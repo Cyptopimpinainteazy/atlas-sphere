@@ -17,3 +17,12 @@ target/
 # Rust
 target/
 Cargo.lock
+
+# Environment and secrets files
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
+*.p12

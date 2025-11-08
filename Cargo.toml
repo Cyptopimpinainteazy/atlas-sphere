@@ -3,6 +3,7 @@ members = [
     "pallets/atlas-kernel",
     "crates/evm-integration",
     "crates/svm-integration",
+    "crates/cross-vm-bridge",
     "runtime",
     "node",
 ]

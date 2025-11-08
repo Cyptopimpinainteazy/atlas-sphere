@@ -16,7 +16,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 [lib]
 name = "atlas_sphere_runtime"
 path = "src/lib.rs"
-crate-type = ["rlib"]
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", workspace = true, default-features = false, features = ["derive"] }
@@ -53,21 +53,12 @@ sp-io = { workspace = true, default-features = false }
 
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
-# Frontier EVM integration dependencies
-fp-evm = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-fp-rpc = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-fp-self-contained = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-pallet-evm = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-pallet-ethereum = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-pallet-dynamic-fee = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0", default-features = false }
-# Ethereum compatibility primitives
-ethereum = { version = "0.14", default-features = false, features = ["with-codec"] }
-ethereum-types = { version = "0.14", default-features = false }
-# Local Atlas Sphere EVM integration utilities
+getrandom = { workspace = true }
+# Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
-# WASM build disabled for this development phase
+substrate-wasm-builder = { workspace = true }
 
 [features]
 default = ["std"]
@@ -101,14 +92,6 @@ std = [
 	"sp-io/std",
 	"log/std",
 	"serde/std",
-	"fp-evm/std",
-	"fp-rpc/std",
-	"fp-self-contained/std",
-	"pallet-evm/std",
-	"pallet-ethereum/std",
-	"pallet-dynamic-fee/std",
-	"ethereum/std",
-	"ethereum-types/std",
 	"atlas-evm-integration/std",
 ]
 runtime-benchmarks = [

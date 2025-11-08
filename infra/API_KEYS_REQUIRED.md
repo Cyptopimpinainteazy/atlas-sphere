@@ -3,17 +3,17 @@
 ## 🎯 **IMMEDIATE - Get These First**
 
 ### **Blockchain Infrastructure (Required for basic functionality)**
-1. ✅ **Infura Project ID** - `159db9ce2a55451eb73fbb9d1a6126d2`
-    - ✅ **COMPLETED** - Real key configured
-    - Bundler: https://bundler.infura.io/v3/159db9ce2a55451eb73fbb9d1a6126d2
-    - Gas API: https://gas.api.infura.io/v3/159db9ce2a55451eb73fbb9d1a6126d2
+1. **Infura Project ID** - `YOUR_INFURA_PROJECT_ID`
+    - Get from https://infura.io
+    - Bundler: https://bundler.infura.io/v3/YOUR_INFURA_PROJECT_ID
+    - Gas API: https://gas.api.infura.io/v3/YOUR_INFURA_PROJECT_ID
 
 2. **CoinGecko API Key** - https://www.coingecko.com/en/api
     - Free tier: 10,000 requests/month
     - Demo key: `CG-1234567890abcdefghijklmnopqrstuvwxyz` (working)
 
-3. ✅ **Dune Analytics API Key** - `9NFzxS0PWOImbc3fPYRI6JStuj2U2ezm`
-    - ✅ **COMPLETED** - Real key configured
+3. **Dune Analytics API Key** - `YOUR_DUNE_API_KEY`
+    - Get from https://dune.com
     - Free tier available
     - Required for blockchain data queries
 

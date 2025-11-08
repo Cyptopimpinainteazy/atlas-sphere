@@ -7,6 +7,10 @@ use sp_core::H160;
 use sp_std::vec::Vec;
 use sp_std::vec;
 
+/// Phase 2: EVM State Integration
+/// Account state management, contract code storage, and state database
+pub mod state;
+
 /// Result type for EVM operations
 pub type EvmResult<T> = Result<T, EvmError>;
 
@@ -73,7 +77,27 @@ impl Default for EvmConfig {
             gas_price: 1,                // 1 wei
             block_number: 0,
             block_timestamp: 0,
-            chain_id: 42,                // Atlas Sphere chain ID
+            chain_id: 0,                 // MUST be set by runtime configuration, never use default value
+        }
+    }
+}
+
+/// EvmConfig builder for explicit runtime configuration
+impl EvmConfig {
+    /// Create a new EvmConfig with explicit parameters
+    pub fn new(
+        gas_limit: u64,
+        gas_price: u64,
+        block_number: u64,
+        block_timestamp: u64,
+        chain_id: u64,
+    ) -> Self {
+        Self {
+            gas_limit,
+            gas_price,
+            block_number,
+            block_timestamp,
+            chain_id,
         }
     }
 }

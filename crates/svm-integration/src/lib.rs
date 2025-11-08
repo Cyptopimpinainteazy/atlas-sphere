@@ -75,7 +75,27 @@ impl Default for SvmConfig {
             compute_unit_price: 1,              // 1 microlamport per compute unit
             block_height: 0,
             block_timestamp: 0,
-            cluster_id: 42,                    // Atlas Sphere cluster ID
+            cluster_id: 0,                     // MUST be set by runtime configuration, never use default value
+        }
+    }
+}
+
+/// SvmConfig builder for explicit runtime configuration
+impl SvmConfig {
+    /// Create a new SvmConfig with explicit parameters
+    pub fn new(
+        compute_unit_limit: u64,
+        compute_unit_price: u64,
+        block_height: u64,
+        block_timestamp: u64,
+        cluster_id: u8,
+    ) -> Self {
+        Self {
+            compute_unit_limit,
+            compute_unit_price,
+            block_height,
+            block_timestamp,
+            cluster_id,
         }
     }
 }

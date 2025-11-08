@@ -27,6 +27,22 @@ pub mod cli;
 #[cfg_attr(docsrs, doc(cfg(feature = "cli")))]
 pub mod command;
 
+/// Phase 4: RPC Endpoints
+/// Custom JSON-RPC methods for authority, EVM, and bridge queries
+pub mod rpc;
+
+/// Phase 5: Network Bootstrapping
+/// Bootstrap configuration, peer discovery, and protocol settings
+pub mod network;
+
+/// Phase 6: Validator Setup
+/// Validator registration, session key derivation, and key rotation
+pub mod authority;
+
+/// Phase 7: Telemetry/Monitoring
+/// Prometheus metrics, health checks, and observability
+pub mod metrics;
+
 /// Chain specification constructors and utilities used to create Atlas Sphere
 /// network configurations.
 pub mod chain_spec;

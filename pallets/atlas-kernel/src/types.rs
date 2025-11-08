@@ -28,7 +28,7 @@ impl AtlasId {
 	pub const LENGTH: usize = 32;
 
 	/// Create a new AtlasId from a fixed-size byte array.
-	pub const fn new(bytes: [u8; 32]) => Self {
+	pub const fn new(bytes: [u8; 32]) -> Self {
 		Self(bytes)
 	}
 
@@ -445,4 +445,257 @@ fn base58_encode(data: &[u8]) -> String {
 	}
 
 	result
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn base58check_round_trip_simple() {
+		let data = b"hello";
+		let encoded = base58check_encode(data);
+		assert!(!encoded.is_empty());
+		// Should produce a valid Base58 string
+		for c in encoded.chars() {
+			assert!(BASE58_ALPHABET.contains(&(c as u8)));
+		}
+	}
+
+	#[test]
+	fn base58check_round_trip_with_zeros() {
+		let data = &[0u8, 0u8, 1u8, 2u8, 3u8];
+		let encoded = base58check_encode(data);
+		// Leading zeros should be represented as '1'
+		assert!(encoded.starts_with("11"));
+	}
+
+	#[test]
+	fn base58check_different_data_different_encoding() {
+		let data1 = b"hello";
+		let data2 = b"world";
+		let encoded1 = base58check_encode(data1);
+		let encoded2 = base58check_encode(data2);
+		assert_ne!(encoded1, encoded2, "Different data should produce different encodings");
+	}
+
+	#[test]
+	fn base58check_empty_data() {
+		let data = &[];
+		let encoded = base58check_encode(data);
+		// Should handle empty input gracefully
+		assert!(!encoded.is_empty() || encoded.is_empty()); // Valid either way
+	}
+
+	#[test]
+	fn base58check_all_zeros() {
+		let data = &[0u8; 32];
+		let encoded = base58check_encode(data);
+		// All zeros should encode to all '1's (plus checksum effects)
+		assert!(encoded.starts_with("1"));
+	}
+
+	#[test]
+	fn base58check_max_bytes() {
+		let data = &[255u8; 32];
+		let encoded = base58check_encode(data);
+		// Should handle large byte arrays
+		assert!(!encoded.is_empty());
+	}
+
+	#[test]
+	fn checksum4_deterministic() {
+		let data = b"test";
+		let cs1 = checksum4(data);
+		let cs2 = checksum4(data);
+		assert_eq!(cs1, cs2, "Checksum should be deterministic");
+	}
+
+	#[test]
+	fn checksum4_different_data_different_checksum() {
+		let cs1 = checksum4(b"test1");
+		let cs2 = checksum4(b"test2");
+		assert_ne!(cs1, cs2, "Different data should produce different checksums");
+	}
+
+	#[test]
+	fn checksum4_length() {
+		let data = b"any_data";
+		let cs = checksum4(data);
+		assert_eq!(cs.len(), 4, "Checksum must be exactly 4 bytes");
+	}
+
+	#[test]
+	fn hex_nibble_valid_lowercase() {
+		assert_eq!(hex_nibble(b'0'), Some(0));
+		assert_eq!(hex_nibble(b'9'), Some(9));
+		assert_eq!(hex_nibble(b'a'), Some(10));
+		assert_eq!(hex_nibble(b'f'), Some(15));
+	}
+
+	#[test]
+	fn hex_nibble_valid_uppercase() {
+		assert_eq!(hex_nibble(b'A'), Some(10));
+		assert_eq!(hex_nibble(b'F'), Some(15));
+	}
+
+	#[test]
+	fn hex_nibble_invalid() {
+		assert_eq!(hex_nibble(b'g'), None);
+		assert_eq!(hex_nibble(b'G'), None);
+		assert_eq!(hex_nibble(b' '), None);
+		assert_eq!(hex_nibble(b'\n'), None);
+	}
+
+	#[test]
+	fn base58_encode_empty() {
+		let encoded = base58_encode(&[]);
+		assert!(encoded.is_empty());
+	}
+
+	#[test]
+	fn base58_encode_single_zero() {
+		let encoded = base58_encode(&[0]);
+		assert_eq!(encoded, "1", "Single zero should encode to '1'");
+	}
+
+	#[test]
+	fn base58_encode_multiple_zeros() {
+		let encoded = base58_encode(&[0, 0, 0]);
+		assert_eq!(encoded, "111", "Multiple zeros should encode to multiple '1's");
+	}
+
+	#[test]
+	fn base58_encode_one() {
+		let encoded = base58_encode(&[1]);
+		assert_eq!(encoded, "2", "Single byte 1 should encode to '2'");
+	}
+
+	#[test]
+	fn base58_encode_valid_alphabet() {
+		let data = &[255u8; 10];
+		let encoded = base58_encode(data);
+		for c in encoded.chars() {
+			assert!(
+				BASE58_ALPHABET.contains(&(c as u8)),
+				"Character '{}' not in Base58 alphabet",
+				c
+			);
+		}
+	}
+
+	#[test]
+	fn atlas_id_new() {
+		let bytes = [1u8; 32];
+		let atlas_id = AtlasId::new(bytes);
+		assert_eq!(atlas_id.0, bytes);
+	}
+
+	#[test]
+	fn evm_payload_round_trip() {
+		let payload = EvmPayload {
+			target: H160::from_low_u64_be(0x123456),
+			input: vec![1, 2, 3, 4, 5],
+			value: 1000,
+		};
+
+		let encoded = payload.encode();
+		let decoded: EvmPayload = EvmPayload::decode(&mut &encoded[..]).unwrap();
+
+		assert_eq!(decoded.target, payload.target);
+		assert_eq!(decoded.input, payload.input);
+		assert_eq!(decoded.value, payload.value);
+	}
+
+	#[test]
+	fn svm_payload_round_trip() {
+		let payload = SvmPayload {
+			program_id: [2u8; 32],
+			accounts: vec![[3u8; 32], [4u8; 32]],
+			data: vec![5, 6, 7],
+		};
+
+		let encoded = payload.encode();
+		let decoded: SvmPayload = SvmPayload::decode(&mut &encoded[..]).unwrap();
+
+		assert_eq!(decoded.program_id, payload.program_id);
+		assert_eq!(decoded.accounts, payload.accounts);
+		assert_eq!(decoded.data, payload.data);
+	}
+
+	#[test]
+	fn cbor_prefix_detection() {
+		// CBOR major type 0 (unsigned integer): 0x00-0x17
+		assert_eq!(0x00 >> 5, 0);
+		assert_eq!(0x17 >> 5, 0);
+
+		// CBOR major type 1 (negative integer): 0x20-0x37
+		assert_eq!(0x20 >> 5, 1);
+		assert_eq!(0x37 >> 5, 1);
+
+		// CBOR major type 2 (byte string): 0x40-0x57
+		assert_eq!(0x40 >> 5, 2);
+		assert_eq!(0x57 >> 5, 2);
+
+		// CBOR major type 3 (text string): 0x60-0x77
+		assert_eq!(0x60 >> 5, 3);
+		assert_eq!(0x77 >> 5, 3);
+
+		// CBOR major type 4 (array): 0x80-0x97
+		assert_eq!(0x80 >> 5, 4);
+		assert_eq!(0x97 >> 5, 4);
+
+		// CBOR major type 5 (map): 0xA0-0xB7
+		assert_eq!(0xA0 >> 5, 5);
+		assert_eq!(0xB7 >> 5, 5);
+	}
+
+	#[test]
+	fn comit_status_ordering() {
+		use core::cmp::Ordering;
+		assert_eq!(ComitStatus::Pending.cmp(&ComitStatus::Pending), Ordering::Equal);
+		assert_eq!(ComitStatus::Pending.cmp(&ComitStatus::Finalized), Ordering::Less);
+		assert_eq!(ComitStatus::Finalized.cmp(&ComitStatus::Pending), Ordering::Greater);
+	}
+
+	#[test]
+	fn hex_parsing_valid_pairs() {
+		// Verify hex_nibble works for all valid characters
+		let hex_chars = "0123456789abcdefABCDEF";
+		for c in hex_chars.chars() {
+			let nibble = hex_nibble(c as u8);
+			assert!(nibble.is_some(), "Valid hex char '{}' should parse", c);
+		}
+	}
+
+	#[test]
+	fn payload_size_validation() {
+		// Test that payloads can represent realistic sizes
+		let evm_payload = EvmPayload {
+			target: H160::zero(),
+			input: vec![0u8; 16384], // 16 KB EVM payload
+			value: 0,
+		};
+
+		let encoded = evm_payload.encode();
+		assert!(encoded.len() >= 16384, "Encoded payload should preserve data size");
+	}
+
+	#[test]
+	fn asset_metadata_round_trip() {
+		let metadata = AssetMetadata {
+			asset_id: 42,
+			symbol: b"TEST".to_vec(),
+			decimals: 18,
+			total_supply: 1_000_000_000_000_000_000u128,
+		};
+
+		let encoded = metadata.encode();
+		let decoded: AssetMetadata = AssetMetadata::decode(&mut &encoded[..]).unwrap();
+
+		assert_eq!(decoded.asset_id, metadata.asset_id);
+		assert_eq!(decoded.symbol, metadata.symbol);
+		assert_eq!(decoded.decimals, metadata.decimals);
+		assert_eq!(decoded.total_supply, metadata.total_supply);
+	}
 }

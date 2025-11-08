@@ -1,16 +1,20 @@
 use atlas_sphere_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SystemConfig,
+	AccountId, AuraConfig, BalancesConfig, RuntimeGenesisConfig, GrandpaConfig, Signature, SystemConfig,
 	WASM_BINARY,
 };
-use serde_json::json;
+use sc_service::{ChainSpec as ServiceChainSpec, ChainType};
+use sc_service::GenericChainSpec;
+use sc_chain_spec::Properties;
+use sc_network::config::MultiaddrWithPeerId;
 use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use parity_scale_codec::Encode;
 use std::{collections::BTreeSet, path::PathBuf};
 
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
+pub type ChainSpec = GenericChainSpec<RuntimeGenesisConfig>;
 
 const DEFAULT_PROTOCOL_ID: &str = "atlas";
 const ATLAS: u128 = 1_000_000_000_000;
@@ -53,8 +57,9 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		vec![],
 		None,
 		Some(DEFAULT_PROTOCOL_ID),
-		Some(default_properties()),
+		None,
 		Default::default(),
+		None,
 	))
 }
 
@@ -87,8 +92,9 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		vec![],
 		None,
 		Some(DEFAULT_PROTOCOL_ID),
-		Some(default_properties()),
+		None,
 		Default::default(),
+		None,
 	))
 }
 
@@ -119,8 +125,9 @@ pub fn staging_config() -> Result<ChainSpec, String> {
 		vec![],
 		None,
 		Some(DEFAULT_PROTOCOL_ID),
-		Some(default_properties()),
+		None,
 		Default::default(),
+		None,
 	))
 }
 
@@ -128,14 +135,15 @@ fn atlas_sphere_genesis(
 	wasm_binary: &[u8],
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	endowed_accounts: Vec<AccountId>,
-) -> GenesisConfig {
+) -> RuntimeGenesisConfig {
 	let mut endowed: BTreeSet<AccountId> = endowed_accounts.into_iter().collect();
 
 	// Add authority accounts to endowed set
 	for (aura, _) in initial_authorities.iter() {
 		// Derive account from Aura public key
-		let account_public: AccountPublic = (*aura).clone().into();
-		let account_id = account_public.into_account();
+		let mut account_bytes = [0u8; 32];
+		account_bytes.copy_from_slice(&aura.encode()[..32]);
+		let account_id = AccountId::from(account_bytes);
 		endowed.insert(account_id);
 	}
 
@@ -155,7 +163,7 @@ fn atlas_sphere_genesis(
 		.map(|(_, grandpa)| (grandpa, 1))
 		.collect();
 
-	GenesisConfig {
+	RuntimeGenesisConfig {
 		system: SystemConfig {
 			code: wasm_binary.to_vec(),
 			..Default::default()

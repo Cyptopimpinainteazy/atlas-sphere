@@ -138,3 +138,102 @@ pub fn new_test_ext() -> TestExternalities {
 		])
 		.build()
 }
+
+/// Mock implementation of DualVmDispatcher for testing
+pub struct MockDispatcher;
+
+impl pallet_atlas_kernel::DualVmDispatcher for MockDispatcher {
+	type AccountId = AccountId;
+	type Balance = Balance;
+
+	fn execute_evm_tx(&self, _tx: Vec<u8>) -> Result<pallet_atlas_kernel::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+		Ok(pallet_atlas_kernel::ExecutionReceipt {
+			success: true,
+			gas_used: 21000,
+			logs: Default::default(),
+			state_changes: Default::default(),
+		})
+	}
+
+	fn execute_svm_tx(&self, _tx: Vec<u8>) -> Result<pallet_atlas_kernel::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+		Ok(pallet_atlas_kernel::ExecutionReceipt {
+			success: true,
+			gas_used: 0,
+			logs: Default::default(),
+			state_changes: Default::default(),
+		})
+	}
+
+	fn execute_dual_tx(
+		&self,
+		evm_tx: Option<Vec<u8>>,
+		svm_tx: Option<Vec<u8>>,
+	) -> Result<pallet_atlas_kernel::SphereState, frame_support::dispatch::DispatchError> {
+		let _evm_receipt = if evm_tx.is_some() {
+			Some(self.execute_evm_tx(evm_tx.unwrap())?)
+		} else {
+			None
+		};
+		
+		let _svm_receipt = if svm_tx.is_some() {
+			Some(self.execute_svm_tx(svm_tx.unwrap())?)
+		} else {
+			None
+		};
+
+		Ok(pallet_atlas_kernel::SphereState {
+			canonical_root: H256::zero(),
+			execution_count: 1,
+		})
+	}
+
+	fn merge_receipts(
+		&self,
+		_evm_receipt: Option<&pallet_atlas_kernel::ExecutionReceipt>,
+		_svm_receipt: Option<&pallet_atlas_kernel::ExecutionReceipt>,
+	) -> pallet_atlas_kernel::SphereState {
+		pallet_atlas_kernel::SphereState {
+			canonical_root: H256::zero(),
+			execution_count: 1,
+		}
+	}
+
+	/// Check authorization - in mock, always allow ALICE, deny others for non-empty ops
+	fn auth_check(&self, caller: &Self::AccountId, operation: &[u8]) -> Result<(), frame_support::dispatch::DispatchError> {
+		if *caller == ALICE {
+			Ok(())
+		} else if operation.is_empty() {
+			Ok(())
+		} else {
+			Err(frame_support::dispatch::DispatchError::BadOrigin)
+		}
+	}
+
+	/// Calculate fees: 1 unit per 1000 gas + 1 unit per 1000 compute units
+	fn fee_accounting(
+		&self,
+		evm_gas_used: u64,
+		svm_compute_units: u64,
+		base_fee: Self::Balance,
+	) -> Result<Self::Balance, frame_support::dispatch::DispatchError> {
+		let evm_fee = (evm_gas_used as u128) / 1000;
+		let svm_fee = (svm_compute_units as u128) / 1000;
+		let total = base_fee + evm_fee + svm_fee;
+		Ok(total)
+	}
+
+	/// Update canonical ledger - in mock, just verify state changes are well-formed
+	fn canonical_ledger_update(
+		&self,
+		_comit_id: H256,
+		state_changes: &[pallet_atlas_kernel::StateChange],
+	) -> Result<(), frame_support::dispatch::DispatchError> {
+		// Verify all state changes have valid addresses
+		for change in state_changes {
+			if change.address.is_empty() {
+				return Err(frame_support::dispatch::DispatchError::Other("Invalid state change address"));
+			}
+		}
+		Ok(())
+	}
+}
