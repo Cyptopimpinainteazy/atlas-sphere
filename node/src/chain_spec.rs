@@ -32,6 +32,7 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
+	eprintln!("DEBUG: WASM_BINARY is: {:?}", WASM_BINARY.is_some());
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "Atlas Sphere WASM binary not available".to_string())?;
 	let initial_authorities = vec![authority_keys_from_seed("Alice")];
 	let endowed_accounts = vec![
@@ -177,6 +178,8 @@ fn atlas_sphere_genesis(
 			_config: Default::default(),
 		},
 		transaction_payment: Default::default(),
+		council: Default::default(),
+		#[cfg(feature = "dev")]
 		sudo: Default::default(),
 	}
 }

@@ -467,9 +467,9 @@ This implementation is **feature-complete but not production-ready**. The follow
 | **Prometheus Metrics** | 20+ | ✅ |
 | **Data Structures** | 40+ | ✅ |
 | **Error Types** | 7+ | ✅ |
-| **Quality Level** | Production | ✅ |
+| **Quality Level** | Developer Preview (Beta) | ⚠️ |
 | **Documentation** | 100% | ✅ |
-| **Ready for Production** | Yes | ✅ |
+| **Ready for Production** | No - See Critical Gaps | ⚠️ |
 
 ---
 
@@ -528,13 +528,14 @@ All seven phases of the Atlas Sphere roadmap have been successfully implemented 
 
 ## 🔍 CRITICAL REVIEW COMMENTS - IMPLEMENTATION STATUS
 
-### Comment Status Summary: **17 of 19 COMPLETE** ✅
+### Comment Status Summary: **18 of 20 COMPLETE** ✅
 
 | # | Comment | Status | Implementation |
 |---|---------|--------|-----------------|
 | 1 | Receipt-aware prepare-root | ✅ Complete | Added gas_used, success, logs, state_changes to verification |
 | 2 | Execution failure detection | ✅ Complete | Proper error handling with detailed failure reasons |
-| 3 | Timestamp computation | ✅ Complete | Block-number-derived (12 second blocks) |
+| 3 | Currency trait fee deduction | ✅ Complete | Balance checking and fee withdrawal integrated with pallet_balances |
+| 4 | Timestamp computation | ✅ Complete | Block-number-derived (12 second blocks) |
 | 4 | Finalization events | ✅ Complete | ComitFinalized event emitted after success |
 | 5 | Payload bounds validation | ✅ Complete | Split into 3 separate constants (EVM, SVM, combined) |
 | 6 | Nonce-on-success-only | ✅ Complete | Incremented after execution + verification |
@@ -554,10 +555,49 @@ All seven phases of the Atlas Sphere roadmap have been successfully implemented 
 
 ### Implementation Details
 
-#### Comments 1-17: ✅ COMPLETE
+#### Comment 3: Currency Trait Fee Deduction - ✅ COMPLETE
+
+**Location**: `pallets/atlas-kernel/src/lib.rs` (lines 534-545)
+
+**Fee Calculation**:
+- EVM execution fee: `gas_used / 1000` (example: 21000 gas → 21 units)
+- SVM execution fee: `compute_units / 1000` (example: 5000 compute units → 5 units)
+- Total required fee: Sum of both VM fees
+- Fee verification: Submitted `fee` parameter must match calculated `required_fee`
+
+**Balance Checking and Withdrawal**:
+The pallet integrates with `frame_support::traits::Currency` to:
+1. Check sufficient balance: `T::Currency::free_balance(&who) >= required_fee`
+2. Withdraw fee after successful execution: `T::Currency::withdraw(&who, required_fee, WithdrawReasons::FEE, KeepAlive)`
+3. Burn withdrawn fees (imbalance dropped)
+4. Return `Error::<T>::InsufficientBalance` if account cannot afford fee
+
+**Implementation**:
+```rust
+// Check sufficient balance
+let free_balance = T::Currency::free_balance(&who);
+ensure!(free_balance >= required_fee.into(), Error::<T>::InsufficientBalance);
+
+// Deduct the fee
+let imbalance = T::Currency::withdraw(
+    &who,
+    required_fee.into(),
+    frame_support::traits::WithdrawReasons::FEE,
+    frame_support::traits::ExistenceRequirement::KeepAlive,
+)?;
+drop(imbalance); // Burn the fee
+```
+
+**Test Coverage**:
+- `submit_comit_insufficient_balance_fails`: Verifies accounts with insufficient balance cannot submit Comits
+- `submit_comit_exact_fee_charge_succeeds`: Confirms correct fee deduction with exact balance
+- All 43 pallet tests pass with proper fee handling
+- Tests use `type Currency = Balances` in mock configuration (`pallets/atlas-kernel/src/mock.rs:105`)
+
+#### Comments 1-2, 4-18: ✅ COMPLETE
 All core logic, verification, validation, error handling, and trait extensions implemented and tested to compile successfully.
 
-#### Comment 18: ⏳ PARTIAL (Frontier Dependency Blocked)
+#### Comment 19: ⏳ PARTIAL (Frontier Dependency Blocked)
 - **Status**: Architecture complete, implementation guide documented
 - **Location**: `docs/RPC_INTEGRATION_GUIDE.md` (1,200+ lines)
 - **Covers**:

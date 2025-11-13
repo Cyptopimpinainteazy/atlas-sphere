@@ -77,7 +77,7 @@ impl Default for EvmConfig {
             gas_price: 1,                // 1 wei
             block_number: 0,
             block_timestamp: 0,
-            chain_id: 0,                 // MUST be set by runtime configuration, never use default value
+            chain_id: 42,                // Atlas Sphere default chain ID
         }
     }
 }

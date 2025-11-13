@@ -3,7 +3,7 @@
 /// Manages Ethereum Virtual Machine state, account storage, and gas metering.
 
 use sp_runtime::traits::{AccountIdConversion, Zero};
-use sp_std::collections::btree_map::BTreeMap;
+use sp_std::{collections::btree_map::BTreeMap, vec::Vec};
 
 /// EVM account state
 #[derive(Clone, Debug)]

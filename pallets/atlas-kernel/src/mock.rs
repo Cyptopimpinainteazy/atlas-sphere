@@ -38,6 +38,7 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
+		Timestamp: pallet_timestamp,
 		Balances: pallet_balances,
 		AtlasKernel: pallet_atlas_kernel,
 	}
@@ -72,6 +73,17 @@ impl system::Config for Test {
 	type MaxConsumers = ConstU32<16>;
 }
 
+parameter_types! {
+	pub const MinimumPeriod: u64 = 6000;
+}
+
+impl pallet_timestamp::Config for Test {
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = MinimumPeriod;
+	type WeightInfo = ();
+}
+
 impl pallet_balances::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Balance = Balance;
@@ -90,18 +102,35 @@ impl pallet_balances::Config for Test {
 
 impl pallet_atlas_kernel::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
 	type Balance = Balance;
 	type AssetId = AssetId;
 	type AtlasId = AtlasId;
 	type MaxAssetsPerAccount = ConstU32<16>;
 	type MaxAssetSymbolLength = ConstU32<16>;
-	type MaxPayloadLength = ConstU32<4096>;
+	type MaxEvmPayloadLength = ConstU32<4096>;
+	type MaxSvmPayloadLength = ConstU32<4096>;
+	type MaxCombinedPayloadLength = ConstU32<8192>;
+	type MaxAuthorities = ConstU32<100>;
+	type MinAuthorities = ConstU32<1>;
 	type WeightInfo = ();
+	type EvmAdapter = ();
+	type SvmAdapter = ();
+	type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
-#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
+	authorized_accounts: Vec<AccountId>,
+}
+
+impl Default for ExtBuilder {
+	fn default() -> Self {
+		Self {
+			balances: vec![],
+			authorized_accounts: vec![],
+		}
+	}
 }
 
 impl ExtBuilder {
@@ -110,21 +139,34 @@ impl ExtBuilder {
 		self
 	}
 
+	pub fn authorized_accounts(mut self, accounts: Vec<AccountId>) -> Self {
+		self.authorized_accounts = accounts;
+		self
+	}
+
 	pub fn build(self) -> TestExternalities {
-		let storage = frame_system::GenesisConfig::<Test>::default()
+		let mut storage = frame_system::GenesisConfig::<Test>::default()
 			.build_storage()
 			.expect("Failed to build system genesis storage");
 
+		// Apply balances genesis
+		pallet_balances::GenesisConfig::<Test> {
+			balances: self.balances,
+		}
+		.assimilate_storage(&mut storage)
+		.expect("Failed to assimilate balances storage");
+
 		let mut t = TestExternalities::new(storage);
 		
-		let _balances_genesis = pallet_balances::GenesisConfig::<Test> {
-			balances: self.balances,
-		};
-		
-		// For now, we'll just use the default balances setup
-		// In a full implementation, you'd need to inject the balances properly
-		
-		t.execute_with(|| System::set_block_number(1));
+		t.execute_with(|| {
+			System::set_block_number(1);
+			// Set initial timestamp
+			Timestamp::set_timestamp(12000);
+			// Initialize authorized accounts
+			for account in self.authorized_accounts {
+				pallet_atlas_kernel::AuthorizedAccounts::<Test>::insert(account, ());
+			}
+		});
 		t
 	}
 }
@@ -136,6 +178,7 @@ pub fn new_test_ext() -> TestExternalities {
 			(BOB, INITIAL_BALANCE),
 			(CHARLIE, INITIAL_BALANCE),
 		])
+		.authorized_accounts(vec![ALICE, BOB, CHARLIE])
 		.build()
 }
 
@@ -150,6 +193,7 @@ impl pallet_atlas_kernel::DualVmDispatcher for MockDispatcher {
 		Ok(pallet_atlas_kernel::ExecutionReceipt {
 			success: true,
 			gas_used: 21000,
+			return_data: Default::default(),
 			logs: Default::default(),
 			state_changes: Default::default(),
 		})
@@ -159,6 +203,7 @@ impl pallet_atlas_kernel::DualVmDispatcher for MockDispatcher {
 		Ok(pallet_atlas_kernel::ExecutionReceipt {
 			success: true,
 			gas_used: 0,
+			return_data: Default::default(),
 			logs: Default::default(),
 			state_changes: Default::default(),
 		})
@@ -182,8 +227,9 @@ impl pallet_atlas_kernel::DualVmDispatcher for MockDispatcher {
 		};
 
 		Ok(pallet_atlas_kernel::SphereState {
-			canonical_root: H256::zero(),
-			execution_count: 1,
+			state_root: H256::zero(),
+			block_number: 1,
+			timestamp: 12000,
 		})
 	}
 
@@ -193,8 +239,9 @@ impl pallet_atlas_kernel::DualVmDispatcher for MockDispatcher {
 		_svm_receipt: Option<&pallet_atlas_kernel::ExecutionReceipt>,
 	) -> pallet_atlas_kernel::SphereState {
 		pallet_atlas_kernel::SphereState {
-			canonical_root: H256::zero(),
-			execution_count: 1,
+			state_root: H256::zero(),
+			block_number: 1,
+			timestamp: 12000,
 		}
 	}
 

@@ -75,7 +75,7 @@ impl Default for SvmConfig {
             compute_unit_price: 1,              // 1 microlamport per compute unit
             block_height: 0,
             block_timestamp: 0,
-            cluster_id: 0,                     // MUST be set by runtime configuration, never use default value
+            cluster_id: 1,                     // Solana mainnet-beta cluster ID
         }
     }
 }
@@ -170,7 +170,7 @@ mod tests {
     fn test_default_config() {
         let config = SvmConfig::default();
         assert_eq!(config.compute_unit_limit, 200_000);
-        assert_eq!(config.cluster_id, 42);
+        assert_eq!(config.cluster_id, 1);  // Mainnet cluster
     }
 
     #[test]

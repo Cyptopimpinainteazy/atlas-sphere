@@ -3,6 +3,7 @@ use crate::{
     service::{self, AtlasSphereExecutorDispatch},
 };
 use atlas_sphere_runtime::opaque::Block;
+use clap::Parser;
 use log::{error, info, warn};
 use sc_cli::{CliConfiguration, Error as CliError, Result as CliResult, SubstrateCli};
 
@@ -20,20 +21,6 @@ pub fn run() -> CliResult<()> {
                 info!("Building Atlas Sphere chain specification (raw: {})", cmd.raw);
                 cmd.run(config.chain_spec, config.network).map_err(|e| {
                     error!("`build-spec` command failed: {e}");
-                    e
-                })
-            })
-        }
-        Some(Commands::BuildSyncSpec(cmd)) => {
-            let runner = cli.create_runner(cmd).map_err(|e| {
-                error!("Failed to initialize runner for `build-sync-spec`: {e}");
-                e
-            })?;
-
-            runner.sync_run(|config| {
-                info!("Building Atlas Sphere sync chain specification");
-                cmd.run(config.chain_spec, config.network).map_err(|e| {
-                    error!("`build-sync-spec` command failed: {e}");
                     e
                 })
             })
@@ -149,7 +136,7 @@ pub fn run() -> CliResult<()> {
             })?;
 
             runner.async_run(|config| {
-                info!("Reverting chain state by {} blocks", cmd.num);
+                info!("Reverting chain state by {:?} blocks", cmd.num);
                 let partial = service::new_partial(&config).map_err(|e| {
                     error!("Unable to build partial components for `revert`: {e}");
                     CliError::Service(e)
@@ -163,48 +150,6 @@ pub fn run() -> CliResult<()> {
                 } = partial;
 
                 Ok((cmd.run(client, backend, None), task_manager))
-            })
-        }
-        Some(Commands::Vanity(cmd)) => {
-            info!("Running vanity address generator");
-            cmd.run().map_err(|e| {
-                error!("`vanity` command failed: {e}");
-                e
-            })
-        }
-        Some(Commands::Key(cmd)) => {
-            info!("Executing key management subcommand");
-            cmd.run(&cli).map_err(|e| {
-                error!("`key` command failed: {e}");
-                e
-            })
-        }
-        Some(Commands::Sign(cmd)) => {
-            info!("Signing payload");
-            cmd.run(&cli).map_err(|e| {
-                error!("`sign` command failed: {e}");
-                e
-            })
-        }
-        Some(Commands::Verify(cmd)) => {
-            info!("Verifying signature");
-            cmd.run(&cli).map_err(|e| {
-                error!("`verify` command failed: {e}");
-                e
-            })
-        }
-        Some(Commands::Identity(cmd)) => {
-            info!("Inspecting node identity");
-            cmd.run(&cli).map_err(|e| {
-                error!("`identity` command failed: {e}");
-                e
-            })
-        }
-        Some(Commands::ChainInfo(cmd)) => {
-            info!("Querying chain information");
-            cmd.run(&cli).map_err(|e| {
-                error!("`chain-info` command failed: {e}");
-                e
             })
         }
         #[cfg(feature = "runtime-benchmarks")]

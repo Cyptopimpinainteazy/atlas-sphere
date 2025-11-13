@@ -73,3 +73,15 @@ pub use chain_spec::*;
 /// Publicly re-export the service layer so that external tools can spin up
 /// Atlas Sphere nodes (full or light) without reaching into module internals.
 pub use service::*;
+
+/// Run the Atlas Sphere node
+#[cfg(feature = "cli")]
+pub fn run() -> Result<(), sc_cli::Error> {
+	command::run()
+}
+
+/// Run the Atlas Sphere node (no-cli fallback)
+#[cfg(not(feature = "cli"))]
+pub fn run() -> Result<(), Box<dyn std::error::Error>> {
+	Err("CLI feature not enabled".into())
+}

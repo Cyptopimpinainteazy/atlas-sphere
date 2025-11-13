@@ -1,6 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "256"]
 
+// Required for impl_runtime_apis! macro in no_std
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::{string::String, format};
+
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything},
@@ -20,7 +26,9 @@ use pallet_balances;
 use pallet_grandpa;
 use pallet_timestamp;
 use pallet_transaction_payment::CurrencyAdapter;
+#[cfg(feature = "dev")]
 use pallet_sudo;
+use pallet_collective;
 use pallet_atlas_kernel;
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, H256};
@@ -29,8 +37,7 @@ use sp_runtime::{
 	generic,
 	impl_opaque_keys,
 	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
-	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, MultiAddress, MultiSignature, Perbill,
+	MultiAddress, MultiSignature, Perbill,
 };
 use sp_session::{GetValidatorCount, GetSessionNumber};
 use sp_std::prelude::*;
@@ -42,8 +49,11 @@ pub use sp_runtime::BuildStorage;
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+// When building without std, provide empty binary
 #[cfg(not(feature = "std"))]
 pub const WASM_BINARY: Option<&[u8]> = None;
+#[cfg(not(feature = "std"))]
+pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;
 
 /// Opaque types used by the CLI commands.
 pub mod opaque {
@@ -105,6 +115,8 @@ parameter_types! {
 	pub const MaxEvmPayloadLength: u32 = 16 * 1024;  // 16 KB for EVM payloads
 	pub const MaxSvmPayloadLength: u32 = 16 * 1024;  // 16 KB for SVM payloads
 	pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
+	pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
+	pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
 	pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
 		Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
 		Perbill::from_percent(75),
@@ -124,11 +136,18 @@ pub fn native_version() -> sp_version::NativeVersion {
 }
 
 parameter_types! {
-	pub const MaxAuthorities: u32 = 32;
 	pub const MaxSetIdSessionEntries: u64 = 0;
 	pub const OperationalFeeMultiplier: u8 = 5;
 }
 
+parameter_types! {
+	pub const CouncilMotionDuration: BlockNumber = 3 * 24 * 60 * 60 / (MILLISECS_PER_BLOCK as BlockNumber / 1000);
+	pub const CouncilMaxProposals: u32 = 100;
+	pub const CouncilMaxMembers: u32 = 100;
+	pub MaxProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
+}
+
+#[cfg(feature = "dev")]
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -142,7 +161,26 @@ construct_runtime!(
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		AtlasKernel: pallet_atlas_kernel,
+		Council: pallet_collective::<Instance1>,
 		Sudo: pallet_sudo,
+	}
+);
+
+#[cfg(not(feature = "dev"))]
+construct_runtime!(
+	pub enum Runtime where
+		Block = Block,
+		NodeBlock = Block,
+		UncheckedExtrinsic = UncheckedExtrinsic,
+	{
+		System: frame_system,
+		Timestamp: pallet_timestamp,
+		Aura: pallet_aura,
+		Grandpa: pallet_grandpa,
+		Balances: pallet_balances,
+		TransactionPayment: pallet_transaction_payment,
+		AtlasKernel: pallet_atlas_kernel,
+		Council: pallet_collective::<Instance1>,
 	}
 );
 
@@ -261,10 +299,30 @@ impl pallet_transaction_payment::Config for Runtime {
 	type FeeMultiplierUpdate = ();
 }
 
+#[cfg(feature = "dev")]
 impl pallet_sudo::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
+}
+
+pub type EnsureRootOrHalfCouncil = frame_support::traits::EitherOfDiverse<
+	frame_system::EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
+>;
+
+pub type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Config<CouncilCollective> for Runtime {
+	type RuntimeOrigin = RuntimeOrigin;
+	type Proposal = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type MotionDuration = CouncilMotionDuration;
+	type MaxProposals = CouncilMaxProposals;
+	type MaxMembers = CouncilMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+	type SetMembersOrigin = frame_system::EnsureRoot<AccountId>;
+	type MaxProposalWeight = MaxProposalWeight;
 }
 
 impl pallet_atlas_kernel::Config for Runtime {
@@ -277,7 +335,13 @@ impl pallet_atlas_kernel::Config for Runtime {
 	type MaxEvmPayloadLength = MaxEvmPayloadLength;
 	type MaxSvmPayloadLength = MaxSvmPayloadLength;
 	type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
+	type MaxAuthorities = MaxAuthorities;
+	type MinAuthorities = MinAuthorities;
 	type WeightInfo = ();
+	type Currency = Balances;
+	type EvmAdapter = ();  // TODO: Wire real Frontier adapter when integrated
+	type SvmAdapter = ();  // TODO: Wire real SVM adapter when integrated
+	type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
 
 // Session trait implementations for minimal runtime
@@ -324,6 +388,97 @@ impl_runtime_apis! {
 
 		fn initialize_block(header: &<Block as BlockT>::Header) {
 			Executive::initialize_block(header);
+		}
+	}
+
+	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
+		fn validate_transaction(
+			source: sp_runtime::transaction_validity::TransactionSource,
+			tx: <Block as BlockT>::Extrinsic,
+			block_hash: <Block as BlockT>::Hash,
+		) -> sp_runtime::transaction_validity::TransactionValidity {
+			Executive::validate_transaction(source, tx, block_hash)
+		}
+	}
+
+	impl pallet_atlas_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId> for Runtime {
+		fn get_canonical_balance(account: AccountId, asset_id: AssetId) -> Balance {
+			pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account, &asset_id)
+		}
+
+		fn get_asset_metadata(asset_id: AssetId) -> Option<(Vec<u8>, u8)> {
+			pallet_atlas_kernel::AssetRegistry::<Runtime>::get(&asset_id)
+				.map(|metadata| (metadata.symbol.into_inner(), metadata.decimals))
+		}
+
+		fn is_authorized(account: AccountId) -> bool {
+			pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account)
+		}
+
+		fn get_authorized_accounts() -> Vec<AccountId> {
+			pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::iter_keys().collect()
+		}
+
+		fn get_authorities() -> Vec<AccountId> {
+			pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
+		}
+	}
+
+	impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
+		fn slot_duration() -> sp_consensus_aura::SlotDuration {
+			sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
+		}
+
+		fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
+			Aura::authorities().to_vec()
+		}
+	}
+
+	impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+		fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+			Grandpa::grandpa_authorities()
+		}
+
+		fn current_set_id() -> sp_consensus_grandpa::SetId {
+			Grandpa::current_set_id()
+		}
+
+		fn submit_report_equivocation_unsigned_extrinsic(
+			_equivocation_proof: sp_consensus_grandpa::EquivocationProof<
+				<Block as BlockT>::Hash,
+				sp_runtime::traits::NumberFor<Block>,
+			>,
+			_key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
+		) -> Option<()> {
+			None
+		}
+
+		fn generate_key_ownership_proof(
+			_set_id: sp_consensus_grandpa::SetId,
+			_authority_id: sp_consensus_grandpa::AuthorityId,
+		) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
+			None
+		}
+	}
+
+	impl sp_block_builder::BlockBuilder<Block> for Runtime {
+		fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> sp_runtime::ApplyExtrinsicResult {
+			Executive::apply_extrinsic(extrinsic)
+		}
+
+		fn finalize_block() -> <Block as BlockT>::Header {
+			Executive::finalize_block()
+		}
+
+		fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+			data.create_extrinsics()
+		}
+
+		fn check_inherents(
+			block: Block,
+			data: sp_inherents::InherentData,
+		) -> sp_inherents::CheckInherentsResult {
+			data.check_extrinsics(&block)
 		}
 	}
 }

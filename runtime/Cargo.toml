@@ -32,7 +32,8 @@ pallet-grandpa = { workspace = true, default-features = false }
 pallet-timestamp = { workspace = true, default-features = false }
 pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
-pallet-sudo = { workspace = true, default-features = false }
+pallet-sudo = { workspace = true, default-features = false, optional = true }
+pallet-collective = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
 
@@ -53,7 +54,7 @@ sp-io = { workspace = true, default-features = false }
 
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
-getrandom = { workspace = true }
+getrandom = { version = "0.2", default-features = false, features = ["js"] }
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
@@ -62,19 +63,22 @@ substrate-wasm-builder = { workspace = true }
 
 [features]
 default = ["std"]
+dev = ["pallet-sudo"]
+skip-wasm-build = []
 std = [
 	"codec/std",
 	"scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
 	"frame-executive/std",
-	"frame-benchmarking/std",
+	"frame-benchmarking?/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
 	"pallet-timestamp/std",
 	"pallet-balances/std",
 	"pallet-transaction-payment/std",
-	"pallet-sudo/std",
+	"pallet-sudo?/std",
+	"pallet-collective/std",
 	"pallet-atlas-kernel/std",
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -104,6 +108,8 @@ runtime-benchmarks = [
 ]
 
 native = []
+
+disable-runtime-api = []
 
 try-runtime = [
 	"frame-support/try-runtime",

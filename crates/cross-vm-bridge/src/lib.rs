@@ -423,8 +423,8 @@ mod tests {
 		let mut bridge = CrossVmBridge::new();
 
 		let op = CrossVmOperation::TransferToEvm {
-			source: vec![1, 2, 3],
-			destination: [0u8; 20],
+			source: vec![1; 32],  // Realistic 32-byte SVM address
+			destination: [0u8; 20],  // Realistic 20-byte EVM address
 			amount: 1000,
 		};
 
@@ -437,8 +437,8 @@ mod tests {
 		let mut bridge = CrossVmBridge::new();
 
 		let op = CrossVmOperation::TransferToSvm {
-			source: [1u8; 20],
-			destination: vec![2, 3, 4],
+			source: [1u8; 20],  // Realistic 20-byte EVM address
+			destination: vec![2; 32],  // Realistic 32-byte SVM address
 			amount: 500,
 		};
 

@@ -20,6 +20,8 @@ frame-support = { workspace = true, default-features = false }
 frame-system = { workspace = true, default-features = false }
 frame-benchmarking = { workspace = true, default-features = false, optional = true }
 pallet-balances = { workspace = true, default-features = false }
+pallet-timestamp = { workspace = true, default-features = false }
+sp-api = { workspace = true, default-features = false }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 minicbor = { version = "0.24.0", default-features = false, features = ["derive", "alloc"] }
 parity-scale-codec = { workspace = true, default-features = false, features = ["derive"] }
@@ -37,8 +39,10 @@ std = [
     "frame-support/std",
     "frame-system/std",
     "pallet-balances/std",
+    "pallet-timestamp/std",
     "parity-scale-codec/std",
     "scale-info/std",
+    "sp-api/std",
     "sp-std/std",
     "sp-core/std",
     "sp-io/std",

@@ -17,11 +17,12 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual 
 9. [Network Configuration](#network-configuration)
 10. [Key Management](#key-management)
 11. [Basic Usage Examples](#basic-usage-examples)
-12. [Testing & Quality Gates](#testing--quality-gates)
-13. [Contribution Guidelines](#contribution-guidelines)
-14. [Roadmap Snapshot](#roadmap-snapshot)
-15. [Resources & Further Reading](#resources--further-reading)
-16. [License](#license)
+12. [Account Authorization](#account-authorization)
+13. [Testing & Quality Gates](#testing--quality-gates)
+14. [Contribution Guidelines](#contribution-guidelines)
+15. [Roadmap Snapshot](#roadmap-snapshot)
+16. [Resources & Further Reading](#resources--further-reading)
+17. [License](#license)
 
 ---
 
@@ -34,9 +35,19 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual 
 
 ## Current Status
 
-- ✅ Atlas Kernel pallet implemented with Comit submission, nonce management, and canonical ledger primitives wired into the runtime.
-- ✅ Runtime integrates the Atlas Kernel alongside balances, transaction payment, Aura, and GRANDPA, enabling end-to-end Comit processing in development environments.
-- 🚧 Dual-VM adapters (Frontier EVM + SVM integration) remain in development, with execution routing and tooling slated for the next milestone.
+🎉 **Atlas Sphere Testnet v1 is NOW LIVE!**
+
+- ✅ **Testnet Deployment:** Public testnet with 3+ validators, RPC endpoints, and faucet service operational
+- ✅ **Atlas Kernel MVP:** Comit submission, nonce management, asset registry, and canonical ledger primitives implemented and wired into runtime
+- ✅ **Runtime Integration:** Aura + GRANDPA consensus, transaction payment, and Atlas Kernel fully integrated for end-to-end Comit processing
+- ✅ **Node Service & RPC:** Node starts with Aura + GRANDPA consensus, networking (peer discovery and sync), and HTTP JSON-RPC server on `127.0.0.1:9944`
+- ✅ **Atlas Kernel RPC:** Five Atlas Kernel RPC methods exposed via `node/src/rpc.rs::create_full()` for querying canonical ledger, asset metadata, authorization status, and authorities
+- ⚠️ **Dual-VM Adapters (EVM/SVM):** Using mock executors for testnet; real Frontier/SVM execution integration in development
+- 🚧 **Governance:** Sudo remains enabled for development; governance pallet integration **NOT YET IMPLEMENTED**
+
+**Testnet RPC**: `http://rpc.testnet.atlas-sphere.io:9944`  
+**Faucet**: `https://faucet.testnet.atlas-sphere.io`  
+**See**: `TESTNET_ANNOUNCEMENT.md` for details
 
 ---
 
@@ -114,15 +125,40 @@ cargo build
    cargo build --release
    ```
 
-2. **Launch a development node with the Atlas Kernel runtime**
+2. **Launch a development node**
 
    ```bash
-   ./target/release/atlas-sphere-node --dev --tmp --log runtime=info
+   ./target/release/atlas-sphere-node --dev --tmp
    ```
 
-3. **Submit a test Comit extrinsic (requires `subxt` CLI)**
+   The node will start with Aura + GRANDPA consensus and expose an HTTP JSON-RPC server on `127.0.0.1:9944`.
+
+3. **Query Atlas Kernel via HTTP JSON-RPC**
+
+   Check authorized accounts:
+   ```bash
+   curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
+        -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getAuthorizedAccounts","params":[null]}'
+   ```
+
+   Get current authorities:
+   ```bash
+   curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
+        -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getAuthorities","params":[null]}'
+   ```
+
+   Query canonical balance (example):
+   ```bash
+   curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
+        -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getCanonicalBalance","params":["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",0,null]}'
+   ```
+
+4. **Submit Comit extrinsic (future - requires WebSocket)**
+
+   ⚠️ **Note:** WebSocket server is not yet exposed. The following `subxt` examples require WebSocket support (future enhancement):
 
    ```bash
+   # Future: once WebSocket is enabled
    cargo install --locked subxt-cli
    subxt extrinsic submit \
      --url ws://127.0.0.1:9944 \
@@ -136,19 +172,21 @@ cargo build
      0x0000000000000000000000000000000000000000000000000000000000000000
    ```
 
-4. **Watch Comit events**
-
+   Watch Comit events:
    ```bash
+   # Future: once WebSocket is enabled
    subxt event watch --url ws://127.0.0.1:9944 atlasKernel
    ```
 
-   You should see `ComitSubmitted` (and optionally `ComitFinalized`) events emitted as the runtime processes the transaction.
+   You should see `ComitSubmitted`, `ComitExecutionStarted`, `ComitExecutionCompleted`, and `ComitFinalized` events in order as the runtime processes the transaction.
 
 ---
 
 ## Running a Node
 
-Launch a local development node with instant seal and predictable authority:
+✅ **STATUS: Node binary is functional with networking and RPC server.**
+
+**Launch a development node:**
 
 ```bash
 ./target/release/atlas-sphere-node --dev
@@ -157,10 +195,23 @@ Launch a local development node with instant seal and predictable authority:
 Useful flags:
 
 - `--tmp` – Run with an in-memory DB (cleared on exit).
+- `--rpc-port <PORT>` – Override the default RPC port (default: `9944`).
 - `--rpc-cors all` – Allow RPC calls from any origin (development only).
 - `--log runtime=debug` – Increase logging verbosity for runtime modules.
 
+**Default RPC Bind Address:** `127.0.0.1:9944`
+
+The node starts with:
+- **Aura consensus** for block authoring (6-second slot duration)
+- **GRANDPA finality** for Byzantine fault-tolerant finalization
+- **Networking** with libp2p peer discovery and block sync
+- **HTTP JSON-RPC server** exposing Atlas Kernel methods
+
 Stop the node with `Ctrl+C`. Logs are streamed to stdout by default.
+
+**Limitations:**
+- Frontier/SVM execution adapters are not yet wired (dual-VM execution uses mock receipts)
+- Governance pallet not integrated (sudo remains enabled)
 
 ## Consensus
 
@@ -226,18 +277,27 @@ For production, store secret phrases securely (e.g., HSM, Hashicorp Vault). Neve
 
 ### 1. Interact via RPC
 
-Enable RPC endpoints:
+Start the node (RPC server enabled by default on `127.0.0.1:9944`):
 
 ```bash
-./target/release/atlas-sphere-node --dev --rpc-methods=Unsafe --rpc-port 9933
+./target/release/atlas-sphere-node --dev
 ```
 
-Query system chain info:
+Query authorized accounts via Atlas Kernel RPC:
 
 ```bash
-curl http://127.0.0.1:9933 -H "Content-Type: application/json" \
-     -d '{"id":1,"jsonrpc":"2.0","method":"system_chain","params":[]}'
+curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
+     -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getAuthorizedAccounts","params":[null]}'
 ```
+
+**Available Atlas Kernel RPC Methods:**
+- `atlasKernel_getCanonicalBalance(account, asset_id, at?)` – Query canonical ledger balance
+- `atlasKernel_getAssetMetadata(asset_id, at?)` – Get asset symbol and decimals
+- `atlasKernel_isAuthorized(account, at?)` – Check account authorization status
+- `atlasKernel_getAuthorizedAccounts(at?)` – List all authorized accounts
+- `atlasKernel_getAuthorities(at?)` – Get current authority set
+
+**Note:** Only Atlas Kernel RPC methods are currently exposed by `node/src/rpc.rs::create_full()`. Standard Substrate RPC methods (e.g., `system_*`, `chain_*`) are not yet wired.
 
 ### 2. Deploy Solidity Contracts
 
@@ -257,6 +317,102 @@ curl http://127.0.0.1:9933 -H "Content-Type: application/json" \
 2. Use the Atlas CLI (roadmap) to draft a cross-domain manifest and submit it via the `atlas_sphere_cross_chain_submit` RPC; during active development you can mock this with `author_submitExtrinsic` carrying the kernel pallet call.
 3. Observe the composite transaction status via `system.events` and confirm both VM executions are finalized in the same block.
 4. Inspect `atlasKernel.lanes` RPC (coming soon) or node logs tagged `atlas-kernel` to verify lane commitments and relay messages.
+
+### Account Authorization
+
+The Atlas Kernel implements an account authorization system that controls which accounts can submit Comits. Authorized accounts are managed through privileged extrinsics and checked during submission.
+
+#### Authorization Management
+
+**Authorize an Account:**
+```rust
+// Requires root privileges (via sudo in development)
+atlasKernel.authorize_account(account_id)
+// Some tooling may expose this as camelCase: authorizeAccount
+```
+
+**Deauthorize an Account:**
+```rust
+// Requires root privileges (via sudo in development)
+atlasKernel.deauthorize_account(account_id)
+// Some tooling may expose this as camelCase: deauthorizeAccount
+```
+
+**Check Authorization Status:**
+```rust
+// Runtime API
+is_authorized(account_id) -> bool
+```
+
+#### Authorization in Code
+
+Authorization is enforced in the `auth_check()` function by verifying membership in `AuthorizedAccounts` storage:
+
+```rust
+// In submit_comit extrinsic
+let operation_context = Self::encode_submit_comit_context(&who, comit_id);
+Self::auth_check(&who, &operation_context)?;
+```
+
+The `auth_check()` implementation:
+```rust
+fn auth_check(caller: &T::AccountId, _operation_context: &[u8]) -> Result<(), DispatchError> {
+    #[cfg(not(feature = "dev-bypass"))]
+    {
+        if AuthorizedAccounts::<T>::contains_key(caller) {
+            Ok(())
+        } else {
+            Err(Error::<T>::Unauthorized.into())
+        }
+    }
+}
+```
+
+#### Example: Authorizing Alice for Comit Submission
+
+Using `subxt` CLI (once node is functional):
+
+```bash
+# Alice authorizes Bob's account (Alice has sudo privileges)
+subxt extrinsic submit \
+  --url ws://127.0.0.1:9944 \
+  --suri //Alice \
+  sudo sudo \
+  atlasKernel authorizeAccount 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+
+# Verify authorization
+subxt rpc call \
+  --url ws://127.0.0.1:9944 \
+  atlasKernel_isAuthorized \
+  5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+```
+
+#### Authorization Storage
+
+Authorized accounts are stored in:
+```rust
+#[pallet::storage]
+pub type AuthorizedAccounts<T: Config> = 
+    StorageMap<_, Blake2_128Concat, T::AccountId, (), ValueQuery>;
+```
+
+Accounts are present with unit value `()` when authorized and removed from storage when deauthorized. Authorization is checked using `contains_key()` rather than reading a boolean value.
+
+#### Events
+
+The system emits events for authorization changes:
+```rust
+Event::AccountAuthorized { account } // When account is authorized
+Event::AccountDeauthorized { account } // When account is deauthorized
+```
+
+#### Testing Authorization
+
+Test coverage includes:
+- `authorize_account_successful`: Root can authorize accounts
+- `deauthorize_account_successful`: Root can revoke authorization
+- `submit_comit_fails_for_unauthorized_account`: Unauthorized accounts cannot submit (returns `Error::<T>::Unauthorized`)
+- All 43 pallet tests verify authorization logic with `dev-bypass` feature disabled in production mode
 
 ---
 
