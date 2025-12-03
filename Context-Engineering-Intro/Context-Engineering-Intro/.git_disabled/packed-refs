@@ -1,0 +1,4 @@
+# pack-refs with: peeled fully-peeled sorted 
+d7c840cf32a7443170f66b61d681cdbc7040e6dd refs/remotes/origin/main
+8445f05b672fa745a96b9298c8f4c04be3130925 refs/remotes/origin/mcp-example
+87052aec1a3014f5f3152effd03aaf8a9ba5b07f refs/remotes/origin/mcp-server-implementation
