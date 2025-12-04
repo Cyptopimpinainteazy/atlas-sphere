@@ -38,6 +38,7 @@ frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd
 frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }

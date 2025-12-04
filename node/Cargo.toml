@@ -63,6 +63,7 @@ sp-transaction-pool = { workspace = true }
 sp-io = { workspace = true }
 sp-timestamp = { workspace = true }
 
+frame-system-rpc-runtime-api = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
 
 frame-benchmarking-cli = { workspace = true, optional = true, default-features = false }
