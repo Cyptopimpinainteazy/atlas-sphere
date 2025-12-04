@@ -5,41 +5,39 @@
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 #[cfg(not(feature = "std"))]
-use alloc::{string::String, format};
+use alloc::{format, string::String};
 
+use codec::{Decode, Encode};
 pub use frame_support::{
-	construct_runtime, parameter_types,
-	traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything},
-	weights::{
-		constants::{
-			BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
-		},
-		ConstantMultiplier, IdentityFee,
-	},
+    construct_runtime, parameter_types,
+    traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything},
+    weights::{
+        constants::{
+            BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
+        },
+        ConstantMultiplier, IdentityFee,
+    },
 };
 use frame_support::{traits::Currency, weights::Weight};
-use codec::{Encode, Decode};
-use scale_info::TypeInfo;
 use frame_system::limits;
+use pallet_atlas_kernel;
 use pallet_aura;
 use pallet_balances;
+use pallet_collective;
 use pallet_grandpa;
-use pallet_timestamp;
-use pallet_transaction_payment::CurrencyAdapter;
 #[cfg(feature = "dev")]
 use pallet_sudo;
-use pallet_collective;
-use pallet_atlas_kernel;
+use pallet_timestamp;
+use pallet_transaction_payment::CurrencyAdapter;
+use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, H256};
 use sp_runtime::{
-	create_runtime_str,
-	generic,
-	impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
-	MultiAddress, MultiSignature, Perbill,
+    create_runtime_str, generic, impl_opaque_keys,
+    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+    MultiAddress, MultiSignature, Perbill,
 };
-use sp_session::{GetValidatorCount, GetSessionNumber};
+use sp_session::{GetSessionNumber, GetValidatorCount};
 use sp_std::prelude::*;
 
 #[cfg(any(feature = "std", test))]
@@ -57,17 +55,19 @@ pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;
 
 /// Opaque types used by the CLI commands.
 pub mod opaque {
-	use super::*;
+    use super::*;
 
-	pub type BlockNumber = super::BlockNumber;
-	pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-	pub type UncheckedExtrinsic = sp_runtime::OpaqueExtrinsic;
-	pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-	pub type BlockId = generic::BlockId<Block>;
+    pub type BlockNumber = super::BlockNumber;
+    pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
+    pub type UncheckedExtrinsic = sp_runtime::OpaqueExtrinsic;
+    pub type Block = generic::Block<Header, UncheckedExtrinsic>;
+    pub type BlockId = generic::BlockId<Block>;
 }
 
 pub type BlockNumber = u32;
 pub type Index = u32;
+/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
+pub type Nonce = Index;
 pub type Signature = MultiSignature;
 pub type Hash = H256;
 pub type Moment = u64;
@@ -81,9 +81,9 @@ pub const MILLISECS_PER_BLOCK: u64 = 6_000;
 
 pub struct RuntimeVersion;
 impl frame_support::traits::Get<sp_version::RuntimeVersion> for RuntimeVersion {
-	fn get() -> sp_version::RuntimeVersion {
-		VERSION
-	}
+    fn get() -> sp_version::RuntimeVersion {
+        VERSION
+    }
 }
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 
@@ -93,123 +93,124 @@ pub const MILLI_ATLAS: Balance = 1_000 * MICRO_ATLAS;
 pub const ATLAS: Balance = 1_000 * MILLI_ATLAS;
 
 pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
-	spec_name: create_runtime_str!("atlas-sphere"),
-	impl_name: create_runtime_str!("atlas-sphere"),
-	authoring_version: 1,
-	spec_version: 1,
-	impl_version: 1,
-	apis: RUNTIME_API_VERSIONS,
-	transaction_version: 1,
-	state_version: 1,
+    spec_name: create_runtime_str!("atlas-sphere"),
+    impl_name: create_runtime_str!("atlas-sphere"),
+    authoring_version: 1,
+    spec_version: 1,
+    impl_version: 1,
+    apis: RUNTIME_API_VERSIONS,
+    transaction_version: 1,
+    state_version: 1,
 };
 
 parameter_types! {
-	pub const BlockHashCount: BlockNumber = 2_400;
-	pub const SS58Prefix: u16 = 42;
-	pub const MinimumPeriod: Moment = (MILLISECS_PER_BLOCK / 2) as Moment;
-	pub const ExistentialDeposit: Balance = 100 * MICRO_ATLAS;
-	pub const TransactionByteFee: Balance = 10 * MICRO_ATLAS;
-	pub const MaxAssetsPerAccount: u32 = 32;
-	pub const MaxAssetSymbolLength: u32 = 16;
-	pub const MaxPayloadLength: u32 = 32 * 1024;
-	pub const MaxEvmPayloadLength: u32 = 16 * 1024;  // 16 KB for EVM payloads
-	pub const MaxSvmPayloadLength: u32 = 16 * 1024;  // 16 KB for SVM payloads
-	pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
-	pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
-	pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
-	pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
-		Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
-		Perbill::from_percent(75),
-	);
-	pub BlockLength: limits::BlockLength = limits::BlockLength::max_with_normal_ratio(
-		5 * 1024 * 1024,
-		Perbill::from_percent(75),
-	);
+    pub const BlockHashCount: BlockNumber = 2_400;
+    pub const SS58Prefix: u16 = 42;
+    pub const MinimumPeriod: Moment = (MILLISECS_PER_BLOCK / 2) as Moment;
+    pub const ExistentialDeposit: Balance = 100 * MICRO_ATLAS;
+    pub const TransactionByteFee: Balance = 10 * MICRO_ATLAS;
+    pub const MaxAssetsPerAccount: u32 = 32;
+    pub const MaxAssetSymbolLength: u32 = 16;
+    pub const MaxPayloadLength: u32 = 32 * 1024;
+    pub const MaxEvmPayloadLength: u32 = 16 * 1024;  // 16 KB for EVM payloads
+    pub const MaxSvmPayloadLength: u32 = 16 * 1024;  // 16 KB for SVM payloads
+    pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
+    pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
+    pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
+    pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
+        Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
+        Perbill::from_percent(75),
+    );
+    pub BlockLength: limits::BlockLength = limits::BlockLength::max_with_normal_ratio(
+        5 * 1024 * 1024,
+        Perbill::from_percent(75),
+    );
 }
 
 #[cfg(feature = "std")]
 pub fn native_version() -> sp_version::NativeVersion {
-	sp_version::NativeVersion {
-		runtime_version: VERSION,
-		can_author_with: Default::default(),
-	}
+    sp_version::NativeVersion {
+        runtime_version: VERSION,
+        can_author_with: Default::default(),
+    }
 }
 
 parameter_types! {
-	pub const MaxSetIdSessionEntries: u64 = 0;
-	pub const OperationalFeeMultiplier: u8 = 5;
+    pub const MaxSetIdSessionEntries: u64 = 0;
+    pub const OperationalFeeMultiplier: u8 = 5;
 }
 
 parameter_types! {
-	pub const CouncilMotionDuration: BlockNumber = 3 * 24 * 60 * 60 / (MILLISECS_PER_BLOCK as BlockNumber / 1000);
-	pub const CouncilMaxProposals: u32 = 100;
-	pub const CouncilMaxMembers: u32 = 100;
-	pub MaxProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
+    pub const CouncilMotionDuration: BlockNumber = 3 * 24 * 60 * 60 / (MILLISECS_PER_BLOCK as BlockNumber / 1000);
+    pub const CouncilMaxProposals: u32 = 100;
+    pub const CouncilMaxMembers: u32 = 100;
+    pub MaxProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
 }
 
 #[cfg(feature = "dev")]
 construct_runtime!(
-	pub enum Runtime where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
-	{
-		System: frame_system,
-		Timestamp: pallet_timestamp,
-		Aura: pallet_aura,
-		Grandpa: pallet_grandpa,
-		Balances: pallet_balances,
-		TransactionPayment: pallet_transaction_payment,
-		AtlasKernel: pallet_atlas_kernel,
-		Council: pallet_collective::<Instance1>,
-		Sudo: pallet_sudo,
-	}
+    pub enum Runtime where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
+        System: frame_system,
+        Timestamp: pallet_timestamp,
+        Aura: pallet_aura,
+        Grandpa: pallet_grandpa,
+        Balances: pallet_balances,
+        TransactionPayment: pallet_transaction_payment,
+        AtlasKernel: pallet_atlas_kernel,
+        Council: pallet_collective::<Instance1>,
+        Sudo: pallet_sudo,
+    }
 );
 
 #[cfg(not(feature = "dev"))]
 construct_runtime!(
-	pub enum Runtime where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
-	{
-		System: frame_system,
-		Timestamp: pallet_timestamp,
-		Aura: pallet_aura,
-		Grandpa: pallet_grandpa,
-		Balances: pallet_balances,
-		TransactionPayment: pallet_transaction_payment,
-		AtlasKernel: pallet_atlas_kernel,
-		Council: pallet_collective::<Instance1>,
-	}
+    pub enum Runtime where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
+        System: frame_system,
+        Timestamp: pallet_timestamp,
+        Aura: pallet_aura,
+        Grandpa: pallet_grandpa,
+        Balances: pallet_balances,
+        TransactionPayment: pallet_transaction_payment,
+        AtlasKernel: pallet_atlas_kernel,
+        Council: pallet_collective::<Instance1>,
+    }
 );
 
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
+pub type UncheckedExtrinsic =
+    generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 pub type Executive = frame_executive::Executive<
-	Runtime,
-	Block,
-	frame_system::ChainContext<Runtime>,
-	Runtime,
-	AllPalletsWithSystem,
+    Runtime,
+    Block,
+    frame_system::ChainContext<Runtime>,
+    Runtime,
+    AllPalletsWithSystem,
 >;
 
 impl_opaque_keys! {
-	pub struct SessionKeys {
-		pub aura: Aura,
-	}
+    pub struct SessionKeys {
+        pub aura: Aura,
+    }
 }
 
 pub type SignedExtra = (
-	frame_system::CheckNonZeroSender<Runtime>,
-	frame_system::CheckSpecVersion<Runtime>,
-	frame_system::CheckTxVersion<Runtime>,
-	frame_system::CheckGenesis<Runtime>,
-	frame_system::CheckEra<Runtime>,
-	frame_system::CheckNonce<Runtime>,
-	frame_system::CheckWeight<Runtime>,
-	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+    frame_system::CheckNonZeroSender<Runtime>,
+    frame_system::CheckSpecVersion<Runtime>,
+    frame_system::CheckTxVersion<Runtime>,
+    frame_system::CheckGenesis<Runtime>,
+    frame_system::CheckEra<Runtime>,
+    frame_system::CheckNonce<Runtime>,
+    frame_system::CheckWeight<Runtime>,
+    pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
@@ -220,128 +221,128 @@ type NegativeImbalance = <Balances as Currency<AccountId>>::NegativeImbalance;
 
 pub struct DealWithFees;
 impl frame_support::traits::OnUnbalanced<NegativeImbalance> for DealWithFees {
-	fn on_unbalanced(amount: NegativeImbalance) {
-		drop(amount);
-	}
+    fn on_unbalanced(amount: NegativeImbalance) {
+        drop(amount);
+    }
 }
 
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = Everything;
-	type Block = Block;
-	type BlockWeights = BlockWeights;
-	type BlockLength = BlockLength;
-	type DbWeight = RocksDbWeight;
-	type RuntimeOrigin = RuntimeOrigin;
-	type RuntimeCall = RuntimeCall;
-	type Hash = Hash;
-	type Hashing = BlakeTwo256;
-	type AccountId = AccountId;
-	type Lookup = AccountIdLookup<AccountId, ()>;
-	type RuntimeEvent = RuntimeEvent;
-	type BlockHashCount = BlockHashCount;
-	type Version = RuntimeVersion;
-	type PalletInfo = PalletInfo;
-	type AccountData = pallet_balances::AccountData<Balance>;
-	type OnNewAccount = ();
-	type OnKilledAccount = ();
-	type SystemWeightInfo = frame_system::weights::SubstrateWeight<Runtime>;
-	type SS58Prefix = ConstU16<42>;
-	type OnSetCode = ();
-	type MaxConsumers = ConstU32<16>;
-	type Nonce = Index;
+    type BaseCallFilter = Everything;
+    type Block = Block;
+    type BlockWeights = BlockWeights;
+    type BlockLength = BlockLength;
+    type DbWeight = RocksDbWeight;
+    type RuntimeOrigin = RuntimeOrigin;
+    type RuntimeCall = RuntimeCall;
+    type Hash = Hash;
+    type Hashing = BlakeTwo256;
+    type AccountId = AccountId;
+    type Lookup = AccountIdLookup<AccountId, ()>;
+    type RuntimeEvent = RuntimeEvent;
+    type BlockHashCount = BlockHashCount;
+    type Version = RuntimeVersion;
+    type PalletInfo = PalletInfo;
+    type AccountData = pallet_balances::AccountData<Balance>;
+    type OnNewAccount = ();
+    type OnKilledAccount = ();
+    type SystemWeightInfo = frame_system::weights::SubstrateWeight<Runtime>;
+    type SS58Prefix = ConstU16<42>;
+    type OnSetCode = ();
+    type MaxConsumers = ConstU32<16>;
+    type Nonce = Index;
 }
 
 impl pallet_timestamp::Config for Runtime {
-	type Moment = Moment;
-	type OnTimestampSet = ();
-	type MinimumPeriod = MinimumPeriod;
-	type WeightInfo = ();
+    type Moment = Moment;
+    type OnTimestampSet = ();
+    type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = ();
 }
 
 impl pallet_aura::Config for Runtime {
-	type AuthorityId = sp_consensus_aura::sr25519::AuthorityId;
-	type MaxAuthorities = MaxAuthorities;
-	type DisabledValidators = ();
-	type AllowMultipleBlocksPerSlot = ConstBool<false>;
+    type AuthorityId = sp_consensus_aura::sr25519::AuthorityId;
+    type MaxAuthorities = MaxAuthorities;
+    type DisabledValidators = ();
+    type AllowMultipleBlocksPerSlot = ConstBool<false>;
 }
 
 impl pallet_grandpa::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type KeyOwnerProof = SessionHandler;
-	type EquivocationReportSystem = ();
-	type WeightInfo = ();
-	type MaxAuthorities = MaxAuthorities;
-	type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
+    type RuntimeEvent = RuntimeEvent;
+    type KeyOwnerProof = SessionHandler;
+    type EquivocationReportSystem = ();
+    type WeightInfo = ();
+    type MaxAuthorities = MaxAuthorities;
+    type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
 impl pallet_balances::Config for Runtime {
-	type Balance = Balance;
-	type DustRemoval = ();
-	type RuntimeEvent = RuntimeEvent;
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = System;
-	type MaxLocks = ConstU32<50>;
-	type MaxReserves = ConstU32<50>;
-	type MaxHolds = ConstU32<0>;
-	type MaxFreezes = ConstU32<0>;
-	type ReserveIdentifier = [u8; 8];
-	type FreezeIdentifier = ();
-	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
-	type RuntimeHoldReason = ();
+    type Balance = Balance;
+    type DustRemoval = ();
+    type RuntimeEvent = RuntimeEvent;
+    type ExistentialDeposit = ExistentialDeposit;
+    type AccountStore = System;
+    type MaxLocks = ConstU32<50>;
+    type MaxReserves = ConstU32<50>;
+    type MaxHolds = ConstU32<0>;
+    type MaxFreezes = ConstU32<0>;
+    type ReserveIdentifier = [u8; 8];
+    type FreezeIdentifier = ();
+    type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+    type RuntimeHoldReason = ();
 }
 
 impl pallet_transaction_payment::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
-	type OperationalFeeMultiplier = OperationalFeeMultiplier;
-	type WeightToFee = IdentityFee<Balance>;
-	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
-	type FeeMultiplierUpdate = ();
+    type RuntimeEvent = RuntimeEvent;
+    type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees>;
+    type OperationalFeeMultiplier = OperationalFeeMultiplier;
+    type WeightToFee = IdentityFee<Balance>;
+    type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
+    type FeeMultiplierUpdate = ();
 }
 
 #[cfg(feature = "dev")]
 impl pallet_sudo::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type RuntimeCall = RuntimeCall;
-	type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeCall = RuntimeCall;
+    type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
 }
 
 pub type EnsureRootOrHalfCouncil = frame_support::traits::EitherOfDiverse<
-	frame_system::EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
+    frame_system::EnsureRoot<AccountId>,
+    pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
 >;
 
 pub type CouncilCollective = pallet_collective::Instance1;
 impl pallet_collective::Config<CouncilCollective> for Runtime {
-	type RuntimeOrigin = RuntimeOrigin;
-	type Proposal = RuntimeCall;
-	type RuntimeEvent = RuntimeEvent;
-	type MotionDuration = CouncilMotionDuration;
-	type MaxProposals = CouncilMaxProposals;
-	type MaxMembers = CouncilMaxMembers;
-	type DefaultVote = pallet_collective::PrimeDefaultVote;
-	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
-	type SetMembersOrigin = frame_system::EnsureRoot<AccountId>;
-	type MaxProposalWeight = MaxProposalWeight;
+    type RuntimeOrigin = RuntimeOrigin;
+    type Proposal = RuntimeCall;
+    type RuntimeEvent = RuntimeEvent;
+    type MotionDuration = CouncilMotionDuration;
+    type MaxProposals = CouncilMaxProposals;
+    type MaxMembers = CouncilMaxMembers;
+    type DefaultVote = pallet_collective::PrimeDefaultVote;
+    type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+    type SetMembersOrigin = frame_system::EnsureRoot<AccountId>;
+    type MaxProposalWeight = MaxProposalWeight;
 }
 
 impl pallet_atlas_kernel::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Balance = Balance;
-	type AssetId = AssetId;
-	type AtlasId = AtlasId;
-	type MaxAssetsPerAccount = MaxAssetsPerAccount;
-	type MaxAssetSymbolLength = MaxAssetSymbolLength;
-	type MaxEvmPayloadLength = MaxEvmPayloadLength;
-	type MaxSvmPayloadLength = MaxSvmPayloadLength;
-	type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
-	type MaxAuthorities = MaxAuthorities;
-	type MinAuthorities = MinAuthorities;
-	type WeightInfo = ();
-	type Currency = Balances;
-	type EvmAdapter = ();  // TODO: Wire real Frontier adapter when integrated
-	type SvmAdapter = ();  // TODO: Wire real SVM adapter when integrated
-	type GovernanceOrigin = EnsureRootOrHalfCouncil;
+    type RuntimeEvent = RuntimeEvent;
+    type Balance = Balance;
+    type AssetId = AssetId;
+    type AtlasId = AtlasId;
+    type MaxAssetsPerAccount = MaxAssetsPerAccount;
+    type MaxAssetSymbolLength = MaxAssetSymbolLength;
+    type MaxEvmPayloadLength = MaxEvmPayloadLength;
+    type MaxSvmPayloadLength = MaxSvmPayloadLength;
+    type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
+    type MaxAuthorities = MaxAuthorities;
+    type MinAuthorities = MinAuthorities;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type EvmAdapter = (); // TODO: Wire real Frontier adapter when integrated
+    type SvmAdapter = (); // TODO: Wire real SVM adapter when integrated
+    type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
 
 // Session trait implementations for minimal runtime
@@ -349,15 +350,15 @@ impl pallet_atlas_kernel::Config for Runtime {
 pub struct SessionHandler;
 
 impl GetValidatorCount for SessionHandler {
-	fn validator_count(&self) -> u32 {
-		0
-	}
+    fn validator_count(&self) -> u32 {
+        0
+    }
 }
 
 impl GetSessionNumber for SessionHandler {
-	fn session(&self) -> u32 {
-		0
-	}
+    fn session(&self) -> u32 {
+        0
+    }
 }
 
 // sp_session::Config not available in polkadot-v1.0.0
@@ -366,129 +367,129 @@ impl GetSessionNumber for SessionHandler {
 // sp_session::SessionKeys trait has incompatible signatures in polkadot-v1.0.0
 /*
 impl sp_session::SessionKeys<Block> for Runtime {
-	fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
-		SessionKeys::generate(seed)
-	}
+    fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+        SessionKeys::generate(seed)
+    }
 
-	fn decode_session_keys(encoded: Vec<u8>) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
-		SessionKeys::decode_into_raw_public_keys(&encoded)
-	}
+    fn decode_session_keys(encoded: Vec<u8>) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
+        SessionKeys::decode_into_raw_public_keys(&encoded)
+    }
 }
 */
 
 impl_runtime_apis! {
-	impl sp_api::Core<Block> for Runtime {
-		fn version() -> sp_version::RuntimeVersion {
-			VERSION
-		}
+    impl sp_api::Core<Block> for Runtime {
+        fn version() -> sp_version::RuntimeVersion {
+            VERSION
+        }
 
-		fn execute_block(block: Block) {
-			Executive::execute_block(block);
-		}
+        fn execute_block(block: Block) {
+            Executive::execute_block(block);
+        }
 
-		fn initialize_block(header: &<Block as BlockT>::Header) {
-			Executive::initialize_block(header);
-		}
-	}
+        fn initialize_block(header: &<Block as BlockT>::Header) {
+            Executive::initialize_block(header);
+        }
+    }
 
-	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
-		fn validate_transaction(
-			source: sp_runtime::transaction_validity::TransactionSource,
-			tx: <Block as BlockT>::Extrinsic,
-			block_hash: <Block as BlockT>::Hash,
-		) -> sp_runtime::transaction_validity::TransactionValidity {
-			Executive::validate_transaction(source, tx, block_hash)
-		}
-	}
+    impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
+        fn validate_transaction(
+            source: sp_runtime::transaction_validity::TransactionSource,
+            tx: <Block as BlockT>::Extrinsic,
+            block_hash: <Block as BlockT>::Hash,
+        ) -> sp_runtime::transaction_validity::TransactionValidity {
+            Executive::validate_transaction(source, tx, block_hash)
+        }
+    }
 
-	impl pallet_atlas_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId> for Runtime {
-		fn get_canonical_balance(account: AccountId, asset_id: AssetId) -> Balance {
-			pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account, &asset_id)
-		}
+    impl pallet_atlas_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId> for Runtime {
+        fn get_canonical_balance(account: AccountId, asset_id: AssetId) -> Balance {
+            pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account, &asset_id)
+        }
 
-		fn get_asset_metadata(asset_id: AssetId) -> Option<(Vec<u8>, u8)> {
-			pallet_atlas_kernel::AssetRegistry::<Runtime>::get(&asset_id)
-				.map(|metadata| (metadata.symbol.into_inner(), metadata.decimals))
-		}
+        fn get_asset_metadata(asset_id: AssetId) -> Option<(Vec<u8>, u8)> {
+            pallet_atlas_kernel::AssetRegistry::<Runtime>::get(&asset_id)
+                .map(|metadata| (metadata.symbol.into_inner(), metadata.decimals))
+        }
 
-		fn is_authorized(account: AccountId) -> bool {
-			pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account)
-		}
+        fn is_authorized(account: AccountId) -> bool {
+            pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account)
+        }
 
-		fn get_authorized_accounts() -> Vec<AccountId> {
-			pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::iter_keys().collect()
-		}
+        fn get_authorized_accounts() -> Vec<AccountId> {
+            pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::iter_keys().collect()
+        }
 
-		fn get_authorities() -> Vec<AccountId> {
-			pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
-		}
-	}
+        fn get_authorities() -> Vec<AccountId> {
+            pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
+        }
+    }
 
-	impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
-		fn slot_duration() -> sp_consensus_aura::SlotDuration {
-			sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
-		}
+    impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
+        fn slot_duration() -> sp_consensus_aura::SlotDuration {
+            sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
+        }
 
-		fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
-			Aura::authorities().to_vec()
-		}
-	}
+        fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
+            Aura::authorities().to_vec()
+        }
+    }
 
-	impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
-		fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-			Grandpa::grandpa_authorities()
-		}
+    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+            Grandpa::grandpa_authorities()
+        }
 
-		fn current_set_id() -> sp_consensus_grandpa::SetId {
-			Grandpa::current_set_id()
-		}
+        fn current_set_id() -> sp_consensus_grandpa::SetId {
+            Grandpa::current_set_id()
+        }
 
-		fn submit_report_equivocation_unsigned_extrinsic(
-			_equivocation_proof: sp_consensus_grandpa::EquivocationProof<
-				<Block as BlockT>::Hash,
-				sp_runtime::traits::NumberFor<Block>,
-			>,
-			_key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
-		) -> Option<()> {
-			None
-		}
+        fn submit_report_equivocation_unsigned_extrinsic(
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
+                <Block as BlockT>::Hash,
+                sp_runtime::traits::NumberFor<Block>,
+            >,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
+        ) -> Option<()> {
+            None
+        }
 
-		fn generate_key_ownership_proof(
-			_set_id: sp_consensus_grandpa::SetId,
-			_authority_id: sp_consensus_grandpa::AuthorityId,
-		) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-			None
-		}
-	}
+        fn generate_key_ownership_proof(
+            _set_id: sp_consensus_grandpa::SetId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
+        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
+            None
+        }
+    }
 
-	impl sp_block_builder::BlockBuilder<Block> for Runtime {
-		fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> sp_runtime::ApplyExtrinsicResult {
-			Executive::apply_extrinsic(extrinsic)
-		}
+    impl sp_block_builder::BlockBuilder<Block> for Runtime {
+        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> sp_runtime::ApplyExtrinsicResult {
+            Executive::apply_extrinsic(extrinsic)
+        }
 
-		fn finalize_block() -> <Block as BlockT>::Header {
-			Executive::finalize_block()
-		}
+        fn finalize_block() -> <Block as BlockT>::Header {
+            Executive::finalize_block()
+        }
 
-		fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-			data.create_extrinsics()
-		}
+        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+            data.create_extrinsics()
+        }
 
-		fn check_inherents(
-			block: Block,
-			data: sp_inherents::InherentData,
-		) -> sp_inherents::CheckInherentsResult {
-			data.check_extrinsics(&block)
-		}
-	}
+        fn check_inherents(
+            block: Block,
+            data: sp_inherents::InherentData,
+        ) -> sp_inherents::CheckInherentsResult {
+            data.check_extrinsics(&block)
+        }
+    }
 }
 
 #[cfg(feature = "std")]
 pub fn atlas_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
-	vec![
-		(0, b"ATLAS".to_vec(), 12),
-		(1, b"ETH".to_vec(), 18),
-		(2, b"SOL".to_vec(), 9),
-		(3, b"USDC".to_vec(), 6),
-	]
+    vec![
+        (0, b"ATLAS".to_vec(), 12),
+        (1, b"ETH".to_vec(), 18),
+        (2, b"SOL".to_vec(), 9),
+        (3, b"USDC".to_vec(), 6),
+    ]
 }

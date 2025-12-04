@@ -117,13 +117,8 @@ jsonrpsee = { version = "0.22.5", default-features = false, features = ["macros"
 # [package.metadata.cargo-tarpaulin.coverage]
 # formats = ["Html", "Xml", "Json"]
 
-#[patch.crates-io]
-# Minimal targeted patch to unify the sc-network/codec stack that
-# triggers the SCALE-derive duplicate-index issue during host builds.
+# Patches for Substrate dependencies - using consistent git rev
 [patch.crates-io]
-sc-network = { path = "vendor/substrate/client/network" }
-sc-network-common = { path = "vendor/substrate/client/network/common" }
-# keep other entries pointing at the original substrate git rev (if needed they can be adjusted later)
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
