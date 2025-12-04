@@ -7,7 +7,7 @@ members = [
     "runtime",
     "node",
 ]
-default-members = ["node"]
+default-members = ["runtime"]
 resolver = "2"
 
 # Patch multiple crates to use wasm32-compatible versions:
@@ -15,174 +15,86 @@ resolver = "2"
 # - rustix 0.38.21: patched to use errno 0.2 (instead of 0.3)
 # - tempfile 3.8.1: uses compatible rustix
 # - errno 0.3.14: patched to provide stub implementation for wasm32
-[patch.crates-io]
-ahash = { path = "patches/ahash-local" }
-rustix = { path = "patches/rustix-local" }
-tempfile = { path = "patches/tempfile-local" }
-errno = { path = "patches/errno-local" }
+#[patch.crates-io]
+#ahash = { path = "patches/ahash-local" }
+#rustix = { path = "patches/rustix-local" }
+#tempfile = { path = "patches/tempfile-local" }
+#errno = { path = "patches/errno-local" }
 
-# Patch Substrate to fix sp-wasm-interface wasmtime dependency and other wasm32 compilation bugs
-[patch."https://github.com/paritytech/substrate"]
-sc-client-api = { path = "patches/substrate-local/client/api" }
-sc-basic-authorship = { path = "patches/substrate-local/client/basic-authorship" }
-sc-chain-spec = { path = "patches/substrate-local/client/chain-spec" }
-sc-client-db = { path = "patches/substrate-local/client/db" }
-sc-consensus = { path = "patches/substrate-local/client/consensus/common" }
-sc-consensus-aura = { path = "patches/substrate-local/client/consensus/aura" }
-sc-consensus-grandpa = { path = "patches/substrate-local/client/consensus/grandpa" }
-sc-block-builder = { path = "patches/substrate-local/client/block-builder" }
-sc-cli = { path = "patches/substrate-local/client/cli" }
-sc-network = { path = "patches/substrate-local/client/network" }
-sc-network-common = { path = "patches/substrate-local/client/network/common" }
-sc-network-light = { path = "patches/substrate-local/client/network/light" }
-sc-network-sync = { path = "patches/substrate-local/client/network/sync" }
-sc-network-transactions = { path = "patches/substrate-local/client/network/transactions" }
-sc-rpc = { path = "patches/substrate-local/client/rpc" }
-sc-rpc-spec-v2 = { path = "patches/substrate-local/client/rpc-spec-v2" }
-sc-service = { path = "patches/substrate-local/client/service" }
-sc-telemetry = { path = "patches/substrate-local/client/telemetry" }
-sc-transaction-pool = { path = "patches/substrate-local/client/transaction-pool" }
-sc-transaction-pool-api = { path = "patches/substrate-local/client/transaction-pool/api" }
-sc-tracing = { path = "patches/substrate-local/client/tracing" }
-sc-executor = { path = "patches/substrate-local/client/executor" }
-sc-keystore = { path = "patches/substrate-local/client/keystore" }
-sc-network-gossip = { path = "patches/substrate-local/client/network-gossip" }
-sc-rpc-api = { path = "patches/substrate-local/client/rpc-api" }
-sc-utils = { path = "patches/substrate-local/client/utils" }
-sp-blockchain = { path = "patches/substrate-local/primitives/blockchain" }
-sp-wasm-interface = { path = "patches/substrate-local/primitives/wasm-interface" }
-sp-session = { path = "patches/substrate-local/primitives/session" }
-sp-consensus-grandpa = { path = "patches/substrate-local/primitives/consensus/grandpa" }
-sp-offchain = { path = "patches/substrate-local/primitives/offchain" }
-sp-block-builder = { path = "patches/substrate-local/primitives/block-builder" }
-sp-consensus-aura = { path = "patches/substrate-local/primitives/consensus/aura" }
-sp-arithmetic = { path = "patches/substrate-local/primitives/arithmetic" }
-sp-externalities = { path = "patches/substrate-local/primitives/externalities" }
-sp-timestamp = { path = "patches/substrate-local/primitives/timestamp" }
-sp-std = { path = "patches/substrate-local/primitives/std" }
-sp-core = { path = "patches/substrate-local/primitives/core" }
-sp-io = { path = "patches/substrate-local/primitives/io" }
-sp-application-crypto = { path = "patches/substrate-local/primitives/application-crypto" }
-sp-runtime = { path = "patches/substrate-local/primitives/runtime" }
-sp-api = { path = "patches/substrate-local/primitives/api" }
-sp-weights = { path = "patches/substrate-local/primitives/weights" }
-sp-transaction-pool = { path = "patches/substrate-local/primitives/transaction-pool" }
-sp-storage = { path = "patches/substrate-local/primitives/storage" }
-sp-inherents = { path = "patches/substrate-local/primitives/inherents" }
-sp-version = { path = "patches/substrate-local/primitives/version" }
-frame-support = { path = "patches/substrate-local/frame/support" }
-frame-system = { path = "patches/substrate-local/frame/system" }
-frame-benchmarking = { path = "patches/substrate-local/frame/benchmarking" }
-frame-executive = { path = "patches/substrate-local/frame/executive" }
-pallet-aura = { path = "patches/substrate-local/frame/aura" }
-pallet-balances = { path = "patches/substrate-local/frame/balances" }
-pallet-collective = { path = "patches/substrate-local/frame/collective" }
-pallet-grandpa = { path = "patches/substrate-local/frame/grandpa" }
-pallet-sudo = { path = "patches/substrate-local/frame/sudo" }
-pallet-timestamp = { path = "patches/substrate-local/frame/timestamp" }
-pallet-transaction-payment = { path = "patches/substrate-local/frame/transaction-payment" }
 
-[workspace.package]
-version = "0.1.0"
-edition = "2021"
-authors = ["Atlas Sphere Core Team <core@atlas-sphere.io>"]
-homepage = "https://atlas-sphere.io"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
-description = "Atlas Sphere Layer 1 blockchain workspace powering a dual-VM execution environment with native cross-chain operations."
-license = "Apache-2.0"
-readme = "README.md"
-keywords = ["atlas-sphere", "substrate", "blockchain", "dual-vm", "web3"]
-categories = ["cryptography::cryptocurrencies"]
+# Unified Substrate patch block is defined further down in this file
+# (auto-generated from cargo metadata). Removed earlier compact/duplicate
+# patch entries to avoid duplicate-key errors; keep the comprehensive
+# `[patch.crates-io]` block below which pins the workspace to rev 948fbd2.
 
-[workspace.metadata]
-project = "Atlas Sphere"
-tagline = "Dual-VM Layer 1 with native cross-chain coherence"
-maintainers = ["Atlas Sphere Core Team"]
-documentation = "https://docs.atlas-sphere.io"
-
+# SCALE codec & metadata (workspace shared deps)
 [workspace.dependencies]
-# Core Substrate primitives (using polkadot-v1.0.0 stable branch for compatibility)
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-keystore = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-offchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-session = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-storage = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-state-machine = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-trie = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-version = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-weights = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-
-# FRAME support crates
-frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-frame-executive = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-
-# FRAME pallets
-pallet-aura = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-grandpa = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-collective = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-sudo = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-
-# FRAME CLI tools
-frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-frame-try-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-
-# Substrate RPC system
-substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-
-# Substrate client (node) dependencies
-sc-basic-authorship = { path = "patches/substrate-local/client/basic-authorship" }
-sc-chain-spec = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-cli = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-client-api = { path = "patches/substrate-local/client/api" }
-sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-consensus-aura = { path = "patches/substrate-local/client/consensus/aura" }
-sc-consensus-grandpa = { path = "patches/substrate-local/client/consensus/grandpa" }
-sc-executor = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-network = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-rpc-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-rpc-server = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-sysinfo = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-tracing = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sc-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-
-# Runtime build tooling
-substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-
-# SCALE codec & metadata
 parity-scale-codec = { version = "3.6.5", default-features = false, features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11.1", default-features = false, features = ["derive"] }
 
+# Common FRAME & Substrate workspace deps (referenced with `workspace = true` in members)
+frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-try-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+frame-executive = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-collective = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-sudo = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-consensus = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-session = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-block-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-inherents = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-offchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-version = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+log = { version = "0.4.20", default-features = false }
+serde = { version = "1.0.195", features = ["derive"], default-features = false }
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+
+# Substrate client (node) workspace deps used by `node` member
+sc-basic-authorship = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-chain-spec = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-cli = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-consensus = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-consensus-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-keystore = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-network = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-rpc = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-telemetry = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-transaction-pool = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+
 # Utilities
 futures = "0.3.30"
 hex-literal = "0.4.1"
-log = "0.4.20"
 once_cell = "1.19.0"
-serde = { version = "1.0.195", features = ["derive"] }
 serde_json = "1.0.111"
 thiserror = "1.0.51"
+
+# Align proc-macro2 across workspace to avoid cargo feature-resolution mismatches
+proc-macro2 = { version = "1.0.103", features = ["span-locations"] }
 
 # Force versions that use getrandom 0.2 (wasm32-compatible)
 # Note: getrandom 0.2 doesn't exist in dependencies, but constraining these
@@ -204,3 +116,16 @@ jsonrpsee = { version = "0.22.5", default-features = false, features = ["macros"
 
 # [package.metadata.cargo-tarpaulin.coverage]
 # formats = ["Html", "Xml", "Json"]
+
+#[patch.crates-io]
+# Minimal targeted patch to unify the sc-network/codec stack that
+# triggers the SCALE-derive duplicate-index issue during host builds.
+[patch.crates-io]
+sc-network = { path = "vendor/substrate/client/network" }
+sc-network-common = { path = "vendor/substrate/client/network/common" }
+# keep other entries pointing at the original substrate git rev (if needed they can be adjusted later)
+sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+

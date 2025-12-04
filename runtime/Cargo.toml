@@ -56,7 +56,7 @@ log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
 getrandom = { version = "0.2", default-features = false, features = ["js"] }
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
-atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+# atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -96,7 +96,7 @@ std = [
 	"sp-io/std",
 	"log/std",
 	"serde/std",
-	"atlas-evm-integration/std",
+	# "atlas-evm-integration/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
