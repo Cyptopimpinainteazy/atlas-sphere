@@ -94,6 +94,25 @@ once_cell = "1.19.0"
 serde_json = "1.0.111"
 thiserror = "1.0.51"
 
+# Frontier EVM dependencies for real EVM execution
+pallet-evm = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+pallet-ethereum = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+pallet-base-fee = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+pallet-evm-precompile-simple = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+pallet-evm-precompile-modexp = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+pallet-evm-precompile-sha3fips = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fp-rpc = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fp-evm = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fp-self-contained = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fc-rpc = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fc-rpc-core = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fc-db = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fc-mapping-sync = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+fc-storage = { git = "https://github.com/polkadot-evm/frontier", branch = "polkadot-v1.1.0", default-features = false }
+
+# Solana BPF/SVM dependencies for real SVM execution
+solana_rbpf = { version = "0.8", default-features = false }
+
 # Align proc-macro2 across workspace to avoid cargo feature-resolution mismatches
 proc-macro2 = { version = "1.0.103", features = ["span-locations"] }
 
@@ -102,6 +121,8 @@ proc-macro2 = { version = "1.0.103", features = ["span-locations"] }
 # prevents newer versions from being pulled in
 ahash = { version = "0.8.11" }
 tempfile = { version = "3.8.1" }
+# Pin base64ct to avoid edition2024 requirement in newer versions
+base64ct = { version = "=1.6.0" }
 
 # CLI & RPC ecosystem
 clap = { version = "4.4.18", features = ["derive"] }
@@ -120,8 +141,26 @@ jsonrpsee = { version = "0.22.5", default-features = false, features = ["macros"
 
 # Patches for Substrate dependencies - using consistent git rev
 [patch.crates-io]
+# Fix environmental crate compatibility with Rust >= 1.82 (local patch with std::thread_local! fix)
+environmental = { path = "patches/environmental" }
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+
+# Patch polkadot-sdk sources to use our substrate rev - comprehensive list
+[patch."https://github.com/paritytech/polkadot-sdk"]
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-externalities = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-application-crypto = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-storage = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-arithmetic = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 

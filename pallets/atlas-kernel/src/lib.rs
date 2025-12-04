@@ -1,10 +1,51 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+//! # Atlas Kernel Pallet
+//!
+//! The core orchestration layer for Atlas Sphere's dual-VM execution architecture.
+//! Enables atomic cross-VM transactions (Comits) that execute on both EVM and SVM.
+//!
+//! ## Security Design Decisions
+//!
+//! ### H-1: prepare_root Verification (Input Commitment Design)
+//!
+//! The `prepare_root` field is a cryptographic commitment to the **input parameters** of a Comit,
+//! NOT the execution outputs. This is intentional:
+//!
+//! - **Rationale**: Clients must compute `prepare_root` before submission. If it committed to
+//!   outputs, clients couldn't know the hash until after execution (circular dependency).
+//! - **Security**: The prepare_root ensures the submitted Comit matches what the client intended.
+//!   It prevents parameter tampering but does NOT guarantee execution results.
+//! - **Enhancement**: For high-value transactions requiring output verification, consider adding
+//!   an optional `expected_output_hash` field in future versions.
+//!
+//! ### H-5: VM Adapter Production Status
+//!
+//! The pallet uses pluggable VM adapters (`T::EvmAdapter`, `T::SvmAdapter`) configured at runtime:
+//!
+//! - **Test Runtime**: Uses `MockEvmAdapter` and `MockSvmAdapter` for deterministic testing
+//! - **Production Runtime**: Should use `FrontierEvmAdapter` and `RbpfSvmAdapter`
+//!
+//! **IMPORTANT**: Before mainnet deployment, verify runtime configuration uses real adapters.
+//! The `adapters.rs` module includes `FrontierEvmAdapter` which wraps pallet-evm, but runtime
+//! must be properly configured to use it instead of mocks.
+
 pub use pallet::*;
 
 /// Phase 1: Full Consensus Implementation
 /// Authority set management, pending changes scheduling, and enactment mechanism
 pub mod authority;
+
+/// VM Execution Adapters
+/// Provides EvmExecutorAdapter and SvmExecutorAdapter traits for runtime configuration.
+///
+/// **H-5 Note**: For production, configure runtime with `FrontierEvmAdapter` and `RbpfSvmAdapter`
+/// instead of mock adapters. Mock adapters are for testing only.
+pub mod adapters;
+pub use adapters::{
+    EvmExecutorAdapter, FailingMockEvmAdapter, FailingMockSvmAdapter, MockEvmAdapter,
+    MockSvmAdapter, SvmExecutorAdapter,
+};
 
 // Runtime API trait defined in runtime crate
 
@@ -272,16 +313,24 @@ pub mod pallet {
         #[pallet::constant]
         type MinAuthorities: Get<u32>;
 
+        /// Default gas limit for EVM execution.
+        #[pallet::constant]
+        type DefaultEvmGasLimit: Get<u64>;
+
+        /// Default compute unit limit for SVM execution.
+        #[pallet::constant]
+        type DefaultSvmComputeLimit: Get<u64>;
+
         /// Weight information provider for extrinsics.
         type WeightInfo: WeightInfo;
 
         /// EVM execution adapter (runtime-configurable)
-        /// TODO: Implement with real Frontier integration when available
-        type EvmAdapter: Default;
+        /// Implement EvmExecutorAdapter trait for real Frontier integration
+        type EvmAdapter: EvmExecutorAdapter;
 
         /// SVM execution adapter (runtime-configurable)
-        /// TODO: Implement with real SVM integration when available
-        type SvmAdapter: Default;
+        /// Implement SvmExecutorAdapter trait for real solana-rbpf integration
+        type SvmAdapter: SvmExecutorAdapter;
 
         /// Origin that can execute privileged governance functions.
         /// Typically EnsureRoot or a council-based origin.
@@ -338,6 +387,31 @@ pub mod pallet {
     pub type PendingAuthorities<T: Config> =
         StorageValue<_, Option<BoundedVec<T::AccountId, T::MaxAuthorities>>, ValueQuery>;
 
+    /// Tracks submitted comit_ids to prevent duplicate submissions.
+    /// Value is the block number when the comit was submitted.
+    #[pallet::storage]
+    pub type SubmittedComits<T: Config> =
+        StorageMap<_, Blake2_128Concat, H256, BlockNumberFor<T>, OptionQuery>;
+
+    /// Rate limiting: tracks Comit submissions per account per block.
+    /// Key: (AccountId, BlockNumber), Value: submission count.
+    /// Used to prevent DoS via excessive submissions from a single account.
+    #[pallet::storage]
+    pub type SubmissionsPerBlock<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        Blake2_128Concat,
+        BlockNumberFor<T>,
+        u32,
+        ValueQuery,
+    >;
+
+    /// Counter for decode failures in state change processing.
+    /// Useful for monitoring and debugging data format issues.
+    #[pallet::storage]
+    pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -386,6 +460,12 @@ pub mod pallet {
         AuthorityChangesScheduled { new_authorities: Vec<T::AccountId> },
         /// Pending authority changes were enacted.
         AuthorityChangesEnacted { new_authorities: Vec<T::AccountId> },
+        /// Fee was deducted from an account for Comit execution.
+        FeeDeducted {
+            account: T::AccountId,
+            amount: T::Balance,
+            comit_id: H256,
+        },
     }
 
     #[pallet::error]
@@ -428,6 +508,22 @@ pub mod pallet {
         NoPendingChanges,
         /// Authority set cannot be empty.
         EmptyAuthoritySet,
+        /// EVM execution failed during Comit processing.
+        EvmExecutionFailed,
+        /// SVM execution failed during Comit processing.
+        SvmExecutionFailed,
+        /// Asset symbol cannot be empty.
+        EmptySymbol,
+        /// Asset symbol cannot start with dash or underscore.
+        InvalidSymbolFormat,
+        /// Too many state changes in execution receipts.
+        TooManyStateChanges,
+        /// Arithmetic overflow in fee calculation.
+        FeeOverflow,
+        /// Comit ID has already been submitted.
+        DuplicateComitId,
+        /// Rate limit exceeded: too many Comit submissions per block.
+        RateLimitExceeded,
     }
 
     #[pallet::pallet]
@@ -449,6 +545,21 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
+            // Check for duplicate comit_id (M-4: Comit ID uniqueness)
+            ensure!(
+                !SubmittedComits::<T>::contains_key(comit_id),
+                Error::<T>::DuplicateComitId
+            );
+
+            // Rate limiting check (L-6): Prevent DoS via excessive submissions
+            const MAX_SUBMISSIONS_PER_BLOCK: u32 = 10;
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let current_count = SubmissionsPerBlock::<T>::get(&who, current_block);
+            ensure!(
+                current_count < MAX_SUBMISSIONS_PER_BLOCK,
+                Error::<T>::RateLimitExceeded
+            );
+
             // Early authorization check: verify caller is authorized for dual-VM operations
             let operation_context = Self::encode_submit_comit_context(&who, comit_id);
             Self::auth_check(&who, &operation_context)?;
@@ -456,17 +567,24 @@ pub mod pallet {
             // First layer checks on payload sizes and emptiness.
             Self::verify_payloads(&comit_id, &evm_payload, &svm_payload)?;
 
-            let expected_nonce = Nonces::<T>::get(&who);
-            if nonce != expected_nonce {
-                return Err(Self::fail_with_reason(
-                    comit_id,
-                    ComitFailureReason::InvalidNonce {
-                        code: 0x05,
-                        expected: expected_nonce,
-                        provided: nonce,
-                    },
-                ));
-            }
+            // Atomic nonce check and increment using try_mutate (C-3)
+            // This ensures the nonce is atomically verified and incremented in a single storage operation
+            Nonces::<T>::try_mutate(&who, |current_nonce| -> DispatchResult {
+                if nonce != *current_nonce {
+                    return Err(Self::fail_with_reason(
+                        comit_id,
+                        ComitFailureReason::InvalidNonce {
+                            code: 0x05,
+                            expected: *current_nonce,
+                            provided: nonce,
+                        },
+                    ));
+                }
+                *current_nonce = current_nonce
+                    .checked_add(1)
+                    .ok_or(Error::<T>::NonceOverflow)?;
+                Ok(())
+            })?;
 
             let comit = Comit::<T::AccountId, T::Balance> {
                 comit_id,
@@ -490,31 +608,53 @@ pub mod pallet {
                 None
             };
 
-            // Execute and collect receipts (this is where mock is used until real executors are wired)
-            let evm_receipt = if let Some(tx) = evm_tx {
-                // TODO: Call real dispatcher when integrated with Frontier/SVM
-                let receipt = ExecutionReceipt {
-                    success: true,
-                    gas_used: 21000,
-                    return_data: Vec::new(),
-                    logs: Vec::new(),
-                    state_changes: Vec::new(),
-                };
-                Some(receipt)
+            // Capture timestamp at execution start (M-6: Fix stale timestamp issue)
+            // This ensures consistent timing even in long-running block production
+            let execution_start_timestamp =
+                <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+
+            // Execute via configured VM adapters (real or mock based on runtime config)
+            // Gas limits: Use runtime-configurable constants (M-3)
+            let evm_gas_limit = T::DefaultEvmGasLimit::get();
+            let svm_compute_limit = T::DefaultSvmComputeLimit::get();
+
+            let evm_receipt = if let Some(ref tx) = evm_tx {
+                // Execute EVM payload via configured adapter
+                match T::EvmAdapter::execute(tx, evm_gas_limit) {
+                    Ok(receipt) => Some(receipt),
+                    Err(_e) => {
+                        // EVM execution failed - return with detailed error
+                        return Err(Self::fail_with_reason(
+                            comit_id,
+                            ComitFailureReason::EvmExecutionFailed {
+                                code: 0x10,
+                                evm_error: 1,
+                                gas_used: 0,
+                            },
+                        ));
+                    }
+                }
             } else {
                 None
             };
 
-            let svm_receipt = if let Some(tx) = svm_tx {
-                // TODO: Call real dispatcher when integrated with SVM
-                let receipt = ExecutionReceipt {
-                    success: true,
-                    gas_used: 5000,
-                    return_data: Vec::new(),
-                    logs: Vec::new(),
-                    state_changes: Vec::new(),
-                };
-                Some(receipt)
+            let svm_receipt = if let Some(ref tx) = svm_tx {
+                // Execute SVM payload via configured adapter
+                match T::SvmAdapter::execute(tx, svm_compute_limit) {
+                    Ok(receipt) => Some(receipt),
+                    Err(_e) => {
+                        // SVM execution failed - must rollback any EVM changes for atomicity
+                        // Note: In current Substrate architecture, returning error rolls back all storage
+                        return Err(Self::fail_with_reason(
+                            comit_id,
+                            ComitFailureReason::SvmExecutionFailed {
+                                code: 0x11,
+                                svm_error: 1,
+                                compute_units_used: 0,
+                            },
+                        ));
+                    }
+                }
             } else {
                 None
             };
@@ -572,6 +712,13 @@ pub mod pallet {
             )?;
             drop(imbalance); // Burn the fee or handle as needed
 
+            // Emit fee deduction event for indexer tracking
+            Self::deposit_event(Event::FeeDeducted {
+                account: who.clone(),
+                amount: required_fee,
+                comit_id,
+            });
+
             // Verify dual-VM prepare_root against actual receipts
             if let Err(reason) = Self::verify_dual_vm_with_receipts(
                 &comit,
@@ -581,9 +728,13 @@ pub mod pallet {
                 return Err(Self::fail_with_reason(comit_id, reason));
             }
 
-            // Only increment nonce AFTER successful execution and verification
-            let next_nonce = nonce.checked_add(1).ok_or(Error::<T>::NonceOverflow)?;
-            Nonces::<T>::insert(&who, next_nonce);
+            // Record comit_id as submitted (M-4: prevents duplicate submissions)
+            SubmittedComits::<T>::insert(comit_id, current_block);
+
+            // Update rate limit counter for this block (L-6)
+            SubmissionsPerBlock::<T>::mutate(&who, current_block, |count| {
+                *count = count.saturating_add(1);
+            });
 
             // Record a default Atlas identifier if none exists yet.
             AccountRegistry::<T>::mutate(&who, |maybe_id| {
@@ -600,12 +751,10 @@ pub mod pallet {
                 fee,
             });
 
-            // Get current timestamp from pallet_timestamp using UnixTime trait
-            let current_timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
-
+            // Use timestamp captured at execution start (M-6: consistent timing)
             Self::deposit_event(Event::ComitExecutionStarted {
                 comit_id,
-                timestamp: current_timestamp,
+                timestamp: execution_start_timestamp,
             });
 
             // Calculate total gas used from both receipts
@@ -654,6 +803,15 @@ pub mod pallet {
 
             // Validate decimals are within reasonable bounds (0-30)
             ensure!(decimals <= 30, Error::<T>::InvalidDecimals);
+
+            // Validate symbol is not empty
+            ensure!(!symbol.is_empty(), Error::<T>::EmptySymbol);
+
+            // Validate symbol does not start with dash or underscore
+            ensure!(
+                !symbol.starts_with(&[b'-']) && !symbol.starts_with(&[b'_']),
+                Error::<T>::InvalidSymbolFormat
+            );
 
             // Validate symbol: must be uppercase ASCII, digits, dash, or underscore
             for &byte in &symbol {
@@ -773,9 +931,14 @@ pub mod pallet {
                     .position(|a| a == &authority)
                     .ok_or(Error::<T>::AuthorityNotFound)?;
 
-                // Check minimum authorities constraint
+                // Check minimum authorities constraint (must keep at least MinAuthorities)
                 ensure!(
                     authorities.len() > T::MinAuthorities::get() as usize,
+                    Error::<T>::BelowMinimumAuthorities
+                );
+                // Additional safety: never allow single authority in production
+                ensure!(
+                    authorities.len() > 1 || T::MinAuthorities::get() == 0,
                     Error::<T>::BelowMinimumAuthorities
                 );
 
@@ -905,14 +1068,20 @@ pub mod pallet {
             context
         }
 
+        /// Maximum number of state changes allowed per Comit execution.
+        /// Prevents DoS via excessive storage writes.
+        const MAX_STATE_CHANGES: usize = 1000;
+
         /// Apply state changes from execution receipts to the CanonicalLedger.
         /// This aggregates state_changes from EVM and SVM receipts and updates storage.
+        /// Tracks decode failures for monitoring (M-2: Unsafe decode operations).
         fn apply_canonical_ledger_update(
-            comit_id: H256,
+            _comit_id: H256,
             evm_receipt: Option<&ExecutionReceipt>,
             svm_receipt: Option<&ExecutionReceipt>,
         ) -> Result<u32, DispatchError> {
             let mut changes_applied = 0u32;
+            let mut decode_failures = 0u32;
 
             // Aggregate state changes from both receipts
             let mut all_changes = Vec::new();
@@ -923,12 +1092,18 @@ pub mod pallet {
                 all_changes.extend_from_slice(&receipt.state_changes);
             }
 
+            // Bound check: prevent excessive state changes (DoS protection)
+            if all_changes.len() > Self::MAX_STATE_CHANGES {
+                return Err(Error::<T>::TooManyStateChanges.into());
+            }
+
             // Apply each state change to CanonicalLedger
             // Note: In production, state_changes would map to account balances or contract storage
             // For now, we interpret the first 32 bytes of address as AccountId and key/value as asset balance
             for change in all_changes.iter() {
-                // Skip invalid address sizes
+                // Skip invalid address sizes (count as decode failure)
                 if change.address.len() < 32 {
+                    decode_failures = decode_failures.saturating_add(1);
                     continue;
                 }
 
@@ -951,26 +1126,47 @@ pub mod pallet {
                             // Update CanonicalLedger with new balance
                             CanonicalLedger::<T>::insert(&acc, &asset, bal);
                             changes_applied = changes_applied.saturating_add(1);
+                        } else {
+                            // Balance decode failed (M-2: track decode failures)
+                            decode_failures = decode_failures.saturating_add(1);
                         }
+                    } else {
+                        // AssetId decode failed (M-2: track decode failures)
+                        decode_failures = decode_failures.saturating_add(1);
                     }
+                } else {
+                    // AccountId decode failed (M-2: track decode failures)
+                    decode_failures = decode_failures.saturating_add(1);
                 }
+            }
+
+            // Update global decode failure counter for monitoring (M-2)
+            if decode_failures > 0 {
+                DecodeFailureCount::<T>::mutate(|count| {
+                    *count = count.saturating_add(decode_failures);
+                });
             }
 
             Ok(changes_applied)
         }
 
+        /// Minimum fee floor to prevent zero-cost transaction attacks.
+        const MIN_FEE: u32 = 1;
+
         /// Calculate the total execution fee for a Comit based on gas/compute usage.
         /// Uses checked arithmetic to prevent overflow.
+        /// Uses ceiling division to prevent zero-fee attacks.
         pub fn calculate_execution_fee(
             evm_gas_used: u64,
             svm_compute_units: u64,
             base_fee: T::Balance,
         ) -> Result<T::Balance, DispatchError> {
             // Gas/compute unit pricing (configurable in production)
-            // EVM: 1 unit per 1000 gas
-            // SVM: 1 unit per 1000 compute units
-            let evm_units_u64 = evm_gas_used.saturating_div(1000);
-            let svm_units_u64 = svm_compute_units.saturating_div(1000);
+            // EVM: 1 unit per 1000 gas (ceiling division)
+            // SVM: 1 unit per 1000 compute units (ceiling division)
+            // Using saturating_add(999) / 1000 for ceiling division to prevent zero-fee attacks
+            let evm_units_u64 = evm_gas_used.saturating_add(999) / 1000;
+            let svm_units_u64 = svm_compute_units.saturating_add(999) / 1000;
 
             let evm_units = T::Balance::from(evm_units_u64 as u32);
             let svm_units = T::Balance::from(svm_units_u64 as u32);
@@ -980,9 +1176,17 @@ pub mod pallet {
             let total_fee = base_fee
                 .checked_add(&evm_units)
                 .and_then(|t| t.checked_add(&svm_units))
-                .ok_or(Error::<T>::NonceOverflow)?; // Reuse NonceOverflow for arithmetic overflow
+                .ok_or(Error::<T>::FeeOverflow)?;
 
-            Ok(total_fee)
+            // Enforce minimum fee floor to prevent zero-cost attacks
+            let min_fee = T::Balance::from(Self::MIN_FEE);
+            let final_fee = if total_fee < min_fee {
+                min_fee
+            } else {
+                total_fee
+            };
+
+            Ok(final_fee)
         }
 
         /// Authorization check for dual-VM operations
@@ -1018,37 +1222,34 @@ pub mod pallet {
                 }
             }
         }
-        fn verify_dual_vm(comit: &ComitOf<T>) -> Result<(), ComitFailureReason> {
-            // Reject zero prepare_root unless explicitly allowed by dev-bypass feature
-            #[cfg(not(feature = "dev-bypass"))]
-            {
-                if comit.prepare_root == H256::zero() {
-                    return Err(ComitFailureReason::Verification {
-                        code: 0x06,
-                        reason: blake2_256(b"zero_prepare_root_not_allowed"),
-                    });
-                }
-            }
 
+        /// Compute prepare_root for a Comit from its input parameters.
+        /// This is the canonical algorithm for generating the prepare_root commitment.
+        /// Exported as public for test use (L-3: Avoid test helper duplication).
+        ///
+        /// # Algorithm
+        /// The prepare_root is computed as Blake2-256 hash of concatenated:
+        /// - comit_id (32 bytes)
+        /// - evm_payload (variable length)
+        /// - svm_payload (variable length)
+        /// - nonce (8 bytes, little-endian)
+        /// - fee (SCALE-encoded)
+        pub fn compute_prepare_root(
+            comit_id: H256,
+            evm_payload: &[u8],
+            svm_payload: &[u8],
+            nonce: u64,
+            fee: T::Balance,
+        ) -> H256 {
             let mut data = Vec::new();
-            data.extend_from_slice(comit.comit_id.as_bytes());
-            data.extend_from_slice(&comit.evm_payload);
-            data.extend_from_slice(&comit.svm_payload);
-            data.extend_from_slice(&comit.nonce.to_le_bytes());
-            data.extend_from_slice(&comit.fee.encode());
-
-            let expected = H256::from(blake2_256(&data));
-
-            if expected == comit.prepare_root {
-                Ok(())
-            } else {
-                let reason_hash = blake2_256(&data);
-                Err(ComitFailureReason::Verification {
-                    code: 0x06,
-                    reason: reason_hash,
-                })
-            }
+            data.extend_from_slice(comit_id.as_bytes());
+            data.extend_from_slice(evm_payload);
+            data.extend_from_slice(svm_payload);
+            data.extend_from_slice(&nonce.to_le_bytes());
+            data.extend_from_slice(&fee.encode());
+            H256::from(blake2_256(&data))
         }
+
         /// Verify prepare_root against actual VM receipts (comprehensive dual-VM commitment)
         fn verify_dual_vm_with_receipts(
             comit: &ComitOf<T>,
@@ -1070,14 +1271,15 @@ pub mod pallet {
             // The prepare_root is a commitment to the input payloads and execution parameters,
             // NOT the execution results. This allows clients to compute the prepare_root
             // beforehand and use it to authorize the Comit submission.
-            let mut data = Vec::new();
-            data.extend_from_slice(comit.comit_id.as_bytes());
-            data.extend_from_slice(&comit.evm_payload);
-            data.extend_from_slice(&comit.svm_payload);
-            data.extend_from_slice(&comit.nonce.to_le_bytes());
-            data.extend_from_slice(&comit.fee.encode());
-
-            let computed_root = H256::from(blake2_256(&data));
+            // H-1 NOTE: This is intentional - prepare_root commits to INPUTS, not OUTPUTS.
+            // For stronger guarantees, consider adding optional expected_output_hash field.
+            let computed_root = Self::compute_prepare_root(
+                comit.comit_id,
+                &comit.evm_payload,
+                &comit.svm_payload,
+                comit.nonce,
+                comit.fee,
+            );
 
             if computed_root == comit.prepare_root {
                 Ok(())
@@ -1114,12 +1316,8 @@ pub mod pallet {
                 ComitFailureReason::EmptyPayloads { .. } => Error::<T>::EmptyPayloads,
                 ComitFailureReason::InvalidNonce { .. } => Error::<T>::InvalidNonce,
                 ComitFailureReason::Verification { .. } => Error::<T>::ComitVerificationFailed,
-                ComitFailureReason::EvmExecutionFailed { .. } => {
-                    Error::<T>::ComitVerificationFailed
-                }
-                ComitFailureReason::SvmExecutionFailed { .. } => {
-                    Error::<T>::ComitVerificationFailed
-                }
+                ComitFailureReason::EvmExecutionFailed { .. } => Error::<T>::EvmExecutionFailed,
+                ComitFailureReason::SvmExecutionFailed { .. } => Error::<T>::SvmExecutionFailed,
             }
         }
 
@@ -1169,28 +1367,14 @@ pub mod pallet {
         type AccountId = T::AccountId;
         type Balance = T::Balance;
 
-        fn execute_evm_tx(&self, _tx: Vec<u8>) -> Result<ExecutionReceipt, DispatchError> {
-            // TODO: Integrate with Frontier/EVM pallet for actual execution
-            // For now, return a mock successful receipt
-            Ok(ExecutionReceipt {
-                success: true,
-                gas_used: 21000, // Base gas for simple transfer
-                return_data: Vec::new(),
-                logs: Vec::new(),
-                state_changes: Vec::new(),
-            })
+        fn execute_evm_tx(&self, tx: Vec<u8>) -> Result<ExecutionReceipt, DispatchError> {
+            // Execute via configured EVM adapter (real or mock based on runtime)
+            T::EvmAdapter::execute(&tx, 10_000_000)
         }
 
-        fn execute_svm_tx(&self, _tx: Vec<u8>) -> Result<ExecutionReceipt, DispatchError> {
-            // TODO: Integrate with SVM pallet for actual execution
-            // For now, return a mock successful receipt
-            Ok(ExecutionReceipt {
-                success: true,
-                gas_used: 5000, // SVM compute units
-                return_data: Vec::new(),
-                logs: Vec::new(),
-                state_changes: Vec::new(),
-            })
+        fn execute_svm_tx(&self, tx: Vec<u8>) -> Result<ExecutionReceipt, DispatchError> {
+            // Execute via configured SVM adapter (real or mock based on runtime)
+            T::SvmAdapter::execute(&tx, 200_000)
         }
 
         fn execute_dual_tx(
@@ -1272,26 +1456,21 @@ pub mod pallet {
         }
 
         /// Check if an account is authorized to execute a specific cross-VM operation.
+        /// Delegates to the pallet's auth_check method for consistent authorization.
         fn auth_check(
             &self,
             caller: &Self::AccountId,
-            _operation: &[u8],
+            operation: &[u8],
         ) -> Result<(), DispatchError> {
-            // For now, accept all signed origins. In production, this would check:
-            // - Whitelist status
-            // - Fee balance
-            // - Rate limits
-            // - KYC requirements (optional)
-            // This is a placeholder for integration with authority/permission systems.
-
-            // TODO: Integrate with authority pallet for granular access control
-            let _ = caller;
-            Ok(())
+            // Delegate to pallet's auth_check for consistent authorization behavior
+            // This ensures trait-based calls respect the same AuthorizedAccounts storage
+            Self::auth_check(caller, operation)
         }
 
         /// Calculate execution fees based on gas and compute unit consumption.
         ///
         /// Uses checked arithmetic to prevent overflow in fee calculations.
+        /// Uses ceiling division and minimum fee floor to prevent zero-fee attacks.
         /// Returns the total fee required for the transaction.
         fn fee_accounting(
             &self,
@@ -1299,25 +1478,8 @@ pub mod pallet {
             svm_compute_units: u64,
             base_fee: Self::Balance,
         ) -> Result<Self::Balance, DispatchError> {
-            // Gas/compute unit pricing: These rates are configurable in production
-            // EVM: 1 unit per 1000 gas (21000 gas ≈ 21 units)
-            // SVM: 1 unit per 1000 compute units
-
-            let evm_units_u64 = evm_gas_used.saturating_div(1000);
-            let svm_units_u64 = svm_compute_units.saturating_div(1000);
-
-            let evm_units = T::Balance::from(evm_units_u64 as u32);
-            let svm_units = T::Balance::from(svm_units_u64 as u32);
-
-            // Total fee = base + EVM units + SVM units
-            // Using checked arithmetic to prevent overflow
-            let total_fee = base_fee
-                .checked_add(&evm_units)
-                .and_then(|t| t.checked_add(&svm_units))
-                .ok_or(sp_runtime::DispatchError::Arithmetic(
-                    sp_runtime::ArithmeticError::Overflow,
-                ))?;
-            Ok(total_fee)
+            // Delegate to pallet's calculate_execution_fee for consistent behavior
+            Self::calculate_execution_fee(evm_gas_used, svm_compute_units, base_fee)
         }
 
         /// Update the canonical ledger with state changes from a successful comit.
@@ -1368,51 +1530,76 @@ pub trait WeightInfo {
     fn enact_authority_change() -> Weight;
 }
 
+/// Default weight implementations using estimated values.
+///
+/// **IMPORTANT (L-2 Security Note):** These are placeholder weight estimates.
+/// Before mainnet deployment, proper benchmarking MUST be performed:
+///
+/// 1. Run `frame-benchmarking` with `--chain=dev`
+/// 2. Generate weight file: `cargo run --release --features=runtime-benchmarks -- benchmark pallet`
+/// 3. Replace this impl with generated `pallet_atlas_kernel::weights::SubstrateWeight<T>`
+///
+/// Current estimates are based on:
+/// - Base DB operations: ~5-10M for simple reads/writes
+/// - submit_comit: ~50M base + VM execution overhead (actual depends on payload)
+/// - Authority operations: ~10-20M due to BoundedVec operations
+///
+/// Underestimating weights could allow DoS attacks via block weight exhaustion.
 impl WeightInfo for () {
     fn submit_comit() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // submit_comit involves dual-VM execution, receipt merging, and canonical ledger updates
         // Base cost: 50_000_000 + scaled with payload size
+        // Actual weight varies significantly based on EVM/SVM execution complexity
         Weight::from_parts(50_000_000, 128_000)
     }
 
     fn register_asset() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // register_asset stores asset metadata in canonical ledger
         // Fixed cost for storage write and index updates
         Weight::from_parts(5_000_000, 32_000)
     }
 
     fn update_canonical_balance() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // update_canonical_balance writes to double-map storage and may emit finalization event
         // Fixed cost with potential event emission overhead
         Weight::from_parts(10_000_000, 48_000)
     }
 
     fn authorize_account() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // authorize_account writes to storage map
         Weight::from_parts(5_000_000, 32_000)
     }
 
     fn deauthorize_account() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // deauthorize_account removes from storage map
         Weight::from_parts(5_000_000, 32_000)
     }
 
     fn add_authority() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // add_authority checks storage and pushes to bounded vec
         Weight::from_parts(10_000_000, 64_000)
     }
 
     fn remove_authority() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // remove_authority searches and removes from bounded vec
         Weight::from_parts(15_000_000, 64_000)
     }
 
     fn schedule_authority_change() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // schedule_authority_change validates and stores bounded vec
         Weight::from_parts(20_000_000, 128_000)
     }
 
     fn enact_authority_change() -> Weight {
+        // TODO(L-2): Replace with benchmarked weight
         // enact_authority_change replaces storage and clears pending
         Weight::from_parts(15_000_000, 64_000)
     }

@@ -2,15 +2,28 @@
 name = "atlas-svm-integration"
 version = "0.1.0"
 edition = "2021"
-description = "SVM (Solana) integration for Atlas Sphere"
+description = "SVM (Solana) integration for Atlas Sphere dual-VM execution"
 publish = false
 
 [dependencies]
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
+# Substrate primitives
+sp-core = { workspace = true, default-features = false }
+sp-runtime = { workspace = true, default-features = false }
+sp-std = { workspace = true, default-features = false }
+sp-io = { workspace = true, default-features = false }
 
-parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
+# Serialization
+parity-scale-codec = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false }
+
+# Logging
+log = { workspace = true, default-features = false }
+
+# Solana BPF runtime (std only for now)
+solana_rbpf = { workspace = true, optional = true }
+
+[dev-dependencies]
+sp-io = { workspace = true }
 
 [features]
 default = ["std"]
@@ -18,5 +31,9 @@ std = [
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
+    "sp-io/std",
     "parity-scale-codec/std",
+    "scale-info/std",
+    "log/std",
+    "solana_rbpf",
 ]

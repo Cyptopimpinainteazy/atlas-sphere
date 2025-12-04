@@ -117,6 +117,8 @@ parameter_types! {
     pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
     pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
     pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
+    pub const DefaultEvmGasLimit: u64 = 10_000_000;  // 10M gas for EVM
+    pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
         Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
         Perbill::from_percent(75),
@@ -338,10 +340,14 @@ impl pallet_atlas_kernel::Config for Runtime {
     type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
     type MaxAuthorities = MaxAuthorities;
     type MinAuthorities = MinAuthorities;
+    type DefaultEvmGasLimit = DefaultEvmGasLimit;
+    type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
     type WeightInfo = ();
     type Currency = Balances;
-    type EvmAdapter = (); // TODO: Wire real Frontier adapter when integrated
-    type SvmAdapter = (); // TODO: Wire real SVM adapter when integrated
+    // Use MockEvmAdapter and MockSvmAdapter for now
+    // For production: use pallet_atlas_kernel::adapters::real_adapters::{FrontierEvmAdapter, RbpfSvmAdapter}
+    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
+    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
 

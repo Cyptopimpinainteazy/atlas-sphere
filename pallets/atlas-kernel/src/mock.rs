@@ -3,7 +3,7 @@
 use crate as pallet_atlas_kernel;
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::ConstU32,
+	traits::{ConstU32, ConstU64},
 };
 use frame_system as system;
 use parity_scale_codec::Encode;
@@ -113,6 +113,8 @@ impl pallet_atlas_kernel::Config for Test {
 	type MaxCombinedPayloadLength = ConstU32<8192>;
 	type MaxAuthorities = ConstU32<100>;
 	type MinAuthorities = ConstU32<1>;
+	type DefaultEvmGasLimit = ConstU64<10_000_000>;
+	type DefaultSvmComputeLimit = ConstU64<200_000>;
 	type WeightInfo = ();
 	type EvmAdapter = ();
 	type SvmAdapter = ();
