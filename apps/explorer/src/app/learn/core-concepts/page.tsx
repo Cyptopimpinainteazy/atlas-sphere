@@ -134,7 +134,7 @@ export default function CoreConceptsPage() {
                     <p className="text-gray-400 mb-6">{concept.description}</p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {concept.details.map((detail, i) => (
-                        <div key={i} className="flex items-center text-sm text-gray-300">
+                        <div key={i} className="flex items-center text-sm text-gray-400">
                           <div className="w-2 h-2 rounded-full bg-indigo-500 mr-3" />
                           {detail}
                         </div>
@@ -149,7 +149,7 @@ export default function CoreConceptsPage() {
       </section>
 
       {/* Architecture Diagram */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">System Architecture</h2>
           
@@ -157,7 +157,7 @@ export default function CoreConceptsPage() {
             <div className="grid md:grid-cols-5 gap-4 items-center">
               {/* User */}
               <div className="text-center">
-                <div className="w-16 h-16 rounded-xl bg-slate-800 mx-auto mb-2 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-xl bg-[#0a0a0a] mx-auto mb-2 flex items-center justify-center">
                   <Box className="w-8 h-8 text-gray-400" />
                 </div>
                 <div className="text-sm text-gray-400">User/DApp</div>
@@ -192,28 +192,28 @@ export default function CoreConceptsPage() {
               </div>
             </div>
             
-            <div className="mt-8 pt-8 border-t border-white/10">
+            <div className="mt-8 pt-8 border-t border-[#1a1a1a]">
               <div className="grid md:grid-cols-3 gap-6 text-center">
                 <div>
                   <div className="flex items-center justify-center mb-2">
                     <Database className="w-5 h-5 text-purple-400 mr-2" />
                     <span className="font-semibold text-white">Canonical Ledger</span>
                   </div>
-                  <p className="text-xs text-gray-500">Unified asset balances across VMs</p>
+                  <p className="text-xs text-gray-600">Unified asset balances across VMs</p>
                 </div>
                 <div>
                   <div className="flex items-center justify-center mb-2">
                     <Lock className="w-5 h-5 text-purple-400 mr-2" />
                     <span className="font-semibold text-white">Authorization</span>
                   </div>
-                  <p className="text-xs text-gray-500">Account permission management</p>
+                  <p className="text-xs text-gray-600">Account permission management</p>
                 </div>
                 <div>
                   <div className="flex items-center justify-center mb-2">
                     <Coins className="w-5 h-5 text-purple-400 mr-2" />
                     <span className="font-semibold text-white">Asset Registry</span>
                   </div>
-                  <p className="text-xs text-gray-500">Token metadata and tracking</p>
+                  <p className="text-xs text-gray-600">Token metadata and tracking</p>
                 </div>
               </div>
             </div>
@@ -238,7 +238,7 @@ export default function CoreConceptsPage() {
       </section>
 
       {/* Comit Flow */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Comit Transaction Lifecycle</h2>
           
@@ -256,16 +256,15 @@ export default function CoreConceptsPage() {
                       {item.step}
                     </div>
                     <h4 className="font-semibold text-white mb-1">{item.name}</h4>
-                    <p className="text-xs text-gray-500">{item.desc}</p>
+                    <p className="text-xs text-gray-600">{item.desc}</p>
                   </div>
                   {index < 3 && (
                     <ArrowRight className="hidden md:block w-6 h-6 text-gray-600 flex-shrink-0" />
                   )}
                 </React.Fragment>
-              ))}
-            </div>
+              ))}n            </div>
             
-            <div className="mt-8 pt-8 border-t border-white/10">
+            <div className="mt-8 pt-8 border-t border-[#1a1a1a]">
               <h4 className="font-semibold text-white mb-4">Events Emitted:</h4>
               <div className="flex flex-wrap gap-2">
                 {['ComitSubmitted', 'ComitExecutionStarted', 'ComitExecutionCompleted', 'ComitFinalized'].map((event) => (

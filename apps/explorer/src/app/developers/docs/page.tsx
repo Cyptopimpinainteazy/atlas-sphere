@@ -108,30 +108,34 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="min-h-screen pt-20">
-      {/* Hero */}
-      <section className="py-16 relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 mesh-gradient opacity-20" />
+    <div className="min-h-screen pt-20 bg-black">
+      {/* Hero with unique Developers section header */}
+      <section className="py-16 relative overflow-hidden border-b border-[#1a1a1a] page-header-developers">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/20 via-black to-purple-950/10" />
+        <div className="absolute inset-0 mesh-gradient opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <div className="badge badge-info mb-4">Documentation</div>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 mb-4">
+              <Code className="w-4 h-4 mr-2 text-violet-400" />
+              <span className="text-sm text-violet-300">Documentation</span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              X3 STAR Documentation
+              X3 STAR <span className="text-violet-400">Documentation</span>
             </h1>
-            <p className="text-xl text-gray-400 mb-8">
+            <p className="text-xl text-gray-500 mb-8">
               Official documentation for the X3 Atlas Sphere blockchain. 
               Everything you need to build on the first dual VM Layer-1.
             </p>
             
             {/* Search */}
             <div className="relative max-w-xl">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
               <input
                 type="text"
                 placeholder="Search documentation..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="input-search pl-12"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#0a0a0a] border border-[#1a1a1a] text-white placeholder-gray-600 focus:outline-none focus:border-violet-500"
               />
             </div>
           </div>
@@ -154,7 +158,7 @@ export default function DocsPage() {
             <nav className={`space-y-6 ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
               {/* Quick Links */}
               <div className="glass-card p-4">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   Quick Links
                 </h3>
                 <div className="space-y-2">
@@ -162,9 +166,9 @@ export default function DocsPage() {
                     <Link
                       key={link.title}
                       href={link.href}
-                      className="flex items-center text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg px-3 py-2 transition-colors"
+                      className="flex items-center text-sm text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg px-3 py-2 transition-colors"
                     >
-                      <span className="text-indigo-400 mr-2">{link.icon}</span>
+                      <span className="text-violet-400 mr-2">{link.icon}</span>
                       {link.title}
                     </Link>
                   ))}
@@ -183,7 +187,7 @@ export default function DocsPage() {
                       <li key={item.title}>
                         <Link
                           href={item.href}
-                          className="block text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg px-3 py-2 transition-colors"
+                          className="block text-sm text-gray-500 hover:text-white hover:bg-[#1a1a1a] rounded-lg px-3 py-2 transition-colors"
                         >
                           {item.title}
                         </Link>
@@ -200,7 +204,7 @@ export default function DocsPage() {
             {/* Welcome Card */}
             <div className="glass-card p-8 mb-8">
               <h2 className="text-2xl font-bold text-white mb-4">Welcome to X3 STAR Docs</h2>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-500 mb-6">
                 X3 STAR (Atlas Sphere) is a next-generation Layer-1 blockchain that enables native 
                 interoperability between EVM and SVM. This documentation will help you understand 
                 the architecture and start building cross-VM applications.
@@ -230,7 +234,7 @@ export default function DocsPage() {
                       <li key={item.title}>
                         <Link
                           href={item.href}
-                          className="text-sm text-gray-400 hover:text-indigo-400 flex items-center"
+                          className="text-sm text-gray-500 hover:text-violet-400 flex items-center"
                         >
                           <ChevronRight className="w-4 h-4 mr-1" />
                           {item.title}
@@ -255,7 +259,7 @@ export default function DocsPage() {
             <div className="mt-8 glass-card p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Example: Query the Network</h3>
               <div className="code-block">
-                <pre className="text-sm text-gray-300">
+                <pre className="text-sm text-gray-400">
 {`// Query Atlas Kernel RPC
 const response = await fetch('https://rpc.testnet.atlas-sphere.io', {
   method: 'POST',
@@ -275,9 +279,9 @@ console.log('Authorized accounts:', data.result);`}
             </div>
 
             {/* Help Section */}
-            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20">
+            <div className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20">
               <h3 className="text-lg font-semibold text-white mb-2">Need Help?</h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-gray-500 mb-4">
                 Can't find what you're looking for? Join our community for support.
               </p>
               <div className="flex flex-wrap gap-4">

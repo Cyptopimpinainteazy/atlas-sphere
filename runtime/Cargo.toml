@@ -19,7 +19,7 @@ path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", workspace = true, default-features = false, features = ["derive"] }
+codec = { workspace = true, default-features = false, features = ["derive"] }
 scale-info = { workspace = true, default-features = false, features = ["derive"] }
 
 frame-support = { workspace = true, default-features = false }
@@ -34,8 +34,14 @@ pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
 pallet-sudo = { workspace = true, default-features = false, optional = true }
 pallet-collective = { workspace = true, default-features = false }
+pallet-evm = { workspace = true, default-features = false }
+pallet-evm-precompile-simple = { workspace = true, default-features = false }
+pallet-evm-precompile-modexp = { workspace = true, default-features = false }
+pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
+atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
 sp-block-builder = { workspace = true, default-features = false }
@@ -82,7 +88,13 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-sudo?/std",
 	"pallet-collective/std",
+	"pallet-evm/std",
+	"pallet-evm-precompile-simple/std",
+	"pallet-evm-precompile-modexp/std",
+	"pallet-evm-precompile-sha3fips/std",
 	"pallet-atlas-kernel/std",
+	"atlas-evm-integration/std",
+	"atlas-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -107,6 +119,7 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
+	"pallet-atlas-kernel/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]
 

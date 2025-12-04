@@ -5,9 +5,9 @@ members = [
     "crates/svm-integration",
     "crates/cross-vm-bridge",
     "runtime",
-    "node",
+    "node", "apps/analytics/analytics-service",
 ]
-default-members = ["runtime"]
+default-members = ["node"]
 resolver = "2"
 
 # Patch multiple crates to use wasm32-compatible versions:

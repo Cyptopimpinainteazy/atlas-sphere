@@ -268,7 +268,7 @@ pub fn compute_svm_prepare_root(
     instruction: &SvmInstruction,
     result: &SvmExecutionResult,
 ) -> [u8; 32] {
-    use sp_core::hashing::blake2_256;
+    use sp_io::hashing::blake2_256;
 
     let mut preimage = Vec::new();
     preimage.extend_from_slice(comit_id);

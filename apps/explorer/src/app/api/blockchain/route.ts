@@ -1,61 +1,94 @@
 import { NextRequest, NextResponse } from 'next/server';
-// import { ApiPromise, WsProvider } from '@polkadot/api';
+import {
+  getNetworkStats,
+  getRecentBlocks,
+  getRecentExtrinsics,
+  getBlock,
+  getAccountInfo,
+  getAuthorities,
+  getAuthorizedAccounts,
+  getCanonicalBalance,
+  getBlockExtrinsics,
+} from '@/lib/substrate';
 
-// Mock API for now - replace with real Polkadot API when space allows
-// let api: ApiPromise | null = null;
-
-// async function getApi() {
-//   if (!api) {
-//     const provider = new WsProvider('ws://127.0.0.1:9944');
-//     api = await ApiPromise.create({ provider });
-//   }
-//   return api;
-// }
-
+// Real blockchain API endpoints
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
 
-    // Mock data for development - replace with real API calls later
     switch (type) {
       case 'stats': {
-        return NextResponse.json({
-          chain: 'Atlas Sphere',
-          nodeName: 'atlas-sphere-node',
-          nodeVersion: 'v0.1.0',
-          blockNumber: 1234567,
-          blockHash: '0x1234567890abcdef'
-        });
+        const stats = await getNetworkStats();
+        return NextResponse.json(stats);
       }
 
       case 'blocks': {
-        const mockBlocks = [];
-        for (let i = 0; i < 10; i++) {
-          mockBlocks.push({
-            number: 1234567 - i,
-            hash: `0x${Math.random().toString(16).substr(2, 16)}`,
-            timestamp: Date.now() - (i * 6000),
-            transactions: Math.floor(Math.random() * 20) + 1
-          });
-        }
-        return NextResponse.json(mockBlocks);
+        const count = parseInt(searchParams.get('count') || '10');
+        const blocks = await getRecentBlocks(count);
+        return NextResponse.json(blocks);
       }
 
-      case 'transactions': {
-        const mockTransactions = [];
-        for (let i = 0; i < 20; i++) {
-          mockTransactions.push({
-            hash: `0x${Math.random().toString(16).substr(2, 16)}`,
-            from: `0x${Math.random().toString(16).substr(2, 16)}`,
-            to: `0x${Math.random().toString(16).substr(2, 16)}`,
-            value: `${(Math.random() * 10).toFixed(3)} ATLAS`,
-            timestamp: Date.now() - (i * 30000),
-            status: Math.random() > 0.1 ? 'success' : 'failed',
-            vm: Math.random() > 0.5 ? 'EVM' : 'SVM'
-          });
+      case 'block': {
+        const blockId = searchParams.get('id');
+        if (!blockId) {
+          return NextResponse.json({ error: 'Block ID required' }, { status: 400 });
         }
-        return NextResponse.json(mockTransactions);
+        const block = await getBlock(isNaN(Number(blockId)) ? blockId : Number(blockId));
+        if (!block) {
+          return NextResponse.json({ error: 'Block not found' }, { status: 404 });
+        }
+        return NextResponse.json(block);
+      }
+
+      case 'block-extrinsics': {
+        const blockIdForExts = searchParams.get('blockId');
+        if (!blockIdForExts) {
+          return NextResponse.json({ error: 'Block ID required' }, { status: 400 });
+        }
+        const extrinsics = await getBlockExtrinsics(
+          isNaN(Number(blockIdForExts)) ? blockIdForExts : Number(blockIdForExts)
+        );
+        return NextResponse.json(extrinsics);
+      }
+
+      case 'transactions':
+      case 'extrinsics': {
+        const count = parseInt(searchParams.get('count') || '20');
+        const extrinsics = await getRecentExtrinsics(count);
+        return NextResponse.json(extrinsics);
+      }
+
+      case 'account': {
+        const address = searchParams.get('address');
+        if (!address) {
+          return NextResponse.json({ error: 'Address required' }, { status: 400 });
+        }
+        const account = await getAccountInfo(address);
+        if (!account) {
+          return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+        }
+        return NextResponse.json(account);
+      }
+
+      case 'balance': {
+        const account = searchParams.get('account');
+        const assetId = parseInt(searchParams.get('assetId') || '0');
+        if (!account) {
+          return NextResponse.json({ error: 'Account required' }, { status: 400 });
+        }
+        const balance = await getCanonicalBalance(account, assetId);
+        return NextResponse.json({ balance });
+      }
+
+      case 'authorities': {
+        const authorities = await getAuthorities();
+        return NextResponse.json(authorities);
+      }
+
+      case 'authorized-accounts': {
+        const accounts = await getAuthorizedAccounts();
+        return NextResponse.json(accounts);
       }
 
       default:
@@ -63,6 +96,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Failed to fetch data';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

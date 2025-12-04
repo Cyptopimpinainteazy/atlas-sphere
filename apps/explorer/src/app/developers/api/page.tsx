@@ -192,7 +192,7 @@ export default function ApiPage() {
   return (
     <div className="min-h-screen pt-20">
       {/* Hero */}
-      <section className="py-16 relative overflow-hidden border-b border-white/10">
+      <section className="py-16 relative overflow-hidden border-b border-[#1a1a1a]">
         <div className="absolute inset-0 mesh-gradient opacity-20" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
@@ -212,7 +212,7 @@ export default function ApiPage() {
                 <code className="text-orange-400 font-mono">https://rpc.testnet.atlas-sphere.io</code>
                 <button
                   onClick={() => copyToClipboard('https://rpc.testnet.atlas-sphere.io', 'endpoint')}
-                  className="p-1 hover:bg-white/10 rounded"
+                  className="p-1 hover:bg-[#1a1a1a] rounded"
                 >
                   {copiedMethod === 'endpoint' ? (
                     <Check className="w-4 h-4 text-emerald-500" />
@@ -237,7 +237,7 @@ export default function ApiPage() {
                 className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === category.id
                     ? 'bg-orange-500 text-white'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'bg-[#0a0a0a] text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
                 }`}
               >
                 <span className="mr-2">{category.icon}</span>
@@ -253,7 +253,7 @@ export default function ApiPage() {
               placeholder="Search methods..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 w-full md:w-64"
+              className="pl-10 pr-4 py-2 rounded-lg bg-[#0a0a0a] border border-[#1a1a1a] text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 w-full md:w-64"
             />
           </div>
         </div>
@@ -263,7 +263,7 @@ export default function ApiPage() {
           {filteredMethods.map((method) => (
             <div key={method.name} className="glass-card overflow-hidden">
               {/* Header */}
-              <div className="p-6 border-b border-white/10">
+              <div className="p-6 border-b border-[#1a1a1a]">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
@@ -278,14 +278,14 @@ export default function ApiPage() {
               </div>
 
               {/* Parameters */}
-              <div className="p-6 border-b border-white/10 bg-white/2">
+              <div className="p-6 border-b border-[#1a1a1a] bg-white/2">
                 <h4 className="text-sm font-semibold text-white mb-3">Parameters</h4>
                 {method.params.length > 0 ? (
                   <div className="space-y-2">
                     {method.params.map((param) => (
                       <div key={param.name} className="flex items-start text-sm">
                         <code className="text-cyan-400 font-mono mr-2">{param.name}</code>
-                        <span className="text-gray-500 mr-2">({param.type})</span>
+                        <span className="text-gray-600 mr-2">({param.type})</span>
                         {param.required && (
                           <span className="badge badge-warning text-xs mr-2">required</span>
                         )}
@@ -294,7 +294,7 @@ export default function ApiPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">No parameters required</p>
+                  <p className="text-gray-600 text-sm">No parameters required</p>
                 )}
 
                 <h4 className="text-sm font-semibold text-white mt-4 mb-2">Returns</h4>
@@ -308,7 +308,7 @@ export default function ApiPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500 uppercase tracking-wider">Request</span>
+                      <span className="text-xs text-gray-600 uppercase tracking-wider">Request</span>
                       <button
                         onClick={() => copyToClipboard(method.example.request, `${method.name}-req`)}
                         className="flex items-center text-xs text-gray-400 hover:text-white"
@@ -327,13 +327,13 @@ export default function ApiPage() {
                       </button>
                     </div>
                     <div className="code-block">
-                      <pre className="text-xs text-gray-300 whitespace-pre-wrap">{method.example.request}</pre>
+                      <pre className="text-xs text-gray-400 whitespace-pre-wrap">{method.example.request}</pre>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500 uppercase tracking-wider">Response</span>
+                      <span className="text-xs text-gray-600 uppercase tracking-wider">Response</span>
                       <button
                         onClick={() => copyToClipboard(method.example.response, `${method.name}-res`)}
                         className="flex items-center text-xs text-gray-400 hover:text-white"
@@ -352,7 +352,7 @@ export default function ApiPage() {
                       </button>
                     </div>
                     <div className="code-block">
-                      <pre className="text-xs text-gray-300 whitespace-pre-wrap">{method.example.response}</pre>
+                      <pre className="text-xs text-gray-400 whitespace-pre-wrap">{method.example.response}</pre>
                     </div>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ export default function ApiPage() {
               { prefix: 'rpc_', desc: 'RPC method discovery' },
               { prefix: 'grandpa_', desc: 'GRANDPA finality' },
             ].map((item) => (
-              <div key={item.prefix} className="p-4 rounded-xl bg-white/5">
+              <div key={item.prefix} className="p-4 rounded-xl bg-[#0a0a0a]">
                 <code className="text-orange-400 font-mono">{item.prefix}*</code>
                 <p className="text-sm text-gray-500 mt-1">{item.desc}</p>
               </div>

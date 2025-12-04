@@ -3,7 +3,9 @@
 //! This module provides the bridge between the pallet's execution interface
 //! and the real EVM/SVM executors from the integration crates.
 
-use crate::{ExecutionLog, ExecutionReceipt, StateChange};
+#[cfg(feature = "std")]
+use crate::ExecutionLog;
+use crate::{ExecutionReceipt, StateChange};
 use frame_support::pallet_prelude::*;
 use sp_core::H256;
 use sp_std::vec;

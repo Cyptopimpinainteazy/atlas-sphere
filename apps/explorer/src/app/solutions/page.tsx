@@ -178,21 +178,25 @@ const resources = [
 
 export default function SolutionsPage() {
   return (
-    <div className="min-h-screen pt-20">
-      {/* Hero */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 mesh-gradient opacity-30" />
-        <div className="absolute right-0 top-1/4 w-96 h-96 opacity-30">
+    <div className="min-h-screen pt-20 bg-black">
+      {/* Hero with unique Solutions section header */}
+      <section className="py-20 relative overflow-hidden page-header-solutions">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/20 via-black to-yellow-950/10" />
+        <div className="absolute inset-0 mesh-gradient opacity-10" />
+        <div className="absolute right-0 top-1/4 w-96 h-96 opacity-20">
           <HexagonCluster className="w-full h-full" />
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <div className="badge badge-purple mb-4">Solutions</div>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4">
+              <Boxes className="w-4 h-4 mr-2 text-amber-400" />
+              <span className="text-sm text-amber-300">Solutions</span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Build Without Limits
+              Build <span className="text-amber-400">Without Limits</span>
             </h1>
-            <p className="text-xl text-gray-400 mb-8">
+            <p className="text-xl text-gray-500 mb-8">
               Comprehensive tools and solutions for every use case. From DeFi to gaming, 
               from enterprise to consumer apps—X3 STAR has you covered.
             </p>
@@ -209,7 +213,7 @@ export default function SolutionsPage() {
       </section>
 
       {/* Tools */}
-      <section className="py-16 border-t border-white/10">
+      <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Tools & Infrastructure</h2>
           
@@ -226,7 +230,7 @@ export default function SolutionsPage() {
                 <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-orange-400 transition-colors">
                   {tool.title}
                 </h3>
-                <p className="text-sm text-gray-400">{tool.description}</p>
+                <p className="text-sm text-gray-500">{tool.description}</p>
               </Link>
             ))}
           </div>
@@ -234,7 +238,7 @@ export default function SolutionsPage() {
       </section>
 
       {/* Use Cases */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Use Cases</h2>
           
@@ -243,7 +247,7 @@ export default function SolutionsPage() {
               <Link
                 key={index}
                 href={useCase.href}
-                className="flex items-center p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-orange-500/30 transition-all group"
+                className="flex items-center p-4 rounded-xl bg-[#0a0a0a] hover:bg-[#111111] border border-[#1a1a1a] hover:border-orange-500/30 transition-all group"
               >
                 <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400 mr-3">
                   {useCase.icon}
@@ -252,9 +256,9 @@ export default function SolutionsPage() {
                   <h3 className="font-medium text-white group-hover:text-orange-400 transition-colors">
                     {useCase.title}
                   </h3>
-                  <p className="text-xs text-gray-500">{useCase.description}</p>
+                  <p className="text-xs text-gray-600">{useCase.description}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-orange-400 transition-colors" />
+                <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-orange-400 transition-colors" />
               </Link>
             ))}
           </div>
@@ -262,7 +266,7 @@ export default function SolutionsPage() {
       </section>
 
       {/* Real World Assets */}
-      <section className="py-16">
+      <section className="py-16 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -270,7 +274,7 @@ export default function SolutionsPage() {
               <h2 className="text-3xl font-bold text-white mb-4">
                 Bridge Physical and Digital
               </h2>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-500 mb-6">
                 Tokenize real estate, commodities, art, and more. X3 STAR's dual VM 
                 architecture enables compliant RWA tokenization with programmable 
                 transfer restrictions and cross-chain liquidity.
@@ -282,7 +286,7 @@ export default function SolutionsPage() {
                   'Integration with traditional finance rails',
                   'Institutional-grade custody solutions',
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center text-gray-300">
+                  <li key={i} className="flex items-center text-gray-400">
                     <Map className="w-5 h-5 text-emerald-500 mr-3" />
                     {item}
                   </li>
@@ -303,9 +307,9 @@ export default function SolutionsPage() {
                   { name: 'Carbon Credits', icon: '🌱' },
                   { name: 'Intellectual Property', icon: '💡' },
                 ].map((asset) => (
-                  <div key={asset.name} className="p-4 rounded-xl bg-white/5 flex items-center">
+                  <div key={asset.name} className="p-4 rounded-xl bg-[#111111] flex items-center">
                     <span className="text-2xl mr-3">{asset.icon}</span>
-                    <span className="text-sm text-gray-300">{asset.name}</span>
+                    <span className="text-sm text-gray-400">{asset.name}</span>
                   </div>
                 ))}
               </div>
@@ -315,14 +319,14 @@ export default function SolutionsPage() {
       </section>
 
       {/* Mobile */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <div className="glass-card p-8">
                 <div className="flex items-center justify-center space-x-4">
-                  <div className="w-48 h-96 rounded-3xl bg-slate-800 border-4 border-slate-700 p-2">
-                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-orange-500/20 to-purple-500/20 flex items-center justify-center">
+                  <div className="w-48 h-96 rounded-3xl bg-[#0a0a0a] border-4 border-[#1a1a1a] p-2">
+                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center">
                       <span className="text-6xl">📱</span>
                     </div>
                   </div>
@@ -334,7 +338,7 @@ export default function SolutionsPage() {
               <h2 className="text-3xl font-bold text-white mb-4">
                 Mobile-First Blockchain
               </h2>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-500 mb-6">
                 Build mobile apps that leverage blockchain without complexity. 
                 X3 STAR's mobile SDKs make it easy to integrate wallet functionality, 
                 NFTs, and payments into any mobile application.
@@ -353,7 +357,7 @@ export default function SolutionsPage() {
       </section>
 
       {/* Resources */}
-      <section className="py-16">
+      <section className="py-16 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Resources</h2>
           
@@ -367,7 +371,7 @@ export default function SolutionsPage() {
                 <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-orange-400 transition-colors">
                   {resource.title}
                 </h3>
-                <p className="text-sm text-gray-400 mb-4">{resource.description}</p>
+                <p className="text-sm text-gray-500 mb-4">{resource.description}</p>
                 <span className="text-orange-400 flex items-center text-sm">
                   Learn more <ArrowRight className="ml-2 w-4 h-4" />
                 </span>
@@ -378,12 +382,12 @@ export default function SolutionsPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 border-t border-white/10">
+      <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to build your solution?
           </h2>
-          <p className="text-gray-400 mb-8">
+          <p className="text-gray-500 mb-8">
             Connect with our solutions team to discuss your project requirements.
           </p>
           <div className="flex flex-wrap justify-center gap-4">

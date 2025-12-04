@@ -178,7 +178,7 @@ export default function TutorialsPage() {
       </section>
 
       {/* Filters */}
-      <section className="py-8 border-y border-white/10">
+      <section className="py-8 border-y border-[#1a1a1a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Category filters */}
@@ -190,7 +190,7 @@ export default function TutorialsPage() {
                   className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedCategory === category.id
                       ? 'bg-indigo-500 text-white'
-                      : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                      : 'bg-[#0a0a0a] text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
                   }`}
                 >
                   <span className="mr-2">{category.icon}</span>
@@ -205,7 +205,7 @@ export default function TutorialsPage() {
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value as Difficulty | 'all')}
-                className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
               >
                 <option value="all">All Levels</option>
                 <option value="beginner">Beginner</option>
@@ -229,7 +229,7 @@ export default function TutorialsPage() {
               >
                 {/* Image placeholder */}
                 <div className="h-48 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                  <div className="w-16 h-16 rounded-full bg-[#111111] flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
                     <Play className="w-8 h-8 text-white" />
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function TutorialsPage() {
                     <span className={`badge ${difficultyColors[tutorial.difficulty]}`}>
                       {tutorial.difficulty}
                     </span>
-                    <span className="text-xs text-gray-500 flex items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
                       <Clock className="w-3 h-3 mr-1" />
                       {tutorial.duration}
                     </span>
@@ -254,14 +254,14 @@ export default function TutorialsPage() {
                   
                   <div className="flex flex-wrap gap-2 mb-4">
                     {tutorial.tags.map((tag) => (
-                      <span key={tag} className="text-xs px-2 py-1 rounded bg-white/5 text-gray-400">
+                      <span key={tag} className="text-xs px-2 py-1 rounded bg-[#0a0a0a] text-gray-400">
                         {tag}
                       </span>
                     ))}
                   </div>
                   
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">By {tutorial.author}</span>
+                    <span className="text-gray-600">By {tutorial.author}</span>
                     <span className="text-indigo-400 flex items-center group-hover:text-indigo-300">
                       Start <ChevronRight className="w-4 h-4 ml-1" />
                     </span>
@@ -289,7 +289,7 @@ export default function TutorialsPage() {
       </section>
 
       {/* Learning Path */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Recommended Learning Path</h2>
           

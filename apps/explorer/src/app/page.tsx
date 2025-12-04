@@ -115,25 +115,26 @@ const updates = [
 
 export default function HomePage() {
   return (
-    <div className="relative">
+    <div className="relative bg-black">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background effects */}
+        <div className="absolute inset-0 bg-black" />
         <div className="absolute inset-0 mesh-gradient" />
-        <div className="absolute inset-0 grid-pattern opacity-50" />
+        <div className="absolute inset-0 grid-pattern opacity-30" />
         
-        {/* Animated orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/30 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+        {/* Animated orbs - Orange/Red */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-600/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-8">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2" />
-              <span className="text-sm text-indigo-300">Testnet v1 Now Live</span>
-              <ArrowRight className="w-4 h-4 ml-2 text-indigo-400" />
+              <span className="text-sm text-orange-300">Testnet v1 Now Live</span>
+              <ArrowRight className="w-4 h-4 ml-2 text-orange-400" />
             </div>
 
             {/* Main heading */}
@@ -144,7 +145,7 @@ export default function HomePage() {
             </h1>
 
             {/* Subheading */}
-            <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12">
+            <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto mb-12">
               X3 Atlas Sphere unites EVM and SVM execution in a single Layer-1.
               Build cross-chain applications with atomic transactions, unified liquidity,
               and unprecedented composability.
@@ -169,7 +170,7 @@ export default function HomePage() {
                   <div className="text-3xl md:text-4xl font-bold gradient-text mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-gray-400">{stat.label}</div>
+                  <div className="text-sm text-gray-500">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -178,15 +179,15 @@ export default function HomePage() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-2">
-            <div className="w-1 h-3 rounded-full bg-white/40 animate-bounce" />
+          <div className="w-6 h-10 rounded-full border-2 border-[#333333] flex items-start justify-center p-2">
+            <div className="w-1 h-3 rounded-full bg-orange-500/60 animate-bounce" />
           </div>
         </div>
       </section>
 
       {/* Problem/Solution Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -195,7 +196,7 @@ export default function HomePage() {
                 <span className="text-white">The blockchain </span>
                 <span className="gradient-text">trilemma is solved</span>
               </h2>
-              <p className="text-lg text-gray-400 mb-8">
+              <p className="text-lg text-gray-500 mb-8">
                 Traditional blockchains force you to choose between ecosystems. 
                 X3 Atlas Sphere eliminates this friction by enabling native 
                 interoperability between the two largest smart contract platforms.
@@ -208,8 +209,8 @@ export default function HomePage() {
                   'Single account abstraction for all assets',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start space-x-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0" />
-                    <span className="text-gray-300">{item}</span>
+                    <CheckCircle className="w-6 h-6 text-orange-500 flex-shrink-0" />
+                    <span className="text-gray-400">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -218,15 +219,15 @@ export default function HomePage() {
               <div className="glass-card p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                      <Code className="w-5 h-5 text-indigo-400" />
+                    <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                      <Code className="w-5 h-5 text-orange-400" />
                     </div>
                     <span className="font-semibold text-white">Comit Transaction</span>
                   </div>
                   <span className="badge badge-success">Atomic</span>
                 </div>
                 <div className="code-block text-xs">
-                  <pre className="text-gray-300">
+                  <pre className="text-gray-400">
 {`// Single atomic transaction
 {
   "comit_id": "0x1234...",
@@ -244,8 +245,8 @@ export default function HomePage() {
 }`}
                   </pre>
                 </div>
-                <div className="mt-4 flex items-center text-sm text-gray-400">
-                  <Zap className="w-4 h-4 mr-2 text-amber-500" />
+                <div className="mt-4 flex items-center text-sm text-gray-500">
+                  <Zap className="w-4 h-4 mr-2 text-orange-500" />
                   Both operations execute atomically or both revert
                 </div>
               </div>
@@ -255,7 +256,7 @@ export default function HomePage() {
       </section>
 
       {/* Core Features Section */}
-      <section className="py-24 relative">
+      <section className="py-24 relative bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="section-title gradient-text">Next-Level Features</h2>
@@ -271,13 +272,13 @@ export default function HomePage() {
                 className="card-feature card-lift group"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 group-hover:from-indigo-500/30 group-hover:to-purple-500/30 transition-colors">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 text-orange-400 group-hover:from-orange-500/30 group-hover:to-red-500/30 transition-colors">
                     {feature.icon}
                   </div>
-                  <span className="badge badge-purple">{feature.badge}</span>
+                  <span className="badge badge-fire">{feature.badge}</span>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
+                <p className="text-gray-500">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -286,7 +287,7 @@ export default function HomePage() {
 
       {/* Architecture Diagram Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#080505] to-black" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -300,11 +301,11 @@ export default function HomePage() {
             <div className="grid md:grid-cols-3 gap-8">
               {/* EVM Side */}
               <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <span className="text-2xl font-bold text-white">EVM</span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Ethereum VM</h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   Frontier-based execution for Solidity, Vyper, and all EVM-compatible contracts
                 </p>
                 <div className="mt-4 space-y-2">
@@ -316,27 +317,27 @@ export default function HomePage() {
 
               {/* Atlas Kernel */}
               <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-purple-500/25 animate-glow">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-orange-500/25 animate-glow">
                   <Cpu className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Atlas Kernel</h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   Orchestrates cross-VM operations with canonical ledger and atomic execution
                 </p>
                 <div className="mt-4 space-y-2">
-                  <div className="badge badge-purple">Comits</div>
-                  <div className="badge badge-purple">Canonical Ledger</div>
-                  <div className="badge badge-purple">Atomic Exec</div>
+                  <div className="badge badge-fire">Comits</div>
+                  <div className="badge badge-fire">Canonical Ledger</div>
+                  <div className="badge badge-fire">Atomic Exec</div>
                 </div>
               </div>
 
               {/* SVM Side */}
               <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                   <span className="text-2xl font-bold text-white">SVM</span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Solana VM</h3>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-500">
                   Sealevel execution for Rust programs with parallel transaction processing
                 </p>
                 <div className="mt-4 space-y-2">
@@ -350,18 +351,18 @@ export default function HomePage() {
             {/* Connection lines visualization */}
             <div className="hidden md:flex justify-center items-center my-8">
               <div className="flex items-center space-x-4">
-                <div className="h-0.5 w-24 bg-gradient-to-r from-blue-500 to-purple-500" />
+                <div className="h-0.5 w-24 bg-gradient-to-r from-blue-500 to-orange-500" />
                 <div className="blockchain-node" />
-                <div className="h-0.5 w-12 bg-purple-500" />
+                <div className="h-0.5 w-12 bg-orange-500" />
                 <div className="blockchain-node" style={{ animationDelay: '0.5s' }} />
-                <div className="h-0.5 w-12 bg-purple-500" />
+                <div className="h-0.5 w-12 bg-orange-500" />
                 <div className="blockchain-node" style={{ animationDelay: '1s' }} />
-                <div className="h-0.5 w-24 bg-gradient-to-r from-purple-500 to-emerald-500" />
+                <div className="h-0.5 w-24 bg-gradient-to-r from-orange-500 to-emerald-500" />
               </div>
             </div>
 
             <div className="text-center mt-8">
-              <Link href="/learn/architecture" className="inline-flex items-center text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link href="/learn/architecture" className="inline-flex items-center text-orange-400 hover:text-orange-300 font-medium">
                 Learn more about the architecture
                 <ArrowUpRight className="ml-1 w-4 h-4" />
               </Link>
@@ -371,7 +372,7 @@ export default function HomePage() {
       </section>
 
       {/* Use Cases Section */}
-      <section className="py-24">
+      <section className="py-24 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="section-title text-white">Build Anything</h2>
@@ -387,14 +388,14 @@ export default function HomePage() {
                 href={useCase.href}
                 className="glass-card-hover p-6 card-lift group"
               >
-                <div className="p-3 rounded-xl bg-white/5 w-fit mb-4 group-hover:bg-indigo-500/20 transition-colors">
-                  <span className="text-gray-400 group-hover:text-indigo-400 transition-colors">
+                <div className="p-3 rounded-xl bg-[#1a1a1a] w-fit mb-4 group-hover:bg-orange-500/20 transition-colors">
+                  <span className="text-gray-500 group-hover:text-orange-400 transition-colors">
                     {useCase.icon}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{useCase.title}</h3>
-                <p className="text-sm text-gray-400 mb-4">{useCase.description}</p>
-                <span className="inline-flex items-center text-sm text-indigo-400 group-hover:text-indigo-300">
+                <p className="text-sm text-gray-500 mb-4">{useCase.description}</p>
+                <span className="inline-flex items-center text-sm text-orange-400 group-hover:text-orange-300">
                   Learn more <ChevronRight className="ml-1 w-4 h-4" />
                 </span>
               </Link>
@@ -411,7 +412,7 @@ export default function HomePage() {
 
       {/* Developer Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -420,7 +421,7 @@ export default function HomePage() {
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
                 Ship faster with familiar tools
               </h2>
-              <p className="text-lg text-gray-400 mb-8">
+              <p className="text-lg text-gray-500 mb-8">
                 Use your existing Ethereum or Solana development workflow. 
                 X3 Atlas Sphere provides full compatibility with both ecosystems' 
                 tooling and SDKs.
@@ -433,9 +434,9 @@ export default function HomePage() {
                   { label: 'ethers.js', desc: 'Web3 Integration' },
                   { label: 'Solana Web3', desc: 'Program Calls' },
                 ].map((tool, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div key={i} className="p-4 rounded-xl bg-[#111111] border border-[#1a1a1a]">
                     <div className="font-semibold text-white">{tool.label}</div>
-                    <div className="text-sm text-gray-400">{tool.desc}</div>
+                    <div className="text-sm text-gray-500">{tool.desc}</div>
                   </div>
                 ))}
               </div>
@@ -457,10 +458,10 @@ export default function HomePage() {
                   <div className="w-3 h-3 rounded-full bg-amber-500" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500" />
                 </div>
-                <span className="text-xs text-gray-500">quickstart.ts</span>
+                <span className="text-xs text-gray-600">quickstart.ts</span>
               </div>
               <div className="code-block text-sm">
-                <pre className="text-gray-300">
+                <pre className="text-gray-400">
 {`import { AtlasClient, Comit } from '@x3/atlas-sdk';
 
 // Connect to X3 Atlas Sphere
@@ -491,7 +492,7 @@ console.log('Comit finalized:', receipt.hash);`}
       </section>
 
       {/* Updates Section */}
-      <section className="py-24">
+      <section className="py-24 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
             <div>
@@ -500,7 +501,7 @@ console.log('Comit finalized:', receipt.hash);`}
                 Stay up to date with X3 Atlas Sphere development
               </p>
             </div>
-            <Link href="/blog" className="mt-4 md:mt-0 text-indigo-400 hover:text-indigo-300 flex items-center">
+            <Link href="/blog" className="mt-4 md:mt-0 text-orange-400 hover:text-orange-300 flex items-center">
               View all updates <ArrowRight className="ml-2 w-4 h-4" />
             </Link>
           </div>
@@ -509,17 +510,17 @@ console.log('Comit finalized:', receipt.hash);`}
             {updates.map((update, index) => (
               <div key={index} className="glass-card-hover p-6 card-lift">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500">{update.date}</span>
+                  <span className="text-sm text-gray-600">{update.date}</span>
                   <span className={`badge ${
                     update.type === 'release' ? 'badge-success' :
-                    update.type === 'milestone' ? 'badge-purple' :
+                    update.type === 'milestone' ? 'badge-fire' :
                     'badge-warning'
                   }`}>
                     {update.type}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{update.title}</h3>
-                <p className="text-sm text-gray-400">{update.description}</p>
+                <p className="text-sm text-gray-500">{update.description}</p>
               </div>
             ))}
           </div>
@@ -528,14 +529,15 @@ console.log('Comit finalized:', receipt.hash);`}
 
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 mesh-gradient opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0505] to-black" />
+        <div className="absolute inset-0 mesh-gradient opacity-30" />
         
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="text-white">Ready to build the </span>
             <span className="gradient-text">future of Web3?</span>
           </h2>
-          <p className="text-xl text-gray-400 mb-12">
+          <p className="text-xl text-gray-500 mb-12">
             Join thousands of developers building on X3 Atlas Sphere. 
             Get started with our testnet today.
           </p>
@@ -549,11 +551,11 @@ console.log('Comit finalized:', receipt.hash);`}
           </div>
 
           {/* Trust badges */}
-          <div className="mt-16 pt-12 border-t border-white/10">
-            <p className="text-sm text-gray-500 mb-6">Trusted by leading Web3 projects</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-50">
+          <div className="mt-16 pt-12 border-t border-[#1a1a1a]">
+            <p className="text-sm text-gray-600 mb-6">Trusted by leading Web3 projects</p>
+            <div className="flex flex-wrap justify-center items-center gap-8 opacity-40">
               {partners.map((partner) => (
-                <span key={partner} className="text-lg font-semibold text-gray-400">
+                <span key={partner} className="text-lg font-semibold text-gray-500">
                   {partner}
                 </span>
               ))}

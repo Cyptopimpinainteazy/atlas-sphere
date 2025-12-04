@@ -52,7 +52,15 @@ impl RbpfSvmExecutor {
     pub fn with_config(config: Config) -> Self {
         Self { config }
     }
+}
 
+impl Default for RbpfSvmExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl RbpfSvmExecutor {
     /// Serialize accounts into a buffer for BPF program access (M-7 fix).
     ///
     /// Format per account:
@@ -85,6 +93,19 @@ impl RbpfSvmExecutor {
 
         buffer
     }
+}
+
+/// Context for Atlas syscall execution
+/// Tracks compute units, logs, and return data during BPF execution
+struct AtlasSyscallContext {
+    /// Remaining compute units
+    compute_units_remaining: u64,
+    /// Compute units consumed
+    compute_units_used: u64,
+    /// Logs emitted during execution
+    logs: Vec<Vec<u8>>,
+    /// Return data from the program
+    return_data: Vec<u8>,
 }
 
 impl AtlasSyscallContext {
@@ -250,7 +271,7 @@ impl SvmExecutor for RbpfSvmExecutor {
 
 /// Compute state root from execution results
 fn compute_state_root(logs: &[Vec<u8>], return_data: &[u8]) -> [u8; 32] {
-    use sp_core::hashing::blake2_256;
+    use sp_io::hashing::blake2_256;
 
     let mut data = Vec::new();
     for log in logs {

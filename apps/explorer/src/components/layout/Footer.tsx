@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Logo from '../ui/Logo';
@@ -56,7 +58,7 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-950 border-t border-white/10">
+    <footer className="bg-black border-t border-[#1a1a1a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Main footer content */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
@@ -65,7 +67,7 @@ export default function Footer() {
             <div className="mb-4">
               <Logo size="md" showText={true} />
             </div>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Next-generation Layer-1 blockchain with dual VM execution. 
               Bridging EVM and SVM for unprecedented interoperability.
             </p>
@@ -76,7 +78,7 @@ export default function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                  className="p-2 text-gray-500 hover:text-orange-400 hover:bg-[#1a1a1a] rounded-lg transition-colors"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -95,7 +97,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -113,7 +115,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -131,7 +133,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -149,7 +151,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -167,7 +169,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-gray-500 hover:text-orange-400 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -184,7 +186,7 @@ export default function Footer() {
               <h3 className="text-xl font-bold text-white mb-2">
                 Stay updated with X3 Atlas Sphere
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-500">
                 Get the latest news, updates, and developer resources delivered to your inbox.
               </p>
             </div>
@@ -192,9 +194,9 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 md:w-64 px-4 py-3 rounded-l-xl bg-white/5 border border-white/10 border-r-0 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                className="flex-1 md:w-64 px-4 py-3 rounded-l-xl bg-[#111111] border border-[#1a1a1a] border-r-0 text-white placeholder-gray-600 focus:outline-none focus:border-orange-500"
               />
-              <button className="px-6 py-3 rounded-r-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-500 hover:to-purple-500 transition-colors">
+              <button className="px-6 py-3 rounded-r-xl bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-colors">
                 Subscribe
               </button>
             </div>
@@ -202,22 +204,22 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/10">
-          <div className="flex items-center space-x-1 text-sm text-gray-400 mb-4 md:mb-0">
+        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-[#1a1a1a]">
+          <div className="flex items-center space-x-1 text-sm text-gray-600 mb-4 md:mb-0">
             <span>© 2025 X3 Atlas Sphere. All rights reserved.</span>
             <span className="mx-2">•</span>
             <span className="flex items-center">
               Built with <Heart className="w-4 h-4 mx-1 text-red-500" /> by the Atlas team
             </span>
           </div>
-          <div className="flex items-center space-x-6 text-sm text-gray-400">
-            <Link href="/privacy" className="hover:text-white transition-colors">
+          <div className="flex items-center space-x-6 text-sm text-gray-600">
+            <Link href="/privacy" className="hover:text-orange-400 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-orange-400 transition-colors">
               Terms of Service
             </Link>
-            <Link href="/security" className="hover:text-white transition-colors">
+            <Link href="/security" className="hover:text-orange-400 transition-colors">
               Security
             </Link>
           </div>

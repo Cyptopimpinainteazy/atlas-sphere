@@ -1,6 +1,6 @@
 # Atlas Sphere L1
 
-[![Build Status](https://github.com/your-org/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
 Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liquidity without trusted intermediaries.
 
@@ -53,13 +53,23 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual 
 
 ## Architecture Overview
 
-| Component | Status | Summary |
-| --- | --- | --- |
-| **Runtime** | Dev-ready | FRAME-based runtime integrating Aura + GRANDPA consensus, balances, transaction payment, sudo (for dev), and scaffolding for VM orchestration. |
-| **Dual VM Layer** | In Development | Frontier-based EVM adapter and SVM bridge are being wired into the canonical ledger with forthcoming execution and RPC exposure. |
-| **Cross-Domain Kernel** | Implemented (MVP) | Atlas Kernel pallet anchors Comit submission, asset registry, and canonical ledger updates powering dual-VM coordination. |
-| **Node Service** | In Progress | Provides RPC, telemetry, and networking services with hooks for future Frontier JSON-RPC and SVM execution interfaces. |
-| **Tooling** | In Progress | CLI utilities cover chain specs and key handling; Comit crafting helpers and SDK improvements are scheduled next. |
+| Component               | Status            | Summary                                                                                                                                        |
+| ----------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Runtime**             | Dev-ready         | FRAME-based runtime integrating Aura + GRANDPA consensus, balances, transaction payment, sudo (for dev), and scaffolding for VM orchestration. |
+| **Dual VM Layer**       | In Development    | Frontier-based EVM adapter and SVM bridge are being wired into the canonical ledger with forthcoming execution and RPC exposure.               |
+| **Cross-Domain Kernel** | Implemented (MVP) | Atlas Kernel pallet anchors Comit submission, asset registry, and canonical ledger updates powering dual-VM coordination.                      |
+| **Node Service**        | In Progress       | Provides RPC, telemetry, and networking services with hooks for future Frontier JSON-RPC and SVM execution interfaces.                         |
+| **Tooling**             | In Progress       | CLI utilities cover chain specs and key handling; Comit crafting helpers and SDK improvements are scheduled next.                              |
+### Developer Tools: BMAD Method
+The repository includes a small integration wrapper for BMAD Method under `crates/vibe-bmad`. BMAD is an AI-driven agile development tool that helps with planning, workflows and architecture decisions.
+
+Quick usage:
+```sh
+cd crates/vibe-bmad
+npm run install-bmad
+npm run workflow-init
+```
+BMAD requires Node.js >= 20. See `crates/vibe-bmad/README.md` for more details.
 
 ---
 
@@ -223,11 +233,11 @@ Atlas Sphere currently leverages the Aura block authoring engine paired with GRA
 
 Atlas Sphere ships with multiple chain specifications:
 
-| Spec | Command | Description |
-| --- | --- | --- |
-| Development | `atlas-sphere-node --dev` | Single-node authority, instant block production. |
-| Local Testnet | `atlas-sphere-node --chain local -d /tmp/atlas-local` | Multi-node authority with deterministic keys (use `--alice`, `--bob`). |
-| Staging/Mainnet (future) | `atlas-sphere-node --chain atlas` | Use generated chain spec files committed by core team. |
+| Spec                     | Command                                               | Description                                                            |
+| ------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------- |
+| Development              | `atlas-sphere-node --dev`                             | Single-node authority, instant block production.                       |
+| Local Testnet            | `atlas-sphere-node --chain local -d /tmp/atlas-local` | Multi-node authority with deterministic keys (use `--alice`, `--bob`). |
+| Staging/Mainnet (future) | `atlas-sphere-node --chain atlas`                     | Use generated chain spec files committed by core team.                 |
 
 Generate custom chain specs:
 

@@ -4,10 +4,10 @@
 use crate::{
     EvmConfig, EvmError, EvmExecutionResult, EvmExecutor, EvmLog, EvmResult, EvmStateChange,
 };
-use sp_core::{H160, H256, U256};
+use sp_core::{H160, U256};
 use sp_std::vec::Vec;
 
-use fp_evm::{Context, ExitReason, ExitSucceed, Log};
+use fp_evm::{ExitReason, Log};
 use pallet_evm::{Config as EvmPalletConfig, Runner};
 
 /// Frontier-based EVM executor
@@ -75,13 +75,6 @@ where
 
         let gas_limit = config.gas_limit;
         let gas_price = config.gas_price;
-
-        // Build execution context
-        let context = Context {
-            caller,
-            address: target.unwrap_or(H160::zero()),
-            apparent_value: value,
-        };
 
         // Execute via Frontier runner
         let (exit_reason, return_value, gas_used, logs) = match target {
@@ -205,7 +198,7 @@ where
 
 /// Compute state root from state changes
 fn compute_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
-    use sp_core::hashing::blake2_256;
+    use sp_io::hashing::blake2_256;
 
     if changes.is_empty() {
         return [0u8; 32];
@@ -227,7 +220,7 @@ impl EvmConfig {
     /// M-8 FIX: Properly maps EvmConfig fields to fp_evm::Config
     pub fn into_evm_config<T: EvmPalletConfig>(&self) -> fp_evm::Config {
         // Start with Shanghai preset as base
-        let mut config = fp_evm::Config::shanghai();
+        let config = fp_evm::Config::shanghai();
 
         // Apply custom gas limits from our config
         // Note: fp_evm::Config doesn't expose all fields, but we can use

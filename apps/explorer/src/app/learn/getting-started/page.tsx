@@ -102,17 +102,21 @@ const quickLinks = [
 
 export default function GettingStartedPage() {
   return (
-    <div className="min-h-screen pt-20">
-      {/* Hero */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 mesh-gradient opacity-30" />
+    <div className="min-h-screen pt-20 bg-black">
+      {/* Hero with unique Learn section header */}
+      <section className="py-20 relative overflow-hidden page-header-learn">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/20 via-black to-teal-950/10" />
+        <div className="absolute inset-0 mesh-gradient opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <div className="badge badge-success mb-4">Getting Started</div>
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-4">
+              <BookOpen className="w-4 h-4 mr-2 text-emerald-400" />
+              <span className="text-sm text-emerald-300">Getting Started</span>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Start building on X3 Atlas Sphere
+              Start building on <span className="text-emerald-400">X3 Atlas Sphere</span>
             </h1>
-            <p className="text-xl text-gray-400 mb-8">
+            <p className="text-xl text-gray-500 mb-8">
               Get up and running with the first dual VM blockchain in under 30 minutes. 
               This guide will walk you through everything you need to know.
             </p>
@@ -131,13 +135,13 @@ export default function GettingStartedPage() {
       </section>
 
       {/* Prerequisites */}
-      <section className="py-16 border-t border-white/10">
+      <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Prerequisites</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-3">Operating System</h3>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 Linux or macOS recommended. Windows via WSL2.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -148,7 +152,7 @@ export default function GettingStartedPage() {
             </div>
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-3">Rust Toolchain</h3>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 Rust stable with WASM target for building the runtime.
               </p>
               <div className="code-block text-xs">
@@ -157,7 +161,7 @@ export default function GettingStartedPage() {
             </div>
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-3">Build Dependencies</h3>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm text-gray-500 mb-4">
                 cmake, pkg-config, OpenSSL, libclang required.
               </p>
               <div className="code-block text-xs">
@@ -169,7 +173,7 @@ export default function GettingStartedPage() {
       </section>
 
       {/* Steps */}
-      <section id="setup" className="py-16">
+      <section id="setup" className="py-16 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-12">Getting Started Steps</h2>
           
@@ -179,7 +183,7 @@ export default function GettingStartedPage() {
                 <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                   {/* Step number */}
                   <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-2xl font-bold text-white">
                       {step.number}
                     </div>
                   </div>
@@ -188,16 +192,16 @@ export default function GettingStartedPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-bold text-white">{step.title}</h3>
-                      <span className="badge badge-purple flex items-center">
+                      <span className="badge badge-fire flex items-center">
                         <Clock className="w-3 h-3 mr-1" />
                         {step.time}
                       </span>
                     </div>
-                    <p className="text-gray-400 mb-4">{step.description}</p>
+                    <p className="text-gray-500 mb-4">{step.description}</p>
                     
                     <div className="grid sm:grid-cols-2 gap-3">
                       {step.items.map((item, i) => (
-                        <div key={i} className="flex items-center text-sm text-gray-300">
+                        <div key={i} className="flex items-center text-sm text-gray-400">
                           <CheckCircle className="w-4 h-4 text-emerald-500 mr-2 flex-shrink-0" />
                           {item}
                         </div>
@@ -206,7 +210,7 @@ export default function GettingStartedPage() {
                   </div>
                   
                   {/* Icon */}
-                  <div className="hidden lg:flex flex-shrink-0 p-4 rounded-xl bg-white/5 text-indigo-400">
+                  <div className="hidden lg:flex flex-shrink-0 p-4 rounded-xl bg-[#1a1a1a] text-orange-400">
                     {step.icon}
                   </div>
                 </div>
@@ -217,7 +221,7 @@ export default function GettingStartedPage() {
       </section>
 
       {/* Quick Start Code */}
-      <section className="py-16 bg-slate-900/50">
+      <section className="py-16 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Quick Start Commands</h2>
           
@@ -225,7 +229,7 @@ export default function GettingStartedPage() {
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-4">1. Clone and Build</h3>
               <div className="code-block">
-                <pre className="text-sm text-gray-300">
+                <pre className="text-sm text-gray-400">
 {`# Clone the repository
 git clone https://github.com/atlas-sphere/atlas-sphere.git
 cd atlas-sphere
@@ -242,7 +246,7 @@ cargo build --release`}
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-4">2. Run Development Node</h3>
               <div className="code-block">
-                <pre className="text-sm text-gray-300">
+                <pre className="text-sm text-gray-400">
 {`# Start a development node
 ./target/release/atlas-sphere-node --dev --tmp
 
@@ -257,7 +261,7 @@ cargo build --release`}
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-4">3. Query the Network</h3>
               <div className="code-block">
-                <pre className="text-sm text-gray-300">
+                <pre className="text-sm text-gray-400">
 {`# Check authorized accounts
 curl http://127.0.0.1:9944 -H "Content-Type: application/json" \\
   -d '{"id":1,"jsonrpc":"2.0",
@@ -270,7 +274,7 @@ curl http://127.0.0.1:9944 -H "Content-Type: application/json" \\
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-4">4. Connect to Testnet</h3>
               <div className="code-block">
-                <pre className="text-sm text-gray-300">
+                <pre className="text-sm text-gray-400">
 {`# Testnet RPC endpoint
 https://rpc.testnet.atlas-sphere.io
 
@@ -287,7 +291,7 @@ https://explorer.testnet.atlas-sphere.io`}
       </section>
 
       {/* Quick Links */}
-      <section className="py-16">
+      <section className="py-16 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-white mb-8">Continue Learning</h2>
           
@@ -298,13 +302,13 @@ https://explorer.testnet.atlas-sphere.io`}
                 href={link.href}
                 className="glass-card-hover p-6 card-lift group"
               >
-                <div className="p-3 rounded-xl bg-white/5 w-fit mb-4 group-hover:bg-indigo-500/20 transition-colors">
-                  <span className="text-gray-400 group-hover:text-indigo-400 transition-colors">
+                <div className="p-3 rounded-xl bg-[#1a1a1a] w-fit mb-4 group-hover:bg-orange-500/20 transition-colors">
+                  <span className="text-gray-500 group-hover:text-orange-400 transition-colors">
                     {link.icon}
                   </span>
                 </div>
                 <h3 className="font-semibold text-white mb-2">{link.title}</h3>
-                <p className="text-sm text-gray-400">{link.description}</p>
+                <p className="text-sm text-gray-500">{link.description}</p>
               </Link>
             ))}
           </div>
@@ -312,10 +316,10 @@ https://explorer.testnet.atlas-sphere.io`}
       </section>
 
       {/* CTA */}
-      <section className="py-16 border-t border-white/10">
+      <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">Need help?</h2>
-          <p className="text-gray-400 mb-8">
+          <p className="text-gray-500 mb-8">
             Join our community on Discord or check out the developer forum for support.
           </p>
           <div className="flex flex-wrap justify-center gap-4">

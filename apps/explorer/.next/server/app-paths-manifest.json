@@ -1,3 +1,8 @@
 {
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/developers/cookbook/page": "app/developers/cookbook/page.js",
+  "/solutions/tools/page": "app/solutions/tools/page.js",
+  "/community/forum/page": "app/community/forum/page.js",
+  "/developers/docs/page": "app/developers/docs/page.js",
+  "/_not-found/page": "app/_not-found/page.js"
 }

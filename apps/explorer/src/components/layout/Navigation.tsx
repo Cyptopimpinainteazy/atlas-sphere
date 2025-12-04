@@ -291,7 +291,7 @@ export default function Navigation() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-slate-950/90 backdrop-blur-xl border-b border-white/10'
+          ? 'bg-black/95 backdrop-blur-xl border-b border-[#1a1a1a]'
           : 'bg-transparent'
       }`}
     >
@@ -309,15 +309,15 @@ export default function Navigation() {
                     href={item.href}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       pathname === item.href
-                        ? 'text-white bg-white/10'
-                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                        ? 'text-orange-400 bg-orange-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
                     }`}
                   >
                     {item.label}
                   </Link>
                 ) : (
                   <>
-                    <button className="flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                    <button className="flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-[#1a1a1a] transition-colors">
                       {item.label}
                       <ChevronDown className="ml-1 w-4 h-4" />
                     </button>
@@ -330,7 +330,7 @@ export default function Navigation() {
                               href={child.href || '#'}
                               className="menu-item flex items-start space-x-3"
                             >
-                              <span className="text-indigo-400 mt-0.5">
+                              <span className="text-orange-500 mt-0.5">
                                 {child.icon}
                               </span>
                               <div>
@@ -338,7 +338,7 @@ export default function Navigation() {
                                   {child.label}
                                 </div>
                                 {child.description && (
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs text-gray-600">
                                     {child.description}
                                   </div>
                                 )}
@@ -356,7 +356,7 @@ export default function Navigation() {
 
           {/* Right side actions */}
           <div className="hidden lg:flex items-center space-x-4">
-            <button className="p-2 text-gray-400 hover:text-white transition-colors">
+            <button className="p-2 text-gray-500 hover:text-white transition-colors">
               <Search className="w-5 h-5" />
             </button>
             <Link href="/developers/docs" className="btn-secondary text-sm">
@@ -369,7 +369,7 @@ export default function Navigation() {
 
           {/* Mobile menu button */}
           <button
-            className="lg:hidden p-2 text-gray-400 hover:text-white"
+            className="lg:hidden p-2 text-gray-500 hover:text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -383,21 +383,21 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-slate-950/95 backdrop-blur-xl border-t border-white/10">
+        <div className="lg:hidden bg-black/98 backdrop-blur-xl border-t border-[#1a1a1a]">
           <div className="max-h-[80vh] overflow-y-auto custom-scrollbar px-4 py-6 space-y-4">
             {navigation.map((item) => (
               <div key={item.label}>
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="block px-4 py-3 text-white font-medium hover:bg-white/5 rounded-lg"
+                    className="block px-4 py-3 text-white font-medium hover:bg-[#1a1a1a] rounded-lg"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.label}
                   </Link>
                 ) : (
                   <div>
-                    <div className="px-4 py-2 text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="px-4 py-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">
                       {item.label}
                     </div>
                     <div className="mt-2 space-y-1">
@@ -405,10 +405,10 @@ export default function Navigation() {
                         <Link
                           key={child.label}
                           href={child.href || '#'}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg"
+                          className="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg"
                           onClick={() => setMobileMenuOpen(false)}
                         >
-                          <span className="text-indigo-400">{child.icon}</span>
+                          <span className="text-orange-500">{child.icon}</span>
                           <span>{child.label}</span>
                         </Link>
                       ))}
@@ -417,7 +417,7 @@ export default function Navigation() {
                 )}
               </div>
             ))}
-            <div className="pt-4 border-t border-white/10 space-y-3">
+            <div className="pt-4 border-t border-[#1a1a1a] space-y-3">
               <Link
                 href="/developers/docs"
                 className="block w-full btn-secondary text-center"

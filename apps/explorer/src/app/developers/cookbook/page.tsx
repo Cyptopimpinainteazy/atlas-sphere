@@ -312,7 +312,7 @@ export default function CookbookPage() {
   return (
     <div className="min-h-screen pt-20">
       {/* Hero */}
-      <section className="py-16 relative overflow-hidden border-b border-white/10">
+      <section className="py-16 relative overflow-hidden border-b border-[#1a1a1a]">
         <div className="absolute inset-0 mesh-gradient opacity-20" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
@@ -350,7 +350,7 @@ export default function CookbookPage() {
               className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedCategory === category.id
                   ? 'bg-emerald-500 text-white'
-                  : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                : 'bg-[#0a0a0a] text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
               }`}
             >
               <span className="mr-2">{category.icon}</span>
@@ -363,7 +363,7 @@ export default function CookbookPage() {
         <div className="space-y-6">
           {filteredSnippets.map((snippet) => (
             <div key={snippet.id} className="glass-card overflow-hidden">
-              <div className="p-6 border-b border-white/10">
+              <div className="p-6 border-b border-[#1a1a1a]">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-lg font-semibold text-white">{snippet.title}</h3>
                   <span className="badge badge-info">{snippet.category}</span>
@@ -371,7 +371,7 @@ export default function CookbookPage() {
                 <p className="text-gray-400 mb-3">{snippet.description}</p>
                 <div className="flex flex-wrap gap-2">
                   {snippet.tags.map((tag) => (
-                    <span key={tag} className="text-xs px-2 py-1 rounded bg-white/5 text-gray-500">
+                    <span key={tag} className="text-xs px-2 py-1 rounded bg-[#0a0a0a] text-gray-500">
                       {tag}
                     </span>
                   ))}
@@ -380,10 +380,10 @@ export default function CookbookPage() {
               
               <div className="relative">
                 <div className="absolute top-4 right-4 flex items-center space-x-2 z-10">
-                  <span className="text-xs text-gray-500 uppercase">{snippet.language}</span>
+                  <span className="text-xs text-gray-600 uppercase">{snippet.language}</span>
                   <button
                     onClick={() => copyToClipboard(snippet.code, snippet.id)}
-                    className="flex items-center px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sm text-gray-300 transition-colors"
+                    className="flex items-center px-3 py-1 rounded-lg bg-[#111111] hover:bg-[#1a1a1a] text-sm text-gray-400 transition-colors"
                   >
                     {copiedId === snippet.id ? (
                       <>
@@ -399,7 +399,7 @@ export default function CookbookPage() {
                   </button>
                 </div>
                 <div className="code-block rounded-none border-0">
-                  <pre className="text-sm text-gray-300 overflow-x-auto">{snippet.code}</pre>
+                  <pre className="text-sm text-gray-400 overflow-x-auto">{snippet.code}</pre>
                 </div>
               </div>
             </div>

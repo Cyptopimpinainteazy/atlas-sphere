@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "@types/axios": "^0.9.36",
+    "ethers": "^6.16.0",
+    "lucide-react": "^0.555.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/webpack-dev-server": "^4.7.1",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "cypress run",
+    "test:open": "cypress open",
+    "bmad:install": "npm --prefix crates/vibe-bmad run install-bmad",
+    "bmad:status": "npm --prefix crates/vibe-bmad run status",
+    "bmad:ci-install": "npm --prefix crates/vibe-bmad run ci-install"
+  }
+}

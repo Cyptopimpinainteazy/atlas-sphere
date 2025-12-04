@@ -258,7 +258,7 @@ pub fn compute_evm_prepare_root(
     payload: &[u8],
     result: &EvmExecutionResult,
 ) -> [u8; 32] {
-    use sp_core::hashing::blake2_256;
+    use sp_io::hashing::blake2_256;
 
     let mut preimage = Vec::new();
     preimage.extend_from_slice(comit_id);

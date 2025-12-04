@@ -11,6 +11,11 @@ fn main() {
     {
         println!("cargo:warning=Building WASM runtime...");
 
+        // Set WASM_BUILD_NO_COLOR to avoid ANSI codes in build output
+        env::set_var("WASM_BUILD_NO_COLOR", "1");
+        // Disable wasm-opt completely - it fails on reference types
+        env::set_var("WASM_BUILD_USE_WASM_OPT", "0");
+
         // Run the WASM builder - catch panic if wasm-opt fails
         let result = panic::catch_unwind(|| {
             substrate_wasm_builder::WasmBuilder::new()
@@ -26,41 +31,124 @@ fn main() {
         }
 
         // Manually generate wasm_binary.rs from the WASM file
-        // The substrate-wasm-builder fails to do this due to wasm-opt deserialization error
-        // Try multiple paths - compact.compressed, compact, or bloaty (unoptimized)
+        // The substrate-wasm-builder may fail to do this due to wasm-opt issues
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        println!("cargo:warning=OUT_DIR: {:?}", out_dir);
 
-        // The OUT_DIR is something like target/release/build/atlas-sphere-runtime-XXX/out
-        // We need to find the wbuild directory which is at target/release/wbuild/atlas-sphere-runtime
-        let target_release_dir = out_dir
-            .parent() // out
-            .and_then(|p| p.parent()) // atlas-sphere-runtime-XXX
-            .and_then(|p| p.parent()) // build
-            .and_then(|p| p.parent()) // release
-            .unwrap_or(&out_dir);
+        // The OUT_DIR for WASM builds is nested deep inside wbuild:
+        // target/release/wbuild/atlas-sphere-runtime/target/wasm32-unknown-unknown/release/build/atlas-sphere-runtime-XXX/out
+        // We need to find: target/release/wbuild/atlas-sphere-runtime/
+        // 
+        // Strategy: Look for the atlas-sphere-runtime directory that contains the .wasm files directly
+        
+        let mut wbuild_dir: Option<PathBuf> = None;
+        
+        // Method 1: Walk up from OUT_DIR looking for the right atlas-sphere-runtime dir
+        let mut current = out_dir.clone();
+        for _ in 0..12 {
+            if let Some(parent) = current.parent() {
+                let parent_name = parent.file_name().and_then(|n| n.to_str());
+                if parent_name == Some("atlas-sphere-runtime") {
+                    // Check if this directory has .wasm files (not the nested target one)
+                    let has_wasm = parent.join("atlas_sphere_runtime.wasm.compact.compressed.wasm").exists()
+                        || parent.join("atlas_sphere_runtime.wasm.wasm").exists()
+                        || parent.join("atlas_sphere_runtime.wasm.compact.wasm").exists();
+                    if has_wasm {
+                        wbuild_dir = Some(parent.to_path_buf());
+                        println!("cargo:warning=Found wbuild_dir by walking up: {:?}", wbuild_dir);
+                        break;
+                    }
+                }
+                current = parent.to_path_buf();
+            } else {
+                break;
+            }
+        }
+        
+        // Method 2: Use CARGO_MANIFEST_DIR to find workspace root, then construct path
+        if wbuild_dir.is_none() {
+            if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+                let manifest_path = PathBuf::from(&manifest_dir);
+                // CARGO_MANIFEST_DIR for runtime crate could be:
+                // - /path/to/workspace/runtime (normal build)
+                // - /path/to/workspace/target/release/wbuild/atlas-sphere-runtime (wasm build)
+                
+                // Check if we're in the wbuild directory
+                if manifest_dir.contains("wbuild") {
+                    // We're in the wbuild build, the wasm files are in our manifest dir
+                    let test_path = manifest_path.join("atlas_sphere_runtime.wasm.compact.compressed.wasm");
+                    if test_path.exists() {
+                        wbuild_dir = Some(manifest_path.clone());
+                        println!("cargo:warning=Found wbuild_dir from CARGO_MANIFEST_DIR (wasm build): {:?}", wbuild_dir);
+                    }
+                }
+                
+                // Also try the normal case: workspace/target/release/wbuild/atlas-sphere-runtime
+                if wbuild_dir.is_none() {
+                    if let Some(workspace_root) = manifest_path.parent() {
+                        let fallback = workspace_root
+                            .join("target")
+                            .join("release")
+                            .join("wbuild")
+                            .join("atlas-sphere-runtime");
+                        let test_path = fallback.join("atlas_sphere_runtime.wasm.compact.compressed.wasm");
+                        if test_path.exists() {
+                            wbuild_dir = Some(fallback);
+                            println!("cargo:warning=Found wbuild_dir from workspace root: {:?}", wbuild_dir);
+                        }
+                    }
+                }
+            }
+        }
 
-        let wbuild_dir = target_release_dir.join("wbuild/atlas-sphere-runtime");
+        // Build list of paths to check
+        let possible_paths: Vec<PathBuf> = if let Some(ref dir) = wbuild_dir {
+            vec![
+                dir.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
+                dir.join("atlas_sphere_runtime.wasm.compact.wasm"),
+                dir.join("atlas_sphere_runtime.wasm.wasm"),
+                dir.join("target/wasm32-unknown-unknown/release/atlas_sphere_runtime.wasm"),
+            ]
+        } else {
+            // Fallback: try hardcoded paths based on workspace location
+            // Extract workspace root from OUT_DIR by looking for "target/release"
+            let out_str = out_dir.to_string_lossy();
+            let workspace_root = if let Some(idx) = out_str.find("/target/release") {
+                &out_str[..idx]
+            } else {
+                "/home/lojak/Desktop/X3-atlas-sphere"
+            };
+            
+            let base = PathBuf::from(workspace_root)
+                .join("target/release/wbuild/atlas-sphere-runtime");
+            
+            println!("cargo:warning=Using fallback wbuild path: {:?}", base);
+            
+            vec![
+                base.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
+                base.join("atlas_sphere_runtime.wasm.compact.wasm"),
+                base.join("atlas_sphere_runtime.wasm.wasm"),
+                base.join("target/wasm32-unknown-unknown/release/atlas_sphere_runtime.wasm"),
+            ]
+        };
 
-        // Also try the old path calculation for compatibility
-        let wbuild_dir_alt = out_dir.join("../../..").join("wbuild/atlas-sphere-runtime");
-
-        let possible_paths = [
-            wbuild_dir.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
-            wbuild_dir.join("atlas_sphere_runtime.wasm.compact.wasm"),
-            wbuild_dir.join("atlas_sphere_runtime.wasm.wasm"),
-            wbuild_dir.join("target/wasm32-unknown-unknown/release/atlas_sphere_runtime.wasm"),
-            // Alternative paths
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.compact.wasm"),
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.wasm"),
-        ];
-
+        // Find a valid WASM binary
         let mut found_path: Option<PathBuf> = None;
         for path in &possible_paths {
             println!("cargo:warning=Checking for WASM at {:?}", path);
             if path.exists() {
-                found_path = Some(path.clone());
-                break;
+                // Verify it's a valid WASM file (starts with magic number)
+                if let Ok(bytes) = fs::read(&path) {
+                    if bytes.len() > 8 && bytes[0..4] == [0x00, 0x61, 0x73, 0x6d] {
+                        println!("cargo:warning=Valid WASM found! Size: {} bytes", bytes.len());
+                        found_path = Some(path.clone());
+                        break;
+                    } else {
+                        println!("cargo:warning=File exists but not valid WASM (size: {}, first 4 bytes: {:?})", 
+                            bytes.len(), 
+                            bytes.get(0..4).unwrap_or(&[]));
+                    }
+                }
             }
         }
 
