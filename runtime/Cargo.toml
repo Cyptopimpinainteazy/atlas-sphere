@@ -40,6 +40,7 @@ pallet-evm-precompile-modexp = { workspace = true, default-features = false }
 pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
+pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
@@ -93,6 +94,7 @@ std = [
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
 	"pallet-atlas-kernel/std",
+	"pallet-atomic-trade-engine/std",
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
 	"sp-api/std",
@@ -120,6 +122,7 @@ runtime-benchmarks = [
 	"pallet-balances/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-atlas-kernel/runtime-benchmarks",
+	"pallet-atomic-trade-engine/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]
 

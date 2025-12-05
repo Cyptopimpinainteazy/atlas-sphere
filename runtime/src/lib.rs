@@ -19,6 +19,7 @@ pub use frame_support::{
 use frame_support::{traits::Currency, weights::Weight};
 use frame_system::limits;
 use pallet_atlas_kernel;
+use pallet_atomic_trade_engine;
 use pallet_aura;
 use pallet_balances;
 use pallet_collective;
@@ -189,6 +190,7 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment,
         EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
+        AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Sudo: pallet_sudo,
     }
@@ -209,6 +211,7 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment,
         EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
+        AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
     }
 );
@@ -413,6 +416,37 @@ impl pallet_atlas_kernel::Config for Runtime {
     #[cfg(not(feature = "std"))]
     type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
+}
+
+// ===== AtomicTradeEngine Configuration =====
+
+parameter_types! {
+    pub const MaxTradeLegs: u32 = 16;
+    pub const MaxCheckpoints: u32 = 8;
+    pub const MaxPendingBatchesPerAccount: u32 = 64;
+    pub const DefaultTradeEvmGasLimit: u64 = 500_000;
+    pub const DefaultTradeSvmComputeLimit: u64 = 500_000;
+}
+
+impl pallet_atomic_trade_engine::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = pallet_atomic_trade_engine::weights::SubstrateWeight<Runtime>;
+    type Currency = Balances;
+    // Use the same VM adapters as AtlasKernel
+    #[cfg(feature = "std")]
+    type EvmAdapter = native_vm_adapters::NativeEvmAdapter;
+    #[cfg(feature = "std")]
+    type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
+    #[cfg(not(feature = "std"))]
+    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
+    #[cfg(not(feature = "std"))]
+    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
+    type MaxTradeLegs = MaxTradeLegs;
+    type MaxCheckpoints = MaxCheckpoints;
+    type MaxPendingBatchesPerAccount = MaxPendingBatchesPerAccount;
+    type DefaultTradeEvmGasLimit = DefaultTradeEvmGasLimit;
+    type DefaultTradeSvmComputeLimit = DefaultTradeSvmComputeLimit;
+    type AmmRegistrarOrigin = EnsureRootOrHalfCouncil;
 }
 
 #[cfg(feature = "std")]
