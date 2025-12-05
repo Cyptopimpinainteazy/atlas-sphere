@@ -206,6 +206,20 @@ pub struct TradeQuote {
     pub arbitrage_profit_bps: Option<u32>,
 }
 
+/// Single price observation for oracle storage.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+pub struct PriceObservation {
+    /// Observed price (scaled by 1e18)
+    pub price: u128,
+    /// Timestamp of observation
+    pub timestamp: u64,
+    /// Block number when recorded
+    pub block_number: u64,
+    /// Source identifier (AMM pool or oracle)
+    pub source: u8,
+}
+
 /// Price oracle data point.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct PricePoint {

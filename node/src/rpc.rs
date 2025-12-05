@@ -8,9 +8,14 @@ use atlas_sphere_runtime::{
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use pallet_atlas_kernel::AtlasKernelRuntimeApi;
+use pallet_atomic_trade_engine::{
+    runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
+    AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
+};
 use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
+use sp_core::H256;
 use sp_runtime::traits::{Block as BlockT, SaturatedConversion};
 use std::sync::Arc;
 
@@ -271,6 +276,180 @@ where
     }
 }
 
+// ============================================================================
+// Atomic Trade Engine RPC
+// ============================================================================
+
+/// Atomic Trade Engine RPC API for AI agents and frontends
+#[rpc(client, server)]
+pub trait AtomicTradeEngineApi<BlockHash> {
+    /// Simulate a trade path without execution
+    #[method(name = "atomicTrade_simulate")]
+    fn simulate_trade(
+        &self,
+        token_in: H256,
+        token_out: H256,
+        amount_in: u128,
+        slippage_bps: u32,
+        at: Option<BlockHash>,
+    ) -> RpcResult<SimulationResult>;
+
+    /// Estimate execution costs (EVM gas, SVM compute units)
+    #[method(name = "atomicTrade_estimateCost")]
+    fn estimate_cost(
+        &self,
+        legs: u32,
+        vm_types: Vec<u8>,
+        at: Option<BlockHash>,
+    ) -> RpcResult<(u64, u64)>;
+
+    /// Get TWAP and latest price for a token pair
+    #[method(name = "atomicTrade_getPriceData")]
+    fn get_price_data(
+        &self,
+        token_a: H256,
+        token_b: H256,
+        at: Option<BlockHash>,
+    ) -> RpcResult<PriceDataResponse>;
+
+    /// Get batch execution status
+    #[method(name = "atomicTrade_getBatchStatus")]
+    fn get_batch_status(
+        &self,
+        batch_hash: H256,
+        at: Option<BlockHash>,
+    ) -> RpcResult<BatchStatusResponse>;
+
+    /// Check if account is authorized for atomic trades
+    #[method(name = "atomicTrade_isAuthorized")]
+    fn is_trade_authorized(&self, account: AccountId, at: Option<BlockHash>) -> RpcResult<bool>;
+}
+
+/// Atomic Trade Engine RPC server implementation
+pub struct AtomicTradeEngineRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> AtomicTradeEngineRpc<C, B> {
+    /// Create new RPC instance
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> AtomicTradeEngineApiServer<<Block as BlockT>::Hash>
+    for AtomicTradeEngineRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send
+        + Sync
+        + 'static
+        + ProvideRuntimeApi<Block>
+        + HeaderBackend<Block>
+        + BlockBackend<Block>,
+    C::Api: AtomicTradeEngineRuntimeApi<Block>,
+{
+    fn simulate_trade(
+        &self,
+        token_in: H256,
+        token_out: H256,
+        amount_in: u128,
+        slippage_bps: u32,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<SimulationResult> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.simulate_trade(at, token_in, token_out, amount_in, slippage_bps)
+            .map_err(|e| {
+                jsonrpsee::types::ErrorObjectOwned::owned(
+                    1,
+                    format!("Runtime API error: {:?}", e),
+                    None::<()>,
+                )
+            })
+    }
+
+    fn estimate_cost(
+        &self,
+        legs: u32,
+        vm_types: Vec<u8>,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<(u64, u64)> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.estimate_execution_cost(at, legs, vm_types)
+            .map_err(|e| {
+                jsonrpsee::types::ErrorObjectOwned::owned(
+                    1,
+                    format!("Runtime API error: {:?}", e),
+                    None::<()>,
+                )
+            })
+    }
+
+    fn get_price_data(
+        &self,
+        token_a: H256,
+        token_b: H256,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<PriceDataResponse> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_price_data(at, token_a, token_b).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_batch_status(
+        &self,
+        batch_hash: H256,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<BatchStatusResponse> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_batch_status(at, batch_hash).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn is_trade_authorized(
+        &self,
+        account: AccountId,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<bool> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        // Convert AccountId to bytes for runtime API
+        use codec::Encode;
+        let account_bytes = account.encode();
+
+        api.is_authorized(at, account_bytes).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+}
+
 /// Create full RPC extensions with Atlas Kernel and system methods
 pub fn create_full<C, P>(
     client: Arc<C>,
@@ -285,6 +464,7 @@ where
         + BlockBackend<Block>,
     C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
     C::Api: AccountNonceApi<Block, AccountId, Nonce>,
+    C::Api: AtomicTradeEngineRuntimeApi<Block>,
     P: Send + Sync + 'static,
 {
     use jsonrpsee::RpcModule;
@@ -300,8 +480,12 @@ where
     module.merge(AtlasKernelApiServer::into_rpc(atlas_kernel))?;
 
     // Add minimal Ethereum-compatible RPC (chainId, gasPrice, blockNumber)
-    let eth_compat = EthCompatRpc::<C, Block>::new(client);
+    let eth_compat = EthCompatRpc::<C, Block>::new(client.clone());
     module.merge(EthCompatApiServer::into_rpc(eth_compat))?;
+
+    // Add Atomic Trade Engine RPC for AI agents
+    let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client);
+    module.merge(AtomicTradeEngineApiServer::into_rpc(atomic_trade))?;
 
     Ok(module)
 }

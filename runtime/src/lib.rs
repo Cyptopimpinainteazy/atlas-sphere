@@ -743,6 +743,156 @@ impl_runtime_apis! {
         }
     }
 
+    impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {
+        fn simulate_trade(
+            token_in: sp_core::H256,
+            token_out: sp_core::H256,
+            amount_in: u128,
+            slippage_bps: u32,
+        ) -> pallet_atomic_trade_engine::runtime_api::SimulationResult {
+            use pallet_atomic_trade_engine::runtime_api::SimulationResult;
+            use pallet_atomic_trade_engine::VmType;
+
+            // Use the pallet's simulate_trade_path function
+            let legs = vec![pallet_atomic_trade_engine::TradeLegInput {
+                vm_type: VmType::Evm,
+                pool_id: sp_core::H256::default(),
+                token_in,
+                token_out,
+                amount_in,
+                min_amount_out: amount_in.saturating_mul(10000 - slippage_bps as u128) / 10000,
+                calldata: sp_runtime::BoundedVec::default(),
+            }];
+
+            match pallet_atomic_trade_engine::Pallet::<Runtime>::simulate_trade_path(&legs) {
+                Ok(output) => SimulationResult {
+                    success: true,
+                    estimated_output: output,
+                    price_impact_bps: if amount_in > 0 {
+                        ((amount_in.saturating_sub(output)) * 10000 / amount_in) as u32
+                    } else {
+                        0
+                    },
+                    evm_gas: 150_000,
+                    svm_compute: 0,
+                    route: vec![],
+                    error: None,
+                },
+                Err(_) => SimulationResult {
+                    success: false,
+                    estimated_output: 0,
+                    price_impact_bps: 0,
+                    evm_gas: 0,
+                    svm_compute: 0,
+                    route: vec![],
+                    error: Some(b"Simulation failed".to_vec()),
+                },
+            }
+        }
+
+        fn estimate_execution_cost(
+            legs: u32,
+            vm_types: Vec<u8>,
+        ) -> (u64, u64) {
+            let mut evm_gas: u64 = 0;
+            let mut svm_compute: u64 = 0;
+
+            for vm_type in vm_types.iter().take(legs as usize) {
+                match vm_type {
+                    0 => evm_gas = evm_gas.saturating_add(150_000), // EVM
+                    1 => svm_compute = svm_compute.saturating_add(200_000), // SVM
+                    2 => { // CrossVM
+                        evm_gas = evm_gas.saturating_add(200_000);
+                        svm_compute = svm_compute.saturating_add(250_000);
+                    }
+                    _ => {}
+                }
+            }
+
+            (evm_gas, svm_compute)
+        }
+
+        fn get_price_data(
+            token_a: sp_core::H256,
+            token_b: sp_core::H256,
+        ) -> pallet_atomic_trade_engine::runtime_api::PriceDataResponse {
+            use pallet_atomic_trade_engine::runtime_api::PriceDataResponse;
+
+            let twap = pallet_atomic_trade_engine::Pallet::<Runtime>::get_twap(token_a, token_b);
+            let latest = pallet_atomic_trade_engine::Pallet::<Runtime>::get_latest_price(token_a, token_b);
+            let twap_data = pallet_atomic_trade_engine::TwapData::<Runtime>::get((token_a, token_b));
+
+            PriceDataResponse {
+                exists: twap.is_some() || latest.is_some(),
+                twap_price: twap,
+                latest_price: latest,
+                observation_count: twap_data.as_ref().map(|t| t.observation_count).unwrap_or(0),
+                last_updated: twap_data.map(|t| t.last_timestamp).unwrap_or(0),
+            }
+        }
+
+        fn get_batch_status(batch_hash: sp_core::H256) -> pallet_atomic_trade_engine::runtime_api::BatchStatusResponse {
+            use pallet_atomic_trade_engine::runtime_api::BatchStatusResponse;
+
+            let maybe_batch = pallet_atomic_trade_engine::TradeBatches::<Runtime>::get(batch_hash);
+
+            match maybe_batch {
+                Some(batch) => BatchStatusResponse {
+                    exists: true,
+                    status: match batch.status {
+                        pallet_atomic_trade_engine::BatchStatus::Pending => 0,
+                        pallet_atomic_trade_engine::BatchStatus::Executing => 1,
+                        pallet_atomic_trade_engine::BatchStatus::Finalized => 2,
+                        pallet_atomic_trade_engine::BatchStatus::RolledBack => 3,
+                    },
+                    submitted_at: batch.submitted_at.saturated_into(),
+                    finalized_at: batch.finalized_at.map(|b| b.saturated_into()),
+                    legs_executed: batch.execution_receipts.len() as u32,
+                    checkpoints: batch.checkpoints.len() as u32,
+                },
+                None => BatchStatusResponse {
+                    exists: false,
+                    status: 0,
+                    submitted_at: 0,
+                    finalized_at: None,
+                    legs_executed: 0,
+                    checkpoints: 0,
+                },
+            }
+        }
+
+        fn find_route(
+            token_in: sp_core::H256,
+            token_out: sp_core::H256,
+            amount_in: u128,
+        ) -> Option<pallet_atomic_trade_engine::types::TradeRoute> {
+            pallet_atomic_trade_engine::Pallet::<Runtime>::find_execution_path(token_in, token_out, amount_in)
+                .map(|(steps, expected_output)| {
+                    pallet_atomic_trade_engine::types::TradeRoute {
+                        steps,
+                        total_expected_output: expected_output,
+                        total_gas_estimate: 150_000,
+                        price_impact_bps: if amount_in > 0 {
+                            ((amount_in.saturating_sub(expected_output)) * 10000 / amount_in) as u32
+                        } else {
+                            0
+                        },
+                    }
+                })
+        }
+
+        fn is_authorized(account: Vec<u8>) -> bool {
+            // Delegate authorization to Atlas Kernel's authorized accounts
+            use codec::Decode;
+            if let Ok(account_id) = AccountId::decode(&mut &account[..]) {
+                // Check if account is authorized in the main Atlas Kernel pallet
+                pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account_id)
+            } else {
+                false
+            }
+        }
+    }
+
     impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
         fn slot_duration() -> sp_consensus_aura::SlotDuration {
             sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())

@@ -57,9 +57,11 @@ mod benchmarking;
 
 pub mod amm;
 pub mod graph;
+pub mod runtime_api;
 pub mod types;
 pub mod weights;
 
+pub use runtime_api::*;
 pub use weights::WeightInfo;
 
 use codec::{Decode, Encode};
@@ -75,6 +77,7 @@ use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
 use sp_runtime::{
+    offchain::{http, Duration},
     traits::{AtLeast32BitUnsigned, CheckedAdd, CheckedMul, CheckedSub, Saturating, Zero},
     DispatchError, RuntimeDebug, SaturatedConversion,
 };
@@ -202,6 +205,33 @@ pub mod pallet {
     #[pallet::getter(fn total_volume)]
     pub type TotalVolume<T: Config> = StorageValue<_, u128, ValueQuery>;
 
+    /// Price observations for TWAP oracle (token_pair => observations).
+    #[pallet::storage]
+    #[pallet::getter(fn price_observations)]
+    pub type PriceObservations<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        (H256, H256), // (token_a, token_b)
+        BoundedVec<types::PricePoint, ConstU32<256>>,
+        ValueQuery,
+    >;
+
+    /// TWAP data for price pairs.
+    #[pallet::storage]
+    #[pallet::getter(fn twap_data)]
+    pub type TwapData<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        (H256, H256), // (token_a, token_b)
+        types::TwapData,
+        OptionQuery,
+    >;
+
+    /// Offchain worker price aggregator submissions.
+    #[pallet::storage]
+    pub type PendingPriceUpdates<T: Config> =
+        StorageValue<_, BoundedVec<types::PricePoint, ConstU32<64>>, ValueQuery>;
+
     pub type BalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -268,6 +298,19 @@ pub mod pallet {
             path: Vec<AssetPair>,
             expected_profit_bps: u32,
         },
+        /// Price observation recorded.
+        PriceObservationRecorded {
+            token_a: H256,
+            token_b: H256,
+            price: u128,
+            source: AmmProtocol,
+        },
+        /// TWAP updated for a token pair.
+        TwapUpdated {
+            token_a: H256,
+            token_b: H256,
+            twap_price: u128,
+        },
     }
 
     #[pallet::error]
@@ -326,6 +369,12 @@ pub mod pallet {
         Unauthorized,
         /// Invalid batch status transition.
         InvalidStatusTransition,
+        /// Price observation limit exceeded.
+        TooManyPriceObservations,
+        /// Invalid price data.
+        InvalidPriceData,
+        /// Price oracle not initialized for pair.
+        PriceOracleNotInitialized,
     }
 
     #[pallet::call]
@@ -660,6 +709,88 @@ pub mod pallet {
             });
 
             Ok(())
+        }
+
+        /// Submit a price observation for the TWAP oracle.
+        ///
+        /// Can be called by authorized price feeders or offchain workers.
+        ///
+        /// # Arguments
+        /// * `token_a` - First token in pair
+        /// * `token_b` - Second token in pair  
+        /// * `price` - Price observation (token_b per token_a, scaled by 1e18)
+        /// * `source` - AMM source of the price
+        #[pallet::call_index(6)]
+        #[pallet::weight(Weight::from_parts(50_000_000, 0))]
+        pub fn submit_price_observation(
+            origin: OriginFor<T>,
+            token_a: H256,
+            token_b: H256,
+            price: u128,
+            source: AmmProtocol,
+        ) -> DispatchResult {
+            // Can be called by root or authorized price feeders
+            T::AmmRegistrarOrigin::ensure_origin(origin)?;
+
+            ensure!(price > 0, Error::<T>::InvalidPriceData);
+            ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
+
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+
+            let observation = types::PricePoint {
+                token_a,
+                token_b,
+                price,
+                timestamp,
+                block_number: current_block.saturated_into(),
+                source,
+            };
+
+            // Store observation
+            PriceObservations::<T>::try_mutate(
+                (token_a, token_b),
+                |observations| -> DispatchResult {
+                    // Remove oldest if at capacity
+                    if observations.len() >= 256 {
+                        observations.remove(0);
+                    }
+                    observations
+                        .try_push(observation.clone())
+                        .map_err(|_| Error::<T>::TooManyPriceObservations)?;
+                    Ok(())
+                },
+            )?;
+
+            // Update TWAP
+            Self::update_twap(token_a, token_b, price, timestamp)?;
+
+            Self::deposit_event(Event::PriceObservationRecorded {
+                token_a,
+                token_b,
+                price,
+                source,
+            });
+
+            Ok(())
+        }
+    }
+
+    // ============================================================================
+    // Offchain Worker
+    // ============================================================================
+
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        /// Offchain worker for price aggregation.
+        fn offchain_worker(block_number: BlockNumberFor<T>) {
+            // Run price aggregation every 10 blocks
+            let block_num: u64 = block_number.saturated_into();
+            if block_num % 10 == 0 {
+                if let Err(e) = Self::fetch_external_prices() {
+                    log::warn!("Offchain worker price fetch failed: {:?}", e);
+                }
+            }
         }
     }
 
@@ -1050,6 +1181,167 @@ pub mod pallet {
             }
 
             Ok(current_amount)
+        }
+
+        // ====================================================================
+        // Price Oracle Functions
+        // ====================================================================
+
+        /// Update TWAP data for a token pair.
+        fn update_twap(
+            token_a: H256,
+            token_b: H256,
+            new_price: u128,
+            timestamp: u64,
+        ) -> Result<(), DispatchError> {
+            TwapData::<T>::mutate((token_a, token_b), |maybe_twap| {
+                match maybe_twap {
+                    Some(twap) => {
+                        // Calculate time-weighted cumulative
+                        let time_elapsed = timestamp.saturating_sub(twap.last_timestamp);
+                        if time_elapsed > 0 {
+                            let price_time_product = new_price.saturating_mul(time_elapsed as u128);
+                            twap.cumulative_price =
+                                twap.cumulative_price.saturating_add(price_time_product);
+                            twap.last_timestamp = timestamp;
+                            twap.observation_count = twap.observation_count.saturating_add(1);
+                        }
+                    }
+                    None => {
+                        // Initialize TWAP data
+                        *maybe_twap = Some(types::TwapData {
+                            token_a,
+                            token_b,
+                            cumulative_price: new_price,
+                            last_timestamp: timestamp,
+                            observation_count: 1,
+                            window_seconds: 3600, // 1 hour default window
+                        });
+                    }
+                }
+            });
+
+            // Emit TWAP updated event with calculated average
+            if let Some(twap) = TwapData::<T>::get((token_a, token_b)) {
+                let avg_price = twap
+                    .cumulative_price
+                    .checked_div(twap.observation_count as u128)
+                    .unwrap_or(new_price);
+
+                Self::deposit_event(Event::TwapUpdated {
+                    token_a,
+                    token_b,
+                    twap_price: avg_price,
+                });
+            }
+
+            Ok(())
+        }
+
+        /// Get current TWAP for a token pair.
+        pub fn get_twap(token_a: H256, token_b: H256) -> Option<u128> {
+            TwapData::<T>::get((token_a, token_b)).map(|twap| {
+                twap.cumulative_price
+                    .checked_div(twap.observation_count as u128)
+                    .unwrap_or(0)
+            })
+        }
+
+        /// Get latest price observation.
+        pub fn get_latest_price(token_a: H256, token_b: H256) -> Option<u128> {
+            PriceObservations::<T>::get((token_a, token_b))
+                .last()
+                .map(|obs| obs.price)
+        }
+
+        /// Fetch external prices via offchain HTTP (stub for offchain worker).
+        #[cfg(feature = "std")]
+        fn fetch_external_prices() -> Result<(), &'static str> {
+            // In production, this would:
+            // 1. Query external price APIs (CoinGecko, DeFi Llama, etc.)
+            // 2. Aggregate prices from multiple sources
+            // 3. Submit unsigned transactions with price updates
+
+            log::debug!("Offchain worker: fetching external prices");
+
+            // Example HTTP request structure (disabled in no_std):
+            // let request = http::Request::get("https://api.coingecko.com/...");
+            // let response = request.send().map_err(|_| "HTTP request failed")?;
+
+            Ok(())
+        }
+
+        #[cfg(not(feature = "std"))]
+        fn fetch_external_prices() -> Result<(), &'static str> {
+            Ok(()) // No-op in WASM
+        }
+
+        // ====================================================================
+        // AI Agent Query APIs (for RPC exposure)
+        // ====================================================================
+
+        /// Estimate gas/compute cost for a trade path.
+        pub fn estimate_execution_cost(legs: &[TradeLegInput]) -> (u64, u64) {
+            let mut evm_gas: u64 = 0;
+            let mut svm_compute: u64 = 0;
+
+            for leg in legs {
+                match leg.vm_type {
+                    VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
+                    VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
+                    VmType::CrossVm => {
+                        evm_gas = evm_gas.saturating_add(200_000);
+                        svm_compute = svm_compute.saturating_add(250_000);
+                    }
+                }
+            }
+
+            (evm_gas, svm_compute)
+        }
+
+        /// Get optimal execution path between two tokens.
+        pub fn find_execution_path(
+            token_in: H256,
+            token_out: H256,
+            amount_in: u128,
+        ) -> Option<(Vec<types::RouteStep>, u128)> {
+            // Build trade graph from registered AMM adapters
+            let mut graph = graph::TradeGraph::new();
+
+            // In production, populate graph from on-chain pool data
+            // For now, return None to indicate path finding is not available
+            // until pools are registered
+
+            // This would call:
+            // graph::TradeGraphResolver::find_optimal_route(&graph, token_in, token_out, amount_in)
+
+            None
+        }
+
+        /// Validate a trade bundle before dispatch.
+        pub fn validate_bundle(
+            legs: &[TradeLegInput],
+            slippage_bps: u32,
+            deadline: BlockNumberFor<T>,
+        ) -> Result<(), DispatchError> {
+            // Check legs count
+            ensure!(!legs.is_empty(), Error::<T>::EmptyTradeBatch);
+            ensure!(
+                legs.len() <= T::MaxTradeLegs::get() as usize,
+                Error::<T>::TooManyTradeLegs
+            );
+
+            // Validate slippage
+            ensure!(
+                slippage_bps >= MIN_SLIPPAGE_BPS && slippage_bps <= MAX_SLIPPAGE_BPS,
+                Error::<T>::InvalidSlippageTolerance
+            );
+
+            // Check deadline
+            let current_block = frame_system::Pallet::<T>::block_number();
+            ensure!(deadline > current_block, Error::<T>::DeadlineExpired);
+
+            Ok(())
         }
     }
 }
