@@ -7,7 +7,7 @@
 //! - Orca Whirlpool (SVM) - Concentrated liquidity on Solana
 //! - Atlas AMM - Native cross-VM AMM
 
-use crate::{AmmProtocol, VmType};
+use crate::types::{AmmProtocol, VmType};
 use codec::{Decode, Encode};
 use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;

@@ -437,7 +437,7 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         // Convert AccountId to bytes for runtime API
-        use codec::Encode;
+        use parity_scale_codec::Encode;
         let account_bytes = account.encode();
 
         api.is_authorized(at, account_bytes).map_err(|e| {

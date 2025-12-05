@@ -6,9 +6,8 @@
 //! - Cross-VM route optimization
 //! - Price impact minimization
 
-use crate::{
-    types::{ArbitrageOpportunity, LiquidityPool, RouteStep, TradeRoute},
-    AmmProtocol, VmType,
+use crate::types::{
+    AmmProtocol, ArbitrageOpportunity, LiquidityPool, RouteStep, TradeRoute, VmType,
 };
 use codec::{Decode, Encode};
 use frame_support::pallet_prelude::*;

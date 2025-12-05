@@ -3,13 +3,63 @@
 //! This module contains additional type definitions for trade execution,
 //! path resolution, and AMM integration.
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::RuntimeDebug;
 use sp_std::vec::Vec;
 
-use crate::{AmmProtocol, VmType};
+// ============================================================================
+// Core Types (exported to crate root)
+// ============================================================================
+
+/// Identifies the target VM for execution.
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+pub enum VmType {
+    /// Ethereum Virtual Machine
+    Evm,
+    /// Solana Virtual Machine
+    Svm,
+    /// Cross-VM operation (requires both)
+    CrossVm,
+}
+
+/// AMM protocol identifiers.
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    RuntimeDebug,
+    TypeInfo,
+    MaxEncodedLen,
+    Ord,
+    PartialOrd,
+)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+pub enum AmmProtocol {
+    /// Uniswap V2 style AMM (EVM)
+    UniswapV2,
+    /// Uniswap V3 concentrated liquidity (EVM)
+    UniswapV3,
+    /// Raydium AMM (SVM)
+    Raydium,
+    /// Orca Whirlpool (SVM)
+    OrcaWhirlpool,
+    /// Custom Atlas Sphere AMM
+    AtlasAmm,
+    /// Generic constant product AMM
+    ConstantProduct,
+    /// Curve-style stable swap
+    StableSwap,
+}
+
+// ============================================================================
+// Trade Types
+// ============================================================================
 
 /// Represents a tradeable asset in the system.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -137,6 +187,7 @@ impl LiquidityPool {
 
 /// Route step in a multi-hop trade path.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct RouteStep {
     /// Pool to use for this step
     pub pool_id: H256,

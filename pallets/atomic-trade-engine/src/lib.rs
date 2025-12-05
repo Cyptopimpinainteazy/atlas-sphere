@@ -100,6 +100,7 @@ pub mod pallet {
     use super::*;
 
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -113,7 +114,7 @@ pub mod pallet {
         type WeightInfo: WeightInfo;
 
         /// The currency type for fee handling.
-        type Currency: Currency<Self::AccountId>;
+        type Currency: Currency<<Self as frame_system::Config>::AccountId>;
 
         /// EVM execution adapter (from atlas-kernel or custom).
         type EvmAdapter: EvmExecutorAdapter;
@@ -142,7 +143,7 @@ pub mod pallet {
         type DefaultTradeSvmComputeLimit: Get<u64>;
 
         /// Origin allowed to register AMM adapters.
-        type AmmRegistrarOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+        type AmmRegistrarOrigin: EnsureOrigin<<Self as frame_system::Config>::RuntimeOrigin>;
     }
 
     /// Active trade batches indexed by batch_id.
@@ -152,7 +153,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         H256, // batch_id
-        TradeBatch<T::AccountId, BalanceOf<T>>,
+        TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
         OptionQuery,
     >;
 
@@ -173,7 +174,7 @@ pub mod pallet {
     pub type PendingBatches<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        T::AccountId,
+        AccountIdOf<T>,
         BoundedVec<H256, T::MaxPendingBatchesPerAccount>,
         ValueQuery,
     >;
@@ -182,13 +183,13 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn amm_adapters)]
     pub type AmmAdapters<T: Config> =
-        StorageMap<_, Blake2_128Concat, AmmProtocol, AmmAdapterConfig, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, types::AmmProtocol, AmmAdapterConfig, OptionQuery>;
 
     /// Trade execution nonces per account.
     #[pallet::storage]
     #[pallet::getter(fn trade_nonces)]
     pub type TradeNonces<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+        StorageMap<_, Blake2_128Concat, AccountIdOf<T>, u64, ValueQuery>;
 
     /// Completed batch count for metrics.
     #[pallet::storage]
@@ -232,6 +233,9 @@ pub mod pallet {
     pub type PendingPriceUpdates<T: Config> =
         StorageValue<_, BoundedVec<types::PricePoint, ConstU32<64>>, ValueQuery>;
 
+    /// Type alias to disambiguate AccountId from frame_system::Config
+    pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+
     pub type BalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
@@ -241,14 +245,14 @@ pub mod pallet {
         /// A new trade batch was created.
         TradeBatchCreated {
             batch_id: H256,
-            origin: T::AccountId,
+            origin: AccountIdOf<T>,
             legs_count: u32,
         },
         /// A trade leg execution started.
         TradeLegStarted {
             batch_id: H256,
             leg_index: u32,
-            vm_type: VmType,
+            vm_type: types::VmType,
         },
         /// A trade leg completed successfully.
         TradeLegCompleted {
@@ -288,11 +292,11 @@ pub mod pallet {
         },
         /// An AMM adapter was registered.
         AmmAdapterRegistered {
-            protocol: AmmProtocol,
-            vm_type: VmType,
+            protocol: types::AmmProtocol,
+            vm_type: types::VmType,
         },
         /// An AMM adapter was removed.
-        AmmAdapterRemoved { protocol: AmmProtocol },
+        AmmAdapterRemoved { protocol: types::AmmProtocol },
         /// Arbitrage opportunity detected.
         ArbitrageOpportunityDetected {
             path: Vec<AssetPair>,
@@ -303,7 +307,7 @@ pub mod pallet {
             token_a: H256,
             token_b: H256,
             price: u128,
-            source: AmmProtocol,
+            source: types::AmmProtocol,
         },
         /// TWAP updated for a token pair.
         TwapUpdated {
@@ -459,11 +463,12 @@ pub mod pallet {
                 origin: who.clone(),
                 legs: trade_legs,
                 slippage_tolerance_bps,
-                deadline,
+                deadline: deadline.saturated_into::<u64>(),
                 nonce,
                 status: BatchStatus::Pending,
-                created_at: current_block,
+                created_at: current_block.saturated_into::<u64>(),
                 total_gas_used: 0,
+                _phantom: core::marker::PhantomData,
             };
 
             // Store batch
@@ -521,7 +526,7 @@ pub mod pallet {
             );
 
             // Check deadline
-            let current_block = frame_system::Pallet::<T>::block_number();
+            let current_block: u64 = frame_system::Pallet::<T>::block_number().saturated_into();
             ensure!(batch.deadline > current_block, Error::<T>::DeadlineExpired);
 
             // Update status to executing
@@ -631,7 +636,7 @@ pub mod pallet {
         #[pallet::weight(<T as Config>::WeightInfo::register_amm_adapter())]
         pub fn register_amm_adapter(
             origin: OriginFor<T>,
-            protocol: AmmProtocol,
+            protocol: types::AmmProtocol,
             config: AmmAdapterConfig,
         ) -> DispatchResult {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
@@ -657,7 +662,7 @@ pub mod pallet {
         /// * `protocol` - The AMM protocol to remove
         #[pallet::call_index(4)]
         #[pallet::weight(<T as Config>::WeightInfo::remove_amm_adapter())]
-        pub fn remove_amm_adapter(origin: OriginFor<T>, protocol: AmmProtocol) -> DispatchResult {
+        pub fn remove_amm_adapter(origin: OriginFor<T>, protocol: types::AmmProtocol) -> DispatchResult {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
@@ -727,7 +732,7 @@ pub mod pallet {
             token_a: H256,
             token_b: H256,
             price: u128,
-            source: AmmProtocol,
+            source: types::AmmProtocol,
         ) -> DispatchResult {
             // Can be called by root or authorized price feeders
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
@@ -736,7 +741,7 @@ pub mod pallet {
             ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
 
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
 
             let observation = types::PricePoint {
                 token_a,
@@ -796,7 +801,7 @@ pub mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Generate a unique batch ID from inputs.
-        fn generate_batch_id(origin: &T::AccountId, nonce: u64, legs: &[TradeLegInput]) -> H256 {
+        fn generate_batch_id(origin: &AccountIdOf<T>, nonce: u64, legs: &[TradeLegInput]) -> H256 {
             let mut data = Vec::new();
             data.extend_from_slice(&origin.encode());
             data.extend_from_slice(&nonce.to_le_bytes());
@@ -808,7 +813,7 @@ pub mod pallet {
 
         /// Create a state checkpoint for rollback support.
         fn create_checkpoint(
-            batch: &TradeBatch<T::AccountId, BalanceOf<T>>,
+            batch: &TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
             index: u32,
         ) -> Result<StateCheckpoint, DispatchError> {
             // Compute state root from current batch state
@@ -826,7 +831,7 @@ pub mod pallet {
 
             let state_root = H256::from(blake2_256(&state_data));
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
 
             Ok(StateCheckpoint {
                 checkpoint_id: index,
@@ -843,7 +848,7 @@ pub mod pallet {
 
         /// Execute all legs of a trade batch atomically.
         fn execute_all_legs(
-            batch: &mut TradeBatch<T::AccountId, BalanceOf<T>>,
+            batch: &mut TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
         ) -> Result<(u128, u64), (u32, BatchFailureReason)> {
             let mut total_output: u128 = 0;
             let mut total_gas: u64 = 0;
@@ -928,9 +933,9 @@ pub mod pallet {
             let payload = Self::build_trade_payload(leg, amount_in)?;
 
             match leg.vm_type {
-                VmType::Evm => {
+                types::VmType::Evm => {
                     let gas_limit = T::DefaultTradeEvmGasLimit::get();
-                    let receipt = T::EvmAdapter::execute(&payload, gas_limit)
+                    let receipt = <T as Config>::EvmAdapter::execute(&payload, gas_limit)
                         .map_err(|_| TradeLegFailureReason::EvmExecutionFailed)?;
 
                     if !receipt.success {
@@ -942,9 +947,9 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                VmType::Svm => {
+                types::VmType::Svm => {
                     let compute_limit = T::DefaultTradeSvmComputeLimit::get();
-                    let receipt = T::SvmAdapter::execute(&payload, compute_limit)
+                    let receipt = <T as Config>::SvmAdapter::execute(&payload, compute_limit)
                         .map_err(|_| TradeLegFailureReason::SvmExecutionFailed)?;
 
                     if !receipt.success {
@@ -956,7 +961,7 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                VmType::CrossVm => {
+                types::VmType::CrossVm => {
                     // Cross-VM execution requires coordination between both VMs
                     Self::execute_cross_vm_leg(leg, amount_in)
                 }
@@ -973,7 +978,7 @@ pub mod pallet {
 
             // Execute EVM portion
             let evm_receipt =
-                T::EvmAdapter::execute(&evm_payload, T::DefaultTradeEvmGasLimit::get())
+                <T as Config>::EvmAdapter::execute(&evm_payload, T::DefaultTradeEvmGasLimit::get())
                     .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !evm_receipt.success {
@@ -989,7 +994,7 @@ pub mod pallet {
 
             // Execute SVM portion
             let svm_receipt =
-                T::SvmAdapter::execute(&svm_payload, T::DefaultTradeSvmComputeLimit::get())
+                <T as Config>::SvmAdapter::execute(&svm_payload, T::DefaultTradeSvmComputeLimit::get())
                     .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !svm_receipt.success {
@@ -1142,7 +1147,7 @@ pub mod pallet {
         }
 
         /// Remove a batch from pending list.
-        fn remove_from_pending(account: &T::AccountId, batch_id: H256) {
+        fn remove_from_pending(account: &AccountIdOf<T>, batch_id: H256) {
             PendingBatches::<T>::mutate(account, |batches| {
                 if let Some(pos) = batches.iter().position(|&id| id == batch_id) {
                     batches.remove(pos);
@@ -1151,7 +1156,7 @@ pub mod pallet {
         }
 
         /// Get current trade nonce for an account.
-        pub fn get_trade_nonce(account: &T::AccountId) -> u64 {
+        pub fn get_trade_nonce(account: &AccountIdOf<T>) -> u64 {
             TradeNonces::<T>::get(account)
         }
 
@@ -1287,9 +1292,9 @@ pub mod pallet {
 
             for leg in legs {
                 match leg.vm_type {
-                    VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
-                    VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
-                    VmType::CrossVm => {
+                    types::VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
+                    types::VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
+                    types::VmType::CrossVm => {
                         evm_gas = evm_gas.saturating_add(200_000);
                         svm_compute = svm_compute.saturating_add(250_000);
                     }
@@ -1348,51 +1353,6 @@ pub mod pallet {
 
 // ============================================================================
 // Types
-// ============================================================================
-
-/// Identifies the target VM for execution.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
-pub enum VmType {
-    /// Ethereum Virtual Machine
-    Evm,
-    /// Solana Virtual Machine
-    Svm,
-    /// Cross-VM operation (requires both)
-    CrossVm,
-}
-
-/// AMM protocol identifiers.
-#[derive(
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    RuntimeDebug,
-    TypeInfo,
-    MaxEncodedLen,
-    Ord,
-    PartialOrd,
-)]
-pub enum AmmProtocol {
-    /// Uniswap V2 style AMM (EVM)
-    UniswapV2,
-    /// Uniswap V3 concentrated liquidity (EVM)
-    UniswapV3,
-    /// Raydium AMM (SVM)
-    Raydium,
-    /// Orca Whirlpool (SVM)
-    OrcaWhirlpool,
-    /// Custom Atlas Sphere AMM
-    AtlasAmm,
-    /// Generic constant product AMM
-    ConstantProduct,
-    /// Curve-style stable swap
-    StableSwap,
-}
-
-/// Asset pair for trading.
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct AssetPair {
     pub asset_in: H256,
@@ -1403,7 +1363,7 @@ pub struct AssetPair {
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct AmmAdapterConfig {
     /// Target VM for this AMM
-    pub vm_type: VmType,
+    pub vm_type: types::VmType,
     /// Contract/program address
     pub address: Vec<u8>,
     /// Fee in basis points
@@ -1416,9 +1376,9 @@ pub struct AmmAdapterConfig {
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct TradeLegInput {
     /// AMM protocol to use
-    pub amm_protocol: AmmProtocol,
+    pub amm_protocol: types::AmmProtocol,
     /// Target VM
-    pub vm_type: VmType,
+    pub vm_type: types::VmType,
     /// Input asset
     pub asset_in: H256,
     /// Output asset
@@ -1434,8 +1394,8 @@ pub struct TradeLegInput {
 /// Internal trade leg representation.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct TradeLeg {
-    pub amm_protocol: AmmProtocol,
-    pub vm_type: VmType,
+    pub amm_protocol: types::AmmProtocol,
+    pub vm_type: types::VmType,
     pub asset_in: H256,
     pub asset_out: H256,
     pub amount_in: u128,
