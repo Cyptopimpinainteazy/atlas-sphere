@@ -79,6 +79,7 @@ export interface AccountInfo {
 export interface ValidatorInfo {
   address: string;
   isActive: boolean;
+  isCurrentAuthor?: boolean;
   blocksProduced?: number;
 }
 

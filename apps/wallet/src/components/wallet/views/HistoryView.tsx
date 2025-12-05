@@ -133,7 +133,6 @@ export function HistoryView() {
                     <span className={`badge ${
                       tx.network === 'evm' ? 'badge-warning' :
                       tx.network === 'svm' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
-                      tx.network === 'multi' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
                       'badge-success'
                     }`}>
                       {tx.network.toUpperCase()}
@@ -150,7 +149,7 @@ export function HistoryView() {
                     tx.type === 'send' ? 'text-red-400' : 
                     'text-white'
                   }`}>
-                    {tx.type !== 'comit' && tx.type !== 'swap' ? tx.amount : tx.value}
+                    {tx.amount}
                   </div>
                   <div className="text-sm text-gray-500">{formatTime(tx.timestamp)}</div>
                 </div>

@@ -37,11 +37,7 @@ impl sc_executor::NativeExecutionDispatch for AtlasSphereExecutorDispatch {
 /// execute both natively and via the embedded WASM runtime. For
 /// `skip-wasm-build` development builds, we force a pure native
 /// executor to avoid deserializing a missing or dummy WASM blob.
-#[cfg(not(feature = "skip-wasm-build"))]
 pub type Executor = NativeElseWasmExecutor<AtlasSphereExecutorDispatch>;
-
-#[cfg(feature = "skip-wasm-build")]
-pub type Executor = sc_executor::NativeExecutor<AtlasSphereExecutorDispatch>;
 
 /// Full client type alias
 pub type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
@@ -84,14 +80,8 @@ pub fn new_partial(
         })
         .transpose()?;
 
-    // Create executor. For native-only `skip-wasm-build` dev builds we
-    // ignore the configured wasm execution method and rely entirely on
-    // the native runtime.
-    #[cfg(not(feature = "skip-wasm-build"))]
+    // Create executor
     let executor = Executor::new(config.wasm_method, None, 8, 64);
-
-    #[cfg(feature = "skip-wasm-build")]
-    let executor = Executor::new(sp_core::traits::ExecutionStrategy::Native, None, 8, 64);
 
     // Build partial components
     let (client, backend, keystore_container, task_manager) =

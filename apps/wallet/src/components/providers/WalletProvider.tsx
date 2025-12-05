@@ -1,48 +1,205 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useWalletStore } from '@/stores/walletStore';
-import { getAtlasClient } from '@/lib/atlasClient';
-import { NATIVE_ASSET_SYMBOL, NATIVE_ASSET_DECIMALS } from '@atlas-sphere/ts-sdk';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
+import { useWalletStore, Transaction, Token } from '@/stores/walletStore';
+import { 
+  sdkIntegration, 
+  ComitSubmissionResult,
+  NATIVE_ASSET_SYMBOL, 
+  NATIVE_ASSET_DECIMALS,
+} from '@/lib/sdkIntegration';
+import type { ComitEvent } from '@atlas-sphere/ts-sdk';
 
 interface WalletContextType {
+  // Connection
   connectEVM: () => Promise<void>;
   connectSolana: () => Promise<void>;
   connectSubstrate: () => Promise<void>;
   createWallet: () => Promise<void>;
   importWallet: (seedPhrase: string) => Promise<void>;
+  // SDK State
+  sdkConnected: boolean;
+  sdkConnecting: boolean;
+  currentBlock: number;
+  chainInfo: { name: string; version: string; tokenSymbol: string } | null;
+  // Comit Operations
+  submitEvmComit: (payload: Uint8Array | string) => Promise<ComitSubmissionResult>;
+  submitSvmComit: (payload: Uint8Array | string) => Promise<ComitSubmissionResult>;
+  submitDualComit: (evmPayload: Uint8Array | string, svmPayload: Uint8Array | string) => Promise<ComitSubmissionResult>;
+  // Balance refresh
+  refreshBalance: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const { setLoading, addAccount, setTokens } = useWalletStore();
+  const { setLoading, addAccount, setTokens, accounts, activeAccountIndex, addTransaction, updateTransaction } = useWalletStore();
+  
+  // SDK connection state
+  const [sdkConnected, setSdkConnected] = useState(false);
+  const [sdkConnecting, setSdkConnecting] = useState(false);
+  const [currentBlock, setCurrentBlock] = useState(0);
+  const [chainInfo, setChainInfo] = useState<{ name: string; version: string; tokenSymbol: string } | null>(null);
+  const blockSubIdRef = useRef<string | null>(null);
+  const comitSubIdRef = useRef<string | null>(null);
+
+  // Initialize SDK connection
+  const initSDK = useCallback(async () => {
+    if (sdkConnecting || sdkConnected) return;
+    
+    setSdkConnecting(true);
+    try {
+      await sdkIntegration.connect();
+      
+      const info = await sdkIntegration.getChainInfo();
+      setChainInfo({
+        name: info.name,
+        version: info.version,
+        tokenSymbol: info.properties.tokenSymbol,
+      });
+      
+      const block = await sdkIntegration.getBlockNumber();
+      setCurrentBlock(block);
+      
+      // Subscribe to block updates
+      blockSubIdRef.current = await sdkIntegration.subscribeToBlocks((blockNumber) => {
+        setCurrentBlock(blockNumber);
+      });
+      
+      setSdkConnected(true);
+      console.log('[Wallet] SDK connected to', info.name);
+    } catch (error) {
+      console.error('[Wallet] Failed to connect SDK:', error);
+    } finally {
+      setSdkConnecting(false);
+    }
+  }, [sdkConnecting, sdkConnected]);
+
+  // Subscribe to Comit events for current account
+  const subscribeComitEvents = useCallback(async (address: string) => {
+    // Unsubscribe from previous
+    if (comitSubIdRef.current) {
+      await sdkIntegration.unsubscribe(comitSubIdRef.current);
+    }
+    
+    comitSubIdRef.current = await sdkIntegration.subscribeToComitEvents(
+      address,
+      (event: ComitEvent) => {
+        console.log('[Wallet] Comit event:', event);
+        
+        // Update transaction status based on event
+        if (event.type === 'submitted') {
+          const tx: Transaction = {
+            id: event.data.comitId,
+            type: 'comit',
+            status: 'pending',
+            amount: '0',
+            symbol: NATIVE_ASSET_SYMBOL,
+            from: event.data.origin,
+            to: '',
+            timestamp: Date.now(),
+            hash: event.data.comitId,
+            network: 'substrate',
+          };
+          addTransaction(tx);
+        } else if (event.type === 'finalized') {
+          updateTransaction(event.data.comitId, { status: 'confirmed' });
+        } else if (event.type === 'failed') {
+          updateTransaction(event.data.comitId, { status: 'failed' });
+        }
+      }
+    );
+  }, [addTransaction, updateTransaction]);
 
   useEffect(() => {
-    // Initialize wallet on mount
-    const initWallet = async () => {
-      // Check for existing connections
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    // Initialize SDK on mount
+    const init = async () => {
+      await initSDK();
       setLoading(false);
     };
-    initWallet();
-  }, [setLoading]);
+    init();
+    
+    return () => {
+      // Cleanup subscriptions
+      if (blockSubIdRef.current) {
+        sdkIntegration.unsubscribe(blockSubIdRef.current).catch(() => {});
+      }
+      if (comitSubIdRef.current) {
+        sdkIntegration.unsubscribe(comitSubIdRef.current).catch(() => {});
+      }
+    };
+  }, [initSDK, setLoading]);
+
+  // Subscribe to events when account changes
+  useEffect(() => {
+    const currentAccount = accounts[activeAccountIndex];
+    if (currentAccount && sdkConnected && currentAccount.network === 'substrate') {
+      subscribeComitEvents(currentAccount.address).catch(console.error);
+    }
+  }, [accounts, activeAccountIndex, sdkConnected, subscribeComitEvents]);
+
+  // Refresh balance for current account
+  const refreshBalance = useCallback(async () => {
+    const currentAccount = accounts[activeAccountIndex];
+    if (!currentAccount || currentAccount.network !== 'substrate') return;
+    
+    try {
+      const balance = await sdkIntegration.getCanonicalBalance(currentAccount.address);
+      // Get current tokens and update
+      const currentTokens = useWalletStore.getState().tokens;
+      const updatedTokens = currentTokens.map((token: Token) => 
+        token.network === 'substrate' 
+          ? { ...token, balance: balance.formatted }
+          : token
+      );
+      setTokens(updatedTokens);
+    } catch (error) {
+      console.error('[Wallet] Failed to refresh balance:', error);
+    }
+  }, [accounts, activeAccountIndex, setTokens]);
+
+  // Submit Comit transactions
+  const submitEvmComit = useCallback(async (payload: Uint8Array | string): Promise<ComitSubmissionResult> => {
+    const currentAccount = accounts[activeAccountIndex];
+    if (!currentAccount) {
+      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'No account connected' };
+    }
+    return sdkIntegration.submitEvmComit(currentAccount.address, payload);
+  }, [accounts, activeAccountIndex]);
+
+  const submitSvmComit = useCallback(async (payload: Uint8Array | string): Promise<ComitSubmissionResult> => {
+    const currentAccount = accounts[activeAccountIndex];
+    if (!currentAccount) {
+      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'No account connected' };
+    }
+    return sdkIntegration.submitSvmComit(currentAccount.address, payload);
+  }, [accounts, activeAccountIndex]);
+
+  const submitDualComit = useCallback(async (
+    evmPayload: Uint8Array | string, 
+    svmPayload: Uint8Array | string
+  ): Promise<ComitSubmissionResult> => {
+    const currentAccount = accounts[activeAccountIndex];
+    if (!currentAccount) {
+      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'No account connected' };
+    }
+    return sdkIntegration.submitDualComit(currentAccount.address, evmPayload, svmPayload);
+  }, [accounts, activeAccountIndex]);
 
   const connectEVM = async () => {
     // Check for MetaMask or other EVM wallets
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       try {
-        const accounts = await (window as any).ethereum.request({
+        const ethAccounts = await (window as any).ethereum.request({
           method: 'eth_requestAccounts',
         });
-        if (accounts[0]) {
+        if (ethAccounts[0]) {
           addAccount({
-            address: accounts[0],
+            address: ethAccounts[0],
             name: 'EVM Wallet',
             network: 'evm',
             balance: '0',
           });
-          // Load demo tokens
           loadDemoTokens();
         }
       } catch (error) {
@@ -92,31 +249,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     try {
-      const client = await getAtlasClient();
-      const canonicalBalance = await client.getCanonicalBalance(address as any);
-
-      const decimals = NATIVE_ASSET_DECIMALS;
-      const symbol = NATIVE_ASSET_SYMBOL || 'STAR';
-
-      const divisor = 10 ** decimals;
-      const humanBalanceNumber = Number(canonicalBalance) / divisor;
-      const humanBalance = humanBalanceNumber.toLocaleString('en-US', {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4,
-      });
+      // Ensure SDK is connected
+      await initSDK();
+      
+      const balanceInfo = await sdkIntegration.getCanonicalBalance(address);
+      const symbol = NATIVE_ASSET_SYMBOL || 'ATLAS';
 
       addAccount({
         address,
         name: 'Substrate Wallet',
         network: 'substrate',
-        balance: humanBalance,
+        balance: balanceInfo.formatted,
       });
 
       setTokens([
         {
           symbol,
-          name: 'X3 STAR',
-          balance: humanBalance,
+          name: 'Atlas Token',
+          balance: balanceInfo.formatted,
           value: '$0.00',
           change24h: 0,
           icon: '⭐',
@@ -125,13 +275,30 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       ]);
     } catch (error) {
       console.error('Failed to connect Substrate wallet:', error);
+      // Fall back to demo mode
+      addAccount({
+        address,
+        name: 'Substrate Wallet (Demo)',
+        network: 'substrate',
+        balance: '1000.0000',
+      });
+      setTokens([
+        {
+          symbol: 'ATLAS',
+          name: 'Atlas Token',
+          balance: '1000.0000',
+          value: '$0.00',
+          change24h: 0,
+          icon: '⭐',
+          network: 'substrate',
+        },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   const createWallet = async () => {
-    // Generate new wallet (demo)
     addAccount({
       address: '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
       name: 'New Wallet',
@@ -142,7 +309,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   const importWallet = async (seedPhrase: string) => {
-    // Import from seed phrase (demo)
     if (seedPhrase.split(' ').length >= 12) {
       addAccount({
         address: '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
@@ -157,8 +323,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const loadDemoTokens = () => {
     setTokens([
       {
-        symbol: 'STAR',
-        name: 'X3 STAR',
+        symbol: 'ATLAS',
+        name: 'Atlas Token',
         balance: '1,250.00',
         value: '$3,750.00',
         change24h: 5.2,
@@ -203,6 +369,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         connectSubstrate,
         createWallet,
         importWallet,
+        sdkConnected,
+        sdkConnecting,
+        currentBlock,
+        chainInfo,
+        submitEvmComit,
+        submitSvmComit,
+        submitDualComit,
+        refreshBalance,
       }}
     >
       {children}

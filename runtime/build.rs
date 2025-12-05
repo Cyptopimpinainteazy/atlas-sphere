@@ -35,6 +35,33 @@ fn main() {
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
         println!("cargo:warning=OUT_DIR: {:?}", out_dir);
 
+        // CRITICAL: Find workspace root from CARGO_MANIFEST_DIR first for native builds
+        let workspace_root = env::var("CARGO_MANIFEST_DIR")
+            .map(|dir| {
+                let path = PathBuf::from(&dir);
+                // If manifest dir is in wbuild, we're in wasm build
+                if dir.contains("wbuild") {
+                    // Walk up to find workspace root
+                    let mut p = path.clone();
+                    for _ in 0..10 {
+                        if let Some(parent) = p.parent() {
+                            if parent.join("Cargo.toml").exists() && parent.join("runtime").exists() {
+                                return Some(parent.to_path_buf());
+                            }
+                            p = parent.to_path_buf();
+                        }
+                    }
+                    None
+                } else {
+                    // Native build - runtime is directly in workspace
+                    path.parent().map(|p| p.to_path_buf())
+                }
+            })
+            .ok()
+            .flatten();
+        
+        println!("cargo:warning=Detected workspace root: {:?}", workspace_root);
+
         // The OUT_DIR for WASM builds is nested deep inside wbuild:
         // target/release/wbuild/atlas-sphere-runtime/target/wasm32-unknown-unknown/release/build/atlas-sphere-runtime-XXX/out
         // We need to find: target/release/wbuild/atlas-sphere-runtime/

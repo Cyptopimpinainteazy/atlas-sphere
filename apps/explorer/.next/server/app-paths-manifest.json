@@ -1,8 +1,9 @@
 {
   "/page": "app/page.js",
-  "/developers/cookbook/page": "app/developers/cookbook/page.js",
-  "/solutions/tools/page": "app/solutions/tools/page.js",
-  "/community/forum/page": "app/community/forum/page.js",
   "/developers/docs/page": "app/developers/docs/page.js",
-  "/_not-found/page": "app/_not-found/page.js"
+  "/developers/docs/canonical-ledger/page": "app/developers/docs/canonical-ledger/page.js",
+  "/developers/docs/installation/page": "app/developers/docs/installation/page.js",
+  "/developers/docs/intro/page": "app/developers/docs/intro/page.js",
+  "/developers/docs/anchor/page": "app/developers/docs/anchor/page.js",
+  "/developers/docs/creating-comits/page": "app/developers/docs/creating-comits/page.js"
 }
