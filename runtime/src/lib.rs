@@ -479,7 +479,10 @@ mod native_vm_adapters {
     };
     use pallet_evm::Runner;
     use sp_core::H160;
-    use sp_runtime::{traits::SaturatedConversion, DispatchError};
+    use sp_runtime::{
+        traits::{SaturatedConversion, UniqueSaturatedInto},
+        DispatchError,
+    };
 
     pub struct NativeEvmAdapter;
     pub struct NativeSvmAdapter;
@@ -545,7 +548,7 @@ mod native_vm_adapters {
             );
 
             match call_result {
-                Ok(info) => Ok(info.used_gas.unique_saturated_into()),
+                Ok(info) => Ok(info.used_gas.standard.unique_saturated_into()),
                 Err(_) => Err(DispatchError::Other("Gas estimation failed")),
             }
         }
@@ -563,7 +566,7 @@ mod native_vm_adapters {
         let success = matches!(info.exit_reason, ExitReason::Succeed(_));
         ExecutionReceipt {
             success,
-            gas_used: info.used_gas.unique_saturated_into(),
+            gas_used: info.used_gas.standard.unique_saturated_into(),
             return_data: info.value,
             logs: info
                 .logs

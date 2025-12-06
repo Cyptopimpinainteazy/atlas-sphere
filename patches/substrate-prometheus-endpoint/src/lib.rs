@@ -24,22 +24,10 @@ pub use prometheus;
 pub type PrometheusError = prometheus::Error;
 
 /// Start a prometheus metrics server.
-pub fn init_prometheus(prometheus_addr: SocketAddr, registry: prometheus::Registry) -> Result<(), Error> {
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(1)
-        .enable_all()
-        .build()
-        .map_err(|_| Error::Internal)?;
-
-    runtime.spawn(async move {
-        if let Err(e) = run_server(prometheus_addr, registry).await {
-            log::error!("Prometheus server error: {:?}", e);
-        }
-    });
-
-    std::mem::forget(runtime); // Keep the runtime alive
-
-    Ok(())
+/// Returns a Future that completes when the server encounters an error.
+/// This matches the original substrate-prometheus-endpoint API.
+pub async fn init_prometheus(prometheus_addr: SocketAddr, registry: prometheus::Registry) -> Result<(), Error> {
+    run_server(prometheus_addr, registry).await
 }
 
 async fn run_server(addr: SocketAddr, registry: prometheus::Registry) -> Result<(), Error> {

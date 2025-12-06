@@ -1,50 +1,64 @@
+use std::sync::atomic::{AtomicU64, Ordering};
 /// Metrics and Monitoring for Atlas Sphere
 ///
 /// Production-ready Prometheus metrics for observability.
 /// Uses Substrate's prometheus registry when available.
 use std::sync::Arc;
 
-/// Prometheus registry type alias
-pub type PrometheusRegistry = sc_service::config::PrometheusRegistry;
+/// Prometheus registry type alias (use substrate_prometheus_endpoint's Registry)
+pub type PrometheusRegistry = substrate_prometheus_endpoint::Registry;
 
 /// Atlas Sphere metrics collector with Prometheus integration
-#[derive(Clone)]
 pub struct MetricsCollector {
     /// Prometheus registry reference
     registry: Option<Arc<PrometheusRegistry>>,
     /// Blocks produced counter
-    blocks_produced: AtomicU64,
+    blocks_produced: Arc<AtomicU64>,
     /// Transactions received counter
-    transactions_received: AtomicU64,
+    transactions_received: Arc<AtomicU64>,
     /// Comit transactions submitted
-    comits_submitted: AtomicU64,
+    comits_submitted: Arc<AtomicU64>,
     /// Comit transactions confirmed
-    comits_confirmed: AtomicU64,
+    comits_confirmed: Arc<AtomicU64>,
     /// Comit transactions failed
-    comits_failed: AtomicU64,
+    comits_failed: Arc<AtomicU64>,
     /// EVM executions counter
-    evm_executions: AtomicU64,
+    evm_executions: Arc<AtomicU64>,
     /// SVM executions counter
-    svm_executions: AtomicU64,
+    svm_executions: Arc<AtomicU64>,
     /// Cross-VM (dual) executions
-    dual_vm_executions: AtomicU64,
+    dual_vm_executions: Arc<AtomicU64>,
 }
 
-use std::sync::atomic::{AtomicU64, Ordering};
+impl Clone for MetricsCollector {
+    fn clone(&self) -> Self {
+        Self {
+            registry: self.registry.clone(),
+            blocks_produced: self.blocks_produced.clone(),
+            transactions_received: self.transactions_received.clone(),
+            comits_submitted: self.comits_submitted.clone(),
+            comits_confirmed: self.comits_confirmed.clone(),
+            comits_failed: self.comits_failed.clone(),
+            evm_executions: self.evm_executions.clone(),
+            svm_executions: self.svm_executions.clone(),
+            dual_vm_executions: self.dual_vm_executions.clone(),
+        }
+    }
+}
 
 impl MetricsCollector {
     /// Create a new metrics collector
     pub fn new() -> Self {
         Self {
             registry: None,
-            blocks_produced: AtomicU64::new(0),
-            transactions_received: AtomicU64::new(0),
-            comits_submitted: AtomicU64::new(0),
-            comits_confirmed: AtomicU64::new(0),
-            comits_failed: AtomicU64::new(0),
-            evm_executions: AtomicU64::new(0),
-            svm_executions: AtomicU64::new(0),
-            dual_vm_executions: AtomicU64::new(0),
+            blocks_produced: Arc::new(AtomicU64::new(0)),
+            transactions_received: Arc::new(AtomicU64::new(0)),
+            comits_submitted: Arc::new(AtomicU64::new(0)),
+            comits_confirmed: Arc::new(AtomicU64::new(0)),
+            comits_failed: Arc::new(AtomicU64::new(0)),
+            evm_executions: Arc::new(AtomicU64::new(0)),
+            svm_executions: Arc::new(AtomicU64::new(0)),
+            dual_vm_executions: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -55,14 +69,14 @@ impl MetricsCollector {
         // Substrate's prometheus endpoint which exposes these counters
         Self {
             registry: Some(registry),
-            blocks_produced: AtomicU64::new(0),
-            transactions_received: AtomicU64::new(0),
-            comits_submitted: AtomicU64::new(0),
-            comits_confirmed: AtomicU64::new(0),
-            comits_failed: AtomicU64::new(0),
-            evm_executions: AtomicU64::new(0),
-            svm_executions: AtomicU64::new(0),
-            dual_vm_executions: AtomicU64::new(0),
+            blocks_produced: Arc::new(AtomicU64::new(0)),
+            transactions_received: Arc::new(AtomicU64::new(0)),
+            comits_submitted: Arc::new(AtomicU64::new(0)),
+            comits_confirmed: Arc::new(AtomicU64::new(0)),
+            comits_failed: Arc::new(AtomicU64::new(0)),
+            evm_executions: Arc::new(AtomicU64::new(0)),
+            svm_executions: Arc::new(AtomicU64::new(0)),
+            dual_vm_executions: Arc::new(AtomicU64::new(0)),
         }
     }
 

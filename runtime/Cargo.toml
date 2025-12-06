@@ -40,6 +40,7 @@ pallet-evm = { workspace = true, default-features = false }
 pallet-evm-precompile-simple = { workspace = true, default-features = false }
 pallet-evm-precompile-modexp = { workspace = true, default-features = false }
 pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
+fp-evm = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
@@ -101,6 +102,7 @@ std = [
 	"pallet-evm-precompile-simple/std",
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
+	"fp-evm/std",
 	"pallet-atlas-kernel/std",
 	"pallet-atomic-trade-engine/std",
 	"pallet-governance/std",

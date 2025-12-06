@@ -21,7 +21,7 @@ use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_core::H256;
-use sp_runtime::traits::{Block as BlockT, SaturatedConversion};
+use sp_runtime::traits::{Block as BlockT, Header as HeaderT, SaturatedConversion};
 use std::sync::Arc;
 
 /// System RPC API for account nonce queries
@@ -487,6 +487,7 @@ where
 // Chain Subscription Implementation
 // ============================================================================
 
+use jsonrpsee::SubscriptionMessage;
 use sc_client_api::{BlockchainEvents, FinalityNotification, ImportNotifications};
 use sp_runtime::generic::BlockId;
 use tokio_stream::StreamExt;
@@ -537,15 +538,25 @@ where
         // Stream block headers to subscriber
         tokio::spawn(async move {
             while let Some(notification) = notifications.next().await {
+                // Access header fields through the Header trait
+                let header_ref = &notification.header;
+                let number: u64 = (*header_ref.number()).saturated_into();
+
                 let header = BlockHeader {
-                    number: (*notification.header.number()).saturated_into(),
-                    hash: H256::from(notification.hash.as_ref()),
-                    parent_hash: H256::from(notification.header.parent_hash().as_ref()),
-                    state_root: H256::from(notification.header.state_root().as_ref()),
-                    extrinsics_root: H256::from(notification.header.extrinsics_root().as_ref()),
+                    number,
+                    hash: H256::from_slice(notification.hash.as_ref()),
+                    parent_hash: H256::from_slice(header_ref.parent_hash().as_ref()),
+                    state_root: H256::from_slice(header_ref.state_root().as_ref()),
+                    extrinsics_root: H256::from_slice(header_ref.extrinsics_root().as_ref()),
                 };
 
-                if sink.send(&header).await.is_err() {
+                let msg = SubscriptionMessage::from_json(&header).unwrap_or_else(|_| {
+                    SubscriptionMessage::from_json(
+                        &serde_json::json!({"error": "serialization failed"}),
+                    )
+                    .unwrap()
+                });
+                if sink.send(msg).await.is_err() {
                     // Subscriber disconnected
                     break;
                 }
@@ -571,15 +582,25 @@ where
         // Stream finalized block headers to subscriber
         tokio::spawn(async move {
             while let Some(notification) = notifications.next().await {
+                // Access header fields through the Header trait
+                let header_ref = &notification.header;
+                let number: u64 = (*header_ref.number()).saturated_into();
+
                 let header = BlockHeader {
-                    number: (*notification.header.number()).saturated_into(),
-                    hash: H256::from(notification.hash.as_ref()),
-                    parent_hash: H256::from(notification.header.parent_hash().as_ref()),
-                    state_root: H256::from(notification.header.state_root().as_ref()),
-                    extrinsics_root: H256::from(notification.header.extrinsics_root().as_ref()),
+                    number,
+                    hash: H256::from_slice(notification.hash.as_ref()),
+                    parent_hash: H256::from_slice(header_ref.parent_hash().as_ref()),
+                    state_root: H256::from_slice(header_ref.state_root().as_ref()),
+                    extrinsics_root: H256::from_slice(header_ref.extrinsics_root().as_ref()),
                 };
 
-                if sink.send(&header).await.is_err() {
+                let msg = SubscriptionMessage::from_json(&header).unwrap_or_else(|_| {
+                    SubscriptionMessage::from_json(
+                        &serde_json::json!({"error": "serialization failed"}),
+                    )
+                    .unwrap()
+                });
+                if sink.send(msg).await.is_err() {
                     // Subscriber disconnected
                     break;
                 }
