@@ -34,6 +34,8 @@ pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
 pallet-sudo = { workspace = true, default-features = false, optional = true }
 pallet-collective = { workspace = true, default-features = false }
+pallet-scheduler = { workspace = true, default-features = false }
+pallet-preimage = { workspace = true, default-features = false }
 pallet-evm = { workspace = true, default-features = false }
 pallet-evm-precompile-simple = { workspace = true, default-features = false }
 pallet-evm-precompile-modexp = { workspace = true, default-features = false }
@@ -41,6 +43,10 @@ pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
+pallet-governance = { path = "../pallets/governance", default-features = false }
+pallet-treasury = { path = "../pallets/treasury", default-features = false }
+pallet-agent-accounts = { path = "../pallets/agent-accounts", default-features = false }
+pallet-agent-memory = { path = "../pallets/agent-memory", default-features = false }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
@@ -89,12 +95,18 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-sudo?/std",
 	"pallet-collective/std",
+	"pallet-scheduler/std",
+	"pallet-preimage/std",
 	"pallet-evm/std",
 	"pallet-evm-precompile-simple/std",
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
 	"pallet-atlas-kernel/std",
 	"pallet-atomic-trade-engine/std",
+	"pallet-governance/std",
+	"pallet-treasury/std",
+	"pallet-agent-accounts/std",
+	"pallet-agent-memory/std",
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
 	"sp-api/std",

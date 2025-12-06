@@ -191,6 +191,8 @@ fn atlas_sphere_genesis(
         transaction_payment: Default::default(),
         council: Default::default(),
         evm: Default::default(),
+        governance: Default::default(),
+        treasury: Default::default(),
         #[cfg(feature = "dev")]
         sudo: Default::default(),
     }

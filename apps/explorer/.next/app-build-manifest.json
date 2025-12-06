@@ -31,60 +31,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
-    "/community/forum/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/community/forum/page.js"
-    ],
-    "/explorer/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/explorer/page.js"
-    ],
     "/learn/getting-started/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/learn/getting-started/page.js"
-    ],
-    "/network/status/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/network/status/page.js"
-    ],
-    "/network/validators/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/network/validators/page.js"
-    ],
-    "/developers/docs/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/page.js"
-    ],
-    "/developers/docs/canonical-ledger/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/canonical-ledger/page.js"
-    ],
-    "/developers/docs/installation/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/installation/page.js"
-    ],
-    "/developers/docs/intro/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/intro/page.js"
-    ],
-    "/developers/docs/anchor/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/anchor/page.js"
-    ],
-    "/developers/docs/creating-comits/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/developers/docs/creating-comits/page.js"
     ]
   }
 }

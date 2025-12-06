@@ -8,8 +8,10 @@
 //! - Slippage protection
 //! - Cross-VM trade execution
 
-use crate::{mock::*, *};
-use frame_support::{assert_noop, assert_ok};
+use crate::mock::*;
+use crate::types::{AmmProtocol, VmType};
+use crate::*;
+use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_core::H256;
 
 // ============================================================================
@@ -30,7 +32,7 @@ fn create_test_leg(
         asset_out: H256::from_low_u64_be(2),
         amount_in,
         min_amount_out: min_out,
-        route_data: vec![0u8; 20], // Mock recipient address
+        route_data: BoundedVec::try_from(vec![0u8; 20]).unwrap(), // Mock recipient address
     }
 }
 
@@ -336,12 +338,13 @@ fn execute_fails_with_slippage_exceeded() {
         let pending = AtomicTradeEngine::pending_batches(&account(1));
         let batch_id = pending[0];
 
-        // Execution should fail due to slippage
-        assert_noop!(
-            AtomicTradeEngine::execute_trade_batch(RuntimeOrigin::signed(account(1)), batch_id,),
-            Error::<Test>::BatchAlreadyCompleted // Batch was marked failed
-        );
+        // Execute - returns Ok but batch status is Failed due to slippage
+        assert_ok!(AtomicTradeEngine::execute_trade_batch(
+            RuntimeOrigin::signed(account(1)),
+            batch_id,
+        ));
 
+        // Verify batch marked as Failed (returns Ok, but batch was processed and failed)
         let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
         assert_eq!(batch.status, BatchStatus::Failed);
         assert_eq!(AtomicTradeEngine::failed_batch_count(), 1);
@@ -453,7 +456,7 @@ fn register_amm_adapter_works() {
     new_test_ext().execute_with(|| {
         let config = AmmAdapterConfig {
             vm_type: VmType::Evm,
-            address: vec![0xab; 20],
+            address: BoundedVec::try_from(vec![0xab; 20]).unwrap(),
             fee_bps: 30, // 0.3%
             enabled: true,
         };
@@ -476,7 +479,7 @@ fn register_amm_adapter_fails_if_already_registered() {
     new_test_ext().execute_with(|| {
         let config = AmmAdapterConfig {
             vm_type: VmType::Evm,
-            address: vec![0xab; 20],
+            address: BoundedVec::try_from(vec![0xab; 20]).unwrap(),
             fee_bps: 30,
             enabled: true,
         };
@@ -503,7 +506,7 @@ fn remove_amm_adapter_works() {
     new_test_ext().execute_with(|| {
         let config = AmmAdapterConfig {
             vm_type: VmType::Svm,
-            address: vec![0xcd; 32],
+            address: BoundedVec::try_from(vec![0xcd; 32]).unwrap(),
             fee_bps: 25,
             enabled: true,
         };

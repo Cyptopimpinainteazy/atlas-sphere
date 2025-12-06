@@ -32,6 +32,7 @@ ethereum-types = { version = "0.14", default-features = false }
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
 jsonrpsee = { version = "0.20", features = ["macros", "server", "client"] }
 tokio = { version = "1.37", default-features = false }
+tokio-stream = "0.1"
 
 
 

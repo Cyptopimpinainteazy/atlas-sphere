@@ -8,7 +8,7 @@ use frame_support::{
     traits::{ConstU32, ConstU64},
 };
 use frame_system as system;
-use pallet_atlas_kernel::{adapters::*, ExecutionReceipt, StateChange};
+use pallet_atlas_kernel::{adapters::*, ExecutionReceipt};
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
@@ -79,8 +79,8 @@ impl pallet_balances::Config for Test {
     type WeightInfo = ();
     type FreezeIdentifier = ();
     type MaxFreezes = ConstU32<0>;
-    type RuntimeHoldReason = ();
-    type RuntimeFreezeReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
+    type MaxHolds = ConstU32<0>;
 }
 
 impl pallet_timestamp::Config for Test {
@@ -95,7 +95,10 @@ impl pallet_timestamp::Config for Test {
 pub struct TradeEngineEvmAdapter;
 
 impl EvmExecutorAdapter for TradeEngineEvmAdapter {
-    fn execute(payload: &[u8], gas_limit: u64) -> Result<ExecutionReceipt, sp_runtime::DispatchError> {
+    fn execute(
+        payload: &[u8],
+        gas_limit: u64,
+    ) -> Result<ExecutionReceipt, sp_runtime::DispatchError> {
         // Simulate swap: parse amount from payload and return 98%
         let amount_in = if payload.len() >= 36 {
             // Parse amount from ABI-encoded payload (bytes 4-36)
@@ -137,10 +140,19 @@ impl EvmExecutorAdapter for TradeEngineEvmAdapter {
 pub struct TradeEngineSvmAdapter;
 
 impl SvmExecutorAdapter for TradeEngineSvmAdapter {
-    fn execute(payload: &[u8], compute_limit: u64) -> Result<ExecutionReceipt, sp_runtime::DispatchError> {
-        // Simulate swap: parse amount from payload and return 97%
-        let amount_in = if payload.len() >= 16 {
-            // Parse u64 amount from Solana instruction data
+    fn execute(
+        payload: &[u8],
+        compute_limit: u64,
+    ) -> Result<ExecutionReceipt, sp_runtime::DispatchError> {
+        // Simulate swap: parse amount from ABI-encoded payload (same format as EVM)
+        // Payload structure: selector (4 bytes) + amount_in (32 bytes, big-endian u256)
+        let amount_in = if payload.len() >= 36 {
+            // Parse amount from ABI-encoded payload (bytes 4-36, last 16 bytes of u256)
+            let mut bytes = [0u8; 16];
+            bytes.copy_from_slice(&payload[20..36]);
+            u128::from_be_bytes(bytes)
+        } else if payload.len() >= 16 {
+            // Fallback: Parse u64 amount from Solana instruction data
             let mut bytes = [0u8; 8];
             bytes.copy_from_slice(&payload[8..16]);
             u64::from_le_bytes(bytes) as u128
@@ -150,7 +162,7 @@ impl SvmExecutorAdapter for TradeEngineSvmAdapter {
 
         let amount_out = amount_in.saturating_mul(97) / 100;
 
-        // Return data: u64 little-endian
+        // Return data: u64 little-endian (SVM-style return)
         let return_data = (amount_out as u64).to_le_bytes().to_vec();
 
         Ok(ExecutionReceipt {
@@ -171,21 +183,36 @@ impl SvmExecutorAdapter for TradeEngineSvmAdapter {
 }
 
 parameter_types! {
-    pub const MaxComitPayloadSize: u32 = 16_384;
-    pub const MaxCombinedPayloadSize: u32 = 32_768;
-    pub const MaxStateChanges: u32 = 256;
-    pub const MaxTotalPayloadSize: u32 = 65_536;
+    pub const MaxAssetsPerAccount: u32 = 100;
+    pub const MaxAssetSymbolLength: u32 = 32;
+    pub const MaxEvmPayloadLength: u32 = 16_384;
+    pub const MaxSvmPayloadLength: u32 = 16_384;
+    pub const MaxCombinedPayloadLength: u32 = 32_768;
+    pub const MaxAuthorities: u32 = 100;
+    pub const MinAuthorities: u32 = 1;
+    pub const DefaultEvmGasLimit: u64 = 500_000;
+    pub const DefaultSvmComputeLimit: u64 = 500_000;
 }
 
 impl pallet_atlas_kernel::Config for Test {
     type RuntimeEvent = RuntimeEvent;
-    type EvmExecutor = TradeEngineEvmAdapter;
-    type SvmExecutor = TradeEngineSvmAdapter;
-    type MaxComitPayloadSize = MaxComitPayloadSize;
-    type MaxCombinedPayloadSize = MaxCombinedPayloadSize;
-    type MaxStateChanges = MaxStateChanges;
-    type MaxTotalPayloadSize = MaxTotalPayloadSize;
+    type Currency = Balances;
+    type Balance = u128;
+    type AssetId = u32;
+    type AtlasId = u64;
+    type MaxAssetsPerAccount = MaxAssetsPerAccount;
+    type MaxAssetSymbolLength = MaxAssetSymbolLength;
+    type MaxEvmPayloadLength = MaxEvmPayloadLength;
+    type MaxSvmPayloadLength = MaxSvmPayloadLength;
+    type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
+    type MaxAuthorities = MaxAuthorities;
+    type MinAuthorities = MinAuthorities;
+    type DefaultEvmGasLimit = DefaultEvmGasLimit;
+    type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
     type WeightInfo = ();
+    type EvmAdapter = TradeEngineEvmAdapter;
+    type SvmAdapter = TradeEngineSvmAdapter;
+    type GovernanceOrigin = frame_system::EnsureRoot<u64>;
 }
 
 parameter_types! {
@@ -234,9 +261,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 /// Helper to advance to a specific block
 pub fn run_to_block(n: u64) {
     while System::block_number() < n {
-        System::on_finalize(System::block_number());
         System::set_block_number(System::block_number() + 1);
-        System::on_initialize(System::block_number());
     }
 }
 

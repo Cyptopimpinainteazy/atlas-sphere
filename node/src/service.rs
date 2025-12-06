@@ -205,20 +205,28 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone())
         .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
 
-    // Start RPC server using jsonrpsee directly
+    // Start RPC server using jsonrpsee with HTTP and WebSocket support
     let rpc_addr = config
         .rpc_addr
         .unwrap_or_else(|| "127.0.0.1:9944".parse().expect("valid default address"));
 
     let max_connections = config.rpc_max_connections;
 
-    // Spawn RPC server as an essential task
+    // Spawn RPC server as an essential task (supports both HTTP and WS)
     let rpc_server_handle = task_manager.spawn_essential_handle();
     rpc_server_handle.spawn("rpc-server", None, async move {
         use jsonrpsee::server::ServerBuilder;
+        use std::time::Duration;
 
+        // jsonrpsee ServerBuilder supports both HTTP and WebSocket connections
+        // on the same port by default. WS connections are upgraded from HTTP.
         let server = ServerBuilder::default()
             .max_connections(max_connections)
+            // Enable ping/pong for WebSocket keep-alive
+            .ping_interval(Duration::from_secs(30))
+            // Set reasonable message size limits
+            .max_request_body_size(15 * 1024 * 1024) // 15 MB
+            .max_response_body_size(15 * 1024 * 1024) // 15 MB
             .build(rpc_addr)
             .await
             .map_err(|e| {
@@ -229,7 +237,8 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
         let _handle = server.start(rpc_module);
 
-        log::info!("🌐 RPC server listening on {}", rpc_addr);
+        log::info!("🌐 RPC server listening on http://{}", rpc_addr);
+        log::info!("🔌 WebSocket available at ws://{}", rpc_addr);
 
         futures::future::pending::<()>().await;
     });

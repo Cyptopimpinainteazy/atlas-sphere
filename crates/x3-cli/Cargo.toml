@@ -1,0 +1,56 @@
+[package]
+name = "x3-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI tool for Atlas Sphere blockchain development"
+authors = ["Atlas Sphere Team"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/atlas-sphere/atlas-sphere"
+keywords = ["blockchain", "cli", "substrate", "evm", "svm"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "x3"
+path = "src/main.rs"
+
+[dependencies]
+# SDK
+atlas-sdk = { path = "../atlas-sdk" }
+
+# CLI framework
+clap = { workspace = true, features = ["derive", "env"] }
+
+# Async runtime
+tokio = { version = "1.35", features = ["rt-multi-thread", "macros", "fs", "process"] }
+futures = { workspace = true }
+
+# Serialization
+serde = { workspace = true, features = ["derive", "std"] }
+serde_json = { workspace = true }
+toml = "0.8"
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = "1.0"
+
+# File handling
+walkdir = "2.4"
+glob = "0.3"
+dirs = "5.0"
+
+# Terminal output
+colored = "2.1"
+indicatif = "0.17"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Hex encoding
+hex = "0.4"
+
+# Templating for code generation
+handlebars = "5.1"
+
+[dev-dependencies]
+tempfile = "3.8"

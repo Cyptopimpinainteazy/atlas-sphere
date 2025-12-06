@@ -62,6 +62,7 @@ pub mod types;
 pub mod weights;
 
 pub use runtime_api::*;
+pub use types::{AmmProtocol, VmType};
 pub use weights::WeightInfo;
 
 use codec::{Decode, Encode};
@@ -95,12 +96,17 @@ pub const MAX_SLIPPAGE_BPS: u32 = 5000; // 50%
 /// Minimum slippage tolerance in basis points
 pub const MIN_SLIPPAGE_BPS: u32 = 1; // 0.01%
 
+/// Maximum length for addresses (enough for EVM 20 bytes or Solana 32 bytes)
+pub const MAX_ADDRESS_LEN: u32 = 64;
+
+/// Maximum length for route data in a trade leg
+pub const MAX_ROUTE_DATA_LEN: u32 = 256;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
 
     #[pallet::pallet]
-    #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -153,7 +159,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         H256, // batch_id
-        TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+        TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
         OptionQuery,
     >;
 
@@ -174,7 +180,7 @@ pub mod pallet {
     pub type PendingBatches<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        AccountIdOf<T>,
+        T::AccountId,
         BoundedVec<H256, T::MaxPendingBatchesPerAccount>,
         ValueQuery,
     >;
@@ -189,7 +195,7 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn trade_nonces)]
     pub type TradeNonces<T: Config> =
-        StorageMap<_, Blake2_128Concat, AccountIdOf<T>, u64, ValueQuery>;
+        StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
     /// Completed batch count for metrics.
     #[pallet::storage]
@@ -245,7 +251,7 @@ pub mod pallet {
         /// A new trade batch was created.
         TradeBatchCreated {
             batch_id: H256,
-            origin: AccountIdOf<T>,
+            origin: T::AccountId,
             legs_count: u32,
         },
         /// A trade leg execution started.
@@ -441,7 +447,7 @@ pub mod pallet {
             );
 
             // Convert input legs to internal representation
-            let trade_legs: Vec<TradeLeg> = legs
+            let trade_legs_vec: Vec<TradeLeg> = legs
                 .iter()
                 .map(|input| TradeLeg {
                     amm_protocol: input.amm_protocol,
@@ -456,6 +462,10 @@ pub mod pallet {
                     gas_used: 0,
                 })
                 .collect();
+
+            // Convert to BoundedVec
+            let trade_legs: BoundedVec<TradeLeg, T::MaxTradeLegs> =
+                BoundedVec::try_from(trade_legs_vec).map_err(|_| Error::<T>::TooManyTradeLegs)?;
 
             // Create trade batch
             let batch = TradeBatch {
@@ -593,7 +603,8 @@ pub mod pallet {
                         reason,
                     });
 
-                    return Err(Error::<T>::BatchAlreadyCompleted.into());
+                    // Return Ok to persist storage changes (batch was processed, just failed)
+                    // Caller should check batch status or listen for TradeBatchFailed event
                 }
             }
 
@@ -662,7 +673,10 @@ pub mod pallet {
         /// * `protocol` - The AMM protocol to remove
         #[pallet::call_index(4)]
         #[pallet::weight(<T as Config>::WeightInfo::remove_amm_adapter())]
-        pub fn remove_amm_adapter(origin: OriginFor<T>, protocol: types::AmmProtocol) -> DispatchResult {
+        pub fn remove_amm_adapter(
+            origin: OriginFor<T>,
+            protocol: types::AmmProtocol,
+        ) -> DispatchResult {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
@@ -741,7 +755,7 @@ pub mod pallet {
             ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
 
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
 
             let observation = types::PricePoint {
                 token_a,
@@ -801,7 +815,7 @@ pub mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Generate a unique batch ID from inputs.
-        fn generate_batch_id(origin: &AccountIdOf<T>, nonce: u64, legs: &[TradeLegInput]) -> H256 {
+        fn generate_batch_id(origin: &T::AccountId, nonce: u64, legs: &[TradeLegInput]) -> H256 {
             let mut data = Vec::new();
             data.extend_from_slice(&origin.encode());
             data.extend_from_slice(&nonce.to_le_bytes());
@@ -813,7 +827,7 @@ pub mod pallet {
 
         /// Create a state checkpoint for rollback support.
         fn create_checkpoint(
-            batch: &TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+            batch: &TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
             index: u32,
         ) -> Result<StateCheckpoint, DispatchError> {
             // Compute state root from current batch state
@@ -831,7 +845,7 @@ pub mod pallet {
 
             let state_root = H256::from(blake2_256(&state_data));
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
 
             Ok(StateCheckpoint {
                 checkpoint_id: index,
@@ -848,7 +862,7 @@ pub mod pallet {
 
         /// Execute all legs of a trade batch atomically.
         fn execute_all_legs(
-            batch: &mut TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+            batch: &mut TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
         ) -> Result<(u128, u64), (u32, BatchFailureReason)> {
             let mut total_output: u128 = 0;
             let mut total_gas: u64 = 0;
@@ -933,9 +947,9 @@ pub mod pallet {
             let payload = Self::build_trade_payload(leg, amount_in)?;
 
             match leg.vm_type {
-                types::VmType::Evm => {
+                VmType::Evm => {
                     let gas_limit = T::DefaultTradeEvmGasLimit::get();
-                    let receipt = <T as Config>::EvmAdapter::execute(&payload, gas_limit)
+                    let receipt = <T as pallet::Config>::EvmAdapter::execute(&payload, gas_limit)
                         .map_err(|_| TradeLegFailureReason::EvmExecutionFailed)?;
 
                     if !receipt.success {
@@ -947,10 +961,11 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                types::VmType::Svm => {
+                VmType::Svm => {
                     let compute_limit = T::DefaultTradeSvmComputeLimit::get();
-                    let receipt = <T as Config>::SvmAdapter::execute(&payload, compute_limit)
-                        .map_err(|_| TradeLegFailureReason::SvmExecutionFailed)?;
+                    let receipt =
+                        <T as pallet::Config>::SvmAdapter::execute(&payload, compute_limit)
+                            .map_err(|_| TradeLegFailureReason::SvmExecutionFailed)?;
 
                     if !receipt.success {
                         return Err(TradeLegFailureReason::SvmExecutionFailed);
@@ -961,7 +976,7 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                types::VmType::CrossVm => {
+                VmType::CrossVm => {
                     // Cross-VM execution requires coordination between both VMs
                     Self::execute_cross_vm_leg(leg, amount_in)
                 }
@@ -977,9 +992,11 @@ pub mod pallet {
             let evm_payload = Self::build_cross_vm_evm_payload(leg, amount_in)?;
 
             // Execute EVM portion
-            let evm_receipt =
-                <T as Config>::EvmAdapter::execute(&evm_payload, T::DefaultTradeEvmGasLimit::get())
-                    .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
+            let evm_receipt = <T as pallet::Config>::EvmAdapter::execute(
+                &evm_payload,
+                T::DefaultTradeEvmGasLimit::get(),
+            )
+            .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !evm_receipt.success {
                 return Err(TradeLegFailureReason::EvmExecutionFailed);
@@ -993,9 +1010,11 @@ pub mod pallet {
             let svm_payload = Self::build_cross_vm_svm_payload(leg, bridged_amount)?;
 
             // Execute SVM portion
-            let svm_receipt =
-                <T as Config>::SvmAdapter::execute(&svm_payload, T::DefaultTradeSvmComputeLimit::get())
-                    .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
+            let svm_receipt = <T as pallet::Config>::SvmAdapter::execute(
+                &svm_payload,
+                T::DefaultTradeSvmComputeLimit::get(),
+            )
+            .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !svm_receipt.success {
                 return Err(TradeLegFailureReason::SvmExecutionFailed);
@@ -1147,7 +1166,7 @@ pub mod pallet {
         }
 
         /// Remove a batch from pending list.
-        fn remove_from_pending(account: &AccountIdOf<T>, batch_id: H256) {
+        fn remove_from_pending(account: &T::AccountId, batch_id: H256) {
             PendingBatches::<T>::mutate(account, |batches| {
                 if let Some(pos) = batches.iter().position(|&id| id == batch_id) {
                     batches.remove(pos);
@@ -1156,7 +1175,7 @@ pub mod pallet {
         }
 
         /// Get current trade nonce for an account.
-        pub fn get_trade_nonce(account: &AccountIdOf<T>) -> u64 {
+        pub fn get_trade_nonce(account: &T::AccountId) -> u64 {
             TradeNonces::<T>::get(account)
         }
 
@@ -1292,9 +1311,9 @@ pub mod pallet {
 
             for leg in legs {
                 match leg.vm_type {
-                    types::VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
-                    types::VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
-                    types::VmType::CrossVm => {
+                    VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
+                    VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
+                    VmType::CrossVm => {
                         evm_gas = evm_gas.saturating_add(200_000);
                         svm_compute = svm_compute.saturating_add(250_000);
                     }
@@ -1352,7 +1371,10 @@ pub mod pallet {
 }
 
 // ============================================================================
-// Types
+// Additional Types (VmType and AmmProtocol are now in types.rs)
+// ============================================================================
+
+/// Asset pair for trading.
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct AssetPair {
     pub asset_in: H256,
@@ -1360,12 +1382,12 @@ pub struct AssetPair {
 }
 
 /// Configuration for an AMM adapter.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct AmmAdapterConfig {
     /// Target VM for this AMM
     pub vm_type: types::VmType,
-    /// Contract/program address
-    pub address: Vec<u8>,
+    /// Contract/program address (bounded to MAX_ADDRESS_LEN)
+    pub address: BoundedVec<u8, ConstU32<MAX_ADDRESS_LEN>>,
     /// Fee in basis points
     pub fee_bps: u32,
     /// Whether adapter is enabled
@@ -1373,7 +1395,7 @@ pub struct AmmAdapterConfig {
 }
 
 /// Input structure for creating trade legs.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct TradeLegInput {
     /// AMM protocol to use
     pub amm_protocol: types::AmmProtocol,
@@ -1387,12 +1409,12 @@ pub struct TradeLegInput {
     pub amount_in: u128,
     /// Minimum acceptable output
     pub min_amount_out: u128,
-    /// Protocol-specific routing data
-    pub route_data: Vec<u8>,
+    /// Protocol-specific routing data (bounded)
+    pub route_data: BoundedVec<u8, ConstU32<MAX_ROUTE_DATA_LEN>>,
 }
 
 /// Internal trade leg representation.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct TradeLeg {
     pub amm_protocol: types::AmmProtocol,
     pub vm_type: types::VmType,
@@ -1400,14 +1422,16 @@ pub struct TradeLeg {
     pub asset_out: H256,
     pub amount_in: u128,
     pub min_amount_out: u128,
-    pub route_data: Vec<u8>,
+    pub route_data: BoundedVec<u8, ConstU32<MAX_ROUTE_DATA_LEN>>,
     pub status: TradeLegStatus,
     pub actual_amount_out: Option<u128>,
     pub gas_used: u64,
 }
 
 /// Status of a trade leg.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, Default,
+)]
 pub enum TradeLegStatus {
     #[default]
     Pending,
@@ -1430,11 +1454,13 @@ pub enum TradeLegFailureReason {
 }
 
 /// Trade batch containing multiple legs.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-pub struct TradeBatch<AccountId, Balance> {
+/// MaxTradeLegs is the max number of legs per batch.
+#[derive(PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxTradeLegs))]
+pub struct TradeBatch<AccountId, Balance, MaxTradeLegs: Get<u32>> {
     pub batch_id: H256,
     pub origin: AccountId,
-    pub legs: Vec<TradeLeg>,
+    pub legs: BoundedVec<TradeLeg, MaxTradeLegs>,
     pub slippage_tolerance_bps: u32,
     pub deadline: u64,
     pub nonce: u64,
@@ -1445,7 +1471,27 @@ pub struct TradeBatch<AccountId, Balance> {
     pub _phantom: core::marker::PhantomData<Balance>,
 }
 
-impl<AccountId, Balance> TradeBatch<AccountId, Balance> {
+// Manual Clone implementation since derive requires MaxTradeLegs: Clone
+impl<AccountId: Clone, Balance, MaxTradeLegs: Get<u32>> Clone
+    for TradeBatch<AccountId, Balance, MaxTradeLegs>
+{
+    fn clone(&self) -> Self {
+        Self {
+            batch_id: self.batch_id,
+            origin: self.origin.clone(),
+            legs: self.legs.clone(),
+            slippage_tolerance_bps: self.slippage_tolerance_bps,
+            deadline: self.deadline,
+            nonce: self.nonce,
+            status: self.status,
+            created_at: self.created_at,
+            total_gas_used: self.total_gas_used,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<AccountId, Balance, MaxTradeLegs: Get<u32>> TradeBatch<AccountId, Balance, MaxTradeLegs> {
     /// Check if batch execution has started.
     pub fn is_executing(&self) -> bool {
         self.status == BatchStatus::Executing
@@ -1461,7 +1507,9 @@ impl<AccountId, Balance> TradeBatch<AccountId, Balance> {
 }
 
 /// Status of a trade batch.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, Default,
+)]
 pub enum BatchStatus {
     #[default]
     Pending,

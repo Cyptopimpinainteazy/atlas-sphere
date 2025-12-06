@@ -2,11 +2,16 @@
 ///
 /// Provides RPC methods for querying Atlas Kernel state via runtime APIs
 /// Includes system RPC methods for account nonce queries
+/// Supports WebSocket subscriptions for real-time block and event updates
 use atlas_sphere_runtime::{
     opaque::Block, AccountId, AssetId, Balance, ChainId, Nonce, NATIVE_GAS_PRICE,
 };
 use frame_system_rpc_runtime_api::AccountNonceApi;
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use jsonrpsee::{
+    core::{async_trait, RpcResult, SubscriptionResult},
+    proc_macros::rpc,
+    PendingSubscriptionSink,
+};
 use pallet_atlas_kernel::AtlasKernelRuntimeApi;
 use pallet_atomic_trade_engine::{
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
@@ -78,6 +83,34 @@ pub trait EthCompatApi {
     /// Get the current block number as a hex quantity
     #[method(name = "eth_blockNumber")]
     fn block_number(&self) -> RpcResult<String>;
+}
+
+/// WebSocket Subscription API for real-time updates
+#[rpc(client, server)]
+pub trait ChainSubscriptionApi {
+    /// Subscribe to new block headers
+    #[subscription(name = "chain_subscribeNewHeads" => "chain_newHead", unsubscribe = "chain_unsubscribeNewHeads", item = BlockHeader)]
+    async fn subscribe_new_heads(&self);
+
+    /// Subscribe to finalized block headers
+    #[subscription(name = "chain_subscribeFinalizedHeads" => "chain_finalizedHead", unsubscribe = "chain_unsubscribeFinalizedHeads", item = BlockHeader)]
+    async fn subscribe_finalized_heads(&self);
+}
+
+/// Block header info for subscriptions
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlockHeader {
+    /// Block number
+    pub number: u64,
+    /// Block hash
+    pub hash: H256,
+    /// Parent block hash
+    pub parent_hash: H256,
+    /// State root
+    pub state_root: H256,
+    /// Extrinsics root
+    pub extrinsics_root: H256,
 }
 
 /// System RPC server implementation
@@ -450,6 +483,111 @@ where
     }
 }
 
+// ============================================================================
+// Chain Subscription Implementation
+// ============================================================================
+
+use sc_client_api::{BlockchainEvents, FinalityNotification, ImportNotifications};
+use sp_runtime::generic::BlockId;
+use tokio_stream::StreamExt;
+
+/// Chain subscription RPC server implementation
+pub struct ChainSubscriptionRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> ChainSubscriptionRpc<C, B> {
+    /// Create new chain subscription RPC instance
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+#[async_trait]
+impl<C, Block> ChainSubscriptionApiServer for ChainSubscriptionRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send
+        + Sync
+        + 'static
+        + ProvideRuntimeApi<Block>
+        + HeaderBackend<Block>
+        + BlockBackend<Block>
+        + BlockchainEvents<Block>,
+{
+    async fn subscribe_new_heads(&self, pending: PendingSubscriptionSink) {
+        let client = self.client.clone();
+
+        // Accept the subscription
+        let sink = match pending.accept().await {
+            Ok(sink) => sink,
+            Err(e) => {
+                log::warn!("Failed to accept subscription: {:?}", e);
+                return;
+            }
+        };
+
+        // Subscribe to import notifications
+        let mut notifications = client.import_notification_stream();
+
+        // Stream block headers to subscriber
+        tokio::spawn(async move {
+            while let Some(notification) = notifications.next().await {
+                let header = BlockHeader {
+                    number: (*notification.header.number()).saturated_into(),
+                    hash: H256::from(notification.hash.as_ref()),
+                    parent_hash: H256::from(notification.header.parent_hash().as_ref()),
+                    state_root: H256::from(notification.header.state_root().as_ref()),
+                    extrinsics_root: H256::from(notification.header.extrinsics_root().as_ref()),
+                };
+
+                if sink.send(&header).await.is_err() {
+                    // Subscriber disconnected
+                    break;
+                }
+            }
+        });
+    }
+
+    async fn subscribe_finalized_heads(&self, pending: PendingSubscriptionSink) {
+        let client = self.client.clone();
+
+        // Accept the subscription
+        let sink = match pending.accept().await {
+            Ok(sink) => sink,
+            Err(e) => {
+                log::warn!("Failed to accept finalized subscription: {:?}", e);
+                return;
+            }
+        };
+
+        // Subscribe to finality notifications
+        let mut notifications = client.finality_notification_stream();
+
+        // Stream finalized block headers to subscriber
+        tokio::spawn(async move {
+            while let Some(notification) = notifications.next().await {
+                let header = BlockHeader {
+                    number: (*notification.header.number()).saturated_into(),
+                    hash: H256::from(notification.hash.as_ref()),
+                    parent_hash: H256::from(notification.header.parent_hash().as_ref()),
+                    state_root: H256::from(notification.header.state_root().as_ref()),
+                    extrinsics_root: H256::from(notification.header.extrinsics_root().as_ref()),
+                };
+
+                if sink.send(&header).await.is_err() {
+                    // Subscriber disconnected
+                    break;
+                }
+            }
+        });
+    }
+}
+
 /// Create full RPC extensions with Atlas Kernel and system methods
 pub fn create_full<C, P>(
     client: Arc<C>,
@@ -461,7 +599,8 @@ where
         + 'static
         + ProvideRuntimeApi<Block>
         + HeaderBackend<Block>
-        + BlockBackend<Block>,
+        + BlockBackend<Block>
+        + BlockchainEvents<Block>,
     C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
     C::Api: AccountNonceApi<Block, AccountId, Nonce>,
     C::Api: AtomicTradeEngineRuntimeApi<Block>,
@@ -484,8 +623,12 @@ where
     module.merge(EthCompatApiServer::into_rpc(eth_compat))?;
 
     // Add Atomic Trade Engine RPC for AI agents
-    let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client);
+    let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client.clone());
     module.merge(AtomicTradeEngineApiServer::into_rpc(atomic_trade))?;
+
+    // Add WebSocket subscription handlers for new/finalized blocks
+    let chain_sub = ChainSubscriptionRpc::<C, Block>::new(client);
+    module.merge(ChainSubscriptionApiServer::into_rpc(chain_sub))?;
 
     Ok(module)
 }

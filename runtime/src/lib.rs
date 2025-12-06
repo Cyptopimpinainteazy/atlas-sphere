@@ -18,16 +18,22 @@ pub use frame_support::{
 };
 use frame_support::{traits::Currency, weights::Weight};
 use frame_system::limits;
+use pallet_agent_accounts;
+use pallet_agent_memory;
 use pallet_atlas_kernel;
 use pallet_atomic_trade_engine;
 use pallet_aura;
 use pallet_balances;
 use pallet_collective;
+use pallet_governance;
 use pallet_grandpa;
+use pallet_preimage;
+use pallet_scheduler;
 #[cfg(feature = "dev")]
 use pallet_sudo;
 use pallet_timestamp;
 use pallet_transaction_payment::CurrencyAdapter;
+use pallet_treasury;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, H256, U256};
@@ -188,11 +194,17 @@ construct_runtime!(
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
+        Scheduler: pallet_scheduler,
+        Preimage: pallet_preimage,
         EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Sudo: pallet_sudo,
+        Governance: pallet_governance,
+        Treasury: pallet_treasury,
+        AgentAccounts: pallet_agent_accounts,
+        AgentMemory: pallet_agent_memory,
     }
 );
 
@@ -209,10 +221,16 @@ construct_runtime!(
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
+        Scheduler: pallet_scheduler,
+        Preimage: pallet_preimage,
         EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
+        Governance: pallet_governance,
+        Treasury: pallet_treasury,
+        AgentAccounts: pallet_agent_accounts,
+        AgentMemory: pallet_agent_memory,
     }
 );
 
@@ -452,15 +470,14 @@ impl pallet_atomic_trade_engine::Config for Runtime {
 #[cfg(feature = "std")]
 mod native_vm_adapters {
     use super::*;
-    use atlas_evm_integration::{
-        EvmConfig, EvmError, EvmExecutionResult, EvmExecutor, FrontierEvmExecutor,
-    };
     use atlas_svm_integration::{
         RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
     };
+    use fp_evm::{CallInfo, ExitReason, ExitSucceed};
     use pallet_atlas_kernel::{
         EvmExecutorAdapter, ExecutionLog, ExecutionReceipt, StateChange, SvmExecutorAdapter,
     };
+    use pallet_evm::Runner;
     use sp_core::H160;
     use sp_runtime::{traits::SaturatedConversion, DispatchError};
 
@@ -469,28 +486,95 @@ mod native_vm_adapters {
 
     impl EvmExecutorAdapter for NativeEvmAdapter {
         fn execute(payload: &[u8], gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
-            let executor = FrontierEvmExecutor::<super::Runtime>::new();
-            let config = evm_config(gas_limit);
-            let result = executor
-                .execute(payload, H160::zero(), None, U256::zero(), &config)
-                .map_err(|err| DispatchError::Other(evm_error_str(err)))?;
-            Ok(map_evm_receipt(result))
+            // Use Frontier's Runner directly for real EVM execution
+            let source = H160::zero(); // System caller
+            let target = H160::zero(); // Default target (for create, this is ignored)
+            let value = U256::zero();
+            let evm_config = fp_evm::Config::shanghai();
+
+            // Determine if this is a call or create based on payload structure
+            // For now, treat non-empty payload as a call to zero address
+            // Full implementation would parse tx type from payload
+            let call_result = <super::Runtime as pallet_evm::Config>::Runner::call(
+                source,
+                target,
+                payload.to_vec(),
+                value,
+                gas_limit,
+                Some(U256::from(super::NATIVE_GAS_PRICE)), // max_fee_per_gas
+                None,                                      // max_priority_fee_per_gas
+                None,                                      // nonce
+                Vec::new(),                                // access_list
+                false,                                     // is_transactional (dry run for kernel)
+                false,                                     // validate (skip signature check)
+                None,                                      // weight_limit
+                None,                                      // proof_size_base_cost
+                &evm_config,
+            );
+
+            match call_result {
+                Ok(info) => Ok(map_call_info_to_receipt(info)),
+                Err(runner_err) => {
+                    // Extract gas used from error if available
+                    Err(DispatchError::Other("EVM execution failed"))
+                }
+            }
         }
 
         fn estimate_gas(payload: &[u8]) -> Result<u64, DispatchError> {
-            let executor = FrontierEvmExecutor::<super::Runtime>::new();
-            let limit = gas_ceiling();
-            let config = evm_config(limit);
-            executor
-                .estimate_gas(payload, H160::zero(), None, U256::zero(), &config)
-                .map_err(|_| DispatchError::Other("Gas estimation failed"))
+            let gas_limit = gas_ceiling();
+            let source = H160::zero();
+            let target = H160::zero();
+            let evm_config = fp_evm::Config::shanghai();
+
+            let call_result = <super::Runtime as pallet_evm::Config>::Runner::call(
+                source,
+                target,
+                payload.to_vec(),
+                U256::zero(),
+                gas_limit,
+                Some(U256::from(super::NATIVE_GAS_PRICE)),
+                None,
+                None,
+                Vec::new(),
+                false, // non-transactional for estimation
+                false,
+                None,
+                None,
+                &evm_config,
+            );
+
+            match call_result {
+                Ok(info) => Ok(info.used_gas.unique_saturated_into()),
+                Err(_) => Err(DispatchError::Other("Gas estimation failed")),
+            }
         }
 
         fn validate(payload: &[u8]) -> Result<(), DispatchError> {
-            let executor = FrontierEvmExecutor::<super::Runtime>::new();
-            executor
-                .validate_bytecode(payload)
-                .map_err(|_| DispatchError::Other("Invalid EVM bytecode"))
+            if payload.is_empty() {
+                return Err(DispatchError::Other("Empty EVM payload"));
+            }
+            // Basic validation - could add opcode validation here
+            Ok(())
+        }
+    }
+
+    fn map_call_info_to_receipt(info: CallInfo) -> ExecutionReceipt {
+        let success = matches!(info.exit_reason, ExitReason::Succeed(_));
+        ExecutionReceipt {
+            success,
+            gas_used: info.used_gas.unique_saturated_into(),
+            return_data: info.value,
+            logs: info
+                .logs
+                .into_iter()
+                .map(|log| ExecutionLog {
+                    address: log.address.as_bytes().to_vec(),
+                    topics: log.topics,
+                    data: log.data,
+                })
+                .collect(),
+            state_changes: Vec::new(), // State tracked by pallet-evm
         }
     }
 
@@ -525,22 +609,6 @@ mod native_vm_adapters {
         }
     }
 
-    fn evm_config(gas_limit: u64) -> EvmConfig {
-        let block_number =
-            frame_system::Pallet::<super::Runtime>::block_number().saturated_into::<u64>();
-        let block_timestamp = pallet_timestamp::Pallet::<super::Runtime>::now();
-
-        EvmConfig {
-            gas_limit,
-            gas_price: U256::from(super::NATIVE_GAS_PRICE),
-            block_number,
-            block_timestamp,
-            chain_id: super::ChainId::get(),
-            base_fee: U256::from(super::NATIVE_GAS_PRICE),
-            coinbase: H160::zero(),
-        }
-    }
-
     fn svm_config(compute_limit: u64) -> SvmConfig {
         let slot = frame_system::Pallet::<super::Runtime>::block_number().saturated_into::<u64>();
         let ts: i64 = pallet_timestamp::Pallet::<super::Runtime>::now().saturated_into();
@@ -553,47 +621,6 @@ mod native_vm_adapters {
             recent_blockhash: [0u8; 32],
             enable_cpi: false,
             max_cpi_depth: 0,
-        }
-    }
-
-    fn map_evm_receipt(result: EvmExecutionResult) -> ExecutionReceipt {
-        ExecutionReceipt {
-            success: result.success,
-            gas_used: result.gas_used,
-            return_data: result.output,
-            logs: result
-                .logs
-                .into_iter()
-                .map(|log| ExecutionLog {
-                    address: log.address.as_bytes().to_vec(),
-                    topics: log.topics,
-                    data: log.data,
-                })
-                .collect(),
-            state_changes: result
-                .state_changes
-                .into_iter()
-                .map(|change| {
-                    let balance_delta = change
-                        .balance_delta
-                        .unsigned_abs()
-                        .min(u128::from(u64::MAX)) as u64;
-                    let nonce_delta = change.nonce_delta.unsigned_abs().min(u64::MAX);
-                    let default_key = H256::from_low_u64_be(balance_delta);
-                    let default_value = H256::from_low_u64_be(nonce_delta);
-                    let (key, value) = change
-                        .storage_changes
-                        .first()
-                        .cloned()
-                        .unwrap_or((default_key, default_value));
-
-                    StateChange {
-                        address: change.address.as_bytes().to_vec(),
-                        key,
-                        value,
-                    }
-                })
-                .collect(),
         }
     }
 
@@ -633,20 +660,6 @@ mod native_vm_adapters {
         H256::from(buf)
     }
 
-    fn evm_error_str(error: EvmError) -> &'static str {
-        match error {
-            EvmError::InvalidPayload => "Invalid EVM payload",
-            EvmError::ExecutionReverted => "EVM execution reverted",
-            EvmError::OutOfGas => "EVM out of gas",
-            EvmError::InvalidState => "Invalid EVM state",
-            EvmError::StackOverflow => "EVM stack overflow",
-            EvmError::StackUnderflow => "EVM stack underflow",
-            EvmError::InvalidOpcode(_) => "Invalid EVM opcode",
-            EvmError::CreateCollision => "EVM create collision",
-            EvmError::ExecutionFailed(_) => "EVM execution failed",
-        }
-    }
-
     fn svm_error_str(error: SvmError) -> &'static str {
         match error {
             SvmError::InvalidPayload => "Invalid SVM payload",
@@ -663,6 +676,160 @@ mod native_vm_adapters {
         }
     }
 }
+
+// ===== Scheduler Pallet Configuration =====
+parameter_types! {
+    pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
+        BlockWeights::get().max_block;
+    pub const MaxScheduledPerBlock: u32 = 50;
+    pub const NoPreimagePostponement: Option<BlockNumber> = Some(10);
+}
+
+impl pallet_scheduler::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeOrigin = RuntimeOrigin;
+    type PalletsOrigin = OriginCaller;
+    type RuntimeCall = RuntimeCall;
+    type MaximumWeight = MaximumSchedulerWeight;
+    type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
+    type MaxScheduledPerBlock = MaxScheduledPerBlock;
+    type WeightInfo = ();
+    type OriginPrivilegeCmp = frame_support::traits::EqualPrivilegeOnly;
+    type Preimages = Preimage;
+}
+
+// ===== Preimage Pallet Configuration =====
+parameter_types! {
+    pub const PreimageMaxSize: u32 = 4096 * 1024;
+    pub const PreimageBaseDeposit: Balance = ATLAS;
+    pub const PreimageByteDeposit: Balance = ATLAS / 100;
+}
+
+impl pallet_preimage::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
+    type Currency = Balances;
+    type ManagerOrigin = frame_system::EnsureRoot<AccountId>;
+    type BaseDeposit = PreimageBaseDeposit;
+    type ByteDeposit = PreimageByteDeposit;
+}
+
+// ===== Governance Pallet Configuration =====
+parameter_types! {
+    pub const ProposalDeposit: Balance = 100 * ATLAS;
+    pub const VotingPeriod: BlockNumber = 7 * 24 * 60 * 10; // ~7 days at 6s blocks
+    pub const EnactmentPeriod: BlockNumber = 24 * 60 * 10; // ~1 day at 6s blocks
+    pub const GovernanceQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(10);
+    pub const ApprovalThreshold: sp_runtime::Percent = sp_runtime::Percent::from_percent(51);
+    pub const MaxGovernanceProposals: u32 = 100;
+    pub const MaxVotes: u32 = 1000;
+    pub const MaxDelegations: u32 = 100;
+    pub const ConvictionPeriod: BlockNumber = 28 * 24 * 60 * 10; // ~28 days at 6s blocks
+}
+
+impl pallet_governance::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type RuntimeCall = RuntimeCall;
+    type Currency = Balances;
+    type SubmitOrigin = frame_system::EnsureSigned<AccountId>;
+    type FastTrackOrigin = EnsureRootOrHalfCouncil;
+    type CancelOrigin = EnsureRootOrHalfCouncil;
+    type RuntimeUpgradeOrigin = frame_system::EnsureRoot<AccountId>;
+    type Scheduler = Scheduler;
+    type PalletsOrigin = OriginCaller;
+    type ProposalDeposit = ProposalDeposit;
+    type VotingPeriod = VotingPeriod;
+    type EnactmentPeriod = EnactmentPeriod;
+    type Quorum = GovernanceQuorum;
+    type ApprovalThreshold = ApprovalThreshold;
+    type MaxProposals = MaxGovernanceProposals;
+    type MaxVotes = MaxVotes;
+    type MaxDelegations = MaxDelegations;
+    type ConvictionPeriod = ConvictionPeriod;
+    type WeightInfo = ();
+}
+
+// ===== Treasury Pallet Configuration =====
+parameter_types! {
+    pub const TreasuryPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/trsry");
+    pub const ProposalBond: sp_runtime::Percent = sp_runtime::Percent::from_percent(5);
+    pub const MaxSigners: u32 = 7;
+    pub const SmallSpendThreshold: Balance = 1_000 * ATLAS;
+    pub const MediumSpendThreshold: Balance = 10_000 * ATLAS;
+    pub const LargeSpendThreshold: Balance = 100_000 * ATLAS;
+    pub const MaxRecurringPayments: u32 = 100;
+    pub const MaxYieldStrategies: u32 = 10;
+    pub const MaxTreasuryProposals: u32 = 100;
+    pub const ProposalBondMinimum: Balance = 100 * ATLAS;
+}
+
+impl pallet_treasury::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type PalletId = TreasuryPalletId;
+    type SmallSpendOrigin = frame_system::EnsureRoot<AccountId>;
+    type MediumSpendOrigin = frame_system::EnsureRoot<AccountId>;
+    type LargeSpendOrigin = frame_system::EnsureRoot<AccountId>;
+    type CriticalSpendOrigin = frame_system::EnsureRoot<AccountId>;
+    type PauseOrigin = frame_system::EnsureRoot<AccountId>;
+    type YieldConfigOrigin = frame_system::EnsureRoot<AccountId>;
+    type MaxSigners = MaxSigners;
+    type MaxProposals = MaxTreasuryProposals;
+    type MaxRecurringPayments = MaxRecurringPayments;
+    type MaxYieldStrategies = MaxYieldStrategies;
+    type SmallSpendLimit = SmallSpendThreshold;
+    type MediumSpendLimit = MediumSpendThreshold;
+    type LargeSpendLimit = LargeSpendThreshold;
+    type ProposalBond = ProposalBond;
+    type ProposalBondMinimum = ProposalBondMinimum;
+    type WeightInfo = ();
+}
+
+// ===== Agent Accounts Pallet Configuration =====
+parameter_types! {
+    pub const RegistrationDeposit: Balance = 10 * ATLAS;
+    pub const MaxAgentsPerController: u32 = 100;
+    pub const DefaultGasPerBlock: u128 = 1_000_000;
+    pub const DefaultComputePerBlock: u128 = 1_000_000;
+    pub const DefaultGasPerEpoch: u128 = 100_000_000;
+    pub const DefaultComputePerEpoch: u128 = 100_000_000;
+    pub const BlocksPerEpoch: BlockNumber = 14400; // ~1 day at 6s blocks
+}
+
+impl pallet_agent_accounts::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type RegisterOrigin = frame_system::EnsureRoot<AccountId>;
+    type AdminOrigin = frame_system::EnsureRoot<AccountId>;
+    type MaxAgentsPerController = MaxAgentsPerController;
+    type RegistrationDeposit = RegistrationDeposit;
+    type DefaultGasPerBlock = DefaultGasPerBlock;
+    type DefaultComputePerBlock = DefaultComputePerBlock;
+    type DefaultGasPerEpoch = DefaultGasPerEpoch;
+    type DefaultComputePerEpoch = DefaultComputePerEpoch;
+    type BlocksPerEpoch = BlocksPerEpoch;
+    type WeightInfo = ();
+}
+
+// ===== Agent Memory Pallet Configuration =====
+parameter_types! {
+    pub const MaxEntriesPerChunk: u32 = 100;
+    pub const MaxChunksPerAgent: u32 = 1_000;
+    pub const StorageByteCost: Balance = ATLAS / 1000; // 0.001 ATLAS per byte
+    pub const DefaultTtl: BlockNumber = 365 * 24 * 600; // ~1 year at 6s blocks
+}
+
+impl pallet_agent_memory::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxEntriesPerChunk = MaxEntriesPerChunk;
+    type MaxChunksPerAgent = MaxChunksPerAgent;
+    type StorageByteCost = StorageByteCost;
+    type DefaultTtl = DefaultTtl;
+    type PruneOrigin = frame_system::EnsureRoot<AccountId>;
+    type WeightInfo = ();
+}
+
 // Session trait implementations for minimal runtime
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo)]
 pub struct SessionHandler;
