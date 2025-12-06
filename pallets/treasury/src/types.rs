@@ -7,9 +7,10 @@ use sp_runtime::Percent;
 use sp_std::vec::Vec;
 
 /// Spending track for proposals.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, Default)]
 pub enum SpendingTrack {
     /// Small spending - fast approval, low threshold (~33%)
+    #[default]
     Small,
     /// Medium spending - standard approval (~50%)
     Medium,
@@ -19,27 +20,16 @@ pub enum SpendingTrack {
     Critical,
 }
 
-impl Default for SpendingTrack {
-    fn default() -> Self {
-        SpendingTrack::Small
-    }
-}
-
 /// Status of a spending proposal.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, Default)]
 pub enum ProposalStatus {
     /// Awaiting approvals.
+    #[default]
     Pending,
     /// Executed successfully.
     Executed,
     /// Rejected by governance.
     Rejected,
-}
-
-impl Default for ProposalStatus {
-    fn default() -> Self {
-        ProposalStatus::Pending
-    }
 }
 
 /// A spending proposal.
@@ -93,20 +83,15 @@ pub struct RecurringPayment<AccountId, Balance, BlockNumber> {
 }
 
 /// Risk level for yield strategies.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, Default)]
 pub enum RiskLevel {
     /// Conservative - low risk, low return.
+    #[default]
     Low,
     /// Moderate - balanced risk/return.
     Medium,
     /// Aggressive - high risk, high potential return.
     High,
-}
-
-impl Default for RiskLevel {
-    fn default() -> Self {
-        RiskLevel::Low
-    }
 }
 
 /// A yield strategy delegated to an AI agent.

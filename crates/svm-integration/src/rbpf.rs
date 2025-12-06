@@ -8,7 +8,6 @@ use crate::{
     SvmInstruction, SvmResult,
 };
 use solana_rbpf::{
-    ebpf,
     elf::Executable,
     error::ProgramResult,
     memory_region::{MemoryMapping, MemoryRegion},
@@ -96,6 +95,7 @@ impl RbpfSvmExecutor {
     }
 
     /// Create a simple test program that returns success
+    #[allow(dead_code)]
     fn create_test_program() -> Vec<u8> {
         // Minimal BPF program: mov r0, 0; exit
         vec![
@@ -114,7 +114,8 @@ struct AtlasSyscallContext {
     compute_units_used: u64,
     /// Logs emitted during execution
     logs: Vec<Vec<u8>>,
-    /// Return data from the program
+    /// Return data from the program (reserved for future use)
+    #[allow(dead_code)]
     return_data: Vec<u8>,
 }
 
@@ -183,7 +184,6 @@ impl SvmExecutor for RbpfSvmExecutor {
 
         // Create the loader with no syscalls (minimal execution)
         let loader = create_loader();
-        let sbpf_version = SBPFVersion::V1;
 
         // Parse the program (either ELF or raw text bytecode)
         let executable_result = if program.starts_with(b"\x7fELF") {
@@ -192,7 +192,7 @@ impl SvmExecutor for RbpfSvmExecutor {
             Executable::from_text_bytes(
                 program,
                 loader.clone(),
-                sbpf_version,
+                SBPFVersion::V1,
                 FunctionRegistry::default(),
             )
         };
@@ -203,7 +203,7 @@ impl SvmExecutor for RbpfSvmExecutor {
         };
 
         // Verify the program before execution
-        if let Err(_) = executable.verify::<RequisiteVerifier>() {
+        if executable.verify::<RequisiteVerifier>().is_err() {
             return Err(SvmError::InvalidPayload);
         }
 
@@ -222,6 +222,7 @@ impl SvmExecutor for RbpfSvmExecutor {
         let regions: Vec<MemoryRegion> =
             vec![MemoryRegion::new_writable(&mut input_buffer, 0x100000000)];
 
+        let sbpf_version = SBPFVersion::V1;
         let memory_mapping = match MemoryMapping::new(regions, &self.config, &sbpf_version) {
             Ok(mm) => mm,
             Err(_) => return Err(SvmError::ExecutionFailed),

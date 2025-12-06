@@ -12,10 +12,11 @@ use serde::{Deserialize, Serialize};
 pub const MAX_ENTRIES_PER_CHUNK: u32 = 100;
 
 /// Type of memory entry.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, Default)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum EntryType {
     /// Observation from environment.
+    #[default]
     Observation,
     /// Action taken by agent.
     Action,
@@ -35,12 +36,6 @@ pub enum EntryType {
     Delta,
     /// Custom type.
     Custom,
-}
-
-impl Default for EntryType {
-    fn default() -> Self {
-        EntryType::Observation
-    }
 }
 
 /// A single memory entry.

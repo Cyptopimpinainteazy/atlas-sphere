@@ -51,7 +51,7 @@ pub mod pallet {
         Blake2_128Concat,
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Saturating, Zero};
+    use sp_runtime::traits::Saturating;
     use sp_std::prelude::*;
 
     type BalanceOf<T> =
@@ -533,7 +533,7 @@ pub mod pallet {
             Agents::<T>::try_mutate(agent_id, |maybe_agent| -> DispatchResult {
                 let agent = maybe_agent.as_mut().ok_or(Error::<T>::AgentNotFound)?;
 
-                let old_status = agent.status.clone();
+                let old_status = agent.status;
                 ensure!(
                     old_status == AgentStatus::Suspended,
                     Error::<T>::InvalidStatusTransition

@@ -44,7 +44,7 @@ pub mod pallet {
     use super::*;
     use frame_support::{
         pallet_prelude::*,
-        traits::{Currency, ExistenceRequirement, ReservableCurrency, WithdrawReasons},
+        traits::{Currency, ExistenceRequirement, ReservableCurrency},
         Blake2_128Concat, PalletId,
     };
     use frame_system::pallet_prelude::*;
@@ -520,8 +520,8 @@ pub mod pallet {
                 }
             }
 
-            // Slash bond
-            T::Currency::slash_reserved(&proposal.proposer, proposal.bond);
+            // Slash bond (ignore imbalance - slashed funds go to pot)
+            let _ = T::Currency::slash_reserved(&proposal.proposer, proposal.bond);
 
             // Remove proposal
             Proposals::<T>::remove(proposal_id);

@@ -64,9 +64,9 @@ where
     fn execute(
         &self,
         payload: &[u8],
-        caller: H160,
+        _caller: H160,
         target: Option<H160>,
-        value: U256,
+        _value: U256,
         config: &EvmConfig,
     ) -> EvmResult<EvmExecutionResult> {
         if payload.is_empty() && target.is_none() {
@@ -74,13 +74,11 @@ where
         }
 
         let gas_limit = config.gas_limit;
-        let gas_price = config.gas_price;
-        let evm_config = fp_evm::Config::shanghai();
 
         // Execute via Frontier runner - signatures vary by pallet-evm version
         // This works with pallet-evm v6.x (Polkadot SDK 1.0)
         let (exit_reason, return_value, gas_used, logs) = match target {
-            Some(to) => {
+            Some(_to) => {
                 // Contract call via runner
                 // NOTE: T::Runner::call signature depends on pallet-evm version
                 // For stub/minimal build: simulate execution
@@ -192,8 +190,6 @@ impl EvmConfig {
     /// M-8 FIX: Properly maps EvmConfig fields to fp_evm::Config
     pub fn into_evm_config<T: EvmPalletConfig>(&self) -> fp_evm::Config {
         // Start with Shanghai preset as base
-        let config = fp_evm::Config::shanghai();
-
         // Apply custom gas limits from our config
         // Note: fp_evm::Config doesn't expose all fields, but we can use
         // the chain_id and other settings through the runtime configuration.
@@ -202,7 +198,7 @@ impl EvmConfig {
         // For now, return Shanghai with documentation that gas limits are
         // passed separately to Runner methods. Full customization requires
         // runtime-level pallet-evm configuration.
-        config
+        fp_evm::Config::shanghai()
     }
 
     /// Get chain_id from config (used for transaction signing)

@@ -68,7 +68,7 @@ pub struct SvmExecutionResult {
 }
 
 /// Represents an update to an account during SVM execution
-#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Default)]
 pub struct AccountUpdate {
     /// Account public key (32 bytes)
     pub pubkey: [u8; 32],
@@ -82,19 +82,6 @@ pub struct AccountUpdate {
     pub owner: [u8; 32],
     /// Rent epoch
     pub rent_epoch: u64,
-}
-
-impl Default for AccountUpdate {
-    fn default() -> Self {
-        Self {
-            pubkey: [0u8; 32],
-            data: Vec::new(),
-            lamports: 0,
-            executable: false,
-            owner: [0u8; 32],
-            rent_epoch: 0,
-        }
-    }
 }
 
 /// SVM execution environment configuration

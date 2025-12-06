@@ -53,8 +53,7 @@ pub mod pallet {
         dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
         pallet_prelude::*,
         traits::{
-            schedule::{DispatchTime, Named as ScheduleNamed},
-            Currency, LockableCurrency, ReservableCurrency,
+            schedule::Named as ScheduleNamed, Currency, LockableCurrency, ReservableCurrency,
         },
         Blake2_128Concat,
     };
@@ -656,8 +655,8 @@ pub mod pallet {
 
             let proposal = Proposals::<T>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
 
-            // Slash deposit
-            T::Currency::slash_reserved(&proposal.proposer, proposal.deposit);
+            // Slash deposit (ignore imbalance - slashed funds handled by runtime)
+            let _ = T::Currency::slash_reserved(&proposal.proposer, proposal.deposit);
 
             // Clean up
             Proposals::<T>::remove(proposal_id);
@@ -730,8 +729,8 @@ pub mod pallet {
 
                 // Slash deposit (or return partial based on participation)
                 if quorum_met {
-                    // Full slash if quorum met but rejected
-                    T::Currency::slash_reserved(&proposal.proposer, proposal.deposit);
+                    // Full slash if quorum met but rejected (ignore imbalance)
+                    let _ = T::Currency::slash_reserved(&proposal.proposer, proposal.deposit);
                 } else {
                     // Return deposit if quorum not met
                     T::Currency::unreserve(&proposal.proposer, proposal.deposit);
@@ -852,13 +851,11 @@ pub mod pallet {
         }
 
         /// Process expired proposals that weren't finalized.
-        fn process_expired_proposals(current_block: BlockNumberFor<T>) -> Weight {
-            let mut weight = Weight::zero();
-
+        fn process_expired_proposals(_current_block: BlockNumberFor<T>) -> Weight {
             // This would iterate through proposals and auto-finalize expired ones
             // For efficiency, we rely on users calling finalize_proposal
 
-            weight
+            Weight::zero()
         }
 
         /// Calculate delegated voting power for an account.

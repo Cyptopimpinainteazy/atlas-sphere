@@ -68,21 +68,15 @@ pub use weights::WeightInfo;
 use codec::{Decode, Encode};
 use frame_support::{
     pallet_prelude::*,
-    traits::{Currency, Time, UnixTime},
+    traits::{Currency, UnixTime},
 };
 use frame_system::pallet_prelude::*;
-use pallet_atlas_kernel::{
-    DualVmDispatcher, EvmExecutorAdapter, ExecutionReceipt, StateChange, SvmExecutorAdapter,
-};
+use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
-use sp_runtime::{
-    offchain::{http, Duration},
-    traits::{AtLeast32BitUnsigned, CheckedAdd, CheckedMul, CheckedSub, Saturating, Zero},
-    DispatchError, RuntimeDebug, SaturatedConversion,
-};
-use sp_std::{collections::btree_map::BTreeMap, prelude::*};
+use sp_runtime::{DispatchError, RuntimeDebug, SaturatedConversion};
+use sp_std::prelude::*;
 
 /// Maximum number of legs in a single trade batch
 pub const MAX_TRADE_LEGS: u32 = 16;
@@ -1191,7 +1185,7 @@ pub mod pallet {
         ) -> Result<u128, DispatchError> {
             let mut current_amount = initial_amount;
 
-            for leg in legs {
+            for _leg in legs {
                 // Simplified simulation - in production would query AMM state
                 // Apply 0.3% fee for each leg (typical Uniswap V2 fee)
                 let fee_bps: u128 = 30; // 0.3%
@@ -1325,12 +1319,12 @@ pub mod pallet {
 
         /// Get optimal execution path between two tokens.
         pub fn find_execution_path(
-            token_in: H256,
-            token_out: H256,
-            amount_in: u128,
+            _token_in: H256,
+            _token_out: H256,
+            _amount_in: u128,
         ) -> Option<(Vec<types::RouteStep>, u128)> {
             // Build trade graph from registered AMM adapters
-            let mut graph = graph::TradeGraph::new();
+            let _graph = graph::TradeGraph::new();
 
             // In production, populate graph from on-chain pool data
             // For now, return None to indicate path finding is not available

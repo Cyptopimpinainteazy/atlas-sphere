@@ -211,7 +211,7 @@ pub mod real_adapters {
     //! These are only available in std builds due to external dependencies
 
     use super::*;
-    use atlas_evm_integration::{EvmConfig, EvmExecutor, MockEvmExecutor};
+    use atlas_evm_integration::{EvmConfig, EvmExecutor};
     use atlas_svm_integration::{RbpfSvmExecutor, SvmConfig, SvmExecutor};
     use sp_core::{H160, U256};
 

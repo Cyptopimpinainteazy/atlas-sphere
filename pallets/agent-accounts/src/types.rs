@@ -9,20 +9,15 @@ use sp_std::prelude::*;
 pub type AgentId = u32;
 
 /// Agent status.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, Default)]
 pub enum AgentStatus {
     /// Agent is active and can operate.
+    #[default]
     Active,
     /// Agent is temporarily suspended.
     Suspended,
     /// Agent is permanently terminated.
     Terminated,
-}
-
-impl Default for AgentStatus {
-    fn default() -> Self {
-        AgentStatus::Active
-    }
 }
 
 /// Agent record.

@@ -50,7 +50,7 @@ pub mod pallet {
         Blake2_128Concat,
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Hash, Saturating, Zero};
+    use sp_runtime::traits::{Saturating, Zero};
     use sp_std::prelude::*;
 
     type BalanceOf<T> =
@@ -301,7 +301,7 @@ pub mod pallet {
 
             let entry = MemoryEntry {
                 id: entry_id,
-                entry_type: entry_type.clone(),
+                entry_type,
                 content: content.clone(),
                 metadata,
                 timestamp: current_block,
@@ -397,7 +397,7 @@ pub mod pallet {
             for (entry_type, content) in entries {
                 let entry = MemoryEntry {
                     id: entry_id,
-                    entry_type: entry_type.clone(),
+                    entry_type,
                     content: content.clone(),
                     metadata: None,
                     timestamp: current_block,
