@@ -8,6 +8,9 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
+/// Maximum entries per chunk (matches runtime config)
+pub const MAX_ENTRIES_PER_CHUNK: u32 = 100;
+
 /// Type of memory entry.
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen, Debug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -57,13 +60,13 @@ pub struct MemoryEntry<BlockNumber> {
     pub ttl: Option<BlockNumber>,
 }
 
-/// A chunk of memory entries.
+/// A chunk of memory entries (bounded to prevent storage attacks).
 #[derive(Clone, Encode, Decode, TypeInfo, Debug)]
 pub struct MemoryChunk<BlockNumber> {
     /// Chunk ID.
     pub id: u32,
-    /// Entries in this chunk.
-    pub entries: Vec<MemoryEntry<BlockNumber>>,
+    /// Entries in this chunk (bounded by MAX_ENTRIES_PER_CHUNK).
+    pub entries: BoundedVec<MemoryEntry<BlockNumber>, ConstU32<MAX_ENTRIES_PER_CHUNK>>,
     /// Block when created.
     pub created_at: BlockNumber,
     /// Whether chunk is finalized (no more entries).
@@ -76,7 +79,7 @@ impl<BlockNumber: Default> Default for MemoryChunk<BlockNumber> {
     fn default() -> Self {
         Self {
             id: 0,
-            entries: Vec::new(),
+            entries: BoundedVec::default(),
             created_at: BlockNumber::default(),
             finalized: false,
             hash: None,

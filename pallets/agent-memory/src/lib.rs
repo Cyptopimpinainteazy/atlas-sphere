@@ -262,7 +262,7 @@ pub mod pallet {
 
             let chunk = MemoryChunk {
                 id: 0,
-                entries: Vec::new(),
+                entries: BoundedVec::default(),
                 created_at: frame_system::Pallet::<T>::block_number(),
                 finalized: false,
                 hash: None,
@@ -337,9 +337,13 @@ pub mod pallet {
                         Error::<T>::TooManyChunks
                     );
 
+                    let mut new_entries = BoundedVec::default();
+                    // This try_push should always succeed since we just created a new chunk
+                    let _ = new_entries.try_push(entry.clone());
+
                     let new_chunk = MemoryChunk {
                         id: new_chunk_id,
-                        entries: vec![entry.clone()],
+                        entries: new_entries,
                         created_at: current_block,
                         finalized: false,
                         hash: None,
@@ -349,7 +353,8 @@ pub mod pallet {
                     CurrentChunk::<T>::insert(agent_id, new_chunk_id);
                     MemoryChunks::<T>::insert(agent_id, new_chunk_id, new_chunk);
                 } else {
-                    chunk.entries.push(entry.clone());
+                    // try_push returns Err if full, but we checked len above
+                    let _ = chunk.entries.try_push(entry.clone());
                 }
 
                 Ok(())
@@ -418,9 +423,12 @@ pub mod pallet {
                                 Error::<T>::TooManyChunks
                             );
 
+                            let mut new_entries = BoundedVec::default();
+                            let _ = new_entries.try_push(entry.clone());
+
                             let new_chunk = MemoryChunk {
                                 id: new_chunk_id,
-                                entries: vec![entry.clone()],
+                                entries: new_entries,
                                 created_at: current_block,
                                 finalized: false,
                                 hash: None,
@@ -429,7 +437,7 @@ pub mod pallet {
                             CurrentChunk::<T>::insert(agent_id, new_chunk_id);
                             MemoryChunks::<T>::insert(agent_id, new_chunk_id, new_chunk);
                         } else {
-                            chunk.entries.push(entry);
+                            let _ = chunk.entries.try_push(entry);
                         }
 
                         Ok(())

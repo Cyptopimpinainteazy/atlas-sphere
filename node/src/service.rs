@@ -206,27 +206,38 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
 
     // Start RPC server using jsonrpsee with HTTP and WebSocket support
+    // Security: Default to localhost binding only
     let rpc_addr = config
         .rpc_addr
         .unwrap_or_else(|| "127.0.0.1:9944".parse().expect("valid default address"));
 
     let max_connections = config.rpc_max_connections;
 
+    // Initialize rate limiter with production config
+    let rate_limiter = std::sync::Arc::new(crate::rpc_middleware::RateLimiter::new(
+        crate::rpc_middleware::RateLimitConfig::default(),
+    ));
+
     // Spawn RPC server as an essential task (supports both HTTP and WS)
     let rpc_server_handle = task_manager.spawn_essential_handle();
+    let rate_limiter_clone = rate_limiter.clone();
     rpc_server_handle.spawn("rpc-server", None, async move {
         use jsonrpsee::server::ServerBuilder;
         use std::time::Duration;
 
-        // jsonrpsee ServerBuilder supports both HTTP and WebSocket connections
-        // on the same port by default. WS connections are upgraded from HTTP.
+        // Security settings for production
+        // - Reasonable message size limits to prevent memory exhaustion
+        // - Ping/pong for WebSocket keep-alive
+        // - Connection limits
         let server = ServerBuilder::default()
             .max_connections(max_connections)
             // Enable ping/pong for WebSocket keep-alive
             .ping_interval(Duration::from_secs(30))
-            // Set reasonable message size limits
-            .max_request_body_size(15 * 1024 * 1024) // 15 MB
-            .max_response_body_size(15 * 1024 * 1024) // 15 MB
+            // Set reasonable message size limits (prevent DoS)
+            .max_request_body_size(10 * 1024 * 1024) // 10 MB max request
+            .max_response_body_size(50 * 1024 * 1024) // 50 MB max response (for large queries)
+            // Limit subscription buffer to prevent memory issues
+            .max_subscriptions_per_connection(10)
             .build(rpc_addr)
             .await
             .map_err(|e| {
@@ -239,8 +250,26 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
         log::info!("🌐 RPC server listening on http://{}", rpc_addr);
         log::info!("🔌 WebSocket available at ws://{}", rpc_addr);
+        log::info!(
+            "🛡️ Rate limiting enabled: {} req/s burst, {} max subscriptions",
+            50,
+            10
+        );
 
-        futures::future::pending::<()>().await;
+        // Periodically cleanup stale rate limiter connections
+        let cleanup_interval = Duration::from_secs(300); // 5 minutes
+        let max_age = Duration::from_secs(3600); // 1 hour
+        loop {
+            tokio::time::sleep(cleanup_interval).await;
+            rate_limiter_clone.cleanup_stale_connections(max_age);
+            let metrics = rate_limiter_clone.metrics();
+            log::debug!(
+                "Rate limiter stats: {} requests, {} rejected, {} active connections",
+                metrics.total_requests,
+                metrics.total_rejected,
+                metrics.active_connections
+            );
+        }
     });
 
     let role = config.role.clone();

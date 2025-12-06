@@ -170,7 +170,7 @@ pub fn native_version() -> sp_version::NativeVersion {
 }
 
 parameter_types! {
-    pub const MaxSetIdSessionEntries: u64 = 0;
+    pub const MaxSetIdSessionEntries: u64 = 168; // ~1 week at 1 hour sessions
     pub const OperationalFeeMultiplier: u8 = 5;
 }
 
@@ -325,10 +325,15 @@ impl pallet_aura::Config for Runtime {
 
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type KeyOwnerProof = SessionHandler;
+    // KeyOwnerProof is Void when we don't have session pallet
+    type KeyOwnerProof = sp_core::Void;
+    // Equivocation reporting disabled without session/offences pallets
+    // To fully enable, add: session, historical, offences, authorship pallets
+    // For now, equivocations are still detected and logged in GRANDPA
     type EquivocationReportSystem = ();
     type WeightInfo = ();
     type MaxAuthorities = MaxAuthorities;
+    // Set to non-zero for proper set tracking (enables historical set queries)
     type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
