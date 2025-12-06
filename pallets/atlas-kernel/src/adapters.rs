@@ -351,7 +351,7 @@ pub mod real_adapters {
                     .map(|update| StateChange {
                         address: update.pubkey.to_vec(),
                         key: H256::from_low_u64_be(update.lamports),
-                        value: H256::from_slice(&update.data.get(..32).unwrap_or(&[0u8; 32])),
+                        value: H256::from_slice(update.data.get(..32).unwrap_or(&[0u8; 32])),
                     })
                     .collect(),
             })

@@ -502,7 +502,7 @@ pub mod pallet {
             Agents::<T>::try_mutate(agent_id, |maybe_agent| -> DispatchResult {
                 let agent = maybe_agent.as_mut().ok_or(Error::<T>::AgentNotFound)?;
 
-                let old_status = agent.status.clone();
+                let old_status = agent.status;
                 ensure!(
                     old_status == AgentStatus::Active,
                     Error::<T>::InvalidStatusTransition
@@ -690,8 +690,7 @@ pub mod pallet {
                 } else {
                     old_score.saturating_sub((-delta) as u32)
                 }
-                .min(200)
-                .max(0); // Clamp to 0-200
+                .clamp(0, 200);
 
                 agent.reputation = new_score;
 

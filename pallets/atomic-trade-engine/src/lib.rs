@@ -411,8 +411,7 @@ pub mod pallet {
                 Error::<T>::TooManyTradeLegs
             );
             ensure!(
-                slippage_tolerance_bps >= MIN_SLIPPAGE_BPS
-                    && slippage_tolerance_bps <= MAX_SLIPPAGE_BPS,
+                (MIN_SLIPPAGE_BPS..=MAX_SLIPPAGE_BPS).contains(&slippage_tolerance_bps),
                 Error::<T>::InvalidSlippageTolerance
             );
 
@@ -647,11 +646,11 @@ pub mod pallet {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
-                !AmmAdapters::<T>::contains_key(&protocol),
+                !AmmAdapters::<T>::contains_key(protocol),
                 Error::<T>::AmmAlreadyRegistered
             );
 
-            AmmAdapters::<T>::insert(&protocol, config.clone());
+            AmmAdapters::<T>::insert(protocol, config.clone());
 
             Self::deposit_event(Event::AmmAdapterRegistered {
                 protocol,
@@ -674,11 +673,11 @@ pub mod pallet {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
-                AmmAdapters::<T>::contains_key(&protocol),
+                AmmAdapters::<T>::contains_key(protocol),
                 Error::<T>::AmmNotRegistered
             );
 
-            AmmAdapters::<T>::remove(&protocol);
+            AmmAdapters::<T>::remove(protocol);
 
             Self::deposit_event(Event::AmmAdapterRemoved { protocol });
 
@@ -1044,7 +1043,7 @@ pub mod pallet {
 
             // to address (32 bytes) - padded
             payload.extend_from_slice(&[0u8; 12]);
-            payload.extend_from_slice(&leg.route_data.get(..20).unwrap_or(&[0u8; 20]));
+            payload.extend_from_slice(leg.route_data.get(..20).unwrap_or(&[0u8; 20]));
 
             // deadline (32 bytes)
             payload.extend_from_slice(&Self::encode_u256(u128::MAX));
@@ -1351,7 +1350,7 @@ pub mod pallet {
 
             // Validate slippage
             ensure!(
-                slippage_bps >= MIN_SLIPPAGE_BPS && slippage_bps <= MAX_SLIPPAGE_BPS,
+                (MIN_SLIPPAGE_BPS..=MAX_SLIPPAGE_BPS).contains(&slippage_bps),
                 Error::<T>::InvalidSlippageTolerance
             );
 

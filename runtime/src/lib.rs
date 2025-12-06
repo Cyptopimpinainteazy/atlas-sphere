@@ -183,11 +183,7 @@ parameter_types! {
 
 #[cfg(feature = "dev")]
 construct_runtime!(
-    pub enum Runtime where
-        Block = Block,
-        NodeBlock = Block,
-        UncheckedExtrinsic = UncheckedExtrinsic,
-    {
+    pub enum Runtime {
         System: frame_system,
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,
@@ -210,11 +206,7 @@ construct_runtime!(
 
 #[cfg(not(feature = "dev"))]
 construct_runtime!(
-    pub enum Runtime where
-        Block = Block,
-        NodeBlock = Block,
-        UncheckedExtrinsic = UncheckedExtrinsic,
-    {
+    pub enum Runtime {
         System: frame_system,
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,

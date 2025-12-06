@@ -808,7 +808,7 @@ pub mod pallet {
         ) -> DispatchResult {
             T::GovernanceOrigin::ensure_origin(origin)?;
             ensure!(
-                !AssetRegistry::<T>::contains_key(&asset_id),
+                !AssetRegistry::<T>::contains_key(asset_id),
                 Error::<T>::AssetAlreadyRegistered
             );
 
@@ -820,16 +820,16 @@ pub mod pallet {
 
             // Validate symbol does not start with dash or underscore
             ensure!(
-                !symbol.starts_with(&[b'-']) && !symbol.starts_with(&[b'_']),
+                !symbol.starts_with(b"-") && !symbol.starts_with(b"_"),
                 Error::<T>::InvalidSymbolFormat
             );
 
             // Validate symbol: must be uppercase ASCII, digits, dash, or underscore
             for &byte in &symbol {
-                let valid = (byte >= b'A' && byte <= b'Z')  // Uppercase letters
-					|| (byte >= b'0' && byte <= b'9')  // Digits
-					|| byte == b'-'  // Dash
-					|| byte == b'_'; // Underscore
+                let valid = byte.is_ascii_uppercase()  // Uppercase letters
+                    || byte.is_ascii_digit()  // Digits
+                    || byte == b'-'  // Dash
+                    || byte == b'_'; // Underscore
                 ensure!(valid, Error::<T>::InvalidSymbolCharset);
             }
 
@@ -865,11 +865,11 @@ pub mod pallet {
         ) -> DispatchResult {
             T::GovernanceOrigin::ensure_origin(origin)?;
             ensure!(
-                AssetRegistry::<T>::contains_key(&asset_id),
+                AssetRegistry::<T>::contains_key(asset_id),
                 Error::<T>::UnknownAsset
             );
 
-            CanonicalLedger::<T>::insert(&account, &asset_id, new_balance);
+            CanonicalLedger::<T>::insert(&account, asset_id, new_balance);
 
             if let Some(id) = comit_id {
                 Self::deposit_event(Event::ComitFinalized { comit_id: id });
@@ -885,7 +885,7 @@ pub mod pallet {
         pub fn authorize_account(origin: OriginFor<T>, account: T::AccountId) -> DispatchResult {
             T::GovernanceOrigin::ensure_origin(origin)?;
 
-            AuthorizedAccounts::<T>::insert(&account, ());
+            AuthorizedAccounts::<T>::insert(account.clone(), ());
             Self::deposit_event(Event::AccountAuthorized { account });
 
             Ok(())
@@ -1135,7 +1135,7 @@ pub mod pallet {
 
                         if let Some(bal) = balance {
                             // Update CanonicalLedger with new balance
-                            CanonicalLedger::<T>::insert(&acc, &asset, bal);
+                            CanonicalLedger::<T>::insert(&acc, asset, bal);
                             changes_applied = changes_applied.saturating_add(1);
                         } else {
                             // Balance decode failed (M-2: track decode failures)
@@ -1339,29 +1339,21 @@ pub mod pallet {
             svm_tx: Option<Vec<u8>>,
         ) -> Result<SphereState, DispatchError> {
             // Execute transactions on both VMs in parallel (when implemented)
-            let _evm_receipt = if let Some(_tx) = evm_tx {
-                Some(ExecutionReceipt {
-                    success: true,
-                    gas_used: 21000,
-                    return_data: Vec::new(),
-                    logs: Vec::new(),
-                    state_changes: Vec::new(),
-                })
-            } else {
-                None
-            };
+            let _evm_receipt = evm_tx.map(|_tx| ExecutionReceipt {
+                success: true,
+                gas_used: 21000,
+                return_data: Vec::new(),
+                logs: Vec::new(),
+                state_changes: Vec::new(),
+            });
 
-            let _svm_receipt = if let Some(_tx) = svm_tx {
-                Some(ExecutionReceipt {
-                    success: true,
-                    gas_used: 5000,
-                    return_data: Vec::new(),
-                    logs: Vec::new(),
-                    state_changes: Vec::new(),
-                })
-            } else {
-                None
-            };
+            let _svm_receipt = svm_tx.map(|_tx| ExecutionReceipt {
+                success: true,
+                gas_used: 5000,
+                return_data: Vec::new(),
+                logs: Vec::new(),
+                state_changes: Vec::new(),
+            });
 
             // Merge receipts into unified state
             Ok(SphereState {

@@ -67,6 +67,14 @@ pub mod pallet {
     type BalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
+    /// Type alias for Proposal to reduce complexity in storage definition
+    type ProposalOf<T> = Proposal<
+        <T as frame_system::Config>::AccountId,
+        BalanceOf<T>,
+        BlockNumberFor<T>,
+        <T as Config>::RuntimeCall,
+    >;
+
     #[pallet::pallet]
     #[pallet::without_storage_info]
     pub struct Pallet<T>(_);
@@ -161,13 +169,8 @@ pub mod pallet {
     /// All proposals.
     #[pallet::storage]
     #[pallet::getter(fn proposals)]
-    pub type Proposals<T: Config> = StorageMap<
-        _,
-        Blake2_128Concat,
-        u32,
-        Proposal<T::AccountId, BalanceOf<T>, BlockNumberFor<T>, <T as Config>::RuntimeCall>,
-        OptionQuery,
-    >;
+    pub type Proposals<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, ProposalOf<T>, OptionQuery>;
 
     /// Votes for each proposal.
     #[pallet::storage]

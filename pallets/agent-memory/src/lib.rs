@@ -505,7 +505,7 @@ pub mod pallet {
                     let all_expired = chunk
                         .entries
                         .iter()
-                        .all(|e| e.ttl.map_or(false, |ttl| current_block > ttl));
+                        .all(|e| e.ttl.is_some_and(|ttl| current_block > ttl));
 
                     if all_expired || chunk.finalized {
                         for entry in &chunk.entries {
