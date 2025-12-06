@@ -1,5 +1,5 @@
 //! Database connection and operations.
-//! 
+//!
 //! Uses runtime queries (not compile-time checked) to avoid requiring DATABASE_URL
 //! at build time.
 
@@ -53,12 +53,11 @@ impl Database {
 
     /// Get indexer state value.
     pub async fn get_state(&self, key: &str) -> Result<Option<String>> {
-        let result: Option<(String,)> = sqlx::query_as(
-            "SELECT value FROM indexer_state WHERE key = $1"
-        )
-        .bind(key)
-        .fetch_optional(&self.pool)
-        .await?;
+        let result: Option<(String,)> =
+            sqlx::query_as("SELECT value FROM indexer_state WHERE key = $1")
+                .bind(key)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(result.map(|r| r.0))
     }
@@ -70,7 +69,7 @@ impl Database {
             INSERT INTO indexer_state (key, value, updated_at)
             VALUES ($1, $2, NOW())
             ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
-            "#
+            "#,
         )
         .bind(key)
         .bind(value)
@@ -88,7 +87,8 @@ impl Database {
 
     /// Set last indexed block number.
     pub async fn set_last_indexed_block(&self, block: i64) -> Result<()> {
-        self.set_state("last_indexed_block", &block.to_string()).await
+        self.set_state("last_indexed_block", &block.to_string())
+            .await
     }
 
     // =========================================================================
@@ -104,7 +104,7 @@ impl Database {
                 timestamp, author, extrinsic_count, event_count, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
             ON CONFLICT (number) DO NOTHING
-            "#
+            "#,
         )
         .bind(block.number)
         .bind(&block.hash)
@@ -124,35 +124,30 @@ impl Database {
 
     /// Get block by number.
     pub async fn get_block(&self, number: i64) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks WHERE number = $1"
-        )
-        .bind(number)
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> = sqlx::query_as("SELECT * FROM blocks WHERE number = $1")
+            .bind(number)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(block)
     }
 
     /// Get block by hash.
     pub async fn get_block_by_hash(&self, hash: &str) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks WHERE hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> = sqlx::query_as("SELECT * FROM blocks WHERE hash = $1")
+            .bind(hash)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(block)
     }
 
     /// Get latest block.
     pub async fn get_latest_block(&self) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks ORDER BY number DESC LIMIT 1"
-        )
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> =
+            sqlx::query_as("SELECT * FROM blocks ORDER BY number DESC LIMIT 1")
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(block)
     }
@@ -175,7 +170,7 @@ impl Database {
                     signer, success, fee, raw_data, created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
                 ON CONFLICT (block_number, extrinsic_index) DO NOTHING
-                "#
+                "#,
             )
             .bind(ext.block_number)
             .bind(ext.extrinsic_index)
@@ -197,7 +192,7 @@ impl Database {
     /// Get extrinsics for a block.
     pub async fn get_extrinsics(&self, block_number: i64) -> Result<Vec<Extrinsic>> {
         let extrinsics: Vec<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics WHERE block_number = $1 ORDER BY extrinsic_index"
+            "SELECT * FROM extrinsics WHERE block_number = $1 ORDER BY extrinsic_index",
         )
         .bind(block_number)
         .fetch_all(&self.pool)
@@ -208,12 +203,10 @@ impl Database {
 
     /// Get extrinsic by hash.
     pub async fn get_extrinsic_by_hash(&self, hash: &str) -> Result<Option<Extrinsic>> {
-        let ext: Option<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics WHERE hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let ext: Option<Extrinsic> = sqlx::query_as("SELECT * FROM extrinsics WHERE hash = $1")
+            .bind(hash)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(ext)
     }
@@ -236,7 +229,7 @@ impl Database {
                     data, created_at
                 ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
                 ON CONFLICT (block_number, event_index) DO NOTHING
-                "#
+                "#,
             )
             .bind(event.block_number)
             .bind(event.extrinsic_index)
@@ -254,12 +247,11 @@ impl Database {
 
     /// Get events for a block.
     pub async fn get_events(&self, block_number: i64) -> Result<Vec<Event>> {
-        let events: Vec<Event> = sqlx::query_as(
-            "SELECT * FROM events WHERE block_number = $1 ORDER BY event_index"
-        )
-        .bind(block_number)
-        .fetch_all(&self.pool)
-        .await?;
+        let events: Vec<Event> =
+            sqlx::query_as("SELECT * FROM events WHERE block_number = $1 ORDER BY event_index")
+                .bind(block_number)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(events)
     }
@@ -278,7 +270,7 @@ impl Database {
                 fee_paid, success, evm_success, svm_success, error_message, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
             ON CONFLICT (comit_hash) DO NOTHING
-            "#
+            "#,
         )
         .bind(comit.block_number)
         .bind(comit.extrinsic_index)
@@ -302,24 +294,22 @@ impl Database {
 
     /// Get Comit transactions for a block.
     pub async fn get_comits(&self, block_number: i64) -> Result<Vec<ComitTransaction>> {
-        let comits: Vec<ComitTransaction> = sqlx::query_as(
-            "SELECT * FROM comit_transactions WHERE block_number = $1"
-        )
-        .bind(block_number)
-        .fetch_all(&self.pool)
-        .await?;
+        let comits: Vec<ComitTransaction> =
+            sqlx::query_as("SELECT * FROM comit_transactions WHERE block_number = $1")
+                .bind(block_number)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(comits)
     }
 
     /// Get Comit by hash.
     pub async fn get_comit_by_hash(&self, hash: &str) -> Result<Option<ComitTransaction>> {
-        let comit: Option<ComitTransaction> = sqlx::query_as(
-            "SELECT * FROM comit_transactions WHERE comit_hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let comit: Option<ComitTransaction> =
+            sqlx::query_as("SELECT * FROM comit_transactions WHERE comit_hash = $1")
+                .bind(hash)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(comit)
     }
@@ -350,7 +340,7 @@ impl Database {
                 last_seen_block = $5,
                 total_transactions = accounts.total_transactions + 1,
                 updated_at = NOW()
-            "#
+            "#,
         )
         .bind(address)
         .bind(balance)
@@ -365,12 +355,10 @@ impl Database {
 
     /// Get account by address.
     pub async fn get_account(&self, address: &str) -> Result<Option<Account>> {
-        let account: Option<Account> = sqlx::query_as(
-            "SELECT * FROM accounts WHERE address = $1"
-        )
-        .bind(address)
-        .fetch_optional(&self.pool)
-        .await?;
+        let account: Option<Account> = sqlx::query_as("SELECT * FROM accounts WHERE address = $1")
+            .bind(address)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(account)
     }
@@ -404,5 +392,66 @@ impl Database {
             .await?;
 
         Ok(row.0)
+    }
+
+    // =========================================================================
+    // Comit Event Recording
+    // =========================================================================
+
+    /// Record a Comit submission event.
+    pub async fn record_comit_submission(
+        &self,
+        comit_id: &str,
+        submitter: &str,
+        block_number: i64,
+        event_index: i32,
+    ) -> Result<()> {
+        sqlx::query(
+            r#"
+            INSERT INTO comit_transactions (comit_id, submitter, block_number, event_index, status, created_at)
+            VALUES ($1, $2, $3, $4, 'submitted', NOW())
+            ON CONFLICT (comit_id) DO UPDATE SET 
+                submitter = $2,
+                block_number = $3,
+                event_index = $4,
+                status = 'submitted',
+                updated_at = NOW()
+            "#
+        )
+        .bind(comit_id)
+        .bind(submitter)
+        .bind(block_number)
+        .bind(event_index)
+        .execute(&self.pool)
+        .await?;
+
+        debug!("Recorded Comit submission: {}", comit_id);
+        Ok(())
+    }
+
+    /// Record a Comit finalization (success or failure).
+    pub async fn record_comit_finalization(
+        &self,
+        comit_id: &str,
+        block_number: i64,
+        success: bool,
+    ) -> Result<()> {
+        let status = if success { "finalized" } else { "failed" };
+
+        sqlx::query(
+            r#"
+            UPDATE comit_transactions 
+            SET status = $2, finalized_at_block = $3, updated_at = NOW()
+            WHERE comit_id = $1
+            "#,
+        )
+        .bind(comit_id)
+        .bind(status)
+        .bind(block_number)
+        .execute(&self.pool)
+        .await?;
+
+        debug!("Recorded Comit finalization: {} -> {}", comit_id, status);
+        Ok(())
     }
 }

@@ -68,10 +68,8 @@ impl Indexer {
                         self.config.node.reconnect_delay_secs, reconnect_attempts
                     );
 
-                    tokio::time::sleep(Duration::from_secs(
-                        self.config.node.reconnect_delay_secs,
-                    ))
-                    .await;
+                    tokio::time::sleep(Duration::from_secs(self.config.node.reconnect_delay_secs))
+                        .await;
 
                     self.connect().await?;
                 }
@@ -181,16 +179,22 @@ impl Indexer {
             *current_block = block_num + 1;
         }
 
-        Err(IndexerError::Connection("Block subscription ended".to_string()))
+        Err(IndexerError::Connection(
+            "Block subscription ended".to_string(),
+        ))
     }
 
     /// Index a single block.
-    async fn index_block(&self, client: &OnlineClient<PolkadotConfig>, block_num: u64) -> Result<()> {
+    async fn index_block(
+        &self,
+        client: &OnlineClient<PolkadotConfig>,
+        block_num: u64,
+    ) -> Result<()> {
         let start = std::time::Instant::now();
 
         // Fetch block by number - iterate through blocks to find it
         let block = client.blocks().at_latest().await?;
-        
+
         // If requesting an old block, we need to walk back through parents
         // For simplicity, we'll use the RPC to get a block at a specific height
         // This is a simplified approach - production would use block hash lookup
@@ -205,16 +209,24 @@ impl Indexer {
         // Extract block header info
         let header = target_block.header();
         let block_hash = target_block.hash();
+
+        // Extract timestamp from events (Timestamp::set inherent)
+        let events = target_block.events().await?;
+        let timestamp = extract_timestamp_from_events(&events).unwrap_or_else(|| Utc::now());
+
+        // Extract block author from Aura digest
+        let author = extract_author_from_header(header);
+
         let new_block = NewBlock {
             number: block_num as i64,
             hash: format!("0x{}", hex::encode(block_hash.0)),
             parent_hash: format!("0x{}", hex::encode(header.parent_hash.0)),
             state_root: format!("0x{}", hex::encode(header.state_root.0)),
             extrinsics_root: format!("0x{}", hex::encode(header.extrinsics_root.0)),
-            timestamp: Utc::now(), // TODO: Extract from timestamp pallet
-            author: None,          // TODO: Extract from aura/babe
-            extrinsic_count: 0,    // Will be updated
-            event_count: 0,        // Will be updated
+            timestamp,
+            author,
+            extrinsic_count: 0, // Will be updated
+            event_count: 0,     // Will be updated
         };
 
         self.db.insert_block(&new_block).await?;
@@ -229,7 +241,7 @@ impl Indexer {
                 // Compute hash from the raw extrinsic bytes using blake2
                 let ext_bytes = ext.bytes();
                 let ext_hash = format!("0x{}", hex::encode(sp_core_hashing::blake2_256(ext_bytes)));
-                
+
                 // Try to decode the extrinsic
                 let (pallet, call) = ("unknown".to_string(), "unknown".to_string());
 
@@ -277,12 +289,13 @@ impl Indexer {
                     event_index,
                     pallet: pallet.clone(),
                     variant: variant.clone(),
-                    data: serde_json::json!({}), // TODO: Decode event data
+                    data: decode_event_data(&event),
                 });
 
                 // Check for Comit events
                 if self.config.indexer.index_comits && pallet == "AtlasKernel" {
-                    self.process_comit_event(&variant, block_num, event_index).await?;
+                    self.process_comit_event(&variant, &event, block_num, event_index)
+                        .await?;
                 }
 
                 event_index += 1;
@@ -306,26 +319,239 @@ impl Indexer {
     }
 
     /// Process a Comit-related event.
-    async fn process_comit_event(
+    async fn process_comit_event<E: subxt::events::StaticEvent>(
         &self,
         variant: &str,
+        event: &subxt::events::EventDetails<PolkadotConfig>,
         block_number: u64,
-        _event_index: i32,
+        event_index: i32,
     ) -> Result<()> {
+        let event_data = decode_event_data(event);
+
         match variant {
             "ComitSubmitted" => {
-                // TODO: Extract Comit details from event data
-                debug!("ComitSubmitted event at block {}", block_number);
+                // Extract Comit details from event data
+                let comit_id = event_data
+                    .get("comit_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                let submitter = event_data
+                    .get("submitter")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+
+                info!(
+                    "ComitSubmitted: id={} submitter={} block={}",
+                    comit_id, submitter, block_number
+                );
+
+                // Record in database if we have a comits table
+                self.db
+                    .record_comit_submission(comit_id, submitter, block_number as i64, event_index)
+                    .await
+                    .ok(); // Ignore if table doesn't exist
             }
             "ComitFinalized" => {
-                debug!("ComitFinalized event at block {}", block_number);
+                let comit_id = event_data
+                    .get("comit_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+
+                info!("ComitFinalized: id={} block={}", comit_id, block_number);
+
+                self.db
+                    .record_comit_finalization(
+                        comit_id,
+                        block_number as i64,
+                        true, // success
+                    )
+                    .await
+                    .ok();
             }
             "ComitFailed" => {
-                debug!("ComitFailed event at block {}", block_number);
+                let comit_id = event_data
+                    .get("comit_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                let reason = event_data
+                    .get("reason")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+
+                warn!(
+                    "ComitFailed: id={} reason={} block={}",
+                    comit_id, reason, block_number
+                );
+
+                self.db
+                    .record_comit_finalization(
+                        comit_id,
+                        block_number as i64,
+                        false, // failed
+                    )
+                    .await
+                    .ok();
             }
             _ => {}
         }
 
         Ok(())
     }
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/// Extract timestamp from block events (Timestamp::set inherent).
+fn extract_timestamp_from_events(
+    events: &subxt::events::Events<PolkadotConfig>,
+) -> Option<chrono::DateTime<Utc>> {
+    for event in events.iter() {
+        if let Ok(event) = event {
+            if event.pallet_name() == "Timestamp" && event.variant_name() == "TimestampSet" {
+                // Try to extract timestamp from event data
+                if let Ok(bytes) = event.field_bytes() {
+                    // Timestamp is typically a u64 in milliseconds
+                    if bytes.len() >= 8 {
+                        let mut ts_bytes = [0u8; 8];
+                        ts_bytes.copy_from_slice(&bytes[..8]);
+                        let millis = u64::from_le_bytes(ts_bytes);
+
+                        return chrono::DateTime::from_timestamp_millis(millis as i64)
+                            .map(|dt| dt.with_timezone(&Utc));
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Extract block author from header digests (Aura/BABE).
+fn extract_author_from_header(
+    header: &subxt::config::Header<u32, subxt::utils::H256>,
+) -> Option<String> {
+    // Aura pre-runtime digest contains the slot and implicitly the author
+    // For simplicity, we extract the PreRuntime digest which contains author info
+    for log in header.digest().logs() {
+        match log {
+            subxt::config::substrate::DigestItem::PreRuntime(engine, data) => {
+                // Aura engine ID is *b"aura"
+                if engine == b"aura" && data.len() >= 8 {
+                    // Data contains slot number, we can derive author index
+                    let mut slot_bytes = [0u8; 8];
+                    slot_bytes.copy_from_slice(&data[..8]);
+                    let slot = u64::from_le_bytes(slot_bytes);
+
+                    // In production, you'd look up the author from the authority set
+                    // For now, return the slot as a placeholder
+                    return Some(format!("slot:{}", slot));
+                }
+                // BABE engine ID is *b"BABE"
+                if engine == b"BABE" && data.len() >= 1 {
+                    // First byte is authority index for primary slots
+                    return Some(format!("authority:{}", data[0]));
+                }
+            }
+            subxt::config::substrate::DigestItem::Consensus(engine, data) => {
+                // GRANDPA justifications, etc.
+                if engine == b"FRNK" && !data.is_empty() {
+                    return Some(format!(
+                        "grandpa:{}",
+                        hex::encode(&data[..data.len().min(8)])
+                    ));
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Decode event data to JSON for storage.
+fn decode_event_data(event: &subxt::events::EventDetails<PolkadotConfig>) -> serde_json::Value {
+    let mut data = serde_json::Map::new();
+
+    // Add basic event info
+    data.insert("pallet".to_string(), serde_json::json!(event.pallet_name()));
+    data.insert(
+        "variant".to_string(),
+        serde_json::json!(event.variant_name()),
+    );
+
+    // Try to decode field bytes as hex
+    if let Ok(bytes) = event.field_bytes() {
+        data.insert(
+            "raw_data".to_string(),
+            serde_json::json!(hex::encode(&bytes)),
+        );
+
+        // Try common field patterns based on event type
+        let pallet = event.pallet_name();
+        let variant = event.variant_name();
+
+        match (pallet, variant) {
+            ("AtlasKernel", "ComitSubmitted") => {
+                // ComitSubmitted { comit_id: H256, submitter: AccountId, ... }
+                if bytes.len() >= 32 {
+                    data.insert(
+                        "comit_id".to_string(),
+                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                    );
+                }
+                if bytes.len() >= 64 {
+                    data.insert(
+                        "submitter".to_string(),
+                        serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
+                    );
+                }
+            }
+            ("AtlasKernel", "ComitFinalized") | ("AtlasKernel", "ComitFailed") => {
+                if bytes.len() >= 32 {
+                    data.insert(
+                        "comit_id".to_string(),
+                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                    );
+                }
+            }
+            ("Balances", "Transfer") => {
+                // Transfer { from, to, amount }
+                if bytes.len() >= 80 {
+                    // 32 + 32 + 16
+                    data.insert(
+                        "from".to_string(),
+                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                    );
+                    data.insert(
+                        "to".to_string(),
+                        serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
+                    );
+                    // Amount is u128 (16 bytes)
+                    if bytes.len() >= 80 {
+                        let mut amount_bytes = [0u8; 16];
+                        amount_bytes.copy_from_slice(&bytes[64..80]);
+                        let amount = u128::from_le_bytes(amount_bytes);
+                        data.insert("amount".to_string(), serde_json::json!(amount.to_string()));
+                    }
+                }
+            }
+            ("System", "ExtrinsicSuccess") => {
+                data.insert("success".to_string(), serde_json::json!(true));
+            }
+            ("System", "ExtrinsicFailed") => {
+                data.insert("success".to_string(), serde_json::json!(false));
+                // Try to decode error
+                if !bytes.is_empty() {
+                    data.insert("error_module".to_string(), serde_json::json!(bytes[0]));
+                    if bytes.len() > 1 {
+                        data.insert("error_index".to_string(), serde_json::json!(bytes[1]));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    serde_json::Value::Object(data)
 }

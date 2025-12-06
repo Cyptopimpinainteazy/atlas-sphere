@@ -205,24 +205,65 @@ pub fn run() -> CliResult<()> {
                     );
                     println!();
 
-                    // TODO: Make actual RPC call to atomicTrade_simulate
-                    // For now, provide a mock response
-                    println!("--- Simulation Result (Mock) ---");
-                    println!("Success:           true");
-                    println!(
-                        "Estimated Output:  {} (mock)",
-                        amount.saturating_mul(98) / 100
-                    );
-                    println!("Price Impact:      50 bps");
-                    println!("EVM Gas:           150,000");
-                    println!("SVM Compute:       0");
-                    println!();
-                    println!("Note: Connect to a running node for live simulation.");
-                    println!(
-                        "      Use: curl -X POST {} -H 'Content-Type: application/json'",
-                        rpc_url
-                    );
-                    println!("           -d '{{\"jsonrpc\":\"2.0\",\"method\":\"atomicTrade_simulate\",\"params\":[...],\"id\":1}}'");
+                    // Make RPC call to atomicTrade_simulate
+                    match make_rpc_call(
+                        rpc_url,
+                        "atomicTrade_simulate",
+                        serde_json::json!([
+                            format!("0x{}", hex::encode(token_in.as_bytes())),
+                            format!("0x{}", hex::encode(token_out.as_bytes())),
+                            amount.to_string(),
+                            slippage_bps
+                        ]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Simulation Result ---");
+                            if let Some(obj) = result.as_object() {
+                                println!(
+                                    "Success:           {}",
+                                    obj.get("success")
+                                        .and_then(|v| v.as_bool())
+                                        .unwrap_or(false)
+                                );
+                                println!(
+                                    "Estimated Output:  {}",
+                                    obj.get("estimatedOutput")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or("0")
+                                );
+                                println!(
+                                    "Price Impact:      {} bps",
+                                    obj.get("priceImpactBps")
+                                        .and_then(|v| v.as_u64())
+                                        .unwrap_or(0)
+                                );
+                                println!(
+                                    "EVM Gas:           {}",
+                                    obj.get("evmGas").and_then(|v| v.as_u64()).unwrap_or(0)
+                                );
+                                println!(
+                                    "SVM Compute:       {}",
+                                    obj.get("svmCompute").and_then(|v| v.as_u64()).unwrap_or(0)
+                                );
+                            } else {
+                                println!("Raw result: {}", result);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}. Showing mock data.", e);
+                            println!("--- Simulation Result (Mock - RPC unavailable) ---");
+                            println!("Success:           true");
+                            println!(
+                                "Estimated Output:  {} (mock)",
+                                amount.saturating_mul(98) / 100
+                            );
+                            println!("Price Impact:      50 bps");
+                            println!("EVM Gas:           150,000");
+                            println!("SVM Compute:       0");
+                            println!();
+                            println!("Note: Start a node to get live simulation results.");
+                        }
+                    }
 
                     Ok(())
                 }
@@ -239,16 +280,55 @@ pub fn run() -> CliResult<()> {
                     println!("RPC URL:  {}", rpc_url);
                     println!();
 
-                    // TODO: Make actual RPC call to atomicTrade_getPriceData
-                    println!("--- Price Data (Mock) ---");
-                    println!("TWAP Price:        0 (no observations)");
-                    println!("Latest Price:      0 (no observations)");
-                    println!("Observations:      0");
-                    println!("Last Updated:      N/A");
-                    println!();
-                    println!(
-                        "Note: Submit price observations via submit_price_observation extrinsic."
-                    );
+                    // Make RPC call to atomicTrade_getPriceData
+                    match make_rpc_call(
+                        rpc_url,
+                        "atomicTrade_getPriceData",
+                        serde_json::json!([
+                            format!("0x{}", hex::encode(token_a.as_bytes())),
+                            format!("0x{}", hex::encode(token_b.as_bytes()))
+                        ]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Price Data ---");
+                            if let Some(obj) = result.as_object() {
+                                println!(
+                                    "TWAP Price:        {}",
+                                    obj.get("twapPrice").and_then(|v| v.as_str()).unwrap_or("0")
+                                );
+                                println!(
+                                    "Latest Price:      {}",
+                                    obj.get("latestPrice")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or("0")
+                                );
+                                println!(
+                                    "Observations:      {}",
+                                    obj.get("observationCount")
+                                        .and_then(|v| v.as_u64())
+                                        .unwrap_or(0)
+                                );
+                                println!(
+                                    "Last Updated:      {}",
+                                    obj.get("lastUpdated")
+                                        .and_then(|v| v.as_str())
+                                        .unwrap_or("N/A")
+                                );
+                            } else {
+                                println!("Raw result: {}", result);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}. Showing mock data.", e);
+                            println!("--- Price Data (Mock - RPC unavailable) ---");
+                            println!("TWAP Price:        0 (no observations)");
+                            println!("Latest Price:      0 (no observations)");
+                            println!("Observations:      0");
+                            println!("Last Updated:      N/A");
+                            println!();
+                            println!("Note: Start a node and submit price observations first.");
+                        }
+                    }
 
                     Ok(())
                 }
@@ -319,4 +399,112 @@ pub fn run() -> CliResult<()> {
             })
         }
     }
+}
+
+/// Make an HTTP JSON-RPC call to a running node.
+///
+/// Returns the result field from the JSON-RPC response, or an error if the call fails.
+fn make_rpc_call(
+    url: &str,
+    method: &str,
+    params: serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    use std::io::{Read, Write};
+    use std::net::TcpStream;
+    use std::time::Duration;
+
+    // Parse URL to extract host, port, and path
+    let url = url
+        .trim_start_matches("http://")
+        .trim_start_matches("https://");
+    let (host_port, path) = if let Some(idx) = url.find('/') {
+        (&url[..idx], &url[idx..])
+    } else {
+        (url, "/")
+    };
+
+    let (host, port) = if let Some(idx) = host_port.find(':') {
+        (
+            &host_port[..idx],
+            host_port[idx + 1..].parse::<u16>().unwrap_or(9944),
+        )
+    } else {
+        (host_port, 9944u16)
+    };
+
+    // Build JSON-RPC request
+    let request_body = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": method,
+        "params": params,
+        "id": 1
+    });
+    let body = request_body.to_string();
+
+    // Build HTTP request
+    let http_request = format!(
+        "POST {} HTTP/1.1\r\n\
+         Host: {}:{}\r\n\
+         Content-Type: application/json\r\n\
+         Content-Length: {}\r\n\
+         Connection: close\r\n\
+         \r\n\
+         {}",
+        path,
+        host,
+        port,
+        body.len(),
+        body
+    );
+
+    // Connect and send request
+    let addr = format!("{}:{}", host, port);
+    let mut stream = TcpStream::connect_timeout(
+        &addr
+            .parse()
+            .map_err(|e| format!("Invalid address: {}", e))?,
+        Duration::from_secs(5),
+    )
+    .map_err(|e| format!("Connection failed: {}", e))?;
+
+    stream
+        .set_read_timeout(Some(Duration::from_secs(10)))
+        .map_err(|e| format!("Failed to set timeout: {}", e))?;
+
+    stream
+        .write_all(http_request.as_bytes())
+        .map_err(|e| format!("Failed to send request: {}", e))?;
+
+    // Read response
+    let mut response = String::new();
+    stream
+        .read_to_string(&mut response)
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+
+    // Parse HTTP response - find JSON body after headers
+    let body_start = response
+        .find("\r\n\r\n")
+        .ok_or("Invalid HTTP response: no body separator")?;
+    let json_body = &response[body_start + 4..];
+
+    // Parse JSON-RPC response
+    let rpc_response: serde_json::Value =
+        serde_json::from_str(json_body).map_err(|e| format!("Invalid JSON response: {}", e))?;
+
+    // Check for error
+    if let Some(error) = rpc_response.get("error") {
+        return Err(format!(
+            "RPC error: {}",
+            error
+                .get("message")
+                .and_then(|m| m.as_str())
+                .unwrap_or("Unknown error")
+        ));
+    }
+
+    // Return result
+    rpc_response
+        .get("result")
+        .cloned()
+        .ok_or_else(|| "No result in response".to_string())
 }

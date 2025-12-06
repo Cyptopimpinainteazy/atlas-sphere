@@ -772,21 +772,27 @@ pub mod pallet {
             origin: OriginFor<T>,
             reason: BoundedVec<u8, ConstU32<256>>,
         ) -> DispatchResult {
-            T::PauseOrigin::ensure_origin(origin)?;
+            // Verify pause origin (e.g., root, council, or emergency multisig)
+            T::PauseOrigin::ensure_origin(origin.clone())?;
 
             ensure!(!IsPaused::<T>::get(), Error::<T>::TreasuryPaused);
 
             IsPaused::<T>::put(true);
 
+            // Try to extract the actual caller; fall back to treasury account for
+            // root/collective origins that don't have an associated AccountId
+            let paused_by =
+                frame_system::ensure_signed(origin).unwrap_or_else(|_| Self::account_id());
+
             let pause_info = EmergencyPause {
-                paused_by: Self::account_id(), // Use treasury account as placeholder
+                paused_by: paused_by.clone(),
                 paused_at: frame_system::Pallet::<T>::block_number(),
                 reason: reason.clone(),
             };
             PauseInfo::<T>::put(pause_info);
 
             Self::deposit_event(Event::TreasuryPaused {
-                by: Self::account_id(),
+                by: paused_by,
                 reason,
             });
 
@@ -797,16 +803,18 @@ pub mod pallet {
         #[pallet::call_index(11)]
         #[pallet::weight(T::WeightInfo::unpause())]
         pub fn unpause(origin: OriginFor<T>) -> DispatchResult {
-            T::PauseOrigin::ensure_origin(origin)?;
+            T::PauseOrigin::ensure_origin(origin.clone())?;
 
             ensure!(IsPaused::<T>::get(), Error::<T>::TreasuryNotPaused);
 
             IsPaused::<T>::put(false);
             PauseInfo::<T>::kill();
 
-            Self::deposit_event(Event::TreasuryUnpaused {
-                by: Self::account_id(),
-            });
+            // Try to extract caller; fall back to treasury account for root/collective
+            let unpaused_by =
+                frame_system::ensure_signed(origin).unwrap_or_else(|_| Self::account_id());
+
+            Self::deposit_event(Event::TreasuryUnpaused { by: unpaused_by });
 
             Ok(())
         }
