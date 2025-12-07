@@ -471,7 +471,7 @@ mod native_vm_adapters {
     use atlas_svm_integration::{
         RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
     };
-    use fp_evm::{CallInfo, ExitReason, ExitSucceed};
+    use fp_evm::{CallInfo, ExitReason};
     use pallet_atlas_kernel::{
         EvmExecutorAdapter, ExecutionLog, ExecutionReceipt, StateChange, SvmExecutorAdapter,
     };
@@ -515,7 +515,7 @@ mod native_vm_adapters {
 
             match call_result {
                 Ok(info) => Ok(map_call_info_to_receipt(info)),
-                Err(runner_err) => {
+                Err(_runner_err) => {
                     // Extract gas used from error if available
                     Err(DispatchError::Other("EVM execution failed"))
                 }

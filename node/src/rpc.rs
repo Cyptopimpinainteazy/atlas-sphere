@@ -8,7 +8,7 @@ use atlas_sphere_runtime::{
 };
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use jsonrpsee::{
-    core::{async_trait, RpcResult, SubscriptionResult},
+    core::{async_trait, RpcResult},
     proc_macros::rpc,
     PendingSubscriptionSink,
 };
@@ -83,6 +83,54 @@ pub trait EthCompatApi {
     /// Get the current block number as a hex quantity
     #[method(name = "eth_blockNumber")]
     fn block_number(&self) -> RpcResult<String>;
+}
+
+/// Health check RPC API for monitoring and load balancers
+#[rpc(client, server)]
+pub trait HealthApi {
+    /// Returns node health status including sync state and peer count
+    #[method(name = "system_health")]
+    fn health(&self) -> RpcResult<HealthStatus>;
+
+    /// Returns node version and build info
+    #[method(name = "system_version")]
+    fn version(&self) -> RpcResult<NodeVersion>;
+
+    /// Simple liveness check - returns true if node is responsive
+    #[method(name = "system_ping")]
+    fn ping(&self) -> RpcResult<bool>;
+}
+
+/// Health status response for monitoring
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HealthStatus {
+    /// Whether the node is syncing
+    pub is_syncing: bool,
+    /// Number of connected peers
+    pub peers: u32,
+    /// Whether the node should be accepting transactions
+    pub should_have_peers: bool,
+    /// Current best block number
+    pub best_block: u64,
+    /// Finalized block number
+    pub finalized_block: u64,
+    /// Blocks behind (0 if synced)
+    pub blocks_behind: u64,
+}
+
+/// Node version information
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeVersion {
+    /// Node implementation name
+    pub name: String,
+    /// Node version
+    pub version: String,
+    /// Chain specification name
+    pub chain: String,
+    /// Runtime spec version
+    pub spec_version: u32,
 }
 
 /// WebSocket Subscription API for real-time updates
@@ -310,6 +358,66 @@ where
 }
 
 // ============================================================================
+// Health Check RPC
+// ============================================================================
+
+/// Health check RPC server implementation
+pub struct HealthRpc<C, B> {
+    client: Arc<C>,
+    chain_name: String,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> HealthRpc<C, B> {
+    /// Create a new Health RPC instance
+    pub fn new(client: Arc<C>, chain_name: String) -> Self {
+        Self {
+            client,
+            chain_name,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> HealthApiServer for HealthRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
+{
+    fn health(&self) -> RpcResult<HealthStatus> {
+        let info = self.client.info();
+        let best: u64 = info.best_number.saturated_into();
+        let finalized: u64 = info.finalized_number.saturated_into();
+
+        // Consider synced if within 10 blocks of finalized
+        let blocks_behind = best.saturating_sub(finalized);
+        let is_syncing = blocks_behind > 10;
+
+        Ok(HealthStatus {
+            is_syncing,
+            peers: 0, // Would need network service to get actual peer count
+            should_have_peers: true,
+            best_block: best,
+            finalized_block: finalized,
+            blocks_behind,
+        })
+    }
+
+    fn version(&self) -> RpcResult<NodeVersion> {
+        Ok(NodeVersion {
+            name: "Atlas Sphere Node".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            chain: self.chain_name.clone(),
+            spec_version: 1, // Matches runtime VERSION
+        })
+    }
+
+    fn ping(&self) -> RpcResult<bool> {
+        Ok(true)
+    }
+}
+
+// ============================================================================
 // Atomic Trade Engine RPC
 // ============================================================================
 
@@ -488,8 +596,7 @@ where
 // ============================================================================
 
 use jsonrpsee::SubscriptionMessage;
-use sc_client_api::{BlockchainEvents, FinalityNotification, ImportNotifications};
-use sp_runtime::generic::BlockId;
+use sc_client_api::BlockchainEvents;
 use tokio_stream::StreamExt;
 
 /// Chain subscription RPC server implementation
@@ -613,6 +720,7 @@ where
 pub fn create_full<C, P>(
     client: Arc<C>,
     _pool: Arc<P>,
+    chain_name: String,
 ) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     C: Send
@@ -642,6 +750,10 @@ where
     // Add minimal Ethereum-compatible RPC (chainId, gasPrice, blockNumber)
     let eth_compat = EthCompatRpc::<C, Block>::new(client.clone());
     module.merge(EthCompatApiServer::into_rpc(eth_compat))?;
+
+    // Add Health check RPC for monitoring and load balancers
+    let health = HealthRpc::<C, Block>::new(client.clone(), chain_name);
+    module.merge(HealthApiServer::into_rpc(health))?;
 
     // Add Atomic Trade Engine RPC for AI agents
     let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client.clone());

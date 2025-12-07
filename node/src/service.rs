@@ -10,7 +10,6 @@ use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
-use sc_network::NetworkService;
 use sc_service::{Configuration, Error as ServiceError, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
@@ -163,12 +162,12 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let sc_service::PartialComponents {
         client,
         backend,
-        mut task_manager,
+        task_manager,
         keystore_container,
         select_chain,
         import_queue,
         transaction_pool,
-        other: (grandpa_block_import, grandpa_link, mut telemetry),
+        other: (grandpa_block_import, grandpa_link, telemetry),
     } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
@@ -202,7 +201,8 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         })?;
 
     // Build RPC extensions module
-    let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone())
+    let chain_name = config.chain_spec.name().to_string();
+    let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone(), chain_name)
         .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
 
     // Start RPC server using jsonrpsee with HTTP and WebSocket support
