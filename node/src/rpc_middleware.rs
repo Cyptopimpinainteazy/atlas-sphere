@@ -2,13 +2,12 @@
 ///
 /// Provides per-connection and per-method rate limiting to prevent DoS attacks
 /// and abuse of RPC endpoints.
-use jsonrpsee::server::middleware::rpc::{RpcServiceBuilder, RpcServiceT};
-use jsonrpsee::types::Request;
-use jsonrpsee::MethodResponse;
+///
+/// Note: The RpcServiceBuilder and RpcServiceT integration requires jsonrpsee 0.20+
+/// which conflicts with substrate's pinned version. The standalone RateLimiter and
+/// CorsConfig are still usable for manual rate limiting checks.
 use std::collections::HashMap;
-use std::future::Future;
 use std::net::SocketAddr;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};

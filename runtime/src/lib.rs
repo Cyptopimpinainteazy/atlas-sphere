@@ -55,7 +55,7 @@ pub use sp_runtime::BuildStorage;
 // In native builds with `skip-wasm-build`, we intentionally skip embedding
 // the WASM blob and expose an empty binary instead to avoid build failures.
 #[cfg(all(feature = "std", not(feature = "skip-wasm-build")))]
-include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+include!(concat!(env!("OUT_DIR"), "/atlas_sphere_runtime.wasm"));
 
 // When building without std OR when explicitly skipping the WASM build,
 // provide empty binaries so native builds can proceed without a runtime blob.
@@ -104,6 +104,7 @@ pub const MILLI_ATLAS: Balance = 1_000 * MICRO_ATLAS;
 pub const ATLAS: Balance = 1_000 * MILLI_ATLAS;
 pub const NATIVE_GAS_PRICE: u64 = 1_000_000_000;
 
+#[sp_version::runtime_version]
 pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
     spec_name: create_runtime_str!("atlas-sphere"),
     impl_name: create_runtime_str!("atlas-sphere"),
