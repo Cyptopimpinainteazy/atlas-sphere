@@ -3,7 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Logo from '../ui/Logo';
+
+// Dynamic import with SSR disabled to prevent hydration mismatch
+const WalletButton = dynamic(
+  () => import('@atlas-sphere/shared').then((mod) => mod.WalletButton),
+  { 
+    ssr: false,
+    loading: () => (
+      <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium opacity-80 text-sm" disabled>
+        Connect Wallet
+      </button>
+    )
+  }
+);
+
 import {
   Menu,
   X,
@@ -59,6 +74,12 @@ const navigation: NavItem[] = [
         href: '/learn/getting-started',
         icon: <Rocket className="w-5 h-5" />,
         description: 'Start your X3 journey here',
+      },
+      {
+        label: 'Tokenomics',
+        href: '/learn/tokenomics',
+        icon: <Coins className="w-5 h-5" />,
+        description: 'How X3Coin powers the ecosystem',
       },
       {
         label: 'Tutorials',
@@ -359,11 +380,9 @@ export default function Navigation() {
             <button className="p-2 text-gray-500 hover:text-white transition-colors">
               <Search className="w-5 h-5" />
             </button>
+            <WalletButton />
             <Link href="/developers/docs" className="btn-secondary text-sm">
               Start Building
-            </Link>
-            <Link href="https://faucet.testnet.atlas-sphere.io" className="btn-primary text-sm">
-              Get Testnet Tokens
             </Link>
           </div>
 

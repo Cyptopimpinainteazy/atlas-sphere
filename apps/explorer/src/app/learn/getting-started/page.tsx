@@ -81,16 +81,16 @@ const quickLinks = [
     icon: <BookOpen className="w-5 h-5" />,
   },
   {
-    title: 'RPC API Reference',
-    description: 'Explore all available RPC methods',
-    href: '/developers/api',
-    icon: <Code className="w-5 h-5" />,
+    title: 'Tokenomics',
+    description: 'How X3Coin powers the ecosystem',
+    href: '/learn/tokenomics',
+    icon: <Zap className="w-5 h-5" />,
   },
   {
     title: 'Cookbook',
     description: 'Copy-paste code examples',
     href: '/developers/cookbook',
-    icon: <Zap className="w-5 h-5" />,
+    icon: <Code className="w-5 h-5" />,
   },
   {
     title: 'Tutorials',

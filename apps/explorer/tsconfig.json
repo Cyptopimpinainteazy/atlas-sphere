@@ -14,7 +14,9 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@atlas-sphere/shared": ["../shared/index.ts"],
+      "@atlas-sphere/shared/*": ["../shared/*"]
     },
     "plugins": [
       {
@@ -22,6 +24,13 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }

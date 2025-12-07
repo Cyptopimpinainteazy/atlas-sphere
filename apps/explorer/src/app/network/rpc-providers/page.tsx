@@ -18,52 +18,46 @@ import { HexagonCluster } from '../../../components/ui/Logo';
 
 const rpcProviders = [
   {
-    name: 'X3 STAR Public RPC',
-    description: 'Official public RPC endpoints maintained by the X3 STAR Foundation',
+    name: 'X3 Atlas Testnet (Official)',
+    description: 'Official X3 Atlas Sphere testnet RPC maintained by the core team. Full archive node with EVM and SVM support.',
     tier: 'Free',
-    features: ['Rate Limited', 'Best Effort', 'Community'],
+    features: ['Archive Node', 'EVM + SVM', 'Faucet Available'],
     endpoints: {
-      http: 'https://rpc.x3star.network',
-      ws: 'wss://ws.x3star.network',
+      http: 'http://rpc.testnet.atlas-sphere.io:9944',
+      ws: 'ws://rpc.testnet.atlas-sphere.io:9944',
     },
-    limits: '100 req/min',
-    latency: '50ms',
+    limits: '1000 req/min',
+    latency: '~50ms',
+    chainId: '9944',
+    evmChainId: '2151',
   },
   {
-    name: 'AtlasNode Pro',
-    description: 'High-performance RPC with guaranteed uptime and priority support',
+    name: 'Local Development Node',
+    description: 'Run your own local development node for testing. Includes Alice/Bob dev accounts with pre-funded balances.',
+    tier: 'Dev',
+    features: ['Instant Blocks', 'Pre-funded Accounts', 'Full Control'],
+    endpoints: {
+      http: 'http://127.0.0.1:9944',
+      ws: 'ws://127.0.0.1:9944',
+    },
+    limits: 'Unlimited',
+    latency: '<1ms',
+    chainId: '9944',
+    evmChainId: '2151',
+  },
+  {
+    name: 'AtlasNode Pro (Coming Soon)',
+    description: 'High-performance RPC with guaranteed uptime and priority support. Enterprise-ready infrastructure.',
     tier: 'Pro',
-    features: ['Unlimited', '99.9% SLA', 'Priority'],
+    features: ['99.9% SLA', 'Unlimited Requests', 'Priority Support'],
     endpoints: {
       http: 'https://api.atlasnode.io/v1/{API_KEY}',
       ws: 'wss://ws.atlasnode.io/v1/{API_KEY}',
     },
     limits: 'Unlimited',
-    latency: '15ms',
-  },
-  {
-    name: 'SphereRPC',
-    description: 'Enterprise-grade infrastructure with global edge deployment',
-    tier: 'Enterprise',
-    features: ['Dedicated', '99.99% SLA', 'Custom'],
-    endpoints: {
-      http: 'https://x3.sphererpc.com/{API_KEY}',
-      ws: 'wss://x3.sphererpc.com/ws/{API_KEY}',
-    },
-    limits: 'Custom',
-    latency: '10ms',
-  },
-  {
-    name: 'Community Node',
-    description: 'Community-operated nodes for developers and hobbyists',
-    tier: 'Free',
-    features: ['Best Effort', 'No SLA', 'Open'],
-    endpoints: {
-      http: 'https://x3.community-rpc.org',
-      ws: 'wss://x3.community-rpc.org/ws',
-    },
-    limits: '50 req/min',
-    latency: '100ms',
+    latency: '~15ms',
+    chainId: '9944',
+    evmChainId: '2151',
   },
 ];
 
@@ -94,9 +88,15 @@ const methods = [
   { method: 'eth_blockNumber', description: 'Get current block number (EVM)' },
   { method: 'eth_call', description: 'Execute contract call (EVM)' },
   { method: 'eth_sendRawTransaction', description: 'Submit transaction (EVM)' },
-  { method: 'atlasKernel_submitComit', description: 'Submit cross-VM Comit' },
-  { method: 'atlasKernel_getCanonicalBalance', description: 'Query canonical ledger' },
-  { method: 'state_getStorage', description: 'Query state storage' },
+  { method: 'eth_getBalance', description: 'Get account balance (EVM)' },
+  { method: 'atlasKernel_submitComit', description: 'Submit cross-VM Comit transaction' },
+  { method: 'atlasKernel_getCanonicalBalance', description: 'Query canonical ledger balance' },
+  { method: 'atlasKernel_isAuthorized', description: 'Check account authorization status' },
+  { method: 'atlasKernel_getAssetMetadata', description: 'Get asset info (symbol, decimals)' },
+  { method: 'state_getStorage', description: 'Query Substrate state storage' },
+  { method: 'chain_getBlock', description: 'Get block by hash (Substrate)' },
+  { method: 'chain_getBlockHash', description: 'Get block hash by number' },
+  { method: 'system_health', description: 'Get node health status' },
 ];
 
 const TierBadge = ({ tier }: { tier: string }) => {
@@ -132,8 +132,8 @@ export default function RPCProvidersPage() {
               RPC Providers
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Connect to the X3 STAR network through reliable RPC providers. 
-              Choose from free community nodes to enterprise-grade infrastructure.
+              Connect to the X3 Atlas Sphere network through reliable RPC providers. 
+              Both Substrate native (Polkadot API) and EVM-compatible (ethers.js) connections supported.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="#providers" className="btn-primary">
@@ -244,39 +244,69 @@ export default function RPCProvidersPage() {
             <div className="glass-card p-0 overflow-hidden">
               <div className="p-3 border-b border-[#1a1a1a] flex items-center">
                 <Code className="w-4 h-4 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-400">JavaScript / ethers.js</span>
+                <span className="text-sm text-gray-400">JavaScript / ethers.js (EVM)</span>
               </div>
               <pre className="p-4 overflow-x-auto text-sm">
                 <code className="text-gray-400">{`import { ethers } from 'ethers';
 
-// Connect to X3 STAR
+// Connect to X3 Atlas Sphere Testnet
 const provider = new ethers.JsonRpcProvider(
-  'https://rpc.x3star.network'
+  'http://rpc.testnet.atlas-sphere.io:9944'
 );
 
 // Get block number
 const blockNumber = await provider.getBlockNumber();
-console.log('Current block:', blockNumber);`}</code>
+console.log('Current block:', blockNumber);
+
+// Or connect locally
+// const localProvider = new ethers.JsonRpcProvider(
+//   'http://127.0.0.1:9944'
+// );`}</code>
               </pre>
             </div>
             
             <div className="glass-card p-0 overflow-hidden">
               <div className="p-3 border-b border-[#1a1a1a] flex items-center">
                 <Code className="w-4 h-4 text-gray-400 mr-2" />
-                <span className="text-sm text-gray-400">Python / web3.py</span>
+                <span className="text-sm text-gray-400">JavaScript / @polkadot/api (Substrate)</span>
               </div>
               <pre className="p-4 overflow-x-auto text-sm">
-                <code className="text-gray-400">{`from web3 import Web3
+                <code className="text-gray-400">{`import { ApiPromise, WsProvider } from '@polkadot/api';
 
-# Connect to X3 STAR
-w3 = Web3(Web3.HTTPProvider(
-    'https://rpc.x3star.network'
-))
+// Connect to X3 Atlas Sphere
+const wsProvider = new WsProvider(
+  'ws://rpc.testnet.atlas-sphere.io:9944'
+);
+const api = await ApiPromise.create({ provider: wsProvider });
 
-# Get block number
-block_number = w3.eth.block_number
-print(f'Current block: {block_number}')`}</code>
+// Query canonical balance
+const balance = await api.rpc.atlasKernel
+  .getCanonicalBalance(accountId, 0); // Asset ID 0 = X3
+console.log('X3 Balance:', balance.toHuman());`}</code>
               </pre>
+            </div>
+          </div>
+          
+          {/* MetaMask Config */}
+          <div className="mt-8 glass-card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">MetaMask Network Configuration</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-3 rounded-lg bg-[#0a0a0a]">
+                <span className="text-xs text-gray-500">Network Name</span>
+                <div className="text-white font-mono">X3 Atlas Testnet</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0a0a0a]">
+                <span className="text-xs text-gray-500">RPC URL</span>
+                <div className="text-cyan-400 font-mono text-sm break-all">http://rpc.testnet.atlas-sphere.io:9944</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0a0a0a]">
+                <span className="text-xs text-gray-500">Chain ID</span>
+                <div className="text-white font-mono">2151</div>
+              </div>
+              <div className="p-3 rounded-lg bg-[#0a0a0a]">
+                <span className="text-xs text-gray-500">Currency Symbol</span>
+                <div className="text-orange-400 font-mono">X3</div>
+              </div>
             </div>
           </div>
         </div>

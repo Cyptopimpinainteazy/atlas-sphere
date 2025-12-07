@@ -76,7 +76,7 @@ const useCases = [
     title: 'Enterprise',
     description: 'Deploy permissioned environments with cross-chain capabilities for institutional use.',
     icon: <Lock className="w-6 h-6" />,
-    href: '/solutions/enterprise',
+    href: '/solutions/permissioned',
   },
   {
     title: 'AI & ML',
@@ -406,6 +406,110 @@ export default function HomePage() {
             <Link href="/solutions" className="btn-secondary">
               View All Solutions
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* X3Coin Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#080505] to-black" />
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <span className="badge badge-fire mb-4">Native Token</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                <span className="text-white">Powered by </span>
+                <span className="gradient-text">X3Coin</span>
+              </h2>
+              <p className="text-lg text-gray-500 mb-8">
+                X3 is the native gas token that powers all operations on Atlas Sphere. 
+                Unlike traditional multi-chain setups, X3 exists once in the Canonical 
+                Ledger and is accessible from both EVM and SVM simultaneously.
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[
+                  { label: 'Symbol', value: 'X3' },
+                  { label: 'Decimals', value: '18' },
+                  { label: 'Asset ID', value: '0' },
+                  { label: 'Type', value: 'Native Gas' },
+                ].map((item, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-[#111111] border border-[#1a1a1a]">
+                    <div className="text-sm text-gray-500">{item.label}</div>
+                    <div className="font-semibold text-white">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  'No wrapped tokens - X3 is the same asset in both VMs',
+                  'Pay gas fees for EVM, SVM, and cross-VM Comits',
+                  'Unified liquidity across all pools and protocols',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start space-x-3">
+                    <CheckCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-400">{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap gap-4">
+                <Link href="/learn/tokenomics" className="btn-primary">
+                  Learn About X3
+                </Link>
+                <Link href="https://faucet.testnet.atlas-sphere.io" className="btn-secondary">
+                  Get Testnet X3
+                </Link>
+              </div>
+            </div>
+
+            <div className="glass-card p-8">
+              <div className="text-center mb-6">
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 mx-auto mb-4 flex items-center justify-center shadow-lg shadow-orange-500/25">
+                  <span className="text-4xl font-bold text-white">X3</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">Canonical Ledger</h3>
+                <p className="text-sm text-gray-500 mt-2">Single source of truth for all balances</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-blue-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3">
+                        <span className="text-blue-400 text-xs font-bold">EVM</span>
+                      </div>
+                      <span className="text-gray-400">Ethereum VM Access</span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-emerald-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center mr-3">
+                        <span className="text-emerald-400 text-xs font-bold">SVM</span>
+                      </div>
+                      <span className="text-gray-400">Solana VM Access</span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-[#0a0a0a] border border-orange-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center mr-3">
+                        <Zap className="w-4 h-4 text-orange-400" />
+                      </div>
+                      <span className="text-gray-400">Cross-VM Comits</span>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowDown, Settings, RefreshCw, Info, Loader2 } from 'lucide-react';
+import { ArrowDown, Settings, RefreshCw, Info, Loader2, Zap } from 'lucide-react';
 import { useWalletStore } from '@/stores/wallet';
 import { TokenSelector } from './token-selector';
 import { useSwap } from '@/hooks/useSwap';
@@ -37,10 +37,21 @@ export function SwapInterface() {
   const [showFromSelector, setShowFromSelector] = useState(false);
   const [showToSelector, setShowToSelector] = useState(false);
 
-  const { quote, isLoading, error, executeSwap, isSwapping } = useSwap({
+  const { 
+    quote, 
+    isLoading, 
+    error, 
+    executeSwap, 
+    isSwapping,
+    isCrossVm,
+    isHighImpact,
+    executionType,
+    refreshQuote,
+  } = useSwap({
     fromToken,
     toToken,
     amount: fromAmount,
+    slippage,
   });
 
   // Update toAmount when quote changes
@@ -60,23 +71,39 @@ export function SwapInterface() {
   };
 
   const handleSwap = async () => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
       toast.error('Please connect your wallet');
       return;
     }
 
     try {
-      await executeSwap();
-      toast.success('Swap executed successfully!');
-      setFromAmount('');
-      setToAmount('');
+      const result = await executeSwap(address);
+      
+      if (result.success) {
+        toast.success(
+          <div>
+            <p className="font-semibold">Swap executed successfully!</p>
+            <p className="text-sm">
+              Swapped {result.inputAmount} {fromToken.symbol} for {result.outputAmount} {toToken.symbol}
+            </p>
+            {result.comitId && (
+              <p className="text-xs text-gray-500 mt-1 font-mono">
+                Comit: {result.comitId.slice(0, 10)}...
+              </p>
+            )}
+          </div>
+        );
+        setFromAmount('');
+        setToAmount('');
+      } else {
+        toast.error(result.error || 'Swap failed');
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Swap failed');
     }
   };
 
   const priceImpact = quote?.priceImpact ?? 0;
-  const isHighImpact = priceImpact > 5;
 
   return (
     <div className="glass rounded-2xl p-6 max-w-lg mx-auto">
@@ -84,6 +111,13 @@ export function SwapInterface() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">Swap</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => refreshQuote()}
+            className="p-2 rounded-lg hover:bg-muted transition"
+            title="Refresh quote"
+          >
+            <RefreshCw className={clsx('w-5 h-5', isLoading && 'animate-spin')} />
+          </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={clsx(
@@ -204,15 +238,24 @@ export function SwapInterface() {
             </span>
           </div>
           <div className="flex justify-between">
+            <span className="text-muted-foreground">Min. Received</span>
+            <span>{quote.minOutput} {toToken.symbol}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-muted-foreground">Execution</span>
-            <span className="capitalize">
-              {fromToken.vm === toToken.vm ? 'Single-VM' : 'Cross-VM (Comit)'}
+            <span className="flex items-center gap-1">
+              {isCrossVm && <Zap className="w-3 h-3 text-primary" />}
+              <span className="capitalize">{executionType.replace('-', ' ')}</span>
             </span>
           </div>
-          {fromToken.vm !== toToken.vm && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Route</span>
+            <span className="font-mono text-xs">{quote.route.join(' → ')}</span>
+          </div>
+          {isCrossVm && (
             <div className="flex items-center gap-2 pt-2 border-t border-border text-primary">
               <Info className="w-4 h-4" />
-              <span>This swap uses Atlas Kernel atomic cross-VM execution</span>
+              <span>Atomic cross-VM swap via Atlas Kernel Comit</span>
             </div>
           )}
         </div>
@@ -241,7 +284,7 @@ export function SwapInterface() {
         ) : isSwapping ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
-            Swapping...
+            {isCrossVm ? 'Executing Cross-VM Comit...' : 'Swapping...'}
           </span>
         ) : isLoading ? (
           <span className="flex items-center justify-center gap-2">
@@ -254,6 +297,11 @@ export function SwapInterface() {
           'No Route Found'
         ) : isHighImpact ? (
           'Swap Anyway (High Impact)'
+        ) : isCrossVm ? (
+          <span className="flex items-center justify-center gap-2">
+            <Zap className="w-5 h-5" />
+            Cross-VM Swap
+          </span>
         ) : (
           'Swap'
         )}

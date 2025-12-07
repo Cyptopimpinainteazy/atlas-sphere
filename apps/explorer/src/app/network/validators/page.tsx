@@ -21,8 +21,8 @@ import { HexagonCluster } from '../../../components/ui/Logo';
 import { useAuthorities } from '@/hooks/useSubstrate';
 
 const requirements = [
-  { label: 'Minimum Stake', value: '100,000 ATLAS', icon: <Coins className="w-5 h-5" /> },
-  { label: 'Hardware', value: '8 CPU, 32GB RAM, 500GB SSD', icon: <Server className="w-5 h-5" /> },
+  { label: 'Minimum Stake', value: '10,000 X3', icon: <Coins className="w-5 h-5" /> },
+  { label: 'Hardware', value: '4 CPU, 16GB RAM, 500GB SSD', icon: <Server className="w-5 h-5" /> },
   { label: 'Uptime Requirement', value: '99.5%', icon: <Clock className="w-5 h-5" /> },
   { label: 'Network', value: '100 Mbps dedicated', icon: <TrendingUp className="w-5 h-5" /> },
 ];
@@ -64,25 +64,25 @@ const steps = [
   {
     step: 2,
     title: 'Set Up Node',
-    description: 'Install and configure the X3 STAR validator node software',
+    description: 'Build and configure the X3 Atlas Sphere node (cargo build --release)',
     status: 'technical',
   },
   {
     step: 3,
     title: 'Generate Keys',
-    description: 'Create validator keys for consensus participation',
+    description: 'Create Aura and GRANDPA session keys for consensus',
     status: 'technical',
   },
   {
     step: 4,
-    title: 'Stake ATLAS',
-    description: 'Bond your ATLAS tokens to activate your validator',
+    title: 'Stake X3',
+    description: 'Bond your X3 tokens to activate your validator',
     status: 'required',
   },
   {
     step: 5,
     title: 'Start Validating',
-    description: 'Begin producing blocks and earning rewards',
+    description: 'Begin producing blocks every 6 seconds and earning rewards',
     status: 'final',
   },
 ];
@@ -90,23 +90,23 @@ const steps = [
 const faqs = [
   {
     question: 'What is the minimum stake required to become a validator?',
-    answer: 'The minimum stake required is 100,000 ATLAS tokens. This stake is bonded and can be slashed if the validator misbehaves or goes offline for extended periods.',
+    answer: 'The minimum stake required is 10,000 X3 tokens for testnet. This stake is bonded and can be slashed if the validator misbehaves or goes offline for extended periods.',
   },
   {
     question: 'What are the hardware requirements?',
-    answer: 'We recommend at least 8 CPU cores, 32GB RAM, and 500GB SSD storage. You\'ll also need a stable internet connection with at least 100 Mbps bandwidth.',
+    answer: 'We recommend at least 4 CPU cores, 16GB RAM, and 500GB SSD storage. You\'ll also need a stable internet connection with at least 100 Mbps bandwidth.',
   },
   {
     question: 'How are rewards calculated?',
-    answer: 'Rewards are based on block production, transaction fees, and your relative stake in the network. Current estimated APY is approximately 8%, but this varies based on network activity.',
+    answer: 'X3 Atlas Sphere uses Aura consensus with GRANDPA finality. Rewards are based on block production and your relative stake in the network. Current estimated APY varies based on network activity.',
   },
   {
     question: 'Can I run a validator on cloud infrastructure?',
-    answer: 'Yes, you can run validators on cloud providers like AWS, Google Cloud, or DigitalOcean. However, for maximum decentralization, we encourage diverse infrastructure choices.',
+    answer: 'Yes, you can run validators on cloud providers like AWS, Google Cloud, Hetzner, or DigitalOcean. However, for maximum decentralization, we encourage diverse infrastructure choices.',
   },
   {
-    question: 'What happens if my validator goes offline?',
-    answer: 'Brief downtime is tolerated, but extended offline periods (>4 hours) may result in slashing of up to 1% of your stake. Maintaining 99.5%+ uptime is essential.',
+    question: 'What consensus mechanism does X3 use?',
+    answer: 'X3 Atlas Sphere uses Aura (Authority Round) for block production with 6-second block times, combined with GRANDPA for deterministic finality.',
   },
 ];
 
@@ -133,7 +133,7 @@ export default function ValidatorsPage() {
               Become a Validator
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Secure the X3 STAR network, earn rewards, and participate in governance. 
+              Secure the X3 Atlas Sphere network, earn rewards, and participate in governance. 
               Join our growing validator community and help decentralize the future.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -354,7 +354,7 @@ export default function ValidatorsPage() {
             Ready to Join?
           </h2>
           <p className="text-gray-400 mb-8">
-            Start your validator journey today and help secure the X3 STAR network.
+            Start your validator journey today and help secure the X3 Atlas Sphere network.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">

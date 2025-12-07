@@ -1,0 +1,22 @@
+{
+  "name": "@atlas-sphere/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./config": "./config/chain.ts",
+    "./providers": "./providers/index.ts",
+    "./components": "./components/index.ts",
+    "./hooks": "./hooks/index.ts"
+  },
+  "peerDependencies": {
+    "@polkadot/api": "^14.0.1",
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.460.0"
+  }
+}
