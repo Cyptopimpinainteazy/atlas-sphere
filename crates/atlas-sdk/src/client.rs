@@ -49,10 +49,7 @@ impl ClientConfig {
     }
 
     /// Create config with both HTTP and WebSocket endpoints.
-    pub fn with_ws(
-        http_endpoint: impl Into<String>,
-        ws_endpoint: impl Into<String>,
-    ) -> Self {
+    pub fn with_ws(http_endpoint: impl Into<String>, ws_endpoint: impl Into<String>) -> Self {
         Self {
             http_endpoint: http_endpoint.into(),
             ws_endpoint: Some(ws_endpoint.into()),
@@ -161,10 +158,10 @@ impl AtlasClient {
     pub async fn connect(endpoint: impl Into<String>) -> Result<Self> {
         let config = ClientConfig::http_only(endpoint);
         let client = Self::with_config(config);
-        
+
         // Verify connection
         client.http.health().await?;
-        
+
         Ok(client)
     }
 
@@ -175,7 +172,7 @@ impl AtlasClient {
     ) -> Result<Self> {
         let http_ep = http_endpoint.into();
         let ws_ep = ws_endpoint.into();
-        
+
         let config = ClientConfig::with_ws(&http_ep, &ws_ep);
         let http = HttpRpcClient::new(&http_ep);
         let ws = Some(WsRpcClient::connect(&ws_ep).await?);
@@ -251,9 +248,7 @@ impl AtlasClient {
     /// Get block header by hash.
     pub async fn block_header(&self, hash: Option<H256>) -> Result<BlockHeader> {
         let hash_str = hash.map(|h| format!("0x{:x}", h));
-        self.http
-            .chain_get_header(hash_str.as_deref())
-            .await
+        self.http.chain_get_header(hash_str.as_deref()).await
     }
 
     /// Get block hash by number.
@@ -305,15 +300,12 @@ impl AtlasClient {
 
     /// Submit a Comit transaction.
     pub async fn submit_comit(&self, payload: ComitPayload) -> Result<ComitResult> {
-        let signer = self
-            .signer
-            .as_ref()
-            .ok_or(AtlasError::NoSigner)?;
+        let signer = self.signer.as_ref().ok_or(AtlasError::NoSigner)?;
 
         // Validate payload sizes
         let evm_size = payload.evm_payload.as_ref().map(|p| p.len()).unwrap_or(0);
         let svm_size = payload.svm_payload.as_ref().map(|p| p.len()).unwrap_or(0);
-        
+
         if evm_size > crate::MAX_PAYLOAD_SIZE {
             return Err(AtlasError::PayloadTooLarge(evm_size));
         }
@@ -363,16 +355,15 @@ impl AtlasClient {
 
     /// Get EVM nonce.
     pub async fn evm_nonce(&self, address: &str) -> Result<u64> {
-        let nonce_hex = self.http.eth_get_transaction_count(address, "latest").await?;
+        let nonce_hex = self
+            .http
+            .eth_get_transaction_count(address, "latest")
+            .await?;
         parse_u64_hex(&nonce_hex)
     }
 
     /// Call EVM contract (read-only).
-    pub async fn evm_call(
-        &self,
-        to: &str,
-        data: &[u8],
-    ) -> Result<Vec<u8>> {
+    pub async fn evm_call(&self, to: &str, data: &[u8]) -> Result<Vec<u8>> {
         let call = crate::evm::EvmCallRequest {
             from: None,
             to: to.to_string(),
@@ -387,11 +378,7 @@ impl AtlasClient {
     }
 
     /// Estimate EVM gas.
-    pub async fn evm_estimate_gas(
-        &self,
-        to: &str,
-        data: &[u8],
-    ) -> Result<u64> {
+    pub async fn evm_estimate_gas(&self, to: &str, data: &[u8]) -> Result<u64> {
         let call = crate::evm::EvmCallRequest {
             from: None,
             to: to.to_string(),
@@ -451,7 +438,7 @@ struct SubmitComitParams {
 
 fn payload_to_signing_message(payload: &ComitPayload) -> Vec<u8> {
     use crate::utils::blake2b_256;
-    
+
     let mut message = Vec::new();
     message.extend_from_slice(&payload.nonce.to_le_bytes());
     message.extend_from_slice(&payload.evm_gas_limit.to_le_bytes());
@@ -463,22 +450,22 @@ fn payload_to_signing_message(payload: &ComitPayload) -> Vec<u8> {
         message.extend_from_slice(svm);
     }
     message.extend_from_slice(&payload.prepare_root.0);
-    
+
     blake2b_256(&message).0.to_vec()
 }
 
 fn parse_h256(s: &str) -> Result<H256> {
     let clean = s.strip_prefix("0x").unwrap_or(s);
-    let bytes = hex::decode(clean)
-        .map_err(|e| AtlasError::Decoding(format!("Invalid hex: {}", e)))?;
-    
+    let bytes =
+        hex::decode(clean).map_err(|e| AtlasError::Decoding(format!("Invalid hex: {}", e)))?;
+
     if bytes.len() != 32 {
         return Err(AtlasError::Decoding(format!(
             "Expected 32 bytes, got {}",
             bytes.len()
         )));
     }
-    
+
     let mut arr = [0u8; 32];
     arr.copy_from_slice(&bytes);
     Ok(H256(arr))

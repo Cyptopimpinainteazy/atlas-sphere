@@ -2,13 +2,7 @@
 
 use crate::error::Result;
 use crate::metrics::Metrics;
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use prometheus::Encoder;
 use serde_json::json;
 use std::net::SocketAddr;

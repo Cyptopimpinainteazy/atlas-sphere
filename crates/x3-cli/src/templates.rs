@@ -17,18 +17,21 @@ impl Default for Templates {
 impl Templates {
     pub fn new() -> Self {
         let mut handlebars = Handlebars::new();
-        
+
         // Register templates
-        handlebars.register_template_string("solidity_contract", SOLIDITY_CONTRACT)
+        handlebars
+            .register_template_string("solidity_contract", SOLIDITY_CONTRACT)
             .expect("Failed to register solidity template");
-        handlebars.register_template_string("anchor_program", ANCHOR_PROGRAM)
+        handlebars
+            .register_template_string("anchor_program", ANCHOR_PROGRAM)
             .expect("Failed to register anchor template");
-        handlebars.register_template_string("test_file", TEST_FILE)
+        handlebars
+            .register_template_string("test_file", TEST_FILE)
             .expect("Failed to register test template");
-        
+
         Self { handlebars }
     }
-    
+
     /// Render a template with data.
     pub fn render<T: Serialize>(&self, name: &str, data: &T) -> crate::error::Result<String> {
         self.handlebars

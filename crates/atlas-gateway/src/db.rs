@@ -140,48 +140,42 @@ impl Database {
 
     /// Get block by number.
     pub async fn get_block(&self, number: i64) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks WHERE number = $1"
-        )
-        .bind(number)
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> = sqlx::query_as("SELECT * FROM blocks WHERE number = $1")
+            .bind(number)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(block)
     }
 
     /// Get block by hash.
     pub async fn get_block_by_hash(&self, hash: &str) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks WHERE hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> = sqlx::query_as("SELECT * FROM blocks WHERE hash = $1")
+            .bind(hash)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(block)
     }
 
     /// Get latest block.
     pub async fn get_latest_block(&self) -> Result<Option<Block>> {
-        let block: Option<Block> = sqlx::query_as(
-            "SELECT * FROM blocks ORDER BY number DESC LIMIT 1"
-        )
-        .fetch_optional(&self.pool)
-        .await?;
+        let block: Option<Block> =
+            sqlx::query_as("SELECT * FROM blocks ORDER BY number DESC LIMIT 1")
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(block)
     }
 
     /// Get recent blocks.
     pub async fn get_recent_blocks(&self, limit: i64, offset: i64) -> Result<Vec<Block>> {
-        let blocks: Vec<Block> = sqlx::query_as(
-            "SELECT * FROM blocks ORDER BY number DESC LIMIT $1 OFFSET $2"
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&self.pool)
-        .await?;
+        let blocks: Vec<Block> =
+            sqlx::query_as("SELECT * FROM blocks ORDER BY number DESC LIMIT $1 OFFSET $2")
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(blocks)
     }
@@ -189,7 +183,7 @@ impl Database {
     /// Get blocks in range.
     pub async fn get_blocks_range(&self, from: i64, to: i64) -> Result<Vec<Block>> {
         let blocks: Vec<Block> = sqlx::query_as(
-            "SELECT * FROM blocks WHERE number >= $1 AND number <= $2 ORDER BY number"
+            "SELECT * FROM blocks WHERE number >= $1 AND number <= $2 ORDER BY number",
         )
         .bind(from)
         .bind(to)
@@ -205,12 +199,10 @@ impl Database {
 
     /// Get extrinsic by hash.
     pub async fn get_extrinsic(&self, hash: &str) -> Result<Option<Extrinsic>> {
-        let ext: Option<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics WHERE hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let ext: Option<Extrinsic> = sqlx::query_as("SELECT * FROM extrinsics WHERE hash = $1")
+            .bind(hash)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(ext)
     }
@@ -218,7 +210,7 @@ impl Database {
     /// Get extrinsics for a block.
     pub async fn get_block_extrinsics(&self, block_number: i64) -> Result<Vec<Extrinsic>> {
         let exts: Vec<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics WHERE block_number = $1 ORDER BY extrinsic_index"
+            "SELECT * FROM extrinsics WHERE block_number = $1 ORDER BY extrinsic_index",
         )
         .bind(block_number)
         .fetch_all(&self.pool)
@@ -235,7 +227,7 @@ impl Database {
         offset: i64,
     ) -> Result<Vec<Extrinsic>> {
         let exts: Vec<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics WHERE signer = $1 ORDER BY id DESC LIMIT $2 OFFSET $3"
+            "SELECT * FROM extrinsics WHERE signer = $1 ORDER BY id DESC LIMIT $2 OFFSET $3",
         )
         .bind(address)
         .bind(limit)
@@ -248,13 +240,12 @@ impl Database {
 
     /// Get recent extrinsics.
     pub async fn get_recent_extrinsics(&self, limit: i64, offset: i64) -> Result<Vec<Extrinsic>> {
-        let exts: Vec<Extrinsic> = sqlx::query_as(
-            "SELECT * FROM extrinsics ORDER BY id DESC LIMIT $1 OFFSET $2"
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&self.pool)
-        .await?;
+        let exts: Vec<Extrinsic> =
+            sqlx::query_as("SELECT * FROM extrinsics ORDER BY id DESC LIMIT $1 OFFSET $2")
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(exts)
     }
@@ -265,12 +256,11 @@ impl Database {
 
     /// Get events for a block.
     pub async fn get_block_events(&self, block_number: i64) -> Result<Vec<Event>> {
-        let events: Vec<Event> = sqlx::query_as(
-            "SELECT * FROM events WHERE block_number = $1 ORDER BY event_index"
-        )
-        .bind(block_number)
-        .fetch_all(&self.pool)
-        .await?;
+        let events: Vec<Event> =
+            sqlx::query_as("SELECT * FROM events WHERE block_number = $1 ORDER BY event_index")
+                .bind(block_number)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(events)
     }
@@ -283,7 +273,7 @@ impl Database {
         offset: i64,
     ) -> Result<Vec<Event>> {
         let events: Vec<Event> = sqlx::query_as(
-            "SELECT * FROM events WHERE pallet = $1 ORDER BY id DESC LIMIT $2 OFFSET $3"
+            "SELECT * FROM events WHERE pallet = $1 ORDER BY id DESC LIMIT $2 OFFSET $3",
         )
         .bind(pallet)
         .bind(limit)
@@ -321,25 +311,27 @@ impl Database {
 
     /// Get Comit by hash.
     pub async fn get_comit(&self, hash: &str) -> Result<Option<ComitTransaction>> {
-        let comit: Option<ComitTransaction> = sqlx::query_as(
-            "SELECT * FROM comit_transactions WHERE comit_hash = $1"
-        )
-        .bind(hash)
-        .fetch_optional(&self.pool)
-        .await?;
+        let comit: Option<ComitTransaction> =
+            sqlx::query_as("SELECT * FROM comit_transactions WHERE comit_hash = $1")
+                .bind(hash)
+                .fetch_optional(&self.pool)
+                .await?;
 
         Ok(comit)
     }
 
     /// Get recent Comits.
-    pub async fn get_recent_comits(&self, limit: i64, offset: i64) -> Result<Vec<ComitTransaction>> {
-        let comits: Vec<ComitTransaction> = sqlx::query_as(
-            "SELECT * FROM comit_transactions ORDER BY id DESC LIMIT $1 OFFSET $2"
-        )
-        .bind(limit)
-        .bind(offset)
-        .fetch_all(&self.pool)
-        .await?;
+    pub async fn get_recent_comits(
+        &self,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<ComitTransaction>> {
+        let comits: Vec<ComitTransaction> =
+            sqlx::query_as("SELECT * FROM comit_transactions ORDER BY id DESC LIMIT $1 OFFSET $2")
+                .bind(limit)
+                .bind(offset)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(comits)
     }
@@ -369,12 +361,10 @@ impl Database {
 
     /// Get account by address.
     pub async fn get_account(&self, address: &str) -> Result<Option<Account>> {
-        let account: Option<Account> = sqlx::query_as(
-            "SELECT * FROM accounts WHERE address = $1"
-        )
-        .bind(address)
-        .fetch_optional(&self.pool)
-        .await?;
+        let account: Option<Account> = sqlx::query_as("SELECT * FROM accounts WHERE address = $1")
+            .bind(address)
+            .fetch_optional(&self.pool)
+            .await?;
 
         Ok(account)
     }
@@ -382,7 +372,7 @@ impl Database {
     /// Get top accounts by balance.
     pub async fn get_top_accounts(&self, limit: i64) -> Result<Vec<Account>> {
         let accounts: Vec<Account> = sqlx::query_as(
-            "SELECT * FROM accounts ORDER BY CAST(native_balance AS NUMERIC) DESC LIMIT $1"
+            "SELECT * FROM accounts ORDER BY CAST(native_balance AS NUMERIC) DESC LIMIT $1",
         )
         .bind(limit)
         .fetch_all(&self.pool)
@@ -394,13 +384,12 @@ impl Database {
     /// Search accounts.
     pub async fn search_accounts(&self, query: &str, limit: i64) -> Result<Vec<Account>> {
         let pattern = format!("{}%", query);
-        let accounts: Vec<Account> = sqlx::query_as(
-            "SELECT * FROM accounts WHERE address LIKE $1 LIMIT $2"
-        )
-        .bind(&pattern)
-        .bind(limit)
-        .fetch_all(&self.pool)
-        .await?;
+        let accounts: Vec<Account> =
+            sqlx::query_as("SELECT * FROM accounts WHERE address LIKE $1 LIMIT $2")
+                .bind(&pattern)
+                .bind(limit)
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(accounts)
     }
@@ -427,15 +416,15 @@ impl Database {
             .fetch_one(&self.pool)
             .await?;
 
-        let total_comits: (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM comit_transactions")
-            .fetch_one(&self.pool)
-            .await?;
+        let total_comits: (i64,) =
+            sqlx::query_as("SELECT COUNT(*)::bigint FROM comit_transactions")
+                .fetch_one(&self.pool)
+                .await?;
 
-        let successful_comits: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*)::bigint FROM comit_transactions WHERE success = true"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let successful_comits: (i64,) =
+            sqlx::query_as("SELECT COUNT(*)::bigint FROM comit_transactions WHERE success = true")
+                .fetch_one(&self.pool)
+                .await?;
 
         let total_accounts: (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM accounts")
             .fetch_one(&self.pool)

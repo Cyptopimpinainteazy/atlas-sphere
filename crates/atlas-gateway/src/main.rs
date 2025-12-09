@@ -12,7 +12,7 @@ use crate::graphql::create_schema;
 use crate::rest::create_router;
 use clap::Parser;
 use std::net::SocketAddr;
-use tracing::{info, error};
+use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 /// Atlas Sphere API Gateway

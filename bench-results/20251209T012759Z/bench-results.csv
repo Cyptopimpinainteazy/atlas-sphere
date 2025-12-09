@@ -1,0 +1,10 @@
+name,old_instrs,new_instrs,instr_delta,old_gas,new_gas,gas_delta,old_bytes,new_bytes,bytes_delta,notes
+name,old_instrs,new_instrs,instr_delta,old_gas,new_gas,gas_delta,old_bytes,new_bytes,bytes_delta,notes
+constant_fold_heavy,17,17,0,24,24,0,136,136,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+arithmetic_chain,20,20,0,39,39,0,174,174,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+conditional_logic,23,23,0,50,50,0,184,184,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+dead_code_sample,14,14,0,19,19,0,118,118,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+copy_chain,6,6,0,7,7,0,76,76,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+peephole_targets,17,17,0,24,24,0,138,138,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+simple_function,8,8,0,21,21,0,108,108,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =
+multi_function,18,18,0,64,64,0,201,201,0,instrΔ=0 = gasΔ=0 = bytesΔ=0 =

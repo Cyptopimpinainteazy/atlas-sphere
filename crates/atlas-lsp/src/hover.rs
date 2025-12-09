@@ -147,7 +147,7 @@ impl HoverProvider {
                     // ... other associated types\n\
                 }\n\
                 ```"
-                    .to_string(),
+                .to_string(),
             ),
             "DispatchResult" => Some(
                 "## DispatchResult\n\n\
@@ -170,7 +170,7 @@ impl HoverProvider {
                     return Err(Error::<T>::SomeError.into());\n\
                 }\n\
                 ```"
-                    .to_string(),
+                .to_string(),
             ),
             "StorageValue" => Some(
                 "## StorageValue\n\n\
@@ -231,7 +231,7 @@ impl HoverProvider {
                     pub prepare_root: H256,\n\
                 }\n\
                 ```"
-                    .to_string(),
+                .to_string(),
             ),
             "EvmPayload" => Some(
                 "## EvmPayload\n\n\
@@ -244,7 +244,7 @@ impl HoverProvider {
                     pub value: U256,\n\
                 }\n\
                 ```"
-                    .to_string(),
+                .to_string(),
             ),
             "SvmPayload" => Some(
                 "## SvmPayload\n\n\
@@ -257,7 +257,7 @@ impl HoverProvider {
                     pub compute_units: u64,\n\
                 }\n\
                 ```"
-                    .to_string(),
+                .to_string(),
             ),
             _ => None,
         }

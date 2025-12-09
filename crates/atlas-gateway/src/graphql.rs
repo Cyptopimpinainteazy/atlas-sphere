@@ -1,6 +1,6 @@
 //! GraphQL schema and resolvers.
 
-use crate::db::{Account, Block, ComitTransaction, Database, Event, Extrinsic, ChainStats};
+use crate::db::{Account, Block, ChainStats, ComitTransaction, Database, Event, Extrinsic};
 use async_graphql::{Context, EmptyMutation, EmptySubscription, Object, Schema};
 
 /// GraphQL query root.
@@ -19,7 +19,11 @@ impl QueryRoot {
     }
 
     /// Get block by hash.
-    async fn block_by_hash(&self, ctx: &Context<'_>, hash: String) -> async_graphql::Result<Option<Block>> {
+    async fn block_by_hash(
+        &self,
+        ctx: &Context<'_>,
+        hash: String,
+    ) -> async_graphql::Result<Option<Block>> {
         let db = ctx.data::<Database>()?;
         Ok(db.get_block_by_hash(&hash).await?)
     }
@@ -59,7 +63,11 @@ impl QueryRoot {
     // ========================================================================
 
     /// Get extrinsic by hash.
-    async fn extrinsic(&self, ctx: &Context<'_>, hash: String) -> async_graphql::Result<Option<Extrinsic>> {
+    async fn extrinsic(
+        &self,
+        ctx: &Context<'_>,
+        hash: String,
+    ) -> async_graphql::Result<Option<Extrinsic>> {
         let db = ctx.data::<Database>()?;
         Ok(db.get_extrinsic(&hash).await?)
     }
@@ -94,7 +102,9 @@ impl QueryRoot {
         #[graphql(default = 0)] offset: i64,
     ) -> async_graphql::Result<Vec<Extrinsic>> {
         let db = ctx.data::<Database>()?;
-        Ok(db.get_account_extrinsics(&address, limit.min(100), offset).await?)
+        Ok(db
+            .get_account_extrinsics(&address, limit.min(100), offset)
+            .await?)
     }
 
     // ========================================================================
@@ -120,7 +130,9 @@ impl QueryRoot {
         #[graphql(default = 0)] offset: i64,
     ) -> async_graphql::Result<Vec<Event>> {
         let db = ctx.data::<Database>()?;
-        Ok(db.get_events_by_pallet(&pallet, limit.min(100), offset).await?)
+        Ok(db
+            .get_events_by_pallet(&pallet, limit.min(100), offset)
+            .await?)
     }
 
     /// Get events by pallet and variant.
@@ -133,7 +145,9 @@ impl QueryRoot {
         #[graphql(default = 0)] offset: i64,
     ) -> async_graphql::Result<Vec<Event>> {
         let db = ctx.data::<Database>()?;
-        Ok(db.get_events_by_type(&pallet, &variant, limit.min(100), offset).await?)
+        Ok(db
+            .get_events_by_type(&pallet, &variant, limit.min(100), offset)
+            .await?)
     }
 
     // ========================================================================
@@ -141,7 +155,11 @@ impl QueryRoot {
     // ========================================================================
 
     /// Get Comit by hash.
-    async fn comit(&self, ctx: &Context<'_>, hash: String) -> async_graphql::Result<Option<ComitTransaction>> {
+    async fn comit(
+        &self,
+        ctx: &Context<'_>,
+        hash: String,
+    ) -> async_graphql::Result<Option<ComitTransaction>> {
         let db = ctx.data::<Database>()?;
         Ok(db.get_comit(&hash).await?)
     }
@@ -166,7 +184,9 @@ impl QueryRoot {
         #[graphql(default = 0)] offset: i64,
     ) -> async_graphql::Result<Vec<ComitTransaction>> {
         let db = ctx.data::<Database>()?;
-        Ok(db.get_account_comits(&address, limit.min(100), offset).await?)
+        Ok(db
+            .get_account_comits(&address, limit.min(100), offset)
+            .await?)
     }
 
     // ========================================================================
@@ -174,7 +194,11 @@ impl QueryRoot {
     // ========================================================================
 
     /// Get account by address.
-    async fn account(&self, ctx: &Context<'_>, address: String) -> async_graphql::Result<Option<Account>> {
+    async fn account(
+        &self,
+        ctx: &Context<'_>,
+        address: String,
+    ) -> async_graphql::Result<Option<Account>> {
         let db = ctx.data::<Database>()?;
         Ok(db.get_account(&address).await?)
     }

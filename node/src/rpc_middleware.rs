@@ -86,6 +86,7 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
+    /// Construct a shared rate limiter with the given configuration.
     pub fn new(config: RateLimitConfig) -> Self {
         Self {
             config,
@@ -237,9 +238,13 @@ impl RateLimiter {
 /// Rate limit error types
 #[derive(Debug, Clone)]
 pub enum RateLimitError {
+    /// Too many requests from a single source.
     TooManyRequests,
+    /// Specific RPC method exceeded its rate cap.
     MethodLimitExceeded,
+    /// Subscription count limit exceeded for the session.
     TooManySubscriptions,
+    /// Temporarily banned due to repeated violations.
     Banned,
 }
 
@@ -257,8 +262,11 @@ impl std::fmt::Display for RateLimitError {
 /// Metrics for monitoring
 #[derive(Debug, Clone)]
 pub struct RateLimitMetrics {
+    /// Total RPC requests evaluated by the rate limiter.
     pub total_requests: u64,
+    /// RPC requests rejected due to rate limiting.
     pub total_rejected: u64,
+    /// Current number of active RPC connections.
     pub active_connections: usize,
 }
 

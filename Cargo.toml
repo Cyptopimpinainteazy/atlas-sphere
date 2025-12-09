@@ -6,6 +6,7 @@ members = [
     "pallets/treasury",
     "pallets/agent-accounts",
     "pallets/agent-memory",
+    "pallets/svm-runtime",
     "crates/evm-integration",
     "crates/svm-integration",
     "crates/cross-vm-bridge",
@@ -17,6 +18,18 @@ members = [
     "runtime",
     "node",
     "apps/analytics/analytics-service",
+    "crates/x3-common",
+    "crates/x3-lexer",
+    "crates/x3-ast",
+    "crates/x3-parser",
+    "crates/x3-hir",
+    "crates/x3-mir",
+    "crates/x3-semantics",
+    "crates/x3-typeck",
+    "crates/x3-backend",
+    "crates/x3-vm",
+    "crates/x3-opt",
+    "crates/x3-bench",
 ]
 default-members = ["node"]
 resolver = "2"

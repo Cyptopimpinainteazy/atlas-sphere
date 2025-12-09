@@ -5,8 +5,8 @@
 //! efficient querying via the API Gateway.
 
 use clap::Parser;
-use tracing::{info, error};
-use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+use tracing::{error, info};
+use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 mod config;
 mod db;
@@ -60,7 +60,10 @@ async fn main() -> Result<()> {
     // Initialize logging
     init_logging(&cli.log_level);
 
-    info!("Starting Atlas Sphere Indexer v{}", env!("CARGO_PKG_VERSION"));
+    info!(
+        "Starting Atlas Sphere Indexer v{}",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Load configuration
     let mut config = IndexerConfig::load(&cli.config)?;
@@ -91,18 +94,13 @@ async fn main() -> Result<()> {
     let metrics = metrics::Metrics::new();
 
     // Start metrics/health server
-    let server_handle = tokio::spawn(server::run(
-        config.metrics.port,
-        metrics.clone(),
-    ));
+    let server_handle = tokio::spawn(server::run(config.metrics.port, metrics.clone()));
 
     // Create and run indexer
     let indexer = indexer::Indexer::new(config, db, metrics).await?;
 
     // Handle shutdown gracefully
-    let indexer_handle = tokio::spawn(async move {
-        indexer.run().await
-    });
+    let indexer_handle = tokio::spawn(async move { indexer.run().await });
 
     // Wait for shutdown signal
     tokio::select! {
@@ -130,8 +128,7 @@ async fn main() -> Result<()> {
 }
 
 fn init_logging(level: &str) {
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(level));
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(level));
 
     tracing_subscriber::registry()
         .with(fmt::layer().with_target(true))

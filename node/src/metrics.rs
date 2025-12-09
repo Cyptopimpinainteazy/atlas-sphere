@@ -149,13 +149,21 @@ impl Default for MetricsCollector {
 /// Snapshot of current metrics values
 #[derive(Clone, Debug, Default)]
 pub struct MetricsSnapshot {
+    /// Number of blocks the node has produced.
     pub blocks_produced: u64,
+    /// Transactions received by the node (from RPC or P2P).
     pub transactions_received: u64,
+    /// Comit submissions that reached the network.
     pub comits_submitted: u64,
+    /// Comit submissions that were confirmed on-chain.
     pub comits_confirmed: u64,
+    /// Comit submissions that failed or were rejected.
     pub comits_failed: u64,
+    /// Etched EVM execution attempts observed during processing.
     pub evm_executions: u64,
+    /// Etched SVM execution attempts observed during processing.
     pub svm_executions: u64,
+    /// Total number of dual-VM execution attempts recorded by the node.
     pub dual_vm_executions: u64,
 }
 

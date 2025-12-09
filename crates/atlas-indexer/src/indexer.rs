@@ -411,16 +411,18 @@ fn extract_timestamp_from_events(
         if let Ok(event) = event {
             if event.pallet_name() == "Timestamp" && event.variant_name() == "TimestampSet" {
                 // Try to extract timestamp from event data
-                if let Ok(bytes) = event.field_bytes() {
-                    // Timestamp is typically a u64 in milliseconds
-                    if bytes.len() >= 8 {
-                        let mut ts_bytes = [0u8; 8];
-                        ts_bytes.copy_from_slice(&bytes[..8]);
-                        let millis = u64::from_le_bytes(ts_bytes);
+                let bytes = match event.field_bytes() {
+                    Ok(bytes) => bytes,
+                    Err(_) => continue,
+                };
+                // Timestamp is typically a u64 in milliseconds
+                if bytes.len() >= 8 {
+                    let mut ts_bytes = [0u8; 8];
+                    ts_bytes.copy_from_slice(&bytes[..8]);
+                    let millis = u64::from_le_bytes(ts_bytes);
 
-                        return chrono::DateTime::from_timestamp_millis(millis as i64)
-                            .map(|dt| dt.with_timezone(&Utc));
-                    }
+                    return chrono::DateTime::from_timestamp_millis(millis as i64)
+                        .map(|dt| dt.with_timezone(&Utc));
                 }
             }
         }
@@ -429,16 +431,14 @@ fn extract_timestamp_from_events(
 }
 
 /// Extract block author from header digests (Aura/BABE).
-fn extract_author_from_header(
-    header: &subxt::config::Header<u32, subxt::utils::H256>,
-) -> Option<String> {
+fn extract_author_from_header(header: &subxt::rpc::types::Header) -> Option<String> {
     // Aura pre-runtime digest contains the slot and implicitly the author
     // For simplicity, we extract the PreRuntime digest which contains author info
     for log in header.digest().logs() {
         match log {
             subxt::config::substrate::DigestItem::PreRuntime(engine, data) => {
                 // Aura engine ID is *b"aura"
-                if engine == b"aura" && data.len() >= 8 {
+                if engine == *b"aura" && data.len() >= 8 {
                     // Data contains slot number, we can derive author index
                     let mut slot_bytes = [0u8; 8];
                     slot_bytes.copy_from_slice(&data[..8]);
@@ -449,14 +449,14 @@ fn extract_author_from_header(
                     return Some(format!("slot:{}", slot));
                 }
                 // BABE engine ID is *b"BABE"
-                if engine == b"BABE" && data.len() >= 1 {
+                if engine == *b"BABE" && data.len() >= 1 {
                     // First byte is authority index for primary slots
                     return Some(format!("authority:{}", data[0]));
                 }
             }
             subxt::config::substrate::DigestItem::Consensus(engine, data) => {
                 // GRANDPA justifications, etc.
-                if engine == b"FRNK" && !data.is_empty() {
+                if engine == *b"FRNK" && !data.is_empty() {
                     return Some(format!(
                         "grandpa:{}",
                         hex::encode(&data[..data.len().min(8)])
@@ -481,76 +481,78 @@ fn decode_event_data(event: &subxt::events::EventDetails<PolkadotConfig>) -> ser
     );
 
     // Try to decode field bytes as hex
-    if let Ok(bytes) = event.field_bytes() {
-        data.insert(
-            "raw_data".to_string(),
-            serde_json::json!(hex::encode(&bytes)),
-        );
+    let bytes = match event.field_bytes() {
+        Ok(bytes) => bytes,
+        Err(_) => return serde_json::Value::Object(data),
+    };
+    data.insert(
+        "raw_data".to_string(),
+        serde_json::json!(hex::encode(&bytes)),
+    );
 
-        // Try common field patterns based on event type
-        let pallet = event.pallet_name();
-        let variant = event.variant_name();
+    // Try common field patterns based on event type
+    let pallet = event.pallet_name();
+    let variant = event.variant_name();
 
-        match (pallet, variant) {
-            ("AtlasKernel", "ComitSubmitted") => {
-                // ComitSubmitted { comit_id: H256, submitter: AccountId, ... }
-                if bytes.len() >= 32 {
-                    data.insert(
-                        "comit_id".to_string(),
-                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
-                    );
-                }
-                if bytes.len() >= 64 {
-                    data.insert(
-                        "submitter".to_string(),
-                        serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
-                    );
-                }
+    match (pallet, variant) {
+        ("AtlasKernel", "ComitSubmitted") => {
+            // ComitSubmitted { comit_id: H256, submitter: AccountId, ... }
+            if bytes.len() >= 32 {
+                data.insert(
+                    "comit_id".to_string(),
+                    serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                );
             }
-            ("AtlasKernel", "ComitFinalized") | ("AtlasKernel", "ComitFailed") => {
-                if bytes.len() >= 32 {
-                    data.insert(
-                        "comit_id".to_string(),
-                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
-                    );
-                }
+            if bytes.len() >= 64 {
+                data.insert(
+                    "submitter".to_string(),
+                    serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
+                );
             }
-            ("Balances", "Transfer") => {
-                // Transfer { from, to, amount }
-                if bytes.len() >= 80 {
-                    // 32 + 32 + 16
-                    data.insert(
-                        "from".to_string(),
-                        serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
-                    );
-                    data.insert(
-                        "to".to_string(),
-                        serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
-                    );
-                    // Amount is u128 (16 bytes)
-                    if bytes.len() >= 80 {
-                        let mut amount_bytes = [0u8; 16];
-                        amount_bytes.copy_from_slice(&bytes[64..80]);
-                        let amount = u128::from_le_bytes(amount_bytes);
-                        data.insert("amount".to_string(), serde_json::json!(amount.to_string()));
-                    }
-                }
-            }
-            ("System", "ExtrinsicSuccess") => {
-                data.insert("success".to_string(), serde_json::json!(true));
-            }
-            ("System", "ExtrinsicFailed") => {
-                data.insert("success".to_string(), serde_json::json!(false));
-                // Try to decode error
-                if !bytes.is_empty() {
-                    data.insert("error_module".to_string(), serde_json::json!(bytes[0]));
-                    if bytes.len() > 1 {
-                        data.insert("error_index".to_string(), serde_json::json!(bytes[1]));
-                    }
-                }
-            }
-            _ => {}
         }
+        ("AtlasKernel", "ComitFinalized") | ("AtlasKernel", "ComitFailed") => {
+            if bytes.len() >= 32 {
+                data.insert(
+                    "comit_id".to_string(),
+                    serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                );
+            }
+        }
+        ("Balances", "Transfer") => {
+            // Transfer { from, to, amount }
+            if bytes.len() >= 80 {
+                // 32 + 32 + 16
+                data.insert(
+                    "from".to_string(),
+                    serde_json::json!(format!("0x{}", hex::encode(&bytes[..32]))),
+                );
+                data.insert(
+                    "to".to_string(),
+                    serde_json::json!(format!("0x{}", hex::encode(&bytes[32..64]))),
+                );
+                // Amount is u128 (16 bytes)
+                if bytes.len() >= 80 {
+                    let mut amount_bytes = [0u8; 16];
+                    amount_bytes.copy_from_slice(&bytes[64..80]);
+                    let amount = u128::from_le_bytes(amount_bytes);
+                    data.insert("amount".to_string(), serde_json::json!(amount.to_string()));
+                }
+            }
+        }
+        ("System", "ExtrinsicSuccess") => {
+            data.insert("success".to_string(), serde_json::json!(true));
+        }
+        ("System", "ExtrinsicFailed") => {
+            data.insert("success".to_string(), serde_json::json!(false));
+            // Try to decode error
+            if !bytes.is_empty() {
+                data.insert("error_module".to_string(), serde_json::json!(bytes[0]));
+                if bytes.len() > 1 {
+                    data.insert("error_index".to_string(), serde_json::json!(bytes[1]));
+                }
+            }
+        }
+        _ => {}
     }
 
     serde_json::Value::Object(data)

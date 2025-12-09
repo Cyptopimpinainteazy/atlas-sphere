@@ -26,7 +26,10 @@ pub type PrometheusError = prometheus::Error;
 /// Start a prometheus metrics server.
 /// Returns a Future that completes when the server encounters an error.
 /// This matches the original substrate-prometheus-endpoint API.
-pub async fn init_prometheus(prometheus_addr: SocketAddr, registry: prometheus::Registry) -> Result<(), Error> {
+pub async fn init_prometheus(
+    prometheus_addr: SocketAddr,
+    registry: prometheus::Registry,
+) -> Result<(), Error> {
     run_server(prometheus_addr, registry).await
 }
 
@@ -51,7 +54,10 @@ async fn run_server(addr: SocketAddr, registry: prometheus::Registry) -> Result<
         }
     });
 
-    Server::bind(&addr).serve(make_svc).await.map_err(|_| Error::Internal)
+    Server::bind(&addr)
+        .serve(make_svc)
+        .await
+        .map_err(|_| Error::Internal)
 }
 
 /// Errors that can occur during prometheus initialization.
@@ -90,9 +96,11 @@ pub fn register<C: Collector + Clone + 'static>(
 
 /// Re-export prometheus types for convenience.
 pub use prometheus::{
-    core::{AtomicF64 as F64, AtomicU64 as U64, GenericCounter, GenericCounterVec, GenericGauge, GenericGaugeVec},
-    exponential_buckets, linear_buckets,
-    Histogram, HistogramOpts, HistogramVec, Opts, Registry,
+    core::{
+        AtomicF64 as F64, AtomicU64 as U64, GenericCounter, GenericCounterVec, GenericGauge,
+        GenericGaugeVec,
+    },
+    exponential_buckets, linear_buckets, Histogram, HistogramOpts, HistogramVec, Opts, Registry,
 };
 
 /// Counter type alias.

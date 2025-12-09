@@ -2,8 +2,8 @@
 
 use crate::document::DocumentStore;
 use lsp_types::{
-    CompletionItem, CompletionItemKind, Documentation, InsertTextFormat,
-    MarkupContent, MarkupKind, Position, Url,
+    CompletionItem, CompletionItemKind, Documentation, InsertTextFormat, MarkupContent, MarkupKind,
+    Position, Url,
 };
 use std::sync::Arc;
 
@@ -33,7 +33,11 @@ impl CompletionProvider {
         };
 
         let col = position.character as usize;
-        let prefix = if col <= line.len() { &line[..col] } else { &line };
+        let prefix = if col <= line.len() {
+            &line[..col]
+        } else {
+            &line
+        };
 
         // Determine completion context
         if self.is_comit_file(uri) {
@@ -143,10 +147,22 @@ impl CompletionProvider {
         // EVM properties
         if prefix.contains("evm") || prefix.ends_with(".") {
             items.extend(vec![
-                self.simple_completion("contract", CompletionItemKind::PROPERTY, "EVM contract address"),
-                self.simple_completion("method", CompletionItemKind::PROPERTY, "Contract method name"),
+                self.simple_completion(
+                    "contract",
+                    CompletionItemKind::PROPERTY,
+                    "EVM contract address",
+                ),
+                self.simple_completion(
+                    "method",
+                    CompletionItemKind::PROPERTY,
+                    "Contract method name",
+                ),
                 self.simple_completion("args", CompletionItemKind::PROPERTY, "Method arguments"),
-                self.simple_completion("gas_limit", CompletionItemKind::PROPERTY, "Gas limit for execution"),
+                self.simple_completion(
+                    "gas_limit",
+                    CompletionItemKind::PROPERTY,
+                    "Gas limit for execution",
+                ),
                 self.simple_completion("value", CompletionItemKind::PROPERTY, "ETH value to send"),
             ]);
         }
@@ -154,10 +170,22 @@ impl CompletionProvider {
         // SVM properties
         if prefix.contains("svm") || prefix.ends_with(".") {
             items.extend(vec![
-                self.simple_completion("program", CompletionItemKind::PROPERTY, "Solana program ID"),
-                self.simple_completion("instruction", CompletionItemKind::PROPERTY, "Instruction index"),
+                self.simple_completion(
+                    "program",
+                    CompletionItemKind::PROPERTY,
+                    "Solana program ID",
+                ),
+                self.simple_completion(
+                    "instruction",
+                    CompletionItemKind::PROPERTY,
+                    "Instruction index",
+                ),
                 self.simple_completion("accounts", CompletionItemKind::PROPERTY, "Account list"),
-                self.simple_completion("compute_units", CompletionItemKind::PROPERTY, "Compute unit budget"),
+                self.simple_completion(
+                    "compute_units",
+                    CompletionItemKind::PROPERTY,
+                    "Compute unit budget",
+                ),
                 self.simple_completion("data", CompletionItemKind::PROPERTY, "Instruction data"),
             ]);
         }
@@ -186,20 +214,52 @@ impl CompletionProvider {
         // Frame imports
         if prefix.contains("use ") || prefix.contains("frame") {
             items.extend(vec![
-                self.simple_completion("frame_support", CompletionItemKind::MODULE, "FRAME support utilities"),
-                self.simple_completion("frame_system", CompletionItemKind::MODULE, "FRAME system pallet"),
-                self.simple_completion("sp_runtime", CompletionItemKind::MODULE, "Substrate runtime primitives"),
-                self.simple_completion("sp_std", CompletionItemKind::MODULE, "Substrate std replacement"),
+                self.simple_completion(
+                    "frame_support",
+                    CompletionItemKind::MODULE,
+                    "FRAME support utilities",
+                ),
+                self.simple_completion(
+                    "frame_system",
+                    CompletionItemKind::MODULE,
+                    "FRAME system pallet",
+                ),
+                self.simple_completion(
+                    "sp_runtime",
+                    CompletionItemKind::MODULE,
+                    "Substrate runtime primitives",
+                ),
+                self.simple_completion(
+                    "sp_std",
+                    CompletionItemKind::MODULE,
+                    "Substrate std replacement",
+                ),
             ]);
         }
 
         // Atlas-specific imports
         if content.contains("atlas") || prefix.contains("atlas") {
             items.extend(vec![
-                self.simple_completion("pallet_atlas_kernel", CompletionItemKind::MODULE, "Atlas Kernel pallet"),
-                self.simple_completion("ComitPayload", CompletionItemKind::STRUCT, "Comit transaction payload"),
-                self.simple_completion("EvmPayload", CompletionItemKind::STRUCT, "EVM execution payload"),
-                self.simple_completion("SvmPayload", CompletionItemKind::STRUCT, "SVM execution payload"),
+                self.simple_completion(
+                    "pallet_atlas_kernel",
+                    CompletionItemKind::MODULE,
+                    "Atlas Kernel pallet",
+                ),
+                self.simple_completion(
+                    "ComitPayload",
+                    CompletionItemKind::STRUCT,
+                    "Comit transaction payload",
+                ),
+                self.simple_completion(
+                    "EvmPayload",
+                    CompletionItemKind::STRUCT,
+                    "EVM execution payload",
+                ),
+                self.simple_completion(
+                    "SvmPayload",
+                    CompletionItemKind::STRUCT,
+                    "SVM execution payload",
+                ),
             ]);
         }
 
@@ -233,7 +293,12 @@ impl CompletionProvider {
         items
     }
 
-    fn simple_completion(&self, label: &str, kind: CompletionItemKind, detail: &str) -> CompletionItem {
+    fn simple_completion(
+        &self,
+        label: &str,
+        kind: CompletionItemKind,
+        detail: &str,
+    ) -> CompletionItem {
         CompletionItem {
             label: label.to_string(),
             kind: Some(kind),

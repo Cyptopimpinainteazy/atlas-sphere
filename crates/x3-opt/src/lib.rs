@@ -50,6 +50,10 @@ pub mod cfg;
 pub mod dce;
 pub mod edge_const_prop;
 pub mod error;
+pub mod licm;
+pub mod loop_detection;
+pub mod loop_pack_v1;
+pub mod loop_unswitching;
 pub mod optimizer;
 pub mod pass;
 pub mod passes;
@@ -57,6 +61,7 @@ pub mod regalloc;
 pub mod rule_miner;
 pub mod run_yolo;
 pub mod ssa_lite;
+pub mod strength_reduction;
 pub mod telemetry;
 
 pub use error::{OptError, OptResult};
@@ -70,6 +75,10 @@ pub use run_yolo::{
 pub use cfg::Cfg;
 
 // Re-export passes for convenience
+pub use licm::{analyze_invariants, perform_licm, InvariantAnalysis};
+pub use loop_detection::{detect_loops, LoopTree};
+pub use loop_pack_v1::run_loop_optimizations;
+pub use loop_unswitching::{apply_unswitch, find_unswitch_opportunities};
 pub use passes::{
     block_fusion::BlockFusionPass, branch_inversion::BranchInversionPass,
     branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
@@ -81,3 +90,4 @@ pub use passes::{
 pub use regalloc::RegAllocator;
 pub use rule_miner::RuleMiner;
 pub use ssa_lite::global_ssa_opt;
+pub use strength_reduction::{analyze_strength_reduction, apply_strength_reduction};

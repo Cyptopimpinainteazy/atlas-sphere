@@ -44,8 +44,14 @@ impl DiagnosticsProvider {
         if open_braces != close_braces {
             diagnostics.push(Diagnostic {
                 range: Range {
-                    start: Position { line: 0, character: 0 },
-                    end: Position { line: 0, character: 0 },
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 0,
+                    },
                 },
                 severity: Some(DiagnosticSeverity::ERROR),
                 code: Some(lsp_types::NumberOrString::String("E001".to_string())),
@@ -65,13 +71,20 @@ impl DiagnosticsProvider {
         if !has_comit && !content.trim().is_empty() {
             diagnostics.push(Diagnostic {
                 range: Range {
-                    start: Position { line: 0, character: 0 },
-                    end: Position { line: 0, character: 0 },
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 0,
+                    },
                 },
                 severity: Some(DiagnosticSeverity::WARNING),
                 code: Some(lsp_types::NumberOrString::String("W001".to_string())),
                 source: Some("atlas-lsp".to_string()),
-                message: "No comit transaction defined. Expected: comit \"name\" { ... }".to_string(),
+                message: "No comit transaction defined. Expected: comit \"name\" { ... }"
+                    .to_string(),
                 ..Default::default()
             });
         }
@@ -84,8 +97,14 @@ impl DiagnosticsProvider {
                     if gas > 30_000_000 {
                         diagnostics.push(Diagnostic {
                             range: Range {
-                                start: Position { line: line_num as u32, character: 0 },
-                                end: Position { line: line_num as u32, character: line.len() as u32 },
+                                start: Position {
+                                    line: line_num as u32,
+                                    character: 0,
+                                },
+                                end: Position {
+                                    line: line_num as u32,
+                                    character: line.len() as u32,
+                                },
                             },
                             severity: Some(DiagnosticSeverity::WARNING),
                             code: Some(lsp_types::NumberOrString::String("W002".to_string())),
@@ -98,18 +117,30 @@ impl DiagnosticsProvider {
             }
 
             // Check for invalid compute units
-            if let Some(caps) = Regex::new(r"compute_units:\s*(\d+)").unwrap().captures(line) {
+            if let Some(caps) = Regex::new(r"compute_units:\s*(\d+)")
+                .unwrap()
+                .captures(line)
+            {
                 if let Ok(cu) = caps[1].parse::<u64>() {
                     if cu > 1_400_000 {
                         diagnostics.push(Diagnostic {
                             range: Range {
-                                start: Position { line: line_num as u32, character: 0 },
-                                end: Position { line: line_num as u32, character: line.len() as u32 },
+                                start: Position {
+                                    line: line_num as u32,
+                                    character: 0,
+                                },
+                                end: Position {
+                                    line: line_num as u32,
+                                    character: line.len() as u32,
+                                },
                             },
                             severity: Some(DiagnosticSeverity::WARNING),
                             code: Some(lsp_types::NumberOrString::String("W003".to_string())),
                             source: Some("atlas-lsp".to_string()),
-                            message: format!("Compute units {} exceeds max per transaction (1.4M)", cu),
+                            message: format!(
+                                "Compute units {} exceeds max per transaction (1.4M)",
+                                cu
+                            ),
                             ..Default::default()
                         });
                     }
@@ -123,8 +154,14 @@ impl DiagnosticsProvider {
                 if addr.len() != 42 {
                     diagnostics.push(Diagnostic {
                         range: Range {
-                            start: Position { line: line_num as u32, character: 0 },
-                            end: Position { line: line_num as u32, character: line.len() as u32 },
+                            start: Position {
+                                line: line_num as u32,
+                                character: 0,
+                            },
+                            end: Position {
+                                line: line_num as u32,
+                                character: line.len() as u32,
+                            },
                         },
                         severity: Some(DiagnosticSeverity::ERROR),
                         code: Some(lsp_types::NumberOrString::String("E002".to_string())),
@@ -154,10 +191,9 @@ impl DiagnosticsProvider {
                 // Look back for weight annotation
                 let has_weight = if line_num > 0 {
                     let prev_lines: Vec<_> = content.lines().take(line_num).collect();
-                    prev_lines.iter()
-                        .rev()
-                        .take(5)
-                        .any(|l| l.contains("#[pallet::weight") || l.contains("#[pallet::call_index"))
+                    prev_lines.iter().rev().take(5).any(|l| {
+                        l.contains("#[pallet::weight") || l.contains("#[pallet::call_index")
+                    })
                 } else {
                     false
                 };
@@ -165,13 +201,21 @@ impl DiagnosticsProvider {
                 if !has_weight && content.contains("#[pallet::call]") {
                     diagnostics.push(Diagnostic {
                         range: Range {
-                            start: Position { line: line_num as u32, character: 0 },
-                            end: Position { line: line_num as u32, character: line.len() as u32 },
+                            start: Position {
+                                line: line_num as u32,
+                                character: 0,
+                            },
+                            end: Position {
+                                line: line_num as u32,
+                                character: line.len() as u32,
+                            },
                         },
                         severity: Some(DiagnosticSeverity::WARNING),
                         code: Some(lsp_types::NumberOrString::String("W010".to_string())),
                         source: Some("atlas-lsp".to_string()),
-                        message: "Dispatchable function may be missing #[pallet::weight(...)] annotation".to_string(),
+                        message:
+                            "Dispatchable function may be missing #[pallet::weight(...)] annotation"
+                                .to_string(),
                         ..Default::default()
                     });
                 }
@@ -181,8 +225,14 @@ impl DiagnosticsProvider {
             if line.contains("ensure!(") && !content.contains("use frame_support") {
                 diagnostics.push(Diagnostic {
                     range: Range {
-                        start: Position { line: line_num as u32, character: 0 },
-                        end: Position { line: line_num as u32, character: line.len() as u32 },
+                        start: Position {
+                            line: line_num as u32,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: line_num as u32,
+                            character: line.len() as u32,
+                        },
                     },
                     severity: Some(DiagnosticSeverity::HINT),
                     code: Some(lsp_types::NumberOrString::String("H001".to_string())),
@@ -210,13 +260,21 @@ impl DiagnosticsProvider {
             if line.contains("decl_module!") {
                 diagnostics.push(Diagnostic {
                     range: Range {
-                        start: Position { line: line_num as u32, character: 0 },
-                        end: Position { line: line_num as u32, character: line.len() as u32 },
+                        start: Position {
+                            line: line_num as u32,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: line_num as u32,
+                            character: line.len() as u32,
+                        },
                     },
                     severity: Some(DiagnosticSeverity::WARNING),
                     code: Some(lsp_types::NumberOrString::String("D002".to_string())),
                     source: Some("atlas-lsp".to_string()),
-                    message: "decl_module! is deprecated. Use #[pallet::call] attribute macro instead.".to_string(),
+                    message:
+                        "decl_module! is deprecated. Use #[pallet::call] attribute macro instead."
+                            .to_string(),
                     ..Default::default()
                 });
             }

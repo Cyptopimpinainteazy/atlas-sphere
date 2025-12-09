@@ -182,10 +182,7 @@ impl HttpRpcClient {
     }
 
     /// Get asset metadata.
-    pub async fn get_asset_metadata(
-        &self,
-        asset_id: u32,
-    ) -> Result<crate::types::AssetMetadata> {
+    pub async fn get_asset_metadata(&self, asset_id: u32) -> Result<crate::types::AssetMetadata> {
         self.request("atlasKernel_getAssetMetadata", (asset_id,))
             .await
     }
@@ -221,19 +218,12 @@ impl HttpRpcClient {
     }
 
     /// Call EVM contract (read-only).
-    pub async fn eth_call(
-        &self,
-        call: &crate::evm::EvmCallRequest,
-        block: &str,
-    ) -> Result<String> {
+    pub async fn eth_call(&self, call: &crate::evm::EvmCallRequest, block: &str) -> Result<String> {
         self.request("eth_call", (call, block)).await
     }
 
     /// Estimate EVM gas.
-    pub async fn eth_estimate_gas(
-        &self,
-        call: &crate::evm::EvmCallRequest,
-    ) -> Result<String> {
+    pub async fn eth_estimate_gas(&self, call: &crate::evm::EvmCallRequest) -> Result<String> {
         self.request("eth_estimateGas", (call,)).await
     }
 
@@ -255,10 +245,7 @@ impl HttpRpcClient {
     }
 
     /// Get EVM logs.
-    pub async fn eth_get_logs(
-        &self,
-        filter: &serde_json::Value,
-    ) -> Result<Vec<serde_json::Value>> {
+    pub async fn eth_get_logs(&self, filter: &serde_json::Value) -> Result<Vec<serde_json::Value>> {
         self.request("eth_getLogs", (filter,)).await
     }
 }
@@ -267,10 +254,10 @@ impl HttpRpcClient {
 // WebSocket RPC Client
 // ============================================================================
 
-use tokio::sync::mpsc;
-use tokio::sync::Mutex;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 
 /// WebSocket subscription message.
 #[derive(Debug, Clone)]

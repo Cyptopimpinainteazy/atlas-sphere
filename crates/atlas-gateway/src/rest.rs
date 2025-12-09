@@ -48,14 +48,11 @@ pub fn create_router(db: Database, schema: AppSchema) -> Router {
         // Health and status
         .route("/health", get(health))
         .route("/status", get(status))
-        
         // GraphQL
         .route("/graphql", post(graphql_handler))
         .route("/graphql/playground", get(graphql_playground))
-        
         // REST API v1
         .nest("/api/v1", api_routes())
-        
         .with_state(state)
         .layer(cors)
         .layer(TraceLayer::new_for_http())
@@ -66,25 +63,20 @@ fn api_routes() -> Router<AppState> {
     Router::new()
         // Stats
         .route("/stats", get(get_stats))
-        
         // Blocks
         .route("/blocks", get(get_blocks))
         .route("/blocks/latest", get(get_latest_block))
         .route("/blocks/:number", get(get_block))
         .route("/blocks/:number/extrinsics", get(get_block_extrinsics))
         .route("/blocks/:number/events", get(get_block_events))
-        
         // Extrinsics
         .route("/extrinsics", get(get_extrinsics))
         .route("/extrinsics/:hash", get(get_extrinsic))
-        
         // Events
         .route("/events", get(get_events))
-        
         // Comits
         .route("/comits", get(get_comits))
         .route("/comits/:hash", get(get_comit))
-        
         // Accounts
         .route("/accounts/:address", get(get_account))
         .route("/accounts/:address/extrinsics", get(get_account_extrinsics))
@@ -109,7 +101,7 @@ struct StatusResponse {
 
 async fn status(State(state): State<AppState>) -> Result<Json<StatusResponse>, GatewayError> {
     let stats = state.db.get_stats().await?;
-    
+
     Ok(Json(StatusResponse {
         status: "ok".to_string(),
         latest_block: stats.latest_block,
@@ -122,10 +114,7 @@ async fn status(State(state): State<AppState>) -> Result<Json<StatusResponse>, G
 // GraphQL endpoints
 // ============================================================================
 
-async fn graphql_handler(
-    State(state): State<AppState>,
-    req: GraphQLRequest,
-) -> GraphQLResponse {
+async fn graphql_handler(State(state): State<AppState>, req: GraphQLRequest) -> GraphQLResponse {
     state.schema.execute(req.into_inner()).await.into()
 }
 
@@ -143,7 +132,10 @@ async fn get_blocks(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let blocks = state.db.get_recent_blocks(pagination.limit.min(100), pagination.offset).await?;
+    let blocks = state
+        .db
+        .get_recent_blocks(pagination.limit.min(100), pagination.offset)
+        .await?;
     Ok(Json(blocks))
 }
 
@@ -164,7 +156,10 @@ async fn get_block(
     let block = state.db.get_block(number).await?;
     match block {
         Some(b) => Ok(Json(b)),
-        None => Err(GatewayError::NotFound(format!("Block {} not found", number))),
+        None => Err(GatewayError::NotFound(format!(
+            "Block {} not found",
+            number
+        ))),
     }
 }
 
@@ -192,7 +187,10 @@ async fn get_extrinsics(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let extrinsics = state.db.get_recent_extrinsics(pagination.limit.min(100), pagination.offset).await?;
+    let extrinsics = state
+        .db
+        .get_recent_extrinsics(pagination.limit.min(100), pagination.offset)
+        .await?;
     Ok(Json(extrinsics))
 }
 
@@ -203,7 +201,10 @@ async fn get_extrinsic(
     let extrinsic = state.db.get_extrinsic(&hash).await?;
     match extrinsic {
         Some(e) => Ok(Json(e)),
-        None => Err(GatewayError::NotFound(format!("Extrinsic {} not found", hash))),
+        None => Err(GatewayError::NotFound(format!(
+            "Extrinsic {} not found",
+            hash
+        ))),
     }
 }
 
@@ -228,14 +229,22 @@ async fn get_events(
 
     let events = match (query.pallet, query.variant) {
         (Some(pallet), Some(variant)) => {
-            state.db.get_events_by_type(&pallet, &variant, limit, offset).await?
+            state
+                .db
+                .get_events_by_type(&pallet, &variant, limit, offset)
+                .await?
         }
         (Some(pallet), None) => {
-            state.db.get_events_by_pallet(&pallet, limit, offset).await?
+            state
+                .db
+                .get_events_by_pallet(&pallet, limit, offset)
+                .await?
         }
         _ => {
             // No filter - return error, need at least pallet filter
-            return Err(GatewayError::BadRequest("pallet parameter required".to_string()));
+            return Err(GatewayError::BadRequest(
+                "pallet parameter required".to_string(),
+            ));
         }
     };
 
@@ -250,7 +259,10 @@ async fn get_comits(
     State(state): State<AppState>,
     Query(pagination): Query<Pagination>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let comits = state.db.get_recent_comits(pagination.limit.min(100), pagination.offset).await?;
+    let comits = state
+        .db
+        .get_recent_comits(pagination.limit.min(100), pagination.offset)
+        .await?;
     Ok(Json(comits))
 }
 
@@ -276,7 +288,10 @@ async fn get_account(
     let account = state.db.get_account(&address).await?;
     match account {
         Some(a) => Ok(Json(a)),
-        None => Err(GatewayError::NotFound(format!("Account {} not found", address))),
+        None => Err(GatewayError::NotFound(format!(
+            "Account {} not found",
+            address
+        ))),
     }
 }
 
@@ -285,7 +300,10 @@ async fn get_account_extrinsics(
     Path(address): Path<String>,
     Query(pagination): Query<Pagination>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let extrinsics = state.db.get_account_extrinsics(&address, pagination.limit.min(100), pagination.offset).await?;
+    let extrinsics = state
+        .db
+        .get_account_extrinsics(&address, pagination.limit.min(100), pagination.offset)
+        .await?;
     Ok(Json(extrinsics))
 }
 
@@ -294,7 +312,10 @@ async fn get_account_comits(
     Path(address): Path<String>,
     Query(pagination): Query<Pagination>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let comits = state.db.get_account_comits(&address, pagination.limit.min(100), pagination.offset).await?;
+    let comits = state
+        .db
+        .get_account_comits(&address, pagination.limit.min(100), pagination.offset)
+        .await?;
     Ok(Json(comits))
 }
 
@@ -302,9 +323,7 @@ async fn get_account_comits(
 // Stats endpoint
 // ============================================================================
 
-async fn get_stats(
-    State(state): State<AppState>,
-) -> Result<impl IntoResponse, GatewayError> {
+async fn get_stats(State(state): State<AppState>) -> Result<impl IntoResponse, GatewayError> {
     let stats = state.db.get_stats().await?;
     Ok(Json(stats))
 }

@@ -10,37 +10,37 @@ use crate::document::DocumentStore;
 
 /// Semantic token types used by the LSP.
 pub const TOKEN_TYPES: &[SemanticTokenType] = &[
-    SemanticTokenType::NAMESPACE,   // 0 - modules, crates
-    SemanticTokenType::TYPE,        // 1 - types, structs
-    SemanticTokenType::CLASS,       // 2 - classes, pallets
-    SemanticTokenType::ENUM,        // 3 - enums
-    SemanticTokenType::INTERFACE,   // 4 - traits
-    SemanticTokenType::STRUCT,      // 5 - structs
-    SemanticTokenType::PARAMETER,   // 6 - parameters
-    SemanticTokenType::VARIABLE,    // 7 - variables
-    SemanticTokenType::PROPERTY,    // 8 - properties
-    SemanticTokenType::FUNCTION,    // 9 - functions
-    SemanticTokenType::MACRO,       // 10 - macros
-    SemanticTokenType::KEYWORD,     // 11 - keywords
-    SemanticTokenType::MODIFIER,    // 12 - modifiers
-    SemanticTokenType::COMMENT,     // 13 - comments
-    SemanticTokenType::STRING,      // 14 - strings
-    SemanticTokenType::NUMBER,      // 15 - numbers
-    SemanticTokenType::REGEXP,      // 16 - regex
-    SemanticTokenType::OPERATOR,    // 17 - operators
+    SemanticTokenType::NAMESPACE, // 0 - modules, crates
+    SemanticTokenType::TYPE,      // 1 - types, structs
+    SemanticTokenType::CLASS,     // 2 - classes, pallets
+    SemanticTokenType::ENUM,      // 3 - enums
+    SemanticTokenType::INTERFACE, // 4 - traits
+    SemanticTokenType::STRUCT,    // 5 - structs
+    SemanticTokenType::PARAMETER, // 6 - parameters
+    SemanticTokenType::VARIABLE,  // 7 - variables
+    SemanticTokenType::PROPERTY,  // 8 - properties
+    SemanticTokenType::FUNCTION,  // 9 - functions
+    SemanticTokenType::MACRO,     // 10 - macros
+    SemanticTokenType::KEYWORD,   // 11 - keywords
+    SemanticTokenType::MODIFIER,  // 12 - modifiers
+    SemanticTokenType::COMMENT,   // 13 - comments
+    SemanticTokenType::STRING,    // 14 - strings
+    SemanticTokenType::NUMBER,    // 15 - numbers
+    SemanticTokenType::REGEXP,    // 16 - regex
+    SemanticTokenType::OPERATOR,  // 17 - operators
 ];
 
 /// Semantic token modifiers used by the LSP.
 pub const TOKEN_MODIFIERS: &[SemanticTokenModifier] = &[
-    SemanticTokenModifier::DECLARATION,    // 0
-    SemanticTokenModifier::DEFINITION,     // 1
-    SemanticTokenModifier::READONLY,       // 2
-    SemanticTokenModifier::STATIC,         // 3
-    SemanticTokenModifier::DEPRECATED,     // 4
-    SemanticTokenModifier::ABSTRACT,       // 5
-    SemanticTokenModifier::ASYNC,          // 6
-    SemanticTokenModifier::MODIFICATION,   // 7
-    SemanticTokenModifier::DOCUMENTATION,  // 8
+    SemanticTokenModifier::DECLARATION,     // 0
+    SemanticTokenModifier::DEFINITION,      // 1
+    SemanticTokenModifier::READONLY,        // 2
+    SemanticTokenModifier::STATIC,          // 3
+    SemanticTokenModifier::DEPRECATED,      // 4
+    SemanticTokenModifier::ABSTRACT,        // 5
+    SemanticTokenModifier::ASYNC,           // 6
+    SemanticTokenModifier::MODIFICATION,    // 7
+    SemanticTokenModifier::DOCUMENTATION,   // 8
     SemanticTokenModifier::DEFAULT_LIBRARY, // 9
 ];
 
@@ -277,9 +277,9 @@ impl SemanticTokensProvider {
 
         // Rust/Substrate keywords
         let keywords = [
-            "fn", "let", "mut", "pub", "struct", "enum", "impl", "trait", "type", "const", "static",
-            "use", "mod", "crate", "self", "super", "where", "for", "loop", "while", "if", "else",
-            "match", "return", "async", "await", "move", "ref", "dyn", "unsafe",
+            "fn", "let", "mut", "pub", "struct", "enum", "impl", "trait", "type", "const",
+            "static", "use", "mod", "crate", "self", "super", "where", "for", "loop", "while",
+            "if", "else", "match", "return", "async", "await", "move", "ref", "dyn", "unsafe",
         ];
 
         // Substrate/FRAME macros
@@ -395,7 +395,7 @@ impl SemanticTokensProvider {
                                 col
                             },
                             length: name.len() as u32,
-                            token_type: 9, // Function
+                            token_type: 9,             // Function
                             token_modifiers_bitset: 1, // Declaration
                         });
                         prev_line = line_idx;
