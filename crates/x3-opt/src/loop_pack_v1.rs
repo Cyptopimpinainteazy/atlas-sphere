@@ -18,9 +18,9 @@
 //! 2. Data structures defined ✅
 //! 3. Test framework established (30+ tests)✅
 //! 4. MIR types imported ✅
+//! 5. Pass trait integration ✅
 //!
 //! Next Steps for Production:
-//! - Wire into optimizer pipeline (add to default_passes())
 //! - Implement CFG builder compatible with actual MirFunction struct
 //! - Add loop-specific tests with real MIR samples
 //! - Integrate with benchmark harness for gas measurement
@@ -29,6 +29,8 @@ use super::licm::{analyze_invariants, perform_licm};
 use super::loop_detection::{detect_loops, LoopTree};
 use super::loop_unswitching::{apply_unswitch, find_unswitch_opportunities};
 use super::strength_reduction::{analyze_strength_reduction, apply_strength_reduction};
+use crate::pass::{Pass, PassResult};
+use crate::OptResult;
 use x3_mir::mir::MirModule;
 
 /// Execute full Loop-Pack v1 optimization suite on a module
@@ -66,6 +68,68 @@ pub fn run_loop_optimizations(module: &mut MirModule) -> usize {
     total_improved
 }
 
+/// Loop-Pack v1 Pass: Orchestrates LICM, strength reduction, and unswitching
+pub struct LoopPackV1Pass {
+    /// Enable LICM (loop-invariant code motion)
+    pub enable_licm: bool,
+    /// Enable strength reduction (induction variable optimization)
+    pub enable_strength_reduction: bool,
+    /// Enable loop unswitching (branch specialization)
+    pub enable_unswitching: bool,
+}
+
+impl LoopPackV1Pass {
+    /// Create a new Loop-Pack v1 pass with all optimizations enabled.
+    pub fn new() -> Self {
+        LoopPackV1Pass {
+            enable_licm: true,
+            enable_strength_reduction: true,
+            enable_unswitching: true,
+        }
+    }
+}
+
+impl Default for LoopPackV1Pass {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Pass for LoopPackV1Pass {
+    fn name(&self) -> &'static str {
+        "loop-pack-v1"
+    }
+
+    fn run(&self, module: &mut MirModule) -> OptResult<PassResult> {
+        let improvements = run_loop_optimizations(module);
+
+        if improvements > 0 {
+            Ok(PassResult::with_count(
+                improvements,
+                format!(
+                    "Loop-Pack v1: {} optimizations applied (LICM: {}, SR: {}, Unswitch: {})",
+                    improvements,
+                    if self.enable_licm { "✓" } else { "✗" },
+                    if self.enable_strength_reduction { "✓" } else { "✗" },
+                    if self.enable_unswitching { "✓" } else { "✗" }
+                ),
+            ))
+        } else {
+            Ok(PassResult::no_change())
+        }
+    }
+
+    /// Loop-Pack v1 should run in default pipelines (enabled for O2+)
+    fn is_default(&self) -> bool {
+        true
+    }
+
+    /// Loop-Pack v1 is moderately expensive (loop detection + analysis)
+    fn cost(&self) -> usize {
+        5 // Slightly expensive due to loop detection and dataflow analysis
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -73,21 +137,34 @@ mod tests {
     #[test]
     fn test_loop_pack_integration() {
         // Framework integration test
-        let module = MirModule {
+        let mut module = MirModule {
             functions: Vec::new(),
             span: Default::default(),
         };
         // Would test full pipeline with real MIR samples
-        assert_eq!(module.functions.len(), 0);
+        let result = LoopPackV1Pass::new().run(&mut module);
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_loop_pack_no_loops() {
         // Gracefully handle modules with no loops
-        let module = MirModule {
+        let mut module = MirModule {
             functions: Vec::new(),
             span: Default::default(),
         };
-        assert_eq!(module.functions.len(), 0);
+        let result = LoopPackV1Pass::new().run(&mut module);
+        assert!(result.is_ok());
+        if let Ok(pass_result) = result {
+            assert!(!pass_result.changed);
+        }
+    }
+
+    #[test]
+    fn test_loop_pack_pass_properties() {
+        let pass = LoopPackV1Pass::new();
+        assert_eq!(pass.name(), "loop-pack-v1");
+        assert!(pass.is_default());
+        assert_eq!(pass.cost(), 5);
     }
 }

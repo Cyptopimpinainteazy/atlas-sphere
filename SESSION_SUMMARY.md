@@ -30,12 +30,12 @@
 ### Phase 2: Loop-Pack v1 Framework (Complete)
 **4 Specialization Modules:**
 
-| Module | Lines | Algorithm | Expected Gain |
-|--------|-------|-----------|----------------|
-| Loop Detection | 310 | Tarjan's strongly-connected components | Foundation |
-| LICM | 188 | SSA-based hoisting + purity analysis | 2-5 gas/iter |
-| Strength Reduction | 190 | Induction variable + cost modeling | 3-5 gas/iter |
-| Loop Unswitching | 172 | Branch invariant specialization | 5-10% branch |
+| Module             | Lines | Algorithm                              | Expected Gain |
+| ------------------ | ----- | -------------------------------------- | ------------- |
+| Loop Detection     | 310   | Tarjan's strongly-connected components | Foundation    |
+| LICM               | 188   | SSA-based hoisting + purity analysis   | 2-5 gas/iter  |
+| Strength Reduction | 190   | Induction variable + cost modeling     | 3-5 gas/iter  |
+| Loop Unswitching   | 172   | Branch invariant specialization        | 5-10% branch  |
 
 **Framework Status:**
 - ✅ 860 lines production code
@@ -96,12 +96,12 @@ BIG FIX: Type names
 
 ### Current vs Target
 
-| Phase | Strategy | Gas Reduction | Status |
-|-------|----------|---------------|--------|
-| Baseline | No optimizations | 0% | - |
-| YOLO | 13-pass pipeline | -33.5% | ✅ VERIFIED |
-| Loop-Pack v1 | 4-pass loop spec | -10-20% | ✅ READY |
-| **Total** | **Combined** | **-40-50%** | **TARGET** |
+| Phase        | Strategy         | Gas Reduction | Status     |
+| ------------ | ---------------- | ------------- | ---------- |
+| Baseline     | No optimizations | 0%            | -          |
+| YOLO         | 13-pass pipeline | -33.5%        | ✅ VERIFIED |
+| Loop-Pack v1 | 4-pass loop spec | -10-20%       | ✅ READY    |
+| **Total**    | **Combined**     | **-40-50%**   | **TARGET** |
 
 ### Measurable Improvements (Per Category)
 ```
@@ -197,28 +197,28 @@ git commit -m "opt: Loop-Pack v1 production integration (+10-20% gas reduction)"
 ## 📊 Code Metrics
 
 ### Size & Complexity
-| Metric | Value | Quality |
-|--------|-------|---------|
-| Total LOC (Loop-Pack v1) | 952 lines | ✅ Lightweight |
-| Framework Files | 5 new files | ✅ Well-organized |
-| Test Coverage | 109/109 passing | ✅ Comprehensive |
-| Cyclomatic Complexity | Low (mostly data structures) | ✅ Maintainable |
+| Metric                   | Value                        | Quality          |
+| ------------------------ | ---------------------------- | ---------------- |
+| Total LOC (Loop-Pack v1) | 952 lines                    | ✅ Lightweight    |
+| Framework Files          | 5 new files                  | ✅ Well-organized |
+| Test Coverage            | 109/109 passing              | ✅ Comprehensive  |
+| Cyclomatic Complexity    | Low (mostly data structures) | ✅ Maintainable   |
 
 ### Safety & Reliability
-| Aspect | Status |
-|--------|--------|
-| Memory Safety | ✅ No unsafe blocks |
-| Type Safety | ✅ All MIR types corrected |
-| Determinism | ✅ BTreeMap for reproducibility |
-| Error Handling | ✅ Early returns on edge cases |
+| Aspect         | Status                         |
+| -------------- | ------------------------------ |
+| Memory Safety  | ✅ No unsafe blocks             |
+| Type Safety    | ✅ All MIR types corrected      |
+| Determinism    | ✅ BTreeMap for reproducibility |
+| Error Handling | ✅ Early returns on edge cases  |
 
 ### Development Velocity
-| Activity | Duration | Efficiency |
-|----------|----------|-----------|
-| YOLO Phase | ~30 min | 13 passes + benchmarking |
-| Loop-Pack Framework | ~45 min | 860 lines + 30+ tests |
-| MIR Integration & Fixes | ~15 min | 11 type corrections |
-| Total Session | ~90 min | 40-50% gas reduction target |
+| Activity                | Duration | Efficiency                  |
+| ----------------------- | -------- | --------------------------- |
+| YOLO Phase              | ~30 min  | 13 passes + benchmarking    |
+| Loop-Pack Framework     | ~45 min  | 860 lines + 30+ tests       |
+| MIR Integration & Fixes | ~15 min  | 11 type corrections         |
+| Total Session           | ~90 min  | 40-50% gas reduction target |
 
 ---
 
@@ -266,16 +266,16 @@ Using BTreeMap throughout ensures identical optimization results across runs - c
 
 ## 🎯 Final Status
 
-| Component | Status | Quality | Production Ready? |
-|-----------|--------|---------|-------------------|
-| YOLO Phase | ✅ Complete | ✅ Verified (-33.5%) | ✅ YES |
-| Loop-Pack Architecture | ✅ Complete | ✅ Framework Sound | ✅ YES |
-| MIR Integration | ✅ Complete | ✅ All Types Fixed | ✅ YES |
-| Test Suite | ✅ 109/109 Passing | ✅ Comprehensive | ✅ YES |
-| Documentation | ✅ Complete | ✅ Detailed | ✅ YES |
-| Pipeline Integration | ⏳ Pending | ✅ Ready | 🔄 NEXT |
-| Benchmark Measurement | ⏳ Pending | - | 🔄 NEXT |
-| Production Deployment | ⏳ Pending | - | 🔄 FINAL |
+| Component              | Status            | Quality             | Production Ready? |
+| ---------------------- | ----------------- | ------------------- | ----------------- |
+| YOLO Phase             | ✅ Complete        | ✅ Verified (-33.5%) | ✅ YES             |
+| Loop-Pack Architecture | ✅ Complete        | ✅ Framework Sound   | ✅ YES             |
+| MIR Integration        | ✅ Complete        | ✅ All Types Fixed   | ✅ YES             |
+| Test Suite             | ✅ 109/109 Passing | ✅ Comprehensive     | ✅ YES             |
+| Documentation          | ✅ Complete        | ✅ Detailed          | ✅ YES             |
+| Pipeline Integration   | ⏳ Pending         | ✅ Ready             | 🔄 NEXT            |
+| Benchmark Measurement  | ⏳ Pending         | -                   | 🔄 NEXT            |
+| Production Deployment  | ⏳ Pending         | -                   | 🔄 FINAL           |
 
 ---
 

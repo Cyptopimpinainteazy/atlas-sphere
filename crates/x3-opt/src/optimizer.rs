@@ -1,5 +1,6 @@
 //! Optimizer orchestration and pass pipeline.
 
+use crate::loop_pack_v1::LoopPackV1Pass;
 use crate::pass::{BoxedPass, Pass};
 use crate::passes::{
     block_fusion::BlockFusionPass, branch_inversion::BranchInversionPass,
@@ -72,6 +73,7 @@ pub fn default_passes() -> Vec<BoxedPass> {
         Box::new(BlockFusionPass),
         Box::new(SpeculativeHoistPass),
         Box::new(DeadCodeEliminationPass::new()),
+        Box::new(LoopPackV1Pass::new()), // Loop optimizations (LICM, SR, unswitching)
         Box::new(CopyPropagationPass::new()),
     ]
 }
@@ -142,10 +144,11 @@ impl Optimizer {
                 self.passes.push(Box::new(BlockFusionPass));
                 self.passes.push(Box::new(SpeculativeHoistPass));
                 self.passes.push(Box::new(DeadCodeEliminationPass::new()));
+                self.passes.push(Box::new(LoopPackV1Pass::new()));
                 self.passes.push(Box::new(CopyPropagationPass::new()));
             }
             OptLevel::Aggressive => {
-                // Same as default but with more iterations
+                // Same as default but with more iterations + loop optimizations
                 self.passes.push(Box::new(ConstantFoldPass::new()));
                 self.passes.push(Box::new(PeepholePass::new()));
                 self.passes.push(Box::new(DomConstPropPass::new()));
@@ -159,6 +162,7 @@ impl Optimizer {
                 self.passes.push(Box::new(BlockFusionPass));
                 self.passes.push(Box::new(SpeculativeHoistPass));
                 self.passes.push(Box::new(DeadCodeEliminationPass::new()));
+                self.passes.push(Box::new(LoopPackV1Pass::new())); // Loop optimizations
                 self.passes.push(Box::new(CopyPropagationPass::new()));
                 self.max_iterations = 20;
             }
@@ -306,10 +310,10 @@ mod tests {
         assert_eq!(basic.passes.len(), 2); // constant fold + peephole
 
         let default = Optimizer::new(OptLevel::Default);
-        assert_eq!(default.passes.len(), 13); // + PRE
+        assert_eq!(default.passes.len(), 14); // 13 base passes + loop-pack-v1
 
         let aggressive = Optimizer::new(OptLevel::Aggressive);
-        assert_eq!(aggressive.passes.len(), 13);
+        assert_eq!(aggressive.passes.len(), 14); // 13 base passes + loop-pack-v1
         assert_eq!(aggressive.max_iterations, 20);
     }
 }
