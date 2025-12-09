@@ -1,0 +1,83 @@
+//! X3 MIR Optimizer
+//!
+//! This crate provides optimization passes for the X3 Mid-level Intermediate Representation.
+//! Optimizations operate on `MirModule` and produce transformed, equivalent code with
+//! improved performance characteristics (fewer instructions, faster execution, lower gas).
+//!
+//! # Architecture
+//!
+//! The optimizer follows a pass-based architecture:
+//!
+//! ```text
+//! MirModule → [Pass 1] → [Pass 2] → ... → [Pass N] → Optimized MirModule
+//! ```
+//!
+//! Each pass implements the `Pass` trait and performs a specific transformation.
+//! The `Optimizer` orchestrates passes, running them until a fixpoint is reached
+//! or a maximum iteration count is exceeded.
+//!
+//! # Implemented Passes
+//!
+//! - **Constant Folding**: Evaluate constant expressions at compile time
+//! - **Peephole Optimization**: Local instruction sequence simplifications
+//! - **Dead Code Elimination**: Remove unreachable code and unused assignments
+//! - **Copy Propagation**: Replace uses of copied values with originals
+//! - **Dominator Constant Propagation**: Propagate constants across basic blocks
+//!
+//! # Control Flow Analysis
+//!
+//! The `cfg` module provides CFG construction and dominator tree computation,
+//! enabling advanced cross-block optimizations like dominator-based constant
+//! propagation and dead block elimination.
+//!
+//! # Example
+//!
+//! ```ignore
+//! use x3_opt::{Optimizer, OptLevel};
+//! use x3_mir::MirModule;
+//!
+//! let mut module: MirModule = /* ... */;
+//! let mut optimizer = Optimizer::new(OptLevel::Default);
+//! optimizer.run(&mut module)?;
+//! ```
+//!
+//! # Determinism
+//!
+//! All passes are deterministic: the same input always produces the same output.
+//! This is critical for blockchain VMs where execution must be reproducible.
+
+pub mod cfg;
+pub mod dce;
+pub mod edge_const_prop;
+pub mod error;
+pub mod optimizer;
+pub mod pass;
+pub mod passes;
+pub mod regalloc;
+pub mod rule_miner;
+pub mod run_yolo;
+pub mod ssa_lite;
+pub mod telemetry;
+
+pub use error::{OptError, OptResult};
+pub use optimizer::{default_passes, OptLevel, Optimizer, PassObserver};
+pub use pass::{Pass, PassResult};
+pub use run_yolo::{
+    count_instructions, estimate_bytes, run_yolo_once, simulate_gas, OptimizationReport, PassDelta,
+};
+
+// Re-export CFG types for convenience
+pub use cfg::Cfg;
+
+// Re-export passes for convenience
+pub use passes::{
+    block_fusion::BlockFusionPass, branch_inversion::BranchInversionPass,
+    branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
+    copy_propagation::CopyPropagationPass, dead_code_elimination::DeadCodeEliminationPass,
+    dom_const_prop::DomConstPropPass, edge_const_prop::EdgeConstPropPass,
+    global_const_prop::GlobalConstPropPass, peephole::PeepholePass,
+    pre_simple::PartialRedundancyEliminationPass, speculative_hoist::SpeculativeHoistPass,
+};
+pub use regalloc::RegAllocator;
+pub use rule_miner::RuleMiner;
+pub use ssa_lite::global_ssa_opt;
