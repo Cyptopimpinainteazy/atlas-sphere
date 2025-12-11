@@ -122,7 +122,7 @@ export default function RPCProvidersPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/network" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Network
@@ -149,7 +149,7 @@ export default function RPCProvidersPage() {
 
       {/* Features */}
       <section className="py-12 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <div key={index} className="flex items-start">
@@ -168,7 +168,7 @@ export default function RPCProvidersPage() {
 
       {/* Providers */}
       <section id="providers" className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Available Providers</h2>
           
           <div className="space-y-6">
@@ -237,7 +237,7 @@ export default function RPCProvidersPage() {
 
       {/* Quick Start */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Quick Start</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
@@ -314,7 +314,7 @@ console.log('X3 Balance:', balance.toHuman());`}</code>
 
       {/* Supported Methods */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Supported Methods</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -54,6 +54,8 @@ import {
   Database,
   BarChart3,
   ExternalLink,
+  Gift,
+  TrendingUp,
 } from 'lucide-react';
 
 interface NavItem {
@@ -66,6 +68,11 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
+  {
+    label: 'Earn',
+    href: '/earn',
+    badge: 'New',
+  },
   {
     label: 'Learn',
     children: [
@@ -200,6 +207,13 @@ const navigation: NavItem[] = [
         description: 'AI-powered applications',
       },
       {
+        label: 'AI Swarm Hub',
+        href: '/x3/swarm',
+        icon: <Cpu className="w-5 h-5" />,
+        description: 'AI agent coordination',
+        badge: 'New',
+      },
+      {
         label: 'Real World Assets',
         href: '/solutions/rwa',
         icon: <Map className="w-5 h-5" />,
@@ -316,7 +330,7 @@ export default function Navigation() {
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container-wide">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Logo size="md" showText={true} />
@@ -328,13 +342,18 @@ export default function Navigation() {
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                       pathname === item.href
                         ? 'text-orange-400 bg-orange-500/10'
                         : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
                     }`}
                   >
                     {item.label}
+                    {item.badge && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white rounded">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <>

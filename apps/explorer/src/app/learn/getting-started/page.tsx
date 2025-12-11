@@ -107,7 +107,7 @@ export default function GettingStartedPage() {
       <section className="py-20 relative overflow-hidden page-header-learn">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/20 via-black to-teal-950/10" />
         <div className="absolute inset-0 mesh-gradient opacity-10" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-4">
               <BookOpen className="w-4 h-4 mr-2 text-emerald-400" />
@@ -136,7 +136,7 @@ export default function GettingStartedPage() {
 
       {/* Prerequisites */}
       <section className="py-16 border-t border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Prerequisites</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="glass-card p-6">
@@ -174,7 +174,7 @@ export default function GettingStartedPage() {
 
       {/* Steps */}
       <section id="setup" className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-12">Getting Started Steps</h2>
           
           <div className="space-y-8">
@@ -222,7 +222,7 @@ export default function GettingStartedPage() {
 
       {/* Quick Start Code */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Quick Start Commands</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
@@ -292,7 +292,7 @@ https://explorer.testnet.atlas-sphere.io`}
 
       {/* Quick Links */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Continue Learning</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

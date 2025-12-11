@@ -57,7 +57,7 @@ export default function TokenomicsPage() {
       {/* Hero */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 mesh-gradient opacity-30" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/learn" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Learn
@@ -76,7 +76,7 @@ export default function TokenomicsPage() {
 
       {/* X3 Token Card */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="glass-card p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-full blur-3xl" />
             
@@ -127,7 +127,7 @@ export default function TokenomicsPage() {
 
       {/* Canonical Ledger Architecture */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">The Canonical Ledger Architecture</h2>
           
           <div className="glass-card p-8">
@@ -182,7 +182,7 @@ export default function TokenomicsPage() {
 
       {/* How External Tokens Enter */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">How External Tokens Enter the System</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
@@ -260,7 +260,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Asset Registry Table */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Registered Assets</h2>
           
           <div className="glass-card overflow-hidden">
@@ -311,7 +311,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Cross-VM Token Flow */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Cross-VM Token Flow (Comit)</h2>
           
           <div className="glass-card p-8">
@@ -356,7 +356,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Fee Structure */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Fee Structure (Paid in X3)</h2>
           
           <div className="glass-card overflow-hidden">
@@ -391,7 +391,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Full System Diagram */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Complete System Architecture</h2>
           
           <div className="glass-card p-8">
@@ -452,7 +452,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Key Points Summary */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Key Takeaways</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -500,7 +500,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
 
       {/* Get X3 Section */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="glass-card p-8">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>

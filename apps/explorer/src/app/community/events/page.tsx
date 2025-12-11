@@ -98,7 +98,7 @@ export default function EventsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/community" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Community
@@ -125,7 +125,7 @@ export default function EventsPage() {
 
       {/* Event Types */}
       <section className="py-8 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-4 gap-6">
             {eventTypes.map((type, index) => (
               <div key={index} className="flex items-center gap-4">
@@ -145,7 +145,7 @@ export default function EventsPage() {
       {/* Featured Event */}
       {upcomingEvents.filter(e => e.featured).map((event, index) => (
         <section key={index} className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="container-wide">
             <div className="glass-card p-8 border-orange-500/30">
               <div className="flex items-center gap-2 mb-4">
                 <span className="badge badge-warning">Featured</span>
@@ -178,7 +178,7 @@ export default function EventsPage() {
 
       {/* Upcoming Events */}
       <section id="upcoming" className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Upcoming Events</h2>
           
           <div className="space-y-4">
@@ -226,7 +226,7 @@ export default function EventsPage() {
 
       {/* Past Events */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Past Events</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -253,7 +253,7 @@ export default function EventsPage() {
 
       {/* Host Event */}
       <section id="host" className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Host a Meetup</h2>

@@ -178,7 +178,7 @@ export default function EcosystemPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/community" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Community
@@ -196,7 +196,7 @@ export default function EcosystemPage() {
 
       {/* Stats */}
       <section className="py-8 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div key={index} className="glass-card p-6 text-center">
@@ -210,7 +210,7 @@ export default function EcosystemPage() {
 
       {/* Search and Filter */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -244,7 +244,7 @@ export default function EcosystemPage() {
       {/* Featured Projects */}
       {featuredProjects.length > 0 && (
         <section className="py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="container-wide">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center">
               <Star className="w-5 h-5 text-orange-400 mr-2" />
               Featured Projects
@@ -289,7 +289,7 @@ export default function EcosystemPage() {
 
       {/* All Projects */}
       <section className="py-8 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">All Projects</h2>
           
           {otherProjects.length > 0 ? (

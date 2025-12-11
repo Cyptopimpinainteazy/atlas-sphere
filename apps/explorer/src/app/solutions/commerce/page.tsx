@@ -122,7 +122,7 @@ export default function CommercePage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/solutions" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Solutions
@@ -149,7 +149,7 @@ export default function CommercePage() {
 
       {/* Benefits */}
       <section className="py-12 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
               <div key={index} className="glass-card p-6 text-center">
@@ -164,7 +164,7 @@ export default function CommercePage() {
 
       {/* Features */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Features</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -185,7 +185,7 @@ export default function CommercePage() {
 
       {/* Platforms */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Supported Platforms</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -211,7 +211,7 @@ export default function CommercePage() {
 
       {/* Code Example */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Custom Integration</h2>
@@ -248,7 +248,7 @@ export default function CommercePage() {
 
       {/* Dashboard Preview */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Merchant Dashboard</h2>
           
           <div className="glass-card p-6">

@@ -103,7 +103,7 @@ export default function CoreConceptsPage() {
       {/* Hero */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 mesh-gradient opacity-30" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="badge badge-purple mb-4">Core Concepts</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -119,7 +119,7 @@ export default function CoreConceptsPage() {
 
       {/* Main Concepts */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid gap-8">
             {concepts.map((concept, index) => (
               <div key={index} className="glass-card p-8">
@@ -150,7 +150,7 @@ export default function CoreConceptsPage() {
 
       {/* Architecture Diagram */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">System Architecture</h2>
           
           <div className="glass-card p-8">
@@ -223,7 +223,7 @@ export default function CoreConceptsPage() {
 
       {/* Terminology */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Terminology</h2>
           
           <div className="grid md:grid-cols-2 gap-4">
@@ -239,7 +239,7 @@ export default function CoreConceptsPage() {
 
       {/* Comit Flow */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Comit Transaction Lifecycle</h2>
           
           <div className="glass-card p-8">
@@ -278,7 +278,7 @@ export default function CoreConceptsPage() {
 
       {/* Next Steps */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Continue Learning</h2>
           
           <div className="grid md:grid-cols-3 gap-6">

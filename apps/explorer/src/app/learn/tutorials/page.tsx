@@ -163,7 +163,7 @@ export default function TutorialsPage() {
       {/* Hero */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 mesh-gradient opacity-30" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="badge badge-info mb-4">Learn</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -179,7 +179,7 @@ export default function TutorialsPage() {
 
       {/* Filters */}
       <section className="py-8 border-y border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             {/* Category filters */}
             <div className="flex flex-wrap gap-2">
@@ -219,7 +219,7 @@ export default function TutorialsPage() {
 
       {/* Tutorials Grid */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredTutorials.map((tutorial) => (
               <Link
@@ -290,7 +290,7 @@ export default function TutorialsPage() {
 
       {/* Learning Path */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Recommended Learning Path</h2>
           
           <div className="relative">

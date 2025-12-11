@@ -91,7 +91,7 @@ export default function RampsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/network" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Network
@@ -118,7 +118,7 @@ export default function RampsPage() {
 
       {/* Quick Stats */}
       <section className="py-8 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-4 gap-6">
             {[
               { icon: <Globe className="w-5 h-5" />, value: '170+', label: 'Countries' },
@@ -142,7 +142,7 @@ export default function RampsPage() {
 
       {/* On-Ramps */}
       <section id="onramps" className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">On-Ramps (Buy Crypto)</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -187,7 +187,7 @@ export default function RampsPage() {
 
       {/* Off-Ramps */}
       <section id="offramps" className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Off-Ramps (Sell Crypto)</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -216,7 +216,7 @@ export default function RampsPage() {
 
       {/* Fee Comparison */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Fee Comparison</h2>
           
           <div className="glass-card overflow-hidden">
@@ -252,7 +252,7 @@ export default function RampsPage() {
 
       {/* Integration */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Integrate Ramps in Your dApp</h2>

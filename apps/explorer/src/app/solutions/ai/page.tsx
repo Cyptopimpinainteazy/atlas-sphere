@@ -115,7 +115,7 @@ export default function AISolutionsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/solutions" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Solutions
@@ -143,7 +143,7 @@ export default function AISolutionsPage() {
 
       {/* Use Cases */}
       <section className="py-16 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">AI Use Cases</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -167,7 +167,7 @@ export default function AISolutionsPage() {
 
       {/* Advantages */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Why X3 STAR for AI?</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -186,7 +186,7 @@ export default function AISolutionsPage() {
 
       {/* Code Example */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Deploy AI Agents</h2>
@@ -223,7 +223,7 @@ export default function AISolutionsPage() {
 
       {/* Ecosystem */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">AI Ecosystem</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

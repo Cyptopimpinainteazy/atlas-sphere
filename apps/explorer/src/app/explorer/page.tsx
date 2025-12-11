@@ -179,7 +179,7 @@ export default function ExplorerPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="inline-flex items-center px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4">
@@ -228,7 +228,7 @@ export default function ExplorerPage() {
 
       {/* Stats */}
       <section className="py-8 border-b border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {networkStatsData.map((stat) => (
               <div key={stat.label} className="glass-card p-4">
@@ -252,7 +252,7 @@ export default function ExplorerPage() {
 
       {/* Tabs */}
       <section className="border-b border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex space-x-1">
             {[
               { id: 'overview', label: 'Overview', icon: <Activity className="w-4 h-4" /> },
@@ -279,7 +279,7 @@ export default function ExplorerPage() {
 
       {/* Content */}
       <section className="py-8 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           {activeTab === 'overview' && (
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Latest Blocks */}

@@ -163,7 +163,7 @@ export default function ForumPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
               <Link href="/community" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
@@ -182,7 +182,7 @@ export default function ForumPage() {
 
       {/* Search and Filter */}
       <section className="py-6 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -214,7 +214,7 @@ export default function ForumPage() {
 
       {/* Main Content */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <div className="lg:col-span-1 space-y-6">

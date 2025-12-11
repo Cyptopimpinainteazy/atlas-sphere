@@ -83,6 +83,18 @@ const docSections = [
     ],
   },
   {
+    id: 'ai-swarm',
+    title: 'AI Swarm & Compute',
+    icon: <Cpu className="w-5 h-5" />,
+    items: [
+      { title: 'AI Swarm Overview', href: '/x3/swarm' },
+      { title: 'Prediction Markets', href: '/x3/swarm/predictions' },
+      { title: 'Blockspace Auctions', href: '/x3/swarm/auctions' },
+      { title: 'GPU Marketplace', href: '/x3/swarm/gpu' },
+      { title: 'Agent Development', href: '/developers/docs/ai-agents' },
+    ],
+  },
+  {
     id: 'node-operations',
     title: 'Node Operations',
     icon: <Database className="w-5 h-5" />,
@@ -99,6 +111,7 @@ const docSections = [
 const quickLinks = [
   { title: 'RPC API Reference', href: '/developers/api', icon: <Globe className="w-4 h-4" /> },
   { title: 'Cookbook Examples', href: '/developers/cookbook', icon: <BookOpen className="w-4 h-4" /> },
+  { title: 'AI Swarm Hub', href: '/x3/swarm', icon: <Cpu className="w-4 h-4" /> },
   { title: 'GitHub Repository', href: 'https://github.com/atlas-sphere', icon: <Code className="w-4 h-4" /> },
   { title: 'SDKs & Tools', href: '/developers/sdks', icon: <Box className="w-4 h-4" /> },
 ];
@@ -113,7 +126,7 @@ export default function DocsPage() {
       <section className="py-16 relative overflow-hidden border-b border-[#1a1a1a] page-header-developers">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-950/20 via-black to-purple-950/10" />
         <div className="absolute inset-0 mesh-gradient opacity-10" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 mb-4">
               <Code className="w-4 h-4 mr-2 text-violet-400" />
@@ -142,7 +155,7 @@ export default function DocsPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container-wide py-12">
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
