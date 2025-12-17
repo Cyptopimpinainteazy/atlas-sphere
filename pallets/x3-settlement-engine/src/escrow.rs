@@ -8,7 +8,7 @@ use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::RuntimeDebug;
-use sp_std::vec::Vec;
+use sp_std::{vec, vec::Vec};
 
 /// Escrow operation to be executed atomically
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo)]

@@ -18,7 +18,7 @@ use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::RuntimeDebug;
-use sp_std::vec::Vec;
+use sp_std::{vec, vec::Vec};
 
 /// Invariant check result
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, PartialEq, Eq)]

@@ -1,5 +1,4 @@
 //! Runtime storage migrations for `pallet-governance`.
-#![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::traits::{OnRuntimeUpgrade, StorageVersion};
 use frame_support::weights::Weight;
@@ -13,7 +12,7 @@ impl<T: crate::Config> OnRuntimeUpgrade for Migration<T> {
     fn on_runtime_upgrade() -> Weight {
         if StorageVersion::get::<pallet::Pallet<T>>() < pallet::STORAGE_VERSION {
             StorageVersion::put::<pallet::Pallet<T>>(&pallet::STORAGE_VERSION);
-            <Weight as From<u64>>::from(2u64)
+            Weight::from_parts(2_000, 0)
         } else {
             Weight::zero()
         }
