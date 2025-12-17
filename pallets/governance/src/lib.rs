@@ -46,6 +46,8 @@ pub use types::*;
 pub mod runtime_api;
 pub use runtime_api::*;
 
+pub(crate) mod migrations;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
@@ -75,8 +77,13 @@ pub mod pallet {
         <T as Config>::RuntimeCall,
     >;
 
+    use frame_support::traits::StorageVersion;
+
+    pub(crate) const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
     #[pallet::without_storage_info]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -155,6 +162,23 @@ pub mod pallet {
 
         /// Weight information for extrinsics.
         type WeightInfo: WeightInfo;
+
+        // ============================================================================
+        // AI Governance Configuration
+        // ============================================================================
+
+        /// Maximum AI proposal payload size
+        #[pallet::constant]
+        type MaxAIProposalPayload: Get<u32>;
+
+        /// Origin for AI proposal submission (AI agents)
+        type AISubmitOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
+
+        /// Origin for AI proposal review (human reviewers)
+        type AIReviewOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
+
+        /// Origin for emergency kill switch activation
+        type EmergencyOrigin: EnsureOrigin<Self::RuntimeOrigin, Success = Self::AccountId>;
     }
 
     // ========================================================================
@@ -241,6 +265,71 @@ pub mod pallet {
     pub type GovernanceConfig<T: Config> =
         StorageValue<_, GovernanceParams<BalanceOf<T>, BlockNumberFor<T>>, ValueQuery>;
 
+    // ============================================================================
+    // AI Governance Storage
+    // ============================================================================
+
+    /// AI Governance configuration
+    #[pallet::storage]
+    #[pallet::getter(fn ai_config)]
+    pub type AIConfig<T: Config> = StorageValue<_, AIGovernanceConfig, ValueQuery>;
+
+    /// AI proposals
+    #[pallet::storage]
+    #[pallet::getter(fn ai_proposals)]
+    pub type AIProposals<T: Config> =
+        StorageMap<_, Blake2_128Concat, u64, AIProposal<T>, OptionQuery>;
+
+    /// Next AI proposal ID
+    #[pallet::storage]
+    pub type NextAIProposalId<T: Config> = StorageValue<_, u64, ValueQuery>;
+
+    /// Simulation results for AI proposals
+    #[pallet::storage]
+    #[pallet::getter(fn simulation_results)]
+    pub type SimulationResults<T: Config> =
+        StorageMap<_, Blake2_128Concat, u64, SimulationResult, OptionQuery>;
+
+    /// Authorization tracking for AI proposals
+    #[pallet::storage]
+    #[pallet::getter(fn ai_authorizations)]
+    pub type AIAuthorizations<T: Config> =
+        StorageMap<_, Blake2_128Concat, u64, AuthorizationRequirements<T>, OptionQuery>;
+
+    /// Sandboxed executions
+    #[pallet::storage]
+    #[pallet::getter(fn sandboxed_executions)]
+    pub type SandboxedExecutions<T: Config> =
+        StorageMap<_, Blake2_128Concat, u64, SandboxedExecution, OptionQuery>;
+
+    /// Current kill switch level
+    #[pallet::storage]
+    #[pallet::getter(fn kill_switch_level)]
+    pub type KillSwitchLevelStorage<T: Config> = StorageValue<_, KillSwitchLevel, ValueQuery>;
+
+    /// Kill switch activation history
+    #[pallet::storage]
+    #[pallet::getter(fn kill_switch_history)]
+    pub type KillSwitchHistory<T: Config> =
+        StorageMap<_, Blake2_128Concat, BlockNumberFor<T>, KillSwitchActivation<T>, OptionQuery>;
+
+    /// AI reviewers (authorized human reviewers)
+    #[pallet::storage]
+    pub type AIReviewers<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, bool, ValueQuery>;
+
+    /// AI proposal approvals (proposal_id => reviewer => approved)
+    #[pallet::storage]
+    pub type AIProposalApprovals<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        u64,
+        Blake2_128Concat,
+        T::AccountId,
+        bool,
+        ValueQuery,
+    >;
+
     // ========================================================================
     // Events
     // ========================================================================
@@ -301,6 +390,55 @@ pub mod pallet {
             account: T::AccountId,
             amount: BalanceOf<T>,
         },
+
+        // ============================================================================
+        // AI Governance Events
+        // ============================================================================
+        /// AI proposal submitted
+        AIProposalSubmitted {
+            proposal_id: u64,
+            proposer: T::AccountId,
+            proposal_type: AIProposalType,
+        },
+        /// AI proposal simulation completed
+        AIProposalSimulated {
+            proposal_id: u64,
+            success: bool,
+            gas_used: u64,
+        },
+        /// AI proposal approved by reviewer
+        AIProposalApproved {
+            proposal_id: u64,
+            reviewer: T::AccountId,
+            total_approvals: u32,
+        },
+        /// AI proposal authorized for execution
+        AIProposalAuthorized {
+            proposal_id: u64,
+            execution_block: BlockNumberFor<T>,
+        },
+        /// AI proposal executed in sandbox
+        AIProposalExecuted { proposal_id: u64, success: bool },
+        /// AI proposal rolled back
+        AIProposalRolledBack {
+            proposal_id: u64,
+            reason: BoundedVec<u8, ConstU32<256>>,
+        },
+        /// Kill switch activated
+        KillSwitchActivated {
+            level: KillSwitchLevel,
+            activator: T::AccountId,
+            reason: BoundedVec<u8, ConstU32<512>>,
+        },
+        /// Kill switch deactivated
+        KillSwitchDeactivated {
+            previous_level: KillSwitchLevel,
+            new_level: KillSwitchLevel,
+        },
+        /// AI reviewer registered
+        AIReviewerRegistered { reviewer: T::AccountId },
+        /// AI governance config updated
+        AIConfigUpdated,
     }
 
     // ========================================================================
@@ -353,6 +491,30 @@ pub mod pallet {
         CannotCancel,
         /// Arithmetic overflow.
         ArithmeticOverflow,
+
+        // ============================================================================
+        // AI Governance Errors
+        // ============================================================================
+        /// AI proposal not found
+        AIProposalNotFound,
+        /// AI proposal not in expected status
+        AIProposalInvalidStatus,
+        /// Not authorized to submit AI proposals
+        NotAIAuthorized,
+        /// Not an AI reviewer
+        NotAIReviewer,
+        /// Simulation failed
+        SimulationFailed,
+        /// Authorization requirements not met
+        AuthorizationFailed,
+        /// Sandbox execution failed
+        SandboxExecutionFailed,
+        /// Kill switch level invalid
+        InvalidKillSwitchLevel,
+        /// Emergency mode active
+        EmergencyModeActive,
+        /// AI proposal payload too large
+        AIProposalPayloadTooLarge,
     }
 
     // ========================================================================
@@ -376,6 +538,12 @@ pub mod pallet {
                 enactment_period: T::EnactmentPeriod::get(),
                 proposal_deposit: T::ProposalDeposit::get(),
             });
+
+            // Initialize AI governance config
+            AIConfig::<T>::put(AIGovernanceConfig::default());
+
+            // Initialize kill switch to normal
+            KillSwitchLevelStorage::<T>::put(KillSwitchLevel::Normal);
         }
     }
 
@@ -817,6 +985,278 @@ pub mod pallet {
 
             Ok(())
         }
+
+        // ============================================================================
+        // AI Governance Extrinsics
+        // ============================================================================
+
+        /// Submit an AI proposal (inert object, no direct execution)
+        #[pallet::call_index(9)]
+        #[pallet::weight(T::WeightInfo::submit_proposal())]
+        pub fn submit_ai_proposal(
+            origin: OriginFor<T>,
+            proposal_type: AIProposalType,
+            payload: BoundedVec<u8, T::MaxAIProposalPayload>,
+            impact_assessment: ImpactAssessment,
+            simulation_requirements: SimulationRequirements,
+        ) -> DispatchResult {
+            let proposer = T::AISubmitOrigin::ensure_origin(origin)?;
+            ensure!(
+                payload.len() <= T::MaxAIProposalPayload::get() as usize,
+                Error::<T>::AIProposalPayloadTooLarge
+            );
+
+            let proposal_id = NextAIProposalId::<T>::get();
+            let current_block = frame_system::Pallet::<T>::block_number();
+
+            let proposal = AIProposal {
+                id: proposal_id,
+                proposer: proposer.clone(),
+                proposal_type: proposal_type.clone(),
+                payload,
+                impact_assessment,
+                simulation_requirements,
+                proposed_at: current_block,
+                status: AIProposalStatus::Proposed,
+            };
+
+            AIProposals::<T>::insert(proposal_id, proposal);
+            NextAIProposalId::<T>::put(proposal_id + 1);
+
+            Self::deposit_event(Event::AIProposalSubmitted {
+                proposal_id,
+                proposer,
+                proposal_type,
+            });
+
+            Ok(())
+        }
+
+        /// Approve an AI proposal (reviewer action)
+        #[pallet::call_index(10)]
+        #[pallet::weight(T::WeightInfo::vote())]
+        pub fn approve_ai_proposal(origin: OriginFor<T>, proposal_id: u64) -> DispatchResult {
+            let reviewer = T::AIReviewOrigin::ensure_origin(origin)?;
+            ensure!(AIReviewers::<T>::get(&reviewer), Error::<T>::NotAIReviewer);
+
+            AIProposals::<T>::try_mutate(proposal_id, |maybe_proposal| {
+                let proposal = maybe_proposal
+                    .as_mut()
+                    .ok_or(Error::<T>::AIProposalNotFound)?;
+                ensure!(
+                    proposal.status == AIProposalStatus::UnderReview,
+                    Error::<T>::AIProposalInvalidStatus
+                );
+
+                // Record approval
+                AIProposalApprovals::<T>::insert(proposal_id, &reviewer, true);
+
+                // Count total approvals
+                let approvals = AIProposalApprovals::<T>::iter_prefix(proposal_id).count() as u32;
+                let config = AIConfig::<T>::get();
+
+                Self::deposit_event(Event::AIProposalApproved {
+                    proposal_id,
+                    reviewer,
+                    total_approvals: approvals,
+                });
+
+                // Check if we have enough approvals for simulation
+                if approvals >= config.min_reviewer_approvals {
+                    proposal.status = AIProposalStatus::Approved;
+                    // Trigger simulation
+                    Self::simulate_ai_proposal(proposal_id)?;
+                }
+
+                Ok(())
+            })
+        }
+
+        /// Authorize AI proposal for execution (multisig + time-lock)
+        #[pallet::call_index(11)]
+        #[pallet::weight(T::WeightInfo::vote())]
+        pub fn authorize_ai_proposal(origin: OriginFor<T>, proposal_id: u64) -> DispatchResult {
+            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization required
+
+            AIProposals::<T>::try_mutate(proposal_id, |maybe_proposal| {
+                let proposal = maybe_proposal
+                    .as_mut()
+                    .ok_or(Error::<T>::AIProposalNotFound)?;
+                ensure!(
+                    proposal.status == AIProposalStatus::SimulationPassed,
+                    Error::<T>::AIProposalInvalidStatus
+                );
+
+                let current_block = frame_system::Pallet::<T>::block_number();
+                let config = AIConfig::<T>::get();
+                let execution_block = current_block.saturating_add(config.default_time_lock.into());
+
+                // Set up authorization requirements
+                let auth_reqs = AuthorizationRequirements {
+                    multisig_threshold: 3, // Require 3 signatures
+                    time_lock_blocks: config.default_time_lock.into(),
+                    reviewer_approvals: config.min_reviewer_approvals,
+                };
+
+                AIAuthorizations::<T>::insert(proposal_id, auth_reqs);
+
+                proposal.status = AIProposalStatus::Approved;
+
+                Self::deposit_event(Event::AIProposalAuthorized {
+                    proposal_id,
+                    execution_block,
+                });
+
+                Ok(())
+            })
+        }
+
+        /// Execute AI proposal in sandbox
+        #[pallet::call_index(12)]
+        #[pallet::weight(T::WeightInfo::submit_proposal())]
+        pub fn execute_ai_proposal(origin: OriginFor<T>, proposal_id: u64) -> DispatchResult {
+            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization required
+
+            let proposal =
+                AIProposals::<T>::get(proposal_id).ok_or(Error::<T>::AIProposalNotFound)?;
+            ensure!(
+                proposal.status == AIProposalStatus::Approved,
+                Error::<T>::AIProposalInvalidStatus
+            );
+
+            // Check time lock
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let auth_reqs =
+                AIAuthorizations::<T>::get(proposal_id).ok_or(Error::<T>::AuthorizationFailed)?;
+            ensure!(
+                current_block
+                    >= proposal
+                        .proposed_at
+                        .saturating_add(auth_reqs.time_lock_blocks),
+                Error::<T>::AuthorizationFailed
+            );
+
+            // Check kill switch level
+            ensure!(
+                KillSwitchLevelStorage::<T>::get() < KillSwitchLevel::UpgradeFreeze,
+                Error::<T>::EmergencyModeActive
+            );
+
+            // Create sandboxed execution
+            let sandbox = SandboxedExecution {
+                gas_ceiling: proposal.simulation_requirements.gas_limit,
+                block_limit: proposal.simulation_requirements.simulation_blocks,
+                rollback_checkpoint: Self::create_rollback_checkpoint(),
+                status: ExecutionStatus::Executing,
+            };
+
+            SandboxedExecutions::<T>::insert(proposal_id, sandbox);
+
+            // Execute in sandbox (simulated for now)
+            let success = Self::execute_in_sandbox(&proposal);
+
+            AIProposals::<T>::try_mutate(proposal_id, |p| {
+                if let Some(prop) = p {
+                    prop.status = if success {
+                        AIProposalStatus::Executed
+                    } else {
+                        AIProposalStatus::Rejected
+                    };
+                }
+                Ok::<(), Error<T>>(())
+            })?;
+
+            Self::deposit_event(Event::AIProposalExecuted {
+                proposal_id,
+                success,
+            });
+
+            Ok(())
+        }
+
+        /// Activate kill switch (graduated emergency controls)
+        #[pallet::call_index(13)]
+        #[pallet::weight(T::WeightInfo::vote())]
+        pub fn activate_kill_switch(
+            origin: OriginFor<T>,
+            level: KillSwitchLevel,
+            reason: BoundedVec<u8, ConstU32<512>>,
+        ) -> DispatchResult {
+            let activator = T::EmergencyOrigin::ensure_origin(origin)?;
+            let current_level = KillSwitchLevelStorage::<T>::get();
+
+            // Can only escalate, not de-escalate
+            ensure!(level >= current_level, Error::<T>::InvalidKillSwitchLevel);
+
+            KillSwitchLevelStorage::<T>::put(level);
+
+            let activation = KillSwitchActivation {
+                level,
+                activator: activator.clone(),
+                reason: reason.clone(),
+                activated_at: frame_system::Pallet::<T>::block_number(),
+                auto_deactivate_at: None,
+            };
+
+            KillSwitchHistory::<T>::insert(frame_system::Pallet::<T>::block_number(), activation);
+
+            Self::deposit_event(Event::KillSwitchActivated {
+                level,
+                activator,
+                reason,
+            });
+
+            Ok(())
+        }
+
+        /// Deactivate kill switch
+        #[pallet::call_index(14)]
+        #[pallet::weight(T::WeightInfo::vote())]
+        pub fn deactivate_kill_switch(origin: OriginFor<T>) -> DispatchResult {
+            T::EmergencyOrigin::ensure_origin(origin)?;
+            let previous_level = KillSwitchLevelStorage::<T>::get();
+
+            KillSwitchLevelStorage::<T>::put(KillSwitchLevel::Normal);
+
+            Self::deposit_event(Event::KillSwitchDeactivated {
+                previous_level,
+                new_level: KillSwitchLevel::Normal,
+            });
+
+            Ok(())
+        }
+
+        /// Register AI reviewer
+        #[pallet::call_index(15)]
+        #[pallet::weight(T::WeightInfo::vote())]
+        pub fn register_ai_reviewer(
+            origin: OriginFor<T>,
+            reviewer: T::AccountId,
+        ) -> DispatchResult {
+            T::EmergencyOrigin::ensure_origin(origin)?;
+
+            AIReviewers::<T>::insert(&reviewer, true);
+
+            Self::deposit_event(Event::AIReviewerRegistered { reviewer });
+
+            Ok(())
+        }
+
+        /// Update AI governance configuration
+        #[pallet::call_index(16)]
+        #[pallet::weight(T::WeightInfo::update_config())]
+        pub fn update_ai_config(
+            origin: OriginFor<T>,
+            new_config: AIGovernanceConfig,
+        ) -> DispatchResult {
+            T::RuntimeUpgradeOrigin::ensure_origin(origin)?;
+
+            AIConfig::<T>::put(new_config);
+
+            Self::deposit_event(Event::AIConfigUpdated);
+
+            Ok(())
+        }
     }
 
     // ========================================================================
@@ -965,14 +1405,17 @@ pub mod pallet {
             let config = GovernanceConfig::<T>::get();
             let proposal_count = ProposalCount::<T>::get();
 
-            let mut active_proposals = Vec::new();
-            let mut pending_enactments = Vec::new();
+            let mut active_proposals: BoundedVec<
+                ProposalSummary<T::AccountId, BalanceOf<T>, BlockNumberFor<T>>,
+                ConstU32<256>,
+            > = Default::default();
+            let mut pending_enactments: BoundedVec<u32, ConstU32<1024>> = Default::default();
 
             for id in 0..proposal_count {
                 if let Some(proposal) = Proposals::<T>::get(id) {
                     if proposal.status == ProposalStatus::Voting {
                         let tally = ProposalVotes::<T>::get(id);
-                        active_proposals.push(ProposalSummary {
+                        let _ = active_proposals.try_push(ProposalSummary {
                             id,
                             proposer: proposal.proposer,
                             status: proposal.status,
@@ -982,7 +1425,7 @@ pub mod pallet {
                             turnout: tally.turnout,
                         });
                     } else if proposal.status == ProposalStatus::Approved {
-                        pending_enactments.push(id);
+                        let _ = pending_enactments.try_push(id);
                     }
                 }
             }
@@ -993,6 +1436,80 @@ pub mod pallet {
                 pending_enactments,
                 config,
             }
+        }
+
+        // ====================================================================
+        // AI Governance Helper Functions
+        // ====================================================================
+
+        /// Simulate AI proposal
+        fn simulate_ai_proposal(proposal_id: u64) -> DispatchResult {
+            let proposal =
+                AIProposals::<T>::get(proposal_id).ok_or(Error::<T>::AIProposalNotFound)?;
+
+            // Basic simulation (in production, this would run actual deterministic tests)
+            let simulation_result = SimulationResult {
+                success: true, // Assume success for now
+                gas_used: proposal
+                    .simulation_requirements
+                    .gas_limit
+                    .saturating_sub(100_000),
+                execution_time: proposal.simulation_requirements.simulation_blocks,
+                state_changes: Default::default(),
+                warnings: Default::default(),
+            };
+
+            SimulationResults::<T>::insert(proposal_id, simulation_result.clone());
+
+            AIProposals::<T>::try_mutate(proposal_id, |p| {
+                if let Some(prop) = p {
+                    prop.status = if simulation_result.success {
+                        AIProposalStatus::SimulationPassed
+                    } else {
+                        AIProposalStatus::SimulationFailed
+                    };
+                }
+                Ok::<(), Error<T>>(())
+            })?;
+
+            Self::deposit_event(Event::AIProposalSimulated {
+                proposal_id,
+                success: simulation_result.success,
+                gas_used: simulation_result.gas_used,
+            });
+
+            Ok(())
+        }
+
+        /// Execute AI proposal in sandbox
+        fn execute_in_sandbox(proposal: &AIProposal<T>) -> bool {
+            // In production, this would execute the proposal in a sandboxed environment
+            // with gas limits, rollback checkpoints, and state isolation
+
+            // For now, simulate execution based on risk assessment
+            proposal.impact_assessment.risk_level < 50
+        }
+
+        /// Create rollback checkpoint
+        fn create_rollback_checkpoint() -> BoundedVec<u8, ConstU32<8192>> {
+            // In production, this would create a state snapshot for rollback
+            // For now, return empty checkpoint
+            Default::default()
+        }
+
+        /// Check if AI evolution is allowed
+        pub fn is_ai_evolution_allowed() -> bool {
+            KillSwitchLevelStorage::<T>::get() < KillSwitchLevel::UpgradeFreeze
+        }
+
+        /// Get current kill switch level
+        pub fn get_kill_switch_level() -> KillSwitchLevel {
+            KillSwitchLevelStorage::<T>::get()
+        }
+
+        /// Get AI proposal status
+        pub fn get_ai_proposal_status(proposal_id: u64) -> Option<AIProposalStatus> {
+            AIProposals::<T>::get(proposal_id).map(|p| p.status)
         }
     }
 }

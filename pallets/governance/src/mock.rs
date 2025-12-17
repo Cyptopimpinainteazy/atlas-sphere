@@ -106,6 +106,9 @@ parameter_types! {
     pub const MaxVotes: u32 = 100;
     pub const MaxDelegations: u32 = 100;
     pub const ConvictionPeriod: u64 = 10;
+
+    // AI governance parameters
+    pub const MaxAIProposalPayload: u32 = 10 * 1024;
 }
 
 impl pallet_governance::Config for Test {
@@ -128,6 +131,11 @@ impl pallet_governance::Config for Test {
     type MaxDelegations = MaxDelegations;
     type ConvictionPeriod = ConvictionPeriod;
     type WeightInfo = ();
+
+    type MaxAIProposalPayload = MaxAIProposalPayload;
+    type AISubmitOrigin = frame_system::EnsureSigned<u64>;
+    type AIReviewOrigin = frame_system::EnsureSigned<u64>;
+    type EmergencyOrigin = frame_system::EnsureSigned<u64>;
 }
 
 /// Build genesis storage for testing
@@ -168,4 +176,20 @@ pub fn run_to_block(n: u64) {
 /// Helper to get test account
 pub fn account(id: u64) -> u64 {
     id
+}
+
+#[test]
+fn migration_sets_storage_version() {
+    let mut ext = new_test_ext();
+    ext.execute_with(|| {
+        use crate::pallet as governance_pallet;
+        use frame_support::traits::StorageVersion;
+
+        StorageVersion::put::<governance_pallet::Pallet<Test>>(&StorageVersion::new(0));
+            let _w = <crate::migrations::Migration<Test> as frame_support::traits::OnRuntimeUpgrade>::on_runtime_upgrade();
+        assert!(
+            StorageVersion::get::<governance_pallet::Pallet<Test>>()
+                >= governance_pallet::STORAGE_VERSION
+        );
+    });
 }

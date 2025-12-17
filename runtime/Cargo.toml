@@ -146,6 +146,10 @@ runtime-benchmarks = [
 
 native = []
 
+# Opt-in: enable real VM adapters for native-only developer workflows.
+# Default behavior keeps native and WASM execution equivalent by using mocks.
+native-real-vm-adapters = []
+
 # Enable Frontier EVM / fp-evm runtime features and integration with native adapters
 frontier = []
 
