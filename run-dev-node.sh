@@ -57,7 +57,6 @@ exec ./target/release/atlas-sphere-node \
     --rpc-port "$RPC_PORT" \
     --port "$P2P_PORT" \
     --prometheus-port "$PROMETHEUS_PORT" \
-    --prometheus-external=false \
     --rpc-cors "$CORS_ORIGINS" \
     --rpc-methods Safe \
     --rpc-max-connections 100 \

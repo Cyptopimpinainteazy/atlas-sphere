@@ -2,12 +2,20 @@
 
 ## Purpose
 
-Atlas Sphere is a Substrate-based Layer-1 chain that unifies Ethereum-style and Solana-style execution environments. The Atlas Kernel pallet coordinates atomic "Comit" transactions, a canonical ledger, and asset registry so that both the Frontier EVM adapter and the Solana-style SVM adapter can participate in the same blocks with predictable gas/fee handling.
+Atlas Sphere is a Substrate-based Layer-1 chain that targets dual execution environments (EVM + SVM) behind a single canonical ledger. The Atlas Kernel pallet coordinates atomic "Comit" transactions, authorization, and asset metadata/registry.
+
+Current reality:
+
+- On-chain execution runs the runtime WASM (`no_std`), so VM execution is currently mocked at the adapter boundary.
+- Native (`std`) builds include real adapter implementations used for native testing and developer workflows.
+
 
 ## Tech Stack
 
 - Rust + Cargo for the node binary, runtime, pallets, adapters, and CLI tooling (targets include `wasm32-unknown-unknown`).
-- Substrate/FRAME as the runtime framework with Aura block production, GRANDPA finality, and custom pallets (`atlas-kernel`, authorization, asset registry).
+- Substrate/FRAME runtime with Aura block production (~6s blocks) and GRANDPA finality.
+- Runtime pallets: Atlas Kernel, Atomic Trade Engine, Evolution Core, X3 Verifier, governance/treasury primitives, and supporting agent/account pallets.
+- RPC: `jsonrpsee`-based HTTP JSON-RPC with runtime APIs for custom methods.
 - Frontend tooling built on Next.js 14 + React 18 + Tailwind CSS, powered by Zustand, @tanstack/react-query, SWR, and ethers for browser interactions.
 - Node.js (>=20) scripts for orchestration, the BMAD Method integration (`crates/vibe-bmad`), and Next.js builds.
 - Supporting CLIs: `subkey`, `subxt`, `node`/`npm`, and OpenSpec itself for spec-driven requirements.
@@ -23,10 +31,10 @@ Atlas Sphere is a Substrate-based Layer-1 chain that unifies Ethereum-style and 
 
 ### Architecture Patterns
 
-- Layered runtime: `pallets/atlas-kernel` for cross-VM orchestration, runtime wiring in `runtime/src/lib.rs`, and node service + RPC plumbing under `node/src/`.
-- Dual-execution model with mock adapters wired during development and Frontier/SVM integrations controlled by adapter traits defined in `pallets/atlas-kernel/src/adapters.rs`.
-- Canonical ledger and `Comit` flow: validate payloads (<32KiB), check authorization, execute via adapters, and finalize committed outputs before updating on-chain state.
-- Tooling is modular: CLI scripts, BMAD workflows, and frontend apps live in their own crates/apps but rely on shared runtime artifacts and onboarding docs under `docs/` and `how-to-guides/`.
+- Layered runtime: core orchestration in `pallets/atlas-kernel/`, runtime wiring in `runtime/src/lib.rs`, and node service + RPC plumbing in `node/src/`.
+- Dual-execution via adapter traits: runtime selects real adapters in `std` builds and mock adapters in `no_std` (WASM) builds.
+- Canonical ledger and `Comit` flow (high-level): validate payload sizes, check authorization, execute via adapters, verify `prepare_root` against inputs (intentional design), then finalize by updating canonical ledger state and emitting events.
+- Node RPC is implemented with `jsonrpsee` in `node/src/rpc.rs`, merging multiple modules into a single server.
 
 ### Testing Strategy
 
@@ -34,6 +42,17 @@ Atlas Sphere is a Substrate-based Layer-1 chain that unifies Ethereum-style and 
 - Enforce formatting/linting with `cargo fmt --all` and `cargo clippy --all-targets --all-features -- -D warnings` as part of CI.
 - Validate OpenSpec proposals via `openspec validate <change-id> --strict` before implementation; spec scenarios must be concrete and executable.
 - Expect frontend/local tooling to have their own scripts (`npm run test`, etc.) where relevant; new UI work should ship with storybook or React testing as needed.
+
+### RPC Surface (Current)
+
+Atlas Sphere currently exposes custom JSON-RPC methods implemented in `node/src/rpc.rs`. The set includes:
+
+- `system_accountNextIndex`
+- `atlasKernel_*` (canonical balance, asset metadata, authorization, authorities)
+- Minimal Ethereum compatibility: `eth_chainId`, `eth_gasPrice`, `eth_blockNumber`
+- Health endpoints: `system_health`, `system_version`, `system_ping`
+- `atomicTrade_*`, `evolutionCore_*`, `x3Verifier_*`
+- Subscription handlers: `chain_subscribeNewHeads`, `chain_subscribeFinalizedHeads` (WebSocket exposure may still be environment/config dependent)
 
 ### Git Workflow
 
@@ -51,9 +70,9 @@ Atlas Sphere is a Substrate-based Layer-1 chain that unifies Ethereum-style and 
 ## Important Constraints
 
 - WASM runtime builds are fragile (`InvalidTableReference(128)` appears if dependencies drift); every contribution must respect the pinned Substrate revision (commit `948fbd2`) and `patches/` folder overrides.
-- Dual-VM adapters currently use mock executors; production-ready Frontier and rBPF adapters are still under integration, so new features must account for missing execution paths.
+- On-chain (WASM) builds use mock VM adapters; do not assume real EVM/SVM execution paths exist in production runtime behavior yet.
 - Authorization checks default to strict mode; the `dev-bypass` feature is only for development and must never ship in production builds.
-- `Comit` payloads must stay within the documented size limits (≤16KiB per payload, ≤32KiB combined) and follow the canonical ledger ordering requirements.
+- `Comit` payloads must stay within the enforced size limits (≤16KiB per payload; combined limits exist, including a larger v2 combined cap).
 
 ## External Dependencies
 

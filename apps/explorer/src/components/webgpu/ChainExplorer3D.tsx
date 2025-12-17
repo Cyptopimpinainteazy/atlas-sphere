@@ -462,8 +462,8 @@ export const ChainExplorer3D: React.FC<ChainExplorer3DProps> = ({
       // Create bind group layout
       const bindGroupLayout = device.createBindGroupLayout({
         entries: [
-          { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: 'uniform' } },
-          { binding: 1, visibility: GPUShaderStage.VERTEX, buffer: { type: 'read-only-storage' } },
+          { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: 'uniform' as const } },
+          { binding: 1, visibility: GPUShaderStage.VERTEX, buffer: { type: 'read-only-storage' as const } },
         ],
       });
 
@@ -590,14 +590,14 @@ export const ChainExplorer3D: React.FC<ChainExplorer3DProps> = ({
       colorAttachments: [{
         view: textureView,
         clearValue: { r: 0.02, g: 0.02, b: 0.05, a: 1.0 },
-        loadOp: 'clear',
-        storeOp: 'store',
+        loadOp: 'clear' as const,
+        storeOp: 'store' as const,
       }],
       depthStencilAttachment: {
         view: depthTexture.createView(),
         depthClearValue: 1.0,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store',
+        depthLoadOp: 'clear' as const,
+        depthStoreOp: 'store' as const,
       },
     });
 

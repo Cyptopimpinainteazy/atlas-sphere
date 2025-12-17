@@ -848,11 +848,20 @@ impl HirLowerer {
                 return Err(HirError::unknown_symbol(&callee.name, callee.span));
             };
 
-            // Get return type from function type
+            // Get return type from function type and validate arity
             let return_ty = if let Some(sig) = callee_ty.as_function() {
+                if sig.params.len() != call.args.len() {
+                    return Err(HirError::new(
+                        HirErrorKind::ArgumentCountMismatch {
+                            expected: sig.params.len(),
+                            found: call.args.len(),
+                        },
+                        call.span,
+                    ));
+                }
                 (*sig.return_type).clone()
             } else {
-                Type::any() // Non-function call (will be caught by type checker)
+                return Err(HirError::not_callable(callee_ty.clone(), call.span));
             };
 
             // Lower arguments
@@ -941,13 +950,15 @@ impl ScopeStack {
     }
 
     fn insert(&mut self, name: &str, info: LocalInfo) -> bool {
-        let frame = self.frames.last_mut().unwrap();
-        if frame.contains_key(name) {
-            false
-        } else {
-            frame.insert(name.to_string(), info);
-            true
+        // Disallow shadowing: check any existing frame for the name.
+        for frame in self.frames.iter() {
+            if frame.contains_key(name) {
+                return false;
+            }
         }
+        let frame = self.frames.last_mut().unwrap();
+        frame.insert(name.to_string(), info);
+        true
     }
 
     fn lookup(&self, name: &str) -> Option<LocalInfo> {
@@ -996,6 +1007,31 @@ mod tests {
         // Check body has let + return
         assert!(function.body.len() >= 2);
         assert!(matches!(function.body[0], HirStmt::Let { .. }));
+    }
+
+    #[test]
+    fn disallow_shadowing_across_scopes() {
+        let source = r#"
+            fn shadow_test() -> i32 {
+                let x = 10;
+                {
+                    let x = 20; // shadowing should be an error now
+                    return x;
+                }
+            }
+        "#;
+        let res = parse_and_lower(source);
+        assert!(res.is_err(), "expected shadowing to be rejected");
+    }
+
+    #[test]
+    fn call_argument_count_mismatch() {
+        let source = r#"
+            fn add(x: i32, y: i32) -> i32 { return x + y; }
+            fn caller() -> i32 { return add(1); }
+        "#;
+        let res = parse_and_lower(source);
+        assert!(res.is_err(), "expected argument count mismatch to error");
     }
 
     #[test]

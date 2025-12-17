@@ -151,16 +151,34 @@ fn default_network() -> String {
     "local".to_string()
 }
 
+#[cfg(feature = "sdk")]
 fn default_local_endpoint() -> String {
     atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string()
 }
 
+#[cfg(not(feature = "sdk"))]
+fn default_local_endpoint() -> String {
+    "http://localhost:9944".to_string()
+}
+
+#[cfg(feature = "sdk")]
 fn default_testnet_endpoint() -> String {
     atlas_sdk::TESTNET_HTTP_ENDPOINT.to_string()
 }
 
+#[cfg(not(feature = "sdk"))]
+fn default_testnet_endpoint() -> String {
+    "http://rpc.testnet.atlas-sphere.io:9944".to_string()
+}
+
+#[cfg(feature = "sdk")]
 fn default_mainnet_endpoint() -> String {
     atlas_sdk::MAINNET_HTTP_ENDPOINT.to_string()
+}
+
+#[cfg(not(feature = "sdk"))]
+fn default_mainnet_endpoint() -> String {
+    "http://rpc.atlas-sphere.io:9944".to_string()
 }
 
 /// Build configuration.

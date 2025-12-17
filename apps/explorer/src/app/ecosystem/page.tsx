@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { 
   Globe, 
   Zap, 
@@ -26,6 +27,17 @@ import {
   Database,
   Link
 } from 'lucide-react';
+
+// Dynamic imports for quantum showcase components
+const ScotchCassetteShowcase = dynamic(
+  () => import('@/components/quantum/ScotchVHSShowcase').then(mod => ({ default: mod.ScotchCassetteShowcase })),
+  { ssr: false, loading: () => <div className="h-96 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
+
+const FeatureShowcase = dynamic(
+  () => import('@/components/quantum/ProjectShowcase').then(mod => ({ default: mod.FeatureShowcase })),
+  { ssr: false, loading: () => <div className="h-64 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
 
 // Ecosystem components data
 const ecosystemComponents = [
@@ -148,7 +160,7 @@ export default function EcosystemPage() {
             <div 
               key={index} 
               className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-600/30 text-center hover:border-purple-500/50 transition-all duration-300 hover:transform hover:scale-105"
-              style={{ animationDelay: `${metric.delay || index * 100}ms` }}
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               <metric.icon className="w-12 h-12 text-purple-400 mx-auto mb-4" />
               <div className="text-2xl md:text-3xl font-bold text-white mb-2">{metric.value}</div>
@@ -313,4 +325,65 @@ export default function EcosystemPage() {
                   <div className="text-gray-400 text-sm">2,847 GPU nodes online</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-green-400 text-xl font-bold">99.9%
+                  <div className="text-green-400 text-xl font-bold">99.9%</div>
+                  <div className="text-gray-400 text-sm">Uptime</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl">
+                <div>
+                  <div className="text-white font-semibold">Network Latency</div>
+                  <div className="text-gray-400 text-sm">Average response time</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-cyan-400 text-xl font-bold">&lt;0.5s</div>
+                  <div className="text-gray-400 text-sm">Response</div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-slate-800/30 rounded-xl">
+                <div>
+                  <div className="text-white font-semibold">Consensus Health</div>
+                  <div className="text-gray-400 text-sm">All validators synchronized</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-green-400 text-xl font-bold">100%</div>
+                  <div className="text-gray-400 text-sm">Healthy</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scotch VHS Cassette Modules */}
+      <div className="py-16 bg-gradient-to-b from-transparent via-slate-900/80 to-transparent">
+        <ScotchCassetteShowcase title="ECOSYSTEM MODULES" />
+      </div>
+
+      {/* Feature Showcase */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <FeatureShowcase title="PLATFORM FEATURES" />
+      </div>
+
+      {/* CTA Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl rounded-3xl p-12 border border-purple-500/30 text-center">
+          <h2 className="text-5xl font-bold text-white mb-6">Join the Ecosystem</h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            Build on the most advanced multi-chain infrastructure with AI-powered optimization 
+            and enterprise-grade security across 103+ networks.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
+              Start Building <ArrowRight className="w-5 h-5" />
+            </button>
+            <button className="border border-purple-500 text-purple-300 px-10 py-4 rounded-xl font-semibold text-lg hover:bg-purple-500/10 transition-all">
+              Read Documentation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

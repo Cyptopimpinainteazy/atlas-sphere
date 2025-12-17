@@ -7,6 +7,8 @@ from atlas_sphere_sdk.types import (
     ComitId,
     ComitPayload,
     ExecutionReceipt,
+    ExecutionLog,
+    StateChange,
     ChainInfo,
     AccountInfo,
     BlockHeader,
@@ -16,26 +18,23 @@ from atlas_sphere_sdk.types import (
 )
 
 
-class TestAccountId:
-    """Tests for AccountId type."""
+class TestTypeAliases:
+    """Tests for type aliases."""
     
-    def test_from_ss58(self):
-        """Test creating AccountId from SS58 address."""
-        addr = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-        account = AccountId.from_ss58(addr)
-        assert account.ss58 == addr
+    def test_account_id_is_str(self):
+        """Test AccountId is a string alias."""
+        account: AccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+        assert isinstance(account, str)
     
-    def test_from_bytes(self):
-        """Test creating AccountId from bytes."""
-        data = bytes(32)
-        account = AccountId.from_bytes(data)
-        assert account.raw == data
+    def test_asset_id_is_int(self):
+        """Test AssetId is an int alias."""
+        asset: AssetId = 1
+        assert isinstance(asset, int)
     
-    def test_str_representation(self):
-        """Test string representation."""
-        addr = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-        account = AccountId.from_ss58(addr)
-        assert str(account) == addr
+    def test_comit_id_is_str(self):
+        """Test ComitId is a string alias."""
+        comit: ComitId = "0x" + "ab" * 32
+        assert isinstance(comit, str)
 
 
 class TestComitPayload:
@@ -45,35 +44,43 @@ class TestComitPayload:
         """Test creating EVM payload."""
         payload = ComitPayload(
             evm_payload=b"\x01\x02\x03",
-            evm_gas_limit=100_000,
             svm_payload=None,
-            svm_compute_limit=0,
         )
         assert payload.evm_payload == b"\x01\x02\x03"
-        assert payload.evm_gas_limit == 100_000
         assert payload.svm_payload is None
     
     def test_create_svm_payload(self):
         """Test creating SVM payload."""
         payload = ComitPayload(
             evm_payload=None,
-            evm_gas_limit=0,
             svm_payload=b"\x04\x05\x06",
-            svm_compute_limit=200_000,
         )
         assert payload.svm_payload == b"\x04\x05\x06"
-        assert payload.svm_compute_limit == 200_000
+        assert payload.evm_payload is None
     
     def test_create_dual_payload(self):
         """Test creating dual EVM+SVM payload."""
         payload = ComitPayload(
             evm_payload=b"\x01\x02\x03",
-            evm_gas_limit=100_000,
             svm_payload=b"\x04\x05\x06",
-            svm_compute_limit=200_000,
         )
         assert payload.evm_payload == b"\x01\x02\x03"
         assert payload.svm_payload == b"\x04\x05\x06"
+    
+    def test_is_empty(self):
+        """Test is_empty method."""
+        empty = ComitPayload()
+        assert empty.is_empty() is True
+        
+        with_evm = ComitPayload(evm_payload=b"\x01")
+        assert with_evm.is_empty() is False
+    
+    def test_compute_prepare_root(self):
+        """Test prepare root computation."""
+        payload = ComitPayload(evm_payload=b"\x01\x02\x03")
+        root = payload.compute_prepare_root()
+        assert len(root) == 32
+        assert isinstance(root, bytes)
 
 
 class TestExecutionReceipt:
@@ -86,7 +93,7 @@ class TestExecutionReceipt:
             gas_used=50_000,
             return_data=b"\x00\x00\x00\x01",
             logs=[],
-            error_message=None,
+            state_changes=[],
         )
         assert receipt.success is True
         assert receipt.gas_used == 50_000
@@ -99,10 +106,10 @@ class TestExecutionReceipt:
             gas_used=21_000,
             return_data=b"",
             logs=[],
-            error_message="Out of gas",
+            state_changes=[],
         )
         assert receipt.success is False
-        assert receipt.error_message == "Out of gas"
+        assert receipt.gas_used == 21_000
 
 
 class TestChainInfo:
@@ -131,7 +138,7 @@ class TestAccountInfo:
     def test_account_info(self):
         """Test AccountInfo creation."""
         info = AccountInfo(
-            address="5GrwvaEF...",
+            account_id="5GrwvaEF...",
             nonce=5,
             free_balance=1_000_000,
             reserved_balance=500_000,

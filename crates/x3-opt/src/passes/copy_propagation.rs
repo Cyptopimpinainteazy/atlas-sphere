@@ -23,7 +23,7 @@
 
 use crate::pass::{Pass, PassResult};
 use crate::OptResult;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use x3_mir::{MirModule, MirValue};
 
 /// Copy propagation pass.
@@ -36,7 +36,7 @@ impl CopyPropagationPass {
 
     /// Find the ultimate source of a value through a chain of copies.
     #[allow(dead_code)]
-    fn resolve(value: MirValue, copies: &HashMap<MirValue, MirValue>) -> MirValue {
+    fn resolve(value: MirValue, copies: &BTreeMap<MirValue, MirValue>) -> MirValue {
         let mut current = value;
         // Follow copy chain (with cycle detection via iteration limit)
         for _ in 0..100 {
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn resolve_copy_chain() {
-        let mut copies = HashMap::new();
+        let mut copies = BTreeMap::new();
         copies.insert(MirValue(2), MirValue(1));
         copies.insert(MirValue(1), MirValue(0));
 
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn resolve_no_copy() {
-        let copies = HashMap::new();
+        let copies = BTreeMap::new();
 
         // v5 is not a copy of anything
         let resolved = CopyPropagationPass::resolve(MirValue(5), &copies);

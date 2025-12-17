@@ -262,6 +262,39 @@ impl X3ExecutorAdapter for MockX3Adapter {
     }
 }
 
+/// Mock X3 adapter that simulates failures for testing error paths.
+///
+/// - Returns Err when payload starts with 0xFF
+/// - Returns success=false when payload starts with 0xFE
+pub struct FailingMockX3Adapter;
+
+impl X3ExecutorAdapter for FailingMockX3Adapter {
+    fn execute(payload: &[u8], gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
+        if payload.first() == Some(&0xFF) {
+            return Err(DispatchError::Other("X3 execution failed (simulated)"));
+        }
+        if payload.first() == Some(&0xFE) {
+            return Ok(ExecutionReceipt {
+                success: false,
+                gas_used: gas_limit / 2,
+                return_data: b"x3 fault".to_vec(),
+                logs: Vec::new(),
+                state_changes: Vec::new(),
+            });
+        }
+
+        MockX3Adapter::execute(payload, gas_limit)
+    }
+
+    fn validate(payload: &[u8]) -> Result<(), DispatchError> {
+        MockX3Adapter::validate(payload)
+    }
+
+    fn estimate_gas(payload: &[u8]) -> Result<u64, DispatchError> {
+        MockX3Adapter::estimate_gas(payload)
+    }
+}
+
 impl X3ExecutorAdapter for () {
     fn execute(_payload: &[u8], _gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
         // Unit type returns mock receipt (for backwards compatibility)
@@ -293,7 +326,6 @@ pub mod real_adapters {
 
     use super::*;
     use atlas_svm_integration::{RbpfSvmExecutor, SvmConfig, SvmExecutor};
-    use sp_core::H160;
 
     /// Production EVM adapter
     /// Uses a standalone EVM implementation for basic bytecode validation and execution.
@@ -519,8 +551,8 @@ mod tests {
 
 #[cfg(all(test, feature = "std"))]
 mod real_adapter_tests {
+    use super::real_adapters::*;
     use super::*;
-    use crate::real_adapters::*;
 
     #[test]
     fn test_rbpf_svm_adapter_real_execution() {

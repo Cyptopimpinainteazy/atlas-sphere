@@ -35,6 +35,7 @@ use pallet_sudo;
 use pallet_timestamp;
 use pallet_transaction_payment::CurrencyAdapter;
 use pallet_treasury;
+use pallet_x3_settlement_engine;
 use pallet_x3_verifier;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
@@ -206,6 +207,7 @@ construct_runtime!(
         AgentMemory: pallet_agent_memory,
         EvolutionCore: pallet_evolution_core,
         X3Verifier: pallet_x3_verifier,
+        X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
 
@@ -230,6 +232,7 @@ construct_runtime!(
         AgentMemory: pallet_agent_memory,
         EvolutionCore: pallet_evolution_core,
         X3Verifier: pallet_x3_verifier,
+        X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
 
@@ -929,6 +932,28 @@ impl pallet_x3_verifier::Config for Runtime {
     type SlashAmount = SlashAmount;
     type JobTimeout = JobTimeout;
     type WeightInfo = pallet_x3_verifier::weights::SubstrateWeight<Runtime>;
+}
+
+// ===== X3SettlementEngine Configuration =====
+
+parameter_types! {
+    pub const MaxSettlementLegs: u32 = 8;           // Max legs per settlement intent
+    pub const MaxPendingIntents: u32 = 1000;        // Max pending intents
+    pub const DefaultSettlementTimeout: u64 = 43200; // ~12 hours in seconds
+    pub const MinBtcConfirmations: u32 = 6;         // Standard BTC confirmations
+    pub const ChallengePeriod: BlockNumber = 600;   // ~1 hour for dispute period
+}
+
+impl pallet_x3_settlement_engine::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type SettlementWeightInfo = pallet_x3_settlement_engine::weights::SubstrateWeight<Runtime>;
+    type Currency = Balances;
+    type UnixTime = Timestamp;
+    type MaxSettlementLegs = MaxSettlementLegs;
+    type MaxPendingIntents = MaxPendingIntents;
+    type DefaultSettlementTimeout = DefaultSettlementTimeout;
+    type MinBtcConfirmations = MinBtcConfirmations;
+    type ChallengePeriod = ChallengePeriod;
 }
 
 // Session trait implementations for minimal runtime

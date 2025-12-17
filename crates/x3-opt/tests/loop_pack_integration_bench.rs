@@ -446,8 +446,8 @@ mod bench {
             println!("  ✓ {}", name);
         }
 
-        // Verify we have 14 passes (13 original + Loop-Pack v1)
-        assert_eq!(report.per_pass.len(), 14, "Should have 14 passes total");
+        // Verify we have 16 passes (13 YOLO + Loop-Pack v1 + PRE + expression_hoisting)
+        assert_eq!(report.per_pass.len(), 16, "Should have 16 passes total");
 
         // Verify Loop-Pack v1 is present
         assert!(

@@ -155,7 +155,12 @@ pub mod pallet {
         pub logs: Vec<Vec<u8>>,
     }
 
+    use frame_support::traits::StorageVersion;
+
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -707,7 +712,8 @@ mod tests {
     fn create_account_works() {
         new_test_ext().execute_with(|| {
             let pubkey = [1u8; 32];
-            let lamports = 1_000_000u64;
+            // Rent exempt balance for 100 bytes: (128 + 100) * 3480 * 2 = 1,586,880 lamports
+            let lamports = 2_000_000u64;
             let space = 100u32;
             let owner = pallet::program_ids::SYSTEM_PROGRAM_ID;
 
@@ -738,13 +744,13 @@ mod tests {
             assert_ok!(Svm::create_account(
                 RuntimeOrigin::signed(1),
                 pubkey,
-                1_000_000,
+                2_000_000,
                 100,
                 owner
             ));
 
             assert_noop!(
-                Svm::create_account(RuntimeOrigin::signed(1), pubkey, 1_000_000, 100, owner),
+                Svm::create_account(RuntimeOrigin::signed(1), pubkey, 2_000_000, 100, owner),
                 pallet::Error::<Test>::AccountAlreadyExists
             );
         });
@@ -786,17 +792,18 @@ mod tests {
             let from_pubkey = [1u8; 32];
             let to_pubkey = [2u8; 32];
             let owner = pallet::program_ids::SYSTEM_PROGRAM_ID;
-
+            // Rent exempt for 0 bytes: 128 * 3480 * 2 = 890,880 lamports
+            // Use 1_000_000 to be rent-exempt
             assert_ok!(Svm::create_account(
                 RuntimeOrigin::signed(1),
                 from_pubkey,
-                100_000,
+                1_000_000,
                 0,
                 owner
             ));
 
             assert_noop!(
-                Svm::transfer(RuntimeOrigin::signed(1), from_pubkey, to_pubkey, 200_000),
+                Svm::transfer(RuntimeOrigin::signed(1), from_pubkey, to_pubkey, 2_000_000),
                 pallet::Error::<Test>::InsufficientLamports
             );
         });

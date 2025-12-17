@@ -334,6 +334,7 @@ impl TradeGraphResolver {
         match vm_type {
             VmType::Evm => 150_000,
             VmType::Svm => 200_000,
+            VmType::X3 => 120_000,
             VmType::CrossVm => 400_000,
         }
     }

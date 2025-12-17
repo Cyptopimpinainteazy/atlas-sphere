@@ -18,7 +18,7 @@
 use crate::dce::run_dce;
 use crate::pass::{Pass, PassResult};
 use crate::OptResult;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use x3_mir::{MirBlockId, MirModule, MirRhs, MirTerminator, MirValue};
 
 /// Dead code elimination pass.
@@ -34,11 +34,11 @@ impl DeadCodeEliminationPass {
         &self,
         entry: MirBlockId,
         blocks: &[x3_mir::MirBlock],
-    ) -> HashSet<MirBlockId> {
-        let mut reachable = HashSet::new();
+    ) -> BTreeSet<MirBlockId> {
+        let mut reachable = BTreeSet::new();
         let mut worklist = VecDeque::new();
 
-        let block_map: HashMap<MirBlockId, &x3_mir::MirBlock> =
+        let block_map: BTreeMap<MirBlockId, &x3_mir::MirBlock> =
             blocks.iter().map(|b| (b.id, b)).collect();
 
         worklist.push_back(entry);

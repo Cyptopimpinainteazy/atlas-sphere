@@ -191,6 +191,13 @@ fn collect_vars(func: &MirFunction) -> Vec<MirValue> {
                         vars.insert(*arg);
                     }
                 }
+                MirRhs::Load { addr, .. } => {
+                    vars.insert(*addr);
+                }
+                MirRhs::Store { addr, val, .. } => {
+                    vars.insert(*addr);
+                    vars.insert(*val);
+                }
             }
         }
 
@@ -260,6 +267,8 @@ fn evaluate_rhs(rhs: &MirRhs, env: &BTreeMap<MirValue, ConstVal>) -> ConstVal {
             }
         }
         MirRhs::Call { .. } => ConstVal::Overdefined,
+        MirRhs::Load { .. } => ConstVal::Overdefined, // loads are not const-foldable
+        MirRhs::Store { .. } => ConstVal::Overdefined, // stores have side effects
     }
 }
 

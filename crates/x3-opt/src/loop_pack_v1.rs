@@ -110,8 +110,16 @@ impl Pass for LoopPackV1Pass {
                     "Loop-Pack v1: {} optimizations applied (LICM: {}, SR: {}, Unswitch: {})",
                     improvements,
                     if self.enable_licm { "✓" } else { "✗" },
-                    if self.enable_strength_reduction { "✓" } else { "✗" },
-                    if self.enable_unswitching { "✓" } else { "✗" }
+                    if self.enable_strength_reduction {
+                        "✓"
+                    } else {
+                        "✗"
+                    },
+                    if self.enable_unswitching {
+                        "✓"
+                    } else {
+                        "✗"
+                    }
                 ),
             ))
         } else {

@@ -71,7 +71,7 @@ use frame_support::{
     traits::{Currency, UnixTime},
 };
 use frame_system::pallet_prelude::*;
-use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter};
+use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
@@ -100,7 +100,13 @@ pub const MAX_ROUTE_DATA_LEN: u32 = 256;
 pub mod pallet {
     use super::*;
 
+    use frame_support::storage::{with_transaction, TransactionOutcome};
+    use frame_support::traits::StorageVersion;
+
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -122,6 +128,9 @@ pub mod pallet {
         /// SVM execution adapter (from atlas-kernel or custom).
         type SvmAdapter: SvmExecutorAdapter;
 
+        /// X3 execution adapter (from atlas-kernel or custom).
+        type X3Adapter: X3ExecutorAdapter;
+
         /// Maximum number of trade legs per batch.
         #[pallet::constant]
         type MaxTradeLegs: Get<u32>;
@@ -141,6 +150,10 @@ pub mod pallet {
         /// Default compute limit for SVM trade operations.
         #[pallet::constant]
         type DefaultTradeSvmComputeLimit: Get<u64>;
+
+        /// Default gas limit for X3 trade operations.
+        #[pallet::constant]
+        type DefaultTradeX3GasLimit: Get<u64>;
 
         /// Origin allowed to register AMM adapters.
         type AmmRegistrarOrigin: EnsureOrigin<<Self as frame_system::Config>::RuntimeOrigin>;
@@ -315,6 +328,9 @@ pub mod pallet {
             token_b: H256,
             twap_price: u128,
         },
+
+        /// A trade batch was executed via Atlas Kernel v2 comit.
+        TradeBatchExecutedViaKernelComitV2 { batch_id: H256, comit_id: H256 },
     }
 
     #[pallet::error]
@@ -359,6 +375,8 @@ pub mod pallet {
         SvmTradeFailed,
         /// Cross-VM bridging failed.
         CrossVmBridgeFailed,
+        /// X3 execution failed during trade.
+        X3TradeFailed,
         /// Arithmetic overflow.
         ArithmeticOverflow,
         /// Invalid asset pair.
@@ -379,6 +397,11 @@ pub mod pallet {
         InvalidPriceData,
         /// Price oracle not initialized for pair.
         PriceOracleNotInitialized,
+
+        /// Batch contains a VM type not supported by kernel v2 comits.
+        KernelComitUnsupportedVm,
+        /// Batch contains more than one leg for the same VM.
+        KernelComitDuplicateVmLeg,
     }
 
     #[pallet::call]
@@ -786,6 +809,189 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Execute a pending trade batch by submitting a triple-VM Kernel comit v2 (EVM + SVM + X3).
+        ///
+        /// This path is intended for "independent" legs: each leg uses its own `amount_in`.
+        /// It does not perform inter-leg carry (output -> next input) and does not parse receipts.
+        ///
+        /// Kernel-level atomicity: if any VM execution fails, the kernel call returns `Err` and
+        /// all Substrate storage writes are rolled back.
+        #[pallet::call_index(7)]
+        #[pallet::weight(<T as Config>::WeightInfo::execute_trade_batch())]
+        pub fn execute_trade_batch_via_kernel_comit_v2(
+            origin: OriginFor<T>,
+            batch_id: H256,
+            comit_id: H256,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let mut batch = TradeBatches::<T>::get(batch_id).ok_or(Error::<T>::BatchNotFound)?;
+
+            ensure!(batch.origin == who, Error::<T>::Unauthorized);
+            ensure!(
+                batch.status == BatchStatus::Pending,
+                Error::<T>::BatchNotPending
+            );
+
+            let current_block: u64 = frame_system::Pallet::<T>::block_number().saturated_into();
+            ensure!(batch.deadline > current_block, Error::<T>::DeadlineExpired);
+
+            // Update status to executing
+            batch.status = BatchStatus::Executing;
+            TradeBatches::<T>::insert(batch_id, batch.clone());
+
+            // Create initial checkpoint
+            let initial_checkpoint = Self::create_checkpoint(&batch, 0)?;
+            Checkpoints::<T>::try_mutate(batch_id, |checkpoints| -> DispatchResult {
+                checkpoints
+                    .try_push(initial_checkpoint.clone())
+                    .map_err(|_| Error::<T>::TooManyCheckpoints)?;
+                Ok(())
+            })?;
+
+            Self::deposit_event(Event::CheckpointCreated {
+                batch_id,
+                checkpoint_index: 0,
+                state_root: initial_checkpoint.state_root,
+            });
+
+            // Build at most one payload per VM.
+            let mut evm_payload: Vec<u8> = Vec::new();
+            let mut svm_payload: Vec<u8> = Vec::new();
+            let mut x3_payload: Vec<u8> = Vec::new();
+
+            for leg in batch.legs.iter() {
+                match leg.vm_type {
+                    VmType::Evm => {
+                        ensure!(
+                            evm_payload.is_empty(),
+                            Error::<T>::KernelComitDuplicateVmLeg
+                        );
+                        evm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::Svm => {
+                        ensure!(
+                            svm_payload.is_empty(),
+                            Error::<T>::KernelComitDuplicateVmLeg
+                        );
+                        svm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::X3 => {
+                        ensure!(x3_payload.is_empty(), Error::<T>::KernelComitDuplicateVmLeg);
+                        x3_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::CrossVm => return Err(Error::<T>::KernelComitUnsupportedVm.into()),
+                }
+            }
+
+            // Kernel nonce and fee upper bound (using kernel-default limits so fee is always >= required_fee).
+            let kernel_nonce = pallet_atlas_kernel::Nonces::<T>::get(&who);
+
+            let evm_units = if evm_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultEvmGasLimit::get()
+            };
+            let svm_units = if svm_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultSvmComputeLimit::get()
+            };
+            let x3_units = if x3_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultX3GasLimit::get()
+            };
+
+            let base_fee = <T as pallet_atlas_kernel::Config>::Balance::default();
+            let fee = pallet_atlas_kernel::Pallet::<T>::calculate_execution_fee_v2(
+                evm_units, svm_units, x3_units, base_fee,
+            )?;
+
+            let prepare_root = pallet_atlas_kernel::Pallet::<T>::compute_prepare_root_v2(
+                comit_id,
+                &evm_payload,
+                &svm_payload,
+                &x3_payload,
+                kernel_nonce,
+                fee,
+            );
+
+            // IMPORTANT: `submit_comit_v2` expects failures to rollback storage by returning `Err`
+            // from the top-level extrinsic. Since AtomicTradeEngine intentionally persists a
+            // failed batch status (returns `Ok(())`), we must isolate kernel writes in a nested
+            // storage transaction and roll them back if the kernel call fails.
+            let kernel_result = with_transaction(|| {
+                let res = pallet_atlas_kernel::Pallet::<T>::submit_comit_v2(
+                    frame_system::RawOrigin::Signed(who.clone()).into(),
+                    comit_id,
+                    evm_payload,
+                    svm_payload,
+                    x3_payload,
+                    kernel_nonce,
+                    fee,
+                    prepare_root,
+                );
+
+                match res {
+                    Ok(()) => TransactionOutcome::Commit(Ok(())),
+                    Err(e) => TransactionOutcome::Rollback(Err(e)),
+                }
+            });
+
+            match kernel_result {
+                Ok(()) => {
+                    // Success: mark batch completed.
+                    for leg in batch.legs.iter_mut() {
+                        leg.status = TradeLegStatus::Completed;
+                        leg.gas_used = 0;
+                        leg.actual_amount_out = None;
+                    }
+
+                    batch.status = BatchStatus::Completed;
+                    batch.total_gas_used = 0;
+                    TradeBatches::<T>::insert(batch_id, batch.clone());
+
+                    Self::remove_from_pending(&who, batch_id);
+                    CompletedBatchCount::<T>::mutate(|c| *c = c.saturating_add(1));
+
+                    let total_input: u128 = batch.legs.iter().map(|l| l.amount_in).sum();
+                    TotalVolume::<T>::mutate(|v| *v = v.saturating_add(total_input));
+
+                    Self::deposit_event(Event::TradeBatchExecutedViaKernelComitV2 {
+                        batch_id,
+                        comit_id,
+                    });
+                    Self::deposit_event(Event::TradeBatchCompleted {
+                        batch_id,
+                        total_input,
+                        total_output: 0,
+                        gas_used: 0,
+                    });
+                }
+                Err(_e) => {
+                    // Failure: rollback to checkpoint and mark failed (persisting status like the non-kernel path).
+                    Self::rollback_to_checkpoint(batch_id, 0)?;
+
+                    for leg in batch.legs.iter_mut() {
+                        leg.status = TradeLegStatus::Failed;
+                    }
+                    batch.status = BatchStatus::Failed;
+                    TradeBatches::<T>::insert(batch_id, batch);
+                    Self::remove_from_pending(&who, batch_id);
+                    FailedBatchCount::<T>::mutate(|c| *c = c.saturating_add(1));
+
+                    Self::deposit_event(Event::TradeBatchFailed {
+                        batch_id,
+                        failed_leg_index: 0,
+                        reason: BatchFailureReason::KernelComitSubmissionFailed { comit_id },
+                    });
+                }
+            }
+
+            Ok(())
+        }
     }
 
     // ============================================================================
@@ -962,6 +1168,20 @@ pub mod pallet {
 
                     if !receipt.success {
                         return Err(TradeLegFailureReason::SvmExecutionFailed);
+                    }
+
+                    // Parse output amount from return data
+                    let amount_out = Self::parse_swap_output(&receipt.return_data).unwrap_or(0);
+
+                    Ok((amount_out, receipt.gas_used))
+                }
+                VmType::X3 => {
+                    let gas_limit = T::DefaultTradeX3GasLimit::get();
+                    let receipt = <T as pallet::Config>::X3Adapter::execute(&payload, gas_limit)
+                        .map_err(|_| TradeLegFailureReason::X3ExecutionFailed)?;
+
+                    if !receipt.success {
+                        return Err(TradeLegFailureReason::X3ExecutionFailed);
                     }
 
                     // Parse output amount from return data
@@ -1306,6 +1526,7 @@ pub mod pallet {
                 match leg.vm_type {
                     VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
                     VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
+                    VmType::X3 => evm_gas = evm_gas.saturating_add(120_000),
                     VmType::CrossVm => {
                         evm_gas = evm_gas.saturating_add(200_000);
                         svm_compute = svm_compute.saturating_add(250_000);
@@ -1439,11 +1660,41 @@ pub enum TradeLegStatus {
 pub enum TradeLegFailureReason {
     EvmExecutionFailed,
     SvmExecutionFailed,
+    X3ExecutionFailed,
     CrossVmBridgeFailed,
     SlippageExceeded,
     InsufficientLiquidity,
     InvalidRoute,
     Timeout,
+}
+
+impl From<TradeLegFailureReason> for sp_runtime::DispatchError {
+    fn from(e: TradeLegFailureReason) -> Self {
+        match e {
+            TradeLegFailureReason::EvmExecutionFailed => {
+                sp_runtime::DispatchError::Other("EVM execution failed")
+            }
+            TradeLegFailureReason::SvmExecutionFailed => {
+                sp_runtime::DispatchError::Other("SVM execution failed")
+            }
+            TradeLegFailureReason::X3ExecutionFailed => {
+                sp_runtime::DispatchError::Other("X3 execution failed")
+            }
+            TradeLegFailureReason::CrossVmBridgeFailed => {
+                sp_runtime::DispatchError::Other("Cross-VM bridge failed")
+            }
+            TradeLegFailureReason::SlippageExceeded => {
+                sp_runtime::DispatchError::Other("Slippage exceeded")
+            }
+            TradeLegFailureReason::InsufficientLiquidity => {
+                sp_runtime::DispatchError::Other("Insufficient liquidity")
+            }
+            TradeLegFailureReason::InvalidRoute => {
+                sp_runtime::DispatchError::Other("Invalid route")
+            }
+            TradeLegFailureReason::Timeout => sp_runtime::DispatchError::Other("Trade timeout"),
+        }
+    }
 }
 
 /// Trade batch containing multiple legs.
@@ -1525,6 +1776,9 @@ pub enum BatchFailureReason {
     },
     DeadlineExpired,
     RollbackFailed,
+    KernelComitSubmissionFailed {
+        comit_id: H256,
+    },
 }
 
 /// State checkpoint for rollback support.

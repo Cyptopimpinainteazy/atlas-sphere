@@ -30,6 +30,7 @@ pub enum CliError {
     #[error("Serialization error: {0}")]
     Serialization(String),
 
+    #[cfg(feature = "sdk")]
     #[error("SDK error: {0}")]
     Sdk(#[from] atlas_sdk::AtlasError),
 
@@ -38,6 +39,9 @@ pub enum CliError {
 
     #[error("Not implemented: {0}")]
     NotImplemented(String),
+
+    #[error("Invalid argument: {0}")]
+    InvalidArgument(String),
 }
 
 impl From<serde_json::Error> for CliError {

@@ -3,7 +3,7 @@
 use crate as pallet_atlas_kernel;
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::{ConstU32, ConstU64},
+    traits::{ConstU32, ConstU64, OnRuntimeUpgrade},
 };
 use frame_system as system;
 use parity_scale_codec::Encode;
@@ -110,14 +110,18 @@ impl pallet_atlas_kernel::Config for Test {
     type MaxAssetSymbolLength = ConstU32<16>;
     type MaxEvmPayloadLength = ConstU32<4096>;
     type MaxSvmPayloadLength = ConstU32<4096>;
+    type MaxX3PayloadLength = ConstU32<4096>;
     type MaxCombinedPayloadLength = ConstU32<8192>;
+    type MaxCombinedPayloadLengthV2 = ConstU32<12_288>;
     type MaxAuthorities = ConstU32<100>;
     type MinAuthorities = ConstU32<1>;
     type DefaultEvmGasLimit = ConstU64<10_000_000>;
     type DefaultSvmComputeLimit = ConstU64<200_000>;
+    type DefaultX3GasLimit = ConstU64<5_000_000>;
     type WeightInfo = ();
     type EvmAdapter = ();
     type SvmAdapter = ();
+    type X3Adapter = crate::FailingMockX3Adapter;
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
@@ -182,6 +186,23 @@ pub fn new_test_ext() -> TestExternalities {
         ])
         .authorized_accounts(vec![ALICE, BOB, CHARLIE])
         .build()
+}
+
+#[test]
+fn migration_runs_and_sets_storage_version() {
+    // Ensure migration sets storage version to declared value
+    ExtBuilder::default().build().execute_with(|| {
+        use frame_support::traits::StorageVersion;
+        // Simulate older version
+        StorageVersion::new(0).put::<pallet_atlas_kernel::Pallet<Test>>();
+        // Run migration
+        let _w = crate::migrations::Migration::<Test>::on_runtime_upgrade();
+        // Check it advanced
+        assert!(
+            StorageVersion::get::<pallet_atlas_kernel::Pallet<Test>>()
+                >= pallet_atlas_kernel::STORAGE_VERSION
+        );
+    });
 }
 
 /// Mock implementation of DualVmDispatcher for testing

@@ -132,6 +132,8 @@ fn uses_of(stmt: &MirStatement) -> Vec<MirValue> {
         MirRhs::Unary(_, operand) => vec![*operand],
         MirRhs::Binary(_, left, right) => vec![*left, *right],
         MirRhs::Call { args, .. } => args.clone(),
+        MirRhs::Load { addr, .. } => vec![*addr],
+        MirRhs::Store { addr, val, .. } => vec![*addr, *val],
     }
 }
 

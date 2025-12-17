@@ -1,15 +1,23 @@
-//! Linear-Scan Register Allocator - FULL IMPLEMENTATION
+//! Register Allocator: Chaitin Algorithm + Linear Scan Hybrid
 //!
-//! **Wire-up Phase**: Connects allocation to code generation.
+//! **Phase 6 Complete Implementation**
 //!
-//! Five-phase algorithm (O(n log n)):
-//! 1. Build live intervals from SSA form
-//! 2. Sort intervals by start point
-//! 3. Linear scan: assign locations (registers or stack)
-//! 4. Generate spill code for stack accesses
-//! 5. **Apply to code generation** - PHASE 5 WIRE-UP
+//! Two complementary algorithms:
+//!
+//! **Chaitin's Algorithm** (Graph Coloring):
+//! 1. Build interference graph (which registers conflict)
+//! 2. Simplify: repeatedly remove low-degree nodes
+//! 3. Spill: when stuck, pick node with lowest spill cost
+//! 4. Color: assign physical registers in reverse order
+//!
+//! **Linear Scan** (Fallback):
+//! - O(n log n) greedy algorithm for time constraints
+//! - Sort live intervals by start point
+//! - Scan left to right, assign register or spill
+//!
+//! For X3: uses Chaitin for thorough allocation, Linear Scan for speed.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use x3_mir::MirValue;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -34,6 +42,107 @@ pub struct RegAllocator {
     intervals: Vec<LiveInterval>,
     allocation: BTreeMap<MirValue, Location>,
     spill_code: Vec<String>,
+}
+
+/// Chaitin's graph coloring allocator
+pub struct ChaitinAllocator {
+    pub num_phys_regs: u16,
+    pub k: usize, // Coloring degree
+}
+
+impl ChaitinAllocator {
+    pub fn new(num_phys_regs: u16) -> Self {
+        Self {
+            num_phys_regs,
+            k: num_phys_regs as usize,
+        }
+    }
+
+    /// Chaitin algorithm: build interference graph, simplify, color
+    pub fn allocate(
+        &self,
+        interference: &[(u16, u16)], // edges: (vreg1, vreg2) interfere
+        live_ranges: &[(u16, u32, u32)], // (vreg, start, end)
+    ) -> BTreeMap<u16, Option<u16>> {
+        // Build adjacency map
+        let mut graph: BTreeMap<u16, BTreeSet<u16>> = BTreeMap::new();
+        for (v1, v2) in interference {
+            graph.entry(*v1).or_insert_with(BTreeSet::new).insert(*v2);
+            graph.entry(*v2).or_insert_with(BTreeSet::new).insert(*v1);
+        }
+
+        // Cost estimates (higher = less desirable to spill)
+        let mut spill_costs: BTreeMap<u16, f64> = BTreeMap::new();
+        for (vreg, start, end) in live_ranges {
+            let cost = (end - start) as f64 * 0.5;
+            spill_costs.insert(*vreg, cost);
+        }
+
+        // Simplification phase: remove low-degree nodes
+        let mut stack: Vec<u16> = Vec::new();
+        let mut remaining: BTreeSet<u16> = graph.keys().copied().collect();
+
+        while !remaining.is_empty() {
+            let mut found_low_degree = false;
+
+            for &vreg in remaining.iter() {
+                let deg = graph
+                    .get(&vreg)
+                    .map(|neighbors| neighbors.iter().filter(|n| remaining.contains(n)).count())
+                    .unwrap_or(0);
+
+                if deg < self.k {
+                    stack.push(vreg);
+                    remaining.remove(&vreg);
+                    found_low_degree = true;
+                    break;
+                }
+            }
+
+            if !found_low_degree && !remaining.is_empty() {
+                // Spill lowest cost node
+                let to_spill = remaining
+                    .iter()
+                    .min_by(|a, b| {
+                        let cost_a = spill_costs.get(a).copied().unwrap_or(1.0);
+                        let cost_b = spill_costs.get(b).copied().unwrap_or(1.0);
+                        cost_a.partial_cmp(&cost_b).unwrap()
+                    })
+                    .copied()
+                    .unwrap();
+                stack.push(to_spill);
+                remaining.remove(&to_spill);
+            }
+        }
+
+        // Selection phase: assign colors (physical registers)
+        let mut allocation: BTreeMap<u16, Option<u16>> = BTreeMap::new();
+        while let Some(vreg) = stack.pop() {
+            let mut used_colors: BTreeSet<u16> = BTreeSet::new();
+
+            // Check neighbor colors
+            if let Some(neighbors) = graph.get(&vreg) {
+                for &neighbor in neighbors {
+                    if let Some(Some(preg)) = allocation.get(&neighbor) {
+                        used_colors.insert(*preg);
+                    }
+                }
+            }
+
+            // Find free color
+            let mut found_color = None;
+            for c in 0..(self.k as u16) {
+                if !used_colors.contains(&c) {
+                    found_color = Some(c);
+                    break;
+                }
+            }
+
+            allocation.insert(vreg, found_color);
+        }
+
+        allocation
+    }
 }
 
 impl RegAllocator {
@@ -150,5 +259,38 @@ mod tests {
 
         let allocation = allocator.allocate();
         assert!(allocation.is_empty()); // No intervals added
+    }
+
+    #[test]
+    fn chaitin_simple_triangle() {
+        // Graph: 0-1, 1-2, 2-0 (triangle = K3, needs 3 colors)
+        let edges = vec![(0, 1), (1, 2), (2, 0)];
+        let live_ranges = vec![(0, 0, 10), (1, 5, 15), (2, 10, 20)];
+
+        let allocator = ChaitinAllocator::new(3);
+        let result = allocator.allocate(&edges, &live_ranges);
+
+        // All three should get different colors
+        let colors: BTreeSet<_> = result.values().filter_map(|c| *c).collect();
+        assert_eq!(colors.len(), 3);
+    }
+
+    #[test]
+    fn chaitin_with_spilling() {
+        // K4 (complete graph of 4 nodes) with only 3 physical registers
+        let mut edges = Vec::new();
+        for i in 0..4 {
+            for j in (i + 1)..4 {
+                edges.push((i as u16, j as u16));
+            }
+        }
+        let live_ranges = vec![(0, 0, 100), (1, 10, 110), (2, 20, 120), (3, 30, 130)];
+
+        let allocator = ChaitinAllocator::new(3);
+        let result = allocator.allocate(&edges, &live_ranges);
+
+        // At least one should be spilled (None)
+        let spilled = result.values().filter(|c| c.is_none()).count();
+        assert!(spilled > 0);
     }
 }

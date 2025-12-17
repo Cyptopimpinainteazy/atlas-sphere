@@ -231,6 +231,14 @@ impl Pass for GlobalConstPropPass {
                             // Calls return unknown/varying values
                             ConstLattice::Bottom
                         }
+                        MirRhs::Load { .. } => {
+                            // Loads return unknown values (may vary)
+                            ConstLattice::Bottom
+                        }
+                        MirRhs::Store { .. } => {
+                            // Stores don't return values
+                            ConstLattice::Top
+                        }
                     };
 
                     // Update lattice with meet

@@ -41,16 +41,25 @@ const ATLAS_TYPES = {
     key: 'H256',
     value: 'H256',
   },
+  // Failure reason variants - defined separately for type registry
+  EvmPayloadTooLargeError: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
+  SvmPayloadTooLargeError: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
+  CombinedPayloadTooLargeError: { code: 'u32', evm_size: 'u32', svm_size: 'u32', max_combined: 'u32' },
+  EmptyPayloadsError: { code: 'u32' },
+  InvalidNonceError: { code: 'u32', expected: 'u64', provided: 'u64' },
+  VerificationError: { code: 'u32', reason: '[u8; 32]' },
+  EvmExecutionFailedError: { code: 'u32', evm_error: 'u32', gas_used: 'u64' },
+  SvmExecutionFailedError: { code: 'u32', svm_error: 'u32', compute_units_used: 'u64' },
   ComitFailureReason: {
     _enum: {
-      EvmPayloadTooLarge: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
-      SvmPayloadTooLarge: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
-      CombinedPayloadTooLarge: { code: 'u32', evm_size: 'u32', svm_size: 'u32', max_combined: 'u32' },
-      EmptyPayloads: { code: 'u32' },
-      InvalidNonce: { code: 'u32', expected: 'u64', provided: 'u64' },
-      Verification: { code: 'u32', reason: '[u8; 32]' },
-      EvmExecutionFailed: { code: 'u32', evm_error: 'u32', gas_used: 'u64' },
-      SvmExecutionFailed: { code: 'u32', svm_error: 'u32', compute_units_used: 'u64' },
+      EvmPayloadTooLarge: 'EvmPayloadTooLargeError',
+      SvmPayloadTooLarge: 'SvmPayloadTooLargeError',
+      CombinedPayloadTooLarge: 'CombinedPayloadTooLargeError',
+      EmptyPayloads: 'EmptyPayloadsError',
+      InvalidNonce: 'InvalidNonceError',
+      Verification: 'VerificationError',
+      EvmExecutionFailed: 'EvmExecutionFailedError',
+      SvmExecutionFailed: 'SvmExecutionFailedError',
     }
   },
   AssetMetadata: {

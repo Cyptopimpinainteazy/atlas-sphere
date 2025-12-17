@@ -1,6 +1,8 @@
 //! Types for the governance pallet.
 
+use crate::pallet::Config as GovernanceConfig;
 use frame_support::pallet_prelude::*;
+use frame_system::pallet_prelude::BlockNumberFor;
 use parity_scale_codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_runtime::{Percent, RuntimeDebug};
@@ -214,11 +216,246 @@ pub struct GovernanceSnapshot<AccountId, Balance: Default, BlockNumber: Default>
     /// Total proposals submitted.
     pub proposal_count: u32,
     /// Currently active proposals in voting.
-    pub active_proposals: Vec<ProposalSummary<AccountId, Balance, BlockNumber>>,
+    pub active_proposals:
+        BoundedVec<ProposalSummary<AccountId, Balance, BlockNumber>, ConstU32<256>>,
     /// Proposals pending enactment.
-    pub pending_enactments: Vec<u32>,
+    pub pending_enactments: BoundedVec<u32, ConstU32<1024>>,
     /// Current governance configuration.
     pub config: GovernanceParams<Balance, BlockNumber>,
+}
+
+// ============================================================================
+// AI Governance Types
+// ============================================================================
+
+/// AI Proposal inert object (no direct execution capability)
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+#[scale_info(skip_type_params(T))]
+pub struct AIProposal<T: GovernanceConfig> {
+    /// Unique proposal ID
+    pub id: u64,
+    /// AI agent proposer
+    pub proposer: T::AccountId,
+    /// Proposal type
+    pub proposal_type: AIProposalType,
+    /// Inert payload (description + metadata, no executable code)
+    pub payload: BoundedVec<u8, <T as GovernanceConfig>::MaxAIProposalPayload>,
+    /// Expected impact assessment
+    pub impact_assessment: ImpactAssessment,
+    /// Simulation requirements
+    pub simulation_requirements: SimulationRequirements,
+    /// Proposed at block
+    pub proposed_at: BlockNumberFor<T>,
+    /// Status
+    pub status: AIProposalStatus,
+}
+
+/// Types of AI proposals
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub enum AIProposalType {
+    /// Runtime parameter evolution
+    RuntimeEvolution,
+    /// New AI agent registration
+    AgentRegistration,
+    /// Protocol optimization
+    ProtocolOptimization,
+    /// Economic parameter adjustment
+    EconomicAdjustment,
+    /// Security enhancement
+    SecurityEnhancement,
+    /// Custom proposal type
+    Custom(u32),
+}
+
+/// Impact assessment for AI proposals
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct ImpactAssessment {
+    /// Risk level (0-100)
+    pub risk_level: u8,
+    /// Expected improvement (0-100)
+    pub expected_improvement: u8,
+    /// Affected subsystems
+    pub affected_subsystems: BoundedVec<Subsystem, ConstU32<16>>,
+    /// Rollback difficulty (0-100)
+    pub rollback_difficulty: u8,
+}
+
+/// Subsystems that can be affected by AI proposals
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub enum Subsystem {
+    Consensus,
+    Execution,
+    Economic,
+    Governance,
+    Security,
+    Storage,
+}
+
+/// Simulation requirements for AI proposals
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct SimulationRequirements {
+    /// Required simulation duration (blocks)
+    pub simulation_blocks: u32,
+    /// Gas limit for simulation
+    pub gas_limit: u64,
+    /// Required success rate (0-100)
+    pub success_rate_threshold: u8,
+    /// Deterministic test requirements
+    pub deterministic_tests: bool,
+}
+
+/// AI proposal status
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq, Default)]
+pub enum AIProposalStatus {
+    #[default]
+    Proposed,
+    UnderReview,
+    SimulationPassed,
+    SimulationFailed,
+    Approved,
+    Rejected,
+    Executed,
+    RolledBack,
+}
+
+/// Simulation result
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct SimulationResult {
+    /// Success status
+    pub success: bool,
+    /// Gas used
+    pub gas_used: u64,
+    /// Execution time (blocks)
+    pub execution_time: u32,
+    /// State changes preview
+    pub state_changes: BoundedVec<StateChange, ConstU32<256>>,
+    /// Warnings/issues found
+    pub warnings: BoundedVec<BoundedVec<u8, ConstU32<256>>, ConstU32<64>>,
+}
+
+/// State change preview
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct StateChange {
+    /// Storage key affected
+    pub key: BoundedVec<u8, ConstU32<1024>>,
+    /// Previous value
+    pub old_value: Option<BoundedVec<u8, ConstU32<1024>>>,
+    /// New value
+    pub new_value: BoundedVec<u8, ConstU32<1024>>,
+}
+
+/// Authorization requirements for AI proposals
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+#[scale_info(skip_type_params(T))]
+pub struct AuthorizationRequirements<T: GovernanceConfig> {
+    /// Required multisig approvals
+    pub multisig_threshold: u32,
+    /// Time lock duration (blocks)
+    pub time_lock_blocks: BlockNumberFor<T>,
+    /// Required reviewer approvals
+    pub reviewer_approvals: u32,
+}
+
+/// Sandboxed execution context
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct SandboxedExecution {
+    /// Gas ceiling
+    pub gas_ceiling: u64,
+    /// Block time limit
+    pub block_limit: u32,
+    /// State rollback checkpoint
+    pub rollback_checkpoint: BoundedVec<u8, ConstU32<8192>>,
+    /// Execution status
+    pub status: ExecutionStatus,
+}
+
+/// Execution status
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq, Default)]
+pub enum ExecutionStatus {
+    #[default]
+    Pending,
+    Executing,
+    Completed,
+    Failed,
+    RolledBack,
+}
+
+/// Kill switch levels (graduated emergency controls)
+#[derive(
+    Clone,
+    Copy,
+    Encode,
+    Decode,
+    TypeInfo,
+    MaxEncodedLen,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Default,
+)]
+pub enum KillSwitchLevel {
+    /// Normal operation
+    #[default]
+    Normal = 0,
+    /// Pause specific AI subsystems
+    SubsystemPause = 1,
+    /// Freeze economic activity
+    EconomicFreeze = 2,
+    /// Prevent any upgrades
+    UpgradeFreeze = 3,
+    /// Complete system halt
+    EmergencyHalt = 4,
+}
+
+/// Kill switch activation record
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+#[scale_info(skip_type_params(T))]
+pub struct KillSwitchActivation<T: GovernanceConfig> {
+    /// Activation level
+    pub level: KillSwitchLevel,
+    /// Activated by
+    pub activator: T::AccountId,
+    /// Reason
+    pub reason: BoundedVec<u8, ConstU32<512>>,
+    /// Activated at
+    pub activated_at: BlockNumberFor<T>,
+    /// Auto-deactivation block (if set)
+    pub auto_deactivate_at: Option<BlockNumberFor<T>>,
+}
+
+/// AI Governance configuration
+#[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
+pub struct AIGovernanceConfig {
+    /// Maximum AI proposal payload size
+    pub max_proposal_payload: u32,
+    /// Default simulation duration
+    pub default_simulation_blocks: u32,
+    /// Default gas limit for simulations
+    pub default_simulation_gas: u64,
+    /// Minimum reviewer approvals
+    pub min_reviewer_approvals: u32,
+    /// Default time lock
+    pub default_time_lock: u32,
+    /// Emergency quorum threshold
+    pub emergency_quorum: Percent,
+    /// Kill switch activation threshold
+    pub kill_switch_threshold: Percent,
+}
+
+impl Default for AIGovernanceConfig {
+    fn default() -> Self {
+        Self {
+            max_proposal_payload: 1024 * 10, // 10KB
+            default_simulation_blocks: 100,
+            default_simulation_gas: 1_000_000,
+            min_reviewer_approvals: 3,
+            default_time_lock: 100, // blocks
+            emergency_quorum: Percent::from_percent(75),
+            kill_switch_threshold: Percent::from_percent(80),
+        }
+    }
 }
 
 #[cfg(test)]

@@ -1,16 +1,18 @@
 //! X3 Bytecode Binary Format
 //!
-//! Defines the structure of compiled X3 bytecode modules.
+//! Defines the structure of compiled X3 bytecode modules with semantic versioning.
 //!
-//! # Binary Layout
+//! # Binary Layout (v2+)
 //!
 //! ```text
 //! ┌────────────────────────────────────────┐
-//! │ Header (16 bytes)                      │
+//! │ Header (24 bytes)                      │
 //! │   Magic: "X3BC" (4 bytes)              │
-//! │   Version: u32                         │
+//! │   Version: u32 (packed semver)         │
 //! │   Flags: u32                           │
 //! │   Checksum: u32                        │
+//! │   MinVersion: u32 (min required)       │
+//! │   FeatureFlags: u32                    │
 //! ├────────────────────────────────────────┤
 //! │ Section Table                          │
 //! │   Section count: u16                   │
@@ -37,9 +39,17 @@
 //! │   Symbol names                         │
 //! └────────────────────────────────────────┘
 //! ```
+//!
+//! # Version Compatibility
+//!
+//! - Major version changes are breaking (new loader required)
+//! - Minor version changes add features (backward compatible)
+//! - Patch version changes are bug fixes (fully compatible)
+//!
+//! Bytecode declares a `min_version` - the loader must be at least that version.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::error::{BackendError, BackendErrorKind, BackendResult};
 use crate::opcode::{ConstIdx, FuncIdx, Register};
@@ -47,8 +57,164 @@ use crate::opcode::{ConstIdx, FuncIdx, Register};
 /// Magic bytes identifying X3 bytecode files.
 pub const MAGIC: &[u8; 4] = b"X3BC";
 
-/// Current bytecode format version.
-pub const VERSION: u32 = 1;
+/// Current bytecode format version (semantic: major.minor.patch packed as u32).
+/// Format: (major << 16) | (minor << 8) | patch
+pub const VERSION: u32 = VersionInfo::new(1, 0, 0).to_packed();
+
+/// Minimum version this loader can read.
+pub const MIN_SUPPORTED_VERSION: u32 = VersionInfo::new(1, 0, 0).to_packed();
+
+/// Maximum version this loader can read (exclusive next major).
+pub const MAX_SUPPORTED_VERSION: u32 = VersionInfo::new(2, 0, 0).to_packed();
+
+/// Semantic version information for bytecode format.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct VersionInfo {
+    /// Major version - breaking changes.
+    pub major: u8,
+    /// Minor version - backward compatible additions.
+    pub minor: u8,
+    /// Patch version - bug fixes.
+    pub patch: u8,
+}
+
+impl VersionInfo {
+    /// Create a new version.
+    pub const fn new(major: u8, minor: u8, patch: u8) -> Self {
+        Self {
+            major,
+            minor,
+            patch,
+        }
+    }
+
+    /// Pack version into u32 for storage.
+    pub const fn to_packed(self) -> u32 {
+        ((self.major as u32) << 16) | ((self.minor as u32) << 8) | (self.patch as u32)
+    }
+
+    /// Unpack version from u32.
+    pub const fn from_packed(packed: u32) -> Self {
+        Self {
+            major: ((packed >> 16) & 0xFF) as u8,
+            minor: ((packed >> 8) & 0xFF) as u8,
+            patch: (packed & 0xFF) as u8,
+        }
+    }
+
+    /// Current runtime version.
+    pub const fn current() -> Self {
+        Self::from_packed(VERSION)
+    }
+
+    /// Check if this version is compatible with another (can read its bytecode).
+    pub fn can_read(&self, bytecode_version: VersionInfo) -> bool {
+        // Same major version required
+        if self.major != bytecode_version.major {
+            return false;
+        }
+        // We can read older minor versions
+        if self.minor < bytecode_version.minor {
+            return false;
+        }
+        true
+    }
+
+    /// Check if bytecode needs this version or newer.
+    pub fn satisfies(&self, min_required: VersionInfo) -> bool {
+        if self.major > min_required.major {
+            return true;
+        }
+        if self.major < min_required.major {
+            return false;
+        }
+        // Same major
+        if self.minor > min_required.minor {
+            return true;
+        }
+        if self.minor < min_required.minor {
+            return false;
+        }
+        // Same minor
+        self.patch >= min_required.patch
+    }
+}
+
+impl std::fmt::Display for VersionInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+    }
+}
+
+impl Default for VersionInfo {
+    fn default() -> Self {
+        Self::current()
+    }
+}
+
+/// Feature flags indicating which bytecode features are used.
+/// These allow forward compatibility - a loader can skip unknown features.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FeatureFlags(pub u32);
+
+impl FeatureFlags {
+    /// No special features.
+    pub const NONE: u32 = 0;
+    /// Uses extended opcodes (v1.1+).
+    pub const EXTENDED_OPCODES: u32 = 1 << 0;
+    /// Uses typed constants (v1.1+).
+    pub const TYPED_CONSTANTS: u32 = 1 << 1;
+    /// Uses inline caching hints (v1.2+).
+    pub const INLINE_CACHE: u32 = 1 << 2;
+    /// Uses cross-VM call encoding (v1.2+).
+    pub const CROSS_VM_CALLS: u32 = 1 << 3;
+    /// Uses gas metering annotations (v1.0+).
+    pub const GAS_METERING: u32 = 1 << 4;
+    /// Uses custom sections (v1.1+).
+    pub const CUSTOM_SECTIONS: u32 = 1 << 5;
+    /// Uses compressed constants (v1.2+).
+    pub const COMPRESSED_CONSTS: u32 = 1 << 6;
+    /// Uses simd operations (v1.3+).
+    pub const SIMD_OPS: u32 = 1 << 7;
+
+    pub fn new() -> Self {
+        Self(0)
+    }
+
+    pub fn set(&mut self, flag: u32) {
+        self.0 |= flag;
+    }
+
+    pub fn has(&self, flag: u32) -> bool {
+        (self.0 & flag) != 0
+    }
+
+    /// Get the minimum version required to support these features.
+    pub fn min_version_required(&self) -> VersionInfo {
+        if self.has(Self::SIMD_OPS) {
+            return VersionInfo::new(1, 3, 0);
+        }
+        if self.has(Self::INLINE_CACHE)
+            || self.has(Self::CROSS_VM_CALLS)
+            || self.has(Self::COMPRESSED_CONSTS)
+        {
+            return VersionInfo::new(1, 2, 0);
+        }
+        if self.has(Self::EXTENDED_OPCODES)
+            || self.has(Self::TYPED_CONSTANTS)
+            || self.has(Self::CUSTOM_SECTIONS)
+        {
+            return VersionInfo::new(1, 1, 0);
+        }
+        VersionInfo::new(1, 0, 0)
+    }
+
+    /// Check if the current runtime supports all these features.
+    pub fn supported_by_current(&self) -> bool {
+        let current = VersionInfo::current();
+        current.satisfies(self.min_version_required())
+    }
+}
 
 /// Maximum bytecode size (16 MB).
 pub const MAX_BYTECODE_SIZE: usize = 16 * 1024 * 1024;
@@ -94,10 +260,14 @@ impl ModuleFlags {
 /// A complete bytecode module ready for execution.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BytecodeModule {
-    /// Module version.
-    pub version: u32,
+    /// Module version (semantic versioned).
+    pub version: VersionInfo,
+    /// Minimum version required to load this module.
+    pub min_version: VersionInfo,
     /// Module flags.
     pub flags: ModuleFlags,
+    /// Feature flags indicating which IR features are used.
+    pub features: FeatureFlags,
     /// Constant pool.
     pub const_pool: ConstPool,
     /// Function table.
@@ -108,33 +278,84 @@ pub struct BytecodeModule {
     pub code: Vec<u8>,
     /// Debug information (if present).
     pub debug_info: Option<DebugInfo>,
+    /// Optional metadata (compiler info, timestamps, etc.).
+    pub metadata: Option<ModuleMetadata>,
+}
+
+/// Module metadata for debugging and tooling.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct ModuleMetadata {
+    /// Name of the compiler that produced this module.
+    pub compiler: String,
+    /// Compiler version.
+    pub compiler_version: String,
+    /// Compilation timestamp (Unix epoch seconds).
+    pub compiled_at: u64,
+    /// Original source file name.
+    pub source_file: Option<String>,
+    /// Git commit hash of source.
+    pub source_hash: Option<String>,
+    /// Optimization level (0-3).
+    pub opt_level: u8,
+    /// Custom key-value annotations.
+    pub annotations: BTreeMap<String, String>,
 }
 
 impl BytecodeModule {
     /// Create a new empty module.
     pub fn new() -> Self {
         Self {
-            version: VERSION,
+            version: VersionInfo::current(),
+            min_version: VersionInfo::new(1, 0, 0),
             flags: ModuleFlags::new(),
+            features: FeatureFlags::new(),
             const_pool: ConstPool::new(),
             functions: Vec::new(),
             globals: Vec::new(),
             code: Vec::new(),
             debug_info: None,
+            metadata: None,
         }
     }
 
-    /// Serialize module to bytes.
+    /// Create a module with specific version.
+    pub fn with_version(version: VersionInfo) -> Self {
+        Self {
+            version,
+            min_version: version,
+            ..Self::new()
+        }
+    }
+
+    /// Set the features used and auto-compute minimum version.
+    pub fn set_features(&mut self, features: FeatureFlags) {
+        self.features = features;
+        // Auto-update min_version based on features
+        let required = features.min_version_required();
+        if required > self.min_version {
+            self.min_version = required;
+        }
+    }
+
+    /// Check if this module can be loaded by the current runtime.
+    pub fn is_compatible(&self) -> bool {
+        let current = VersionInfo::current();
+        current.can_read(self.version) && current.satisfies(self.min_version)
+    }
+
+    /// Serialize module to bytes (v2 format with extended header).
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
 
-        // Header
+        // Header (24 bytes)
         bytes.extend_from_slice(MAGIC);
-        bytes.extend_from_slice(&self.version.to_le_bytes());
+        bytes.extend_from_slice(&self.version.to_packed().to_le_bytes());
         bytes.extend_from_slice(&self.flags.0.to_le_bytes());
         // Placeholder for checksum (filled at end)
         let checksum_pos = bytes.len();
         bytes.extend_from_slice(&0u32.to_le_bytes());
+        bytes.extend_from_slice(&self.min_version.to_packed().to_le_bytes());
+        bytes.extend_from_slice(&self.features.0.to_le_bytes());
 
         // Constant pool
         self.write_const_pool(&mut bytes);
@@ -157,8 +378,16 @@ impl BytecodeModule {
             bytes.push(0); // No debug info
         }
 
+        // Metadata (optional, v1.1+)
+        if let Some(ref meta) = self.metadata {
+            bytes.push(1); // Has metadata
+            self.write_metadata(&mut bytes, meta);
+        } else {
+            bytes.push(0); // No metadata
+        }
+
         // Compute and write checksum
-        let checksum = self.compute_checksum(&bytes[16..]); // Skip header
+        let checksum = self.compute_checksum(&bytes[24..]); // Skip header
         bytes[checksum_pos..checksum_pos + 4].copy_from_slice(&checksum.to_le_bytes());
 
         bytes
@@ -166,7 +395,7 @@ impl BytecodeModule {
 
     /// Deserialize module from bytes.
     pub fn from_bytes(bytes: &[u8]) -> BackendResult<Self> {
-        if bytes.len() < 16 {
+        if bytes.len() < 24 {
             return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
         }
 
@@ -175,10 +404,14 @@ impl BytecodeModule {
             return Err(BackendError::without_span(BackendErrorKind::InvalidMagic));
         }
 
-        let version = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
-        if version > VERSION {
+        let version_packed = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
+        let version = VersionInfo::from_packed(version_packed);
+
+        // Check if we support this version
+        let current = VersionInfo::current();
+        if !current.can_read(version) {
             return Err(BackendError::without_span(
-                BackendErrorKind::UnsupportedVersion(version),
+                BackendErrorKind::UnsupportedVersion(version_packed),
             ));
         }
 
@@ -186,8 +419,21 @@ impl BytecodeModule {
             bytes[8], bytes[9], bytes[10], bytes[11],
         ]));
         let _checksum = u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]);
+        let min_version = VersionInfo::from_packed(u32::from_le_bytes([
+            bytes[16], bytes[17], bytes[18], bytes[19],
+        ]));
+        let features = FeatureFlags(u32::from_le_bytes([
+            bytes[20], bytes[21], bytes[22], bytes[23],
+        ]));
 
-        let mut offset = 16;
+        // Check minimum version requirement
+        if !current.satisfies(min_version) {
+            return Err(BackendError::without_span(
+                BackendErrorKind::UnsupportedVersion(min_version.to_packed()),
+            ));
+        }
+
+        let mut offset = 24;
 
         // Read constant pool
         let (const_pool, new_offset) = Self::read_const_pool(bytes, offset)?;
@@ -222,20 +468,36 @@ impl BytecodeModule {
         // Read debug info
         let debug_info = if offset < bytes.len() && bytes[offset] == 1 {
             offset += 1;
-            let (debug, _) = Self::read_debug_info(bytes, offset)?;
+            let (debug, new_offset) = Self::read_debug_info(bytes, offset)?;
+            offset = new_offset;
             Some(debug)
+        } else {
+            if offset < bytes.len() {
+                offset += 1;
+            }
+            None
+        };
+
+        // Read metadata (v1.1+)
+        let metadata = if offset < bytes.len() && bytes[offset] == 1 {
+            offset += 1;
+            let (meta, _) = Self::read_metadata(bytes, offset)?;
+            Some(meta)
         } else {
             None
         };
 
         Ok(Self {
             version,
+            min_version,
             flags,
+            features,
             const_pool,
             functions,
             globals,
             code,
             debug_info,
+            metadata,
         })
     }
 
@@ -611,7 +873,7 @@ impl BytecodeModule {
         ]) as usize;
         offset += 4;
 
-        let mut symbol_names = HashMap::new();
+        let mut symbol_names = BTreeMap::new();
         for _ in 0..name_count {
             if offset + 6 > bytes.len() {
                 return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
@@ -637,6 +899,195 @@ impl BytecodeModule {
             DebugInfo {
                 source_map,
                 symbol_names,
+            },
+            offset,
+        ))
+    }
+
+    fn write_metadata(&self, bytes: &mut Vec<u8>, meta: &ModuleMetadata) {
+        // Compiler name
+        bytes.extend_from_slice(&(meta.compiler.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(meta.compiler.as_bytes());
+
+        // Compiler version
+        bytes.extend_from_slice(&(meta.compiler_version.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(meta.compiler_version.as_bytes());
+
+        // Timestamp
+        bytes.extend_from_slice(&meta.compiled_at.to_le_bytes());
+
+        // Source file (optional)
+        if let Some(ref source) = meta.source_file {
+            bytes.push(1);
+            bytes.extend_from_slice(&(source.len() as u16).to_le_bytes());
+            bytes.extend_from_slice(source.as_bytes());
+        } else {
+            bytes.push(0);
+        }
+
+        // Source hash (optional)
+        if let Some(ref hash) = meta.source_hash {
+            bytes.push(1);
+            bytes.extend_from_slice(&(hash.len() as u16).to_le_bytes());
+            bytes.extend_from_slice(hash.as_bytes());
+        } else {
+            bytes.push(0);
+        }
+
+        // Opt level
+        bytes.push(meta.opt_level);
+
+        // Annotations (BTreeMap for determinism)
+        bytes.extend_from_slice(&(meta.annotations.len() as u32).to_le_bytes());
+        for (key, value) in &meta.annotations {
+            bytes.extend_from_slice(&(key.len() as u16).to_le_bytes());
+            bytes.extend_from_slice(key.as_bytes());
+            bytes.extend_from_slice(&(value.len() as u16).to_le_bytes());
+            bytes.extend_from_slice(value.as_bytes());
+        }
+    }
+
+    fn read_metadata(bytes: &[u8], mut offset: usize) -> BackendResult<(ModuleMetadata, usize)> {
+        // Compiler name
+        if offset + 2 > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let compiler_len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+        offset += 2;
+        if offset + compiler_len > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let compiler = String::from_utf8_lossy(&bytes[offset..offset + compiler_len]).to_string();
+        offset += compiler_len;
+
+        // Compiler version
+        if offset + 2 > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let version_len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+        offset += 2;
+        if offset + version_len > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let compiler_version =
+            String::from_utf8_lossy(&bytes[offset..offset + version_len]).to_string();
+        offset += version_len;
+
+        // Timestamp
+        if offset + 8 > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let compiled_at = u64::from_le_bytes([
+            bytes[offset],
+            bytes[offset + 1],
+            bytes[offset + 2],
+            bytes[offset + 3],
+            bytes[offset + 4],
+            bytes[offset + 5],
+            bytes[offset + 6],
+            bytes[offset + 7],
+        ]);
+        offset += 8;
+
+        // Source file
+        if offset >= bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let source_file = if bytes[offset] == 1 {
+            offset += 1;
+            if offset + 2 > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+            offset += 2;
+            if offset + len > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let s = String::from_utf8_lossy(&bytes[offset..offset + len]).to_string();
+            offset += len;
+            Some(s)
+        } else {
+            offset += 1;
+            None
+        };
+
+        // Source hash
+        if offset >= bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let source_hash = if bytes[offset] == 1 {
+            offset += 1;
+            if offset + 2 > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+            offset += 2;
+            if offset + len > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let s = String::from_utf8_lossy(&bytes[offset..offset + len]).to_string();
+            offset += len;
+            Some(s)
+        } else {
+            offset += 1;
+            None
+        };
+
+        // Opt level
+        if offset >= bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let opt_level = bytes[offset];
+        offset += 1;
+
+        // Annotations
+        if offset + 4 > bytes.len() {
+            return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+        }
+        let anno_count = u32::from_le_bytes([
+            bytes[offset],
+            bytes[offset + 1],
+            bytes[offset + 2],
+            bytes[offset + 3],
+        ]) as usize;
+        offset += 4;
+
+        let mut annotations = BTreeMap::new();
+        for _ in 0..anno_count {
+            if offset + 2 > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let key_len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+            offset += 2;
+            if offset + key_len > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let key = String::from_utf8_lossy(&bytes[offset..offset + key_len]).to_string();
+            offset += key_len;
+
+            if offset + 2 > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let val_len = u16::from_le_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+            offset += 2;
+            if offset + val_len > bytes.len() {
+                return Err(BackendError::without_span(BackendErrorKind::UnexpectedEof));
+            }
+            let value = String::from_utf8_lossy(&bytes[offset..offset + val_len]).to_string();
+            offset += val_len;
+
+            annotations.insert(key, value);
+        }
+
+        Ok((
+            ModuleMetadata {
+                compiler,
+                compiler_version,
+                compiled_at,
+                source_file,
+                source_hash,
+                opt_level,
+                annotations,
             },
             offset,
         ))
@@ -684,22 +1135,22 @@ pub struct ConstPool {
     pub entries: Vec<ConstValue>,
     /// Deduplication map for integers.
     #[serde(skip)]
-    int_map: HashMap<i64, ConstIdx>,
+    int_map: BTreeMap<i64, ConstIdx>,
     /// Deduplication map for floats (using bits).
     #[serde(skip)]
-    float_map: HashMap<u64, ConstIdx>,
+    float_map: BTreeMap<u64, ConstIdx>,
     /// Deduplication map for strings.
     #[serde(skip)]
-    string_map: HashMap<String, ConstIdx>,
+    string_map: BTreeMap<String, ConstIdx>,
 }
 
 impl ConstPool {
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
-            int_map: HashMap::new(),
-            float_map: HashMap::new(),
-            string_map: HashMap::new(),
+            int_map: BTreeMap::new(),
+            float_map: BTreeMap::new(),
+            string_map: BTreeMap::new(),
         }
     }
 
@@ -856,8 +1307,8 @@ pub struct GlobalEntry {
 pub struct DebugInfo {
     /// Maps code offsets to source locations.
     pub source_map: Vec<SourceMapEntry>,
-    /// Maps symbol indices to names.
-    pub symbol_names: HashMap<u32, String>,
+    /// Maps symbol indices to names (BTreeMap for determinism).
+    pub symbol_names: BTreeMap<u32, String>,
 }
 
 /// Single entry in the source map.
@@ -924,5 +1375,130 @@ mod tests {
         assert!(flags.has(ModuleFlags::DEBUG_INFO));
         assert!(flags.has(ModuleFlags::USES_EVM));
         assert!(!flags.has(ModuleFlags::USES_SVM));
+    }
+
+    #[test]
+    fn version_info_packing() {
+        let v = VersionInfo::new(1, 2, 3);
+        let packed = v.to_packed();
+        let unpacked = VersionInfo::from_packed(packed);
+        assert_eq!(v, unpacked);
+        assert_eq!(v.major, 1);
+        assert_eq!(v.minor, 2);
+        assert_eq!(v.patch, 3);
+    }
+
+    #[test]
+    fn version_compatibility() {
+        let v1_0_0 = VersionInfo::new(1, 0, 0);
+        let v1_1_0 = VersionInfo::new(1, 1, 0);
+        let v1_2_0 = VersionInfo::new(1, 2, 0);
+        let v2_0_0 = VersionInfo::new(2, 0, 0);
+
+        // Same major version - can read older minor
+        assert!(v1_1_0.can_read(v1_0_0));
+        assert!(v1_2_0.can_read(v1_1_0));
+
+        // Cannot read newer minor
+        assert!(!v1_0_0.can_read(v1_1_0));
+
+        // Cannot read different major
+        assert!(!v2_0_0.can_read(v1_0_0));
+        assert!(!v1_0_0.can_read(v2_0_0));
+    }
+
+    #[test]
+    fn version_satisfies() {
+        let v1_0_0 = VersionInfo::new(1, 0, 0);
+        let v1_1_0 = VersionInfo::new(1, 1, 0);
+        let v1_1_5 = VersionInfo::new(1, 1, 5);
+
+        assert!(v1_1_0.satisfies(v1_0_0));
+        assert!(v1_1_5.satisfies(v1_1_0));
+        assert!(!v1_0_0.satisfies(v1_1_0));
+    }
+
+    #[test]
+    fn feature_flags_min_version() {
+        let mut f = FeatureFlags::new();
+        assert_eq!(f.min_version_required(), VersionInfo::new(1, 0, 0));
+
+        f.set(FeatureFlags::EXTENDED_OPCODES);
+        assert_eq!(f.min_version_required(), VersionInfo::new(1, 1, 0));
+
+        f.set(FeatureFlags::CROSS_VM_CALLS);
+        assert_eq!(f.min_version_required(), VersionInfo::new(1, 2, 0));
+
+        f.set(FeatureFlags::SIMD_OPS);
+        assert_eq!(f.min_version_required(), VersionInfo::new(1, 3, 0));
+    }
+
+    #[test]
+    fn module_with_metadata() {
+        let mut module = BytecodeModule::new();
+        module.const_pool.add_integer(42).unwrap();
+        module.functions.push(FunctionEntry {
+            name: "test".to_string(),
+            entry_point: 0,
+            param_count: 0,
+            local_count: 1,
+            max_stack: 2,
+            return_type_tag: 1,
+        });
+        module.code = vec![0x00, 0x01];
+        module.metadata = Some(ModuleMetadata {
+            compiler: "x3c".to_string(),
+            compiler_version: "1.0.0".to_string(),
+            compiled_at: 1700000000,
+            source_file: Some("test.x3".to_string()),
+            source_hash: Some("abc123".to_string()),
+            opt_level: 2,
+            annotations: {
+                let mut m = BTreeMap::new();
+                m.insert("target".to_string(), "evm".to_string());
+                m
+            },
+        });
+
+        let bytes = module.to_bytes();
+        let decoded = BytecodeModule::from_bytes(&bytes).unwrap();
+
+        assert!(decoded.metadata.is_some());
+        let meta = decoded.metadata.unwrap();
+        assert_eq!(meta.compiler, "x3c");
+        assert_eq!(meta.compiler_version, "1.0.0");
+        assert_eq!(meta.compiled_at, 1700000000);
+        assert_eq!(meta.source_file.as_deref(), Some("test.x3"));
+        assert_eq!(meta.source_hash.as_deref(), Some("abc123"));
+        assert_eq!(meta.opt_level, 2);
+        assert_eq!(meta.annotations.get("target"), Some(&"evm".to_string()));
+    }
+
+    #[test]
+    fn module_version_roundtrip() {
+        let mut module = BytecodeModule::with_version(VersionInfo::new(1, 0, 0));
+        module.set_features({
+            let mut f = FeatureFlags::new();
+            f.set(FeatureFlags::GAS_METERING);
+            f
+        });
+        module.const_pool.add_integer(1).unwrap();
+        module.functions.push(FunctionEntry {
+            name: "main".to_string(),
+            entry_point: 0,
+            param_count: 0,
+            local_count: 0,
+            max_stack: 1,
+            return_type_tag: 0,
+        });
+        module.code = vec![0x00];
+
+        let bytes = module.to_bytes();
+        let decoded = BytecodeModule::from_bytes(&bytes).unwrap();
+
+        assert_eq!(decoded.version, VersionInfo::new(1, 0, 0));
+        assert_eq!(decoded.min_version, VersionInfo::new(1, 0, 0));
+        assert!(decoded.features.has(FeatureFlags::GAS_METERING));
+        assert!(decoded.is_compatible());
     }
 }

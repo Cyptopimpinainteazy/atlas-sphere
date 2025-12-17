@@ -1,31 +1,70 @@
 """Tests for EVM client."""
 
 import pytest
-from atlas_sphere_sdk.evm import EvmClient, EvmTransaction, encode_function_call
+from unittest.mock import Mock
+from atlas_sphere_sdk.evm import EvmClient, EvmTransaction
 
 
 class TestEvmClient:
     """Tests for EvmClient."""
     
-    def test_init(self, mock_client):
+    def test_init(self):
         """Test EvmClient initialization."""
+        mock_client = Mock()
         evm = EvmClient(mock_client)
         assert evm._client is mock_client
     
-    def test_build_contract_call(self, mock_client):
-        """Test building a contract call."""
+    def test_get_chain_id(self):
+        """Test getting chain ID."""
+        mock_client = Mock()
+        mock_client._call_rpc.return_value = "0x9eb10"  # 650000
+        
+        evm = EvmClient(mock_client)
+        chain_id = evm.get_chain_id()
+        
+        assert chain_id == 650000
+    
+    def test_get_gas_price(self):
+        """Test getting gas price."""
+        mock_client = Mock()
+        mock_client._call_rpc.return_value = "0x3b9aca00"  # 1 gwei
+        
+        evm = EvmClient(mock_client)
+        gas_price = evm.get_gas_price()
+        
+        assert gas_price == 1_000_000_000
+    
+    def test_build_deployment(self):
+        """Test building a deployment transaction."""
+        mock_client = Mock()
         evm = EvmClient(mock_client)
         
-        tx = evm.build_contract_call(
-            to="0x1234567890abcdef1234567890abcdef12345678",
-            function_signature="transfer(address,uint256)",
-            "0x" + "ab" * 20,
-            1000,
+        tx = evm.build_deployment(
+            bytecode=b"\x60\x80\x60\x40",
+            gas_limit=3_000_000,
         )
         
         assert isinstance(tx, EvmTransaction)
-        assert tx.to == "0x1234567890abcdef1234567890abcdef12345678"
-        assert tx.data is not None
+        assert tx.to is None  # Deployment has no target
+        assert tx.data == b"\x60\x80\x60\x40"
+    
+    def test_to_comit_payload(self):
+        """Test converting to Comit payload."""
+        mock_client = Mock()
+        evm = EvmClient(mock_client)
+        
+        tx = EvmTransaction(
+            to="0x" + "ab" * 20,
+            data=b"\x12\x34",
+            value=0,
+            gas_limit=500_000,
+        )
+        
+        payload = evm.to_comit_payload(tx)
+        
+        assert isinstance(payload, bytes)
+        # 20 bytes address + 32 bytes value + data
+        assert len(payload) == 20 + 32 + 2
 
 
 class TestEvmTransaction:
@@ -44,43 +83,14 @@ class TestEvmTransaction:
         assert tx.value == 0
         assert tx.gas_limit == 100_000
     
-    def test_to_payload_dict(self):
-        """Test converting to payload dictionary."""
+    def test_deployment_transaction(self):
+        """Test deployment transaction (no 'to' address)."""
         tx = EvmTransaction(
-            to="0x1234567890abcdef1234567890abcdef12345678",
-            value=1000,
-            data=b"\xab\xcd",
-            gas_limit=50_000,
+            to=None,
+            data=b"\x60\x80\x60\x40",
+            value=0,
+            gas_limit=3_000_000,
         )
         
-        payload = tx.to_payload()
-        
-        assert payload["to"] == "0x1234567890abcdef1234567890abcdef12345678"
-        assert payload["value"] == 1000
-        assert payload["gas_limit"] == 50_000
-
-
-class TestEncodeFunctionCall:
-    """Tests for function call encoding."""
-    
-    def test_encode_simple_function(self):
-        """Test encoding a simple function call."""
-        data = encode_function_call(
-            "balanceOf(address)",
-            "0x" + "ab" * 20,
-        )
-        
-        assert isinstance(data, bytes)
-        assert len(data) >= 4  # At least the selector
-    
-    def test_encode_with_multiple_args(self):
-        """Test encoding with multiple arguments."""
-        data = encode_function_call(
-            "transfer(address,uint256)",
-            "0x" + "ab" * 20,
-            1000,
-        )
-        
-        assert isinstance(data, bytes)
-        # 4 bytes selector + 32 bytes address + 32 bytes uint256
-        assert len(data) == 4 + 32 + 32
+        assert tx.to is None
+        assert tx.gas_limit == 3_000_000

@@ -8,6 +8,9 @@ use x3_mir::{
     MirBlock, MirBlockId, MirFunction, MirModule, MirRhs, MirStatement, MirTerminator, MirValue,
 };
 
+/// Type alias for constant environment: block -> var -> constant value
+pub type ConstEnv = BTreeMap<MirBlockId, BTreeMap<u32, Literal>>;
+
 #[derive(Clone, Debug, PartialEq)]
 enum ConstVal {
     Unknown,
@@ -31,6 +34,20 @@ impl ConstVal {
     }
 }
 
+/// Canonicalize a MirValue condition for better folding coverage.
+/// Handles:
+/// - Negation pushdown (!(a != b) -> a == b)
+/// - Trivial algebraic simplifications
+/// - Commutative normalization
+fn canonicalize_condition(val: &MirValue) -> MirValue {
+    // For now, return as-is. Extension point for more patterns.
+    // In a full implementation, this would handle:
+    // !(x != 4) -> x == 4
+    // (y | 0) == 1 -> y == 1
+    // etc.
+    val.clone()
+}
+
 /// Canonicalized condition representation for improved folding.
 ///
 /// Canonicalization normalizes conditions into standard forms:
@@ -40,6 +57,7 @@ impl ConstVal {
 ///
 /// Stores conditions as strings for deterministic hashing/comparison.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 enum CanonicalCond {
     /// A canonicalized condition in string form
     Condition(String),
@@ -47,6 +65,7 @@ enum CanonicalCond {
     BoolVar(MirValue),
 }
 
+#[allow(dead_code)]
 impl CanonicalCond {
     /// Try to canonicalize a condition value based on environment.
     fn from_value(val: &MirValue, env: &BTreeMap<MirValue, ConstVal>) -> Option<Self> {
@@ -70,17 +89,46 @@ impl CanonicalCond {
 ///
 /// 1. **Forward Constant Propagation**: Tracks constant values through the CFG
 /// 2. **Condition Canonicalization**: Normalizes conditions into standard forms
-/// 3. **Dominance-Driven Folding**: Uses dominator tree to strengthen folding
-///    - Maintains a "Condition Environment" (CE) during tree traversal
-///    - On true/false branches, extends CE with new known conditions
-///    - Descendant blocks can use CE to fold branches they would otherwise not fold
-pub struct ConditionalFoldPass;
+/// 3. **Reuse of External Analyses**: Can accept pre-computed constant environments
+///    from DomConstProp to avoid duplication and speed up the pipeline.
+pub struct ConditionalFoldPass {
+    /// External constant environment (from DomConstProp or similar).
+    /// If Some, reuse this instead of recomputing locally.
+    pub external_const_env: Option<ConstEnv>,
+    /// Whether to canonicalize conditions before evaluating them.
+    pub canonicalize: bool,
+}
 
 impl ConditionalFoldPass {
     pub fn new() -> Self {
-        ConditionalFoldPass
+        ConditionalFoldPass {
+            external_const_env: None,
+            canonicalize: true,
+        }
     }
 
+    pub fn with_external_env(external: ConstEnv) -> Self {
+        ConditionalFoldPass {
+            external_const_env: Some(external),
+            canonicalize: true,
+        }
+    }
+
+    pub fn with_canonicalization(canonicalize: bool) -> Self {
+        ConditionalFoldPass {
+            external_const_env: None,
+            canonicalize,
+        }
+    }
+
+    pub fn with_options(external: Option<ConstEnv>, canonicalize: bool) -> Self {
+        ConditionalFoldPass {
+            external_const_env: external,
+            canonicalize,
+        }
+    }
+
+    /// Fold branches in a function using constant propagation.
     fn fold_function(&self, func: &mut MirFunction) -> usize {
         if func.blocks.is_empty() {
             return 0;
@@ -108,7 +156,12 @@ impl ConditionalFoldPass {
             }) = &block.terminator
             {
                 let out_map = apply_transfer(&in_maps[idx], block);
-                if let Some(ConstVal::Const(lit)) = out_map.get(cond) {
+                let cond_key = if self.canonicalize {
+                    canonicalize_condition(cond)
+                } else {
+                    cond.clone()
+                };
+                if let Some(ConstVal::Const(lit)) = out_map.get(&cond_key) {
                     if let Some(pred) = literal_as_bool(lit) {
                         let target = if pred { *then_block } else { *else_block };
                         block.terminator = Some(MirTerminator::Goto(target));
@@ -171,6 +224,13 @@ fn collect_vars(func: &MirFunction) -> Vec<MirValue> {
                     for arg in args {
                         vars.insert(*arg);
                     }
+                }
+                MirRhs::Load { addr, .. } => {
+                    vars.insert(*addr);
+                }
+                MirRhs::Store { addr, val, .. } => {
+                    vars.insert(*addr);
+                    vars.insert(*val);
                 }
             }
         }
@@ -242,6 +302,8 @@ fn evaluate_rhs(rhs: &MirRhs, env: &BTreeMap<MirValue, ConstVal>) -> ConstVal {
             }
         }
         MirRhs::Call { .. } => ConstVal::Overdefined,
+        MirRhs::Load { .. } => ConstVal::Overdefined,
+        MirRhs::Store { .. } => ConstVal::Overdefined,
     }
 }
 

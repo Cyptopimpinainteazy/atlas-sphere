@@ -14,10 +14,12 @@ name = "atlas-sphere-node"
 path = "src/main.rs"
 
 [dependencies]
-atlas-sphere-runtime = { path = "../runtime", features = ["std"] }
+atlas-sphere-runtime = { path = "../runtime", features = ["std", "frontier"] }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", features = ["std"] }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", features = ["std"] }
+pallet-evolution-core = { path = "../pallets/evolution-core", features = ["std"] }
+pallet-x3-verifier = { path = "../pallets/x3-verifier", features = ["std"] }
 
 async-trait = "0.1"
 clap = { version = "4.4", features = ["derive"] }
@@ -76,7 +78,10 @@ frame-try-runtime = { workspace = true, optional = true, default-features = fals
 [features]
 default = ["cli"]
 cli = []
-skip-wasm-build = ["atlas-sphere-runtime/skip-wasm-build"]
+
+# Optional flags to enable Frontier JSON-RPC and EVM runtime features.  
+# Enabling `frontier` will opt-in to Frontier crates and runtime adapters.
+frontier = []
 
 native = ["atlas-sphere-runtime/native"]
 
@@ -87,3 +92,5 @@ runtime-benchmarks = [
 try-runtime = [
     "atlas-sphere-runtime/try-runtime",
 ]
+
+# Optional Frontier (EVM) JSON-RPC wiring

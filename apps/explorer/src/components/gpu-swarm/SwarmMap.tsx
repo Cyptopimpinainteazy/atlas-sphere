@@ -3,8 +3,21 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
+interface GpuNode {
+  id: string;
+  lat: number;
+  lng: number;
+  city: string;
+  country: string;
+  gpu: string;
+  vram: number;
+  status: 'active' | 'idle' | 'syncing' | 'offline';
+  tasks: number;
+  hashrate: number;
+}
+
 // Mock GPU node data - in production this would come from the swarm coordinator
-const MOCK_GPU_NODES = [
+const MOCK_GPU_NODES: GpuNode[] = [
   // North America
   { id: 'node-sf-01', lat: 37.7749, lng: -122.4194, city: 'San Francisco', country: 'USA', gpu: 'RTX 4090', vram: 24, status: 'active', tasks: 12, hashrate: 145.2 },
   { id: 'node-la-01', lat: 34.0522, lng: -118.2437, city: 'Los Angeles', country: 'USA', gpu: 'RTX 4080', vram: 16, status: 'active', tasks: 8, hashrate: 98.7 },
@@ -55,19 +68,6 @@ const MOCK_GPU_NODES = [
   { id: 'node-jnb-01', lat: -26.2041, lng: 28.0473, city: 'Johannesburg', country: 'South Africa', gpu: 'RTX 4090', vram: 24, status: 'syncing', tasks: 2, hashrate: 21.7 },
   { id: 'node-cai-01', lat: 30.0444, lng: 31.2357, city: 'Cairo', country: 'Egypt', gpu: 'RTX 3090', vram: 24, status: 'active', tasks: 4, hashrate: 43.2 },
 ];
-
-interface GpuNode {
-  id: string;
-  lat: number;
-  lng: number;
-  city: string;
-  country: string;
-  gpu: string;
-  vram: number;
-  status: 'active' | 'idle' | 'syncing' | 'offline';
-  tasks: number;
-  hashrate: number;
-}
 
 interface SwarmMapProps {
   className?: string;

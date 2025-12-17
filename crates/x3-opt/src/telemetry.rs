@@ -258,6 +258,8 @@ fn mir_statement_stats(stmt: &MirStatement) -> (&'static str, u64) {
             BinaryOp::LogicalOr => ("binary_lor", opcode_cost(BackendOpcode::LOr)),
         },
         MirRhs::Call { .. } => ("call", opcode_cost(BackendOpcode::Call)),
+        MirRhs::Load { .. } => ("load", opcode_cost(BackendOpcode::AddI)), // estimate
+        MirRhs::Store { .. } => ("store", opcode_cost(BackendOpcode::AddI)), // estimate
     }
 }
 

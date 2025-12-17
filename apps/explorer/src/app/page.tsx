@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { 
   Globe, 
   Zap, 
@@ -15,6 +16,45 @@ import {
   Target,
   Layers
 } from 'lucide-react';
+
+// Dynamic import for Prometheus widget (client-side only)
+const PrometheusWidget = dynamic(
+  () => import('@/components/prometheus/PrometheusWidget'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-600/30 animate-pulse h-64">
+        <div className="h-8 w-48 bg-slate-700 rounded mb-4"></div>
+        <div className="grid grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-20 bg-slate-700 rounded-xl"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+);
+
+// Dynamic imports for quantum showcase components
+const HorizontalScrollTrack = dynamic(
+  () => import('@/components/quantum/HorizontalGallery').then(mod => ({ default: mod.HorizontalScrollTrack })),
+  { ssr: false, loading: () => <div className="h-80 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
+
+const FloatingCardsGrid = dynamic(
+  () => import('@/components/quantum/ProjectShowcase').then(mod => ({ default: mod.FloatingCardsGrid })),
+  { ssr: false, loading: () => <div className="h-64 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
+
+const ProjectShowcase = dynamic(
+  () => import('@/components/quantum/ProjectShowcase').then(mod => ({ default: mod.ProjectShowcase })),
+  { ssr: false, loading: () => <div className="h-96 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
+
+const ScotchCassetteShowcase = dynamic(
+  () => import('@/components/quantum/ScotchVHSShowcase').then(mod => ({ default: mod.ScotchCassetteShowcase })),
+  { ssr: false, loading: () => <div className="h-96 animate-pulse bg-slate-800/50 rounded-2xl" /> }
+);
 
 interface Feature {
   icon: React.ComponentType<{ className?: string }>;
@@ -259,6 +299,11 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Prometheus Node Metrics Widget */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <PrometheusWidget endpoint="http://127.0.0.1:9615/metrics" refreshInterval={10000} />
+      </div>
+
       {/* Feature Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h2 className="text-4xl font-bold text-center text-white mb-12">Production-Ready Features</h2>
@@ -314,6 +359,36 @@ export default function HomePage() {
             <NavCard key={index} item={item} />
           ))}
         </div>
+      </div>
+
+      {/* Horizontal Scroll Gallery */}
+      <div className="py-12 overflow-hidden">
+        <HorizontalScrollTrack 
+          title="ATLAS ECOSYSTEM"
+          speed={0.8}
+          direction="left"
+          showOverlay={true}
+        />
+      </div>
+
+      {/* Floating Capabilities Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 className="text-4xl font-bold text-center text-white mb-12">
+          <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            Core Capabilities
+          </span>
+        </h2>
+        <FloatingCardsGrid />
+      </div>
+
+      {/* Project Showcase */}
+      <div className="py-12">
+        <ProjectShowcase title="EXPLORE PROJECTS" />
+      </div>
+
+      {/* Scotch VHS Cassette Modules */}
+      <div className="py-12 bg-gradient-to-b from-transparent via-slate-900/80 to-transparent">
+        <ScotchCassetteShowcase title="QUANTUM MODULES" />
       </div>
 
       {/* CTA Section */}

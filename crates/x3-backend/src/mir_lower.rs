@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use x3_ast::{BinaryOp, UnaryOp};
 use x3_common::{Literal, Span};
 use x3_mir::{
-    MirBlock, MirBlockId, MirFunction, MirModule, MirRhs, MirStatement, MirTerminator, MirValue,
-    SymbolId,
+    memory::MemoryModel, MirBlock, MirBlockId, MirFunction, MirModule, MirRhs, MirStatement,
+    MirTerminator, MirValue, SymbolId,
 };
 
 use crate::bc_format::{BytecodeModule, ModuleFlags};
@@ -208,6 +208,61 @@ impl MirBytecodeCompiler {
 
                 self.emitter.emit_call(dst, func_idx, &arg_regs);
             }
+            MirRhs::Load { model, addr } => {
+                let addr_reg = self.get_reg(*addr)?;
+                match model {
+                    MemoryModel::Register => {
+                        // Register-to-register move (pure operation)
+                        self.emitter.emit_load_register(dst, addr_reg);
+                    }
+                    MemoryModel::Stack => {
+                        // Load from function-local stack slot
+                        self.emitter.emit_load_stack(dst, addr_reg);
+                    }
+                    MemoryModel::Heap => {
+                        // Load from heap memory (may alias, bounds-checked)
+                        self.emitter.emit_load_heap(dst, addr_reg);
+                    }
+                    MemoryModel::GlobalStorage => {
+                        // Load from on-chain persistent storage
+                        // For now, interpret addr_reg as a constant pool index
+                        // (In production, would encode the address differently)
+                        if let Some(idx) = self.extract_constant_index(addr_reg) {
+                            self.emitter.emit_load_global_storage(dst, idx);
+                        } else {
+                            // Fallback: treat as heap for addresses not in const pool
+                            self.emitter.emit_load_heap(dst, addr_reg);
+                        }
+                    }
+                }
+            }
+            MirRhs::Store { model, addr, val } => {
+                let addr_reg = self.get_reg(*addr)?;
+                let val_reg = self.get_reg(*val)?;
+                match model {
+                    MemoryModel::Register => {
+                        // Register-to-register move (pure operation)
+                        self.emitter.emit_store_register(addr_reg, val_reg);
+                    }
+                    MemoryModel::Stack => {
+                        // Store to function-local stack slot
+                        self.emitter.emit_store_stack(addr_reg, val_reg);
+                    }
+                    MemoryModel::Heap => {
+                        // Store to heap memory (may alias, bounds-checked)
+                        self.emitter.emit_store_heap(addr_reg, val_reg);
+                    }
+                    MemoryModel::GlobalStorage => {
+                        // Store to on-chain persistent storage (side-effecting)
+                        if let Some(idx) = self.extract_constant_index(addr_reg) {
+                            self.emitter.emit_store_global_storage(idx, val_reg);
+                        } else {
+                            // Fallback: treat as heap for addresses not in const pool
+                            self.emitter.emit_store_heap(addr_reg, val_reg);
+                        }
+                    }
+                }
+            }
         }
 
         Ok(())
@@ -342,6 +397,18 @@ impl MirBytecodeCompiler {
                 self.current_span,
             )
         })
+    }
+
+    /// Extract constant pool index from a register, if available.
+    /// This is a heuristic for GlobalStorage accesses that are loaded from constants.
+    /// For a fully general solution, the MIR would annotate the address explicitly.
+    fn extract_constant_index(&self, _reg: Register) -> Option<u32> {
+        // In a full implementation, we would:
+        // 1. Track which registers hold constant indices
+        // 2. Look up the constant value for GlobalStorage keys
+        // For now, we return None to fall back to heap-like access.
+        // TODO: Implement full constant tracking for GlobalStorage optimization.
+        None
     }
 }
 

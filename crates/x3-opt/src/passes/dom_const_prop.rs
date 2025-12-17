@@ -32,7 +32,7 @@
 use crate::cfg::Cfg;
 use crate::pass::{Pass, PassResult};
 use crate::OptResult;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 use x3_ast::BinaryOp;
 use x3_common::Literal;
 use x3_mir::{MirBlockId, MirModule, MirRhs, MirStatement, MirValue};
@@ -58,8 +58,8 @@ impl DomConstPropPass {
     ///
     /// A definition is "stable" if it's not invalidated by a side-effecting
     /// operation (call) that could potentially modify memory.
-    fn block_stable_defs(&self, stmts: &[MirStatement]) -> HashMap<MirValue, ConstVal> {
-        let mut defs: HashMap<MirValue, ConstVal> = HashMap::new();
+    fn block_stable_defs(&self, stmts: &[MirStatement]) -> BTreeMap<MirValue, ConstVal> {
+        let mut defs: BTreeMap<MirValue, ConstVal> = BTreeMap::new();
 
         for stmt in stmts {
             match &stmt.rhs {
@@ -101,6 +101,15 @@ impl DomConstPropPass {
                     } else {
                         defs.insert(stmt.target, ConstVal::Unknown);
                     }
+                }
+                MirRhs::Load { .. } => {
+                    // Loads are conservative - mark as unknown (may vary)
+                    defs.insert(stmt.target, ConstVal::Unknown);
+                }
+                MirRhs::Store { .. } => {
+                    // Stores don't produce a value but have side effects
+                    // Mark all existing defs as potentially invalid (conservative)
+                    defs.clear();
                 }
             }
         }
@@ -163,9 +172,9 @@ impl DomConstPropPass {
     ///
     /// Note: This function is reserved for future SSA-based phi-node analysis.
     #[allow(dead_code)]
-    fn merge_constants(maps: &[&HashMap<MirValue, ConstVal>]) -> HashMap<MirValue, ConstVal> {
+    fn merge_constants(maps: &[&BTreeMap<MirValue, ConstVal>]) -> BTreeMap<MirValue, ConstVal> {
         if maps.is_empty() {
-            return HashMap::new();
+            return BTreeMap::new();
         }
 
         if maps.len() == 1 {
@@ -178,7 +187,7 @@ impl DomConstPropPass {
             all_keys.extend(map.keys().cloned());
         }
 
-        let mut result = HashMap::new();
+        let mut result = BTreeMap::new();
         for key in all_keys {
             let mut values: Vec<&ConstVal> = Vec::new();
             for map in maps {
@@ -227,7 +236,8 @@ impl Pass for DomConstPropPass {
             let (idom, dom_tree) = cfg.compute_dominators();
 
             // Compute stable definitions for each block
-            let mut block_defs: BTreeMap<MirBlockId, HashMap<MirValue, ConstVal>> = BTreeMap::new();
+            let mut block_defs: BTreeMap<MirBlockId, BTreeMap<MirValue, ConstVal>> =
+                BTreeMap::new();
             for block in &func.blocks {
                 let defs = self.block_stable_defs(&block.statements);
                 block_defs.insert(block.id, defs);
@@ -235,9 +245,9 @@ impl Pass for DomConstPropPass {
 
             // Propagate constants from dominators to dominated blocks
             // Process in dominator tree order (BFS from entry)
-            let mut incoming_constants: BTreeMap<MirBlockId, HashMap<MirValue, ConstVal>> =
+            let mut incoming_constants: BTreeMap<MirBlockId, BTreeMap<MirValue, ConstVal>> =
                 BTreeMap::new();
-            incoming_constants.insert(cfg.entry, HashMap::new());
+            incoming_constants.insert(cfg.entry, BTreeMap::new());
 
             let mut worklist: Vec<MirBlockId> = vec![cfg.entry];
             let mut visited: BTreeSet<MirBlockId> = BTreeSet::new();
@@ -263,7 +273,7 @@ impl Pass for DomConstPropPass {
                     merged
                 } else {
                     // Entry block - no incoming constants
-                    HashMap::new()
+                    BTreeMap::new()
                 };
 
                 incoming_constants.insert(block_id, dom_constants);
@@ -334,6 +344,15 @@ impl Pass for DomConstPropPass {
                         MirRhs::Call { .. } => {
                             // Calls are side-effecting - mark result as unknown
                             local_constants.insert(stmt.target, ConstVal::Unknown);
+                            stmt.rhs.clone()
+                        }
+                        MirRhs::Load { .. } => {
+                            local_constants.insert(stmt.target, ConstVal::Unknown);
+                            stmt.rhs.clone()
+                        }
+                        MirRhs::Store { .. } => {
+                            // Stores invalidate all existing constants (conservative)
+                            local_constants.clear();
                             stmt.rhs.clone()
                         }
                     };

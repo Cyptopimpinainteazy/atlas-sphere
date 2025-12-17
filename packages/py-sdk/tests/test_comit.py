@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import Mock, patch
 from atlas_sphere_sdk.comit import ComitBuilder, ComitTransaction
+from atlas_sphere_sdk.types import InvalidPayloadError
 
 
 class TestComitBuilder:
@@ -14,8 +15,8 @@ class TestComitBuilder:
         keypair = Mock()
         keypair.public_key = bytes(32)
         
-        with pytest.raises(ValueError, match="At least one payload"):
-            builder.build(keypair)
+        with pytest.raises(InvalidPayloadError, match="At least one payload"):
+            builder.build(keypair, nonce=1)
     
     def test_evm_payload(self):
         """Test adding EVM payload."""
@@ -106,35 +107,33 @@ class TestComitTransaction:
     def test_transaction_creation(self):
         """Test creating a ComitTransaction."""
         tx = ComitTransaction(
-            sender=bytes(32),
+            comit_id="0x" + "ab" * 32,
             nonce=1,
             evm_payload=b"\x01\x02\x03",
-            evm_gas_limit=100_000,
-            svm_payload=None,
-            svm_compute_limit=0,
+            svm_payload=b"",
             prepare_root=bytes(32),
-            signature=bytes(64),
+            evm_gas_limit=100_000,
+            svm_compute_limit=0,
         )
         
         assert tx.nonce == 1
         assert tx.evm_payload == b"\x01\x02\x03"
         assert tx.evm_gas_limit == 100_000
     
-    def test_to_extrinsic(self):
-        """Test converting to extrinsic format."""
+    def test_to_dict(self):
+        """Test converting to dictionary format."""
         tx = ComitTransaction(
-            sender=bytes(32),
+            comit_id="0x" + "ab" * 32,
             nonce=1,
             evm_payload=b"\x01",
-            evm_gas_limit=100_000,
             svm_payload=b"\x02",
-            svm_compute_limit=200_000,
             prepare_root=bytes(32),
-            signature=bytes(64),
+            evm_gas_limit=100_000,
+            svm_compute_limit=200_000,
         )
         
-        extrinsic = tx.to_extrinsic()
+        data = tx.to_dict()
         
-        assert "evm_payload" in extrinsic
-        assert "svm_payload" in extrinsic
-        assert extrinsic["nonce"] == 1
+        assert "evm_payload" in data
+        assert "svm_payload" in data
+        assert data["nonce"] == 1

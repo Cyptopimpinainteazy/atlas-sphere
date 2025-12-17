@@ -29,6 +29,7 @@ use core::marker::PhantomData;
 /// Weight functions needed for `pallet_atlas_kernel`.
 pub trait WeightInfo {
     fn submit_comit() -> Weight;
+    fn submit_comit_v2() -> Weight;
     fn register_asset() -> Weight;
     fn update_canonical_balance() -> Weight;
     fn authorize_account() -> Weight;
@@ -65,6 +66,25 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
         //  Estimated: `3577`
         // Minimum execution time: 45_000_000 picoseconds.
         Weight::from_parts(50_000_000, 3577)
+            .saturating_add(T::DbWeight::get().reads(6_u64))
+            .saturating_add(T::DbWeight::get().writes(4_u64))
+    }
+
+    /// Storage: `AtlasKernel::SubmittedComits` (r:1 w:1)
+    /// Proof: `AtlasKernel::SubmittedComits` (`max_values`: None, `max_size`: Some(40), added: 2515, mode: `MaxEncodedLen`)
+    /// Storage: `AtlasKernel::SubmissionsPerBlock` (r:1 w:1)
+    /// Proof: `AtlasKernel::SubmissionsPerBlock` (`max_values`: None, `max_size`: Some(32), added: 2507, mode: `MaxEncodedLen`)
+    /// Storage: `AtlasKernel::AuthorizedAccounts` (r:1 w:0)
+    /// Proof: `AtlasKernel::AuthorizedAccounts` (`max_values`: None, `max_size`: Some(16), added: 2491, mode: `MaxEncodedLen`)
+    /// Storage: `AtlasKernel::Nonces` (r:1 w:1)
+    /// Proof: `AtlasKernel::Nonces` (`max_values`: None, `max_size`: Some(24), added: 2499, mode: `MaxEncodedLen`)
+    /// Storage: `Balances::Account` (r:1 w:1)
+    /// Proof: `Balances::Account` (`max_values`: None, `max_size`: Some(112), added: 2587, mode: `MaxEncodedLen`)
+    /// Storage: `Timestamp::Now` (r:1 w:0)
+    /// Proof: `Timestamp::Now` (`max_values`: Some(1), `max_size`: Some(8), added: 503, mode: `MaxEncodedLen`)
+    fn submit_comit_v2() -> Weight {
+        // Conservative: same base weight as submit_comit until benchmarks are re-run.
+        Weight::from_parts(60_000_000, 4096)
             .saturating_add(T::DbWeight::get().reads(6_u64))
             .saturating_add(T::DbWeight::get().writes(4_u64))
     }
@@ -171,6 +191,10 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 impl WeightInfo for () {
     fn submit_comit() -> Weight {
         Weight::from_parts(50_000_000, 128_000)
+    }
+
+    fn submit_comit_v2() -> Weight {
+        Weight::from_parts(60_000_000, 160_000)
     }
 
     fn register_asset() -> Weight {

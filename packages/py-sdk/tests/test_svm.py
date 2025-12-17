@@ -1,36 +1,39 @@
 """Tests for SVM client."""
 
 import pytest
+from unittest.mock import Mock
 from atlas_sphere_sdk.svm import SvmClient, SvmInstruction, SvmAccount
 
 
 class TestSvmClient:
     """Tests for SvmClient."""
     
-    def test_init(self, mock_client):
+    def test_init(self):
         """Test SvmClient initialization."""
+        mock_client = Mock()
         svm = SvmClient(mock_client)
         assert svm._client is mock_client
     
-    def test_build_instruction(self, mock_client):
+    def test_build_instruction(self):
         """Test building an instruction."""
+        mock_client = Mock()
         svm = SvmClient(mock_client)
         
         instruction = svm.build_instruction(
             program_id=bytes(32),
-            data=b"\x01\x02\x03",
             accounts=[],
+            data=b"\x01\x02\x03",
         )
         
         assert isinstance(instruction, SvmInstruction)
         assert instruction.program_id == bytes(32)
         assert instruction.data == b"\x01\x02\x03"
     
-    def test_build_transfer(self, mock_client):
+    def test_build_transfer(self):
         """Test building a transfer instruction."""
+        mock_client = Mock()
         svm = SvmClient(mock_client)
         
-        # System program ID (11111111111111111111111111111111)
         instruction = svm.build_transfer(
             from_pubkey=bytes(32),
             to_pubkey=bytes(32),
@@ -39,6 +42,23 @@ class TestSvmClient:
         
         assert isinstance(instruction, SvmInstruction)
         assert len(instruction.accounts) == 2
+    
+    def test_to_comit_payload(self):
+        """Test converting instruction to Comit payload."""
+        mock_client = Mock()
+        svm = SvmClient(mock_client)
+        
+        instruction = SvmInstruction(
+            program_id=bytes(32),
+            accounts=[],
+            data=b"\x01\x02\x03",
+            compute_limit=200_000,
+        )
+        
+        payload = svm.to_comit_payload(instruction)
+        
+        assert isinstance(payload, bytes)
+        assert len(payload) > 32  # At least program_id
 
 
 class TestSvmInstruction:
@@ -72,20 +92,6 @@ class TestSvmInstruction:
         assert len(instruction.accounts) == 2
         assert instruction.accounts[0].is_signer is True
         assert instruction.accounts[1].is_signer is False
-    
-    def test_to_payload(self):
-        """Test converting to payload."""
-        instruction = SvmInstruction(
-            program_id=bytes(32),
-            accounts=[],
-            data=b"\x01\x02\x03",
-        )
-        
-        payload = instruction.to_payload()
-        
-        assert "program_id" in payload
-        assert "accounts" in payload
-        assert "data" in payload
 
 
 class TestSvmAccount:
@@ -113,17 +119,3 @@ class TestSvmAccount:
         
         assert account.is_signer is False
         assert account.is_writable is False
-    
-    def test_to_dict(self):
-        """Test converting to dictionary."""
-        account = SvmAccount(
-            pubkey=bytes(32),
-            is_signer=True,
-            is_writable=False,
-        )
-        
-        d = account.to_dict()
-        
-        assert "pubkey" in d
-        assert d["is_signer"] is True
-        assert d["is_writable"] is False

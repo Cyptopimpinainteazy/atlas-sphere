@@ -141,3 +141,16 @@ pub fn run_to_block(n: u64) {
         <Treasury as Hooks<u64>>::on_initialize(System::block_number());
     }
 }
+
+#[test]
+fn migration_sets_storage_version() {
+    let mut ext = new_test_ext();
+    ext.execute_with(|| {
+        use frame_support::traits::StorageVersion;
+        use crate::pallet as treasury_pallet;
+
+        StorageVersion::put::<treasury_pallet::Pallet<Test>>(StorageVersion::new(0));
+        let _w = crate::migrations::Migration::<Test>::on_runtime_upgrade();
+        assert!(StorageVersion::get::<treasury_pallet::Pallet<Test>>() >= treasury_pallet::STORAGE_VERSION);
+    });
+}

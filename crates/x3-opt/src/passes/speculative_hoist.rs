@@ -136,6 +136,10 @@ fn is_pure(rhs: &MirRhs) -> bool {
 
         // Function calls are NOT pure (side effects possible)
         MirRhs::Call { .. } => false,
+
+        // Loads and stores are NOT pure
+        MirRhs::Load { .. } => false,
+        MirRhs::Store { .. } => false,
     }
 }
 
@@ -168,6 +172,8 @@ fn get_operands(rhs: &MirRhs) -> Vec<MirValue> {
         MirRhs::Binary(_, a, b) => vec![*a, *b],
         MirRhs::Unary(_, v) => vec![*v],
         MirRhs::Call { args, .. } => args.clone(),
+        MirRhs::Load { addr, .. } => vec![*addr],
+        MirRhs::Store { addr, val, .. } => vec![*addr, *val],
     }
 }
 

@@ -13,10 +13,12 @@
   },
   "peerDependencies": {
     "@polkadot/api": "^14.0.1",
+    "framer-motion": "^12.23.26",
     "react": "^18.0.0"
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.460.0"
   }
 }

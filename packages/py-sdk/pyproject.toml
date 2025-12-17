@@ -30,7 +30,6 @@ dependencies = [
     "requests>=2.31.0",
     "web3>=6.11.0",
     "solana>=0.32.0",
-    "solana-py>=0.11.0",
     "solders>=0.20.0",
     "httpx>=0.25.0",
     "pydantic>=2.5.0",

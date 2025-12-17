@@ -103,7 +103,8 @@ export const DocAssistant: React.FC<DocAssistantProps> = ({
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
   // Position styles
   const positionStyles: Record<string, React.CSSProperties> = {
@@ -121,17 +122,19 @@ export const DocAssistant: React.FC<DocAssistantProps> = ({
   // Initialize speech recognition
   useEffect(() => {
     if (enableVoice && typeof window !== 'undefined') {
-      const SpeechRecognition = (window as typeof window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition }).SpeechRecognition ||
-                               (window as typeof window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition }).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognitionAPI) {
+        recognitionRef.current = new SpeechRecognitionAPI();
         recognitionRef.current.continuous = false;
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-US';
 
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recognitionRef.current.onresult = (event: any) => {
           const transcript = Array.from(event.results)
-            .map((result: SpeechRecognitionResult) => result[0].transcript)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((result: any) => result[0].transcript)
             .join('');
           setInputValue(transcript);
         };

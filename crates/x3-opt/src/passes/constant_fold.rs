@@ -13,7 +13,7 @@
 
 use crate::pass::{Pass, PassResult};
 use crate::OptResult;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use x3_ast::BinaryOp;
 use x3_common::Literal;
 use x3_mir::{MirModule, MirRhs, MirStatement, MirValue};
@@ -21,13 +21,13 @@ use x3_mir::{MirModule, MirRhs, MirStatement, MirValue};
 /// Constant folding optimization pass.
 pub struct ConstantFoldPass {
     /// Track which values are known constants.
-    _constants: HashMap<MirValue, Literal>,
+    _constants: BTreeMap<MirValue, Literal>,
 }
 
 impl ConstantFoldPass {
     pub fn new() -> Self {
         ConstantFoldPass {
-            _constants: HashMap::new(),
+            _constants: BTreeMap::new(),
         }
     }
 
@@ -132,7 +132,7 @@ impl Pass for ConstantFoldPass {
 
         for func in module.functions.iter_mut() {
             // Build constant map for this function
-            let mut constants: HashMap<MirValue, Literal> = HashMap::new();
+            let mut constants: BTreeMap<MirValue, Literal> = BTreeMap::new();
 
             for block in func.blocks.iter_mut() {
                 let mut new_statements = Vec::with_capacity(block.statements.len());
@@ -236,6 +236,10 @@ impl Pass for ConstantFoldPass {
 
                         // Calls are not folded (may have side effects)
                         MirRhs::Call { .. } => rhs,
+
+                        // Loads and stores are not folded
+                        MirRhs::Load { .. } => rhs,
+                        MirRhs::Store { .. } => rhs,
                     };
 
                     new_statements.push(MirStatement {

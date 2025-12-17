@@ -57,12 +57,14 @@
 //! 4. **Atomic isolation**: Atomic blocks can be rolled back on failure
 //! 5. **No undefined behavior**: All opcodes have well-defined semantics
 
+pub mod bridge;
 pub mod error;
 pub mod hostcall;
 pub mod verifier;
 pub mod vm;
 
 // Re-exports
+pub use bridge::{BridgeConfig, BridgeError, X3VMBridge};
 pub use error::{VMError, VMErrorKind, VMResult, VerifierError, VerifierErrorKind};
 pub use hostcall::{Hostcall, HostcallRegistry};
 pub use verifier::{opcode_gas_cost, DecodedInstr, Verifier, VerifyOptions};

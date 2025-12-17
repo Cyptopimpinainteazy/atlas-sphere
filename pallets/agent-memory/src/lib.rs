@@ -29,6 +29,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+
+
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
@@ -59,8 +61,13 @@ pub mod pallet {
     /// Type alias for agent ID.
     pub type AgentId = u32;
 
+    use frame_support::traits::StorageVersion;
+
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
     #[pallet::without_storage_info]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]

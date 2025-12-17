@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function MonitoringPage() {
   return (
     <DocLayout
       title="Monitoring & Observability"
       description="Monitor your X3 Atlas Sphere nodes and applications"
-      section="nodes"
-      prevPage={{ title: 'Key Management', href: '/developers/docs/keys' }}
-      nextPage={{ title: 'Introduction', href: '/developers/docs/intro' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Comprehensive monitoring is essential for maintaining healthy nodes and applications.
@@ -21,7 +18,7 @@ export default function MonitoringPage() {
       <p>
         X3 nodes expose Prometheus metrics on port 9615 by default:
       </p>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Start node with Prometheus metrics
 ./atlas-sphere-node \\
   --prometheus-port 9615 \\
@@ -29,12 +26,12 @@ export default function MonitoringPage() {
 
 # Test metrics endpoint
 curl http://localhost:9615/metrics`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Key Metrics</h2>
 
       <h3>Block Production</h3>
-      <DocLayout.CodeBlock language="promql">
+      <CodeBlock language="promql">
 {`# Current block height
 substrate_block_height{status="best"}
 
@@ -46,10 +43,10 @@ substrate_block_height{status="finalized"}
 
 # Finality lag (best - finalized)
 substrate_block_height{status="best"} - substrate_block_height{status="finalized"}`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Networking</h3>
-      <DocLayout.CodeBlock language="promql">
+      <CodeBlock language="promql">
 {`# Connected peers
 substrate_sub_libp2p_peers_count
 
@@ -58,19 +55,19 @@ rate(substrate_sub_libp2p_network_bytes_total[5m])
 
 # Sync status
 substrate_sub_libp2p_is_major_syncing`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Transaction Pool</h3>
-      <DocLayout.CodeBlock language="promql">
+      <CodeBlock language="promql">
 {`# Transactions in pool
 substrate_sub_txpool_validations_scheduled
 
 # Transaction imports
 rate(substrate_sub_txpool_submitted_txns[5m])`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Comit Specific</h3>
-      <DocLayout.CodeBlock language="promql">
+      <CodeBlock language="promql">
 {`# Comits submitted per minute
 rate(atlas_kernel_comits_submitted_total[1m])
 
@@ -80,10 +77,10 @@ sum(rate(atlas_kernel_comits_submitted_total[5m]))
 
 # Average Comit execution time
 histogram_quantile(0.95, rate(atlas_kernel_comit_execution_seconds_bucket[5m]))`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Prometheus Setup</h2>
-      <DocLayout.CodeBlock language="yaml" filename="prometheus.yml">
+      <CodeBlock language="yaml" title="prometheus.yml">
 {`global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -115,10 +112,10 @@ scrape_configs:
         labels:
           network: 'testnet'
           type: 'rpc'`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Alerting Rules</h2>
-      <DocLayout.CodeBlock language="yaml" filename="alerts/atlas.yml">
+      <CodeBlock language="yaml" title="alerts/atlas.yml">
 {`groups:
   - name: atlas-alerts
     rules:
@@ -163,13 +160,13 @@ scrape_configs:
           severity: warning
         annotations:
           summary: "Comit failure rate > 10%"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Grafana Dashboard</h2>
       <p>
         Import our pre-built dashboard for X3 Atlas Sphere:
       </p>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Download dashboard JSON
 curl -O https://raw.githubusercontent.com/Cyptopimpinainteazy/atlas-sphere/main/monitoring/grafana-dashboard.json
 
@@ -178,10 +175,10 @@ curl -X POST \\
   -H "Content-Type: application/json" \\
   -d @grafana-dashboard.json \\
   http://admin:password@localhost:3000/api/dashboards/db`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Logging</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Set log level
 ./atlas-sphere-node -l info
 
@@ -193,10 +190,10 @@ curl -X POST \\
 
 # Log to file
 ./atlas-sphere-node 2>&1 | tee /var/log/atlas/node.log`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Structured Logging with Vector</h3>
-      <DocLayout.CodeBlock language="toml" filename="vector.toml">
+      <CodeBlock language="toml" title="vector.toml">
 {`[sources.atlas_logs]
 type = "file"
 include = ["/var/log/atlas/*.log"]
@@ -213,22 +210,22 @@ type = "elasticsearch"
 inputs = ["parse_json"]
 endpoint = "http://elasticsearch:9200"
 index = "atlas-logs-%Y-%m-%d"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Telemetry</h2>
       <p>
         Submit telemetry to the X3 telemetry server for network-wide visibility:
       </p>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`./atlas-sphere-node \\
   --telemetry-url "wss://telemetry.atlas-sphere.io/submit 0"
 
 # View telemetry dashboard
 # https://telemetry.atlas-sphere.io`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Health Checks</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Simple health check
 curl -s http://localhost:9933/health | jq
 
@@ -243,12 +240,12 @@ curl -s -H "Content-Type: application/json" \\
 #   "isSyncing": false,
 #   "shouldHavePeers": true
 # }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="tip" title="Monitoring Stack">
+      <Callout type="info" title="Monitoring Stack">
         We recommend the Prometheus + Grafana + Alertmanager stack for production 
         monitoring. For logs, use Vector with Elasticsearch or Loki.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

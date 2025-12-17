@@ -57,7 +57,7 @@ def mock_client(mock_substrate):
     )
     
     client.get_account_info.return_value = AccountInfo(
-        address="5GrwvaEF...",
+        account_id="5GrwvaEF...",
         nonce=5,
         free_balance=1_000_000_000_000,
         reserved_balance=0,

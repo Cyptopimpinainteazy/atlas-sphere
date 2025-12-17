@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function EvmDeployPage() {
   return (
     <DocLayout
       title="Deploying EVM Contracts"
       description="Deploy smart contracts to X3 Atlas Sphere's EVM environment"
-      section="evm"
-      prevPage={{ title: 'Run a Node', href: '/developers/docs/run-node' }}
-      nextPage={{ title: 'Interact with Contracts', href: '/developers/docs/evm-interact' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Deploy your Solidity smart contracts to X3 Atlas Sphere using familiar EVM tools.
@@ -29,7 +26,7 @@ export default function EvmDeployPage() {
       </ul>
 
       <h2>Network Configuration</h2>
-      <DocLayout.CodeBlock language="typescript" filename="hardhat.config.ts">
+      <CodeBlock language="typescript" title="hardhat.config.ts">
 {`import { HardhatUserConfig } from 'hardhat/config';
 
 const config: HardhatUserConfig = {
@@ -50,13 +47,13 @@ const config: HardhatUserConfig = {
 };
 
 export default config;`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Simple Contract Deployment</h2>
       <p>
         Here's a simple ERC20 token deployment script:
       </p>
-      <DocLayout.CodeBlock language="solidity" filename="contracts/AtlasToken.sol">
+      <CodeBlock language="solidity" title="contracts/AtlasToken.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -67,9 +64,9 @@ contract AtlasToken is ERC20 {
         _mint(msg.sender, initialSupply);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.CodeBlock language="typescript" filename="scripts/deploy.ts">
+      <CodeBlock language="typescript" title="scripts/deploy.ts">
 {`import { ethers } from 'hardhat';
 
 async function main() {
@@ -89,27 +86,27 @@ main().catch((error) => {
   console.error(error);
   process.exit(1);
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Deploy Command</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Deploy to testnet
 npx hardhat run scripts/deploy.ts --network x3Testnet
 
 # Deploy to local node
 npx hardhat run scripts/deploy.ts --network x3Local`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Gas Prices">
+      <Callout type="info" title="Gas Prices">
         X3 uses a fixed gas price of 1 gwei on testnet. Gas is paid in ATLAS tokens.
         Use the faucet to get test tokens.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Verifying Deployment</h2>
       <p>
         After deployment, verify your contract in the X3 Explorer:
       </p>
-      <DocLayout.CodeBlock language="typescript" filename="scripts/verify.ts">
+      <CodeBlock language="typescript" title="scripts/verify.ts">
 {`import { run } from 'hardhat';
 
 async function verify(address: string, constructorArgs: any[]) {
@@ -120,7 +117,7 @@ async function verify(address: string, constructorArgs: any[]) {
 }
 
 // Example: verify('0x...', [ethers.parseEther('1000000')])`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Contract Size Limits</h2>
       <p>
@@ -132,10 +129,10 @@ async function verify(address: string, constructorArgs: any[]) {
         <li>Block gas limit: 30 million</li>
       </ul>
 
-      <DocLayout.Callout type="tip" title="Cross-VM Contracts">
+      <Callout type="info" title="Cross-VM Contracts">
         For contracts that interact with SVM programs via Comits, see the 
         <a href="/developers/docs/creating-comits" className="text-orange-400 hover:text-orange-300 ml-1">Creating Comits</a> guide.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

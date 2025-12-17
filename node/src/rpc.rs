@@ -4,7 +4,7 @@
 /// Includes system RPC methods for account nonce queries
 /// Supports WebSocket subscriptions for real-time block and event updates
 use atlas_sphere_runtime::{
-    opaque::Block, AccountId, AssetId, Balance, ChainId, Nonce, NATIVE_GAS_PRICE,
+    opaque::Block, AccountId, AssetId, Balance, BlockNumber, ChainId, Nonce, NATIVE_GAS_PRICE,
 };
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use jsonrpsee::{
@@ -16,6 +16,14 @@ use pallet_atlas_kernel::AtlasKernelRuntimeApi;
 use pallet_atomic_trade_engine::{
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
     AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
+};
+use pallet_evolution_core::runtime_api::{
+    BlockMetricsResponse, EvolutionCoreApi as EvolutionCoreRuntimeApi, EvolutionStatusResponse,
+    EvolvableParamsResponse, ProposalResponse,
+};
+use pallet_x3_verifier::runtime_api::{
+    ExecutorResponse, JobId, JobResponse, ReceiptResponse, VerifierStatusResponse,
+    X3VerifierApi as X3VerifierRuntimeApi,
 };
 use sc_client_api::BlockBackend;
 use sp_api::ProvideRuntimeApi;
@@ -592,6 +600,370 @@ where
 }
 
 // ============================================================================
+// Evolution Core RPC
+// ============================================================================
+
+/// Evolution Core RPC API for querying AIC evolution state
+#[rpc(client, server)]
+pub trait EvolutionCoreApi<BlockHash> {
+    /// Get current evolvable parameters
+    #[method(name = "evolutionCore_getParams")]
+    fn get_params(&self, at: Option<BlockHash>) -> RpcResult<EvolvableParamsResponse>;
+
+    /// Get evolution status summary
+    #[method(name = "evolutionCore_getStatus")]
+    fn get_status(&self, at: Option<BlockHash>) -> RpcResult<EvolutionStatusResponse>;
+
+    /// Get recent block metrics
+    #[method(name = "evolutionCore_getMetrics")]
+    fn get_metrics(
+        &self,
+        depth: u32,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Vec<(BlockNumber, BlockMetricsResponse)>>;
+
+    /// Get pending proposals
+    #[method(name = "evolutionCore_getPendingProposals")]
+    fn get_pending_proposals(
+        &self,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Vec<ProposalResponse<AccountId, BlockNumber>>>;
+
+    /// Check if evolution is enabled
+    #[method(name = "evolutionCore_isEnabled")]
+    fn is_enabled(&self, at: Option<BlockHash>) -> RpcResult<bool>;
+
+    /// Check if account is an AI agent
+    #[method(name = "evolutionCore_isAiAgent")]
+    fn is_ai_agent(&self, account: AccountId, at: Option<BlockHash>) -> RpcResult<bool>;
+}
+
+/// Evolution Core RPC server implementation
+pub struct EvolutionCoreRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> EvolutionCoreRpc<C, B> {
+    /// Create new RPC instance
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> EvolutionCoreApiServer<<Block as BlockT>::Hash> for EvolutionCoreRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
+    C::Api: EvolutionCoreRuntimeApi<Block, AccountId, BlockNumber>,
+{
+    fn get_params(
+        &self,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<EvolvableParamsResponse> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_params(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_status(
+        &self,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<EvolutionStatusResponse> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_status(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_metrics(
+        &self,
+        depth: u32,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<(BlockNumber, BlockMetricsResponse)>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_recent_metrics(at, depth).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_pending_proposals(
+        &self,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<ProposalResponse<AccountId, BlockNumber>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_pending_proposals(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn is_enabled(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<bool> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.is_evolution_enabled(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn is_ai_agent(
+        &self,
+        account: AccountId,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<bool> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.is_ai_agent(at, account).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+}
+
+// ============================================================================
+// X3 Verifier RPC
+// ============================================================================
+
+/// X3 Verifier RPC API for querying swarm execution state
+#[rpc(client, server)]
+pub trait X3VerifierApi<BlockHash> {
+    /// Get verifier status summary
+    #[method(name = "x3Verifier_getStatus")]
+    fn get_status(&self, at: Option<BlockHash>) -> RpcResult<VerifierStatusResponse>;
+
+    /// Get executor information
+    #[method(name = "x3Verifier_getExecutor")]
+    fn get_executor(
+        &self,
+        account: AccountId,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Option<ExecutorResponse<AccountId, Balance>>>;
+
+    /// Get all active executors
+    #[method(name = "x3Verifier_getActiveExecutors")]
+    fn get_active_executors(
+        &self,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Vec<ExecutorResponse<AccountId, Balance>>>;
+
+    /// Get job information
+    #[method(name = "x3Verifier_getJob")]
+    fn get_job(
+        &self,
+        job_id: H256,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Option<JobResponse<AccountId, Balance, BlockNumber>>>;
+
+    /// Get pending jobs
+    #[method(name = "x3Verifier_getPendingJobs")]
+    fn get_pending_jobs(
+        &self,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Vec<JobResponse<AccountId, Balance, BlockNumber>>>;
+
+    /// Get receipt for a job
+    #[method(name = "x3Verifier_getReceipt")]
+    fn get_receipt(
+        &self,
+        job_id: H256,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Option<ReceiptResponse<AccountId>>>;
+
+    /// Check if verification is enabled
+    #[method(name = "x3Verifier_isEnabled")]
+    fn is_enabled(&self, at: Option<BlockHash>) -> RpcResult<bool>;
+
+    /// Check if account is a registered executor
+    #[method(name = "x3Verifier_isExecutor")]
+    fn is_executor(&self, account: AccountId, at: Option<BlockHash>) -> RpcResult<bool>;
+}
+
+/// X3 Verifier RPC server implementation
+pub struct X3VerifierRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> X3VerifierRpc<C, B> {
+    /// Create new RPC instance
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> X3VerifierApiServer<<Block as BlockT>::Hash> for X3VerifierRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
+    C::Api: X3VerifierRuntimeApi<Block, AccountId, Balance, BlockNumber>,
+{
+    fn get_status(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<VerifierStatusResponse> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_status(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_executor(
+        &self,
+        account: AccountId,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Option<ExecutorResponse<AccountId, Balance>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_executor(at, account).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_active_executors(
+        &self,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<ExecutorResponse<AccountId, Balance>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_active_executors(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_job(
+        &self,
+        job_id: H256,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Option<JobResponse<AccountId, Balance, BlockNumber>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_job(at, job_id).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_pending_jobs(
+        &self,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<JobResponse<AccountId, Balance, BlockNumber>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_pending_jobs(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_receipt(
+        &self,
+        job_id: H256,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Option<ReceiptResponse<AccountId>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_receipt(at, job_id).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn is_enabled(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<bool> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.is_verification_enabled(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn is_executor(
+        &self,
+        account: AccountId,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<bool> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.is_executor(at, account).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+}
+
+// ============================================================================
 // Chain Subscription Implementation
 // ============================================================================
 
@@ -733,6 +1105,8 @@ where
     C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
     C::Api: AccountNonceApi<Block, AccountId, Nonce>,
     C::Api: AtomicTradeEngineRuntimeApi<Block>,
+    C::Api: EvolutionCoreRuntimeApi<Block, AccountId, BlockNumber>,
+    C::Api: X3VerifierRuntimeApi<Block, AccountId, Balance, BlockNumber>,
     P: Send + Sync + 'static,
 {
     use jsonrpsee::RpcModule;
@@ -759,9 +1133,28 @@ where
     let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client.clone());
     module.merge(AtomicTradeEngineApiServer::into_rpc(atomic_trade))?;
 
+    // Add Evolution Core RPC for AIC parameter evolution
+    let evolution_core = EvolutionCoreRpc::<C, Block>::new(client.clone());
+    module.merge(EvolutionCoreApiServer::into_rpc(evolution_core))?;
+
+    // Add X3 Verifier RPC for off-chain job verification
+    let x3_verifier = X3VerifierRpc::<C, Block>::new(client.clone());
+    module.merge(X3VerifierApiServer::into_rpc(x3_verifier))?;
+
     // Add WebSocket subscription handlers for new/finalized blocks
     let chain_sub = ChainSubscriptionRpc::<C, Block>::new(client);
     module.merge(ChainSubscriptionApiServer::into_rpc(chain_sub))?;
+
+    // If the `frontier` feature is enabled, try to add Frontier JSON-RPC modules
+    // (full `eth_*`, `net_*`, `web3_*` endpoints). This is compiled conditionally
+    // so that builds without Frontier dependencies continue to work.
+    #[cfg(feature = "frontier")]
+    {
+        // TODO: Implement frontier RPC module when needed
+        // if let Ok(fmod) = crate::rpc_frontier::create_frontier_stub(client.clone(), _pool) {
+        //     module.merge(fmod)?;
+        // }
+    }
 
     Ok(module)
 }

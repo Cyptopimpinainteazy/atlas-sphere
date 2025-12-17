@@ -2,10 +2,24 @@
 
 use crate::error::{CliError, Result};
 use crate::project::Project;
-use clap::Args;
+use clap::{Args, ValueEnum};
 use colored::Colorize;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::path::PathBuf;
 use std::process::Command;
+use x3_compiler::{CompilationOptions, Compiler};
+
+/// Emit format for X3 compilation
+#[derive(Clone, ValueEnum, Default)]
+pub enum EmitType {
+    /// Emit bytecode (default)
+    #[default]
+    Bytecode,
+    /// Emit MIR representation
+    Mir,
+    /// Emit HIR representation
+    Hir,
+}
 
 #[derive(Args)]
 pub struct BuildArgs {
@@ -17,17 +31,41 @@ pub struct BuildArgs {
     #[arg(long)]
     pub svm_only: bool,
 
+    /// Build only X3 programs
+    #[arg(long)]
+    pub x3_only: bool,
+
+    /// X3 source file to compile (optional, defaults to all .x3 files)
+    #[arg(long)]
+    pub x3_file: Option<PathBuf>,
+
     /// Optimization level (0-3)
-    #[arg(short, long)]
+    #[arg(short = 'O', long = "opt-level", value_parser = clap::value_parser!(u8).range(0..=3))]
     pub optimization: Option<u8>,
 
     /// Skip compilation, only generate ABIs
     #[arg(long)]
     pub abi_only: bool,
 
-    /// Verbose output
+    /// Verbose output (shows compilation progress)
     #[arg(short, long)]
     pub verbose: bool,
+
+    /// Emit intermediate representation (mir, hir, bytecode)
+    #[arg(long, value_enum)]
+    pub emit: Option<EmitType>,
+
+    /// Emit optimization statistics
+    #[arg(long)]
+    pub stats: bool,
+
+    /// Emit optimized MIR
+    #[arg(long)]
+    pub emit_mir_opt: bool,
+
+    /// Enable debug info in output
+    #[arg(long)]
+    pub debug: bool,
 }
 
 pub async fn execute(args: BuildArgs) -> Result<()> {
@@ -45,8 +83,16 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
             .unwrap(),
     );
 
-    let build_evm = !args.svm_only;
-    let build_svm = !args.evm_only;
+    let build_evm = !args.svm_only && !args.x3_only;
+    let build_svm = !args.evm_only && !args.x3_only;
+    let build_x3 = !args.evm_only && !args.svm_only;
+
+    // Build X3 programs
+    if build_x3 {
+        pb.set_message("Compiling X3 programs...");
+        build_x3_programs(&project, &args)?;
+        pb.set_message("X3 programs compiled");
+    }
 
     // Build EVM contracts
     if build_evm {
@@ -69,6 +115,152 @@ pub async fn execute(args: BuildArgs) -> Result<()> {
         "✓".green(),
         project.out_dir().display()
     );
+
+    Ok(())
+}
+
+/// Build X3 programs using x3-compiler
+fn build_x3_programs(project: &Project, args: &BuildArgs) -> Result<()> {
+    // Find X3 source files
+    let x3_files = if let Some(ref file) = args.x3_file {
+        vec![file.clone()]
+    } else {
+        find_x3_files(&project.root)?
+    };
+
+    if x3_files.is_empty() {
+        println!("  {} No X3 files found", "○".yellow());
+        return Ok(());
+    }
+
+    println!("  {} Found {} X3 file(s)", "→".blue(), x3_files.len());
+
+    // Build compilation options
+    let opt_level = match args.optimization {
+        Some(0) => x3_compiler::OptLevel::None,
+        Some(1) => x3_compiler::OptLevel::Basic,
+        Some(2) | None => x3_compiler::OptLevel::Default,
+        Some(3) | Some(_) => x3_compiler::OptLevel::Aggressive,
+    };
+
+    let emit_format = match args.emit.as_ref().unwrap_or(&EmitType::Bytecode) {
+        EmitType::Bytecode => x3_compiler::options::EmitFormat::Bytecode,
+        EmitType::Mir => x3_compiler::options::EmitFormat::Mir,
+        EmitType::Hir => x3_compiler::options::EmitFormat::Hir,
+    };
+
+    let options = CompilationOptions {
+        opt_level,
+        debug: args.debug,
+        verbose: args.verbose,
+        emit_hir: matches!(args.emit, Some(EmitType::Hir)),
+        emit_mir: matches!(args.emit, Some(EmitType::Mir)),
+        emit_mir_opt: args.emit_mir_opt,
+        emit_stats: args.stats,
+        emit_format,
+        analyze_gas: false,
+        verify_contract: false,
+    };
+
+    // Compile each X3 file
+    for file in &x3_files {
+        compile_x3_file(project, file, &options, args)?;
+    }
+
+    Ok(())
+}
+
+fn find_x3_files(root: &std::path::Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+
+    // Check src/x3 and contracts/x3 directories
+    for subdir in &["src", "contracts", "x3", "src/x3"] {
+        let dir = root.join(subdir);
+        if dir.exists() {
+            for entry in walkdir::WalkDir::new(&dir)
+                .into_iter()
+                .filter_map(|e| e.ok())
+            {
+                let path = entry.path();
+                if path.extension().map_or(false, |ext| ext == "x3") {
+                    files.push(path.to_path_buf());
+                }
+            }
+        }
+    }
+
+    Ok(files)
+}
+
+fn compile_x3_file(
+    project: &Project,
+    file: &PathBuf,
+    options: &CompilationOptions,
+    args: &BuildArgs,
+) -> Result<()> {
+    let source = std::fs::read_to_string(file)?;
+    let file_stem = file.file_stem().unwrap().to_string_lossy();
+
+    if args.verbose {
+        println!(
+            "  {} Compiling {} (opt={:?})",
+            "→".blue(),
+            file.display(),
+            options.opt_level
+        );
+    }
+
+    let output = Compiler::compile(&source, options.clone())
+        .map_err(|e| CliError::Build(format!("X3 compilation failed: {:?}", e)))?;
+
+    // Write bytecode output
+    let out_dir = project.out_dir();
+    std::fs::create_dir_all(&out_dir)?;
+
+    let bytecode_file = out_dir.join(format!("{}.x3b", file_stem));
+    std::fs::write(&bytecode_file, &output.bytecode.code)?;
+
+    println!(
+        "  {} Compiled: {} → {} ({} bytes)",
+        "✓".green(),
+        file.display(),
+        bytecode_file.display(),
+        output.bytecode.code.len()
+    );
+
+    // Write stats if requested
+    if args.stats {
+        if let Some(ref artifacts) = output.artifacts {
+            if let Some(ref stats) = artifacts.opt_stats {
+                println!("      📊 Optimization stats:");
+                println!("         Passes run: {}", stats.passes_run);
+                println!("         Passes changed: {}", stats.passes_changed);
+                println!("         Transformations: {}", stats.total_transformations);
+                println!("         Iterations: {}", stats.iterations);
+            }
+        }
+    }
+
+    // Write MIR if requested
+    if options.emit_mir {
+        if let Some(ref artifacts) = output.artifacts {
+            if let Some(ref mir) = artifacts.mir_unoptimized {
+                let mir_file = out_dir.join(format!("{}.mir", file_stem));
+                std::fs::write(&mir_file, format!("{:#?}", mir))?;
+                println!("      → MIR written to: {}", mir_file.display());
+            }
+        }
+    }
+
+    if options.emit_mir_opt {
+        if let Some(ref artifacts) = output.artifacts {
+            if let Some(ref mir) = artifacts.mir_optimized {
+                let mir_file = out_dir.join(format!("{}.mir.opt", file_stem));
+                std::fs::write(&mir_file, format!("{:#?}", mir))?;
+                println!("      → Optimized MIR written to: {}", mir_file.display());
+            }
+        }
+    }
 
     Ok(())
 }

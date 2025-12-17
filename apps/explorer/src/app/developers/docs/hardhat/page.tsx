@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function HardhatGuidePage() {
   return (
     <DocLayout
       title="Hardhat Development Guide"
       description="Complete guide to using Hardhat for X3 Atlas Sphere development"
-      section="evm"
-      prevPage={{ title: 'Interact with Contracts', href: '/developers/docs/evm-interact' }}
-      nextPage={{ title: 'Foundry Guide', href: '/developers/docs/foundry' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Hardhat is the recommended development environment for building EVM smart contracts
@@ -18,7 +15,7 @@ export default function HardhatGuidePage() {
       </p>
 
       <h2>Project Setup</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Create new project
 mkdir my-x3-project && cd my-x3-project
 npm init -y
@@ -30,10 +27,10 @@ npm install --save-dev @openzeppelin/contracts
 # Initialize Hardhat
 npx hardhat init
 # Select "Create a TypeScript project"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Hardhat Configuration</h2>
-      <DocLayout.CodeBlock language="typescript" filename="hardhat.config.ts">
+      <CodeBlock language="typescript" title="hardhat.config.ts">
 {`import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
 import * as dotenv from 'dotenv';
@@ -87,10 +84,10 @@ const config: HardhatUserConfig = {
 };
 
 export default config;`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Writing Tests</h2>
-      <DocLayout.CodeBlock language="typescript" filename="test/Token.test.ts">
+      <CodeBlock language="typescript" title="test/Token.test.ts">
 {`import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
@@ -147,10 +144,10 @@ describe('AtlasToken', function () {
     });
   });
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Running Tests</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Run all tests
 npx hardhat test
 
@@ -162,10 +159,10 @@ npx hardhat test test/Token.test.ts
 
 # Run with coverage
 npx hardhat coverage`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Deployment Scripts</h2>
-      <DocLayout.CodeBlock language="typescript" filename="scripts/deploy.ts">
+      <CodeBlock language="typescript" title="scripts/deploy.ts">
 {`import { ethers, run, network } from 'hardhat';
 
 async function main() {
@@ -199,18 +196,18 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Environment Variables">
+      <Callout type="info" title="Environment Variables">
         Create a <code>.env</code> file with your private key and API keys:
         <pre className="mt-2 text-xs">
 {`PRIVATE_KEY=your_private_key_here
 EXPLORER_API_KEY=your_api_key`}
         </pre>
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Useful Hardhat Tasks</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Compile contracts
 npx hardhat compile
 
@@ -228,7 +225,7 @@ npx hardhat run scripts/deploy.ts --network x3Testnet
 
 # Verify existing contract
 npx hardhat verify --network x3Testnet CONTRACT_ADDRESS "constructor_arg1"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
     </DocLayout>
   );
 }

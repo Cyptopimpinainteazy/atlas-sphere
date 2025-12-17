@@ -126,6 +126,8 @@ pub fn statement_operands(stmt: &MirStatement) -> Vec<usize> {
         MirRhs::Unary(_, a) => vec![a.0],
         MirRhs::Literal(_) => Vec::new(),
         MirRhs::Call { args, .. } => args.iter().map(|v| v.0).collect(),
+        MirRhs::Load { addr, .. } => vec![addr.0],
+        MirRhs::Store { addr, val, .. } => vec![addr.0, val.0],
     }
 }
 

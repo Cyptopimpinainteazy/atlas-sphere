@@ -176,7 +176,7 @@ pub struct VM {
     /// Call stack.
     call_stack: Vec<Frame>,
     /// Configuration.
-    config: VMConfig,
+    pub config: VMConfig,
     /// Gas consumed.
     gas_used: u64,
     /// Atomic nesting depth.

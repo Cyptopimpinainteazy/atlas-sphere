@@ -161,7 +161,6 @@ ExecStart=/usr/local/bin/atlas-sphere-node \\
   --validator \\
   --rpc-external \\
   --rpc-cors all \\
-  --rpc-methods Unsafe \\
   --pruning archive
 Restart=always
 RestartSec=10

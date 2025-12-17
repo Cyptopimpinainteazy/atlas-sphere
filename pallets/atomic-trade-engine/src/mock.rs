@@ -182,16 +182,64 @@ impl SvmExecutorAdapter for TradeEngineSvmAdapter {
     }
 }
 
+/// Mock X3 adapter that returns 99% output (1% fee simulation)
+pub struct TradeEngineX3Adapter;
+
+impl X3ExecutorAdapter for TradeEngineX3Adapter {
+    fn execute(
+        payload: &[u8],
+        gas_limit: u64,
+    ) -> Result<ExecutionReceipt, sp_runtime::DispatchError> {
+        // Simulate swap: parse amount from payload and return 99%
+        let amount_in = if payload.len() >= 36 {
+            // Parse amount from ABI-encoded payload (bytes 4-36)
+            let mut bytes = [0u8; 16];
+            bytes.copy_from_slice(&payload[20..36]);
+            u128::from_be_bytes(bytes)
+        } else {
+            1_000_000_000_000_000_000u128 // Default 1 token
+        };
+
+        let amount_out = amount_in.saturating_mul(99) / 100;
+
+        // Return data: ABI-encoded uint256 output amount
+        let mut return_data = vec![0u8; 32];
+        return_data[16..32].copy_from_slice(&amount_out.to_be_bytes());
+
+        Ok(ExecutionReceipt {
+            success: true,
+            gas_used: gas_limit.min(120_000),
+            return_data,
+            logs: Vec::new(),
+            state_changes: Vec::new(),
+        })
+    }
+
+    fn validate(payload: &[u8]) -> Result<(), sp_runtime::DispatchError> {
+        if payload.is_empty() {
+            return Err(sp_runtime::DispatchError::Other("Empty payload"));
+        }
+        Ok(())
+    }
+
+    fn estimate_gas(_payload: &[u8]) -> Result<u64, sp_runtime::DispatchError> {
+        Ok(120_000)
+    }
+}
+
 parameter_types! {
     pub const MaxAssetsPerAccount: u32 = 100;
     pub const MaxAssetSymbolLength: u32 = 32;
     pub const MaxEvmPayloadLength: u32 = 16_384;
     pub const MaxSvmPayloadLength: u32 = 16_384;
+    pub const MaxX3PayloadLength: u32 = 16_384;
     pub const MaxCombinedPayloadLength: u32 = 32_768;
+    pub const MaxCombinedPayloadLengthV2: u32 = 49_152;
     pub const MaxAuthorities: u32 = 100;
     pub const MinAuthorities: u32 = 1;
     pub const DefaultEvmGasLimit: u64 = 500_000;
     pub const DefaultSvmComputeLimit: u64 = 500_000;
+    pub const DefaultX3GasLimit: u64 = 500_000;
 }
 
 impl pallet_atlas_kernel::Config for Test {
@@ -204,14 +252,18 @@ impl pallet_atlas_kernel::Config for Test {
     type MaxAssetSymbolLength = MaxAssetSymbolLength;
     type MaxEvmPayloadLength = MaxEvmPayloadLength;
     type MaxSvmPayloadLength = MaxSvmPayloadLength;
+    type MaxX3PayloadLength = MaxX3PayloadLength;
     type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
+    type MaxCombinedPayloadLengthV2 = MaxCombinedPayloadLengthV2;
     type MaxAuthorities = MaxAuthorities;
     type MinAuthorities = MinAuthorities;
     type DefaultEvmGasLimit = DefaultEvmGasLimit;
     type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
+    type DefaultX3GasLimit = DefaultX3GasLimit;
     type WeightInfo = ();
     type EvmAdapter = TradeEngineEvmAdapter;
     type SvmAdapter = TradeEngineSvmAdapter;
+    type X3Adapter = TradeEngineX3Adapter;
     type GovernanceOrigin = frame_system::EnsureRoot<u64>;
 }
 
@@ -221,6 +273,7 @@ parameter_types! {
     pub const MaxPendingBatchesPerAccount: u32 = 64;
     pub const DefaultTradeEvmGasLimit: u64 = 500_000;
     pub const DefaultTradeSvmComputeLimit: u64 = 500_000;
+    pub const DefaultTradeX3GasLimit: u64 = 500_000;
 }
 
 impl pallet_atomic_trade_engine::Config for Test {
@@ -228,11 +281,13 @@ impl pallet_atomic_trade_engine::Config for Test {
     type Currency = Balances;
     type EvmAdapter = TradeEngineEvmAdapter;
     type SvmAdapter = TradeEngineSvmAdapter;
+    type X3Adapter = TradeEngineX3Adapter;
     type MaxTradeLegs = MaxTradeLegs;
     type MaxCheckpoints = MaxCheckpoints;
     type MaxPendingBatchesPerAccount = MaxPendingBatchesPerAccount;
     type DefaultTradeEvmGasLimit = DefaultTradeEvmGasLimit;
     type DefaultTradeSvmComputeLimit = DefaultTradeSvmComputeLimit;
+    type DefaultTradeX3GasLimit = DefaultTradeX3GasLimit;
     type AmmRegistrarOrigin = frame_system::EnsureRoot<u64>;
     type WeightInfo = ();
 }

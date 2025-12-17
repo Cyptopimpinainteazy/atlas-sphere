@@ -11,6 +11,7 @@
 use crate::mock::*;
 use crate::types::{AmmProtocol, VmType};
 use crate::*;
+use frame_support::traits::Currency;
 use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_core::H256;
 
@@ -44,6 +45,12 @@ fn evm_leg(amount: u128, min_out: u128) -> TradeLegInput {
 /// Create an SVM trade leg
 fn svm_leg(amount: u128, min_out: u128) -> TradeLegInput {
     create_test_leg(VmType::Svm, AmmProtocol::Raydium, amount, min_out)
+}
+
+/// Create an X3 trade leg
+fn x3_leg(amount: u128, min_out: u128) -> TradeLegInput {
+    // Protocol is currently informational in the pallet implementation; choose a stable default.
+    create_test_leg(VmType::X3, AmmProtocol::ConstantProduct, amount, min_out)
 }
 
 /// Create a cross-VM trade leg
@@ -272,6 +279,121 @@ fn execute_single_svm_leg_works() {
 
         let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
         assert_eq!(batch.status, BatchStatus::Completed);
+    });
+}
+
+#[test]
+fn execute_single_x3_leg_works() {
+    new_test_ext().execute_with(|| {
+        let amount = 1_000_000_000_000_000_000u128;
+        // Mock adapter returns 99%
+        let min_out = amount * 98 / 100;
+
+        let legs = vec![x3_leg(amount, min_out)];
+
+        assert_ok!(AtomicTradeEngine::create_trade_batch(
+            RuntimeOrigin::signed(account(1)),
+            legs,
+            100,
+            100,
+            0,
+        ));
+
+        let pending = AtomicTradeEngine::pending_batches(&account(1));
+        let batch_id = pending[0];
+
+        assert_ok!(AtomicTradeEngine::execute_trade_batch(
+            RuntimeOrigin::signed(account(1)),
+            batch_id,
+        ));
+
+        let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
+        assert_eq!(batch.status, BatchStatus::Completed);
+    });
+}
+
+#[test]
+fn execute_triple_vm_batch_via_kernel_comit_v2_works() {
+    new_test_ext().execute_with(|| {
+        let who = account(1);
+        pallet_atlas_kernel::AuthorizedAccounts::<Test>::insert(who, ());
+
+        let evm_amount = 1_000_000_000_000_000_000u128;
+        let svm_amount = 1_000_000_000u128;
+        let x3_amount = 2_000_000_000_000_000_000u128;
+
+        let legs = vec![
+            evm_leg(evm_amount, evm_amount * 97 / 100),
+            svm_leg(svm_amount, svm_amount * 96 / 100),
+            x3_leg(x3_amount, x3_amount * 98 / 100),
+        ];
+
+        assert_ok!(AtomicTradeEngine::create_trade_batch(
+            RuntimeOrigin::signed(who),
+            legs,
+            500,
+            100,
+            0,
+        ));
+
+        let pending = AtomicTradeEngine::pending_batches(&who);
+        let batch_id = pending[0];
+        let comit_id = H256::from_low_u64_be(5001);
+
+        assert_ok!(AtomicTradeEngine::execute_trade_batch_via_kernel_comit_v2(
+            RuntimeOrigin::signed(who),
+            batch_id,
+            comit_id,
+        ));
+
+        // Prove the kernel path executed: kernel nonce increments.
+        assert_eq!(pallet_atlas_kernel::Nonces::<Test>::get(who), 1);
+
+        let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
+        assert_eq!(batch.status, BatchStatus::Completed);
+    });
+}
+
+#[test]
+fn kernel_comit_failure_is_rolled_back_but_batch_is_marked_failed() {
+    new_test_ext().execute_with(|| {
+        let who = account(1);
+        pallet_atlas_kernel::AuthorizedAccounts::<Test>::insert(who, ());
+
+        // Force kernel fee withdrawal to fail AFTER nonce mutation inside submit_comit_v2.
+        // This should be rolled back by AtomicTradeEngine's nested transaction wrapper.
+        Balances::make_free_balance_be(&who, 0);
+
+        let legs = vec![
+            evm_leg(1_000_000_000_000_000_000u128, 1),
+            svm_leg(1_000_000_000u128, 1),
+            x3_leg(2_000_000_000_000_000_000u128, 1),
+        ];
+
+        assert_ok!(AtomicTradeEngine::create_trade_batch(
+            RuntimeOrigin::signed(who),
+            legs,
+            500,
+            100,
+            0,
+        ));
+
+        let pending = AtomicTradeEngine::pending_batches(&who);
+        let batch_id = pending[0];
+        let comit_id = H256::from_low_u64_be(5002);
+
+        // The AtomicTradeEngine call returns Ok but marks the batch failed.
+        assert_ok!(AtomicTradeEngine::execute_trade_batch_via_kernel_comit_v2(
+            RuntimeOrigin::signed(who),
+            batch_id,
+            comit_id,
+        ));
+
+        // Critical property: kernel nonce did NOT increment because kernel changes were rolled back.
+        assert_eq!(pallet_atlas_kernel::Nonces::<Test>::get(who), 0);
+
+        let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
+        assert_eq!(batch.status, BatchStatus::Failed);
     });
 }
 

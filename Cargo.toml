@@ -9,6 +9,7 @@ members = [
     "pallets/svm-runtime",
     "pallets/evolution-core",
     "pallets/x3-verifier",
+    "pallets/x3-settlement-engine",
     "pallets/meme-overlord",
     "crates/evm-integration",
     "crates/svm-integration",

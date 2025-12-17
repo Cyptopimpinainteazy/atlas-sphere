@@ -8,16 +8,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { SWRConfig } from 'swr';
-import { ChainProvider, RPC_ENDPOINTS, type NetworkEnv } from '@atlas-sphere/shared';
-
-// Determine the network environment
-const getNetworkEnv = (): NetworkEnv => {
-  if (typeof window === 'undefined') return 'local';
-  const url = window.location.hostname;
-  if (url.includes('testnet')) return 'testnet';
-  if (url.includes('atlas-sphere.io')) return 'mainnet';
-  return 'local';
-};
+import { ChainProvider } from '@atlas-sphere/shared';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -44,9 +35,6 @@ export function Providers({ children }: ProvidersProps) {
     );
   }
 
-  const networkEnv = getNetworkEnv();
-  const wsEndpoint = RPC_ENDPOINTS[networkEnv].ws;
-
   return (
     <SWRConfig
       value={{
@@ -56,7 +44,7 @@ export function Providers({ children }: ProvidersProps) {
         errorRetryInterval: 5000,
       }}
     >
-      <ChainProvider endpoint={wsEndpoint} autoConnect>
+      <ChainProvider autoConnect>
         {children}
       </ChainProvider>
     </SWRConfig>

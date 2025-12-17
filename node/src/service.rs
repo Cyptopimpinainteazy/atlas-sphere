@@ -10,10 +10,19 @@ use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
-use sc_service::{Configuration, Error as ServiceError, PartialComponents, TaskManager};
+use sc_service::{
+    ChainType, Configuration, Error as ServiceError, KeystoreContainer, PartialComponents,
+    TaskManager,
+};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
+use sp_core::{crypto::KeyTypeId, Pair};
 use std::sync::Arc;
+
+/// Key type for Aura block authoring
+const AURA: KeyTypeId = KeyTypeId(*b"aura");
+/// Key type for GRANDPA finality
+const GRANDPA: KeyTypeId = KeyTypeId(*b"gran");
 
 /// Atlas Sphere native executor implementation
 pub struct AtlasSphereExecutorDispatch;
@@ -46,6 +55,42 @@ pub type FullBackend = sc_service::TFullBackend<Block>;
 
 /// Type alias for select chain implementation
 pub type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+
+/// Insert development keys into the keystore for block authoring.
+///
+/// For development mode (`--dev`), this inserts Alice's Aura (sr25519) and
+/// GRANDPA (ed25519) keys into the keystore so the node can author blocks.
+fn insert_dev_keys(keystore: &KeystoreContainer) -> Result<(), ServiceError> {
+    use sp_core::crypto::SecretStringError;
+
+    // Alice's seed phrase for development
+    let seed = "//Alice";
+    let keystore = keystore.keystore();
+
+    // Insert Aura key (sr25519) for block authoring
+    let aura_pair =
+        sp_core::sr25519::Pair::from_string(seed, None).map_err(|e: SecretStringError| {
+            ServiceError::Other(format!("Failed to generate Aura keypair: {:?}", e))
+        })?;
+    keystore
+        .insert(AURA, seed, &aura_pair.public().0)
+        .map_err(|e| ServiceError::Other(format!("Failed to insert Aura key: {:?}", e)))?;
+
+    log::info!("🔑 Inserted Alice's Aura key for block authoring");
+
+    // Insert GRANDPA key (ed25519) for finality
+    let grandpa_pair =
+        sp_core::ed25519::Pair::from_string(seed, None).map_err(|e: SecretStringError| {
+            ServiceError::Other(format!("Failed to generate GRANDPA keypair: {:?}", e))
+        })?;
+    keystore
+        .insert(GRANDPA, seed, &grandpa_pair.public().0)
+        .map_err(|e| ServiceError::Other(format!("Failed to insert GRANDPA key: {:?}", e)))?;
+
+    log::info!("🔑 Inserted Alice's GRANDPA key for finality");
+
+    Ok(())
+}
 
 /// Create partial components for Atlas Sphere node
 ///
@@ -89,6 +134,11 @@ pub fn new_partial(
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
         )?;
+
+    // For development chains, insert Alice's keys for block authoring
+    if config.chain_spec.chain_type() == ChainType::Development {
+        insert_dev_keys(&keystore_container)?;
+    }
 
     let client = Arc::new(client);
 

@@ -33,7 +33,7 @@
 
 use crate::pass::{Pass, PassResult};
 use crate::OptResult;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use x3_ast::BinaryOp;
 use x3_common::Literal;
 use x3_mir::{MirModule, MirRhs, MirStatement, MirValue};
@@ -99,7 +99,7 @@ impl PeepholePass {
     fn try_optimize(
         &self,
         stmt: &MirStatement,
-        constants: &HashMap<MirValue, Literal>,
+        constants: &BTreeMap<MirValue, Literal>,
     ) -> Option<MirRhs> {
         match &stmt.rhs {
             MirRhs::Binary(op, left, right) => {
@@ -253,7 +253,7 @@ impl PeepholePass {
     fn find_double_negation(
         &self,
         statements: &[MirStatement],
-        definitions: &HashMap<MirValue, &MirStatement>,
+        definitions: &BTreeMap<MirValue, &MirStatement>,
     ) -> Vec<(usize, MirValue)> {
         let mut replacements = Vec::new();
 
@@ -296,9 +296,9 @@ impl Pass for PeepholePass {
         for func in module.functions.iter_mut() {
             for block in func.blocks.iter_mut() {
                 // Build constant map from statements seen so far
-                let mut constants: HashMap<MirValue, Literal> = HashMap::new();
+                let mut constants: BTreeMap<MirValue, Literal> = BTreeMap::new();
                 // Build definitions map for inter-statement patterns
-                let mut _definitions: HashMap<MirValue, usize> = HashMap::new();
+                let mut _definitions: BTreeMap<MirValue, usize> = BTreeMap::new();
 
                 // First pass: collect constants and definitions
                 for (idx, stmt) in block.statements.iter().enumerate() {
@@ -309,7 +309,7 @@ impl Pass for PeepholePass {
                 }
 
                 // Build definition refs for double-negation check
-                let def_refs: HashMap<MirValue, &MirStatement> =
+                let def_refs: BTreeMap<MirValue, &MirStatement> =
                     block.statements.iter().map(|s| (s.target, s)).collect();
 
                 // Find double negation patterns

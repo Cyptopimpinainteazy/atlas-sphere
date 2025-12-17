@@ -21,6 +21,8 @@ pub enum VmType {
     Evm,
     /// Solana Virtual Machine
     Svm,
+    /// Atlas X3 Virtual Machine
+    X3,
     /// Cross-VM operation (requires both)
     CrossVm,
 }

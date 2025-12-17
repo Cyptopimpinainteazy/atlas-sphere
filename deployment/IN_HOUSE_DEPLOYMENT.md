@@ -139,7 +139,6 @@ atlas-sphere-node \
   --rpc-port 9944 \
   --validator \
   --rpc-cors all \
-  --rpc-methods Unsafe \
   --pruning archive
 ```
 

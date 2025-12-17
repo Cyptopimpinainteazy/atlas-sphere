@@ -1,29 +1,26 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function CreatingComitsPage() {
   return (
     <DocLayout
       title="Creating Comit Transactions"
       description="Build atomic cross-VM transactions that execute on both EVM and SVM"
-      section="cross-vm"
-      prevPage={{ title: 'SPL Tokens', href: '/developers/docs/spl-tokens' }}
-      nextPage={{ title: 'Atomic Execution', href: '/developers/docs/atomic-execution' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Comit transactions are the core innovation of X3 Atlas Sphere—atomic operations 
         that execute across both EVM and SVM in a single transaction with guaranteed consistency.
       </p>
 
-      <DocLayout.Callout type="info" title="What is a Comit?">
+      <Callout type="info" title="What is a Comit?">
         A Comit (Cross-VM Commit) bundles an EVM payload and SVM payload that execute 
         atomically. Either both succeed, or both fail—no partial states.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Comit Structure</h2>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`pub struct Comit {
     /// Unique identifier
     pub comit_id: H256,
@@ -40,10 +37,10 @@ export default function CreatingComitsPage() {
     /// Hash of inputs for verification
     pub prepare_root: H256,
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Creating a Comit via SDK</h2>
-      <DocLayout.CodeBlock language="typescript" filename="create-comit.ts">
+      <CodeBlock language="typescript" title="create-comit.ts">
 {`import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { ethers } from 'ethers';
@@ -95,7 +92,7 @@ const hash = await comit.signAndSend(account, ({ status, events }) => {
     }
   }
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Comit Lifecycle</h2>
       <p>
@@ -111,7 +108,7 @@ const hash = await comit.signAndSend(account, ({ status, events }) => {
       </ol>
 
       <h2>Prepare Root Calculation</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { keccak256 } from 'ethers';
 
 // prepare_root = hash(origin || nonce || evm_payload || svm_payload)
@@ -127,10 +124,10 @@ function calculatePrepareRoot(
   );
   return keccak256(encoded);
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Error Handling</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Listen for Comit events
 api.query.system.events((events) => {
   events.forEach(({ event }) => {
@@ -164,13 +161,13 @@ function decodeFailureReason(code: number): string {
   };
   return reasons[code] || 'Unknown error';
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Gas and Compute Units</h2>
-      <DocLayout.Callout type="warning" title="Fee Calculation">
+      <Callout type="warning" title="Fee Calculation">
         Comit fees combine EVM gas and SVM compute units:
         <code className="block mt-2">fee = base_fee + (evm_gas / 1000) + (svm_compute / 1000)</code>
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Best Practices</h2>
       <ul>
@@ -182,7 +179,7 @@ function decodeFailureReason(code: number): string {
       </ul>
 
       <h2>RPC Methods</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Check if account is authorized
 const isAuthorized = await api.rpc.atlasKernel.isAuthorized(accountId);
 
@@ -194,7 +191,7 @@ const estimate = await api.rpc.atlasKernel.estimateComitFee(
   evmPayload,
   svmPayload
 );`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
     </DocLayout>
   );
 }

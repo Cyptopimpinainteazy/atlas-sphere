@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function ErcStandardsPage() {
   return (
     <DocLayout
       title="ERC Token Standards"
       description="Implementing ERC-20, ERC-721, and ERC-1155 tokens on X3 Atlas Sphere"
-      section="evm"
-      prevPage={{ title: 'Foundry Guide', href: '/developers/docs/foundry' }}
-      nextPage={{ title: 'SVM Programs', href: '/developers/docs/svm-programs' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         X3 Atlas Sphere's EVM fully supports all Ethereum token standards. Deploy ERC-20,
@@ -21,7 +18,7 @@ export default function ErcStandardsPage() {
       <p>
         The most common token standard for fungible assets like currencies, governance tokens, and stablecoins.
       </p>
-      <DocLayout.CodeBlock language="solidity" filename="contracts/MyToken.sol">
+      <CodeBlock language="solidity" title="contracts/MyToken.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -48,13 +45,13 @@ contract MintableToken is ERC20 {
         _mint(to, amount);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>ERC-721: Non-Fungible Tokens</h2>
       <p>
         For unique assets like NFTs, game items, and digital collectibles.
       </p>
-      <DocLayout.CodeBlock language="solidity" filename="contracts/MyNFT.sol">
+      <CodeBlock language="solidity" title="contracts/MyNFT.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -100,13 +97,13 @@ contract MyNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
         return super.supportsInterface(interfaceId);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>ERC-1155: Multi-Token Standard</h2>
       <p>
         Efficient for managing multiple token types (fungible and non-fungible) in a single contract.
       </p>
-      <DocLayout.CodeBlock language="solidity" filename="contracts/GameItems.sol">
+      <CodeBlock language="solidity" title="contracts/GameItems.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -142,15 +139,15 @@ contract GameItems is ERC1155, Ownable {
         _mintBatch(to, ids, amounts, data);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Cross-VM Token Bridging</h2>
-      <DocLayout.Callout type="info" title="Canonical Ledger Integration">
+      <Callout type="info" title="Canonical Ledger Integration">
         ERC tokens on X3 can be registered in the Canonical Ledger, enabling them to be 
         accessed from both EVM and SVM environments through Comit transactions.
-      </DocLayout.Callout>
+      </Callout>
 
-      <DocLayout.CodeBlock language="solidity" filename="contracts/BridgeableToken.sol">
+      <CodeBlock language="solidity" title="contracts/BridgeableToken.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -175,7 +172,7 @@ contract BridgeableToken is ERC20 {
         bridge.lockForSVM(address(this), amount, svmRecipient);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Best Practices</h2>
       <ul>
@@ -186,10 +183,10 @@ contract BridgeableToken is ERC20 {
         <li><strong>Access control</strong> - Use roles for privileged functions</li>
       </ul>
 
-      <DocLayout.Callout type="warning" title="Security">
+      <Callout type="warning" title="Security">
         Always audit your token contracts before mainnet deployment. Common issues include
         reentrancy, integer overflow (use Solidity 0.8+), and missing access controls.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

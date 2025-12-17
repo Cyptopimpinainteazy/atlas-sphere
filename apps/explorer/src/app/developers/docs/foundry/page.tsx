@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function FoundryGuidePage() {
   return (
     <DocLayout
       title="Foundry Development Guide"
       description="Build and test smart contracts with Foundry on X3 Atlas Sphere"
-      section="evm"
-      prevPage={{ title: 'Hardhat Guide', href: '/developers/docs/hardhat' }}
-      nextPage={{ title: 'ERC Standards', href: '/developers/docs/erc-standards' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Foundry is a blazing fast, portable toolkit for Ethereum development written in Rust.
@@ -18,7 +15,7 @@ export default function FoundryGuidePage() {
       </p>
 
       <h2>Installation</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install Foundry
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
@@ -27,10 +24,10 @@ foundryup
 forge --version
 cast --version
 anvil --version`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Project Setup</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Create new project
 forge init my-x3-project
 cd my-x3-project
@@ -40,10 +37,10 @@ forge install OpenZeppelin/openzeppelin-contracts
 
 # Update remappings
 echo '@openzeppelin/=lib/openzeppelin-contracts/' >> remappings.txt`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Foundry Configuration</h2>
-      <DocLayout.CodeBlock language="toml" filename="foundry.toml">
+      <CodeBlock language="toml" title="foundry.toml">
 {`[profile.default]
 src = "src"
 out = "out"
@@ -63,10 +60,10 @@ x3_testnet = { key = "\${EXPLORER_API_KEY}", url = "https://api.explorer.testnet
 line_length = 100
 tab_width = 4
 bracket_spacing = true`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Writing Contracts</h2>
-      <DocLayout.CodeBlock language="solidity" filename="src/AtlasToken.sol">
+      <CodeBlock language="solidity" title="src/AtlasToken.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -82,10 +79,10 @@ contract AtlasToken is ERC20, Ownable {
         _mint(to, amount);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Writing Tests</h2>
-      <DocLayout.CodeBlock language="solidity" filename="test/AtlasToken.t.sol">
+      <CodeBlock language="solidity" title="test/AtlasToken.t.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -153,10 +150,10 @@ contract AtlasTokenTest is Test {
         token.mint(bob, 1000 ether);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Running Tests</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Run all tests
 forge test
 
@@ -174,10 +171,10 @@ forge test --fuzz-runs 10000
 
 # Generate coverage report
 forge coverage`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Deployment</h2>
-      <DocLayout.CodeBlock language="solidity" filename="script/Deploy.s.sol">
+      <CodeBlock language="solidity" title="script/Deploy.s.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -196,9 +193,9 @@ contract DeployScript is Script {
         vm.stopBroadcast();
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Deploy to local node
 forge script script/Deploy.s.sol --rpc-url x3_local --broadcast
 
@@ -207,10 +204,10 @@ forge script script/Deploy.s.sol --rpc-url x3_testnet --broadcast --verify
 
 # Verify existing contract
 forge verify-contract CONTRACT_ADDRESS AtlasToken --chain 5330`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Useful Cast Commands</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Call view function
 cast call TOKEN_ADDRESS "balanceOf(address)(uint256)" USER_ADDRESS --rpc-url x3_testnet
 
@@ -227,12 +224,12 @@ cast 4byte-decode 0xa9059cbb...
 # Convert units
 cast to-wei 1 ether
 cast from-wei 1000000000000000000`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="tip" title="Pro Tip">
+      <Callout type="info" title="Pro Tip">
         Use <code>forge snapshot</code> to track gas usage across test runs and 
         <code>forge snapshot --diff</code> to compare changes.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

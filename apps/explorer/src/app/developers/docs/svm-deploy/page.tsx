@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function SvmDeployPage() {
   return (
     <DocLayout
       title="Deploy SVM Programs"
       description="Deploy Solana-compatible programs to X3 Atlas Sphere"
-      section="svm"
-      prevPage={{ title: 'Anchor Framework', href: '/developers/docs/anchor' }}
-      nextPage={{ title: 'SVM Accounts', href: '/developers/docs/svm-accounts' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Deploy your SVM programs to X3 Atlas Sphere using the Solana CLI or Anchor.
@@ -18,7 +15,7 @@ export default function SvmDeployPage() {
       </p>
 
       <h2>Prerequisites</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install Solana CLI
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
 
@@ -30,10 +27,10 @@ solana-keygen new --outfile ~/.config/solana/x3-keypair.json
 
 # Check balance
 solana balance`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Deploy with Anchor</h2>
-      <DocLayout.CodeBlock language="toml" filename="Anchor.toml">
+      <CodeBlock language="toml" title="Anchor.toml">
 {`[features]
 seeds = false
 skip-lint = false
@@ -50,9 +47,9 @@ wallet = "~/.config/solana/x3-keypair.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Build program
 anchor build
 
@@ -64,10 +61,10 @@ anchor deploy --program-name my_program
 
 # Upgrade existing program
 anchor upgrade target/deploy/my_program.so --program-id PROGRAM_ADDRESS`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Deploy with Solana CLI</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Build your program
 cargo build-bpf
 
@@ -80,13 +77,13 @@ solana program deploy target/deploy/my_program.so \\
 
 # Check program info
 solana program show PROGRAM_ADDRESS`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Program Upgrades</h2>
       <p>
         SVM programs on X3 can be upgradeable, allowing you to fix bugs and add features:
       </p>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Set upgrade authority
 solana program set-upgrade-authority PROGRAM_ID --new-upgrade-authority NEW_AUTHORITY
 
@@ -95,15 +92,15 @@ solana program deploy target/deploy/my_program.so --program-id PROGRAM_ID
 
 # Make immutable (WARNING: cannot be undone)
 solana program set-upgrade-authority PROGRAM_ID --final`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="warning" title="Upgrade Authority">
+      <Callout type="warning" title="Upgrade Authority">
         Store your upgrade authority keypair securely. Losing it means you cannot upgrade 
         the program. Consider using a multisig for production deployments.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Deployment Verification</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Verify deployment
 solana program show PROGRAM_ADDRESS
 
@@ -117,13 +114,13 @@ solana program show PROGRAM_ADDRESS
 
 # Get program account data
 solana account PROGRAM_ADDRESS`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>IDL Management</h2>
       <p>
         For Anchor programs, deploy the IDL for client discoverability:
       </p>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Initialize IDL account
 anchor idl init --filepath target/idl/my_program.json PROGRAM_ID
 
@@ -135,12 +132,12 @@ anchor idl fetch PROGRAM_ID
 
 # Close IDL account
 anchor idl close PROGRAM_ID`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Common Issues</h2>
 
       <h3>Insufficient Balance</h3>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Get testnet tokens from faucet
 # Visit: https://faucet.testnet.atlas-sphere.io
 
@@ -148,7 +145,7 @@ anchor idl close PROGRAM_ID`}
 curl -X POST https://faucet.testnet.atlas-sphere.io/api/request \\
   -H "Content-Type: application/json" \\
   -d '{"address": "YOUR_ADDRESS"}'`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Program Size</h3>
       <p>

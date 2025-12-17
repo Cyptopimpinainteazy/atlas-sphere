@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function CrossVmAssetsPage() {
   return (
     <DocLayout
       title="Cross-VM Assets"
       description="Managing assets that span both EVM and SVM environments"
-      section="cross-vm"
-      prevPage={{ title: 'Atomic Execution', href: '/developers/docs/atomic-execution' }}
-      nextPage={{ title: 'Error Handling', href: '/developers/docs/error-handling' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Assets on X3 Atlas Sphere exist in the Canonical Ledger, accessible from both 
@@ -21,7 +18,7 @@ export default function CrossVmAssetsPage() {
       <p>
         The Canonical Ledger is the single source of truth for all assets on X3:
       </p>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`// Canonical Ledger structure
 CanonicalLedger: Map<(AccountId, AssetId), Balance>
 
@@ -29,15 +26,15 @@ CanonicalLedger: Map<(AccountId, AssetId), Balance>
 // - No wrapped tokens
 // - No bridging needed
 // - Accessible from both VMs`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Key Concept">
+      <Callout type="info" title="Key Concept">
         Unlike other cross-chain solutions, X3 doesn't use wrapped tokens. Each asset 
         exists once in the Canonical Ledger and can be operated on from either VM.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Registering Assets</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { ApiPromise } from '@polkadot/api';
 
 // Register a new asset (governance only)
@@ -54,10 +51,10 @@ await api.tx.sudo.sudo(registerAsset).signAndSend(sudoKey);
 const metadata = await api.query.atlasKernel.assetMetadata(assetId);
 console.log('Symbol:', metadata.symbol.toHuman());
 console.log('Decimals:', metadata.decimals.toNumber());`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Querying Balances</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Via Substrate RPC
 const balance = await api.rpc.atlasKernel.getCanonicalBalance(
   accountId,
@@ -75,13 +72,13 @@ const evmBalance = await ledgerContract.balanceOf(evmAddress, assetId);
 
 // Via SVM (account lookup)
 const svmBalance = await connection.getAccountInfo(balanceAccountPda);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Cross-VM Transfers</h2>
       <p>
         Move assets between VM contexts using Comits:
       </p>
-      <DocLayout.CodeBlock language="typescript" filename="cross-vm-transfer.ts">
+      <CodeBlock language="typescript" title="cross-vm-transfer.ts">
 {`// Transfer from EVM-controlled to SVM-controlled account
 
 // EVM payload: Release tokens from EVM contract
@@ -105,10 +102,10 @@ const comit = api.tx.atlasKernel.submitComit(
 );
 
 await comit.signAndSend(account);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>EVM Integration</h2>
-      <DocLayout.CodeBlock language="solidity" filename="CanonicalLedgerAccess.sol">
+      <CodeBlock language="solidity" title="CanonicalLedgerAccess.sol">
 {`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
@@ -132,10 +129,10 @@ contract DeFiProtocol {
         // ... rest of deposit logic
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>SVM Integration</h2>
-      <DocLayout.CodeBlock language="rust" filename="programs/defi/src/lib.rs">
+      <CodeBlock language="rust" title="programs/defi/src/lib.rs">
 {`use anchor_lang::prelude::*;
 
 #[program]
@@ -175,13 +172,13 @@ pub struct Deposit<'info> {
     
     pub user: Signer<'info>,
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Asset ID Standards</h2>
       <p>
         Asset IDs follow a consistent format:
       </p>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Native ATLAS token
 const ATLAS_ASSET_ID = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
@@ -194,7 +191,7 @@ const erc20AssetId = keccak256(
 const splAssetId = keccak256(
   solidityPacked(['uint8', 'bytes32'], [2, mintPubkey.toBytes()])
 );`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Best Practices</h2>
       <ul>

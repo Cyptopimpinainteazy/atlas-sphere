@@ -86,7 +86,11 @@ pub mod lower;
 pub mod mir_lower;
 pub mod opcode;
 
-pub use bc_format::{BytecodeModule, ConstPool, FunctionEntry};
+pub use bc_format::{
+    BytecodeModule, ConstPool, DebugInfo, FeatureFlags, FunctionEntry, GlobalEntry, ModuleFlags,
+    ModuleMetadata, SourceMapEntry, VersionInfo, MAGIC, MAX_BYTECODE_SIZE, MAX_CONST_POOL,
+    MAX_FUNCTIONS, MAX_STRING_LEN, MIN_SUPPORTED_VERSION, VERSION,
+};
 pub use bc_format_helpers::{
     assemble_branch_module, assemble_halt_module, assemble_param_module, assemble_simple_module,
 };

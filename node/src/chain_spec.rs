@@ -198,6 +198,8 @@ fn atlas_sphere_genesis(
         evm: Default::default(),
         governance: Default::default(),
         treasury: Default::default(),
+        evolution_core: Default::default(),
+        x3_verifier: Default::default(),
         #[cfg(feature = "dev")]
         sudo: Default::default(),
     }

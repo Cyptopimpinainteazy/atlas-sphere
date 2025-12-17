@@ -43,13 +43,13 @@ pub mod authority;
 /// instead of mock adapters. Mock adapters are for testing only.
 pub mod adapters;
 pub use adapters::{
-    EvmExecutorAdapter, FailingMockEvmAdapter, FailingMockSvmAdapter, MockEvmAdapter,
-    MockSvmAdapter, SvmExecutorAdapter,
+    EvmExecutorAdapter, FailingMockEvmAdapter, FailingMockSvmAdapter, FailingMockX3Adapter,
+    MockEvmAdapter, MockSvmAdapter, MockX3Adapter, SvmExecutorAdapter, X3ExecutorAdapter,
 };
 
 // Re-export real adapters for std builds (native runtime)
 #[cfg(feature = "std")]
-pub use adapters::real_adapters::{FrontierEvmAdapter, RbpfSvmAdapter};
+pub use adapters::real_adapters::{FrontierEvmAdapter, RbpfSvmAdapter, X3VmAdapter};
 
 /// Benchmarking support for weight generation.
 /// Enable with `--features runtime-benchmarks`.
@@ -59,6 +59,9 @@ pub mod benchmarking;
 /// Auto-generated weight information for extrinsics.
 /// Regenerate using frame-benchmarking CLI.
 pub mod weights;
+
+/// Runtime storage migrations.
+pub mod migrations;
 pub use weights::WeightInfo;
 
 use frame_support::pallet_prelude::*;
@@ -89,6 +92,31 @@ pub struct Comit<AccountId, Balance> {
     /// Fee charged for processing the Comit.
     pub fee: Balance,
     /// Dual-VM prepare phase commitment root.
+    pub prepare_root: H256,
+}
+
+/// Version 2 Comit supporting triple-VM execution (EVM + SVM + X3VM).
+///
+/// This is intentionally a separate type from `Comit` to avoid breaking
+/// downstream code that relies on the original dual-VM shape.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[scale_info(skip_type_params(AccountId, Balance))]
+pub struct ComitV2<AccountId, Balance> {
+    /// Globally unique Comit identifier.
+    pub comit_id: H256,
+    /// Origin account that submitted the Comit.
+    pub origin: AccountId,
+    /// Payload destined for the EVM execution environment.
+    pub evm_payload: Vec<u8>,
+    /// Payload destined for the SVM execution environment.
+    pub svm_payload: Vec<u8>,
+    /// Payload destined for the X3VM execution environment.
+    pub x3_payload: Vec<u8>,
+    /// Sequential nonce scoped to the origin account.
+    pub nonce: u64,
+    /// Fee charged for processing the Comit.
+    pub fee: Balance,
+    /// Multi-VM prepare phase commitment root.
     pub prepare_root: H256,
 }
 
@@ -168,6 +196,13 @@ pub enum ComitFailureReason {
         actual_size: u32,
         max_size: u32,
     },
+    /// The provided X3 payload exceeds runtime defined limits.
+    /// Error Code: 0x07
+    X3PayloadTooLarge {
+        code: u32,
+        actual_size: u32,
+        max_size: u32,
+    },
     /// Combined payloads exceed the cumulative limit.
     /// Error Code: 0x03
     CombinedPayloadTooLarge {
@@ -206,9 +241,17 @@ pub enum ComitFailureReason {
         svm_error: u32,
         compute_units_used: u64,
     },
+    /// X3 execution failed with error code.
+    /// Error Code: 0x12
+    X3ExecutionFailed {
+        code: u32,
+        x3_error: u32,
+        gas_used: u64,
+    },
 }
 
 type ComitOf<T> = Comit<<T as frame_system::Config>::AccountId, <T as Config>::Balance>;
+type ComitV2Of<T> = ComitV2<<T as frame_system::Config>::AccountId, <T as Config>::Balance>;
 
 /// Dual-VM Dispatcher trait for coordinating execution across EVM and SVM runtimes.
 /// This trait defines the interface for executing transactions on both virtual machines
@@ -312,9 +355,17 @@ pub mod pallet {
         #[pallet::constant]
         type MaxSvmPayloadLength: Get<u32>;
 
+        /// Maximum length allowed for X3 payloads.
+        #[pallet::constant]
+        type MaxX3PayloadLength: Get<u32>;
+
         /// Maximum combined length of both EVM and SVM payloads.
         #[pallet::constant]
         type MaxCombinedPayloadLength: Get<u32>;
+
+        /// Maximum combined length of EVM + SVM + X3 payloads (v2 Comits).
+        #[pallet::constant]
+        type MaxCombinedPayloadLengthV2: Get<u32>;
 
         /// Maximum number of authorities allowed in the authority set.
         #[pallet::constant]
@@ -332,6 +383,10 @@ pub mod pallet {
         #[pallet::constant]
         type DefaultSvmComputeLimit: Get<u64>;
 
+        /// Default gas limit for X3VM execution.
+        #[pallet::constant]
+        type DefaultX3GasLimit: Get<u64>;
+
         /// Weight information provider for extrinsics.
         type WeightInfo: WeightInfo;
 
@@ -342,6 +397,10 @@ pub mod pallet {
         /// SVM execution adapter (runtime-configurable)
         /// Implement SvmExecutorAdapter trait for real solana-rbpf integration
         type SvmAdapter: SvmExecutorAdapter;
+
+        /// X3 VM execution adapter (runtime-configurable)
+        /// Implement X3ExecutorAdapter trait for X3 bytecode execution
+        type X3Adapter: X3ExecutorAdapter;
 
         /// Origin that can execute privileged governance functions.
         /// Typically EnsureRoot or a council-based origin.
@@ -523,6 +582,8 @@ pub mod pallet {
         EvmExecutionFailed,
         /// SVM execution failed during Comit processing.
         SvmExecutionFailed,
+        /// X3VM execution failed during Comit processing.
+        X3ExecutionFailed,
         /// Asset symbol cannot be empty.
         EmptySymbol,
         /// Asset symbol cannot start with dash or underscore.
@@ -537,7 +598,12 @@ pub mod pallet {
         RateLimitExceeded,
     }
 
+    use frame_support::traits::StorageVersion;
+
+    pub(crate) const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::call]
@@ -786,6 +852,270 @@ pub mod pallet {
             )?;
 
             // Emit event for ledger updates
+            if changes_applied > 0 {
+                Self::deposit_event(Event::CanonicalLedgerUpdated {
+                    comit_id,
+                    changes_applied,
+                });
+            }
+
+            Self::deposit_event(Event::ComitFinalized { comit_id });
+            Ok(())
+        }
+
+        /// Submit a v2 Comit transaction describing triple-VM execution intents (EVM + SVM + X3VM).
+        ///
+        /// Atomicity model: if any VM execution fails (error or `success=false`), this extrinsic
+        /// returns `Err` and all Substrate storage writes (including CanonicalLedger updates)
+        /// are rolled back. Runtime VM adapters MUST be transactional to guarantee rollback
+        /// for VM state as well.
+        #[pallet::call_index(9)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
+        pub fn submit_comit_v2(
+            origin: OriginFor<T>,
+            comit_id: H256,
+            evm_payload: Vec<u8>,
+            svm_payload: Vec<u8>,
+            x3_payload: Vec<u8>,
+            nonce: u64,
+            fee: T::Balance,
+            prepare_root: H256,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            ensure!(
+                !SubmittedComits::<T>::contains_key(comit_id),
+                Error::<T>::DuplicateComitId
+            );
+
+            const MAX_SUBMISSIONS_PER_BLOCK: u32 = 10;
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let current_count = SubmissionsPerBlock::<T>::get(&who, current_block);
+            ensure!(
+                current_count < MAX_SUBMISSIONS_PER_BLOCK,
+                Error::<T>::RateLimitExceeded
+            );
+
+            let operation_context = Self::encode_submit_comit_v2_context(&who, comit_id);
+            Self::auth_check(&who, &operation_context)?;
+
+            Self::verify_payloads_v2(&comit_id, &evm_payload, &svm_payload, &x3_payload)?;
+
+            Nonces::<T>::try_mutate(&who, |current_nonce| -> DispatchResult {
+                if nonce != *current_nonce {
+                    return Err(Self::fail_with_reason(
+                        comit_id,
+                        ComitFailureReason::InvalidNonce {
+                            code: 0x05,
+                            expected: *current_nonce,
+                            provided: nonce,
+                        },
+                    ));
+                }
+                *current_nonce = current_nonce
+                    .checked_add(1)
+                    .ok_or(Error::<T>::NonceOverflow)?;
+                Ok(())
+            })?;
+
+            let comit = ComitV2::<T::AccountId, T::Balance> {
+                comit_id,
+                origin: who.clone(),
+                evm_payload: evm_payload.clone(),
+                svm_payload: svm_payload.clone(),
+                x3_payload: x3_payload.clone(),
+                nonce,
+                fee,
+                prepare_root,
+            };
+
+            let evm_tx = (!evm_payload.is_empty()).then(|| evm_payload.clone());
+            let svm_tx = (!svm_payload.is_empty()).then(|| svm_payload.clone());
+            let x3_tx = (!x3_payload.is_empty()).then(|| x3_payload.clone());
+
+            let execution_start_timestamp =
+                <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+
+            let evm_gas_limit = T::DefaultEvmGasLimit::get();
+            let svm_compute_limit = T::DefaultSvmComputeLimit::get();
+            let x3_gas_limit = T::DefaultX3GasLimit::get();
+
+            let evm_receipt = if let Some(ref tx) = evm_tx {
+                match T::EvmAdapter::execute(tx, evm_gas_limit) {
+                    Ok(receipt) => Some(receipt),
+                    Err(_e) => {
+                        return Err(Self::fail_with_reason(
+                            comit_id,
+                            ComitFailureReason::EvmExecutionFailed {
+                                code: 0x10,
+                                evm_error: 1,
+                                gas_used: 0,
+                            },
+                        ));
+                    }
+                }
+            } else {
+                None
+            };
+
+            let svm_receipt = if let Some(ref tx) = svm_tx {
+                match T::SvmAdapter::execute(tx, svm_compute_limit) {
+                    Ok(receipt) => Some(receipt),
+                    Err(_e) => {
+                        return Err(Self::fail_with_reason(
+                            comit_id,
+                            ComitFailureReason::SvmExecutionFailed {
+                                code: 0x11,
+                                svm_error: 1,
+                                compute_units_used: 0,
+                            },
+                        ));
+                    }
+                }
+            } else {
+                None
+            };
+
+            let x3_receipt = if let Some(ref tx) = x3_tx {
+                match T::X3Adapter::execute(tx, x3_gas_limit) {
+                    Ok(receipt) => Some(receipt),
+                    Err(_e) => {
+                        return Err(Self::fail_with_reason(
+                            comit_id,
+                            ComitFailureReason::X3ExecutionFailed {
+                                code: 0x12,
+                                x3_error: 1,
+                                gas_used: 0,
+                            },
+                        ));
+                    }
+                }
+            } else {
+                None
+            };
+
+            if let Some(ref receipt) = evm_receipt {
+                if !receipt.success {
+                    return Err(Self::fail_with_reason(
+                        comit_id,
+                        ComitFailureReason::EvmExecutionFailed {
+                            code: 0x10,
+                            evm_error: 1,
+                            gas_used: receipt.gas_used,
+                        },
+                    ));
+                }
+            }
+
+            if let Some(ref receipt) = svm_receipt {
+                if !receipt.success {
+                    return Err(Self::fail_with_reason(
+                        comit_id,
+                        ComitFailureReason::SvmExecutionFailed {
+                            code: 0x11,
+                            svm_error: 1,
+                            compute_units_used: receipt.gas_used,
+                        },
+                    ));
+                }
+            }
+
+            if let Some(ref receipt) = x3_receipt {
+                if !receipt.success {
+                    return Err(Self::fail_with_reason(
+                        comit_id,
+                        ComitFailureReason::X3ExecutionFailed {
+                            code: 0x12,
+                            x3_error: 1,
+                            gas_used: receipt.gas_used,
+                        },
+                    ));
+                }
+            }
+
+            let evm_gas_used = evm_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
+            let svm_compute_units = svm_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
+            let x3_gas_used = x3_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
+            let base_fee = T::Balance::default();
+            let required_fee = Self::calculate_execution_fee_v2(
+                evm_gas_used,
+                svm_compute_units,
+                x3_gas_used,
+                base_fee,
+            )?;
+
+            ensure!(fee >= required_fee, Error::<T>::IncorrectFee);
+
+            let free_balance = T::Currency::free_balance(&who);
+            ensure!(
+                free_balance >= required_fee.into(),
+                Error::<T>::InsufficientBalance
+            );
+
+            let imbalance = T::Currency::withdraw(
+                &who,
+                required_fee.into(),
+                frame_support::traits::WithdrawReasons::FEE,
+                frame_support::traits::ExistenceRequirement::KeepAlive,
+            )?;
+            drop(imbalance);
+
+            Self::deposit_event(Event::FeeDeducted {
+                account: who.clone(),
+                amount: required_fee,
+                comit_id,
+            });
+
+            if let Err(reason) = Self::verify_triple_vm_with_receipts(
+                &comit,
+                evm_receipt.as_ref(),
+                svm_receipt.as_ref(),
+                x3_receipt.as_ref(),
+            ) {
+                return Err(Self::fail_with_reason(comit_id, reason));
+            }
+
+            SubmittedComits::<T>::insert(comit_id, current_block);
+
+            SubmissionsPerBlock::<T>::mutate(&who, current_block, |count| {
+                *count = count.saturating_add(1);
+            });
+
+            AccountRegistry::<T>::mutate(&who, |maybe_id| {
+                if maybe_id.is_none() {
+                    *maybe_id = Some(T::AtlasId::default());
+                }
+            });
+
+            Self::deposit_event(Event::ComitSubmitted {
+                comit_id,
+                origin: who.clone(),
+                nonce,
+                fee,
+            });
+
+            Self::deposit_event(Event::ComitExecutionStarted {
+                comit_id,
+                timestamp: execution_start_timestamp,
+            });
+
+            let total_gas_used = evm_gas_used
+                .saturating_add(svm_compute_units)
+                .saturating_add(x3_gas_used);
+
+            Self::deposit_event(Event::ComitExecutionCompleted {
+                comit_id,
+                success: true,
+                gas_used: total_gas_used,
+            });
+
+            let changes_applied = Self::apply_canonical_ledger_update_v2(
+                comit_id,
+                evm_receipt.as_ref(),
+                svm_receipt.as_ref(),
+                x3_receipt.as_ref(),
+            )?;
+
             if changes_applied > 0 {
                 Self::deposit_event(Event::CanonicalLedgerUpdated {
                     comit_id,
@@ -1070,10 +1400,84 @@ pub mod pallet {
             Ok(())
         }
 
+        fn verify_payloads_v2(
+            comit_id: &H256,
+            evm_payload: &[u8],
+            svm_payload: &[u8],
+            x3_payload: &[u8],
+        ) -> Result<(), DispatchError> {
+            let max_evm = T::MaxEvmPayloadLength::get() as usize;
+            let max_svm = T::MaxSvmPayloadLength::get() as usize;
+            let max_x3 = T::MaxX3PayloadLength::get() as usize;
+            let max_combined = T::MaxCombinedPayloadLengthV2::get() as usize;
+
+            if evm_payload.is_empty() && svm_payload.is_empty() && x3_payload.is_empty() {
+                return Err(Self::fail_with_reason(
+                    *comit_id,
+                    ComitFailureReason::EmptyPayloads { code: 0x04 },
+                ));
+            }
+
+            if evm_payload.len() > max_evm {
+                return Err(Self::fail_with_reason(
+                    *comit_id,
+                    ComitFailureReason::EvmPayloadTooLarge {
+                        code: 0x01,
+                        actual_size: evm_payload.len() as u32,
+                        max_size: max_evm as u32,
+                    },
+                ));
+            }
+
+            if svm_payload.len() > max_svm {
+                return Err(Self::fail_with_reason(
+                    *comit_id,
+                    ComitFailureReason::SvmPayloadTooLarge {
+                        code: 0x02,
+                        actual_size: svm_payload.len() as u32,
+                        max_size: max_svm as u32,
+                    },
+                ));
+            }
+
+            if x3_payload.len() > max_x3 {
+                return Err(Self::fail_with_reason(
+                    *comit_id,
+                    ComitFailureReason::X3PayloadTooLarge {
+                        code: 0x07,
+                        actual_size: x3_payload.len() as u32,
+                        max_size: max_x3 as u32,
+                    },
+                ));
+            }
+
+            if evm_payload.len() + svm_payload.len() + x3_payload.len() > max_combined {
+                return Err(Self::fail_with_reason(
+                    *comit_id,
+                    ComitFailureReason::CombinedPayloadTooLarge {
+                        code: 0x03,
+                        evm_size: evm_payload.len() as u32,
+                        svm_size: svm_payload.len() as u32,
+                        max_combined: max_combined as u32,
+                    },
+                ));
+            }
+
+            Ok(())
+        }
+
         /// Encode operation context for authorization checks
         fn encode_submit_comit_context(caller: &T::AccountId, comit_id: H256) -> Vec<u8> {
             let mut context = Vec::new();
             context.extend_from_slice(b"submit_comit");
+            context.extend_from_slice(&caller.encode());
+            context.extend_from_slice(comit_id.as_bytes());
+            context
+        }
+
+        fn encode_submit_comit_v2_context(caller: &T::AccountId, comit_id: H256) -> Vec<u8> {
+            let mut context = Vec::new();
+            context.extend_from_slice(b"submit_comit_v2");
             context.extend_from_slice(&caller.encode());
             context.extend_from_slice(comit_id.as_bytes());
             context
@@ -1261,7 +1665,55 @@ pub mod pallet {
             H256::from(blake2_256(&data))
         }
 
+        /// Compute prepare_root for a v2 Comit from its input parameters.
+        ///
+        /// Canonical algorithm: Blake2-256 over concatenated:
+        /// - comit_id (32)
+        /// - evm_payload
+        /// - svm_payload
+        /// - x3_payload
+        /// - nonce (8 LE)
+        /// - fee (SCALE)
+        pub fn compute_prepare_root_v2(
+            comit_id: H256,
+            evm_payload: &[u8],
+            svm_payload: &[u8],
+            x3_payload: &[u8],
+            nonce: u64,
+            fee: T::Balance,
+        ) -> H256 {
+            let mut data = Vec::new();
+            data.extend_from_slice(comit_id.as_bytes());
+            data.extend_from_slice(evm_payload);
+            data.extend_from_slice(svm_payload);
+            data.extend_from_slice(x3_payload);
+            data.extend_from_slice(&nonce.to_le_bytes());
+            data.extend_from_slice(&fee.encode());
+            H256::from(blake2_256(&data))
+        }
+
         /// Verify prepare_root against actual VM receipts (comprehensive dual-VM commitment)
+        ///
+        /// # SECURITY NOTICE (H-1 Audit Finding - Design Decision)
+        ///
+        /// The `prepare_root` is intentionally a commitment to INPUTS only, not OUTPUTS.
+        /// This design choice enables:
+        /// 1. Client-side pre-computation: Users can compute prepare_root before submission
+        /// 2. Deterministic authorization: Wallets can sign based on known inputs
+        /// 3. Replay protection: Combined with nonce prevents transaction replay
+        ///
+        /// ## Trade-offs
+        /// - Pro: Simpler client integration, no simulation required
+        /// - Con: Cannot verify execution results match expectations
+        ///
+        /// ## Mitigation for High-Value Transactions
+        /// For transactions requiring output verification, implement:
+        /// - Application-layer expected_output_hash verification
+        /// - Multi-sig validation with result confirmation
+        /// - Post-execution audit trail comparison
+        ///
+        /// The execution receipts are passed to allow future extensions but are
+        /// deliberately unused in the current implementation per this design.
         fn verify_dual_vm_with_receipts(
             comit: &ComitOf<T>,
             _evm_receipt: Option<&ExecutionReceipt>,
@@ -1282,8 +1734,8 @@ pub mod pallet {
             // The prepare_root is a commitment to the input payloads and execution parameters,
             // NOT the execution results. This allows clients to compute the prepare_root
             // beforehand and use it to authorize the Comit submission.
-            // H-1 NOTE: This is intentional - prepare_root commits to INPUTS, not OUTPUTS.
-            // For stronger guarantees, consider adding optional expected_output_hash field.
+            //
+            // See function-level documentation for full security rationale (H-1 audit finding).
             let computed_root = Self::compute_prepare_root(
                 comit.comit_id,
                 &comit.evm_payload,
@@ -1296,6 +1748,47 @@ pub mod pallet {
                 Ok(())
             } else {
                 // Hash the mismatch reason for diagnostic
+                let mut reason_data = Vec::new();
+                reason_data.extend_from_slice(comit.comit_id.as_bytes());
+                reason_data.extend_from_slice(computed_root.as_bytes());
+                reason_data.extend_from_slice(comit.prepare_root.as_bytes());
+                let reason_hash = blake2_256(&reason_data);
+
+                Err(ComitFailureReason::Verification {
+                    code: 0x06,
+                    reason: reason_hash,
+                })
+            }
+        }
+
+        fn verify_triple_vm_with_receipts(
+            comit: &ComitV2Of<T>,
+            _evm_receipt: Option<&ExecutionReceipt>,
+            _svm_receipt: Option<&ExecutionReceipt>,
+            _x3_receipt: Option<&ExecutionReceipt>,
+        ) -> Result<(), ComitFailureReason> {
+            #[cfg(not(feature = "dev-bypass"))]
+            {
+                if comit.prepare_root == H256::zero() {
+                    return Err(ComitFailureReason::Verification {
+                        code: 0x06,
+                        reason: blake2_256(b"zero_prepare_root_not_allowed"),
+                    });
+                }
+            }
+
+            let computed_root = Self::compute_prepare_root_v2(
+                comit.comit_id,
+                &comit.evm_payload,
+                &comit.svm_payload,
+                &comit.x3_payload,
+                comit.nonce,
+                comit.fee,
+            );
+
+            if computed_root == comit.prepare_root {
+                Ok(())
+            } else {
                 let mut reason_data = Vec::new();
                 reason_data.extend_from_slice(comit.comit_id.as_bytes());
                 reason_data.extend_from_slice(computed_root.as_bytes());
@@ -1323,13 +1816,109 @@ pub mod pallet {
             match reason {
                 ComitFailureReason::EvmPayloadTooLarge { .. } => Error::<T>::PayloadTooLarge,
                 ComitFailureReason::SvmPayloadTooLarge { .. } => Error::<T>::PayloadTooLarge,
+                ComitFailureReason::X3PayloadTooLarge { .. } => Error::<T>::PayloadTooLarge,
                 ComitFailureReason::CombinedPayloadTooLarge { .. } => Error::<T>::PayloadTooLarge,
                 ComitFailureReason::EmptyPayloads { .. } => Error::<T>::EmptyPayloads,
                 ComitFailureReason::InvalidNonce { .. } => Error::<T>::InvalidNonce,
                 ComitFailureReason::Verification { .. } => Error::<T>::ComitVerificationFailed,
                 ComitFailureReason::EvmExecutionFailed { .. } => Error::<T>::EvmExecutionFailed,
                 ComitFailureReason::SvmExecutionFailed { .. } => Error::<T>::SvmExecutionFailed,
+                ComitFailureReason::X3ExecutionFailed { .. } => Error::<T>::X3ExecutionFailed,
             }
+        }
+
+        /// Calculate the total execution fee for a v2 Comit based on gas/compute usage.
+        pub fn calculate_execution_fee_v2(
+            evm_gas_used: u64,
+            svm_compute_units: u64,
+            x3_gas_used: u64,
+            base_fee: T::Balance,
+        ) -> Result<T::Balance, DispatchError> {
+            let evm_units_u64 = evm_gas_used.saturating_add(999) / 1000;
+            let svm_units_u64 = svm_compute_units.saturating_add(999) / 1000;
+            let x3_units_u64 = x3_gas_used.saturating_add(999) / 1000;
+
+            let evm_units = T::Balance::from(evm_units_u64 as u32);
+            let svm_units = T::Balance::from(svm_units_u64 as u32);
+            let x3_units = T::Balance::from(x3_units_u64 as u32);
+
+            let total_fee = base_fee
+                .checked_add(&evm_units)
+                .and_then(|t| t.checked_add(&svm_units))
+                .and_then(|t| t.checked_add(&x3_units))
+                .ok_or(Error::<T>::FeeOverflow)?;
+
+            let min_fee = T::Balance::from(Self::MIN_FEE);
+            Ok(if total_fee < min_fee {
+                min_fee
+            } else {
+                total_fee
+            })
+        }
+
+        fn apply_canonical_ledger_update_v2(
+            _comit_id: H256,
+            evm_receipt: Option<&ExecutionReceipt>,
+            svm_receipt: Option<&ExecutionReceipt>,
+            x3_receipt: Option<&ExecutionReceipt>,
+        ) -> Result<u32, DispatchError> {
+            let mut changes_applied = 0u32;
+            let mut decode_failures = 0u32;
+
+            let mut all_changes = Vec::new();
+            if let Some(receipt) = evm_receipt {
+                all_changes.extend_from_slice(&receipt.state_changes);
+            }
+            if let Some(receipt) = svm_receipt {
+                all_changes.extend_from_slice(&receipt.state_changes);
+            }
+            if let Some(receipt) = x3_receipt {
+                all_changes.extend_from_slice(&receipt.state_changes);
+            }
+
+            if all_changes.len() > Self::MAX_STATE_CHANGES {
+                return Err(Error::<T>::TooManyStateChanges.into());
+            }
+
+            for change in all_changes.iter() {
+                if change.address.len() < 32 {
+                    decode_failures = decode_failures.saturating_add(1);
+                    continue;
+                }
+
+                let mut account_bytes = [0u8; 32];
+                account_bytes.copy_from_slice(&change.address[..32]);
+                let account = T::AccountId::decode(&mut &account_bytes[..]).ok();
+
+                if let Some(acc) = account {
+                    let asset_id_bytes = change.key.as_bytes();
+                    let asset_id = T::AssetId::decode(&mut &asset_id_bytes[..]).ok();
+
+                    if let Some(asset) = asset_id {
+                        let balance_bytes = change.value.as_bytes();
+                        let balance = T::Balance::decode(&mut &balance_bytes[..]).ok();
+
+                        if let Some(bal) = balance {
+                            CanonicalLedger::<T>::insert(&acc, asset, bal);
+                            changes_applied = changes_applied.saturating_add(1);
+                        } else {
+                            decode_failures = decode_failures.saturating_add(1);
+                        }
+                    } else {
+                        decode_failures = decode_failures.saturating_add(1);
+                    }
+                } else {
+                    decode_failures = decode_failures.saturating_add(1);
+                }
+            }
+
+            if decode_failures > 0 {
+                DecodeFailureCount::<T>::mutate(|count| {
+                    *count = count.saturating_add(decode_failures);
+                });
+            }
+
+            Ok(changes_applied)
         }
 
         /// Execute dual-VM transactions and return the unified state
@@ -1572,6 +2161,18 @@ sp_api::decl_runtime_apis! {
 
         /// Get the current authority set
         fn get_authorities() -> Vec<AccountId>;
+
+        /// Map an EVM 20-byte address into a runtime AccountId (Option)
+        fn map_evm_address(address: Vec<u8>) -> Option<AccountId>;
+
+        /// Query EVM-specific canonical balance by EVM address
+        fn get_evm_balance(evm_address: Vec<u8>, asset_id: AssetId) -> Option<Balance>;
+
+        /// Query contract bytecode for an EVM address
+        fn get_evm_code(evm_address: Vec<u8>) -> Vec<u8>;
+
+        /// Query EVM storage at a specific storage key for an EVM address
+        fn get_evm_storage(evm_address: Vec<u8>, storage_key: H256) -> Option<H256>;
     }
 }
 

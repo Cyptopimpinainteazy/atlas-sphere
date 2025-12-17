@@ -11,11 +11,11 @@
 
 ## 📊 Performance Targets
 
-| Metric | YOLO Baseline | With Loop-Pack | Expected Combined |
-|--------|---------------|-----------------|-------------------|
-| Gas Reduction | 33.5% ✓ | +6-20% | 40-50% |
-| Test Suite | 20-50% | Integrated | 21.9% avg (synthetic) |
-| Real-world | TBD | TBD | 40-50% estimated |
+| Metric        | YOLO Baseline | With Loop-Pack | Expected Combined     |
+| ------------- | ------------- | -------------- | --------------------- |
+| Gas Reduction | 33.5% ✓       | +6-20%         | 40-50%                |
+| Test Suite    | 20-50%        | Integrated     | 21.9% avg (synthetic) |
+| Real-world    | TBD           | TBD            | 40-50% estimated      |
 
 ---
 

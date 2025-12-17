@@ -149,10 +149,10 @@ impl Verifier {
 
     /// Verify structural integrity.
     fn verify_structure(module: &BytecodeModule) -> VerifierResult<()> {
-        // Version check
-        if module.version > VERSION {
+        // Version check - compare packed u32 representations
+        if module.version.to_packed() > VERSION {
             return Err(VerifierError::without_offset(
-                VerifierErrorKind::UnsupportedVersion(module.version),
+                VerifierErrorKind::UnsupportedVersion(module.version.to_packed()),
             ));
         }
 

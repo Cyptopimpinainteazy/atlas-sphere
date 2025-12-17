@@ -1167,6 +1167,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-treasury",
+ "pallet-x3-settlement-engine",
  "pallet-x3-verifier",
  "parity-scale-codec",
  "scale-info",
@@ -8040,6 +8041,25 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "sp-core 21.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
+ "sp-io 23.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
+ "sp-runtime 24.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
+ "sp-std 8.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
+]
+
+[[package]]
+name = "pallet-x3-settlement-engine"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-atlas-kernel",
+ "pallet-atomic-trade-engine",
+ "pallet-balances",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core 21.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
  "sp-io 23.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",
  "sp-runtime 24.0.0 (git+https://github.com/paritytech/substrate?rev=948fbd2)",

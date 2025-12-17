@@ -31,3 +31,7 @@ debug-ops = []
 jit-hints = []
 # Enable detailed gas metering
 gas-metering = []
+
+# Enable mocked cross-VM bridge hostcalls (development/testing only).
+# When disabled, bridge hostcalls return a hard error rather than false success.
+bridge-mocks = []

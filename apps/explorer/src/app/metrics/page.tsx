@@ -105,7 +105,7 @@ export default function MetricsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'excellent': return <CheckCircle className="w-4 h-4 text-green-400" />;
-      case 'good': <CheckCircle className="w-4 h-4 text-blue-400" />;
+      case 'good': return <CheckCircle className="w-4 h-4 text-blue-400" />;
       case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-400" />;
       case 'poor': return <AlertTriangle className="w-4 h-4 text-red-400" />;
       default: return <Activity className="w-4 h-4 text-gray-400" />;
@@ -306,4 +306,32 @@ export default function MetricsPage() {
           
           <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-600/30 text-center hover:border-purple-500/50 transition-all hover:transform hover:scale-105 cursor-pointer">
             <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
-              <Refresh
+              <RefreshCw className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-4">Refresh Data</h3>
+            <p className="text-gray-400 mb-6">Update all metrics now</p>
+            <div className="text-green-400 font-semibold">Live Updates</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-600/30 text-center hover:border-purple-500/50 transition-all hover:transform hover:scale-105 cursor-pointer">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <Gauge className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-4">Monitor Performance</h3>
+            <p className="text-gray-400 mb-6">Real-time system monitoring</p>
+            <div className="text-purple-400 font-semibold">System Health</div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-600/30 text-center hover:border-purple-500/50 transition-all hover:transform hover:scale-105 cursor-pointer">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <Settings className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-4">Configure Alerts</h3>
+            <p className="text-gray-400 mb-6">Set up custom alerts</p>
+            <div className="text-orange-400 font-semibold">Notifications</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

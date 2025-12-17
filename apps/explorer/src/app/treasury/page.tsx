@@ -301,4 +301,13 @@ export default function TreasuryPage() {
           <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-600/30 text-center hover:border-purple-500/50 transition-all hover:transform hover:scale-105 cursor-pointer">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
               <Download className="w-8 h-8 text-white" />
-            </div
+            </div>
+            <h3 className="text-xl font-bold text-white mb-4">Export Treasury Data</h3>
+            <p className="text-gray-400 mb-6">Download financial reports</p>
+            <div className="text-cyan-400 font-semibold">Data Export</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

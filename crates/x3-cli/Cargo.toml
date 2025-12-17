@@ -13,9 +13,26 @@ categories = ["command-line-utilities", "development-tools"]
 name = "x3"
 path = "src/main.rs"
 
+[features]
+default = []
+full = ["sdk"]
+sdk = ["atlas-sdk"]
+
 [dependencies]
-# SDK
-atlas-sdk = { path = "../atlas-sdk" }
+# SDK (optional - only needed for deploy, simulate, tx, account commands)
+atlas-sdk = { path = "../atlas-sdk", optional = true }
+
+# X3 Compiler
+x3-compiler = { path = "../x3-compiler" }
+
+# X3 VM (for REPL)
+x3-vm = { path = "../x3-vm" }
+
+# X3 Parser (for REPL type checking)
+x3-parser = { path = "../x3-parser" }
+
+# X3 Optimizer (for OptLevel)
+x3-opt = { path = "../x3-opt" }
 
 # CLI framework
 clap = { workspace = true, features = ["derive", "env"] }

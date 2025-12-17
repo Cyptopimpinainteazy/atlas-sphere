@@ -2,6 +2,8 @@ use x3_ast::{BinaryOp, UnaryOp};
 use x3_common::Span;
 pub use x3_hir::hir::SymbolId;
 
+use crate::memory::MemoryModel;
+
 /// SSA value produced inside the MIR module.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct MirValue(pub usize);
@@ -51,6 +53,19 @@ pub enum MirRhs {
     Call {
         target: SymbolId,
         args: Vec<MirValue>,
+    },
+    /// Load from memory using the specified model.
+    /// `addr` is the address/slot to load from.
+    Load {
+        model: MemoryModel,
+        addr: MirValue,
+    },
+    /// Store to memory using the specified model.
+    /// `addr` is the destination address/slot, `val` is the value to store.
+    Store {
+        model: MemoryModel,
+        addr: MirValue,
+        val: MirValue,
     },
 }
 

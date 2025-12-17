@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function BestPracticesPage() {
   return (
     <DocLayout
       title="Best Practices"
       description="Guidelines for building robust cross-VM applications"
-      section="cross-vm"
-      prevPage={{ title: 'Error Handling', href: '/developers/docs/error-handling' }}
-      nextPage={{ title: 'Run a Validator', href: '/developers/docs/validator' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Follow these best practices to build secure, efficient, and maintainable 
@@ -20,7 +17,7 @@ export default function BestPracticesPage() {
       <h2>Security</h2>
 
       <h3>Authorization First</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Always verify authorization before constructing Comits
 const isAuthorized = await api.rpc.atlasKernel.isAuthorized(accountId);
 if (!isAuthorized) {
@@ -29,10 +26,10 @@ if (!isAuthorized) {
 
 // Then proceed with Comit construction
 const comit = api.tx.atlasKernel.submitComit(...);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Validate Inputs</h3>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`// GOOD: Validate all inputs
 function processSwap(
     uint256 amountIn,
@@ -52,10 +49,10 @@ function unsafeSwap(uint256 amount, address recipient) external {
     // Direct processing without checks - vulnerable!
     token.transfer(recipient, amount);
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Reentrancy Protection</h3>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract SafeProtocol is ReentrancyGuard {
@@ -72,12 +69,12 @@ contract SafeProtocol is ReentrancyGuard {
         require(success, "Transfer failed");
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Performance</h2>
 
       <h3>Minimize Comit Payload Size</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// GOOD: Focused Comit with minimal data
 const evmPayload = contract.interface.encodeFunctionData(
   'swap',
@@ -89,10 +86,10 @@ const badPayload = contract.interface.encodeFunctionData(
   'swapWithMetadata',
   [amountIn, minOut, deadline, userPreferences, analytics, logs]
 );`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Batch Operations</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// GOOD: Single Comit for multiple operations
 const multicall = contract.interface.encodeFunctionData('multicall', [
   [
@@ -107,10 +104,10 @@ const multicall = contract.interface.encodeFunctionData('multicall', [
 // Comit 2: deposit  
 // Comit 3: stake
 // More expensive and not atomic between Comits!`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Gas Estimation</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Always estimate before submission
 const estimate = await api.rpc.atlasKernel.estimateComitFee(
   evmPayload,
@@ -125,12 +122,12 @@ const balance = await api.query.system.account(account.address);
 if (balance.data.free.lt(fee)) {
   throw new Error('Insufficient balance for Comit fee');
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Reliability</h2>
 
       <h3>Idempotent Operations</h3>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`// GOOD: Idempotent - safe for retry
 mapping(bytes32 => bool) public processedRequests;
 
@@ -145,10 +142,10 @@ function processRequest(bytes32 requestId, uint256 amount) external {
 function unsafeProcess(uint256 amount) external {
     balances[msg.sender] += amount; // Will double on retry
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Event Emission</h3>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`// Emit comprehensive events for indexing and debugging
 event SwapExecuted(
     bytes32 indexed comitId,
@@ -173,10 +170,10 @@ function swap(...) external {
         block.timestamp
     );
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Monitoring</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Monitor Comit success rate
 const metrics = {
   submitted: 0,
@@ -197,12 +194,12 @@ api.query.system.events((events) => {
   // Report to monitoring
   reportMetrics(metrics);
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Testing</h2>
 
       <h3>Test Both VMs</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`describe('Cross-VM Swap', () => {
   it('should atomically swap tokens', async () => {
     // Setup: Fund accounts on both VMs
@@ -232,7 +229,7 @@ api.query.system.events((events) => {
     expect(await getSplBalance(user, svmMint)).to.equal(beforeSvm);
   });
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Checklist</h2>
       <ul className="space-y-2">

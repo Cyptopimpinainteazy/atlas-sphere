@@ -1198,7 +1198,7 @@ mod tests {
     #[test]
     fn opcode_vm_hints() {
         // VM-aware optimization hints for optimizer passes
-        assert!(Opcode::AtomicBegin.is_control_flow()); // Atomic boundaries = control flow
+        assert!(Opcode::AtomicBegin.has_side_effects()); // Atomic boundaries = side effects (not control flow)
         assert!(Opcode::EvmCall.has_side_effects()); // Cross-VM calls = side effects
         assert!(!Opcode::AddI.has_side_effects()); // Pure arithmetic
         assert!(Opcode::SvmInvoke.has_side_effects()); // SVM invoke = side effects

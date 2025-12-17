@@ -41,13 +41,23 @@ async fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Init(args) => commands::init::execute(args).await,
         Commands::Build(args) => commands::build::execute(args).await,
+        Commands::Compile(args) => commands::compile::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Deploy(args) => commands::deploy::execute(args).await,
         Commands::Test(args) => commands::test::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Trace(args) => commands::trace::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Simulate(args) => commands::simulate::execute(args).await,
         Commands::Docgen(args) => commands::docgen::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Account(args) => commands::account::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Query(args) => commands::query::execute(args).await,
+        #[cfg(feature = "sdk")]
         Commands::Tx(args) => commands::tx::execute(args).await,
+        Commands::Repl(args) => commands::repl::execute(args).await,
+        Commands::Swap(args) => commands::swap::execute(args).await,
+        Commands::Chains(args) => commands::swap::execute_chains(args).await,
     }
 }

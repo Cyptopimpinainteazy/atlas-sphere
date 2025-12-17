@@ -6,7 +6,6 @@ use crate::error::{IndexerError, Result};
 use crate::metrics::Metrics;
 use crate::models::*;
 use chrono::Utc;
-use futures::StreamExt;
 use std::sync::Arc;
 use std::time::Duration;
 use subxt::{OnlineClient, PolkadotConfig};
@@ -319,7 +318,7 @@ impl Indexer {
     }
 
     /// Process a Comit-related event.
-    async fn process_comit_event<E: subxt::events::StaticEvent>(
+    async fn process_comit_event(
         &self,
         variant: &str,
         event: &subxt::events::EventDetails<PolkadotConfig>,
@@ -411,10 +410,7 @@ fn extract_timestamp_from_events(
         if let Ok(event) = event {
             if event.pallet_name() == "Timestamp" && event.variant_name() == "TimestampSet" {
                 // Try to extract timestamp from event data
-                let bytes = match event.field_bytes() {
-                    Ok(bytes) => bytes,
-                    Err(_) => continue,
-                };
+                let bytes = event.field_bytes();
                 // Timestamp is typically a u64 in milliseconds
                 if bytes.len() >= 8 {
                     let mut ts_bytes = [0u8; 8];
@@ -431,14 +427,16 @@ fn extract_timestamp_from_events(
 }
 
 /// Extract block author from header digests (Aura/BABE).
-fn extract_author_from_header(header: &subxt::rpc::types::Header) -> Option<String> {
+fn extract_author_from_header(
+    header: &<PolkadotConfig as subxt::Config>::Header,
+) -> Option<String> {
     // Aura pre-runtime digest contains the slot and implicitly the author
     // For simplicity, we extract the PreRuntime digest which contains author info
-    for log in header.digest().logs() {
+    for log in header.digest.logs.iter() {
         match log {
             subxt::config::substrate::DigestItem::PreRuntime(engine, data) => {
                 // Aura engine ID is *b"aura"
-                if engine == *b"aura" && data.len() >= 8 {
+                if *engine == *b"aura" && data.len() >= 8 {
                     // Data contains slot number, we can derive author index
                     let mut slot_bytes = [0u8; 8];
                     slot_bytes.copy_from_slice(&data[..8]);
@@ -449,14 +447,14 @@ fn extract_author_from_header(header: &subxt::rpc::types::Header) -> Option<Stri
                     return Some(format!("slot:{}", slot));
                 }
                 // BABE engine ID is *b"BABE"
-                if engine == *b"BABE" && data.len() >= 1 {
+                if *engine == *b"BABE" && data.len() >= 1 {
                     // First byte is authority index for primary slots
                     return Some(format!("authority:{}", data[0]));
                 }
             }
             subxt::config::substrate::DigestItem::Consensus(engine, data) => {
                 // GRANDPA justifications, etc.
-                if engine == *b"FRNK" && !data.is_empty() {
+                if *engine == *b"FRNK" && !data.is_empty() {
                     return Some(format!(
                         "grandpa:{}",
                         hex::encode(&data[..data.len().min(8)])
@@ -481,10 +479,7 @@ fn decode_event_data(event: &subxt::events::EventDetails<PolkadotConfig>) -> ser
     );
 
     // Try to decode field bytes as hex
-    let bytes = match event.field_bytes() {
-        Ok(bytes) => bytes,
-        Err(_) => return serde_json::Value::Object(data),
-    };
+    let bytes = event.field_bytes();
     data.insert(
         "raw_data".to_string(),
         serde_json::json!(hex::encode(&bytes)),

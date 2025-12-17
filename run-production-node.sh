@@ -2,7 +2,7 @@
 # Atlas Sphere Production Node Launcher
 # This script launches an Atlas Sphere node with production security settings
 
-set -e
+set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
@@ -20,7 +20,10 @@ fi
 # Required configuration
 NODE_NAME="${NODE_NAME:?NODE_NAME environment variable required}"
 BASE_PATH="${BASE_PATH:-/var/lib/atlas-sphere}"
-CHAIN="${CHAIN:-local}"  # local, staging, or mainnet
+CHAIN="${CHAIN:-local}"  # dev, local, staging, testnet, or a custom chainspec path
+
+# Where to load chain specs from (repo default).
+CHAIN_SPEC_DIR="${CHAIN_SPEC_DIR:-deployment/chain-specs}"
 
 # Network ports
 RPC_PORT="${RPC_PORT:-9944}"
@@ -37,10 +40,12 @@ if [ ! -f "./target/release/atlas-sphere-node" ]; then
     exit 1
 fi
 
-# Verify chain spec exists for non-dev chains
-if [ "$CHAIN" != "dev" ] && [ ! -f "chain-specs/${CHAIN}.json" ]; then
-    echo "❌ Chain spec not found: chain-specs/${CHAIN}.json"
-    exit 1
+# If CHAIN points to an explicit file, verify it exists early.
+if [ -f "${CHAIN}" ]; then
+    :
+elif [ "${CHAIN}" != "dev" ] && [ "${CHAIN}" != "local" ] && [ "${CHAIN}" != "staging" ] && [ "${CHAIN}" != "testnet" ]; then
+    echo "⚠️  CHAIN='${CHAIN}' is not one of dev/local/staging/testnet and is not a file path."
+    echo "   The node will attempt to resolve it via built-in chain spec loading."
 fi
 
 echo ""
@@ -53,11 +58,43 @@ echo "  ✅ Rate limiting enabled (50 req/s, 10 subscriptions)"
 echo ""
 
 # Determine chain spec argument
-if [ "$CHAIN" = "dev" ]; then
-    CHAIN_ARG="--dev"
-else
-    CHAIN_ARG="--chain chain-specs/${CHAIN}.json"
-fi
+case "${CHAIN}" in
+    dev)
+        CHAIN_ARG="--dev"
+        ;;
+    local)
+        # Uses the built-in local testnet chainspec loader.
+        CHAIN_ARG="--chain local"
+        ;;
+    staging)
+        # Prefer the curated deployment chainspec if present.
+        if [ -f "${CHAIN_SPEC_DIR}/atlas-staging-plain.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-staging-plain.json"
+        else
+            CHAIN_ARG="--chain staging"
+        fi
+        ;;
+    testnet)
+        # Prefer raw (fully specified) spec if present.
+        if [ -f "${CHAIN_SPEC_DIR}/atlas-testnet-raw.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-testnet-raw.json"
+        elif [ -f "${CHAIN_SPEC_DIR}/atlas-testnet-plain.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-testnet-plain.json"
+        else
+            echo "❌ No testnet chainspec found in ${CHAIN_SPEC_DIR}."
+            echo "   Expected atlas-testnet-raw.json or atlas-testnet-plain.json."
+            exit 1
+        fi
+        ;;
+    *)
+        if [ -f "${CHAIN}" ]; then
+            CHAIN_ARG="--chain ${CHAIN}"
+        else
+            # Fall back to built-in resolution (or a custom chain ID).
+            CHAIN_ARG="--chain ${CHAIN}"
+        fi
+        ;;
+esac
 
 # Key file (for validators)
 KEY_FILE="${KEY_FILE:-}"

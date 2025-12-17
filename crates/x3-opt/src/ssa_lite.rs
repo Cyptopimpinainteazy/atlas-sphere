@@ -74,7 +74,10 @@ pub fn ssa_const_prop(ssa: &mut SsaFunction) -> bool {
                         }
                     }
                 }
-                MirRhs::Literal(_) | MirRhs::Call { .. } => {}
+                MirRhs::Literal(_)
+                | MirRhs::Call { .. }
+                | MirRhs::Load { .. }
+                | MirRhs::Store { .. } => {}
             }
 
             if let MirRhs::Literal(literal) = &stmt.rhs {

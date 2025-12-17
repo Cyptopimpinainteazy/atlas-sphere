@@ -54,21 +54,32 @@ pub mod licm;
 pub mod loop_detection;
 pub mod loop_pack_v1;
 pub mod loop_unswitching;
+pub mod memory_analysis;
 pub mod optimizer;
 pub mod pass;
 pub mod passes;
+pub mod peephole_autogen;
 pub mod regalloc;
 pub mod rule_miner;
 pub mod run_yolo;
 pub mod ssa_lite;
 pub mod strength_reduction;
+pub mod superoptimizer;
 pub mod telemetry;
+pub mod value_numbering;
 
 pub use error::{OptError, OptResult};
-pub use optimizer::{default_passes, OptLevel, Optimizer, PassObserver};
+pub use optimizer::{default_passes, OptLevel, OptStats, Optimizer, PassObserver};
 pub use pass::{Pass, PassResult};
 pub use run_yolo::{
     count_instructions, estimate_bytes, run_yolo_once, simulate_gas, OptimizationReport, PassDelta,
+};
+
+// Re-export memory analysis helpers
+pub use memory_analysis::{
+    memory_access_is_hoistable, memory_accesses_can_reorder, rhs_has_aliasing_access,
+    rhs_has_observable_effects, rhs_is_memory_access, rhs_is_persistent_load,
+    rhs_is_persistent_store, rhs_is_sideeffecting_store,
 };
 
 // Re-export CFG types for convenience
@@ -79,6 +90,8 @@ pub use licm::{analyze_invariants, perform_licm, InvariantAnalysis};
 pub use loop_detection::{detect_loops, LoopTree};
 pub use loop_pack_v1::run_loop_optimizations;
 pub use loop_unswitching::{apply_unswitch, find_unswitch_opportunities};
+
+// Phase 6 & Tier A-D: Advanced Optimizations
 pub use passes::{
     block_fusion::BlockFusionPass, branch_inversion::BranchInversionPass,
     branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
@@ -87,7 +100,10 @@ pub use passes::{
     global_const_prop::GlobalConstPropPass, peephole::PeepholePass,
     pre_simple::PartialRedundancyEliminationPass, speculative_hoist::SpeculativeHoistPass,
 };
+pub use peephole_autogen::{ExecutionTelemetry, PeepholeAutogen, PeepholePattern};
+pub use regalloc::ChaitinAllocator;
 pub use regalloc::RegAllocator;
 pub use rule_miner::RuleMiner;
 pub use ssa_lite::global_ssa_opt;
 pub use strength_reduction::{analyze_strength_reduction, apply_strength_reduction};
+pub use superoptimizer::{Cost, Superoptimizer, SymbolicValue};

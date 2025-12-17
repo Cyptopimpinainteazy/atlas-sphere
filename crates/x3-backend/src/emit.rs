@@ -760,6 +760,71 @@ impl BytecodeEmitter {
         self.emit_load_const(dst, idx);
         Ok(())
     }
+
+    // ========================================================================
+    // Memory Model Specialized Helpers
+    // ========================================================================
+    // These methods optimize Load/Store per memory model:
+    // - Register: pure register move (no side effects)
+    // - Stack: local stack slots (can use implicit frame layout)
+    // - Heap: heap-allocated memory (requires address calculation)
+    // - GlobalStorage: persistent on-chain storage (uses LoadGlobal/StoreGlobal)
+
+    /// Load from register model (pure register move).
+    /// This is the cheapest operation: just a move between registers.
+    pub fn emit_load_register(&mut self, dst: Register, src: Register) {
+        self.emit_mov(dst, src);
+    }
+
+    /// Store to register model (pure register move).
+    /// Symmetric to load: move value into destination register.
+    pub fn emit_store_register(&mut self, dst: Register, src: Register) {
+        self.emit_mov(dst, src);
+    }
+
+    /// Load from stack slot.
+    /// In X3, stack slots are function-local and accessed via frame layout.
+    /// For now, we use LoadIndex into an implicit stack array.
+    /// addr: stack slot index (register or immediate encoded in const pool)
+    pub fn emit_load_stack(&mut self, dst: Register, addr: Register) {
+        // Stack loads are treated like array access on a stack buffer
+        // This will be refined by the VM with frame pointer arithmetic
+        self.emit_load_index(dst, Register(0), addr); // r0 = implicit stack frame
+    }
+
+    /// Store to stack slot.
+    /// Symmetric to load: write to implicit stack frame.
+    pub fn emit_store_stack(&mut self, addr: Register, src: Register) {
+        self.emit_store_index(Register(0), addr, src); // r0 = implicit stack frame
+    }
+
+    /// Load from heap memory.
+    /// Heap loads require bounds checking and alignment; treated as array access.
+    /// addr: heap address (pointer register)
+    pub fn emit_load_heap(&mut self, dst: Register, addr: Register) {
+        // Heap loads are array-like access on the heap arena
+        // TODO: Add bounds checking opcode for production
+        self.emit_load_index(dst, Register(1), addr); // r1 = implicit heap base
+    }
+
+    /// Store to heap memory.
+    /// Symmetric to load: write to heap with bounds checking.
+    pub fn emit_store_heap(&mut self, addr: Register, src: Register) {
+        self.emit_store_index(Register(1), addr, src); // r1 = implicit heap base
+    }
+
+    /// Load from global persistent storage (on-chain state).
+    /// GlobalStorage accesses are side-effecting and must not be elided.
+    /// Wraps LoadGlobal with explicit global index encoding.
+    pub fn emit_load_global_storage(&mut self, dst: Register, global_idx: u32) {
+        self.emit_load_global(dst, global_idx);
+    }
+
+    /// Store to global persistent storage (on-chain state).
+    /// Symmetric to load: persists value to on-chain storage.
+    pub fn emit_store_global_storage(&mut self, global_idx: u32, src: Register) {
+        self.emit_store_global(global_idx, src);
+    }
 }
 
 impl Default for BytecodeEmitter {

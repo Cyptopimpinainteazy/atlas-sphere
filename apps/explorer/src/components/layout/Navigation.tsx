@@ -266,6 +266,13 @@ const navigation: NavItem[] = [
         icon: <BarChart3 className="w-5 h-5" />,
         description: 'Blockchain explorer and indexer',
       },
+      {
+        label: 'Prometheus Metrics',
+        href: '/prometheus',
+        icon: <TrendingUp className="w-5 h-5" />,
+        description: 'Live node & kernel metrics',
+        badge: 'Live',
+      },
     ],
   },
   {

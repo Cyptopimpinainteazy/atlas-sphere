@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function ChainSpecPage() {
   return (
     <DocLayout
       title="Chain Specification"
       description="Understanding and customizing X3 Atlas Sphere chain specs"
-      section="nodes"
-      prevPage={{ title: 'Run a Validator', href: '/developers/docs/validator' }}
-      nextPage={{ title: 'Key Management', href: '/developers/docs/keys' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Chain specifications define the genesis state and network parameters for X3 Atlas Sphere.
@@ -18,7 +15,7 @@ export default function ChainSpecPage() {
       </p>
 
       <h2>Built-in Chain Specs</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# List available chain specs
 ./atlas-sphere-node build-spec --list
 
@@ -27,10 +24,10 @@ export default function ChainSpecPage() {
 # - local     : Multi-node local testnet
 # - testnet   : Public testnet
 # - mainnet   : Production network (future)`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Using a Chain Spec</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Start with built-in spec
 ./atlas-sphere-node --chain testnet
 
@@ -39,10 +36,10 @@ export default function ChainSpecPage() {
 
 # Start with raw spec (for production)
 ./atlas-sphere-node --chain /path/to/custom-spec-raw.json`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Generating Chain Specs</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Generate plain spec (readable JSON)
 ./atlas-sphere-node build-spec \\
   --chain testnet \\
@@ -54,10 +51,10 @@ export default function ChainSpecPage() {
   --chain custom-spec.json \\
   --raw \\
   > custom-spec-raw.json`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Chain Spec Structure</h2>
-      <DocLayout.CodeBlock language="json" filename="chain-spec.json">
+      <CodeBlock language="json" title="chain-spec.json">
 {`{
   "name": "X3 Atlas Sphere Testnet",
   "id": "atlas_testnet",
@@ -107,12 +104,12 @@ export default function ChainSpecPage() {
     }
   }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Customizing Genesis</h2>
 
       <h3>Initial Balances</h3>
-      <DocLayout.CodeBlock language="json">
+      <CodeBlock language="json">
 {`"balances": {
   "balances": [
     ["5GrwvaEF...", "1000000000000000000000000"],
@@ -120,10 +117,10 @@ export default function ChainSpecPage() {
     ["5DAAnrj7...", "250000000000000000000000"]
   ]
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Initial Validators</h3>
-      <DocLayout.CodeBlock language="json">
+      <CodeBlock language="json">
 {`"aura": {
   "authorities": [
     "5GrwvaEF...",  // Validator 1 Aura key
@@ -138,10 +135,10 @@ export default function ChainSpecPage() {
     ["5CiPPseX...", 1]   // Validator 3 GRANDPA key, weight 1
   ]
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Atlas Kernel Configuration</h3>
-      <DocLayout.CodeBlock language="json">
+      <CodeBlock language="json">
 {`"atlasKernel": {
   "authorizedAccounts": [
     "5GrwvaEF...",  // Pre-authorized for Comits
@@ -155,19 +152,19 @@ export default function ChainSpecPage() {
     }
   ]
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Bootnodes</h2>
-      <DocLayout.CodeBlock language="json">
+      <CodeBlock language="json">
 {`"bootNodes": [
   "/dns/boot1.testnet.atlas-sphere.io/tcp/30333/p2p/12D3KooWEyoppNCUVQCNiY8bDYwLTK3YuEMhrGrXE8m5eDVqS3Rb",
   "/dns/boot2.testnet.atlas-sphere.io/tcp/30333/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD",
   "/ip4/192.168.1.100/tcp/30333/p2p/12D3KooWBmAwcd4PJNJvfV89HwE48nwkRmAgo8Vy3uQEyNNHBox2"
 ]`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Local Testnet Setup</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Generate spec for local 3-node testnet
 ./atlas-sphere-node build-spec \\
   --chain local \\
@@ -196,12 +193,12 @@ export default function ChainSpecPage() {
   --bob \\
   --port 30334 \\
   --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/12D3KooW...`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Raw vs Plain Specs">
+      <Callout type="info" title="Raw vs Plain Specs">
         Use raw specs in production. They contain pre-computed storage values and 
         load faster. Plain specs are for human editing during development.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }
