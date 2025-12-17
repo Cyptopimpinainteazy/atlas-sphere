@@ -85,9 +85,16 @@ For each tool, ask about integration:
 2. **Advanced Elicitation** - Where should critical evaluation checkpoints be placed? [after content creation, quality gates]
 3. **Brainstorming** - Where should creative ideation be integrated? [idea generation phases, innovation points]
 
-**LLM Features:** 4. **Web-Browsing** - When is current information needed? [real-time data, current events] 5. **File I/O** - What document operations are required? [file creation, data management] 6. **Sub-Agents** - Where would specialized delegation help? [complex tasks, parallel processing] 7. **Sub-Processes** - Where would parallel processing improve performance? [long operations, resource optimization]
+**LLM Features:**
 
-**Tool-Memory:** 8. **Sidecar File** - Does your workflow need persistent state? [session continuity, agent initialization]"
+4. **Web-Browsing** - When is current information needed? [real-time data, current events]
+5. **File I/O** - What document operations are required? [file creation, data management]
+6. **Sub-Agents** - Where would specialized delegation help? [complex tasks, parallel processing]
+7. **Sub-Processes** - Where would parallel processing improve performance? [long operations, resource optimization]
+
+**Tool-Memory:**
+
+8. **Sidecar File** - Does your workflow need persistent state? [session continuity, agent initialization]"
 
 ### 4. Document Core Tools Configuration
 
