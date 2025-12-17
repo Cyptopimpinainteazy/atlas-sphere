@@ -35,3 +35,23 @@ yarn-error.log*
 package-lock.json
 .next
 *.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Python environments (avoid committing vendored venvs)
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
