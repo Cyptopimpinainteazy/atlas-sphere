@@ -89,6 +89,7 @@ pub mod protocol;
 pub mod scheduler;
 pub mod task;
 pub mod verification;
+pub mod wallet;
 pub mod warden;
 
 pub use announcer::{

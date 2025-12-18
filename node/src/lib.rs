@@ -54,6 +54,9 @@ pub mod chain_spec;
 /// wiring, and RPC setup for the Atlas Sphere blockchain.
 pub mod service;
 
+// Local helper for colorful CLI logging
+mod logging;
+
 /// Publicly re-export the CLI surface when it is available.
 ///
 /// Downstream crates can bring [`Cli`](cli::Cli) and related types into scope

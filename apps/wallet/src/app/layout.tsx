@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
-import { ChainStatusBanner } from '@atlas-sphere/shared/components';
+import ChainStatusContainer from '@/components/ChainStatusContainer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-black text-white min-h-screen`}>
         <Providers>
           <div className="p-4">
-            <ChainStatusBanner status="Running" isConnected />
+            <ChainStatusContainer />
           </div>
           {children}
         </Providers>

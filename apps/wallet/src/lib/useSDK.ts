@@ -173,7 +173,7 @@ export function useSDK(autoConnect: boolean = true): UseSDKReturn {
   const subscribeToBlocks = useCallback(async (
     callback: (blockNumber: number, blockHash: string) => void
   ) => {
-    return sdkIntegration.subscribeToBlocks(callback);
+    return sdkIntegration.subscribeToBlocks((bn, hash) => callback(bn, hash ?? ''));
   }, []);
 
   const subscribeToComitEvents = useCallback(async (

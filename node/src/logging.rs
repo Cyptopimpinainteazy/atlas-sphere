@@ -24,6 +24,13 @@ pub fn init() {
         })
         .init();
 
+    // Initialize tracing subscriber so `tracing` events are captured too
+    // Forward `log` crate records into `tracing` and initialize a tracing subscriber
+    let _ = tracing_log::LogTracer::init();
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init();
+
     // Simple startup banner (ANSI color) — visible even if logger is overridden
     println!("\x1b[1;35m🚀  \x1b[0m\x1b[38;5;206mAtlas Sphere Node — syncing the mesh ⚡️\x1b[0m");
 }

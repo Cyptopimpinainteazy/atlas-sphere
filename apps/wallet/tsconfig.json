@@ -22,6 +22,7 @@
       "@atlas-sphere/shared": ["../shared/index.ts"],
       "@atlas-sphere/shared/*": ["../shared/*"]
     },
+    "types": ["jest", "node"],
     "baseUrl": "."
   },
   "include": [

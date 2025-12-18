@@ -124,6 +124,8 @@ class SDKIntegration {
       version: '1.0.0',
       properties: {
         tokenSymbol: NATIVE_ASSET_SYMBOL,
+        tokenDecimals: NATIVE_ASSET_DECIMALS,
+        ss58Format: 42,
       },
     };
   }
@@ -133,7 +135,7 @@ class SDKIntegration {
   }
 
   // Mock Comit methods
-  async submitEvmComit(signer: string, evmPayload: Uint8Array | string): Promise<ComitSubmissionResult> {
+  async submitEvmComit(signer: string, evmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
     if (!this.connected) {
       return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
     }
@@ -146,7 +148,7 @@ class SDKIntegration {
     };
   }
 
-  async submitSvmComit(signer: string, svmPayload: Uint8Array | string): Promise<ComitSubmissionResult> {
+  async submitSvmComit(signer: string, svmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
     if (!this.connected) {
       return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
     }
@@ -159,7 +161,7 @@ class SDKIntegration {
     };
   }
 
-  async submitDualComit(signer: string, evmPayload: Uint8Array | string, svmPayload: Uint8Array | string): Promise<ComitSubmissionResult> {
+  async submitDualComit(signer: string, evmPayload: Uint8Array | string, svmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
     if (!this.connected) {
       return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
     }
@@ -173,12 +175,23 @@ class SDKIntegration {
   }
 
   // Mock subscription methods
-  async subscribeToBlocks(callback: (blockNumber: number) => void): Promise<string> {
+  async subscribeToBlocks(callback: (blockNumber: number, blockHash?: string) => void): Promise<string> {
     const interval = setInterval(() => {
-      callback(Math.floor(Math.random() * 1000) + 1);
+      const bn = Math.floor(Math.random() * 1000) + 1;
+      const hash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+      try { callback(bn, hash); } catch { callback(bn); }
     }, 5000);
     
     return 'mock-subscription-id';
+  }
+
+  async subscribeToFinalizedBlocks(callback: (blockNumber: number, blockHash?: string) => void): Promise<string> {
+    const interval = setInterval(() => {
+      const bn = Math.floor(Math.random() * 1000) + 1;
+      const hash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+      try { callback(bn, hash); } catch { callback(bn); }
+    }, 8000);
+    return 'mock-finalized-sub-id';
   }
 
   async subscribeToComitEvents(address: string, callback: (event: ComitEvent) => void): Promise<string> {
@@ -189,6 +202,8 @@ class SDKIntegration {
         data: {
           comitId: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
           origin: address,
+          nonce: BigInt(0),
+          fee: BigInt(0),
         },
       });
     }, 1000);
@@ -198,6 +213,46 @@ class SDKIntegration {
 
   async unsubscribe(subscriptionId: string): Promise<boolean> {
     return true;
+  }
+
+  async getFinalizedBlockNumber(): Promise<number> {
+    const n = await this.getBlockNumber();
+    return Math.max(0, n - 2);
+  }
+
+  async getBalance(address: string, assetId: number = NATIVE_ASSET_ID): Promise<BalanceInfo> {
+    return this.getCanonicalBalance(address, assetId);
+  }
+
+  async getNonce(address: string): Promise<bigint> {
+    return BigInt(0);
+  }
+
+  async getMultipleBalances(address: string, assetIds: number[]): Promise<BalanceInfo[]> {
+    const res: BalanceInfo[] = [];
+    for (const id of assetIds) {
+      res.push(await this.getCanonicalBalance(address, id));
+    }
+    return res;
+  }
+
+  formatBalance(balance: bigint, decimals: number = NATIVE_ASSET_DECIMALS) {
+    // Avoid bigint exponent issues on lower TS targets — use loop
+    let factor = BigInt(1);
+    for (let i = 0; i < decimals; i++) factor *= BigInt(10);
+    const whole = balance / factor;
+    const frac = balance % factor;
+    const fracStr = String((Number(frac) / Number(factor)).toFixed(4)).slice(1);
+    return `${whole.toString()}${fracStr}`;
+  }
+
+  parseBalance(str: string, decimals: number = NATIVE_ASSET_DECIMALS) {
+    const asFloat = parseFloat(str);
+    return BigInt(Math.floor(asFloat * Math.pow(10, decimals)));
+  }
+
+  configure(config: Partial<WalletConfig>) {
+    if (config.endpoint) this.endpoint = config.endpoint;
   }
 }
 
@@ -210,3 +265,7 @@ export const sdkIntegration = new SDKIntegration();
 export function getSDK(): SDKIntegration {
   return sdkIntegration;
 }
+
+export const formatBalance = (b: bigint, d?: number) => sdkIntegration.formatBalance(b, d);
+export const parseBalance = (s: string, d?: number) => sdkIntegration.parseBalance(s, d);
+

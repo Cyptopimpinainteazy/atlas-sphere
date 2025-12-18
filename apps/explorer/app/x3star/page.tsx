@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChainStatusBanner } from '@atlas-sphere/shared/components';
+import ChainStatusContainer from '@/components/ChainStatusContainer';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    x3Star OS — Bloomberg Terminal Edition
@@ -586,7 +586,7 @@ function ExecutionEngineApp({ blocks }: { blocks: BlockData[] }) {
   return (
     <div className="h-full flex flex-col bg-[#0a0a0a] font-mono text-xs">
       <div className="p-3">
-        <ChainStatusBanner status="Operational" isConnected />
+        <ChainStatusContainer />
       </div>
       {/* Header Stats */}
       <div className="grid grid-cols-5 border-b border-[#1a1a1a]">

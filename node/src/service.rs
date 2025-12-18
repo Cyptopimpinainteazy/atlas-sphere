@@ -6,7 +6,7 @@
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
 use atlas_sphere_runtime::{opaque::Block, RuntimeApi};
-use sc_client_api::BlockBackend;
+use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
@@ -15,8 +15,10 @@ use sc_service::{
     TaskManager,
 };
 use sc_telemetry::{Telemetry, TelemetryWorker};
+use sp_api::HeaderT;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_core::{crypto::KeyTypeId, Pair};
+use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 
 /// Key type for Aura block authoring
@@ -415,6 +417,38 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
     // Start the network
     network_starter.start_network();
+
+    // Spawn a background task to watch finalized blocks and log events with emojis
+    {
+        let client = client.clone();
+        task_manager
+            .spawn_handle()
+            .spawn("import-watcher", None, async move {
+                use futures_util::StreamExt;
+
+                let mut notifications = client.import_notification_stream();
+                while let Some(notification) = notifications.next().await {
+                    let number: u64 = (*notification.header.number()).saturated_into();
+                    log::info!("🟡 Block imported: #{} — syncing state", number);
+                }
+            });
+    }
+
+    {
+        let client = client.clone();
+        task_manager
+            .spawn_handle()
+            .spawn("block-watcher", None, async move {
+                use futures_util::StreamExt;
+
+                let mut notifications = client.finality_notification_stream();
+                while let Some(notification) = notifications.next().await {
+                    // number is saturated into u64
+                    let number: u64 = (*notification.header.number()).saturated_into();
+                    log::info!("🔔 Block finalized: #{} ✅", number);
+                }
+            });
+    }
 
     log::info!("✨ Atlas Sphere node started successfully");
     log::info!("🔗 Network: {}", config.chain_spec.name());

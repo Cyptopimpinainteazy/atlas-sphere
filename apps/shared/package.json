@@ -20,5 +20,11 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.460.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^14.1.0",
+    "@testing-library/jest-dom": "^6.1.0",
+    "@types/jest": "^29.5.3",
+    "jest": "^29.7.0"
   }
 }

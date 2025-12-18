@@ -163,7 +163,9 @@ export function useWalletData(options: UseWalletDataOptions = {}) {
       const balances = await sdkIntegration.getMultipleBalances(activeAccount.address, assetIds);
 
       // Update token balances
-      for (const [assetId, balanceInfo] of balances) {
+      for (let i = 0; i < balances.length; i++) {
+        const assetId = assetIds[i];
+        const balanceInfo = balances[i];
         const token = DEFAULT_TOKENS.find(t => t.assetId === assetId);
         if (token) {
           updateTokenBalance(token.symbol, balanceInfo.formatted);

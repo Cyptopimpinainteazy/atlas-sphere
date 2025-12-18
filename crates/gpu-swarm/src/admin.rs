@@ -7,12 +7,13 @@ use rand::RngCore;
 use std::time::UNIX_EPOCH;
 
 use aes_gcm::aead::{Aead, KeyInit};
-use aes_gcm::{Aes256Gcm, Key, Nonce}; // AES-GCM
+use aes_gcm::{Aes256Gcm, Nonce}; // AES-GCM
 use argon2::Argon2;
 use base64::{engine::general_purpose, Engine as _};
 use dashmap::DashMap;
 use dirs::config_dir;
 use once_cell::sync::Lazy;
+use sha2::Digest;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -81,7 +82,7 @@ fn session_matches(provided: &str) -> bool {
 }
 
 /// Ensure we have a config directory, return it
-fn ensure_config_dir() -> PathBuf {
+pub fn ensure_config_dir() -> PathBuf {
     let base = config_dir().unwrap_or_else(|| {
         let mut p = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
         p.push(".config");
@@ -95,7 +96,7 @@ fn ensure_config_dir() -> PathBuf {
 }
 
 /// Ensure a local admin token file exists, return the token string
-fn ensure_local_token() -> std::io::Result<String> {
+pub fn ensure_local_token() -> std::io::Result<String> {
     let dir = ensure_config_dir();
     let token_file = dir.join("admin.token");
     if token_file.exists() {
@@ -129,13 +130,15 @@ fn encrypt_private_key(secret: &[u8; 32], token: &str) -> anyhow::Result<String>
         .hash_password_into(token.as_bytes(), &salt_bytes, &mut out)
         .map_err(|e| anyhow::anyhow!("argon2 failed: {}", e))?;
 
-    let key = Key::from_slice(&out);
-    let cipher = Aes256Gcm::new(key);
+    let cipher =
+        Aes256Gcm::new_from_slice(&out).map_err(|e| anyhow::anyhow!("aes init error: {}", e))?;
 
     let mut nonce_bytes = [0u8; 12];
     rand::thread_rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
-    let ct = cipher.encrypt(nonce, secret.as_ref()).map_err(|e| anyhow::anyhow!("aes encrypt: {}", e))?;
+    let ct = cipher
+        .encrypt(nonce, secret.as_ref())
+        .map_err(|e| anyhow::anyhow!("aes encrypt: {}", e))?;
     // store as base64: salt | nonce | ct
     let b = format!(
         "{}:{}:{}",
@@ -164,12 +167,14 @@ fn decrypt_private_key(enc: &str, token: &str) -> anyhow::Result<[u8; 32]> {
         .hash_password_into(token.as_bytes(), &salt_bytes, &mut out)
         .map_err(|e| anyhow::anyhow!("argon2 failed: {}", e))?;
 
-    let key = Key::from_slice(&out);
-    let cipher = Aes256Gcm::new(key);
+    let cipher =
+        Aes256Gcm::new_from_slice(&out).map_err(|e| anyhow::anyhow!("aes init error: {}", e))?;
     let nonce_bytes = general_purpose::STANDARD.decode(nonce_b64)?;
     let ct = general_purpose::STANDARD.decode(ct_b64)?;
     let nonce = Nonce::from_slice(&nonce_bytes);
-    let pt = cipher.decrypt(nonce, ct.as_ref()).map_err(|e| anyhow::anyhow!("aes decrypt: {}", e))?;
+    let pt = cipher
+        .decrypt(nonce, ct.as_ref())
+        .map_err(|e| anyhow::anyhow!("aes decrypt: {}", e))?;
     let arr: [u8; 32] = pt
         .try_into()
         .map_err(|_| anyhow::anyhow!("invalid plaintext length"))?;

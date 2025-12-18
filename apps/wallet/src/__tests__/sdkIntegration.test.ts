@@ -8,17 +8,18 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 
 // Mock the SDK modules
-jest.mock('@atlas-sphere/ts-sdk', () => ({
+jest.mock('@atlas-sphere/ts-sdk', () => ({ // mocked ts-sdk (shallow)
+
   AtlasSphereClient: jest.fn().mockImplementation(() => ({
-    connect: jest.fn().mockResolvedValue(undefined),
-    disconnect: jest.fn().mockResolvedValue(undefined),
+    connect: jest.fn(async () => undefined),
+    disconnect: jest.fn(async () => undefined),
     isConnected: true,
-    getBalance: jest.fn().mockResolvedValue(BigInt('1000000000000')),
-    getCanonicalBalance: jest.fn().mockResolvedValue(BigInt('500000000000')),
-    getAssetMetadata: jest.fn().mockResolvedValue({ symbol: 'ATLAS', decimals: 12 }),
-    isAuthorized: jest.fn().mockResolvedValue(true),
-    getNonce: jest.fn().mockResolvedValue(BigInt(0)),
-    getChainInfo: jest.fn().mockResolvedValue({
+    getBalance: jest.fn(async () => BigInt('1000000000000')),
+    getCanonicalBalance: jest.fn(async () => BigInt('500000000000')),
+    getAssetMetadata: jest.fn(async () => ({ symbol: 'ATLAS', decimals: 12 })),
+    isAuthorized: jest.fn(async () => true),
+    getNonce: jest.fn(async () => BigInt(0)),
+    getChainInfo: jest.fn(async () => ({
       name: 'Atlas Sphere',
       version: '1.0.0',
       properties: {
@@ -26,10 +27,10 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({
         tokenDecimals: 12,
         ss58Format: 42,
       },
-    }),
-    getBlockNumber: jest.fn().mockResolvedValue(100),
-    getFinalizedBlockNumber: jest.fn().mockResolvedValue(95),
-    submitComit: jest.fn().mockResolvedValue({
+    })),
+    getBlockNumber: jest.fn(async () => 100),
+    getFinalizedBlockNumber: jest.fn(async () => 95),
+    submitComit: jest.fn(async () => ({
       comit: {
         comitId: '0x' + '1'.repeat(64),
         origin: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
@@ -55,12 +56,12 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({
       blockNumber: 100,
       blockHash: '0x' + '4'.repeat(64),
       extrinsicIndex: 0,
-    }),
-    subscribeNewBlocks: jest.fn().mockResolvedValue('sub_1'),
-    subscribeFinalizedBlocks: jest.fn().mockResolvedValue('sub_2'),
-    subscribeComitEvents: jest.fn().mockResolvedValue('sub_3'),
-    unsubscribe: jest.fn().mockResolvedValue(true),
-  })),
+    })),
+    subscribeNewBlocks: jest.fn(async () => 'sub_1'),
+    subscribeFinalizedBlocks: jest.fn(async () => 'sub_2'),
+    subscribeComitEvents: jest.fn(async () => 'sub_3'),
+    unsubscribe: jest.fn(async () => true),
+  })) as any,
   ComitBuilder: jest.fn().mockImplementation(() => ({
     withEvmPayload: jest.fn().mockReturnThis(),
     withSvmPayload: jest.fn().mockReturnThis(),
@@ -96,11 +97,13 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({
       fee: BigInt(1500000),
     }),
   }),
-  createQueryClient: jest.fn().mockResolvedValue({}),
-  formatBalance: jest.fn().mockImplementation((balance, decimals) => {
+  createQueryClient: jest.fn(async () => ({})),
+  formatBalance: (jest.fn() as jest.Mock).mockImplementation((...args: any[]) => {
+    const [balance, decimals] = args as [any, number];
     return (Number(balance) / Math.pow(10, decimals)).toFixed(4);
   }),
-  parseBalance: jest.fn().mockImplementation((str, decimals) => {
+  parseBalance: (jest.fn() as jest.Mock).mockImplementation((...args: any[]) => {
+    const [str, decimals] = args as [string, number];
     return BigInt(Math.floor(parseFloat(str) * Math.pow(10, decimals)));
   }),
   NATIVE_ASSET_ID: 0,
@@ -108,12 +111,12 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({
   NATIVE_ASSET_DECIMALS: 12,
   DEFAULT_WS_ENDPOINT: 'ws://127.0.0.1:9944',
   ConnectionError: class extends Error {
-    constructor(endpoint, cause) {
-      super(`Failed to connect to ${endpoint}: ${cause.message}`);
+    constructor(endpoint: string, cause: any) {
+      super(`Failed to connect to ${endpoint}: ${cause?.message ?? String(cause)}`);
     }
   },
   RpcError: class extends Error {
-    constructor(method, message) {
+    constructor(method: string, message: string) {
       super(`RPC ${method} failed: ${message}`);
     }
   },

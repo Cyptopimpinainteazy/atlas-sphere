@@ -1,5 +1,5 @@
 import React from 'react';
-import { WalletProvider, WalletContext } from './WalletContext';
+import WalletProvider from './context/WalletProvider';
 import { MainLayout } from './components/MainLayout';
 
 export const WalletApp = () => {

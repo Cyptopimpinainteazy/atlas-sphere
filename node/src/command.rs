@@ -7,7 +7,7 @@ use clap::Parser;
 use log::{error, info, warn};
 use sc_cli::{CliConfiguration, Error as CliError, Result as CliResult, SubstrateCli};
 
-mod logging;
+use crate::logging;
 
 /// Entry point that runs the CLI and dispatches the requested command.
 pub fn run() -> CliResult<()> {
