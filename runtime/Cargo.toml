@@ -50,6 +50,7 @@ pallet-agent-accounts = { path = "../pallets/agent-accounts", default-features =
 pallet-agent-memory = { path = "../pallets/agent-memory", default-features = false }
 pallet-evolution-core = { path = "../pallets/evolution-core", default-features = false }
 pallet-x3-verifier = { path = "../pallets/x3-verifier", default-features = false }
+pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", default-features = false }
 pallet-x3-settlement-engine = { path = "../pallets/x3-settlement-engine", default-features = false }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
@@ -112,6 +113,7 @@ std = [
 	"pallet-agent-memory/std",
 	"pallet-evolution-core/std",
 	"pallet-x3-verifier/std",
+	"pallet-x3-domain-registry/std",
 	"pallet-x3-settlement-engine/std",
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
@@ -143,6 +145,7 @@ runtime-benchmarks = [
 	"pallet-atomic-trade-engine/runtime-benchmarks",
 	"pallet-evolution-core/runtime-benchmarks",
 	"pallet-x3-verifier/runtime-benchmarks",
+	"pallet-x3-domain-registry/runtime-benchmarks",
 	"pallet-x3-settlement-engine/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]

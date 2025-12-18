@@ -11,6 +11,9 @@ use alloc::{string::String, vec::Vec};
 
 use sp_core::H256;
 
+#[cfg(feature = "std")]
+use std::sync::Arc;
+
 /// Hostcall IDs for X3 VM
 pub mod hostcall_ids {
     // Storage operations (0x00-0x0F)
@@ -44,6 +47,77 @@ pub mod hostcall_ids {
     // Balance/Assets (0x50-0x5F)
     pub const GET_BALANCE: u32 = 0x50;
     pub const TRANSFER: u32 = 0x51;
+}
+
+/// Cross-VM execution backends and execution context.
+///
+/// These are *not* constructed inside this crate so we can stay lightweight.
+/// Callers (node service / integration harness) provide the real executors.
+#[cfg(feature = "std")]
+#[derive(Clone)]
+pub struct CrossVmContext {
+    pub evm: Option<Arc<dyn atlas_evm_integration::EvmExecutor + Send + Sync>>,
+    pub svm: Option<Arc<dyn atlas_svm_integration::SvmExecutor + Send + Sync>>,
+
+    pub evm_config: atlas_evm_integration::EvmConfig,
+    pub svm_config: atlas_svm_integration::SvmConfig,
+
+    pub evm_caller: sp_core::H160,
+    pub svm_payer: [u8; 32],
+}
+
+#[cfg(feature = "std")]
+impl Default for CrossVmContext {
+    fn default() -> Self {
+        Self {
+            evm: None,
+            svm: None,
+            evm_config: atlas_evm_integration::EvmConfig::default(),
+            svm_config: atlas_svm_integration::SvmConfig::default(),
+            evm_caller: sp_core::H160::zero(),
+            svm_payer: [0u8; 32],
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+fn vm_hostcall_error(msg: impl Into<String>) -> x3_vm::VMError {
+    x3_vm::VMError::without_ip(x3_vm::VMErrorKind::HostcallError(msg.into()))
+}
+
+#[cfg(feature = "std")]
+fn expect_bytes(arg: Option<&x3_vm::Value>, name: &str) -> Result<Vec<u8>, x3_vm::VMError> {
+    match arg {
+        Some(x3_vm::Value::Bytes(b)) => Ok(b.clone()),
+        Some(v) => Err(vm_hostcall_error(format!(
+            "{} requires bytes, got {:?}",
+            name, v
+        ))),
+        None => Err(vm_hostcall_error(format!("{} missing argument", name))),
+    }
+}
+
+#[cfg(feature = "std")]
+fn expect_i64(arg: Option<&x3_vm::Value>, name: &str) -> Result<i64, x3_vm::VMError> {
+    match arg {
+        Some(x3_vm::Value::I64(v)) => Ok(*v),
+        Some(v) => Err(vm_hostcall_error(format!(
+            "{} requires i64, got {:?}",
+            name, v
+        ))),
+        None => Err(vm_hostcall_error(format!("{} missing argument", name))),
+    }
+}
+
+#[cfg(feature = "std")]
+fn bytes_to_h160(bytes: &[u8]) -> Result<sp_core::H160, x3_vm::VMError> {
+    if bytes.len() != 20 {
+        return Err(vm_hostcall_error(format!(
+            "address must be 20 bytes, got {}",
+            bytes.len()
+        )));
+    }
+    Ok(sp_core::H160::from_slice(bytes))
 }
 
 /// Substrate-aware hostcall handler
@@ -182,10 +256,24 @@ pub fn register_substrate_hostcalls(registry: &mut x3_vm::HostcallRegistry) {
     });
 
     // Register cross-VM
-    registry.register(EVM_CALL as u8, "evm_call", 3, |_args| Ok(None));
-    registry.register(SVM_CALL as u8, "svm_call", 3, |_args| Ok(None));
+    // Fail-closed by default: cross-VM wiring must be explicitly provided.
+    registry.register(EVM_CALL as u8, "evm_call", 4, |_args| {
+        Err(VMError::without_ip(VMErrorKind::HostcallError(
+            "evm_call not wired (provide CrossVmContext via register_substrate_hostcalls_with_cross_vm)"
+                .into(),
+        )))
+    });
+    registry.register(SVM_CALL as u8, "svm_call", 3, |_args| {
+        Err(VMError::without_ip(VMErrorKind::HostcallError(
+            "svm_call not wired (provide CrossVmContext via register_substrate_hostcalls_with_cross_vm)"
+                .into(),
+        )))
+    });
     registry.register(BRIDGE_TRANSFER as u8, "bridge_transfer", 3, |_args| {
-        Ok(None)
+        Err(VMError::without_ip(VMErrorKind::HostcallError(
+            "bridge_transfer not wired (provide CrossVmContext via register_substrate_hostcalls_with_cross_vm)"
+                .into(),
+        )))
     });
 
     // Register environment
@@ -212,4 +300,147 @@ pub fn register_substrate_hostcalls(registry: &mut x3_vm::HostcallRegistry) {
     registry.register(TRANSFER as u8, "transfer", 3, |_args| {
         Ok(Some(x3_vm::Value::Bool(false)))
     });
+}
+
+/// Register Substrate hostcalls with cross-VM execution wired to real adapters.
+///
+/// This stays fail-closed if an executor is missing.
+#[cfg(feature = "std")]
+pub fn register_substrate_hostcalls_with_cross_vm(
+    registry: &mut x3_vm::HostcallRegistry,
+    ctx: CrossVmContext,
+) {
+    use hostcall_ids::*;
+
+    let ctx = Arc::new(ctx);
+
+    registry.register(EVM_CALL as u8, "evm_call", 4, {
+        let ctx = Arc::clone(&ctx);
+        move |args| {
+            let executor = ctx
+                .evm
+                .as_ref()
+                .ok_or_else(|| vm_hostcall_error("evm executor not configured"))?;
+
+            let gas = expect_i64(args.get(0), "evm_call.gas")?;
+            let addr_bytes = expect_bytes(args.get(1), "evm_call.addr")?;
+            let value_i64 = expect_i64(args.get(2), "evm_call.value")?;
+            let data = expect_bytes(args.get(3), "evm_call.data")?;
+
+            let target = bytes_to_h160(&addr_bytes)?;
+            let mut cfg = ctx.evm_config.clone();
+            cfg.gas_limit = gas.max(0) as u64;
+
+            let result = executor
+                .call(
+                    &data,
+                    ctx.evm_caller,
+                    target,
+                    sp_core::U256::from(value_i64.max(0) as u64),
+                    &cfg,
+                )
+                .map_err(|e| vm_hostcall_error(format!("evm_call failed: {:?}", e)))?;
+
+            Ok(Some(x3_vm::Value::Bytes(result.output)))
+        }
+    });
+
+    registry.register(SVM_CALL as u8, "svm_call", 3, {
+        let ctx = Arc::clone(&ctx);
+        move |args| {
+            let executor = ctx
+                .svm
+                .as_ref()
+                .ok_or_else(|| vm_hostcall_error("svm executor not configured"))?;
+
+            let program = expect_bytes(args.get(0), "svm_call.program")?;
+            let input = expect_bytes(args.get(1), "svm_call.input")?;
+            let compute_units = expect_i64(args.get(2), "svm_call.compute_units")?;
+
+            let mut cfg = ctx.svm_config.clone();
+            cfg.compute_unit_limit = compute_units.max(0) as u64;
+
+            let result = executor
+                .execute_bpf(&program, &input, &cfg)
+                .map_err(|e| vm_hostcall_error(format!("svm_call failed: {:?}", e)))?;
+
+            Ok(Some(x3_vm::Value::Bytes(result.output)))
+        }
+    });
+
+    // Cross-domain token transfer is intentionally left as fail-closed until
+    // canonical ledger / escrow semantics are wired.
+    registry.register(BRIDGE_TRANSFER as u8, "bridge_transfer", 3, |_args| {
+        Err(vm_hostcall_error(
+            "bridge_transfer not implemented (wire canonical bridge + ledger semantics)",
+        ))
+    });
+}
+
+#[cfg(all(test, feature = "std"))]
+mod cross_vm_tests {
+    use super::*;
+
+    #[test]
+    fn cross_vm_hostcalls_fail_closed_by_default() {
+        let mut registry = x3_vm::HostcallRegistry::new();
+        register_substrate_hostcalls(&mut registry);
+
+        // evm_call: 4 args
+        let evm_res = registry.invoke(
+            hostcall_ids::EVM_CALL as u8,
+            &[
+                x3_vm::Value::I64(21_000),
+                x3_vm::Value::Bytes(vec![0u8; 20]),
+                x3_vm::Value::I64(0),
+                x3_vm::Value::Bytes(vec![]),
+            ],
+        );
+        assert!(evm_res.is_err());
+
+        // svm_call: 3 args
+        let svm_res = registry.invoke(
+            hostcall_ids::SVM_CALL as u8,
+            &[
+                x3_vm::Value::Bytes(vec![0x7f, 0x45, 0x4c, 0x46]),
+                x3_vm::Value::Bytes(vec![]),
+                x3_vm::Value::I64(100_000),
+            ],
+        );
+        assert!(svm_res.is_err());
+    }
+
+    #[test]
+    fn cross_vm_hostcalls_can_use_executor_traits() {
+        let mut registry = x3_vm::HostcallRegistry::new();
+
+        let ctx = CrossVmContext {
+            evm: Some(Arc::new(atlas_evm_integration::MockEvmExecutor)),
+            svm: Some(Arc::new(atlas_svm_integration::MockSvmExecutor)),
+            ..CrossVmContext::default()
+        };
+
+        register_substrate_hostcalls_with_cross_vm(&mut registry, ctx);
+
+        let evm_res = registry.invoke(
+            hostcall_ids::EVM_CALL as u8,
+            &[
+                x3_vm::Value::I64(21_000),
+                x3_vm::Value::Bytes(vec![0u8; 20]),
+                x3_vm::Value::I64(0),
+                x3_vm::Value::Bytes(vec![0x60, 0x00]),
+            ],
+        );
+        assert!(matches!(evm_res, Ok(Some(x3_vm::Value::Bytes(_)))));
+
+        let svm_res = registry.invoke(
+            hostcall_ids::SVM_CALL as u8,
+            &[
+                x3_vm::Value::Bytes(vec![0x79, 0x00]),
+                x3_vm::Value::Bytes(vec![0x01]),
+                x3_vm::Value::I64(200_000),
+            ],
+        );
+        assert!(matches!(svm_res, Ok(Some(x3_vm::Value::Bytes(_)))));
+    }
 }

@@ -207,6 +207,7 @@ construct_runtime!(
         AgentMemory: pallet_agent_memory,
         EvolutionCore: pallet_evolution_core,
         X3Verifier: pallet_x3_verifier,
+        X3DomainRegistry: pallet_x3_domain_registry,
         X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
@@ -232,6 +233,7 @@ construct_runtime!(
         AgentMemory: pallet_agent_memory,
         EvolutionCore: pallet_evolution_core,
         X3Verifier: pallet_x3_verifier,
+        X3DomainRegistry: pallet_x3_domain_registry,
         X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
@@ -934,6 +936,25 @@ impl pallet_x3_verifier::Config for Runtime {
     type WeightInfo = pallet_x3_verifier::weights::SubstrateWeight<Runtime>;
 }
 
+// ===== X3 Domain Registry Pallet Configuration =====
+parameter_types! {
+    pub const MaxX3DomainLen: u32 = 253;
+    pub const MaxX3Domains: u32 = 10_000;
+    pub const MaxX3RecordsPerDomain: u32 = 32;
+    pub const MaxX3CnameLen: u32 = 253;
+    pub const MaxX3TxtLen: u32 = 1024;
+}
+
+impl pallet_x3_domain_registry::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type UpdateOrigin = EnsureRootOrHalfCouncil;
+    type MaxDomainLen = MaxX3DomainLen;
+    type MaxDomains = MaxX3Domains;
+    type MaxRecordsPerDomain = MaxX3RecordsPerDomain;
+    type MaxCnameLen = MaxX3CnameLen;
+    type MaxTxtLen = MaxX3TxtLen;
+}
+
 // ===== X3SettlementEngine Configuration =====
 
 parameter_types! {
@@ -1454,6 +1475,20 @@ impl_runtime_apis! {
             pallet_x3_verifier::Executors::<Runtime>::get(&account)
                 .map(|e| e.active)
                 .unwrap_or(false)
+        }
+    }
+
+    impl pallet_x3_domain_registry::runtime_api::X3DomainRegistryApi<Block, AccountId> for Runtime {
+        fn get_records(domain: Vec<u8>) -> Vec<pallet_x3_domain_registry::runtime_api::X3DnsRecordResponse> {
+            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_get_records(domain)
+        }
+
+        fn get_domain(domain: Vec<u8>) -> Option<pallet_x3_domain_registry::runtime_api::X3DomainResponse<AccountId>> {
+            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_get_domain(domain)
+        }
+
+        fn list_domains() -> Vec<Vec<u8>> {
+            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_list_domains()
         }
     }
 }

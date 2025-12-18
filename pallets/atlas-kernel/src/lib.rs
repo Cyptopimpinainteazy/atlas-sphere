@@ -2181,3 +2181,6 @@ mod mock;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod chaos_tests;

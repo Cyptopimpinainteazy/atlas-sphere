@@ -20,6 +20,7 @@ pallet-atlas-kernel = { path = "../pallets/atlas-kernel", features = ["std"] }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", features = ["std"] }
 pallet-evolution-core = { path = "../pallets/evolution-core", features = ["std"] }
 pallet-x3-verifier = { path = "../pallets/x3-verifier", features = ["std"] }
+pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", features = ["std"] }
 
 async-trait = "0.1"
 clap = { version = "4.4", features = ["derive"] }
@@ -27,6 +28,9 @@ futures = "0.3"
 futures-util = { version = "0.3", default-features = false }
 hex = "0.4"
 log = "0.4"
+env_logger = "0.10"
+ansi_term = "0.12"
+chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ethereum = { version = "0.14", default-features = false }

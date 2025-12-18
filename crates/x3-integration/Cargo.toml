@@ -13,6 +13,10 @@ x3-backend = { path = "../x3-backend" }
 x3-common = { path = "../x3-common" }
 x3-verifier = { path = "../x3-verifier" }
 
+# Cross-VM executor traits (real backends are provided by the caller)
+atlas-evm-integration = { path = "../evm-integration", default-features = false }
+atlas-svm-integration = { path = "../svm-integration", default-features = false }
+
 # Substrate primitives
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -49,6 +53,8 @@ std = [
     "serde",
     "thiserror",
     "log/std",
+    "atlas-evm-integration/std",
+    "atlas-svm-integration/std",
 ]
 # Enable contract compilation from source
 compile = []

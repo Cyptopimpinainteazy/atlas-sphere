@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Quantum Theme Styles */
-@import '../styles/quantum.css';
+@import '../src/styles/quantum.css';
 
 :root {
   /* X3 Dark Color Palette - Blackscale with Orange/Red Accents */

@@ -74,7 +74,9 @@
 //! - No wallet/signing capabilities
 //! - Deterministic execution verified by multiple nodes
 
+pub mod admin;
 pub mod announcer;
+pub mod bip39;
 pub mod config;
 pub mod coordinator;
 pub mod crown;

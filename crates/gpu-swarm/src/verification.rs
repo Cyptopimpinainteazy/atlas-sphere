@@ -4,6 +4,7 @@ use crate::error::{SwarmError, SwarmResult};
 use crate::node::NodeId;
 use crate::protocol::{ExecutionProof, TaskResult, VerificationResult};
 use crate::task::{Task, TaskId};
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -391,7 +392,7 @@ impl ReexecutionVerifier {
         // Randomly sample based on reexecution rate
         let should_reexecute = {
             let mut bytes = [0u8; 4];
-            getrandom::getrandom(&mut bytes).unwrap_or_default();
+            rand::thread_rng().fill_bytes(&mut bytes);
             let random = u32::from_le_bytes(bytes);
             random % self.config.reexecution_rate == 0
         };

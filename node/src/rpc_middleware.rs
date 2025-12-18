@@ -36,6 +36,8 @@ impl Default for RateLimitConfig {
         method_limits.insert("eth_call".to_string(), 100); // 100/min
         method_limits.insert("eth_estimateGas".to_string(), 60); // 60/min
         method_limits.insert("atlasKernel_getCanonicalBalance".to_string(), 300); // 300/min
+        method_limits.insert("x3Domains_getRecords".to_string(), 300); // 300/min
+        method_limits.insert("x3Domains_getDomain".to_string(), 120); // 120/min
         method_limits.insert("atomicTrade_simulate".to_string(), 30); // 30/min (expensive)
 
         Self {

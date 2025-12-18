@@ -3,6 +3,7 @@
 //! Run a GPU swarm node that can execute distributed compute tasks.
 
 use gpu_swarm::{
+    admin::{run_admin, AdminState},
     config::SwarmConfig,
     coordinator::{CoordinatorConfig, SwarmCoordinator},
     network::{NetworkConfig, NetworkManager},
@@ -42,10 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create swarm node
     let node = SwarmNode::new(&config, gpu)?;
-    tracing::info!(
-        "Node ID: {}",
-        hex::encode(&node.id[..16])
-    );
+    tracing::info!("Node ID: {}", hex::encode(&node.id[..16]));
 
     // Create network manager
     let net_config = NetworkConfig::default();
@@ -55,12 +53,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     network.start().await?;
     tracing::info!("Network started");
 
-    // Main loop - in a real implementation this would:
-    // 1. Connect to coordinator
-    // 2. Register node
-    // 3. Receive and execute tasks
-    // 4. Submit results
-    // 5. Handle heartbeats
+    // Spawn local admin GUI server on 127.0.0.1:9101
+    let admin_state = std::sync::Arc::new(tokio::sync::Mutex::new(AdminState::default()));
+    let admin_state_clone = admin_state.clone();
+    let admin_addr: std::net::SocketAddr = "127.0.0.1:9101".parse().unwrap();
+    tokio::spawn(async move {
+        tracing::info!("Starting admin UI on http://127.0.0.1:9101");
+        run_admin(admin_state_clone, admin_addr).await;
+    });
+
+    // Simulate updating uptime, rewards and history in background
+    let metrics_state = admin_state.clone();
+    tokio::spawn(async move {
+        let start = std::time::Instant::now();
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let mut s = metrics_state.lock().await;
+            s.uptime_seconds = start.elapsed().as_secs();
+            if s.enabled {
+                // Simulate rewards accrual based on gpu level
+                let rate = match s.gpu_level.as_str() {
+                    "low" => 0.01,
+                    "high" => 0.05,
+                    _ => 0.02,
+                };
+                s.rewards += rate;
+                // append to reward history every 5 seconds
+                if (s.uptime_seconds % 5) == 0 {
+                    let t = chrono::Utc::now().timestamp() as u64;
+                    let r = s.rewards;
+                    s.rewards_history
+                        .push(gpu_swarm::admin::RewardPoint { t, rewards: r });
+                    // keep only last 200 points
+                    let rh_len = s.rewards_history.len();
+                    if rh_len > 200 {
+                        let remove = rh_len - 200;
+                        s.rewards_history.drain(0..remove);
+                    }
+                }
+                // simple scoring: base + rewards*10
+                s.score = (100 + (s.rewards * 10.0) as u32) as u32;
+            }
+        }
+    });
 
     tracing::info!("Node ready. Press Ctrl+C to stop.");
 
@@ -80,7 +115,7 @@ fn detect_gpu_capabilities() -> GpuCapabilities {
         backends: vec![GpuBackend::Vulkan], // Fallback to Vulkan
         device_name: "GPU (Simulated)".to_string(),
         vendor: "Unknown".to_string(),
-        total_vram: 8 * 1024 * 1024 * 1024, // 8 GB
+        total_vram: 8 * 1024 * 1024 * 1024,     // 8 GB
         available_vram: 6 * 1024 * 1024 * 1024, // 6 GB available
         compute_units: 32,
         max_workgroup_size: 1024,

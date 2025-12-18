@@ -21,6 +21,9 @@ use pallet_evolution_core::runtime_api::{
     BlockMetricsResponse, EvolutionCoreApi as EvolutionCoreRuntimeApi, EvolutionStatusResponse,
     EvolvableParamsResponse, ProposalResponse,
 };
+use pallet_x3_domain_registry::runtime_api::{
+    X3DnsRecordResponse, X3DomainRegistryApi as X3DomainRegistryRuntimeApi, X3DomainResponse,
+};
 use pallet_x3_verifier::runtime_api::{
     ExecutorResponse, JobId, JobResponse, ReceiptResponse, VerifierStatusResponse,
     X3VerifierApi as X3VerifierRuntimeApi,
@@ -71,6 +74,42 @@ pub trait AtlasKernelApi<BlockHash> {
     /// Get current authority set
     #[method(name = "atlasKernel_getAuthorities")]
     fn get_authorities(&self, at: Option<BlockHash>) -> RpcResult<Vec<AccountId>>;
+}
+
+/// X3 Domains RPC API
+///
+/// Exposes chain-backed `.x3` domain records for the authoritative DNS server.
+#[rpc(client, server)]
+pub trait X3DomainsApi<BlockHash> {
+    /// Get all records for a domain.
+    #[method(name = "x3Domains_getRecords")]
+    fn get_records(&self, domain: String, at: Option<BlockHash>) -> RpcResult<Vec<X3DnsRecordRpc>>;
+
+    /// Get domain snapshot (owner + records).
+    #[method(name = "x3Domains_getDomain")]
+    fn get_domain(
+        &self,
+        domain: String,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Option<X3DomainRpcResponse>>;
+
+    /// List all registered domains.
+    #[method(name = "x3Domains_listDomains")]
+    fn list_domains(&self, at: Option<BlockHash>) -> RpcResult<Vec<String>>;
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct X3DnsRecordRpc {
+    pub rr_type: u16,
+    pub ttl: u32,
+    pub data: String,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct X3DomainRpcResponse {
+    pub domain: String,
+    pub owner: AccountId,
+    pub records: Vec<X3DnsRecordRpc>,
 }
 
 /// Minimal Ethereum-compatible RPC for chain metadata
@@ -316,6 +355,117 @@ where
                 None::<()>,
             )
         })
+    }
+}
+
+/// X3 Domains RPC server implementation
+pub struct X3DomainsRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> X3DomainsRpc<C, B> {
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> X3DomainsApiServer<<Block as BlockT>::Hash> for X3DomainsRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send
+        + Sync
+        + 'static
+        + ProvideRuntimeApi<Block>
+        + HeaderBackend<Block>
+        + BlockBackend<Block>,
+    C::Api: X3DomainRegistryRuntimeApi<Block, AccountId>,
+{
+    fn get_records(
+        &self,
+        domain: String,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<X3DnsRecordRpc>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        let records: Vec<X3DnsRecordResponse> =
+            api.get_records(at, domain.into_bytes()).map_err(|e| {
+                jsonrpsee::types::ErrorObjectOwned::owned(
+                    1,
+                    format!("Runtime API error: {:?}", e),
+                    None::<()>,
+                )
+            })?;
+
+        Ok(records.into_iter().map(map_x3_record_response).collect())
+    }
+
+    fn get_domain(
+        &self,
+        domain: String,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Option<X3DomainRpcResponse>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        let domain_resp: Option<X3DomainResponse<AccountId>> =
+            api.get_domain(at, domain.into_bytes()).map_err(|e| {
+                jsonrpsee::types::ErrorObjectOwned::owned(
+                    1,
+                    format!("Runtime API error: {:?}", e),
+                    None::<()>,
+                )
+            })?;
+
+        Ok(domain_resp.map(|d| X3DomainRpcResponse {
+            domain: String::from_utf8_lossy(&d.domain).to_string(),
+            owner: d.owner,
+            records: d.records.into_iter().map(map_x3_record_response).collect(),
+        }))
+    }
+
+    fn list_domains(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Vec<String>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        let domains = api.list_domains(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })?;
+
+        Ok(domains
+            .into_iter()
+            .map(|d| String::from_utf8_lossy(&d).to_string())
+            .collect())
+    }
+}
+
+fn map_x3_record_response(r: X3DnsRecordResponse) -> X3DnsRecordRpc {
+    let data = match r.rr_type {
+        1 if r.data.len() == 4 => {
+            let ip = std::net::Ipv4Addr::new(r.data[0], r.data[1], r.data[2], r.data[3]);
+            ip.to_string()
+        }
+        28 if r.data.len() == 16 => {
+            let mut octets = [0u8; 16];
+            octets.copy_from_slice(&r.data[..16]);
+            let ip = std::net::Ipv6Addr::from(octets);
+            ip.to_string()
+        }
+        _ => String::from_utf8_lossy(&r.data).to_string(),
+    };
+
+    X3DnsRecordRpc {
+        rr_type: r.rr_type,
+        ttl: r.ttl,
+        data,
     }
 }
 
@@ -1104,6 +1254,7 @@ where
         + BlockchainEvents<Block>,
     C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
     C::Api: AccountNonceApi<Block, AccountId, Nonce>,
+    C::Api: X3DomainRegistryRuntimeApi<Block, AccountId>,
     C::Api: AtomicTradeEngineRuntimeApi<Block>,
     C::Api: EvolutionCoreRuntimeApi<Block, AccountId, BlockNumber>,
     C::Api: X3VerifierRuntimeApi<Block, AccountId, Balance, BlockNumber>,
@@ -1120,6 +1271,10 @@ where
     // Add Atlas Kernel custom RPC
     let atlas_kernel = AtlasKernelRpc::<C, Block>::new(client.clone());
     module.merge(AtlasKernelApiServer::into_rpc(atlas_kernel))?;
+
+    // Add X3 Domains custom RPC
+    let x3_domains = X3DomainsRpc::<C, Block>::new(client.clone());
+    module.merge(X3DomainsApiServer::into_rpc(x3_domains))?;
 
     // Add minimal Ethereum-compatible RPC (chainId, gasPrice, blockNumber)
     let eth_compat = EthCompatRpc::<C, Block>::new(client.clone());

@@ -8,6 +8,7 @@ use gpu_swarm::{
     network::{NetworkConfig, NetworkManager},
     node::NodeId,
 };
+use rand::RngCore;
 use std::path::PathBuf;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -19,7 +20,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    tracing::info!("Starting GPU Swarm Coordinator v{}", env!("CARGO_PKG_VERSION"));
+    tracing::info!(
+        "Starting GPU Swarm Coordinator v{}",
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Load or create configuration
     let config_path = PathBuf::from("coordinator-config.toml");
@@ -34,10 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate coordinator ID
     let coordinator_id: NodeId = {
         let mut id = [0u8; 32];
-        if let Err(e) = getrandom::getrandom(&mut id) {
-            eprintln!("Failed to generate random ID: {}", e);
-            std::process::exit(1);
-        }
+        rand::thread_rng().fill_bytes(&mut id);
         id
     };
     tracing::info!("Coordinator ID: {}", hex::encode(&coordinator_id[..16]));
@@ -52,7 +53,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create coordinator
     let coord_config = CoordinatorConfig::default();
-    let (mut coordinator, _message_tx, mut events) = SwarmCoordinator::new(coord_config, coordinator_id);
+    let (mut coordinator, _message_tx, mut events) =
+        SwarmCoordinator::new(coord_config, coordinator_id);
 
     // Spawn event handler
     let event_task = tokio::spawn(async move {
@@ -64,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Start coordinator
     tracing::info!("Coordinator ready. Press Ctrl+C to stop.");
-    
+
     // Run coordinator in background
     let run_task = tokio::spawn(async move {
         if let Err(e) = coordinator.start().await {
