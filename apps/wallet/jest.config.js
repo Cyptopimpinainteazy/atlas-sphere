@@ -17,6 +17,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.(ts|tsx|js|jsx)"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^@atlas-sphere/ts-sdk$": "<rootDir>/node_modules/@atlas-sphere/ts-sdk/src/index.ts",
     // Handle CSS modules
     "\\.css$": "identity-obj-proxy",
   },
