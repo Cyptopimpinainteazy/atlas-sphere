@@ -11,7 +11,7 @@ import json
 import os
 import argparse
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+from web3.middleware import ExtraDataToPOAMiddleware
 import solcx
 import time
 from swarm.db import SessionLocal, models
@@ -53,7 +53,7 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
     # support eth-tester
     if rpc:
         w3 = Web3(Web3.HTTPProvider(rpc))
-        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         acct = w3.eth.account.from_key(private_key)
         sender = acct.address
     else:

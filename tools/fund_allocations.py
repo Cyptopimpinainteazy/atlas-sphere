@@ -19,7 +19,7 @@ import argparse
 import json
 import os
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+from web3.middleware import ExtraDataToPOAMiddleware
 import solcx
 from swarm.db import SessionLocal, models
 
@@ -104,7 +104,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     if rpc:
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
-        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
         acct = w3.eth.account.from_key(private_key)
         sender = acct.address
     else:
