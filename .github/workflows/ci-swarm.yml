@@ -39,19 +39,31 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || echo "No requirements.txt found"
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements.txt found, skipping Python dependencies"
+          fi
       
       - name: Run Alembic migrations
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/swarm_test
         run: |
-          alembic upgrade head || echo "Alembic migrations skipped"
+          if [ -f alembic.ini ]; then
+            alembic upgrade head
+          else
+            echo "No alembic.ini found, skipping migrations"
+          fi
       
       - name: Run Python tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/swarm_test
         run: |
-          pytest tests/ || echo "No Python tests found"
+          if [ -d tests ]; then
+            pytest tests/
+          else
+            echo "No tests directory found, skipping Python tests"
+          fi
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
