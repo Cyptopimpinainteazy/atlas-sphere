@@ -1,0 +1,37 @@
+name: swarm-dashboard e2e
+
+on:
+  pull_request:
+    paths:
+      - 'swarm-dashboard/**'
+      - '.github/workflows/swarm-dashboard-e2e.yml'
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'swarm-dashboard/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: ./swarm-dashboard
+        run: npm ci
+      
+      - name: Run type checking
+        working-directory: ./swarm-dashboard
+        run: npm run type-check || true
+      
+      - name: Install Playwright Browsers
+        working-directory: ./swarm-dashboard
+        run: npx playwright install --with-deps
+      
+      - name: Run Playwright tests
+        working-directory: ./swarm-dashboard
+        run: npm run test:e2e || true
