@@ -91,7 +91,7 @@ def deploy_token_and_distributor(w3: Web3, acct=None, abi_rd=None, bc_rd=None):
     token_addr = r.contractAddress
 
     # Use pre-compiled RewardDistributor if provided, otherwise compile it
-    if abi_rd is None or bc_rd is None:
+    if abi_rd is None and bc_rd is None:
         abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
     RD = w3.eth.contract(abi=abi_rd, bytecode=bc_rd)
     tx2 = RD.constructor(token_addr).transact({'from': acct})
