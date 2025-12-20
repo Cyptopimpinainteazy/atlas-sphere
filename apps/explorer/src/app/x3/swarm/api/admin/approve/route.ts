@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { spawn } from 'child_process'
 import { pendingActionDB, adminDB, kycDB, eventDB } from '@/lib/db'
 import { ethers } from 'ethers'
 
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
     if (!signature) return NextResponse.json({ error: 'missing_signature' }, { status: 400 })
     let signer = null
     try {
-      signer = ethers.utils.verifyMessage(actionId, signature)
+      signer = ethers.verifyMessage(actionId, signature)
     } catch (e) {
       return NextResponse.json({ error: 'invalid_signature' }, { status: 400 })
     }
@@ -62,11 +63,10 @@ export async function POST(req: Request) {
       if (autoFund) {
         try {
           // call CLI helper to process finalized payouts (non-blocking)
-          const { spawn } = require('child_process')
-          const child = spawn('python', ['tools/process_finalized_payouts.py'], { stdio: 'inherit' })
+          spawn('python', ['tools/process_finalized_payouts.py'], { stdio: 'inherit' })
           // Don't wait for completion
         } catch (e) {
-          // ignore errors
+          console.error('Failed to spawn process_finalized_payouts helper:', e)
         }
       }
 

@@ -16,7 +16,6 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
@@ -105,8 +104,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        acct = w3.eth.account.from_key(private_key)
-        sender = acct.address
+        w3.eth.account.from_key(private_key)
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
@@ -132,20 +130,18 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
-    # perform transfer via token contract
-    abi_token, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
-    # token ABI unknown here; assume ERC20 minimal; we'll call transfer using low-level
+    # Use minimal ERC20 ABI for token transfer
+    min_abi = [
+        {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
+    ]
     # For eth-tester this will work via MockToken if we deployed it
     if rpc:
-        # build and sign transactions for remote provider
-        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
+        # Remote RPC flow requires proper transaction signing and is not fully implemented
+        # Use eth-tester mode for development or extend this function for production use
+        raise RuntimeError("Remote RPC flow not fully implemented; use eth-tester mode (no --rpc flag) or extend script for production")
     else:
         # token_contract exists in scope when deployed
-        # we will call token_contract = w3.eth.contract(address=token, abi=[...])
-        # For simplicity, attach a minimal ABI for transfer
-        min_abi = [
-            {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
-        ]
+        # For eth-tester, attach a minimal ABI for transfer
         token_contract = w3.eth.contract(address=token, abi=min_abi)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})
         # Now set allocations on distributor
