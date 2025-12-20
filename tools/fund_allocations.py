@@ -137,7 +137,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
     # perform transfer via token contract
-    # token ABI unknown here; assume ERC20 minimal; we'll call transfer using low-level
+    # Use minimal ERC20 ABI for transfer since full token ABI is not available
     # For eth-tester this will work via MockToken if we deployed it
     if rpc:
         # build and sign transactions for remote provider
