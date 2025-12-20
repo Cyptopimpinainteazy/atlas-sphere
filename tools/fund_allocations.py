@@ -114,6 +114,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         provider = EthereumTesterProvider()
         w3 = Web3(provider)
         sender = w3.eth.accounts[0]
+        acct = None  # Not needed for eth-tester, will default to w3.eth.accounts[0]
 
     # Compile RewardDistributor once at the start to avoid repeated compilations
     abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
@@ -126,9 +127,8 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     amounts_wei = [int(a) for a in amounts]
 
     if not distributor or not token:
-        # Pass account if available (rpc mode), otherwise let function default to w3.eth.accounts[0]
-        acct_arg = acct if rpc else None
-        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, acct=acct_arg, abi_rd=abi_rd, bc_rd=bc_rd)
+        # Pass account if available (rpc mode), otherwise None (defaults to w3.eth.accounts[0])
+        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, acct=acct, abi_rd=abi_rd, bc_rd=bc_rd)
         distributor = rd_contract.address
         token = token_contract.address
     else:
