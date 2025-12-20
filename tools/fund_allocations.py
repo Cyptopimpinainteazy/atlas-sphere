@@ -49,7 +49,7 @@ def compile_contract(source_path, contract_name):
     return cont['abi'], cont['evm']['bytecode']['object']
 
 
-def deploy_token_and_distributor(w3: Web3, acct=None):
+def deploy_token_and_distributor(w3: Web3, abi_rd, bc_rd, acct=None):
     # Deploy MockToken then RewardDistributor
     token_source = '''
     // SPDX-License-Identifier: MIT
@@ -90,7 +90,7 @@ def deploy_token_and_distributor(w3: Web3, acct=None):
     r = w3.eth.wait_for_transaction_receipt(tx)
     token_addr = r.contractAddress
 
-    abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
+    # Use pre-compiled RewardDistributor ABI and bytecode
     RD = w3.eth.contract(abi=abi_rd, bytecode=bc_rd)
     tx2 = RD.constructor(token_addr).transact({'from': acct})
     r2 = w3.eth.wait_for_transaction_receipt(tx2)
@@ -100,6 +100,9 @@ def deploy_token_and_distributor(w3: Web3, acct=None):
 
 
 def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, threshold=None):
+    # Compile RewardDistributor once at the start to avoid repeated compilation
+    abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
+    
     # support eth-tester when rpc is None
     if rpc:
         w3 = Web3(Web3.HTTPProvider(rpc))
@@ -121,21 +124,18 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     amounts_wei = [int(a) for a in amounts]
 
     if not distributor or not token:
-        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3)
+        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, abi_rd, bc_rd)
         distributor = rd_contract.address
         token = token_contract.address
     else:
-        # attach
-        abi_rd, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
+        # attach using pre-compiled ABI
         rd_contract = w3.eth.contract(address=distributor, abi=abi_rd)
 
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
     # perform transfer via token contract
-    abi_token, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
-    # token ABI unknown here; assume ERC20 minimal; we'll call transfer using low-level
-    # For eth-tester this will work via MockToken if we deployed it
+    # Use minimal ERC20 ABI for token transfers
     if rpc:
         # build and sign transactions for remote provider
         raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
@@ -148,9 +148,8 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         ]
         token_contract = w3.eth.contract(address=token, abi=min_abi)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})
-        # Now set allocations on distributor
-        rd_abi, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
-        rd_contract = w3.eth.contract(address=distributor, abi=rd_abi)
+        # Now set allocations on distributor using pre-compiled ABI
+        rd_contract = w3.eth.contract(address=distributor, abi=abi_rd)
         rd_contract.functions.setAllocations(addresses, amounts_wei).transact({'from': sender})
         print("Allocations set on distributor")
 
