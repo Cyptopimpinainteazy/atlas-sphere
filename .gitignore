@@ -1,0 +1,16 @@
+# Build artifacts
+/target
+
+# Node modules
+**/node_modules/
+
+# Python envs
+.venv*/
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
