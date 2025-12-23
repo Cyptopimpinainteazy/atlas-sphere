@@ -1,6 +1,11 @@
 /// EVM State Integration for Atlas Sphere
 ///
 /// Manages Ethereum Virtual Machine state, account storage, and gas metering.
+///
+/// Note: `compute_state_root()` produces Ethereum-compatible state roots using
+/// the standard Merkle Patricia Trie construction and RLP-encoded account values.
+/// The method is deterministic on identical sequences of state updates and is
+/// used to assert canonical state after EVM execution.
 
 use sp_runtime::traits::Zero;
 use sp_std::{collections::btree_map::BTreeMap, vec::Vec};

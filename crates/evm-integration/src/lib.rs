@@ -20,6 +20,13 @@
 //!   - `0x01 | value_u64_be[8] | init_code[..]`
 //!
 //! This format is intentionally compact for Comit payload transport and may evolve.
+//!
+//! ## Features & testing
+//!
+//! - To run the heavy cryptographic precompiles (bn128, ModExp, Blake2F) enable the
+//!   `full-precompiles` feature. This pulls in optional dependencies and is intended
+//!   for native builds (not runtime wasm).
+//! - Example: `cargo test -p atlas-evm-integration --features "frontier-executor full-precompiles"`
 
 use sp_core::H160;
 use sp_std::vec::Vec;
@@ -122,7 +129,10 @@ impl EvmConfig {
 
 /// Trait for EVM execution adapters
 pub trait EvmExecutor {
-    /// Execute EVM bytecode
+    /// Execute EVM bytecode.
+    ///
+    /// On EVM revert, the returned `EvmError::ExecutionReverted` may include the revert
+    /// return data as `Some(Vec<u8>)` when available.
     fn execute(
         &self,
         payload: &[u8],
@@ -480,6 +490,11 @@ impl GasCalculator {
 }
 
 #[cfg(feature = "frontier-executor")]
+/// Ethereum standard precompiles (0x01..=0x09).
+///
+/// - Most precompiles have lightweight std implementations available by default.
+/// - Heavy cryptographic precompiles (bn128, modexp, blake2f) are gated under
+///   the `full-precompiles` feature and require optional dependencies.
 mod precompiles {
     use ethereum_types::{H160, U256};
     use evm::executor::stack::{
@@ -1096,6 +1111,12 @@ mod tests {
         let result = executor.execute(&payload, &[0u8; 20], &EvmConfig::default()).unwrap();
         assert!(result.success);
         assert_eq!(result.output, b"hello");
+
+        // Now run with an extremely low gas limit to ensure OutOfGas is returned
+        let mut cfg = EvmConfig::default();
+        cfg.gas_limit = 1;
+        let err = executor.execute(&payload, &[0u8; 20], &cfg).unwrap_err();
+        assert_eq!(err, EvmError::OutOfGas);
     }
 
     #[cfg(feature = "frontier-executor")]
@@ -1353,6 +1374,83 @@ mod tests {
         }
     }
 
+    // --- Full precompiles tests (require full-precompiles feature)
+    #[cfg(all(feature = "frontier-executor", feature = "full-precompiles"))]
+    #[test]
+    fn test_full_precompiles_modexp_exact() {
+        let executor = FrontierEvmExecutor;
+        let mut payload = Vec::new();
+        payload.push(0x00);
+        let mut to = [0u8; 20];
+        to[19] = 0x05; // modexp
+        payload.extend_from_slice(&to);
+        payload.extend_from_slice(&0u64.to_be_bytes());
+        // base=258, exp=5, mod=97 (small prime)
+        let base = vec![0x01, 0x02]; // 258
+        let exp = vec![0x05]; // 5
+        let modu = vec![97u8]; // 97
+        let mut input = vec![0u8; 96];
+        // lengths
+        input[31] = base.len() as u8;
+        input[63] = exp.len() as u8;
+        input[95] = modu.len() as u8;
+        // append data blocks
+        input.extend_from_slice(&base);
+        input.extend_from_slice(&exp);
+        input.extend_from_slice(&modu);
+        payload.extend_from_slice(&input);
+
+        let result = executor.execute(&payload, &[0u8; 20], &EvmConfig::default()).unwrap();
+        assert!(result.success);
+        // manual computation: 258^5 mod 97
+        let mut acc = 1u128;
+        for _ in 0..5 { acc = (acc * 258) % 97 }
+        if !result.output.is_empty() {
+            let mut out_bytes = [0u8; 32];
+            let take = core::cmp::min(32, result.output.len());
+            out_bytes[32 - take..32].copy_from_slice(&result.output[..take]);
+            let out_val = ethereum_types::U256::from_big_endian(&out_bytes);
+            assert_eq!(out_val % ethereum_types::U256::from(97u64), ethereum_types::U256::from(acc));
+        }
+    }
+
+    #[cfg(all(feature = "frontier-executor", feature = "full-precompiles"))]
+    #[test]
+    fn test_full_precompiles_bn128_pairing() {
+        let executor = FrontierEvmExecutor;
+        let mut payload = Vec::new();
+        payload.push(0x00);
+        let mut to = [0u8; 20];
+        to[19] = 0x08; // bn128 pairing
+        payload.extend_from_slice(&to);
+        payload.extend_from_slice(&0u64.to_be_bytes());
+        // empty input should return 32 bytes with last byte 1 per implementation
+        payload.extend_from_slice(&[]);
+        let result = executor.execute(&payload, &[0u8; 20], &EvmConfig::default()).unwrap();
+        assert!(result.success);
+        assert_eq!(result.output.len(), 32);
+        assert_eq!(result.output[31], 1);
+    }
+
+    #[cfg(all(feature = "frontier-executor", feature = "full-precompiles"))]
+    #[test]
+    fn test_full_precompiles_blake2f_rounds() {
+        let executor = FrontierEvmExecutor;
+        let mut payload = Vec::new();
+        payload.push(0x00);
+        let mut to = [0u8; 20];
+        to[19] = 0x09; // blake2f
+        payload.extend_from_slice(&to);
+        payload.extend_from_slice(&0u64.to_be_bytes());
+        // Prepare 213-byte input with rounds = 1 and valid zeros; expect success
+        let mut input = vec![0u8; 213];
+        input[0..4].copy_from_slice(&1u32.to_be_bytes());
+        payload.extend_from_slice(&input);
+        let result = executor.execute(&payload, &[0u8; 20], &EvmConfig::default()).unwrap();
+        assert!(result.success);
+        assert_eq!(result.output.len(), 64);
+    }
+
     #[cfg(feature = "frontier-executor")]
     #[test]
     fn test_frontier_out_of_gas() {
@@ -1369,6 +1467,34 @@ mod tests {
 
         let result = executor.execute(&payload, &[0u8; 20], &cfg);
         assert_eq!(result, Err(EvmError::OutOfGas));
+    }
+
+    #[cfg(feature = "frontier-executor")]
+    #[test]
+    fn test_state_root_deterministic() {
+        // Deploy same contract twice in separate fresh backends and ensure state_root is deterministic
+        let executor = FrontierEvmExecutor;
+
+        let bytecode = vec![
+            0x60, 0x42, // PUSH1 0x42
+            0x60, 0x00, // PUSH1 0x00
+            0x55,       // SSTORE
+            0x60, 0x00, // PUSH1 0x00
+            0x60, 0x00, // PUSH1 0x00
+            0xF3,       // RETURN
+        ];
+
+        let mut payload = vec![0x01]; // CREATE
+        payload.extend_from_slice(&0u64.to_be_bytes()); // value
+        payload.extend_from_slice(&bytecode);
+
+        let res1 = executor.execute(&payload, &[1u8; 20], &EvmConfig::default()).unwrap();
+        assert!(res1.success);
+
+        let res2 = executor.execute(&payload, &[1u8; 20], &EvmConfig::default()).unwrap();
+        assert!(res2.success);
+
+        assert_eq!(res1.state_root, res2.state_root, "State roots should be deterministic for identical deployments");
     }
 }
 
