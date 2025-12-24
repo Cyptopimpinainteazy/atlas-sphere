@@ -152,6 +152,72 @@ jobs:
           echo "TEST_EXIT=${TEST_EXIT}" > artifact-meta.txt
           exit $TEST_EXIT
 
+      - name: Detect SIGILL and auto-open issue
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'artifacts';
+            const patterns = [/SIGILL/, /ILL_ILLOPN/];
+            const matches = [];
+
+            function walk(dir) {
+              const files = [];
+              if (!fs.existsSync(dir)) return files;
+              for (const f of fs.readdirSync(dir)) {
+                const p = `${dir}/${f}`;
+                const st = fs.statSync(p);
+                if (st.isDirectory()) files.push(...walk(p));
+                else files.push(p);
+              }
+              return files;
+            }
+
+            for (const f of walk(path)) {
+              try {
+                const content = fs.readFileSync(f, 'utf8');
+                for (const re of patterns) {
+                  if (re.test(content)) {
+                    matches.push(f);
+                    break;
+                  }
+                }
+              } catch (e) {
+                // binary files may throw; ignore
+              }
+            }
+
+            if (matches.length === 0) {
+              core.info = core && core.info ? core.info : console.log;
+              console.log('No SIGILL patterns found in artifacts.');
+            } else {
+              const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+              // Attempt to extract PR number from context
+              const prNumber = context.payload.pull_request && context.payload.pull_request.number ? context.payload.pull_request.number : null;
+              const title = `SIGILL observed in CI (run ${process.env.GITHUB_RUN_ID}${prNumber ? `, PR #${prNumber}` : ''})`;
+
+              let body = '';
+              const templatePath = '.github/ISSUE_TEMPLATE/sigill-crash-report.md';
+              if (fs.existsSync(templatePath)) {
+                body = fs.readFileSync(templatePath, 'utf8') + '\n\n';
+              }
+              body += `**Workflow run:** ${runUrl}\n`;
+              if (prNumber) body += `**Pull request:** #${prNumber}\n`;
+              body += `**Found in files:**\n${matches.map(f => `- ${f}`).join('\n')}\n\n`;
+              body += 'Artifacts: attached to workflow run (evm-sigill-diagnostics).\n';
+
+              // Prevent duplicate issues with same title
+              const { data: issues } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+              if (!issues.some(i => i.title === title)) {
+                await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['bug','diagnostics'] });
+                console.log(`Opened issue: ${title}`);
+              } else {
+                console.log('An open issue with the same title already exists; skipping creation.');
+              }
+            }
+
       - name: Upload diagnostic artifacts
         if: always()
         uses: actions/upload-artifact@v4
