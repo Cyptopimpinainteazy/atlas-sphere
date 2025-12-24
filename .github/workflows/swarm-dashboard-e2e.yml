@@ -58,9 +58,9 @@ jobs:
           if [ -f swarm-dashboard/e2e/axe-violations.json ]; then
             echo "found=true" >> $GITHUB_OUTPUT
             summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
-            body="Axe accessibility check reported violations on this run:\n\n${summary}\n\nFull JSON attached as an artifact: \`axe-violations.json\`"
+            body="Axe accessibility check reported violations on this run:\n\n${summary}\n\nFull JSON is available as a workflow artifact (axe-violations.json)."
             echo "Posting comment to PR #${{ github.event.pull_request.number }}"
-            curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -X POST -d "{\"body\": \"${body//"/\\\"}\"}" "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+            gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments -f body="$body"
           else
             echo "found=false" >> $GITHUB_OUTPUT
           fi
@@ -71,3 +71,25 @@ jobs:
         with:
           name: axe-violations
           path: swarm-dashboard/e2e/axe-violations.json
+
+      - name: Create triage issue for Axe violations (if none exists)
+        if: steps.check_axe.outputs.found == 'true'
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Preparing to create triage issue for Axe violations..."
+          TITLE="A11y: Axe accessibility violations detected (PR #${PR})"
+          # Search for existing open issues with the same title
+          hits=$(gh api search/issues -f q="repo:${REPO} is:issue is:open in:title \"${TITLE}\"" --jq '.total_count')
+          echo "Found existing issues: $hits"
+          if [ "$hits" -eq 0 ]; then
+            echo "Creating new issue: $TITLE"
+            summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
+            BODY="Axe accessibility check found violations on PR #${PR}:\n\n${summary}\n\nSee attached artifact 'axe-violations.json' for full details."
+            ISSUE=$(gh api repos/${REPO}/issues -f title="$TITLE" -f body="$BODY" -f labels='["accessibility","triage"]' --jq '.number')
+            echo "Opened issue #${ISSUE}"
+            gh api repos/${REPO}/issues/${PR}/comments -f body="Opened triage issue #${ISSUE} for accessibility violations: https://github.com/${REPO}/issues/${ISSUE}"
+          else
+            echo "Issue already exists, skipping creation."
+          fi
