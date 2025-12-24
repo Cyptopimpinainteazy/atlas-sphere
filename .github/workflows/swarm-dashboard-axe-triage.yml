@@ -31,9 +31,9 @@ jobs:
               BODY="Axe accessibility check found violations on PR #${PR}:\n\n${summary}\n\nSee attached artifact 'axe-violations.json' for full details."
               if [ -n "${ASSIGNEE}" ]; then
                 echo "Assignee configured: ${ASSIGNEE} — assigning issue"
-                ISSUE=$(gh issue create --repo ${REPO} --title "$TITLE" --body "$BODY" --label accessibility --label triage --assignee "${ASSIGNEE}" --json number --jq '.number')
+                ISSUE=$(gh api repos/${REPO}/issues -f title="$TITLE" -f body="$BODY" -f labels='["accessibility","triage"]' -f 'assignees[]='"${ASSIGNEE}" --jq '.number')
               else
-                ISSUE=$(gh issue create --repo ${REPO} --title "$TITLE" --body "$BODY" --label accessibility --label triage --json number --jq '.number')
+                ISSUE=$(gh api repos/${REPO}/issues -f title="$TITLE" -f body="$BODY" -f labels='["accessibility","triage"]' --jq '.number')
               fi
               echo "Opened issue #${ISSUE}"
               gh issue comment --repo ${REPO} ${PR} --body "Opened triage issue #${ISSUE} for accessibility violations: https://github.com/${REPO}/issues/${ISSUE}"
