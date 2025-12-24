@@ -20,6 +20,20 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'swarm-dashboard/package-lock.json'
       
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: swarm-dashboard/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
       - name: Install dependencies
         working-directory: ./swarm-dashboard
         run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund

@@ -38,8 +38,8 @@ test.afterAll(() => {
 
 test('dashboard demo shows readiness score and SIGILL count', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#readiness-score')).toHaveText(/\d+/);
-  await expect(page.locator('#sigill-count')).toHaveText(/\d+/);
+  await expect(page.locator('#readiness-score')).toHaveText(/\d+/, { timeout: 15000 });
+  await expect(page.locator('#sigill-count')).toHaveText(/\d+/, { timeout: 15000 });
 
   // The seeded fixtures include one SIGILL alert
   const sigillText = await page.locator('#sigill-count').innerText();

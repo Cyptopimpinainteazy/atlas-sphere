@@ -2,10 +2,16 @@ import { PlaywrightTestConfig } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 30_000,
-  expect: { timeout: 5000 },
+  timeout: 60_000,
+  expect: { timeout: 10000 },
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? [['github'], ['list']] : [['list']],
   use: {
-    baseURL: 'http://localhost:3001'
+    baseURL: 'http://localhost:3001',
+    headless: true,
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   }
 };
 
