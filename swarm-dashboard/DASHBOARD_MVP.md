@@ -11,8 +11,10 @@ Small, focused MVP to surface branch CI status, `atlas-evm-integration` test hea
 - POST /rpc with JSON-RPC method `test_health` -> returns project test counts (unit/integration)
 - POST /rpc with JSON-RPC method `alerts` -> returns list of alerts
 - POST /rpc with JSON-RPC method `create_alert` (params: alert object) -> creates alert (MVP manual creation)
+- GET /api/alerts/sigill -> returns pre-filtered list of SIGILL-related alerts with artifact links (count + alerts[])
+- GET /api/readiness/testnet -> aggregated readiness payload (score, ci, tests, node, network, last_updated)
 
-Mock server is `mock-rpc-server.js` and uses `mock-rpc-data.json` as the data source.
+Mock server is `mock-rpc-server.js` and uses `mock-rpc-data.json` as the data source. The SIGILL triage playbook is in `.github/triage/SIGILL_PLAYBOOK.md` and the SIGILL issue template is available at `.github/ISSUE_TEMPLATE/sigill-crash-report.md`.
 
 ## Frontend
 

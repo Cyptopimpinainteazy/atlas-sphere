@@ -11,6 +11,7 @@ import { useMediaMetrics } from '../hooks/useMediaMetrics';
 import { CiStatusTile } from '../components/CiStatusTile';
 import { TestHealthTile } from '../components/TestHealthTile';
 import { AlertsPanel } from '../components/AlertsPanel';
+import { TestnetReadinessTile } from '../components/TestnetReadinessTile';
 
 /**
  * Enhanced dashboard page with period selector and metrics view
@@ -38,6 +39,7 @@ export default function DashboardPage() {
         <QuickStats rpcUrl={rpcUrl} />
         <CiStatusTile rpcUrl={rpcUrl} branch="feature/swarm-dashboard-e2e" pr={3} />
         <TestHealthTile rpcUrl={rpcUrl} />
+        <TestnetReadinessTile rpcUrl={rpcUrl} />
         <AlertsPanel rpcUrl={rpcUrl} />
       </div>
 

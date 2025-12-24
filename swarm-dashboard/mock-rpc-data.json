@@ -189,6 +189,16 @@
       "last_run": null
     }
   },
+  "node_status": {
+    "synced": true,
+    "best_block": 123456,
+    "last_seen": "2025-12-23T12:00:00Z"
+  },
+  "network_metrics": {
+    "peers": 12,
+    "finality_lag": 1,
+    "coverage": 87.5
+  },
   "alerts": [
     {
       "id": "alert-001",

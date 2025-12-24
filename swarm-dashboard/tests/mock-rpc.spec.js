@@ -75,4 +75,41 @@ describe('mock RPC server', () => {
         const found = list2.result.find(a => a.id === created.result.id);
         expect(found).toBeDefined();
     });
+
+    // Helper to GET JSON from server
+    function getJson(path) {
+        return new Promise((resolve, reject) => {
+            http.get({ hostname: 'localhost', port: 9944, path, method: 'GET' }, res => {
+                let buf = '';
+                res.setEncoding('utf8');
+                res.on('data', chunk => (buf += chunk));
+                res.on('end', () => {
+                    try {
+                        resolve(JSON.parse(buf));
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            }).on('error', reject);
+        });
+    }
+
+    test('GET /api/alerts/sigill returns SIGILL alerts and artifacts', async () => {
+        const resp = await getJson('/api/alerts/sigill');
+        expect(resp).toHaveProperty('count');
+        expect(Array.isArray(resp.alerts)).toBe(true);
+        // At least one pre-seeded SIGILL alert is present in the mock data
+        if (resp.count > 0) {
+            expect(resp.alerts[0]).toHaveProperty('artifacts');
+            expect(resp.alerts[0].artifacts).toHaveProperty('strace');
+        }
+    });
+
+    test('GET /api/readiness/testnet returns score and details', async () => {
+        const resp = await getJson('/api/readiness/testnet');
+        expect(resp).toHaveProperty('score');
+        expect(typeof resp.score).toBe('number');
+        expect(resp).toHaveProperty('ci');
+        expect(resp).toHaveProperty('tests');
+    });
 });

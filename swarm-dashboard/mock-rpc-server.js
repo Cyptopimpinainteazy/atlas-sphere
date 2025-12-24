@@ -92,6 +92,60 @@ app.get('/ws', (req, res) => {
     res.status(200).send('WebSocket endpoint - use WebSocket client to connect');
 });
 
+// SIGILL alerts feed (filters alerts for SIGILL-related issues)
+app.get('/api/alerts/sigill', (req, res) => {
+    const sigillAlerts = (mockData.alerts || []).filter(a => {
+        const title = (a.title || '').toString().toUpperCase();
+        const msg = (a.message || '').toString().toUpperCase();
+        return title.includes('SIGILL') || msg.includes('SIGILL');
+    });
+
+    const enriched = sigillAlerts.map(a => Object.assign({}, a, {
+        artifacts: {
+            strace: `http://localhost:${PORT}/artifacts/${a.id}/strace.tgz`,
+            core: `http://localhost:${PORT}/artifacts/${a.id}/core.dump`
+        }
+    }));
+
+    res.json({ count: enriched.length, alerts: enriched });
+});
+
+// Readiness endpoint for testnet (aggregates CI, tests, node and network metrics into a score)
+app.get('/api/readiness/testnet', (req, res) => {
+    const ci = mockData.ci_status || { status: 'unknown' };
+    const tests = mockData.test_health?.['atlas-evm-integration'] || {};
+    const node = mockData.node_status || { synced: false, best_block: 0 };
+    const net = mockData.network_metrics || { peers: 0, finality_lag: null, coverage: null };
+
+    let score = 100;
+    if (ci.status === 'failed') score -= 40;
+    else if (ci.status === 'unknown') score -= 10;
+
+    const failing = (tests.unit?.failed || 0) + (tests.integration?.failed || 0);
+    score -= Math.min(failing * 10, 30);
+
+    if (!node.synced) score -= 30;
+    if (net.peers < 5) score -= 10;
+    if (net.finality_lag && net.finality_lag > 5) score -= 10;
+    if (net.coverage && net.coverage < 50) score -= 10;
+    if (score < 0) score = 0;
+
+    res.json({
+        score,
+        ci,
+        tests,
+        node,
+        network: net,
+        last_updated: new Date().toISOString()
+    });
+});
+
+// Artifacts placeholder (serve a small payload describing the mock artifact)
+app.get('/artifacts/:alertId/:file', (req, res) => {
+    const { alertId, file } = req.params;
+    res.json({ alertId, file, message: 'This is a mock artifact placeholder.' });
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({
@@ -104,7 +158,9 @@ app.get('/health', (req, res) => {
             'media_metrics',
             'media_jobs',
             'media_request_repurposing',
-            'media_job_status'
+            'media_job_status',
+            'api/alerts/sigill',
+            'api/readiness/testnet'
         ]
     });
 });
