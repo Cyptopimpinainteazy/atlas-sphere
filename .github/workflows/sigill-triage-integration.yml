@@ -12,6 +12,9 @@ permissions:
 jobs:
   sigill-integration:
     runs-on: ubuntu-latest
+    env:
+      SIGILL_FALLBACK_COMMENT_ENABLED: ${{ secrets.SIGILL_FALLBACK_COMMENT_ENABLED || 'false' }}
+      SIGILL_FALLBACK_COMMENT_MIN_ATTEMPTS: ${{ secrets.SIGILL_FALLBACK_COMMENT_MIN_ATTEMPTS || '2' }}
 
     steps:
       - name: Checkout
@@ -159,8 +162,9 @@ jobs:
               count = issues.filter(i => i.title === title).length;
               while (count === 0 && attempts < maxAttempts) {
                 attempts++;
-                const delay = Math.min(1000 * Math.pow(2, attempts - 1), 8000);
-                console.log(`No matching open issue found; retrying (${attempts}/${maxAttempts}) after ${delay}ms`);
+                const jitter = Math.floor(Math.random() * 250); // jitter 0-249ms
+                const delay = Math.min(1000 * Math.pow(2, attempts - 1), 8000) + jitter;
+                console.log(`No matching open issue found; retrying (${attempts}/${maxAttempts}) after ${delay}ms (jitter=${jitter}ms)`);
                 await new Promise(res => setTimeout(res, delay));
                 const { data: issues2 } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
                 count = issues2.filter(i => i.title === title).length;
@@ -179,6 +183,29 @@ jobs:
           if [ "${{ steps.detect_duplicate.outputs.fallback_used }}" = "true" ]; then
             echo "::warning::Fallback to list-based detection was used (retry applied)."
           fi
+
+      - name: Post PR comment (opt-in)
+        if: env.SIGILL_FALLBACK_COMMENT_ENABLED == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const attempts = parseInt('${{ steps.detect_duplicate.outputs.fallback_attempts }}' || '0');
+            const min = parseInt(process.env.SIGILL_FALLBACK_COMMENT_MIN_ATTEMPTS || '2');
+            if (attempts >= min) {
+              const pr = context.payload.pull_request && context.payload.pull_request.number;
+              if (!pr) {
+                console.log('Not a pull_request event; skipping comment.');
+                return;
+              }
+              const body = `Note: SIGILL duplicate-detection fallback was used in this run (attempts=${attempts}). If you'd like to opt out of PR comments, set SIGILL_FALLBACK_COMMENT_ENABLED=false for this repository.`;
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: pr, body });
+              console.log(`Posted fallback comment to PR #${pr}`);
+            } else {
+              console.log(`Fallback attempts ${attempts} < ${min}; skipping PR comment.`);
+            }
+        env:
+          SIGILL_FALLBACK_COMMENT_MIN_ATTEMPTS: ${{ secrets.SIGILL_FALLBACK_COMMENT_MIN_ATTEMPTS || '2' }}
 
       - name: Write fallback telemetry
         run: |
