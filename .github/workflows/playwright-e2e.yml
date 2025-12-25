@@ -18,6 +18,10 @@ jobs:
         run: |
           cd swarm-dashboard
           npm ci
+      - name: Install Playwright browsers
+        working-directory: swarm-dashboard
+        run: |
+          npx playwright install --with-deps
       - name: Run Playwright tests
         working-directory: swarm-dashboard
         run: |
