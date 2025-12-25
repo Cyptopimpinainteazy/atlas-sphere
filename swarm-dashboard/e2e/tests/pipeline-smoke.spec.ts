@@ -4,7 +4,9 @@ import http from 'http';
 import path from 'path';
 
 let mockProc: any = null;
-let demoProc: any = null;
+let startedMock = false;
+let demoServer: any = null;
+let demoUrl = '';
 
 async function waitFor(url: string, timeout = 10000) {
   const start = Date.now();
@@ -27,25 +29,21 @@ async function waitFor(url: string, timeout = 10000) {
 // - SIGILL alerts rendering and artifact links
 // It prefers a public RPC if env is set; for local runs it falls back to mock server.
 
+let helpers: any = null;
+
+// centralized server helpers and setup
+import { startServers } from '../test-helpers';
+
 test.beforeAll(async () => {
   const repoRoot = path.resolve(__dirname, '..', '..');
-
-  // start mock RPC server
-  mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'] });
-  await waitFor('http://localhost:9944/health', 15000);
-
-  // start static demo server
-  demoProc = spawn('npx', ['http-server', './e2e/demo', '-p', '3001', '-c-1'], { cwd: repoRoot, shell: true, stdio: ['ignore', 'inherit', 'inherit'] });
-  await waitFor('http://localhost:3001', 10000);
+  helpers = await startServers(repoRoot);
 });
 
-test.afterAll(() => {
-  if (mockProc) mockProc.kill();
-  if (demoProc) demoProc.kill();
+test.afterAll(async () => {
+  if (helpers) await helpers.stop();
 });
-
 test('pipeline smoke: readiness, SIGILL alerts and artifacts', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(helpers.demoUrl);
 
   // Readiness score
   await expect(page.locator('#readiness-score')).toHaveText(/\d+/, { timeout: 15000 });

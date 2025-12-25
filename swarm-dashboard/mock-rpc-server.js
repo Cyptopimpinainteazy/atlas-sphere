@@ -3,7 +3,9 @@ const cors = require('cors');
 const mockData = require('./mock-rpc-data.json');
 
 const app = express();
-const PORT = 9944;
+// Allow overriding port via environment variable (for ephemeral port support in tests)
+const DEFAULT_PORT = process.env.PORT ? Number(process.env.PORT) : 9944;
+let BOUND_PORT = DEFAULT_PORT;
 
 // Enable CORS for all routes
 app.use(cors());
@@ -102,8 +104,8 @@ app.get('/api/alerts/sigill', (req, res) => {
 
     const enriched = sigillAlerts.map(a => Object.assign({}, a, {
         artifacts: {
-            strace: `http://localhost:${PORT}/artifacts/${a.id}/strace.tgz`,
-            core: `http://localhost:${PORT}/artifacts/${a.id}/core.dump`
+            strace: `http://localhost:${BOUND_PORT}/artifacts/${a.id}/strace.tgz`,
+            core: `http://localhost:${BOUND_PORT}/artifacts/${a.id}/core.dump`
         }
     }));
 
@@ -165,8 +167,10 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Mock RPC Server running on http://localhost:${PORT}`);
+const server = app.listen(DEFAULT_PORT, () => {
+    BOUND_PORT = server.address().port;
+    console.log(`MOCK_RPC_PORT=${BOUND_PORT}`);
+    console.log(`🚀 Mock RPC Server running on http://localhost:${BOUND_PORT}`);
     console.log(`📊 Available endpoints:`);
     console.log(`   POST /rpc - JSON-RPC endpoint`);
     console.log(`   GET  /health - Health check`);

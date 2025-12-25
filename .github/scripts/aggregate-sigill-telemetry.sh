@@ -7,7 +7,7 @@ set -euo pipefail
 DAYS=7
 MIN_RUNS=1
 OUT_DIR="artifacts"
-SUMMARY_JSON="${OUT_DIR}/sigill-fallback-summary.json"
+SUMMARY_JSON="${OUT_DIR}/sigils-fallback-summary.json"
 REPO="${GITHUB_REPOSITORY:-Cyptopimpinainteazy/atlas-sphere}"
 
 while [[ "$#" -gt 0 ]]; do

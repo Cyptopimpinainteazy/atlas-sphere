@@ -1,0 +1,35 @@
+name: Playwright E2E
+
+on:
+  pull_request:
+  push:
+    branches: [ main, chore/**, feat/** ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: |
+          cd swarm-dashboard
+          npm ci
+      - name: Run Playwright tests
+        working-directory: swarm-dashboard
+        run: |
+          npm run e2e:test
+        continue-on-error: true
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swarm-dashboard-test-results
+          path: |
+            swarm-dashboard/test-results/**
+            swarm-dashboard/e2e/axe-violations.json
+            swarm-dashboard/test-results/*.zip
+            swarm-dashboard/test-results/*.tar
