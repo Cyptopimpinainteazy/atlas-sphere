@@ -122,4 +122,4 @@ async function startServers(repoRoot, opts = {}) {
     };
 }
 
-module.exports = { startServers, waitFor };
+module.exports = { startServers, waitFor, probeMockPort, startMockServerWithRetry, startMockServer };

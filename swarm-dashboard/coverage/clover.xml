@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1766655122024" clover="3.2.0">
-  <project timestamp="1766655122024" name="All files">
+<coverage generated="1766705017957" clover="3.2.0">
+  <project timestamp="1766705017957" name="All files">
     <metrics statements="10" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4" elements="15" coveredelements="13" complexity="0" loc="10" ncloc="10" packages="1" files="1" classes="1"/>
     <file name="useMediaMetrics.ts" path="/home/lojak/Desktop/X3-atlas-sphere/swarm-dashboard/src/hooks/useMediaMetrics.ts">
       <metrics statements="10" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4"/>
