@@ -17,7 +17,12 @@ import { TestnetReadinessTile } from '../components/TestnetReadinessTile';
  * Enhanced dashboard page with period selector and metrics view
  */
 export default function DashboardPage() {
-  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || 'http://localhost:9944';
+  // RPC URL resolution order:
+  // 1) NEXT_PUBLIC_RPC_URL (explicit env override)
+  // 2) NEXT_PUBLIC_PUBLIC_RPC_URL or NEXT_PUBLIC_FALLBACK_RPC_URL (public RPC to use until testnet is available)
+  // 3) local mock server at http://localhost:9944 (used for local e2e/demo)
+  const publicRpc = process.env.NEXT_PUBLIC_PUBLIC_RPC_URL || process.env.NEXT_PUBLIC_FALLBACK_RPC_URL;
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || publicRpc || 'http://localhost:9944';
   const [selectedPeriod, setSelectedPeriod] = useState('week');
 
   return (

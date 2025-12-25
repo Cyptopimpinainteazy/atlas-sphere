@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { spawn } from 'child_process';
 import http from 'http';
+import path from 'path';
 
 let mockProc: any = null;
 let demoProc: any = null;
@@ -23,11 +24,12 @@ async function waitFor(url: string, timeout = 5000) {
 
 test.beforeAll(async () => {
   // start mock server (serves /api endpoints on port 9944)
-  mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: process.cwd(), stdio: ['ignore', 'inherit', 'inherit'] });
+  const repoRoot = path.resolve(__dirname, '..', '..');
+  mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'] });
   await waitFor('http://localhost:9944/health', 15000);
 
   // start static demo server
-  demoProc = spawn('npx', ['http-server', './e2e/demo', '-p', '3001', '-c-1'], { cwd: process.cwd(), shell: true, stdio: ['ignore', 'inherit', 'inherit'] });
+  demoProc = spawn('npx', ['http-server', './e2e/demo', '-p', '3001', '-c-1'], { cwd: repoRoot, shell: true, stdio: ['ignore', 'inherit', 'inherit'] });
   await waitFor('http://localhost:3001', 10000);
 });
 

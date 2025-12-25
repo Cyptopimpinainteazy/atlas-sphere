@@ -23,6 +23,16 @@ Mock server is `mock-rpc-server.js` and uses `mock-rpc-data.json` as the data so
 - `src/components/AlertsPanel.js` - Alerts list with links
 - Integrated into `src/app/dashboard-example.tsx` in the sidebar
 
+## Configuration
+
+The dashboard can be pointed to different RPC endpoints via environment variables:
+
+- `NEXT_PUBLIC_RPC_URL` (highest priority) — explicit RPC used by the dashboard.
+- `NEXT_PUBLIC_PUBLIC_RPC_URL` or `NEXT_PUBLIC_FALLBACK_RPC_URL` — optional public RPC to use temporarily while a testnet is not yet available. This lets the app run against a public node until a paid/private RPC is configured.
+- If neither is set, the dashboard will fall back to the local mock server at `http://localhost:9944` for local dev and e2e testing.
+
+Tip: create a `.env` file (see `.env.example`) to set a public RPC during interim testing. When you add your paid RPC, set `NEXT_PUBLIC_RPC_URL` and the dashboard will prefer it; you can then move the public RPC to a backup/fallback variable.
+
 ## Tests
 
 - `tests/mock-rpc.spec.js` - Jest tests for RPC endpoints
