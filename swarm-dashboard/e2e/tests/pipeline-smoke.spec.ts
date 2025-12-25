@@ -4,7 +4,8 @@ import http from 'http';
 import path from 'path';
 
 let mockProc: any = null;
-let demoProc: any = null;
+let demoServer: any = null;
+let demoUrl = '';
 
 async function waitFor(url: string, timeout = 10000) {
   const start = Date.now();
@@ -34,18 +35,26 @@ test.beforeAll(async () => {
   mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'] });
   await waitFor('http://localhost:9944/health', 15000);
 
-  // start static demo server
-  demoProc = spawn('npx', ['http-server', './e2e/demo', '-p', '3001', '-c-1'], { cwd: repoRoot, shell: true, stdio: ['ignore', 'inherit', 'inherit'] });
-  await waitFor('http://localhost:3001', 10000);
+  // start static demo server on an ephemeral port to avoid port collisions when running tests in parallel
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const httpServer = require('http-server');
+  const serveRoot = path.join(repoRoot, 'e2e', 'demo');
+  demoServer = httpServer.createServer({ root: serveRoot, cache: -1 });
+
+  await new Promise<void>((resolve) => demoServer.listen(0, '127.0.0.1', () => resolve()));
+  const addr = demoServer.server.address();
+  const port = (addr && (addr as any).port) || 3001;
+  demoUrl = `http://127.0.0.1:${port}`;
+
+  await waitFor(demoUrl, 10000);
 });
 
 test.afterAll(() => {
   if (mockProc) mockProc.kill();
-  if (demoProc) demoProc.kill();
+  if (demoServer) demoServer.close();
 });
-
 test('pipeline smoke: readiness, SIGILL alerts and artifacts', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(demoUrl);
 
   // Readiness score
   await expect(page.locator('#readiness-score')).toHaveText(/\d+/, { timeout: 15000 });

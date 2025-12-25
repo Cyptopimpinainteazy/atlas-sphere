@@ -1,15 +1,17 @@
 async function fetchAndRender() {
-    try {
-        const base = 'http://localhost:9944';
-        const [r1, r2] = await Promise.all([
-            fetch(`${base}/api/readiness/testnet`).then(r => r.json()),
-            fetch(`${base}/api/alerts/sigill`).then(r => r.json())
-        ]);
+  try {
+    const base = 'http://localhost:9944';
+    const [r1, r2] = await Promise.all([
+      fetch(`${base}/api/readiness/testnet`).then(r => r.json()),
+      fetch(`${base}/api/alerts/sigill`).then(r => r.json())
+    ]);
 
-        const scoreEl = document.getElementById('readiness-score');
+    const scoreEl = document.getElementById('readiness-score');
     const statusEl = document.getElementById('readiness-status');
     const sigillEl = document.getElementById('sigill-count');
     const sigillList = document.getElementById('sigill-list');
+    const ciEl = document.getElementById('ci-status');
+    const testHealthEl = document.getElementById('test-health-counts');
 
     // Readiness
     scoreEl.textContent = typeof r1.score === 'number' ? Math.round(r1.score).toString() : 'n/a';
@@ -33,10 +35,12 @@ async function fetchAndRender() {
         sigillList.appendChild(li);
       });
     }
-    } catch (err) {
-        document.getElementById('readiness-score').textContent = 'err';
-        document.getElementById('sigill-count').textContent = 'err';
-    }
+    if (ciEl) ciEl.textContent = 'Unknown';
+    if (testHealthEl) testHealthEl.textContent = '0';
+  } catch (err) {
+    document.getElementById('readiness-score').textContent = 'err';
+    document.getElementById('sigill-count').textContent = 'err';
+  }
 }
 
 fetchAndRender();
