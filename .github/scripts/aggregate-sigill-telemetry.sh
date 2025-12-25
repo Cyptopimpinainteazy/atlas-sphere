@@ -19,9 +19,11 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
-mkdir -p "$OUT_DIR" /tmp/sigill-telemetry || true
+mkdir -p /tmp/sigill-telemetry || true
 cd /tmp/sigill-telemetry
-
+# write artifacts to a local path inside the temp dir so the script can run both locally and in CI
+OUT_DIR="$PWD/artifacts"
+mkdir -p "$OUT_DIR"
 SINCE=$(date -u -d "$DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
 echo "Looking for workflow runs since: $SINCE"
 
