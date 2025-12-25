@@ -50,3 +50,5 @@ Contact & next steps
 
 ---
 This playbook is minimal and meant to be used as a quick checklist for PR triage — update it with any lessons learned.
+
+Note: The 'SIGILL triage integration test' workflow (see .github/workflows/sigill-triage-integration.yml) validates our duplicate-protection behavior and prefers checking the created issue by number before falling back to a list-based retry.
