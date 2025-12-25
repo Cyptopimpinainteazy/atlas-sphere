@@ -55,6 +55,24 @@ function startMockServer(repoRoot, options = {}) {
     });
 }
 
+async function startMockServerWithRetry(repoRoot, opts = {}) {
+    const retries = typeof opts.retries === 'number' ? opts.retries : 3;
+    const baseDelay = typeof opts.baseDelay === 'number' ? opts.baseDelay : 300;
+
+    let lastErr = null;
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            return await startMockServer(repoRoot, opts);
+        } catch (err) {
+            lastErr = err;
+            if (attempt === retries - 1) break;
+            const delay = baseDelay * Math.pow(2, attempt);
+            await new Promise(r => setTimeout(r, delay));
+        }
+    }
+    throw lastErr;
+}
+
 function startDemoServer(repoRoot, rpcPort) {
     return new Promise((resolve) => {
         const httpServer = require('http-server');
@@ -89,7 +107,7 @@ async function startServers(repoRoot, opts = {}) {
         };
     }
 
-    const { mockProc, rpcPort } = await startMockServer(repoRoot);
+    const { mockProc, rpcPort } = await startMockServerWithRetry(repoRoot, opts);
     const { demoServer, demoUrl } = await startDemoServer(repoRoot, rpcPort);
 
     return {
