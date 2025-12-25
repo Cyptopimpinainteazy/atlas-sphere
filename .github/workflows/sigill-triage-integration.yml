@@ -131,9 +131,22 @@ jobs:
             const runId = context.runId || process.env.GITHUB_RUN_ID || 'manual';
             const title = `[TEST] SIGILL observed in CI (run ${runId}${prNumber ? `, PR #${prNumber}` : ''})`;
 
-            const { data: issues } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
-            const count = issues.filter(i => i.title === title).length;
-            console.log(`Existing open issues with title '${title}': ${count}`);
+            // If the previous step returned an issue number, check that issue directly (avoids timing issues)
+            const issueNum = parseInt(core.getInput('issue-number') || process.env.ISSUE_NUMBER || '${{ steps.detect_create.outputs.issue_number }}');
+            let count = 0;
+            if (issueNum) {
+              try {
+                const { data: issue } = await github.rest.issues.get({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNum });
+                if (issue.state === 'open' && issue.title === title) count = 1;
+                console.log(`Checked issue #${issueNum}: state=${issue.state}, title='${issue.title}'`);
+              } catch (e) {
+                console.log(`Could not fetch issue #${issueNum}: ${e}`);
+              }
+            } else {
+              const { data: issues } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+              count = issues.filter(i => i.title === title).length;
+              console.log(`Existing open issues with title '${title}': ${count}`);
+            }
             core.setOutput('duplicate_ok', count === 1 ? 'true' : 'false');
 
       - name: Cleanup test issue
