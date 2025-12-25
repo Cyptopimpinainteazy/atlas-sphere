@@ -142,8 +142,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const num = parseInt(core.getInput('issue-number') || core.getOutput('issue_number') || process.env.ISSUE_NUMBER);
-            const issue = num || parseInt('${{ steps.detect_create.outputs.issue_number }}');
+            const num = parseInt(core.getInput('issue-number') || process.env.ISSUE_NUMBER || '${{ steps.detect_create.outputs.issue_number }}');
+            const issue = num;
             if (!issue) {
               console.log('No issue number to clean up.');
               return;
