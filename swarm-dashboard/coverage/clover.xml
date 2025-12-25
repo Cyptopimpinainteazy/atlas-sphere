@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1766653970163" clover="3.2.0">
+  <project timestamp="1766653970163" name="All files">
+    <metrics statements="10" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4" elements="15" coveredelements="13" complexity="0" loc="10" ncloc="10" packages="1" files="1" classes="1"/>
+    <file name="useMediaMetrics.ts" path="/home/lojak/Desktop/X3-atlas-sphere/swarm-dashboard/src/hooks/useMediaMetrics.ts">
+      <metrics statements="10" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4"/>
+      <line num="1" count="1" type="stmt"/>
+      <line num="33" count="1" type="stmt"/>
+      <line num="34" count="2" type="stmt"/>
+      <line num="37" count="2" type="stmt"/>
+      <line num="38" count="1" type="stmt"/>
+      <line num="39" count="1" type="stmt"/>
+      <line num="42" count="2" type="stmt"/>
+      <line num="51" count="2" type="stmt"/>
+      <line num="57" count="0" type="stmt"/>
+      <line num="64" count="2" type="stmt"/>
+    </file>
+  </project>
+</coverage>

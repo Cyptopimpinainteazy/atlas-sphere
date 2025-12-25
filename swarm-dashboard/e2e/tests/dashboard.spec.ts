@@ -3,54 +3,24 @@ import { spawn } from 'child_process';
 import http from 'http';
 import path from 'path';
 
-let mockProc: any = null;
-let demoServer: any = null;
-let demoUrl = '';
+let helpers: any = null;
 
-async function waitFor(url: string, timeout = 5000) {
-  const start = Date.now();
-  return new Promise<void>((resolve, reject) => {
-    (function check() {
-      http.get(url, res => {
-        if (res.statusCode === 200) return resolve();
-        if (Date.now() - start > timeout) return reject(new Error('timeout'));
-        setTimeout(check, 200);
-      }).on('error', () => {
-        if (Date.now() - start > timeout) return reject(new Error('timeout'));
-        setTimeout(check, 200);
-      });
-    })();
-  });
-}
+// centralized server helpers and setup
+import { startServers } from '../test-helpers';
 
 test.beforeAll(async () => {
-  // start mock server (serves /api endpoints on port 9944)
   const repoRoot = path.resolve(__dirname, '..', '..');
-  mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'] });
-  await waitFor('http://localhost:9944/health', 15000);
-
-  // start static demo server on an ephemeral port to avoid port collisions when running tests in parallel
-  // using the programmatic http-server API so we can listen(0) and get an available port
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpServer = require('http-server');
-  const serveRoot = path.join(repoRoot, 'e2e', 'demo');
-  demoServer = httpServer.createServer({ root: serveRoot, cache: -1 });
-
-  await new Promise<void>((resolve) => demoServer.listen(0, '127.0.0.1', () => resolve()));
-  const addr = demoServer.server.address();
-  const port = (addr && (addr as any).port) || 3001;
-  demoUrl = `http://127.0.0.1:${port}`;
-
-  await waitFor(demoUrl, 10000);
+  helpers = await startServers(repoRoot);
+  // ensure demo is reachable
+  await helpers; // demoUrl available
 });
 
-test.afterAll(() => {
-  if (mockProc) mockProc.kill();
-  if (demoServer) demoServer.close();
+test.afterAll(async () => {
+  if (helpers) await helpers.stop();
 });
 
 test('dashboard demo shows readiness score and SIGILL count', async ({ page }) => {
-  await page.goto(demoUrl);
+  await page.goto(helpers.demoUrl);
   await expect(page.locator('#readiness-score')).toHaveText(/\d+/, { timeout: 15000 });
   await expect(page.locator('#readiness-status')).toHaveText(/Good|Warning|Critical|unknown/, { timeout: 15000 });
   await expect(page.locator('#sigill-count')).toHaveText(/\d+/, { timeout: 15000 });

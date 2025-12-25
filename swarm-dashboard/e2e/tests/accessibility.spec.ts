@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { spawn } from 'child_process';
 
 let demoServer: any = null;
 let demoUrl = '';
+let helpers: any = null;
+import { startServers } from '../test-helpers';
 
 async function waitFor(url: string, timeout = 5000) {
   return new Promise<void>((resolve, reject) => {
@@ -27,24 +30,17 @@ async function waitFor(url: string, timeout = 5000) {
   });
 }
 
+let mockProc: any = null;
+
 test.beforeAll(async () => {
   const repoRoot = path.resolve(__dirname, '..', '..');
-  // start a local demo server on an ephemeral port to avoid collisions
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpServer = require('http-server');
-  const serveRoot = path.join(repoRoot, 'e2e', 'demo');
-  demoServer = httpServer.createServer({ root: serveRoot, cache: -1 });
-
-  await new Promise<void>((resolve) => demoServer.listen(0, '127.0.0.1', () => resolve()));
-  const addr = demoServer.server.address();
-  const port = (addr && (addr as any).port) || 3001;
-  demoUrl = `http://127.0.0.1:${port}`;
-
-  await waitFor(demoUrl, 10000);
+  helpers = await startServers(repoRoot);
+  demoUrl = helpers.demoUrl;
 });
 
 test.afterAll(() => {
   if (demoServer) demoServer.close();
+  if (mockProc) mockProc.kill();
 });
 
 // Small accessibility smoke test using axe-core loaded from CDN to avoid adding deps
@@ -68,8 +64,9 @@ test('accessibility: demo passes basic axe checks', async ({ page }) => {
 
     // Write a JSON artifact so CI can consume and post a PR comment
     try {
-      fs.mkdirSync('swarm-dashboard/e2e', { recursive: true });
-      fs.writeFileSync('swarm-dashboard/e2e/axe-violations.json', JSON.stringify(result.violations, null, 2));
+      const outPath = path.join(path.resolve(__dirname, '..', '..'), 'e2e', 'axe-violations.json');
+      fs.mkdirSync(path.dirname(outPath), { recursive: true });
+      fs.writeFileSync(outPath, JSON.stringify(result.violations, null, 2));
     } catch (err) {
       console.error('Failed to write axe violations artifact:', err);
     }

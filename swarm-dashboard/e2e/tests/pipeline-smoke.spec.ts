@@ -4,6 +4,7 @@ import http from 'http';
 import path from 'path';
 
 let mockProc: any = null;
+let startedMock = false;
 let demoServer: any = null;
 let demoUrl = '';
 
@@ -28,33 +29,21 @@ async function waitFor(url: string, timeout = 10000) {
 // - SIGILL alerts rendering and artifact links
 // It prefers a public RPC if env is set; for local runs it falls back to mock server.
 
+let helpers: any = null;
+
+// centralized server helpers and setup
+import { startServers } from '../test-helpers';
+
 test.beforeAll(async () => {
   const repoRoot = path.resolve(__dirname, '..', '..');
-
-  // start mock RPC server
-  mockProc = spawn('node', ['mock-rpc-server.js'], { cwd: repoRoot, stdio: ['ignore', 'inherit', 'inherit'] });
-  await waitFor('http://localhost:9944/health', 15000);
-
-  // start static demo server on an ephemeral port to avoid port collisions when running tests in parallel
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const httpServer = require('http-server');
-  const serveRoot = path.join(repoRoot, 'e2e', 'demo');
-  demoServer = httpServer.createServer({ root: serveRoot, cache: -1 });
-
-  await new Promise<void>((resolve) => demoServer.listen(0, '127.0.0.1', () => resolve()));
-  const addr = demoServer.server.address();
-  const port = (addr && (addr as any).port) || 3001;
-  demoUrl = `http://127.0.0.1:${port}`;
-
-  await waitFor(demoUrl, 10000);
+  helpers = await startServers(repoRoot);
 });
 
-test.afterAll(() => {
-  if (mockProc) mockProc.kill();
-  if (demoServer) demoServer.close();
+test.afterAll(async () => {
+  if (helpers) await helpers.stop();
 });
 test('pipeline smoke: readiness, SIGILL alerts and artifacts', async ({ page }) => {
-  await page.goto(demoUrl);
+  await page.goto(helpers.demoUrl);
 
   // Readiness score
   await expect(page.locator('#readiness-score')).toHaveText(/\d+/, { timeout: 15000 });
