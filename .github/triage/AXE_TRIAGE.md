@@ -25,3 +25,9 @@ Triage steps (quick)
 Notes
 - The `axe-triage` job is intentionally kept as an independent, low-friction safety net so accessibility regressions are recorded even if Playwright e2e fails early or times out.
 - See `.github/ISSUE_TEMPLATE/axe-violations.md` for an issue template with triage checklist and commands to run locally.
+
+---
+
+## Add to CONTRIBUTORS / PR checklist
+- Add the following one-line PR checklist bullet where you keep your PR checklist (we added it to PR #12):
+  - [ ] Axe accessibility checks run in CI and triage is configured (`accessibility`, `triage` labels; `AXE_TRIAGE_ASSIGNEE` optional).
