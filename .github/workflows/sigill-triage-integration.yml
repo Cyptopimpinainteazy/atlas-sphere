@@ -1,0 +1,164 @@
+name: SIGILL triage integration test
+
+on:
+  pull_request:
+    paths:
+      - 'swarm-dashboard/**'
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sigill-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create fake diagnostic artifact (SIGILL)
+        run: |
+          mkdir -p artifacts
+          echo "[  123.456789] kernel: process test: SIGILL at 0xdeadbeef" > artifacts/dmesg.tail
+          echo "ILL_ILLOPN: illegal opcode" >> artifacts/strace.log
+          ls -la artifacts
+
+      - name: Run detection and create test issue
+        uses: actions/github-script@v6
+        id: detect_create
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = 'artifacts';
+            const patterns = [/SIGILL/, /ILL_ILLOPN/];
+            const matches = [];
+
+            function walk(dir) {
+              const files = [];
+              if (!fs.existsSync(dir)) return files;
+              for (const f of fs.readdirSync(dir)) {
+                const p = `${dir}/${f}`;
+                const st = fs.statSync(p);
+                if (st.isDirectory()) files.push(...walk(p));
+                else files.push(p);
+              }
+              return files;
+            }
+
+            for (const f of walk(path)) {
+              try {
+                const content = fs.readFileSync(f, 'utf8');
+                for (const re of patterns) {
+                  if (re.test(content)) {
+                    matches.push(f);
+                    break;
+                  }
+                }
+              } catch (e) {
+                // binary files may throw; ignore
+              }
+            }
+
+            if (matches.length === 0) {
+              core.info = core && core.info ? core.info : console.log;
+              console.log('No SIGILL patterns found in artifacts.');
+              return core.setOutput('created', 'false');
+            } else {
+              const prNumber = context.payload.pull_request && context.payload.pull_request.number ? context.payload.pull_request.number : null;
+              const runId = context.runId || process.env.GITHUB_RUN_ID || 'manual';
+              const title = `[TEST] SIGILL observed in CI (run ${runId}${prNumber ? `, PR #${prNumber}` : ''})`;
+
+              let body = '';
+              const templatePath = '.github/ISSUE_TEMPLATE/sigill-crash-report.md';
+              if (fs.existsSync(templatePath)) {
+                body = fs.readFileSync(templatePath, 'utf8') + '\n\n';
+              }
+              body += `**Workflow run:** ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${runId}\n`;
+              if (prNumber) body += `**Pull request:** #${prNumber}\n`;
+              body += `**Found in files:**\n${matches.map(f => `- ${f}`).join('\n')}\n`;
+
+              // Prevent duplicates by searching open issues with same title
+              const { data: issues } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+              if (!issues.some(i => i.title === title)) {
+                const issue = await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body, labels: ['bug', 'diagnostics', 'integration-test'] });
+                console.log(`Opened issue: ${issue.data.number}`);
+                core.setOutput('issue_number', issue.data.number);
+                core.setOutput('created', 'true');
+              } else {
+                console.log('An open issue with the same title already exists; skipping creation.');
+                core.setOutput('created', 'false');
+              }
+            }
+
+      - name: Re-run detection to validate duplicate protection
+        uses: actions/github-script@v6
+        id: detect_duplicate
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Run same detection and record whether a new issue would be created (should be skipped)
+            const fs = require('fs');
+            const path = 'artifacts';
+            const patterns = [/SIGILL/, /ILL_ILLOPN/];
+            const matches = [];
+            function walk(dir) {
+              const files = [];
+              if (!fs.existsSync(dir)) return files;
+              for (const f of fs.readdirSync(dir)) {
+                const p = `${dir}/${f}`;
+                const st = fs.statSync(p);
+                if (st.isDirectory()) files.push(...walk(p));
+                else files.push(p);
+              }
+              return files;
+            }
+            for (const f of walk(path)) {
+              try {
+                const content = fs.readFileSync(f, 'utf8');
+                for (const re of patterns) {
+                  if (re.test(content)) {
+                    matches.push(f);
+                    break;
+                  }
+                }
+              } catch (e) {}
+            }
+            if (matches.length === 0) return core.setOutput('duplicate_ok', 'na');
+
+            const prNumber = context.payload.pull_request && context.payload.pull_request.number ? context.payload.pull_request.number : null;
+            const runId = context.runId || process.env.GITHUB_RUN_ID || 'manual';
+            const title = `[TEST] SIGILL observed in CI (run ${runId}${prNumber ? `, PR #${prNumber}` : ''})`;
+
+            const { data: issues } = await github.rest.issues.listForRepo({ owner: context.repo.owner, repo: context.repo.repo, state: 'open' });
+            const count = issues.filter(i => i.title === title).length;
+            console.log(`Existing open issues with title '${title}': ${count}`);
+            core.setOutput('duplicate_ok', count === 1 ? 'true' : 'false');
+
+      - name: Cleanup test issue
+        if: steps.detect_create.outputs.created == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const num = parseInt(core.getInput('issue-number') || core.getOutput('issue_number') || process.env.ISSUE_NUMBER);
+            const issue = num || parseInt('${{ steps.detect_create.outputs.issue_number }}');
+            if (!issue) {
+              console.log('No issue number to clean up.');
+              return;
+            }
+            await github.rest.issues.update({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issue, state: 'closed' });
+            console.log(`Closed issue ${issue}`);
+        env:
+          ISSUE_NUMBER: ${{ steps.detect_create.outputs.issue_number }}
+
+      - name: Assert duplicate protection
+        if: steps.detect_create.outputs.created == 'true'
+        run: |
+          if [ "${{ steps.detect_duplicate.outputs.duplicate_ok }}" != "true" ]; then
+            echo "Duplicate protection failed (expected a single open issue with that title).";
+            exit 1;
+          else
+            echo "Duplicate protection passed.";
+          fi
