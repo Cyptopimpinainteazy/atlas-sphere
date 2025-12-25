@@ -18,6 +18,14 @@ async function waitFor(url, timeout = 10000) {
     });
 }
 
+async function probeMockPort(port = 9944, timeout = 1000) {
+    return new Promise((resolve) => {
+        const req = http.get(`http://127.0.0.1:${port}/health`, res => { resolve(res.statusCode === 200); });
+        req.on('error', () => resolve(false));
+        req.setTimeout(timeout, () => { try { req.abort(); } catch (e) { } resolve(false); });
+    });
+}
+
 function startMockServer(repoRoot, options = {}) {
     return new Promise((resolve, reject) => {
         const mockProc = spawn('node', ['mock-rpc-server.js'], {
@@ -62,7 +70,25 @@ function startDemoServer(repoRoot, rpcPort) {
     });
 }
 
-async function startServers(repoRoot) {
+async function startServers(repoRoot, opts = {}) {
+    // If an external mock server is already running on 9944, reuse it (helps CI and concurrent runs).
+    const wellKnownPort = opts.port || 9944;
+    const existing = await probeMockPort(wellKnownPort, opts.probeTimeout || 1000);
+    if (existing) {
+        const rpcPort = wellKnownPort;
+        const demo = await startDemoServer(repoRoot, rpcPort);
+        return {
+            mockProc: null,
+            rpcPort,
+            demoServer: demo.demoServer,
+            demoUrl: demo.demoUrl,
+            async stop() {
+                try { if (demo.demoServer) demo.demoServer.close(); } catch (e) { }
+                // do not kill external mock
+            }
+        };
+    }
+
     const { mockProc, rpcPort } = await startMockServer(repoRoot);
     const { demoServer, demoUrl } = await startDemoServer(repoRoot, rpcPort);
 
