@@ -33,3 +33,13 @@ jobs:
             swarm-dashboard/e2e/axe-violations.json
             swarm-dashboard/test-results/*.zip
             swarm-dashboard/test-results/*.tar
+            swarm-dashboard/test-results/junit.xml
+      - name: Post test summary to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: dorny/test-reporter@v1
+        with:
+          name: Playwright E2E
+          path: swarm-dashboard/test-results/junit.xml
+          reporter: junit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
