@@ -1,0 +1,9 @@
+[
+  {
+    "id": "image-alt",
+    "impact": "serious",
+    "nodes": [
+      { "html": "<img src=\"x.jpg\">", "target": ["img"] }
+    ]
+  }
+]
