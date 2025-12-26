@@ -179,6 +179,24 @@ mod tests {
         let database_url = std::env::var("DATABASE_URL").unwrap();
         let pool = sqlx::PgPool::connect(&database_url).await.expect("could not connect to postgres for test");
         // Run idempotent table creation (migration) so test can assert against schema
+        // Drop orphan sequences if any (leftover from failed runs) to avoid duplicate sequence errors
+        let cleanup_seq_reputation = r#"
+            DO $$ BEGIN
+              IF EXISTS (SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = 'reputation_events_id_seq')
+                 AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'reputation_events') THEN
+                EXECUTE 'DROP SEQUENCE reputation_events_id_seq';
+              END IF;
+            END$$;
+        "#;
+        let cleanup_seq_slashing = r#"
+            DO $$ BEGIN
+              IF EXISTS (SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = 'slashing_events_id_seq')
+                 AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'slashing_events') THEN
+                EXECUTE 'DROP SEQUENCE slashing_events_id_seq';
+              END IF;
+            END$$;
+        "#;
+
         let create_reputation = r#"
             CREATE TABLE IF NOT EXISTS reputation_events (
                 id SERIAL PRIMARY KEY,
@@ -205,7 +223,9 @@ mod tests {
                 appeal_status TEXT
             );
         "#;
-        // Execute migrations (idempotent)
+        // Execute idempotent sequence cleanup and migrations
+        sqlx::query(cleanup_seq_reputation).execute(&pool).await.expect("migration failed");
+        sqlx::query(cleanup_seq_slashing).execute(&pool).await.expect("migration failed");
         sqlx::query(create_reputation).execute(&pool).await.expect("migration failed");
         sqlx::query(create_slashing).execute(&pool).await.expect("migration failed");
 

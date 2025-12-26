@@ -189,13 +189,13 @@ mod pg_impl {
         }
         async fn get_reputation_events(&self, wallet: &str) -> Result<Vec<ReputationEvent>, String> {
             let query = r#"SELECT id, wallet_address, node_id, event_type, delta, prev_reputation, new_reputation, evidence_hash, occurred_at FROM reputation_events WHERE wallet_address = $1"#;
-            let rows = sqlx::query_as::<_, (i64, String, Option<String>, String, f64, f64, f64, Option<String>, chrono::NaiveDateTime)>(query)
+            let rows = sqlx::query_as::<_, (i32, String, Option<String>, String, f64, f64, f64, Option<String>, chrono::DateTime<Utc>)>(query)
                 .bind(wallet)
                 .fetch_all(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
             let evs = rows.into_iter().map(|r| ReputationEvent {
-                id: r.0,
+                id: r.0 as i64,
                 wallet_address: r.1,
                 node_id: r.2.and_then(|s| uuid::Uuid::parse_str(&s).ok()),
                 event_type: r.3,
@@ -203,26 +203,26 @@ mod pg_impl {
                 prev_reputation: r.5,
                 new_reputation: r.6,
                 evidence_hash: r.7,
-                occurred_at: DateTime::<Utc>::from_utc(r.8, Utc),
+                occurred_at: r.8,
             }).collect();
             Ok(evs)
         }
         async fn get_slashing_events(&self, wallet: &str) -> Result<Vec<SlashingEvent>, String> {
             let query = r#"SELECT id, wallet_address, node_id, severity, slash_amount, recurrence_count, evidence_hash, occurred_at, appeal_status FROM slashing_events WHERE wallet_address = $1"#;
-            let rows = sqlx::query_as::<_, (i64, String, Option<String>, f64, f64, i32, Option<String>, chrono::NaiveDateTime, Option<String>)>(query)
+            let rows = sqlx::query_as::<_, (i32, String, Option<String>, f64, f64, i32, Option<String>, chrono::DateTime<Utc>, Option<String>)>(query)
                 .bind(wallet)
                 .fetch_all(&self.pool)
                 .await
                 .map_err(|e| e.to_string())?;
             let evs = rows.into_iter().map(|r| SlashingEvent {
-                id: r.0,
+                id: r.0 as i64,
                 wallet_address: r.1,
                 node_id: r.2.and_then(|s| uuid::Uuid::parse_str(&s).ok()),
                 severity: r.3,
                 slash_amount: r.4,
                 recurrence_count: r.5,
                 evidence_hash: r.6,
-                occurred_at: DateTime::<Utc>::from_utc(r.7, Utc),
+                occurred_at: r.7,
                 appeal_status: r.8.unwrap_or_else(|| "none".to_string()),
             }).collect();
             Ok(evs)
