@@ -70,13 +70,15 @@ pub trait MediaApi: Send + Sync {
 }
 
 pub struct MediaRpc {
-    dispatcher: Option<std::sync::Arc<std::sync::Mutex<crate::job_queue::JobDispatcher>>>,
+    // Dispatcher is optional and stubbed out in the crate tests to avoid coupling
+    // to other workspace crates in this example.
+    dispatcher: Option<std::sync::Arc<std::sync::Mutex<()>>> ,
     reputation_repo: Option<std::sync::Arc<dyn crate::reputation::ReputationRepo>>,
 }
 
 impl MediaRpc {
     pub fn new() -> Self { Self { dispatcher: None, reputation_repo: None } }
-    pub fn with_dispatcher(mut self, d: std::sync::Arc<std::sync::Mutex<crate::job_queue::JobDispatcher>>) -> Self { self.dispatcher = Some(d); self }
+    pub fn with_dispatcher(mut self, d: std::sync::Arc<std::sync::Mutex<()>>) -> Self { self.dispatcher = Some(d); self }
     pub fn with_reputation_repo(mut self, repo: std::sync::Arc<dyn crate::reputation::ReputationRepo>) -> Self { self.reputation_repo = Some(repo); self }
 }
 
