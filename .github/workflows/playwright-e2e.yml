@@ -30,16 +30,13 @@ jobs:
           name: swarm-dashboard-coverage
           path: |
             swarm-dashboard/coverage/**
-      - name: Upload coverage to Codecov (if token present)
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: swarm-dashboard/coverage/lcov.info
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          if [ -z "$CODECOV_TOKEN" ]; then
-            echo "CODECOV_TOKEN not set; skipping Codecov upload";
-            exit 0;
-          fi
-          echo "Uploading coverage to Codecov..."
-          npx codecov -f swarm-dashboard/coverage/lcov.info
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   e2e:
     runs-on: ubuntu-latest
