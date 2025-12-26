@@ -62,7 +62,8 @@ async function startMockServerWithRetry(repoRoot, opts = {}) {
     let lastErr = null;
     for (let attempt = 0; attempt < retries; attempt++) {
         try {
-            return await startMockServer(repoRoot, opts);
+            // call the exported function so tests can spy/mock it via jest.spyOn(exports, 'startMockServer')
+            return await module.exports.startMockServer(repoRoot, opts);
         } catch (err) {
             lastErr = err;
             if (attempt === retries - 1) break;
