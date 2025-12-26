@@ -95,16 +95,15 @@ PY
   alembic-lint:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
       - name: Fetch base branch
         run: git fetch origin main --depth=1
 
-      - name: Run Alembic migration lint (non-blocking)
+      - name: Run Alembic migration lint
         run: |
-          python3 scripts/validate_alembic.py || true
+          python3 scripts/validate_alembic.py
         shell: bash
 
       - name: Cache cargo registry
