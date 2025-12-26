@@ -45,6 +45,21 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           if [ -f alembic.ini ]; then
+            # Ensure required logger sections are present to avoid fileConfig KeyError
+            python - <<'PY'
+from configparser import ConfigParser
+import sys
+cfg = ConfigParser()
+if not cfg.read('alembic.ini'):
+    print('alembic.ini not found or unreadable')
+    sys.exit(1)
+missing = [s for s in ('logger_sqlalchemy','logger_alembic') if s not in cfg.sections()]
+if missing:
+    print('Missing logger sections in alembic.ini:', missing)
+    sys.exit(1)
+print('alembic.ini logger sections OK')
+PY
+
             pip install alembic psycopg2-binary
 
             # Quick sanity check: ensure Alembic runtime deps import correctly
