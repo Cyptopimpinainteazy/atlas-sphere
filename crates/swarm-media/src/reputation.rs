@@ -295,3 +295,63 @@ async fn test_pgrepo_reputation_events_roundtrip() {
     assert!(found.len() >= 1);
     assert_eq!(found[0].wallet_address, "0xroundtrip");
 }
+
+#[cfg(test)]
+#[tokio::test]
+async fn test_slashing_appeal_lifecycle_and_recurrence() {
+    if std::env::var("DATABASE_URL").is_err() {
+        return;
+    }
+    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let pool = sqlx::PgPool::connect(&database_url).await.expect("could not connect to postgres for test");
+    // Ensure schema
+    let create_slashing = r#"
+        CREATE TABLE IF NOT EXISTS slashing_events (
+            id SERIAL PRIMARY KEY,
+            wallet_address TEXT NOT NULL,
+            node_id TEXT,
+            severity DOUBLE PRECISION,
+            slash_amount DOUBLE PRECISION,
+            recurrence_count INTEGER,
+            evidence_hash TEXT,
+            occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            appeal_status TEXT
+        );
+    "#;
+    sqlx::query(create_slashing).execute(&pool).await.expect("migration failed");
+
+    let repo = pg_impl::PgRepo::new(pool.clone());
+    // Insert a pending appeal
+    let now = Utc::now();
+    let s = SlashingEvent { id: 0, wallet_address: "0xappeal".to_string(), node_id: None, severity: 0.4, slash_amount: 4.0, recurrence_count: 1, evidence_hash: None, occurred_at: now, appeal_status: "pending".to_string() };
+    repo.insert_slashing_event(s).await.expect("insert failed");
+
+    // Update appeal status via SQL (simulate appeal resolution)
+    sqlx::query("UPDATE slashing_events SET appeal_status = $1 WHERE wallet_address = $2")
+        .bind("accepted")
+        .bind("0xappeal")
+        .execute(&pool)
+        .await
+        .expect("update failed");
+
+    let events = repo.get_slashing_events("0xappeal").await.expect("query failed");
+    assert!(events.len() >= 1);
+    assert_eq!(events[0].appeal_status, "accepted");
+
+    // Recurrence math: ensure repeat increases slash
+    let s1 = compute_slash_amount(100.0, 0.5, 1, 0.5);
+    let s2 = compute_slash_amount(100.0, 0.5, 3, 0.5);
+    assert!(s2 > s1);
+}
+
+#[test]
+fn test_compute_wallet_reputation_behaviors() {
+    // Empty nodes => fallback 0.5
+    let w = compute_wallet_reputation(&[], 0.0, 0.0);
+    assert!((w - 0.5).abs() < 1e-9);
+
+    // With nodes and funding/social factors
+    let nodes = vec![0.9, 0.8, 0.95];
+    let w2 = compute_wallet_reputation(&nodes, 0.1, 0.05);
+    assert!(w2 > 0.9);
+}
