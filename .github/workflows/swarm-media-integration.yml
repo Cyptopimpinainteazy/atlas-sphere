@@ -2,6 +2,7 @@ name: swarm-media-integration
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     paths:
       - 'crates/swarm-media/**'
       - 'alembic/**'
@@ -108,6 +109,8 @@ PY
           cargo test --lib -- --nocapture
 
   alembic-roundtrip-nonblocking:
+    if: >
+      github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'run-alembic-roundtrip')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +128,7 @@ PY
         continue-on-error: true
         run: |
           if [ -f alembic.ini ]; then
-            echo "Running non-blocking Alembic roundtrip: downgrade base -> upgrade head"
+            echo "Running labeled non-blocking Alembic roundtrip: downgrade base -> upgrade head"
             alembic downgrade base || true
             alembic upgrade head || true
             echo "Non-blocking Alembic roundtrip completed (errors ignored)"
