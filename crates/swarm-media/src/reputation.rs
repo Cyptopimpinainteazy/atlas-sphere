@@ -235,3 +235,63 @@ pub fn new_pg_repo(pool: sqlx::PgPool) -> std::sync::Arc<dyn ReputationRepo> {
 }
 
 pub use pg_impl::PgRepo;
+
+#[cfg(test)]
+#[tokio::test]
+async fn test_pgrepo_reputation_events_roundtrip() {
+    if std::env::var("DATABASE_URL").is_err() {
+        return;
+    }
+
+    let database_url = std::env::var("DATABASE_URL").unwrap();
+    let pool = sqlx::PgPool::connect(&database_url).await.expect("could not connect to postgres for test");
+
+    // ensure tables exist
+    let create_reputation = r#"
+        CREATE TABLE IF NOT EXISTS reputation_events (
+            id SERIAL PRIMARY KEY,
+            wallet_address TEXT NOT NULL,
+            node_id TEXT,
+            event_type TEXT,
+            delta DOUBLE PRECISION,
+            prev_reputation DOUBLE PRECISION,
+            new_reputation DOUBLE PRECISION,
+            evidence_hash TEXT,
+            occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+        );
+    "#;
+    let create_slashing = r#"
+        CREATE TABLE IF NOT EXISTS slashing_events (
+            id SERIAL PRIMARY KEY,
+            wallet_address TEXT NOT NULL,
+            node_id TEXT,
+            severity DOUBLE PRECISION,
+            slash_amount DOUBLE PRECISION,
+            recurrence_count INTEGER,
+            evidence_hash TEXT,
+            occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+            appeal_status TEXT
+        );
+    "#;
+    sqlx::query(create_reputation).execute(&pool).await.expect("migration failed");
+    sqlx::query(create_slashing).execute(&pool).await.expect("migration failed");
+
+    let repo = pg_impl::PgRepo::new(pool);
+
+    let ev = ReputationEvent {
+        id: 0,
+        wallet_address: "0xroundtrip".to_string(),
+        node_id: None,
+        event_type: "integration_test".to_string(),
+        delta: 0.12,
+        prev_reputation: 0.5,
+        new_reputation: 0.62,
+        evidence_hash: Some("h1".to_string()),
+        occurred_at: Utc::now(),
+    };
+
+    repo.insert_reputation_event(ev.clone()).await.expect("insert failed");
+    let found = repo.get_reputation_events("0xroundtrip").await.expect("query failed");
+    assert!(found.len() >= 1);
+    assert_eq!(found[0].wallet_address, "0xroundtrip");
+}

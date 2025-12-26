@@ -178,11 +178,57 @@ mod tests {
         if std::env::var("DATABASE_URL").is_err() { return; }
         let database_url = std::env::var("DATABASE_URL").unwrap();
         let pool = sqlx::PgPool::connect(&database_url).await.expect("could not connect to postgres for test");
+        // Run idempotent table creation (migration) so test can assert against schema
+        let create_reputation = r#"
+            CREATE TABLE IF NOT EXISTS reputation_events (
+                id SERIAL PRIMARY KEY,
+                wallet_address TEXT NOT NULL,
+                node_id TEXT,
+                event_type TEXT,
+                delta DOUBLE PRECISION,
+                prev_reputation DOUBLE PRECISION,
+                new_reputation DOUBLE PRECISION,
+                evidence_hash TEXT,
+                occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+            );
+        "#;
+        let create_slashing = r#"
+            CREATE TABLE IF NOT EXISTS slashing_events (
+                id SERIAL PRIMARY KEY,
+                wallet_address TEXT NOT NULL,
+                node_id TEXT,
+                severity DOUBLE PRECISION,
+                slash_amount DOUBLE PRECISION,
+                recurrence_count INTEGER,
+                evidence_hash TEXT,
+                occurred_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                appeal_status TEXT
+            );
+        "#;
+        // Execute migrations (idempotent)
+        sqlx::query(create_reputation).execute(&pool).await.expect("migration failed");
+        sqlx::query(create_slashing).execute(&pool).await.expect("migration failed");
+
         let repo = crate::reputation::new_pg_repo(pool.clone());
         let rpc = MediaRpc::new().with_reputation_repo(repo.clone());
-        let slash = crate::reputation::SlashingEvent { id: 0, wallet_address: "0xintegration".to_string(), node_id: None, severity: 0.3, slash_amount: 5.0, recurrence_count: 1, evidence_hash: None, occurred_at: chrono::Utc::now(), appeal_status: "none".to_string() };
-        repo.insert_slashing_event(slash).await.unwrap();
-        let slashes = rpc.get_slashing_events("0xintegration".to_string()).await.unwrap();
-        assert!(!slashes.is_empty());
+
+        // Ensure querying an empty wallet returns empty set
+        let empty = rpc.get_slashing_events("this-wallet-does-not-exist".to_string()).await.unwrap();
+        assert!(empty.is_empty());
+
+        // Insert multiple slashing events for recurrence and date-format checks
+        let now = chrono::Utc::now();
+        let slash1 = crate::reputation::SlashingEvent { id: 0, wallet_address: "0xedge".to_string(), node_id: None, severity: 0.2, slash_amount: 2.0, recurrence_count: 1, evidence_hash: None, occurred_at: now, appeal_status: "none".to_string() };
+        let slash2 = crate::reputation::SlashingEvent { id: 0, wallet_address: "0xedge".to_string(), node_id: None, severity: 0.5, slash_amount: 5.0, recurrence_count: 2, evidence_hash: None, occurred_at: now + chrono::Duration::seconds(10), appeal_status: "none".to_string() };
+        repo.insert_slashing_event(slash1).await.unwrap();
+        repo.insert_slashing_event(slash2).await.unwrap();
+
+        let slashes = rpc.get_slashing_events("0xedge".to_string()).await.unwrap();
+        assert!(slashes.len() >= 2);
+        // date formatting check
+        for s in &slashes {
+            let occurred = s.get("occurred_at").and_then(|v| v.as_str()).expect("occurred_at missing");
+            chrono::DateTime::parse_from_rfc3339(occurred).expect("invalid RFC3339 timestamp");
+        }
     }
 }
