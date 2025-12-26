@@ -6,6 +6,37 @@ on:
     branches: [ main, chore/**, feat/** ]
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: |
+          cd swarm-dashboard
+          npm ci
+      - name: Run unit tests (Jest)
+        working-directory: swarm-dashboard
+        run: |
+          npm run test:ci
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swarm-dashboard-coverage
+          path: |
+            swarm-dashboard/coverage/**
+      - name: Upload coverage to Codecov
+        if: secrets.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v4
+        with:
+          files: swarm-dashboard/coverage/lcov.info
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   e2e:
     runs-on: ubuntu-latest
     steps:
