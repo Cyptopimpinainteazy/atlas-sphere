@@ -1,0 +1,237 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+use std::sync::{Arc, Mutex};
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ReputationFactors {
+    pub uptime_fraction: f64,
+    pub success_rate: f64,
+    pub watchdog_pass_rate: f64,
+    pub performance_consistency: f64,
+}
+
+impl ReputationFactors {
+    pub fn clamp(&mut self) {
+        self.uptime_fraction = self.uptime_fraction.clamp(0.0, 1.0);
+        self.success_rate = self.success_rate.clamp(0.0, 1.0);
+        self.watchdog_pass_rate = self.watchdog_pass_rate.clamp(0.0, 1.0);
+        self.performance_consistency = self.performance_consistency.clamp(0.0, 1.0);
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ReputationEvent {
+    pub id: i64,
+    pub wallet_address: String,
+    pub node_id: Option<Uuid>,
+    pub event_type: String,
+    pub delta: f64,
+    pub prev_reputation: f64,
+    pub new_reputation: f64,
+    pub evidence_hash: Option<String>,
+    pub occurred_at: DateTime<Utc>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct SlashingEvent {
+    pub id: i64,
+    pub wallet_address: String,
+    pub node_id: Option<Uuid>,
+    pub severity: f64,
+    pub slash_amount: f64,
+    pub recurrence_count: i32,
+    pub evidence_hash: Option<String>,
+    pub occurred_at: DateTime<Utc>,
+    pub appeal_status: String,
+}
+
+#[async_trait::async_trait]
+pub trait ReputationRepo: Send + Sync + 'static {
+    async fn insert_reputation_event(&self, ev: ReputationEvent) -> Result<(), String>;
+    async fn insert_slashing_event(&self, ev: SlashingEvent) -> Result<(), String>;
+    async fn get_reputation_events(&self, wallet: &str) -> Result<Vec<ReputationEvent>, String>;
+    async fn get_slashing_events(&self, wallet: &str) -> Result<Vec<SlashingEvent>, String>;
+}
+
+#[derive(Clone, Default)]
+pub struct InMemoryRepo {
+    pub events: Arc<Mutex<Vec<ReputationEvent>>>,
+    pub slashes: Arc<Mutex<Vec<SlashingEvent>>>,
+}
+
+#[async_trait::async_trait]
+impl ReputationRepo for InMemoryRepo {
+    async fn insert_reputation_event(&self, ev: ReputationEvent) -> Result<(), String> {
+        let mut g = self.events.lock().unwrap();
+        g.push(ev);
+        Ok(())
+    }
+    async fn insert_slashing_event(&self, ev: SlashingEvent) -> Result<(), String> {
+        let mut g = self.slashes.lock().unwrap();
+        g.push(ev);
+        Ok(())
+    }
+    async fn get_reputation_events(&self, wallet: &str) -> Result<Vec<ReputationEvent>, String> {
+        let g = self.events.lock().unwrap();
+        Ok(g.iter().filter(|e| e.wallet_address == wallet).cloned().collect())
+    }
+    async fn get_slashing_events(&self, wallet: &str) -> Result<Vec<SlashingEvent>, String> {
+        let g = self.slashes.lock().unwrap();
+        Ok(g.iter().filter(|e| e.wallet_address == wallet).cloned().collect())
+    }
+}
+
+pub fn compute_node_reputation(mut f: ReputationFactors, incident_penalty: f64) -> (f64, f64) {
+    f.clamp();
+    let raw = 0.25 * f.uptime_fraction
+        + 0.35 * f.success_rate
+        + 0.25 * f.watchdog_pass_rate
+        + 0.10 * f.performance_consistency;
+    let incident = incident_penalty.clamp(0.0, 1.0);
+    let adj = raw * incident;
+    (raw, adj)
+}
+
+pub fn compute_wallet_reputation(node_reps: &[f64], funding_factor: f64, social_factor: f64) -> f64 {
+    if node_reps.is_empty() {
+        return 0.5_f64.clamp(0.0, 1.0);
+    }
+    let mut reps = node_reps.to_vec();
+    reps.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let median = if reps.len() % 2 == 1 {
+        reps[reps.len() / 2]
+    } else {
+        let hi = reps.len() / 2;
+        (reps[hi - 1] + reps[hi]) / 2.0
+    };
+    let f_funding = funding_factor.clamp(0.0, 0.2);
+    let f_social = social_factor.clamp(0.0, 0.1);
+    let wallet_rep = (median * (1.0 + f_funding + f_social)).clamp(0.0, 1.0);
+    wallet_rep
+}
+
+pub fn compute_slash_amount(bond: f64, severity: f64, repeat_count: i32, base_scale: f64) -> f64 {
+    let severity = severity.clamp(0.0, 1.0);
+    let repeat_factor = 1.0 + 0.5 * ((repeat_count - 1).max(0) as f64);
+    let base_slash_fraction = severity * base_scale;
+    let slash = (bond * base_slash_fraction * repeat_factor).floor();
+    slash.min(bond)
+}
+
+pub struct ReputationManager<R: ReputationRepo> {
+    pub repo: Arc<R>,
+}
+
+impl<R: ReputationRepo> ReputationManager<R> {
+    pub fn new(repo: Arc<R>) -> Self {
+        Self { repo }
+    }
+    pub async fn record_reputation_event(&self, ev: ReputationEvent) -> Result<(), String> {
+        self.repo.insert_reputation_event(ev).await
+    }
+    pub async fn record_slashing_event(&self, ev: SlashingEvent) -> Result<(), String> {
+        self.repo.insert_slashing_event(ev).await
+    }
+}
+
+mod pg_impl {
+    use super::*;
+    use sqlx::PgPool;
+
+    pub struct PgRepo {
+        pool: PgPool,
+    }
+
+    impl PgRepo {
+        pub fn new(pool: PgPool) -> Self {
+            Self { pool }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl ReputationRepo for PgRepo {
+        async fn insert_reputation_event(&self, ev: ReputationEvent) -> Result<(), String> {
+            let query = r#"INSERT INTO reputation_events(wallet_address,node_id,event_type,delta,prev_reputation,new_reputation,evidence_hash,occurred_at)
+                VALUES($1,$2,$3,$4,$5,$6,$7,$8)"#;
+            let node_id = ev.node_id.map(|u| u.to_string());
+            sqlx::query(query)
+                .bind(&ev.wallet_address)
+                .bind(node_id)
+                .bind(&ev.event_type)
+                .bind(ev.delta as f64)
+                .bind(ev.prev_reputation as f64)
+                .bind(ev.new_reputation as f64)
+                .bind(ev.evidence_hash)
+                .bind(ev.occurred_at.naive_utc())
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(())
+        }
+        async fn insert_slashing_event(&self, ev: SlashingEvent) -> Result<(), String> {
+            let query = r#"INSERT INTO slashing_events(wallet_address,node_id,severity,slash_amount,recurrence_count,evidence_hash,occurred_at,appeal_status)
+                VALUES($1,$2,$3,$4,$5,$6,$7,$8)"#;
+            let node_id = ev.node_id.map(|u| u.to_string());
+            sqlx::query(query)
+                .bind(&ev.wallet_address)
+                .bind(node_id)
+                .bind(ev.severity as f64)
+                .bind(ev.slash_amount as f64)
+                .bind(ev.recurrence_count)
+                .bind(ev.evidence_hash)
+                .bind(ev.occurred_at.naive_utc())
+                .bind(&ev.appeal_status)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(())
+        }
+        async fn get_reputation_events(&self, wallet: &str) -> Result<Vec<ReputationEvent>, String> {
+            let query = r#"SELECT id, wallet_address, node_id, event_type, delta, prev_reputation, new_reputation, evidence_hash, occurred_at FROM reputation_events WHERE wallet_address = $1"#;
+            let rows = sqlx::query_as::<_, (i64, String, Option<String>, String, f64, f64, f64, Option<String>, chrono::NaiveDateTime)>(query)
+                .bind(wallet)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            let evs = rows.into_iter().map(|r| ReputationEvent {
+                id: r.0,
+                wallet_address: r.1,
+                node_id: r.2.and_then(|s| uuid::Uuid::parse_str(&s).ok()),
+                event_type: r.3,
+                delta: r.4,
+                prev_reputation: r.5,
+                new_reputation: r.6,
+                evidence_hash: r.7,
+                occurred_at: DateTime::<Utc>::from_utc(r.8, Utc),
+            }).collect();
+            Ok(evs)
+        }
+        async fn get_slashing_events(&self, wallet: &str) -> Result<Vec<SlashingEvent>, String> {
+            let query = r#"SELECT id, wallet_address, node_id, severity, slash_amount, recurrence_count, evidence_hash, occurred_at, appeal_status FROM slashing_events WHERE wallet_address = $1"#;
+            let rows = sqlx::query_as::<_, (i64, String, Option<String>, f64, f64, i32, Option<String>, chrono::NaiveDateTime, Option<String>)>(query)
+                .bind(wallet)
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            let evs = rows.into_iter().map(|r| SlashingEvent {
+                id: r.0,
+                wallet_address: r.1,
+                node_id: r.2.and_then(|s| uuid::Uuid::parse_str(&s).ok()),
+                severity: r.3,
+                slash_amount: r.4,
+                recurrence_count: r.5,
+                evidence_hash: r.6,
+                occurred_at: DateTime::<Utc>::from_utc(r.7, Utc),
+                appeal_status: r.8.unwrap_or_else(|| "none".to_string()),
+            }).collect();
+            Ok(evs)
+        }
+    }
+}
+
+pub fn new_pg_repo(pool: sqlx::PgPool) -> std::sync::Arc<dyn ReputationRepo> {
+    std::sync::Arc::new(pg_impl::PgRepo::new(pool))
+}
+
+pub use pg_impl::PgRepo;
