@@ -79,6 +79,18 @@ PY
             echo "No alembic.ini found, creating tables via SQL in test setup"
           fi
 
+      - name: Verify Alembic idempotency (upgrade head again)
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          if [ -f alembic.ini ]; then
+            echo "Running Alembic idempotency check: second upgrade"
+            alembic upgrade head
+            echo "Alembic idempotency check passed"
+          else
+            echo "No alembic.ini found, skipping idempotency check"
+          fi
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
