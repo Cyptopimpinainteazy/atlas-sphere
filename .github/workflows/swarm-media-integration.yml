@@ -38,14 +38,14 @@ jobs:
           override: true
 
       - name: Set DATABASE_URL
-        run: echo "DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/atlas_test" >> $GITHUB_ENV
+        run: echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/atlas_test" >> $GITHUB_ENV
 
       - name: Run Alembic migrations (if present)
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           if [ -f alembic.ini ]; then
-            pip install alembic
+            pip install alembic psycopg2-binary
             alembic upgrade head
           else
             echo "No alembic.ini found, creating tables via SQL in test setup"
