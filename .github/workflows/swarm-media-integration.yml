@@ -92,6 +92,21 @@ PY
             echo "No alembic.ini found, skipping idempotency check"
           fi
 
+  alembic-lint:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch base branch
+        run: git fetch origin main --depth=1
+
+      - name: Run Alembic migration lint (non-blocking)
+        run: |
+          python3 scripts/validate_alembic.py || true
+        shell: bash
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
