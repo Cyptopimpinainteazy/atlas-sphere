@@ -56,7 +56,8 @@ cargo test -- --nocapture   # Run tests with output
 ### Database Migrations
 ```bash
 # Requires DATABASE_URL environment variable
-export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/swarm_test
+# Example for local development (use your actual credentials):
+export DATABASE_URL=postgresql://username:password@localhost:5432/swarm_test
 alembic upgrade head        # Apply migrations
 python scripts/validate_alembic.py  # Validate migrations
 ```
@@ -161,7 +162,10 @@ The repository includes advanced diagnostic workflows for EVM integration:
 
 ### Required Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string (for migrations and Rust services)
+  - Format: `postgresql://username:password@host:port/database`
 - `AXE_TRIAGE_ASSIGNEE` (optional) - GitHub username for auto-assigning accessibility triage issues
+  - Set as a Repository Variable in GitHub Settings → Secrets and variables → Actions → Variables
+  - Example: `gh variable set AXE_TRIAGE_ASSIGNEE --body username -R owner/repo`
 
 ### Local Development
 1. Install Node.js 20+
