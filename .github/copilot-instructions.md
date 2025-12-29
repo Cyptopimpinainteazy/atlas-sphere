@@ -102,9 +102,9 @@ python scripts/validate_alembic.py  # Validate migrations
 ## Pull Request Guidelines
 
 ### Required Checklist Items
-- [ ] I added/updated Alembic migrations if needed
-- [ ] If adding an Alembic migration, I included an orphaned-sequence guard or added a `# sequence-guard` comment
-- [ ] Axe accessibility checks pass (automatically run in CI)
+- [ ] I added/updated Alembic migrations if needed.
+- [ ] **If** adding an Alembic migration, I included an orphaned-sequence guard or added a `# sequence-guard` comment.
+- [ ] If you want the non-blocking Alembic roundtrip check to run on this PR, add the label: `run-alembic-roundtrip`.
 
 ### Adding Alembic Migration
 1. Create migration file in `alembic/versions/`
@@ -114,10 +114,10 @@ python scripts/validate_alembic.py  # Validate migrations
 ## CI/CD Workflows
 
 ### Key Workflows
-- **playwright-e2e.yml** - Runs Jest unit tests and Playwright E2E tests; uploads coverage
-- **ci-swarm.yml** - Full CI pipeline with PostgreSQL, Python tests, Node tests, and Rust diagnostics
-- **swarm-dashboard-axe-triage.yml** - Creates accessibility triage issues
-- **alembic-roundtrip.yml** - Validates database migration reversibility
+- **playwright-e2e.yml** - Runs Jest unit tests (with coverage) and Playwright E2E tests separately; uploads coverage artifacts
+- **ci-swarm.yml** - Full CI pipeline with PostgreSQL, Python tests, Node tests, Lighthouse performance checks, and Rust EVM diagnostics
+- **swarm-dashboard-axe-triage.yml** - Creates accessibility triage issues when axe violations are detected
+- **alembic-roundtrip.yml** - Validates database migration reversibility (triggered by `run-alembic-roundtrip` label)
 
 ### Diagnostic Capabilities
 The repository includes advanced diagnostic workflows for EVM integration:
