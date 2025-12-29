@@ -104,7 +104,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        w3.eth.account.from_key(private_key)
+        acct = w3.eth.account.from_key(private_key)
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
