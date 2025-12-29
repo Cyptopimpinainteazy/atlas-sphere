@@ -14,7 +14,7 @@ advancedElicitationTask: '{project-root}/.bmad/core/tasks/advanced-elicitation.x
 partyModeWorkflow: '{project-root}/.bmad/core/workflows/party-mode/workflow.md'
 
 # Documentation References (load JIT)
-validation: '{project-root}/.bmad/bmb/workflows/create-agent/data/agent-validation-checklist.md'
+validation: '{project-root}/.bmad/bmb/docs/agents/agent-validation-checklist.md'
 agent_compilation: '{project-root}/.bmad/bmb/docs/agents/agent-compilation.md'
 ---
 
