@@ -14,7 +14,7 @@ This is the **atlas-sphere** repository, a multi-language project containing:
 - **Build Tool**: Webpack 5
 - **Testing**: Jest with ts-jest and React Testing Library
 - **E2E Testing**: Playwright with axe-core accessibility scanning
-- **Styling**: TypeScript strict mode with `noUncheckedIndexedAccess` enabled
+- **TypeScript Config**: Strict mode enabled with `noUncheckedIndexedAccess`
 
 ### Backend (crates/swarm-media/)
 - **Language**: Rust (2021 edition)
