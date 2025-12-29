@@ -34,6 +34,4 @@ jobs:
         working-directory: ./swarm-dashboard
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 'false'
-        run: |
-          npx playwright install --with-deps
-          npx playwright test --config e2e/playwright.config.ts
+        run: npx playwright test --config e2e/playwright.config.ts
