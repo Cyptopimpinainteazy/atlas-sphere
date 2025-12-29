@@ -1,0 +1,9 @@
+{
+  "/page": "app/page.js",
+  "/developers/docs/page": "app/developers/docs/page.js",
+  "/developers/docs/canonical-ledger/page": "app/developers/docs/canonical-ledger/page.js",
+  "/developers/docs/installation/page": "app/developers/docs/installation/page.js",
+  "/developers/docs/intro/page": "app/developers/docs/intro/page.js",
+  "/developers/docs/anchor/page": "app/developers/docs/anchor/page.js",
+  "/developers/docs/creating-comits/page": "app/developers/docs/creating-comits/page.js"
+}

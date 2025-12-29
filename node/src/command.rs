@@ -1,5 +1,5 @@
 use crate::{
-    cli::{Cli, Commands},
+    cli::{AtomicSwapSubcommand, Cli, Commands},
     service::{self, AtlasSphereExecutorDispatch},
 };
 use atlas_sphere_runtime::opaque::Block;
@@ -18,7 +18,10 @@ pub fn run() -> CliResult<()> {
             })?;
 
             runner.sync_run(|config| {
-                info!("Building Atlas Sphere chain specification (raw: {})", cmd.raw);
+                info!(
+                    "Building Atlas Sphere chain specification (raw: {})",
+                    cmd.raw
+                );
                 cmd.run(config.chain_spec, config.network).map_err(|e| {
                     error!("`build-spec` command failed: {e}");
                     e
@@ -161,10 +164,11 @@ pub fn run() -> CliResult<()> {
 
             runner.sync_run(|config| {
                 info!("Executing runtime benchmarks");
-                cmd.run::<Block, AtlasSphereExecutorDispatch>(config).map_err(|e| {
-                    error!("`benchmark` command failed: {e}");
-                    e
-                })
+                cmd.run::<Block, AtlasSphereExecutorDispatch>(config)
+                    .map_err(|e| {
+                        error!("`benchmark` command failed: {e}");
+                        e
+                    })
             })
         }
         #[cfg(feature = "try-runtime")]
@@ -173,6 +177,131 @@ pub fn run() -> CliResult<()> {
             Err(CliError::Other(
                 "try-runtime subcommand is not yet supported for Atlas Sphere".into(),
             ))
+        }
+        Some(Commands::AtomicSwap(cmd)) => {
+            match &cmd.command {
+                AtomicSwapSubcommand::Simulate {
+                    token_in,
+                    token_out,
+                    amount,
+                    slippage_bps,
+                    rpc_url,
+                } => {
+                    info!("Simulating atomic swap trade...");
+                    info!("  Token In:  {:?}", token_in);
+                    info!("  Token Out: {:?}", token_out);
+                    info!("  Amount:    {}", amount);
+                    info!("  Slippage:  {} bps", slippage_bps);
+                    info!("  RPC URL:   {}", rpc_url);
+
+                    println!("\n=== Atomic Swap Simulation ===");
+                    println!("Token In:     0x{}", hex::encode(token_in.as_bytes()));
+                    println!("Token Out:    0x{}", hex::encode(token_out.as_bytes()));
+                    println!("Amount In:    {}", amount);
+                    println!(
+                        "Slippage:     {} bps ({}%)",
+                        slippage_bps,
+                        *slippage_bps as f64 / 100.0
+                    );
+                    println!();
+
+                    // TODO: Make actual RPC call to atomicTrade_simulate
+                    // For now, provide a mock response
+                    println!("--- Simulation Result (Mock) ---");
+                    println!("Success:           true");
+                    println!(
+                        "Estimated Output:  {} (mock)",
+                        amount.saturating_mul(98) / 100
+                    );
+                    println!("Price Impact:      50 bps");
+                    println!("EVM Gas:           150,000");
+                    println!("SVM Compute:       0");
+                    println!();
+                    println!("Note: Connect to a running node for live simulation.");
+                    println!(
+                        "      Use: curl -X POST {} -H 'Content-Type: application/json'",
+                        rpc_url
+                    );
+                    println!("           -d '{{\"jsonrpc\":\"2.0\",\"method\":\"atomicTrade_simulate\",\"params\":[...],\"id\":1}}'");
+
+                    Ok(())
+                }
+                AtomicSwapSubcommand::Price {
+                    token_a,
+                    token_b,
+                    rpc_url,
+                } => {
+                    info!("Querying price data for token pair...");
+
+                    println!("\n=== Price Data Query ===");
+                    println!("Token A:  0x{}", hex::encode(token_a.as_bytes()));
+                    println!("Token B:  0x{}", hex::encode(token_b.as_bytes()));
+                    println!("RPC URL:  {}", rpc_url);
+                    println!();
+
+                    // TODO: Make actual RPC call to atomicTrade_getPriceData
+                    println!("--- Price Data (Mock) ---");
+                    println!("TWAP Price:        0 (no observations)");
+                    println!("Latest Price:      0 (no observations)");
+                    println!("Observations:      0");
+                    println!("Last Updated:      N/A");
+                    println!();
+                    println!(
+                        "Note: Submit price observations via submit_price_observation extrinsic."
+                    );
+
+                    Ok(())
+                }
+                AtomicSwapSubcommand::EstimateCost { legs, vm_types } => {
+                    info!("Estimating execution costs...");
+
+                    println!("\n=== Execution Cost Estimate ===");
+                    println!("Trade Legs: {}", legs);
+                    println!("VM Types:   {:?}", vm_types);
+                    println!();
+
+                    let mut evm_gas: u64 = 0;
+                    let mut svm_compute: u64 = 0;
+
+                    for (i, vm_type) in vm_types.iter().enumerate() {
+                        match vm_type.to_lowercase().as_str() {
+                            "evm" => {
+                                evm_gas += 150_000;
+                                println!("  Leg {}: EVM      +150,000 gas", i + 1);
+                            }
+                            "svm" => {
+                                svm_compute += 200_000;
+                                println!("  Leg {}: SVM      +200,000 compute units", i + 1);
+                            }
+                            "crossvm" => {
+                                evm_gas += 200_000;
+                                svm_compute += 250_000;
+                                println!(
+                                    "  Leg {}: CrossVM  +200,000 gas, +250,000 compute",
+                                    i + 1
+                                );
+                            }
+                            other => {
+                                warn!("Unknown VM type '{}', skipping", other);
+                            }
+                        }
+                    }
+
+                    println!();
+                    println!("--- Total Estimates ---");
+                    println!("EVM Gas:         {}", evm_gas);
+                    println!("SVM Compute:     {}", svm_compute);
+
+                    // Rough cost estimates (assuming 20 gwei gas price, $3000 ETH)
+                    let evm_cost_usd = (evm_gas as f64 * 20.0 * 1e-9 * 3000.0);
+                    println!(
+                        "Est. EVM Cost:   ${:.4} (at 20 gwei, $3000/ETH)",
+                        evm_cost_usd
+                    );
+
+                    Ok(())
+                }
+            }
         }
         None => {
             let runner = cli.create_runner(&cli.run).map_err(|e| {
