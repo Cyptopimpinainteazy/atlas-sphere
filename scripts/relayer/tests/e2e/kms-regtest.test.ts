@@ -61,35 +61,42 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
     console.info(`[TEST] getProvider() -> ${currentProvider ? currentProvider.name : 'null'}`);
     if (!currentProvider) throw new Error('KMS provider not registered by bootstrap');
 
-    // create or load wallet (disable_private_keys=false, blank=false to have HD keys)
+    // create wallet with HD keys (disable_private_keys=false, blank=false)
+    // createwallet automatically loads the wallet on success
     try {
       await rpc('createwallet', ['e2e-wallet', false, false]);
-    } catch (err) {
-      // ignore: wallet may already exist
-    }
-    // load wallet if not already loaded
-    try {
-      await rpc('loadwallet', ['e2e-wallet']);
-    } catch (err) {
-      // ignore: wallet may already be loaded
+      console.info('[TEST] created wallet e2e-wallet');
+    } catch (err: any) {
+      // Wallet may already exist; check if message indicates so
+      if (err.message && err.message.includes('already exists')) {
+        console.info('[TEST] wallet e2e-wallet already exists, loading...');
+        await rpc('loadwallet', ['e2e-wallet']);
+      } else {
+        throw err;
+      }
     }
 
     // ensure a funded address to spend from
     const minerAddr = await rpc('getnewaddress', ['miner']);
+    console.info(`[TEST] minerAddr=${minerAddr}`);
     await rpc('generatetoaddress', [101, minerAddr]);
 
     // create a target address we will send from to a KMS-signed spend
     const depositAddr = await rpc('getnewaddress', ['deposit']);
+    console.info(`[TEST] depositAddr=${depositAddr}`);
     const depositTxid = await rpc('sendtoaddress', [depositAddr, '1.0']);
+    console.info(`[TEST] depositTxid=${depositTxid}`);
     await rpc('generatetoaddress', [1, minerAddr]); // confirm
 
     // find the UTXO
     const unspent = await rpc('listunspent', [1, 9999999, [depositAddr]]);
+    console.info(`[TEST] found ${unspent.length} utxo(s) for depositAddr`);
     assert(unspent.length >= 1, 'no utxo found');
     const utxo = unspent[0];
-    // fetch the raw tx hex for nonWitnessUtxo
+    // fetch the raw tx hex for nonWitnessUtxo (requires -txindex on bitcoind)
     const rawtx = await rpc('getrawtransaction', [utxo.txid, true]);
     utxo.hex = rawtx.hex;
+    console.info(`[TEST] utxo txid=${utxo.txid}, vout=${utxo.vout}, amount=${utxo.amount}`);
 
     // prepare a simple payload that the bitcoin builder expects for signing
     // This test uses the builder to create and sign a tx spending the utxo to a fresh address
