@@ -46,11 +46,10 @@ jobs:
           BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
           ETHEREUM_RPC_URL: "http://localhost:8545"
           RELAYER_KMS_KEY_ID: "local-1"
-          # Use a deterministic regtest WIF for CI (compressed, testnet prefix)
-          # This is cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m
-          # Generated from private key bytes repeated pattern for reproducibility
-          RELAYER_LOCAL_KMS_WIF: "cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m"
-          KMS_LOCAL_WIF: "cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m"
+          # Deterministic regtest WIF generated from seed Buffer.alloc(32, 0x42)
+          # Valid compressed WIF for regtest network
+          RELAYER_LOCAL_KMS_WIF: "cPoVxi18CnxHUQjYNpjRM3RYUVFA61wuTNQez7BtRKkfp9Fw6RTW"
+          KMS_LOCAL_WIF: "cPoVxi18CnxHUQjYNpjRM3RYUVFA61wuTNQez7BtRKkfp9Fw6RTW"
         run: |
           cd scripts/relayer
           # Tests run via ts-node (transpileOnly), no pre-build needed
