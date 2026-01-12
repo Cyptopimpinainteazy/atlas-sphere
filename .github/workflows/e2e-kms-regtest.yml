@@ -41,7 +41,8 @@ jobs:
       - name: Install relayer deps
         run: |
           cd scripts/relayer
-          npm ci
+          # Use npm install since package.json was updated without updating lock file
+          npm install
 
       - name: Run relayer E2E smoke (uses LocalKmsProvider)
         env:
