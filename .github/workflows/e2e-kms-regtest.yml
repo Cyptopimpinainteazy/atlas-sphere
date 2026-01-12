@@ -43,11 +43,6 @@ jobs:
           cd scripts/relayer
           npm ci
 
-      - name: Build relayer TypeScript
-        run: |
-          cd scripts/relayer
-          npm run build --if-present
-
       - name: Run relayer E2E smoke (uses LocalKmsProvider)
         env:
           BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
@@ -59,7 +54,7 @@ jobs:
           KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
         run: |
           cd scripts/relayer
-          # Use the sequential test-runner to run the tests; this will execute unit+e2e smoke
+          # Tests run via ts-node (transpileOnly), no pre-build needed
           npm test --if-present
 
       - name: Collect logs
