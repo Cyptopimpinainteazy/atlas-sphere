@@ -22,11 +22,12 @@ jobs:
       - name: Start Bitcoind (regtest)
         run: |
           # Regtest RPC default port is 18443 inside container
-          # Map external 18443 to internal 18443 for simplicity
+          # Enable txindex for getrawtransaction on confirmed txs
           docker run -d --name bitcoind -p 18443:18443 \
             ruimarinho/bitcoin-core:23 \
             -regtest \
             -server \
+            -txindex \
             -rpcbind=0.0.0.0:18443 \
             -rpcallowip=0.0.0.0/0 \
             -rpcuser=user \
