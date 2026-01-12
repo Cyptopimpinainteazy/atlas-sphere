@@ -105,9 +105,8 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { buildAndSignRefund } = require('../../src/handlers/bitcoin-builder');
 
-    // The builder expects a payload shaped like a refund or spend; provide minimal fields
+    // The builder expects: payload.lock.{utxos, refundTo, feeRate, privateKeyWIF, kmsKeyId}
     const payload = {
-      // builder expects lock.utxos
       lock: {
         utxos: [
           {
@@ -115,14 +114,18 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
             vout: utxo.vout,
             value: BigInt(Math.floor(utxo.amount * 1e8)),
             scriptPubKey: utxo.scriptPubKey,
+            hex: utxo.hex,
             address: depositAddr,
           },
         ],
+        // refundTo must be inside lock
+        refundTo: toAddr,
+        feeRate: 10,
+        // privateKeyWIF is only needed if not using KMS; provide the env WIF as fallback
+        privateKeyWIF: process.env.RELAYER_LOCAL_KMS_WIF,
         // instruct builder to sign with KMS key id; bootstrap registered key 'local-1'
         kmsKeyId: process.env.RELAYER_KMS_KEY_ID || 'local-1',
       },
-      refundTo: toAddr,
-      feeRate: 10,
     };
 
     const hex = await buildAndSignRefund(payload);
