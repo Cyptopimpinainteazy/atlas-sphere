@@ -16,19 +16,36 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
     return;
   }
 
-  function rpc(method: string, params: any[] = []) {
+  async function rpc(method: string, params: any[] = []) {
     const u = new URL(bitcoinRpc as string);
     const auth = u.username && u.password ? { username: u.username, password: u.password } : null;
-    const body = JSON.stringify({ jsonrpc: '1.0', id: 'e2e', method, params });
+    const bodyObj = { jsonrpc: '1.0', id: 'e2e', method, params };
     const headers: any = { 'Content-Type': 'application/json' };
     if (auth) {
       const creds = Buffer.from(`${auth.username}:${auth.password}`).toString('base64');
       headers.Authorization = `Basic ${creds}`;
     }
-    return fetch(bitcoinRpc as string, { method: 'POST', body, headers }).then((r) => r.json()).then((j) => {
-      if (j.error) throw new Error(JSON.stringify(j.error));
-      return j.result;
-    });
+
+    const maxAttempts = 6;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch(bitcoinRpc as string, { method: 'POST', body: JSON.stringify(bodyObj), headers });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '<no-body>');
+          throw new Error(`RPC HTTP ${res.status}: ${txt}`);
+        }
+        const j = await res.json();
+        if (j.error) throw new Error(JSON.stringify(j.error));
+        return j.result;
+      } catch (err: any) {
+        console.warn(`[TEST] rpc ${method} attempt ${attempt} failed: ${err && err.message ? err.message : err}`);
+        if (attempt === maxAttempts) throw err;
+        // exponential-ish backoff
+        await new Promise((r) => setTimeout(r, attempt * 500));
+      }
+    }
+
+    throw new Error('unreachable');
   }
 
   it('registers LocalKms from env, builds and broadcasts tx signed by KMS', async () => {
@@ -44,11 +61,17 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
     console.info(`[TEST] getProvider() -> ${currentProvider ? currentProvider.name : 'null'}`);
     if (!currentProvider) throw new Error('KMS provider not registered by bootstrap');
 
-    // create or load wallet
+    // create or load wallet (disable_private_keys=false, blank=false to have HD keys)
     try {
-      await rpc('createwallet', ['e2e-wallet', false, true]);
+      await rpc('createwallet', ['e2e-wallet', false, false]);
     } catch (err) {
       // ignore: wallet may already exist
+    }
+    // load wallet if not already loaded
+    try {
+      await rpc('loadwallet', ['e2e-wallet']);
+    } catch (err) {
+      // ignore: wallet may already be loaded
     }
 
     // ensure a funded address to spend from
