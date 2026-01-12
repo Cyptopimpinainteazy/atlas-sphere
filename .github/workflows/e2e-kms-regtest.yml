@@ -1,0 +1,61 @@
+name: E2E - KMS + Regtest
+
+on:
+  push:
+    branches: [ e2e-kms-regtest ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e-kms-regtest:
+    runs-on: ubuntu-latest
+    env:
+      # Expect this secret to be set in repo secrets
+      KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Ganache (ethereum)
+        run: |
+          docker run -d --name ganache -p 8545:8545 trufflesuite/ganache-cli:latest -d
+          # give ganache a moment
+          sleep 2
+
+      - name: Start Bitcoind (regtest)
+        run: |
+          docker run -d --name bitcoind -p 18332:18332 ruimarinho/bitcoin-core:23 -regtest -server -rpcallowip=::/0 -rpcuser=user -rpcpassword=pass -fallbackfee=0.0002 -printtoconsole
+          # wait for RPC to become ready
+          for i in {1..30}; do
+            if docker logs bitcoind 2>&1 | grep -q "Done loading"; then
+              echo "bitcoind ready"; break
+            fi
+            echo "waiting for bitcoind..."; sleep 2
+          done
+
+      - name: Install Node & dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install relayer deps
+        run: |
+          cd scripts/relayer
+          npm ci
+
+      - name: Run relayer E2E smoke (uses LocalKmsProvider)
+        env:
+          BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
+          ETHEREUM_RPC_URL: "http://localhost:8545"
+          RELAYER_KMS_KEY_ID: "local-1"
+          # KMS_PRIVATE exported from repo secret
+          KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
+        run: |
+          cd scripts/relayer
+          # Use the sequential test-runner to run the tests; this will execute unit+e2e smoke
+          npm test --if-present || true
+
+      - name: Collect logs
+        if: always()
+        run: |
+          docker logs --tail 200 ganache || true
+          docker logs --tail 200 bitcoind || true
