@@ -37,10 +37,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
       - name: Install relayer deps
         run: |
           cd scripts/relayer
           npm ci
+
+      - name: Build relayer TypeScript
+        run: |
+          cd scripts/relayer
+          npm run build --if-present
 
       - name: Run relayer E2E smoke (uses LocalKmsProvider)
         env:
@@ -54,7 +60,7 @@ jobs:
         run: |
           cd scripts/relayer
           # Use the sequential test-runner to run the tests; this will execute unit+e2e smoke
-          npm test --if-present || true
+          npm test --if-present
 
       - name: Collect logs
         if: always()
