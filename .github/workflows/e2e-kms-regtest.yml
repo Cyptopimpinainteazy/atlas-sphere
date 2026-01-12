@@ -60,7 +60,9 @@ jobs:
         env:
           BITCOIN_RPC_URL: "http://user:pass@127.0.0.1:18443/"
           ETHEREUM_RPC_URL: "http://127.0.0.1:8545"
+          # Key id used by test payload; bootstrap reads RELAYER_LOCAL_KMS_KEY_ID
           RELAYER_KMS_KEY_ID: "local-1"
+          RELAYER_LOCAL_KMS_KEY_ID: "local-1"
           # Deterministic regtest WIF generated from seed Buffer.alloc(32, 0x42)
           # Valid compressed WIF for regtest network
           RELAYER_LOCAL_KMS_WIF: "cPoVxi18CnxHUQjYNpjRM3RYUVFA61wuTNQez7BtRKkfp9Fw6RTW"
