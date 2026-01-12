@@ -47,7 +47,9 @@ jobs:
           BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
           ETHEREUM_RPC_URL: "http://localhost:8545"
           RELAYER_KMS_KEY_ID: "local-1"
-          # KMS_PRIVATE exported from repo secret
+          # Wire the Local KMS WIF into the relayer bootstrap
+          RELAYER_LOCAL_KMS_WIF: ${{ secrets.KMS_LOCAL_WIF }}
+          # Also expose KMS_LOCAL_WIF for scripts that reference it
           KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
         run: |
           cd scripts/relayer
