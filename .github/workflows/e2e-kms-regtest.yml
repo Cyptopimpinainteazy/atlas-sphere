@@ -21,7 +21,18 @@ jobs:
 
       - name: Start Bitcoind (regtest)
         run: |
-          docker run -d --name bitcoind -p 18332:18332 ruimarinho/bitcoin-core:23 -regtest -server -rpcallowip=::/0 -rpcuser=user -rpcpassword=pass -fallbackfee=0.0002 -printtoconsole
+          # Regtest RPC default port is 18443 inside container
+          # Map external 18443 to internal 18443 for simplicity
+          docker run -d --name bitcoind -p 18443:18443 \
+            ruimarinho/bitcoin-core:23 \
+            -regtest \
+            -server \
+            -rpcbind=0.0.0.0:18443 \
+            -rpcallowip=0.0.0.0/0 \
+            -rpcuser=user \
+            -rpcpassword=pass \
+            -fallbackfee=0.0002 \
+            -printtoconsole
           # wait for RPC to become ready
           for i in {1..30}; do
             if docker logs bitcoind 2>&1 | grep -q "Done loading"; then
@@ -29,6 +40,9 @@ jobs:
             fi
             echo "waiting for bitcoind..."; sleep 2
           done
+          # Quick sanity check
+          sleep 2
+          curl -s --user user:pass --data-binary '{"jsonrpc":"1.0","id":"test","method":"getblockchaininfo","params":[]}' -H 'content-type: application/json' http://127.0.0.1:18443/ | head -c 200 || echo "RPC check done"
 
       - name: Install Node & dependencies
         uses: actions/setup-node@v4
@@ -43,8 +57,8 @@ jobs:
 
       - name: Run relayer E2E smoke (uses LocalKmsProvider)
         env:
-          BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
-          ETHEREUM_RPC_URL: "http://localhost:8545"
+          BITCOIN_RPC_URL: "http://user:pass@127.0.0.1:18443/"
+          ETHEREUM_RPC_URL: "http://127.0.0.1:8545"
           RELAYER_KMS_KEY_ID: "local-1"
           # Deterministic regtest WIF generated from seed Buffer.alloc(32, 0x42)
           # Valid compressed WIF for regtest network
