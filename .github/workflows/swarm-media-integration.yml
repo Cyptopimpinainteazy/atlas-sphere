@@ -75,18 +75,19 @@ jobs:
           print("Alembic dependencies imported successfully")
           PY
 
-            alembic upgrade head
+            # Use 'heads' (plural) to handle multiple migration branches
+            alembic upgrade heads
           else
             echo "No alembic.ini found, creating tables via SQL in test setup"
           fi
 
-      - name: Verify Alembic idempotency (upgrade head again)
+      - name: Verify Alembic idempotency (upgrade heads again)
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           if [ -f alembic.ini ]; then
             echo "Running Alembic idempotency check: second upgrade"
-            alembic upgrade head
+            alembic upgrade heads
             echo "Alembic idempotency check passed"
           else
             echo "No alembic.ini found, skipping idempotency check"
@@ -142,9 +143,9 @@ jobs:
         continue-on-error: true
         run: |
           if [ -f alembic.ini ]; then
-            echo "Running labeled non-blocking Alembic roundtrip: downgrade base -> upgrade head"
+            echo "Running labeled non-blocking Alembic roundtrip: downgrade base -> upgrade heads"
             alembic downgrade base || true
-            alembic upgrade head || true
+            alembic upgrade heads || true
             echo "Non-blocking Alembic roundtrip completed (errors ignored)"
           else
             echo "No alembic.ini found, skipping non-blocking roundtrip"
