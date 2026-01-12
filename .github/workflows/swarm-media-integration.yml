@@ -8,7 +8,7 @@ on:
       - 'alembic/**'
       - '.github/workflows/**'
   push:
-    branches: [ main ]
+    branches: [ main, e2e-kms-regtest ]
 
 jobs:
   test:
@@ -48,32 +48,32 @@ jobs:
           if [ -f alembic.ini ]; then
             # Ensure required logger sections are present to avoid fileConfig KeyError
             python - <<'PY'
-from configparser import ConfigParser
-import sys
-cfg = ConfigParser()
-if not cfg.read('alembic.ini'):
-    print('alembic.ini not found or unreadable')
-    sys.exit(1)
-missing = [s for s in ('logger_sqlalchemy','logger_alembic') if s not in cfg.sections()]
-if missing:
-    print('Missing logger sections in alembic.ini:', missing)
-    sys.exit(1)
-print('alembic.ini logger sections OK')
-PY
+          from configparser import ConfigParser
+          import sys
+          cfg = ConfigParser()
+          if not cfg.read('alembic.ini'):
+              print('alembic.ini not found or unreadable')
+              sys.exit(1)
+          missing = [s for s in ('logger_sqlalchemy','logger_alembic') if s not in cfg.sections()]
+          if missing:
+              print('Missing logger sections in alembic.ini:', missing)
+              sys.exit(1)
+          print('alembic.ini logger sections OK')
+          PY
 
             pip install alembic psycopg2-binary
 
             # Quick sanity check: ensure Alembic runtime deps import correctly
             python - <<'PY'
-import sys
-try:
-    import sqlalchemy
-    import psycopg2
-except Exception as e:
-    print("Dependency import failed:", e)
-    sys.exit(1)
-print("Alembic dependencies imported successfully")
-PY
+          import sys
+          try:
+              import sqlalchemy
+              import psycopg2
+          except Exception as e:
+              print("Dependency import failed:", e)
+              sys.exit(1)
+          print("Alembic dependencies imported successfully")
+          PY
 
             alembic upgrade head
           else
@@ -92,20 +92,6 @@ PY
             echo "No alembic.ini found, skipping idempotency check"
           fi
 
-  alembic-lint:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Fetch base branch
-        run: git fetch origin main --depth=1
-
-      - name: Run Alembic migration lint
-        run: |
-          python3 scripts/validate_alembic.py
-        shell: bash
-
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -121,6 +107,20 @@ PY
           set -e
           cd crates/swarm-media
           cargo test --lib -- --nocapture
+
+  alembic-lint:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch base branch
+        run: git fetch origin main --depth=1
+
+      - name: Run Alembic migration lint
+        run: |
+          python3 scripts/validate_alembic.py
+        shell: bash
 
   alembic-roundtrip-nonblocking:
     if: >
@@ -149,4 +149,3 @@ PY
           else
             echo "No alembic.ini found, skipping non-blocking roundtrip"
           fi
-
