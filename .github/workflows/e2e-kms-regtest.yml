@@ -9,9 +9,6 @@ on:
 jobs:
   e2e-kms-regtest:
     runs-on: ubuntu-latest
-    env:
-      # Expect this secret to be set in repo secrets
-      KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,10 +46,11 @@ jobs:
           BITCOIN_RPC_URL: "http://user:pass@localhost:18332/"
           ETHEREUM_RPC_URL: "http://localhost:8545"
           RELAYER_KMS_KEY_ID: "local-1"
-          # Wire the Local KMS WIF into the relayer bootstrap
-          RELAYER_LOCAL_KMS_WIF: ${{ secrets.KMS_LOCAL_WIF }}
-          # Also expose KMS_LOCAL_WIF for scripts that reference it
-          KMS_LOCAL_WIF: ${{ secrets.KMS_LOCAL_WIF }}
+          # Use a deterministic regtest WIF for CI (compressed, testnet prefix)
+          # This is cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m
+          # Generated from private key bytes repeated pattern for reproducibility
+          RELAYER_LOCAL_KMS_WIF: "cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m"
+          KMS_LOCAL_WIF: "cQpvGtkkUKQ8Y6djdFKJwCChkqM4WoGkRaFjD3LjSJHJXHUU3N7m"
         run: |
           cd scripts/relayer
           # Tests run via ts-node (transpileOnly), no pre-build needed
