@@ -7,8 +7,9 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
   this.timeout(120000);
 
   const bitcoinRpc = process.env.BITCOIN_RPC_URL;
-  const kmsWif = process.env.RELAYER_LOCAL_KMS_WIF || process.env.RELAYER_KMS_WIF || process.env.KMS_LOCAL_WIF;
+  const kmsWif = process.env.RELAYER_LOCAL_KMS_WIF;
 
+  if (!bitcoinRpc || !kmsWif) {
     it('skips when BITCOIN_RPC_URL or RELAYER_LOCAL_KMS_WIF not set', function () {
       this.skip();
     });
@@ -16,8 +17,14 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
   }
 
   function rpc(method: string, params: any[] = []) {
+    const u = new URL(bitcoinRpc as string);
+    const auth = u.username && u.password ? { username: u.username, password: u.password } : null;
     const body = JSON.stringify({ jsonrpc: '1.0', id: 'e2e', method, params });
     const headers: any = { 'Content-Type': 'application/json' };
+    if (auth) {
+      const creds = Buffer.from(`${auth.username}:${auth.password}`).toString('base64');
+      headers.Authorization = `Basic ${creds}`;
+    }
     return fetch(bitcoinRpc as string, { method: 'POST', body, headers }).then((r) => r.json()).then((j) => {
       if (j.error) throw new Error(JSON.stringify(j.error));
       return j.result;
@@ -25,60 +32,82 @@ describe('e2e: Local KMS + bitcoind (regtest)', function () {
   }
 
   it('registers LocalKms from env, builds and broadcasts tx signed by KMS', async () => {
-    // Init Local KMS provider from env (this will register a provider)
+    // Init Local KMS provider from env (this will register a provider with id like `local-1`)
+    // The bootstrap exports an init function that reads RELAYER_LOCAL_KMS_WIF
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { initLocalKmsFromEnv } = require('../../src/kms/bootstrap');
-    initLocalKmsFromEnv();
+    const provider = initLocalKmsFromEnv();
+    console.info(`[TEST] initLocalKmsFromEnv returned provider: ${provider ? provider.name : 'null'}`);
+    // ensure provider registered
+    const kmsMod = require('../../src/kms');
+    const currentProvider = kmsMod.getProvider && kmsMod.getProvider();
+    console.info(`[TEST] getProvider() -> ${currentProvider ? currentProvider.name : 'null'}`);
+    if (!currentProvider) throw new Error('KMS provider not registered by bootstrap');
 
-    try { await rpc('createwallet', ['e2e-wallet', false, true]); } catch (e) {}
+    // create or load wallet
+    try {
+      await rpc('createwallet', ['e2e-wallet', false, true]);
+    } catch (err) {
+      // ignore: wallet may already exist
+    }
 
+    // ensure a funded address to spend from
     const minerAddr = await rpc('getnewaddress', ['miner']);
     await rpc('generatetoaddress', [101, minerAddr]);
 
+    // create a target address we will send from to a KMS-signed spend
     const depositAddr = await rpc('getnewaddress', ['deposit']);
-    const txid = await rpc('sendtoaddress', [depositAddr, '1.0']);
-    await rpc('generatetoaddress', [1, minerAddr]);
+    const depositTxid = await rpc('sendtoaddress', [depositAddr, '1.0']);
+    await rpc('generatetoaddress', [1, minerAddr]); // confirm
 
+    // find the UTXO
     const unspent = await rpc('listunspent', [1, 9999999, [depositAddr]]);
     assert(unspent.length >= 1, 'no utxo found');
     const utxo = unspent[0];
+    // fetch the raw tx hex for nonWitnessUtxo
     const rawtx = await rpc('getrawtransaction', [utxo.txid, true]);
     utxo.hex = rawtx.hex;
 
+    // prepare a simple payload that the bitcoin builder expects for signing
+    // This test uses the builder to create and sign a tx spending the utxo to a fresh address
     const toAddr = await rpc('getnewaddress', ['to']);
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { buildAndSignRefund } = require('../../src/handlers/bitcoin-builder');
 
+    // The builder expects a payload shaped like a refund or spend; provide minimal fields
     const payload = {
-      utxos: [
-        {
-          txid: utxo.txid,
-          vout: utxo.vout,
-          value: BigInt(Math.floor(utxo.amount * 1e8)),
-          scriptPubKey: utxo.scriptPubKey,
-          hex: utxo.hex,
-          address: depositAddr,
-        },
-      ],
-      outputs: [
-        {
-          address: toAddr,
-          value: BigInt(90000000),
-        },
-      ],
+      // builder expects lock.utxos
       lock: {
+        utxos: [
+          {
+            txid: utxo.txid,
+            vout: utxo.vout,
+            value: BigInt(Math.floor(utxo.amount * 1e8)),
+            scriptPubKey: utxo.scriptPubKey,
+            address: depositAddr,
+          },
+        ],
+        // instruct builder to sign with KMS key id; bootstrap registered key 'local-1'
         kmsKeyId: process.env.RELAYER_KMS_KEY_ID || 'local-1',
       },
+      refundTo: toAddr,
+      feeRate: 10,
     };
 
     const hex = await buildAndSignRefund(payload);
+    console.info(`[TEST] builder returned hex length=${hex ? hex.length : 0}`);
     assert(hex && typeof hex === 'string', 'builder did not return raw hex');
 
-    const txidSent = await rpc('sendrawtransaction', [hex]);
-    assert(txidSent && typeof txidSent === 'string', 'sendrawtransaction did not return txid');
+    // broadcast via sendrawtransaction
+    const txid = await rpc('sendrawtransaction', [hex]);
+    console.info(`[TEST] broadcast returned txid=${txid}`);
+    assert(txid && typeof txid === 'string', 'sendrawtransaction did not return txid');
 
+    // ensure mempool contains it
     const mempoolAfter = await rpc('getrawmempool');
-    assert(mempoolAfter.includes(txidSent), 'tx not found in mempool after broadcast');
+    assert(mempoolAfter.includes(txid), 'tx not found in mempool after broadcast');
+    // log success marker for CI
+    console.info(`[TEST] E2E KMS signing and broadcast successful for keyId=${payload.lock.kmsKeyId}, txid=${txid}`);
   });
 });
