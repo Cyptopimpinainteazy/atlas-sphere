@@ -16,7 +16,6 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
@@ -105,8 +104,8 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+        # Prepare account for transaction signing (needed when RPC flow is implemented)
         acct = w3.eth.account.from_key(private_key)
-        sender = acct.address
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
@@ -132,13 +131,11 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
-    # perform transfer via token contract
-    abi_token, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
-    # token ABI unknown here; assume ERC20 minimal; we'll call transfer using low-level
-    # For eth-tester this will work via MockToken if we deployed it
+    # token ABI unknown here; assume minimal ERC20 ABI defined below for transfer
     if rpc:
-        # build and sign transactions for remote provider
-        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
+        # Remote RPC flow requires manual transaction building/signing similar to process_finalized_payouts.py
+        # For production use, implement proper transaction building with nonce management and gas estimation
+        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester for testing or implement full transaction flow")
     else:
         # token_contract exists in scope when deployed
         # we will call token_contract = w3.eth.contract(address=token, abi=[...])
