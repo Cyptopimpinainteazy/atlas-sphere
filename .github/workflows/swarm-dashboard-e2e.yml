@@ -37,9 +37,8 @@ jobs:
       - name: Install dependencies
         working-directory: ./swarm-dashboard
         run: |
-          # Attempt a lockfile-safe install, but always fall back to a best-effort install
-          npm ci --legacy-peer-deps || true
-          npm install --no-audit --no-fund
+          # Use npm ci with fallback to npm install
+          npm ci || npm install
       
       - name: Run type checking
         working-directory: ./swarm-dashboard
