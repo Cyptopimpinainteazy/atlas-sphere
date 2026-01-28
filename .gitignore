@@ -47,6 +47,43 @@ out/
 cache/
 *~
 
+# Vibe Code Assistant - AI Instructions & Prompts
+# Auto-generated AI guidance files - excluded from version control
+.github/instructions/
+.github/prompts/
+.github/copilot-instructions.md
+how-to-guides/
+
+# Rust
+target/
+Cargo.lock
+
+# Environment and secrets files
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
+*.p12
+
+# Node.js
+.next
+*.tsbuildinfo
+
+# Python caches and tooling
+.ruff_cache/
+.mypy_cache/
+coverage.xml
+
+# Python environments (avoid committing vendored venvs)
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
+
 # IDE
 .vscode/
 .idea/

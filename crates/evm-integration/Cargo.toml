@@ -2,63 +2,45 @@
 name = "atlas-evm-integration"
 version = "0.1.0"
 edition = "2021"
-description = "EVM integration for Atlas Sphere"
+description = "EVM integration for Atlas Sphere dual-VM execution"
 
 [dependencies]
-# Substrate
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
+# Substrate primitives
+sp-core = { workspace = true, default-features = false }
+sp-runtime = { workspace = true, default-features = false }
+sp-std = { workspace = true, default-features = false }
+sp-io = { workspace = true, default-features = false }
 
-# Frontier (Ethereum compatibility)
-fp-evm = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0" }
-fp-rpc = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0" }
-pallet-evm = { git = "https://github.com/paritytech/frontier", branch = "polkadot-v1.0.0" }
+# Frontier EVM
+pallet-evm = { workspace = true, default-features = false }
+fp-evm = { workspace = true, default-features = false }
 
-# Atlas Sphere
-pallet-atlas-kernel = { path = "../../pallets/atlas-kernel" }
-
-# Ethereum compatibility
+# Ethereum types
 ethereum = { version = "0.14", default-features = false, features = ["with-codec"] }
-ethereum-types = "0.14"
+ethereum-types = { version = "0.14", default-features = false }
 
 # Serialization
-serde = { version = "1.0", optional = true }
-scale-codec = { package = "parity-scale-codec", version = "3.0", default-features = false, features = ["derive"] }
+parity-scale-codec = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false }
 
-# Testing
-proptest = { version = "1.0", optional = true }
+# Logging
+log = { workspace = true, default-features = false }
 
 [dev-dependencies]
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0" }
-tokio = { version = "1.0", features = ["macros"] }
+sp-io = { workspace = true }
 
 [features]
 default = ["std"]
 std = [
-    "serde",
-    "frame-support/std",
-    "frame-system/std",
     "sp-core/std",
     "sp-runtime/std",
     "sp-std/std",
-    "fp-evm/std",
-    "fp-rpc/std",
+    "sp-io/std",
     "pallet-evm/std",
-    "pallet-atlas-kernel/std",
+    "fp-evm/std",
     "ethereum/std",
-    "scale-codec/std",
-]
-runtime-benchmarks = [
-    "frame-support/runtime-benchmarks",
-    "frame-system/runtime-benchmarks",
-]
-try-runtime = [
-    "frame-support/try-runtime",
-    "frame-system/try-runtime",
-]
-testing = [
-    "proptest",
+    "ethereum-types/std",
+    "parity-scale-codec/std",
+    "scale-info/std",
+    "log/std",
 ]

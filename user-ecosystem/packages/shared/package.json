@@ -1,0 +1,46 @@
+{
+  "name": "@atlas-sphere/shared",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./chains": {
+      "import": "./dist/chains/index.mjs",
+      "require": "./dist/chains/index.js",
+      "types": "./dist/chains/index.d.ts"
+    },
+    "./wallet": {
+      "import": "./dist/wallet/index.mjs",
+      "require": "./dist/wallet/index.js",
+      "types": "./dist/wallet/index.d.ts"
+    },
+    "./swarm": {
+      "import": "./dist/swarm/index.mjs",
+      "require": "./dist/swarm/index.js",
+      "types": "./dist/swarm/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@polkadot/api": "^10.11.1",
+    "@polkadot/extension-dapp": "^0.46.6",
+    "ethers": "^6.9.0",
+    "@solana/web3.js": "^1.87.6",
+    "zustand": "^4.4.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "vitest": "^1.1.0"
+  }
+}

@@ -33,6 +33,11 @@ sp-io = { workspace = true, default-features = false }
 sp-runtime = { workspace = true, default-features = false }
 sp-std = { workspace = true, default-features = false }
 
+# Real VM integration crates (std only for now)
+atlas-evm-integration = { path = "../../crates/evm-integration", optional = true }
+atlas-svm-integration = { path = "../../crates/svm-integration", optional = true }
+atlas-x3-integration = { path = "../../crates/x3-integration", optional = true }
+
 [features]
 default = ["std"]
 std = [
@@ -52,10 +57,16 @@ std = [
     "minicbor/std",
     "hex/std",
     "frame-benchmarking?/std",
+    "atlas-evm-integration",
+    "atlas-svm-integration",
+    "atlas-x3-integration",
 ]
 runtime-benchmarks = [
     "frame-benchmarking",
 ]
+
+# Development mode: bypass authorization checks for easier testing
+dev-bypass = []
 
 try-runtime = [
     "frame-support/try-runtime",
