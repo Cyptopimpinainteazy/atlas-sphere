@@ -161,3 +161,19 @@ export const allocationDB = {
     return result.rows[0]?.amount || 0
   }
 }
+
+// Event operations
+export const eventDB = {
+  async getAll() {
+    const result = await pool.query('SELECT id, type, payload, ts FROM events ORDER BY ts DESC')
+    return result.rows
+  },
+
+  async create(type: string, payload: any) {
+    const result = await pool.query(
+      'INSERT INTO events (type, payload, ts) VALUES ($1, $2, NOW()) RETURNING *',
+      [type, JSON.stringify(payload)]
+    )
+    return result.rows[0]
+  }
+}

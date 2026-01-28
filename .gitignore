@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Node
 node_modules/
 package-lock.json
@@ -6,17 +5,20 @@ package-lock.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-=======
-# Node modules
-node_modules/
->>>>>>> copilot/fix-workflow-errors
 
 # Build artifacts
 dist/
 build/
-<<<<<<< HEAD
+/target
+
+# Temp
 /tmp/
+
+# Logs
 *.log
+
+# Node modules (fallback)
+**/node_modules/
 
 # Python
 venv/
@@ -27,6 +29,11 @@ env/
 .coverage
 htmlcov/
 .tox/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 
 # Misc
 *.db
@@ -39,17 +46,6 @@ htmlcov/
 out/
 cache/
 *~
-=======
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
 
 # IDE
 .vscode/
@@ -60,4 +56,3 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
->>>>>>> copilot/fix-workflow-errors
