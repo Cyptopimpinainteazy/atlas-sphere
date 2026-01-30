@@ -9,8 +9,18 @@ jobs:
   dispatch-triage-test:
     name: Dispatch triage test (if configured)
     runs-on: ubuntu-latest
-    if: ${{ secrets.RUN_OLLAMA_TRIAGE == 'true' && secrets.TRIAGE_TEST_TOKEN != '' && secrets.TRIAGE_TEST_REPO != '' }}
     steps:
+      - name: Check triage config
+        env:
+          RUN_OLLAMA_TRIAGE: ${{ secrets.RUN_OLLAMA_TRIAGE }}
+          TRIAGE_TEST_TOKEN: ${{ secrets.TRIAGE_TEST_TOKEN }}
+          TRIAGE_TEST_REPO: ${{ secrets.TRIAGE_TEST_REPO }}
+        run: |
+          if [ "${RUN_OLLAMA_TRIAGE}" != "true" ] || [ -z "${TRIAGE_TEST_TOKEN}" ] || [ -z "${TRIAGE_TEST_REPO}" ]; then
+            echo "Triage not configured; skipping job."
+            exit 0
+          fi
+
       - name: Trigger triage test workflow
         uses: actions/github-script@v6
         with:
