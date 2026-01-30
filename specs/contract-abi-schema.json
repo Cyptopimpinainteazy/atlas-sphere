@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://atlas-sphere.io/schemas/contract-abi/v1.0",
+  "title": "X3 Contract ABI Schema",
+  "description": "Application Binary Interface for X3 contracts - defines callable functions, events, and storage",
+  "type": "object",
+  "required": ["name", "version", "functions"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Z][a-zA-Z0-9_]*$",
+      "description": "Contract name (PascalCase)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the contract"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable contract description"
+    },
+    "author": {
+      "type": "string",
+      "description": "Contract author or team"
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (e.g., MIT, Apache-2.0)"
+    },
+    "compiler": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "const": "x3c" },
+        "version": { "type": "string" }
+      }
+    },
+    "bytecode_hash": {
+      "type": "string",
+      "pattern": "^0x[a-f0-9]{64}$",
+      "description": "Blake2b-256 hash of compiled bytecode"
+    },
+    "functions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/function_abi" }
+    },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event_abi" }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/error_abi" }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Public storage layout",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": { "$ref": "#/$defs/type_ref" },
+          "slot": { "type": "integer" },
+          "description": { "type": "string" }
+        },
+        "required": ["type", "slot"]
+      }
+    },
+    "types": {
+      "type": "object",
+      "description": "Custom type definitions used in ABI",
+      "additionalProperties": { "$ref": "#/$defs/type_def" }
+    },
+    "safety": {
+      "type": "object",
+      "description": "Safety metadata",
+      "properties": {
+        "audited": { "type": "boolean" },
+        "audit_report": { "type": "string", "format": "uri" },
+        "max_gas": { "type": "integer" },
+        "deterministic": { "type": "boolean" },
+        "atomic_capable": { "type": "boolean" },
+        "cross_vm": {
+          "type": "array",
+          "items": { "enum": ["evm", "svm"] }
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "networks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "address": { "type": "string" },
+              "block": { "type": "integer" },
+              "tx_hash": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "type_ref": {
+      "oneOf": [
+        {
+          "enum": [
+            "u8",
+            "u16",
+            "u32",
+            "u64",
+            "u128",
+            "u256",
+            "i8",
+            "i16",
+            "i32",
+            "i64",
+            "i128",
+            "bool",
+            "address",
+            "bytes32",
+            "bytes",
+            "string"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^\\[.+;\\s*\\d+\\]$",
+          "description": "Fixed array like [u64; 10]"
+        },
+        {
+          "type": "string",
+          "pattern": "^Vec<.+>$",
+          "description": "Dynamic array like Vec<u64>"
+        },
+        {
+          "type": "string",
+          "pattern": "^Map<.+,\\s*.+>$",
+          "description": "Map like Map<address, u256>"
+        },
+        {
+          "type": "string",
+          "pattern": "^[A-Z][a-zA-Z0-9_]*$",
+          "description": "Custom type reference"
+        }
+      ]
+    },
+    "type_def": {
+      "type": "object",
+      "properties": {
+        "kind": { "enum": ["struct", "enum", "alias"] },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "$ref": "#/$defs/type_ref" },
+              "description": { "type": "string" }
+            },
+            "required": ["name", "type"]
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "underlying": { "$ref": "#/$defs/type_ref" }
+      },
+      "required": ["kind"]
+    },
+    "function_abi": {
+      "type": "object",
+      "required": ["name", "inputs", "outputs"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$"
+        },
+        "inputs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" }
+        },
+        "outputs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" }
+        },
+        "visibility": {
+          "enum": ["public", "external"],
+          "default": "public"
+        },
+        "mutability": {
+          "enum": ["pure", "view", "mutable"],
+          "default": "mutable"
+        },
+        "payable": {
+          "type": "boolean",
+          "default": false
+        },
+        "atomic": {
+          "type": "boolean",
+          "default": false,
+          "description": "Requires atomic execution context"
+        },
+        "gas_estimate": {
+          "type": "integer",
+          "description": "Estimated gas cost"
+        },
+        "selector": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{8}$",
+          "description": "4-byte function selector"
+        },
+        "description": {
+          "type": "string"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "inputs": { "type": "object" },
+              "outputs": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "event_abi": {
+      "type": "object",
+      "required": ["name", "inputs"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "$ref": "#/$defs/type_ref" },
+              "indexed": { "type": "boolean", "default": false }
+            },
+            "required": ["name", "type"]
+          }
+        },
+        "topic": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{64}$",
+          "description": "Event signature hash"
+        }
+      }
+    },
+    "error_abi": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "inputs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" }
+        },
+        "selector": {
+          "type": "string",
+          "pattern": "^0x[a-f0-9]{8}$"
+        }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "$ref": "#/$defs/type_ref" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}
