@@ -1,0 +1,507 @@
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }], span_labels: [(Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb068 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+
+
+rustc version: 1.93.0-nightly (1d60f9e07 2025-12-01)
+platform: x86_64-unknown-linux-gnuthread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }], span_labels: [(Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b311f - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb068 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }], span_labels: [(Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb23c - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }], span_labels: [(Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(109963), hi: BytePos(109967), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b311f - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb23c - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }], span_labels: [(Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb068 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }], span_labels: [(Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b311f - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb068 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }], span_labels: [(Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb23c - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>
+thread 'main' panicked at compiler/rustc_parse/src/parser/item.rs:402:32:
+called `Result::unwrap()` on an `Err` value: Some(DiagInner { level: Error, messages: [(FluentIdentifier("parse_expected_identifier_found_keyword_str", None), NoStyle)], code: None, lint_id: None, span: MultiSpan { primary_spans: [Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }], span_labels: [(Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, Translated("expected identifier, found keyword"))] }, children: [], suggestions: Enabled([]), args: {"token": Str("Self")}, reserved_args: {}, sort_span: Span { lo: BytePos(230237), hi: BytePos(230241), ctxt: #0 }, is_lint: None, long_ty_path: None, emitted_at: DiagLocation { file: "compiler/rustc_parse/src/parser/diagnostics.rs", line: 381, col: 34 } })
+stack backtrace:
+   0:     0x7816c5a46c1b - <std[4678c71a32e79bb1]::backtrace::Backtrace>::create
+   1:     0x7816c5a46b65 - <std[4678c71a32e79bb1]::backtrace::Backtrace>::force_capture
+   2:     0x7816c4ac5de3 - std[4678c71a32e79bb1]::panicking::update_hook::<alloc[c965d1d29cf50179]::boxed::Box<rustc_driver_impl[1715f68c7a8f253]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:     0x7816c5a59bb2 - std[4678c71a32e79bb1]::panicking::panic_with_hook
+   4:     0x7816c5a3c1b8 - std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}
+   5:     0x7816c5a30939 - std[4678c71a32e79bb1]::sys::backtrace::__rust_end_short_backtrace::<std[4678c71a32e79bb1]::panicking::panic_handler::{closure#0}, !>
+   6:     0x7816c5a3dd0d - __rustc[9859e6116a3aec88]::rust_begin_unwind
+   7:     0x7816c2dc396c - core[f88d888627b4647b]::panicking::panic_fmt
+   8:     0x7816c24c0162 - core[f88d888627b4647b]::result::unwrap_failed
+   9:     0x7816c342bc76 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::recover_missing_kw_before_item
+  10:     0x7816c6cf0f0c - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  11:     0x7816c6cf0d26 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_kind
+  12:     0x7816c6cecf9a - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item_common
+  13:     0x7816c6cecba9 - <rustc_parse[c6348f385363a5a3]::parser::Parser>::parse_item
+  14:     0x5e177d5ba5c8 - rustfmt_nightly[f536619a61390318]::parse::macros::parse_macro_arg
+  15:     0x5e177d5a13a5 - rustfmt_nightly[f536619a61390318]::macros::rewrite_macro
+  16:     0x5e177d57d743 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  17:     0x5e177d588108 - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  18:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  19:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  20:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  21:     0x5e177d586d6d - rustfmt_nightly[f536619a61390318]::expr::rewrite_block_with_visitor
+  22:     0x5e177d57f408 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  23:     0x5e177d5b303c - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  24:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  25:     0x5e177d5b2563 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  26:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  27:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  28:     0x5e177d5b311f - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_body
+  29:     0x5e177d5dd671 - <rustfmt_nightly[f536619a61390318]::lists::ListItems<core[f88d888627b4647b]::iter::adapters::map::Map<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::iter::adapters::zip::Zip<core[f88d888627b4647b]::slice::iter::Iter<rustc_ast[dcaaee1b918f420]::ast::Arm>, core[f88d888627b4647b]::iter::adapters::chain::Chain<core[f88d888627b4647b]::iter::adapters::take::Take<core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>, core[f88d888627b4647b]::iter::sources::repeat::Repeat<bool>>>, alloc[c965d1d29cf50179]::vec::into_iter::IntoIter<core[f88d888627b4647b]::option::Option<rustc_span[c7b5a55ae70c0212]::BytePos>>>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#0}>, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#1}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#2}, rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms::{closure#3}> as core[f88d888627b4647b]::iter::traits::iterator::Iterator>::next
+  30:     0x5e177d5b23f8 - rustfmt_nightly[f536619a61390318]::matches::rewrite_match_arms
+  31:     0x5e177d5b12df - rustfmt_nightly[f536619a61390318]::matches::rewrite_match
+  32:     0x5e177d57dfc9 - rustfmt_nightly[f536619a61390318]::expr::format_expr
+  33:     0x5e177d4cb23c - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_expr::<rustc_ast[dcaaee1b918f420]::ast::Expr>
+  34:     0x5e177d4cd879 - rustfmt_nightly[f536619a61390318]::expr::rewrite_assign_rhs_with::<alloc[c965d1d29cf50179]::string::String, rustc_ast[dcaaee1b918f420]::ast::Expr>
+  35:     0x5e177d5bcb07 - <rustc_ast[dcaaee1b918f420]::ast::Local as rustfmt_nightly[f536619a61390318]::rewrite::Rewrite>::rewrite_result
+  36:     0x5e177d5881cd - rustfmt_nightly[f536619a61390318]::stmt::format_stmt
+  37:     0x5e177d52c970 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  38:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  39:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  40:     0x5e177d52cedb - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_stmts
+  41:     0x5e177d52f9a1 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_block
+  42:     0x5e177d531853 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_fn
+  43:     0x5e177d52b8e0 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_item
+  44:     0x5e177d571198 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::visit_items_with_reordering
+  45:     0x5e177d530350 - <rustfmt_nightly[f536619a61390318]::visitor::FmtVisitor>::walk_mod_items
+  46:     0x5e177d4a4181 - <scoped_tls[ae811ec71adfb17f]::ScopedKey<rustc_span[c7b5a55ae70c0212]::SessionGlobals>>::with::<<rustfmt_nightly[f536619a61390318]::Session<std[4678c71a32e79bb1]::io::stdio::Stdout>>::format_input_inner::{closure#0}, core[f88d888627b4647b]::result::Result<rustfmt_nightly[f536619a61390318]::FormatReport, rustfmt_nightly[f536619a61390318]::ErrorKind>>
+  47:     0x5e177d49e131 - rustfmt[8695a09a01b3a556]::format_and_emit_report::<std[4678c71a32e79bb1]::io::stdio::Stdout>
+  48:     0x5e177d4b2cf7 - rustfmt[8695a09a01b3a556]::execute
+  49:     0x5e177d4aed87 - rustfmt[8695a09a01b3a556]::main
+  50:     0x5e177d4ad3c3 - std[4678c71a32e79bb1]::sys::backtrace::__rust_begin_short_backtrace::<fn(), ()>
+  51:     0x5e177d4adaa9 - std[4678c71a32e79bb1]::rt::lang_start::<()>::{closure#0}
+  52:     0x7816c707f6eb - std[4678c71a32e79bb1]::rt::lang_start_internal
+  53:     0x5e177d4be7f8 - main
+  54:     0x7816c0c29d90 - __libc_start_call_main
+                               at ./csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+  55:     0x7816c0c29e40 - __libc_start_main_impl
+                               at ./csu/../csu/libc-start.c:392:3
+  56:     0x5e177d39fce9 - <unknown>
+  57:                0x0 - <unknown>

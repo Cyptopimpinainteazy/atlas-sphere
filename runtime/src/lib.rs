@@ -4,11 +4,13 @@
 // Required for impl_runtime_apis! macro in no_std
 #[cfg(not(feature = "std"))]
 extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::{format, string::String};
 
 use codec::{Decode, Encode};
 pub use frame_support::{
     construct_runtime, parameter_types,
-    traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything, Get},
+    traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything},
     weights::{
         constants::{
             BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
@@ -18,28 +20,18 @@ pub use frame_support::{
 };
 use frame_support::{traits::Currency, weights::Weight};
 use frame_system::limits;
-use pallet_agent_accounts;
-use pallet_agent_memory;
 use pallet_atlas_kernel;
-use pallet_atomic_trade_engine;
 use pallet_aura;
 use pallet_balances;
 use pallet_collective;
-use pallet_evolution_core;
-use pallet_governance;
 use pallet_grandpa;
-use pallet_preimage;
-use pallet_scheduler;
 #[cfg(feature = "dev")]
 use pallet_sudo;
 use pallet_timestamp;
 use pallet_transaction_payment::CurrencyAdapter;
-use pallet_treasury;
-use pallet_x3_settlement_engine;
-use pallet_x3_verifier;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
-use sp_core::{OpaqueMetadata, H256, U256};
+use sp_core::{OpaqueMetadata, H256};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
@@ -48,9 +40,6 @@ use sp_runtime::{
 use sp_session::{GetSessionNumber, GetValidatorCount};
 use sp_std::prelude::*;
 
-mod precompiles;
-use precompiles::FrontierPrecompiles;
-
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 
@@ -58,7 +47,7 @@ pub use sp_runtime::BuildStorage;
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-// When building for WASM (no-std), provide empty binaries
+// When building without std, provide empty binary
 #[cfg(not(feature = "std"))]
 pub const WASM_BINARY: Option<&[u8]> = None;
 #[cfg(not(feature = "std"))]
@@ -102,9 +91,7 @@ pub const NANO_ATLAS: Balance = 1;
 pub const MICRO_ATLAS: Balance = 1_000 * NANO_ATLAS;
 pub const MILLI_ATLAS: Balance = 1_000 * MICRO_ATLAS;
 pub const ATLAS: Balance = 1_000 * MILLI_ATLAS;
-pub const NATIVE_GAS_PRICE: u64 = 1_000_000_000;
 
-#[sp_version::runtime_version]
 pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
     spec_name: create_runtime_str!("atlas-sphere"),
     impl_name: create_runtime_str!("atlas-sphere"),
@@ -127,14 +114,9 @@ parameter_types! {
     pub const MaxPayloadLength: u32 = 32 * 1024;
     pub const MaxEvmPayloadLength: u32 = 16 * 1024;  // 16 KB for EVM payloads
     pub const MaxSvmPayloadLength: u32 = 16 * 1024;  // 16 KB for SVM payloads
-    pub const MaxX3PayloadLength: u32 = 16 * 1024;  // 16 KB for X3 payloads
     pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
-    pub const MaxCombinedPayloadLengthV2: u32 = 48 * 1024;  // 48 KB combined (EVM+SVM+X3)
     pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
     pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
-    pub const DefaultEvmGasLimit: u64 = 10_000_000;  // 10M gas for EVM
-    pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
-    pub const DefaultX3GasLimit: u64 = 5_000_000;  // 5M gas for X3
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
         Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
         Perbill::from_percent(75),
@@ -143,26 +125,6 @@ parameter_types! {
         5 * 1024 * 1024,
         Perbill::from_percent(75),
     );
-}
-
-parameter_types! {
-    pub const ChainId: u64 = 650_000;
-    pub const GasLimitPovSizeRatio: u64 = 40;
-    pub WeightPerGas: Weight = Weight::from_parts(20_000, 0);
-}
-
-pub struct BlockGasLimit;
-impl Get<U256> for BlockGasLimit {
-    fn get() -> U256 {
-        U256::from(30_000_000u64)
-    }
-}
-
-pub struct PrecompilesValue;
-impl Get<FrontierPrecompiles<Runtime>> for PrecompilesValue {
-    fn get() -> FrontierPrecompiles<Runtime> {
-        FrontierPrecompiles::new()
-    }
 }
 
 #[cfg(feature = "std")]
@@ -174,7 +136,7 @@ pub fn native_version() -> sp_version::NativeVersion {
 }
 
 parameter_types! {
-    pub const MaxSetIdSessionEntries: u64 = 168; // ~1 week at 1 hour sessions
+    pub const MaxSetIdSessionEntries: u64 = 0;
     pub const OperationalFeeMultiplier: u8 = 5;
 }
 
@@ -187,54 +149,38 @@ parameter_types! {
 
 #[cfg(feature = "dev")]
 construct_runtime!(
-    pub enum Runtime {
+    pub enum Runtime where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
         System: frame_system,
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
-        Scheduler: pallet_scheduler,
-        Preimage: pallet_preimage,
-        EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
-        AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Sudo: pallet_sudo,
-        Governance: pallet_governance,
-        Treasury: pallet_treasury,
-        AgentAccounts: pallet_agent_accounts,
-        AgentMemory: pallet_agent_memory,
-        EvolutionCore: pallet_evolution_core,
-        X3Verifier: pallet_x3_verifier,
-        X3DomainRegistry: pallet_x3_domain_registry,
-        X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
 
 #[cfg(not(feature = "dev"))]
 construct_runtime!(
-    pub enum Runtime {
+    pub enum Runtime where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
         System: frame_system,
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,
         Grandpa: pallet_grandpa,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
-        Scheduler: pallet_scheduler,
-        Preimage: pallet_preimage,
-        EVM: pallet_evm,
         AtlasKernel: pallet_atlas_kernel,
-        AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
-        Governance: pallet_governance,
-        Treasury: pallet_treasury,
-        AgentAccounts: pallet_agent_accounts,
-        AgentMemory: pallet_agent_memory,
-        EvolutionCore: pallet_evolution_core,
-        X3Verifier: pallet_x3_verifier,
-        X3DomainRegistry: pallet_x3_domain_registry,
-        X3SettlementEngine: pallet_x3_settlement_engine,
     }
 );
 
@@ -242,18 +188,12 @@ pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
 pub type UncheckedExtrinsic =
     generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
-// Runtime storage migrations tuple. Add migration structs for pallets that need upgrades.
-// Note: Only atlas-kernel has migrations currently implemented
-pub type Migrations = (pallet_atlas_kernel::migrations::Migration<Runtime>,);
-
-// Use the migrations tuple in the executive so migrations run on runtime upgrades
 pub type Executive = frame_executive::Executive<
     Runtime,
     Block,
     frame_system::ChainContext<Runtime>,
     Runtime,
     AllPalletsWithSystem,
-    Migrations,
 >;
 
 impl_opaque_keys! {
@@ -283,13 +223,6 @@ pub struct DealWithFees;
 impl frame_support::traits::OnUnbalanced<NegativeImbalance> for DealWithFees {
     fn on_unbalanced(amount: NegativeImbalance) {
         drop(amount);
-    }
-}
-
-pub struct FixedGasPrice;
-impl pallet_evm::FeeCalculator for FixedGasPrice {
-    fn min_gas_price() -> (U256, Weight) {
-        (U256::from(NATIVE_GAS_PRICE), Weight::zero())
     }
 }
 
@@ -335,15 +268,10 @@ impl pallet_aura::Config for Runtime {
 
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    // KeyOwnerProof is Void when we don't have session pallet
-    type KeyOwnerProof = sp_core::Void;
-    // Equivocation reporting disabled without session/offences pallets
-    // To fully enable, add: session, historical, offences, authorship pallets
-    // For now, equivocations are still detected and logged in GRANDPA
+    type KeyOwnerProof = SessionHandler;
     type EquivocationReportSystem = ();
     type WeightInfo = ();
     type MaxAuthorities = MaxAuthorities;
-    // Set to non-zero for proper set tracking (enables historical set queries)
     type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
@@ -384,8 +312,6 @@ pub type EnsureRootOrHalfCouncil = frame_support::traits::EitherOfDiverse<
     pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
 >;
 
-pub type EnsureCouncilMember = pallet_collective::EnsureMember<AccountId, CouncilCollective>;
-
 pub type CouncilCollective = pallet_collective::Instance1;
 impl pallet_collective::Config<CouncilCollective> for Runtime {
     type RuntimeOrigin = RuntimeOrigin;
@@ -400,29 +326,6 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
     type MaxProposalWeight = MaxProposalWeight;
 }
 
-impl pallet_evm::Config for Runtime {
-    type FeeCalculator = FixedGasPrice;
-    type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
-    type WeightPerGas = WeightPerGas;
-    type BlockHashMapping = pallet_evm::SubstrateBlockHashMapping<Self>;
-    type CallOrigin = pallet_evm::EnsureAddressRoot<AccountId>;
-    type WithdrawOrigin = pallet_evm::EnsureAddressTruncated;
-    type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>;
-    type Currency = Balances;
-    type RuntimeEvent = RuntimeEvent;
-    type PrecompilesType = FrontierPrecompiles<Self>;
-    type PrecompilesValue = PrecompilesValue;
-    type ChainId = ChainId;
-    type BlockGasLimit = BlockGasLimit;
-    type Runner = pallet_evm::runner::stack::Runner<Self>;
-    type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, ()>;
-    type OnCreate = ();
-    type FindAuthor = ();
-    type GasLimitPovSizeRatio = GasLimitPovSizeRatio;
-    type Timestamp = Timestamp;
-    type WeightInfo = pallet_evm::weights::SubstrateWeight<Self>;
-}
-
 impl pallet_atlas_kernel::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Balance = Balance;
@@ -432,549 +335,14 @@ impl pallet_atlas_kernel::Config for Runtime {
     type MaxAssetSymbolLength = MaxAssetSymbolLength;
     type MaxEvmPayloadLength = MaxEvmPayloadLength;
     type MaxSvmPayloadLength = MaxSvmPayloadLength;
-    type MaxX3PayloadLength = MaxX3PayloadLength;
     type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
-    type MaxCombinedPayloadLengthV2 = MaxCombinedPayloadLengthV2;
     type MaxAuthorities = MaxAuthorities;
     type MinAuthorities = MinAuthorities;
-    type DefaultEvmGasLimit = DefaultEvmGasLimit;
-    type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
-    type DefaultX3GasLimit = DefaultX3GasLimit;
-    type WeightInfo = pallet_atlas_kernel::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = ();
     type Currency = Balances;
-    // VM Adapters:
-    // Default to mocks for BOTH native and WASM execution to keep consensus-critical
-    // behavior deterministic and identical across execution backends.
-    //
-    // Real/native adapters can be enabled explicitly for non-production developer
-    // workflows via the `native-real-vm-adapters` feature.
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
-    type EvmAdapter = native_vm_adapters::NativeEvmAdapter;
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
-    type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
-    type X3Adapter = pallet_atlas_kernel::adapters::real_adapters::X3VmAdapter;
-
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type X3Adapter = pallet_atlas_kernel::MockX3Adapter;
+    type EvmAdapter = (); // TODO: Wire real Frontier adapter when integrated
+    type SvmAdapter = (); // TODO: Wire real SVM adapter when integrated
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
-}
-
-// ===== AtomicTradeEngine Configuration =====
-
-parameter_types! {
-    pub const MaxTradeLegs: u32 = 16;
-    pub const MaxCheckpoints: u32 = 8;
-    pub const MaxPendingBatchesPerAccount: u32 = 64;
-    pub const DefaultTradeEvmGasLimit: u64 = 500_000;
-    pub const DefaultTradeSvmComputeLimit: u64 = 500_000;
-    pub const DefaultTradeX3GasLimit: u64 = 500_000;
-}
-
-impl pallet_atomic_trade_engine::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_atomic_trade_engine::weights::SubstrateWeight<Runtime>;
-    type Currency = Balances;
-    // Use the same VM adapters as AtlasKernel
-    #[cfg(feature = "std")]
-    type EvmAdapter = native_vm_adapters::NativeEvmAdapter;
-    #[cfg(feature = "std")]
-    type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
-    #[cfg(feature = "std")]
-    type X3Adapter = pallet_atlas_kernel::adapters::real_adapters::X3VmAdapter;
-    #[cfg(not(feature = "std"))]
-    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
-    #[cfg(not(feature = "std"))]
-    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
-    #[cfg(not(feature = "std"))]
-    type X3Adapter = pallet_atlas_kernel::MockX3Adapter;
-    type MaxTradeLegs = MaxTradeLegs;
-    type MaxCheckpoints = MaxCheckpoints;
-    type MaxPendingBatchesPerAccount = MaxPendingBatchesPerAccount;
-    type DefaultTradeEvmGasLimit = DefaultTradeEvmGasLimit;
-    type DefaultTradeSvmComputeLimit = DefaultTradeSvmComputeLimit;
-    type DefaultTradeX3GasLimit = DefaultTradeX3GasLimit;
-    type AmmRegistrarOrigin = EnsureRootOrHalfCouncil;
-}
-
-#[cfg(feature = "std")]
-mod native_vm_adapters {
-    use super::*;
-    use atlas_svm_integration::{
-        RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
-    };
-    use fp_evm::{CallInfo, ExitReason};
-    use pallet_atlas_kernel::{
-        EvmExecutorAdapter, ExecutionLog, ExecutionReceipt, StateChange, SvmExecutorAdapter,
-    };
-    use pallet_evm::Runner;
-    use sp_core::H160;
-    use sp_runtime::{
-        traits::{SaturatedConversion, UniqueSaturatedInto},
-        DispatchError,
-    };
-
-    pub struct NativeEvmAdapter;
-    pub struct NativeSvmAdapter;
-
-    impl EvmExecutorAdapter for NativeEvmAdapter {
-        fn execute(payload: &[u8], gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
-            // Use Frontier's Runner directly for real EVM execution
-            let source = H160::zero(); // System caller
-            let target = H160::zero(); // Default target (for create, this is ignored)
-            let value = U256::zero();
-            let evm_config = fp_evm::Config::shanghai();
-
-            // Determine if this is a call or create based on payload structure
-            // For now, treat non-empty payload as a call to zero address
-            // Full implementation would parse tx type from payload
-            let call_result = <super::Runtime as pallet_evm::Config>::Runner::call(
-                source,
-                target,
-                payload.to_vec(),
-                value,
-                gas_limit,
-                Some(U256::from(super::NATIVE_GAS_PRICE)), // max_fee_per_gas
-                None,                                      // max_priority_fee_per_gas
-                None,                                      // nonce
-                Vec::new(),                                // access_list
-                false,                                     // is_transactional (dry run for kernel)
-                false,                                     // validate (skip signature check)
-                None,                                      // weight_limit
-                None,                                      // proof_size_base_cost
-                &evm_config,
-            );
-
-            match call_result {
-                Ok(info) => Ok(map_call_info_to_receipt(info)),
-                Err(_runner_err) => {
-                    // Extract gas used from error if available
-                    Err(DispatchError::Other("EVM execution failed"))
-                }
-            }
-        }
-
-        fn estimate_gas(payload: &[u8]) -> Result<u64, DispatchError> {
-            let gas_limit = gas_ceiling();
-            let source = H160::zero();
-            let target = H160::zero();
-            let evm_config = fp_evm::Config::shanghai();
-
-            let call_result = <super::Runtime as pallet_evm::Config>::Runner::call(
-                source,
-                target,
-                payload.to_vec(),
-                U256::zero(),
-                gas_limit,
-                Some(U256::from(super::NATIVE_GAS_PRICE)),
-                None,
-                None,
-                Vec::new(),
-                false, // non-transactional for estimation
-                false,
-                None,
-                None,
-                &evm_config,
-            );
-
-            match call_result {
-                Ok(info) => Ok(info.used_gas.standard.unique_saturated_into()),
-                Err(_) => Err(DispatchError::Other("Gas estimation failed")),
-            }
-        }
-
-        fn validate(payload: &[u8]) -> Result<(), DispatchError> {
-            if payload.is_empty() {
-                return Err(DispatchError::Other("Empty EVM payload"));
-            }
-            // Basic validation - could add opcode validation here
-            Ok(())
-        }
-    }
-
-    fn map_call_info_to_receipt(info: CallInfo) -> ExecutionReceipt {
-        let success = matches!(info.exit_reason, ExitReason::Succeed(_));
-        ExecutionReceipt {
-            success,
-            gas_used: info.used_gas.standard.unique_saturated_into(),
-            return_data: info.value,
-            logs: info
-                .logs
-                .into_iter()
-                .map(|log| ExecutionLog {
-                    address: log.address.as_bytes().to_vec(),
-                    topics: log.topics,
-                    data: log.data,
-                })
-                .collect(),
-            state_changes: Vec::new(), // State tracked by pallet-evm
-        }
-    }
-
-    impl SvmExecutorAdapter for NativeSvmAdapter {
-        fn execute(payload: &[u8], compute_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
-            if payload.is_empty() {
-                return Err(DispatchError::Other("Empty SVM payload"));
-            }
-
-            let executor = RbpfSvmExecutor::new();
-            let config = svm_config(compute_limit);
-            let result = executor
-                .execute_bpf(payload, &[], &config)
-                .map_err(|err| DispatchError::Other(svm_error_str(err)))?;
-            Ok(map_svm_receipt(result))
-        }
-
-        fn validate(payload: &[u8]) -> Result<(), DispatchError> {
-            let executor = RbpfSvmExecutor::new();
-            executor
-                .validate_program(payload)
-                .map_err(|err| DispatchError::Other(svm_error_str(err)))
-        }
-    }
-
-    fn gas_ceiling() -> u64 {
-        let limit = super::BlockGasLimit::get();
-        if limit > U256::from(u64::MAX) {
-            u64::MAX
-        } else {
-            limit.low_u64()
-        }
-    }
-
-    fn svm_config(compute_limit: u64) -> SvmConfig {
-        let slot = frame_system::Pallet::<super::Runtime>::block_number().saturated_into::<u64>();
-        let ts: i64 = pallet_timestamp::Pallet::<super::Runtime>::now().saturated_into();
-
-        SvmConfig {
-            compute_unit_limit: compute_limit,
-            compute_unit_price: 1,
-            slot,
-            block_timestamp: ts,
-            recent_blockhash: [0u8; 32],
-            enable_cpi: false,
-            max_cpi_depth: 0,
-        }
-    }
-
-    fn map_svm_receipt(result: SvmExecutionResult) -> ExecutionReceipt {
-        ExecutionReceipt {
-            success: result.success,
-            gas_used: result.compute_units_used,
-            return_data: result.output,
-            logs: result
-                .logs
-                .into_iter()
-                .map(|data| ExecutionLog {
-                    address: vec![0u8; 32],
-                    topics: Vec::new(),
-                    data,
-                })
-                .collect(),
-            state_changes: result
-                .account_updates
-                .into_iter()
-                .map(|update| StateChange {
-                    address: update.pubkey.to_vec(),
-                    key: H256::from_low_u64_be(update.lamports),
-                    value: truncate_to_h256(&update.data),
-                })
-                .collect(),
-        }
-    }
-
-    fn truncate_to_h256(data: &[u8]) -> H256 {
-        if data.is_empty() {
-            return H256::zero();
-        }
-        let mut buf = [0u8; 32];
-        let take = core::cmp::min(32, data.len());
-        buf[..take].copy_from_slice(&data[..take]);
-        H256::from(buf)
-    }
-
-    fn svm_error_str(error: SvmError) -> &'static str {
-        match error {
-            SvmError::InvalidPayload => "Invalid SVM payload",
-            SvmError::ExecutionFailed => "SVM execution failed",
-            SvmError::InvalidAccount => "Invalid SVM account",
-            SvmError::InvalidSignature => "Invalid SVM signature",
-            SvmError::OutOfComputeUnits => "SVM out of compute units",
-            SvmError::InvalidInstructionData => "Invalid SVM instruction",
-            SvmError::AccountDataTooSmall => "SVM account data too small",
-            SvmError::InsufficientFunds => "SVM insufficient funds",
-            SvmError::ProgramNotExecutable => "SVM program not executable",
-            SvmError::InvalidProgramId => "Invalid SVM program id",
-            SvmError::ExecutionError(_) => "SVM execution error",
-        }
-    }
-}
-
-// ===== Scheduler Pallet Configuration =====
-parameter_types! {
-    pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
-        BlockWeights::get().max_block;
-    pub const MaxScheduledPerBlock: u32 = 50;
-    pub const NoPreimagePostponement: Option<BlockNumber> = Some(10);
-}
-
-impl pallet_scheduler::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type RuntimeOrigin = RuntimeOrigin;
-    type PalletsOrigin = OriginCaller;
-    type RuntimeCall = RuntimeCall;
-    type MaximumWeight = MaximumSchedulerWeight;
-    type ScheduleOrigin = EnsureRootOrHalfCouncil;
-    type MaxScheduledPerBlock = MaxScheduledPerBlock;
-    type WeightInfo = ();
-    type OriginPrivilegeCmp = frame_support::traits::EqualPrivilegeOnly;
-    type Preimages = Preimage;
-}
-
-// ===== Preimage Pallet Configuration =====
-parameter_types! {
-    pub const PreimageMaxSize: u32 = 4096 * 1024;
-    pub const PreimageBaseDeposit: Balance = ATLAS;
-    pub const PreimageByteDeposit: Balance = ATLAS / 100;
-}
-
-impl pallet_preimage::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = ();
-    type Currency = Balances;
-    type ManagerOrigin = EnsureRootOrHalfCouncil;
-    type BaseDeposit = PreimageBaseDeposit;
-    type ByteDeposit = PreimageByteDeposit;
-}
-
-// ===== Governance Pallet Configuration =====
-parameter_types! {
-    pub const ProposalDeposit: Balance = 100 * ATLAS;
-    pub const VotingPeriod: BlockNumber = 7 * 24 * 60 * 10; // ~7 days at 6s blocks
-    pub const EnactmentPeriod: BlockNumber = 24 * 60 * 10; // ~1 day at 6s blocks
-    pub const GovernanceQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(10);
-    pub const ApprovalThreshold: sp_runtime::Percent = sp_runtime::Percent::from_percent(51);
-    pub const MaxGovernanceProposals: u32 = 100;
-    pub const MaxVotes: u32 = 1000;
-    pub const MaxDelegations: u32 = 100;
-    pub const ConvictionPeriod: BlockNumber = 28 * 24 * 60 * 10; // ~28 days at 6s blocks
-
-    // ============================================================================
-    // AI Governance Parameters
-    // ============================================================================
-
-    pub const MaxAIProposalPayload: u32 = 10 * 1024; // 10KB max payload
-}
-
-impl pallet_governance::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type RuntimeCall = RuntimeCall;
-    type Currency = Balances;
-    type SubmitOrigin = frame_system::EnsureSigned<AccountId>;
-    type FastTrackOrigin = EnsureRootOrHalfCouncil;
-    type CancelOrigin = EnsureRootOrHalfCouncil;
-    type RuntimeUpgradeOrigin = EnsureRootOrHalfCouncil;
-    type Scheduler = Scheduler;
-    type PalletsOrigin = OriginCaller;
-    type ProposalDeposit = ProposalDeposit;
-    type VotingPeriod = VotingPeriod;
-    type EnactmentPeriod = EnactmentPeriod;
-    type Quorum = GovernanceQuorum;
-    type ApprovalThreshold = ApprovalThreshold;
-    type MaxProposals = MaxGovernanceProposals;
-    type MaxVotes = MaxVotes;
-    type MaxDelegations = MaxDelegations;
-    type ConvictionPeriod = ConvictionPeriod;
-    type WeightInfo = ();
-
-    // ============================================================================
-    // AI Governance Configuration
-    // ============================================================================
-
-    type MaxAIProposalPayload = MaxAIProposalPayload;
-    type AISubmitOrigin = frame_system::EnsureSigned<AccountId>;
-    type AIReviewOrigin = frame_system::EnsureSigned<AccountId>;
-    type EmergencyOrigin = EnsureCouncilMember;
-}
-
-// ===== Treasury Pallet Configuration =====
-parameter_types! {
-    pub const TreasuryPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/trsry");
-    pub const ProposalBond: sp_runtime::Percent = sp_runtime::Percent::from_percent(5);
-    pub const MaxSigners: u32 = 7;
-    pub const SmallSpendThreshold: Balance = 1_000 * ATLAS;
-    pub const MediumSpendThreshold: Balance = 10_000 * ATLAS;
-    pub const LargeSpendThreshold: Balance = 100_000 * ATLAS;
-    pub const MaxRecurringPayments: u32 = 100;
-    pub const MaxYieldStrategies: u32 = 10;
-    pub const MaxTreasuryProposals: u32 = 100;
-    pub const ProposalBondMinimum: Balance = 100 * ATLAS;
-}
-
-impl pallet_treasury::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type PalletId = TreasuryPalletId;
-    type SmallSpendOrigin = EnsureRootOrHalfCouncil;
-    type MediumSpendOrigin = EnsureRootOrHalfCouncil;
-    type LargeSpendOrigin = EnsureRootOrHalfCouncil;
-    type CriticalSpendOrigin = EnsureRootOrHalfCouncil;
-    type PauseOrigin = EnsureRootOrHalfCouncil;
-    type YieldConfigOrigin = EnsureRootOrHalfCouncil;
-    type MaxSigners = MaxSigners;
-    type MaxProposals = MaxTreasuryProposals;
-    type MaxRecurringPayments = MaxRecurringPayments;
-    type MaxYieldStrategies = MaxYieldStrategies;
-    type SmallSpendLimit = SmallSpendThreshold;
-    type MediumSpendLimit = MediumSpendThreshold;
-    type LargeSpendLimit = LargeSpendThreshold;
-    type ProposalBond = ProposalBond;
-    type ProposalBondMinimum = ProposalBondMinimum;
-    type WeightInfo = ();
-}
-
-// ===== Agent Accounts Pallet Configuration =====
-parameter_types! {
-    pub const RegistrationDeposit: Balance = 10 * ATLAS;
-    pub const MaxAgentsPerController: u32 = 100;
-    pub const DefaultGasPerBlock: u128 = 1_000_000;
-    pub const DefaultComputePerBlock: u128 = 1_000_000;
-    pub const DefaultGasPerEpoch: u128 = 100_000_000;
-    pub const DefaultComputePerEpoch: u128 = 100_000_000;
-    pub const BlocksPerEpoch: BlockNumber = 14400; // ~1 day at 6s blocks
-}
-
-impl pallet_agent_accounts::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type RegisterOrigin = EnsureRootOrHalfCouncil;
-    type AdminOrigin = EnsureRootOrHalfCouncil;
-    type MaxAgentsPerController = MaxAgentsPerController;
-    type RegistrationDeposit = RegistrationDeposit;
-    type DefaultGasPerBlock = DefaultGasPerBlock;
-    type DefaultComputePerBlock = DefaultComputePerBlock;
-    type DefaultGasPerEpoch = DefaultGasPerEpoch;
-    type DefaultComputePerEpoch = DefaultComputePerEpoch;
-    type BlocksPerEpoch = BlocksPerEpoch;
-    type WeightInfo = ();
-}
-
-// ===== Agent Memory Pallet Configuration =====
-parameter_types! {
-    pub const MaxEntriesPerChunk: u32 = 100;
-    pub const MaxChunksPerAgent: u32 = 1_000;
-    pub const StorageByteCost: Balance = ATLAS / 1000; // 0.001 ATLAS per byte
-    pub const DefaultTtl: BlockNumber = 365 * 24 * 600; // ~1 year at 6s blocks
-}
-
-impl pallet_agent_memory::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type MaxEntriesPerChunk = MaxEntriesPerChunk;
-    type MaxChunksPerAgent = MaxChunksPerAgent;
-    type StorageByteCost = StorageByteCost;
-    type DefaultTtl = DefaultTtl;
-    type PruneOrigin = EnsureRootOrHalfCouncil;
-    type WeightInfo = ();
-}
-
-// ===== Evolution Core Pallet Configuration =====
-parameter_types! {
-    pub const MinApprovalQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(66);
-    pub const MaxPendingProposals: u32 = 100;
-    pub const MaxReasonLength: u32 = 256;
-    pub const ProposalLifetime: BlockNumber = 7 * 24 * 60 * 10; // ~7 days
-    pub const MetricsHistoryDepth: u32 = 100;
-    pub const AutoEvolutionBounds: (u32, u32) = (80, 120); // min 80%, max 120%
-}
-
-impl pallet_evolution_core::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type EvolutionAuthority = EnsureRootOrHalfCouncil;
-    type EmergencyOrigin = EnsureRootOrHalfCouncil;
-    type MinApprovalQuorum = MinApprovalQuorum;
-    type MaxPendingProposals = MaxPendingProposals;
-    type MaxReasonLength = MaxReasonLength;
-    type ProposalLifetime = ProposalLifetime;
-    type MetricsHistoryDepth = MetricsHistoryDepth;
-    type AutoEvolutionBounds = AutoEvolutionBounds;
-    type WeightInfo = pallet_evolution_core::weights::SubstrateWeight<Runtime>;
-}
-
-// ===== X3 Verifier Pallet Configuration =====
-parameter_types! {
-    pub const MinExecutorStake: Balance = 1000 * ATLAS;
-    pub const MaxOutputSize: u32 = 64 * 1024; // 64 KB
-    pub const MaxKeySize: u32 = 256;
-    pub const MaxValueSize: u32 = 4096;
-    pub const MaxStateChanges: u32 = 100;
-    pub const MaxProofDepth: u32 = 32;
-    pub const ExecutorRewardShare: u32 = 70; // 70%
-    pub const ProtocolFeeShare: u32 = 15; // 15%
-    pub const SlashAmount: Balance = 100 * ATLAS;
-    pub const JobTimeout: BlockNumber = 100; // ~10 minutes at 6s blocks
-}
-
-impl pallet_x3_verifier::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type ExecutorRegistrar = EnsureRootOrHalfCouncil;
-    type MinExecutorStake = MinExecutorStake;
-    type MaxOutputSize = MaxOutputSize;
-    type MaxKeySize = MaxKeySize;
-    type MaxValueSize = MaxValueSize;
-    type MaxStateChanges = MaxStateChanges;
-    type MaxProofDepth = MaxProofDepth;
-    type ExecutorRewardShare = ExecutorRewardShare;
-    type ProtocolFeeShare = ProtocolFeeShare;
-    type SlashAmount = SlashAmount;
-    type JobTimeout = JobTimeout;
-    type WeightInfo = pallet_x3_verifier::weights::SubstrateWeight<Runtime>;
-}
-
-// ===== X3 Domain Registry Pallet Configuration =====
-parameter_types! {
-    pub const MaxX3DomainLen: u32 = 253;
-    pub const MaxX3Domains: u32 = 10_000;
-    pub const MaxX3RecordsPerDomain: u32 = 32;
-    pub const MaxX3CnameLen: u32 = 253;
-    pub const MaxX3TxtLen: u32 = 1024;
-}
-
-impl pallet_x3_domain_registry::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type UpdateOrigin = EnsureRootOrHalfCouncil;
-    type MaxDomainLen = MaxX3DomainLen;
-    type MaxDomains = MaxX3Domains;
-    type MaxRecordsPerDomain = MaxX3RecordsPerDomain;
-    type MaxCnameLen = MaxX3CnameLen;
-    type MaxTxtLen = MaxX3TxtLen;
-}
-
-// ===== X3SettlementEngine Configuration =====
-
-parameter_types! {
-    pub const MaxSettlementLegs: u32 = 8;           // Max legs per settlement intent
-    pub const MaxPendingIntents: u32 = 1000;        // Max pending intents
-    pub const DefaultSettlementTimeout: u64 = 43200; // ~12 hours in seconds
-    pub const MinBtcConfirmations: u32 = 6;         // Standard BTC confirmations
-    pub const ChallengePeriod: BlockNumber = 600;   // ~1 hour for dispute period
-}
-
-impl pallet_x3_settlement_engine::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type SettlementWeightInfo = pallet_x3_settlement_engine::weights::SubstrateWeight<Runtime>;
-    type Currency = Balances;
-    type UnixTime = Timestamp;
-    type MaxSettlementLegs = MaxSettlementLegs;
-    type MaxPendingIntents = MaxPendingIntents;
-    type DefaultSettlementTimeout = DefaultSettlementTimeout;
-    type MinBtcConfirmations = MinBtcConfirmations;
-    type ChallengePeriod = ChallengePeriod;
 }
 
 // Session trait implementations for minimal runtime
@@ -1055,153 +423,6 @@ impl_runtime_apis! {
         fn get_authorities() -> Vec<AccountId> {
             pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
         }
-
-        fn map_evm_address(address: Vec<u8>) -> Option<AccountId> {
-            use sp_core::H160;
-            use sp_runtime::traits::BlakeTwo256;
-            if address.len() != 20 {
-                return None;
-            }
-            let mut slice = [0u8; 20];
-            slice.copy_from_slice(&address[..20]);
-            let evm_addr = H160::from(slice);
-
-            // Use the runtime's AddressMapping type from pallet_evm
-            // to derive AccountId from EVM address
-            Some(<pallet_evm::HashedAddressMapping<BlakeTwo256> as pallet_evm::AddressMapping<AccountId>>::into_account_id(evm_addr))
-        }
-
-        fn get_evm_balance(evm_address: Vec<u8>, asset_id: AssetId) -> Option<Balance> {
-            use sp_core::H160;
-            use sp_runtime::traits::BlakeTwo256;
-            if evm_address.len() != 20 { return None; }
-            let mut slice = [0u8; 20];
-            slice.copy_from_slice(&evm_address[..20]);
-            let evm_addr = H160::from(slice);
-            let account_id: AccountId = <pallet_evm::HashedAddressMapping<BlakeTwo256> as pallet_evm::AddressMapping<AccountId>>::into_account_id(evm_addr);
-            Some(pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account_id, &asset_id))
-        }
-
-        fn get_evm_code(_evm_address: Vec<u8>) -> Vec<u8> {
-            // Placeholder: return empty bytecode until real bytecode storage is implemented
-            Vec::new()
-        }
-
-        fn get_evm_storage(_evm_address: Vec<u8>, _storage_key: H256) -> Option<H256> {
-            // Placeholder: not implemented yet
-            None
-        }
-    }
-
-    impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {
-        fn simulate_trade(
-            _token_in: sp_core::H256,
-            _token_out: sp_core::H256,
-            amount_in: u128,
-            slippage_bps: u32,
-        ) -> pallet_atomic_trade_engine::runtime_api::SimulationResult {
-            use pallet_atomic_trade_engine::runtime_api::SimulationResult;
-
-            // Simplified simulation - returns mock data
-            // Full implementation would build TradeLegInput and call simulate_trade_path
-            let estimated_output = amount_in.saturating_mul(10000 - slippage_bps as u128) / 10000;
-
-            SimulationResult {
-                success: true,
-                estimated_output,
-                price_impact_bps: slippage_bps,
-                evm_gas: 150_000,
-                svm_compute: 0,
-                route: vec![],
-                error: None,
-            }
-        }
-
-        fn estimate_execution_cost(
-            legs: u32,
-            vm_types: Vec<u8>,
-        ) -> (u64, u64) {
-            let mut evm_gas: u64 = 0;
-            let mut svm_compute: u64 = 0;
-
-            for vm_type in vm_types.iter().take(legs as usize) {
-                match vm_type {
-                    0 => evm_gas = evm_gas.saturating_add(150_000), // EVM
-                    1 => svm_compute = svm_compute.saturating_add(200_000), // SVM
-                    2 => { // CrossVM
-                        evm_gas = evm_gas.saturating_add(200_000);
-                        svm_compute = svm_compute.saturating_add(250_000);
-                    }
-                    _ => {}
-                }
-            }
-
-            (evm_gas, svm_compute)
-        }
-
-        fn get_price_data(
-            token_a: sp_core::H256,
-            token_b: sp_core::H256,
-        ) -> pallet_atomic_trade_engine::runtime_api::PriceDataResponse {
-            use pallet_atomic_trade_engine::runtime_api::PriceDataResponse;
-
-            let twap = pallet_atomic_trade_engine::Pallet::<Runtime>::get_twap(token_a, token_b);
-            let latest = pallet_atomic_trade_engine::Pallet::<Runtime>::get_latest_price(token_a, token_b);
-            let twap_data = pallet_atomic_trade_engine::TwapData::<Runtime>::get((token_a, token_b));
-
-            PriceDataResponse {
-                exists: twap.is_some() || latest.is_some(),
-                twap_price: twap,
-                latest_price: latest,
-                observation_count: twap_data.as_ref().map(|t| t.observation_count).unwrap_or(0),
-                last_updated: twap_data.map(|t| t.last_timestamp).unwrap_or(0),
-            }
-        }
-
-        fn get_batch_status(batch_hash: sp_core::H256) -> pallet_atomic_trade_engine::runtime_api::BatchStatusResponse {
-            use pallet_atomic_trade_engine::runtime_api::BatchStatusResponse;
-
-            let maybe_batch = pallet_atomic_trade_engine::TradeBatches::<Runtime>::get(batch_hash);
-
-            match maybe_batch {
-                Some(batch) => BatchStatusResponse {
-                    exists: true,
-                    status: match batch.status {
-                        pallet_atomic_trade_engine::BatchStatus::Pending => 0,
-                        pallet_atomic_trade_engine::BatchStatus::Executing => 1,
-                        pallet_atomic_trade_engine::BatchStatus::Completed => 2,
-                        pallet_atomic_trade_engine::BatchStatus::Failed => 3,
-                        pallet_atomic_trade_engine::BatchStatus::Cancelled => 4,
-                    },
-                    submitted_at: batch.created_at,
-                    finalized_at: None, // TradeBatch doesn't track finalized_at
-                    legs_executed: batch.legs.len() as u32,
-                    checkpoints: 0, // Checkpoints stored separately
-                },
-                None => BatchStatusResponse::default(),
-            }
-        }
-
-        fn find_route(
-            _token_in: sp_core::H256,
-            _token_out: sp_core::H256,
-            _amount_in: u128,
-        ) -> Option<pallet_atomic_trade_engine::types::TradeRoute> {
-            // Route finding requires populated AMM pools
-            // Return None until pools are registered
-            None
-        }
-
-        fn is_authorized(account: Vec<u8>) -> bool {
-            // Delegate authorization to Atlas Kernel's authorized accounts
-            use codec::Decode;
-            if let Ok(account_id) = AccountId::decode(&mut &account[..]) {
-                // Check if account is authorized in the main Atlas Kernel pallet
-                pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account_id)
-            } else {
-                false
-            }
-        }
     }
 
     impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
@@ -1281,216 +502,6 @@ impl_runtime_apis! {
             Runtime::metadata_versions()
         }
     }
-
-    impl pallet_evolution_core::runtime_api::EvolutionCoreApi<Block, AccountId, BlockNumber> for Runtime {
-        fn get_params() -> pallet_evolution_core::runtime_api::EvolvableParamsResponse {
-            let params = pallet_evolution_core::Pallet::<Runtime>::get_params();
-            pallet_evolution_core::runtime_api::EvolvableParamsResponse {
-                gas_multiplier: params.gas_multiplier,
-                evm_weight_pct: params.evm_weight_pct,
-                svm_weight_pct: params.svm_weight_pct,
-                jit_threshold: params.jit_threshold,
-                max_parallel: params.max_parallel,
-                mev_smooth_factor: params.mev_smooth_factor,
-            }
-        }
-
-        fn get_status() -> pallet_evolution_core::runtime_api::EvolutionStatusResponse {
-            pallet_evolution_core::runtime_api::EvolutionStatusResponse {
-                evolution_enabled: pallet_evolution_core::EvolutionEnabled::<Runtime>::get(),
-                auto_evolution_enabled: pallet_evolution_core::AutoEvolutionEnabled::<Runtime>::get(),
-                pending_proposals: pallet_evolution_core::PendingProposals::<Runtime>::get().len() as u32,
-                ai_agents_count: pallet_evolution_core::AIAgentApprovers::<Runtime>::iter().count() as u32,
-                total_mutations_applied: pallet_evolution_core::TotalMutationsApplied::<Runtime>::get(),
-            }
-        }
-
-        fn get_recent_metrics(depth: u32) -> Vec<(BlockNumber, pallet_evolution_core::runtime_api::BlockMetricsResponse)> {
-            pallet_evolution_core::Pallet::<Runtime>::get_recent_metrics(depth)
-                .into_iter()
-                .map(|(block, metrics)| {
-                    (block, pallet_evolution_core::runtime_api::BlockMetricsResponse {
-                        gas_used: metrics.gas_used,
-                        evm_calls: metrics.evm_calls,
-                        svm_calls: metrics.svm_calls,
-                        cross_vm_calls: metrics.cross_vm_calls,
-                        mempool_depth: metrics.mempool_depth,
-                        mev_pressure: metrics.mev_pressure,
-                        x3_hotpath_hits: metrics.x3_hotpath_hits,
-                        swap_volume: metrics.swap_volume,
-                        flashloan_volume: metrics.flashloan_volume,
-                    })
-                })
-                .collect()
-        }
-
-        fn get_pending_proposals() -> Vec<pallet_evolution_core::runtime_api::ProposalResponse<AccountId, BlockNumber>> {
-            pallet_evolution_core::PendingProposals::<Runtime>::get()
-                .into_iter()
-                .filter_map(|id| {
-                    pallet_evolution_core::Proposals::<Runtime>::get(id).map(|proposal| {
-                        pallet_evolution_core::runtime_api::ProposalResponse {
-                            id: id as u32,
-                            proposer: proposal.proposer,
-                            reason: proposal.reason.into_inner(),
-                            proposed_at: proposal.proposed_at,
-                            approvals: proposal.approvals,
-                            status: match proposal.status {
-                                pallet_evolution_core::pallet::ProposalStatus::Pending => 0,
-                                pallet_evolution_core::pallet::ProposalStatus::Approved => 1,
-                                pallet_evolution_core::pallet::ProposalStatus::Rejected => 2,
-                                pallet_evolution_core::pallet::ProposalStatus::Applied => 3,
-                                pallet_evolution_core::pallet::ProposalStatus::Rolled => 4,
-                            },
-                        }
-                    })
-                })
-                .collect()
-        }
-
-        fn is_ai_agent(account: AccountId) -> bool {
-            pallet_evolution_core::AIAgentApprovers::<Runtime>::get(&account)
-        }
-
-        fn is_evolution_enabled() -> bool {
-            pallet_evolution_core::EvolutionEnabled::<Runtime>::get()
-        }
-    }
-
-    impl pallet_x3_verifier::runtime_api::X3VerifierApi<Block, AccountId, Balance, BlockNumber> for Runtime {
-        fn get_status() -> pallet_x3_verifier::runtime_api::VerifierStatusResponse {
-            pallet_x3_verifier::runtime_api::VerifierStatusResponse {
-                verification_enabled: pallet_x3_verifier::VerificationEnabled::<Runtime>::get(),
-                active_executors: pallet_x3_verifier::Executors::<Runtime>::iter()
-                    .filter(|(_, e)| e.active)
-                    .count() as u32,
-                pending_jobs: pallet_x3_verifier::Jobs::<Runtime>::iter()
-                    .filter(|(_, j)| matches!(j.status, pallet_x3_verifier::pallet::JobStatus::Pending | pallet_x3_verifier::pallet::JobStatus::Submitted))
-                    .count() as u32,
-                total_jobs_submitted: pallet_x3_verifier::TotalJobsSubmitted::<Runtime>::get(),
-                total_jobs_verified: pallet_x3_verifier::TotalJobsVerified::<Runtime>::get(),
-            }
-        }
-
-        fn get_executor(account: AccountId) -> Option<pallet_x3_verifier::runtime_api::ExecutorResponse<AccountId, Balance>> {
-            pallet_x3_verifier::Executors::<Runtime>::get(&account).map(|exec| {
-                pallet_x3_verifier::runtime_api::ExecutorResponse {
-                    account: account.clone(),
-                    stake: exec.stake,
-                    jobs_completed: exec.jobs_completed,
-                    jobs_failed: exec.jobs_failed,
-                    reputation: exec.reputation,
-                    active: exec.active,
-                }
-            })
-        }
-
-        fn get_active_executors() -> Vec<pallet_x3_verifier::runtime_api::ExecutorResponse<AccountId, Balance>> {
-            pallet_x3_verifier::Executors::<Runtime>::iter()
-                .filter(|(_, e)| e.active)
-                .map(|(account, exec)| {
-                    pallet_x3_verifier::runtime_api::ExecutorResponse {
-                        account,
-                        stake: exec.stake,
-                        jobs_completed: exec.jobs_completed,
-                        jobs_failed: exec.jobs_failed,
-                        reputation: exec.reputation,
-                        active: exec.active,
-                    }
-                })
-                .collect()
-        }
-
-        fn get_job(job_id: pallet_x3_verifier::runtime_api::JobId) -> Option<pallet_x3_verifier::runtime_api::JobResponse<AccountId, Balance, BlockNumber>> {
-            pallet_x3_verifier::Jobs::<Runtime>::get(&job_id).map(|job| {
-                pallet_x3_verifier::runtime_api::JobResponse {
-                    job_id,
-                    submitter: job.submitter,
-                    bytecode_hash: job.bytecode_hash,
-                    input_hash: job.input_hash,
-                    gas_limit: job.gas_limit,
-                    reward: job.reward,
-                    executor: job.executor,
-                    status: match job.status {
-                        pallet_x3_verifier::pallet::JobStatus::Pending => 0,
-                        pallet_x3_verifier::pallet::JobStatus::Submitted => 1,
-                        pallet_x3_verifier::pallet::JobStatus::Verified => 2,
-                        pallet_x3_verifier::pallet::JobStatus::Applied => 3,
-                        pallet_x3_verifier::pallet::JobStatus::Failed => 4,
-                        pallet_x3_verifier::pallet::JobStatus::Disputed => 5,
-                    },
-                    submitted_at: job.submitted_at,
-                    receipt_hash: job.receipt_hash,
-                }
-            })
-        }
-
-        fn get_pending_jobs() -> Vec<pallet_x3_verifier::runtime_api::JobResponse<AccountId, Balance, BlockNumber>> {
-            pallet_x3_verifier::Jobs::<Runtime>::iter()
-                .filter(|(_, j)| matches!(j.status, pallet_x3_verifier::pallet::JobStatus::Pending | pallet_x3_verifier::pallet::JobStatus::Submitted))
-                .map(|(job_id, job)| {
-                    pallet_x3_verifier::runtime_api::JobResponse {
-                        job_id,
-                        submitter: job.submitter,
-                        bytecode_hash: job.bytecode_hash,
-                        input_hash: job.input_hash,
-                        gas_limit: job.gas_limit,
-                        reward: job.reward,
-                        executor: job.executor,
-                        status: match job.status {
-                            pallet_x3_verifier::pallet::JobStatus::Pending => 0,
-                            pallet_x3_verifier::pallet::JobStatus::Submitted => 1,
-                            pallet_x3_verifier::pallet::JobStatus::Verified => 2,
-                            pallet_x3_verifier::pallet::JobStatus::Applied => 3,
-                            pallet_x3_verifier::pallet::JobStatus::Failed => 4,
-                            pallet_x3_verifier::pallet::JobStatus::Disputed => 5,
-                        },
-                        submitted_at: job.submitted_at,
-                        receipt_hash: job.receipt_hash,
-                    }
-                })
-                .collect()
-        }
-
-        fn get_receipt(job_id: pallet_x3_verifier::runtime_api::JobId) -> Option<pallet_x3_verifier::runtime_api::ReceiptResponse<AccountId>> {
-            pallet_x3_verifier::Receipts::<Runtime>::get(&job_id).map(|receipt| {
-                pallet_x3_verifier::runtime_api::ReceiptResponse {
-                    job_id,
-                    executor: receipt.executor,
-                    input_hash: receipt.input_hash,
-                    output_hash: receipt.output_hash,
-                    state_root_before: receipt.state_root_before,
-                    state_root_after: receipt.state_root_after,
-                    gas_used: receipt.gas_used,
-                    timestamp: receipt.timestamp,
-                }
-            })
-        }
-
-        fn is_verification_enabled() -> bool {
-            pallet_x3_verifier::VerificationEnabled::<Runtime>::get()
-        }
-
-        fn is_executor(account: AccountId) -> bool {
-            pallet_x3_verifier::Executors::<Runtime>::get(&account)
-                .map(|e| e.active)
-                .unwrap_or(false)
-        }
-    }
-
-    impl pallet_x3_domain_registry::runtime_api::X3DomainRegistryApi<Block, AccountId> for Runtime {
-        fn get_records(domain: Vec<u8>) -> Vec<pallet_x3_domain_registry::runtime_api::X3DnsRecordResponse> {
-            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_get_records(domain)
-        }
-
-        fn get_domain(domain: Vec<u8>) -> Option<pallet_x3_domain_registry::runtime_api::X3DomainResponse<AccountId>> {
-            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_get_domain(domain)
-        }
-
-        fn list_domains() -> Vec<Vec<u8>> {
-            pallet_x3_domain_registry::Pallet::<Runtime>::runtime_list_domains()
-        }
-    }
 }
 
 #[cfg(feature = "std")]
@@ -1501,56 +512,4 @@ pub fn atlas_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
         (2, b"SOL".to_vec(), 9),
         (3, b"USDC".to_vec(), 6),
     ]
-}
-
-#[cfg(all(test, feature = "std"))]
-mod vm_adapter_tests {
-    use super::*;
-    use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter};
-
-    #[test]
-    fn test_native_evm_adapter_real_execution() {
-        // Test that NativeEvmAdapter uses real Frontier
-        let simple_evm_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xf3]; // PUSH1 0 PUSH1 0 RETURN
-        let result = native_vm_adapters::NativeEvmAdapter::execute(&simple_evm_bytecode, 100_000);
-        assert!(result.is_ok());
-        let receipt = result.unwrap();
-        assert!(receipt.success);
-        assert!(receipt.gas_used > 0);
-    }
-
-    #[test]
-    fn test_native_svm_adapter_real_execution() {
-        // Test that NativeSvmAdapter uses real rBPF
-        let simple_bpf_program = vec![
-            0xb7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov r0, 0
-            0x95, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exit
-        ];
-        let result = native_vm_adapters::NativeSvmAdapter::execute(&simple_bpf_program, 100_000);
-        assert!(result.is_ok());
-        let receipt = result.unwrap();
-        assert!(receipt.success);
-    }
-
-    #[test]
-    fn test_x3_adapter_real_execution() {
-        // Test that X3VmAdapter uses real X3 VM
-        use pallet_atlas_kernel::real_adapters::X3VmAdapter;
-
-        // Simple X3 bytecode: X3BC magic + minimal module
-        let x3_bytecode = vec![0x58, 0x33, 0x42, 0x43];
-        let result = X3VmAdapter::validate(&x3_bytecode);
-        // Validation should work with real verifier (may return Ok or Err for partial payload)
-        assert!(result.is_ok() || result.is_err());
-    }
-
-    #[test]
-    fn test_wasm_builds_use_mocks() {
-        // Verify WASM builds still use mock adapters
-        #[cfg(not(feature = "std"))]
-        {
-            // In WASM, adapters should be mocks
-            // This test ensures no_std compatibility
-        }
-    }
 }

@@ -14,26 +14,15 @@ name = "atlas-sphere-node"
 path = "src/main.rs"
 
 [dependencies]
-atlas-sphere-runtime = { path = "../runtime", features = ["std", "frontier"] }
+atlas-sphere-runtime = { path = "../runtime", features = ["std"] }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", features = ["std"] }
-pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", features = ["std"] }
-pallet-evolution-core = { path = "../pallets/evolution-core", features = ["std"] }
-pallet-x3-verifier = { path = "../pallets/x3-verifier", features = ["std"] }
-pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", features = ["std"] }
 
 async-trait = "0.1"
 clap = { version = "4.4", features = ["derive"] }
 futures = "0.3"
 futures-util = { version = "0.3", default-features = false }
-hex = "0.4"
 log = "0.4"
-env_logger = "0.10"
-ansi_term = "0.12"
-chrono = { version = "0.4", features = ["serde"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-tracing-log = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ethereum = { version = "0.14", default-features = false }
@@ -41,7 +30,6 @@ ethereum-types = { version = "0.14", default-features = false }
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
 jsonrpsee = { version = "0.20", features = ["macros", "server", "client"] }
 tokio = { version = "1.37", default-features = false }
-tokio-stream = "0.1"
 
 
 
@@ -60,7 +48,6 @@ sc-service = { workspace = true, features = ["rocksdb"] }
 sc-telemetry = { workspace = true }
 sc-transaction-pool = { workspace = true }
 sc-transaction-pool-api = { workspace = true }
-substrate-prometheus-endpoint = { path = "../patches/substrate-prometheus-endpoint" }
 
 sp-api = { workspace = true }
 sp-block-builder = { workspace = true }
@@ -85,10 +72,7 @@ frame-try-runtime = { workspace = true, optional = true, default-features = fals
 [features]
 default = ["cli"]
 cli = []
-
-# Optional flags to enable Frontier JSON-RPC and EVM runtime features.  
-# Enabling `frontier` will opt-in to Frontier crates and runtime adapters.
-frontier = []
+skip-wasm-build = ["atlas-sphere-runtime/skip-wasm-build"]
 
 native = ["atlas-sphere-runtime/native"]
 
@@ -99,5 +83,3 @@ runtime-benchmarks = [
 try-runtime = [
     "atlas-sphere-runtime/try-runtime",
 ]
-
-# Optional Frontier (EVM) JSON-RPC wiring

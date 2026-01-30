@@ -1,33 +1,13 @@
 # Frontier RPC Integration Guide
 
 ## Status
-
 ⚠️ **Developer Preview** - Frontier dependency resolution blocked  
 RPC wiring is architecturally complete and ready to integrate once Frontier dependencies are resolved.
 
-## Current Implementation
-
-### Already Implemented ✅
-
-The Atlas Kernel pallet provides these runtime APIs via `AtlasKernelRuntimeApi`:
-
-- `get_canonical_balance(account, asset_id)` - Query canonical ledger balances
-- `get_asset_metadata(asset_id)` - Query asset symbol and decimals
-- `is_authorized(account)` - Check if account is authorized for Comits
-- `get_authorized_accounts()` - List all authorized accounts
-- `get_authorities()` - Get current authority set
-
-### Future Enhancements 🔮
-
-The sections below describe future EVM-specific RPC endpoints that will be added
-when Frontier integration is complete. These are design documents, not current implementations.
-
 ## Overview
-
 This guide documents how to wire the Atlas Sphere canonical ledger to Frontier's EVM RPC endpoints, enabling MetaMask and Hardhat compatibility.
 
-## Canonical Ledger Status
-
+## Current Status
 - ✅ Canonical ledger schema supports EVM address queries
 - ✅ DualVmDispatcher trait includes `canonical_ledger_update()` for state persistence
 - ✅ Cross-VM bridge validates and merges EVM state changes
@@ -236,9 +216,6 @@ pub fn create_full<C>(
 ### 5. Wire to Frontier (if dependencies resolved)
 
 Once Frontier is available, wire through Frontier's JSON-RPC layer:
-
-Note: An optional node feature `frontier` is provided to gate Frontier RPC wiring in `node/Cargo.toml`. When enabled, node RPC merges Frontier endpoints; use caution to pin Frontier versions compatible with the Substrate `rev` in the workspace (see root `Cargo.toml`).
-
 
 ```rust
 // In frontier/src/rpc.rs integration

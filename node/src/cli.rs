@@ -1,9 +1,8 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use sc_cli::{
-    ChainSpec, CheckBlockCmd, ExportBlocksCmd, ExportStateCmd, ImportBlocksCmd, PurgeChainCmd,
-    RevertCmd, RunCmd, SubstrateCli,
+    ChainSpec, CheckBlockCmd, ExportBlocksCmd, ExportStateCmd, ImportBlocksCmd,
+    PurgeChainCmd, RevertCmd, RunCmd, SubstrateCli,
 };
-use sp_core::H256;
 use std::path::PathBuf;
 
 /// Command line options for the Atlas Sphere node binary.
@@ -61,86 +60,6 @@ pub enum Commands {
     /// Execute try-runtime checks against on-chain state.
     #[cfg(feature = "try-runtime")]
     TryRuntime(sc_cli::TryRuntimeCmd),
-    /// Atomic swap simulation and execution commands.
-    AtomicSwap(AtomicSwapCmd),
-}
-
-/// Atomic swap CLI commands for simulating and executing cross-VM trades.
-///
-/// These commands provide offline simulation capabilities for AI agents
-/// and frontends to preview trade execution before submitting transactions.
-#[derive(Debug, Args)]
-pub struct AtomicSwapCmd {
-    #[command(subcommand)]
-    pub command: AtomicSwapSubcommand,
-}
-
-/// Atomic swap subcommands
-#[derive(Debug, Subcommand)]
-pub enum AtomicSwapSubcommand {
-    /// Simulate a trade path without execution.
-    ///
-    /// Returns estimated output, gas costs, price impact, and optimal route.
-    /// Use this before submitting transactions to verify expected outcomes.
-    Simulate {
-        /// Input token (H256 hex string, e.g., 0x0001...0000)
-        #[arg(long, value_parser = parse_h256)]
-        token_in: H256,
-
-        /// Output token (H256 hex string)
-        #[arg(long, value_parser = parse_h256)]
-        token_out: H256,
-
-        /// Amount of input tokens (in smallest unit)
-        #[arg(long)]
-        amount: u128,
-
-        /// Maximum slippage tolerance in basis points (default: 100 = 1%)
-        #[arg(long, default_value = "100")]
-        slippage_bps: u32,
-
-        /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
-        rpc_url: String,
-    },
-
-    /// Get current price data for a token pair.
-    Price {
-        /// First token (H256 hex string)
-        #[arg(long, value_parser = parse_h256)]
-        token_a: H256,
-
-        /// Second token (H256 hex string)
-        #[arg(long, value_parser = parse_h256)]
-        token_b: H256,
-
-        /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
-        rpc_url: String,
-    },
-
-    /// Estimate execution costs for a multi-leg trade.
-    EstimateCost {
-        /// Number of trade legs
-        #[arg(long)]
-        legs: u32,
-
-        /// VM types for each leg (comma-separated: evm,svm,crossvm)
-        #[arg(long, value_delimiter = ',')]
-        vm_types: Vec<String>,
-    },
-}
-
-/// Parse H256 from hex string
-fn parse_h256(s: &str) -> Result<H256, String> {
-    let s = s.strip_prefix("0x").unwrap_or(s);
-    let bytes = hex::decode(s).map_err(|e| format!("Invalid hex: {}", e))?;
-    if bytes.len() != 32 {
-        return Err(format!("Expected 32 bytes, got {}", bytes.len()));
-    }
-    let mut arr = [0u8; 32];
-    arr.copy_from_slice(&bytes);
-    Ok(H256::from(arr))
 }
 
 impl SubstrateCli for Cli {

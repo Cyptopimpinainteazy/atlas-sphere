@@ -35,11 +35,6 @@ run_test "atlas-sphere-runtime" "cargo test -p atlas-sphere-runtime --release 2>
 run_test "pallet-atlas-kernel" "cargo test -p pallet-atlas-kernel --release 2>&1"
 run_test "atlas-evm-integration" "cargo test -p atlas-evm-integration --release 2>&1"
 run_test "atlas-svm-integration" "cargo test -p atlas-svm-integration --release 2>&1"
-run_test "x3-parser" "cargo test -p x3-parser 2>&1"
-run_test "x3-semantics" "cargo test -p x3-semantics 2>&1"
-run_test "x3-typeck" "cargo test -p x3-typeck 2>&1"
-run_test "x3-mir" "cargo test -p x3-mir 2>&1"
-run_test "x3-opt" "cargo test -p x3-opt 2>&1"
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║                     TEST SUITE RESULTS                        ║"
