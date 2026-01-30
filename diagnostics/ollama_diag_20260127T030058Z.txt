@@ -1,0 +1,45 @@
+Ollama diagnostics - 20260127T030058Z
+--- Models (GET /v1/models) ---
+{"object":"list","data":[{"id":"codellama:7b","object":"model","created":1769479645,"owned_by":"library"},{"id":"qwen2.5-coder:7b","object":"model","created":1769108546,"owned_by":"library"},{"id":"llama3.2:1b","object":"model","created":1769106583,"owned_by":"library"}]}
+
+--- Chat smoke test (POST /v1/chat/completions) ---
+{"id":"chatcmpl-379","object":"chat.completion","created":1769482860,"model":"codellama:7b","system_fingerprint":"fp_ollama","choices":[{"index":0,"message":{"role":"assistant","content":"\nHello!"},"finish_reason":"stop"}],"usage":{"prompt_tokens":27,"completion_tokens":4,"total_tokens":31}}
+
+--- Workspace settings (.vscode/settings.json) ---
+{
+  "github.copilot.llm-gateway.serverUrl": "http://127.0.0.1:11434",
+  "github.copilot.llm-gateway.apiKey": "",
+  "github.copilot.llm-gateway.enableToolCalling": true,
+  "github.copilot.llm-gateway.parallelToolCalling": true,
+  "github.copilot.llm-gateway.agentTemperature": 0.9,
+  "github.copilot.llm-gateway.defaultMaxTokens": 32768,
+  "github.copilot.llm-gateway.defaultMaxOutputTokens": 4096
+  ,
+  "github.copilot.llm-gateway.enabledModels": [
+    "codellama:7b",
+    "qwen2.5-coder:7b",
+    "llama3.2:1b"
+  ],
+  "github.copilot.llm-gateway.autoEnableModels": true
+}
+
+--- VS Code extensions (code --list-extensions) ---
+
+--- Extension logs template ---
+Please paste the contents of the VS Code Output panel for the following channels:
+
+- GitHub Copilot LLM Gateway
+- GitHub Copilot
+
+Steps to collect logs:
+1. In VS Code: View → Output
+2. Select 'GitHub Copilot LLM Gateway' from the dropdown and copy recent messages
+3. Paste logs below this line and keep any timestamps/errors
+
+--- BEGIN PASTE ---
+
+<PASTE LOGS HERE>
+
+--- END PASTE ---
+
+Warning: Do NOT paste private keys or secrets. Remove any API keys before sharing.

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Suppression Audit</title>
+    <link rel="stylesheet" href="/ui/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Suppression Audit</h1>
+        <div class="controls"><a href="/ui/" class="btn ghost">Approvals</a> <button id="export" class="btn">Export CSV</button></div>
+      </header>
+      <main>
+        <section class="panel" style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
+          <label>Filter: <input id="filter-recipient" placeholder="recipient"/></label>
+          <label>Page size: <select id="page-size"><option>10</option><option>25</option><option selected>50</option><option>100</option></select></label>
+          <button id="prev" class="btn ghost">Prev</button>
+          <div id="page-ind" style="color:var(--muted);padding:4px 8px;border-radius:6px">Page: <span id="page-num">1</span> / <span id="page-total">1</span></div>
+          <div id="pages" style="display:inline-flex; gap:4px; margin-left:8px"></div>
+          <label>Jump: <input id="jump-to" style="width:80px" placeholder="page #"/></label>
+          <button id="go" class="btn ghost">Go</button>
+          <button id="next" class="btn ghost">Next</button>
+        </section>
+        <section id="audit" class="panel">Loading…</section>
+      </main>
+    </div>
+    <script src="/ui/audit.js"></script>
+  </body>
+</html>
