@@ -312,33 +312,10 @@ export class ProofRelayer extends EventEmitter {
     rpcUrl: string
   ): Promise<string> {
     // Create settlement extrinsic for X3VM pallet
-    let encoded = null;
-    try {
-      const wsUrl = this.chainRpcUrls['x3vm']?.replace('http', 'ws') || process.env.X3VM_WS_URL || 'ws://localhost:9944';
-      const { encodeSettlementExtrinsic } = require('./handlers/x3vm-encoder');
-      const payload = {
-        shipmentId: `spv-${proof.blockHeight}-${proof.confirmations || 0}`,
-        parts: [proof.merkleRoot || ''],
-        amount: 0,
-      };
-      encoded = await encodeSettlementExtrinsic(wsUrl, 'settlement', 'settle', payload);
-    } catch (err) {
-      console.warn('[X3VM] encoder failed; falling back to generic encoding', err.message || err);
-      encoded = (
-        '0x' +
-        Buffer.from(
-          JSON.stringify({
-            blockHeight: proof.blockHeight,
-            merkleProof: proof.merkleProof,
-          })
-        ).toString('hex')
-      );
-    }
-
     const settlementTx = {
       jsonrpc: '2.0',
       method: 'author_submitExtrinsic',
-      params: [encoded],
+      params: [this.encodeX3VMSettlement(proof)],
       id: 1,
     };
 
@@ -393,26 +370,7 @@ export class ProofRelayer extends EventEmitter {
    * Encode settlement for X3VM
    */
   private encodeX3VMSettlement(proof: SPVProof): string {
-    // Use metadata-driven encoder if available (attempt live node encode)
-    try {
-      const wsUrl = this.chainRpcUrls['x3vm']?.replace('http', 'ws') || process.env.X3VM_WS_URL || 'ws://localhost:9944';
-      const { encodeSettlementExtrinsic } = require('./handlers/x3vm-encoder');
-      // Map proof -> settlement payload; adjust mapping if pallet expects different fields
-      const payload = {
-        shipmentId: `spv-${proof.blockHeight}-${proof.confirmations || 0}`,
-        parts: [proof.merkleRoot || ''],
-        amount: 0
-      };
-      // NOTE: this is a synchronous wrapper; encodeSettlementExtrinsic returns a Promise so we block here
-      // to keep existing interface; in future refactor to async
-      const wait = (p: Promise<any>) => { let r:any; p.then((v:any)=>r=v).catch((e:any)=>{throw e}); const start = Date.now(); while (r===undefined && Date.now()-start<2000){}; return r; };
-      const hex = (async () => await encodeSettlementExtrinsic(wsUrl, 'settlement', 'settle', payload))();
-      // We cannot await here synchronously; fallback to generic remark encoding
-    } catch (err) {
-      // fallback to generic remark encoding
-    }
-
-    // Fallback - minimal encoding
+    // Simplified encoding - in production would use Substrate codec
     return (
       '0x' +
       Buffer.from(
