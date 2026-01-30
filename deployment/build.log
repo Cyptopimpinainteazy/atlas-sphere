@@ -1,0 +1,343 @@
+warning: /home/lojak/Desktop/atlas-sphere/runtime/Cargo.toml: `default-features` is ignored for log, since `default-features` was not specified for `workspace.dependencies.log`, this could become a hard error in the future
+warning: /home/lojak/Desktop/atlas-sphere/runtime/Cargo.toml: `default-features` is ignored for serde, since `default-features` was not specified for `workspace.dependencies.serde`, this could become a hard error in the future
+warning: /home/lojak/Desktop/atlas-sphere/runtime/Cargo.toml: unused manifest key: dependencies.codec.package
+   Compiling send_wrapper v0.4.0
+   Compiling gloo-timers v0.2.6
+   Compiling hyper v0.14.32
+   Compiling tower v0.4.13
+   Compiling rustls v0.21.12
+   Compiling rustls-webpki v0.101.7
+   Compiling async-lock v2.8.0
+   Compiling rustls-pemfile v1.0.4
+   Compiling openssl-probe v0.1.6
+   Compiling web-sys v0.3.82
+   Compiling webpki-roots v0.25.4
+   Compiling pallet-atlas-kernel v0.1.0 (/home/lojak/Desktop/atlas-sphere/pallets/atlas-kernel)
+   Compiling atlas-sphere-runtime v0.1.0 (/home/lojak/Desktop/atlas-sphere/runtime)
+   Compiling pallet-collective v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling futures-timer v3.0.3
+   Compiling rustls-native-certs v0.6.3
+   Compiling libp2p-core v0.39.2
+   Compiling sc-utils v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling finality-grandpa v0.16.3
+warning: unused import: `storage::bounded_vec::BoundedVec`
+  --> pallets/atlas-kernel/src/authority.rs:12:40
+   |
+12 | use frame_support::{pallet_prelude::*, storage::bounded_vec::BoundedVec};
+   |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling libp2p-swarm v0.42.2
+   Compiling libp2p-noise v0.42.2
+   Compiling libp2p-websocket v0.41.0
+   Compiling libp2p-wasm-ext v0.39.0
+   Compiling libp2p-dns v0.39.0
+   Compiling libp2p-tcp v0.39.0
+   Compiling libp2p-yamux v0.43.1
+warning: unused import: `ReservableCurrency`
+  --> pallets/atlas-kernel/src/lib.rs:14:39
+   |
+14 | use frame_support::traits::{Currency, ReservableCurrency};
+   |                                       ^^^^^^^^^^^^^^^^^^
+
+   Compiling sp-consensus-grandpa v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+warning: unused variable: `tx`
+   --> pallets/atlas-kernel/src/lib.rs:471:34
+    |
+471 |             let evm_receipt = if let Some(tx) = evm_tx {
+    |                                           ^^ help: if this is intentional, prefix it with an underscore: `_tx`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `tx`
+   --> pallets/atlas-kernel/src/lib.rs:485:34
+    |
+485 |             let svm_receipt = if let Some(tx) = svm_tx {
+    |                                           ^^ help: if this is intentional, prefix it with an underscore: `_tx`
+
+warning: unused variable: `comit_id`
+   --> pallets/atlas-kernel/src/lib.rs:885:4
+    |
+885 |             comit_id: H256,
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_comit_id`
+
+warning: associated functions `verify_dual_vm` and `do_execute_dual_tx` are never used
+    --> pallets/atlas-kernel/src/lib.rs:991:8
+     |
+ 820 |     impl<T: Config> Pallet<T> {
+     |     ------------------------- associated functions in this implementation
+...
+ 991 |         }    fn verify_dual_vm(comit: &ComitOf<T>) -> Result<(), ComitFailureReason> {
+     |                 ^^^^^^^^^^^^^^
+...
+1095 |         fn do_execute_dual_tx(evm_tx: Option<Vec<u8>>, svm_tx: Option<Vec<u8>>) -> Result<SphereState, DispatchError> {
+     |            ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling atlas-evm-integration v0.1.0 (/home/lojak/Desktop/atlas-sphere/crates/evm-integration)
+warning: unused import: `AccountIdConversion`
+ --> crates/evm-integration/src/state.rs:5:26
+  |
+5 | use sp_runtime::traits::{AccountIdConversion, Zero};
+  |                          ^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pallet-atlas-kernel` (lib) generated 6 warnings (run `cargo fix --lib -p pallet-atlas-kernel` to apply 4 suggestions)
+   Compiling pallet-grandpa v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling libp2p-request-response v0.24.1
+   Compiling libp2p-kad v0.43.3
+   Compiling libp2p-ping v0.42.0
+   Compiling libp2p-allow-block-list v0.1.1
+   Compiling libp2p-connection-limits v0.1.0
+   Compiling libp2p-mdns v0.43.1
+   Compiling libp2p-identify v0.42.2
+warning: `atlas-evm-integration` (lib) generated 1 warning (run `cargo fix --lib -p atlas-evm-integration` to apply 1 suggestion)
+   Compiling tokio-rustls v0.24.1
+   Compiling libp2p v0.51.4
+   Compiling sc-telemetry v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+warning: unused import: `OpaqueMetadata`
+  --> runtime/src/lib.rs:28:15
+   |
+28 | use sp_core::{OpaqueMetadata, H256};
+   |               ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated constant `WhereSection::_w`: 
+                 It is deprecated to use a `where` clause in `construct_runtime`.
+                 Please instead use `frame_system::Config` to set the `Block` type and delete this clause. 
+                 It is planned to be removed in December 2023.
+         
+                 For more info see:
+                     <https://github.com/paritytech/substrate/pull/14437>
+   --> runtime/src/lib.rs:161:1
+    |
+161 | / construct_runtime!(
+162 | |     pub enum Runtime where
+163 | |         Block = Block,
+164 | |         NodeBlock = Block,
+...   |
+176 | | );
+    | |_^
+    |
+    = note: `#[warn(deprecated)]` on by default
+    = note: this warning originates in the macro `frame_support::match_and_insert` which comes from the expansion of the macro `construct_runtime` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+   Compiling substrate-prometheus-endpoint v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee-core v0.16.3
+   Compiling jsonrpsee-core v0.20.4
+   Compiling hyper-rustls v0.24.2
+   Compiling gloo-utils v0.2.0
+   Compiling gloo-net v0.4.0
+   Compiling sc-sysinfo v6.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-client-api v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-proposer-metrics v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee-server v0.16.3
+   Compiling sc-consensus v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-block-builder v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-tracing v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-transaction-pool v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-client-db v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-basic-authorship v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee-client-transport v0.20.4
+   Compiling jsonrpsee v0.16.3
+   Compiling sc-rpc-server v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee-http-client v0.20.4
+   Compiling sc-network-common v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-consensus-slots v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee-ws-client v0.20.4
+   Compiling jsonrpsee-wasm-client v0.20.4
+   Compiling jsonrpsee-server v0.20.4
+   Compiling sc-consensus-aura v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling jsonrpsee v0.20.4
+warning: `atlas-sphere-runtime` (lib) generated 2 warnings (run `cargo fix --lib -p atlas-sphere-runtime` to apply 1 suggestion)
+   Compiling sc-chain-spec v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network-light v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network-bitswap v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network-transactions v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-informant v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network-sync v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-network-gossip v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-rpc-api v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-rpc-spec-v2 v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-consensus-grandpa v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-rpc v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling substrate-frame-rpc-system v4.0.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-service v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling sc-cli v0.10.0-dev (https://github.com/paritytech/substrate?branch=polkadot-v1.0.0#948fbd2f)
+   Compiling atlas-sphere-node v0.1.0 (/home/lojak/Desktop/atlas-sphere/node)
+warning: unused import: `AtlasSphereExecutorDispatch`
+ --> node/src/command.rs:3:21
+  |
+3 |     service::{self, AtlasSphereExecutorDispatch},
+  |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `atlas_sphere_runtime::opaque::Block`
+ --> node/src/command.rs:5:5
+  |
+5 | use atlas_sphere_runtime::opaque::Block;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `warn`
+ --> node/src/command.rs:7:24
+  |
+7 | use log::{error, info, warn};
+  |                        ^^^^
+
+warning: unused import: `opaque::Block`
+ --> node/src/rpc.rs:5:57
+  |
+5 | use atlas_sphere_runtime::{AccountId, AssetId, Balance, opaque::Block};
+  |                                                         ^^^^^^^^^^^^^
+
+warning: unused import: `NetworkService`
+ --> node/src/network.rs:7:2
+  |
+7 |     NetworkService,
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+ --> node/src/network.rs:9:5
+  |
+9 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+ --> node/src/authority.rs:6:5
+  |
+6 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+ --> node/src/metrics.rs:6:5
+  |
+6 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `sc_network::config::MultiaddrWithPeerId`
+ --> node/src/chain_spec.rs:8:5
+  |
+8 | use sc_network::config::MultiaddrWithPeerId;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> node/src/chain_spec.rs:9:13
+  |
+9 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unexpected `cfg` condition value: `dev`
+   --> node/src/chain_spec.rs:181:9
+    |
+181 |         #[cfg(feature = "dev")]
+    |               ^^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `cli`, `default`, `frame-benchmarking-cli`, `frame-try-runtime`, `native`, `runtime-benchmarks`, and `try-runtime`
+    = help: consider adding `dev` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unused import: `sc_network::NetworkService`
+  --> node/src/service.rs:14:5
+   |
+14 | use sc_network::NetworkService;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `command::*`
+  --> node/src/lib.rs:67:9
+   |
+67 | pub use command::*;
+   |         ^^^^^^^^^^
+
+warning: use of deprecated associated function `sc_executor::NativeElseWasmExecutor::<D>::new`: use `Self::new_with_wasm_executor` method instead of it
+  --> node/src/service.rs:80:27
+   |
+80 |     let executor = Executor::new(
+   |                              ^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `CliConfiguration`
+ --> node/src/command.rs:8:14
+  |
+8 | use sc_cli::{CliConfiguration, Error as CliError, Result as CliResult, SubstrateCli};
+  |              ^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> node/src/service.rs:168:3
+    |
+168 |         mut task_manager,
+    |         ----^^^^^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> node/src/service.rs:173:47
+    |
+173 |         other: (grandpa_block_import, grandpa_link, mut telemetry),
+    |                                                     ----^^^^^^^^^
+    |                                                     |
+    |                                                     help: remove this `mut`
+
+warning: function `default_properties` is never used
+   --> node/src/chain_spec.rs:186:4
+    |
+186 | fn default_properties() -> Properties {
+    |    ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: missing documentation for a function
+  --> node/src/command.rs:10:1
+   |
+10 | pub fn run() -> CliResult<()> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: the lint level is defined here
+  --> node/src/lib.rs:2:9
+   |
+ 2 | #![warn(missing_docs, rust_2018_idioms)]
+   |         ^^^^^^^^^^^^
+
+warning: missing documentation for a type alias
+  --> node/src/chain_spec.rs:17:1
+   |
+17 | pub type ChainSpec = GenericChainSpec<RuntimeGenesisConfig>;
+   | ^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a function
+  --> node/src/chain_spec.rs:25:1
+   |
+25 | pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a function
+  --> node/src/chain_spec.rs:34:1
+   |
+34 | pub fn development_config() -> Result<ChainSpec, String> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a function
+  --> node/src/chain_spec.rs:66:1
+   |
+66 | pub fn local_testnet_config() -> Result<ChainSpec, String> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: missing documentation for a function
+   --> node/src/chain_spec.rs:101:1
+    |
+101 | pub fn staging_config() -> Result<ChainSpec, String> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `atlas-sphere-node` (lib) generated 24 warnings (run `cargo fix --lib -p atlas-sphere-node` to apply 14 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 00s
+warning: the following packages contain code that will be rejected by a future version of Rust: trie-db v0.27.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
