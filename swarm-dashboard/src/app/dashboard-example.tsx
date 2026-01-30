@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { MediaProductionPanel } from '../components/MediaProductionPanel';
-import { useMediaMetrics, MetricsPeriod } from '../hooks/useMediaMetrics';
+import { useMediaMetrics } from '../hooks/useMediaMetrics';
 import { CiStatusTile } from '../components/CiStatusTile';
 import { TestHealthTile } from '../components/TestHealthTile';
 import { AlertsPanel } from '../components/AlertsPanel';
@@ -23,16 +23,7 @@ export default function DashboardPage() {
   // 3) local mock server at http://localhost:9944 (used for local e2e/demo)
   const publicRpc = process.env.NEXT_PUBLIC_PUBLIC_RPC_URL || process.env.NEXT_PUBLIC_FALLBACK_RPC_URL;
   const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || publicRpc || 'http://localhost:9944';
-  const [selectedPeriod, setSelectedPeriod] = useState<MetricsPeriod>('week');
-
-// Ensure IntrinsicElements allow <style jsx> to avoid styled-jsx typing issues
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      style: any;
-    }
-  }
-}
+  const [selectedPeriod, setSelectedPeriod] = useState('week');
 
   return (
     <div className="dashboard-layout">
@@ -107,9 +98,6 @@ declare global {
 function DashboardHeader({
   selectedPeriod,
   onPeriodChange,
-}: {
-  selectedPeriod: MetricsPeriod;
-  onPeriodChange: (p: MetricsPeriod) => void;
 }) {
   const periods: MetricsPeriod[] = ['day', 'week', 'month', 'quarter', 'year'];
 
@@ -217,9 +205,6 @@ function DashboardHeader({
 function MetricsPanel({
   rpcUrl,
   period,
-}: {
-  rpcUrl: string;
-  period: MetricsPeriod;
 }) {
   const {
     summary,
@@ -399,13 +384,8 @@ function MetricCard({
   value,
   change,
   isTrend = false,
-}: {
-  title: string;
-  value: any;
-  change?: number;
-  isTrend?: boolean;
 }) {
-  const isPositive = change === undefined || change >= 0;
+  const isPositive = !change || change >= 0;
 
   return (
     <div className="metric-card">
@@ -460,7 +440,7 @@ function MetricCard({
 /**
  * Quick stats sidebar
  */
-function QuickStats({ rpcUrl }: { rpcUrl: string }) {
+function QuickStats({ rpcUrl }) {
   const { summary, loading } = useMediaMetrics({
     rpcUrl,
     period: 'week',
@@ -533,12 +513,6 @@ function StatItem({
   unit,
   suffix,
   color,
-}: {
-  label: string;
-  value: string | number;
-  unit?: string;
-  suffix?: string;
-  color?: string;
 }) {
   return (
     <div className="stat-item">

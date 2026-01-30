@@ -6,9 +6,7 @@
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
     "mock-server": "node mock-rpc-server.js",
-    "test": "jest --config ./jest.config.ts --testPathIgnorePatterns=./e2e/",
-    "test:ci": "jest --config ./jest.config.ts --runInBand --coverage --testPathIgnorePatterns=./e2e/",
-    "test:coverage": "jest --config ./jest.config.ts --coverage --testPathIgnorePatterns=./e2e/",
+    "test": "jest --testPathIgnorePatterns=./e2e/",
     "tsc": "tsc --noEmit",
     "e2e:serve": "npx http-server ./e2e/demo -p 3001 -c-1",
     "e2e:test": "playwright test --config e2e/playwright.config.ts"
