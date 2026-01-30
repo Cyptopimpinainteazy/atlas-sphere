@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Comit file icon - dark theme -->
-  <rect x="2" y="1" width="12" height="14" rx="1" fill="#312E81" stroke="#818CF8" stroke-width="1"/>
-  <path d="M5 5h6M5 8h6M5 11h4" stroke="#A5B4FC" stroke-width="1" stroke-linecap="round"/>
-  <circle cx="11" cy="11" r="2" fill="#34D399"/>
-</svg>
