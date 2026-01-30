@@ -15,18 +15,6 @@ depends_on = None
 
 
 def upgrade():
-    # Guard against orphaned sequences left from prior test runs.
-    # If an id sequence exists for a missing table, drop it to avoid duplicate sequence errors.
-    op.execute("""
-    DO $$
-    BEGIN
-        IF EXISTS (SELECT 1 FROM pg_class WHERE relkind='S' AND relname='reputation_events_id_seq')
-           AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='reputation_events') THEN
-            DROP SEQUENCE reputation_events_id_seq;
-        END IF;
-    END$$;
-    """)
-
     op.create_table(
         'reputation_events',
         sa.Column('id', sa.Integer, primary_key=True),
@@ -39,16 +27,6 @@ def upgrade():
         sa.Column('evidence_hash', sa.Text),
         sa.Column('occurred_at', sa.TIMESTAMP(timezone=True), server_default=sa.func.now()),
     )
-
-    op.execute("""
-    DO $$
-    BEGIN
-        IF EXISTS (SELECT 1 FROM pg_class WHERE relkind='S' AND relname='slashing_events_id_seq')
-           AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='slashing_events') THEN
-            DROP SEQUENCE slashing_events_id_seq;
-        END IF;
-    END$$;
-    """)
 
     op.create_table(
         'slashing_events',
