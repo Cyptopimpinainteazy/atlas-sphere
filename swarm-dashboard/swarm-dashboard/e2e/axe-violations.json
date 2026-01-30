@@ -1,0 +1,155 @@
+[
+  {
+    "id": "color-contrast",
+    "impact": "serious",
+    "tags": [
+      "cat.color",
+      "wcag2aa",
+      "wcag143",
+      "ACT"
+    ],
+    "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA contrast ratio thresholds",
+    "help": "Elements must have sufficient color contrast",
+    "helpUrl": "https://dequeuniversity.com/rules/axe/4.6/color-contrast?application=axeAPI",
+    "nodes": [
+      {
+        "any": [
+          {
+            "id": "color-contrast",
+            "data": {
+              "fgColor": "#0000ee",
+              "bgColor": "#0f1720",
+              "contrastRatio": 1.92,
+              "fontSize": "12.0pt (16px)",
+              "fontWeight": "normal",
+              "messageKey": null,
+              "expectedContrastRatio": "4.5:1"
+            },
+            "relatedNodes": [
+              {
+                "html": "<div class=\"tile\">",
+                "target": [
+                  ".tile:nth-child(4)"
+                ]
+              }
+            ],
+            "impact": "serious",
+            "message": "Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ],
+        "all": [],
+        "none": [],
+        "impact": "serious",
+        "html": "<a class=\"sigill-issue link\" href=\"https://gist.github.com/Cyptopimpinainteazy/a3a0c9076f9457d70a722d9eaba04d4b\" target=\"_blank\">Issue / Gist</a>",
+        "target": [
+          ".sigill-issue"
+        ],
+        "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+        "any": [
+          {
+            "id": "color-contrast",
+            "data": {
+              "fgColor": "#0000ee",
+              "bgColor": "#0f1720",
+              "contrastRatio": 1.92,
+              "fontSize": "12.0pt (16px)",
+              "fontWeight": "normal",
+              "messageKey": null,
+              "expectedContrastRatio": "4.5:1"
+            },
+            "relatedNodes": [
+              {
+                "html": "<div class=\"tile\">",
+                "target": [
+                  ".tile:nth-child(4)"
+                ]
+              }
+            ],
+            "impact": "serious",
+            "message": "Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ],
+        "all": [],
+        "none": [],
+        "impact": "serious",
+        "html": "<a class=\"sigill-strace link\" href=\"http://localhost:9944/artifacts/alert-001/strace.tgz\" target=\"_blank\">strace</a>",
+        "target": [
+          ".sigill-strace"
+        ],
+        "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+      },
+      {
+        "any": [
+          {
+            "id": "color-contrast",
+            "data": {
+              "fgColor": "#0000ee",
+              "bgColor": "#0f1720",
+              "contrastRatio": 1.92,
+              "fontSize": "12.0pt (16px)",
+              "fontWeight": "normal",
+              "messageKey": null,
+              "expectedContrastRatio": "4.5:1"
+            },
+            "relatedNodes": [
+              {
+                "html": "<div class=\"tile\">",
+                "target": [
+                  ".tile:nth-child(4)"
+                ]
+              }
+            ],
+            "impact": "serious",
+            "message": "Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+          }
+        ],
+        "all": [],
+        "none": [],
+        "impact": "serious",
+        "html": "<a class=\"sigill-core link\" href=\"http://localhost:9944/artifacts/alert-001/core.dump\" target=\"_blank\">core</a>",
+        "target": [
+          ".sigill-core"
+        ],
+        "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 1.92 (foreground color: #0000ee, background color: #0f1720, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+      }
+    ]
+  },
+  {
+    "id": "html-has-lang",
+    "impact": "serious",
+    "tags": [
+      "cat.language",
+      "wcag2a",
+      "wcag311",
+      "ACT"
+    ],
+    "description": "Ensures every HTML document has a lang attribute",
+    "help": "<html> element must have a lang attribute",
+    "helpUrl": "https://dequeuniversity.com/rules/axe/4.6/html-has-lang?application=axeAPI",
+    "nodes": [
+      {
+        "any": [
+          {
+            "id": "has-lang",
+            "data": {
+              "messageKey": "noLang"
+            },
+            "relatedNodes": [],
+            "impact": "serious",
+            "message": "The <html> element does not have a lang attribute"
+          }
+        ],
+        "all": [],
+        "none": [],
+        "impact": "serious",
+        "html": "<html>",
+        "target": [
+          "html"
+        ],
+        "failureSummary": "Fix any of the following:\n  The <html> element does not have a lang attribute"
+      }
+    ]
+  }
+]
