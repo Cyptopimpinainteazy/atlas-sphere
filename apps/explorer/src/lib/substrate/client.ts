@@ -8,6 +8,11 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { Header, SignedBlock } from '@polkadot/types/interfaces';
 
+// Import shared configuration
+const getWsEndpoint = (): string => {
+  return process.env.NEXT_PUBLIC_SUBSTRATE_WS_ENDPOINT || 'ws://127.0.0.1:9944';
+};
+
 // Custom types for Atlas Kernel pallet
 const ATLAS_TYPES = {
   Comit: {
@@ -36,16 +41,25 @@ const ATLAS_TYPES = {
     key: 'H256',
     value: 'H256',
   },
+  // Failure reason variants - defined separately for type registry
+  EvmPayloadTooLargeError: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
+  SvmPayloadTooLargeError: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
+  CombinedPayloadTooLargeError: { code: 'u32', evm_size: 'u32', svm_size: 'u32', max_combined: 'u32' },
+  EmptyPayloadsError: { code: 'u32' },
+  InvalidNonceError: { code: 'u32', expected: 'u64', provided: 'u64' },
+  VerificationError: { code: 'u32', reason: '[u8; 32]' },
+  EvmExecutionFailedError: { code: 'u32', evm_error: 'u32', gas_used: 'u64' },
+  SvmExecutionFailedError: { code: 'u32', svm_error: 'u32', compute_units_used: 'u64' },
   ComitFailureReason: {
     _enum: {
-      EvmPayloadTooLarge: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
-      SvmPayloadTooLarge: { code: 'u32', actual_size: 'u32', max_size: 'u32' },
-      CombinedPayloadTooLarge: { code: 'u32', evm_size: 'u32', svm_size: 'u32', max_combined: 'u32' },
-      EmptyPayloads: { code: 'u32' },
-      InvalidNonce: { code: 'u32', expected: 'u64', provided: 'u64' },
-      Verification: { code: 'u32', reason: '[u8; 32]' },
-      EvmExecutionFailed: { code: 'u32', evm_error: 'u32', gas_used: 'u64' },
-      SvmExecutionFailed: { code: 'u32', svm_error: 'u32', compute_units_used: 'u64' },
+      EvmPayloadTooLarge: 'EvmPayloadTooLargeError',
+      SvmPayloadTooLarge: 'SvmPayloadTooLargeError',
+      CombinedPayloadTooLarge: 'CombinedPayloadTooLargeError',
+      EmptyPayloads: 'EmptyPayloadsError',
+      InvalidNonce: 'InvalidNonceError',
+      Verification: 'VerificationError',
+      EvmExecutionFailed: 'EvmExecutionFailedError',
+      SvmExecutionFailed: 'SvmExecutionFailedError',
     }
   },
   AssetMetadata: {
@@ -102,9 +116,7 @@ const ATLAS_RPC = {
 // Connection state
 let apiInstance: ApiPromise | null = null;
 let connectionPromise: Promise<ApiPromise> | null = null;
-
-// Default WebSocket endpoint
-const DEFAULT_WS_ENDPOINT = process.env.NEXT_PUBLIC_SUBSTRATE_WS_ENDPOINT || 'ws://127.0.0.1:9944';
+let reconnectTimeout: NodeJS.Timeout | null = null;
 
 export interface SubstrateClientConfig {
   endpoint?: string;
@@ -115,7 +127,7 @@ export interface SubstrateClientConfig {
  * Get or create the Substrate API connection
  */
 export async function getApi(config?: SubstrateClientConfig): Promise<ApiPromise> {
-  const endpoint = config?.endpoint || DEFAULT_WS_ENDPOINT;
+  const endpoint = config?.endpoint || getWsEndpoint();
 
   // Return existing instance if connected
   if (apiInstance?.isConnected) {
@@ -144,7 +156,8 @@ export async function getApi(config?: SubstrateClientConfig): Promise<ApiPromise
 async function createConnection(endpoint: string): Promise<ApiPromise> {
   console.log(`[Substrate] Connecting to ${endpoint}...`);
 
-  const provider = new WsProvider(endpoint);
+  // Auto-reconnect enabled with 1 second delay
+  const provider = new WsProvider(endpoint, 1000);
   
   const api = await ApiPromise.create({
     provider,
@@ -162,10 +175,27 @@ async function createConnection(endpoint: string): Promise<ApiPromise> {
 
   console.log(`[Substrate] Connected to ${chain} via ${nodeName} v${nodeVersion}`);
 
-  // Setup disconnect handler
+  // Setup disconnect handler with auto-reconnect
   api.on('disconnected', () => {
     console.warn('[Substrate] Disconnected from node');
     apiInstance = null;
+    
+    // Schedule reconnection
+    if (!reconnectTimeout) {
+      reconnectTimeout = setTimeout(async () => {
+        reconnectTimeout = null;
+        console.log('[Substrate] Attempting reconnection...');
+        try {
+          await getApi();
+        } catch (error) {
+          console.error('[Substrate] Reconnection failed:', error);
+        }
+      }, 5000);
+    }
+  });
+
+  api.on('connected', () => {
+    console.log('[Substrate] Reconnected to node');
   });
 
   api.on('error', (error) => {
@@ -179,6 +209,11 @@ async function createConnection(endpoint: string): Promise<ApiPromise> {
  * Disconnect from the Substrate node
  */
 export async function disconnect(): Promise<void> {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+  
   if (apiInstance) {
     await apiInstance.disconnect();
     apiInstance = null;

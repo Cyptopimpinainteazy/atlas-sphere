@@ -104,10 +104,7 @@ pub async fn run_migrations(pool: &Pool) -> Result<(), ServiceError> {
 // =============================================================================
 
 /// Insert a new event
-pub async fn insert_event(
-    pool: &Pool,
-    event: &Event,
-) -> Result<Event, ServiceError> {
+pub async fn insert_event(pool: &Pool, event: &Event) -> Result<Event, ServiceError> {
     let client = pool.get().await?;
 
     client
@@ -136,12 +133,25 @@ pub async fn insert_event(
     // Update comit tracking if this is a comit event
     if let Some(comit_hash) = &event.comit_hash {
         if let Some(account) = &event.account {
-            update_comit_tracking(pool, comit_hash, account, &event.event_type, event.block_number).await?;
+            update_comit_tracking(
+                pool,
+                comit_hash,
+                account,
+                &event.event_type,
+                event.block_number,
+            )
+            .await?;
         }
     }
 
     // Update hourly metrics
-    update_hourly_metrics(pool, &event.event_type, event.chain_type.as_deref(), &event.account).await?;
+    update_hourly_metrics(
+        pool,
+        &event.event_type,
+        event.chain_type.as_deref(),
+        &event.account,
+    )
+    .await?;
 
     Ok(event.clone())
 }
@@ -214,9 +224,11 @@ pub async fn query_events(
 
     // Get total count
     let count_sql = format!("SELECT COUNT(*) FROM events {}", where_clause);
-    let params_slice: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> = 
-        param_values.iter().map(|v| v.as_ref() as &(dyn tokio_postgres::types::ToSql + Sync)).collect();
-    
+    let params_slice: Vec<&(dyn tokio_postgres::types::ToSql + Sync)> = param_values
+        .iter()
+        .map(|v| v.as_ref() as &(dyn tokio_postgres::types::ToSql + Sync))
+        .collect();
+
     let count_row = client.query_one(&count_sql, &params_slice).await?;
     let total: i64 = count_row.get(0);
 
@@ -467,7 +479,9 @@ pub async fn get_timeseries(
     let client = pool.get().await?;
 
     let interval = params.interval.as_deref().unwrap_or("hour");
-    let start = params.start_time.unwrap_or_else(|| Utc::now() - chrono::Duration::days(7));
+    let start = params
+        .start_time
+        .unwrap_or_else(|| Utc::now() - chrono::Duration::days(7));
     let end = params.end_time.unwrap_or_else(Utc::now);
 
     let interval_sql = match interval {

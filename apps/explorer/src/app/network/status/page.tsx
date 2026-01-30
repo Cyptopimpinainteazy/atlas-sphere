@@ -128,7 +128,7 @@ export default function NetworkStatusPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="flex items-center justify-between">
             <div>
               <Link href="/network" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
@@ -154,7 +154,7 @@ export default function NetworkStatusPage() {
 
       {/* Stats */}
       <section className="py-8 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {networkStats.map((stat, index) => (
               <div key={index} className="glass-card p-6">
@@ -171,7 +171,7 @@ export default function NetworkStatusPage() {
 
       {/* VM Status */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">Virtual Machine Status</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -203,7 +203,7 @@ export default function NetworkStatusPage() {
 
       {/* Services */}
       <section className="py-8 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">Services</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -222,7 +222,7 @@ export default function NetworkStatusPage() {
 
       {/* Regional Status */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">
             <Globe className="inline w-5 h-5 mr-2" />
             Regional Status
@@ -260,7 +260,7 @@ export default function NetworkStatusPage() {
 
       {/* Recent Incidents */}
       <section className="py-8 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">Recent Incidents</h2>
           
           {recentIncidents.length === 0 ? (
@@ -292,7 +292,7 @@ export default function NetworkStatusPage() {
 
       {/* Performance Graph Placeholder */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-xl font-bold text-white mb-6">
             <BarChart3 className="inline w-5 h-5 mr-2" />
             Performance (24h)

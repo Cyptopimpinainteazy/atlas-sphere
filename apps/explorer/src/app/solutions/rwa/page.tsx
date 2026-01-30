@@ -96,7 +96,7 @@ export default function RWAPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/solutions" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Solutions
@@ -123,7 +123,7 @@ export default function RWAPage() {
 
       {/* Stats */}
       <section className="py-8 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-3 gap-6 text-center">
             <div className="glass-card p-6">
               <p className="text-3xl font-bold gradient-text">$500T+</p>
@@ -143,7 +143,7 @@ export default function RWAPage() {
 
       {/* Asset Classes */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Supported Asset Classes</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -170,7 +170,7 @@ export default function RWAPage() {
 
       {/* Features */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Platform Features</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -189,7 +189,7 @@ export default function RWAPage() {
 
       {/* Compliance */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Built-in Compliance</h2>
@@ -233,7 +233,7 @@ export default function RWAPage() {
 
       {/* Partners */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Ecosystem Partners</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">

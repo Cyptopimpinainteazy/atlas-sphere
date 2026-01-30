@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function AnchorPage() {
   return (
     <DocLayout
       title="Anchor Framework"
       description="Build SVM programs faster with the Anchor framework"
-      section="svm"
-      prevPage={{ title: 'SVM Programs', href: '/developers/docs/svm-programs' }}
-      nextPage={{ title: 'Deploy SVM Programs', href: '/developers/docs/svm-deploy' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Anchor is the recommended framework for building SVM programs on X3 Atlas Sphere.
@@ -18,7 +15,7 @@ export default function AnchorPage() {
       </p>
 
       <h2>Installation</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install Anchor CLI
 cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
 avm install latest
@@ -26,10 +23,10 @@ avm use latest
 
 # Verify installation
 anchor --version`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Create New Project</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Initialize new Anchor project
 anchor init my_x3_program
 cd my_x3_program
@@ -43,10 +40,10 @@ cd my_x3_program
 # │           └── lib.rs
 # ├── tests/            # TypeScript tests
 # └── migrations/       # Deploy scripts`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Counter Program Example</h2>
-      <DocLayout.CodeBlock language="rust" filename="programs/counter/src/lib.rs">
+      <CodeBlock language="rust" title="programs/counter/src/lib.rs">
 {`use anchor_lang::prelude::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
@@ -114,12 +111,12 @@ pub enum ErrorCode {
     #[msg("Cannot decrement below zero")]
     CounterUnderflow,
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Key Anchor Features</h2>
 
       <h3>Account Validation</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`#[derive(Accounts)]
 pub struct Transfer<'info> {
     #[account(mut, seeds = [b"vault"], bump)]
@@ -134,10 +131,10 @@ pub struct Transfer<'info> {
     pub authority: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Error Handling</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`#[error_code]
 pub enum MyError {
     #[msg("Insufficient funds for transfer")]
@@ -152,10 +149,10 @@ pub enum MyError {
 
 // Usage
 require!(amount <= MAX_AMOUNT, MyError::AmountExceedsMax(MAX_AMOUNT));`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Events</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`#[event]
 pub struct TransferEvent {
     pub from: Pubkey,
@@ -169,10 +166,10 @@ emit!(TransferEvent {
     to: ctx.accounts.to.key(),
     amount,
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Writing Tests</h2>
-      <DocLayout.CodeBlock language="typescript" filename="tests/counter.ts">
+      <CodeBlock language="typescript" title="tests/counter.ts">
 {`import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Counter } from "../target/types/counter";
@@ -213,10 +210,10 @@ describe("counter", () => {
     expect(account.count.toNumber()).to.equal(1);
   });
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Building and Testing</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Build program
 anchor build
 
@@ -228,15 +225,15 @@ anchor deploy
 
 # Generate IDL
 anchor idl init --filepath target/idl/counter.json PROGRAM_ID`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="tip" title="X3 Configuration">
+      <Callout type="info" title="X3 Configuration">
         Update <code>Anchor.toml</code> to use X3's RPC endpoint for deployment:
         <pre className="mt-2 text-xs">
 {`[provider]
 cluster = "https://rpc.testnet.atlas-sphere.io"`}
         </pre>
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

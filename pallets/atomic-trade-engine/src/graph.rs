@@ -16,7 +16,6 @@ use sp_core::H256;
 use sp_runtime::RuntimeDebug;
 use sp_std::{
     collections::{btree_map::BTreeMap, btree_set::BTreeSet},
-    vec,
     vec::Vec,
 };
 
@@ -335,6 +334,7 @@ impl TradeGraphResolver {
         match vm_type {
             VmType::Evm => 150_000,
             VmType::Svm => 200_000,
+            VmType::X3 => 120_000,
             VmType::CrossVm => 400_000,
         }
     }
@@ -354,7 +354,7 @@ impl TradeGraphResolver {
             if let Ok(route) = Self::evaluate_path(graph, &path, test_amount) {
                 if route.expected_amount_out > test_amount {
                     let profit = route.expected_amount_out.saturating_sub(test_amount);
-                    let profit_bps = ((profit as u128)
+                    let profit_bps = (profit
                         .saturating_mul(10000)
                         .checked_div(test_amount)
                         .unwrap_or(0)) as u32;
@@ -369,7 +369,7 @@ impl TradeGraphResolver {
                             let optimal_profit = optimal_route
                                 .expected_amount_out
                                 .saturating_sub(optimal_input);
-                            let optimal_profit_bps = ((optimal_profit as u128)
+                            let optimal_profit_bps = (optimal_profit
                                 .saturating_mul(10000)
                                 .checked_div(optimal_input)
                                 .unwrap_or(0))

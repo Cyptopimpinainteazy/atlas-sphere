@@ -1,26 +1,23 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function ValidatorPage() {
   return (
     <DocLayout
       title="Run a Validator"
       description="Become a validator on X3 Atlas Sphere network"
-      section="nodes"
-      prevPage={{ title: 'Best Practices', href: '/developers/docs/best-practices' }}
-      nextPage={{ title: 'Chain Spec', href: '/developers/docs/chain-spec' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Validators secure the X3 Atlas Sphere network by producing blocks and participating 
         in consensus. This guide covers validator setup and operation.
       </p>
 
-      <DocLayout.Callout type="warning" title="Testnet Only">
+      <Callout type="warning" title="Testnet Only">
         Currently, validator slots are limited to authorized participants on testnet.
         Mainnet will feature permissionless validation.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>System Requirements</h2>
       <ul>
@@ -32,7 +29,7 @@ export default function ValidatorPage() {
       </ul>
 
       <h2>Installation</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install dependencies
 sudo apt update && sudo apt install -y build-essential git clang curl libssl-dev
 
@@ -48,10 +45,10 @@ cargo build --release
 
 # Verify binary
 ./target/release/atlas-sphere-node --version`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Generate Validator Keys</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Generate session keys
 ./target/release/atlas-sphere-node key generate --scheme Sr25519 \\
   --output-type json > aura-key.json
@@ -77,10 +74,10 @@ cp *.json /secure/backup/location/
   --scheme Ed25519 \\
   --suri "$(cat grandpa-key.json | jq -r '.secretPhrase')" \\
   --key-type gran`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Validator Configuration</h2>
-      <DocLayout.CodeBlock language="bash" filename="/etc/atlas-validator/config.yaml">
+      <CodeBlock language="bash" title="/etc/atlas-validator/config.yaml">
 {`# Validator configuration
 base_path: /var/lib/atlas-validator
 chain: testnet
@@ -105,10 +102,10 @@ telemetry_url: "wss://telemetry.atlas-sphere.io/submit 0"
 # Prometheus metrics
 prometheus_external: true
 prometheus_port: 9615`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Systemd Service</h2>
-      <DocLayout.CodeBlock language="ini" filename="/etc/systemd/system/atlas-validator.service">
+      <CodeBlock language="ini" title="/etc/systemd/system/atlas-validator.service">
 {`[Unit]
 Description=X3 Atlas Sphere Validator
 After=network.target
@@ -141,9 +138,9 @@ ReadWritePaths=/var/lib/atlas-validator
 
 [Install]
 WantedBy=multi-user.target`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Enable and start service
 sudo systemctl daemon-reload
 sudo systemctl enable atlas-validator
@@ -152,13 +149,13 @@ sudo systemctl start atlas-validator
 # Check status
 sudo systemctl status atlas-validator
 sudo journalctl -u atlas-validator -f`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Register as Validator</h2>
       <p>
         Once your node is synced, register your validator with the network:
       </p>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 
 const api = await ApiPromise.create({ 
@@ -176,10 +173,10 @@ await api.tx.session
   .signAndSend(controller);
 
 console.log('Session keys set:', sessionKeys.toHex());`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Monitoring</h2>
-      <DocLayout.CodeBlock language="yaml" filename="prometheus.yml">
+      <CodeBlock language="yaml" title="prometheus.yml">
 {`scrape_configs:
   - job_name: 'atlas-validator'
     static_configs:
@@ -190,7 +187,7 @@ console.log('Session keys set:', sessionKeys.toHex());`}
         target_label: instance
         regex: '(.+):9615'
         replacement: '\${1}'`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <p>Key metrics to monitor:</p>
       <ul>

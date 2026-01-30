@@ -116,7 +116,7 @@ export default function TokenExtensionsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/solutions" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Solutions
@@ -143,7 +143,7 @@ export default function TokenExtensionsPage() {
 
       {/* Extensions Grid */}
       <section className="py-16 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Available Extensions</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -170,7 +170,7 @@ export default function TokenExtensionsPage() {
 
       {/* Code Example */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Simple to Implement</h2>
@@ -205,7 +205,7 @@ export default function TokenExtensionsPage() {
 
       {/* Use Cases */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Real-World Applications</h2>
           
           <div className="grid md:grid-cols-3 gap-6">

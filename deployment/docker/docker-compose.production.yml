@@ -39,7 +39,6 @@ services:
       - --name=Atlas-Bootnode
       - --rpc-external
       - --rpc-cors=all
-      - --rpc-methods=unsafe
       - --prometheus-external
       - --prometheus-port=9615
     healthcheck:

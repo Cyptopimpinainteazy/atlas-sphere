@@ -149,7 +149,7 @@ export default function CommunityPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/30 mb-4">
               <Users className="w-4 h-4 mr-2 text-pink-400" />
@@ -177,7 +177,7 @@ export default function CommunityPage() {
 
       {/* Stats */}
       <section className="py-8 border-t border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {communityStats.map((stat, index) => (
               <div key={index} className="glass-card p-6 flex items-center">
@@ -196,7 +196,7 @@ export default function CommunityPage() {
 
       {/* Sections */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {sections.map((section, index) => (
               <Link
@@ -219,7 +219,7 @@ export default function CommunityPage() {
 
       {/* Social Links */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Connect With Us</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -248,7 +248,7 @@ export default function CommunityPage() {
 
       {/* Featured Projects */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
             <Link href="/community/ecosystem" className="text-orange-400 hover:text-orange-300 flex items-center">
@@ -273,7 +273,7 @@ export default function CommunityPage() {
 
       {/* Upcoming Events */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-white">Upcoming Events</h2>
             <Link href="/community/events" className="text-orange-400 hover:text-orange-300 flex items-center">
@@ -311,7 +311,7 @@ export default function CommunityPage() {
 
       {/* Contribute */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="glass-card p-8 md:p-12 text-center">
             <Heart className="w-12 h-12 text-red-500 mx-auto mb-6" />
             <h2 className="text-3xl font-bold text-white mb-4">

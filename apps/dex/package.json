@@ -13,6 +13,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
+    "@atlas-sphere/shared": "file:../shared",
+    "@polkadot/api": "^14.0.1",
+    "@polkadot/types": "^14.0.1",
     "next": "14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

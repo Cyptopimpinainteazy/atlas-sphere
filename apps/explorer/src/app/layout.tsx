@@ -1,6 +1,8 @@
 import './globals.css';
 import Navigation from '../components/layout/Navigation';
 import Footer from '../components/layout/Footer';
+import { Providers } from '../components/providers';
+import FloatingNeuralTerminal from '../components/ai/FloatingNeuralTerminal';
 
 export const metadata = {
   title: 'X3 Atlas Sphere - Dual VM Layer-1 Blockchain',
@@ -28,9 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="bg-slate-950 min-h-screen">
-        <Navigation />
-        <main>{children}</main>
-        <Footer />
+        <Providers>
+          <Navigation />
+          <main>{children}</main>
+          <Footer />
+          <FloatingNeuralTerminal />
+        </Providers>
       </body>
     </html>
   );

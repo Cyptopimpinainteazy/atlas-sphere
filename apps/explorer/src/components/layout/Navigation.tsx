@@ -3,7 +3,22 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import Logo from '../ui/Logo';
+
+// Dynamic import with SSR disabled to prevent hydration mismatch
+const WalletButton = dynamic(
+  () => import('@atlas-sphere/shared').then((mod) => mod.WalletButton),
+  { 
+    ssr: false,
+    loading: () => (
+      <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium opacity-80 text-sm" disabled>
+        Connect Wallet
+      </button>
+    )
+  }
+);
+
 import {
   Menu,
   X,
@@ -39,6 +54,8 @@ import {
   Database,
   BarChart3,
   ExternalLink,
+  Gift,
+  TrendingUp,
 } from 'lucide-react';
 
 interface NavItem {
@@ -52,6 +69,11 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   {
+    label: 'Earn',
+    href: '/earn',
+    badge: 'New',
+  },
+  {
     label: 'Learn',
     children: [
       {
@@ -59,6 +81,12 @@ const navigation: NavItem[] = [
         href: '/learn/getting-started',
         icon: <Rocket className="w-5 h-5" />,
         description: 'Start your X3 journey here',
+      },
+      {
+        label: 'Tokenomics',
+        href: '/learn/tokenomics',
+        icon: <Coins className="w-5 h-5" />,
+        description: 'How X3Coin powers the ecosystem',
       },
       {
         label: 'Tutorials',
@@ -179,6 +207,13 @@ const navigation: NavItem[] = [
         description: 'AI-powered applications',
       },
       {
+        label: 'AI Swarm Hub',
+        href: '/x3/swarm',
+        icon: <Cpu className="w-5 h-5" />,
+        description: 'AI agent coordination',
+        badge: 'New',
+      },
+      {
         label: 'Real World Assets',
         href: '/solutions/rwa',
         icon: <Map className="w-5 h-5" />,
@@ -230,6 +265,13 @@ const navigation: NavItem[] = [
         href: '/network/indexer',
         icon: <BarChart3 className="w-5 h-5" />,
         description: 'Blockchain explorer and indexer',
+      },
+      {
+        label: 'Prometheus Metrics',
+        href: '/prometheus',
+        icon: <TrendingUp className="w-5 h-5" />,
+        description: 'Live node & kernel metrics',
+        badge: 'Live',
       },
     ],
   },
@@ -295,7 +337,7 @@ export default function Navigation() {
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container-wide">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Logo size="md" showText={true} />
@@ -307,13 +349,18 @@ export default function Navigation() {
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                       pathname === item.href
                         ? 'text-orange-400 bg-orange-500/10'
                         : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
                     }`}
                   >
                     {item.label}
+                    {item.badge && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white rounded">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <>
@@ -359,11 +406,9 @@ export default function Navigation() {
             <button className="p-2 text-gray-500 hover:text-white transition-colors">
               <Search className="w-5 h-5" />
             </button>
+            <WalletButton />
             <Link href="/developers/docs" className="btn-secondary text-sm">
               Start Building
-            </Link>
-            <Link href="https://faucet.testnet.atlas-sphere.io" className="btn-primary text-sm">
-              Get Testnet Tokens
             </Link>
           </div>
 

@@ -2,7 +2,7 @@
 
 import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 import Link from 'next/link';
-import { Terminal, Code, CheckCircle } from 'lucide-react';
+import { Terminal, Code, CheckCircle, Coins } from 'lucide-react';
 
 export default function QuickstartPage() {
   return (
@@ -33,19 +33,19 @@ export default function QuickstartPage() {
 
         {/* Step 1: Install SDK */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Step 1: Install the SDK</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Step 1: Install Dependencies</h2>
           <p className="text-gray-400 mb-4">
-            Install the X3 Atlas Sphere SDK using npm or yarn:
+            Install the Polkadot API for Substrate access and ethers.js for EVM access:
           </p>
           <CodeBlock language="bash" title="Terminal">
-{`# Using npm
-npm install @x3/atlas-sdk @polkadot/api
+{`# For Substrate (native) access
+npm install @polkadot/api @polkadot/keyring
 
-# Using yarn
-yarn add @x3/atlas-sdk @polkadot/api
+# For EVM access
+npm install ethers
 
-# Using pnpm
-pnpm add @x3/atlas-sdk @polkadot/api`}
+# For both (recommended)
+npm install @polkadot/api @polkadot/keyring ethers`}
           </CodeBlock>
         </section>
 
@@ -53,25 +53,38 @@ pnpm add @x3/atlas-sdk @polkadot/api`}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Step 2: Connect to the Network</h2>
           <p className="text-gray-400 mb-4">
-            Create a connection to the X3 Atlas Sphere testnet:
+            Connect to X3 Atlas Sphere testnet:
           </p>
           <CodeBlock language="typescript" title="connect.ts">
-{`import { AtlasClient } from '@x3/atlas-sdk';
+{`import { ApiPromise, WsProvider } from '@polkadot/api';
 
-// Connect to testnet
-const client = new AtlasClient({
-  rpcUrl: 'https://rpc.testnet.atlas-sphere.io',
-  wsUrl: 'wss://rpc.testnet.atlas-sphere.io',
-});
+// Connect to testnet via WebSocket
+const wsProvider = new WsProvider('ws://rpc.testnet.atlas-sphere.io:9944');
+const api = await ApiPromise.create({ provider: wsProvider });
 
-// Check connection
-const connected = await client.isConnected();
-console.log('Connected:', connected);
+// Wait for connection
+await api.isReady;
 
-// Get network info
-const info = await client.getNetworkInfo();
-console.log('Chain:', info.chain);
-console.log('Block:', info.blockNumber);`}
+// Get chain info
+const chain = await api.rpc.system.chain();
+const lastHeader = await api.rpc.chain.getHeader();
+console.log(\`Connected to \${chain}\`);
+console.log(\`Latest block: #\${lastHeader.number}\`);`}
+          </CodeBlock>
+          
+          <p className="text-gray-400 mt-6 mb-4">
+            Or connect using ethers.js for EVM access:
+          </p>
+          <CodeBlock language="typescript" title="connect-evm.ts">
+{`import { ethers } from 'ethers';
+
+// Connect to X3 Atlas EVM
+const provider = new ethers.JsonRpcProvider(
+  'http://rpc.testnet.atlas-sphere.io:9944'
+);
+
+const blockNumber = await provider.getBlockNumber();
+console.log('EVM block:', blockNumber);`}
           </CodeBlock>
         </section>
 
@@ -79,24 +92,26 @@ console.log('Block:', info.blockNumber);`}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Step 3: Get Test Tokens</h2>
           <p className="text-gray-400 mb-4">
-            Visit our faucet to get testnet ATLAS tokens:
+            Visit our faucet to get testnet X3 tokens:
           </p>
           <div className="glass-card p-6 flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-white mb-1">Testnet Faucet</h3>
-              <p className="text-sm text-gray-500">Get 100 ATLAS tokens for testing</p>
+              <p className="text-sm text-gray-500">Get X3 tokens for testing</p>
             </div>
             <Link 
               href="https://faucet.testnet.atlas-sphere.io" 
               className="btn-primary"
               target="_blank"
             >
-              Get Tokens
+              Get X3 Tokens
             </Link>
           </div>
           
-          <Callout type="info" title="Faucet Limits">
-            The faucet provides 100 ATLAS per request with a 24-hour cooldown per address.
+          <Callout type="info" title="X3 is the Native Gas Token">
+            X3 is used for all transaction fees on Atlas Sphere - whether you're using 
+            the EVM, SVM, or cross-VM Comits. It exists once in the Canonical Ledger 
+            and is accessible from both VMs.
           </Callout>
         </section>
 
@@ -104,22 +119,25 @@ console.log('Block:', info.blockNumber);`}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Step 4: Query the Chain</h2>
           <p className="text-gray-400 mb-4">
-            Query blockchain data using the SDK:
+            Query blockchain data using the Polkadot API:
           </p>
           <CodeBlock language="typescript" title="query.ts">
-{`// Get account balance
-const balance = await client.getBalance('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY');
-console.log('Balance:', balance.free.toString(), 'ATLAS');
+{`// Query system info
+const [chain, name, version] = await Promise.all([
+  api.rpc.system.chain(),
+  api.rpc.system.name(),
+  api.rpc.system.version(),
+]);
+console.log(\`Chain: \${chain}, Node: \${name} v\${version}\`);
 
-// Get latest blocks
-const blocks = await client.getRecentBlocks(10);
-blocks.forEach(block => {
-  console.log(\`Block #\${block.number}: \${block.hash}\`);
-});
+// Query canonical ledger balance (Asset ID 0 = X3)
+const accountId = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'; // Alice
+const balance = await api.query.atlasKernel.canonicalLedger(accountId, 0);
+console.log('X3 Balance:', balance.toHuman());
 
 // Subscribe to new blocks
-client.subscribeBlocks((block) => {
-  console.log('New block:', block.number);
+const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+  console.log(\`New block #\${header.number}\`);
 });`}
           </CodeBlock>
         </section>
@@ -133,23 +151,19 @@ client.subscribeBlocks((block) => {
           <CodeBlock language="typescript" title="transfer.ts">
 {`import { Keyring } from '@polkadot/keyring';
 
-// Create a keyring for signing
+// Create a keyring for signing (Substrate native)
 const keyring = new Keyring({ type: 'sr25519' });
 const alice = keyring.addFromUri('//Alice'); // Dev account
 
-// Send a transfer
-const tx = await client.transfer({
-  to: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
-  amount: '10000000000000', // 10 ATLAS (12 decimals)
-});
+// Send a balance transfer
+const transfer = api.tx.balances.transferKeepAlive(
+  '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', // Bob
+  10_000_000_000_000n // 10 X3 (18 decimals)
+);
 
 // Sign and submit
-const hash = await tx.signAndSend(alice);
-console.log('Transaction hash:', hash.toHex());
-
-// Wait for confirmation
-const receipt = await client.waitForTransaction(hash);
-console.log('Confirmed in block:', receipt.blockNumber);`}
+const hash = await transfer.signAndSend(alice);
+console.log('Transaction hash:', hash.toHex());`}
           </CodeBlock>
           
           <Callout type="warning" title="Security Note">
@@ -158,10 +172,43 @@ console.log('Confirmed in block:', receipt.blockNumber);`}
           </Callout>
         </section>
 
+        {/* EVM Transactions */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">Bonus: EVM Transactions</h2>
+          <p className="text-gray-400 mb-4">
+            Send transactions using ethers.js on the EVM side:
+          </p>
+          <CodeBlock language="typescript" title="evm-transfer.ts">
+{`import { ethers } from 'ethers';
+
+const provider = new ethers.JsonRpcProvider(
+  'http://rpc.testnet.atlas-sphere.io:9944'
+);
+
+// Create wallet from private key
+const wallet = new ethers.Wallet(privateKey, provider);
+
+// Send X3 (native gas token)
+const tx = await wallet.sendTransaction({
+  to: '0xRecipientAddress...',
+  value: ethers.parseEther('1.0'), // 1 X3
+});
+
+console.log('TX hash:', tx.hash);
+const receipt = await tx.wait();
+console.log('Confirmed in block:', receipt?.blockNumber);`}
+          </CodeBlock>
+        </section>
+
         {/* What's Next */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">What&apos;s Next?</h2>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/learn/tokenomics" className="glass-card-hover p-4 block card-lift">
+              <Coins className="w-6 h-6 text-orange-400 mb-2" />
+              <h3 className="font-semibold text-white mb-1">Tokenomics</h3>
+              <p className="text-xs text-gray-500">Learn about X3Coin</p>
+            </Link>
             <Link href="/developers/docs/dual-vm" className="glass-card-hover p-4 block card-lift">
               <Code className="w-6 h-6 text-orange-400 mb-2" />
               <h3 className="font-semibold text-white mb-1">Dual VM Guide</h3>
@@ -172,10 +219,10 @@ console.log('Confirmed in block:', receipt.blockNumber);`}
               <h3 className="font-semibold text-white mb-1">Comit Transactions</h3>
               <p className="text-xs text-gray-500">Cross-VM atomic operations</p>
             </Link>
-            <Link href="/developers/cookbook" className="glass-card-hover p-4 block card-lift">
+            <Link href="/network/rpc-providers" className="glass-card-hover p-4 block card-lift">
               <Code className="w-6 h-6 text-orange-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">Cookbook</h3>
-              <p className="text-xs text-gray-500">Example code snippets</p>
+              <h3 className="font-semibold text-white mb-1">RPC Providers</h3>
+              <p className="text-xs text-gray-500">Network endpoints</p>
             </Link>
           </div>
         </section>

@@ -187,7 +187,7 @@ export default function SolutionsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 mb-4">
               <Boxes className="w-4 h-4 mr-2 text-amber-400" />
@@ -214,7 +214,7 @@ export default function SolutionsPage() {
 
       {/* Tools */}
       <section className="py-16 border-t border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Tools & Infrastructure</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -239,7 +239,7 @@ export default function SolutionsPage() {
 
       {/* Use Cases */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Use Cases</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -267,7 +267,7 @@ export default function SolutionsPage() {
 
       {/* Real World Assets */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="badge badge-success mb-4">Real World Assets</div>
@@ -320,7 +320,7 @@ export default function SolutionsPage() {
 
       {/* Mobile */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
               <div className="glass-card p-8">
@@ -358,7 +358,7 @@ export default function SolutionsPage() {
 
       {/* Resources */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Resources</h2>
           
           <div className="grid md:grid-cols-3 gap-6">

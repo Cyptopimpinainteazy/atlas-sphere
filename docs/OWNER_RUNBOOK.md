@@ -61,6 +61,11 @@ ENABLE_EXTERNAL=1 ./run-dev-node.sh
     --rpc-external
 ```
 
+### Public RPC (dev/local/staging/testnet)
+
+Use the hardened, repeatable bundle in [deployment/public-rpc/README.md](deployment/public-rpc/README.md).
+
+
 ### Checking Node Health
 ```bash
 # RPC health check

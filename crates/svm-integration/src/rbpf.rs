@@ -8,7 +8,6 @@ use crate::{
     SvmInstruction, SvmResult,
 };
 use solana_rbpf::{
-    ebpf,
     elf::Executable,
     error::ProgramResult,
     memory_region::{MemoryMapping, MemoryRegion},
@@ -96,6 +95,7 @@ impl RbpfSvmExecutor {
     }
 
     /// Create a simple test program that returns success
+    #[allow(dead_code)]
     fn create_test_program() -> Vec<u8> {
         // Minimal BPF program: mov r0, 0; exit
         vec![
@@ -114,7 +114,8 @@ struct AtlasSyscallContext {
     compute_units_used: u64,
     /// Logs emitted during execution
     logs: Vec<Vec<u8>>,
-    /// Return data from the program
+    /// Return data from the program (reserved for future use)
+    #[allow(dead_code)]
     return_data: Vec<u8>,
 }
 
@@ -181,23 +182,90 @@ impl SvmExecutor for RbpfSvmExecutor {
             return Err(SvmError::InvalidPayload);
         }
 
-        // For initial implementation, simulate execution
-        // Full implementation would use solana-rbpf VM
-        let compute_used = (program.len() + input.len()) as u64 * 10;
+        // Create the loader with no syscalls (minimal execution)
+        let loader = create_loader();
 
-        if compute_used > config.compute_unit_limit {
+        // Parse the program (either ELF or raw text bytecode)
+        let executable_result = if program.starts_with(b"\x7fELF") {
+            Executable::from_elf(program, loader.clone())
+        } else {
+            Executable::from_text_bytes(
+                program,
+                loader.clone(),
+                SBPFVersion::V1,
+                FunctionRegistry::default(),
+            )
+        };
+
+        let executable = match executable_result {
+            Ok(exe) => exe,
+            Err(_) => return Err(SvmError::InvalidPayload),
+        };
+
+        // Verify the program before execution
+        if executable.verify::<RequisiteVerifier>().is_err() {
+            return Err(SvmError::InvalidPayload);
+        }
+
+        // Create execution context with compute unit metering
+        let mut context = AtlasSyscallContext::new(config.compute_unit_limit);
+
+        // Set up memory regions for the VM
+        // Region 0: Program code (read-only)
+        // Region 1: Input data (read-write for return data)
+        let mut input_buffer = input.to_vec();
+        // Ensure minimum buffer size for BPF
+        if input_buffer.len() < 64 {
+            input_buffer.resize(64, 0);
+        }
+
+        let regions: Vec<MemoryRegion> =
+            vec![MemoryRegion::new_writable(&mut input_buffer, 0x100000000)];
+
+        let sbpf_version = SBPFVersion::V1;
+        let memory_mapping = match MemoryMapping::new(regions, &self.config, &sbpf_version) {
+            Ok(mm) => mm,
+            Err(_) => return Err(SvmError::ExecutionFailed),
+        };
+
+        // Create and run the VM
+        let mut vm = EbpfVm::new(
+            loader,
+            &sbpf_version,
+            &mut context,
+            memory_mapping,
+            4096, // stack size
+        );
+
+        // Execute the BPF program
+        let (instruction_count, result) = vm.execute_program(&executable, true);
+
+        // Consume compute units based on instructions executed
+        context.consume(instruction_count);
+
+        // Check if we ran out of compute units
+        if context.get_remaining() == 0 && instruction_count >= config.compute_unit_limit {
             return Err(SvmError::OutOfComputeUnits);
         }
 
-        // Simulate successful execution
-        let state_root = compute_state_root(&[input.to_vec()], program);
+        // Interpret execution result
+        let (success, return_data) = match result {
+            ProgramResult::Ok(return_value) => {
+                // Return value 0 indicates success in BPF convention
+                (return_value == 0, vec![return_value as u8])
+            }
+            ProgramResult::Err(_) => (false, vec![]),
+        };
+
+        // Compute state root from logs and return data
+        let state_root = compute_state_root(&context.logs, &return_data);
 
         Ok(SvmExecutionResult {
-            success: true,
-            output: vec![0], // Success return
-            compute_units_used: compute_used,
+            success,
+            output: return_data,
+            compute_units_used: context.compute_units_used,
             account_updates: vec![],
-            logs: vec![b"Program executed".to_vec()],
+            logs: context.logs,
             state_root,
         })
     }

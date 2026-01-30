@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Quantum Theme Styles */
+@import '../styles/quantum.css';
+
 :root {
   /* X3 Dark Color Palette - Blackscale with Orange/Red Accents */
   --x3-black: #000000;
@@ -41,6 +44,16 @@
 }
 
 @layer components {
+  /* Full-width container with responsive padding */
+  .container-full {
+    @apply w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16;
+  }
+
+  /* Wide container for main content - stretches more on large screens */
+  .container-wide {
+    @apply w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16;
+  }
+
   /* Gradient text - Orange/Red fire gradient */
   .gradient-text {
     @apply bg-gradient-to-r from-orange-500 via-red-500 to-orange-400 bg-clip-text text-transparent;

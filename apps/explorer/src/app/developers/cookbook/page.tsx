@@ -314,7 +314,7 @@ export default function CookbookPage() {
       {/* Hero */}
       <section className="py-16 relative overflow-hidden border-b border-[#1a1a1a]">
         <div className="absolute inset-0 mesh-gradient opacity-20" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="badge badge-success mb-4">Cookbook</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -340,7 +340,7 @@ export default function CookbookPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container-wide py-12">
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2 mb-8">
           {categories.map((category) => (

@@ -138,7 +138,7 @@ export default function NetworkPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 mb-4">
               <Globe className="w-4 h-4 mr-2 text-blue-400" />
@@ -157,7 +157,7 @@ export default function NetworkPage() {
 
       {/* Stats */}
       <section className="py-8 border-t border-[#1a1a1a] bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {derivedNetworkStats.map((stat, index) => (
               <div key={index} className="glass-card p-6 flex items-center">
@@ -178,7 +178,7 @@ export default function NetworkPage() {
 
       {/* Main Sections */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid md:grid-cols-2 gap-6">
             {sections.map((section, index) => (
               <Link
@@ -206,7 +206,7 @@ export default function NetworkPage() {
 
       {/* Explorers */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Block Explorers</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -238,7 +238,7 @@ export default function NetworkPage() {
 
       {/* Indexers */}
       <section className="py-16 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Data Indexers</h2>
           
           <div className="grid md:grid-cols-3 gap-6">

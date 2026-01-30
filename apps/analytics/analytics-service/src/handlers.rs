@@ -29,7 +29,9 @@ pub async fn readiness_check(state: web::Data<AppState>) -> HttpResponse {
 
     let response = ReadinessResponse {
         ready: db_healthy,
-        checks: ReadinessChecks { database: db_healthy },
+        checks: ReadinessChecks {
+            database: db_healthy,
+        },
     };
 
     if db_healthy {
@@ -56,17 +58,14 @@ pub async fn record_event(
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string());
 
-    let ip_hash = req
-        .connection_info()
-        .realip_remote_addr()
-        .map(|ip| {
-            // Hash IP for privacy
-            use std::collections::hash_map::DefaultHasher;
-            use std::hash::{Hash, Hasher};
-            let mut hasher = DefaultHasher::new();
-            ip.hash(&mut hasher);
-            format!("{:016x}", hasher.finish())
-        });
+    let ip_hash = req.connection_info().realip_remote_addr().map(|ip| {
+        // Hash IP for privacy
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut hasher = DefaultHasher::new();
+        ip.hash(&mut hasher);
+        format!("{:016x}", hasher.finish())
+    });
 
     let event = Event {
         id: Uuid::new_v4(),

@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function ErrorHandlingPage() {
   return (
     <DocLayout
       title="Error Handling"
       description="Handle errors and failures in cross-VM operations"
-      section="cross-vm"
-      prevPage={{ title: 'Cross-VM Assets', href: '/developers/docs/cross-vm-assets' }}
-      nextPage={{ title: 'Best Practices', href: '/developers/docs/best-practices' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Robust error handling is crucial for cross-VM applications. Learn how to detect,
@@ -23,7 +20,7 @@ export default function ErrorHandlingPage() {
       </p>
 
       <h3>1. Validation Errors (Pre-execution)</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`const ValidationErrors = {
   0x01: 'InvalidNonce',        // Nonce doesn't match expected
   0x02: 'InsufficientFee',     // Fee too low for operation
@@ -31,10 +28,10 @@ export default function ErrorHandlingPage() {
   0x04: 'PayloadTooLarge',     // EVM or SVM payload exceeds limit
   0x05: 'InvalidPayload',      // Malformed payload data
 };`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>2. Execution Errors</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`const ExecutionErrors = {
   // EVM errors (0x10 prefix)
   0x10: 'EvmExecutionFailed',
@@ -48,17 +45,17 @@ export default function ErrorHandlingPage() {
   0x22: 'SvmProgramError',
   0x23: 'SvmAccountError',
 };`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>3. Verification Errors</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`const VerificationErrors = {
   0x06: 'PrepareRootMismatch', // Input hash doesn't match
 };`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Detecting Failures</h2>
-      <DocLayout.CodeBlock language="typescript" filename="error-handling.ts">
+      <CodeBlock language="typescript" title="error-handling.ts">
 {`import { ApiPromise } from '@polkadot/api';
 
 async function submitComitWithErrorHandling(
@@ -106,10 +103,10 @@ async function submitComitWithErrorHandling(
       });
   });
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Decoding EVM Errors</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { ethers } from 'ethers';
 
 function decodeEvmError(errorData: string, contractInterface: ethers.Interface) {
@@ -149,10 +146,10 @@ function decodeEvmError(errorData: string, contractInterface: ethers.Interface) 
 
   return { type: 'unknown', data: errorData };
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Decoding SVM Errors</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { AnchorError } from '@coral-xyz/anchor';
 
 function decodeSvmError(errorData: Uint8Array, idl: Idl) {
@@ -188,10 +185,10 @@ function decodeSvmError(errorData: Uint8Array, idl: Idl) {
     message: programErrors[errorCode] || 'Unknown error',
   };
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Retry Strategies</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`async function submitWithRetry(
   submitFn: () => Promise<void>,
   maxRetries = 3
@@ -227,15 +224,15 @@ function decodeSvmError(errorData: Uint8Array, idl: Idl) {
   
   throw lastError;
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="warning" title="Idempotency">
+      <Callout type="warning" title="Idempotency">
         Design your Comits to be idempotent when possible. If a retry succeeds after 
         the original was included in a block, you don't want double-execution.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Error Events</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Subscribe to all Comit failure events
 api.query.system.events((events) => {
   events.forEach(({ event }) => {
@@ -254,7 +251,7 @@ api.query.system.events((events) => {
     }
   });
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
     </DocLayout>
   );
 }

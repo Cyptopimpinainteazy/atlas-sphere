@@ -94,7 +94,7 @@ export default function LearningPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/developers" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Developers
@@ -121,7 +121,7 @@ export default function LearningPage() {
 
       {/* Resources */}
       <section className="py-12 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {resources.map((resource, index) => (
               <div key={index} className="glass-card p-6 text-center">
@@ -139,7 +139,7 @@ export default function LearningPage() {
 
       {/* Learning Paths */}
       <section id="paths" className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Learning Paths</h2>
           
           <div className="space-y-6">
@@ -185,7 +185,7 @@ export default function LearningPage() {
 
       {/* Certifications */}
       <section id="certifications" className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-white">Certifications</h2>
             <Award className="w-8 h-8 text-amber-400" />
@@ -211,7 +211,7 @@ export default function LearningPage() {
 
       {/* Progress Tracking */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="glass-card p-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>

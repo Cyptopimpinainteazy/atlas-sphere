@@ -108,12 +108,12 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({
   NATIVE_ASSET_DECIMALS: 12,
   DEFAULT_WS_ENDPOINT: 'ws://127.0.0.1:9944',
   ConnectionError: class extends Error {
-    constructor(endpoint: string, cause: Error) {
+    constructor(endpoint, cause) {
       super(`Failed to connect to ${endpoint}: ${cause.message}`);
     }
   },
   RpcError: class extends Error {
-    constructor(method: string, message: string) {
+    constructor(method, message) {
       super(`RPC ${method} failed: ${message}`);
     }
   },

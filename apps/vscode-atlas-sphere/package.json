@@ -1,0 +1,236 @@
+{
+  "name": "vscode-atlas-sphere",
+  "displayName": "Atlas Sphere",
+  "description": "VS Code extension for Atlas Sphere blockchain development - Dual-VM (EVM + SVM) with Comit transactions",
+  "version": "0.1.0",
+  "publisher": "atlas-sphere",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atlas-sphere/atlas-sphere"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets",
+    "Formatters"
+  ],
+  "keywords": [
+    "blockchain",
+    "substrate",
+    "evm",
+    "solana",
+    "comit",
+    "dual-vm",
+    "atlas"
+  ],
+  "activationEvents": [
+    "onLanguage:comit",
+    "onLanguage:rust",
+    "workspaceContains:**/*.comit",
+    "workspaceContains:**/*.atlas",
+    "workspaceContains:**/Cargo.toml"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "comit",
+        "aliases": [
+          "Comit",
+          "Atlas Transaction"
+        ],
+        "extensions": [
+          ".comit",
+          ".atlas"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/comit-light.svg",
+          "dark": "./icons/comit-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "comit",
+        "scopeName": "source.comit",
+        "path": "./syntaxes/comit.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "comit",
+        "path": "./snippets/comit.json"
+      },
+      {
+        "language": "rust",
+        "path": "./snippets/substrate.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Atlas Sphere",
+      "properties": {
+        "atlasSphere.lsp.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the atlas-lsp executable. If empty, uses the bundled version or searches PATH."
+        },
+        "atlasSphere.lsp.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the Atlas LSP server."
+        },
+        "atlasSphere.diagnostics.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable diagnostics from the Atlas LSP."
+        },
+        "atlasSphere.completion.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable autocompletion for Comit and Substrate development."
+        },
+        "atlasSphere.testnet.rpcUrl": {
+          "type": "string",
+          "default": "http://rpc.testnet.atlas-sphere.io:9944",
+          "description": "RPC URL for Atlas testnet connection."
+        },
+        "atlasSphere.testnet.faucetUrl": {
+          "type": "string",
+          "default": "https://faucet.testnet.atlas-sphere.io",
+          "description": "URL for the testnet faucet."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "atlasSphere.restartLsp",
+        "title": "Restart LSP Server",
+        "category": "Atlas Sphere"
+      },
+      {
+        "command": "atlasSphere.openDocs",
+        "title": "Open Documentation",
+        "category": "Atlas Sphere"
+      },
+      {
+        "command": "atlasSphere.newComit",
+        "title": "New Comit Transaction",
+        "category": "Atlas Sphere"
+      },
+      {
+        "command": "atlasSphere.requestFaucet",
+        "title": "Request Testnet Tokens",
+        "category": "Atlas Sphere"
+      },
+      {
+        "command": "atlasSphere.showStatus",
+        "title": "Show Chain Status",
+        "category": "Atlas Sphere"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "atlasSphere.restartLsp",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "atlasSphere.newComit",
+          "when": "workspaceFolderCount > 0"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "atlasSphere.newComit",
+          "when": "resourceExtname == .comit || resourceExtname == .atlas",
+          "group": "atlas"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "atlasSphere.newComit",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "editorTextFocus && resourceExtname == .comit"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "atlas-sphere",
+          "title": "Atlas Sphere",
+          "icon": "./icons/atlas-sphere.svg"
+        }
+      ]
+    },
+    "views": {
+      "atlas-sphere": [
+        {
+          "id": "atlasSphere.chain",
+          "name": "Chain Status"
+        },
+        {
+          "id": "atlasSphere.accounts",
+          "name": "Accounts"
+        },
+        {
+          "id": "atlasSphere.comits",
+          "name": "Recent Comits"
+        }
+      ]
+    },
+    "problemMatchers": [
+      {
+        "name": "atlas-comit",
+        "owner": "comit",
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning|info):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

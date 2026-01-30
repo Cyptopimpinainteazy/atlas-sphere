@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function AtomicExecutionPage() {
   return (
     <DocLayout
       title="Atomic Cross-VM Execution"
       description="How X3 ensures atomic execution across EVM and SVM"
-      section="cross-vm"
-      prevPage={{ title: 'Creating Comits', href: '/developers/docs/creating-comits' }}
-      nextPage={{ title: 'Cross-VM Assets', href: '/developers/docs/cross-vm-assets' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         X3 Atlas Sphere guarantees atomic execution across both VMs. This guide explains 
@@ -29,7 +26,7 @@ export default function AtomicExecutionPage() {
       </ul>
 
       <h2>Execution Flow</h2>
-      <DocLayout.CodeBlock language="text">
+      <CodeBlock language="text">
 {`┌─────────────────────────────────────────────────────────────┐
 │                    Comit Execution                          │
 ├─────────────────────────────────────────────────────────────┤
@@ -60,7 +57,7 @@ export default function AtomicExecutionPage() {
 │     └── If failure: Discard all state changes               │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Rollback Scenarios</h2>
       <p>
@@ -68,7 +65,7 @@ export default function AtomicExecutionPage() {
       </p>
 
       <h3>EVM Failure</h3>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`// This causes full Comit rollback
 contract Example {
     function riskyOperation() external {
@@ -79,10 +76,10 @@ contract Example {
         require(condition, "Failed");
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>SVM Failure</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`// SVM program error
 pub fn process_instruction(...) -> ProgramResult {
     // Some operations...
@@ -91,24 +88,24 @@ pub fn process_instruction(...) -> ProgramResult {
     // Including the EVM portion of the Comit
     return Err(ProgramError::Custom(1));
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Verification Failure</h3>
-      <DocLayout.CodeBlock language="text">
+      <CodeBlock language="text">
 {`Even if both EVM and SVM execute successfully, the Comit
 can still fail if the prepare_root doesn't match.
 
 This ensures the Comit hasn't been tampered with between
 submission and execution.`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>State Isolation</h2>
-      <DocLayout.Callout type="info" title="Important">
+      <Callout type="info" title="Important">
         During Comit execution, state changes are isolated. Neither the EVM nor SVM 
         can observe the other's pending changes until the Comit finalizes.
-      </DocLayout.Callout>
+      </Callout>
 
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`// Example: Token swap across VMs
 
 // EVM side: Lock tokens
@@ -121,13 +118,13 @@ submission and execution.`}
 // After finalization:
 // - Both changes are visible atomically
 // - No window where one side is visible without the other`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Handling Partial Success</h2>
       <p>
         Design your contracts to handle rollbacks gracefully:
       </p>
-      <DocLayout.CodeBlock language="solidity">
+      <CodeBlock language="solidity">
 {`// GOOD: Check conditions upfront
 contract SafeSwap {
     function swapForSVM(uint256 amount) external {
@@ -153,7 +150,7 @@ contract UnsafeSwap {
         require(token.balanceOf(msg.sender) >= amount);
     }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Cross-VM Communication</h2>
       <p>
@@ -166,7 +163,7 @@ contract UnsafeSwap {
       </ul>
 
       <h2>Ordering Guarantees</h2>
-      <DocLayout.CodeBlock language="text">
+      <CodeBlock language="text">
 {`Block N:
   Comit A (submitted first)
     └── EVM executes, then SVM executes
@@ -177,7 +174,7 @@ Within a block:
   - Comits execute in submission order
   - EVM always executes before SVM within a Comit
   - No interleaving between Comits`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Best Practices for Atomicity</h2>
       <ul>

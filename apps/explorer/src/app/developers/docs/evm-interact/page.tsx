@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function EvmInteractPage() {
   return (
     <DocLayout
       title="Interact with EVM Contracts"
       description="Call and interact with deployed smart contracts on X3 Atlas Sphere"
-      section="evm"
-      prevPage={{ title: 'Deploy Contracts', href: '/developers/docs/evm-deploy' }}
-      nextPage={{ title: 'Hardhat Guide', href: '/developers/docs/hardhat' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Interact with your deployed smart contracts using ethers.js, wagmi, or any
@@ -18,7 +15,7 @@ export default function EvmInteractPage() {
       </p>
 
       <h2>Using ethers.js</h2>
-      <DocLayout.CodeBlock language="typescript" filename="interact.ts">
+      <CodeBlock language="typescript" title="interact.ts">
 {`import { ethers } from 'ethers';
 
 // Connect to X3 testnet
@@ -39,10 +36,10 @@ console.log('Balance:', ethers.formatEther(balance));
 const tx = await contract.transfer(recipient, ethers.parseEther('100'));
 await tx.wait();
 console.log('Transfer complete:', tx.hash);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Using wagmi + React</h2>
-      <DocLayout.CodeBlock language="typescript" filename="WagmiConfig.tsx">
+      <CodeBlock language="typescript" title="WagmiConfig.tsx">
 {`import { createConfig, http } from 'wagmi';
 import { defineChain } from 'viem';
 
@@ -65,9 +62,9 @@ export const config = createConfig({
     [x3Testnet.id]: http(),
   },
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.CodeBlock language="typescript" filename="ContractInteraction.tsx">
+      <CodeBlock language="typescript" title="ContractInteraction.tsx">
 {`'use client';
 
 import { useReadContract, useWriteContract } from 'wagmi';
@@ -106,10 +103,10 @@ export function TransferButton() {
     </button>
   );
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Event Listening</h2>
-      <DocLayout.CodeBlock language="typescript" filename="events.ts">
+      <CodeBlock language="typescript" title="events.ts">
 {`import { ethers } from 'ethers';
 
 const provider = new ethers.JsonRpcProvider('https://rpc.testnet.atlas-sphere.io');
@@ -123,10 +120,10 @@ contract.on('Transfer', (from, to, amount, event) => {
 // Query past events
 const filter = contract.filters.Transfer(null, userAddress);
 const events = await contract.queryFilter(filter, -1000); // Last 1000 blocks`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Multicall for Batch Reads</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { ethers } from 'ethers';
 
 const multicall = new ethers.Contract(MULTICALL_ADDRESS, multicallAbi, provider);
@@ -138,15 +135,15 @@ const calls = [
 ];
 
 const results = await multicall.aggregate.staticCall(calls);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="tip" title="Gas Estimation">
+      <Callout type="info" title="Gas Estimation">
         Always use <code>estimateGas()</code> before sending transactions to avoid failed txs.
         X3 provides accurate gas estimates via standard EVM methods.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Error Handling</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`try {
   const tx = await contract.transfer(to, amount);
   await tx.wait();
@@ -159,7 +156,7 @@ const results = await multicall.aggregate.staticCall(calls);`}
     console.error('Contract error:', decoded);
   }
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
     </DocLayout>
   );
 }

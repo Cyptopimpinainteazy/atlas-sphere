@@ -62,26 +62,21 @@ pub mod types;
 pub mod weights;
 
 pub use runtime_api::*;
+pub use types::{AmmProtocol, VmType};
 pub use weights::WeightInfo;
 
 use codec::{Decode, Encode};
 use frame_support::{
     pallet_prelude::*,
-    traits::{Currency, Time, UnixTime},
+    traits::{Currency, UnixTime},
 };
 use frame_system::pallet_prelude::*;
-use pallet_atlas_kernel::{
-    DualVmDispatcher, EvmExecutorAdapter, ExecutionReceipt, StateChange, SvmExecutorAdapter,
-};
+use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
-use sp_runtime::{
-    offchain::{http, Duration},
-    traits::{AtLeast32BitUnsigned, CheckedAdd, CheckedMul, CheckedSub, Saturating, Zero},
-    DispatchError, RuntimeDebug, SaturatedConversion,
-};
-use sp_std::{collections::btree_map::BTreeMap, prelude::*};
+use sp_runtime::{DispatchError, RuntimeDebug, SaturatedConversion};
+use sp_std::prelude::*;
 
 /// Maximum number of legs in a single trade batch
 pub const MAX_TRADE_LEGS: u32 = 16;
@@ -95,12 +90,23 @@ pub const MAX_SLIPPAGE_BPS: u32 = 5000; // 50%
 /// Minimum slippage tolerance in basis points
 pub const MIN_SLIPPAGE_BPS: u32 = 1; // 0.01%
 
+/// Maximum length for addresses (enough for EVM 20 bytes or Solana 32 bytes)
+pub const MAX_ADDRESS_LEN: u32 = 64;
+
+/// Maximum length for route data in a trade leg
+pub const MAX_ROUTE_DATA_LEN: u32 = 256;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
 
+    use frame_support::storage::{with_transaction, TransactionOutcome};
+    use frame_support::traits::StorageVersion;
+
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
-    #[pallet::without_storage_info]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
@@ -122,6 +128,9 @@ pub mod pallet {
         /// SVM execution adapter (from atlas-kernel or custom).
         type SvmAdapter: SvmExecutorAdapter;
 
+        /// X3 execution adapter (from atlas-kernel or custom).
+        type X3Adapter: X3ExecutorAdapter;
+
         /// Maximum number of trade legs per batch.
         #[pallet::constant]
         type MaxTradeLegs: Get<u32>;
@@ -142,6 +151,10 @@ pub mod pallet {
         #[pallet::constant]
         type DefaultTradeSvmComputeLimit: Get<u64>;
 
+        /// Default gas limit for X3 trade operations.
+        #[pallet::constant]
+        type DefaultTradeX3GasLimit: Get<u64>;
+
         /// Origin allowed to register AMM adapters.
         type AmmRegistrarOrigin: EnsureOrigin<<Self as frame_system::Config>::RuntimeOrigin>;
     }
@@ -153,7 +166,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         H256, // batch_id
-        TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+        TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
         OptionQuery,
     >;
 
@@ -174,7 +187,7 @@ pub mod pallet {
     pub type PendingBatches<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        AccountIdOf<T>,
+        T::AccountId,
         BoundedVec<H256, T::MaxPendingBatchesPerAccount>,
         ValueQuery,
     >;
@@ -189,7 +202,7 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn trade_nonces)]
     pub type TradeNonces<T: Config> =
-        StorageMap<_, Blake2_128Concat, AccountIdOf<T>, u64, ValueQuery>;
+        StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
     /// Completed batch count for metrics.
     #[pallet::storage]
@@ -245,7 +258,7 @@ pub mod pallet {
         /// A new trade batch was created.
         TradeBatchCreated {
             batch_id: H256,
-            origin: AccountIdOf<T>,
+            origin: T::AccountId,
             legs_count: u32,
         },
         /// A trade leg execution started.
@@ -315,6 +328,9 @@ pub mod pallet {
             token_b: H256,
             twap_price: u128,
         },
+
+        /// A trade batch was executed via Atlas Kernel v2 comit.
+        TradeBatchExecutedViaKernelComitV2 { batch_id: H256, comit_id: H256 },
     }
 
     #[pallet::error]
@@ -359,6 +375,8 @@ pub mod pallet {
         SvmTradeFailed,
         /// Cross-VM bridging failed.
         CrossVmBridgeFailed,
+        /// X3 execution failed during trade.
+        X3TradeFailed,
         /// Arithmetic overflow.
         ArithmeticOverflow,
         /// Invalid asset pair.
@@ -379,6 +397,11 @@ pub mod pallet {
         InvalidPriceData,
         /// Price oracle not initialized for pair.
         PriceOracleNotInitialized,
+
+        /// Batch contains a VM type not supported by kernel v2 comits.
+        KernelComitUnsupportedVm,
+        /// Batch contains more than one leg for the same VM.
+        KernelComitDuplicateVmLeg,
     }
 
     #[pallet::call]
@@ -411,8 +434,7 @@ pub mod pallet {
                 Error::<T>::TooManyTradeLegs
             );
             ensure!(
-                slippage_tolerance_bps >= MIN_SLIPPAGE_BPS
-                    && slippage_tolerance_bps <= MAX_SLIPPAGE_BPS,
+                (MIN_SLIPPAGE_BPS..=MAX_SLIPPAGE_BPS).contains(&slippage_tolerance_bps),
                 Error::<T>::InvalidSlippageTolerance
             );
 
@@ -441,7 +463,7 @@ pub mod pallet {
             );
 
             // Convert input legs to internal representation
-            let trade_legs: Vec<TradeLeg> = legs
+            let trade_legs_vec: Vec<TradeLeg> = legs
                 .iter()
                 .map(|input| TradeLeg {
                     amm_protocol: input.amm_protocol,
@@ -456,6 +478,10 @@ pub mod pallet {
                     gas_used: 0,
                 })
                 .collect();
+
+            // Convert to BoundedVec
+            let trade_legs: BoundedVec<TradeLeg, T::MaxTradeLegs> =
+                BoundedVec::try_from(trade_legs_vec).map_err(|_| Error::<T>::TooManyTradeLegs)?;
 
             // Create trade batch
             let batch = TradeBatch {
@@ -593,7 +619,8 @@ pub mod pallet {
                         reason,
                     });
 
-                    return Err(Error::<T>::BatchAlreadyCompleted.into());
+                    // Return Ok to persist storage changes (batch was processed, just failed)
+                    // Caller should check batch status or listen for TradeBatchFailed event
                 }
             }
 
@@ -642,11 +669,11 @@ pub mod pallet {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
-                !AmmAdapters::<T>::contains_key(&protocol),
+                !AmmAdapters::<T>::contains_key(protocol),
                 Error::<T>::AmmAlreadyRegistered
             );
 
-            AmmAdapters::<T>::insert(&protocol, config.clone());
+            AmmAdapters::<T>::insert(protocol, config.clone());
 
             Self::deposit_event(Event::AmmAdapterRegistered {
                 protocol,
@@ -662,15 +689,18 @@ pub mod pallet {
         /// * `protocol` - The AMM protocol to remove
         #[pallet::call_index(4)]
         #[pallet::weight(<T as Config>::WeightInfo::remove_amm_adapter())]
-        pub fn remove_amm_adapter(origin: OriginFor<T>, protocol: types::AmmProtocol) -> DispatchResult {
+        pub fn remove_amm_adapter(
+            origin: OriginFor<T>,
+            protocol: types::AmmProtocol,
+        ) -> DispatchResult {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(
-                AmmAdapters::<T>::contains_key(&protocol),
+                AmmAdapters::<T>::contains_key(protocol),
                 Error::<T>::AmmNotRegistered
             );
 
-            AmmAdapters::<T>::remove(&protocol);
+            AmmAdapters::<T>::remove(protocol);
 
             Self::deposit_event(Event::AmmAdapterRemoved { protocol });
 
@@ -741,7 +771,7 @@ pub mod pallet {
             ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
 
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
 
             let observation = types::PricePoint {
                 token_a,
@@ -779,6 +809,189 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Execute a pending trade batch by submitting a triple-VM Kernel comit v2 (EVM + SVM + X3).
+        ///
+        /// This path is intended for "independent" legs: each leg uses its own `amount_in`.
+        /// It does not perform inter-leg carry (output -> next input) and does not parse receipts.
+        ///
+        /// Kernel-level atomicity: if any VM execution fails, the kernel call returns `Err` and
+        /// all Substrate storage writes are rolled back.
+        #[pallet::call_index(7)]
+        #[pallet::weight(<T as Config>::WeightInfo::execute_trade_batch())]
+        pub fn execute_trade_batch_via_kernel_comit_v2(
+            origin: OriginFor<T>,
+            batch_id: H256,
+            comit_id: H256,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let mut batch = TradeBatches::<T>::get(batch_id).ok_or(Error::<T>::BatchNotFound)?;
+
+            ensure!(batch.origin == who, Error::<T>::Unauthorized);
+            ensure!(
+                batch.status == BatchStatus::Pending,
+                Error::<T>::BatchNotPending
+            );
+
+            let current_block: u64 = frame_system::Pallet::<T>::block_number().saturated_into();
+            ensure!(batch.deadline > current_block, Error::<T>::DeadlineExpired);
+
+            // Update status to executing
+            batch.status = BatchStatus::Executing;
+            TradeBatches::<T>::insert(batch_id, batch.clone());
+
+            // Create initial checkpoint
+            let initial_checkpoint = Self::create_checkpoint(&batch, 0)?;
+            Checkpoints::<T>::try_mutate(batch_id, |checkpoints| -> DispatchResult {
+                checkpoints
+                    .try_push(initial_checkpoint.clone())
+                    .map_err(|_| Error::<T>::TooManyCheckpoints)?;
+                Ok(())
+            })?;
+
+            Self::deposit_event(Event::CheckpointCreated {
+                batch_id,
+                checkpoint_index: 0,
+                state_root: initial_checkpoint.state_root,
+            });
+
+            // Build at most one payload per VM.
+            let mut evm_payload: Vec<u8> = Vec::new();
+            let mut svm_payload: Vec<u8> = Vec::new();
+            let mut x3_payload: Vec<u8> = Vec::new();
+
+            for leg in batch.legs.iter() {
+                match leg.vm_type {
+                    VmType::Evm => {
+                        ensure!(
+                            evm_payload.is_empty(),
+                            Error::<T>::KernelComitDuplicateVmLeg
+                        );
+                        evm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::Svm => {
+                        ensure!(
+                            svm_payload.is_empty(),
+                            Error::<T>::KernelComitDuplicateVmLeg
+                        );
+                        svm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::X3 => {
+                        ensure!(x3_payload.is_empty(), Error::<T>::KernelComitDuplicateVmLeg);
+                        x3_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                    }
+                    VmType::CrossVm => return Err(Error::<T>::KernelComitUnsupportedVm.into()),
+                }
+            }
+
+            // Kernel nonce and fee upper bound (using kernel-default limits so fee is always >= required_fee).
+            let kernel_nonce = pallet_atlas_kernel::Nonces::<T>::get(&who);
+
+            let evm_units = if evm_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultEvmGasLimit::get()
+            };
+            let svm_units = if svm_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultSvmComputeLimit::get()
+            };
+            let x3_units = if x3_payload.is_empty() {
+                0
+            } else {
+                <T as pallet_atlas_kernel::Config>::DefaultX3GasLimit::get()
+            };
+
+            let base_fee = <T as pallet_atlas_kernel::Config>::Balance::default();
+            let fee = pallet_atlas_kernel::Pallet::<T>::calculate_execution_fee_v2(
+                evm_units, svm_units, x3_units, base_fee,
+            )?;
+
+            let prepare_root = pallet_atlas_kernel::Pallet::<T>::compute_prepare_root_v2(
+                comit_id,
+                &evm_payload,
+                &svm_payload,
+                &x3_payload,
+                kernel_nonce,
+                fee,
+            );
+
+            // IMPORTANT: `submit_comit_v2` expects failures to rollback storage by returning `Err`
+            // from the top-level extrinsic. Since AtomicTradeEngine intentionally persists a
+            // failed batch status (returns `Ok(())`), we must isolate kernel writes in a nested
+            // storage transaction and roll them back if the kernel call fails.
+            let kernel_result = with_transaction(|| {
+                let res = pallet_atlas_kernel::Pallet::<T>::submit_comit_v2(
+                    frame_system::RawOrigin::Signed(who.clone()).into(),
+                    comit_id,
+                    evm_payload,
+                    svm_payload,
+                    x3_payload,
+                    kernel_nonce,
+                    fee,
+                    prepare_root,
+                );
+
+                match res {
+                    Ok(()) => TransactionOutcome::Commit(Ok(())),
+                    Err(e) => TransactionOutcome::Rollback(Err(e)),
+                }
+            });
+
+            match kernel_result {
+                Ok(()) => {
+                    // Success: mark batch completed.
+                    for leg in batch.legs.iter_mut() {
+                        leg.status = TradeLegStatus::Completed;
+                        leg.gas_used = 0;
+                        leg.actual_amount_out = None;
+                    }
+
+                    batch.status = BatchStatus::Completed;
+                    batch.total_gas_used = 0;
+                    TradeBatches::<T>::insert(batch_id, batch.clone());
+
+                    Self::remove_from_pending(&who, batch_id);
+                    CompletedBatchCount::<T>::mutate(|c| *c = c.saturating_add(1));
+
+                    let total_input: u128 = batch.legs.iter().map(|l| l.amount_in).sum();
+                    TotalVolume::<T>::mutate(|v| *v = v.saturating_add(total_input));
+
+                    Self::deposit_event(Event::TradeBatchExecutedViaKernelComitV2 {
+                        batch_id,
+                        comit_id,
+                    });
+                    Self::deposit_event(Event::TradeBatchCompleted {
+                        batch_id,
+                        total_input,
+                        total_output: 0,
+                        gas_used: 0,
+                    });
+                }
+                Err(_e) => {
+                    // Failure: rollback to checkpoint and mark failed (persisting status like the non-kernel path).
+                    Self::rollback_to_checkpoint(batch_id, 0)?;
+
+                    for leg in batch.legs.iter_mut() {
+                        leg.status = TradeLegStatus::Failed;
+                    }
+                    batch.status = BatchStatus::Failed;
+                    TradeBatches::<T>::insert(batch_id, batch);
+                    Self::remove_from_pending(&who, batch_id);
+                    FailedBatchCount::<T>::mutate(|c| *c = c.saturating_add(1));
+
+                    Self::deposit_event(Event::TradeBatchFailed {
+                        batch_id,
+                        failed_leg_index: 0,
+                        reason: BatchFailureReason::KernelComitSubmissionFailed { comit_id },
+                    });
+                }
+            }
+
+            Ok(())
+        }
     }
 
     // ============================================================================
@@ -801,7 +1014,7 @@ pub mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Generate a unique batch ID from inputs.
-        fn generate_batch_id(origin: &AccountIdOf<T>, nonce: u64, legs: &[TradeLegInput]) -> H256 {
+        fn generate_batch_id(origin: &T::AccountId, nonce: u64, legs: &[TradeLegInput]) -> H256 {
             let mut data = Vec::new();
             data.extend_from_slice(&origin.encode());
             data.extend_from_slice(&nonce.to_le_bytes());
@@ -813,7 +1026,7 @@ pub mod pallet {
 
         /// Create a state checkpoint for rollback support.
         fn create_checkpoint(
-            batch: &TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+            batch: &TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
             index: u32,
         ) -> Result<StateCheckpoint, DispatchError> {
             // Compute state root from current batch state
@@ -831,7 +1044,7 @@ pub mod pallet {
 
             let state_root = H256::from(blake2_256(&state_data));
             let current_block = frame_system::Pallet::<T>::block_number();
-            let timestamp = pallet_timestamp::Pallet::<T>::get().saturated_into::<u64>();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
 
             Ok(StateCheckpoint {
                 checkpoint_id: index,
@@ -848,7 +1061,7 @@ pub mod pallet {
 
         /// Execute all legs of a trade batch atomically.
         fn execute_all_legs(
-            batch: &mut TradeBatch<AccountIdOf<T>, BalanceOf<T>>,
+            batch: &mut TradeBatch<T::AccountId, BalanceOf<T>, T::MaxTradeLegs>,
         ) -> Result<(u128, u64), (u32, BatchFailureReason)> {
             let mut total_output: u128 = 0;
             let mut total_gas: u64 = 0;
@@ -933,9 +1146,9 @@ pub mod pallet {
             let payload = Self::build_trade_payload(leg, amount_in)?;
 
             match leg.vm_type {
-                types::VmType::Evm => {
+                VmType::Evm => {
                     let gas_limit = T::DefaultTradeEvmGasLimit::get();
-                    let receipt = <T as Config>::EvmAdapter::execute(&payload, gas_limit)
+                    let receipt = <T as pallet::Config>::EvmAdapter::execute(&payload, gas_limit)
                         .map_err(|_| TradeLegFailureReason::EvmExecutionFailed)?;
 
                     if !receipt.success {
@@ -947,10 +1160,11 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                types::VmType::Svm => {
+                VmType::Svm => {
                     let compute_limit = T::DefaultTradeSvmComputeLimit::get();
-                    let receipt = <T as Config>::SvmAdapter::execute(&payload, compute_limit)
-                        .map_err(|_| TradeLegFailureReason::SvmExecutionFailed)?;
+                    let receipt =
+                        <T as pallet::Config>::SvmAdapter::execute(&payload, compute_limit)
+                            .map_err(|_| TradeLegFailureReason::SvmExecutionFailed)?;
 
                     if !receipt.success {
                         return Err(TradeLegFailureReason::SvmExecutionFailed);
@@ -961,7 +1175,21 @@ pub mod pallet {
 
                     Ok((amount_out, receipt.gas_used))
                 }
-                types::VmType::CrossVm => {
+                VmType::X3 => {
+                    let gas_limit = T::DefaultTradeX3GasLimit::get();
+                    let receipt = <T as pallet::Config>::X3Adapter::execute(&payload, gas_limit)
+                        .map_err(|_| TradeLegFailureReason::X3ExecutionFailed)?;
+
+                    if !receipt.success {
+                        return Err(TradeLegFailureReason::X3ExecutionFailed);
+                    }
+
+                    // Parse output amount from return data
+                    let amount_out = Self::parse_swap_output(&receipt.return_data).unwrap_or(0);
+
+                    Ok((amount_out, receipt.gas_used))
+                }
+                VmType::CrossVm => {
                     // Cross-VM execution requires coordination between both VMs
                     Self::execute_cross_vm_leg(leg, amount_in)
                 }
@@ -977,9 +1205,11 @@ pub mod pallet {
             let evm_payload = Self::build_cross_vm_evm_payload(leg, amount_in)?;
 
             // Execute EVM portion
-            let evm_receipt =
-                <T as Config>::EvmAdapter::execute(&evm_payload, T::DefaultTradeEvmGasLimit::get())
-                    .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
+            let evm_receipt = <T as pallet::Config>::EvmAdapter::execute(
+                &evm_payload,
+                T::DefaultTradeEvmGasLimit::get(),
+            )
+            .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !evm_receipt.success {
                 return Err(TradeLegFailureReason::EvmExecutionFailed);
@@ -993,9 +1223,11 @@ pub mod pallet {
             let svm_payload = Self::build_cross_vm_svm_payload(leg, bridged_amount)?;
 
             // Execute SVM portion
-            let svm_receipt =
-                <T as Config>::SvmAdapter::execute(&svm_payload, T::DefaultTradeSvmComputeLimit::get())
-                    .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
+            let svm_receipt = <T as pallet::Config>::SvmAdapter::execute(
+                &svm_payload,
+                T::DefaultTradeSvmComputeLimit::get(),
+            )
+            .map_err(|_| TradeLegFailureReason::CrossVmBridgeFailed)?;
 
             if !svm_receipt.success {
                 return Err(TradeLegFailureReason::SvmExecutionFailed);
@@ -1031,7 +1263,7 @@ pub mod pallet {
 
             // to address (32 bytes) - padded
             payload.extend_from_slice(&[0u8; 12]);
-            payload.extend_from_slice(&leg.route_data.get(..20).unwrap_or(&[0u8; 20]));
+            payload.extend_from_slice(leg.route_data.get(..20).unwrap_or(&[0u8; 20]));
 
             // deadline (32 bytes)
             payload.extend_from_slice(&Self::encode_u256(u128::MAX));
@@ -1147,7 +1379,7 @@ pub mod pallet {
         }
 
         /// Remove a batch from pending list.
-        fn remove_from_pending(account: &AccountIdOf<T>, batch_id: H256) {
+        fn remove_from_pending(account: &T::AccountId, batch_id: H256) {
             PendingBatches::<T>::mutate(account, |batches| {
                 if let Some(pos) = batches.iter().position(|&id| id == batch_id) {
                     batches.remove(pos);
@@ -1156,7 +1388,7 @@ pub mod pallet {
         }
 
         /// Get current trade nonce for an account.
-        pub fn get_trade_nonce(account: &AccountIdOf<T>) -> u64 {
+        pub fn get_trade_nonce(account: &T::AccountId) -> u64 {
             TradeNonces::<T>::get(account)
         }
 
@@ -1172,7 +1404,7 @@ pub mod pallet {
         ) -> Result<u128, DispatchError> {
             let mut current_amount = initial_amount;
 
-            for leg in legs {
+            for _leg in legs {
                 // Simplified simulation - in production would query AMM state
                 // Apply 0.3% fee for each leg (typical Uniswap V2 fee)
                 let fee_bps: u128 = 30; // 0.3%
@@ -1292,9 +1524,10 @@ pub mod pallet {
 
             for leg in legs {
                 match leg.vm_type {
-                    types::VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
-                    types::VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
-                    types::VmType::CrossVm => {
+                    VmType::Evm => evm_gas = evm_gas.saturating_add(150_000),
+                    VmType::Svm => svm_compute = svm_compute.saturating_add(200_000),
+                    VmType::X3 => evm_gas = evm_gas.saturating_add(120_000),
+                    VmType::CrossVm => {
                         evm_gas = evm_gas.saturating_add(200_000);
                         svm_compute = svm_compute.saturating_add(250_000);
                     }
@@ -1306,12 +1539,12 @@ pub mod pallet {
 
         /// Get optimal execution path between two tokens.
         pub fn find_execution_path(
-            token_in: H256,
-            token_out: H256,
-            amount_in: u128,
+            _token_in: H256,
+            _token_out: H256,
+            _amount_in: u128,
         ) -> Option<(Vec<types::RouteStep>, u128)> {
             // Build trade graph from registered AMM adapters
-            let mut graph = graph::TradeGraph::new();
+            let _graph = graph::TradeGraph::new();
 
             // In production, populate graph from on-chain pool data
             // For now, return None to indicate path finding is not available
@@ -1338,7 +1571,7 @@ pub mod pallet {
 
             // Validate slippage
             ensure!(
-                slippage_bps >= MIN_SLIPPAGE_BPS && slippage_bps <= MAX_SLIPPAGE_BPS,
+                (MIN_SLIPPAGE_BPS..=MAX_SLIPPAGE_BPS).contains(&slippage_bps),
                 Error::<T>::InvalidSlippageTolerance
             );
 
@@ -1352,7 +1585,10 @@ pub mod pallet {
 }
 
 // ============================================================================
-// Types
+// Additional Types (VmType and AmmProtocol are now in types.rs)
+// ============================================================================
+
+/// Asset pair for trading.
 #[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct AssetPair {
     pub asset_in: H256,
@@ -1360,12 +1596,12 @@ pub struct AssetPair {
 }
 
 /// Configuration for an AMM adapter.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct AmmAdapterConfig {
     /// Target VM for this AMM
     pub vm_type: types::VmType,
-    /// Contract/program address
-    pub address: Vec<u8>,
+    /// Contract/program address (bounded to MAX_ADDRESS_LEN)
+    pub address: BoundedVec<u8, ConstU32<MAX_ADDRESS_LEN>>,
     /// Fee in basis points
     pub fee_bps: u32,
     /// Whether adapter is enabled
@@ -1373,7 +1609,7 @@ pub struct AmmAdapterConfig {
 }
 
 /// Input structure for creating trade legs.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct TradeLegInput {
     /// AMM protocol to use
     pub amm_protocol: types::AmmProtocol,
@@ -1387,12 +1623,12 @@ pub struct TradeLegInput {
     pub amount_in: u128,
     /// Minimum acceptable output
     pub min_amount_out: u128,
-    /// Protocol-specific routing data
-    pub route_data: Vec<u8>,
+    /// Protocol-specific routing data (bounded)
+    pub route_data: BoundedVec<u8, ConstU32<MAX_ROUTE_DATA_LEN>>,
 }
 
 /// Internal trade leg representation.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct TradeLeg {
     pub amm_protocol: types::AmmProtocol,
     pub vm_type: types::VmType,
@@ -1400,14 +1636,16 @@ pub struct TradeLeg {
     pub asset_out: H256,
     pub amount_in: u128,
     pub min_amount_out: u128,
-    pub route_data: Vec<u8>,
+    pub route_data: BoundedVec<u8, ConstU32<MAX_ROUTE_DATA_LEN>>,
     pub status: TradeLegStatus,
     pub actual_amount_out: Option<u128>,
     pub gas_used: u64,
 }
 
 /// Status of a trade leg.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, Default,
+)]
 pub enum TradeLegStatus {
     #[default]
     Pending,
@@ -1422,6 +1660,7 @@ pub enum TradeLegStatus {
 pub enum TradeLegFailureReason {
     EvmExecutionFailed,
     SvmExecutionFailed,
+    X3ExecutionFailed,
     CrossVmBridgeFailed,
     SlippageExceeded,
     InsufficientLiquidity,
@@ -1429,12 +1668,43 @@ pub enum TradeLegFailureReason {
     Timeout,
 }
 
+impl From<TradeLegFailureReason> for sp_runtime::DispatchError {
+    fn from(e: TradeLegFailureReason) -> Self {
+        match e {
+            TradeLegFailureReason::EvmExecutionFailed => {
+                sp_runtime::DispatchError::Other("EVM execution failed")
+            }
+            TradeLegFailureReason::SvmExecutionFailed => {
+                sp_runtime::DispatchError::Other("SVM execution failed")
+            }
+            TradeLegFailureReason::X3ExecutionFailed => {
+                sp_runtime::DispatchError::Other("X3 execution failed")
+            }
+            TradeLegFailureReason::CrossVmBridgeFailed => {
+                sp_runtime::DispatchError::Other("Cross-VM bridge failed")
+            }
+            TradeLegFailureReason::SlippageExceeded => {
+                sp_runtime::DispatchError::Other("Slippage exceeded")
+            }
+            TradeLegFailureReason::InsufficientLiquidity => {
+                sp_runtime::DispatchError::Other("Insufficient liquidity")
+            }
+            TradeLegFailureReason::InvalidRoute => {
+                sp_runtime::DispatchError::Other("Invalid route")
+            }
+            TradeLegFailureReason::Timeout => sp_runtime::DispatchError::Other("Trade timeout"),
+        }
+    }
+}
+
 /// Trade batch containing multiple legs.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-pub struct TradeBatch<AccountId, Balance> {
+/// MaxTradeLegs is the max number of legs per batch.
+#[derive(PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[scale_info(skip_type_params(MaxTradeLegs))]
+pub struct TradeBatch<AccountId, Balance, MaxTradeLegs: Get<u32>> {
     pub batch_id: H256,
     pub origin: AccountId,
-    pub legs: Vec<TradeLeg>,
+    pub legs: BoundedVec<TradeLeg, MaxTradeLegs>,
     pub slippage_tolerance_bps: u32,
     pub deadline: u64,
     pub nonce: u64,
@@ -1445,7 +1715,27 @@ pub struct TradeBatch<AccountId, Balance> {
     pub _phantom: core::marker::PhantomData<Balance>,
 }
 
-impl<AccountId, Balance> TradeBatch<AccountId, Balance> {
+// Manual Clone implementation since derive requires MaxTradeLegs: Clone
+impl<AccountId: Clone, Balance, MaxTradeLegs: Get<u32>> Clone
+    for TradeBatch<AccountId, Balance, MaxTradeLegs>
+{
+    fn clone(&self) -> Self {
+        Self {
+            batch_id: self.batch_id,
+            origin: self.origin.clone(),
+            legs: self.legs.clone(),
+            slippage_tolerance_bps: self.slippage_tolerance_bps,
+            deadline: self.deadline,
+            nonce: self.nonce,
+            status: self.status,
+            created_at: self.created_at,
+            total_gas_used: self.total_gas_used,
+            _phantom: core::marker::PhantomData,
+        }
+    }
+}
+
+impl<AccountId, Balance, MaxTradeLegs: Get<u32>> TradeBatch<AccountId, Balance, MaxTradeLegs> {
     /// Check if batch execution has started.
     pub fn is_executing(&self) -> bool {
         self.status == BatchStatus::Executing
@@ -1461,7 +1751,9 @@ impl<AccountId, Balance> TradeBatch<AccountId, Balance> {
 }
 
 /// Status of a trade batch.
-#[derive(Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, Default,
+)]
 pub enum BatchStatus {
     #[default]
     Pending,
@@ -1484,6 +1776,9 @@ pub enum BatchFailureReason {
     },
     DeadlineExpired,
     RollbackFailed,
+    KernelComitSubmissionFailed {
+        comit_id: H256,
+    },
 }
 
 /// State checkpoint for rollback support.

@@ -14,6 +14,7 @@ use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 
+/// Chain specification specialized to this runtime's genesis configuration.
 pub type ChainSpec = GenericChainSpec<RuntimeGenesisConfig>;
 
 const DEFAULT_PROTOCOL_ID: &str = "atlas";
@@ -22,6 +23,7 @@ const ENDOWMENT: u128 = 1_000_000 * ATLAS;
 
 type AccountPublic = <Signature as Verify>::Signer;
 
+/// Load the named `ChainSpec` via the supplied identifier string.
 pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     match id {
         "" | "dev" => Ok(Box::new(development_config()?)),
@@ -31,6 +33,7 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     }
 }
 
+/// Build the `ChainSpec` powering the development network (local node).
 pub fn development_config() -> Result<ChainSpec, String> {
     eprintln!("DEBUG: WASM_BINARY is: {:?}", WASM_BINARY.is_some());
     // For native-dev builds (e.g., with `skip-wasm-build`), we still want to be
@@ -69,6 +72,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
     ))
 }
 
+/// Build the local testnet `ChainSpec` used during development.
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
     // Mirror the development config behavior: allow local testnets to run
     // without an embedded WASM blob when using native-only execution.
@@ -106,6 +110,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ))
 }
 
+/// Build the staging `ChainSpec` matching the release network parameters.
 pub fn staging_config() -> Result<ChainSpec, String> {
     // Staging networks are expected to have a proper WASM runtime embedded.
     // Keep the strict check here so that any missing or invalid blob fails
@@ -191,6 +196,10 @@ fn atlas_sphere_genesis(
         transaction_payment: Default::default(),
         council: Default::default(),
         evm: Default::default(),
+        governance: Default::default(),
+        treasury: Default::default(),
+        evolution_core: Default::default(),
+        x3_verifier: Default::default(),
         #[cfg(feature = "dev")]
         sudo: Default::default(),
     }

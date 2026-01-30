@@ -46,7 +46,7 @@ jobs:
         run: cargo install cargo-audit --locked
 
       - name: Run cargo audit
-        run: cargo audit --json > cargo-audit-report.json || true
+        run: cargo audit --json > cargo-audit-report.json
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
@@ -75,7 +75,7 @@ jobs:
 
       - name: Run npm audit (TS SDK)
         working-directory: packages/ts-sdk
-        run: npm audit --json > ../../npm-audit-report.json || true
+        run: npm audit --json > ../../npm-audit-report.json
 
       - name: Upload npm audit report
         uses: actions/upload-artifact@v4

@@ -140,7 +140,7 @@ export default function SDKsPage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/developers" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Developers
@@ -168,7 +168,7 @@ export default function SDKsPage() {
 
       {/* Main SDKs */}
       <section id="sdks" className="py-16 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Core SDKs</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -207,7 +207,7 @@ export default function SDKsPage() {
 
       {/* Mobile SDKs */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="flex items-center gap-3 mb-8">
             <Smartphone className="w-6 h-6 text-orange-400" />
             <h2 className="text-2xl font-bold text-white">Mobile SDKs</h2>
@@ -236,7 +236,7 @@ export default function SDKsPage() {
 
       {/* CLI */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -284,7 +284,7 @@ export default function SDKsPage() {
 
       {/* Code Example */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Quick Start Example</h2>
           
           <div className="glass-card p-0 overflow-hidden">

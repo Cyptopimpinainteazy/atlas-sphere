@@ -31,6 +31,9 @@ pub mod command;
 /// Custom JSON-RPC methods for authority, EVM, and bridge queries
 pub mod rpc;
 
+/// RPC rate limiting and security middleware
+pub mod rpc_middleware;
+
 /// Phase 5: Network Bootstrapping
 /// Bootstrap configuration, peer discovery, and protocol settings
 pub mod network;
@@ -77,11 +80,11 @@ pub use service::*;
 /// Run the Atlas Sphere node
 #[cfg(feature = "cli")]
 pub fn run() -> Result<(), sc_cli::Error> {
-	command::run()
+    command::run()
 }
 
 /// Run the Atlas Sphere node (no-cli fallback)
 #[cfg(not(feature = "cli"))]
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-	Err("CLI feature not enabled".into())
+    Err("CLI feature not enabled".into())
 }

@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function SplTokensPage() {
   return (
     <DocLayout
       title="SPL Token Standard"
       description="Create and manage SPL tokens on X3 Atlas Sphere's SVM"
-      section="svm"
-      prevPage={{ title: 'SVM Accounts', href: '/developers/docs/svm-accounts' }}
-      nextPage={{ title: 'Creating Comits', href: '/developers/docs/creating-comits' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         SPL tokens are the standard for fungible and non-fungible tokens on SVM.
@@ -18,7 +15,7 @@ export default function SplTokensPage() {
       </p>
 
       <h2>Create a Token</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install SPL Token CLI
 cargo install spl-token-cli
 
@@ -31,10 +28,10 @@ spl-token create-token
 
 # Create token with specific decimals
 spl-token create-token --decimals 6`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Token Operations</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Create token account
 spl-token create-account TOKEN_MINT_ADDRESS
 
@@ -49,10 +46,10 @@ spl-token transfer TOKEN_MINT_ADDRESS 100 RECIPIENT_ADDRESS
 
 # Burn tokens
 spl-token burn TOKEN_MINT_ADDRESS 50`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Programmatic Token Creation</h2>
-      <DocLayout.CodeBlock language="typescript" filename="create-token.ts">
+      <CodeBlock language="typescript" title="create-token.ts">
 {`import {
   Connection,
   Keypair,
@@ -86,10 +83,10 @@ console.log('Token mint address:', mint.toBase58());
 const mintInfo = await getMint(connection, mint);
 console.log('Supply:', mintInfo.supply);
 console.log('Decimals:', mintInfo.decimals);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Token Accounts</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import {
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddress,
@@ -114,10 +111,10 @@ const createAtaIx = createAssociatedTokenAccountInstruction(
 // Get token account info
 const tokenAccount = await getAccount(connection, ata);
 console.log('Balance:', tokenAccount.amount);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Minting Tokens</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { mintTo, mintToChecked } from '@solana/spl-token';
 
 // Mint tokens
@@ -140,10 +137,10 @@ await mintToChecked(
   1_000_000_000n,
   9                       // Expected decimals
 );`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Transfers</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { transfer, transferChecked } from '@solana/spl-token';
 
 // Transfer tokens
@@ -167,10 +164,10 @@ await transferChecked(
   100_000_000n,
   9                       // Decimals
 );`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Token Metadata</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { Metaplex } from '@metaplex-foundation/js';
 
 const metaplex = new Metaplex(connection);
@@ -188,15 +185,15 @@ await metaplex.nfts().update({
   nftOrSft: nft,
   name: 'Updated Name',
 });`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Cross-VM Tokens">
+      <Callout type="info" title="Cross-VM Tokens">
         SPL tokens can be bridged to the Canonical Ledger, making them accessible 
         from EVM contracts. See <a href="/developers/docs/cross-vm-assets" className="text-orange-400 hover:text-orange-300">Cross-VM Assets</a> for details.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Token Program in Anchor</h2>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
 
 #[derive(Accounts)]
@@ -225,7 +222,7 @@ pub fn transfer_tokens(ctx: Context<TransferTokens>, amount: u64) -> Result<()> 
     
     token::transfer(cpi_ctx, amount)
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Token-2022 (Token Extensions)</h2>
       <p>

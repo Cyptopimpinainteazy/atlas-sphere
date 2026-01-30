@@ -237,6 +237,9 @@ pub fn create_full<C>(
 
 Once Frontier is available, wire through Frontier's JSON-RPC layer:
 
+Note: An optional node feature `frontier` is provided to gate Frontier RPC wiring in `node/Cargo.toml`. When enabled, node RPC merges Frontier endpoints; use caution to pin Frontier versions compatible with the Substrate `rev` in the workspace (see root `Cargo.toml`).
+
+
 ```rust
 // In frontier/src/rpc.rs integration
 impl EthApiT for EthApi {

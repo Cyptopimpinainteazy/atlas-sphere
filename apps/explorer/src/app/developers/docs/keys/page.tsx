@@ -1,26 +1,23 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function KeysPage() {
   return (
     <DocLayout
       title="Key Management"
       description="Secure key generation and management for X3 Atlas Sphere"
-      section="nodes"
-      prevPage={{ title: 'Chain Spec', href: '/developers/docs/chain-spec' }}
-      nextPage={{ title: 'Monitoring', href: '/developers/docs/monitoring' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Proper key management is critical for securing your accounts and validator operations.
         This guide covers key types, generation, and security best practices.
       </p>
 
-      <DocLayout.Callout type="warning" title="Security Critical">
+      <Callout type="warning" title="Security Critical">
         Never share private keys or seed phrases. Store backups in multiple secure, 
         offline locations. Compromised keys can result in loss of funds.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Key Types</h2>
       <ul>
@@ -32,7 +29,7 @@ export default function KeysPage() {
       <h2>Generate Keys</h2>
 
       <h3>Using the Node Binary</h3>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Generate Sr25519 key (recommended for most uses)
 ./atlas-sphere-node key generate --scheme Sr25519
 
@@ -48,10 +45,10 @@ export default function KeysPage() {
 
 # Generate ECDSA key (Ethereum compatible)
 ./atlas-sphere-node key generate --scheme Ecdsa`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Using subkey Tool</h3>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install subkey
 cargo install --force subkey --git https://github.com/paritytech/substrate
 
@@ -63,10 +60,10 @@ subkey inspect "word1 word2 ... word12"
 
 # Generate with custom network ID
 subkey generate --scheme sr25519 --network atlas`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Using Polkadot.js</h3>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { Keyring } from '@polkadot/keyring';
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 
@@ -80,10 +77,10 @@ const pair = keyring.addFromMnemonic(mnemonic);
 
 console.log('Address:', pair.address);
 console.log('Public key:', pair.publicKey);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Validator Session Keys</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Generate all session keys at once
 ./atlas-sphere-node key generate-session-keys --chain testnet
 
@@ -106,12 +103,12 @@ curl -H "Content-Type: application/json" \\
   --scheme Ed25519 \\
   --suri "different mnemonic here" \\
   --key-type gran`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Key Storage</h2>
 
       <h3>Keystore Location</h3>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Default keystore location
 ~/.local/share/atlas-sphere-node/chains/<chain>/keystore/
 
@@ -120,10 +117,10 @@ curl -H "Content-Type: application/json" \\
 
 # List keys in keystore
 ls -la /var/lib/atlas/chains/testnet/keystore/`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>Encrypted Backup</h3>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Create encrypted backup of keys
 tar czf - keys/ | gpg --symmetric --cipher-algo AES256 > keys-backup.tar.gz.gpg
 
@@ -132,10 +129,10 @@ gpg --decrypt keys-backup.tar.gz.gpg | tar xzf -
 
 # Use hardware security module (HSM) for production
 # Configure via --keystore-uri`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Account Derivation</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Soft derivation (/)
 subkey inspect "mnemonic//account1"
 subkey inspect "mnemonic//account2"
@@ -148,10 +145,10 @@ subkey inspect "mnemonic///password"
 
 # Combined
 subkey inspect "mnemonic//hard/soft///password"`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Address Formats</h2>
-      <DocLayout.CodeBlock language="typescript">
+      <CodeBlock language="typescript">
 {`import { encodeAddress, decodeAddress } from '@polkadot/util-crypto';
 
 // Convert between formats
@@ -168,7 +165,7 @@ const polkadotAddress = encodeAddress(publicKey, 0);
 
 // Decode any SS58 address
 const decoded = decodeAddress(atlasAddress);`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Security Best Practices</h2>
       <ul>
@@ -182,10 +179,10 @@ const decoded = decodeAddress(atlasAddress);`}
         <li>✅ Test recovery before storing real value</li>
       </ul>
 
-      <DocLayout.Callout type="info" title="Hardware Wallets">
+      <Callout type="info" title="Hardware Wallets">
         For maximum security, use Ledger hardware wallets with the Polkadot app.
         Session keys can be injected from hot wallets while controller keys stay cold.
-      </DocLayout.Callout>
+      </Callout>
     </DocLayout>
   );
 }

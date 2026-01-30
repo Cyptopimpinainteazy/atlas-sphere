@@ -1,16 +1,13 @@
 'use client';
 
 import React from 'react';
-import DocLayout from '@/components/docs/DocLayout';
+import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
 export default function SvmProgramsPage() {
   return (
     <DocLayout
       title="SVM Programs Overview"
       description="Build Solana-compatible programs on X3 Atlas Sphere's SVM environment"
-      section="svm"
-      prevPage={{ title: 'ERC Standards', href: '/developers/docs/erc-standards' }}
-      nextPage={{ title: 'Anchor Framework', href: '/developers/docs/anchor' }}
     >
       <p className="lead text-xl text-gray-400 mb-8">
         X3 Atlas Sphere includes a native SVM (Solana Virtual Machine) that runs alongside
@@ -32,7 +29,7 @@ export default function SvmProgramsPage() {
       <p>
         SVM programs follow Solana's architecture:
       </p>
-      <DocLayout.CodeBlock language="rust" filename="programs/counter/src/lib.rs">
+      <CodeBlock language="rust" title="programs/counter/src/lib.rs">
 {`use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -98,7 +95,7 @@ pub fn process_instruction(
 
     Ok(())
 }`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Key Concepts</h2>
       
@@ -113,7 +110,7 @@ pub fn process_instruction(
       </ul>
 
       <h3>2. Program Derived Addresses (PDAs)</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`// Derive a PDA for storing user data
 let (pda, bump) = Pubkey::find_program_address(
     &[b"user", user_pubkey.as_ref()],
@@ -122,10 +119,10 @@ let (pda, bump) = Pubkey::find_program_address(
 
 // Use seeds for signing
 let seeds = &[b"user", user_pubkey.as_ref(), &[bump]];`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h3>3. Cross-Program Invocations (CPI)</h3>
-      <DocLayout.CodeBlock language="rust">
+      <CodeBlock language="rust">
 {`use solana_program::program::invoke_signed;
 
 // Call another program
@@ -134,10 +131,10 @@ invoke_signed(
     &[token_account.clone(), authority.clone()],
     &[&[b"authority", &[authority_bump]]],
 )?;`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
       <h2>Building Programs</h2>
-      <DocLayout.CodeBlock language="bash">
+      <CodeBlock language="bash">
 {`# Install Solana CLI tools
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
 
@@ -154,12 +151,12 @@ cd my_program
 cargo build-bpf
 
 # The compiled program will be at target/deploy/my_program.so`}
-      </DocLayout.CodeBlock>
+      </CodeBlock>
 
-      <DocLayout.Callout type="info" title="Anchor Recommended">
+      <Callout type="info" title="Anchor Recommended">
         For most projects, we recommend using the <a href="/developers/docs/anchor" className="text-orange-400 hover:text-orange-300">Anchor framework</a> which 
         provides a higher-level abstraction and reduces boilerplate significantly.
-      </DocLayout.Callout>
+      </Callout>
 
       <h2>Differences from Solana</h2>
       <p>

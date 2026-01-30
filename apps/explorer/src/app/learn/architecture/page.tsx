@@ -113,7 +113,7 @@ export default function ArchitecturePage() {
           <HexagonCluster className="w-full h-full" />
         </div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-wide">
           <div className="max-w-3xl">
             <Link href="/learn" className="text-gray-400 hover:text-white mb-4 inline-flex items-center">
               ← Back to Learn
@@ -140,7 +140,7 @@ export default function ArchitecturePage() {
 
       {/* Layer Stack */}
       <section className="py-16 border-t border-[#1a1a1a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Architecture Stack</h2>
           
           <div className="space-y-4">
@@ -168,7 +168,7 @@ export default function ArchitecturePage() {
 
       {/* Core Components */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Core Components</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -195,7 +195,7 @@ export default function ArchitecturePage() {
 
       {/* Comit Flow */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Comit Transaction Flow</h2>
           
           <div className="glass-card p-8">
@@ -221,7 +221,7 @@ export default function ArchitecturePage() {
 
       {/* Dual VM Diagram */}
       <section className="py-16 bg-[#050505]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Dual-VM Architecture</h2>
           
           <div className="glass-card p-8">
