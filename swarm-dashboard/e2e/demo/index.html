@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Swarm Dashboard E2E Demo</title>
+    <style>
+      body { background: #0b0f14; color: #eee; font-family: Arial, sans-serif; padding: 24px }
+      .tile { padding: 12px; border-radius: 6px; background: #0f1720; width: 320px; }
+
+      /* accessibility helpers */
+      .skip { position: absolute; left: -999px; top: auto; width: 1px; height: 1px; overflow: hidden }
+      .skip:focus { position: static; left: 0; width: auto; height: auto; background: #fff; color: #000; padding: 8px; z-index: 1000 }
+      .visually-hidden { position: absolute; left: -9999px; }
+
+      /* increase label contrast for accessibility */
+      .label { color: #e6eef3; font-size: 12px }
+      .value { font-size: 28px; color: #00d4ff; font-weight: 700 }
+      a.link { color: #7fe8ff }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <h1 class="visually-hidden">Swarm Dashboard — E2E Demo</h1>
+    <main id="main" role="main">
+      <h2>Swarm Dashboard — E2E Demo</h2>
+
+      <div class="tile" role="region" aria-label="Testnet Readiness">
+        <div class="label">Testnet Readiness</div>
+        <div id="readiness-score" class="value" aria-live="polite" aria-atomic="true">—</div>
+        <div id="readiness-status" class="label" aria-live="polite" aria-atomic="true">unknown</div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="tile" role="region" aria-label="SIGILL Alerts">
+        <div class="label">SIGILL Alerts</div>
+        <div id="sigill-count" class="value" aria-live="polite" aria-atomic="true">—</div>
+        <ul id="sigill-list" style="margin-top:8px"></ul>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="tile" role="region" aria-label="CI Status">
+        <div class="label">CI Status</div>
+        <div id="ci-status" class="value" aria-live="polite">Unknown</div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="tile" role="region" aria-label="Test Health">
+        <div class="label">Test Health</div>
+        <div id="test-health-counts" class="value" aria-live="polite">0</div>
+      </div>
+    </main>
+
+    <script src="./demo.js"></script>
+  </body>
+</html>
