@@ -52,13 +52,11 @@ sp-version = { workspace = true, default-features = false }
 sp-weights = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 
-frame-system-rpc-runtime-api = { workspace = true, default-features = false }
-
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
 getrandom = { version = "0.2", default-features = false, features = ["js"] }
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
-# atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -74,7 +72,6 @@ std = [
 	"frame-system/std",
 	"frame-executive/std",
 	"frame-benchmarking?/std",
-	"frame-system-rpc-runtime-api/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
 	"pallet-timestamp/std",
@@ -99,7 +96,7 @@ std = [
 	"sp-io/std",
 	"log/std",
 	"serde/std",
-	# "atlas-evm-integration/std",
+	"atlas-evm-integration/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

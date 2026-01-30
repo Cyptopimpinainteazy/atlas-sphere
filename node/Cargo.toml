@@ -47,7 +47,7 @@ sc-rpc = { workspace = true }
 sc-service = { workspace = true, features = ["rocksdb"] }
 sc-telemetry = { workspace = true }
 sc-transaction-pool = { workspace = true }
-sc-transaction-pool-api = { workspace = true }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v1.0.0", default-features = false }
 
 sp-api = { workspace = true }
 sp-block-builder = { workspace = true }
@@ -63,7 +63,6 @@ sp-transaction-pool = { workspace = true }
 sp-io = { workspace = true }
 sp-timestamp = { workspace = true }
 
-frame-system-rpc-runtime-api = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
 
 frame-benchmarking-cli = { workspace = true, optional = true, default-features = false }

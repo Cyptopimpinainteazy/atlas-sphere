@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
-use std::panic;
 use std::path::PathBuf;
+use std::panic;
 
 fn main() {
     println!("cargo:warning=Build script starting...");
@@ -27,49 +27,16 @@ fn main() {
 
         // Manually generate wasm_binary.rs from the WASM file
         // The substrate-wasm-builder fails to do this due to wasm-opt deserialization error
-        // Try multiple paths - compact.compressed, compact, or bloaty (unoptimized)
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let wasm_binary_path = out_dir.join("../../..")
+            .join("wbuild/atlas-sphere-runtime/atlas_sphere_runtime.wasm.compact.compressed.wasm");
 
-        // The OUT_DIR is something like target/release/build/atlas-sphere-runtime-XXX/out
-        // We need to find the wbuild directory which is at target/release/wbuild/atlas-sphere-runtime
-        let target_release_dir = out_dir
-            .parent() // out
-            .and_then(|p| p.parent()) // atlas-sphere-runtime-XXX
-            .and_then(|p| p.parent()) // build
-            .and_then(|p| p.parent()) // release
-            .unwrap_or(&out_dir);
+        println!("cargo:warning=Looking for WASM at {:?}", wasm_binary_path);
 
-        let wbuild_dir = target_release_dir.join("wbuild/atlas-sphere-runtime");
-
-        // Also try the old path calculation for compatibility
-        let wbuild_dir_alt = out_dir.join("../../..").join("wbuild/atlas-sphere-runtime");
-
-        let possible_paths = [
-            wbuild_dir.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
-            wbuild_dir.join("atlas_sphere_runtime.wasm.compact.wasm"),
-            wbuild_dir.join("atlas_sphere_runtime.wasm.wasm"),
-            wbuild_dir.join("target/wasm32-unknown-unknown/release/atlas_sphere_runtime.wasm"),
-            // Alternative paths
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.compact.compressed.wasm"),
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.compact.wasm"),
-            wbuild_dir_alt.join("atlas_sphere_runtime.wasm.wasm"),
-        ];
-
-        let mut found_path: Option<PathBuf> = None;
-        for path in &possible_paths {
-            println!("cargo:warning=Checking for WASM at {:?}", path);
-            if path.exists() {
-                found_path = Some(path.clone());
-                break;
-            }
-        }
-
-        if let Some(wasm_binary_path) = found_path {
-            println!(
-                "cargo:warning=WASM file found at {:?}, generating wasm_binary.rs",
-                wasm_binary_path
-            );
-            let wasm_binary = fs::read(&wasm_binary_path).expect("Failed to read WASM binary");
+        if wasm_binary_path.exists() {
+            println!("cargo:warning=WASM file found, generating wasm_binary.rs");
+            let wasm_binary = fs::read(&wasm_binary_path)
+                .expect("Failed to read WASM binary");
 
             let mut output = String::from("pub const WASM_BINARY: Option<&[u8]> = Some(&[\n");
             for (i, byte) in wasm_binary.iter().enumerate() {
@@ -91,12 +58,9 @@ fn main() {
             fs::write(out_dir.join("wasm_binary.rs"), output)
                 .expect("Failed to write wasm_binary.rs");
 
-            println!(
-                "cargo:warning=Generated wasm_binary.rs with {} byte WASM runtime",
-                wasm_binary.len()
-            );
+            println!("cargo:warning=Generated wasm_binary.rs with {} byte WASM runtime", wasm_binary.len());
         } else {
-            println!("cargo:warning=No WASM binary found at any expected path");
+            println!("cargo:warning=WASM binary not found at {:?}", wasm_binary_path);
             // Create a minimal WASM binary as fallback
             let minimal_wasm = vec![0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]; // WASM magic + version
             let mut output = String::from("pub const WASM_BINARY: Option<&[u8]> = Some(&[\n");
