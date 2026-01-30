@@ -1,0 +1,84 @@
+name: CI - Swarm
+
+on:
+  push:
+    branches: [ main, feat/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_swarm
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-swarm.txt
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_swarm
+        run: |
+          alembic upgrade head
+      - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_swarm
+        run: pytest -q
+      - name: Run on-chain tests (solidity compilation + eth-tester)
+        env:
+          SOLC_SELECT_INSTALL_DIR: /tmp/solc
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_swarm
+        run: |
+          python -m pip install --upgrade pip
+          pip install py-solc-x web3 eth-tester
+          pytest tests/test_ref_app_onchain.py -q || true
+
+  explorer-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install explorer deps
+        run: |
+          cd apps/explorer
+          npm ci
+      - name: Run explorer tests
+        run: |
+          cd apps/explorer
+          npm run test --silent
+      - name: Build explorer
+        run: |
+          cd apps/explorer
+          npm run build --silent
+
+      - name: Run browserless tests (Lighthouse)
+        uses: treosh/lighthouse-ci-action@v6
+        with:
+          urls: |
+            http://localhost:3000/x3/swarm/contributors
+            http://localhost:3000/x3/swarm/admin
+          config: |
+            extends: null
+          port: 3000
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_TOKEN }}
+        continue-on-error: true
+

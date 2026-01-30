@@ -1,0 +1,39 @@
+name: swarm-dashboard e2e
+
+on:
+  pull_request:
+    paths:
+      - 'swarm-dashboard/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install swarm-dashboard deps
+        working-directory: ./swarm-dashboard
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: TypeScript check
+        working-directory: ./swarm-dashboard
+        run: npm run tsc
+
+      - name: Run unit tests
+        working-directory: ./swarm-dashboard
+        run: npm test --if-present
+
+      - name: Run Playwright e2e
+        working-directory: ./swarm-dashboard
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 'false'
+        run: |
+          npx playwright install --with-deps
+          npx playwright test --config e2e/playwright.config.ts

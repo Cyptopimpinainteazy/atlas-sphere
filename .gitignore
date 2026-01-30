@@ -1,35 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Vibe Code Assistant - AI Instructions & Prompts
-# Auto-generated AI guidance files - excluded from version control
-.github/instructions/
-.github/prompts/
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
 .vscode/
-how-to-guides/
-.github/copilot-instructions.md
+.idea/
+*.swp
+*.swo
+*~
 
-# Rust
-target/
+# OS
+.DS_Store
+Thumbs.db
 
-# Note: These files enhance GitHub Copilot with project-specific guidance.
-# They are excluded to keep your repository clean and focused on your code.
-# The extension will recreate them as needed when analyzing code.
-
-# Rust
-target/
-Cargo.lock
-
-# Environment and secrets files
-.env
-.env.local
-.env.*.local
-secrets/
-*.key
-*.pem
-*.p12
-
-# Node.js
+# Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
