@@ -54,3 +54,5 @@ This playbook is minimal and meant to be used as a quick checklist for PR triage
 Note: The 'SIGILL triage integration test' workflow (see .github/workflows/sigill-triage-integration.yml) validates our duplicate-protection behavior and prefers checking the created issue by number before falling back to a list-based retry. It also uploads a small telemetry artifact (`sigill-fallback-telemetry`) containing `fallback_used` and `fallback_attempts` to help diagnose timing-related flakiness.
 
 Note: A scheduled aggregator (`.github/workflows/sigill-fallback-aggregator.yml`) collects recent `sigill-fallback-telemetry` artifacts and can open an alert if the fallback rate exceeds a configured threshold; PR commenting is opt-in via `SIGILL_FALLBACK_COMMENT_ENABLED`.
+
+Run the helper script locally or in CI: `.github/scripts/aggregate-sigill-telemetry.sh --days 7 --min-runs 1` or use the manual workflow `Run SIGILL aggregator (manual)` to dispatch on-demand.
