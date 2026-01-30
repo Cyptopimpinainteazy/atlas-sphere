@@ -1,7 +1,4 @@
 from tools.fund_allocations import fund_allocations, load_allocations
-import json
-import os
-from web3 import Web3
 from swarm.db import SessionLocal, models
 
 

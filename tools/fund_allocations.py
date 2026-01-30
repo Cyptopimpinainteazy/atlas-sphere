@@ -16,9 +16,7 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
-from typing import Optional
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 import solcx
@@ -50,7 +48,7 @@ def compile_contract(source_path, contract_name):
     return cont['abi'], cont['evm']['bytecode']['object']
 
 
-def deploy_token_and_distributor(w3: Web3, acct=None, abi_rd: Optional[list] = None, bc_rd: Optional[str] = None):
+def deploy_token_and_distributor(w3: Web3, acct=None):
     # Deploy MockToken then RewardDistributor
     token_source = '''
     // SPDX-License-Identifier: MIT
@@ -91,9 +89,7 @@ def deploy_token_and_distributor(w3: Web3, acct=None, abi_rd: Optional[list] = N
     r = w3.eth.wait_for_transaction_receipt(tx)
     token_addr = r.contractAddress
 
-    # Use pre-compiled RewardDistributor if provided, otherwise compile it
-    if abi_rd is None or bc_rd is None:
-        abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
+    abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
     RD = w3.eth.contract(abi=abi_rd, bytecode=bc_rd)
     tx2 = RD.constructor(token_addr).transact({'from': acct})
     r2 = w3.eth.wait_for_transaction_receipt(tx2)
@@ -108,17 +104,12 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        acct = w3.eth.account.from_key(private_key)
-        sender = acct.address
+        # Remote RPC flow not fully implemented - raises RuntimeError below (line 141)
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
         w3 = Web3(provider)
         sender = w3.eth.accounts[0]
-        acct = None  # deploy_token_and_distributor handles None by using w3.eth.accounts[0]
-
-    # Compile RewardDistributor once at the start to avoid repeated compilations
-    abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
 
     allocs = load_allocations()
     addresses = list(allocs.keys())
@@ -128,30 +119,34 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     amounts_wei = [int(a) for a in amounts]
 
     if not distributor or not token:
-        # deploy_token_and_distributor handles acct=None by defaulting to w3.eth.accounts[0]
-        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, acct=acct, abi_rd=abi_rd, bc_rd=bc_rd)
+        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3)
         distributor = rd_contract.address
         token = token_contract.address
     else:
-        # attach to existing contracts using pre-compiled ABI
+        # attach
+        abi_rd, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
         rd_contract = w3.eth.contract(address=distributor, abi=abi_rd)
-        # Create minimal token contract for transfer - full ABI not available for existing contracts
-        min_abi = [
-            {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
-        ]
-        token_contract = w3.eth.contract(address=token, abi=min_abi)
 
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
-    
+    # Use minimal ERC20 ABI for token transfer
+    min_abi = [
+        {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
+    ]
+    # For eth-tester this will work via MockToken if we deployed it
     if rpc:
-        # build and sign transactions for remote provider
-        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
+        # Remote RPC flow requires proper transaction signing and is not fully implemented
+        # Use eth-tester mode for development or extend this function for production use
+        raise RuntimeError("Remote RPC flow not fully implemented; use eth-tester mode (no --rpc flag) or extend script for production")
     else:
-        # Use token_contract to transfer tokens (either from deploy or attached above)
+        # token_contract exists in scope when deployed
+        # For eth-tester, attach a minimal ABI for transfer
+        token_contract = w3.eth.contract(address=token, abi=min_abi)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})
-        # Use rd_contract to set allocations (either from deploy or attached above)
+        # Now set allocations on distributor
+        rd_abi, _ = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
+        rd_contract = w3.eth.contract(address=distributor, abi=rd_abi)
         rd_contract.functions.setAllocations(addresses, amounts_wei).transact({'from': sender})
         print("Allocations set on distributor")
 
