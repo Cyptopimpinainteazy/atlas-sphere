@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const mockData = require('./mock-rpc-data.json');
+let mockData = require('./mock-rpc-data.json');
+const fs = require('fs');
 
 const app = express();
 // Allow overriding port via environment variable (for ephemeral port support in tests)
@@ -146,6 +147,17 @@ app.get('/api/readiness/testnet', (req, res) => {
 app.get('/artifacts/:alertId/:file', (req, res) => {
     const { alertId, file } = req.params;
     res.json({ alertId, file, message: 'This is a mock artifact placeholder.' });
+});
+
+// Admin: reset mock data from disk
+app.post('/__reset', (req, res) => {
+    try {
+        const raw = fs.readFileSync(path.resolve(__dirname, './mock-rpc-data.json'), 'utf8');
+        mockData = JSON.parse(raw);
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: err.message });
+    }
 });
 
 // Health check

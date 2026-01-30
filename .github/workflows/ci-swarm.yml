@@ -76,6 +76,10 @@ jobs:
         working-directory: ./swarm-dashboard
         run: npm ci
       
+      - name: Run Node unit tests
+        working-directory: ./swarm-dashboard
+        run: npm test --silent
+
       - name: Build swarm-dashboard
         working-directory: ./swarm-dashboard
         run: |
