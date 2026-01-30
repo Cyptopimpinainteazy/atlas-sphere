@@ -10,13 +10,10 @@ Usage:
 import json
 import os
 import argparse
-import logging
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 import solcx
 from swarm.db import SessionLocal, models
-
-logging.basicConfig(level=logging.INFO)
 
 
 def load_finalized():
@@ -133,7 +130,7 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
             signed = acct.sign_transaction(tx)
             tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
             print(f'Set allocation tx: {tx_hash.hex()}')
-            # also add to gnosis batch data
+            # add to gnosis batch data (build_transaction always includes 'data' field)
             gnosis_batch.append({'to': distributor, 'value': 0, 'data': tx['data']})
         else:
             rd_contract.functions.setAllocation(who, amt).transact({'from': sender})
@@ -160,8 +157,8 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
         import requests
         ws_url = os.environ.get('SWARM_WS_EVENTS_URL', 'http://127.0.0.1:8787/events')
         requests.post(ws_url, json={'type': 'payouts_processed', 'count': len(finalized)})
-    except Exception as e:
-        logging.warning(f'Failed to notify WebSocket server: {e}')
+    except Exception:
+        pass
 
     print('All finalized payouts processed')
 

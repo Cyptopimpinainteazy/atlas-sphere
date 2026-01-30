@@ -104,7 +104,8 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        # Remote RPC flow not fully implemented - raises RuntimeError below (line 141)
+        # Prepare account for transaction signing (needed when RPC flow is implemented)
+        acct = w3.eth.account.from_key(private_key)
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
@@ -130,18 +131,18 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
-    # Use minimal ERC20 ABI for token transfer
-    min_abi = [
-        {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
-    ]
-    # For eth-tester this will work via MockToken if we deployed it
+    # token ABI unknown here; assume minimal ERC20 ABI defined below for transfer
     if rpc:
-        # Remote RPC flow requires proper transaction signing and is not fully implemented
-        # Use eth-tester mode for development or extend this function for production use
-        raise RuntimeError("Remote RPC flow not fully implemented; use eth-tester mode (no --rpc flag) or extend script for production")
+        # Remote RPC flow requires manual transaction building/signing similar to process_finalized_payouts.py
+        # For production use, implement proper transaction building with nonce management and gas estimation
+        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester for testing or implement full transaction flow")
     else:
         # token_contract exists in scope when deployed
-        # For eth-tester, attach a minimal ABI for transfer
+        # we will call token_contract = w3.eth.contract(address=token, abi=[...])
+        # For simplicity, attach a minimal ABI for transfer
+        min_abi = [
+            {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
+        ]
         token_contract = w3.eth.contract(address=token, abi=min_abi)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})
         # Now set allocations on distributor
