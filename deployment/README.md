@@ -5,7 +5,6 @@
 ### Quick Start
 - **[QUICKSTART.md](QUICKSTART.md)** - Choose your deployment path (3 options)
 - **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** - Complete in-house deployment guide
-- **[PUBLIC_RPC.md](PUBLIC_RPC.md)** - Run public RPC (dev/local/staging/testnet) safely
 
 ### Deployment Scripts
 - **[deploy-local-testnet.sh](deploy-local-testnet.sh)** - Automated single-server deployment

@@ -6,25 +6,15 @@
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
 use atlas_sphere_runtime::{opaque::Block, RuntimeApi};
-use sc_client_api::{BlockBackend, BlockchainEvents};
+use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
-use sc_service::{
-    ChainType, Configuration, Error as ServiceError, KeystoreContainer, PartialComponents,
-    TaskManager,
-};
+use sc_network::NetworkService;
+use sc_service::{Configuration, Error as ServiceError, PartialComponents, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sp_api::HeaderT;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_core::{crypto::KeyTypeId, Pair};
-use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
-
-/// Key type for Aura block authoring
-const AURA: KeyTypeId = KeyTypeId(*b"aura");
-/// Key type for GRANDPA finality
-const GRANDPA: KeyTypeId = KeyTypeId(*b"gran");
 
 /// Atlas Sphere native executor implementation
 pub struct AtlasSphereExecutorDispatch;
@@ -57,42 +47,6 @@ pub type FullBackend = sc_service::TFullBackend<Block>;
 
 /// Type alias for select chain implementation
 pub type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
-
-/// Insert development keys into the keystore for block authoring.
-///
-/// For development mode (`--dev`), this inserts Alice's Aura (sr25519) and
-/// GRANDPA (ed25519) keys into the keystore so the node can author blocks.
-fn insert_dev_keys(keystore: &KeystoreContainer) -> Result<(), ServiceError> {
-    use sp_core::crypto::SecretStringError;
-
-    // Alice's seed phrase for development
-    let seed = "//Alice";
-    let keystore = keystore.keystore();
-
-    // Insert Aura key (sr25519) for block authoring
-    let aura_pair =
-        sp_core::sr25519::Pair::from_string(seed, None).map_err(|e: SecretStringError| {
-            ServiceError::Other(format!("Failed to generate Aura keypair: {:?}", e))
-        })?;
-    keystore
-        .insert(AURA, seed, &aura_pair.public().0)
-        .map_err(|e| ServiceError::Other(format!("Failed to insert Aura key: {:?}", e)))?;
-
-    log::info!("🔑 Inserted Alice's Aura key for block authoring");
-
-    // Insert GRANDPA key (ed25519) for finality
-    let grandpa_pair =
-        sp_core::ed25519::Pair::from_string(seed, None).map_err(|e: SecretStringError| {
-            ServiceError::Other(format!("Failed to generate GRANDPA keypair: {:?}", e))
-        })?;
-    keystore
-        .insert(GRANDPA, seed, &grandpa_pair.public().0)
-        .map_err(|e| ServiceError::Other(format!("Failed to insert GRANDPA key: {:?}", e)))?;
-
-    log::info!("🔑 Inserted Alice's GRANDPA key for finality");
-
-    Ok(())
-}
 
 /// Create partial components for Atlas Sphere node
 ///
@@ -136,11 +90,6 @@ pub fn new_partial(
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
         )?;
-
-    // For development chains, insert Alice's keys for block authoring
-    if config.chain_spec.chain_type() == ChainType::Development {
-        insert_dev_keys(&keystore_container)?;
-    }
 
     let client = Arc::new(client);
 
@@ -214,12 +163,12 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let sc_service::PartialComponents {
         client,
         backend,
-        task_manager,
+        mut task_manager,
         keystore_container,
         select_chain,
         import_queue,
         transaction_pool,
-        other: (grandpa_block_import, grandpa_link, telemetry),
+        other: (grandpa_block_import, grandpa_link, mut telemetry),
     } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
@@ -253,43 +202,23 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         })?;
 
     // Build RPC extensions module
-    let chain_name = config.chain_spec.name().to_string();
-    let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone(), chain_name)
+    let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone())
         .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
 
-    // Start RPC server using jsonrpsee with HTTP and WebSocket support
-    // Security: Default to localhost binding only
+    // Start RPC server using jsonrpsee directly
     let rpc_addr = config
         .rpc_addr
         .unwrap_or_else(|| "127.0.0.1:9944".parse().expect("valid default address"));
 
     let max_connections = config.rpc_max_connections;
 
-    // Initialize rate limiter with production config
-    let rate_limiter = std::sync::Arc::new(crate::rpc_middleware::RateLimiter::new(
-        crate::rpc_middleware::RateLimitConfig::default(),
-    ));
-
-    // Spawn RPC server as an essential task (supports both HTTP and WS)
+    // Spawn RPC server as an essential task
     let rpc_server_handle = task_manager.spawn_essential_handle();
-    let rate_limiter_clone = rate_limiter.clone();
     rpc_server_handle.spawn("rpc-server", None, async move {
         use jsonrpsee::server::ServerBuilder;
-        use std::time::Duration;
 
-        // Security settings for production
-        // - Reasonable message size limits to prevent memory exhaustion
-        // - Ping/pong for WebSocket keep-alive
-        // - Connection limits
         let server = ServerBuilder::default()
             .max_connections(max_connections)
-            // Enable ping/pong for WebSocket keep-alive
-            .ping_interval(Duration::from_secs(30))
-            // Set reasonable message size limits (prevent DoS)
-            .max_request_body_size(10 * 1024 * 1024) // 10 MB max request
-            .max_response_body_size(50 * 1024 * 1024) // 50 MB max response (for large queries)
-            // Limit subscription buffer to prevent memory issues
-            .max_subscriptions_per_connection(10)
             .build(rpc_addr)
             .await
             .map_err(|e| {
@@ -300,28 +229,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
         let _handle = server.start(rpc_module);
 
-        log::info!("🌐 RPC server listening on http://{}", rpc_addr);
-        log::info!("🔌 WebSocket available at ws://{}", rpc_addr);
-        log::info!(
-            "🛡️ Rate limiting enabled: {} req/s burst, {} max subscriptions",
-            50,
-            10
-        );
+        log::info!("🌐 RPC server listening on {}", rpc_addr);
 
-        // Periodically cleanup stale rate limiter connections
-        let cleanup_interval = Duration::from_secs(300); // 5 minutes
-        let max_age = Duration::from_secs(3600); // 1 hour
-        loop {
-            tokio::time::sleep(cleanup_interval).await;
-            rate_limiter_clone.cleanup_stale_connections(max_age);
-            let metrics = rate_limiter_clone.metrics();
-            log::debug!(
-                "Rate limiter stats: {} requests, {} rejected, {} active connections",
-                metrics.total_requests,
-                metrics.total_rejected,
-                metrics.active_connections
-            );
-        }
+        futures::future::pending::<()>().await;
     });
 
     let role = config.role.clone();
@@ -417,38 +327,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
     // Start the network
     network_starter.start_network();
-
-    // Spawn a background task to watch finalized blocks and log events with emojis
-    {
-        let client = client.clone();
-        task_manager
-            .spawn_handle()
-            .spawn("import-watcher", None, async move {
-                use futures_util::StreamExt;
-
-                let mut notifications = client.import_notification_stream();
-                while let Some(notification) = notifications.next().await {
-                    let number: u64 = (*notification.header.number()).saturated_into();
-                    log::info!("🟡 Block imported: #{} — syncing state", number);
-                }
-            });
-    }
-
-    {
-        let client = client.clone();
-        task_manager
-            .spawn_handle()
-            .spawn("block-watcher", None, async move {
-                use futures_util::StreamExt;
-
-                let mut notifications = client.finality_notification_stream();
-                while let Some(notification) = notifications.next().await {
-                    // number is saturated into u64
-                    let number: u64 = (*notification.header.number()).saturated_into();
-                    log::info!("🔔 Block finalized: #{} ✅", number);
-                }
-            });
-    }
 
     log::info!("✨ Atlas Sphere node started successfully");
     log::info!("🔗 Network: {}", config.chain_spec.name());

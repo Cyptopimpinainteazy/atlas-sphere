@@ -1,6 +1,0 @@
-- [x] Create BASIC_PROGRAM_ADDRESS export file
-- [x] Update programs index export
-- [ ] Verify module imports in basic-exports.ts
-- [ ] Run TypeScript compilation to ensure no errors
-- [ ] Run application tests
-- [ ] Deploy or restart runtime if needed

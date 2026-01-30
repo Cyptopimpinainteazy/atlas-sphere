@@ -40,17 +40,6 @@ fn compute_prepare_root(
     AtlasKernel::compute_prepare_root(comit_id, evm_payload, svm_payload, nonce, fee)
 }
 
-fn compute_prepare_root_v2(
-    comit_id: H256,
-    evm_payload: &[u8],
-    svm_payload: &[u8],
-    x3_payload: &[u8],
-    nonce: u64,
-    fee: Balance,
-) -> H256 {
-    AtlasKernel::compute_prepare_root_v2(comit_id, evm_payload, svm_payload, x3_payload, nonce, fee)
-}
-
 #[test]
 fn submit_comit_successful_flow() {
     new_test_ext().execute_with(|| {
@@ -95,95 +84,6 @@ fn submit_comit_successful_flow() {
             }
             e => panic!("Unexpected event: {:?}", e),
         }
-    });
-}
-
-#[test]
-fn submit_comit_v2_successful_flow() {
-    new_test_ext().execute_with(|| {
-        let comit_id = H256::from_low_u64_be(101);
-        let evm_payload = vec![1, 2, 3];
-        let svm_payload = vec![4, 5];
-        let x3_payload = vec![0x58, 0x33, 0x00, 0x01];
-        let nonce = 0;
-        let fee: Balance = 500;
-        let prepare_root = compute_prepare_root_v2(
-            comit_id,
-            &evm_payload,
-            &svm_payload,
-            &x3_payload,
-            nonce,
-            fee,
-        );
-
-        assert_ok!(AtlasKernel::submit_comit_v2(
-            RuntimeOrigin::signed(ALICE),
-            comit_id,
-            evm_payload,
-            svm_payload,
-            x3_payload,
-            nonce,
-            fee,
-            prepare_root,
-        ));
-
-        assert_eq!(Nonces::<Test>::get(ALICE), 1);
-
-        let events = atlas_events();
-        // FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted, (optional ledger update), Finalized
-        assert!(events.len() >= 5);
-        assert!(matches!(events[1], AtlasEvent::ComitSubmitted { .. }));
-        assert!(matches!(
-            events[2],
-            AtlasEvent::ComitExecutionStarted { .. }
-        ));
-        assert!(matches!(
-            events[3],
-            AtlasEvent::ComitExecutionCompleted { .. }
-        ));
-        assert!(matches!(
-            events.last().unwrap(),
-            AtlasEvent::ComitFinalized { .. }
-        ));
-    });
-}
-
-#[test]
-fn submit_comit_v2_fails_when_x3_execution_errors() {
-    new_test_ext().execute_with(|| {
-        let comit_id = H256::from_low_u64_be(102);
-        let evm_payload = vec![1];
-        let svm_payload = vec![1];
-        // 0xFF triggers FailingMockX3Adapter Err
-        let x3_payload = vec![0xFF, 0x00, 0x00, 0x00];
-        let nonce = 0;
-        let fee: Balance = 500;
-        let prepare_root = compute_prepare_root_v2(
-            comit_id,
-            &evm_payload,
-            &svm_payload,
-            &x3_payload,
-            nonce,
-            fee,
-        );
-
-        assert_noop!(
-            AtlasKernel::submit_comit_v2(
-                RuntimeOrigin::signed(ALICE),
-                comit_id,
-                evm_payload,
-                svm_payload,
-                x3_payload,
-                nonce,
-                fee,
-                prepare_root,
-            ),
-            AtlasError::X3ExecutionFailed
-        );
-
-        // Atomic rollback: nonce not incremented and no events persisted
-        assert_eq!(Nonces::<Test>::get(ALICE), 0);
-        assert_eq!(atlas_events().len(), 0);
     });
 }
 

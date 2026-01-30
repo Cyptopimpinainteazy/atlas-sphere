@@ -131,7 +131,7 @@ pub struct TimeSeriesPoint {
 /// Time-series query parameters
 #[derive(Debug, Clone, Deserialize)]
 pub struct TimeSeriesParams {
-    pub metric: String,           // "events", "comits", "accounts"
+    pub metric: String, // "events", "comits", "accounts"
     pub interval: Option<String>, // "hour", "day", "week"
     pub start_time: Option<DateTime<Utc>>,
     pub end_time: Option<DateTime<Utc>>,

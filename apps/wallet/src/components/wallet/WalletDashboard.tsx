@@ -9,7 +9,6 @@ import { SwapView } from './views/SwapView';
 import { HistoryView } from './views/HistoryView';
 import { SettingsView } from './views/SettingsView';
 import { ComitView } from './views/ComitView';
-import { MintView } from './views/MintView';
 
 export function WalletDashboard() {
   const { activeView } = useWalletStore();
@@ -28,8 +27,6 @@ export function WalletDashboard() {
         return <SettingsView />;
       case 'comit':
         return <ComitView />;
-      case 'mint':
-        return <MintView />;
       default:
         return <Dashboard />;
     }

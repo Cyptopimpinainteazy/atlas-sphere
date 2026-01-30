@@ -12,8 +12,7 @@ import {
   LogOut,
   Zap,
   Copy,
-  Check,
-  Coins
+  Check
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,7 +21,6 @@ const navItems = [
   { id: 'send', label: 'Send', icon: Send },
   { id: 'receive', label: 'Receive', icon: Download },
   { id: 'swap', label: 'Swap', icon: ArrowLeftRight },
-  { id: 'mint', label: 'Create Token', icon: Coins, badge: '✨' },
   { id: 'comit', label: 'Comit', icon: Zap },
   { id: 'history', label: 'History', icon: History },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -108,9 +106,6 @@ export function Sidebar() {
                 <span className="ml-auto badge bg-orange-500/20 text-orange-400 border border-orange-500/30">
                   NEW
                 </span>
-              )}
-              {item.id === 'mint' && (
-                <span className="ml-auto text-sm">✨</span>
               )}
             </button>
           );

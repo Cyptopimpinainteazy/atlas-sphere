@@ -5,7 +5,7 @@ use sp_runtime::traits::Zero;
 use sp_std::{collections::btree_map::BTreeMap, vec::Vec};
 
 /// EVM account state
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct EvmAccount {
     /// Account nonce
     pub nonce: u64,
@@ -20,7 +20,12 @@ pub struct EvmAccount {
 impl EvmAccount {
     /// Create new EVM account
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            nonce: 0,
+            balance: 0,
+            code_hash: [0u8; 32],
+            storage_root: [0u8; 32],
+        }
     }
 
     /// Set account balance
@@ -74,7 +79,6 @@ impl EvmCode {
 pub type StorageValue = [u8; 32];
 
 /// EVM state database
-#[derive(Default)]
 pub struct EvmStateDb {
     accounts: BTreeMap<[u8; 20], EvmAccount>,
     code: BTreeMap<[u8; 32], EvmCode>,
@@ -84,7 +88,11 @@ pub struct EvmStateDb {
 impl EvmStateDb {
     /// Create new EVM state database
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            accounts: BTreeMap::new(),
+            code: BTreeMap::new(),
+            storage: BTreeMap::new(),
+        }
     }
 
     /// Get account by address
@@ -94,7 +102,9 @@ impl EvmStateDb {
 
     /// Get mutable account reference
     pub fn account_mut(&mut self, address: &[u8; 20]) -> &mut EvmAccount {
-        self.accounts.entry(*address).or_default()
+        self.accounts
+            .entry(*address)
+            .or_insert_with(EvmAccount::new)
     }
 
     /// Get account nonce

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import WalletContext, { WalletContextType } from './WalletContext';
+import WalletContext from './WalletContext';
 
-export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
+export const WalletProvider = ({ children }) => {
   const [walletAddress, setWalletAddress] = useState('');
   const [privateKey, setPrivateKey] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -13,21 +13,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     setIsConnected(true);
   };
 
-  const value: WalletContextType = {
-    walletAddress,
-    setWalletAddress,
-    privateKey,
-    setPrivateKey,
-    isConnected,
-    setIsConnected,
-    connectWallet,
-  };
-
   return (
-    <WalletContext.Provider value={value}>
+    <WalletContext.Provider value={{ walletAddress, setWalletAddress, privateKey, setPrivateKey, isConnected, setIsConnected, connectWallet }}>
       {children}
     </WalletContext.Provider>
   );
 };
-
-export default WalletProvider;

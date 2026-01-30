@@ -13,7 +13,7 @@ use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::RuntimeDebug;
-use sp_std::vec::Vec;
+use sp_std::{vec, vec::Vec};
 
 /// Swap parameters for AMM execution
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]

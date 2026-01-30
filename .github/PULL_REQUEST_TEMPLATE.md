@@ -1,9 +1,5 @@
 # Pull Request Template
 
-## Summary
-
-<!-- Describe the change at a high level. -->
-
 ## Description
 
 <!-- Describe what this PR does and why -->
@@ -41,9 +37,6 @@
 
 ## Checklist
 
-- [ ] I added/updated Alembic migrations if needed.
-- [ ] **If** adding an Alembic migration, I included an orphaned-sequence guard or added a `# sequence-guard` comment.
-- [ ] If you want the non-blocking Alembic roundtrip check to run on this PR, add the label: `run-alembic-roundtrip`.
 - [ ] My code follows the project style guidelines
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas

@@ -5,7 +5,7 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
-use sp_core::{H256, U256};
+use sp_core::H256;
 use sp_runtime::RuntimeDebug;
 use sp_std::vec::Vec;
 
@@ -21,8 +21,6 @@ pub enum VmType {
     Evm,
     /// Solana Virtual Machine
     Svm,
-    /// Atlas X3 Virtual Machine
-    X3,
     /// Cross-VM operation (requires both)
     CrossVm,
 }
@@ -105,7 +103,6 @@ impl LiquidityPool {
     /// Calculate output amount for a given input using constant product formula.
     ///
     /// Formula: amount_out = (reserve_out * amount_in * (10000 - fee_bps)) / (reserve_in * 10000 + amount_in * (10000 - fee_bps))
-    /// Uses U256 for intermediate calculations to avoid overflow with large token amounts.
     pub fn get_amount_out(&self, amount_in: u128, token_in: H256) -> Option<u128> {
         let (reserve_in, reserve_out) = if token_in == self.token_a {
             (self.reserve_a, self.reserve_b)
@@ -119,29 +116,19 @@ impl LiquidityPool {
             return None;
         }
 
-        // Use U256 to avoid overflow in intermediate calculations
-        let fee_multiplier = U256::from(10000u128.checked_sub(self.fee_bps as u128)?);
-        let amount_in_with_fee = U256::from(amount_in) * fee_multiplier;
-        let numerator = U256::from(reserve_out) * amount_in_with_fee;
-        let denominator = U256::from(reserve_in) * U256::from(10000u64) + amount_in_with_fee;
+        let fee_multiplier = 10000u128.checked_sub(self.fee_bps as u128)?;
+        let amount_in_with_fee = amount_in.checked_mul(fee_multiplier)?;
+        let numerator = reserve_out.checked_mul(amount_in_with_fee)?;
+        let denominator = reserve_in
+            .checked_mul(10000)?
+            .checked_add(amount_in_with_fee)?;
 
-        if denominator.is_zero() {
-            return None;
-        }
-
-        let result = numerator / denominator;
-
-        // Convert back to u128, returning None if overflow
-        if result > U256::from(u128::MAX) {
-            return None;
-        }
-        Some(result.as_u128())
+        numerator.checked_div(denominator)
     }
 
     /// Calculate required input amount for a desired output.
     ///
     /// Formula: amount_in = (reserve_in * amount_out * 10000) / ((reserve_out - amount_out) * (10000 - fee_bps))
-    /// Uses U256 for intermediate calculations to avoid overflow with large token amounts.
     pub fn get_amount_in(&self, amount_out: u128, token_out: H256) -> Option<u128> {
         let (reserve_in, reserve_out) = if token_out == self.token_b {
             (self.reserve_a, self.reserve_b)
@@ -155,27 +142,17 @@ impl LiquidityPool {
             return None;
         }
 
-        // Use U256 to avoid overflow in intermediate calculations
-        let fee_multiplier = U256::from(10000u128.checked_sub(self.fee_bps as u128)?);
-        let numerator = U256::from(reserve_in) * U256::from(amount_out) * U256::from(10000u64);
-        let denominator = (U256::from(reserve_out) - U256::from(amount_out)) * fee_multiplier;
-
-        if denominator.is_zero() {
-            return None;
-        }
+        let fee_multiplier = 10000u128.checked_sub(self.fee_bps as u128)?;
+        let numerator = reserve_in.checked_mul(amount_out)?.checked_mul(10000)?;
+        let denominator = reserve_out
+            .checked_sub(amount_out)?
+            .checked_mul(fee_multiplier)?;
 
         // Add 1 to round up
-        let result = numerator / denominator + U256::one();
-
-        // Convert back to u128, returning None if overflow
-        if result > U256::from(u128::MAX) {
-            return None;
-        }
-        Some(result.as_u128())
+        numerator.checked_div(denominator)?.checked_add(1)
     }
 
     /// Calculate price impact for a trade.
-    /// Uses U256 for intermediate calculations to avoid overflow with large token amounts.
     pub fn calculate_price_impact(&self, amount_in: u128, token_in: H256) -> Option<u32> {
         let amount_out = self.get_amount_out(amount_in, token_in)?;
 
@@ -189,26 +166,22 @@ impl LiquidityPool {
         // Execution price = amount_out / amount_in
         // Price impact = 1 - (execution_price / spot_price)
 
-        // Use U256 for intermediate calculations
-        let scale = U256::from(1_000_000u64);
-        let spot_price_scaled = U256::from(reserve_out) * scale / U256::from(reserve_in);
+        let spot_price_scaled = reserve_out
+            .checked_mul(1_000_000)? // Scale factor
+            .checked_div(reserve_in)?;
 
-        if spot_price_scaled.is_zero() {
-            return Some(0);
-        }
-
-        let exec_price_scaled = U256::from(amount_out) * scale / U256::from(amount_in);
+        let exec_price_scaled = amount_out.checked_mul(1_000_000)?.checked_div(amount_in)?;
 
         if exec_price_scaled >= spot_price_scaled {
             return Some(0);
         }
 
-        let impact_scaled = (spot_price_scaled - exec_price_scaled)
-            * U256::from(10000u64) // Convert to basis points
-            / spot_price_scaled;
+        let impact_scaled = spot_price_scaled
+            .checked_sub(exec_price_scaled)?
+            .checked_mul(10000)? // Convert to basis points
+            .checked_div(spot_price_scaled)?;
 
-        // Safe to cast as impact should be < 10000 basis points
-        Some(impact_scaled.as_u32())
+        Some(impact_scaled as u32)
     }
 }
 
@@ -299,7 +272,7 @@ pub struct PriceObservation {
 }
 
 /// Price oracle data point.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct PricePoint {
     /// Asset pair
     pub token_a: H256,
@@ -315,7 +288,7 @@ pub struct PricePoint {
 }
 
 /// Time-weighted average price data.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct TwapData {
     /// Asset pair
     pub token_a: H256,

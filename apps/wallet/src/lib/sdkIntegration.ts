@@ -1,11 +1,28 @@
 /**
- * Simplified SDK Integration Layer for Atlas Sphere Wallet
+ * SDK Integration Layer for Atlas Sphere Wallet
  * 
- * Provides wallet operations without problematic dependencies
+ * Provides production-ready SDK wrappers for wallet operations
+ * with proper error handling, caching, and event subscriptions.
  */
 
-import { AtlasSphereClient, formatBalance as sdkFormatBalance, parseBalance as sdkParseBalance } from '@atlas-sphere/ts-sdk';
-import type { ComitEvent } from '@atlas-sphere/ts-sdk';
+import {
+  AtlasSphereClient,
+  ComitBuilder,
+  evmComit,
+  svmComit,
+  dualComit,
+  QueryClient,
+  createQueryClient,
+  formatBalance,
+  parseBalance,
+  NATIVE_ASSET_ID,
+  NATIVE_ASSET_SYMBOL,
+  NATIVE_ASSET_DECIMALS,
+  DEFAULT_WS_ENDPOINT,
+  ComitEvent,
+  ConnectionError,
+  RpcError,
+} from '@atlas-sphere/ts-sdk';
 
 // =============================================================================
 // Types
@@ -41,59 +58,86 @@ export interface TransactionStatus {
 }
 
 // =============================================================================
-// Constants
-// =============================================================================
-
-export const NATIVE_ASSET_ID = 0;
-export const NATIVE_ASSET_SYMBOL = 'ATLAS';
-export const NATIVE_ASSET_DECIMALS = 12;
-export const DEFAULT_WS_ENDPOINT = 'ws://localhost:9944';
-
-// =============================================================================
-// Simplified SDK Integration
+// SDK Integration Class
 // =============================================================================
 
 /**
- * Simplified SDK integration manager for wallet operations
+ * Singleton SDK integration manager for wallet operations
  */
 class SDKIntegration {
-  private connected = false;
-  private endpoint: string;
-  private client: any | null = null;
+  private client: AtlasSphereClient | null = null;
+  private queryClient: QueryClient | null = null;
+  private config: WalletConfig;
+  private connectionPromise: Promise<void> | null = null;
+  private subscriptions: Map<string, () => void> = new Map();
 
   constructor() {
-    this.endpoint = process.env.NEXT_PUBLIC_SUBSTRATE_RPC_ENDPOINT || DEFAULT_WS_ENDPOINT;
+    this.config = {
+      endpoint: process.env.NEXT_PUBLIC_SUBSTRATE_RPC_ENDPOINT || DEFAULT_WS_ENDPOINT,
+      useWebSocket: true,
+      rpcTimeoutMs: 30000,
+      finalizationTimeoutMs: 60000,
+      autoReconnect: true,
+    };
   }
 
   /**
-   * Connect to the Atlas Sphere node (delegates to SDK client when available)
+   * Configure the SDK with custom options
    */
-  async connect(): Promise<void> {
+  configure(config: Partial<WalletConfig>): void {
+    this.config = { ...this.config, ...config };
+    // Reconnect with new config if already connected
+    if (this.client?.isConnected) {
+      this.disconnect().then(() => this.connect());
+    }
+  }
+
+  /**
+   * Connect to the Atlas Sphere node
+   */
+  async connect(): Promise<AtlasSphereClient> {
+    if (this.client?.isConnected) {
+      return this.client;
+    }
+
+    // Prevent multiple simultaneous connection attempts
+    if (this.connectionPromise) {
+      await this.connectionPromise;
+      return this.client!;
+    }
+
+    this.connectionPromise = this.performConnect();
+    await this.connectionPromise;
+    this.connectionPromise = null;
+
+    return this.client!;
+  }
+
+  private async performConnect(): Promise<void> {
     try {
-      // Try to construct the real SDK client if available (use dynamic require to pick up Jest module mocks)
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod = require('@atlas-sphere/ts-sdk');
-        if (!this.client && mod && typeof mod.AtlasSphereClient === 'function') {
-          this.client = new mod.AtlasSphereClient({ endpoint: this.endpoint });
-        }
-      } catch (e) {
-        // ignore - module not available at runtime
-      }
+      this.client = new AtlasSphereClient({
+        endpoint: this.config.endpoint,
+        useWebSocket: this.config.useWebSocket,
+        rpcTimeoutMs: this.config.rpcTimeoutMs,
+        finalizationTimeoutMs: this.config.finalizationTimeoutMs,
+        autoReconnect: this.config.autoReconnect,
+      });
 
-      if (this.client) {
-        if (typeof this.client.connect === 'function') await this.client.connect();
-        this.connected = true;
-        console.log('[SDK] Connected to Atlas Sphere node');
-        return;
-      }
+      await this.client.connect();
 
-      // Fallback simulated connection
-      this.connected = true;
+      // Initialize query client with caching
+      this.queryClient = await createQueryClient({
+        endpoint: this.config.endpoint,
+        useWebSocket: this.config.useWebSocket,
+      });
+
       console.log('[SDK] Connected to Atlas Sphere node');
     } catch (error) {
       console.error('[SDK] Connection failed:', error);
-      throw error;
+      throw new ConnectionError(
+        this.config.endpoint,
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -101,12 +145,21 @@ class SDKIntegration {
    * Disconnect from the node
    */
   async disconnect(): Promise<void> {
-    if (this.client) {
-      try { await this.client.disconnect(); } catch (e) { /* ignore */ }
-      this.client = null;
+    // Clear all subscriptions
+    for (const [id, unsub] of this.subscriptions) {
+      try {
+        unsub();
+      } catch {
+        // Ignore
+      }
+      this.subscriptions.delete(id);
     }
 
-    this.connected = false;
+    if (this.client) {
+      await this.client.disconnect();
+      this.client = null;
+    }
+    this.queryClient = null;
     console.log('[SDK] Disconnected from Atlas Sphere node');
   }
 
@@ -114,286 +167,343 @@ class SDKIntegration {
    * Check if connected
    */
   isConnected(): boolean {
-    return this.connected;
+    return this.client?.isConnected ?? false;
+  }
+
+  /**
+   * Get the underlying client
+   */
+  getClient(): AtlasSphereClient {
+    if (!this.client?.isConnected) {
+      throw new Error('Not connected to Atlas Sphere. Call connect() first.');
+    }
+    return this.client;
   }
 
   // ===========================================================================
-  // Mock Methods for Development
+  // Balance Operations
   // ===========================================================================
 
+  /**
+   * Get native balance for an account
+   */
+  async getBalance(address: string): Promise<BalanceInfo> {
+    const client = await this.connect();
+    
+    try {
+      const balance = await client.getBalance(address);
+      return {
+        native: balance,
+        formatted: formatBalance(balance, NATIVE_ASSET_DECIMALS),
+      };
+    } catch (error) {
+      console.error('[SDK] Failed to get balance:', error);
+      throw new RpcError('getBalance', String(error));
+    }
+  }
+
+  /**
+   * Get canonical ledger balance
+   */
   async getCanonicalBalance(address: string, assetId: number = NATIVE_ASSET_ID): Promise<BalanceInfo> {
-    if (!this.connected) {
-      throw new Error('Not connected to Atlas Sphere');
-    }
+    const client = await this.connect();
 
-    if (this.client && typeof this.client.getCanonicalBalance === 'function') {
-      const res = await this.client.getCanonicalBalance(address, assetId);
-      // If the SDK returns a raw bigint, convert to BalanceInfo
-      if (typeof res === 'bigint') {
-        return { native: res, formatted: sdkFormatBalance(res, NATIVE_ASSET_DECIMALS) };
-      }
-      return res as BalanceInfo;
+    try {
+      const balance = await client.getCanonicalBalance(address, assetId);
+      return {
+        native: balance,
+        formatted: formatBalance(balance, NATIVE_ASSET_DECIMALS),
+      };
+    } catch (error) {
+      console.error('[SDK] Failed to get canonical balance:', error);
+      throw new RpcError('getCanonicalBalance', String(error));
     }
-
-    // Mock balance for development
-    const mockBalance = BigInt(Math.floor(Math.random() * 1000000000000));
-    return {
-      native: mockBalance,
-      formatted: '1000.0000',
-    };
   }
 
+  /**
+   * Get balances for multiple assets
+   */
+  async getMultipleBalances(
+    address: string,
+    assetIds: number[]
+  ): Promise<Map<number, BalanceInfo>> {
+    const client = await this.connect();
+    const results = new Map<number, BalanceInfo>();
+
+    await Promise.all(
+      assetIds.map(async (assetId) => {
+        try {
+          const balance = await client.getCanonicalBalance(address, assetId);
+          const metadata = await client.getAssetMetadata(assetId);
+          const decimals = metadata?.decimals ?? NATIVE_ASSET_DECIMALS;
+          
+          results.set(assetId, {
+            native: balance,
+            formatted: formatBalance(balance, decimals),
+          });
+        } catch (error) {
+          console.warn(`[SDK] Failed to get balance for asset ${assetId}:`, error);
+        }
+      })
+    );
+
+    return results;
+  }
+
+  // ===========================================================================
+  // Comit Operations
+  // ===========================================================================
+
+  /**
+   * Submit an EVM-only Comit transaction
+   */
+  async submitEvmComit(
+    signer: string,
+    evmPayload: Uint8Array | string,
+    fee?: bigint
+  ): Promise<ComitSubmissionResult> {
+    const client = await this.connect();
+
+    try {
+      // Build the comit
+      const builder = evmComit(evmPayload);
+      if (fee) {
+        builder.withFee(fee);
+      } else {
+        builder.withFee('auto');
+      }
+      const comitInput = builder.build();
+
+      // Submit
+      const result = await client.submitComit(comitInput, signer);
+
+      return {
+        comitId: result.comit.comitId,
+        blockHash: result.blockHash,
+        blockNumber: result.blockNumber,
+        success: result.evmReceipt?.success ?? true,
+        gasUsed: result.evmReceipt?.gasUsed ? BigInt(result.evmReceipt.gasUsed) : undefined,
+      };
+    } catch (error) {
+      console.error('[SDK] EVM Comit submission failed:', error);
+      return {
+        comitId: '',
+        blockHash: '',
+        blockNumber: 0,
+        success: false,
+        error: String(error),
+      };
+    }
+  }
+
+  /**
+   * Submit an SVM-only Comit transaction
+   */
+  async submitSvmComit(
+    signer: string,
+    svmPayload: Uint8Array | string,
+    fee?: bigint
+  ): Promise<ComitSubmissionResult> {
+    const client = await this.connect();
+
+    try {
+      const builder = svmComit(svmPayload);
+      if (fee) {
+        builder.withFee(fee);
+      } else {
+        builder.withFee('auto');
+      }
+      const comitInput = builder.build();
+
+      const result = await client.submitComit(comitInput, signer);
+
+      return {
+        comitId: result.comit.comitId,
+        blockHash: result.blockHash,
+        blockNumber: result.blockNumber,
+        success: result.svmReceipt?.success ?? true,
+        gasUsed: result.svmReceipt?.gasUsed ? BigInt(result.svmReceipt.gasUsed) : undefined,
+      };
+    } catch (error) {
+      console.error('[SDK] SVM Comit submission failed:', error);
+      return {
+        comitId: '',
+        blockHash: '',
+        blockNumber: 0,
+        success: false,
+        error: String(error),
+      };
+    }
+  }
+
+  /**
+   * Submit a dual-VM Comit transaction
+   */
+  async submitDualComit(
+    signer: string,
+    evmPayload: Uint8Array | string,
+    svmPayload: Uint8Array | string,
+    fee?: bigint
+  ): Promise<ComitSubmissionResult> {
+    const client = await this.connect();
+
+    try {
+      const builder = dualComit(evmPayload, svmPayload);
+      if (fee) {
+        builder.withFee(fee);
+      } else {
+        builder.withFee('auto');
+      }
+      const comitInput = builder.build();
+
+      const result = await client.submitComit(comitInput, signer);
+
+      return {
+        comitId: result.comit.comitId,
+        blockHash: result.blockHash,
+        blockNumber: result.blockNumber,
+        success: (result.evmReceipt?.success ?? true) && (result.svmReceipt?.success ?? true),
+        gasUsed: result.evmReceipt?.gasUsed ? BigInt(result.evmReceipt.gasUsed) : undefined,
+      };
+    } catch (error) {
+      console.error('[SDK] Dual Comit submission failed:', error);
+      return {
+        comitId: '',
+        blockHash: '',
+        blockNumber: 0,
+        success: false,
+        error: String(error),
+      };
+    }
+  }
+
+  /**
+   * Submit a custom Comit transaction using ComitBuilder
+   */
+  async submitCustomComit(
+    signer: string,
+    buildFn: (builder: ComitBuilder) => ComitBuilder
+  ): Promise<ComitSubmissionResult> {
+    const client = await this.connect();
+
+    try {
+      const builder = new ComitBuilder();
+      const comitInput = buildFn(builder).build();
+
+      const result = await client.submitComit(comitInput, signer);
+
+      return {
+        comitId: result.comit.comitId,
+        blockHash: result.blockHash,
+        blockNumber: result.blockNumber,
+        success: true,
+      };
+    } catch (error) {
+      console.error('[SDK] Custom Comit submission failed:', error);
+      return {
+        comitId: '',
+        blockHash: '',
+        blockNumber: 0,
+        success: false,
+        error: String(error),
+      };
+    }
+  }
+
+  // ===========================================================================
+  // Account Operations
+  // ===========================================================================
+
+  /**
+   * Check if an account is authorized to submit Comits
+   */
   async isAuthorized(address: string): Promise<boolean> {
-    if (!this.connected) {
-      throw new Error('Not connected to Atlas Sphere');
-    }
-
-    if (this.client && typeof this.client.isAuthorized === 'function') {
-      return await this.client.isAuthorized(address);
-    }
-
-    // Mock authorization check
-    return address === '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
+    const client = await this.connect();
+    return client.isAuthorized(address);
   }
 
-  async getChainInfo() {
-    if (this.client && typeof this.client.getChainInfo === 'function') {
-      return await this.client.getChainInfo();
-    }
-
-    return {
-      name: 'Atlas Sphere Dev',
-      version: '1.0.0',
-      properties: {
-        tokenSymbol: NATIVE_ASSET_SYMBOL,
-        tokenDecimals: NATIVE_ASSET_DECIMALS,
-        ss58Format: 42,
-      },
-    };
-  }
-
-  async getBlockNumber(): Promise<number> {
-    if (this.client && typeof this.client.getBlockNumber === 'function') {
-      return await this.client.getBlockNumber();
-    }
-    return Math.floor(Math.random() * 1000) + 1;
-  }
-
-  // Mock Comit methods
-  async submitEvmComit(signer: string, evmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
-    if (!this.connected) {
-      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
-    }
-
-    if (this.client && typeof this.client.submitComit === 'function') {
-      const r = await this.client.submitComit(signer, evmPayload, fee);
-
-      // Normalize SDK response into ComitSubmissionResult
-      const success = Boolean(r?.evmReceipt?.success || r?.svmReceipt?.success);
-      const comitId = r?.comit?.comitId || '';
-      const blockNumber = typeof r?.blockNumber === 'number' ? r.blockNumber : 0;
-      const blockHash = r?.blockHash || '';
-      let gasUsed: bigint | undefined;
-      try {
-        if (r?.evmReceipt?.gasUsed) gasUsed = BigInt(r.evmReceipt.gasUsed);
-      } catch (e) { /* ignore */ }
-
-      return {
-        comitId,
-        blockHash,
-        blockNumber,
-        success,
-        gasUsed,
-      } as ComitSubmissionResult;
-    }
-
-    return {
-      comitId: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockNumber: Math.floor(Math.random() * 1000) + 1,
-      success: true,
-    };
-  }
-
-  async submitSvmComit(signer: string, svmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
-    if (!this.connected) {
-      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
-    }
-
-    if (this.client && typeof this.client.submitComit === 'function') {
-      const r = await this.client.submitComit(signer, svmPayload, fee);
-
-      // Normalize SDK response into ComitSubmissionResult
-      const success = Boolean(r?.evmReceipt?.success || r?.svmReceipt?.success);
-      const comitId = r?.comit?.comitId || '';
-      const blockNumber = typeof r?.blockNumber === 'number' ? r.blockNumber : 0;
-      const blockHash = r?.blockHash || '';
-      let gasUsed: bigint | undefined;
-      try {
-        if (r?.evmReceipt?.gasUsed) gasUsed = BigInt(r.evmReceipt.gasUsed);
-      } catch (e) { /* ignore */ }
-
-      return {
-        comitId,
-        blockHash,
-        blockNumber,
-        success,
-        gasUsed,
-      } as ComitSubmissionResult;
-    }
-
-    return {
-      comitId: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockNumber: Math.floor(Math.random() * 1000) + 1,
-      success: true,
-    };
-  }
-
-  async submitDualComit(signer: string, evmPayload: Uint8Array | string, svmPayload: Uint8Array | string, fee?: bigint): Promise<ComitSubmissionResult> {
-    if (!this.connected) {
-      return { comitId: '', blockHash: '', blockNumber: 0, success: false, error: 'Not connected' };
-    }
-
-    if (this.client && typeof this.client.submitComit === 'function') {
-      const r = await this.client.submitComit(signer, { evmPayload, svmPayload }, fee);
-
-      // Normalize SDK response into ComitSubmissionResult
-      const success = Boolean(r?.evmReceipt?.success || r?.svmReceipt?.success);
-      const comitId = r?.comit?.comitId || '';
-      const blockNumber = typeof r?.blockNumber === 'number' ? r.blockNumber : 0;
-      const blockHash = r?.blockHash || '';
-      let gasUsed: bigint | undefined;
-      try {
-        if (r?.evmReceipt?.gasUsed) gasUsed = BigInt(r.evmReceipt.gasUsed);
-      } catch (e) { /* ignore */ }
-
-      return {
-        comitId,
-        blockHash,
-        blockNumber,
-        success,
-        gasUsed,
-      } as ComitSubmissionResult;
-    }
-
-    return {
-      comitId: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockHash: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-      blockNumber: Math.floor(Math.random() * 1000) + 1,
-      success: true,
-    };
-  }
-
-  // Mock subscription methods
-  async subscribeToBlocks(callback: (blockNumber: number, blockHash?: string) => void): Promise<string> {
-    if (this.client && typeof this.client.subscribeNewBlocks === 'function') {
-      return await this.client.subscribeNewBlocks(callback);
-    }
-
-    const interval = setInterval(() => {
-      const bn = Math.floor(Math.random() * 1000) + 1;
-      const hash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-      try { callback(bn, hash); } catch { callback(bn); }
-    }, 5000);
-    
-    return 'mock-subscription-id';
-  }
-
-  async subscribeToFinalizedBlocks(callback: (blockNumber: number, blockHash?: string) => void): Promise<string> {
-    if (this.client && typeof this.client.subscribeFinalizedBlocks === 'function') {
-      return await this.client.subscribeFinalizedBlocks(callback);
-    }
-
-    const interval = setInterval(() => {
-      const bn = Math.floor(Math.random() * 1000) + 1;
-      const hash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-      try { callback(bn, hash); } catch { callback(bn); }
-    }, 8000);
-    return 'mock-finalized-sub-id';
-  }
-
-  async subscribeToComitEvents(address: string, callback: (event: ComitEvent) => void): Promise<string> {
-    if (this.client && typeof this.client.subscribeComitEvents === 'function') {
-      return await this.client.subscribeComitEvents(address, callback);
-    }
-
-    // Mock some events
-    setTimeout(() => {
-      callback({
-        type: 'submitted',
-        data: {
-          comitId: '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-          origin: address,
-          nonce: BigInt(0),
-          fee: BigInt(0),
-        },
-      });
-    }, 1000);
-    
-    return 'mock-comit-subscription-id';
-  }
-
-  async unsubscribe(subscriptionId: string): Promise<boolean> {
-    if (this.client && typeof this.client.unsubscribe === 'function') {
-      return await this.client.unsubscribe(subscriptionId);
-    }
-    return true;
-  }
-
-  async getFinalizedBlockNumber(): Promise<number> {
-    if (this.client && typeof this.client.getFinalizedBlockNumber === 'function') {
-      return await this.client.getFinalizedBlockNumber();
-    }
-
-    const n = await this.getBlockNumber();
-    return Math.max(0, n - 2);
-  }
-
-  async getBalance(address: string, assetId: number = NATIVE_ASSET_ID): Promise<BalanceInfo> {
-    if (this.client && typeof this.client.getBalance === 'function') {
-      const res = await this.client.getBalance(address, assetId);
-      if (typeof res === 'bigint') {
-        return { native: res, formatted: sdkFormatBalance(res, NATIVE_ASSET_DECIMALS) };
-      }
-      return res as BalanceInfo;
-    }
-    return this.getCanonicalBalance(address, assetId);
-  }
-
+  /**
+   * Get the current nonce for an account
+   */
   async getNonce(address: string): Promise<bigint> {
-    return BigInt(0);
+    const client = await this.connect();
+    return client.getNonce(address);
   }
 
-  async getMultipleBalances(address: string, assetIds: number[]): Promise<BalanceInfo[]> {
-    const res: BalanceInfo[] = [];
-    for (const id of assetIds) {
-      res.push(await this.getCanonicalBalance(address, id));
+  // ===========================================================================
+  // Chain Information
+  // ===========================================================================
+
+  /**
+   * Get chain information
+   */
+  async getChainInfo() {
+    const client = await this.connect();
+    return client.getChainInfo();
+  }
+
+  /**
+   * Get current block number
+   */
+  async getBlockNumber(): Promise<number> {
+    const client = await this.connect();
+    return client.getBlockNumber();
+  }
+
+  /**
+   * Get finalized block number
+   */
+  async getFinalizedBlockNumber(): Promise<number> {
+    const client = await this.connect();
+    return client.getFinalizedBlockNumber();
+  }
+
+  // ===========================================================================
+  // Subscriptions
+  // ===========================================================================
+
+  /**
+   * Subscribe to new blocks
+   */
+  async subscribeToBlocks(
+    callback: (blockNumber: number, blockHash: string) => void
+  ): Promise<string> {
+    const client = await this.connect();
+    const subId = await client.subscribeNewBlocks(callback);
+    return subId;
+  }
+
+  /**
+   * Subscribe to finalized blocks
+   */
+  async subscribeToFinalizedBlocks(
+    callback: (blockNumber: number, blockHash: string) => void
+  ): Promise<string> {
+    const client = await this.connect();
+    const subId = await client.subscribeFinalizedBlocks(callback);
+    return subId;
+  }
+
+  /**
+   * Subscribe to Comit events for an account
+   */
+  async subscribeToComitEvents(
+    address: string,
+    callback: (event: ComitEvent) => void
+  ): Promise<string> {
+    const client = await this.connect();
+    const subId = await client.subscribeComitEvents(address, callback);
+    return subId;
+  }
+
+  /**
+   * Unsubscribe from a subscription
+   */
+  async unsubscribe(subscriptionId: string): Promise<boolean> {
+    if (!this.client?.isConnected) {
+      return false;
     }
-    return res;
-  }
-
-  formatBalance(balance: bigint, decimals: number = NATIVE_ASSET_DECIMALS) {
-    if (typeof sdkFormatBalance === 'function') return sdkFormatBalance(balance, decimals);
-
-    // Avoid bigint exponent issues on lower TS targets — use loop
-    let factor = BigInt(1);
-    for (let i = 0; i < decimals; i++) factor *= BigInt(10);
-    const whole = balance / factor;
-    const frac = balance % factor;
-    const fracStr = String((Number(frac) / Number(factor)).toFixed(4)).slice(1);
-    return `${whole.toString()}${fracStr}`;
-  }
-
-  parseBalance(str: string, decimals: number = NATIVE_ASSET_DECIMALS) {
-    if (typeof sdkParseBalance === 'function') return sdkParseBalance(str, decimals);
-
-    const asFloat = parseFloat(str);
-    return BigInt(Math.floor(asFloat * Math.pow(10, decimals)));
-  }
-
-  configure(config: Partial<WalletConfig>) {
-    if (config.endpoint) this.endpoint = config.endpoint;
+    return this.client.unsubscribe(subscriptionId);
   }
 }
 
@@ -401,12 +511,29 @@ class SDKIntegration {
 // Singleton Export
 // =============================================================================
 
+/**
+ * Singleton SDK integration instance
+ */
 export const sdkIntegration = new SDKIntegration();
 
+/**
+ * Get the SDK integration instance
+ */
 export function getSDK(): SDKIntegration {
   return sdkIntegration;
 }
 
-export const formatBalance = (b: bigint, d?: number) => sdkIntegration.formatBalance(b, d);
-export const parseBalance = (s: string, d?: number) => sdkIntegration.parseBalance(s, d);
-
+// Re-export useful SDK types and utilities
+export {
+  AtlasSphereClient,
+  ComitBuilder,
+  evmComit,
+  svmComit,
+  dualComit,
+  formatBalance,
+  parseBalance,
+  NATIVE_ASSET_ID,
+  NATIVE_ASSET_SYMBOL,
+  NATIVE_ASSET_DECIMALS,
+  DEFAULT_WS_ENDPOINT,
+};

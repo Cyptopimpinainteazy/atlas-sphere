@@ -1,54 +1,11 @@
 [workspace]
 members = [
     "pallets/atlas-kernel",
-    "pallets/atomic-trade-engine",
-    "pallets/governance",
-    "pallets/treasury",
-    "pallets/agent-accounts",
-    "pallets/agent-memory",
-    "pallets/svm-runtime",
-    "pallets/evolution-core",
-    "pallets/x3-verifier",
-    "pallets/x3-domain-registry",
-    "pallets/x3-settlement-engine",
-    "pallets/meme-overlord",
     "crates/evm-integration",
     "crates/svm-integration",
     "crates/cross-vm-bridge",
-    "crates/external-chains",
-    "crates/atlas-sdk",
-    "crates/x3-cli",
-    "crates/atlas-indexer",
-    "crates/atlas-gateway",
-    "crates/atlas-lsp",
-    "crates/x3-integration",
-    "crates/gpu-swarm",
-    "crates/x3-sidecar",
-    "crates/x3-evolution",
-    "crates/quantum-swarm",
-    "crates/chronos-flash",
-    "crates/voice-to-x3",
-    "crates/dream-mining",
-    "crates/quantum-crypto",
-    "crates/apotheosis-tx",
     "runtime",
-    "node",
-    "apps/analytics/analytics-service",
-    "crates/x3-common",
-    "crates/x3-lexer",
-    "crates/x3-ast",
-    "crates/x3-parser",
-    "crates/x3-hir",
-    "crates/x3-mir",
-    "crates/x3-semantics",
-    "crates/x3-typeck",
-    "crates/x3-backend",
-    "crates/x3-vm",
-    "crates/x3-opt",
-    "crates/x3-bench",
-    "crates/x3-compiler",
-    "crates/x3-verifier",
-    "crates/atlas-dns-server",
+    "node", "apps/analytics/analytics-service",
 ]
 default-members = ["node"]
 resolver = "2"
@@ -89,8 +46,6 @@ frame-try-runtime = { git = "https://github.com/paritytech/substrate", rev = "94
 frame-executive = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
-pallet-scheduler = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
-pallet-preimage = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-collective = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 pallet-sudo = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -198,23 +153,9 @@ codegen-units = 1
 [patch.crates-io]
 # Fix environmental crate compatibility with Rust >= 1.82 (local patch with std::thread_local! fix)
 environmental = { path = "patches/environmental" }
-# Enable bulk-memory opcode parsing (0xFC prefix) so Substrate can deserialize rustc-generated WASM.
-parity-wasm = { path = "patches/parity-wasm" }
-# Make wasm-instrument compatible with bulk instructions when parity-wasm/bulk is enabled.
-wasm-instrument = { path = "patches/wasm-instrument" }
-# Fix substrate-prometheus-endpoint protobuf type mismatch (Vec -> RepeatedField)
-substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint" }
-# Fix errno WASM compatibility by providing stub implementation for wasm32 targets
-errno = { path = "patches/errno" }
-# Provide a minimal rfs crate implementation used by `which` on some platforms
-rfs = { path = "patches/rfs" }
-# Fix getrandom for wasm32-unknown-unknown (Substrate WASM runtime)
-getrandom = { path = "patches/getrandom" }
-# Fix ahash to use getrandom 0.2 instead of 0.3 (0.3 doesn't support wasm32-unknown-unknown)
-ahash = { path = "patches/ahash" }
-# Also patch getrandom 0.1.16 to version alias - leave upstream (substrate uses it differently)
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
 # Patch polkadot-sdk sources to use our substrate rev - comprehensive list
@@ -233,8 +174,3 @@ sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" 
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
-# Patch Substrate git sources for prometheus fix and executor bulk-memory support
-[patch."https://github.com/paritytech/substrate"]
-substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint" }
-# Enable bulk-memory support in the Wasmtime executor so LLVM-generated memory.fill/copy ops work
-sc-executor = { path = "patches/sc-executor" }

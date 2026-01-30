@@ -34,24 +34,13 @@ pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
 pallet-sudo = { workspace = true, default-features = false, optional = true }
 pallet-collective = { workspace = true, default-features = false }
-pallet-scheduler = { workspace = true, default-features = false }
-pallet-preimage = { workspace = true, default-features = false }
 pallet-evm = { workspace = true, default-features = false }
 pallet-evm-precompile-simple = { workspace = true, default-features = false }
 pallet-evm-precompile-modexp = { workspace = true, default-features = false }
 pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
-fp-evm = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
-pallet-governance = { path = "../pallets/governance", default-features = false }
-pallet-treasury = { path = "../pallets/treasury", default-features = false }
-pallet-agent-accounts = { path = "../pallets/agent-accounts", default-features = false }
-pallet-agent-memory = { path = "../pallets/agent-memory", default-features = false }
-pallet-evolution-core = { path = "../pallets/evolution-core", default-features = false }
-pallet-x3-verifier = { path = "../pallets/x3-verifier", default-features = false }
-pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", default-features = false }
-pallet-x3-settlement-engine = { path = "../pallets/x3-settlement-engine", default-features = false }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
@@ -74,6 +63,7 @@ frame-system-rpc-runtime-api = { workspace = true, default-features = false }
 
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
+getrandom = { version = "0.2", default-features = false, features = ["js"] }
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
 # atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
@@ -83,38 +73,28 @@ substrate-wasm-builder = { workspace = true }
 [features]
 default = ["std"]
 dev = ["pallet-sudo"]
+skip-wasm-build = []
 std = [
 	"codec/std",
 	"scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
 	"frame-executive/std",
-	"frame-benchmarking/std",
+	"frame-benchmarking?/std",
 	"frame-system-rpc-runtime-api/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
 	"pallet-timestamp/std",
 	"pallet-balances/std",
 	"pallet-transaction-payment/std",
-	"pallet-sudo/std",
+	"pallet-sudo?/std",
 	"pallet-collective/std",
-	"pallet-scheduler/std",
-	"pallet-preimage/std",
 	"pallet-evm/std",
 	"pallet-evm-precompile-simple/std",
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
-	"fp-evm/std",
 	"pallet-atlas-kernel/std",
 	"pallet-atomic-trade-engine/std",
-	"pallet-governance/std",
-	"pallet-treasury/std",
-	"pallet-agent-accounts/std",
-	"pallet-agent-memory/std",
-	"pallet-evolution-core/std",
-	"pallet-x3-verifier/std",
-	"pallet-x3-domain-registry/std",
-	"pallet-x3-settlement-engine/std",
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
 	"sp-api/std",
@@ -143,21 +123,10 @@ runtime-benchmarks = [
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-atlas-kernel/runtime-benchmarks",
 	"pallet-atomic-trade-engine/runtime-benchmarks",
-	"pallet-evolution-core/runtime-benchmarks",
-	"pallet-x3-verifier/runtime-benchmarks",
-	"pallet-x3-domain-registry/runtime-benchmarks",
-	"pallet-x3-settlement-engine/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]
 
 native = []
-
-# Opt-in: enable real VM adapters for native-only developer workflows.
-# Default behavior keeps native and WASM execution equivalent by using mocks.
-native-real-vm-adapters = []
-
-# Enable Frontier EVM / fp-evm runtime features and integration with native adapters
-frontier = []
 
 disable-runtime-api = []
 

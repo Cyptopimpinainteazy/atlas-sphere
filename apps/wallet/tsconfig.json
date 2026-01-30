@@ -18,20 +18,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@atlas-sphere/shared": ["../shared/index.ts"],
-      "@atlas-sphere/shared/*": ["../shared/*"]
-    },
-    "types": ["jest", "node"],
-    "baseUrl": "."
+      "@/*": ["./src/*"]
+    }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "../shared/**/*.ts",
-    "../shared/**/*.tsx"
-  ],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
