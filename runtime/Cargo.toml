@@ -19,7 +19,7 @@ path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", workspace = true, default-features = false, features = ["derive"] }
+codec = { workspace = true, default-features = false, features = ["derive"] }
 scale-info = { workspace = true, default-features = false, features = ["derive"] }
 
 frame-support = { workspace = true, default-features = false }
@@ -34,8 +34,15 @@ pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
 pallet-sudo = { workspace = true, default-features = false, optional = true }
 pallet-collective = { workspace = true, default-features = false }
+pallet-evm = { workspace = true, default-features = false }
+pallet-evm-precompile-simple = { workspace = true, default-features = false }
+pallet-evm-precompile-modexp = { workspace = true, default-features = false }
+pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 
 pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
+pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
+atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
 sp-block-builder = { workspace = true, default-features = false }
@@ -52,11 +59,13 @@ sp-version = { workspace = true, default-features = false }
 sp-weights = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 
+frame-system-rpc-runtime-api = { workspace = true, default-features = false }
+
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
 getrandom = { version = "0.2", default-features = false, features = ["js"] }
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
-atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+# atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -72,6 +81,7 @@ std = [
 	"frame-system/std",
 	"frame-executive/std",
 	"frame-benchmarking?/std",
+	"frame-system-rpc-runtime-api/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
 	"pallet-timestamp/std",
@@ -79,7 +89,14 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-sudo?/std",
 	"pallet-collective/std",
+	"pallet-evm/std",
+	"pallet-evm-precompile-simple/std",
+	"pallet-evm-precompile-modexp/std",
+	"pallet-evm-precompile-sha3fips/std",
 	"pallet-atlas-kernel/std",
+	"pallet-atomic-trade-engine/std",
+	"atlas-evm-integration/std",
+	"atlas-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -96,7 +113,7 @@ std = [
 	"sp-io/std",
 	"log/std",
 	"serde/std",
-	"atlas-evm-integration/std",
+	# "atlas-evm-integration/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -104,6 +121,8 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
+	"pallet-atlas-kernel/runtime-benchmarks",
+	"pallet-atomic-trade-engine/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 ]
 
