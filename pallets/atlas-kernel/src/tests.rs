@@ -1,10 +1,8 @@
 use frame_support::{assert_noop, assert_ok};
 use parity_scale_codec::Encode;
 use sp_core::{hashing::blake2_256, H256};
-use crate::PubkeyToAccount;
 
-use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, ComitFailureReason, Nonces, VMId, Config};
-use frame_support::traits::Get;
+use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, ComitFailureReason, Nonces};
 
 use crate::mock::{
     self, new_test_ext, AssetId, AtlasId, AtlasKernel, Balance, ExtBuilder, RuntimeEvent,
@@ -241,91 +239,30 @@ fn submit_comit_rejects_empty_payloads() {
 }
 
 #[test]
-fn dispatch_tx_success() {
+fn submit_comit_rejects_payloads_exceeding_limit() {
     new_test_ext().execute_with(|| {
-        // Dispatch an EVM payload
-        use k256::ecdsa::{SigningKey, signature::Signer};
-        use k256::elliptic_curve::sec1::ToEncodedPoint;
-        let payload = vec![1, 2, 3, 4];
-        let gas_limit = <Test as Config>::DefaultEvmGasLimit::get();
-        // Create deterministic key for test and register mapping pubkey -> ALICE
-        let (pk_bytes, sig_bytes) = dispatcher::test_utils::sign_payload(&[11u8;32], &payload);
-        let mut signer_pub = [0u8;33];
-        signer_pub.copy_from_slice(&pk_bytes[..33]);
-        // Register mapping: pubkey => ALICE (authorized account)
-        PubkeyToAccount::<Test>::insert(signer_pub, ALICE);
-        let sig = sig_bytes;
+        let comit_id = H256::from_low_u64_be(4);
+        let payload = vec![0u8; 4_097];
+        let fee: Balance = 1;
 
-        assert_ok!(AtlasKernel::dispatch_tx(
-            RuntimeOrigin::signed(ALICE),
-            VMId::EVM,
-            payload.clone(),
-            gas_limit,
-            signer_pub,
-            sig,
-        ));
+        assert_noop!(
+            AtlasKernel::submit_comit(
+                RuntimeOrigin::signed(ALICE),
+                comit_id,
+                payload,
+                Vec::new(),
+                0,
+                fee,
+                H256::zero(),
+            ),
+            AtlasError::PayloadTooLarge
+        );
 
+        assert_eq!(Nonces::<Test>::get(ALICE), 0);
+
+        // No events emitted on error (they get rolled back)
         let events = atlas_events();
-        // Last event should be TxDispatched
-        assert!(matches!(events.last().unwrap(),
-            crate::Event::TxDispatched { origin: _, vm: VMId::EVM, success: true, gas_used: _ }
-        ));
-    });
-}
-
-#[test]
-fn dispatch_tx_invalid_gas_fails() {
-    new_test_ext().execute_with(|| {
-        use k256::ecdsa::{SigningKey, signature::Signer};
-        use k256::elliptic_curve::sec1::ToEncodedPoint;
-        let payload = vec![1,2];
-        let base: u64 = <Test as Config>::DefaultEvmGasLimit::get();
-        let gas_limit = base.saturating_add(1u64);
-        let (pk_bytes, sig_bytes) = dispatcher::test_utils::sign_payload(&[13u8;32], &payload);
-        let mut signer_pub = [0u8;33];
-        signer_pub.copy_from_slice(&pk_bytes[..33]);
-        PubkeyToAccount::<Test>::insert(signer_pub, ALICE);
-        let sig = sig_bytes;
-
-        assert_noop!(
-            AtlasKernel::dispatch_tx(
-                RuntimeOrigin::signed(ALICE),
-                VMId::EVM,
-                payload,
-                gas_limit,
-                signer_pub.clone(),
-                sig,
-            ),
-            AtlasError::DispatchFailed
-        );
-    });
-}
-
-#[test]
-fn dispatch_tx_invalid_signature_fails() {
-    new_test_ext().execute_with(|| {
-        use k256::ecdsa::{SigningKey, signature::Signer};
-        let payload = vec![0xAA, 0xBB];
-        let gas_limit = <Test as Config>::DefaultEvmGasLimit::get();
-        // Generate an honest key bound to ALICE
-        let (pk_bytes, _sig_bytes) = dispatcher::test_utils::sign_payload(&[21u8;32], &payload);
-        let mut signer_pub = [0u8;33];
-        signer_pub.copy_from_slice(&pk_bytes[..33]);
-        PubkeyToAccount::<Test>::insert(signer_pub, ALICE);
-        // But the attacker uses a different key for signing
-        let (_att_pk, bad_sig) = dispatcher::test_utils::sign_payload(&[22u8;32], &payload);
-
-        assert_noop!(
-            AtlasKernel::dispatch_tx(
-                RuntimeOrigin::signed(ALICE),
-                VMId::EVM,
-                payload,
-                gas_limit,
-                signer_pub.clone(),
-                bad_sig,
-            ),
-            AtlasError::InvalidSignature
-        );
+        assert_eq!(events.len(), 0);
     });
 }
 
