@@ -45,7 +45,7 @@ if failed:
     for f in failed:
         print(" - ", f)
     print("\nPlease add a guard block like the following to avoid duplicate sequence errors during repeated test runs:")
-    print(r"""
+    print(r'''
     op.execute("""
     DO $$
     BEGIN
@@ -56,7 +56,7 @@ if failed:
     END$$;
     """)
     # Or add a marker comment: # sequence-guard
-    """)
+    ''')
     sys.exit(1)
 
 print("All changed Alembic migrations include an orphaned-sequence guard or marker.")

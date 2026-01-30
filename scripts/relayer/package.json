@@ -1,0 +1,54 @@
+{
+  "name": "@atlas-sphere/proof-relayer",
+  "version": "1.0.0",
+  "description": "Off-chain proof relayer for atomic swaps across Bitcoin, Ethereum, Solana, and X3VM",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "node test-runner.js",
+    "test:watch": "mocha --require ts-node/register --watch tests/**/*.test.ts",
+    "lint": "eslint src/**/*.ts",
+    "start": "ts-node src/index.ts",
+    "serve": "ts-node src/http-server.ts"
+  },
+  "dependencies": {
+    "bip68": "^1.0.1",
+    "bitcoinjs-lib": "^7.0.0",
+    "ethers": "^6.0.0",
+    "events": "^3.3.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.0.0",
+    "@types/sinon": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "chai": "^6.2.2",
+    "eslint": "^8.0.0",
+    "mocha": "^10.2.0",
+    "sinon": "^15.0.0",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0",
+    "tiny-secp256k1": "^2.2.3",
+    "ecpair": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "htlc",
+    "atomic-swap",
+    "proof-relay",
+    "spv",
+    "bitcoin",
+    "ethereum",
+    "solana",
+    "x3vm",
+    "cross-chain"
+  ],
+  "author": "Atlas Sphere Contributors",
+  "license": "Apache-2.0"
+}
