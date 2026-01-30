@@ -1,0 +1,21 @@
+aiohttp==3.9.1
+base58==2.1.1
+numpy==1.24.3
+pandas==2.0.3
+requests==2.31.0
+solana==0.32.0
+solders==0.20.0
+anchorpy==0.19.1
+asyncio==3.4.3
+sqlite3
+python-dotenv==1.0.0
+websockets==11.0.3
+ujson==5.8.0
+# Jupiter SDK (placeholder - install from their repo)
+# git+https://github.com/jup-ag/jupiter-python-sdk.git
+# Raydium SDK (placeholder - install from their repo)
+# git+https://github.com/raydium-io/raydium-sdk.git
+# Orca SDK (placeholder - install from their repo)
+# git+https://github.com/orca-so/typescript-sdk.git
+# Serum SDK (placeholder - install from their repo)
+# git+https://github.com/project-serum/serum-ts.git

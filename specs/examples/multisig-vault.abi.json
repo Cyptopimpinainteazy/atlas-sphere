@@ -1,0 +1,324 @@
+{
+  "name": "MultiSigVault",
+  "version": "1.0.0",
+  "description": "Multi-signature vault with time-locked withdrawals and cross-VM asset support",
+  "author": "Atlas Sphere Team",
+  "license": "MIT",
+  "compiler": {
+    "name": "x3c",
+    "version": "0.1.0"
+  },
+  "types": {
+    "ProposalId": {
+      "kind": "alias",
+      "underlying": "u64"
+    },
+    "ProposalStatus": {
+      "kind": "enum",
+      "variants": ["Pending", "Approved", "Executed", "Rejected", "Expired"]
+    },
+    "AssetType": {
+      "kind": "enum",
+      "variants": ["Native", "EVM", "SVM"]
+    },
+    "Proposal": {
+      "kind": "struct",
+      "fields": [
+        { "name": "id", "type": "ProposalId" },
+        { "name": "proposer", "type": "address" },
+        { "name": "recipient", "type": "bytes32" },
+        { "name": "recipient_vm", "type": "AssetType" },
+        { "name": "asset", "type": "bytes32" },
+        { "name": "amount", "type": "u256" },
+        { "name": "approvals", "type": "u8" },
+        { "name": "status", "type": "ProposalStatus" },
+        { "name": "created_at", "type": "u64" },
+        { "name": "expires_at", "type": "u64" }
+      ]
+    },
+    "VaultConfig": {
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "threshold",
+          "type": "u8",
+          "description": "Required approvals"
+        },
+        {
+          "name": "timelock",
+          "type": "u64",
+          "description": "Blocks before execution"
+        },
+        {
+          "name": "proposal_expiry",
+          "type": "u64",
+          "description": "Blocks until expiry"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "signers": {
+      "type": "Map<address, bool>",
+      "slot": 0,
+      "description": "Authorized signers"
+    },
+    "signer_count": {
+      "type": "u8",
+      "slot": 1,
+      "description": "Number of signers"
+    },
+    "config": {
+      "type": "VaultConfig",
+      "slot": 2
+    },
+    "proposals": {
+      "type": "Map<ProposalId, Proposal>",
+      "slot": 3
+    },
+    "proposal_approvals": {
+      "type": "Map<ProposalId, Map<address, bool>>",
+      "slot": 4,
+      "description": "Tracks who approved each proposal"
+    },
+    "next_proposal_id": {
+      "type": "ProposalId",
+      "slot": 5
+    },
+    "balances": {
+      "type": "Map<bytes32, u256>",
+      "slot": 6,
+      "description": "Asset balances (asset_id => amount)"
+    }
+  },
+  "functions": [
+    {
+      "name": "initialize",
+      "inputs": [
+        { "name": "signers", "type": "Vec<address>" },
+        { "name": "threshold", "type": "u8" },
+        { "name": "timelock_blocks", "type": "u64" }
+      ],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Initialize vault with signers and threshold",
+      "gas_estimate": 100000
+    },
+    {
+      "name": "deposit",
+      "inputs": [
+        { "name": "asset_id", "type": "bytes32" },
+        { "name": "amount", "type": "u256" }
+      ],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "payable": true,
+      "description": "Deposit assets into vault",
+      "gas_estimate": 50000
+    },
+    {
+      "name": "propose_withdrawal",
+      "inputs": [
+        { "name": "recipient", "type": "bytes32" },
+        { "name": "recipient_vm", "type": "AssetType" },
+        { "name": "asset_id", "type": "bytes32" },
+        { "name": "amount", "type": "u256" }
+      ],
+      "outputs": [{ "name": "proposal_id", "type": "ProposalId" }],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Create withdrawal proposal (signer only)",
+      "gas_estimate": 80000
+    },
+    {
+      "name": "approve",
+      "inputs": [{ "name": "proposal_id", "type": "ProposalId" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Approve a proposal (signer only)",
+      "gas_estimate": 40000
+    },
+    {
+      "name": "execute",
+      "inputs": [{ "name": "proposal_id", "type": "ProposalId" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "atomic": true,
+      "description": "Execute approved proposal after timelock",
+      "gas_estimate": 150000
+    },
+    {
+      "name": "execute_cross_vm",
+      "inputs": [
+        { "name": "proposal_id", "type": "ProposalId" },
+        { "name": "target_contract", "type": "bytes32" },
+        { "name": "calldata", "type": "bytes" }
+      ],
+      "outputs": [{ "name": "return_data", "type": "bytes" }],
+      "visibility": "public",
+      "mutability": "mutable",
+      "atomic": true,
+      "description": "Execute cross-VM call with vault funds",
+      "gas_estimate": 300000
+    },
+    {
+      "name": "cancel",
+      "inputs": [{ "name": "proposal_id", "type": "ProposalId" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Cancel pending proposal (proposer only)",
+      "gas_estimate": 30000
+    },
+    {
+      "name": "add_signer",
+      "inputs": [{ "name": "signer", "type": "address" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Add new signer (requires proposal + execution)",
+      "gas_estimate": 50000
+    },
+    {
+      "name": "remove_signer",
+      "inputs": [{ "name": "signer", "type": "address" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Remove signer (requires proposal + execution)",
+      "gas_estimate": 50000
+    },
+    {
+      "name": "update_threshold",
+      "inputs": [{ "name": "new_threshold", "type": "u8" }],
+      "outputs": [],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Update approval threshold"
+    },
+    {
+      "name": "get_proposal",
+      "inputs": [{ "name": "proposal_id", "type": "ProposalId" }],
+      "outputs": [{ "name": "proposal", "type": "Proposal" }],
+      "visibility": "public",
+      "mutability": "view"
+    },
+    {
+      "name": "get_balance",
+      "inputs": [{ "name": "asset_id", "type": "bytes32" }],
+      "outputs": [{ "name": "balance", "type": "u256" }],
+      "visibility": "public",
+      "mutability": "view"
+    },
+    {
+      "name": "is_signer",
+      "inputs": [{ "name": "account", "type": "address" }],
+      "outputs": [{ "name": "is_signer", "type": "bool" }],
+      "visibility": "public",
+      "mutability": "view"
+    },
+    {
+      "name": "get_config",
+      "inputs": [],
+      "outputs": [{ "name": "config", "type": "VaultConfig" }],
+      "visibility": "public",
+      "mutability": "view"
+    }
+  ],
+  "events": [
+    {
+      "name": "Deposited",
+      "inputs": [
+        { "name": "depositor", "type": "address", "indexed": true },
+        { "name": "asset_id", "type": "bytes32", "indexed": true },
+        { "name": "amount", "type": "u256", "indexed": false }
+      ]
+    },
+    {
+      "name": "ProposalCreated",
+      "inputs": [
+        { "name": "proposal_id", "type": "u64", "indexed": true },
+        { "name": "proposer", "type": "address", "indexed": true },
+        { "name": "recipient", "type": "bytes32", "indexed": false },
+        { "name": "amount", "type": "u256", "indexed": false }
+      ]
+    },
+    {
+      "name": "ProposalApproved",
+      "inputs": [
+        { "name": "proposal_id", "type": "u64", "indexed": true },
+        { "name": "approver", "type": "address", "indexed": true },
+        { "name": "approval_count", "type": "u8", "indexed": false }
+      ]
+    },
+    {
+      "name": "ProposalExecuted",
+      "inputs": [
+        { "name": "proposal_id", "type": "u64", "indexed": true },
+        { "name": "executor", "type": "address", "indexed": true },
+        { "name": "recipient", "type": "bytes32", "indexed": false },
+        { "name": "amount", "type": "u256", "indexed": false }
+      ]
+    },
+    {
+      "name": "ProposalCancelled",
+      "inputs": [{ "name": "proposal_id", "type": "u64", "indexed": true }]
+    },
+    {
+      "name": "SignerAdded",
+      "inputs": [{ "name": "signer", "type": "address", "indexed": true }]
+    },
+    {
+      "name": "SignerRemoved",
+      "inputs": [{ "name": "signer", "type": "address", "indexed": true }]
+    },
+    {
+      "name": "ThresholdUpdated",
+      "inputs": [
+        { "name": "old_threshold", "type": "u8", "indexed": false },
+        { "name": "new_threshold", "type": "u8", "indexed": false }
+      ]
+    }
+  ],
+  "errors": [
+    { "name": "NotSigner", "inputs": [], "selector": "0x00000020" },
+    { "name": "AlreadyApproved", "inputs": [], "selector": "0x00000021" },
+    {
+      "name": "ThresholdNotMet",
+      "inputs": [
+        { "name": "current", "type": "u8" },
+        { "name": "required", "type": "u8" }
+      ],
+      "selector": "0x00000022"
+    },
+    {
+      "name": "TimelockNotExpired",
+      "inputs": [
+        { "name": "current_block", "type": "u64" },
+        { "name": "unlock_block", "type": "u64" }
+      ],
+      "selector": "0x00000023"
+    },
+    { "name": "ProposalExpired", "inputs": [], "selector": "0x00000024" },
+    { "name": "ProposalNotFound", "inputs": [], "selector": "0x00000025" },
+    { "name": "InvalidProposalStatus", "inputs": [], "selector": "0x00000026" },
+    {
+      "name": "InsufficientVaultBalance",
+      "inputs": [],
+      "selector": "0x00000027"
+    },
+    { "name": "InvalidThreshold", "inputs": [], "selector": "0x00000028" },
+    { "name": "AlreadyInitialized", "inputs": [], "selector": "0x00000029" }
+  ],
+  "safety": {
+    "audited": false,
+    "max_gas": 500000,
+    "deterministic": true,
+    "atomic_capable": true,
+    "cross_vm": ["evm", "svm"]
+  }
+}
