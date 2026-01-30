@@ -1,0 +1,25 @@
+name: Scheduled Triaged Triage Test
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # weekly Monday 04:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  dispatch-triage-test:
+    name: Dispatch triage test (if configured)
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RUN_OLLAMA_TRIAGE == 'true' && secrets.TRIAGE_TEST_TOKEN != '' && secrets.TRIAGE_TEST_REPO != '' }}
+    steps:
+      - name: Trigger triage test workflow
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const inputs = { test_repo: process.env.TRIAGE_TEST_REPO, test_assignee: process.env.TRIAGE_TEST_ASSIGNEE || '' }
+            await github.rest.actions.createWorkflowDispatch({ owner: context.repo.owner, repo: context.repo.repo, workflow_id: 'ollama-triage-test.yml', ref: 'main', inputs })
+        env:
+          TRIAGE_TEST_REPO: ${{ secrets.TRIAGE_TEST_REPO }}
+          TRIAGE_TEST_ASSIGNEE: ${{ secrets.TRIAGE_TEST_ASSIGNEE || '' }}
+
+      - name: Done
+        run: echo "Dispatched triage test workflow (if inputs set)"
