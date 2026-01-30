@@ -3,7 +3,7 @@ name: 'step-02-analyze-agent'
 description: 'Load agent and relevant documentation for analysis'
 
 # Path Definitions
-workflow_path: '{project-root}/.bmad/bmb/workflows/edit-agent'
+workflow_path: '{project-root}/src/modules/bmb/workflows/edit-agent'
 
 # File References
 thisStepFile: '{workflow_path}/steps/step-02-analyze-agent.md'
@@ -23,7 +23,7 @@ menu_patterns: '{project-root}/.bmad/bmb/docs/agents/agent-menu-patterns.md'
 communication_presets: '{project-root}/.bmad/bmb/workflows/create-agent/data/communication-presets.csv'
 reference_simple_agent: '{project-root}/.bmad/bmb/reference/agents/simple-examples/commit-poet.agent.yaml'
 reference_expert_agent: '{project-root}/.bmad/bmb/reference/agents/expert-examples/journal-keeper/journal-keeper.agent.yaml'
-validation: '{project-root}/.bmad/bmb/docs/agents/agent-validation-checklist.md'
+validation: '{project-root}/.bmad/bmb/workflows/create-agent/data/agent-validation-checklist.md'
 ---
 
 # Step 2: Analyze Agent
