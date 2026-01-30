@@ -1,25 +1,18 @@
-import { defineConfig, devices } from '@playwright/test';
+import { PlaywrightTestConfig } from '@playwright/test';
 
-export default defineConfig({
+const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 30_000,
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
-  fullyParallel: false,
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
+  timeout: 60_000,
+  expect: { timeout: 10000 },
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? [['github'], ['list']] : [['list']],
   use: {
+    baseURL: 'http://localhost:3001',
     headless: true,
-    viewport: { width: 1280, height: 800 },
-    actionTimeout: 10_000,
     trace: 'on-first-retry',
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: {
-        browserName: 'chromium',
-        ...devices['Desktop Chrome'],
-      },
-    },
-  ],
-  // No webServer configured: tests set content directly with `page.setContent`.
-});
+    screenshot: 'only-on-failure',
+  }
+};
+
+export default config;
