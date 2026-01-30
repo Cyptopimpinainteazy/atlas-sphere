@@ -1,0 +1,98 @@
+# ============================================================================
+# Atlas Sphere Node - Production Multi-Stage Dockerfile
+# ============================================================================
+# Purpose: Production-ready Substrate node with security hardening
+# Target: atlas-sphere-node binary
+# ============================================================================
+
+# ============================================================================
+# Stage 1: Builder - Compile Rust binaries
+# ============================================================================
+FROM rust:1.85-slim as builder
+
+# Set working directory
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    clang \
+    cmake \
+    git \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install wasm32 target for runtime compilation
+RUN rustup target add wasm32-unknown-unknown
+
+# Copy project files
+COPY . .
+
+# Build release binary with optimizations
+RUN cargo build --release --locked \
+    && strip target/release/atlas-sphere-node
+
+# ============================================================================
+# Stage 2: Runtime - Minimal production image
+# ============================================================================
+FROM ubuntu:22.04
+
+# Metadata labels
+LABEL maintainer="Atlas Sphere DevOps <devops@atlas-sphere.io>" \
+      description="Atlas Sphere Substrate Node - Production Image" \
+      version="1.0.0" \
+      io.atlas-sphere.image.vendor="Atlas Sphere" \
+      io.atlas-sphere.image.source="https://github.com/Cyptopimpinainteazy/atlas-sphere" \
+      io.atlas-sphere.image.documentation="https://docs.atlas-sphere.io"
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN groupadd -r atlas && \
+    useradd -r -g atlas -m -d /atlas-sphere -s /bin/bash atlas
+
+# Copy binary from builder
+COPY --from=builder /build/target/release/atlas-sphere-node /usr/local/bin/
+
+# Set ownership
+RUN chown atlas:atlas /usr/local/bin/atlas-sphere-node && \
+    chmod 755 /usr/local/bin/atlas-sphere-node
+
+# Create data directory
+RUN mkdir -p /data && chown atlas:atlas /data
+
+# Verify binary
+RUN /usr/local/bin/atlas-sphere-node --version
+
+# Switch to non-root user
+USER atlas
+WORKDIR /atlas-sphere
+
+# Expose ports
+# 30333: P2P networking
+# 9933: HTTP RPC
+# 9944: WebSocket RPC
+# 9615: Prometheus metrics
+EXPOSE 30333 9933 9944 9615
+
+# Volume for chain data
+VOLUME ["/data"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9933/health || exit 1
+
+# Default command (can be overridden)
+ENTRYPOINT ["/usr/local/bin/atlas-sphere-node"]
+CMD ["--chain", "/data/chain-spec.json", \
+     "--base-path", "/data", \
+     "--rpc-external", \
+     "--rpc-cors", "all", \
+     "--prometheus-external"]

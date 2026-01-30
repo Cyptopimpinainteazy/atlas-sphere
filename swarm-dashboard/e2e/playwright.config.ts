@@ -1,20 +1,25 @@
-import { PlaywrightTestConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
-const config: PlaywrightTestConfig = {
+export default defineConfig({
   testDir: './tests',
-  timeout: 60_000,
-  expect: { timeout: 10000 },
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI ? [['github'], ['list'], ['junit', { outputFile: 'test-results/junit.xml' }]] : [['list'], ['junit', { outputFile: 'test-results/junit.xml' }]],
-  outputDir: 'test-results',
+  timeout: 30_000,
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01 } },
+  fullyParallel: false,
+  reporter: [['list'], ['html', { outputFolder: 'playwright-report' }]],
   use: {
-    // Allow overriding the demo URL via environment for CI or dynamic-port tests
-    baseURL: process.env.DEMO_URL || 'http://localhost:3001',
     headless: true,
+    viewport: { width: 1280, height: 800 },
+    actionTimeout: 10_000,
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  }
-};
-
-export default config;
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        browserName: 'chromium',
+        ...devices['Desktop Chrome'],
+      },
+    },
+  ],
+  // No webServer configured: tests set content directly with `page.setContent`.
+});
