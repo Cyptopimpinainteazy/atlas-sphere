@@ -1,26 +1,17 @@
-# Node modules
-node_modules/
-
 # Build artifacts
-dist/
-build/
+/target
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
+# Node modules
+**/node_modules/
 
-# IDE
+# Python envs
+.venv*/
+
+# Editor files
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# OS
 .DS_Store
-Thumbs.db
+
+# Logs
+*.log
+__pycache__/
