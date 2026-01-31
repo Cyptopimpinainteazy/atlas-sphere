@@ -163,17 +163,45 @@ def process_doc_task(task, dry_run=True):
         if not dry_run:
             git_create_branch(branch_name)
             file_path.write_text("\n".join(new_lines), encoding='utf-8')
-            commit_msg = f"docs: implement task in {task['file']} - {summary}"
-            sha = git_commit_file(file_path, commit_msg)
-            # return details
+
+            # Stage changes
+            subprocess.check_call(["git", "add", str(file_path)], cwd=REPO_ROOT)
+
+            # Verify there are changes staged
+            status_out = subprocess.check_output(["git", "status", "--porcelain"], cwd=REPO_ROOT, text=True).strip()
+            if not status_out:
+                # Nothing to commit
+                # Clean up note: return to original branch
+                subprocess.check_call(["git", "checkout", current_branch], cwd=REPO_ROOT)
+                return {"status": "no-changes", "branch": branch_name, "summary": summary}
+
+            # Sanitize summary for commit message
+            safe_summary = re.sub(r"\s+", " ", summary.replace('\n', ' ')).strip()
+            safe_summary = re.sub(r"[^\w\d\-\s\.,:()]+", '', safe_summary)
+            if len(safe_summary) > 120:
+                safe_summary = safe_summary[:117] + '...'
+
+            commit_msg = f"docs: implement task in {task['file']} - {safe_summary}"
+
+            # Run commit and capture any errors
+            commit_proc = subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if commit_proc.returncode != 0:
+                # Commit failed (hooks or other); include stderr in result
+                err = commit_proc.stderr.strip()
+                # Return to original branch
+                subprocess.check_call(["git", "checkout", current_branch], cwd=REPO_ROOT)
+                return {"status": "commit-failed", "branch": branch_name, "error": err, "summary": summary}
+
+            sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
+            # Return details
+            subprocess.check_call(["git", "checkout", current_branch], cwd=REPO_ROOT)
             return {"status": "committed", "branch": branch_name, "commit": sha, "summary": summary}
         else:
             # In dry-run, don't change files; return what would be done
             return {"status": "dry-run", "branch": branch_name, "summary": summary, "new_line": new_line, "note_line": note_line}
     finally:
-        # return to original branch if we created one
-        if not dry_run:
-            subprocess.check_call(["git", "checkout", current_branch], cwd=REPO_ROOT)
+        # nothing else to clean up here
+        pass
 
 
 def main(dry_run=True, limit=None, start=0, sleep=0.2, all_tasks=False):
