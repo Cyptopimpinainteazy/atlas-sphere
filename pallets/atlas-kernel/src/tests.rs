@@ -416,6 +416,70 @@ fn submit_comit_rejects_duplicate_comit_id() {
     });
 }
 
+// -----------------------------------------------------------------------------
+// Authority management tests (scheduling and enactment)
+// -----------------------------------------------------------------------------
+#[test]
+fn schedule_authority_change_success_and_enact() {
+    new_test_ext().execute_with(|| {
+        // Ensure no pending authorities initially
+        assert!(PendingAuthorities::<Test>::get().is_none());
+
+        // Schedule a new authority set containing ALICE and BOB
+        let new_set = vec![ALICE, BOB];
+        assert_ok!(AtlasKernel::schedule_authority_change(RuntimeOrigin::root(), new_set.clone()));
+
+        // PendingAuthorities should be present
+        let pending = PendingAuthorities::<Test>::get();
+        assert!(pending.is_some());
+
+        // Enact the change
+        assert_ok!(AtlasKernel::enact_authority_change(RuntimeOrigin::root()));
+
+        // Pending cleared and Authorities updated
+        assert!(PendingAuthorities::<Test>::get().is_none());
+        let authorities = Authorities::<Test>::get();
+        assert!(authorities.contains(&ALICE));
+        assert!(authorities.contains(&BOB));
+
+        // Check events were emitted
+        let events = atlas_events();
+        assert!(events.iter().any(|e| matches!(e, crate::Event::AuthorityChangesScheduled { .. })));
+        assert!(events.iter().any(|e| matches!(e, crate::Event::AuthorityChangesEnacted { .. })));
+    });
+}
+
+#[test]
+fn schedule_authority_change_rejects_empty_set() {
+    new_test_ext().execute_with(|| {
+        // Scheduling empty set should fail with EmptyAuthoritySet
+        let empty: Vec<u64> = vec![];
+        assert_noop!(AtlasKernel::schedule_authority_change(RuntimeOrigin::root(), empty), Error::<Test>::EmptyAuthoritySet);
+    });
+}
+
+#[test]
+fn enact_authority_change_without_pending_fails() {
+    new_test_ext().execute_with(|| {
+        // Ensure no pending authority changes
+        PendingAuthorities::<Test>::kill();
+        assert_noop!(AtlasKernel::enact_authority_change(RuntimeOrigin::root()), Error::<Test>::NoPendingChanges);
+    });
+}
+
+#[test]
+fn schedule_exceeds_max_authorities_fails() {
+    new_test_ext().execute_with(|| {
+        // Create an oversized authority list (MaxAuthorities in mock is 100)
+        let max = <Test as crate::Config>::MaxAuthorities::get() as usize;
+        let mut oversized = Vec::with_capacity(max + 1);
+        for i in 0..(max + 1) {
+            oversized.push(frame_benchmarking::account::<u64>("overflow", i as u32, 0));
+        }
+        assert_noop!(AtlasKernel::schedule_authority_change(RuntimeOrigin::root(), oversized), Error::<Test>::ExceedsMaximumAuthorities);
+    });
+}
+
 #[test]
 fn submit_comit_allows_different_comit_ids_with_sequential_nonces() {
     new_test_ext().execute_with(|| {
