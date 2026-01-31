@@ -1056,6 +1056,10 @@ impl_runtime_apis! {
             pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
         }
 
+        fn get_pending_authorities() -> Option<Vec<AccountId>> {
+            pallet_atlas_kernel::PendingAuthorities::<Runtime>::get().map(|b| b.into_inner())
+        }
+
         fn map_evm_address(address: Vec<u8>) -> Option<AccountId> {
             use sp_core::H160;
             use sp_runtime::traits::BlakeTwo256;

@@ -74,6 +74,10 @@ pub trait AtlasKernelApi<BlockHash> {
     /// Get current authority set
     #[method(name = "atlasKernel_getAuthorities")]
     fn get_authorities(&self, at: Option<BlockHash>) -> RpcResult<Vec<AccountId>>;
+
+    /// Get pending authority changes scheduled for the next session
+    #[method(name = "atlasKernel_getPendingAuthorities")]
+    fn get_pending_authorities(&self, at: Option<BlockHash>) -> RpcResult<Option<Vec<AccountId>>>;
 }
 
 /// X3 Domains RPC API
@@ -349,6 +353,19 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         api.get_authorities(at).map_err(|e| {
+            jsonrpsee::types::ErrorObjectOwned::owned(
+                1,
+                format!("Runtime API error: {:?}", e),
+                None::<()>,
+            )
+        })
+    }
+
+    fn get_pending_authorities(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Option<Vec<AccountId>>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_pending_authorities(at).map_err(|e| {
             jsonrpsee::types::ErrorObjectOwned::owned(
                 1,
                 format!("Runtime API error: {:?}", e),

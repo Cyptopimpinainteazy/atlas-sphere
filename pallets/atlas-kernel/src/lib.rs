@@ -2162,6 +2162,9 @@ sp_api::decl_runtime_apis! {
         /// Get the current authority set
         fn get_authorities() -> Vec<AccountId>;
 
+        /// Get pending authority changes scheduled for the next session
+        fn get_pending_authorities() -> Option<Vec<AccountId>>;
+
         /// Map an EVM 20-byte address into a runtime AccountId (Option)
         fn map_evm_address(address: Vec<u8>) -> Option<AccountId>;
 
