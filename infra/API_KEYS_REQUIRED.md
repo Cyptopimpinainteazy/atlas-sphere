@@ -94,7 +94,7 @@
 - [x] CoinGecko API Key ✅ **WORKING** (demo key)
 - [x] Dune Analytics API Key ✅ **COMPLETED**
 - [x] GoPlus Security API Key ✅ **WORKING**
-- [ ] Generate wallet keystore
+- [x] Generate wallet keystore  — helper script added: `scripts/generate_keystore.sh` (template; DO NOT use for production keys).
 - [ ] PostgreSQL password
 - [ ] Git SSH key + token
 
