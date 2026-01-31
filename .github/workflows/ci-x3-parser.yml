@@ -1,0 +1,39 @@
+name: x3-parser CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+      - copilot/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  x3-parser-test:
+    name: x3-parser tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run parser crate tests
+        run: |
+          cargo test -p x3-parser --release

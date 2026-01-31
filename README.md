@@ -1,6 +1,6 @@
 # Atlas Sphere L1
 
-[![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![x3-parser CI](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci-x3-parser.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci-x3-parser.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
 Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liquidity without trusted intermediaries.
 
