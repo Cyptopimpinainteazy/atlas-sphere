@@ -1,0 +1,190 @@
+{
+  "items": [
+    {
+      "Function": {
+        "name": {
+          "name": "atomic_examples",
+          "span": {
+            "start": 3,
+            "end": 18
+          }
+        },
+        "params": [],
+        "ret_ty": null,
+        "body": {
+          "statements": [
+            {
+              "Atomic": {
+                "metadata": null,
+                "body": {
+                  "statements": [
+                    {
+                      "Emit": {
+                        "value": {
+                          "Literal": {
+                            "literal": {
+                              "Integer": 1
+                            },
+                            "span": {
+                              "start": 41,
+                              "end": 42
+                            }
+                          }
+                        },
+                        "span": {
+                          "start": 36,
+                          "end": 43
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start": 34,
+                    "end": 45
+                  }
+                },
+                "span": {
+                  "start": 27,
+                  "end": 45
+                }
+              }
+            },
+            {
+              "Atomic": {
+                "metadata": {
+                  "Identifier": {
+                    "name": "prepare",
+                    "span": {
+                      "start": 57,
+                      "end": 64
+                    }
+                  }
+                },
+                "body": {
+                  "statements": [
+                    {
+                      "Let": {
+                        "name": {
+                          "name": "x",
+                          "span": {
+                            "start": 72,
+                            "end": 73
+                          }
+                        },
+                        "mutable": false,
+                        "ty": null,
+                        "initializer": {
+                          "Literal": {
+                            "literal": {
+                              "Integer": 2
+                            },
+                            "span": {
+                              "start": 76,
+                              "end": 77
+                            }
+                          }
+                        },
+                        "span": {
+                          "start": 68,
+                          "end": 77
+                        }
+                      }
+                    },
+                    {
+                      "Emit": {
+                        "value": {
+                          "Identifier": {
+                            "name": "x",
+                            "span": {
+                              "start": 84,
+                              "end": 85
+                            }
+                          }
+                        },
+                        "span": {
+                          "start": 79,
+                          "end": 86
+                        }
+                      }
+                    }
+                  ],
+                  "span": {
+                    "start": 66,
+                    "end": 88
+                  }
+                },
+                "span": {
+                  "start": 50,
+                  "end": 88
+                }
+              }
+            }
+          ],
+          "span": {
+            "start": 21,
+            "end": 90
+          }
+        },
+        "span": {
+          "start": 0,
+          "end": 90
+        }
+      }
+    },
+    {
+      "Function": {
+        "name": {
+          "name": "emit_only",
+          "span": {
+            "start": 95,
+            "end": 104
+          }
+        },
+        "params": [],
+        "ret_ty": null,
+        "body": {
+          "statements": [
+            {
+              "Emit": {
+                "value": {
+                  "Call": {
+                    "callee": {
+                      "Identifier": {
+                        "name": "do_something",
+                        "span": {
+                          "start": 118,
+                          "end": 130
+                        }
+                      }
+                    },
+                    "args": [],
+                    "span": {
+                      "start": 118,
+                      "end": 132
+                    }
+                  }
+                },
+                "span": {
+                  "start": 113,
+                  "end": 133
+                }
+              }
+            }
+          ],
+          "span": {
+            "start": 107,
+            "end": 135
+          }
+        },
+        "span": {
+          "start": 92,
+          "end": 135
+        }
+      }
+    }
+  ],
+  "span": {
+    "start": 0,
+    "end": 136
+  }
+}

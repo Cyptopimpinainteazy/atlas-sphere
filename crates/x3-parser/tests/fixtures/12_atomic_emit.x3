@@ -1,0 +1,8 @@
+fn atomic_examples() {
+    atomic { emit 1; }
+    atomic(prepare) { let x = 2; emit x; }
+}
+
+fn emit_only() {
+    emit do_something();
+}

@@ -1,0 +1,9 @@
+fn loops() {
+    for (let i in 0..10) {
+        emit i;
+    }
+
+    for (let j = 0; j < 10; j = j + 1) {
+        emit j;
+    }
+}

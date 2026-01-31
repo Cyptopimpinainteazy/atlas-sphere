@@ -1,0 +1,8 @@
+fn annotated(a: i32, mut b: bool, c) -> i32 {
+    return a;
+}
+
+fn no_return_type(x, y) {
+    let z = x + 1;
+    emit z;
+}
