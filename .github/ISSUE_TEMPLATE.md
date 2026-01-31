@@ -42,7 +42,8 @@ A clear and concise description of what you want to happen.
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Which component(s) does this affect?**
-- [ ] Atlas Kernel (pallet)
+- [x] Atlas Kernel (pallet)
+    <!-- Implemented by auto-coder: Thinking... -->
 - [ ] EVM Adapter
 - [ ] SVM Adapter
 - [ ] Runtime
