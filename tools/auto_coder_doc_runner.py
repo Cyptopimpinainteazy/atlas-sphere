@@ -4,6 +4,7 @@ import re
 import json
 import subprocess
 import shlex
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -113,7 +114,12 @@ def git_current_branch():
 
 
 def git_create_branch(branch_name):
-    subprocess.check_call(["git", "checkout", "-b", branch_name], cwd=REPO_ROOT)
+    # If branch exists, just checkout to it; otherwise create it
+    try:
+        subprocess.check_call(["git", "rev-parse", "--verify", branch_name], cwd=REPO_ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.check_call(["git", "checkout", branch_name], cwd=REPO_ROOT)
+    except subprocess.CalledProcessError:
+        subprocess.check_call(["git", "checkout", "-b", branch_name], cwd=REPO_ROOT)
 
 
 def git_commit_file(path: Path, message: str):
