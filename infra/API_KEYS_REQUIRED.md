@@ -105,7 +105,8 @@
 - [x] CoinGecko API Key ✅ **WORKING** (demo key)
 - [x] Dune Analytics API Key ✅ **COMPLETED**
 - [x] GoPlus Security API Key ✅ **WORKING**
-- [x] Generate wallet keystore  — helper script added: `scripts/generate_keystore.sh` (template; DO NOT use for production keys).
+- [x] Generate wallet keystore — helper script added
+  - `scripts/generate_keystore.sh` (template; **DO NOT** use for production keys).
 - [ ] PostgreSQL password
 - [ ] Git SSH key + token
 
@@ -135,4 +136,5 @@
 
 ---
 
-**⚠️ Remember**: Some services require real funds for gas fees. Start with testnets (Goerli, Sepolia, Solana Devnet) before moving to mainnet.
+**⚠️ Remember**: Some services require real funds for gas fees.
+Start with testnets (Goerli, Sepolia, Solana Devnet) before moving to mainnet.
