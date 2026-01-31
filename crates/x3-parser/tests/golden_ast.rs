@@ -19,13 +19,19 @@ fn golden_ast_matches_fixture() {
 
     match fs::read_to_string(&golden_path) {
         Ok(expected) => {
-            assert_eq!(expected, actual, "AST serialization diverged from golden fixture");
+            assert_eq!(
+                expected, actual,
+                "AST serialization diverged from golden fixture"
+            );
         }
         Err(_) => {
             // First run: write golden for developer review and fail the test so it gets committed.
             fs::create_dir_all(&golden_dir).expect("create golden dir");
             fs::write(&golden_path, &actual).expect("write golden file");
-            panic!("Golden file created at {} — inspect and commit it", golden_path);
+            panic!(
+                "Golden file created at {} — inspect and commit it",
+                golden_path
+            );
         }
     }
 }
