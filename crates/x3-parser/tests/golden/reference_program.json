@@ -1,0 +1,300 @@
+{
+  "items": [
+    {
+      "Function": {
+        "name": {
+          "name": "reference",
+          "span": {
+            "start": 12,
+            "end": 21
+          }
+        },
+        "params": [
+          {
+            "name": {
+              "name": "a",
+              "span": {
+                "start": 22,
+                "end": 23
+              }
+            },
+            "mutable": false,
+            "ty": {
+              "name": {
+                "name": "i32",
+                "span": {
+                  "start": 25,
+                  "end": 28
+                }
+              },
+              "span": {
+                "start": 25,
+                "end": 28
+              }
+            },
+            "span": {
+              "start": 22,
+              "end": 23
+            }
+          },
+          {
+            "name": {
+              "name": "b",
+              "span": {
+                "start": 30,
+                "end": 31
+              }
+            },
+            "mutable": false,
+            "ty": {
+              "name": {
+                "name": "i32",
+                "span": {
+                  "start": 33,
+                  "end": 36
+                }
+              },
+              "span": {
+                "start": 33,
+                "end": 36
+              }
+            },
+            "span": {
+              "start": 30,
+              "end": 31
+            }
+          }
+        ],
+        "ret_ty": {
+          "name": {
+            "name": "i32",
+            "span": {
+              "start": 41,
+              "end": 44
+            }
+          },
+          "span": {
+            "start": 41,
+            "end": 44
+          }
+        },
+        "body": {
+          "statements": [
+            {
+              "Let": {
+                "name": {
+                  "name": "x",
+                  "span": {
+                    "start": 63,
+                    "end": 64
+                  }
+                },
+                "mutable": false,
+                "ty": null,
+                "initializer": {
+                  "Binary": {
+                    "op": "Add",
+                    "left": {
+                      "Literal": {
+                        "literal": {
+                          "Integer": 1
+                        },
+                        "span": {
+                          "start": 67,
+                          "end": 68
+                        }
+                      }
+                    },
+                    "right": {
+                      "Binary": {
+                        "op": "Mul",
+                        "left": {
+                          "Literal": {
+                            "literal": {
+                              "Integer": 2
+                            },
+                            "span": {
+                              "start": 71,
+                              "end": 72
+                            }
+                          }
+                        },
+                        "right": {
+                          "Literal": {
+                            "literal": {
+                              "Integer": 3
+                            },
+                            "span": {
+                              "start": 75,
+                              "end": 76
+                            }
+                          }
+                        },
+                        "span": {
+                          "start": 71,
+                          "end": 76
+                        }
+                      }
+                    },
+                    "span": {
+                      "start": 67,
+                      "end": 76
+                    }
+                  }
+                },
+                "span": {
+                  "start": 59,
+                  "end": 76
+                }
+              }
+            },
+            {
+              "Let": {
+                "name": {
+                  "name": "y",
+                  "span": {
+                    "start": 94,
+                    "end": 95
+                  }
+                },
+                "mutable": false,
+                "ty": null,
+                "initializer": {
+                  "Call": {
+                    "callee": {
+                      "Identifier": {
+                        "name": "sum",
+                        "span": {
+                          "start": 98,
+                          "end": 101
+                        }
+                      }
+                    },
+                    "args": [
+                      {
+                        "Literal": {
+                          "literal": {
+                            "Integer": 4
+                          },
+                          "span": {
+                            "start": 102,
+                            "end": 103
+                          }
+                        }
+                      },
+                      {
+                        "Call": {
+                          "callee": {
+                            "Identifier": {
+                              "name": "factorial",
+                              "span": {
+                                "start": 105,
+                                "end": 114
+                              }
+                            }
+                          },
+                          "args": [
+                            {
+                              "Binary": {
+                                "op": "Add",
+                                "left": {
+                                  "Literal": {
+                                    "literal": {
+                                      "Integer": 5
+                                    },
+                                    "span": {
+                                      "start": 115,
+                                      "end": 116
+                                    }
+                                  }
+                                },
+                                "right": {
+                                  "Literal": {
+                                    "literal": {
+                                      "Integer": 6
+                                    },
+                                    "span": {
+                                      "start": 119,
+                                      "end": 120
+                                    }
+                                  }
+                                },
+                                "span": {
+                                  "start": 115,
+                                  "end": 120
+                                }
+                              }
+                            }
+                          ],
+                          "span": {
+                            "start": 105,
+                            "end": 121
+                          }
+                        }
+                      }
+                    ],
+                    "span": {
+                      "start": 98,
+                      "end": 122
+                    }
+                  }
+                },
+                "span": {
+                  "start": 90,
+                  "end": 122
+                }
+              }
+            },
+            {
+              "Return": [
+                {
+                  "Binary": {
+                    "op": "Add",
+                    "left": {
+                      "Identifier": {
+                        "name": "x",
+                        "span": {
+                          "start": 143,
+                          "end": 144
+                        }
+                      }
+                    },
+                    "right": {
+                      "Identifier": {
+                        "name": "y",
+                        "span": {
+                          "start": 147,
+                          "end": 148
+                        }
+                      }
+                    },
+                    "span": {
+                      "start": 143,
+                      "end": 148
+                    }
+                  }
+                },
+                {
+                  "start": 136,
+                  "end": 148
+                }
+              ]
+            }
+          ],
+          "span": {
+            "start": 45,
+            "end": 159
+          }
+        },
+        "span": {
+          "start": 9,
+          "end": 159
+        }
+      }
+    }
+  ],
+  "span": {
+    "start": 9,
+    "end": 164
+  }
+}

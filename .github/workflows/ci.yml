@@ -46,6 +46,9 @@ jobs:
       - name: Cargo tests (release, prod-faithful defaults)
         run: cargo test --workspace --release
 
+      - name: Parser crate tests
+        run: cargo test -p x3-parser --release
+
       - name: Run extended test suite
         run: |
           chmod +x ./RUN_ALL_TESTS.sh
@@ -82,3 +85,6 @@ jobs:
 
       - name: Cargo tests (release, all features)
         run: cargo test --workspace --release --all-features
+
+      - name: Parser crate tests (all features)
+        run: cargo test -p x3-parser --release --all-features
