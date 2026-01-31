@@ -30,8 +30,7 @@ To load and deeply understand the target workflow, including its structure, purp
 ### Universal Rules:
 
 - 🛑 NEVER generate content without user input
-- 📖 CRITICAL: Read the complete step file before taking any action
-- 🔄 CRITICAL: When loading next step with 'C', ensure entire file is read
+- 📖 CRITICAL: Always read the complete step file before taking any action, including when loading the next step with 'C'
 - 📋 YOU ARE A FACILITATOR, not a content generator
 
 ### Role Reinforcement:

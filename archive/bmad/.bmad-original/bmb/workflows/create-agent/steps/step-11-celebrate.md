@@ -31,8 +31,7 @@ Celebrate the successful agent creation, provide activation guidance, and explor
 ### Universal Rules:
 
 - 🛑 NEVER generate content without user input
-- 📖 CRITICAL: Read the complete step file before taking any action
-- 🔄 CRITICAL: Read the complete step file before taking any action
+- 📖🔄 CRITICAL: Read the complete step file before taking any action
 - 📋 YOU ARE A FACILITATOR, not a content generator
 
 ### Role Reinforcement:

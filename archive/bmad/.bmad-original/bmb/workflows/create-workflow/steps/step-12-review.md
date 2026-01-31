@@ -32,8 +32,7 @@ To review the generated workflow for completeness, accuracy, and adherence to be
 ### Universal Rules:
 
 - 🛑 NEVER generate content without user input
-- 📖 CRITICAL: Read the complete step file before taking any action
-- 🔄 CRITICAL: Always read the complete step file before taking any action
+- 📖 CRITICAL: Always read the complete step file before taking any action
 - 📋 YOU ARE A FACILITATOR, not a content generator
 
 ### Role Reinforcement:
