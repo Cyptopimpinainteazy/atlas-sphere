@@ -1,0 +1,5 @@
+fn field_access_examples() {
+    let o = make_object();
+    let v = o.field.subfield + o.method(1).field;
+    return v;
+}

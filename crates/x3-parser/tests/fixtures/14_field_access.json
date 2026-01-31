@@ -1,0 +1,210 @@
+{
+  "items": [
+    {
+      "Function": {
+        "name": {
+          "name": "field_access_examples",
+          "span": {
+            "start": 3,
+            "end": 24
+          }
+        },
+        "params": [],
+        "ret_ty": null,
+        "body": {
+          "statements": [
+            {
+              "Let": {
+                "name": {
+                  "name": "o",
+                  "span": {
+                    "start": 37,
+                    "end": 38
+                  }
+                },
+                "mutable": false,
+                "ty": null,
+                "initializer": {
+                  "Call": {
+                    "callee": {
+                      "Identifier": {
+                        "name": "make_object",
+                        "span": {
+                          "start": 41,
+                          "end": 52
+                        }
+                      }
+                    },
+                    "args": [],
+                    "span": {
+                      "start": 41,
+                      "end": 54
+                    }
+                  }
+                },
+                "span": {
+                  "start": 33,
+                  "end": 54
+                }
+              }
+            },
+            {
+              "Let": {
+                "name": {
+                  "name": "v",
+                  "span": {
+                    "start": 64,
+                    "end": 65
+                  }
+                },
+                "mutable": false,
+                "ty": null,
+                "initializer": {
+                  "Binary": {
+                    "op": "Add",
+                    "left": {
+                      "FieldAccess": {
+                        "object": {
+                          "FieldAccess": {
+                            "object": {
+                              "Identifier": {
+                                "name": "o",
+                                "span": {
+                                  "start": 68,
+                                  "end": 69
+                                }
+                              }
+                            },
+                            "field": {
+                              "name": "field",
+                              "span": {
+                                "start": 70,
+                                "end": 75
+                              }
+                            },
+                            "span": {
+                              "start": 68,
+                              "end": 75
+                            }
+                          }
+                        },
+                        "field": {
+                          "name": "subfield",
+                          "span": {
+                            "start": 76,
+                            "end": 84
+                          }
+                        },
+                        "span": {
+                          "start": 68,
+                          "end": 84
+                        }
+                      }
+                    },
+                    "right": {
+                      "FieldAccess": {
+                        "object": {
+                          "Call": {
+                            "callee": {
+                              "FieldAccess": {
+                                "object": {
+                                  "Identifier": {
+                                    "name": "o",
+                                    "span": {
+                                      "start": 87,
+                                      "end": 88
+                                    }
+                                  }
+                                },
+                                "field": {
+                                  "name": "method",
+                                  "span": {
+                                    "start": 89,
+                                    "end": 95
+                                  }
+                                },
+                                "span": {
+                                  "start": 87,
+                                  "end": 95
+                                }
+                              }
+                            },
+                            "args": [
+                              {
+                                "Literal": {
+                                  "literal": {
+                                    "Integer": 1
+                                  },
+                                  "span": {
+                                    "start": 96,
+                                    "end": 97
+                                  }
+                                }
+                              }
+                            ],
+                            "span": {
+                              "start": 87,
+                              "end": 98
+                            }
+                          }
+                        },
+                        "field": {
+                          "name": "field",
+                          "span": {
+                            "start": 99,
+                            "end": 104
+                          }
+                        },
+                        "span": {
+                          "start": 87,
+                          "end": 104
+                        }
+                      }
+                    },
+                    "span": {
+                      "start": 68,
+                      "end": 104
+                    }
+                  }
+                },
+                "span": {
+                  "start": 60,
+                  "end": 104
+                }
+              }
+            },
+            {
+              "Return": [
+                {
+                  "Identifier": {
+                    "name": "v",
+                    "span": {
+                      "start": 117,
+                      "end": 118
+                    }
+                  }
+                },
+                {
+                  "start": 110,
+                  "end": 118
+                }
+              ]
+            }
+          ],
+          "span": {
+            "start": 27,
+            "end": 121
+          }
+        },
+        "span": {
+          "start": 0,
+          "end": 121
+        }
+      }
+    }
+  ],
+  "span": {
+    "start": 0,
+    "end": 122
+  }
+}

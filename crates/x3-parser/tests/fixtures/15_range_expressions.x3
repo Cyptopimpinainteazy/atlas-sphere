@@ -1,0 +1,5 @@
+fn range_examples() {
+    let r = 0..10;
+    let x = 1 + 2..3 + 4; // tests Pratt boundary around range
+    let y = (1 + 2) .. (3 * 4);
+}
