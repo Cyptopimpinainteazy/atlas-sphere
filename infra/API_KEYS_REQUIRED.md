@@ -13,12 +13,12 @@
     - Free tier: 10,000 requests/month
     - Demo key: `CG-1234567890abcdefghijklmnopqrstuvwxyz` (working)
 
-2. **Dune Analytics API Key** - `YOUR_DUNE_API_KEY`
+1. **Dune Analytics API Key** - `YOUR_DUNE_API_KEY`
     - Get from [Dune](https://dune.com)
     - Free tier available
     - Required for blockchain data queries
 
-3. **GoPlus Security API Key** - [GoPlus Labs](https://gopluslabs.io)
+1. **GoPlus Security API Key** - [GoPlus Labs](https://gopluslabs.io)
     - Free tier for security checks
 
 ## ⚠️ **HIGH PRIORITY - For Production Services**
@@ -64,26 +64,31 @@
 ## 🚀 **ADVANCED FEATURES (Optional)**
 
 ### **Trading & DeFi**
-12. **DEX API Keys**
+
+1. **DEX API Keys**
     - Uniswap, SushiSwap, Jupiter (if needed)
     - Usually free with rate limits
 
 ### **Flash Loans**
-13. **Flashloan API Keys**
+
+1. **Flashloan API Keys**
     - Aave, dYdX (for testing/research only)
     - **⚠️ Use only in development with SAFE_MODE=true**
 
 ### **MEV Services**
-14. **MEV Operator Key**
+
+1. **MEV Operator Key**
     - For MEV bundle submission
     - **⚠️ Requires governance approval for production**
 
 ### **Bridge Operations**
-15. **Bridge Operator Key**
+
+1. **Bridge Operator Key**
     - For cross-chain bridge operations
     - **⚠️ Requires multi-sig governance**
 
 ### **LLM Services**
+
 1. **OpenAI API Key** - [OpenAI Platform](https://platform.openai.com)
     - Required for strategy evolution features
     - Get from the OpenAI platform
@@ -95,6 +100,7 @@
 ## 📋 **QUICK SETUP CHECKLIST**
 
 ### **Development Setup (Minimal)**
+
 - [x] Infura Project ID ✅ **COMPLETED**
 - [x] CoinGecko API Key ✅ **WORKING** (demo key)
 - [x] Dune Analytics API Key ✅ **COMPLETED**
@@ -104,6 +110,7 @@
 - [ ] Git SSH key + token
 
 ### **Production Setup (Full)**
+
 - [ ] All development keys
 - [ ] Production RPC endpoints
 - [ ] Multi-signature wallet setup
