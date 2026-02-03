@@ -34,6 +34,10 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
   const preimage = payload.preimage || '';
   const p = preimage.startsWith('0x') ? preimage : '0x' + preimage;
 
+  // Dynamic fee estimation constants
+  const BASE_FEE_BUFFER_PERCENT = 20; // Add 20% buffer for base fee fluctuation
+  const BASE_FEE_BUFFER_DIVISOR = 100 / BASE_FEE_BUFFER_PERCENT; // 5 for 20%
+
   // Submit transaction with dynamic fee bumping and robust confirmation tracking
   // Use provider fee data as baseline (EIP-1559) and bump maxFeePerGas on retries
   const feeData = await provider.getFeeData();
@@ -46,8 +50,8 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
   
   // Use block base fee if available, otherwise use fee data
   if (blockBaseFee && !baseMaxFee) {
-    // Add 20% buffer to base fee for next block fluctuation
-    const buffer = blockBaseFee / BigInt(5);
+    // Add buffer to base fee for next block fluctuation
+    const buffer = blockBaseFee / BigInt(BASE_FEE_BUFFER_DIVISOR);
     baseMaxFee = blockBaseFee + buffer;
   }
 

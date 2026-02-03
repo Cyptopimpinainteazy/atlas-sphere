@@ -277,10 +277,13 @@ pub struct FeeEstimate {
 }
 
 impl FeeEstimate {
+    /// Buffer percentage added to base fee for fluctuation (20%)
+    const BASE_FEE_BUFFER_DIVISOR: u32 = 5; // 100 / 20 = 5
+
     /// Create a new fee estimate
     pub fn new(base_fee: U256, priority_fee: U256) -> Self {
         // max_fee = base_fee + priority_fee with 20% buffer for base fee fluctuation
-        let buffer = base_fee / U256::from(5); // 20% of base fee
+        let buffer = base_fee / U256::from(Self::BASE_FEE_BUFFER_DIVISOR);
         let max_fee = base_fee + buffer + priority_fee;
         let gas_price = base_fee + priority_fee;
         
