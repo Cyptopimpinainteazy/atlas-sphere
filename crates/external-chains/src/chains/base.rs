@@ -140,6 +140,15 @@ impl ChainAdapter for BaseAdapter {
         Ok(U256::from(1_000_000)) // ~0.001 gwei
     }
 
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // Base (OP Stack L2) supports EIP-1559
+        // Very low fees due to L2 scaling
+        let base_fee = U256::from(500_000); // ~0.0005 gwei
+        let priority_fee = U256::from(500_000); // ~0.0005 gwei tip
+        
+        Ok(FeeEstimate::new(base_fee, priority_fee))
+    }
+
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>> {
         // TODO: eth_getTransactionReceipt
         Ok(Some(TransactionReceipt {

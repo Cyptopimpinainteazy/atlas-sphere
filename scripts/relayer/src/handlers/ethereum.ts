@@ -40,6 +40,17 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
   let baseMaxFee = feeData.maxFeePerGas ? BigInt(feeData.maxFeePerGas) : undefined;
   let basePriority = feeData.maxPriorityFeePerGas ? BigInt(feeData.maxPriorityFeePerGas) : BigInt(1_000_000_000); // 1 gwei fallback
 
+  // Get base fee from latest block for more accurate estimation
+  const latestBlock = await provider.getBlock('latest');
+  const blockBaseFee = latestBlock?.baseFeePerGas ? BigInt(latestBlock.baseFeePerGas) : undefined;
+  
+  // Use block base fee if available, otherwise use fee data
+  if (blockBaseFee && !baseMaxFee) {
+    // Add 20% buffer to base fee for next block fluctuation
+    const buffer = blockBaseFee / BigInt(5);
+    baseMaxFee = blockBaseFee + buffer + basePriority;
+  }
+
   let lastErr: any = null;
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
@@ -47,8 +58,10 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
       let maxPriorityFeePerGas: any = undefined;
 
       if (baseMaxFee) {
-        // bump strategy: multiply base by 1.0 + attempt*0.2
-        const multiplier = BigInt(Math.floor(100 + attempt * 20)); // 100, 120, 140...
+        // Dynamic bump strategy: 
+        // - First attempt: base fee + priority
+        // - Subsequent attempts: exponential increase (100%, 150%, 200%, 250%, 300%)
+        const multiplier = BigInt(Math.floor(100 + attempt * 50)); // 100, 150, 200, 250, 300
         maxFeePerGas = (baseMaxFee * multiplier) / BigInt(100);
         maxPriorityFeePerGas = (basePriority * multiplier) / BigInt(100);
       }
@@ -57,7 +70,11 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
       if (maxFeePerGas) opts['maxFeePerGas'] = maxFeePerGas;
       if (maxPriorityFeePerGas) opts['maxPriorityFeePerGas'] = maxPriorityFeePerGas;
 
-      console.info(`EVM handler attempt ${attempt + 1}: submitting with opts`, { maxFeePerGas: opts.maxFeePerGas?.toString(), maxPriorityFeePerGas: opts.maxPriorityFeePerGas?.toString() });
+      console.info(`EVM handler attempt ${attempt + 1}: submitting with dynamic fees`, { 
+        maxFeePerGas: opts.maxFeePerGas?.toString(), 
+        maxPriorityFeePerGas: opts.maxPriorityFeePerGas?.toString(),
+        blockBaseFee: blockBaseFee?.toString(),
+      });
 
       const tx = await contract.withdraw(htlcId, p, opts);
       // Wait for configurable confirmations (default 1)

@@ -221,6 +221,14 @@ pub trait ChainAdapter: Send + Sync {
     /// Get gas price estimate
     async fn estimate_gas_price(&self) -> AdapterResult<U256>;
 
+    /// Get dynamic fee estimate (EIP-1559 compatible)
+    /// Returns detailed fee breakdown including base fee and priority fee
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // Default implementation uses legacy gas price
+        let gas_price = self.estimate_gas_price().await?;
+        Ok(FeeEstimate::from_gas_price(gas_price))
+    }
+
     /// Get transaction receipt
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>>;
 }
@@ -253,6 +261,59 @@ pub struct LogEntry {
     pub topics: Vec<H256>,
     /// Data
     pub data: Vec<u8>,
+}
+
+/// Dynamic fee estimate for EIP-1559 compatible chains
+#[derive(Debug, Clone, Copy, Encode, Decode, TypeInfo, PartialEq, Eq)]
+pub struct FeeEstimate {
+    /// Base fee per gas (from the latest block)
+    pub base_fee: U256,
+    /// Recommended priority fee per gas (tip to miners/validators)
+    pub priority_fee: U256,
+    /// Maximum fee per gas willing to pay
+    pub max_fee: U256,
+    /// Legacy gas price (for non-EIP-1559 chains)
+    pub gas_price: U256,
+}
+
+impl FeeEstimate {
+    /// Create a new fee estimate
+    pub fn new(base_fee: U256, priority_fee: U256) -> Self {
+        // max_fee = base_fee + priority_fee with 20% buffer for base fee fluctuation
+        let buffer = base_fee / U256::from(5); // 20% of base fee
+        let max_fee = base_fee + buffer + priority_fee;
+        let gas_price = base_fee + priority_fee;
+        
+        Self {
+            base_fee,
+            priority_fee,
+            max_fee,
+            gas_price,
+        }
+    }
+
+    /// Create fee estimate from legacy gas price
+    pub fn from_gas_price(gas_price: U256) -> Self {
+        Self {
+            base_fee: gas_price,
+            priority_fee: U256::zero(),
+            max_fee: gas_price,
+            gas_price,
+        }
+    }
+
+    /// Bump fees by a multiplier (e.g., 1.2 for 20% increase)
+    pub fn bump(&self, multiplier_percent: u32) -> Self {
+        let multiplier = U256::from(multiplier_percent);
+        let divisor = U256::from(100);
+        
+        Self {
+            base_fee: self.base_fee * multiplier / divisor,
+            priority_fee: self.priority_fee * multiplier / divisor,
+            max_fee: self.max_fee * multiplier / divisor,
+            gas_price: self.gas_price * multiplier / divisor,
+        }
+    }
 }
 
 /// Mock adapter for testing
@@ -367,5 +428,57 @@ mod tests {
         );
         let hash = msg.hash();
         assert_ne!(hash, H256::zero());
+    }
+
+    #[test]
+    fn test_fee_estimate_new() {
+        let base_fee = U256::from(100_000_000_000u64); // 100 gwei
+        let priority_fee = U256::from(2_000_000_000u64); // 2 gwei
+        
+        let estimate = FeeEstimate::new(base_fee, priority_fee);
+        
+        assert_eq!(estimate.base_fee, base_fee);
+        assert_eq!(estimate.priority_fee, priority_fee);
+        // max_fee should be base + 20% buffer + priority
+        let expected_max = base_fee + (base_fee / U256::from(5)) + priority_fee;
+        assert_eq!(estimate.max_fee, expected_max);
+        assert_eq!(estimate.gas_price, base_fee + priority_fee);
+    }
+
+    #[test]
+    fn test_fee_estimate_from_gas_price() {
+        let gas_price = U256::from(50_000_000_000u64); // 50 gwei
+        
+        let estimate = FeeEstimate::from_gas_price(gas_price);
+        
+        assert_eq!(estimate.base_fee, gas_price);
+        assert_eq!(estimate.priority_fee, U256::zero());
+        assert_eq!(estimate.max_fee, gas_price);
+        assert_eq!(estimate.gas_price, gas_price);
+    }
+
+    #[test]
+    fn test_fee_estimate_bump() {
+        let base_fee = U256::from(100_000_000_000u64); // 100 gwei
+        let priority_fee = U256::from(2_000_000_000u64); // 2 gwei
+        
+        let estimate = FeeEstimate::new(base_fee, priority_fee);
+        
+        // Bump by 50% (multiplier 150)
+        let bumped = estimate.bump(150);
+        
+        assert_eq!(bumped.base_fee, base_fee * U256::from(150) / U256::from(100));
+        assert_eq!(bumped.priority_fee, priority_fee * U256::from(150) / U256::from(100));
+        assert!(bumped.max_fee > estimate.max_fee);
+    }
+
+    #[tokio::test]
+    async fn test_mock_adapter_estimate_fees() {
+        let adapter = MockChainAdapter::new(ChainType::Base);
+        
+        let estimate = adapter.estimate_fees().await.unwrap();
+        
+        // Should use legacy gas price by default
+        assert!(estimate.gas_price > U256::zero());
     }
 }
