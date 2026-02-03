@@ -48,7 +48,7 @@ export async function ethereumHandler(payload: SettlementPayload): Promise<strin
   if (blockBaseFee && !baseMaxFee) {
     // Add 20% buffer to base fee for next block fluctuation
     const buffer = blockBaseFee / BigInt(5);
-    baseMaxFee = blockBaseFee + buffer + basePriority;
+    baseMaxFee = blockBaseFee + buffer;
   }
 
   let lastErr: any = null;

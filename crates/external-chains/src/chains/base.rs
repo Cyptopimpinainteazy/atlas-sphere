@@ -137,14 +137,14 @@ impl ChainAdapter for BaseAdapter {
 
     async fn estimate_gas_price(&self) -> AdapterResult<U256> {
         // Base has low gas prices due to L2
-        Ok(U256::from(1_000_000)) // ~0.001 gwei
+        Ok(U256::from(1_000_000)) // 0.001 gwei (1 µgwei)
     }
 
     async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
         // Base (OP Stack L2) supports EIP-1559
         // Very low fees due to L2 scaling
-        let base_fee = U256::from(500_000); // ~0.0005 gwei
-        let priority_fee = U256::from(500_000); // ~0.0005 gwei tip
+        let base_fee = U256::from(500_000); // 0.0005 gwei (0.5 µgwei)
+        let priority_fee = U256::from(500_000); // 0.0005 gwei (0.5 µgwei) tip
         
         Ok(FeeEstimate::new(base_fee, priority_fee))
     }
