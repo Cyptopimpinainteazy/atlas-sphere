@@ -164,6 +164,15 @@ impl ChainAdapter for ArbitrumAdapter {
         Ok(U256::from(100_000_000)) // 0.1 gwei
     }
 
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // Arbitrum supports EIP-1559 style fees
+        // Uses ArbGas units, very cheap L2 fees
+        let base_fee = U256::from(50_000_000); // 0.05 gwei
+        let priority_fee = U256::from(50_000_000); // 0.05 gwei tip
+        
+        Ok(FeeEstimate::new(base_fee, priority_fee))
+    }
+
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>> {
         Ok(Some(TransactionReceipt {
             tx_hash,

@@ -157,6 +157,15 @@ impl ChainAdapter for PolygonAdapter {
         Ok(U256::from(30_000_000_000u64)) // 30 gwei
     }
 
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // Polygon supports EIP-1559 since London hard fork
+        // Gas prices fluctuate based on network usage
+        let base_fee = U256::from(30_000_000_000u64); // 30 gwei base
+        let priority_fee = U256::from(30_000_000_000u64); // 30 gwei tip for faster inclusion
+        
+        Ok(FeeEstimate::new(base_fee, priority_fee))
+    }
+
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>> {
         Ok(Some(TransactionReceipt {
             tx_hash,

@@ -164,6 +164,15 @@ impl ChainAdapter for BnbAdapter {
         Ok(U256::from(3_000_000_000u64)) // 3 gwei
     }
 
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // BNB Chain (BSC) supports EIP-1559 after Bruno upgrade
+        // Generally low fees due to PoSA consensus
+        let base_fee = U256::from(3_000_000_000u64); // 3 gwei base
+        let priority_fee = U256::from(1_000_000_000u64); // 1 gwei tip
+        
+        Ok(FeeEstimate::new(base_fee, priority_fee))
+    }
+
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>> {
         Ok(Some(TransactionReceipt {
             tx_hash,
