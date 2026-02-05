@@ -1,0 +1,49 @@
+<<<<<<< REPO
+# Bootnode Network Configuration
+# Generated: 2025-11-09 08:13:01 UTC
+
+## Network Key (Ed25519)
+12D3KooWMfud7YHRhghaceUsWExWT59DLgwpZE37RuCeyUyfRtb4
+
+## Peer ID
+211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Multiaddress Format
+/ip4/<BOOTNODE_IP>/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Example (replace <BOOTNODE_IP> with actual IP)
+/ip4/10.0.1.100/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+/dns4/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Systemd Service Configuration
+Place the node key file at: /var/lib/atlas/node-key
+Set permissions: chmod 600 /var/lib/atlas/node-key
+
+## Chain Spec Entry (Add to "bootNodes")
+"/ip4/<BOOTNODE_IP>/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9"
+
+=======
+# Bootnode Network Configuration
+# Generated: 2025-11-09 08:13:01 UTC
+
+## Network Key (Ed25519)
+12D3KooWMfud7YHRhghaceUsWExWT59DLgwpZE37RuCeyUyfRtb4
+
+## Peer ID
+211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Multiaddress Format
+/ip4/<BOOTNODE_IP>/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Example (replace <BOOTNODE_IP> with actual IP)
+/ip4/10.0.1.100/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+/dns4/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9
+
+## Systemd Service Configuration
+Place the node key file at: /var/lib/atlas/node-key
+Set permissions: chmod 600 /var/lib/atlas/node-key
+
+## Chain Spec Entry (Add to "bootNodes")
+"/ip4/<BOOTNODE_IP>/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9"
+
+>>>>>>> IMPORT (TEXT)
