@@ -1,196 +1,228 @@
-# GitHub Copilot Instructions for atlas-sphere
+# Atlas Sphere - Copilot Instructions
 
-## Repository Overview
+## Project Overview
 
-This is the **atlas-sphere** repository, a multi-language project containing:
-- A React/TypeScript dashboard application (`swarm-dashboard/`)
-- Rust crates for backend services (`crates/`)
-- Python scripts for validation and database migrations (`alembic/`)
+Atlas Sphere is a next-generation Layer-1 blockchain with dual virtual machine support (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is built on Substrate and optimized for cross-domain composability with atomic cross-chain operations.
 
 ## Technology Stack
 
-### Frontend (swarm-dashboard/)
-- **Language**: TypeScript/React 18
-- **Build Tool**: Webpack 5
-- **Testing**: Jest with ts-jest and React Testing Library
-- **E2E Testing**: Playwright with axe-core accessibility scanning
-- **TypeScript Config**: Strict mode enabled with `noUncheckedIndexedAccess`
+### Core Technologies
+- **Rust**: Primary language for blockchain runtime, pallets, and node (stable toolchain)
+- **Substrate Framework**: FRAME-based runtime with Aura + GRANDPA consensus
+- **TypeScript/JavaScript**: Frontend applications, tooling, and testing
+- **React 19**: UI components and web applications
+- **Node.js**: Build tooling and development scripts
 
-### Backend (crates/swarm-media/)
-- **Language**: Rust (2021 edition)
-- **Framework**: Tokio async runtime
-- **Database**: SQLx with PostgreSQL
-- **Testing**: Cargo test with mockall
+### Key Components
+- **Runtime**: Substrate FRAME runtime with custom pallets
+- **Pallets**: Custom blockchain modules (atlas-kernel, atomic-trade-engine, governance, treasury, etc.)
+- **EVM Integration**: Frontier-based Ethereum compatibility layer
+- **SVM Integration**: Solana Virtual Machine adapter
+- **Node Service**: P2P networking, RPC server, consensus
+- **Crates**: Supporting libraries (atlas-sdk, x3-cli, indexer, gateway, etc.)
 
-### Database Migrations
-- **Tool**: Alembic (Python)
-- **Database**: PostgreSQL 15
-- **Validation**: Custom Python validation script (`scripts/validate_alembic.py`)
+### Build Tools
+- `cargo` for Rust compilation
+- `rustup` for toolchain management
+- `npm` for JavaScript/TypeScript dependencies
+- `make` for BMAD build automation
+- GitHub Actions for CI/CD
 
-## Build and Test Commands
+## Coding Standards
 
-### Frontend (swarm-dashboard/)
+### Rust Code Style
+- Follow the official Rust style guide
+- Use `rustfmt` for automatic formatting
+- Use `clippy` for linting and catching common mistakes
+- Run `cargo fmt` and `cargo clippy` before committing
+- Write comprehensive doc comments for public APIs using `///`
+- Use snake_case for function and variable names
+- Use PascalCase for types and traits
+- Prefer explicit error handling over unwrapping (avoid `.unwrap()` in production code)
+
+### TypeScript/JavaScript Style
+- Use TypeScript for type safety in new code
+- Follow modern ES6+ syntax
+- Use functional components with hooks in React
+- Prefer `const` over `let`, avoid `var`
+- Use meaningful variable and function names
+- Add JSDoc comments for complex functions
+
+### Testing Requirements
+- All new Substrate pallets must include unit tests using `#[test]` and mock runtime
+- Runtime changes require integration tests
+- Frontend changes should include React component tests where appropriate
+- Run `cargo test` for Rust tests
+- E2E tests use both Playwright (swarm-dashboard) and Cypress (apps/e2e)
+- Jest for unit/integration tests in TypeScript projects
+
+### Security Best Practices
+- Never commit secrets, private keys, or credentials
+- Validate all external inputs in pallets and RPCs
+- Use safe arithmetic operations (checked/saturating math) in Substrate code
+- Review security implications of storage changes
+- Follow OWASP guidelines for web components
+- Report security vulnerabilities to security@atlas-sphere.io (not via GitHub issues)
+- Security reports receive acknowledgment within 48 hours (see SECURITY.md)
+
+## Architecture Patterns
+
+### Substrate Runtime Development
+- Each pallet should be self-contained with clear interfaces
+- Use `Config` trait to define pallet dependencies
+- Implement proper weight calculations for all extrinsics
+- Use storage versioning for migrations
+- Prefer `BoundedVec` over `Vec` in storage
+- Use events for important state changes
+- Implement proper error handling with custom error types
+
+### Cross-VM Bridge Pattern
+- The Atlas Kernel pallet coordinates dual-VM execution
+- Comits (atomic cross-domain commits) represent transactions spanning both VMs
+- Asset registry manages native and wrapped assets
+- Canonical ledger tracks cross-VM state
+
+### RPC and Client Interaction
+- Node provides HTTP JSON-RPC on port 9944
+- Atlas Kernel exposes custom RPC methods via `node/src/rpc.rs`
+- Use polkadot.js for client-side interactions
+- Frontend apps use `@polkadot/api` and `ethers.js`
+
+## Development Workflow
+
+### Building the Project
 ```bash
-cd swarm-dashboard
-npm install              # Install dependencies
-npm run tsc              # Type-check TypeScript
-npm run build            # Production build
-npm test                 # Run unit tests
-npm run test:ci          # Run tests with coverage in CI
-npm run e2e:serve        # Start demo server for E2E tests
-npm run e2e:test         # Run Playwright E2E tests
+# Build the node
+cargo build --release
+
+# Build with WASM runtime
+cargo build --release --features runtime-wasm
+
+# Build specific workspace member
+cargo build -p pallet-atlas-kernel
 ```
 
-### Backend (Rust)
+### Running Tests
 ```bash
-cd crates/swarm-media
-cargo build              # Build the crate
-cargo test               # Run tests
-cargo clippy             # Lint code
+# Run all Rust tests
+cargo test --workspace
+
+# Run tests for specific crate
+cargo test -p pallet-atlas-kernel
+
+# Run E2E tests with Cypress (from root)
+npm test
+
+# Open Cypress test runner
+npm run test:open
+
+# Run Playwright tests (in swarm-dashboard)
+cd swarm-dashboard && npm run test:e2e
+
+# Run Jest unit tests (in swarm-dashboard)
+cd swarm-dashboard && npm test
 ```
 
-### Database Migrations
+### Linting and Formatting
 ```bash
-alembic upgrade head     # Run migrations
-alembic downgrade base   # Rollback all migrations
-python scripts/validate_alembic.py  # Validate migration files
+# Format Rust code
+cargo fmt --all
+
+# Lint Rust code
+cargo clippy --workspace --all-targets -- -D warnings
+
+# Check without building
+cargo check --workspace
 ```
 
-## Coding Conventions
+### Running a Node
+```bash
+# Development node with clean state
+cargo run --release -- --dev --tmp
 
-### TypeScript/React
-- Use **TypeScript strict mode** with `noUncheckedIndexedAccess` enabled
-- Prefer **functional components** with hooks
-- Use **explicit return types** for hooks and functions
-- Follow React 18 best practices
-- Use **TSX** file extension for React components
-- Place test files adjacent to components in `tests/` directory
-- Use Testing Library for component tests
-
-### Rust
-- Follow Rust 2021 edition standards
-- Use async/await with Tokio runtime
-- Prefer `thiserror` for error types
-- Use `tracing` for logging (not `println!`)
-- Include comprehensive error handling
-- Write unit tests for all public APIs
-
-### Python
-- Use type hints where applicable
-- Follow PEP 8 style guidelines
-- Validate Alembic migrations with the provided script
-
-### General
-- Keep commits focused and descriptive
-- Reference issue numbers in commit messages
-- Run linters and tests before committing
-
-## Accessibility Requirements
-
-**Critical**: This repository has strict accessibility standards.
-
-- All UI changes **must pass axe-core accessibility checks**
-- Playwright E2E tests automatically run axe-core scans
-- Violations are reported in `swarm-dashboard/e2e/axe-violations.json`
-- CI will create triage issues labeled `accessibility` and `triage` for violations
-- See `.github/triage/AXE_TRIAGE.md` for triage procedures
-- Add accessibility checks to PR checklists
-
-## CI/CD Workflows
-
-The repository uses GitHub Actions for CI:
-- **ci-swarm.yml**: Main CI for swarm-dashboard (build, test, lint, Lighthouse)
-- **swarm-dashboard-e2e.yml**: Playwright E2E tests with accessibility checks
-- **swarm-dashboard-axe-triage.yml**: Accessibility violation triage automation
-- **swarm-media-integration.yml**: Rust crate testing and integration
-- **alembic-roundtrip.yml**: Database migration validation (label-gated with `run-alembic-roundtrip`)
+# Connect to testnet
+# RPC: http://rpc.testnet.atlas-sphere.io:9944
+# Faucet: https://faucet.testnet.atlas-sphere.io
+```
 
 ## Project Structure
 
-```
-atlas-sphere/
-├── .github/
-│   ├── workflows/          # GitHub Actions CI/CD workflows
-│   ├── triage/             # Triage documentation (AXE_TRIAGE.md, etc.)
-│   ├── CONTRIBUTING.md     # Contribution guidelines
-│   └── PULL_REQUEST_TEMPLATE.md
-├── swarm-dashboard/        # React/TypeScript frontend application
-│   ├── src/                # Source code
-│   ├── e2e/                # Playwright E2E tests
-│   ├── tests/              # Unit tests
-│   ├── package.json
-│   └── tsconfig.json
-├── crates/
-│   └── swarm-media/        # Rust backend service
-│       ├── src/
-│       └── Cargo.toml
-├── alembic/                # Database migrations
-│   ├── versions/           # Migration files
-│   └── env.py
-├── scripts/
-│   └── validate_alembic.py # Alembic validation script
-└── bin/
-    └── act                 # Local GitHub Actions runner
-```
+- `/pallets/` - Substrate runtime pallets
+- `/crates/` - Supporting Rust libraries
+- `/runtime/` - Substrate runtime definition
+- `/node/` - Node service implementation
+- `/apps/` - Frontend applications
+- `/ui/` - React UI components
+- `/scripts/` - Build and deployment scripts
+- `/tests/` - Integration and E2E tests
+- `/.github/workflows/` - CI/CD pipelines
 
-## Special Considerations
+## Important Files and Conventions
 
-### Alembic Migrations
-- All migration files must include proper upgrade/downgrade guards
-- Use `validate_alembic.py` to check for common issues
-- Label PRs with `run-alembic-roundtrip` to trigger roundtrip testing
-- Migrations must be reversible (downgrade should work)
-
-### Testing Strategy
-- Unit tests are required for new components and functions
-- E2E tests should cover critical user paths
-- Accessibility tests run automatically on all PRs
-- Coverage reports are uploaded as CI artifacts
-
-### PR Checklist
-When creating PRs, ensure:
-- [ ] Type-checking passes (`npm run tsc`)
-- [ ] Unit tests pass with adequate coverage
-- [ ] E2E tests pass
-- [ ] Axe accessibility checks pass (no new violations)
-- [ ] Alembic migrations validated (if applicable)
-- [ ] Code follows repository conventions
+- `Cargo.toml` - Workspace configuration and dependencies
+- `rust-toolchain.toml` - Rust toolchain specification
+- `Makefile` - BMAD build targets
+- `.gitleaks.toml` - Secret scanning configuration
+- `SECURITY.md` - Security policy and reporting
+- `CONTRIBUTING.md` - Contribution guidelines
 
 ## Common Tasks
 
-### Adding a New React Component
-1. Create component in `swarm-dashboard/src/components/ComponentName.tsx`
-2. Use TypeScript with strict typing
-3. Add unit test in `swarm-dashboard/tests/ComponentName.spec.js`
-4. Ensure accessibility compliance (ARIA labels, semantic HTML)
-5. Run `npm run tsc` and `npm test` before committing
+### Adding a New Pallet
+1. Create directory under `/pallets/`
+2. Add to workspace in root `Cargo.toml`
+3. Implement `Config` trait and storage
+4. Add to runtime in `/runtime/src/lib.rs`
+5. Write unit tests using mock runtime
+6. Document public APIs
 
-### Adding a New Rust Module
-1. Create module in `crates/swarm-media/src/module_name.rs`
-2. Export in `lib.rs` or appropriate parent module
-3. Add unit tests in the same file or `tests/` directory
-4. Run `cargo test` and `cargo clippy`
-5. Ensure proper error handling with `thiserror` or `anyhow`
+### Adding a New Crate
+1. Create directory under `/crates/`
+2. Add to workspace in root `Cargo.toml`
+3. Follow standard Rust project structure
+4. Include README.md with usage examples
+5. Add tests and documentation
 
-### Updating Database Schema
-1. Create migration: `alembic revision -m "description"`
-2. Implement upgrade and downgrade functions
-3. Run `python scripts/validate_alembic.py`
-4. Test locally: `alembic upgrade head && alembic downgrade base`
-5. Add `run-alembic-roundtrip` label to PR for CI validation
+### Working with Frontend
+1. Frontend code is in `/ui/`, `/apps/`, and `/swarm-dashboard/`
+2. Use React 19 with functional components
+3. State management follows React patterns
+4. Use ethers.js for Ethereum interactions
+5. Use @polkadot/api for Substrate interactions
 
-## Resources
+## CI/CD and Quality Gates
 
-- [CONTRIBUTING.md](.github/CONTRIBUTING.md) - Contribution guidelines
-- [AXE_TRIAGE.md](.github/triage/AXE_TRIAGE.md) - Accessibility triage process
-- [Dashboard MVP](swarm-dashboard/DASHBOARD_MVP.md) - Dashboard feature specification
-- [Alembic README](alembic/README.md) - Migration documentation
+- CI runs on all PRs via GitHub Actions
+- Required checks: build, test, lint, security scan
+- Accessibility checks run on frontend changes (axe-core)
+- Docker images published via `docker-publish.yml`
+- Production deployment via `production-deploy.yml`
+- E2E integration tests via `e2e-integration-tests.yml`
 
-## Security & Best Practices
+## Resources and Documentation
 
-- Never commit secrets or credentials
-- Use environment variables for configuration
-- Validate all user inputs
-- Follow OWASP security guidelines for web applications
-- Keep dependencies up to date
-- Use `npm audit` and `cargo audit` regularly
+- [Substrate Documentation](https://docs.substrate.io/)
+- [FRAME Documentation](https://docs.substrate.io/reference/frame-pallets/)
+- [Polkadot.js API](https://polkadot.js.org/docs/)
+- Project Status: See `PROJECT_STATUS.md` and `ATLAS_SPHERE_STATUS.md`
+- Testnet Info: See `TESTNET_ANNOUNCEMENT.md`
+- Security Policy: See `SECURITY.md`
+- Contributing: See `.github/CONTRIBUTING.md`
+
+## Code Review Guidelines
+
+- Keep PRs focused and small when possible
+- Include tests for new functionality
+- Update documentation for API changes
+- Run all checks locally before pushing
+- Follow security best practices
+- Consider performance implications of runtime changes
+- Test cross-VM interactions thoroughly
+
+## Special Notes
+
+- The project uses BMAD Method for workflow automation (see `crates/vibe-bmad/`)
+- Testnet is currently running with mock VM executors; full EVM/SVM integration in progress
+- Governance pallet is not yet implemented (sudo enabled for development)
+- X3 language compiler and toolchain included in `/crates/x3-*`
+- GPU swarm and quantum computing features are experimental

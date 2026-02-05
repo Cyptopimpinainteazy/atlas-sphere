@@ -51,7 +51,6 @@ cache/
 # Auto-generated AI guidance files - excluded from version control
 .github/instructions/
 .github/prompts/
-.github/copilot-instructions.md
 how-to-guides/
 
 # Rust
