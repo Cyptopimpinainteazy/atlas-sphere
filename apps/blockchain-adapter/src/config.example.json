@@ -1,0 +1,26 @@
+{
+  "port": 4001,
+  "chains": {
+    "evm": {
+      "rpcUrl": "https://lb.drpc.live/ethereum/ArgUBy0RzURpos-Jlz1TqLRxbgscV2AR8JXZrqRhf0fE"
+    },
+    "bitcoin": {
+      "rpcUrl": "https://lb.drpc.live/bitcoin/ArgUBy0RzURpos-Jlz1TqLRxbgscV2AR8JXZrqRhf0fE"
+    },
+    "solana": {
+      "rpcUrl": "https://lb.drpc.live/solana/ArgUBy0RzURpos-Jlz1TqLRxbgscV2AR8JXZrqRhf0fE"
+    },
+    "x3vm": {
+      "rpcUrl": "https://x3vm.local:9933",
+      "wsUrl": "wss://x3vm.local:9944",
+      "note": "Set real X3VM RPC/WS endpoints via environment or replace these values"
+    }
+  }
+}
+
+/* Environment variables used by adapter (recommended):
+EVM_DEPLOYER_PRIVATE_KEY - private key used to deploy/call provenance contract
+EVM_RPC_URL - optional override for EVM RPC
+X3VM_WS_URL - WebSocket endpoint for X3VM node (used for signing & extrinsic submission)
+X3VM_SIGNER_SURI - sr25519 SURI or mnemonic for extrinsic signing
+*/
