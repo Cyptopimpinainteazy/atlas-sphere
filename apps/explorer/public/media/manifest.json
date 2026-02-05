@@ -1,0 +1,33 @@
+{
+  "name": "Atlas Sphere Media Library",
+  "version": "1.0.0",
+  "description": "Custom media assets for the Quantum Landing Page",
+  "structure": {
+    "gallery": {
+      "description": "Images for horizontal scroll galleries (400x400 recommended)",
+      "formats": ["jpg", "png", "webp"],
+      "count": 12
+    },
+    "heroes": {
+      "description": "Hero section backgrounds (1920x1080 recommended)",
+      "formats": ["jpg", "webp"],
+      "count": 4
+    },
+    "cube": {
+      "description": "6 images for the rotating 3D cube (400x400 square)",
+      "formats": ["jpg", "png", "webp"],
+      "count": 6
+    },
+    "slider": {
+      "description": "Background and mask images for masked hero slider",
+      "formats": ["jpg", "webp"],
+      "count": 8
+    }
+  },
+  "currentAssets": {
+    "gallery": "Using Unsplash placeholder images",
+    "cube": "Using Unsplash placeholder images",
+    "slider": "Using Unsplash placeholder images"
+  },
+  "instructions": "Replace placeholder URLs in HorizontalGallery.tsx with /media/gallery/your-image.jpg"
+}

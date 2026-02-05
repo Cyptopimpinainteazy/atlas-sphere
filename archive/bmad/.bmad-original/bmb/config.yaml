@@ -1,0 +1,8 @@
+# BMB Module Configuration
+# Generated for Atlas Sphere
+
+user_name: Developer
+bmad_folder: .bmad
+communication_language: en
+document_output_language: en
+output_folder: docs

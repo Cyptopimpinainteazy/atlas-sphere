@@ -1,0 +1,8 @@
+name: {{WORKFLOW_NAME}}
+
+on: {{WORKFLOW_TRIGGERS}}
+
+{{WORKFLOW_ENV}}
+
+jobs:
+{{WORKFLOW_JOBS}}

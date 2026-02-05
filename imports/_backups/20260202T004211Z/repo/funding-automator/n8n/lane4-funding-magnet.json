@@ -1,0 +1,308 @@
+{
+  "name": "Lane 4 - Funding Magnet",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Cron Trigger - Daily",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        220,
+        180
+      ],
+      "parameters": {
+        "mode": "everyDay"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Scrape Grants / VC pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        460,
+        160
+      ],
+      "parameters": {
+        "url": "https://example.com/grants-feed.json",
+        "method": "GET",
+        "options": {}
+      }
+    },
+    {
+      "id": "3",
+      "name": "Parse & Normalize",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        700,
+        160
+      ],
+      "parameters": {
+        "functionCode": "// Normalize sources into campaigns with contacts and deadlines\nconst raw = items[0].json || {};\nconst list = raw.items || raw || [];\nconst out = list.map(i => ({ id: i.id || (i.title||'').slice(0,20).replace(/[^a-z0-9]/gi,'').toLowerCase(), org: i.org || i.name || i.source || 'unknown', contact: i.contact || null, deadline: i.deadline || null, url: i.url || i.link, notes: i.description || '' }));\nreturn out.map(r=>({json:r}));"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Check Stash (Has this been handled?)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        940,
+        160
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/grants/check",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id: $json.id }"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Generate Pitch (LLM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        160
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/tools/generate-pitch",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ org: $json.org, id: $json.id, notes: $json.notes }"
+      }
+    },
+    {
+      "id": "6",
+      "name": "Generate Pitch Variants (exec)",
+      "type": "n8n-nodes-base.exec",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        160
+      ],
+      "parameters": {
+        "command": "bash",
+        "arguments": [
+          "-lc",
+          "node tools/generate_pitches.js"
+        ]
+      }
+    },
+    {
+      "id": "7",
+      "name": "Verify Email (placeholder)",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        160
+      ],
+      "parameters": {
+        "fileName": "/data/staging/funding_queue/{{ $json.id }}.json",
+        "fileContent": "={{ JSON.stringify($json, null, 2) }}"
+      }
+    },
+    {
+      "id": "8",
+      "name": "Queue For Approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        160
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/notify/approval",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id: $json.id, org: $json.org, contact: $json.contact, excerpts: $json.notes }"
+      }
+    },
+    {
+      "id": "9",
+      "name": "Notify Slack (approval required)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        160
+      ],
+      "parameters": {
+        "path": "funding/approve",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "10",
+      "name": "Approval Webhook (n8n)",
+      "type": "n8n-nodes-base.readFile",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        160
+      ],
+      "parameters": {
+        "filePath": "/data/staging/funding_queue/{{ $json.id }}.json"
+      }
+    },
+    {
+      "id": "11",
+      "name": "On Approve: Load Queue Item",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        2700,
+        160
+      ],
+      "parameters": {
+        "filePath": "/data/staging/funding_queue/{{ $json.id }}.pitch.json"
+      }
+    },
+    {
+      "id": "12",
+      "name": "Send via SMTP (burner-domain placeholder)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        160
+      ],
+      "parameters": {
+        "fromEmail": "hype@burner.example",
+        "toEmail": "={{ $json.contact || 'noreply@example.com' }}",
+        "subject": "={{ 'Micro-pitch: ' + ($json.org || '') }}",
+        "text": "={{ $json.generated || $json.body || 'See attached' }}"
+      }
+    },
+    {
+      "id": "13",
+      "name": "Write Log",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [
+        3220,
+        160
+      ],
+      "parameters": {
+        "fileName": "/data/logs/funding_sent.log",
+        "fileContent": "={{ new Date().toISOString() + ' | ' + JSON.stringify($json) }}",
+        "append": true
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger - Daily": {
+      "main": [
+        [
+          {
+            "node": "Scrape Grants / VC pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Grants / VC pages": {
+      "main": [
+        [
+          {
+            "node": "Parse & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Check Stash (Has this been handled?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Stash (Has this been handled?)": {
+      "main": [
+        [
+          {
+            "node": "Generate Pitch (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Pitch (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Verify Email (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Email (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Queue For Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queue For Approval": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack (approval required)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Webhook (n8n)": {
+      "main": [
+        [
+          {
+            "node": "On Approve: Load Queue Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Approve: Load Queue Item": {
+      "main": [
+        [
+          {
+            "node": "Send via SMTP (burner-domain placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via SMTP (burner-domain placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Write Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "bounce_test@example.com": {
+    "ts": "2025-12-11T00:13:10.916Z",
+    "messageId": "fake-msgid-123",
+    "reason": "hard bounce"
+  },
+  "postmark-bounce@example.com": {
+    "ts": "2025-12-11T00:13:05.109Z",
+    "provider": "postmark",
+    "messageId": "pm-1",
+    "reason": "Test bounce"
+  },
+  "bounce1@example.com": {
+    "ts": "2025-12-11T00:13:04.866Z",
+    "provider": "sendgrid",
+    "messageId": "msg-9",
+    "reason": "bounce"
+  }
+}
