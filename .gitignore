@@ -1,45 +1,26 @@
-# Node
-node_modules/
-package-lock.json
-.npm
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build artifacts
-dist/
-build/
-/target
-
-# Temp
-/tmp/
-
-# Logs
-*.log
-
-# Node modules (fallback)
-**/node_modules/
-
 # Python
-venv/
-ENV/
-env/
-.venv
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-
-# Misc
-*.db
-*.sqlite
-*.sqlite3
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
 *.egg
 *.abi
 *.bin
@@ -51,45 +32,42 @@ cache/
 # Auto-generated AI guidance files - excluded from version control
 .github/instructions/
 .github/prompts/
-.github/copilot-instructions.md
 how-to-guides/
 
-# Rust
-target/
-Cargo.lock
-
-# Environment and secrets files
-.env
-.env.local
-.env.*.local
-secrets/
-*.key
-*.pem
-*.p12
-
-# Node.js
-.next
-*.tsbuildinfo
-
-# Python caches and tooling
-.ruff_cache/
-.mypy_cache/
-coverage.xml
-
-# Python environments (avoid committing vendored venvs)
-.venv/
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+# Virtual environments
 venv/
 env/
-**/.venv/
-**/venv/
-**/env/
+ENV/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+out/
+*.log
+# Node
+node_modules/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
