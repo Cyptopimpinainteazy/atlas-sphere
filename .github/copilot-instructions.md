@@ -77,7 +77,7 @@ Atlas Sphere is a next-generation Layer-1 blockchain with dual virtual machine s
 
 ### Cross-VM Bridge Pattern
 - The Atlas Kernel pallet coordinates dual-VM execution
-- Comits (commits) represent atomic cross-domain operations
+- Comits (atomic cross-domain commits) represent transactions spanning both VMs
 - Asset registry manages native and wrapped assets
 - Canonical ledger tracks cross-VM state
 
@@ -109,11 +109,11 @@ cargo test --workspace
 # Run tests for specific crate
 cargo test -p pallet-atlas-kernel
 
-# Run JavaScript/TypeScript tests
+# Run E2E tests with Cypress
 npm test
 
-# Run E2E tests
-npm run test
+# Open Cypress test runner
+npm run test:open
 ```
 
 ### Linting and Formatting
