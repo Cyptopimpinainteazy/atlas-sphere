@@ -154,6 +154,15 @@ impl ChainAdapter for AvalancheAdapter {
         Ok(U256::from(25_000_000_000u64)) // 25 nAVAX
     }
 
+    async fn estimate_fees(&self) -> AdapterResult<FeeEstimate> {
+        // Avalanche C-Chain supports EIP-1559 style dynamic fees
+        // Base fee adjusts based on network congestion
+        let base_fee = U256::from(25_000_000_000u64); // 25 nAVAX base
+        let priority_fee = U256::from(2_000_000_000u64); // 2 nAVAX priority tip
+        
+        Ok(FeeEstimate::new(base_fee, priority_fee))
+    }
+
     async fn get_transaction_receipt(&self, tx_hash: H256) -> AdapterResult<Option<TransactionReceipt>> {
         Ok(Some(TransactionReceipt {
             tx_hash,
