@@ -1,0 +1,135 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Comit",
+  "scopeName": "source.comit",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#operators" },
+    { "include": "#properties" },
+    { "include": "#addresses" },
+    { "include": "#blocks" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.comit",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.comit",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.comit",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.comit",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.comit",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.comit",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.comit",
+          "match": "0x[0-9a-fA-F]+"
+        },
+        {
+          "name": "constant.numeric.decimal.comit",
+          "match": "\\b\\d+(_\\d+)*\\b"
+        },
+        {
+          "name": "constant.numeric.float.comit",
+          "match": "\\b\\d+\\.\\d+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.comit",
+          "match": "\\b(comit|evm|svm|evm_only|svm_only|atomic)\\b"
+        },
+        {
+          "name": "keyword.other.comit",
+          "match": "\\b(true|false|null)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comit",
+          "match": "(:|=>|->|=)"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "name": "variable.other.property.comit",
+          "match": "\\b(contract|method|args|gas_limit|value|program|instruction|accounts|compute_units|data|nonce|prepare_root)\\b"
+        },
+        {
+          "name": "entity.name.type.comit",
+          "match": "\\b(EvmPayload|SvmPayload|ComitPayload|AccountMeta)\\b"
+        }
+      ]
+    },
+    "addresses": {
+      "patterns": [
+        {
+          "name": "constant.other.address.ethereum.comit",
+          "match": "0x[0-9a-fA-F]{40}"
+        },
+        {
+          "name": "constant.other.address.solana.comit",
+          "match": "[1-9A-HJ-NP-Za-km-z]{32,44}"
+        }
+      ]
+    },
+    "blocks": {
+      "patterns": [
+        {
+          "name": "meta.block.comit",
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            { "include": "#comments" },
+            { "include": "#strings" },
+            { "include": "#numbers" },
+            { "include": "#keywords" },
+            { "include": "#operators" },
+            { "include": "#properties" },
+            { "include": "#addresses" },
+            { "include": "#blocks" }
+          ]
+        }
+      ]
+    }
+  }
+}

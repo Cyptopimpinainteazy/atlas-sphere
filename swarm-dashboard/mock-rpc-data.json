@@ -1,0 +1,213 @@
+{
+  "media_status": {
+    "recordingsScheduled": 12,
+    "recordingsCompleted": 10,
+    "onTimePercentage": 83.3,
+    "totalAssetsCreated": 45,
+    "assetsReady": 42,
+    "assetsPublished": 38,
+    "activeContributors": 5,
+    "totalProductionHours": 120,
+    "lastRecording": "2024-01-15T14:30:00Z",
+    "nextRecording": "2024-01-17T11:00:00Z"
+  },
+  "media_schedule": {
+    "scheduleId": "sched-001",
+    "daysOfWeek": [2, 5],
+    "timeOfDay": "11:00 AM",
+    "timezone": "America/Los_Angeles",
+    "sessionsThisMonth": [
+      {
+        "sessionId": "session-001",
+        "scheduledAt": "2024-01-16T18:00:00Z",
+        "status": "completed",
+        "theme": "DeFi Fundamentals",
+        "contributors": ["alice", "bob"]
+      },
+      {
+        "sessionId": "session-002",
+        "scheduledAt": "2024-01-19T18:00:00Z",
+        "status": "scheduled",
+        "theme": "Advanced Trading Strategies",
+        "contributors": ["charlie", "diana"]
+      }
+    ],
+    "nextSession": {
+      "sessionId": "session-002",
+      "scheduledAt": "2024-01-19T18:00:00Z",
+      "status": "scheduled",
+      "theme": "Advanced Trading Strategies",
+      "contributors": ["charlie", "diana"]
+    },
+    "onTimePercentage": 83.3,
+    "onTimeStreak": 5
+  },
+  "media_contributors": {
+    "contributors": [
+      {
+        "id": "alice",
+        "name": "Alice Johnson",
+        "role": "Host",
+        "status": "active",
+        "email": "alice@atlas-sphere.io",
+        "walletAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+        "isActive": true
+      },
+      {
+        "id": "bob",
+        "name": "Bob Smith",
+        "role": "Technical Expert",
+        "status": "active",
+        "email": "bob@atlas-sphere.io",
+        "walletAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44f",
+        "isActive": true
+      },
+      {
+        "id": "charlie",
+        "name": "Charlie Brown",
+        "role": "Content Creator",
+        "status": "active",
+        "email": "charlie@atlas-sphere.io",
+        "walletAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44g",
+        "isActive": true
+      },
+      {
+        "id": "diana",
+        "name": "Diana Prince",
+        "role": "Guest Expert",
+        "status": "active",
+        "email": "diana@atlas-sphere.io",
+        "walletAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44h",
+        "isActive": true
+      },
+      {
+        "id": "eve",
+        "name": "Eve Wilson",
+        "role": "Producer",
+        "status": "paused",
+        "email": "eve@atlas-sphere.io",
+        "walletAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44i",
+        "isActive": false
+      }
+    ],
+    "totalActive": 4,
+    "totalPaused": 1
+  },
+  "media_metrics": {
+    "period": "week",
+    "summary": {
+      "recordingsScheduled": 12,
+      "recordingsCompleted": 10,
+      "onTimePercentage": 83.3,
+      "totalAssetsCreated": 45,
+      "totalCompensation": 2500.0,
+      "averageAssetsPerRecording": 4.5,
+      "highlights": [
+        "Successfully completed 10 out of 12 scheduled recordings",
+        "83.3% on-time delivery rate maintained",
+        "45 total assets created across multiple platforms"
+      ]
+    },
+    "contributorBreakdown": [
+      {
+        "contributorId": "alice",
+        "contributorName": "Alice Johnson",
+        "recordingsFeaturedIn": 8,
+        "assetsCreated": 20,
+        "compensationOwed": 1200.0
+      },
+      {
+        "contributorId": "bob",
+        "contributorName": "Bob Smith",
+        "recordingsFeaturedIn": 6,
+        "assetsCreated": 15,
+        "compensationOwed": 800.0
+      },
+      {
+        "contributorId": "charlie",
+        "contributorName": "Charlie Brown",
+        "recordingsFeaturedIn": 4,
+        "assetsCreated": 10,
+        "compensationOwed": 500.0
+      }
+    ]
+  },
+  "media_jobs": [
+    {
+      "jobId": "job-001",
+      "status": "completed",
+      "priority": "High",
+      "assetType": "FullEpisode",
+      "target": "YouTube",
+      "progressPercentage": 100,
+      "createdAt": "2024-01-15T10:00:00Z",
+      "lastUpdate": "2024-01-15T12:30:00Z",
+      "estimatedCompletion": "2024-01-15T12:30:00Z"
+    },
+    {
+      "jobId": "job-002",
+      "status": "running",
+      "priority": "Normal",
+      "assetType": "Clip",
+      "target": "TikTok",
+      "progressPercentage": 65,
+      "createdAt": "2024-01-15T14:00:00Z",
+      "lastUpdate": "2024-01-15T14:45:00Z",
+      "estimatedCompletion": "2024-01-15T15:15:00Z"
+    },
+    {
+      "jobId": "job-003",
+      "status": "queued",
+      "priority": "Low",
+      "assetType": "Transcript",
+      "target": "Website",
+      "progressPercentage": 0,
+      "createdAt": "2024-01-15T15:00:00Z",
+      "lastUpdate": "2024-01-15T15:00:00Z",
+      "estimatedCompletion": "2024-01-15T16:00:00Z"
+    }
+  ],
+  "ci_status": {
+    "branch": "feature/swarm-dashboard-e2e",
+    "pr": 3,
+    "status": "unknown",
+    "last_checked": null,
+    "details": null
+  },
+  "test_health": {
+    "atlas-evm-integration": {
+      "unit": {
+        "total": 24,
+        "passed": 24,
+        "failed": 0
+      },
+      "integration": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      "last_run": null
+    }
+  },
+  "node_status": {
+    "synced": true,
+    "best_block": 123456,
+    "last_seen": "2025-12-23T12:00:00Z"
+  },
+  "network_metrics": {
+    "peers": 12,
+    "finality_lag": 1,
+    "coverage": 87.5
+  },
+  "alerts": [
+    {
+      "id": "alert-001",
+      "level": "critical",
+      "title": "SIGILL observed in local test run",
+      "message": "SIGILL (Illegal instruction) observed during local test execution; see gist and PR for details.",
+      "link": "https://gist.github.com/Cyptopimpinainteazy/a3a0c9076f9457d70a722d9eaba04d4b",
+      "related_pr": 3,
+      "created_at": "2025-12-23T00:00:00Z"
+    }
+  ]
+}
