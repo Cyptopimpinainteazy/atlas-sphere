@@ -16,7 +16,6 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
 from typing import Optional
 from web3 import Web3
@@ -108,8 +107,8 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+        # Prepare account for transaction signing (needed when RPC flow is implemented)
         acct = w3.eth.account.from_key(private_key)
-        sender = acct.address
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
@@ -146,8 +145,9 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     print(f"Funding distributor {distributor} with total: {total}")
     
     if rpc:
-        # build and sign transactions for remote provider
-        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
+        # Remote RPC flow requires manual transaction building/signing similar to process_finalized_payouts.py
+        # For production use, implement proper transaction building with nonce management and gas estimation
+        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester for testing or implement full transaction flow")
     else:
         # Use token_contract to transfer tokens (either from deploy or attached above)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})

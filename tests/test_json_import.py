@@ -1,5 +1,4 @@
 import pytest
-import os
 import json
 from swarm.db import SessionLocal
 from tools.json_to_db import import_json_to_db
