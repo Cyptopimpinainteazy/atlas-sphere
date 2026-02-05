@@ -1,0 +1,264 @@
+{
+  "name": "Lane 3 - Social Detonator",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Trigger - Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Fetch Upload Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        420,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/queue/videos/pending",
+        "method": "GET",
+        "options": {}
+      }
+    },
+    {
+      "id": "3",
+      "name": "Split (One Video Per Batch)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        640,
+        200
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "4",
+      "name": "Choose Platforms",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "functionCode": "const item = items[0].json;\n// decide platforms based on metadata or manual rules\nconst platforms = item.metadata?.platforms || ['youtube','x','tiktok'];\nreturn [{json:{id:item.id, path:item.path, thumb:item.thumb, metadata:item.metadata||{}, platforms}}];"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Throttle / Delay",
+      "type": "n8n-nodes-base.delay",
+      "typeVersion": 1,
+      "position": [
+        1150,
+        200
+      ],
+      "parameters": {
+        "mode": "set",
+        "waitTime": 10
+      }
+    },
+    {
+      "id": "6",
+      "name": "Upload to YouTube (placeholder)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        120
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/platforms/youtube/upload",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id:$json.id, filePath:$json.path, title: $json.metadata.title || 'NovaFlux Short', description: $json.metadata.description || '', tags: $json.metadata.tags || [] }"
+      }
+    },
+    {
+      "id": "7",
+      "name": "Upload to X (placeholder)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        260
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/platforms/x/post",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id:$json.id, filePath:$json.path, text: $json.metadata.title || '' }"
+      }
+    },
+    {
+      "id": "8",
+      "name": "Upload to TikTok (placeholder)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        400
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/platforms/tiktok/upload",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id:$json.id, filePath:$json.path, caption: $json.metadata.title || '' }"
+      }
+    },
+    {
+      "id": "9",
+      "name": "Write Log",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        260
+      ],
+      "parameters": {
+        "fileName": "/data/logs/uploads.log",
+        "fileContent": "={{ new Date().toISOString() + ' | ' + JSON.stringify($json) }}",
+        "append": true
+      }
+    },
+    {
+      "id": "10",
+      "name": "Mark Done in Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        260
+      ],
+      "parameters": {
+        "url": "http://localhost:3000/queue/videos/mark-done",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id: $json.id }"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger - Manual": {
+      "main": [
+        [
+          {
+            "node": "Fetch Upload Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Upload Queue": {
+      "main": [
+        [
+          {
+            "node": "Split (One Video Per Batch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split (One Video Per Batch)": {
+      "main": [
+        [
+          {
+            "node": "Choose Platforms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Platforms": {
+      "main": [
+        [
+          {
+            "node": "Throttle / Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle / Delay": {
+      "main": [
+        [
+          {
+            "node": "Upload to YouTube (placeholder)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload to X (placeholder)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload to TikTok (placeholder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to YouTube (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Write Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mark Done in Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to X (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Write Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mark Done in Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to TikTok (placeholder)": {
+      "main": [
+        [
+          {
+            "node": "Write Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mark Done in Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

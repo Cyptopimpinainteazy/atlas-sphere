@@ -1,0 +1,91 @@
+Status: Draft
+Target: OpenSpace v2 / Atlas Sphere v1.0
+Summary:
+  Implement the X3 language parser crate (crates/x3-parser) including:
+  - Pratt expression parser with operator precedence table
+  - Statement & block parsing (lets, returns, atomic, agent, context)
+  - Deterministic TokenStream wrapper for lexer output
+  - Error diagnostics and recovery
+  - Integration tests and deterministic golden outputs for the compile pipeline
+
+Rationale:
+  The parser is the gating factor for the entire compiler → bytecode → VM pipeline.
+  This proposal formalizes the expected grammar, operator precedence, and API (parse_program)
+  so downstream components (HIR, MIR, emitter, verifier, sidecar) can be developed in parallel.
+
+Deliverables:
+  - crates/x3-parser implementation (lib.rs, grammar.rs, tokens.rs, error.rs, parser.rs)
+  - test fixtures (x3 samples) + golden AST JSON for regressions
+  - OpenSpec grammar document (openspec/x3-language-grammar.md)
+  - CI rules: parser unit tests + AST canonicalization checks
+
+Acceptance Criteria:
+  - `parse_program(src)` returns deterministic AST for each provided fixture
+  - All CI tests pass, golden AST matches
+  - Integration: `compiler::compile_program` can consume `parse_program` output and produce `.x3b` bytes for basic examples
+
+Security considerations:
+  - parser must never panic on user input, must provide bounded memory use, and must fail gracefully on malformed tokens
+
+Timeline:
+  - Implement parser crate: 3 working days
+  - Tests + golden fixtures: 1 day
+  - Integration & CI: 1 day
+
+7) Next steps for you (exact commands & checklist)
+Create folder crates/x3-parser/src and paste the files: lib.rs, grammar.rs, error.rs, tokens.rs, parser.rs.
+
+Wire crates/x3-parser/Cargo.toml with dependencies: x3-ast, x3-lexer, thiserror.
+
+Add parser unit tests in crates/x3-parser/tests/ with 8 small example sources covering:
+
+function declaration
+
+let/return
+
+atomic block
+
+agent/context blocks
+
+call + args
+
+arithmetic precedence
+
+field access & indexing
+
+ternary conditional
+
+Hook into compiler::compile_program: replace parse_program placeholder with x3_parser::parse_program_from_tokens( lexer::tokenize(src) ).
+
+Run cargo test -p x3-parser then cargo test -p compiler then run x3-tools run_simple on a small sample.
+
+Add openspec file openspec/OSC-X3-0001-PARSER.md to your repo and open the change discussion.
+
+Final notes & guarantees
+The parser scaffolds are deterministic and designed to produce canonical AST nodes (no HashMap iteration or unsorted collections).
+
+The Pratt implementation is intentionally explicit (no macros), easy to audit, and matches your AST style.
+
+The operator table and grammar are tuned to trading/agent code needs (fast arithmetic, vector ops, hostcalls).
+
+The OpenSpec snippet makes this a clean governance-ready change proposal you can merge into your openspec/ directory.
+
+Want me to:
+
+generate the full Cargo.toml for the parser crate,
+
+produce 8 concrete example X3 source files + golden AST JSONs,
+
+or expand the Pratt parser to include full error recovery and diagnostics?
+
+Say which and I’ll paste the next batch.
+
+ChatGPT's out of space for saved memories
+New memories won’t be added until you make space. Learn more
+
+Manage
+
+
+
+No file chosenNo file chosen
+ChatGPT can make mistakes. Check important info.
