@@ -53,8 +53,8 @@ Atlas Sphere is a next-generation Layer-1 blockchain with dual virtual machine s
 - Runtime changes require integration tests
 - Frontend changes should include React component tests where appropriate
 - Run `cargo test` for Rust tests
-- Run `npm test` for JavaScript/TypeScript tests
-- E2E tests use Playwright and Cypress
+- E2E tests use both Playwright (swarm-dashboard) and Cypress (apps/e2e)
+- Jest for unit/integration tests in TypeScript projects
 
 ### Security Best Practices
 - Never commit secrets, private keys, or credentials
@@ -109,11 +109,17 @@ cargo test --workspace
 # Run tests for specific crate
 cargo test -p pallet-atlas-kernel
 
-# Run E2E tests with Cypress
+# Run E2E tests with Cypress (from root)
 npm test
 
 # Open Cypress test runner
 npm run test:open
+
+# Run Playwright tests (in swarm-dashboard)
+cd swarm-dashboard && npm run test:e2e
+
+# Run Jest unit tests (in swarm-dashboard)
+cd swarm-dashboard && npm test
 ```
 
 ### Linting and Formatting
