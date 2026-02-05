@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  x3vm-node:
+    image: parity/substrate:latest
+    # Replace parity/substrate with the official X3VM docker image if available
+    command: --dev --rpc-methods=Unsafe --rpc-cors=all --ws-external --rpc-external
+    ports:
+      - "9933:9933"  # RPC
+      - "9944:9944"  # WS
+    volumes:
+      - x3vm-data:/data
+    environment:
+      - RUST_LOG=info
+
+volumes:
+  x3vm-data:
+    driver: local
+
+# Usage: docker-compose -f infra/x3vm/docker-compose.yml up
+# Note: This is a dev node for local testing only. Replace image/command with X3VM production node image for real testnet or mainnet setups.

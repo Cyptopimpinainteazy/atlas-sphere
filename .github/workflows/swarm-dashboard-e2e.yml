@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./swarm-dashboard
         run: |
+          # Use npm ci with fallback to npm install
+          npm ci || npm install
+      
           npm ci --legacy-peer-deps || true
           npm install --no-audit --no-fund
 
@@ -97,6 +100,7 @@ jobs:
             gh api repos/${REPO}/issues/${PR}/comments -f body="Opened triage issue #${ISSUE} for accessibility violations: https://github.com/${REPO}/issues/${ISSUE}"
           else
             echo "Issue already exists, skipping creation."
+          fi
           fi
 
 # Also include a simpler 'test' job from other branch
