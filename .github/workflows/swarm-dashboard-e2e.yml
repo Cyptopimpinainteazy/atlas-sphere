@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./swarm-dashboard
         run: |
+          # Use npm ci with fallback to npm install
+          npm ci || npm install
+      
           npm ci --legacy-peer-deps || true
           npm install --no-audit --no-fund
 
@@ -98,6 +101,7 @@ jobs:
           else
             echo "Issue already exists, skipping creation."
           fi
+          fi
 
 # Also include a simpler 'test' job from other branch
 jobs:
@@ -129,4 +133,6 @@ jobs:
         working-directory: ./swarm-dashboard
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 'false'
+        run: |
+          npx playwright test --config e2e/playwright.config.ts
         run: npx playwright test --config e2e/playwright.config.ts
