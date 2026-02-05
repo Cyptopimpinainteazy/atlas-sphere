@@ -1,0 +1,27 @@
+[package]
+name = "flashloan_receiver"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "flashloan_receiver"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"
+solana-program = "1.18.22"
+solana-sdk = "1.18.22"
+spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "3.0.0", features = ["no-entrypoint"] }
+
+# Solend
+solend-program = { git = "https://github.com/solendprotocol/solend-program.git", tag = "v1.19.0" } # Check actual
