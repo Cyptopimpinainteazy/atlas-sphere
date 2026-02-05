@@ -1,0 +1,156 @@
+<<<<<<< REPO
+<<<<<<< REPO
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="2.5385570000000004">
+<testsuite name="accessibility.spec.ts" timestamp="2025-12-25T09:55:02.266Z" hostname="" tests="1" failures="0" skipped="0" time="0.715" errors="0">
+<testcase name="accessibility: demo passes basic axe checks" classname="accessibility.spec.ts" time="0.715">
+<system-err>
+<![CDATA[(node:2585732) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard-smoke.spec.ts" timestamp="2025-12-25T09:55:02.266Z" hostname="" tests="1" failures="0" skipped="0" time="0.37" errors="0">
+<testcase name="dashboard smoke test shows title and changes period" classname="dashboard-smoke.spec.ts" time="0.37">
+<system-err>
+<![CDATA[(node:2585744) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard.spec.ts" timestamp="2025-12-25T09:55:02.266Z" hostname="" tests="1" failures="0" skipped="0" time="0.448" errors="0">
+<testcase name="dashboard demo shows readiness score and SIGILL count" classname="dashboard.spec.ts" time="0.448">
+<system-err>
+<![CDATA[(node:2585738) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="pipeline-smoke.spec.ts" timestamp="2025-12-25T09:55:02.266Z" hostname="" tests="1" failures="0" skipped="0" time="0.482" errors="0">
+<testcase name="pipeline smoke: readiness, SIGILL alerts and artifacts" classname="pipeline-smoke.spec.ts" time="0.482">
+<system-err>
+<![CDATA[(node:2585725) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="sigill-artifacts.spec.ts" timestamp="2025-12-25T09:55:02.266Z" hostname="" tests="1" failures="0" skipped="0" time="0.92" errors="0">
+<testcase name="sigill artifact links respond with mock artifact payload and new alerts increase count" classname="sigill-artifacts.spec.ts" time="0.92">
+<system-err>
+<![CDATA[(node:2585726) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+</testsuites>
+=======
+<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="2.5883220000000002">
+<testsuite name="accessibility.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.846" errors="0">
+<testcase name="accessibility: demo passes basic axe checks" classname="accessibility.spec.ts" time="0.846">
+<system-err>
+<![CDATA[(node:972057) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard-smoke.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.77" errors="0">
+<testcase name="dashboard smoke test shows title and changes period" classname="dashboard-smoke.spec.ts" time="0.77">
+<system-err>
+<![CDATA[(node:972071) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.688" errors="0">
+<testcase name="dashboard demo shows readiness score and SIGILL count" classname="dashboard.spec.ts" time="0.688">
+<system-err>
+<![CDATA[(node:972083) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="pipeline-smoke.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.725" errors="0">
+<testcase name="pipeline smoke: readiness, SIGILL alerts and artifacts" classname="pipeline-smoke.spec.ts" time="0.725">
+<system-err>
+<![CDATA[(node:972058) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="sigill-artifacts.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.935" errors="0">
+<testcase name="sigill artifact links respond with mock artifact payload and new alerts increase count" classname="sigill-artifacts.spec.ts" time="0.935">
+<system-err>
+<![CDATA[(node:972064) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="swarmgraph.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="1.029" errors="0">
+<testcase name="SwarmGraph visual smoke" classname="swarmgraph.spec.ts" time="1.029">
+</testcase>
+</testsuite>
+</testsuites>
+>>>>>>> IMPORT (TEXT)
+
+=======
+<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="2.5883220000000002">
+<testsuite name="accessibility.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.846" errors="0">
+<testcase name="accessibility: demo passes basic axe checks" classname="accessibility.spec.ts" time="0.846">
+<system-err>
+<![CDATA[(node:972057) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard-smoke.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.77" errors="0">
+<testcase name="dashboard smoke test shows title and changes period" classname="dashboard-smoke.spec.ts" time="0.77">
+<system-err>
+<![CDATA[(node:972071) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="dashboard.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.688" errors="0">
+<testcase name="dashboard demo shows readiness score and SIGILL count" classname="dashboard.spec.ts" time="0.688">
+<system-err>
+<![CDATA[(node:972083) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="pipeline-smoke.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.725" errors="0">
+<testcase name="pipeline smoke: readiness, SIGILL alerts and artifacts" classname="pipeline-smoke.spec.ts" time="0.725">
+<system-err>
+<![CDATA[(node:972058) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="sigill-artifacts.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="0.935" errors="0">
+<testcase name="sigill artifact links respond with mock artifact payload and new alerts increase count" classname="sigill-artifacts.spec.ts" time="0.935">
+<system-err>
+<![CDATA[(node:972064) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+(Use `node --trace-deprecation ...` to show where the warning was created)
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="swarmgraph.spec.ts" timestamp="2026-01-03T09:25:38.914Z" hostname="" tests="1" failures="0" skipped="0" time="1.029" errors="0">
+<testcase name="SwarmGraph visual smoke" classname="swarmgraph.spec.ts" time="1.029">
+</testcase>
+</testsuite>
+</testsuites>
+>>>>>>> IMPORT (TEXT)

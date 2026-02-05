@@ -1,0 +1,12 @@
+[Unit]
+Description=GPU Swarm Coordinator
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/swarm-coordinator --config /etc/gpu-swarm/coordinator-config.toml
+Restart=on-failure
+User=swarm
+
+[Install]
+WantedBy=multi-user.target
