@@ -16,7 +16,6 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
 from typing import Optional
 from web3 import Web3
@@ -113,8 +112,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
         w3 = Web3(Web3.HTTPProvider(rpc))
         # Add POA middleware for testnets
         w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-        acct = w3.eth.account.from_key(private_key)
-        sender = acct.address
+        # Remote RPC flow not fully implemented - raises RuntimeError below (line 141)
     else:
         from web3.providers.eth_tester import EthereumTesterProvider
         provider = EthereumTesterProvider()
@@ -154,13 +152,22 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     # transfer total tokens to distributor from sender
     total = sum(amounts_wei)
     print(f"Funding distributor {distributor} with total: {total}")
+    # Use minimal ERC20 ABI for token transfer
+    min_abi = [
+        {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
+    ]
+    # For eth-tester this will work via MockToken if we deployed it
     
     # perform transfer via token contract
     # Use minimal ERC20 ABI for token transfers
     if rpc:
-        # build and sign transactions for remote provider
-        raise RuntimeError("Remote RPC flow not implemented in helper; use eth-tester or extend script")
+        # Remote RPC flow requires proper transaction signing and is not fully implemented
+        # Use eth-tester mode for development or extend this function for production use
+        raise RuntimeError("Remote RPC flow not fully implemented; use eth-tester mode (no --rpc flag) or extend script for production")
     else:
+        # token_contract exists in scope when deployed
+        # For eth-tester, attach a minimal ABI for transfer
+        token_contract = w3.eth.contract(address=token, abi=min_abi)
         # Use token_contract to transfer tokens (either from deploy or attached above)
         token_contract.functions.transfer(distributor, total).transact({'from': sender})
         # Use rd_contract to set allocations (either from deploy or attached above)

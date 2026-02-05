@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -20,6 +23,12 @@ wheels/
 .installed.cfg
 *.egg
 
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 # Virtual environments
 venv/
 env/
@@ -36,6 +45,14 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+out/
+*.log
 # Node
 node_modules/
 
