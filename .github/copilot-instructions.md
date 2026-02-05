@@ -63,6 +63,7 @@ Atlas Sphere is a next-generation Layer-1 blockchain with dual virtual machine s
 - Review security implications of storage changes
 - Follow OWASP guidelines for web components
 - Report security vulnerabilities to security@atlas-sphere.io (not via GitHub issues)
+- Security reports receive acknowledgment within 48 hours (see SECURITY.md)
 
 ## Architecture Patterns
 
