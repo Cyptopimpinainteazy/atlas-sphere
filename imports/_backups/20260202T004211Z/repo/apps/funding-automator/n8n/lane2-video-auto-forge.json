@@ -1,0 +1,87 @@
+{
+  "name": "Lane 2 - Video Auto-Forge",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Trigger - Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 250]
+    },
+    {
+      "id": "2",
+      "name": "Load Script File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [420, 250],
+      "parameters": {
+        "filePath": "/data/staging/text.json"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Parse Script",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [700, 250],
+      "parameters": {
+        "functionCode": "const payload = items[0].binary ? JSON.parse(items[0].binary.data.toString()) : items[0].json;\nconst script = payload.script || payload.body || payload.text || '';\nconst segs = [{start:0,end:0.6, text: script.split('.')[0] + '.'},{start:0.6,end:8.5,text: script.replace(/^[^.]*\.?\s*/,'')}];\nreturn [{json:{script,segments:segs,meta:payload}}];"
+      }
+    },
+    {
+      "id": "4",
+      "name": "TTS - Local CLI",
+      "type": "n8n-nodes-base.exec",
+      "typeVersion": 1,
+      "position": [980, 250],
+      "parameters": {
+        "command": "bash",
+        "arguments": ["-lc","# Use local TTS (bark/tortoise) - write script to a file and produce voice.wav\necho \"{{$json.script}}\" > /tmp/nova_script.txt\n# Replace next line with your TTS CLI call (bark/tortoise/etc)\nbark --text_file /tmp/nova_script.txt --out_file /tmp/nova_voice.wav --voice 'NovaFlux' || tortoise-tts --text-file /tmp/nova_script.txt --out /tmp/nova_voice.wav --voice 'NovaFlux'\n# Ensure output path exists and copy to staging\nmkdir -p /data/staging/audio && cp /tmp/nova_voice.wav /data/staging/audio/{{ $json.meta.id || 'voice' }}.wav || true"]
+      }
+    },
+    {
+      "id": "5",
+      "name": "Assemble Video (ffmpeg)",
+      "type": "n8n-nodes-base.exec",
+      "typeVersion": 1,
+      "position": [1260, 250],
+      "parameters": {
+        "command": "bash",
+        "arguments": ["-lc","# Assemble video using ffmpeg templates\n# Input: script, audio at /data/staging/audio/<id>.wav, optional bg video /data/assets/bg_loop.mp4\nID={{ $json.meta.id || 'short' }}\nAUDIO=/data/staging/audio/$ID.wav\nBG=/data/assets/bg_loop.mp4\nOUT=/data/staging/videos/$ID.mp4\nmkdir -p /data/staging/videos\n# Sample command: overlay SRT captions and loop background to audio length\nffmpeg -y -stream_loop -1 -i $BG -i $AUDIO -filter_complex \"[0:v]scale=1080:1920,setsar=1[v];[v][1:a]concat=n=1:v=1:a=1[outv][outa]\" -map [outv] -map [outa] -c:v libx264 -c:a aac -shortest $OUT || true\n# also create thumbnail\nffmpeg -y -i $OUT -ss 00:00:00 -vframes 1 /data/staging/videos/$ID.thumb.jpg || true"]
+      }
+    },
+    {
+      "id": "6",
+      "name": "Write Metadata",
+      "type": "n8n-nodes-base.writeFile",
+      "typeVersion": 1,
+      "position": [1480, 250],
+      "parameters": {
+        "fileName": "/data/staging/videos/{{ $json.meta.id || '' }}.json",
+        "fileContent": "={{ JSON.stringify({id:$json.meta.id||'', script:$json.script, segments:$json.segments, video:`/data/staging/videos/${$json.meta.id||'short'}.mp4`},null,2) }}"
+      }
+    },
+    {
+      "id": "7",
+      "name": "Push to Upload Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1700, 250],
+      "parameters": {
+        "url": "http://localhost:3000/queue/videos",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={ id: $json.meta.id || 'short', path: `/data/staging/videos/${$json.meta.id||'short'}.mp4`, thumb: `/data/staging/videos/${$json.meta.id||'short'}.thumb.jpg`, metadata: $json }",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Trigger - Manual": { "main": [[{"node":"Load Script File","type":"main","index":0}]] },
+    "Load Script File": { "main": [[{"node":"Parse Script","type":"main","index":0}]] },
+    "Parse Script": { "main": [[{"node":"TTS - Local CLI","type":"main","index":0}]] },
+    "TTS - Local CLI": { "main": [[{"node":"Assemble Video (ffmpeg)","type":"main","index":0}]] },
+    "Assemble Video (ffmpeg)": { "main": [[{"node":"Write Metadata","type":"main","index":0}]] },
+    "Write Metadata": { "main": [[{"node":"Push to Upload Queue","type":"main","index":0}]] }
+  }
+}

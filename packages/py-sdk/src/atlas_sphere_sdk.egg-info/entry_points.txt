@@ -1,0 +1,2 @@
+[console_scripts]
+atlas-sphere = atlas_sphere_sdk.cli:main
