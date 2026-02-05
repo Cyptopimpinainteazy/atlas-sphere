@@ -94,6 +94,10 @@ For each tool, ask about integration:
 
 **Tool-Memory:**
 
+8. **Sidecar File** Jacobsen- Does your workflow need persistent state? [session continuity, agent initialization]"
+
+**Tool-Memory:**
+
 8. **Sidecar File** - Does your workflow need persistent state? [session continuity, agent initialization]
 ### 4. Document Core Tools Configuration
 

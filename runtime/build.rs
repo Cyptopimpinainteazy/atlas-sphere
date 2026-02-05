@@ -172,7 +172,7 @@ fn main() {
                         break;
                     } else {
                         println!("cargo:warning=File exists but not valid WASM (size: {}, first 4 bytes: {:?})", 
-                            bytes.len(), 
+                            bytes.len(),
                             bytes.get(0..4).unwrap_or(&[]));
                     }
                 }
