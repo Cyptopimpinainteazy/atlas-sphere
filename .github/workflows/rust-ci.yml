@@ -1,0 +1,34 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/setup-rust@v1
+        with:
+          toolchain: stable
+          components: clippy,rustfmt
+
+      - name: cargo fmt check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: x3-compiler tests
+        run: cargo test -p x3-compiler --manifest-path crates/x3-compiler/Cargo.toml --quiet
+
+      - name: atlas-kernel tests
+        run: cargo test -p pallet-atlas-kernel --manifest-path pallets/atlas-kernel/Cargo.toml --quiet
