@@ -143,7 +143,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     else:
         # attach using pre-compiled ABI
         rd_contract = w3.eth.contract(address=distributor, abi=abi_rd)
-        # Create minimal token contract for transfer - full ABI not available for existing contracts
+        # Create minimal ERC20 token contract for transfer - we don't know the specific token implementation when attaching to existing contracts
         min_abi = [
             {"constant":False,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"type":"function"}
         ]
