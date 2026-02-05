@@ -1,33 +1,3 @@
-"""Simple metrics server for the swarm - serves JSON metrics from out/metrics.json"""
-from flask import Flask, jsonify
-import json
-import os
-
-app = Flask(__name__)
-METRICS_PATH = os.environ.get('X3_METRICS_PATH', 'out/metrics.json')
-
-@app.route('/metrics')
-def metrics():
-    if not os.path.exists(METRICS_PATH):
-        return jsonify({'error': 'no_metrics'}), 404
-    with open(METRICS_PATH, 'r') as fh:
-        data = json.load(fh)
-    return jsonify(data)
-
-@app.route('/ref_app')
-def ref_app_page():
-    from flask import render_template
-    return render_template('ref_app.html')
-
-@app.route('/ref_app/json')
-def ref_app_json():
-    path = os.environ.get('X3_REFAPP_OUT', 'out/ref_app_run.json')
-    if not os.path.exists(path):
-        return jsonify({'error': 'no_runs'}), 404
-    with open(path, 'r') as fh:
-        data = json.load(fh)
-    return jsonify(data)
-
 """Simple metrics server for the swarm - serves JSON metrics from DB and files"""
 from flask import Flask, jsonify
 import json
@@ -79,10 +49,6 @@ def gpu_contrib_json():
         return jsonify(data)
     finally:
         session.close()
-
-@app.route('/health')
-def health():
-    return jsonify({'status': 'ok'})
 
 @app.route('/health')
 def health():

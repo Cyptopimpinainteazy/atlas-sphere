@@ -134,6 +134,7 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
             tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
             print(f'Set allocation tx: {tx_hash.hex()}')
             # also add to gnosis batch data
+            # add to gnosis batch data (build_transaction always includes 'data' field)
             gnosis_batch.append({'to': distributor, 'value': 0, 'data': tx['data']})
         else:
             rd_contract.functions.setAllocation(who, amt).transact({'from': sender})

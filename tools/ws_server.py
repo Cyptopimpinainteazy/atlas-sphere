@@ -14,7 +14,9 @@ try:
     use_nats = True
 except ImportError as e:
     logging.warning(f"NATS library not available: {e}")
+except ImportError:
     use_nats = False
+    print("NATS module not available - WebSocket server will run without NATS integration")
 
 # Set of connected WS clients
 connected_clients = set()
