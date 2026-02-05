@@ -22,6 +22,17 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.abi
+*.bin
+out/
+cache/
+*~
+
+# Vibe Code Assistant - AI Instructions & Prompts
+# Auto-generated AI guidance files - excluded from version control
+.github/instructions/
+.github/prompts/
+how-to-guides/
 
 # Node
 node_modules/
