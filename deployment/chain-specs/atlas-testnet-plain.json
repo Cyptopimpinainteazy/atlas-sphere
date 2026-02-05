@@ -1,0 +1,80 @@
+{
+  "name": "Atlas Sphere Testnet v1",
+  "id": "atlas_testnet_v1",
+  "chainType": "Live",
+  "bootNodes": [
+    "/ip4/127.0.0.1/tcp/30333/p2p/211d3541d4b56a921adaf0b6629e48a09f9840968ebe590bace085ca5bff90d9"
+  ],
+  "telemetryEndpoints": null,
+  "protocolId": "atlas",
+  "properties": {
+    "tokenSymbol": "ATLAS",
+    "tokenDecimals": 12,
+    "ss58Format": 42
+  },
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": "0x"
+      },
+      "aura": {
+        "authorities": [
+          "5CPeHfNX6xdgjBUAZ1GQzYZqWaavaAhf9VbrUzAAZMgpWgE9",
+          "5CzHuk7LRfJ1nVVqa34drnyMLTzaknrPUTBXAuNVrmDJmA4H",
+          "5CJ5HBv1KeMZHWVDveRLHmQA83hs4tsQLf4MvGVk3hD6BNTy"
+        ]
+      },
+      "grandpa": {
+        "authorities": [
+          [
+            "5FvH1nTjxPeNRjnpQbfquNp5ZtDqmbxH1qEKJgtBnfymEAxL",
+            1
+          ],
+          [
+            "5FEdL2irxd3M5fnLetMpVSYY3aFfMVqypSZ9csrPWh3Xz87x",
+            1
+          ],
+          [
+            "5HcAwUc7rYEaPYPYDN2LBW6bN8qZWu88uWqRD79YACqz1mxe",
+            1
+          ]
+        ]
+      },
+      "balances": {
+        "balances": [
+          [
+            "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+            1000000000000000000
+          ],
+          [
+            "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+            1000000000000000000
+          ],
+          [
+            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            1000000000000000000
+          ],
+          [
+            "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+            1000000000000000000
+          ],
+          [
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            1000000000000000000
+          ],
+          [
+            "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+            1000000000000000000
+          ]
+        ]
+      },
+      "transactionPayment": {
+        "multiplier": "1000000000000000000"
+      },
+      "council": {
+        "members": []
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Grafana Dashboard Provisioning
+apiVersion: 1
+
+providers:
+  - name: 'Atlas Sphere Dashboards'
+    orgId: 1
+    folder: 'Atlas Sphere'
+    folderUid: 'atlas-sphere'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
