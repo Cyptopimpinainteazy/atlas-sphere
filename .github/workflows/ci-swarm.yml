@@ -13,10 +13,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_DB: test_swarm
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_swarm
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,7 +42,7 @@ jobs:
             pip install -r requirements.txt
           else
             echo "No requirements.txt found, skipping Python dependencies"
-          fi
+          Commits2fi
 
       - name: Run Alembic migrations
         env:
@@ -192,3 +201,13 @@ jobs:
                 console.log('An open issue with the same title already exists; skipping creation.');
               }
             }
+
+      - name: Upload diagnostic artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evm-sigill-diagnostics
+          path: |
+            artifacts.tgz
+            artifacts/
+            artifact-meta.txt
