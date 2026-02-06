@@ -74,7 +74,7 @@ Feature: $ARGUMENTS
      "errors": [
        {
          "field": "name",
-         "message": "Name is required"
+         "message": "Name is reqfrontend/uired"
        }
      ]
    }
@@ -85,7 +85,7 @@ Feature: $ARGUMENTS
    - Frontend: Matching Zod schemas
 
    ```
-   name: required, 2-100 chars
+   name: reqfrontend/uired, 2-100 chars
    description: optional, max 1000 chars
    email: valid email format
    date: ISO 8601 format
@@ -100,7 +100,7 @@ Feature: $ARGUMENTS
    - 409: Conflict (duplicate)
    - 500: Internal Server Error
 
-6. **Integration requirements**:
+6. **Integration reqfrontend/uirements**:
    - CORS: Allow frontend origin
    - Content-Type: application/json
    - Authentication: Bearer token (if needed)

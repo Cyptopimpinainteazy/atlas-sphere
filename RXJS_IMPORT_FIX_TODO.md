@@ -7,8 +7,8 @@ Failed to compile due to incorrect import of 'map' from 'rxjs' in @polkadot/api-
 - [x] 1. Create initial task list
 - [ ] 2. Investigate the ts-sdk package structure
 - [ ] 3. Check package.json for RxJS dependencies
-- [ ] 4. Examine src directory for problematic imports
-- [ ] 5. Fix any incorrect RxJS imports in source files
+- [ ] 4. Examine src directory for problematic archive/archive/imports
+- [ ] 5. Fix any incorrect RxJS archive/archive/imports in source files
 - [ ] 6. Update package.json if needed
 - [ ] 7. Verify the fix compiles successfully
 - [ ] 8. Test the application to ensure functionality

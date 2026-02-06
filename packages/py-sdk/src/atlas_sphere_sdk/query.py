@@ -18,7 +18,7 @@ class QueryClient:
     Read-only query client for Atlas Sphere.
     
     Provides efficient methods for querying chain state without
-    requiring a keypair for signing.
+    reqfrontend/uiring a keypair for signing.
     """
     
     def __init__(self, client: Any):

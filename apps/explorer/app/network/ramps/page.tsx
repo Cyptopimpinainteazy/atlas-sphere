@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   ArrowUpDown,
   CreditCard,
-  Building2,
+  Bfrontend/uilding2,
   Globe,
   Shield,
   Zap,
@@ -13,7 +13,7 @@ import {
   ExternalLink,
   AlertCircle,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const onramps = [
   {
@@ -116,7 +116,7 @@ export default function RampsPage() {
         </div>
       </section>
 
-      {/* Quick Stats */}
+      {/* Qfrontend/uick Stats */}
       <section className="py-8 border-t border-[#1a1a1a]">
         <div className="container-wide">
           <div className="grid sm:grid-cols-4 gap-6">
@@ -274,11 +274,11 @@ export default function RampsPage() {
                 ))}
               </ul>
               <Link href="/developers/docs" className="btn-primary">
-                Integration Guide
+                Integration Gfrontend/uide
               </Link>
             </div>
             <div className="glass-card p-8 text-center">
-              <Building2 className="w-16 h-16 text-orange-400 mx-auto mb-4" />
+              <Bfrontend/uilding2 className="w-16 h-16 text-orange-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Partner Program</h3>
               <p className="text-gray-400 mb-4">
                 Are you a payment provider? Join our partner program.

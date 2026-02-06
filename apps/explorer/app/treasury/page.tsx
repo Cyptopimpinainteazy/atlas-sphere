@@ -6,7 +6,7 @@ import {
   PieChart,
   TrendingUp,
   Users,
-  Building,
+  Bfrontend/uilding,
   Shield,
   ArrowRight,
   PieChart as PieChartIcon,
@@ -34,7 +34,7 @@ const distributionData = [
   { category: 'DAO Treasury', percentage: 40, amount: '$35.6M', color: 'bg-blue-500', description: 'Community governance & development' },
   { category: 'Development Fund', percentage: 20, amount: '$17.8M', color: 'bg-green-500', description: 'Core development & innovation' },
   { category: 'Marketing', percentage: 10, amount: '$8.9M', color: 'bg-purple-500', description: 'Growth & adoption' },
-  { category: 'Liquidity Pool', percentage: 15, amount: '$13.35M', color: 'bg-orange-500', description: 'Market stability' },
+  { category: 'Liqfrontend/uidity Pool', percentage: 15, amount: '$13.35M', color: 'bg-orange-500', description: 'Market stability' },
   { category: 'Buyback & Burn', percentage: 10, amount: '$8.9M', color: 'bg-pink-500', description: 'Token value enhancement' },
   { category: 'Insurance Fund', percentage: 5, amount: '$4.45M', color: 'bg-red-500', description: 'Risk mitigation' }
 ];
@@ -84,7 +84,7 @@ export default function TreasuryPage() {
       case 'distribution': return <PieChartIcon className="w-5 h-5 text-blue-400" />;
       case 'buyback': return <Zap className="w-5 h-5 text-pink-400" />;
       case 'marketing': return <TrendingUp className="w-5 h-5 text-purple-400" />;
-      case 'development': return <Building className="w-5 h-5 text-green-400" />;
+      case 'development': return <Bfrontend/uilding className="w-5 h-5 text-green-400" />;
       case 'insurance': return <Shield className="w-5 h-5 text-red-400" />;
       default: return <Activity className="w-5 h-5 text-gray-400" />;
     }
@@ -293,7 +293,7 @@ export default function TreasuryPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Qfrontend/uick Actions */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h2 className="text-3xl font-bold text-center text-white mb-8">Treasury Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

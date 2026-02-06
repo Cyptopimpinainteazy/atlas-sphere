@@ -7,7 +7,7 @@ use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage,
+    Bfrontend/uildStorage,
 };
 
 pub type AccountId = u64;
@@ -74,7 +74,7 @@ impl pallet_x3_domain_registry::Config for Test {
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let t = frame_system::GenesisConfig::<Test>::default()
-        .build_storage()
+        .bfrontend/uild_storage()
         .unwrap();
 
     let mut ext = sp_io::TestExternalities::new(t);

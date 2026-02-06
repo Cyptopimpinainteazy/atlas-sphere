@@ -72,7 +72,7 @@
 | ------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------ | --- |
 | **X3/REAPER Domain Language**         | High-perf scripting for trading/agents with explicit gas, atomic blocks, hostcalls | ✅ Spec complete, implementation ~85% | 85% |
 | **X3 Bytecode Format**                | Compact deterministic instruction set (v0.1), register-based                       | ✅ Defined and implemented            | 90% |
-| **X3 Language Spec / Grammar (EBNF)** | Grammar, built-ins, annotations                                                    | ✅ Full spec in docs                  | 95% |
+| **X3 Language Spec / Grammar (EBNF)** | Grammar, bfrontend/uilt-ins, annotations                                                    | ✅ Full spec in docs                  | 95% |
 
 ### Compiler Frontend
 
@@ -167,14 +167,14 @@
 | **Explorer App**                     | Block/tx/account explorer                                    | ✅ Next.js app with components                | 70% |
 | **Wallet App**                       | Wallet UI with stores, hooks                                 | ✅ Complete structure                         | 65% |
 | **DEX App**                          | Decentralized exchange UI                                    | ⚠️ Basic structure                            | 40% |
-| **Analytics App**                    | Analytics dashboard                                          | ⚠️ apps/analytics exists                      | 35% |
+| **Analytics App**                    | Analytics apps/apps/dash-legacy-2-legacy-2board                                          | ⚠️ apps/analytics exists                      | 35% |
 | **Next-Gen UI Features (2030 Mode)** | Holographic previews, 3D explorer, AI doc assistant          | ❌ Not implemented                            | 0%  |
 
 ### Developer Resources
 
 | Item                     | Features/Details                                          | Status                   | %   |
 | ------------------------ | --------------------------------------------------------- | ------------------------ | --- |
-| **Developer Tutorials**  | EVM quickstart, SVM quickstart, cross-VM atomic           | ⚠️ Partial in docs        | 35% |
+| **Developer Tutorials**  | EVM qfrontend/uickstart, SVM qfrontend/uickstart, cross-VM atomic           | ⚠️ Partial in docs        | 35% |
 | **SDK Examples**         | EVM (JS/Ethers), SVM (Rust/Anchor), CLI (Bash)            | ⚠️ atlas-sdk crate exists | 45% |
 | **Docs Repo Structure**  | overview.md, architecture.md, rpc.md, faq.md, security.md | ✅ 16 docs in /docs       | 85% |
 | **Validation Checklist** | QA steps, unit test plan for SDKs                         | ⚠️ Partial                | 40% |
@@ -194,7 +194,7 @@
 | ------------------------------- | ----------------------------------------------- | -------------------------- | --- |
 | **Decentralized Storage Layer** | Filecoin/IPFS subsystem for AI models, receipts | ❌ Not implemented          | 5%  |
 | **Docker/K8s Deployment**       | Dockerfile, deployment scripts                  | ⚠️ Dockerfile exists        | 50% |
-| **CI/CD Pipeline**              | Automated builds/tests                          | ⚠️ GitHub workflows partial | 45% |
+| **CI/CD Pipeline**              | Automated bfrontend/uilds/tests                          | ⚠️ GitHub workflows partial | 45% |
 
 ### Ecosystem Assets (Fundraising/Marketing)
 
@@ -215,7 +215,7 @@
 | Command       | File        | Status            |
 | ------------- | ----------- | ----------------- |
 | `x3 compile`  | compile.rs  | ✅                 |
-| `x3 build`    | build.rs    | ✅                 |
+| `x3 bfrontend/uild`    | bfrontend/uild.rs    | ✅                 |
 | `x3 test`     | test.rs     | ✅                 |
 | `x3 deploy`   | deploy.rs   | ✅                 |
 | `x3 init`     | init.rs     | ✅                 |
@@ -260,9 +260,9 @@
 ### P0 — Blockers for Production
 1. ❌ **Full Frontier EVM Integration** — Core functionality (55% → 100%)
 2. ❌ **Full rBPF SVM Integration** — Core functionality (50% → 100%)
-3. ❌ **RPC WebSocket Endpoint** — Required for real-time UIs
-4. ❌ **IR Versioning Tags** — Required for upgrade safety
-5. ❌ **Gas Model Formalization** — Required for mainnet fees
+3. ❌ **RPC WebSocket Endpoint** — Reqfrontend/uired for real-time UIs
+4. ❌ **IR Versioning Tags** — Reqfrontend/uired for upgrade safety
+5. ❌ **Gas Model Formalization** — Reqfrontend/uired for mainnet fees
 
 ### P1 — High Priority
 6. ❌ **Flashloan Pallet Implementation** — Key DeFi primitive

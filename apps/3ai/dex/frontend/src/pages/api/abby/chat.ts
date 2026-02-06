@@ -13,7 +13,7 @@ export default async function handler(
     const { message } = req.body;
     
     if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+      return res.status(400).json({ error: 'Message is reqfrontend/uired' });
     }
 
     // Process the message with ABBY's AI

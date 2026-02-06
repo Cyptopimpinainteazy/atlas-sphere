@@ -63,8 +63,8 @@ pub struct AIProposal<T: Config> {
     pub payload: BoundedVec<u8, T::MaxAIProposalPayload>,
     /// Expected impact assessment
     pub impact_assessment: ImpactAssessment,
-    /// Simulation requirements
-    pub simulation_requirements: SimulationRequirements,
+    /// Simulation reqfrontend/uirements
+    pub simulation_reqfrontend/uirements: SimulationReqfrontend/uirements,
     /// Proposed at block
     pub proposed_at: BlockNumberFor<T>,
     /// Status
@@ -112,16 +112,16 @@ pub enum Subsystem {
     Storage,
 }
 
-/// Simulation requirements for AI proposals
+/// Simulation reqfrontend/uirements for AI proposals
 #[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
-pub struct SimulationRequirements {
-    /// Required simulation duration (blocks)
+pub struct SimulationReqfrontend/uirements {
+    /// Reqfrontend/uired simulation duration (blocks)
     pub simulation_blocks: u32,
     /// Gas limit for simulation
     pub gas_limit: u64,
-    /// Required success rate (0-100)
+    /// Reqfrontend/uired success rate (0-100)
     pub success_rate_threshold: u8,
-    /// Deterministic test requirements
+    /// Deterministic test reqfrontend/uirements
     pub deterministic_tests: bool,
 }
 
@@ -165,14 +165,14 @@ pub struct StateChange {
     pub new_value: Vec<u8>,
 }
 
-/// Authorization requirements for AI proposals
+/// Authorization reqfrontend/uirements for AI proposals
 #[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
-pub struct AuthorizationRequirements {
-    /// Required multisig approvals
+pub struct AuthorizationReqfrontend/uirements {
+    /// Reqfrontend/uired multisig approvals
     pub multisig_threshold: u32,
     /// Time lock duration (blocks)
     pub time_lock_blocks: BlockNumberFor<T>,
-    /// Required reviewer approvals
+    /// Reqfrontend/uired reviewer approvals
     pub reviewer_approvals: u32,
 }
 

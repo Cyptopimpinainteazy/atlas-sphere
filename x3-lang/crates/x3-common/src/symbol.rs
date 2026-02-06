@@ -232,7 +232,7 @@ pub mod kw {
         EMIT => "emit",
         LOG => "log",
         ASSERT => "assert",
-        REQUIRE => "require",
+        REQUIRE => "reqfrontend/uire",
 
         // Boolean literals
         TRUE => "true",

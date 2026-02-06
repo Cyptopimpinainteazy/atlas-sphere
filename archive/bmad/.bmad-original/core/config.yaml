@@ -1,9 +1,0 @@
-# Core Configuration
-# Generated for Atlas Sphere
-# Version: 6.0.0-alpha.13
-
-user_name: Developer
-bmad_folder: .bmad
-communication_language: en
-document_output_language: en
-output_folder: docs

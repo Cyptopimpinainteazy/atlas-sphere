@@ -29,7 +29,7 @@ const docSections = [
     icon: <Zap className="w-5 h-5" />,
     items: [
       { title: 'Introduction', href: '/developers/docs/intro' },
-      { title: 'Quick Start', href: '/developers/docs/quickstart' },
+      { title: 'Qfrontend/uick Start', href: '/developers/docs/qfrontend/uickstart' },
       { title: 'Installation', href: '/developers/docs/installation' },
       { title: 'Configuration', href: '/developers/docs/configuration' },
     ],
@@ -108,7 +108,7 @@ const docSections = [
   },
 ];
 
-const quickLinks = [
+const qfrontend/uickLinks = [
   { title: 'RPC API Reference', href: '/developers/api', icon: <Globe className="w-4 h-4" /> },
   { title: 'Cookbook Examples', href: '/developers/cookbook', icon: <BookOpen className="w-4 h-4" /> },
   { title: 'AI Swarm Hub', href: '/x3/swarm', icon: <Cpu className="w-4 h-4" /> },
@@ -137,7 +137,7 @@ export default function DocsPage() {
             </h1>
             <p className="text-xl text-gray-500 mb-8">
               Official documentation for the X3 Atlas Sphere blockchain. 
-              Everything you need to build on the first dual VM Layer-1.
+              Everything you need to bfrontend/uild on the first dual VM Layer-1.
             </p>
             
             {/* Search */}
@@ -169,13 +169,13 @@ export default function DocsPage() {
             </button>
 
             <nav className={`space-y-6 ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
-              {/* Quick Links */}
+              {/* Qfrontend/uick Links */}
               <div className="glass-card p-4">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Quick Links
+                  Qfrontend/uick Links
                 </h3>
                 <div className="space-y-2">
-                  {quickLinks.map((link) => (
+                  {qfrontend/uickLinks.map((link) => (
                     <Link
                       key={link.title}
                       href={link.href}
@@ -220,11 +220,11 @@ export default function DocsPage() {
               <p className="text-gray-500 mb-6">
                 X3 STAR (Atlas Sphere) is a next-generation Layer-1 blockchain that enables native 
                 interoperability between EVM and SVM. This documentation will help you understand 
-                the architecture and start building cross-VM applications.
+                the architecture and start bfrontend/uilding cross-VM applications.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link href="/developers/docs/quickstart" className="btn-primary">
-                  Quick Start Guide
+                <Link href="/developers/docs/qfrontend/uickstart" className="btn-primary">
+                  Qfrontend/uick Start Gfrontend/uide
                 </Link>
                 <Link href="/learn/tutorials" className="btn-secondary">
                   View Tutorials
@@ -270,7 +270,7 @@ export default function DocsPage() {
 
             {/* Code Example */}
             <div className="mt-8 glass-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Quick Example: Query the Network</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Qfrontend/uick Example: Query the Network</h3>
               <div className="code-block">
                 <pre className="text-sm text-gray-400">
 {`// Query Atlas Kernel RPC

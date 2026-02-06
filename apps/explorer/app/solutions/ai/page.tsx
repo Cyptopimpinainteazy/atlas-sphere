@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const aiUseCases = [
   {
@@ -41,7 +41,7 @@ const aiUseCases = [
   },
   {
     title: 'Compute Networks',
-    description: 'Build decentralized GPU and compute networks for AI workloads',
+    description: 'Bfrontend/uild decentralized GPU and compute networks for AI workloads',
     icon: <Cpu className="w-6 h-6" />,
     features: ['GPU Marketplace', 'Task Distribution', 'Proof of Compute'],
     color: 'from-orange-500 to-amber-500',
@@ -125,13 +125,13 @@ export default function AISolutionsPage() {
               AI-Powered Blockchain
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Build intelligent applications with AI agents, on-chain ML, and decentralized 
+              Bfrontend/uild intelligent applications with AI agents, on-chain ML, and decentralized 
               compute. X3 STAR provides the infrastructure for the next generation of AI x Crypto.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
                 <Sparkles className="w-4 h-4 mr-2" />
-                Start Building
+                Start Bfrontend/uilding
               </Link>
               <Link href="/developers/cookbook" className="btn-secondary">
                 View Examples
@@ -247,7 +247,7 @@ export default function AISolutionsPage() {
       <section className="py-16 border-t border-[#1a1a1a]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Build the Future of AI x Crypto
+            Bfrontend/uild the Future of AI x Crypto
           </h2>
           <p className="text-gray-400 mb-8">
             Get started with X3 STAR's AI infrastructure and join the next wave of intelligent applications.

@@ -21,8 +21,8 @@ The `atlas-dns-server` binary target is not recognized by cargo when running `ca
 - [ ] 2.4 Test workspace-wide binary recognition
 - [ ] 2.5 Update any references to use correct binary name
 
-### Phase 3: Build & Run Verification
-- [ ] 3.1 Build atlas-dns-server from workspace root
+### Phase 3: Bfrontend/uild & Run Verification
+- [ ] 3.1 Bfrontend/uild atlas-dns-server from workspace root
 - [ ] 3.2 Run atlas-dns-server binary from workspace root
 - [ ] 3.3 Test DNS resolution for configured domains
 - [ ] 3.4 Verify all frontend domains are working

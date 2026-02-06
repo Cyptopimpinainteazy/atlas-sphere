@@ -21,14 +21,14 @@
 - `DebtTokens.sol` - Variable/stable debt (546 lines)
 - `MathLibraries.sol` - Math utilities (427 lines)
 - `FlashLoanReceivers.sol` - Flash loan handlers (343 lines)
-- Tests: Pool.t.sol (626 lines), Liquidation.t.sol (530 lines)
+- Tests: Pool.t.sol (626 lines), Liqfrontend/uidation.t.sol (530 lines)
 - Deploy script: 297 lines
 
 ### 2. **Cross-Chain Position Manager (CCPM)** (1,218 lines)
 - `PositionManager.sol` - Full cross-chain position management
 - Position types: SPOT, PERPETUAL, LP, LENDING, STAKING
 - Cross-chain messaging via LayerZero/Axelar
-- Risk management: liquidation, margin calls, stop-loss
+- Risk management: liqfrontend/uidation, margin calls, stop-loss
 
 ### 3. **Treasury System** (880 lines)
 - `AtlasTreasury.sol` - Unified fee collection & distribution
@@ -140,10 +140,10 @@ contracts/
 
 ## 🚀 Deployment
 
-### Build Contracts
+### Bfrontend/uild Contracts
 ```bash
-cd contracts/ai-swarm && forge build
-cd contracts/lending && forge build
+cd contracts/ai-swarm && forge bfrontend/uild
+cd contracts/lending && forge bfrontend/uild
 ```
 
 ### Run Tests
@@ -186,7 +186,7 @@ PRIVATE_KEY=xxx forge script script/Deploy.s.sol --rpc-url $RPC --broadcast
    - Integrate prediction markets with evolution
 
 3. **Frontend** - Complete UI components:
-   - AI Swarm dashboard
+   - AI Swarm apps/apps/dash-legacy-2-legacy-2board
    - Prediction market interface
    - GPU marketplace UI
 

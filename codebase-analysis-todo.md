@@ -52,7 +52,7 @@
 
 ## Phase 9: Documentation & Specifications
 - [ ] Review all specification documents
-- [ ] Check implementation guides
+- [ ] Check implementation gfrontend/uides
 - [ ] Analyze roadmap and status files
 - [ ] Examine TODO and completion reports
 

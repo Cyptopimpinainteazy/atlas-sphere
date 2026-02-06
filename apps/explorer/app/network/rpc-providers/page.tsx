@@ -14,7 +14,7 @@ import {
   Clock,
   Users,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const rpcProviders = [
   {
@@ -235,10 +235,10 @@ export default function RPCProvidersPage() {
         </div>
       </section>
 
-      {/* Quick Start */}
+      {/* Qfrontend/uick Start */}
       <section className="py-16">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">Quick Start</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Qfrontend/uick Start</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="glass-card p-0 overflow-hidden">
@@ -346,7 +346,7 @@ console.log('X3 Balance:', balance.toHuman());`}</code>
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">
-              Node Setup Guide
+              Node Setup Gfrontend/uide
             </Link>
             <Link href="/community/forum" className="btn-secondary">
               Provider Community

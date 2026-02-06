@@ -7,10 +7,10 @@ export default function AnchorPage() {
   return (
     <DocLayout
       title="Anchor Framework"
-      description="Build SVM programs faster with the Anchor framework"
+      description="Bfrontend/uild SVM programs faster with the Anchor framework"
     >
       <p className="lead text-xl text-gray-400 mb-8">
-        Anchor is the recommended framework for building SVM programs on X3 Atlas Sphere.
+        Anchor is the recommended framework for bfrontend/uilding SVM programs on X3 Atlas Sphere.
         It provides safety checks, boilerplate reduction, and a powerful IDL system.
       </p>
 
@@ -69,7 +69,7 @@ pub mod counter {
 
     pub fn decrement(ctx: Context<Update>) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
-        require!(counter.count > 0, ErrorCode::CounterUnderflow);
+        reqfrontend/uire!(counter.count > 0, ErrorCode::CounterUnderflow);
         counter.count = counter.count.checked_sub(1).unwrap();
         msg!("Counter decremented to: {}", counter.count);
         Ok(())
@@ -148,7 +148,7 @@ pub enum MyError {
 }
 
 // Usage
-require!(amount <= MAX_AMOUNT, MyError::AmountExceedsMax(MAX_AMOUNT));`}
+reqfrontend/uire!(amount <= MAX_AMOUNT, MyError::AmountExceedsMax(MAX_AMOUNT));`}
       </CodeBlock>
 
       <h3>Events</h3>
@@ -180,7 +180,7 @@ describe("counter", () => {
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Counter as Program<Counter>;
-  const counter = anchor.web3.Keypair.generate();
+  const counter = anchor.frontend/web3.Keypair.generate();
 
   it("Initializes the counter", async () => {
     await program.methods
@@ -188,7 +188,7 @@ describe("counter", () => {
       .accounts({
         counter: counter.publicKey,
         authority: provider.wallet.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
+        systemProgram: anchor.frontend/web3.SystemProgram.programId,
       })
       .signers([counter])
       .rpc();
@@ -212,10 +212,10 @@ describe("counter", () => {
 });`}
       </CodeBlock>
 
-      <h2>Building and Testing</h2>
+      <h2>Bfrontend/uilding and Testing</h2>
       <CodeBlock language="bash">
-{`# Build program
-anchor build
+{`# Bfrontend/uild program
+anchor bfrontend/uild
 
 # Run tests
 anchor test

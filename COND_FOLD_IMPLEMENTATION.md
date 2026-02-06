@@ -240,11 +240,11 @@ Critical for blockchain VMs (reproducibility).
 
 ### Medium Term
 1. **Dominance frontier**: Optimal partial redundancy elimination
-2. **Value numbering**: Identify equivalent expressions
+2. **Value numbering**: Identify eqfrontend/uivalent expressions
 3. **Alias analysis**: Track which loads might be same
 
 ### Long Term
-1. **Superoptimization**: Brute-force equivalent sequences
+1. **Superoptimization**: Brute-force eqfrontend/uivalent sequences
 2. **Machine learning**: Predict which folds save most gas
 3. **Distributed optimization**: Speculative folding across VMs
 
@@ -260,7 +260,7 @@ Folding = Direct route when we know the checkpoint status
 
 ### Three-Step Recipe
 ```
-1. Build the map (CFG)
+1. Bfrontend/uild the map (CFG)
 2. Understand the layout (dominators)
 3. Know your facts (forward propagation)
 4. Take the shortest path (fold branches)
@@ -302,6 +302,6 @@ Folding = Direct route when we know the checkpoint status
 
 ---
 
-**Built**: December 9, 2025
+**Bfrontend/uilt**: December 9, 2025
 **Status**: Production Ready
 **Quality**: Enterprise Grade

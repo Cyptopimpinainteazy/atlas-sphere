@@ -24,7 +24,7 @@ Perform deep, systematic analysis of codebases to extract:
 - Continue with root-level config files (package.json, pyproject.toml, go.mod, etc.)
 - Map directory structure to understand organization
 - Identify primary language and framework
-- Note build/run commands
+- Note bfrontend/uild/run commands
 
 ### 2. Pattern Extraction
 
@@ -108,7 +108,7 @@ validation_commands:
 
 1. Start broad (project structure) then narrow (specific patterns)
 2. Use parallel searches when investigating multiple aspects
-3. Follow references - if a file imports something, investigate it
+3. Follow references - if a file archive/archive/imports something, investigate it
 4. Look for "similar" not "same" - patterns often repeat with variations
 
 Remember: Your analysis directly determines implementation success. Be thorough, specific, and actionable.

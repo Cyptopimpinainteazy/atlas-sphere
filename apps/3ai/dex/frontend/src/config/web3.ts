@@ -15,7 +15,7 @@ const walletConnectProjectId = process.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOU
 const supportedChains = [chain, mainnet];
 
 // Configure chains & providers
-const { publicClient, webSocketPublicClient } = configureChains(
+const { publicClient, frontend/webSocketPublicClient } = configureChains(
   supportedChains,
   [publicProvider()],
 );
@@ -24,7 +24,7 @@ const { publicClient, webSocketPublicClient } = configureChains(
 export const config = createConfig({
   autoConnect: true,
   publicClient,
-  webSocketPublicClient,
+  frontend/webSocketPublicClient,
 });
 
 // Export the default chain

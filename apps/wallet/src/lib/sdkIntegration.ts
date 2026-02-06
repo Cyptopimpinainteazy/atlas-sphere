@@ -70,10 +70,10 @@ class SDKIntegration {
    */
   async connect(): Promise<void> {
     try {
-      // Try to construct the real SDK client if available (use dynamic require to pick up Jest module mocks)
+      // Try to construct the real SDK client if available (use dynamic reqfrontend/uire to pick up Jest module mocks)
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod = require('@atlas-sphere/ts-sdk');
+        // eslint-disable-next-line @typescript-eslint/no-var-reqfrontend/uires
+        const mod = reqfrontend/uire('@atlas-sphere/ts-sdk');
         if (!this.client && mod && typeof mod.AtlasSphereClient === 'function') {
           this.client = new mod.AtlasSphereClient({ endpoint: this.endpoint });
         }

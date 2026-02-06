@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, BoxProps } from '@chakra-ui/react';
+import { Box, BoxProps } from '@chakra-frontend/frontend/ui/react';
 
 interface VideoBackgroundProps extends BoxProps {
   videoSrc: string;

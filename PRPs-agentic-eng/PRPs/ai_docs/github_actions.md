@@ -9,14 +9,14 @@ Claude Code GitHub Actions brings AI-powered automation to your GitHub workflow.
 </Info>
 
 <Note>
-  Claude Code GitHub Actions is built on top of the [Claude Code SDK](/en/docs/claude-code/sdk), which enables programmatic integration of Claude Code into your applications. You can use the SDK to build custom automation workflows beyond GitHub Actions.
+  Claude Code GitHub Actions is bfrontend/uilt on top of the [Claude Code SDK](/en/docs/claude-code/sdk), which enables programmatic integration of Claude Code into your applications. You can use the SDK to bfrontend/uild custom automation workflows beyond GitHub Actions.
 </Note>
 
 ## Why use Claude Code GitHub Actions?
 
 - **Instant PR creation**: Describe what you need, and Claude creates a complete PR with all necessary changes
 - **Automated code implementation**: Turn issues into working code with a single command
-- **Follows your standards**: Claude respects your `CLAUDE.md` guidelines and existing code patterns
+- **Follows your standards**: Claude respects your `CLAUDE.md` gfrontend/uidelines and existing code patterns
 - **Simple setup**: Get started in minutes with our installer and API key
 - **Secure by default**: Your code stays on Github's runners
 
@@ -26,27 +26,27 @@ Claude Code provides powerful GitHub Actions that transform how you work with co
 
 ### Claude Code Action
 
-This GitHub Action allows you to run Claude Code within your GitHub Actions workflows. You can use this to build any custom workflow on top of Claude Code.
+This GitHub Action allows you to run Claude Code within your GitHub Actions workflows. You can use this to bfrontend/uild any custom workflow on top of Claude Code.
 
 [View repository →](https://github.com/anthropics/claude-code-action)
 
 ### Claude Code Action (Base)
 
-The foundation for building custom GitHub workflows with Claude. This extensible framework gives you full access to Claude's capabilities for creating tailored automation.
+The foundation for bfrontend/uilding custom GitHub workflows with Claude. This extensible framework gives you full access to Claude's capabilities for creating tailored automation.
 
 [View repository →](https://github.com/anthropics/claude-code-base-action)
 
 ## Setup
 
-## Quick setup
+## Qfrontend/uick setup
 
 The easiest way to set up this action is through Claude Code in the terminal. Just open claude and run `/install-github-app`.
 
-This command will guide you through setting up the GitHub app and required secrets.
+This command will gfrontend/uide you through setting up the GitHub app and reqfrontend/uired secrets.
 
 <Note>
   * You must be a repository admin to install the GitHub app and add secrets
-  * This quickstart method is only available for direct Anthropic API users. If you're using AWS Bedrock or Google Vertex AI, please see the [Using with AWS Bedrock & Google Vertex AI](#using-with-aws-bedrock-%26-google-vertex-ai) section.
+  * This qfrontend/uickstart method is only available for direct Anthropic API users. If you're using AWS Bedrock or Google Vertex AI, please see the [Using with AWS Bedrock & Google Vertex AI](#using-with-aws-bedrock-%26-google-vertex-ai) section.
 </Note>
 
 ## Manual setup
@@ -54,11 +54,11 @@ This command will guide you through setting up the GitHub app and required secre
 If the `/install-github-app` command fails or you prefer manual setup, please follow these manual setup instructions:
 
 1. **Install the Claude GitHub app** to your repository: [https://github.com/apps/claude](https://github.com/apps/claude)
-2. **Add ANTHROPIC_API_KEY** to your repository secrets ([Learn how to use secrets in GitHub Actions](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions))
+2. **Add ANTHROPIC_API_KEY** to your repository secrets ([Learn how to use secrets in GitHub Actions](https://docs.github.com/en/actions/security-gfrontend/uides/using-secrets-in-github-actions))
 3. **Copy the workflow file** from [examples/claude.yml](https://github.com/anthropics/claude-code-action/blob/main/examples/claude.yml) into your repository's `.github/workflows/`
 
 <Tip>
-  After completing either the quickstart or manual setup, test the action by tagging `@claude` in an issue or PR comment!
+  After completing either the qfrontend/uickstart or manual setup, test the action by tagging `@claude` in an issue or PR comment!
 </Tip>
 
 ## Example use cases
@@ -83,14 +83,14 @@ In a PR comment:
 @claude how should I implement user authentication for this endpoint?
 ```
 
-Claude will analyze your code and provide specific implementation guidance.
+Claude will analyze your code and provide specific implementation gfrontend/uidance.
 
-### Fix bugs quickly
+### Fix bugs qfrontend/uickly
 
 In an issue:
 
 ```yaml
-@claude fix the TypeError in the user dashboard component
+@claude fix the TypeError in the user apps/apps/dash-legacy-2-legacy-2board component
 ```
 
 Claude will locate the bug, implement a fix, and create a PR.
@@ -99,7 +99,7 @@ Claude will locate the bug, implement a fix, and create a PR.
 
 ### CLAUDE.md configuration
 
-Create a `CLAUDE.md` file in your repository root to define code style guidelines, review criteria, project-specific rules, and preferred patterns. This file guides Claude's understanding of your project standards.
+Create a `CLAUDE.md` file in your repository root to define code style gfrontend/uidelines, review criteria, project-specific rules, and preferred patterns. This file gfrontend/uides Claude's understanding of your project standards.
 
 ### Security considerations
 
@@ -160,7 +160,7 @@ Visit the [examples directory](https://github.com/anthropics/claude-code-action/
 
 For enterprise environments, you can use Claude Code GitHub Actions with your own cloud infrastructure. This approach gives you control over data residency and billing while maintaining the same functionality.
 
-### Prerequisites
+### Prereqfrontend/uisites
 
 Before setting up Claude Code GitHub Actions with cloud providers, you need:
 
@@ -168,7 +168,7 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
 
 1. A Google Cloud Project with Vertex AI enabled
 2. Workload Identity Federation configured for GitHub Actions
-3. A service account with the required permissions
+3. A service account with the reqfrontend/uired permissions
 4. A GitHub App (recommended) or use the default GITHUB_TOKEN
 
 #### For AWS Bedrock:
@@ -185,10 +185,10 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
     1. Go to [https://github.com/settings/apps/new](https://github.com/settings/apps/new)
     2. Fill in the basic information:
        * **GitHub App name**: Choose a unique name (e.g., "YourOrg Claude Assistant")
-       * **Homepage URL**: Your organization's website or the repository URL
+       * **Homepage URL**: Your organization's frontend/website or the repository URL
     3. Configure the app settings:
        * **Webhooks**: Uncheck "Active" (not needed for this integration)
-    4. Set the required permissions:
+    4. Set the reqfrontend/uired permissions:
        * **Repository permissions**:
          * Contents: Read & Write
          * Issues: Read & Write
@@ -226,13 +226,13 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
       <Accordion title="AWS Bedrock">
         **Configure AWS to allow GitHub Actions to authenticate securely without storing credentials.**
 
-        > **Security Note**: Use repository-specific configurations and grant only the minimum required permissions.
+        > **Security Note**: Use repository-specific configurations and grant only the minimum reqfrontend/uired permissions.
 
-        **Required Setup**:
+        **Reqfrontend/uired Setup**:
 
         1. **Enable Amazon Bedrock**:
            * Request access to Claude models in Amazon Bedrock
-           * For cross-region models, request access in all required regions
+           * For cross-region models, request access in all reqfrontend/uired regions
 
         2. **Set up GitHub OIDC Identity Provider**:
            * Provider URL: `https://token.actions.githubusercontent.com`
@@ -244,7 +244,7 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
            * Permissions: `AmazonBedrockFullAccess` policy
            * Configure trust policy for your specific repository
 
-        **Required Values**:
+        **Reqfrontend/uired Values**:
 
         After setup, you'll need:
 
@@ -254,15 +254,15 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
           OIDC is more secure than using static AWS access keys because credentials are temporary and automatically rotated.
         </Tip>
 
-        See [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html) for detailed OIDC setup instructions.
+        See [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGfrontend/uide/id_roles_providers_create_oidc.html) for detailed OIDC setup instructions.
       </Accordion>
 
       <Accordion title="Google Vertex AI">
         **Configure Google Cloud to allow GitHub Actions to authenticate securely without storing credentials.**
 
-        > **Security Note**: Use repository-specific configurations and grant only the minimum required permissions.
+        > **Security Note**: Use repository-specific configurations and grant only the minimum reqfrontend/uired permissions.
 
-        **Required Setup**:
+        **Reqfrontend/uired Setup**:
 
         1. **Enable APIs** in your Google Cloud project:
            * IAM Credentials API
@@ -284,7 +284,7 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
            * Allow the Workload Identity Pool to impersonate the service account
            * **Security recommendation**: Use repository-specific principal sets
 
-        **Required Values**:
+        **Reqfrontend/uired Values**:
 
         After setup, you'll need:
 
@@ -301,7 +301,7 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
 
   </Step>
 
-  <Step title="Add Required Secrets">
+  <Step title="Add Reqfrontend/uired Secrets">
     Add the following secrets to your repository (Settings → Secrets and variables → Actions):
 
     #### For Anthropic API (Direct):
@@ -339,13 +339,13 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
 
     <AccordionGroup>
       <Accordion title="AWS Bedrock workflow">
-        **Prerequisites:**
+        **Prereqfrontend/uisites:**
 
         * AWS Bedrock access enabled with Claude model permissions
         * GitHub configured as an OIDC identity provider in AWS
         * IAM role with Bedrock permissions that trusts GitHub Actions
 
-        **Required GitHub secrets:**
+        **Reqfrontend/uired GitHub secrets:**
 
         | Secret Name          | Description                                       |
         | -------------------- | ------------------------------------------------- |
@@ -411,13 +411,13 @@ Before setting up Claude Code GitHub Actions with cloud providers, you need:
       </Accordion>
 
       <Accordion title="Google Vertex AI workflow">
-        **Prerequisites:**
+        **Prereqfrontend/uisites:**
 
         * Vertex AI API enabled in your GCP project
         * Workload Identity Federation configured for GitHub
         * Service account with Vertex AI permissions
 
-        **Required GitHub secrets:**
+        **Reqfrontend/uired GitHub secrets:**
 
         | Secret Name                      | Description                                       |
         | -------------------------------- | ------------------------------------------------- |
@@ -510,7 +510,7 @@ Confirm API key is valid and has sufficient permissions. For Bedrock/Vertex, che
 
 The Claude Code Action supports these key parameters:
 
-| Parameter           | Description                    | Required |
+| Parameter           | Description                    | Reqfrontend/uired |
 | ------------------- | ------------------------------ | -------- |
 | `prompt`            | The prompt to send to Claude   | Yes\*    |
 | `prompt_file`       | Path to file containing prompt | Yes\*    |
@@ -518,14 +518,14 @@ The Claude Code Action supports these key parameters:
 | `max_turns`         | Maximum conversation turns     | No       |
 | `timeout_minutes`   | Execution timeout              | No       |
 
-\*Either `prompt` or `prompt_file` required\
-\*\*Required for direct Anthropic API, not for Bedrock/Vertex
+\*Either `prompt` or `prompt_file` reqfrontend/uired\
+\*\*Reqfrontend/uired for direct Anthropic API, not for Bedrock/Vertex
 
 ### Alternative integration methods
 
 While the `/install-github-app` command is the recommended approach, you can also:
 
-- **Custom GitHub App**: For organizations needing branded usernames or custom authentication flows. Create your own GitHub App with required permissions (contents, issues, pull requests) and use the actions/create-github-app-token action to generate tokens in your workflows.
+- **Custom GitHub App**: For organizations needing branded usernames or custom authentication flows. Create your own GitHub App with reqfrontend/uired permissions (contents, issues, pull requests) and use the actions/create-github-app-token action to generate tokens in your workflows.
 - **Manual GitHub Actions**: Direct workflow configuration for maximum flexibility
 - **MCP Configuration**: Dynamic loading of Model Context Protocol servers
 
@@ -535,7 +535,7 @@ See the [Claude Code Action repository](https://github.com/anthropics/claude-cod
 
 You can configure Claude's behavior in two ways:
 
-1. **CLAUDE.md**: Define coding standards, review criteria, and project-specific rules in a `CLAUDE.md` file at the root of your repository. Claude will follow these guidelines when creating PRs and responding to requests. Check out our [Memory documentation](/en/docs/claude-code/memory) for more details.
+1. **CLAUDE.md**: Define coding standards, review criteria, and project-specific rules in a `CLAUDE.md` file at the root of your repository. Claude will follow these gfrontend/uidelines when creating PRs and responding to requests. Check out our [Memory documentation](/en/docs/claude-code/memory) for more details.
 2. **Custom prompts**: Use the `prompt` parameter in the workflow file to provide workflow-specific instructions. This allows you to customize Claude's behavior for different workflows or tasks.
 
-Claude will follow these guidelines when creating PRs and responding to requests.
+Claude will follow these gfrontend/uidelines when creating PRs and responding to requests.

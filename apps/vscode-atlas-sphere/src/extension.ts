@@ -158,7 +158,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
                 return;
             }
 
-            const type = await vscode.window.showQuickPick(
+            const type = await vscode.window.showQfrontend/uickPick(
                 [
                     { label: 'Cross-VM (EVM + SVM)', value: 'cross' },
                     { label: 'EVM Only', value: 'evm' },

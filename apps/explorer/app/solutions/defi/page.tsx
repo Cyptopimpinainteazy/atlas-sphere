@@ -15,14 +15,14 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const defiProducts = [
   {
     title: 'Decentralized Exchanges',
-    description: 'Build AMMs and order books that span both EVM and SVM with unified liquidity',
+    description: 'Bfrontend/uild AMMs and order books that span both EVM and SVM with unified liqfrontend/uidity',
     icon: <ArrowLeftRight className="w-6 h-6" />,
-    features: ['Cross-VM Swaps', 'Unified Liquidity', 'MEV Protection'],
+    features: ['Cross-VM Swaps', 'Unified Liqfrontend/uidity', 'MEV Protection'],
     color: 'from-orange-500 to-amber-500',
   },
   {
@@ -33,10 +33,10 @@ const defiProducts = [
     color: 'from-blue-500 to-cyan-500',
   },
   {
-    title: 'Liquidity Provision',
-    description: 'Provide liquidity across both VMs and earn rewards from unified pools',
+    title: 'Liqfrontend/uidity Provision',
+    description: 'Provide liqfrontend/uidity across both VMs and earn rewards from unified pools',
     icon: <Droplets className="w-6 h-6" />,
-    features: ['Single-sided LP', 'Concentrated Liquidity', 'Auto-compounding'],
+    features: ['Single-sided LP', 'Concentrated Liqfrontend/uidity', 'Auto-compounding'],
     color: 'from-emerald-500 to-green-500',
   },
   {
@@ -55,13 +55,13 @@ const advantages = [
     icon: <Zap className="w-5 h-5" />,
   },
   {
-    title: 'Unified Liquidity',
-    description: 'Access liquidity from both virtual machines without bridging delays',
+    title: 'Unified Liqfrontend/uidity',
+    description: 'Access liqfrontend/uidity from both virtual machines without bridging delays',
     icon: <Droplets className="w-5 h-5" />,
   },
   {
     title: 'MEV Protection',
-    description: 'Built-in ordering guarantees prevent front-running and sandwich attacks',
+    description: 'Bfrontend/uilt-in ordering guarantees prevent front-running and sandwich attacks',
     icon: <Shield className="w-5 h-5" />,
   },
   {
@@ -75,7 +75,7 @@ const protocols = [
   { name: 'X3 Swap', type: 'DEX', tvl: '$45M', description: 'Cross-VM AMM' },
   { name: 'Atlas Lend', type: 'Lending', tvl: '$32M', description: 'Unified lending' },
   { name: 'Sphere Yield', type: 'Yield', tvl: '$28M', description: 'Yield optimizer' },
-  { name: 'Dual Pool', type: 'Liquidity', tvl: '$21M', description: 'Cross-VM pools' },
+  { name: 'Dual Pool', type: 'Liqfrontend/uidity', tvl: '$21M', description: 'Cross-VM pools' },
 ];
 
 const codeExample = `// Execute a cross-VM swap
@@ -116,12 +116,12 @@ export default function DeFiSolutionsPage() {
               Cross-VM DeFi
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Build DeFi protocols that leverage both EVM and SVM. Unified liquidity, 
+              Bfrontend/uild DeFi protocols that leverage both EVM and SVM. Unified liqfrontend/uidity, 
               atomic swaps, and composability across virtual machines.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
-                Start Building
+                Start Bfrontend/uilding
               </Link>
               <Link href="/developers/cookbook" className="btn-secondary">
                 View Examples
@@ -134,7 +134,7 @@ export default function DeFiSolutionsPage() {
       {/* Products */}
       <section className="py-16 border-t border-[#1a1a1a]">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">DeFi Building Blocks</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">DeFi Bfrontend/uilding Blocks</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             {defiProducts.map((product, index) => (
@@ -181,7 +181,7 @@ export default function DeFiSolutionsPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Simple Cross-VM DeFi</h2>
               <p className="text-gray-400 mb-6">
-                Build complex DeFi operations with simple, atomic transactions. 
+                Bfrontend/uild complex DeFi operations with simple, atomic transactions. 
                 The Atlas Kernel handles cross-VM coordination automatically.
               </p>
               <ul className="space-y-3">
@@ -189,7 +189,7 @@ export default function DeFiSolutionsPage() {
                   'Atomic execution across both VMs',
                   'Single transaction, single fee',
                   'Automatic rollback on failure',
-                  'Built-in MEV protection',
+                  'Bfrontend/uilt-in MEV protection',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center text-gray-400">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-3" />
@@ -235,10 +235,10 @@ export default function DeFiSolutionsPage() {
       <section className="py-16 border-t border-[#1a1a1a]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Build the Future of DeFi
+            Bfrontend/uild the Future of DeFi
           </h2>
           <p className="text-gray-400 mb-8">
-            Get started with X3 STAR's DeFi primitives and build protocols that span both VMs.
+            Get started with X3 STAR's DeFi primitives and bfrontend/uild protocols that span both VMs.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">

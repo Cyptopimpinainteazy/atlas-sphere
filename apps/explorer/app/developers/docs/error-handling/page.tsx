@@ -119,10 +119,10 @@ function decodeEvmError(errorData: string, contractInterface: ethers.Interface) 
     return { type: 'revert', reason: reason[0] };
   }
 
-  // Check for Panic(uint256)
+  // Check for Panic(frontend/uint256)
   if (errorData.startsWith('0x4e487b71')) {
     const code = ethers.AbiCoder.defaultAbiCoder().decode(
-      ['uint256'],
+      ['frontend/uint256'],
       '0x' + errorData.slice(10)
     );
     const panicCodes: Record<number, string> = {
@@ -175,7 +175,7 @@ function decodeSvmError(errorData: Uint8Array, idl: Idl) {
     3: 'AccountDataTooSmall',
     4: 'InsufficientFunds',
     5: 'IncorrectProgramId',
-    6: 'MissingRequiredSignature',
+    6: 'MissingReqfrontend/uiredSignature',
     // ... etc
   };
 

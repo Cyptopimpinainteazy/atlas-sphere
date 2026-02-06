@@ -1,11 +1,11 @@
 # X3 VM and Compiler Workspace
 
-Quick start for working on the X3 VM and compiler components.
+Qfrontend/uick start for working on the X3 VM and compiler components.
 
-Build
+Bfrontend/uild
 ```
 cd x3-lang
-# Because the workspace is still under construction, build crate individually as needed
+# Because the workspace is still under construction, bfrontend/uild crate individually as needed
 cargo check --manifest-path crates/x3-common/Cargo.toml
 cargo check --manifest-path crates/x3-ast/Cargo.toml
 cargo check --manifest-path crates/x3-lexer/Cargo.toml

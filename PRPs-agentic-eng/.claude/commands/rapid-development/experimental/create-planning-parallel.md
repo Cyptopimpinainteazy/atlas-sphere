@@ -23,7 +23,7 @@ Prompt: Research the market landscape for "$ARGUMENTS". Conduct deep analysis of
 - Market gaps and unmet needs
 - Target audience and user segments
 
-Focus purely on research - do not write any code. Use web search extensively. Return a comprehensive market analysis report with specific data points and insights.
+Focus purely on research - do not write any code. Use frontend/frontend/web search extensively. Return a comprehensive market analysis report with specific data points and insights.
 ```
 
 #### Agent 2: Technical Feasibility
@@ -37,7 +37,7 @@ Prompt: Analyze technical feasibility for "$ARGUMENTS". Research and evaluate:
 - Technical challenges and solutions
 - Development effort estimation
 
-Focus on research only - no code implementation. Use web search for current best practices. Return technical recommendations with pros/cons analysis.
+Focus on research only - no code implementation. Use frontend/frontend/web search for current best practices. Return technical recommendations with pros/cons analysis.
 ```
 
 #### Agent 3: User Experience Research
@@ -47,25 +47,25 @@ Prompt: Research user experience patterns for "$ARGUMENTS". Investigate:
 - User journey mapping and flow examples
 - Pain points in existing solutions
 - UX best practices and design patterns
-- Accessibility standards and requirements
+- Accessibility standards and reqfrontend/uirements
 - User interface trends and innovations
 - Usability testing insights from similar products
 
-Research only - no design creation. Use web search for UX case studies. Return UX analysis with actionable recommendations.
+Research only - no design creation. Use frontend/frontend/web search for UX case studies. Return UX analysis with actionable recommendations.
 ```
 
 #### Agent 4: Best Practices & Compliance
 ```
 Task: Industry Standards Research
 Prompt: Research industry best practices for "$ARGUMENTS". Cover:
-- Security standards and compliance requirements
+- Security standards and compliance reqfrontend/uirements
 - Data privacy and protection regulations
 - Performance benchmarks and KPIs
 - Quality assurance methodologies
 - Risk management practices
 - Legal and regulatory considerations
 
-Research focus only. Use web search for compliance guides. Return comprehensive best practices guide with specific standards.
+Research focus only. Use frontend/frontend/web search for compliance gfrontend/uides. Return comprehensive best practices gfrontend/uide with specific standards.
 ```
 
 ## Phase 2: Research Synthesis & Analysis
@@ -87,7 +87,7 @@ Once all agents complete their research, synthesize the findings into:
 ### User Experience Blueprint
 - User journey mapping
 - Key interaction patterns
-- Accessibility requirements
+- Accessibility reqfrontend/uirements
 - Design system recommendations
 
 ### Implementation Readiness
@@ -96,7 +96,7 @@ Once all agents complete their research, synthesize the findings into:
 - Success metrics and KPIs
 - Quality gates and validation
 
-## Phase 3: User Validation & Requirements Gathering
+## Phase 3: User Validation & Reqfrontend/uirements Gathering
 
 ### Critical Questions for User
 Before generating the final PRD, ask the user to clarify:
@@ -127,13 +127,13 @@ Using the synthesized research and user input, create a comprehensive PRD follow
 
 ### PRD Output Template
 ```markdown
-# Product Requirements Document: [Feature Name]
+# Product Reqfrontend/uirements Document: [Feature Name]
 
 ## 1. Executive Summary
 - Problem statement
 - Proposed solution
 - Success criteria
-- Resource requirements
+- Resource reqfrontend/uirements
 
 ## 2. Market Analysis
 [Insert Market Intelligence Agent findings]
@@ -156,13 +156,13 @@ Using the synthesized research and user input, create a comprehensive PRD follow
 
 ## 5. Security & Compliance
 [Insert Best Practices Agent findings]
-- Security requirements
+- Security reqfrontend/uirements
 - Compliance standards
 - Risk assessment
 
 ## 6. Implementation Plan
 - Development phases
-- Dependencies and prerequisites
+- Dependencies and prereqfrontend/uisites
 - Timeline estimates
 - Resource allocation
 
@@ -177,7 +177,7 @@ Using the synthesized research and user input, create a comprehensive PRD follow
 - Resource risks and alternatives
 ```
 
-### Required Diagrams (using Mermaid)
+### Reqfrontend/uired Diagrams (using Mermaid)
 Generate these diagrams in the PRD:
 
 1. **User Flow Diagram**
@@ -218,7 +218,7 @@ Before marking complete, verify:
 - [ ] User flows diagrammed with Mermaid
 - [ ] Implementation phases outlined
 - [ ] Success metrics defined
-- [ ] Security requirements documented
+- [ ] Security reqfrontend/uirements documented
 - [ ] Ready for implementation PRP creation
 
 ### Next Steps

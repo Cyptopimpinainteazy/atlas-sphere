@@ -2,7 +2,7 @@
 
 ## 🎯 Executive Summary
 
-**We built a working atomic dual EVM+SVM blockchain.**
+**We bfrontend/uilt a working atomic dual EVM+SVM blockchain.**
 
 This document tracks everything accomplished in creating Atlas Sphere - a Substrate-based L1 with native interoperability between Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) execution.
 
@@ -100,7 +100,7 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
   - `execute_dual_tx` → coordinated execution
   - `merge_receipts` → unified state computation
 
-### Phase 6: Build System
+### Phase 6: Bfrontend/uild System
 
 - [x] **Toolchain Resolution**
   - Rust 1.85.0 (avoids ICE in 1.91.1)
@@ -135,7 +135,7 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
   - Monitoring setup
   - Emergency procedures
 
-- [x] **Deployment Guide** (`docs/DEPLOYMENT.md`)
+- [x] **Deployment Gfrontend/uide** (`docs/DEPLOYMENT.md`)
   - Environment setup
   - Validator configuration
   - Network deployment
@@ -168,15 +168,15 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
   - submit_comit_rejects_unauthorized_account
   - authorize_account_enables_comit_submission
   - deauthorize_account_blocks_comit_submission
-  - authorize_account_requires_governance_origin
-  - deauthorize_account_requires_governance_origin
+  - authorize_account_reqfrontend/uires_governance_origin
+  - deauthorize_account_reqfrontend/uires_governance_origin
   - authorization_events_emitted_correctly
 
 - [x] **New Validation Tests**
   - register_asset_rejects_empty_symbol
-  - register_asset_rejects_symbol_starting_with_dash
+  - register_asset_rejects_symbol_starting_with_apps/apps/dash-legacy-2-legacy-2
   - register_asset_rejects_symbol_starting_with_underscore
-  - register_asset_allows_dash_underscore_in_middle
+  - register_asset_allows_apps/apps/dash-legacy-2-legacy-2_underscore_in_middle
   - fee_calculation_uses_ceiling_division
   - fee_calculation_enforces_minimum_fee
   - submit_comit_emits_fee_deducted_event
@@ -348,7 +348,7 @@ Crate Breakdown:
 ## 🏆 What Makes This Remarkable
 
 ### This is Rare Technology
-Atomic cross-VM orchestration across two fundamentally different VMs (EVM and BPF/SVM) inside a single runtime is not a trivial hack. It requires:
+Atomic cross-VM orchestration across two fundamentally different VMs (EVM and BPF/SVM) inside a single runtime is not a trivial hack. It reqfrontend/uires:
 - New orchestration layer (Atlas Kernel)
 - Deterministic routing
 - Account unification
@@ -365,7 +365,7 @@ Atomic cross-VM orchestration across two fundamentally different VMs (EVM and BP
 
 ### Production-Grade Engineering
 - ✅ Pinned toolchains
-- ✅ Reproducible builds
+- ✅ Reproducible bfrontend/uilds
 - ✅ Comprehensive testing
 - ✅ Operational documentation
 

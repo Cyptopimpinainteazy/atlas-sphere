@@ -1,4 +1,4 @@
-# Atlas Sphere – Functional Blockchain Plan (Quick Summary)
+# Atlas Sphere – Functional Blockchain Plan (Qfrontend/uick Summary)
 
 ## 📋 Overview
 
@@ -35,10 +35,10 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] Add overflow guards in canonical ledger
 - [ ] Write 200+ test cases (currently ~100)
 - [ ] Lock runtime constants (MaxPayloadLength, ExistentialDeposit, etc.)
-- [ ] Verify deterministic WASM builds and reproducibility
+- [ ] Verify deterministic WASM bfrontend/uilds and reproducibility
 - [ ] Add property-based tests (proptest)
 
-**Exit Criteria:** 95%+ test coverage, all tests pass, deterministic WASM builds.
+**Exit Criteria:** 95%+ test coverage, all tests pass, deterministic WASM bfrontend/uilds.
 
 ---
 
@@ -73,7 +73,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] Implement Ethereum RPC methods (eth_call, eth_sendRawTransaction, etc.)
 - [ ] Test MetaMask integration
 - [ ] Create example contracts (Greeter, ERC-20, simple DEX)
-- [ ] Build Hardhat configuration and deploy scripts
+- [ ] Bfrontend/uild Hardhat configuration and deploy scripts
 
 **Exit Criteria:** MetaMask connects to localhost:8545; simple ERC-20 deploys and executes; fees charged in ATLAS.
 
@@ -82,7 +82,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 ### **Phase 4: SVM Integration** (2–3 weeks)
 **Goal:** Deterministic Solana execution with canonical ledger sync.
 
-- [ ] Build SVM sidecar service:
+- [ ] Bfrontend/uild SVM sidecar service:
   - Listens for Comit events via RPC
   - Executes SVM programs deterministically
   - Generates and submits receipts
@@ -94,7 +94,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Signature checks (Solana transaction signatures)
   - Replay detection
   - State root verification
-- [ ] Build example SVM programs (transfer, balance query, counter)
+- [ ] Bfrontend/uild example SVM programs (transfer, balance query, counter)
 - [ ] Integration tests for full SVM submission → finalization flow
 
 **Exit Criteria:** SVM program executes deterministically; receipt updates canonical ledger; tests pass.
@@ -109,7 +109,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Sequential execution (EVM first, then SVM)
   - Atomic state commits (both succeed or both fail)
   - Rollback logic on failure
-- [ ] Build atomic swap example:
+- [ ] Bfrontend/uild atomic swap example:
   - User on EVM holds Token A; on SVM holds Token B
   - Single Comit swaps atomically
 - [ ] E2E tests for cross-VM atomicity
@@ -124,7 +124,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] **TypeScript SDK** (`packages/ts-sdk/`):
   - `AtlasClient` wrapper around RPC
   - `Signer` for key management
-  - `Comit` builder
+  - `Comit` bfrontend/uilder
   - Type-safe interfaces for all on-chain types
   - Example scripts
 - [ ] **Python SDK** (`packages/py-sdk/`):
@@ -188,7 +188,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Deploy faucet service
   - Rate-limited test ATLAS distribution
 - [ ] **Complete documentation**:
-  - Getting started guide
+  - Getting started gfrontend/uide
   - EVM and SVM deployment tutorials
   - API reference
   - Atomic swap walkthrough
@@ -224,7 +224,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Public announcement
 - [ ] **Post-launch operations**:
   - 24/7 incident response
-  - Real-time dashboards
+  - Real-time apps/apps/dash-legacy-2-legacy-2boards
   - Community support
 
 **Exit Criteria:** Mainnet launches; first blocks finalize; validator set healthy and decentralized.
@@ -254,7 +254,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 ```
 atlas-sphere/
 ├── pallets/atlas-kernel/src/lib.rs          # Core Comit logic
-├── pallets/atlas-kernel/src/tests.rs        # Test suite (expand to 200+)
+├── pallets/atlas-kernel/src/tests.rs        # Test sfrontend/uite (expand to 200+)
 ├── runtime/src/lib.rs                       # Runtime configuration
 ├── node/src/                                 # Node binary
 ├── pallets/frontier-integration/            # EVM pallet setup (Phase 3)
@@ -275,9 +275,9 @@ atlas-sphere/
 ## 🚀 Getting Started
 
 1. **Priority:** Start Phase 1 immediately
-   - Expand test suite to 200+ tests
+   - Expand test sfrontend/uite to 200+ tests
    - Lock runtime constants
-   - Verify deterministic WASM builds
+   - Verify deterministic WASM bfrontend/uilds
 
 2. **Parallelize early:** Begin SDK design (Phase 6 prep) while Phase 1 is in progress
 
@@ -293,7 +293,7 @@ atlas-sphere/
 
 - [ ] Review this plan with the team
 - [ ] Prioritize Phase 1 tasks and assign owners
-- [ ] Set up CI/CD for automated testing and WASM builds
+- [ ] Set up CI/CD for automated testing and WASM bfrontend/uilds
 - [ ] Create GitHub issues with acceptance criteria
 - [ ] Establish weekly sync cadence
 - [ ] Engage community (announce testnet timeline)

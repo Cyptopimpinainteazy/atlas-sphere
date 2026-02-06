@@ -1,8 +1,8 @@
 //! HTTP handlers for Analytics Service
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_frontend/frontend/web::{frontend/frontend/web, HttpRequest, HttpResponse};
 use chrono::Utc;
-use uuid::Uuid;
+use ufrontend/uid::Ufrontend/uid;
 
 use crate::db;
 use crate::error::ServiceError;
@@ -24,7 +24,7 @@ pub async fn health_check() -> HttpResponse {
 }
 
 /// GET /ready - Readiness check with database validation
-pub async fn readiness_check(state: web::Data<AppState>) -> HttpResponse {
+pub async fn readiness_check(state: frontend/frontend/web::Data<AppState>) -> HttpResponse {
     let db_healthy = db::check_health(&state.pool).await;
 
     let response = ReadinessResponse {
@@ -47,9 +47,9 @@ pub async fn readiness_check(state: web::Data<AppState>) -> HttpResponse {
 
 /// POST /api/v1/events - Record a new event
 pub async fn record_event(
-    state: web::Data<AppState>,
+    state: frontend/frontend/web::Data<AppState>,
     req: HttpRequest,
-    body: web::Json<CreateEventRequest>,
+    body: frontend/frontend/web::Json<CreateEventRequest>,
 ) -> Result<HttpResponse, ServiceError> {
     // Extract user agent and IP for analytics
     let user_agent = req
@@ -68,7 +68,7 @@ pub async fn record_event(
     });
 
     let event = Event {
-        id: Uuid::new_v4(),
+        id: Ufrontend/uid::new_v4(),
         event_type: body.event_type.clone(),
         account: body.account.clone(),
         comit_hash: body.comit_hash.clone(),
@@ -94,8 +94,8 @@ pub async fn record_event(
 
 /// GET /api/v1/events - List events with filters
 pub async fn get_events(
-    state: web::Data<AppState>,
-    query: web::Query<EventQueryParams>,
+    state: frontend/frontend/web::Data<AppState>,
+    query: frontend/frontend/web::Query<EventQueryParams>,
 ) -> Result<HttpResponse, ServiceError> {
     let (events, total) = db::query_events(&state.pool, &query).await?;
 
@@ -107,8 +107,8 @@ pub async fn get_events(
 
 /// GET /api/v1/events/{event_id} - Get single event by ID
 pub async fn get_event(
-    state: web::Data<AppState>,
-    path: web::Path<Uuid>,
+    state: frontend/frontend/web::Data<AppState>,
+    path: frontend/frontend/web::Path<Ufrontend/uid>,
 ) -> Result<HttpResponse, ServiceError> {
     let event_id = path.into_inner();
 
@@ -134,8 +134,8 @@ pub struct MetricsSummaryParams {
 
 /// GET /api/v1/metrics/summary - Get aggregated metrics
 pub async fn get_metrics_summary(
-    state: web::Data<AppState>,
-    query: web::Query<MetricsSummaryParams>,
+    state: frontend/frontend/web::Data<AppState>,
+    query: frontend/frontend/web::Query<MetricsSummaryParams>,
 ) -> Result<HttpResponse, ServiceError> {
     let summary = db::get_metrics_summary(&state.pool, query.start_time, query.end_time).await?;
     Ok(HttpResponse::Ok().json(summary))
@@ -143,8 +143,8 @@ pub async fn get_metrics_summary(
 
 /// GET /api/v1/metrics/timeseries - Get time-series data
 pub async fn get_timeseries(
-    state: web::Data<AppState>,
-    query: web::Query<TimeSeriesParams>,
+    state: frontend/frontend/web::Data<AppState>,
+    query: frontend/frontend/web::Query<TimeSeriesParams>,
 ) -> Result<HttpResponse, ServiceError> {
     let data = db::get_timeseries(&state.pool, &query).await?;
     Ok(HttpResponse::Ok().json(data))
@@ -155,7 +155,7 @@ pub async fn get_timeseries(
 // =============================================================================
 
 /// GET /api/v1/comits/stats - Get comit transaction statistics
-pub async fn get_comit_stats(state: web::Data<AppState>) -> Result<HttpResponse, ServiceError> {
+pub async fn get_comit_stats(state: frontend/frontend/web::Data<AppState>) -> Result<HttpResponse, ServiceError> {
     let stats = db::get_comit_stats(&state.pool).await?;
     Ok(HttpResponse::Ok().json(stats))
 }
@@ -169,9 +169,9 @@ pub struct AccountComitsParams {
 
 /// GET /api/v1/comits/by-account/{account} - Get comits for a specific account
 pub async fn get_comits_by_account(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-    query: web::Query<AccountComitsParams>,
+    state: frontend/frontend/web::Data<AppState>,
+    path: frontend/frontend/web::Path<String>,
+    query: frontend/frontend/web::Query<AccountComitsParams>,
 ) -> Result<HttpResponse, ServiceError> {
     let account = path.into_inner();
     let limit = query.limit.unwrap_or(100).min(1000);

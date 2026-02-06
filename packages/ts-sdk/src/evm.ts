@@ -39,7 +39,7 @@ export interface EvmTxParams {
 export interface FunctionSignature {
   /** Function name */
   name: string;
-  /** Full signature (e.g., "transfer(address,uint256)") */
+  /** Full signature (e.g., "transfer(address,frontend/uint256)") */
   signature: string;
   /** 4-byte selector */
   selector: HexString;
@@ -158,14 +158,14 @@ export function functionSelector(signature: string): HexString {
 }
 
 /**
- * Encode a uint256 value
+ * Encode a frontend/uint256 value
  */
 export function encodeUint256(value: bigint): Uint8Array {
   if (value < 0n) {
-    throw new ValidationError('value', 'uint256 cannot be negative', value);
+    throw new ValidationError('value', 'frontend/uint256 cannot be negative', value);
   }
   if (value >= 2n ** 256n) {
-    throw new ValidationError('value', 'uint256 overflow', value);
+    throw new ValidationError('value', 'frontend/uint256 overflow', value);
   }
 
   const bytes = new Uint8Array(32);
@@ -178,11 +178,11 @@ export function encodeUint256(value: bigint): Uint8Array {
 }
 
 /**
- * Decode a uint256 value
+ * Decode a frontend/uint256 value
  */
 export function decodeUint256(bytes: Uint8Array): bigint {
   if (bytes.length !== 32) {
-    throw new ValidationError('bytes', 'uint256 must be 32 bytes', bytes.length);
+    throw new ValidationError('bytes', 'frontend/uint256 must be 32 bytes', bytes.length);
   }
 
   let value = 0n;
@@ -222,7 +222,7 @@ export function decodeAddress(bytes: Uint8Array): HexString {
  * Encode bytes for ABI (dynamic type)
  */
 export function encodeBytes(data: Uint8Array): Uint8Array {
-  // Encode length as uint256
+  // Encode length as frontend/uint256
   const length = encodeUint256(BigInt(data.length));
 
   // Pad data to 32-byte boundary
@@ -312,7 +312,7 @@ export function decodeFunctionCall(data: Uint8Array): DecodedCall {
  */
 export function encodeTransfer(to: HexString, amount: bigint): Uint8Array {
   return encodeFunctionCall(
-    'transfer(address,uint256)',
+    'transfer(address,frontend/uint256)',
     [encodeAddress(to), encodeUint256(amount)]
   );
 }
@@ -322,7 +322,7 @@ export function encodeTransfer(to: HexString, amount: bigint): Uint8Array {
  */
 export function encodeApprove(spender: HexString, amount: bigint): Uint8Array {
   return encodeFunctionCall(
-    'approve(address,uint256)',
+    'approve(address,frontend/uint256)',
     [encodeAddress(spender), encodeUint256(amount)]
   );
 }
@@ -336,7 +336,7 @@ export function encodeTransferFrom(
   amount: bigint
 ): Uint8Array {
   return encodeFunctionCall(
-    'transferFrom(address,address,uint256)',
+    'transferFrom(address,address,frontend/uint256)',
     [encodeAddress(from), encodeAddress(to), encodeUint256(amount)]
   );
 }
@@ -365,7 +365,7 @@ export function isErrorRevert(data: Uint8Array): boolean {
 }
 
 /**
- * Check if data is a Panic(uint256) revert
+ * Check if data is a Panic(frontend/uint256) revert
  */
 export function isPanicRevert(data: Uint8Array): boolean {
   if (data.length < 4) return false;
@@ -394,7 +394,7 @@ export function decodeErrorMessage(data: Uint8Array): string | null {
 }
 
 /**
- * Decode Panic(uint256) code
+ * Decode Panic(frontend/uint256) code
  */
 export function decodePanicCode(data: Uint8Array): bigint | null {
   if (!isPanicRevert(data) || data.length < 36) {

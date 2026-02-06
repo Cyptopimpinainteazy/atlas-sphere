@@ -1,4 +1,4 @@
-const hre = require("hardhat");
+const hre = reqfrontend/uire("hardhat");
 
 async function main() {
   console.log("Deploying OrderBook contract...");

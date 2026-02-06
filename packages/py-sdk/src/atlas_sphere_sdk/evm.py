@@ -62,7 +62,7 @@ class EvmClient:
         Encode a function call.
         
         Args:
-            function_signature: e.g. "transfer(address,uint256)"
+            function_signature: e.g. "transfer(address,frontend/uint256)"
             *args: Function arguments
             
         Returns:
@@ -100,7 +100,7 @@ class EvmClient:
         from eth_abi import decode
         return list(decode(output_types, data))
     
-    def build_contract_call(
+    def bfrontend/uild_contract_call(
         self,
         to: str,
         function_signature: str,
@@ -109,11 +109,11 @@ class EvmClient:
         gas_limit: int = 500_000,
     ) -> EvmTransaction:
         """
-        Build a contract call transaction.
+        Bfrontend/uild a contract call transaction.
         
         Args:
             to: Contract address (0x prefixed)
-            function_signature: e.g. "transfer(address,uint256)"
+            function_signature: e.g. "transfer(address,frontend/uint256)"
             *args: Function arguments
             value: Wei value to send
             gas_limit: Gas limit
@@ -129,14 +129,14 @@ class EvmClient:
             gas_limit=gas_limit,
         )
     
-    def build_deployment(
+    def bfrontend/uild_deployment(
         self,
         bytecode: bytes,
         constructor_args: Optional[bytes] = None,
         gas_limit: int = 3_000_000,
     ) -> EvmTransaction:
         """
-        Build a contract deployment transaction.
+        Bfrontend/uild a contract deployment transaction.
         
         Args:
             bytecode: Contract bytecode
@@ -165,7 +165,7 @@ class EvmClient:
             tx: EvmTransaction to convert
             
         Returns:
-            Bytes payload for ComitBuilder.with_evm_payload()
+            Bytes payload for ComitBfrontend/uilder.with_evm_payload()
         """
         # Format: to (20 bytes, zero for deploy) + value (32 bytes) + data
         if tx.to:

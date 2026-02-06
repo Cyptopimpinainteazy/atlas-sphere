@@ -91,7 +91,7 @@ impl InvariantEnforcer {
     /// 1. Verified SPV proof
     /// 2. Confirmed sufficient depth
     /// 3. Verified counterpart legs are locked
-    pub fn check_btc_release_requires_x3(
+    pub fn check_btc_release_reqfrontend/uires_x3(
         &self,
         btc_released: bool,
         x3_confirmed: bool,
@@ -244,7 +244,7 @@ impl InvariantEnforcer {
     ) -> Vec<InvariantCheckResult> {
         vec![
             self.check_no_partial_execution(legs_total, legs_claimed, state),
-            self.check_btc_release_requires_x3(btc_released, x3_confirmed, btc_confirmations),
+            self.check_btc_release_reqfrontend/uires_x3(btc_released, x3_confirmed, btc_confirmations),
             self.check_intent_resolution(state, created_at, timeout, current_time),
         ]
     }
@@ -299,7 +299,7 @@ pub struct ViolationReport {
 ///
 /// Before any governance proposal can execute, it must pass:
 /// 1. Invariant simulation (no invariants broken by change)
-/// 2. Settlement test suite (existing settlements not affected)
+/// 2. Settlement test sfrontend/uite (existing settlements not affected)
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct GovernanceInvariantCheck {
     /// Proposal ID
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn test_btc_release_without_confirmation() {
         let enforcer = default_enforcer();
-        let result = enforcer.check_btc_release_requires_x3(true, false, 6);
+        let result = enforcer.check_btc_release_reqfrontend/uires_x3(true, false, 6);
         assert_eq!(
             result,
             InvariantCheckResult::Fail(InvariantViolationType::BtcReleaseWithoutConfirmation)
@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn test_btc_release_insufficient_confirmations() {
         let enforcer = default_enforcer();
-        let result = enforcer.check_btc_release_requires_x3(true, true, 3);
+        let result = enforcer.check_btc_release_reqfrontend/uires_x3(true, true, 3);
         assert_eq!(
             result,
             InvariantCheckResult::Fail(InvariantViolationType::BtcReleaseWithoutConfirmation)
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn test_btc_release_valid() {
         let enforcer = default_enforcer();
-        let result = enforcer.check_btc_release_requires_x3(true, true, 6);
+        let result = enforcer.check_btc_release_reqfrontend/uires_x3(true, true, 6);
         assert_eq!(result, InvariantCheckResult::Pass);
     }
 

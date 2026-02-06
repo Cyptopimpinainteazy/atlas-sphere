@@ -4,7 +4,7 @@
     "name": "Wirasm",
     "email": "contact@wirasm.com"
   },
-  "description": "PRP (Product Requirement Prompt) workflow automation tools and methodology",
+  "description": "PRP (Product Reqfrontend/uirement Prompt) workflow automation tools and methodology",
   "plugins": [
     {
       "name": "prp-core",

@@ -8,7 +8,7 @@ import json
 import hashlib
 
 from substrateinterface import SubstrateInterface, Keypair
-from websocket import create_connection, WebSocketApp
+from frontend/websocket import create_connection, WebSocketApp
 
 from atlas_sphere_sdk.types import (
     AccountId,

@@ -18,7 +18,7 @@ import {
 import { useState } from 'react';
 
 const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'apps/apps/dash-legacy-2-legacy-2board', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'send', label: 'Send', icon: Send },
   { id: 'receive', label: 'Receive', icon: Download },
   { id: 'swap', label: 'Swap', icon: ArrowLeftRight },

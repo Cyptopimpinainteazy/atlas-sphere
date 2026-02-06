@@ -55,7 +55,7 @@ spl-token burn TOKEN_MINT_ADDRESS 50`}
   Keypair,
   Transaction,
   SystemProgram,
-} from '@solana/web3.js';
+} from '@solana/frontend/web3.js';
 import {
   TOKEN_PROGRAM_ID,
   createInitializeMintInstruction,

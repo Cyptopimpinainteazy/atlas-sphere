@@ -75,7 +75,7 @@ struct EvmContext { block_number, gas_price, caller, ... }
 - ✅ Operation rollback capability
 - ✅ Gas accounting across VMs
 - ✅ Error propagation and handling
-- ✅ Operation queuing and batching
+- ✅ Operation quefrontend/uing and batching
 
 **Operation Types**:
 ```rust

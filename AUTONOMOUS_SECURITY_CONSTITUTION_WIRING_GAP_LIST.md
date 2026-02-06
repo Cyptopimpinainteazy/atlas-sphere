@@ -15,7 +15,7 @@ This document maps “constitution-grade” expectations (fail-closed security g
 
 ---
 
-## Requirement → Reality Mapping
+## Reqfrontend/uirement → Reality Mapping
 
 ### R-01: “Fail closed on security regressions”
 
@@ -44,10 +44,10 @@ This document maps “constitution-grade” expectations (fail-closed security g
 - `.github/workflows/ci.yml` and `.github/workflows/production-deploy.yml` run tests with `--all-features`.
 
 **Gap**
-- Union-of-features builds can mask security posture (e.g., dev-only bypass).
+- Union-of-features bfrontend/uilds can mask security posture (e.g., dev-only bypass).
 
 **Remediation**
-- Add a build/test matrix (prod vs dev), and treat prod jobs as gating.
+- Add a bfrontend/uild/test matrix (prod vs dev), and treat prod jobs as gating.
 
 ---
 
@@ -110,13 +110,13 @@ Minimum bar to claim constitution wiring is complete:
    - vulnerability scans,
    - VM integration tests,
    - constitution-critical invariant tests.
-2) CI validates production-faithful builds (no `--all-features` for prod gate).
+2) CI validates production-faithful bfrontend/uilds (no `--all-features` for prod gate).
 3) Governance AI:
    - deterministic simulation (no hardcoded success),
    - sandbox enforcement semantics,
-   - real rollback checkpoint or explicitly removed requirement.
+   - real rollback checkpoint or explicitly removed reqfrontend/uirement.
 4) X3VM bridge:
-   - no mock hostcalls in production builds,
+   - no mock hostcalls in production bfrontend/uilds,
    - receipts and state transitions are covered by integration tests.
 
 ---

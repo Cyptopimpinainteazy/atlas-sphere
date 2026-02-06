@@ -134,7 +134,7 @@ def extract_failure_patterns():
                     'type': 'import_error',
                     'description': message,
                     'frequency': 'medium',
-                    'solution': 'Verify all imports before implementation'
+                    'solution': 'Verify all archive/archive/imports before implementation'
                 })
             elif 'type' in message.lower():
                 patterns.append({
@@ -166,7 +166,7 @@ def identify_success_patterns():
         })
 
     # Check for clean code quality
-    ruff_output = subprocess.check_output(['ruff', 'check', '.', '--quiet']).decode()
+    ruff_output = subprocess.check_output(['ruff', 'check', '.', '--qfrontend/uiet']).decode()
     if not ruff_output.strip():
         success_patterns.append({
             'pattern': 'clean_code_style',
@@ -217,7 +217,7 @@ failure_patterns:
     description: "Pydantic v2 syntax changes"
     frequency: "medium"
     detection_signs:
-      - "ValidationError: Field required"
+      - "ValidationError: Field reqfrontend/uired"
       - "AttributeError: 'Field' object has no attribute"
     prevention:
       - "Use Field() instead of ... for optional fields"
@@ -301,7 +301,7 @@ def collect_metrics():
     lines_stats = get_line_change_stats(commits)
 
     # Test results
-    test_results = run_test_suite()
+    test_results = run_test_sfrontend/uite()
 
     # Code quality
     quality_metrics = get_code_quality_metrics()

@@ -2,7 +2,7 @@
 
 **Audit Date:** December 6, 2025  
 **Audit Tag:** `v1.0.0-audit-freeze`  
-**Commit Hash:** `5732ec21` (following build fixes)  
+**Commit Hash:** `5732ec21` (following bfrontend/uild fixes)  
 **Auditor:** GitHub Copilot Security Review  
 
 ---
@@ -11,7 +11,7 @@
 
 | Sector                       | Critical | High   | Medium | Low    | Passed  |
 | ---------------------------- | -------- | ------ | ------ | ------ | ------- |
-| 1. Build Determinism         | 0        | 0      | 0      | 0      | ✅       |
+| 1. Bfrontend/uild Determinism         | 0        | 0      | 0      | 0      | ✅       |
 | 2. WASM Validation           | 0        | 0      | 0      | 0      | ✅       |
 | 3. Pallet Safety             | 2        | 2      | 2      | 2      | 15+     |
 | 4. VM Adapter Security       | 1        | 2      | 1      | 2      | 4       |
@@ -22,21 +22,21 @@
 | 9. Production Infrastructure | 1        | 4      | 5      | 3      | 5       |
 | **TOTAL**                    | **6**    | **18** | **23** | **13** | **50+** |
 
-**Overall Assessment:** READY FOR TESTNET WITH CAUTIONS. Mainnet requires addressing Critical and High issues.
+**Overall Assessment:** READY FOR TESTNET WITH CAUTIONS. Mainnet reqfrontend/uires addressing Critical and High issues.
 
 ---
 
-## Sector 1: Build Determinism
+## Sector 1: Bfrontend/uild Determinism
 
 ### ✅ VERIFIED
 
-**Test Method:** 3 sequential release builds  
-**Result:** All builds produce identical binary hash
+**Test Method:** 3 sequential release bfrontend/uilds  
+**Result:** All bfrontend/uilds produce identical binary hash
 
 ```
-Build 1: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
-Build 2: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
-Build 3: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
+Bfrontend/uild 1: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
+Bfrontend/uild 2: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
+Bfrontend/uild 3: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
 ```
 
 **Configuration:**
@@ -52,7 +52,7 @@ Build 3: 7ab10bcffba676f4b78c584517a6aeea4bb1e0c5091e287ea3beb07d74b51d7e
 
 **Validation Command:**
 ```bash
-wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runtime.wasm.compact.wasm
+wasm-tools validate target/release/wbfrontend/uild/atlas-sphere-runtime/atlas_sphere_runtime.wasm.compact.wasm
 ```
 
 **Output:**
@@ -62,7 +62,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 [INFO] functions validated in 5.453208ms
 ```
 
-**Previous Issue (RESOLVED):** `InvalidTableReference(128)` was caused by prometheus type mismatch in sc-service build. Fixed by making `init_prometheus` return `async Future`.
+**Previous Issue (RESOLVED):** `InvalidTableReference(128)` was caused by prometheus type mismatch in sc-service bfrontend/uild. Fixed by making `init_prometheus` return `async Future`.
 
 ---
 
@@ -72,7 +72,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 
 | ID   | Issue                            | Location     | Description                                                                                                                       |
 | ---- | -------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| P-C1 | Production Adapter Verification  | `lib.rs:470` | Runtime may use mock adapters in production builds. Verify `NativeEvmAdapter`/`NativeSvmAdapter` use real Frontier/rBPF execution |
+| P-C1 | Production Adapter Verification  | `lib.rs:470` | Runtime may use mock adapters in production bfrontend/uilds. Verify `NativeEvmAdapter`/`NativeSvmAdapter` use real Frontier/rBPF execution |
 | P-C2 | prepare_root Only Commits Inputs | `lib.rs:H-1` | Cryptographic commitment is to inputs only, not execution outputs. Malicious validator could execute different operations         |
 
 ### HIGH Issues
@@ -173,9 +173,9 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 
 | ID   | Issue                            | Location             | Description                                  |
 | ---- | -------------------------------- | -------------------- | -------------------------------------------- |
-| C-H1 | Equivocation Reporting Disabled  | `runtime/lib.rs:330` | `EquivocationReportSystem = ()`              |
+| C-H1 | Eqfrontend/uivocation Reporting Disabled  | `runtime/lib.rs:330` | `Eqfrontend/uivocationReportSystem = ()`              |
 | C-H2 | MaxSetIdSessionEntries = 0       | `runtime/lib.rs:137` | No historical set IDs stored for proofs      |
-| C-H3 | Aura Equivocation Check Disabled | `service.rs`         | `check_for_equivocation: Default::default()` |
+| C-H3 | Aura Eqfrontend/uivocation Check Disabled | `service.rs`         | `check_for_eqfrontend/uivocation: Default::default()` |
 
 ### MEDIUM Issues
 
@@ -188,7 +188,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 
 | ID   | Issue             | Location | Description                                   |
 | ---- | ----------------- | -------- | --------------------------------------------- |
-| C-L1 | No Session Pallet | Runtime  | Authority rotation requires governance/manual |
+| C-L1 | No Session Pallet | Runtime  | Authority rotation reqfrontend/uires governance/manual |
 
 ### ✅ Passed Checks
 
@@ -261,7 +261,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 
 - Type hints not enforced at runtime
 - No rate limiting on RPC calls
-- Late module imports
+- Late module archive/archive/imports
 - Missing `__repr__` sanitization
 - os.urandom for non-critical IDs (acceptable)
 
@@ -297,7 +297,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 ### LOW Issues
 
 - Static service discovery
-- No template variables in dashboards
+- No template variables in apps/apps/dash-legacy-2-legacy-2boards
 - Validator keys in volume mounts
 
 ---
@@ -310,7 +310,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 2. **Remove `--rpc-methods=unsafe`** from all production nodes
 3. **Fix unbounded Vec** in `pallet-agent-memory`
 4. **Add migration wrapper** to Executive type
-5. **Enable equivocation reporting** in GRANDPA
+5. **Enable eqfrontend/uivocation reporting** in GRANDPA
 6. **Restrict CORS** to specific origins
 
 ### 🟠 Pre-Mainnet High (Should Fix)
@@ -319,7 +319,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 2. Register custom metrics with Prometheus
 3. Set MaxSetIdSessionEntries > 0
 4. Add storage version annotations to all pallets
-5. Enable Aura equivocation checking
+5. Enable Aura eqfrontend/uivocation checking
 6. Add TLS verification to Python SDK
 7. Bind Prometheus to internal network only
 
@@ -353,7 +353,7 @@ wasm-tools validate target/release/wbuild/atlas-sphere-runtime/atlas_sphere_runt
 | Date       | Action         | Commit                             |
 | ---------- | -------------- | ---------------------------------- |
 | 2025-12-06 | Initial tag    | `v1.0.0-audit-freeze` @ `38302cbc` |
-| 2025-12-06 | Build fixes    | `5732ec21`                         |
+| 2025-12-06 | Bfrontend/uild fixes    | `5732ec21`                         |
 | 2025-12-06 | Audit complete | This report                        |
 
 ---
@@ -365,9 +365,9 @@ Atlas Sphere demonstrates strong foundational security practices with:
 - Comprehensive test coverage for core pallet
 - Well-structured dual-VM architecture design
 
-However, several areas require attention before mainnet:
+However, several areas reqfrontend/uire attention before mainnet:
 1. **VM adapters** must transition from mock to real execution
-2. **Consensus security** needs equivocation reporting enabled
+2. **Consensus security** needs eqfrontend/uivocation reporting enabled
 3. **Production infrastructure** has multiple security misconfigurations
 4. **SDK** lacks input validation and secure defaults
 

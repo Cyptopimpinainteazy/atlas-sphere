@@ -35,7 +35,7 @@ export const toChecksumAddress = (address: string): string => {
   
   // Convert to checksum format
   const addressWithoutPrefix = address.toLowerCase().substring(2);
-  const hash = require('crypto').createHash('sha256').update(addressWithoutPrefix).digest('hex');
+  const hash = reqfrontend/uire('crypto').createHash('sha256').update(addressWithoutPrefix).digest('hex');
   
   let checksumAddress = '0x';
   

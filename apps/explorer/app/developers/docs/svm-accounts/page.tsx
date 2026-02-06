@@ -11,7 +11,7 @@ export default function SvmAccountsPage() {
     >
       <p className="lead text-xl text-gray-400 mb-8">
         The SVM uses an account-based model where all state is stored in accounts.
-        Understanding accounts is crucial for building efficient SVM programs.
+        Understanding accounts is crucial for bfrontend/uilding efficient SVM programs.
       </p>
 
       <h2>Account Structure</h2>
@@ -38,7 +38,7 @@ export default function SvmAccountsPage() {
       <h3>1. System Accounts</h3>
       <p>Regular user accounts owned by the System Program:</p>
       <CodeBlock language="typescript">
-{`import { SystemProgram, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
+{`import { SystemProgram, Keypair, LAMPORTS_PER_SOL } from '@solana/frontend/web3.js';
 
 // Create account
 const newAccount = Keypair.generate();
@@ -87,7 +87,7 @@ let signer_seeds = &[
 
       <CodeBlock language="typescript">
 {`// In TypeScript (client)
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/frontend/web3.js';
 
 const [pda, bump] = PublicKey.findProgramAddressSync(
   [Buffer.from('user-stats'), userPubkey.toBuffer()],
@@ -165,7 +165,7 @@ pub struct UserStats {
         Accounts must maintain a minimum balance to be rent-exempt:
       </p>
       <CodeBlock language="typescript">
-{`import { Connection } from '@solana/web3.js';
+{`import { Connection } from '@solana/frontend/web3.js';
 
 const connection = new Connection('https://rpc.testnet.atlas-sphere.io');
 

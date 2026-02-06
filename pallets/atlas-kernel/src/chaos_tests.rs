@@ -245,10 +245,10 @@ mod authorization {
     /// Test that unauthorized accounts cannot submit comits
     #[test]
     fn unauthorized_account_rejected() {
-        let mut ext = ExtBuilder::default()
+        let mut ext = ExtBfrontend/uilder::default()
             .balances(vec![(ALICE, INITIAL_BALANCE), (DAVE, INITIAL_BALANCE)])
             .authorized_accounts(vec![ALICE]) // Only ALICE authorized
-            .build();
+            .bfrontend/uild();
 
         ext.execute_with(|| {
             let result = submit_comit(DAVE, random_comit_id(1), &[0x01], &[0x02], 0);
@@ -260,10 +260,10 @@ mod authorization {
     /// Test authorization cannot be self-granted
     #[test]
     fn cannot_self_authorize() {
-        let mut ext = ExtBuilder::default()
+        let mut ext = ExtBfrontend/uilder::default()
             .balances(vec![(DAVE, INITIAL_BALANCE)])
             .authorized_accounts(vec![])
-            .build();
+            .bfrontend/uild();
 
         ext.execute_with(|| {
             let dave_origin = RuntimeOrigin::signed(DAVE);
@@ -278,10 +278,10 @@ mod authorization {
     /// Test root can authorize accounts
     #[test]
     fn root_can_authorize() {
-        let mut ext = ExtBuilder::default()
+        let mut ext = ExtBfrontend/uilder::default()
             .balances(vec![(DAVE, INITIAL_BALANCE)])
             .authorized_accounts(vec![])
-            .build();
+            .bfrontend/uild();
 
         ext.execute_with(|| {
             assert_ok!(AtlasKernel::authorize_account(RuntimeOrigin::root(), DAVE));
@@ -622,7 +622,7 @@ mod prepare_root {
 
 /// Fast sanity check for CI
 #[test]
-fn quick_smoke() {
+fn qfrontend/uick_smoke() {
     new_test_ext().execute_with(|| {
         // Basic happy path
         assert_ok!(submit_comit(ALICE, random_comit_id(1), &[0x01], &[0x02], 0,));

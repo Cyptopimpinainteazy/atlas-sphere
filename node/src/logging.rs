@@ -1,13 +1,13 @@
 use ansi_term::Colour::{Blue, Green, Purple, Red, Yellow};
 use chrono::Local;
-use env_logger::{Builder, Env};
+use env_logger::{Bfrontend/uilder, Env};
 use std::io::Write;
 
 /// Initialize a colorful logger with emojis and a light startup banner.
 pub fn init() {
     let env = Env::default().filter_or("RUST_LOG", "info");
 
-    Builder::from_env(env)
+    Bfrontend/uilder::from_env(env)
         .format(|buf, record| {
             let ts = Local::now().format("%Y-%m-%d %H:%M:%S");
             let level = record.level();

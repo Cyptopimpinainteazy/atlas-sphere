@@ -33,7 +33,7 @@ HAS_ZIP=$(command -v zip &> /dev/null && echo "yes" || echo "no")
 echo "Available backup methods:"
 echo "  1. Password-protected tar.gz with OpenSSL (recommended) - Available: $HAS_OPENSSL"
 echo "  2. Password-protected zip - Available: $HAS_ZIP"
-echo "  3. GPG encrypted (requires GPG key) - Available: $HAS_GPG"
+echo "  3. GPG encrypted (reqfrontend/uires GPG key) - Available: $HAS_GPG"
 echo "  4. Plain tar.gz (NOT ENCRYPTED - not recommended)"
 echo ""
 

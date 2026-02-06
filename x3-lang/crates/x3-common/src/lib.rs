@@ -9,7 +9,7 @@ pub mod span;
 pub mod symbol;
 pub mod token;
 
-pub use diagnostic::{Diagnostic, DiagnosticBuilder, DiagnosticLevel};
+pub use diagnostic::{Diagnostic, DiagnosticBfrontend/uilder, DiagnosticLevel};
 pub use error::{X3Error, X3Result};
 pub use source::{SourceFile, SourceMap};
 pub use span::{BytePos, Span, Spanned};

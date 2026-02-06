@@ -11,7 +11,7 @@ use sp_core::H256;
 use sp_io::TestExternalities;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage,
+    Bfrontend/uildStorage,
 };
 
 pub type AccountId = u64;
@@ -125,12 +125,12 @@ impl pallet_atlas_kernel::Config for Test {
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
-pub struct ExtBuilder {
+pub struct ExtBfrontend/uilder {
     balances: Vec<(AccountId, Balance)>,
     authorized_accounts: Vec<AccountId>,
 }
 
-impl Default for ExtBuilder {
+impl Default for ExtBfrontend/uilder {
     fn default() -> Self {
         Self {
             balances: vec![],
@@ -139,7 +139,7 @@ impl Default for ExtBuilder {
     }
 }
 
-impl ExtBuilder {
+impl ExtBfrontend/uilder {
     pub fn balances(mut self, balances: Vec<(AccountId, Balance)>) -> Self {
         self.balances = balances;
         self
@@ -150,10 +150,10 @@ impl ExtBuilder {
         self
     }
 
-    pub fn build(self) -> TestExternalities {
+    pub fn bfrontend/uild(self) -> TestExternalities {
         let mut storage = frame_system::GenesisConfig::<Test>::default()
-            .build_storage()
-            .expect("Failed to build system genesis storage");
+            .bfrontend/uild_storage()
+            .expect("Failed to bfrontend/uild system genesis storage");
 
         // Apply balances genesis
         pallet_balances::GenesisConfig::<Test> {
@@ -178,20 +178,20 @@ impl ExtBuilder {
 }
 
 pub fn new_test_ext() -> TestExternalities {
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![
             (ALICE, INITIAL_BALANCE),
             (BOB, INITIAL_BALANCE),
             (CHARLIE, INITIAL_BALANCE),
         ])
         .authorized_accounts(vec![ALICE, BOB, CHARLIE])
-        .build()
+        .bfrontend/uild()
 }
 
 #[test]
 fn migration_runs_and_sets_storage_version() {
     // Ensure migration sets storage version to declared value
-    ExtBuilder::default().build().execute_with(|| {
+    ExtBfrontend/uilder::default().bfrontend/uild().execute_with(|| {
         use frame_support::traits::StorageVersion;
         // Simulate older version
         StorageVersion::new(0).put::<pallet_atlas_kernel::Pallet<Test>>();

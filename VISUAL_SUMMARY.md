@@ -47,7 +47,7 @@ Phase 3: CI/CD IMPROVEMENTS                                     Time: 1 hour
 │ • ci/codecov-action                                                         │
 │ • copilot/fix-workflow-errors (PR #7)                                      │
 │ • chore/e2e-ci-improvements                                                 │
-│ • copilot/fix-workflow-issues-swarm-dashboard                              │
+│ • copilot/fix-workflow-issues-apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2                              │
 └────────────────────────────────────────────────────────────────────────────┘
 
 Phase 4: BACKEND FEATURES                                       Time: 1 hour
@@ -59,9 +59,9 @@ Phase 4: BACKEND FEATURES                                       Time: 1 hour
 
 Phase 5: FRONTEND FEATURES                                      Time: 2 hours
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ • feature/swarm-dashboard-e2e (PR #3) ⚡ LARGE CHANGESET                   │
+│ • feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e (PR #3) ⚡ LARGE CHANGESET                   │
 │   └─ TypeScript migration + testing infrastructure                         │
-│ • feat/ui/cli-and-banner - CLI improvements                                │
+│ • feat/frontend/frontend/ui/cli-and-banner - CLI improvements                                │
 │ • chore/tsx-cleanup-2 - TypeScript cleanup                                 │
 └────────────────────────────────────────────────────────────────────────────┘
 
@@ -84,7 +84,7 @@ Testing & Validation:                                           Time: 2-3 hours
 ═══════════════════════════════════════════════════════════════════════════════
 ❌ test/alembic-lint-fail          - Intentional test failure
 ❌ opt/yolo-20251209T114158         - Experimental branch
-❌ feature/dashboard-mvp-clean      - Duplicate of swarm-dashboard-e2e
+❌ feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean      - Duplicate of apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
 ❌ copilot/merge-all-feature-branches - Current working branch
 
 ⚠️  EXPECTED MERGE CONFLICTS
@@ -92,7 +92,7 @@ Testing & Validation:                                           Time: 2-3 hours
 📄 .github/workflows/ci-swarm.yml     Multiple PRs modify (High probability)
 📄 package.json / package-lock.json   Dependency updates (High)
 📄 tools/fund_allocations.py          Optimization + security (Medium)
-📄 swarm-dashboard/* files            TypeScript migration (Medium)
+📄 apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/* files            TypeScript migration (Medium)
 📄 alembic/* migrations               Migration sequence numbers (Low)
 
 🔐 SECURITY VALIDATION CHECKLIST
@@ -113,7 +113,7 @@ Python/Backend:
   cd alembic && alembic upgrade head && alembic downgrade base
 
 Frontend:
-  cd swarm-dashboard
+  cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
   npm install
   npm run tsc --silent
   npm test
@@ -121,14 +121,14 @@ Frontend:
 
 Rust/Substrate (if applicable):
   cargo test
-  cargo build --release
+  cargo bfrontend/uild --release
 
 📈 EXECUTION APPROACHES
 ═══════════════════════════════════════════════════════════════════════════════
 
 Approach 1: AUTOMATED SCRIPT ⚡
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ Best for: Quick testing, experienced users                                 │
+│ Best for: Qfrontend/uick testing, experienced users                                 │
 │                                                                             │
 │ ./scripts/merge_all_branches.sh --dry-run    # Test first                 │
 │ ./scripts/merge_all_branches.sh              # Execute                     │
@@ -172,7 +172,7 @@ Approach 3: INTEGRATION BRANCH 🔄
 ═══════════════════════════════════════════════════════════════════════════════
 
 1️⃣  START HERE: Read MERGE_PROJECT_README.md
-    └─ Quick overview and execution options
+    └─ Qfrontend/uick overview and execution options
 
 2️⃣  UNDERSTAND BRANCHES: Read FEATURE_ANALYSIS.md
     └─ What each branch contains and why
@@ -208,7 +208,7 @@ If issues occur after merge:
 ☑ No hardcoded secrets in code
 ☑ No duplicate code
 ☑ Database migrations idempotent
-☑ Application builds successfully
+☑ Application bfrontend/uilds successfully
 ☑ Documentation up to date
 
 📞 NEED HELP?

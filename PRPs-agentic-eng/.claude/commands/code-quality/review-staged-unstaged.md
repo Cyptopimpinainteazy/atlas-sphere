@@ -79,7 +79,7 @@ Create a concise review report with:
 - [What was done well]
 
 ## Test Coverage
-Current: X% | Required: 80%
+Current: X% | Reqfrontend/uired: 80%
 Missing tests: [list]
 Save report to PRPs/code_reviews/review[#].md (check existing files first)
 

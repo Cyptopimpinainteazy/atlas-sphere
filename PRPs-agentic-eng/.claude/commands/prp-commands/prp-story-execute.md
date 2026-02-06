@@ -23,11 +23,11 @@ Execute a story/task PRP through **sequential task completion** with immediate v
 
 ### 2. Pre-Implementation Check
 
-- Ultrathink about the story intent and task requirements
+- Ultrathink about the story intent and task reqfrontend/uirements
 - Verify all referenced files exist
 - Check that patterns mentioned are accessible
 - Ensure development environment is ready
-- Run any pre-requisite setup commands
+- Run any pre-reqfrontend/uisite setup commands
 
 ### 3. Task-by-Task Implementation
 
@@ -35,7 +35,7 @@ For each task in the PRP:
 
 **a) Understand Task**
 
-- Read task requirements completely
+- Read task reqfrontend/uirements completely
 - Review referenced patterns
 - Check gotchas and constraints
 
@@ -62,13 +62,13 @@ For each task in the PRP:
 After all tasks complete:
 
 - Run the validation gates from PRP
-- Execute comprehensive test suite
+- Execute comprehensive test sfrontend/uite
 - Verify all acceptance criteria met
 
 ### 5. Completion
 
 - Work through completion checklist
-- Ensure story requirements satisfied
+- Ensure story reqfrontend/uirements satisfied
 - Move completed PRP to PRPs/completed/ create the folder if it does not exist
 
 ## Execution Rules
@@ -90,6 +90,6 @@ When a task fails validation:
 ## Success Criteria
 
 - Every validation command passes
-- Full test suite green
+- Full test sfrontend/uite green
 - Story acceptance criteria met
 - Code follows project conventions

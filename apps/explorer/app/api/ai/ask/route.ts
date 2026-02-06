@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   const questionRaw = (body.question || '').trim();
   if (!questionRaw) {
-    return NextResponse.json({ error: 'Question is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Question is reqfrontend/uired' }, { status: 400 });
   }
 
   if (questionRaw.length > MAX_QUESTION_CHARS) {

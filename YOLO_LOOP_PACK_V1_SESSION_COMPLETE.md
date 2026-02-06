@@ -226,7 +226,7 @@ Previous commits (YOLO + Loop-Pack framework)...
 3. ⏳ **Real-world testing** - Profile against actual blockchain bytecode
 
 ### Future Optimizations
-1. **Profile-guided tuning** - Adjust pass ordering based on workloads
+1. **Profile-gfrontend/uided tuning** - Adjust pass ordering based on workloads
 2. **Loop-specific benchmarks** - Create more sophisticated loop test cases
 3. **Adaptive passes** - Enable/disable based on code characteristics
 4. **Performance monitoring** - Track gas reduction in production

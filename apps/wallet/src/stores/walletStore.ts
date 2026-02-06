@@ -63,7 +63,7 @@ interface WalletState {
   pendingComits: string[];
   
   // UI State
-  activeView: 'dashboard' | 'send' | 'receive' | 'swap' | 'history' | 'settings' | 'comit' | 'mint';
+  activeView: 'apps/apps/dash-legacy-2-legacy-2board' | 'send' | 'receive' | 'swap' | 'history' | 'settings' | 'comit' | 'mint';
   
   // Actions
   setConnected: (connected: boolean) => void;
@@ -98,7 +98,7 @@ export const useWalletStore = create<WalletState>()(
       tokens: [],
       transactions: [],
       pendingComits: [],
-      activeView: 'dashboard',
+      activeView: 'apps/apps/dash-legacy-2-legacy-2board',
 
       // Actions
       setConnected: (connected) => set({ isConnected: connected }),

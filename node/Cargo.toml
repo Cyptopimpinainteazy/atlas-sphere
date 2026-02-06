@@ -63,7 +63,7 @@ sc-transaction-pool-api = { workspace = true }
 substrate-prometheus-endpoint = { path = "../patches/substrate-prometheus-endpoint" }
 
 sp-api = { workspace = true }
-sp-block-builder = { workspace = true }
+sp-block-bfrontend/uilder = { workspace = true }
 sp-blockchain = { workspace = true }
 sp-consensus = { workspace = true }
 sp-consensus-aura = { workspace = true }

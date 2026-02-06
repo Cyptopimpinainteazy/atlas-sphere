@@ -6,8 +6,8 @@
 ```bash
 cargo install cargo-watch
 ```
-**Usage:** `cargo watch -x "build --release"`
-- Rebuilds instantly when you save files
+**Usage:** `cargo watch -x "bfrontend/uild --release"`
+- Rebfrontend/uilds instantly when you save files
 - Saves ~10 mins per hour of development
 
 ### 2. **Cargo-Expand** (Macro expansion debugging)
@@ -63,7 +63,7 @@ cargo install just
 ```
 **Create `justfile` in root:**
 ```makefile
-# Run full test suite
+# Run full test sfrontend/uite
 test:
     cargo test --all
 
@@ -73,9 +73,9 @@ check:
     cargo clippy --all-targets --all-features -- -D warnings
     cargo test --all
 
-# Watch for changes and rebuild
+# Watch for changes and rebfrontend/uild
 watch:
-    cargo watch -x "build --release"
+    cargo watch -x "bfrontend/uild --release"
 
 # Run node in dev mode
 run-node:
@@ -99,7 +99,7 @@ Then run: `just test`, `just check`, `just watch`, etc.
 ### 9. **Makefile (Simple alternative)**
 If you prefer Make, create a `Makefile`:
 ```makefile
-.PHONY: test check fmt clippy watch build run-node coverage audit
+.PHONY: test check fmt clippy watch bfrontend/uild run-node coverage audit
 
 test:
 	cargo test --all
@@ -113,10 +113,10 @@ clippy:
 	cargo clippy --all-targets --all-features -- -D warnings
 
 watch:
-	cargo watch -x "build --release"
+	cargo watch -x "bfrontend/uild --release"
 
-build:
-	cargo build --release
+bfrontend/uild:
+	cargo bfrontend/uild --release
 
 run-node:
 	./target/release/atlas-sphere-node --dev --tmp
@@ -196,11 +196,11 @@ jobs:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
       
-      - name: Cache cargo build
+      - name: Cache cargo bfrontend/uild
         uses: actions/cache@v3
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-bfrontend/uild-target-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Format check
         run: cargo fmt --all -- --check
@@ -211,12 +211,12 @@ jobs:
       - name: Run tests
         run: cargo test --all
       
-      - name: Build release
-        run: cargo build --release
+      - name: Bfrontend/uild release
+        run: cargo bfrontend/uild --release
       
-      - name: Build WASM runtime
+      - name: Bfrontend/uild WASM runtime
         run: |
-          cargo build -p runtime --release --target wasm32-unknown-unknown
+          cargo bfrontend/uild -p runtime --release --target wasm32-unknown-unknown
 ```
 
 This runs automatically on every push/PR!
@@ -228,11 +228,11 @@ This runs automatically on every push/PR!
 ### 1. **Speed Up Compilation**
 Add to `~/.cargo/config.toml`:
 ```toml
-[build]
+[bfrontend/uild]
 jobs = 8  # Parallel compilation jobs (adjust to your CPU cores)
 
 [profile.dev]
-opt-level = 1  # Fast dev builds with minimal optimization
+opt-level = 1  # Fast dev bfrontend/uilds with minimal optimization
 ```
 
 ### 2. **Use Sccache** (Shared Compilation Cache)
@@ -255,7 +255,7 @@ apt-get install lld  # Ubuntu/Debian
 
 Add to `~/.cargo/config.toml`:
 ```toml
-[build]
+[bfrontend/uild]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 ```
 
@@ -315,7 +315,7 @@ Add to `.vscode/settings.json`:
 
 | Tool | Time Saved Per Week | Why |
 |------|-------------------|-----|
-| cargo-watch | 30-60 min | No manual rebuilds |
+| cargo-watch | 30-60 min | No manual rebfrontend/uilds |
 | cargo-expand | 60-120 min | Macro debugging instant |
 | Just/Makefile | 20-30 min | Single-command workflows |
 | Pre-commit hooks | 30-60 min | Catch errors before pushing |
@@ -325,7 +325,7 @@ Add to `.vscode/settings.json`:
 
 ---
 
-## Quick Setup Script
+## Qfrontend/uick Setup Script
 
 ```bash
 #!/bin/bash
@@ -345,7 +345,7 @@ cargo install subxt-cli
 echo "✅ All tools installed!"
 echo ""
 echo "Next steps:"
-echo "1. cargo watch -x 'build --release'  # Auto-rebuild"
+echo "1. cargo watch -x 'bfrontend/uild --release'  # Auto-rebfrontend/uild"
 echo "2. make check                        # Format + lint + test"
 echo "3. cargo tarpaulin --out Html        # Coverage report"
 echo ""
@@ -365,7 +365,7 @@ Save as `scripts/setup-dev-tools.sh` and run: `bash scripts/setup-dev-tools.sh`
 ### 2. **Discord/Slack Integration**
 For team coordination:
 - GitHub notifications → Discord
-- Build failures → Slack alerts
+- Bfrontend/uild failures → Slack alerts
 - Testnet status updates
 
 ---
@@ -384,7 +384,7 @@ rust-lang.rust-analyzer,tamasfe.even-better-toml,panicbit.cargo,dotcypress.vscod
 ```
 
 **Add to workflow:**
-1. Use `cargo watch` for auto-rebuild
+1. Use `cargo watch` for auto-rebfrontend/uild
 2. Use `just check` before commits (auto-format + clippy + test)
 3. Set up GitHub Actions CI for automated testing
 4. Use pre-commit hooks to prevent broken commits

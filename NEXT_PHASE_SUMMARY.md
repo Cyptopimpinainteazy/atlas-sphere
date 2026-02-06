@@ -36,7 +36,7 @@
 Gas Usage:   248 → 165  (-33.5%) ✅
 Bytecode:    1135 → 816 (-28%)  ✅
 Tests:       28/29 passing (100% of relevant tests)
-Build:       Clean (0 errors)
+Bfrontend/uild:       Clean (0 errors)
 ```
 
 ---
@@ -129,7 +129,7 @@ Expected Impact:  60% → 70% compiler completeness
 | **Availability Analysis**   | 150-200 | 3-5        | 1 hour    |
 | **Redundancy Detection**    | 200-300 | 2-3        | 1 hour    |
 | **IR Transformation**       | 300-400 | 5-7        | 1.5 hours |
-| **Integration & Testing**   | 100-150 | Full suite | 1 hour    |
+| **Integration & Testing**   | 100-150 | Full sfrontend/uite | 1 hour    |
 | **Documentation**           | 200-300 | Examples   | 0.5 hours |
 
 **Total**: 900-1250 lines, 11+ tests, 4-6 hours
@@ -143,7 +143,7 @@ Expected Impact:  60% → 70% compiler completeness
 - Dataflow analysis patterns (from DomConstProp, EdgeConstProp)
 - Test infrastructure (79 existing passing tests)
 - Phi node support (from Loop-Pack)
-- Build system (Cargo, all dependencies resolved)
+- Bfrontend/uild system (Cargo, all dependencies resolved)
 
 ✅ **Documentation prepared**:
 - PASS_B_ROADMAP.md (comprehensive planning document)

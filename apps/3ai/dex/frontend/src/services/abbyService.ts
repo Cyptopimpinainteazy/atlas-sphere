@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/frontend/web3.js';
 import { AnchorProvider, Program } from '@project-serum/anchor';
 import { IDL as DexIDL } from '../idl/dex';
 import { MEME_AGENT_PROGRAM_ID } from '../config/constants';

@@ -173,7 +173,7 @@ describe('ABI encoding', () => {
 describe('function encoding', () => {
   describe('functionSelector', () => {
     it('should return 4-byte selector', () => {
-      const selector = functionSelector('transfer(address,uint256)');
+      const selector = functionSelector('transfer(address,frontend/uint256)');
       expect(selector).toMatch(/^0x[0-9a-f]{8}$/);
     });
 
@@ -193,7 +193,7 @@ describe('function encoding', () => {
   describe('encodeFunctionCall', () => {
     it('should include selector and params', () => {
       const call = encodeFunctionCall(
-        'transfer(address,uint256)',
+        'transfer(address,frontend/uint256)',
         [encodeAddress(('0x' + '12'.repeat(20)) as HexString), encodeUint256(100n)]
       );
 
@@ -204,7 +204,7 @@ describe('function encoding', () => {
   describe('decodeFunctionCall', () => {
     it('should extract selector and params', () => {
       const call = encodeFunctionCall(
-        'transfer(address,uint256)',
+        'transfer(address,frontend/uint256)',
         [encodeAddress(('0x' + '12'.repeat(20)) as HexString), encodeUint256(100n)]
       );
 
@@ -261,7 +261,7 @@ describe('error decoding', () => {
   });
 
   describe('isPanicRevert', () => {
-    it('should detect Panic(uint256)', () => {
+    it('should detect Panic(frontend/uint256)', () => {
       const data = new Uint8Array([0x4e, 0x48, 0x7b, 0x71, ...new Array(32).fill(0)]);
       expect(isPanicRevert(data)).toBe(true);
     });

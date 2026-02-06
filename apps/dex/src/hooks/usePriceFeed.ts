@@ -159,7 +159,7 @@ export function usePairPrice(
     }
 
     try {
-      // Try to get exchange rate from liquidity pools
+      // Try to get exchange rate from liqfrontend/uidity pools
       let rate = 0;
       
       try {
@@ -168,7 +168,7 @@ export function usePairPrice(
           ? [tokenIn, tokenOut] 
           : [tokenOut, tokenIn];
         
-        const poolData = await (api.query as any).atlasKernel?.liquidityPools?.(poolKey);
+        const poolData = await (api.query as any).atlasKernel?.liqfrontend/uidityPools?.(poolKey);
         if (poolData && !poolData.isNone) {
           const pool = poolData.unwrap();
           const reserve0 = BigInt(pool.reserve0.toString());

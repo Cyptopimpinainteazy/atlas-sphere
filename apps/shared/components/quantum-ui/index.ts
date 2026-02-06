@@ -26,8 +26,8 @@ export * from './GhostText';
 export * from './HolographicCard';
 export * from './Cube3D';
 
-// Liquid & metallic effects
-export * from './LiquidMetal';
+// Liqfrontend/uid & metallic effects
+export * from './Liqfrontend/uidMetal';
 
 // Atmospheric backgrounds
 export * from './AuroraBorealis';

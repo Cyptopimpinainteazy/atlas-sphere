@@ -309,7 +309,7 @@ export async function getComit(comitId: string): Promise<ComitInfo | null> {
   }
 
   // For now, return basic info from storage
-  // Full comit details would require indexer or event scanning
+  // Full comit details would reqfrontend/uire indexer or event scanning
   const blockNumber = (submittedAt as unknown as { unwrap?: () => { toNumber: () => number } }).unwrap?.().toNumber();
 
   return {

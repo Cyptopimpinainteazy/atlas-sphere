@@ -63,7 +63,7 @@ impl Default for TestTimeout {
 pub struct TestConfig {
     pub network_name: String,
     pub rpc_url: String,
-    pub websocket_url: String,
+    pub frontend/websocket_url: String,
     pub chain_id: u64,
     pub private_key: String,
     pub timeout: TestTimeout,
@@ -75,7 +75,7 @@ impl Default for TestConfig {
         Self {
             network_name: "atlas-sphere-testnet".to_string(),
             rpc_url: "http://localhost:9933".to_string(),
-            websocket_url: "ws://localhost:9944".to_string(),
+            frontend/websocket_url: "ws://localhost:9944".to_string(),
             chain_id: 9999,
             private_key: "0x1234567890123456789012345678901234567890123456789012345678901234".to_string(),
             timeout: TestTimeout::default(),

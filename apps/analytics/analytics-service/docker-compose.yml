@@ -20,7 +20,7 @@ services:
       retries: 5
 
   analytics-service:
-    build:
+    bfrontend/uild:
       context: .
       dockerfile: Dockerfile
     container_name: atlas-analytics-service

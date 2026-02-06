@@ -16,7 +16,7 @@ import {
   Star,
   Zap,
 } from 'lucide-react';
-import { HexagonCluster } from '../../components/ui/Logo';
+import { HexagonCluster } from '../../components/frontend/frontend/ui/Logo';
 
 const communityStats = [
   { label: 'Discord Members', value: '45K+', icon: <MessageSquare className="w-5 h-5" /> },
@@ -28,21 +28,21 @@ const communityStats = [
 const sections = [
   {
     title: 'Community Forum',
-    description: 'Discuss ideas, ask questions, and connect with other X3 STAR builders',
+    description: 'Discuss ideas, ask questions, and connect with other X3 STAR bfrontend/uilders',
     icon: <MessageSquare className="w-8 h-8" />,
     href: '/community/forum',
     color: 'from-orange-500 to-amber-500',
   },
   {
     title: 'Ecosystem Directory',
-    description: 'Discover projects, dApps, and services built on X3 STAR',
+    description: 'Discover projects, dApps, and services bfrontend/uilt on X3 STAR',
     icon: <Globe className="w-8 h-8" />,
     href: '/community/ecosystem',
     color: 'from-blue-500 to-cyan-500',
   },
   {
     title: 'Grants Program',
-    description: 'Get funding to build on X3 STAR and grow the ecosystem',
+    description: 'Get funding to bfrontend/uild on X3 STAR and grow the ecosystem',
     icon: <Gift className="w-8 h-8" />,
     href: '/community/grants',
     color: 'from-emerald-500 to-green-500',
@@ -80,7 +80,7 @@ const socialLinks = [
   },
   {
     name: 'Telegram',
-    description: 'Join our Telegram group for quick updates',
+    description: 'Join our Telegram group for qfrontend/uick updates',
     url: '#',
     icon: <MessageSquare className="w-6 h-6" />,
     members: '30,000+ members',
@@ -159,7 +159,7 @@ export default function CommunityPage() {
               Join the <span className="text-pink-400">X3 STAR Community</span>
             </h1>
             <p className="text-xl text-gray-500 mb-8">
-              Connect with developers, validators, and enthusiasts building the future 
+              Connect with developers, validators, and enthusiasts bfrontend/uilding the future 
               of cross-VM blockchain technology.
             </p>
             <div className="flex flex-wrap gap-4">

@@ -6,8 +6,8 @@
 
 ## 📋 Pre-Deployment Phase
 
-### Build & Testing
-- [ ] Build release binary: `cargo build --release`
+### Bfrontend/uild & Testing
+- [ ] Bfrontend/uild release binary: `cargo bfrontend/uild --release`
 - [ ] Verify binary runs: `./target/release/atlas-sphere-node --version`
 - [ ] Run all unit tests: `cargo test --all`
 - [ ] Run integration tests: `./RUN_ALL_TESTS.sh`
@@ -15,9 +15,9 @@
 - [ ] Verify RPC methods work locally (see `TESTNET_QUICKSTART.md`)
 
 ### Chain Specification
-- [ ] Generate dev chain spec: `atlas-sphere-node build-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
+- [ ] Generate dev chain spec: `atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
 - [ ] Edit chain spec (name, id, bootnodes, validators)
-- [ ] Convert to raw format: `atlas-sphere-node build-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
+- [ ] Convert to raw format: `atlas-sphere-node bfrontend/uild-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
 - [ ] Validate JSON syntax: `jq . atlas-testnet-raw.json`
 - [ ] Commit chain spec to repository
 
@@ -31,7 +31,7 @@
   - [ ] `rpc2.testnet.atlas-sphere.io` → Backup RPC node
   - [ ] `bootnode.testnet.atlas-sphere.io` → Bootnode IP
   - [ ] `faucet.testnet.atlas-sphere.io` → Faucet service
-  - [ ] `metrics.testnet.atlas-sphere.io` → Grafana dashboard
+  - [ ] `metrics.testnet.atlas-sphere.io` → Grafana apps/apps/dash-legacy-2-legacy-2board
 - [ ] Configure firewall rules:
   - [ ] Allow 30333 (P2P) from all
   - [ ] Allow 9944 (RPC) from load balancer only
@@ -110,7 +110,7 @@ For each RPC node (repeat 2+ times):
 - [ ] Set up Nginx/HAProxy for RPC load balancing
 - [ ] Configure health checks (system_health endpoint)
 - [ ] Set rate limiting: 1000 req/min per IP
-- [ ] Enable CORS for web apps
+- [ ] Enable CORS for frontend/frontend/web apps
 - [ ] Test load balancer: `curl http://rpc.testnet.atlas-sphere.io:9944`
 - [ ] Verify failover works (stop one RPC node, test again)
 
@@ -132,10 +132,10 @@ For each RPC node (repeat 2+ times):
 ### Grafana Dashboards
 - [ ] Install Grafana on monitoring server
 - [ ] Add Prometheus data source
-- [ ] Import Substrate node dashboard
-- [ ] Create custom Atlas Kernel dashboard
+- [ ] Import Substrate node apps/apps/dash-legacy-2-legacy-2board
+- [ ] Create custom Atlas Kernel apps/apps/dash-legacy-2-legacy-2board
 - [ ] Configure alert notifications (Discord, Email, PagerDuty)
-- [ ] Make dashboard public: `http://metrics.testnet.atlas-sphere.io`
+- [ ] Make apps/apps/dash-legacy-2-legacy-2board public: `http://metrics.testnet.atlas-sphere.io`
 
 ### Health Checks
 - [ ] Verify all nodes syncing: `system_health` on each node
@@ -181,7 +181,7 @@ For each RPC node (repeat 2+ times):
 - [ ] Create Telegram group for testnet
 - [ ] Prepare Twitter announcement thread
 - [ ] Draft Medium/blog post with technical details
-- [ ] Create quick start video tutorial (optional)
+- [ ] Create qfrontend/uick start video tutorial (optional)
 
 ### Developer Resources
 - [ ] Publish `TESTNET_QUICKSTART.md` to docs site
@@ -212,7 +212,7 @@ For each RPC node (repeat 2+ times):
 ### Performance Validation
 - [ ] Verify block time averaging ~6 seconds
 - [ ] Check finalization delay (<30 seconds typical)
-- [ ] Monitor validator equivocation (should be zero)
+- [ ] Monitor validator eqfrontend/uivocation (should be zero)
 - [ ] Check RPC response times (<200ms average)
 - [ ] Verify no memory leaks (stable memory usage)
 
@@ -230,7 +230,7 @@ For each RPC node (repeat 2+ times):
 ### Stability Monitoring
 - [ ] Daily check on validator uptime (target: 99%+)
 - [ ] Daily check on RPC node uptime (target: 99.9%+)
-- [ ] Review Grafana dashboards for anomalies
+- [ ] Review Grafana apps/apps/dash-legacy-2-legacy-2boards for anomalies
 - [ ] Check disk usage growth rate
 - [ ] Monitor network peer count (should grow daily)
 
@@ -239,7 +239,7 @@ For each RPC node (repeat 2+ times):
 - [ ] Respond to GitHub issues within 24 hours
 - [ ] Host first developer Q&A session
 - [ ] Collect feature requests for v2
-- [ ] Document first community-built apps
+- [ ] Document first community-bfrontend/uilt apps
 
 ### Bug Tracking
 - [ ] Create GitHub issues for reported bugs

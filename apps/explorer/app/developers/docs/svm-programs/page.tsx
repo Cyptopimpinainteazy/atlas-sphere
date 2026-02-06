@@ -7,7 +7,7 @@ export default function SvmProgramsPage() {
   return (
     <DocLayout
       title="SVM Programs Overview"
-      description="Build Solana-compatible programs on X3 Atlas Sphere's SVM environment"
+      description="Bfrontend/uild Solana-compatible programs on X3 Atlas Sphere's SVM environment"
     >
       <p className="lead text-xl text-gray-400 mb-8">
         X3 Atlas Sphere includes a native SVM (Solana Virtual Machine) that runs alongside
@@ -133,7 +133,7 @@ invoke_signed(
 )?;`}
       </CodeBlock>
 
-      <h2>Building Programs</h2>
+      <h2>Bfrontend/uilding Programs</h2>
       <CodeBlock language="bash">
 {`# Install Solana CLI tools
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
@@ -147,8 +147,8 @@ cd my_program
 # solana-program = "1.18"
 # borsh = "1.0"
 
-# Build for BPF
-cargo build-bpf
+# Bfrontend/uild for BPF
+cargo bfrontend/uild-bpf
 
 # The compiled program will be at target/deploy/my_program.so`}
       </CodeBlock>

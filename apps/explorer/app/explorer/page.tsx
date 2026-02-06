@@ -11,7 +11,7 @@ import {
   Activity,
   RefreshCw,
 } from 'lucide-react';
-import { HexagonCluster } from '../../components/ui/Logo';
+import { HexagonCluster } from '../../components/frontend/frontend/ui/Logo';
 import {
   useNetworkStats,
   useRecentBlocks,

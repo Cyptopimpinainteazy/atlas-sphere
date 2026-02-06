@@ -1,4 +1,4 @@
-Below is the complete **CLAUDE‑RUST.md** guide, modelled after the language‑specific files in your repository.
+Below is the complete **CLAUDE‑RUST.md** gfrontend/uide, modelled after the language‑specific files in your repository.
 All version numbers, tools and best‑practice links are current as of **Rust 1.88 (2025‑06‑26)**.
 
 ---
@@ -6,7 +6,7 @@ All version numbers, tools and best‑practice links are current as of **Rust 
 ````markdown
 # CLAUDE‑RUST.md
 
-This file provides comprehensive guidance to **Claude Code** when working with Rust 1.88+ projects.
+This file provides comprehensive gfrontend/uidance to **Claude Code** when working with Rust 1.88+ projects.
 
 ## Core Development Philosophy
 
@@ -25,7 +25,7 @@ Leverage Rust’s ownership and `Send`/`Sync` traits to write data‑race‑free
 unsafe { Box::from_raw(ptr) };
 ````
 
-Every `unsafe` requires:
+Every `unsafe` reqfrontend/uires:
 
 1. **Why** it is needed
 2. Invariants that callers must uphold
@@ -33,11 +33,11 @@ Every `unsafe` requires:
 
 ---
 
-## 🤖 AI Assistant Guidelines
+## 🤖 AI Assistant Gfrontend/uidelines
 
 * **Context Awareness:** Inspect `Cargo.toml`, existing modules, and workspace members before introducing new crates or features.
 * **Duplication Guard:** No duplicate trait or type definitions—reuse or extend existing ones.
-* **Ask vs Assume:** When path ambiguity exists, request clarification; never guess file locations.
+* **Ask vs Assume:** When path ambigfrontend/uity exists, request clarification; never guess file locations.
 * **TDD Preferred:** Write failing unit‐tests before implementing behaviour.
 
 ---
@@ -132,7 +132,7 @@ failure-output = "immediate-final"
 
 ---
 
-## 📝 Error Handling Guidelines
+## 📝 Error Handling Gfrontend/uidelines
 
 * **Library crates:** define typed errors with `thiserror::Error`.
 * **Binary crates:** aggregate with `anyhow::Result<T>` for ergonomic CLI surfaces.
@@ -162,14 +162,14 @@ Do **NOT** mix sync and async blocking calls (`std::thread::sleep`) inside asyn
 
 ---
 
-## 🔐 Security Requirements
+## 🔐 Security Reqfrontend/uirements
 
 | Area             | Rule                                                                            |
 | ---------------- | ------------------------------------------------------------------------------- |
 | **Dependencies** | `cargo audit` must pass — no *RUSTSEC* advisories in `main` ([rustsec.org][11]) |
 | **Supply‑Chain** | Pin transitive crates with `cargo deny` licence & version policies              |
 | **Secrets**      | Never commit tokens; load via `$ENV` or macOS Keychain                          |
-| **Unsafe Code**  | Requires MIRI test or formal proof; CI denies new `unsafe` lines                |
+| **Unsafe Code**  | Reqfrontend/uires MIRI test or formal proof; CI denies new `unsafe` lines                |
 
 ---
 
@@ -177,7 +177,7 @@ Do **NOT** mix sync and async blocking calls (`std::thread::sleep`) inside asyn
 
 * **Clippy Pedantic group** is *WARN* baseline; promote violations to *DENY* when stable.
 * No `unwrap()`, `expect()`, `todo!()` in production code paths.
-* Public items *must* carry rustdoc with examples; `cargo doc --document-private-items` must build cleanly (no `missing_docs`).
+* Public items *must* carry rustdoc with examples; `cargo doc --document-private-items` must bfrontend/uild cleanly (no `missing_docs`).
 * Maximum cyclomatic complexity per function: **10** (enforced by `clippy::cognitive_complexity`).
 * File length ≤ 500 LOC; function length ≤ 50 LOC.
 
@@ -191,7 +191,7 @@ name: Rust CI
 on: [push, pull_request]
 
 jobs:
-  build:
+  bfrontend/uild:
     runs-on: macos-14  # Apple Silicon
     steps:
       - uses: actions/checkout@v4
@@ -229,7 +229,7 @@ jobs:
 
 ---
 
-## ⚠️ Critical Guidelines (Non‑Negotiable)
+## ⚠️ Critical Gfrontend/uidelines (Non‑Negotiable)
 
 1. **FORBID `unsafe_code`** at workspace root; explicitly `allow` only in modules that need it.
 2. **MUST** validate external input (CLI flags, JSON, SQL rows) with `serde` + `validator` or manual checks.

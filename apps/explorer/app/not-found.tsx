@@ -38,7 +38,7 @@ export default function NotFound() {
           </Link>
         </div>
 
-        {/* Quick Links */}
+        {/* Qfrontend/uick Links */}
         <div className="mt-12 pt-8 border-t border-[#1a1a1a]">
           <p className="text-sm text-gray-500 mb-4">Popular destinations</p>
           <div className="flex flex-wrap justify-center gap-3">

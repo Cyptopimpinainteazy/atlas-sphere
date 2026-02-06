@@ -13,7 +13,7 @@ import {
   useColorModeValue,
   Link,
   useBreakpointValue
-} from '@chakra-ui/react';
+} from '@chakra-frontend/frontend/ui/react';
 import { keyframes } from '@emotion/react';
 import { FaRocket, FaChartLine, FaLock, FaExchangeAlt, FaRobot } from 'react-icons/fa';
 import { Link as RouterLink } from 'react-router-dom';
@@ -119,7 +119,7 @@ const LandingPage = () => {
               </Heading>
               <Text fontSize="xl" mb={8} maxW="2xl" opacity={0.9}>
                 Experience the future of decentralized trading with 3aiXchange. 
-                Fast, secure, and built on the 3ai blockchain.
+                Fast, secure, and bfrontend/uilt on the 3ai blockchain.
               </Text>
               <HStack spacing={4}>
                 <Button 
@@ -184,7 +184,7 @@ const LandingPage = () => {
         <Container maxW="container.xl">
           <VStack spacing={2} textAlign="center" mb={16}>
             <Text color="blue.500" fontWeight="bold">WHY CHOOSE 3AIXCHANGE</Text>
-            <Heading as="h2" size="xl">Built for the Future of Trading</Heading>
+            <Heading as="h2" size="xl">Bfrontend/uilt for the Future of Trading</Heading>
             <Text color={useColorModeValue('gray.600', 'gray.400')} maxW="2xl">
               Experience the next generation of decentralized trading with our powerful features
             </Text>

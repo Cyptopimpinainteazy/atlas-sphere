@@ -8,7 +8,7 @@ use frame_support::{
 use frame_system::EnsureRoot;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage,
+    Bfrontend/uildStorage,
 };
 
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -96,10 +96,10 @@ pub const OPERATOR1: u64 = 10;
 pub const OPERATOR2: u64 = 11;
 pub const OPERATOR3: u64 = 12;
 
-/// Build test externalities.
+/// Bfrontend/uild test externalities.
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = frame_system::GenesisConfig::<Test>::default()
-        .build_storage()
+        .bfrontend/uild_storage()
         .unwrap();
 
     pallet_balances::GenesisConfig::<Test> {

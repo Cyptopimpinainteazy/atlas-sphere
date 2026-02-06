@@ -36,7 +36,7 @@ Using PRPs/templates/prp_base_typescript.md as template:
 
 - **Documentation**: URLs with specific sections
 - **Code Examples**: Real snippets from codebase
-- **Gotchas**: Library quirks, version issues, TypeScript gotchas
+- **Gotchas**: Library qfrontend/uirks, version issues, TypeScript gotchas
 - **Patterns**: Existing approaches to follow
 - **Best Practices**: Common pitfalls found during research
 
@@ -59,15 +59,15 @@ npm run lint
 # Unit Tests
 npm test
 
-# Build validation
-npm run build
+# Bfrontend/uild validation
+npm run bfrontend/uild
 
 # Integration tests (if applicable)
 npm run test:integration
 ```
 
 The more validation gates the better, but make sure they are executable by the AI agent.
-Include tests, build validation, linting, and any other relevant validation gates. Get creative with the validation gates.
+Include tests, bfrontend/uild validation, linting, and any other relevant validation gates. Get creative with the validation gates.
 
 **_ CRITICAL AFTER YOU ARE DONE RESEARCHING AND EXPLORING THE CODEBASE BEFORE YOU START WRITING THE PRP _**
 

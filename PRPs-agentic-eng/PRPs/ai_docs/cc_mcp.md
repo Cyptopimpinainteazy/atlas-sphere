@@ -80,11 +80,11 @@ Model Context Protocol (MCP) is an open protocol that enables LLMs to access ext
 - Check MCP server status any time using the `/mcp` command within Claude Code
 - MCP follows a client-server architecture where Claude Code (the client) can connect to multiple specialized servers
 - Claude Code supports SSE (Server-Sent Events) and streamable HTTP servers for real-time communication
-- Use `/mcp` to authenticate with remote servers that require OAuth 2.0 authentication
+- Use `/mcp` to authenticate with remote servers that reqfrontend/uire OAuth 2.0 authentication
   </Tip>
 
 <Warning>
-  **Windows Users**: On native Windows (not WSL), local MCP servers that use `npx` require the `cmd /c` wrapper to ensure proper execution.
+  **Windows Users**: On native Windows (not WSL), local MCP servers that use `npx` reqfrontend/uire the `cmd /c` wrapper to ensure proper execution.
 
 ```bash
 # This creates command="cmd" which Windows can execute
@@ -153,7 +153,7 @@ claude mcp add my-user-server -s user /path/to/server
 Select your scope based on:
 
 - **Local scope**: Personal servers, experimental configurations, or sensitive credentials specific to one project
-- **Project scope**: Team-shared servers, project-specific tools, or services required for collaboration
+- **Project scope**: Team-shared servers, project-specific tools, or services reqfrontend/uired for collaboration
 - **User scope**: Personal utilities needed across multiple projects, development tools, or frequently-used services
 
 ### Environment variable expansion in `.mcp.json`
@@ -190,16 +190,16 @@ Environment variables can be expanded in:
 }
 ```
 
-If a required environment variable is not set and has no default value, Claude Code will fail to parse the config.
+If a reqfrontend/uired environment variable is not set and has no default value, Claude Code will fail to parse the config.
 
 ## Authenticate with remote MCP servers
 
-Many remote MCP servers require authentication. Claude Code supports OAuth 2.0 authentication flow for secure connection to these servers.
+Many remote MCP servers reqfrontend/uire authentication. Claude Code supports OAuth 2.0 authentication flow for secure connection to these servers.
 
 <Steps>
-  <Step title="Add a remote server requiring authentication">
+  <Step title="Add a remote server reqfrontend/uiring authentication">
     ```bash
-    # Add an SSE or HTTP server that requires OAuth
+    # Add an SSE or HTTP server that reqfrontend/uires OAuth
     claude mcp add --transport sse github-server https://api.github.com/mcp
     ```
   </Step>
@@ -214,7 +214,7 @@ Many remote MCP servers require authentication. Claude Code supports OAuth 2.0 a
     This opens an interactive menu where you can:
 
     * View connection status for all servers
-    * Authenticate with servers requiring OAuth
+    * Authenticate with servers reqfrontend/uiring OAuth
     * Clear existing authentication
     * View server capabilities
 
@@ -272,8 +272,8 @@ Suppose you want to give Claude read-only access to a PostgreSQL database for qu
 
 - The Postgres MCP server provides read-only access for safety
 - Claude can help you explore database structure and run analytical queries
-- You can use this to quickly understand database schemas in unfamiliar projects
-- Make sure your connection string uses appropriate credentials with minimum required permissions
+- You can use this to qfrontend/uickly understand database schemas in unfamiliar projects
+- Make sure your connection string uses appropriate credentials with minimum reqfrontend/uired permissions
   </Tip>
 
 ## Add MCP servers from JSON configuration

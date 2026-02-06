@@ -1,4 +1,4 @@
-# ConditionalFoldPass: Quick Reference & Testing Guide
+# ConditionalFoldPass: Qfrontend/uick Reference & Testing Gfrontend/uide
 
 ## 🚀 TL;DR
 
@@ -9,13 +9,13 @@
 
 ---
 
-## 📋 Quick Test
+## 📋 Qfrontend/uick Test
 
 ```bash
 # Test just this pass
 cargo test -p x3-opt --lib passes::cond_fold
 
-# Full optimizer suite
+# Full optimizer sfrontend/uite
 cargo test -p x3-opt --lib
 
 # With detailed output
@@ -160,7 +160,7 @@ fn do_not_fold_when_unknown() {
 ```rust
 #[test]
 fn fold_constant_arithmetic() {
-    // Build MIR:
+    // Bfrontend/uild MIR:
     // v0 = const 5
     // v1 = const 3
     // v2 = add v0, v1        // becomes Const(8)
@@ -282,7 +282,7 @@ After this pass stabilizes, next phases:
 
 ---
 
-## 📞 Quick FAQ
+## 📞 Qfrontend/uick FAQ
 
 **Q: Does it handle loops?**  
 A: Yes, but conservatively. Loop-invariant constants are discovered by DomConstProp first.
@@ -291,7 +291,7 @@ A: Yes, but conservatively. Loop-invariant constants are discovered by DomConstP
 A: Function calls set variables to Overdefined (unknown return value), preventing false folds.
 
 **Q: Can I disable it?**  
-A: Yes: build custom Optimizer with custom pass list, or modify default_passes().
+A: Yes: bfrontend/uild custom Optimizer with custom pass list, or modify default_passes().
 
 **Q: Thread-safe?**  
 A: Yes. Each pass processes MirModule independently. No global state.

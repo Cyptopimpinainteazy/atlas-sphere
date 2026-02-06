@@ -10,7 +10,7 @@ This report is evidence-driven: findings cite concrete repository controls and t
 
 ## Executive Summary
 
-The codebase contains strong *building blocks* (explicit authorization model in the kernel, governance kill switch primitives, separation between dev and non-dev runtime composition). However, multiple system-critical guarantees implied by “Autonomous Security Constitution” are **not actually enforced** today due to CI running in non-production-faithful configurations and due to placeholder governance AI simulation/sandbox/rollback logic.
+The codebase contains strong *bfrontend/uilding blocks* (explicit authorization model in the kernel, governance kill switch primitives, separation between dev and non-dev runtime composition). However, multiple system-critical guarantees implied by “Autonomous Security Constitution” are **not actually enforced** today due to CI running in non-production-faithful configurations and due to placeholder governance AI simulation/sandbox/rollback logic.
 
 The highest risk class is **false confidence**: the repository appears to have comprehensive security scanning and “real VM checks”, but several of those checks are configured to **not fail the pipeline** or to run with **feature sets that can activate dev-only bypass paths**.
 
@@ -30,7 +30,7 @@ Until the project fails closed on security gates and proves real (non-mock) cros
 - External attacker exploiting missing enforcement (bridge mocks / simulated safety)
 - Insider or supply-chain adversary exploiting CI fail-open scans
 - Governance key compromise / misconfiguration
-- Operator error: release built with dev-only features enabled
+- Operator error: release bfrontend/uilt with dev-only features enabled
 
 ---
 
@@ -38,7 +38,7 @@ Until the project fails closed on security gates and proves real (non-mock) cros
 
 | ID | Severity | Title |
 |---:|:--------:|-------|
-| F-01 | CRITICAL | CI uses `--all-features`, enabling dev-only bypass paths in security-relevant builds/tests |
+| F-01 | CRITICAL | CI uses `--all-features`, enabling dev-only bypass paths in security-relevant bfrontend/uilds/tests |
 | F-02 | CRITICAL | Vulnerability scanning runs fail-open (`|| true`) in “production deploy” workflow |
 | F-03 | HIGH | “Real VM” integration checks ignore multiple test failures (`|| true`) |
 | F-04 | HIGH | AI governance simulation/sandbox/rollback are explicitly placeholders (non-deterministic, non-enforcing) |
@@ -63,7 +63,7 @@ Until the project fails closed on security gates and proves real (non-mock) cros
   - `.github/workflows/production-deploy.yml` runs `cargo test --workspace --release --all-features`
 
 **Why this matters**
-For a Substrate runtime with dev-only features, `--all-features` is not a “stronger” test — it is a *different product configuration*. It can activate dev bypasses that are intentionally excluded from production builds, masking security posture.
+For a Substrate runtime with dev-only features, `--all-features` is not a “stronger” test — it is a *different product configuration*. It can activate dev bypasses that are intentionally excluded from production bfrontend/uilds, masking security posture.
 
 **Concrete risk example**
 The kernel explicitly documents a dev-only authorization bypass:
@@ -74,12 +74,12 @@ If CI validates behavior under `--all-features`, it can accidentally validate a 
 **Recommendation**
 - Replace `--all-features` with an explicit **feature matrix**:
   - Production-faithful: `--no-default-features` (runtime), and explicit “prod” feature set for std/non-std as intended.
-  - Dev/test: `--features std,dev` only where required.
-  - Never test “security posture” using feature-union builds.
+  - Dev/test: `--features std,dev` only where reqfrontend/uired.
+  - Never test “security posture” using feature-union bfrontend/uilds.
 - Add a job that **asserts forbidden features are absent** in release artifacts (e.g., deny `dev-bypass` in release pipeline).
 
 **Acceptance criteria**
-- A CI job exists that builds/tests the runtime/node in the exact feature configuration intended for production release.
+- A CI job exists that bfrontend/uilds/tests the runtime/node in the exact feature configuration intended for production release.
 - A CI job fails if forbidden dev bypass features are enabled.
 
 ---
@@ -138,7 +138,7 @@ This creates a non-blocking “green” signal even when VM integration is broke
   - `create_rollback_checkpoint`: returns empty checkpoint
 
 **Why this matters**
-If the constitution requires deterministic simulation, sandbox enforcement, and rollback capability prior to enactment, the current implementation does not satisfy those requirements.
+If the constitution reqfrontend/uires deterministic simulation, sandbox enforcement, and rollback capability prior to enactment, the current implementation does not satisfy those reqfrontend/uirements.
 
 **Recommendation**
 - Replace placeholders with deterministic, reproducible simulations and state-diff validation.
@@ -166,7 +166,7 @@ Atomic cross-chain / cross-VM swap safety relies on real state transitions and v
 - Ensure hostcalls enforce gas/limits, return structured receipts, and are covered by integration tests.
 
 **Acceptance criteria**
-- Mock hostcalls are either removed from production builds or clearly gated behind a dev/test feature.
+- Mock hostcalls are either removed from production bfrontend/uilds or clearly gated behind a dev/test feature.
 - Integration tests prove end-to-end execution paths across the intended domains.
 
 ---
@@ -193,10 +193,10 @@ This is acceptable in a hermetic CI environment but becomes a critical issue if 
 
 **Evidence**
 - `pallets/atlas-kernel/src/lib.rs` `auth_check()`:
-  - Without `dev-bypass`: requires membership in `AuthorizedAccounts`, empty allowlist means “no one authorized”.
+  - Without `dev-bypass`: reqfrontend/uires membership in `AuthorizedAccounts`, empty allowlist means “no one authorized”.
 
 **Why this matters**
-This is a good primitive. The main risk is CI/packaging accidentally validating or building with bypass enabled.
+This is a good primitive. The main risk is CI/packaging accidentally validating or bfrontend/uilding with bypass enabled.
 
 ---
 
@@ -208,7 +208,7 @@ This is a good primitive. The main risk is CI/packaging accidentally validating 
 1) CI fails closed on vulnerability scans and VM integration tests.
 2) Release validation uses production-faithful feature sets (no `--all-features` for security validation).
 3) Governance AI simulation/sandbox/rollback claims are implemented or removed and replaced with explicit limitations.
-4) Mock bridge hostcalls are removed from production builds or replaced with real implementations and end-to-end proof.
+4) Mock bridge hostcalls are removed from production bfrontend/uilds or replaced with real implementations and end-to-end proof.
 
 ---
 

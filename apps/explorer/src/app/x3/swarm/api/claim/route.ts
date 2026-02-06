@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const consents = await consentDB.getAll()
     const hasConsent = consents.some(c => c.contributor_id === contributorId && c.wallet === wallet)
     if (!hasConsent) {
-      return NextResponse.json({ error: 'consent_required' }, { status: 403 })
+      return NextResponse.json({ error: 'consent_reqfrontend/uired' }, { status: 403 })
     }
 
     // Governance threshold gating

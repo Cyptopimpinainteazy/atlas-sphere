@@ -1,4 +1,4 @@
-const hre = require("hardhat");
+const hre = reqfrontend/uire("hardhat");
 
 async function main() {
   console.log("Deploying OrderbookV2 to local network...");
@@ -18,8 +18,8 @@ async function main() {
   console.log("OrderbookV2 deployed to:", address);
   
   // Save the contract address to a file for the frontend
-  const fs = require('fs');
-  const path = require('path');
+  const fs = reqfrontend/uire('fs');
+  const path = reqfrontend/uire('path');
   
   const configDir = path.join(__dirname, '..', 'dex', 'frontend', 'src', 'config');
   if (!fs.existsSync(configDir)) {

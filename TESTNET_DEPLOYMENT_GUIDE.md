@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - Deployment Guide
+# Atlas Sphere Testnet v1 - Deployment Gfrontend/uide
 
 **Status**: Ready for Deployment  
 **Version**: 0.1.0-testnet  
@@ -44,10 +44,10 @@ Atlas Sphere Testnet v1 is a **developer preview network** designed for:
 
 ## Pre-Deployment Checklist
 
-### 1. Build Release Binary
+### 1. Bfrontend/uild Release Binary
 ```bash
 cd /home/lojak/Desktop/atlas-sphere
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 **Verify binary**:
@@ -59,7 +59,7 @@ cargo build --release
 
 **Create testnet chain spec**:
 ```bash
-./target/release/atlas-sphere-node build-spec \
+./target/release/atlas-sphere-node bfrontend/uild-spec \
   --chain local \
   --disable-default-bootnode \
   > atlas-testnet.json
@@ -67,7 +67,7 @@ cargo build --release
 
 **Convert to raw format**:
 ```bash
-./target/release/atlas-sphere-node build-spec \
+./target/release/atlas-sphere-node bfrontend/uild-spec \
   --chain atlas-testnet.json \
   --raw \
   --disable-default-bootnode \
@@ -123,7 +123,7 @@ Edit `atlas-testnet.json` and add validator public keys:
 
 ## Deployment Architecture
 
-### Minimum Requirements
+### Minimum Reqfrontend/uirements
 - **3 Validator Nodes** (authority set)
 - **2 RPC Nodes** (public endpoints)
 - **1 Bootnode** (peer discovery)
@@ -382,7 +382,7 @@ POST https://faucet.testnet.atlas-sphere.io/claim
 
 ## Developer Onboarding
 
-### Quick Start for Developers
+### Qfrontend/uick Start for Developers
 
 **1. Get testnet tokens**:
 ```bash
@@ -527,10 +527,10 @@ sudo systemctl start atlas-validator
 
 ### Updating Node Software
 
-**1. Build new version**:
+**1. Bfrontend/uild new version**:
 ```bash
 git pull origin main
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 **2. Stop node**:
@@ -622,7 +622,7 @@ Atlas Sphere Testnet v1 is ready for deployment with:
 - HTTP-only RPC (WebSocket coming soon)
 - No economic value (testnet only)
 
-**Deploy immediately** to gather community feedback while continuing development in parallel.
+**Deploy immediately** to gather community feedback while continfrontend/uing development in parallel.
 
 ---
 

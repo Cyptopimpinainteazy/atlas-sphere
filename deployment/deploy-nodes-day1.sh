@@ -15,7 +15,7 @@ CHAIN_SPEC="$DEPLOYMENT_DIR/chain-specs/atlas-testnet-raw.json"
 KEYS_DIR="$DEPLOYMENT_DIR/keys"
 INVENTORY="$DEPLOYMENT_DIR/inventory.yaml"
 
-# Check prerequisites
+# Check prereqfrontend/uisites
 if [ ! -f "$BINARY" ]; then
     echo "❌ Binary not found: $BINARY"
     echo "   Copy from target/release/atlas-sphere-node"
@@ -27,7 +27,7 @@ if [ ! -f "$CHAIN_SPEC" ]; then
     exit 1
 fi
 
-echo "✅ Prerequisites checked"
+echo "✅ Prereqfrontend/uisites checked"
 echo ""
 
 # Step 1: Deploy bootnode

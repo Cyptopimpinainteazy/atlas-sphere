@@ -13,7 +13,7 @@ This directory contains comprehensive documentation and tooling to merge all 28 
    - 7-phase merge strategy organized by priority
    - Manual and automated merge approaches
    - Conflict resolution strategies
-   - Testing requirements for each phase
+   - Testing reqfrontend/uirements for each phase
    - Rollback procedures
 
 2. **FEATURE_ANALYSIS.md** (13 KB, 397 lines)
@@ -43,7 +43,7 @@ This directory contains comprehensive documentation and tooling to merge all 28 
    - Color-coded progress output
    - Error handling
 
-## 🚀 Quick Start
+## 🚀 Qfrontend/uick Start
 
 ### Option 1: Automated Merge (Recommended for Testing)
 
@@ -82,7 +82,7 @@ git checkout -b integration/all-features main
 ./scripts/merge_all_branches.sh
 
 # 3. Test thoroughly
-cd swarm-dashboard && npm test
+cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm test
 python -m pytest
 cargo test  # if applicable
 
@@ -133,7 +133,7 @@ The following files will likely have conflicts:
 - `.github/workflows/ci-swarm.yml` (multiple PRs modify)
 - `package.json` / `package-lock.json` (dependency updates)
 - `tools/fund_allocations.py` (optimization + security fixes)
-- `swarm-dashboard/` directory (TypeScript migration)
+- `apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/` directory (TypeScript migration)
 
 See **FEATURE_ANALYSIS.md** for detailed conflict predictions and resolution strategies.
 
@@ -143,10 +143,10 @@ Do NOT merge these branches:
 
 - ❌ `test/alembic-lint-fail` - Intentional CI failure for testing
 - ❌ `opt/yolo-20251209T114158` - Experimental/temporary
-- ❌ `feature/dashboard-mvp-clean` - Duplicate of swarm-dashboard-e2e
+- ❌ `feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean` - Duplicate of apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
 - ❌ `copilot/merge-all-feature-branches` - Current working branch
 
-## 🧪 Testing Requirements
+## 🧪 Testing Reqfrontend/uirements
 
 After merging each phase, run appropriate tests:
 
@@ -158,7 +158,7 @@ cd alembic && alembic upgrade head && alembic downgrade base
 
 ### Frontend
 ```bash
-cd swarm-dashboard
+cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
 npm install
 npm run tsc --silent
 npm test
@@ -168,7 +168,7 @@ npm run e2e:test
 ### Rust/Substrate (if applicable)
 ```bash
 cargo test
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 ## 🔄 Rollback Plan
@@ -215,7 +215,7 @@ For first-time users:
 ### Dependency Chains
 
 Some branches depend on others:
-- Several PRs target `feature/swarm-dashboard-e2e` → Merge that branch first
+- Several PRs target `feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e` → Merge that branch first
 - Security fixes should be merged before feature work
 - Database migrations should be merged before backend features
 
@@ -247,7 +247,7 @@ The merge is successful when:
 - ✅ All security fixes are in main (no hardcoded secrets)
 - ✅ All CI workflows pass
 - ✅ All tests pass (Python, Frontend, Rust)
-- ✅ Application builds successfully
+- ✅ Application bfrontend/uilds successfully
 - ✅ Database migrations work correctly
 - ✅ No duplicate code remains
 - ✅ Documentation reflects new features

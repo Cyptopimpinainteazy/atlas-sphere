@@ -856,7 +856,7 @@ pub mod pallet {
                 state_root: initial_checkpoint.state_root,
             });
 
-            // Build at most one payload per VM.
+            // Bfrontend/uild at most one payload per VM.
             let mut evm_payload: Vec<u8> = Vec::new();
             let mut svm_payload: Vec<u8> = Vec::new();
             let mut x3_payload: Vec<u8> = Vec::new();
@@ -868,24 +868,24 @@ pub mod pallet {
                             evm_payload.is_empty(),
                             Error::<T>::KernelComitDuplicateVmLeg
                         );
-                        evm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                        evm_payload = Self::bfrontend/uild_trade_payload(leg, leg.amount_in)?;
                     }
                     VmType::Svm => {
                         ensure!(
                             svm_payload.is_empty(),
                             Error::<T>::KernelComitDuplicateVmLeg
                         );
-                        svm_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                        svm_payload = Self::bfrontend/uild_trade_payload(leg, leg.amount_in)?;
                     }
                     VmType::X3 => {
                         ensure!(x3_payload.is_empty(), Error::<T>::KernelComitDuplicateVmLeg);
-                        x3_payload = Self::build_trade_payload(leg, leg.amount_in)?;
+                        x3_payload = Self::bfrontend/uild_trade_payload(leg, leg.amount_in)?;
                     }
                     VmType::CrossVm => return Err(Error::<T>::KernelComitUnsupportedVm.into()),
                 }
             }
 
-            // Kernel nonce and fee upper bound (using kernel-default limits so fee is always >= required_fee).
+            // Kernel nonce and fee upper bound (using kernel-default limits so fee is always >= reqfrontend/uired_fee).
             let kernel_nonce = pallet_atlas_kernel::Nonces::<T>::get(&who);
 
             let evm_units = if evm_payload.is_empty() {
@@ -1142,8 +1142,8 @@ pub mod pallet {
             leg: &TradeLeg,
             amount_in: u128,
         ) -> Result<(u128, u64), TradeLegFailureReason> {
-            // Build payload for the appropriate VM
-            let payload = Self::build_trade_payload(leg, amount_in)?;
+            // Bfrontend/uild payload for the appropriate VM
+            let payload = Self::bfrontend/uild_trade_payload(leg, amount_in)?;
 
             match leg.vm_type {
                 VmType::Evm => {
@@ -1190,7 +1190,7 @@ pub mod pallet {
                     Ok((amount_out, receipt.gas_used))
                 }
                 VmType::CrossVm => {
-                    // Cross-VM execution requires coordination between both VMs
+                    // Cross-VM execution reqfrontend/uires coordination between both VMs
                     Self::execute_cross_vm_leg(leg, amount_in)
                 }
             }
@@ -1201,8 +1201,8 @@ pub mod pallet {
             leg: &TradeLeg,
             amount_in: u128,
         ) -> Result<(u128, u64), TradeLegFailureReason> {
-            // Build EVM portion payload
-            let evm_payload = Self::build_cross_vm_evm_payload(leg, amount_in)?;
+            // Bfrontend/uild EVM portion payload
+            let evm_payload = Self::bfrontend/uild_cross_vm_evm_payload(leg, amount_in)?;
 
             // Execute EVM portion
             let evm_receipt = <T as pallet::Config>::EvmAdapter::execute(
@@ -1219,8 +1219,8 @@ pub mod pallet {
             let bridged_amount = Self::parse_swap_output(&evm_receipt.return_data)
                 .ok_or(TradeLegFailureReason::CrossVmBridgeFailed)?;
 
-            // Build SVM portion payload with bridged amount
-            let svm_payload = Self::build_cross_vm_svm_payload(leg, bridged_amount)?;
+            // Bfrontend/uild SVM portion payload with bridged amount
+            let svm_payload = Self::bfrontend/uild_cross_vm_svm_payload(leg, bridged_amount)?;
 
             // Execute SVM portion
             let svm_receipt = <T as pallet::Config>::SvmAdapter::execute(
@@ -1241,8 +1241,8 @@ pub mod pallet {
             Ok((amount_out, total_gas))
         }
 
-        /// Build trade payload for VM execution.
-        fn build_trade_payload(
+        /// Bfrontend/uild trade payload for VM execution.
+        fn bfrontend/uild_trade_payload(
             leg: &TradeLeg,
             amount_in: u128,
         ) -> Result<Vec<u8>, TradeLegFailureReason> {
@@ -1276,8 +1276,8 @@ pub mod pallet {
             Ok(payload)
         }
 
-        /// Build EVM payload for cross-VM trade.
-        fn build_cross_vm_evm_payload(
+        /// Bfrontend/uild EVM payload for cross-VM trade.
+        fn bfrontend/uild_cross_vm_evm_payload(
             leg: &TradeLeg,
             amount_in: u128,
         ) -> Result<Vec<u8>, TradeLegFailureReason> {
@@ -1304,8 +1304,8 @@ pub mod pallet {
             Ok(payload)
         }
 
-        /// Build SVM payload for cross-VM trade.
-        fn build_cross_vm_svm_payload(
+        /// Bfrontend/uild SVM payload for cross-VM trade.
+        fn bfrontend/uild_cross_vm_svm_payload(
             leg: &TradeLeg,
             bridged_amount: u128,
         ) -> Result<Vec<u8>, TradeLegFailureReason> {
@@ -1543,7 +1543,7 @@ pub mod pallet {
             _token_out: H256,
             _amount_in: u128,
         ) -> Option<(Vec<types::RouteStep>, u128)> {
-            // Build trade graph from registered AMM adapters
+            // Bfrontend/uild trade graph from registered AMM adapters
             let _graph = graph::TradeGraph::new();
 
             // In production, populate graph from on-chain pool data
@@ -1663,7 +1663,7 @@ pub enum TradeLegFailureReason {
     X3ExecutionFailed,
     CrossVmBridgeFailed,
     SlippageExceeded,
-    InsufficientLiquidity,
+    InsufficientLiqfrontend/uidity,
     InvalidRoute,
     Timeout,
 }
@@ -1686,8 +1686,8 @@ impl From<TradeLegFailureReason> for sp_runtime::DispatchError {
             TradeLegFailureReason::SlippageExceeded => {
                 sp_runtime::DispatchError::Other("Slippage exceeded")
             }
-            TradeLegFailureReason::InsufficientLiquidity => {
-                sp_runtime::DispatchError::Other("Insufficient liquidity")
+            TradeLegFailureReason::InsufficientLiqfrontend/uidity => {
+                sp_runtime::DispatchError::Other("Insufficient liqfrontend/uidity")
             }
             TradeLegFailureReason::InvalidRoute => {
                 sp_runtime::DispatchError::Other("Invalid route")
@@ -1715,7 +1715,7 @@ pub struct TradeBatch<AccountId, Balance, MaxTradeLegs: Get<u32>> {
     pub _phantom: core::marker::PhantomData<Balance>,
 }
 
-// Manual Clone implementation since derive requires MaxTradeLegs: Clone
+// Manual Clone implementation since derive reqfrontend/uires MaxTradeLegs: Clone
 impl<AccountId: Clone, Balance, MaxTradeLegs: Get<u32>> Clone
     for TradeBatch<AccountId, Balance, MaxTradeLegs>
 {

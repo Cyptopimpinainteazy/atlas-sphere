@@ -142,8 +142,8 @@ export function MintView() {
       // Dynamic import SDK
       const sdk = await import('@atlas-sphere/ts-sdk');
       
-      // Build token creation payload
-      const payload = buildMintPayload(config);
+      // Bfrontend/uild token creation payload
+      const payload = bfrontend/uildMintPayload(config);
       
       // For demo, simulate the minting process
       await new Promise(resolve => setTimeout(resolve, 3000));
@@ -664,7 +664,7 @@ export function MintView() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
+              {/* Qfrontend/uick Actions */}
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={resetForm}
@@ -708,7 +708,7 @@ export function MintView() {
 }
 
 // Helper functions
-function buildMintPayload(config: TokenConfig): Uint8Array {
+function bfrontend/uildMintPayload(config: TokenConfig): Uint8Array {
   // Encode token creation parameters
   const encoder = new TextEncoder();
   const nameBytes = encoder.encode(config.name);

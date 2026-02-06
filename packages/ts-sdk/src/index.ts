@@ -9,16 +9,16 @@
  *
  * @example
  * ```typescript
- * import { AtlasSphereClient, ComitBuilder } from '@atlas-sphere/ts-sdk';
+ * import { AtlasSphereClient, ComitBfrontend/uilder } from '@atlas-sphere/ts-sdk';
  *
  * const client = new AtlasSphereClient({ endpoint: 'ws://localhost:9944' });
  * await client.connect();
  *
- * const comit = new ComitBuilder()
+ * const comit = new ComitBfrontend/uilder()
  *   .withEvmPayload({ to: '0x...', data: '0x...', value: 0n })
  *   .withSvmPayload({ programId: '0x...', data: '0x...' })
  *   .withFee('auto')
- *   .build();
+ *   .bfrontend/uild();
  *
  * const result = await client.submitComit(comit, signerAccount);
  * ```
@@ -87,11 +87,11 @@ export type {
 } from './client';
 
 // =============================================================================
-// Comit Builder
+// Comit Bfrontend/uilder
 // =============================================================================
 
 export {
-  ComitBuilder,
+  ComitBfrontend/uilder,
   comit,
   evmComit,
   svmComit,

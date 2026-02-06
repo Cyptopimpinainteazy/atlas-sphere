@@ -23,7 +23,7 @@ fn register_x3_domain_succeeds() {
 }
 
 #[test]
-fn set_records_requires_owner() {
+fn set_records_reqfrontend/uires_owner() {
     new_test_ext().execute_with(|| {
         assert_ok!(X3DomainRegistry::register_domain(
             RuntimeOrigin::signed(1),

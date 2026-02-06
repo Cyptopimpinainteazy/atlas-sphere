@@ -1,4 +1,4 @@
-import { Box, VStack, Link, Icon, Text, useColorModeValue } from '@chakra-ui/react';
+import { Box, VStack, Link, Icon, Text, useColorModeValue } from '@chakra-frontend/frontend/ui/react';
 import { NavLink as RouterLink, useLocation } from 'react-router-dom';
 import { FiHome, FiTrendingUp, FiDollarSign, FiPieChart, FiSettings } from 'react-icons/fi';
 

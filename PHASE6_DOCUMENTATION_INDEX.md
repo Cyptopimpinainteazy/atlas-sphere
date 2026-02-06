@@ -14,10 +14,10 @@
 
 | File                                               | Purpose                          | Read Time |
 | -------------------------------------------------- | -------------------------------- | --------- |
-| [PHASE6_QUICK_START.md](PHASE6_QUICK_START.md)     | Overview + quick reference       | 5 min     |
-| [PHASE6_COMPLETE.md](PHASE6_COMPLETE.md)           | Comprehensive architecture guide | 20 min    |
-| [PHASE6_BUILD_REPORT.txt](PHASE6_BUILD_REPORT.txt) | Build metrics + status           | 2 min     |
-| This file                                          | Navigation guide                 | 2 min     |
+| [PHASE6_QUICK_START.md](PHASE6_QUICK_START.md)     | Overview + qfrontend/uick reference       | 5 min     |
+| [PHASE6_COMPLETE.md](PHASE6_COMPLETE.md)           | Comprehensive architecture gfrontend/uide | 20 min    |
+| [PHASE6_BUILD_REPORT.txt](PHASE6_BUILD_REPORT.txt) | Bfrontend/uild metrics + status           | 2 min     |
+| This file                                          | Navigation gfrontend/uide                 | 2 min     |
 
 ---
 
@@ -67,7 +67,7 @@ cargo test -p x3-opt superoptimizer
 
 ---
 
-## 🚀 Quick API Reference
+## 🚀 Qfrontend/uick API Reference
 
 ### Register Allocator
 ```rust
@@ -104,8 +104,8 @@ let best = opt.search()?;
 | -------------------- | --------- |
 | Tests Passing        | 120/120 ✅ |
 | Compilation Errors   | 0 ✅       |
-| Build Time (dev)     | 8.09s ✅   |
-| Build Time (release) | 11m ✅     |
+| Bfrontend/uild Time (dev)     | 8.09s ✅   |
+| Bfrontend/uild Time (release) | 11m ✅     |
 | New Code Lines       | ~900      |
 | New Tests            | 8         |
 | Backward Compatible  | 100% ✅    |
@@ -127,8 +127,8 @@ let best = opt.search()?;
 
 ### Superoptimizer
 **Problem**: Find fastest instruction sequence for expression  
-**Solution**: Enumerate all equivalent orderings + cost model  
-**Equivalences**: Commutative, associative, strength reduction  
+**Solution**: Enumerate all eqfrontend/uivalent orderings + cost model  
+**Eqfrontend/uivalences**: Commutative, associative, strength reduction  
 **Result**: Instruction sequence with lowest weighted cost
 
 ---
@@ -169,7 +169,7 @@ Phase 7: (Next) CLI/RPC integration & E2E testing
 - Superoptimizer: [PHASE6_COMPLETE.md](PHASE6_COMPLETE.md#-d-superoptimizer-core-smt--brute-force)
 
 **If you want to use them in code:**
-- [PHASE6_QUICK_START.md](PHASE6_QUICK_START.md#-quick-api-reference)
+- [PHASE6_QUICK_START.md](PHASE6_QUICK_START.md#-qfrontend/uick-api-reference)
 
 **If you want to extend them:**
 - Look at the source code + comments

@@ -48,8 +48,8 @@ pub struct SettlementLeg {
     pub asset: AssetSpec,
     /// Timeout for this leg
     pub timeout: u64,
-    /// Required confirmations
-    pub confirmations_required: u32,
+    /// Reqfrontend/uired confirmations
+    pub confirmations_reqfrontend/uired: u32,
 }
 
 /// Settlement risk level
@@ -101,7 +101,7 @@ impl IntentPlanner {
                 chain: slow_chain.chain.clone(),
                 asset: slow_chain.clone(),
                 timeout: slow_timeout,
-                confirmations_required: Self::required_confirmations(&slow_chain.chain),
+                confirmations_reqfrontend/uired: Self::reqfrontend/uired_confirmations(&slow_chain.chain),
             },
             // Leg 1: Fast chain funds second
             SettlementLeg {
@@ -109,7 +109,7 @@ impl IntentPlanner {
                 chain: fast_chain.chain.clone(),
                 asset: fast_chain.clone(),
                 timeout: fast_timeout,
-                confirmations_required: Self::required_confirmations(&fast_chain.chain),
+                confirmations_reqfrontend/uired: Self::reqfrontend/uired_confirmations(&fast_chain.chain),
             },
         ];
 
@@ -139,8 +139,8 @@ impl IntentPlanner {
         }
     }
 
-    /// Get required confirmations for chain
-    fn required_confirmations(chain: &ExternalChainId) -> u32 {
+    /// Get reqfrontend/uired confirmations for chain
+    fn reqfrontend/uired_confirmations(chain: &ExternalChainId) -> u32 {
         match chain {
             ExternalChainId::Bitcoin | ExternalChainId::BitcoinTestnet => 6,
             ExternalChainId::Ethereum => 12,

@@ -1,6 +1,6 @@
 # DNS Configuration for Atlas Sphere Testnet
 
-## Required DNS Records
+## Reqfrontend/uired DNS Records
 
 After provisioning VMs, create these DNS records in your DNS provider:
 
@@ -13,10 +13,10 @@ faucet.testnet.atlas-sphere.io   → FAUCET_SERVER_IP
 metrics.testnet.atlas-sphere.io  → GRAFANA_IP
 ```
 
-## Provider-Specific Guides
+## Provider-Specific Gfrontend/uides
 
 ### Cloudflare
-1. Log in to Cloudflare dashboard
+1. Log in to Cloudflare apps/apps/dash-legacy-2-legacy-2board
 2. Select your domain
 3. Go to DNS → Records
 4. Add A records:

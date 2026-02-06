@@ -31,10 +31,10 @@ static TEST_RUNTIME: once_cell::sync::OnceCell<Runtime> = once_cell::sync::OnceC
 /// Initialize the global test runtime
 pub fn init_test_runtime() -> &'static Runtime {
     TEST_RUNTIME.get_or_init(|| {
-        tokio::runtime::Builder::new_multi_thread()
+        tokio::runtime::Bfrontend/uilder::new_multi_thread()
             .worker_threads(4)
             .enable_all()
-            .build()
+            .bfrontend/uild()
             .expect("Failed to create test runtime")
     })
 }

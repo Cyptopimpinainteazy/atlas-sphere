@@ -42,7 +42,7 @@ fn auth_check(
     // - Whitelist status
     // - Fee balance
     // - Rate limits
-    // - KYC requirements (optional)
+    // - KYC reqfrontend/uirements (optional)
     let _ = caller;
     Ok(())  // ⚠️ ALWAYS RETURNS OK
 }
@@ -147,7 +147,7 @@ fn verify_dual_vm_with_receipts(
 - Enables client-side pre-computation of prepare_root
 - Allows deterministic authorization without simulation
 - Combined with nonce provides replay protection
-- Documented mitigation strategies for high-value transactions requiring output verification
+- Documented mitigation strategies for high-value transactions reqfrontend/uiring output verification
 
 ---
 
@@ -171,10 +171,10 @@ The mock setup pre-authorizes ALICE, BOB, CHARLIE:
 ```rust
 #[test]
 fn submit_comit_rejects_unauthorized_account() {
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE)])
         .authorized_accounts(vec![])  // No one authorized
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             assert_noop!(
                 AtlasKernel::submit_comit(...),
@@ -221,7 +221,7 @@ ComitFailureReason::EvmExecutionFailed { .. } => Error::<T>::ComitVerificationFa
 ComitFailureReason::SvmExecutionFailed { .. } => Error::<T>::ComitVerificationFailed,
 ```
 
-**Impact:** Clients cannot distinguish between verification failures and execution failures from the error code alone, complicating debugging and error handling.
+**Impact:** Clients cannot distingfrontend/uish between verification failures and execution failures from the error code alone, complicating debugging and error handling.
 
 **Recommendation:** Add distinct error variants:
 ```rust
@@ -241,7 +241,7 @@ SvmExecutionFailed,
 let executor = atlas_evm_integration::MockEvmExecutor; // Use mock for now until pallet-evm is wired
 ```
 
-**Impact:** In `std` builds, the "real" adapter still executes with mocked behavior, not actual EVM execution.
+**Impact:** In `std` bfrontend/uilds, the "real" adapter still executes with mocked behavior, not actual EVM execution.
 
 **Resolution:** Added clear security warnings in documentation:
 
@@ -261,7 +261,7 @@ let executor = atlas_evm_integration::MockEvmExecutor; // Use mock for now until
 
 **Description:** While symbol characters are validated, there's no validation against:
 - Empty symbols
-- Leading/trailing whitespace (dashes/underscores at edges)
+- Leading/trailing whitespace (apps/apps/dash-legacy-2-legacy-2es/underscores at edges)
 - Reserved symbols
 
 ```rust
@@ -489,7 +489,7 @@ pub type Authorities<T: Config> =
 
 ### ✅ Governance-Only Privileged Operations
 
-Sensitive operations require `GovernanceOrigin`:
+Sensitive operations reqfrontend/uire `GovernanceOrigin`:
 ```rust
 T::GovernanceOrigin::ensure_origin(origin)?;
 ```
@@ -505,7 +505,7 @@ EvmPayloadTooLarge { code: u32, actual_size: u32, max_size: u32 }
 
 Events emit in logical order: Submitted → ExecutionStarted → ExecutionCompleted → Finalized
 
-### ✅ Comprehensive Test Suite
+### ✅ Comprehensive Test Sfrontend/uite
 
 70 pallet tests + 10 EVM + 7 SVM + additional crate tests provide good coverage.
 

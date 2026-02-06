@@ -44,7 +44,7 @@ pub struct GovernanceConfigSnapshot {
     pub voting_period: u64,
     /// Execution delay in blocks.
     pub execution_delay: u64,
-    /// Minimum deposit required.
+    /// Minimum deposit reqfrontend/uired.
     pub minimum_deposit: u128,
     /// Quorum threshold (percent * 100).
     pub quorum_threshold: u32,

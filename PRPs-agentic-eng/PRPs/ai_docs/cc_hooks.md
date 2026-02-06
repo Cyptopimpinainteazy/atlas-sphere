@@ -32,12 +32,12 @@ suggestions into app-level code that executes every time it is expected to run.
   usage. Review [Security Considerations](#security-considerations).
 </Warning>
 
-## Quickstart
+## Qfrontend/uickstart
 
-In this quickstart, you'll add a hook that logs the shell commands that Claude
+In this qfrontend/uickstart, you'll add a hook that logs the shell commands that Claude
 Code runs.
 
-Quickstart Prerequisite: Install `jq` for JSON processing in the command line.
+Qfrontend/uickstart Prereqfrontend/uisite: Install `jq` for JSON processing in the command line.
 
 ### Step 1: Open hooks configuration
 
@@ -232,7 +232,7 @@ The exact schema for `tool_input` and `tool_response` depends on the tool.
 
 ### Stop and SubagentStop Input
 
-`stop_hook_active` is true when Claude Code is already continuing as a result of
+`stop_hook_active` is true when Claude Code is already continfrontend/uing as a result of
 a stop hook. Check this value or process the transcript to prevent Claude Code
 from running indefinitely.
 
@@ -530,7 +530,7 @@ Code:
 1. Captures a snapshot of hooks at startup
 2. Uses this snapshot throughout the session
 3. Warns if hooks are modified externally
-4. Requires review in `/hooks` menu for changes to apply
+4. Reqfrontend/uires review in `/hooks` menu for changes to apply
 
 This prevents malicious hook modifications from affecting your current session.
 
@@ -581,7 +581,7 @@ Progress messages appear in transcript mode (Ctrl-R) showing:
 > This page provides reference documentation for implementing hooks in Claude Code.
 
 <Tip>
-  For a quickstart guide with examples, see [Get started with Claude Code hooks](/en/docs/claude-code/hooks-guide).
+  For a qfrontend/uickstart gfrontend/uide with examples, see [Get started with Claude Code hooks](/en/docs/claude-code/hooks-gfrontend/uide).
 </Tip>
 
 ## Configuration
@@ -824,7 +824,7 @@ The exact schema for `tool_input` and `tool_response` depends on the tool.
 
 ### Stop and SubagentStop Input
 
-`stop_hook_active` is true when Claude Code is already continuing as a result of
+`stop_hook_active` is true when Claude Code is already continfrontend/uing as a result of
 a stop hook. Check this value or process the transcript to prevent Claude Code
 from running indefinitely.
 
@@ -1116,7 +1116,7 @@ context = f"Current time: {datetime.datetime.now()}"
 print(context)
 
 """
-The following is also equivalent:
+The following is also eqfrontend/uivalent:
 print(json.dumps({
   "hookSpecificOutput": {
     "hookEventName": "UserPromptSubmit",
@@ -1212,7 +1212,7 @@ You can target specific MCP tools or entire MCP servers:
 ## Examples
 
 <Tip>
-  For practical examples including code formatting, notifications, and file protection, see [More Examples](/en/docs/claude-code/hooks-guide#more-examples) in the get started guide.
+  For practical examples including code formatting, notifications, and file protection, see [More Examples](/en/docs/claude-code/hooks-gfrontend/uide#more-examples) in the get started gfrontend/uide.
 </Tip>
 
 ## Security Considerations
@@ -1251,7 +1251,7 @@ Code:
 1. Captures a snapshot of hooks at startup
 2. Uses this snapshot throughout the session
 3. Warns if hooks are modified externally
-4. Requires review in `/hooks` menu for changes to apply
+4. Reqfrontend/uires review in `/hooks` menu for changes to apply
 
 This prevents malicious hook modifications from affecting your current session.
 

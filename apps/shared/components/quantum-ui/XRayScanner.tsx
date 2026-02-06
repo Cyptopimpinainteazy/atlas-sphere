@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface XRayScannerProps {
   className?: string;
   scanColor?: string;
-  mode?: 'body' | 'blockchain' | 'circuit' | 'neural';
+  mode?: 'body' | 'blockchain' | 'circfrontend/uit' | 'neural';
 }
 
 /**
@@ -37,8 +37,8 @@ export const XRayScanner: React.FC<XRayScannerProps> = ({
 
   const outerContent = mode === 'blockchain' ? (
     <BlockchainOuter />
-  ) : mode === 'circuit' ? (
-    <CircuitOuter />
+  ) : mode === 'circfrontend/uit' ? (
+    <Circfrontend/uitOuter />
   ) : mode === 'neural' ? (
     <NeuralOuter />
   ) : (
@@ -47,8 +47,8 @@ export const XRayScanner: React.FC<XRayScannerProps> = ({
 
   const innerContent = mode === 'blockchain' ? (
     <BlockchainInner />
-  ) : mode === 'circuit' ? (
-    <CircuitInner />
+  ) : mode === 'circfrontend/uit' ? (
+    <Circfrontend/uitInner />
   ) : mode === 'neural' ? (
     <NeuralInner />
   ) : (
@@ -323,8 +323,8 @@ const BlockchainInner: React.FC = () => (
   </div>
 );
 
-// Circuit Outer
-const CircuitOuter: React.FC = () => (
+// Circfrontend/uit Outer
+const Circfrontend/uitOuter: React.FC = () => (
   <div style={{
     width: '100%',
     height: '100%',
@@ -345,8 +345,8 @@ const CircuitOuter: React.FC = () => (
   </div>
 );
 
-// Circuit Inner
-const CircuitInner: React.FC = () => (
+// Circfrontend/uit Inner
+const Circfrontend/uitInner: React.FC = () => (
   <div style={{
     width: '100%',
     height: '100%',

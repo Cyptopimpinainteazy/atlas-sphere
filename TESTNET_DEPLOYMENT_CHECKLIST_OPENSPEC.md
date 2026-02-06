@@ -13,8 +13,8 @@
 - [ ] 1.3 Confirm all scenarios have GIVEN-WHEN-THEN format
 - [ ] 1.4 Ensure stakeholder approval for change proposal
 
-### Build & Testing (OpenSpec Compliant)
-- [ ] 2.1 Build release binary: `cargo build --release`
+### Bfrontend/uild & Testing (OpenSpec Compliant)
+- [ ] 2.1 Bfrontend/uild release binary: `cargo bfrontend/uild --release`
 - [ ] 2.2 Verify binary runs: `./target/release/atlas-sphere-node --version`
 - [ ] 2.3 Run all unit tests: `cargo test --all`
 - [ ] 2.4 Run integration tests: `./RUN_ALL_TESTS.sh`
@@ -23,9 +23,9 @@
 - [ ] 2.7 Test X3 language runtime: Execute examples from `x3-lang/examples/`
 
 ### Chain Specification (OpenSpec Enhanced)
-- [ ] 3.1 Generate dev chain spec: `atlas-sphere-node build-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
+- [ ] 3.1 Generate dev chain spec: `atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
 - [ ] 3.2 Edit chain spec (name, id, bootnodes, validators)
-- [ ] 3.3 Convert to raw format: `atlas-sphere-node build-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
+- [ ] 3.3 Convert to raw format: `atlas-sphere-node bfrontend/uild-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
 - [ ] 3.4 Validate JSON syntax: `jq . atlas-testnet-raw.json`
 - [ ] 3.5 Commit chain spec to repository
 - [ ] 3.6 Document chain spec changes in OpenSpec
@@ -36,7 +36,7 @@
   - [ ] 4.1.2 `rpc2.testnet.x3` → Backup RPC node IP
   - [ ] 4.1.3 `bootnode.testnet.x3` → Bootnode IP
   - [ ] 4.1.4 `faucet.testnet.x3` → Faucet service IP
-  - [ ] 4.1.5 `metrics.testnet.x3` → Grafana dashboard IP
+  - [ ] 4.1.5 `metrics.testnet.x3` → Grafana apps/apps/dash-legacy-2-legacy-2board IP
 - [ ] 4.2 Test DNS resolution: `dig rpc.testnet.x3`
 - [ ] 4.3 Verify DNS server health: `cargo run --bin atlas-dns-server`
 - [ ] 4.4 Update DNS server configuration with testnet zones
@@ -128,7 +128,7 @@ For each RPC node (repeat 2+ times):
 - [ ] 10.1 Set up Nginx/HAProxy for RPC load balancing
 - [ ] 10.2 Configure health checks (system_health endpoint)
 - [ ] 10.3 Set rate limiting: 1000 req/min per IP
-- [ ] 10.4 Enable CORS for web apps
+- [ ] 10.4 Enable CORS for frontend/frontend/web apps
 - [ ] 10.5 Test load balancer: `curl http://rpc.testnet.x3:9944`
 - [ ] 10.6 Verify failover works (stop one RPC node, test again)
 - [ ] 10.7 Document load balancer configuration in OpenSpec
@@ -153,11 +153,11 @@ For each RPC node (repeat 2+ times):
 ### Grafana Dashboards (Enhanced)
 - [ ] 12.1 Install Grafana on monitoring server
 - [ ] 12.2 Add Prometheus data source
-- [ ] 12.3 Import Substrate node dashboard
-- [ ] 12.4 Create custom Atlas Kernel dashboard
-- [ ] 12.5 Create DNS server monitoring dashboard
+- [ ] 12.3 Import Substrate node apps/apps/dash-legacy-2-legacy-2board
+- [ ] 12.4 Create custom Atlas Kernel apps/apps/dash-legacy-2-legacy-2board
+- [ ] 12.5 Create DNS server monitoring apps/apps/dash-legacy-2-legacy-2board
 - [ ] 12.6 Configure alert notifications (Discord, Email, PagerDuty)
-- [ ] 12.7 Make dashboard public: `http://metrics.testnet.x3`
+- [ ] 12.7 Make apps/apps/dash-legacy-2-legacy-2board public: `http://metrics.testnet.x3`
 
 ### GPU Swarm Integration (NEW - OpenSpec Enhanced)
 - [ ] 13.1 Deploy GPU swarm coordinator: `cargo run --bin swarm-coordinator`
@@ -206,7 +206,7 @@ For each RPC node (repeat 2+ times):
 ## 🧪 X3 Language Runtime Testing (NEW - OpenSpec Enhanced)
 
 ### X3 Runtime Validation
-- [ ] 17.1 Test X3 compiler: `cargo build --bin x3c`
+- [ ] 17.1 Test X3 compiler: `cargo bfrontend/uild --bin x3c`
 - [ ] 17.2 Execute sample scripts:
   - [ ] 17.2.1 `jit_lp.x3` - Linear programming optimization
   - [ ] 17.2.2 `mev_smooth.x3` - MEV detection algorithm
@@ -243,7 +243,7 @@ For each RPC node (repeat 2+ times):
 - [ ] 20.2 Create Telegram group for testnet
 - [ ] 20.3 Prepare Twitter announcement thread
 - [ ] 20.4 Draft Medium/blog post with technical details
-- [ ] 20.5 Create quick start video tutorial (optional)
+- [ ] 20.5 Create qfrontend/uick start video tutorial (optional)
 - [ ] 20.6 Highlight OpenSpec-driven development process
 - [ ] 20.7 Showcase Atlas DNS server and GPU swarm features
 

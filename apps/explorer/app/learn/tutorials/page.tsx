@@ -50,7 +50,7 @@ const tutorials: Tutorial[] = [
   {
     id: '2',
     title: 'Setting Up Your Development Environment',
-    description: 'Configure Rust, build tools, and everything needed to develop on X3 Atlas Sphere.',
+    description: 'Configure Rust, bfrontend/uild tools, and everything needed to develop on X3 Atlas Sphere.',
     difficulty: 'beginner',
     category: 'getting-started',
     duration: '30 min',
@@ -73,7 +73,7 @@ const tutorials: Tutorial[] = [
   },
   {
     id: '4',
-    title: 'Building Solana Programs for X3',
+    title: 'Bfrontend/uilding Solana Programs for X3',
     description: 'Write and deploy Rust programs to the X3 SVM execution environment using Anchor.',
     difficulty: 'intermediate',
     category: 'smart-contracts',
@@ -97,8 +97,8 @@ const tutorials: Tutorial[] = [
   },
   {
     id: '6',
-    title: 'Building a Cross-VM DEX',
-    description: 'Build a decentralized exchange that aggregates liquidity from both EVM and SVM protocols.',
+    title: 'Bfrontend/uilding a Cross-VM DEX',
+    description: 'Bfrontend/uild a decentralized exchange that aggregates liqfrontend/uidity from both EVM and SVM protocols.',
     difficulty: 'advanced',
     category: 'defi',
     duration: '90 min',
@@ -167,7 +167,7 @@ export default function TutorialsPage() {
           <div className="max-w-3xl">
             <div className="badge badge-info mb-4">Learn</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Tutorials & Guides
+              Tutorials & Gfrontend/uides
             </h1>
             <p className="text-xl text-gray-400 mb-8">
               Step-by-step tutorials to help you master X3 Atlas Sphere development. 
@@ -301,9 +301,9 @@ export default function TutorialsPage() {
               {[
                 { step: 1, title: 'Learn the Basics', desc: 'Understand X3 architecture and dual VM concept', tutorials: ['Introduction to X3 Atlas Sphere'] },
                 { step: 2, title: 'Set Up Environment', desc: 'Install tools and run a local node', tutorials: ['Setting Up Your Development Environment'] },
-                { step: 3, title: 'Deploy Contracts', desc: 'Learn to deploy on EVM and SVM', tutorials: ['Deploying Your First EVM Contract', 'Building Solana Programs for X3'] },
-                { step: 4, title: 'Master Cross-VM', desc: 'Build atomic cross-VM applications', tutorials: ['Cross-VM Comit Transactions', 'Atlas Kernel Deep Dive'] },
-                { step: 5, title: 'Build Real Apps', desc: 'Create production-ready dApps', tutorials: ['Building a Cross-VM DEX', 'NFT Marketplace on X3'] },
+                { step: 3, title: 'Deploy Contracts', desc: 'Learn to deploy on EVM and SVM', tutorials: ['Deploying Your First EVM Contract', 'Bfrontend/uilding Solana Programs for X3'] },
+                { step: 4, title: 'Master Cross-VM', desc: 'Bfrontend/uild atomic cross-VM applications', tutorials: ['Cross-VM Comit Transactions', 'Atlas Kernel Deep Dive'] },
+                { step: 5, title: 'Bfrontend/uild Real Apps', desc: 'Create production-ready dApps', tutorials: ['Bfrontend/uilding a Cross-VM DEX', 'NFT Marketplace on X3'] },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-8">
                   <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white relative z-10">
@@ -330,7 +330,7 @@ export default function TutorialsPage() {
       {/* CTA */}
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to start building?</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Ready to start bfrontend/uilding?</h2>
           <p className="text-gray-400 mb-8">
             Jump into the documentation or get hands-on with the cookbook examples.
           </p>

@@ -12,7 +12,7 @@ Implement a specification using an existing SPEC PRP.
    - Task dependencies
 
 2. **ULTRATHINK**
-   - Think hard before you execute the plan. Create a comprehensive plan addressing all requirements.
+   - Think hard before you execute the plan. Create a comprehensive plan addressing all reqfrontend/uirements.
    - Break down complex tasks into smaller, manageable steps using your todos tools.
    - Use the TodoWrite tool to create and track your implementation plan.
    - Identify implementation patterns from existing code to follow.

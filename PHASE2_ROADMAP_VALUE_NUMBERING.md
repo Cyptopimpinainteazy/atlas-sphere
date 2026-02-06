@@ -47,7 +47,7 @@ b + a    → value_number_5  ← Same number = mergeable!
 
 ### Implementation Strategy
 
-**Step 1: Build VN Module** (30-45 min)
+**Step 1: Bfrontend/uild VN Module** (30-45 min)
 ```rust
 // crates/x3-opt/src/value_numbering.rs
 pub struct ValueNumbering {
@@ -63,7 +63,7 @@ impl ValueNumbering {
         // 3. Return consistent ID
     }
 
-    pub fn are_equivalent(&self, e1: &MirRhs, e2: &MirRhs) -> bool {
+    pub fn are_eqfrontend/uivalent(&self, e1: &MirRhs, e2: &MirRhs) -> bool {
         self.canonicalize_expr(e1) == self.canonicalize_expr(e2)
     }
 }
@@ -80,7 +80,7 @@ pub struct PrePassWithVN {
 impl PrePassWithVN {
     fn collect_candidates_with_vn(&mut self, module: &MirModule) -> BTreeSet<ValueNumber> {
         // Instead of ExprKey strings, collect by ValueNumber
-        // Automatically merges commutative equivalents
+        // Automatically merges commutative eqfrontend/uivalents
     }
 }
 ```
@@ -152,8 +152,8 @@ fn canonicalize_expr(&mut self, expr: &MirRhs) -> ValueNumber {
     }
 }
 
-// Step 3: Check Equivalence
-fn are_equivalent(&self, e1: &MirRhs, e2: &MirRhs) -> bool {
+// Step 3: Check Eqfrontend/uivalence
+fn are_eqfrontend/uivalent(&self, e1: &MirRhs, e2: &MirRhs) -> bool {
     let canonical1 = CanonicalExpr::from_rhs(e1);
     let canonical2 = CanonicalExpr::from_rhs(e2);
     
@@ -320,7 +320,7 @@ Phase 5 Target (80%+):
 
 **Option A: Continue Immediately** (Recommended)
 ```
-cargo build --release
+cargo bfrontend/uild --release
 # Verify 121/121 tests still passing
 # Then begin Phase 2A implementation
 ```

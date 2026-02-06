@@ -46,7 +46,7 @@ git log --grep="fix" --grep="feat" --oneline -20
 
 1. Run linters to check code style
 2. Run type checkers if applicable  
-3. Run test suite
+3. Run test sfrontend/uite
 4. Check for semantic conflicts (code that merges but breaks functionality)
 5. Verify no debugging code was left in
 

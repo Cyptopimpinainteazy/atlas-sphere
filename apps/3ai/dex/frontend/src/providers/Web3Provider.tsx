@@ -9,7 +9,7 @@ import { chain } from '../config/chains';
 const queryClient = new QueryClient();
 
 // Configure chains & providers with the 3ai chain and mainnet
-const { publicClient, webSocketPublicClient } = configureChains(
+const { publicClient, frontend/webSocketPublicClient } = configureChains(
   [chain, mainnet],
   [
     publicProvider(),
@@ -25,7 +25,7 @@ const { publicClient, webSocketPublicClient } = configureChains(
 const config = createConfig({
   autoConnect: true,
   publicClient,
-  webSocketPublicClient,
+  frontend/webSocketPublicClient,
 });
 
 interface Web3ProviderProps {

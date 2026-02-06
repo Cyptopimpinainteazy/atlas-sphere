@@ -34,12 +34,12 @@ class TestEvmClient:
         
         assert gas_price == 1_000_000_000
     
-    def test_build_deployment(self):
-        """Test building a deployment transaction."""
+    def test_bfrontend/uild_deployment(self):
+        """Test bfrontend/uilding a deployment transaction."""
         mock_client = Mock()
         evm = EvmClient(mock_client)
         
-        tx = evm.build_deployment(
+        tx = evm.bfrontend/uild_deployment(
             bytecode=b"\x60\x80\x60\x40",
             gas_limit=3_000_000,
         )

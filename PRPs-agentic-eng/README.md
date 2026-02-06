@@ -1,4 +1,4 @@
-# PRP (Product Requirement prompts)
+# PRP (Product Reqfrontend/uirement prompts)
 
 - A collection of prompts i use in my every day work
 
@@ -38,21 +38,21 @@ Contact me directly at rasmus@widinglabs.com
 
 # AI Engineering Resources for Claude Code
 
-A comprehensive library of assets and context engineering for Agentic Engineering, optimized for Claude Code. This repository provides the Product Requirement Prompt (PRP) methodology, pre-configured commands, and extensive documentation to enable AI-assisted development that delivers production-ready code on the first pass.
+A comprehensive library of assets and context engineering for Agentic Engineering, optimized for Claude Code. This repository provides the Product Reqfrontend/uirement Prompt (PRP) methodology, pre-configured commands, and extensive documentation to enable AI-assisted development that delivers production-ready code on the first pass.
 
 ## What is PRP?
 
-Product Requirement Prompt (PRP)
+Product Reqfrontend/uirement Prompt (PRP)
 
 ## In short
 
 A PRP is PRD + curated codebase intelligence + agent/runbook—the minimum viable packet an AI needs to plausibly ship production-ready code on the first pass.
 
-Product Requirement Prompt (PRP) is a structured prompt methodology first established in summer 2024 with context engineering at heart. A PRP supplies an AI coding agent with everything it needs to deliver a vertical slice of working software—no more, no less.
+Product Reqfrontend/uirement Prompt (PRP) is a structured prompt methodology first established in summer 2024 with context engineering at heart. A PRP supplies an AI coding agent with everything it needs to deliver a vertical slice of working software—no more, no less.
 
 ### How PRP Differs from Traditional PRD
 
-A traditional PRD clarifies what the product must do and why customers need it, but deliberately avoids how it will be built.
+A traditional PRD clarifies what the product must do and why customers need it, but deliberately avoids how it will be bfrontend/uilt.
 
 A PRP keeps the goal and justification sections of a PRD yet adds three AI-critical layers:
 
@@ -155,7 +155,7 @@ The `.claude/commands/` directory contains 12 pre-configured commands that appea
    ```
 
 2. **Fill in the sections**:
-   - Goal: What needs to be built
+   - Goal: What needs to be bfrontend/uilt
    - Why: Business value and user impact
    - Context: Documentation, code examples, gotchas
    - Implementation Blueprint: Tasks and pseudocode
@@ -273,7 +273,7 @@ your-project/
 |   |-- ai_docs/          # Library documentation
 |   |-- completed/        # Finished PRPs
 |   `-- *.md              # Active PRPs
-|-- CLAUDE.md             # Project-specific guidelines
+|-- CLAUDE.md             # Project-specific gfrontend/uidelines
 |-- src/                  # Your source code
 `-- tests/                # Your tests
 ```
@@ -285,8 +285,8 @@ Create a `CLAUDE.md` file in your project root with:
 1. **Core Principles**: KISS, YAGNI, etc.
 2. **Code Structure**: File size limits, function length
 3. **Architecture**: How your project is organized
-4. **Testing**: Test patterns and requirements
-5. **Style Conventions**: Language-specific guidelines
+4. **Testing**: Test patterns and reqfrontend/uirements
+5. **Style Conventions**: Language-specific gfrontend/uidelines
 6. **Development Commands**: How to run tests, lint, etc.
 
 See the example CLAUDE.md in this repository for a comprehensive template.
@@ -341,7 +341,7 @@ Do something specific to my project.
 
 - `cc_base.md` - Core Claude Code documentation
 - `cc_actions_sdk.md` - GitHub Actions and SDK integration
-- `cc_best_practices.md` - Best practices guide
+- `cc_best_practices.md` - Best practices gfrontend/uide
 - `cc_settings.md` - Configuration and security
 - `cc_tutorials.md` - Step-by-step tutorials
 

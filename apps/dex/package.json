@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "bfrontend/uild": "next bfrontend/uild",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -19,7 +19,7 @@
     "@next/font": "^14.0.0",
     "@polkadot/api": "^14.0.1",
     "@polkadot/types": "^14.0.1",
-    "@solana/web3.js": "^1.87.0",
+    "@solana/frontend/web3.js": "^1.87.0",
     "@tanstack/react-query": "^5.14.0",
     "autoprefixer": "^10.4.0",
     "axios": "^1.6.0",

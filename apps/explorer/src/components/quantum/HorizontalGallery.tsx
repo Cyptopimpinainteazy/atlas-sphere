@@ -564,7 +564,7 @@ const sceneContents: SceneContent[] = [
   { id: 1, heading: 'Introduction', title: 'A digest of the tutorial', description: 'Atlas Sphere combines cutting-edge blockchain technology with AI-powered validation for unprecedented performance.' },
   { id: 2, heading: 'Navigation', title: 'Hidden radio buttons', description: 'Explore our ecosystem of DeFi protocols, GPU swarms, and cross-chain bridges spanning 103+ networks.' },
   { id: 3, heading: 'Masked Text', title: 'background-clip techniques', description: 'Experience the future with quantum-resistant cryptography and neural network threat detection.' },
-  { id: 4, heading: 'Modern CSS', title: 'CSS Grid and Variables', description: 'Built on Substrate with dual-VM execution, Atlas Sphere delivers enterprise-grade blockchain infrastructure.' },
+  { id: 4, heading: 'Modern CSS', title: 'CSS Grid and Variables', description: 'Bfrontend/uilt on Substrate with dual-VM execution, Atlas Sphere delivers enterprise-grade blockchain infrastructure.' },
 ];
 
 interface ParallaxMaskedTextProps {

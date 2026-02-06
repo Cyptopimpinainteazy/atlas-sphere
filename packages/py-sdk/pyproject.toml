@@ -1,6 +1,6 @@
-[build-system]
-requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.build_meta"
+[bfrontend/uild-system]
+reqfrontend/uires = ["setuptools>=68.0", "wheel"]
+bfrontend/uild-backend = "setuptools.bfrontend/uild_meta"
 
 [project]
 name = "atlas-sphere-sdk"
@@ -22,13 +22,13 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.9"
+reqfrontend/uires-python = ">=3.9"
 dependencies = [
     "substrate-interface>=1.7.0",
     "scalecodec>=1.2.0",
-    "websocket-client>=1.6.0",
+    "frontend/websocket-client>=1.6.0",
     "requests>=2.31.0",
-    "web3>=6.11.0",
+    "frontend/web3>=6.11.0",
     "solana>=0.32.0",
     "solders>=0.20.0",
     "httpx>=0.25.0",
@@ -83,9 +83,9 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
-  | _build
+  | _bfrontend/uild
   | buck-out
-  | build
+  | bfrontend/uild
   | dist
   | \.env
 )/

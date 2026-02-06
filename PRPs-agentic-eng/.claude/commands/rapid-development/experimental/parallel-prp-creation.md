@@ -5,7 +5,7 @@ arguments:
   - name: prp_name
     description: The base name for the PRP (e.g., "user-authentication")
   - name: implementation_details
-    description: Core feature requirements and context
+    description: Core feature reqfrontend/uirements and context
   - name: number_of_parallel_prps
     description: Number of parallel PRP variations to create (recommended 2-5)
 ---
@@ -56,7 +56,7 @@ Agent 3: Maintainability-Focused Approach
   Validation: Unit testing, code quality
 
 Agent 4: Rapid-Development Approach
-  Focus: Quick implementation, minimal complexity
+  Focus: Qfrontend/uick implementation, minimal complexity
   Architecture: Simplified patterns, frameworks
   Validation: Integration testing, functionality
 
@@ -103,7 +103,7 @@ PRP Creation:
 - Use PRPs/templates/prp_base.md as foundation
 - Focus implementation blueprint on performance patterns
 - Include specific performance validation gates
-- Add load testing and benchmarking requirements
+- Add load testing and benchmarking reqfrontend/uirements
 - Reference existing high-performance code examples
 
 Output Files:
@@ -117,7 +117,7 @@ Include in results:
 - Performance validation strategy
 - Expected performance improvements
 
-Do NOT run any servers, builds, or executables. Focus on research and PRP creation only.
+Do NOT run any servers, bfrontend/uilds, or executables. Focus on research and PRP creation only.
 ```
 
 ### Agent 2: Security-First Implementation
@@ -147,7 +147,7 @@ PRP Creation:
 - Use PRPs/templates/prp_base.md as foundation
 - Focus implementation blueprint on security patterns
 - Include comprehensive security validation gates
-- Add penetration testing and security scan requirements
+- Add penetration testing and security scan reqfrontend/uirements
 - Reference existing security implementations
 
 Output Files:
@@ -161,7 +161,7 @@ Include in results:
 - Security validation strategy
 - Compliance considerations
 
-Do NOT run any servers, builds, or executables. Focus on research and PRP creation only.
+Do NOT run any servers, bfrontend/uilds, or executables. Focus on research and PRP creation only.
 ```
 
 ### Agent 3: Maintainability-Focused Implementation
@@ -205,7 +205,7 @@ Include in results:
 - Testing and quality validation strategy
 - Maintainability metrics and targets
 
-Do NOT run any servers, builds, or executables. Focus on research and PRP creation only.
+Do NOT run any servers, bfrontend/uilds, or executables. Focus on research and PRP creation only.
 ```
 
 ### Agent 4: Rapid-Development Implementation
@@ -220,7 +220,7 @@ Your approach should emphasize:
 - Minimal viable implementation patterns
 - Framework utilization and code generation
 - Simplified architecture and reduced complexity
-- Quick wins and iterative development
+- Qfrontend/uick wins and iterative development
 - Leveraging existing libraries and components
 - Fast feedback loops and validation
 
@@ -228,13 +228,13 @@ Research Phase:
 1. Analyze existing codebase for reusable components
 2. Research rapid development frameworks and tools
 3. Identify opportunities for code reuse and simplification
-4. Study existing patterns that can be quickly adapted
+4. Study existing patterns that can be qfrontend/uickly adapted
 5. Review integration testing for fast validation
 
 PRP Creation:
 - Use PRPs/templates/prp_base.md as foundation
 - Focus implementation blueprint on rapid delivery patterns
-- Include streamlined validation gates for quick feedback
+- Include streamlined validation gates for qfrontend/uick feedback
 - Add integration testing for core functionality
 - Reference existing components that can be leveraged
 
@@ -249,7 +249,7 @@ Include in results:
 - Rapid validation strategy
 - Time estimates and delivery milestones
 
-Do NOT run any servers, builds, or executables. Focus on research and PRP creation only.
+Do NOT run any servers, bfrontend/uilds, or executables. Focus on research and PRP creation only.
 ```
 
 ### Agent 5: Enterprise-Grade Implementation
@@ -266,12 +266,12 @@ Your approach should emphasize:
 - Error handling and resilience patterns
 - Configuration management and deployment
 - Documentation and operational procedures
-- Compliance and audit requirements
+- Compliance and audit reqfrontend/uirements
 
 Research Phase:
 1. Analyze existing enterprise patterns in codebase
 2. Research enterprise frameworks and monitoring tools
-3. Identify requirements for production deployment
+3. Identify reqfrontend/uirements for production deployment
 4. Study error handling and recovery mechanisms
 5. Review operational and maintenance procedures
 
@@ -279,7 +279,7 @@ PRP Creation:
 - Use PRPs/templates/prp_base.md as foundation
 - Focus implementation blueprint on enterprise patterns
 - Include comprehensive operational validation gates
-- Add monitoring, logging, and alerting requirements
+- Add monitoring, logging, and alerting reqfrontend/uirements
 - Reference existing enterprise-grade implementations
 
 Output Files:
@@ -288,17 +288,17 @@ Output Files:
 
 Include in results:
 - Enterprise readiness analysis of current codebase
-- Identified operational and monitoring requirements
+- Identified operational and monitoring reqfrontend/uirements
 - Implementation approach summary
 - Production validation strategy
 - Operational procedures and documentation
 
-Do NOT run any servers, builds, or executables. Focus on research and PRP creation only.
+Do NOT run any servers, bfrontend/uilds, or executables. Focus on research and PRP creation only.
 ```
 
 ## Agent Execution Rules
 
-### Research Guidelines
+### Research Gfrontend/uidelines
 
 Each agent must independently:
 
@@ -317,10 +317,10 @@ Each agent must independently:
 3. **Context Documentation**
    - Read PRPs/ai_docs/ for project-specific documentation
    - Analyze configuration files and setup patterns
-   - Identify environment and dependency requirements
+   - Identify environment and dependency reqfrontend/uirements
    - Document existing conventions and standards
 
-### PRP Creation Requirements
+### PRP Creation Reqfrontend/uirements
 
 Each agent must create a complete PRP including:
 
@@ -334,7 +334,7 @@ Each agent must create a complete PRP including:
 - Trade-offs and benefits of selected approach
 
 ## What
-[Feature requirements tailored to implementation strategy]
+[Feature reqfrontend/uirements tailored to implementation strategy]
 
 ## All Needed Context
 ### Documentation & References
@@ -404,7 +404,7 @@ Each agent must create a comprehensive results file containing:
 ### Documentation Review
 
 - Project-specific constraints: [from ai_docs analysis]
-- Configuration requirements: [environment setup needs]
+- Configuration reqfrontend/uirements: [environment setup needs]
 - Integration considerations: [existing system compatibility]
 
 ## Implementation Strategy
@@ -449,7 +449,7 @@ Each agent must create a comprehensive results file containing:
 
 ### Next Steps
 
-[Immediate actions required to proceed]
+[Immediate actions reqfrontend/uired to proceed]
 
 ## Comparative Analysis
 
@@ -459,7 +459,7 @@ Each agent must create a comprehensive results file containing:
 
 ### Ideal Use Cases
 
-[When this approach is most suitable]
+[When this approach is most sfrontend/uitable]
 
 ### Performance Expectations
 
@@ -522,7 +522,7 @@ After all agents complete, synthesize results by comparing:
 
 - Lines of code estimates
 - Development time projections
-- Dependency requirements
+- Dependency reqfrontend/uirements
 - Configuration complexity
 
 ### Performance Characteristics
@@ -535,7 +535,7 @@ After all agents complete, synthesize results by comparing:
 ### Maintenance Burden
 
 - Code complexity metrics
-- Testing requirements
+- Testing reqfrontend/uirements
 - Documentation needs
 - Long-term sustainability
 
@@ -550,11 +550,11 @@ After all agents complete, synthesize results by comparing:
 
 Choose optimal approach based on:
 
-1. **Project Requirements**: Match approach to actual needs
+1. **Project Reqfrontend/uirements**: Match approach to actual needs
 2. **Team Capabilities**: Align with team expertise and resources
 3. **Timeline Constraints**: Balance quality with delivery speed
 4. **Maintenance Goals**: Consider long-term sustainability
-5. **Performance Needs**: Match optimization level to requirements
+5. **Performance Needs**: Match optimization level to reqfrontend/uirements
 
 ## Success Metrics
 
@@ -576,4 +576,4 @@ If agents encounter issues:
 4. **Resource Conflicts**: Ensure agents work independently
 5. **Quality Issues**: Maintain minimum PRP completeness standards
 
-This parallel approach maximizes the probability of identifying the optimal implementation strategy by exploring multiple architectural approaches simultaneously, enabling data-driven selection of the best approach for your specific requirements.
+This parallel approach maximizes the probability of identifying the optimal implementation strategy by exploring multiple architectural approaches simultaneously, enabling data-driven selection of the best approach for your specific reqfrontend/uirements.

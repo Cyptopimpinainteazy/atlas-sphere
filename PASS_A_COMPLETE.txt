@@ -240,12 +240,12 @@
 │    • crates/x3-opt/src/passes/pre_simple.rs        (49 lines - placeholder)
 │    • crates/x3-opt/src/regalloc.rs                 (57 lines - placeholder)
 │    • crates/x3-opt/src/rule_miner.rs               (modified - fix test)  │
-│    • crates/x3-opt/src/lib.rs                      (modified - imports)   │
+│    • crates/x3-opt/src/lib.rs                      (modified - archive/archive/imports)   │
 │    • crates/x3-opt/src/passes/mod.rs               (modified - exports)   │
 │    • crates/x3-opt/src/optimizer.rs                (modified - import)    │
 │                                                                             │
 │  Documentation:                                                            │
-│    • DOMINANCE_BASED_COND_FOLD.md                  (detailed guide)      │
+│    • DOMINANCE_BASED_COND_FOLD.md                  (detailed gfrontend/uide)      │
 │    • COND_FOLD_IMPLEMENTATION.md                   (implementation deep-dive)
 │    • COND_FOLD_SUMMARY.md                          (executive summary)    │
 │    • OPTIMIZATION_PASS_A_STATUS.md                 (comprehensive status) │
@@ -255,9 +255,9 @@
 
 ┌─ QUICK START ──────────────────────────────────────────────────────────────┐
 │                                                                             │
-│  Build:                                                                    │
+│  Bfrontend/uild:                                                                    │
 │    $ cd /home/lojak/Desktop/X3-atlas-sphere                               │
-│    $ cargo build --release                                                │
+│    $ cargo bfrontend/uild --release                                                │
 │                                                                             │
 │  Test:                                                                     │
 │    $ cargo test -p x3-opt --lib                                           │
@@ -276,7 +276,7 @@
 │  ✅ Code implemented (416 lines)                                           │
 │  ✅ Tests passing (79/79)                                                 │
 │  ✅ Compilation clean (0 errors)                                          │
-│  ✅ Documentation complete (5 guides)                                     │
+│  ✅ Documentation complete (5 gfrontend/uides)                                     │
 │  ✅ Pipeline integrated (position 5/13)                                   │
 │  ✅ Determinism verified (BTreeMap)                                       │
 │  ✅ Idempotence verified (tests)                                          │
@@ -297,7 +297,7 @@
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-Built: December 9, 2025
+Bfrontend/uilt: December 9, 2025
 Version: 1.0
 Quality: Production Grade
 Next: PRE Enhancement + Superoptimizer

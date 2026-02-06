@@ -1,4 +1,4 @@
-Quick refactoring check for Python code focusing on:
+Qfrontend/uick refactoring check for Python code focusing on:
 - Vertical slice boundaries
 - Function complexity
 - Type safety with Pydantic v2
@@ -8,7 +8,7 @@ Scan for:
 1. Functions >20 lines that need decomposition
 2. long files that need decomposition
 3. Missing Pydantic models for I/O
-4. Cross-feature imports violating vertical slices
+4. Cross-feature archive/archive/imports violating vertical slices
 5. Classes with multiple responsibilities
 6. Missing type hints
 

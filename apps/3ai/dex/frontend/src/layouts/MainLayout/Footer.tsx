@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Link, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, Text, Link, useColorModeValue } from '@chakra-frontend/frontend/ui/react';
 
 export const Footer = () => {
   const bgColor = useColorModeValue('white', 'gray.800');

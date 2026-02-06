@@ -1,4 +1,4 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, VStack, Text, Box } from '@chakra-ui/react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, VStack, Text, Box } from '@chakra-frontend/frontend/ui/react';
 import { useConnect } from 'wagmi';
 import { FaEthereum } from 'react-icons/fa';
 import { SiWalletconnect } from 'react-icons/si';

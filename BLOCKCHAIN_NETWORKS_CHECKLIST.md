@@ -37,7 +37,7 @@ assert_eq!(chain_count(), 103);
 - [x] **ChainID**: 1
 - [x] **Currency**: ETH
 - [x] **Implementation Status**: ✅ Universal Registry
-- [x] **Notes**: Foundation network, highest liquidity - *Use as base for L2s*
+- [x] **Notes**: Foundation network, highest liqfrontend/uidity - *Use as base for L2s*
 
 ### Binance Smart Chain (BSC)
 - [x] **ChainID**: 56

@@ -39,7 +39,7 @@ If no specific scope provided, review the entire codebase.
    - Strict mode compliance across all files
    - Type safety and explicit typing
    - Interface definitions and exports
-   - Proper use of Astro's built-in types
+   - Proper use of Astro's bfrontend/uilt-in types
    - Generic usage and constraints
 
 ### 3. **Astro-Specific Patterns**
@@ -80,7 +80,7 @@ If no specific scope provided, review the entire codebase.
 ### 8. **Dependencies & Tooling**
    - pnpm usage compliance
    - Dependency management
-   - Build configuration
+   - Bfrontend/uild configuration
    - Development tooling setup
    - Integration configurations
 
@@ -95,7 +95,7 @@ If no specific scope provided, review the entire codebase.
    - ESLint configuration and compliance
    - Prettier formatting consistency
    - TypeScript strict mode adherence
-   - Build process compliance
+   - Bfrontend/uild process compliance
    - Pre-commit hook effectiveness
 
 ## Analysis Commands
@@ -110,7 +110,7 @@ tree -I 'node_modules|dist|.git' -L 3
 npx tsc --noEmit --listFiles
 
 # Bundle analysis
-pnpm run build && du -sh dist/
+pnpm run bfrontend/uild && du -sh dist/
 
 # Code quality metrics
 rg --stats "client:" --type astro
@@ -151,7 +151,7 @@ Create a comprehensive review report:
 ## Critical Findings
 
 ### 🔴 Architecture Issues (Must Fix)
-- [Structural problems requiring immediate attention]
+- [Structural problems reqfrontend/uiring immediate attention]
 - [Performance bottlenecks]
 - [Security vulnerabilities]
 
@@ -230,7 +230,7 @@ Create a comprehensive review report:
 ## Compliance Checklist
 - [ ] `astro check` passes project-wide
 - [ ] `pnpm run lint` zero warnings
-- [ ] `pnpm run build` succeeds
+- [ ] `pnpm run bfrontend/uild` succeeds
 - [ ] `pnpm test` 80%+ coverage
 - [ ] All components under size limits
 - [ ] No `any` types in codebase
@@ -249,7 +249,7 @@ Code Quality Score: X/100
 
 Technical Debt: X hours estimated
 Bundle Size: X MB (Target: <2MB)
-Build Time: X seconds
+Bfrontend/uild Time: X seconds
 Test Coverage: X% (Target: 80%)
 ```
 

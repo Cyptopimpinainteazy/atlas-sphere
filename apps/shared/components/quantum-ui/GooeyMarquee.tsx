@@ -15,7 +15,7 @@ interface GooeyMarqueeProps {
 /**
  * GooeyMarquee - Scrolling text with gooey blur/contrast SVG filter effect
  * 
- * The magic: SVG filter with blur + color matrix creates the liquid blob effect
+ * The magic: SVG filter with blur + color matrix creates the liqfrontend/uid blob effect
  * Text color MUST match the edge color for the gooey merge to work!
  */
 export const GooeyMarquee: React.FC<GooeyMarqueeProps> = ({

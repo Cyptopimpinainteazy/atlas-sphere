@@ -16,13 +16,13 @@ Map out the codebase organization:
 
 ## 3. Getting Started
 Create step-by-step setup instructions:
-- Prerequisites (required software, versions)
+- Prereqfrontend/uisites (reqfrontend/uired software, versions)
 - Environment setup commands
 - How to install dependencies
 - Configuration files that need to be created/modified
 - How to run the project locally
 - How to run tests
-- How to build for production
+- How to bfrontend/uild for production
 
 ## 4. Key Components
 Identify and explain the most important files/modules:
@@ -37,9 +37,9 @@ Identify and explain the most important files/modules:
 Document the development process:
 - Git branch naming conventions
 - How to create a new feature
-- Testing requirements
+- Testing reqfrontend/uirements
 - Code style/linting rules
-- PR process and review guidelines
+- PR process and review gfrontend/uidelines
 - CI/CD pipeline overview
 
 ## 6. Architecture Decisions
@@ -62,7 +62,7 @@ Provide examples for frequent development tasks:
 ## 8. Potential Gotchas
 List things that might trip up new developers:
 - Non-obvious configurations
-- Required environment variables
+- Reqfrontend/uired environment variables
 - External service dependencies
 - Known issues or workarounds
 - Performance bottlenecks
@@ -72,15 +72,15 @@ List things that might trip up new developers:
 - Locate existing documentation (README, wikis, docs/)
 - API documentation
 - Database schemas
-- Deployment guides
-- Team conventions or style guides
+- Deployment gfrontend/uides
+- Team conventions or style gfrontend/uides
 
 ## 10. Next Steps
 Create an onboarding checklist for the new developer:
 1. Set up development environment
 2. Run the project successfully
 3. Make a small test change
-4. Run the test suite
+4. Run the test sfrontend/uite
 5. Understand the main user flow
 6. Identify area to start contributing
 

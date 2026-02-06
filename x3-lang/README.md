@@ -1,6 +1,6 @@
 # X3 Programming Language
 
-**X3** is a systems programming language purpose-built for agent swarms, on-chain/off-chain atomic execution, deterministic parallelism, high-performance MEV calculation, and cryptographic pipelines.
+**X3** is a systems programming language purpose-bfrontend/uilt for agent swarms, on-chain/off-chain atomic execution, deterministic parallelism, high-performance MEV calculation, and cryptographic pipelines.
 
 ## Features
 
@@ -8,7 +8,7 @@
 - **Declarative Agent Definitions**: First-class support for autonomous agents with automatic context inheritance
 - **Atomic Execution Blocks**: Cross-chain atomic transactions spanning EVM and SVM
 - **Deterministic Parallelism**: DAG-based execution with guaranteed reproducibility
-- **Built-in MEV Primitives**: `flashloan`, `route`, `bundle`, `sim` as native operations
+- **Bfrontend/uilt-in MEV Primitives**: `flashloan`, `route`, `bundle`, `sim` as native operations
 - **Strong Type System**: Algebraic data types, generics, traits, and compile-time guarantees
 
 ### Runtime
@@ -108,15 +108,15 @@ cargo install --path crates/x3-cli
 cargo install x3-cli
 ```
 
-## Quick Start
+## Qfrontend/uick Start
 
 ```bash
 # Create a new project
 x3 new my_agent_swarm
 cd my_agent_swarm
 
-# Build
-x3 build
+# Bfrontend/uild
+x3 bfrontend/uild
 
 # Run tests
 x3 test

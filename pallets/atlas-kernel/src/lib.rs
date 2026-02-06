@@ -16,7 +16,7 @@
 //!   outputs, clients couldn't know the hash until after execution (circular dependency).
 //! - **Security**: The prepare_root ensures the submitted Comit matches what the client intended.
 //!   It prevents parameter tampering but does NOT guarantee execution results.
-//! - **Enhancement**: For high-value transactions requiring output verification, consider adding
+//! - **Enhancement**: For high-value transactions reqfrontend/uiring output verification, consider adding
 //!   an optional `expected_output_hash` field in future versions.
 //!
 //! ### H-5: VM Adapter Production Status
@@ -47,7 +47,7 @@ pub use adapters::{
     MockEvmAdapter, MockSvmAdapter, MockX3Adapter, SvmExecutorAdapter, X3ExecutorAdapter,
 };
 
-// Re-export real adapters for std builds (native runtime)
+// Re-export real adapters for std bfrontend/uilds (native runtime)
 #[cfg(feature = "std")]
 pub use adapters::real_adapters::{FrontierEvmAdapter, RbpfSvmAdapter, X3VmAdapter};
 
@@ -371,7 +371,7 @@ pub mod pallet {
         #[pallet::constant]
         type MaxAuthorities: Get<u32>;
 
-        /// Minimum number of authorities required in the authority set.
+        /// Minimum number of authorities reqfrontend/uired in the authority set.
         #[pallet::constant]
         type MinAuthorities: Get<u32>;
 
@@ -411,7 +411,7 @@ pub mod pallet {
     type AssetMetadataOf<T> = AssetMetadata<AssetSymbolOf<T>>;
 
     /// Canonical ledger mapping (account, asset_id) -> balance.
-    /// Uses a double-storage map for efficient access without requiring nested collections.
+    /// Uses a double-storage map for efficient access without reqfrontend/uiring nested collections.
     #[pallet::storage]
     pub type CanonicalLedger<T: Config> = StorageDoubleMap<
         _,
@@ -558,7 +558,7 @@ pub mod pallet {
         SymbolTooLong,
         /// Asset decimals exceed maximum allowed value (0-30).
         InvalidDecimals,
-        /// Asset symbol contains invalid characters; must be uppercase ASCII, digits, dash, or underscore.
+        /// Asset symbol contains invalid characters; must be uppercase ASCII, digits, apps/apps/dash-legacy-2-legacy-2, or underscore.
         InvalidSymbolCharset,
         /// Caller is not authorized to perform this operation.
         Unauthorized,
@@ -586,7 +586,7 @@ pub mod pallet {
         X3ExecutionFailed,
         /// Asset symbol cannot be empty.
         EmptySymbol,
-        /// Asset symbol cannot start with dash or underscore.
+        /// Asset symbol cannot start with apps/apps/dash-legacy-2-legacy-2 or underscore.
         InvalidSymbolFormat,
         /// Too many state changes in execution receipts.
         TooManyStateChanges,
@@ -763,36 +763,36 @@ pub mod pallet {
                 }
             }
 
-            // Fee deduction: Compute required fee before execution
+            // Fee deduction: Compute reqfrontend/uired fee before execution
             let evm_gas_used = evm_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
             let svm_compute_units = svm_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
             let base_fee = T::Balance::default();
-            let required_fee =
+            let reqfrontend/uired_fee =
                 Self::calculate_execution_fee(evm_gas_used, svm_compute_units, base_fee)?;
 
-            // Check if declared fee matches required fee
-            ensure!(fee >= required_fee, Error::<T>::IncorrectFee);
+            // Check if declared fee matches reqfrontend/uired fee
+            ensure!(fee >= reqfrontend/uired_fee, Error::<T>::IncorrectFee);
 
             // Check sufficient balance
             let free_balance = T::Currency::free_balance(&who);
             ensure!(
-                free_balance >= required_fee.into(),
+                free_balance >= reqfrontend/uired_fee.into(),
                 Error::<T>::InsufficientBalance
             );
 
             // Deduct the fee
             let imbalance = T::Currency::withdraw(
                 &who,
-                required_fee.into(),
+                reqfrontend/uired_fee.into(),
                 frame_support::traits::WithdrawReasons::FEE,
-                frame_support::traits::ExistenceRequirement::KeepAlive,
+                frame_support::traits::ExistenceReqfrontend/uirement::KeepAlive,
             )?;
             drop(imbalance); // Burn the fee or handle as needed
 
             // Emit fee deduction event for indexer tracking
             Self::deposit_event(Event::FeeDeducted {
                 account: who.clone(),
-                amount: required_fee,
+                amount: reqfrontend/uired_fee,
                 comit_id,
             });
 
@@ -1037,32 +1037,32 @@ pub mod pallet {
             let svm_compute_units = svm_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
             let x3_gas_used = x3_receipt.as_ref().map(|r| r.gas_used).unwrap_or(0);
             let base_fee = T::Balance::default();
-            let required_fee = Self::calculate_execution_fee_v2(
+            let reqfrontend/uired_fee = Self::calculate_execution_fee_v2(
                 evm_gas_used,
                 svm_compute_units,
                 x3_gas_used,
                 base_fee,
             )?;
 
-            ensure!(fee >= required_fee, Error::<T>::IncorrectFee);
+            ensure!(fee >= reqfrontend/uired_fee, Error::<T>::IncorrectFee);
 
             let free_balance = T::Currency::free_balance(&who);
             ensure!(
-                free_balance >= required_fee.into(),
+                free_balance >= reqfrontend/uired_fee.into(),
                 Error::<T>::InsufficientBalance
             );
 
             let imbalance = T::Currency::withdraw(
                 &who,
-                required_fee.into(),
+                reqfrontend/uired_fee.into(),
                 frame_support::traits::WithdrawReasons::FEE,
-                frame_support::traits::ExistenceRequirement::KeepAlive,
+                frame_support::traits::ExistenceReqfrontend/uirement::KeepAlive,
             )?;
             drop(imbalance);
 
             Self::deposit_event(Event::FeeDeducted {
                 account: who.clone(),
-                amount: required_fee,
+                amount: reqfrontend/uired_fee,
                 comit_id,
             });
 
@@ -1148,13 +1148,13 @@ pub mod pallet {
             // Validate symbol is not empty
             ensure!(!symbol.is_empty(), Error::<T>::EmptySymbol);
 
-            // Validate symbol does not start with dash or underscore
+            // Validate symbol does not start with apps/apps/dash-legacy-2-legacy-2 or underscore
             ensure!(
                 !symbol.starts_with(b"-") && !symbol.starts_with(b"_"),
                 Error::<T>::InvalidSymbolFormat
             );
 
-            // Validate symbol: must be uppercase ASCII, digits, dash, or underscore
+            // Validate symbol: must be uppercase ASCII, digits, apps/apps/dash-legacy-2-legacy-2, or underscore
             for &byte in &symbol {
                 let valid = byte.is_ascii_uppercase()  // Uppercase letters
                     || byte.is_ascii_digit()  // Digits
@@ -1629,7 +1629,7 @@ pub mod pallet {
             #[cfg(not(feature = "dev-bypass"))]
             {
                 // Production: check authorization list
-                // If no authorized accounts exist, reject (explicit authorization required)
+                // If no authorized accounts exist, reject (explicit authorization reqfrontend/uired)
                 if AuthorizedAccounts::<T>::contains_key(caller) {
                     Ok(())
                 } else {
@@ -1703,11 +1703,11 @@ pub mod pallet {
         /// 3. Replay protection: Combined with nonce prevents transaction replay
         ///
         /// ## Trade-offs
-        /// - Pro: Simpler client integration, no simulation required
+        /// - Pro: Simpler client integration, no simulation reqfrontend/uired
         /// - Con: Cannot verify execution results match expectations
         ///
         /// ## Mitigation for High-Value Transactions
-        /// For transactions requiring output verification, implement:
+        /// For transactions reqfrontend/uiring output verification, implement:
         /// - Application-layer expected_output_hash verification
         /// - Multi-sig validation with result confirmation
         /// - Post-execution audit trail comparison
@@ -1730,7 +1730,7 @@ pub mod pallet {
                 }
             }
 
-            // Build canonical dual-VM commitment WITHOUT receipt data.
+            // Bfrontend/uild canonical dual-VM commitment WITHOUT receipt data.
             // The prepare_root is a commitment to the input payloads and execution parameters,
             // NOT the execution results. This allows clients to compute the prepare_root
             // beforehand and use it to authorize the Comit submission.
@@ -2072,7 +2072,7 @@ pub mod pallet {
         ///
         /// Uses checked arithmetic to prevent overflow in fee calculations.
         /// Uses ceiling division and minimum fee floor to prevent zero-fee attacks.
-        /// Returns the total fee required for the transaction.
+        /// Returns the total fee reqfrontend/uired for the transaction.
         fn fee_accounting(
             &self,
             evm_gas_used: u64,

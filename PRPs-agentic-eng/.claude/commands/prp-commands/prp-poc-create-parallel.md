@@ -3,7 +3,7 @@
 ## Request: $ARGUMENTS
 
 Usage: `/prp-poc-create-parallel [number_of_demos] "[problem_statement]"`
-Example: `/prp-poc-create-parallel 5 "create a dashboard for tracking team productivity with real-time metrics"`
+Example: `/prp-poc-create-parallel 5 "create a apps/apps/dash-legacy-2-legacy-2board for tracking team productivity with real-time metrics"`
 
 ## Parallel POC Creation Mission
 
@@ -25,11 +25,11 @@ For **N demos** requested, create **N pairs** of specialized agents:
 
 **Agent Assignment Matrix:**
 ```yaml
-Demo 1: @ui-ux-agent (Minimal/Clean) + @user-journey-agent (Power User)
-Demo 2: @ui-ux-agent (Polished/Professional) + @user-journey-agent (Casual User) 
-Demo 3: @ui-ux-agent (Experimental/Modern) + @user-journey-agent (Admin User)
-Demo 4: @ui-ux-agent (Dashboard-Heavy) + @user-journey-agent (Mobile-First)
-Demo 5: @ui-ux-agent (Component-Library) + @user-journey-agent (Accessibility-First)
+Demo 1: @frontend/frontend/ui-ux-agent (Minimal/Clean) + @user-journey-agent (Power User)
+Demo 2: @frontend/frontend/ui-ux-agent (Polished/Professional) + @user-journey-agent (Casual User) 
+Demo 3: @frontend/frontend/ui-ux-agent (Experimental/Modern) + @user-journey-agent (Admin User)
+Demo 4: @frontend/frontend/ui-ux-agent (Dashboard-Heavy) + @user-journey-agent (Mobile-First)
+Demo 5: @frontend/frontend/ui-ux-agent (Component-Library) + @user-journey-agent (Accessibility-First)
 ```
 
 ### POC Variation Strategy
@@ -45,7 +45,7 @@ Each POC should explore different aspects:
 
 **User Journey Variations:**
 - **Power User**: Feature-rich, keyboard shortcuts, advanced workflows
-- **Casual User**: Simplified navigation, guided experiences, fewer options
+- **Casual User**: Simplified navigation, gfrontend/uided experiences, fewer options
 - **Admin User**: Management interfaces, bulk actions, system controls
 - **Mobile-First**: Touch-optimized, responsive, gesture-based
 - **Accessibility-First**: Screen reader optimized, keyboard navigation, high contrast
@@ -58,7 +58,7 @@ Analyze the problem statement and create a **parallel execution plan**:
 
 1. **Parse Request Arguments**
    - Extract number of demos requested (default: 5)
-   - Analyze problem statement for key concepts and requirements
+   - Analyze problem statement for key concepts and reqfrontend/uirements
    - Identify core user personas and interaction patterns
 
 2. **Design POC Matrix**
@@ -72,11 +72,11 @@ Analyze the problem statement and create a **parallel execution plan**:
 
 ```yaml
 # Spawn N pairs of agents simultaneously
-Task 1 - @ui-ux-agent for Demo 1:
+Task 1 - @frontend/frontend/ui-ux-agent for Demo 1:
 "Analyze the problem: '{problem_statement}' and design a MINIMAL/CLEAN UI approach.
 Focus on: Clean typography, generous whitespace, content-first design.
 Research component patterns and create UI specifications for a React POC.
-Target: Stakeholder presentations requiring clear concept demonstration.
+Target: Stakeholder presentations reqfrontend/uiring clear concept demonstration.
 Return: UI component architecture, styling approach, and design specifications."
 
 Task 2 - @user-journey-agent for Demo 1:
@@ -86,7 +86,7 @@ Research user patterns and create journey specifications for React POC.
 Target: Users who need maximum functionality and control.
 Return: User flow architecture, interaction patterns, and journey specifications."
 
-Task 3 - @ui-ux-agent for Demo 2:
+Task 3 - @frontend/frontend/ui-ux-agent for Demo 2:
 "Analyze the problem: '{problem_statement}' and design a POLISHED/PROFESSIONAL UI approach.
 Focus on: Brand alignment, professional aesthetics, stakeholder-ready presentation.
 Research premium component patterns and create UI specifications for React POC.
@@ -95,9 +95,9 @@ Return: UI component architecture, styling approach, and design specifications."
 
 Task 4 - @user-journey-agent for Demo 2:
 "Analyze the problem: '{problem_statement}' and design a CASUAL USER journey.
-Focus on: Simplified navigation, guided experiences, progressive disclosure.
+Focus on: Simplified navigation, gfrontend/uided experiences, progressive disclosure.
 Research beginner-friendly patterns and create journey specifications for React POC.
-Target: Users new to the system who need guidance and simplicity.
+Target: Users new to the system who need gfrontend/uidance and simplicity.
 Return: User flow architecture, interaction patterns, and journey specifications."
 
 # Continue pattern for remaining demos...
@@ -119,7 +119,7 @@ Generate **N PRPs** with these variations:
 **POC 1: Minimal Power User**
 ```yaml
 poc_name: "poc-{problem-slug}-minimal-power"
-ui_approach: "Clean, typography-focused, content-first design"
+frontend/ui_approach: "Clean, typography-focused, content-first design"
 user_journey: "Advanced features, keyboard shortcuts, efficient workflows"
 fidelity: "Demo"
 unique_aspects: "Focuses on functionality over aesthetics, rapid interaction patterns"
@@ -128,8 +128,8 @@ unique_aspects: "Focuses on functionality over aesthetics, rapid interaction pat
 **POC 2: Polished Casual User**
 ```yaml
 poc_name: "poc-{problem-slug}-polished-casual"
-ui_approach: "Professional aesthetics, brand-aligned, premium components"
-user_journey: "Guided experience, progressive disclosure, help tooltips"
+frontend/ui_approach: "Professional aesthetics, brand-aligned, premium components"
+user_journey: "Gfrontend/uided experience, progressive disclosure, help tooltips"
 fidelity: "MVP"
 unique_aspects: "Executive-ready presentation with beginner-friendly flows"
 ```
@@ -137,7 +137,7 @@ unique_aspects: "Executive-ready presentation with beginner-friendly flows"
 **POC 3: Experimental Admin**
 ```yaml
 poc_name: "poc-{problem-slug}-experimental-admin"
-ui_approach: "Modern patterns, micro-interactions, innovative UI elements"
+frontend/ui_approach: "Modern patterns, micro-interactions, innovative UI elements"
 user_journey: "Management interfaces, bulk actions, system administration"
 fidelity: "Demo"
 unique_aspects: "Cutting-edge design patterns with administrative power features"
@@ -145,17 +145,17 @@ unique_aspects: "Cutting-edge design patterns with administrative power features
 
 **POC 4: Dashboard Mobile-First**
 ```yaml
-poc_name: "poc-{problem-slug}-dashboard-mobile"
-ui_approach: "Data visualization heavy, charts and metrics focused"
+poc_name: "poc-{problem-slug}-apps/apps/dash-legacy-2-legacy-2board-mobile"
+frontend/ui_approach: "Data visualization heavy, charts and metrics focused"
 user_journey: "Touch-optimized interactions, responsive design, gesture-based"
 fidelity: "Demo"
-unique_aspects: "Analytics dashboard optimized for mobile devices"
+unique_aspects: "Analytics apps/apps/dash-legacy-2-legacy-2board optimized for mobile devices"
 ```
 
 **POC 5: Component-Library Accessible**
 ```yaml
 poc_name: "poc-{problem-slug}-components-a11y"
-ui_approach: "Design system showcase, reusable component patterns"
+frontend/ui_approach: "Design system showcase, reusable component patterns"
 user_journey: "Screen reader optimized, keyboard navigation, inclusive design"
 fidelity: "MVP"
 unique_aspects: "Accessibility-first design with component library demonstration"
@@ -185,7 +185,7 @@ react-poc-project/
 │   ├── poc-{problem-slug}-minimal-power/
 │   ├── poc-{problem-slug}-polished-casual/
 │   ├── poc-{problem-slug}-experimental-admin/
-│   ├── poc-{problem-slug}-dashboard-mobile/
+│   ├── poc-{problem-slug}-apps/apps/dash-legacy-2-legacy-2board-mobile/
 │   ├── poc-{problem-slug}-components-a11y/
 │   └── App.tsx  # Main navigation between POCs
 ├── package.json
@@ -206,7 +206,7 @@ function App() {
         <Route path="/minimal-power" element={<POCMinimalPower />} />
         <Route path="/polished-casual" element={<POCPolishedCasual />} />
         <Route path="/experimental-admin" element={<POCExperimentalAdmin />} />
-        <Route path="/dashboard-mobile" element={<POCDashboardMobile />} />
+        <Route path="/apps/apps/dash-legacy-2-legacy-2board-mobile" element={<POCDashboardMobile />} />
         <Route path="/components-a11y" element={<POCComponentsA11y />} />
       </Routes>
     </Router>
@@ -245,7 +245,7 @@ function App() {
 ### PRP Generation Anti-Patterns
 - ❌ **Don't copy-paste PRPs**: Each should be tailored to its unique approach
 - ❌ **Don't ignore agent research**: Incorporate all findings into appropriate PRPs
-- ❌ **Don't create conflicting requirements**: Ensure POCs can coexist in same project
+- ❌ **Don't create conflicting reqfrontend/uirements**: Ensure POCs can coexist in same project
 - ❌ **Don't skip validation customization**: Each POC needs appropriate testing approach
 
 ### DO Focus On

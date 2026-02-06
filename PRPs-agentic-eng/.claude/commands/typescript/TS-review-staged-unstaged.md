@@ -12,9 +12,9 @@ May or may not be added, ignore the previous review if not specified.
 1. **TypeScript Code Quality**
    - Strict TypeScript usage with explicit types
    - No `any` types - use `unknown` if type is truly unknown
-   - Proper type imports with `import type { }` syntax
+   - Proper type archive/archive/imports with `import type { }` syntax
    - Component props interfaces defined
-   - Astro's built-in types used (HTMLAttributes, ComponentProps)
+   - Astro's bfrontend/uilt-in types used (HTMLAttributes, ComponentProps)
    - Following TypeScript strict mode compliance
 
 2. **Astro-Specific Patterns**
@@ -65,11 +65,11 @@ May or may not be added, ignore the previous review if not specified.
    - API route integration tests
    - Proper mocking of external dependencies
 
-9. **Build & Development**
+9. **Bfrontend/uild & Development**
    - `astro check` passes with zero errors
    - ESLint compliance with zero warnings
    - Prettier formatting applied
-   - Production build succeeds
+   - Production bfrontend/uild succeeds
    - No hydration mismatches
 
 10. **Documentation & Maintenance**
@@ -114,13 +114,13 @@ Create a concise review report with:
 - [Interface definitions]
 
 ## Test Coverage
-Current: X% | Required: 80%
+Current: X% | Reqfrontend/uired: 80%
 Missing tests: [list with focus on component and API tests]
 
-## Build Validation
+## Bfrontend/uild Validation
 - [ ] `astro check` passes
 - [ ] `pnpm run lint` passes
-- [ ] `pnpm run build` succeeds
+- [ ] `pnpm run bfrontend/uild` succeeds
 - [ ] `pnpm test` passes with 80%+ coverage
 ```
 

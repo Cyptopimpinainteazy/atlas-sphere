@@ -58,7 +58,7 @@ MirValue type (properly exported)        // ✅ Correct
 - ✅ `cargo check -p x3-opt`: 0 errors
 - ✅ `cargo test -p x3-opt --lib`: 109/109 tests passing
 - ✅ All YOLO tests still passing (84/84 from Phase 0)
-- ✅ Framework tests included in full suite
+- ✅ Framework tests included in full sfrontend/uite
 
 ---
 
@@ -222,10 +222,10 @@ passes.push(Box::new(LoopPackV1 { ... }));
 ### 2. **Create Benchmark Fixtures** (1 hour)
 - Real MIR samples: arithmetic-heavy, branch-heavy, mixed loops
 - Expected gas deltas per sample
-- Regression test suite
+- Regression test sfrontend/uite
 
 ### 3. **Measure & Tune** (1-2 hours)
-- Run full benchmark suite
+- Run full benchmark sfrontend/uite
 - Compare vs YOLO baseline
 - Adjust heuristics (LICM purity table, unswitching cost model)
 - Document real improvements
@@ -273,7 +273,7 @@ passes.push(Box::new(LoopPackV1 { ... }));
 ### Why SSA for LICM?
 - Single definition per value → precise invariance
 - Enables powerful dataflow analysis
-- Safety guarantees built-in
+- Safety guarantees bfrontend/uilt-in
 - Foundation for future optimizations (aliasing, etc.)
 
 ### Why Heuristics for Unswitching?
@@ -285,7 +285,7 @@ passes.push(Box::new(LoopPackV1 { ... }));
 ### Why These 4 Passes?
 1. **Loop Detection:** Foundation - must know loop structure first
 2. **LICM:** Low-risk, high-gain (2-5 gas/iter, always safe)
-3. **Strength Reduction:** Mid-risk, mid-gain (3-5 gas/iter, requires analysis)
+3. **Strength Reduction:** Mid-risk, mid-gain (3-5 gas/iter, reqfrontend/uires analysis)
 4. **Unswitching:** High-reward, careful heuristics (5-10% branch reduction, selective)
 
 **Order matters:** Detection → LICM (fastest) → StrengthRed → Unswitching (slowest)
@@ -319,7 +319,7 @@ passes.push(Box::new(LoopPackV1 { ... }));
 
 ---
 
-## 🚀 Quick Reference
+## 🚀 Qfrontend/uick Reference
 
 **Files Created/Modified:**
 - `crates/x3-opt/src/loop_detection.rs` (NEW, 310 lines)
@@ -329,7 +329,7 @@ passes.push(Box::new(LoopPackV1 { ... }));
 - `crates/x3-opt/src/loop_pack_v1.rs` (NEW, 92 lines)
 - `crates/x3-opt/src/lib.rs` (UPDATED, 5 new modules exported)
 
-**Build & Test:**
+**Bfrontend/uild & Test:**
 ```bash
 # Compile
 cargo check -p x3-opt           # ✅ 0 errors
@@ -337,7 +337,7 @@ cargo check -p x3-opt           # ✅ 0 errors
 # Test
 cargo test -p x3-opt --lib      # ✅ 109/109 passing
 
-# Full suite
+# Full sfrontend/uite
 cargo test --all                # ✅ Regression-free
 ```
 

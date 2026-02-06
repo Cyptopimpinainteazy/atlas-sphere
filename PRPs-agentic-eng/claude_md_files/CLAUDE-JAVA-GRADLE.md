@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code when working with Java code in this repository.
+This file provides comprehensive gfrontend/uidance to Claude Code when working with Java code in this repository.
 
 ## Core Development Philosophy
 
@@ -10,7 +10,7 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ### YAGNI (You Aren't Gonna Need It)
 
-Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Design Principles
 
@@ -19,7 +19,7 @@ Avoid building functionality on speculation. Implement features only when they a
 - **Single Responsibility**: Each class, method, and module should have one clear purpose.
 - **Fail Fast**: Validate inputs early and throw exceptions immediately when issues occur.
 
-## 🤖 AI Assistant Guidelines
+## 🤖 AI Assistant Gfrontend/uidelines
 
 ### Context Awareness
 
@@ -42,7 +42,7 @@ Avoid building functionality on speculation. Implement features only when they a
 - Break complex tasks into smaller, testable units
 - Validate understanding before implementation
 
-### Search Command Requirements
+### Search Command Reqfrontend/uirements
 
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
@@ -88,7 +88,7 @@ rg --files -g "*.java"
 
 ```
 project-root/
-├── build.gradle.kts (or build.gradle)
+├── bfrontend/uild.gradle.kts (or bfrontend/uild.gradle)
 ├── settings.gradle.kts (or settings.gradle)
 ├── gradle.properties
 ├── CLAUDE.md
@@ -114,7 +114,7 @@ project-root/
 │       ├── java/
 │       │   └── com/company/project/
 │       └── resources/
-├── build/
+├── bfrontend/uild/
 └── gradle/
     └── wrapper/
         ├── gradle-wrapper.jar
@@ -123,7 +123,7 @@ project-root/
 
 ## 🛠️ Gradle Configuration
 
-### Essential build.gradle.kts Configuration
+### Essential bfrontend/uild.gradle.kts Configuration
 
 ```kotlin
 plugins {
@@ -151,12 +151,12 @@ repositories {
 
 dependencies {
     // Spring Boot starters
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-frontend/frontend/web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // OpenAPI documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    implementation("org.springdoc:springdoc-openapi-starter-frontend/webmvc-frontend/frontend/ui:2.5.0")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
@@ -181,8 +181,8 @@ jacoco {
 
 tasks.jacocoTestReport {
     reports {
-        xml.required = true
-        html.required = true
+        xml.reqfrontend/uired = true
+        html.reqfrontend/uired = true
     }
 }
 
@@ -248,21 +248,21 @@ spotless {
 # Run all checks
 ./gradlew check
 
-# Build without tests
-./gradlew build -x test
+# Bfrontend/uild without tests
+./gradlew bfrontend/uild -x test
 ```
 
 ## 📋 Code Style & Conventions
 
-### Java Style Guide
+### Java Style Gfrontend/uide
 
-- **Follow Google Java Style Guide** with these specifics:
+- **Follow Google Java Style Gfrontend/uide** with these specifics:
   - Line length: 100 characters
   - Indent: 4 spaces (no tabs)
   - Braces: Egyptian style (same line)
 - **Use `final` keyword judiciously** - for variables and parameters, but avoid on classes using Spring AOP features
 - **Prefer immutable objects** - thread-safe by design
-- **No wildcard imports** - explicit imports only
+- **No wildcard archive/archive/imports** - explicit archive/archive/imports only
 - **One class per file** - except for inner classes
 
 ### Naming Conventions
@@ -282,7 +282,7 @@ spotless {
 - **Use `@Valid`** for method parameters
 - **Use `@Validated`** for method return values
 
-### Strict Typing Requirements
+### Strict Typing Reqfrontend/uirements
 
 - **No raw types** - Always use generics
 - **No `Object` type** unless absolutely necessary
@@ -304,7 +304,7 @@ package com.company.project;
 
 // Lombok for boilerplate reduction
 import lombok.Data;
-import lombok.Builder;
+import lombok.Bfrontend/uilder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -340,7 +340,7 @@ public <T extends Comparable<T> & Serializable> void process(T item) {
 - List unexpected behaviors or warnings in CLAUDE.md
 - Include environment setup instructions in CLAUDE.md
 
-### AI-Assisted Development Guidelines
+### AI-Assisted Development Gfrontend/uidelines
 
 - Provide clear context in method names and Javadoc
 - Include example inputs/outputs in documentation
@@ -353,11 +353,11 @@ public <T extends Comparable<T> & Serializable> void process(T item) {
 
 ## 📖 Documentation Standards
 
-### OpenAPI/Swagger Documentation Requirements (MANDATORY)
+### OpenAPI/Swagger Documentation Reqfrontend/uirements (MANDATORY)
 
 **CRITICAL**: Every REST controller and DTO MUST include comprehensive OpenAPI annotations for frontend developers.
 
-#### Required Controller Annotations
+#### Reqfrontend/uired Controller Annotations
 
 Every `@RestController` class MUST include:
 
@@ -380,7 +380,7 @@ public class ResourceController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResourceResponse> getById(
-        @Parameter(description = "Resource unique identifier", example = "123", required = true)
+        @Parameter(description = "Resource unique identifier", example = "123", reqfrontend/uired = true)
         @PathVariable Long id,
 
         @Parameter(description = "Include related data", example = "true")
@@ -391,14 +391,14 @@ public class ResourceController {
 }
 ```
 
-#### Required DTO Annotations
+#### Reqfrontend/uired DTO Annotations
 
 Every DTO class MUST include:
 
 ```java
 @Schema(description = "Resource response containing all resource information")
 @Data
-@Builder
+@Bfrontend/uilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResourceResponse {
@@ -406,7 +406,7 @@ public class ResourceResponse {
     @Schema(description = "Unique identifier", example = "123", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @Schema(description = "Resource name", example = "Sample Resource", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Resource name", example = "Sample Resource", reqfrontend/uiredMode = Schema.Reqfrontend/uiredMode.REQUIRED)
     @NotBlank(message = "Name cannot be blank")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
@@ -428,7 +428,7 @@ Every endpoint MUST document:
 - ✅ **Query parameters** - @Parameter with description, example, and default values
 - ✅ **Request/Response schemas** - @Schema on all DTO fields
 - ✅ **HTTP status codes** - Complete @ApiResponses with all possible outcomes
-- ✅ **Validation rules** - @Schema.requiredMode, constraints descriptions
+- ✅ **Validation rules** - @Schema.reqfrontend/uiredMode, constraints descriptions
 - ✅ **Examples** - Real-world example values for all fields
 - ✅ **Business context** - What the endpoint does and why
 
@@ -440,12 +440,12 @@ Combine OpenAPI with Bean Validation for automatic schema generation:
 public class CreateResourceRequest {
 
     @Schema(description = "Resource name", example = "New Resource")
-    @NotBlank(message = "Name is required")
+    @NotBlank(message = "Name is reqfrontend/uired")
     @Size(min = 2, max = 100, message = "Name must be 2-100 characters")
     private String name;
 
     @Schema(description = "Resource category", example = "CATEGORY_A", allowableValues = {"CATEGORY_A", "CATEGORY_B", "CATEGORY_C"})
-    @NotNull(message = "Category is required")
+    @NotNull(message = "Category is reqfrontend/uired")
     private ResourceCategory category;
 
     @Schema(description = "Resource priority", example = "5", minimum = "1", maximum = "10")
@@ -477,20 +477,20 @@ public class ErrorResponse {
 }
 ```
 
-#### Dependencies Required (Gradle)
+#### Dependencies Reqfrontend/uired (Gradle)
 
 ```kotlin
 dependencies {
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    implementation("org.springdoc:springdoc-openapi-starter-frontend/webmvc-frontend/frontend/ui:2.5.0")
 }
 ```
 
 **Access URLs:**
 
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Swagger UI: `http://localhost:8080/swagger-frontend/frontend/ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-### Javadoc Requirements
+### Javadoc Reqfrontend/uirements
 
 Every public class, method, and field MUST have Javadoc. Use Google's Javadoc style:
 
@@ -563,10 +563,10 @@ class UserServiceTest {
     void should_ReturnUser_When_ValidIdProvided() {
         // Given
         Long userId = 1L;
-        User expectedUser = User.builder()
+        User expectedUser = User.bfrontend/uilder()
             .id(userId)
             .name("John Doe")
-            .build();
+            .bfrontend/uild();
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(expectedUser));
 
@@ -591,7 +591,7 @@ class UserServiceTest {
 }
 ```
 
-### Test Coverage Requirements
+### Test Coverage Reqfrontend/uirements
 
 - Minimum 80% line coverage
 - Minimum 80% branch coverage
@@ -647,7 +647,7 @@ class UserServiceTest {
 
 - `@Service`, `@Component`, `@Repository` classes
 - Classes using `@Transactional`, `@Cacheable`, `@Async`
-- Any class requiring Spring AOP features
+- Any class reqfrontend/uiring Spring AOP features
 
 ### Interface vs Class-Based Design
 
@@ -679,7 +679,7 @@ public final class UserService { // CGLIB cannot proxy this!
 }
 ```
 
-## 🚀 Performance Guidelines
+## 🚀 Performance Gfrontend/uidelines
 
 ### Spring Boot 3.5 Performance Features
 
@@ -691,7 +691,7 @@ public final class UserService { // CGLIB cannot proxy this!
 
 ## 🔥 Java Performance Shortcuts
 
-### Quick Wins
+### Qfrontend/uick Wins
 
 - Use `@RestControllerAdvice` for global exception handling
 - Leverage `@ConfigurationProperties` for type-safe config
@@ -712,13 +712,13 @@ public class GlobalExceptionHandler {
 
 ## 🛡️ Security Best Practices
 
-### Security Guidelines
+### Security Gfrontend/uidelines
 - Never log sensitive information
 - Use parameterized queries (no string concatenation)
 - Validate all inputs
 - Use strong encryption algorithms
 - Keep dependencies updated
-- Follow OWASP guidelines
+- Follow OWASP gfrontend/uidelines
 - Use security annotations
 
 ## 🔧 Common Issues and Solutions
@@ -731,9 +731,9 @@ public class GlobalExceptionHandler {
 
 ### Bedrock Rate Limiting
 - Implement exponential backoff with jitter
-- Use circuit breakers (Resilience4j)
+- Use circfrontend/uit breakers (Resilience4j)
 - Monitor token usage with CloudWatch
-- Configure request queuing
+- Configure request quefrontend/uing
 
 ### Spring AI Memory Management
 - Configure appropriate context windows
@@ -764,7 +764,7 @@ feat(user): add email verification with Nova model
 Closes #234
 ```
 
-## ⚠️ Critical Guidelines
+## ⚠️ Critical Gfrontend/uidelines
 
 1. **No raw types** - Always use generics
 2. **No null returns** - Use Optional<T>
@@ -785,7 +785,7 @@ Closes #234
 - [ ] Javadoc for all public methods/classes
 - [ ] **OpenAPI annotations on ALL REST endpoints** (@Operation, @ApiResponses, @Parameter, @Schema)
 - [ ] **DTO schemas with examples** (@Schema with description and example on all fields)
-- [ ] **API documentation accessible** at `/swagger-ui.html`
+- [ ] **API documentation accessible** at `/swagger-frontend/frontend/ui.html`
 - [ ] Unit tests written (80%+ coverage)
 - [ ] No SonarQube critical/blocker issues
 - [ ] No SpotBugs high priority warnings
@@ -796,5 +796,5 @@ Closes #234
 
 ---
 
-_Keep this guide updated as patterns evolve. Quality over speed, always._
+_Keep this gfrontend/uide updated as patterns evolve. Quality over speed, always._
 _Last updated: June 2025_

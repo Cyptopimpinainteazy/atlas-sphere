@@ -25,7 +25,7 @@ cd crates/atlas-dns-server && cargo run --bin atlas-dns-server
 3. **Fixed rusqlite optional dependency configuration** ✅
 4. **Tested atlas-dns-server compilation** ✅
 5. **Verified atlas-dns-server is properly in workspace** ✅
-6. **Built atlas-dns-server package specifically** ✅
+6. **Bfrontend/uilt atlas-dns-server package specifically** ✅
 7. **Checked workspace members** ✅
 8. **Fixed workspace membership for atlas-dns-server** ✅
 9. **Added crates/atlas-dns-server to workspace members** ✅
@@ -33,7 +33,7 @@ cd crates/atlas-dns-server && cargo run --bin atlas-dns-server
 11. **Documented all completed features and next steps** ✅
 12. **Updated default services to include frontend domains** ✅
 13. **Fixed workspace membership in main Cargo.toml** ✅
-14. **Built and tested DNS server with updated configuration** ✅
+14. **Bfrontend/uilt and tested DNS server with updated configuration** ✅
 15. **Verified DNS resolution for all configured domains** ✅
 
 ## 🌐 FRONTEND DOMAINS: ALL CONFIGURED & READY
@@ -53,7 +53,7 @@ let default_services = vec![
     ("rpc", "10.0.1.200"),
     ("xchange", "10.0.2.100"),
     ("wallet", "10.0.2.200"),
-    ("dashboard", "10.0.2.300"),
+    ("apps/apps/dash-legacy-2-legacy-2board", "10.0.2.300"),
     ("explorer", "10.0.2.400"),
     ("docs", "10.0.3.100"),
     ("status", "10.0.3.200"),
@@ -97,7 +97,7 @@ sudo systemctl enable --now atlas-dns-server
 #### Option 3: Manual Binary
 ```bash
 cd crates/atlas-dns-server
-cargo build --bin atlas-dns-server
+cargo bfrontend/uild --bin atlas-dns-server
 ./target/debug/atlas-dns-server
 ```
 
@@ -126,7 +126,7 @@ cargo build --bin atlas-dns-server
 ### ✅ **Compilation Test**: PASSED
 - No compilation errors ✅
 - All dependencies resolve ✅
-- Binary builds successfully ✅
+- Binary bfrontend/uilds successfully ✅
 
 ### ✅ **Runtime Test**: PASSED  
 - Server starts without errors ✅
@@ -140,7 +140,7 @@ cargo build --bin atlas-dns-server
 
 ### ✅ **Integration Test**: PASSED
 - Workspace integration complete ✅
-- Cargo build system working ✅
+- Cargo bfrontend/uild system working ✅
 - Deployment ready ✅
 
 ## 📋 DNS SERVER CAPABILITIES
@@ -179,7 +179,7 @@ The DNS server is **ready for immediate production deployment**:
 
 ## 🚀 DEPLOYMENT INSTRUCTIONS
 
-### **Quick Start (Verified Working):**
+### **Qfrontend/uick Start (Verified Working):**
 ```bash
 cd crates/atlas-dns-server
 cargo run --bin atlas-dns-server

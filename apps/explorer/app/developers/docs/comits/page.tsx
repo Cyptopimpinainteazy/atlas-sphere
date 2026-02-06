@@ -154,7 +154,7 @@ export default function ComitsPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Creating a Comit</h2>
           <CodeBlock language="typescript" title="create-comit.ts">
-{`import { AtlasClient, Comit, ComitBuilder } from '@x3/atlas-sdk';
+{`import { AtlasClient, Comit, ComitBfrontend/uilder } from '@x3/atlas-sdk';
 import { ethers } from 'ethers';
 
 async function createComit() {
@@ -162,13 +162,13 @@ async function createComit() {
     rpcUrl: 'https://rpc.testnet.atlas-sphere.io' 
   });
 
-  // Use the builder for easier Comit construction
-  const comit = new ComitBuilder()
+  // Use the bfrontend/uilder for easier Comit construction
+  const comit = new ComitBfrontend/uilder()
     // Add EVM operation - swap on Uniswap
     .withEvmPayload({
       to: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
       data: ethers.utils.defaultAbiCoder.encode(
-        ['address[]', 'uint256', 'uint256'],
+        ['address[]', 'frontend/uint256', 'frontend/uint256'],
         [
           ['0xTokenA...', '0xTokenB...'],
           ethers.utils.parseEther('1'),
@@ -188,7 +188,7 @@ async function createComit() {
     })
     // Set fee
     .withFee('1000000000000') // 1 ATLAS
-    .build();
+    .bfrontend/uild();
 
   // Submit the Comit
   const receipt = await atlas.submitComit(comit, signer);

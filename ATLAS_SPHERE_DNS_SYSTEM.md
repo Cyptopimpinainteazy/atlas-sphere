@@ -13,7 +13,7 @@ Create a custom DNS server for the `.x3` TLD to provide clean, branded domains f
 - `api.x3` - API Gateway
 - `rpc.x3` - RPC Endpoints
 - `explorer.x3` - Network Explorer
-- `dashboard.x3` - Analytics Dashboard
+- `apps/apps/dash-legacy-2-legacy-2board.x3` - Analytics Dashboard
 - `governance.x3` - Governance Portal
 - `docs.x3` - Documentation Portal
 - `status.x3` - Network Status
@@ -42,7 +42,7 @@ Create a custom DNS server for the `.x3` TLD to provide clean, branded domains f
 ## 📋 IMPLEMENTATION PLAN
 
 ### Phase 1: DNS Server Core
-- [ ] 1.1 Build authoritative DNS server in Rust
+- [ ] 1.1 Bfrontend/uild authoritative DNS server in Rust
 - [ ] 1.2 Implement .x3 TLD zone file
 - [ ] 1.3 Add DNSSEC signing
 - [ ] 1.4 Create DNS management API
@@ -61,9 +61,9 @@ Create a custom DNS server for the `.x3` TLD to provide clean, branded domains f
 
 ### Phase 4: User Experience
 - [ ] 4.1 Domain search and registration portal
-- [ ] 4.2 DNS management dashboard
+- [ ] 4.2 DNS management apps/apps/dash-legacy-2-legacy-2board
 - [ ] 4.3 Developer API documentation
-- [ ] 4.4 Integration guides
+- [ ] 4.4 Integration gfrontend/uides
 
 ## 🔧 TECHNICAL IMPLEMENTATION
 
@@ -154,7 +154,7 @@ rpc.x3.                   300     IN      A       10.0.1.200
 ; Atlas Services
 xchange.x3.              300     IN      A       10.0.2.100
 wallet.x3.                300     IN      A       10.0.2.200
-dashboard.x3.             300     IN      A       10.0.2.300
+apps/apps/dash-legacy-2-legacy-2board.x3.             300     IN      A       10.0.2.300
 explorer.x3.             300     IN      A       10.0.2.400
 
 ; Infrastructure
@@ -281,7 +281,7 @@ interface DomainRegistrationPortal {
 ### Medium-term (Month 2-3)
 1. Full service integration
 2. Advanced DNS features
-3. Monitoring dashboard
+3. Monitoring apps/apps/dash-legacy-2-legacy-2board
 4. Production deployment
 
 ### Long-term (Month 3+)

@@ -65,7 +65,7 @@ const balance = await api.rpc.atlasKernel.getCanonicalBalance(
 const evmProvider = new ethers.JsonRpcProvider('https://rpc.testnet.atlas-sphere.io');
 const ledgerContract = new ethers.Contract(
   CANONICAL_LEDGER_PRECOMPILE,
-  ['function balanceOf(address account, bytes32 assetId) view returns (uint256)'],
+  ['function balanceOf(address account, bytes32 assetId) view returns (frontend/uint256)'],
   evmProvider
 );
 const evmBalance = await ledgerContract.balanceOf(evmAddress, assetId);
@@ -88,7 +88,7 @@ const evmPayload = escrowContract.interface.encodeFunctionData(
 );
 
 // SVM payload: Credit the SVM account
-const svmPayload = buildCreditInstruction(
+const svmPayload = bfrontend/uildCreditInstruction(
   recipientSvmAccount,
   assetId,
   amount
@@ -110,20 +110,20 @@ await comit.signAndSend(account);`}
 pragma solidity ^0.8.20;
 
 interface ICanonicalLedger {
-    function balanceOf(address account, bytes32 assetId) external view returns (uint256);
-    function transfer(bytes32 assetId, address to, uint256 amount) external returns (bool);
-    function transferFrom(bytes32 assetId, address from, address to, uint256 amount) external returns (bool);
+    function balanceOf(address account, bytes32 assetId) external view returns (frontend/uint256);
+    function transfer(bytes32 assetId, address to, frontend/uint256 amount) external returns (bool);
+    function transferFrom(bytes32 assetId, address from, address to, frontend/uint256 amount) external returns (bool);
 }
 
 contract DeFiProtocol {
     ICanonicalLedger public constant ledger = ICanonicalLedger(0x000000000000000000000000000000000000C0DE);
     bytes32 public constant ATLAS_ID = bytes32(0);
     
-    function getAtlasBalance(address user) external view returns (uint256) {
+    function getAtlasBalance(address user) external view returns (frontend/uint256) {
         return ledger.balanceOf(user, ATLAS_ID);
     }
     
-    function deposit(bytes32 assetId, uint256 amount) external {
+    function deposit(bytes32 assetId, frontend/uint256 amount) external {
         // Transfer from user to this contract
         ledger.transferFrom(assetId, msg.sender, address(this), amount);
         // ... rest of deposit logic
@@ -142,7 +142,7 @@ pub mod defi {
     pub fn deposit(ctx: Context<Deposit>, asset_id: [u8; 32], amount: u64) -> Result<()> {
         // Read from canonical ledger PDA
         let ledger_balance = ctx.accounts.canonical_balance.amount;
-        require!(ledger_balance >= amount, ErrorCode::InsufficientBalance);
+        reqfrontend/uire!(ledger_balance >= amount, ErrorCode::InsufficientBalance);
         
         // Update user position
         let position = &mut ctx.accounts.user_position;
@@ -184,12 +184,12 @@ const ATLAS_ASSET_ID = '0x000000000000000000000000000000000000000000000000000000
 
 // ERC20 tokens (hash of contract address)
 const erc20AssetId = keccak256(
-  solidityPacked(['uint8', 'address'], [1, tokenAddress])
+  solidityPacked(['frontend/uint8', 'address'], [1, tokenAddress])
 );
 
 // SPL tokens (hash of mint address)
 const splAssetId = keccak256(
-  solidityPacked(['uint8', 'bytes32'], [2, mintPubkey.toBytes()])
+  solidityPacked(['frontend/uint8', 'bytes32'], [2, mintPubkey.toBytes()])
 );`}
       </CodeBlock>
 

@@ -21,12 +21,12 @@ For a clean separation of concerns, run **two nodes per network**:
 
 Direct Internet exposure (`rpc_bind=public`) is supported, but not recommended.
 
-## Quick start (from repo checkout)
+## Qfrontend/uick start (from repo checkout)
 
-Build the node binary:
+Bfrontend/uild the node binary:
 
 ```bash
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 Run a localhost-only testnet RPC node:
@@ -58,14 +58,14 @@ The runner exposes a few knobs as environment variables so you can tighten limit
 
 If you want an extra safety latch for direct Internet exposure, enable:
 
-- `require_confirm_public_rpc=true`
+- `reqfrontend/uire_confirm_public_rpc=true`
 - `confirm_public_rpc=yes`
 
 When enabled, `rpc_bind=public` will refuse to start unless the confirmation is present.
 
 By default, `rpc_bind=public` will also refuse to start if `rpc_methods` is not `Safe`. To override (not recommended):
 
-- `require_safe_rpc_methods_on_public=false`
+- `reqfrontend/uire_safe_rpc_methods_on_public=false`
 
 ## Systemd (recommended)
 

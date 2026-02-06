@@ -1,4 +1,4 @@
-# Phase 3: Load/Store Hoisting - Implementation Guide
+# Phase 3: Load/Store Hoisting - Implementation Gfrontend/uide
 
 **Target**: 72-75% Compiler Completion  
 **Est. Duration**: 2-3 hours  
@@ -13,7 +13,7 @@
 
 **Current State** (70%):
 - Binary/Unary operations value-numbered ✅
-- Commutative equivalences recognized ✅
+- Commutative eqfrontend/uivalences recognized ✅
 - Cross-block redundancy detected ✅
 - **Gap**: Memory operations still considered impure
 
@@ -141,7 +141,7 @@ fn compute_availability(...) {
 
 ### Step 3: Validation & Benchmarks (30 min)
 
-Run full test suite:
+Run full test sfrontend/uite:
 ```bash
 cargo test -p x3-opt --lib
 # Expected: 130-135 tests passing (4 new)
@@ -401,7 +401,7 @@ fn test_different_loads_different_vn() {
 ### Regression Testing
 **Risk**: New code breaks existing optimizations  
 **Mitigation**: All 126 existing tests must pass before Phase 3 complete  
-**Process**: Run full suite after each change
+**Process**: Run full sfrontend/uite after each change
 
 ---
 
@@ -427,13 +427,13 @@ fn test_different_loads_different_vn() {
 2. **Prototype CanonicalExpr**: Add Load/Store variants
 3. **Test Alone**: Verify value_numbering tests pass
 4. **Integrate PRE**: Wire into compute_availability()
-5. **Full Test**: Run entire suite
+5. **Full Test**: Run entire sfrontend/uite
 6. **Benchmark**: Measure performance
-7. **Document**: Create Phase 3 completion guide
+7. **Document**: Create Phase 3 completion gfrontend/uide
 
 ---
 
-## 10. Quick Reference: Key Files
+## 10. Qfrontend/uick Reference: Key Files
 
 | File                                   | Change                          | LOC |
 | -------------------------------------- | ------------------------------- | --- |

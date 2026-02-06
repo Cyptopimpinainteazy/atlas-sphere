@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ChakraProvider, Box } from '@chakra-ui/react';
+import { ChakraProvider, Box } from '@chakra-frontend/frontend/ui/react';
 import { Web3Provider } from './providers/Web3Provider';
 import { MainLayout } from './layouts/MainLayout';
 import LandingPage from './pages/LandingPage';

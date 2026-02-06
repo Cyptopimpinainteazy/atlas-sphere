@@ -12,13 +12,13 @@ export default function RunNodePage() {
     >
       <div className="space-y-8">
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Prerequisites</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Prereqfrontend/uisites</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#1a1a1a]">
                   <th className="text-left py-3 px-4 text-gray-500 font-medium">Component</th>
-                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Requirement</th>
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Reqfrontend/uirement</th>
                 </tr>
               </thead>
               <tbody>
@@ -48,7 +48,7 @@ export default function RunNodePage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Quick Start (Docker)</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Qfrontend/uick Start (Docker)</h2>
           <CodeBlock language="bash" title="Docker Setup">
 {`# Pull the latest image
 docker pull atlassphere/node:latest
@@ -73,8 +73,8 @@ docker logs -f atlas-node`}
         </section>
 
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Building from Source</h2>
-          <CodeBlock language="bash" title="Build Instructions">
+          <h2 className="text-2xl font-bold text-white mb-4">Bfrontend/uilding from Source</h2>
+          <CodeBlock language="bash" title="Bfrontend/uild Instructions">
 {`# Clone the repository
 git clone https://github.com/atlas-sphere/atlas-sphere.git
 cd atlas-sphere
@@ -86,10 +86,10 @@ source $HOME/.cargo/env
 # Add WASM target
 rustup target add wasm32-unknown-unknown
 
-# Build the node
-cargo build --release
+# Bfrontend/uild the node
+cargo bfrontend/uild --release
 
-# Verify build
+# Verify bfrontend/uild
 ./target/release/atlas-sphere-node --version`}
           </CodeBlock>
         </section>

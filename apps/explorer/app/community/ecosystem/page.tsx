@@ -11,7 +11,7 @@ import {
   Star,
   ChevronDown,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const categories = [
   'All',
@@ -29,7 +29,7 @@ const projects = [
   {
     name: 'X3 Swap',
     category: 'DeFi',
-    description: 'Cross-VM decentralized exchange with unified liquidity pools',
+    description: 'Cross-VM decentralized exchange with unified liqfrontend/uidity pools',
     logo: '🔄',
     tvl: '$45M',
     users: '25K+',
@@ -79,7 +79,7 @@ const projects = [
   {
     name: 'DualPool',
     category: 'DeFi',
-    description: 'Concentrated liquidity AMM for cross-VM trading',
+    description: 'Concentrated liqfrontend/uidity AMM for cross-VM trading',
     logo: '🌊',
     tvl: '$18M',
     users: '8K+',
@@ -99,7 +99,7 @@ const projects = [
   {
     name: 'X3 Analytics',
     category: 'Analytics',
-    description: 'Comprehensive analytics dashboard for X3 STAR',
+    description: 'Comprehensive analytics apps/apps/dash-legacy-2-legacy-2board for X3 STAR',
     logo: '📊',
     tvl: null,
     users: '20K+',
@@ -109,7 +109,7 @@ const projects = [
   {
     name: 'Comit SDK',
     category: 'Developer Tools',
-    description: 'TypeScript SDK for building cross-VM applications',
+    description: 'TypeScript SDK for bfrontend/uilding cross-VM applications',
     logo: '🛠️',
     tvl: null,
     users: '2K+ devs',
@@ -188,7 +188,7 @@ export default function EcosystemPage() {
               Ecosystem Directory
             </h1>
             <p className="text-xl text-gray-400">
-              Discover projects, dApps, and services built on X3 STAR
+              Discover projects, dApps, and services bfrontend/uilt on X3 STAR
             </p>
           </div>
         </div>
@@ -338,7 +338,7 @@ export default function EcosystemPage() {
             List Your Project
           </h2>
           <p className="text-gray-400 mb-8">
-            Building on X3 STAR? Get your project listed in the ecosystem directory.
+            Bfrontend/uilding on X3 STAR? Get your project listed in the ecosystem directory.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a href="#" className="btn-primary">

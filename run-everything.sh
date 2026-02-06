@@ -47,7 +47,7 @@ HTLC_COORDINATOR_PORT=8787  # HTLC Atomic Swap Coordinator
 X3OS_PORT=3001          # Explorer with X3OS at /x3os
 WALLET_PORT=3002
 DEX_PORT=3003
-SOLANA_DEX_PORT=3000    # next-solana-main
+SOLANA_DEX_PORT=3000    # apps/apps/next-solana-main-legacy-2-legacy-2
 QUANTUM_DASHBOARD_PORT=3100  # Quantum Advisor Dashboard
 
 # URLs
@@ -255,7 +255,7 @@ kill_port() {
 start_ollama() {
     log_header "Starting Ollama (Multi-GPU AI)"
 
-    # If already running, require the HTTP endpoint to respond.
+    # If already running, reqfrontend/uire the HTTP endpoint to respond.
     if port_in_use $OLLAMA_PORT; then
         resolve_ollama_url || true
         log_info "Ollama URL: $OLLAMA_URL"
@@ -267,8 +267,8 @@ start_ollama() {
 
         log_warn "Ollama is listening but HTTP is not reachable yet"
 
-        # If managed by systemd, try a restart to recover quickly.
-        if systemctl is-active --quiet ollama 2>/dev/null; then
+        # If managed by systemd, try a restart to recover qfrontend/uickly.
+        if systemctl is-active --qfrontend/uiet ollama 2>/dev/null; then
             log_info "Restarting Ollama via systemd..."
             sudo systemctl restart ollama 2>/dev/null || true
             sleep 2
@@ -283,7 +283,7 @@ start_ollama() {
     log_info "Starting Ollama service..."
 
     # Try systemctl first (preferred for multi-GPU setup)
-    if systemctl is-active --quiet ollama 2>/dev/null; then
+    if systemctl is-active --qfrontend/uiet ollama 2>/dev/null; then
         log_success "Ollama systemd service already active"
     elif sudo systemctl start ollama 2>/dev/null; then
         sleep 2
@@ -348,7 +348,7 @@ start_blockchain() {
     fi
 
     if [ -z "$node_binary" ] || [ ! -f "$node_binary" ]; then
-        log_warn "Node binary not found. Build with: cd node && cargo build --release"
+        log_warn "Node binary not found. Bfrontend/uild with: cd node && cargo bfrontend/uild --release"
         return 1
     fi
 
@@ -502,7 +502,7 @@ start_x3os_tauri() {
     done
 
     if [ -z "$bin" ]; then
-        log_warn "X3OS Tauri binary not found. Build with: cd apps/x3os/src-tauri && cargo build --release"
+        log_warn "X3OS Tauri binary not found. Bfrontend/uild with: cd apps/x3os/src-tauri && cargo bfrontend/uild --release"
         return 1
     fi
 
@@ -523,10 +523,10 @@ start_x3os_tauri() {
     fi
 }
 
-start_quantum_dashboard() {
+start_quantum_apps/apps/dash-legacy-2-legacy-2board() {
     log_header "Starting Quantum Dashboard (Tauri)"
 
-    local app_dir="$PROJECT_ROOT/apps/quantum-dashboard"
+    local app_dir="$PROJECT_ROOT/apps/quantum-apps/apps/dash-legacy-2-legacy-2board"
 
     if [ ! -d "$app_dir" ] || [ ! -f "$app_dir/package.json" ]; then
         log_warn "Quantum Dashboard not found at $app_dir"
@@ -554,12 +554,12 @@ start_quantum_dashboard() {
     export NEXT_PUBLIC_BLOCKCHAIN_WS_URL="$BLOCKCHAIN_WS"
     export NEXT_PUBLIC_OLLAMA_URL="$OLLAMA_URL"
 
-    # Try to find pre-built Tauri binary first
+    # Try to find pre-bfrontend/uilt Tauri binary first
     local tauri_bin=""
     local tauri_candidates=(
-        "$app_dir/src-tauri/target/release/x3-quantum-dashboard"
+        "$app_dir/src-tauri/target/release/x3-quantum-apps/apps/dash-legacy-2-legacy-2board"
         "$app_dir/src-tauri/target/release/X3 Quantum Dashboard"
-        "$PROJECT_ROOT/target/release/x3-quantum-dashboard"
+        "$PROJECT_ROOT/target/release/x3-quantum-apps/apps/dash-legacy-2-legacy-2board"
     )
 
     for c in "${tauri_candidates[@]}"; do
@@ -571,9 +571,9 @@ start_quantum_dashboard() {
 
     if [ -n "$tauri_bin" ]; then
         log_info "Launching Quantum Dashboard Tauri app from: $tauri_bin"
-        "$tauri_bin" > "$PROJECT_ROOT/logs/quantum-dashboard.log" 2>&1 &
+        "$tauri_bin" > "$PROJECT_ROOT/logs/quantum-apps/apps/dash-legacy-2-legacy-2board.log" 2>&1 &
         local pid=$!
-        save_pid "quantum-dashboard" $pid
+        save_pid "quantum-apps/apps/dash-legacy-2-legacy-2board" $pid
         sleep 2
         if kill -0 "$pid" 2>/dev/null; then
             log_success "Quantum Dashboard Tauri started (PID: $pid)"
@@ -585,9 +585,9 @@ start_quantum_dashboard() {
     # Fallback: run tauri dev mode (starts Next.js + Tauri together)
     if [ -f "$app_dir/src-tauri/tauri.conf.json" ]; then
         log_info "Starting Quantum Dashboard in Tauri dev mode..."
-        npm run tauri:dev > "$PROJECT_ROOT/logs/quantum-dashboard.log" 2>&1 &
+        npm run tauri:dev > "$PROJECT_ROOT/logs/quantum-apps/apps/dash-legacy-2-legacy-2board.log" 2>&1 &
         local pid=$!
-        save_pid "quantum-dashboard" $pid
+        save_pid "quantum-apps/apps/dash-legacy-2-legacy-2board" $pid
 
         cd "$PROJECT_ROOT"
 
@@ -602,9 +602,9 @@ start_quantum_dashboard() {
 
     # Final fallback: just run Next.js dev server
     log_info "Starting Quantum Dashboard (Next.js only) on port $QUANTUM_DASHBOARD_PORT..."
-    npm run dev > "$PROJECT_ROOT/logs/quantum-dashboard.log" 2>&1 &
+    npm run dev > "$PROJECT_ROOT/logs/quantum-apps/apps/dash-legacy-2-legacy-2board.log" 2>&1 &
     local pid=$!
-    save_pid "quantum-dashboard" $pid
+    save_pid "quantum-apps/apps/dash-legacy-2-legacy-2board" $pid
 
     cd "$PROJECT_ROOT"
 
@@ -686,7 +686,7 @@ show_status() {
     # Ollama
     if ollama_http_ok "$OLLAMA_URL"; then
         echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Ollama (GPU/AI)     ${OLLAMA_URL}              ${CYAN}║${NC}"
-    elif port_in_use $OLLAMA_PORT || systemctl is-active --quiet ollama 2>/dev/null; then
+    elif port_in_use $OLLAMA_PORT || systemctl is-active --qfrontend/uiet ollama 2>/dev/null; then
         echo -e "${CYAN}║${NC}  ${YELLOW}○${NC} Ollama (GPU/AI)     LISTENING/STARTING               ${CYAN}║${NC}"
     else
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} Ollama (GPU/AI)     NOT RUNNING                        ${CYAN}║${NC}"
@@ -713,7 +713,7 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} HTLC Coordinator    NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
-    # Solana DEX (next-solana-main with X3 Exchange)
+    # Solana DEX (apps/apps/next-solana-main-legacy-2-legacy-2 with X3 Exchange)
     if port_in_use $SOLANA_DEX_PORT; then
         echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Solana DEX          http://localhost:$SOLANA_DEX_PORT                  ${CYAN}║${NC}"
     else
@@ -810,7 +810,7 @@ main() {
             log_error "Ollama failed to start and --strict is set; aborting startup"
             exit 1
         else
-            log_warn "Continuing without Ollama..."
+            log_warn "Continfrontend/uing without Ollama..."
         fi
     fi
 
@@ -822,7 +822,7 @@ main() {
             log_error "Blockchain failed to start and --strict is set; aborting startup"
             exit 1
         else
-            log_warn "Blockchain not started, continuing..."
+            log_warn "Blockchain not started, continfrontend/uing..."
         fi
     fi
 
@@ -834,22 +834,22 @@ main() {
             log_error "Swarm server failed readiness check and --strict is set; aborting startup"
             exit 1
         else
-            log_warn "Swarm server not started, continuing..."
+            log_warn "Swarm server not started, continfrontend/uing..."
         fi
     fi
 
     # ============================================================
     # Layer 2.5: HTLC Coordinator (Atomic Swaps)
     # ============================================================
-    start_htlc_coordinator || log_warn "HTLC Coordinator not started, continuing..."
+    start_htlc_coordinator || log_warn "HTLC Coordinator not started, continfrontend/uing..."
 
     # ============================================================
     # Layer 3: Frontend Applications
     # ============================================================
     log_header "Starting Frontend Applications"
 
-    # Solana DEX (next-solana-main) - Main trading platform with X3 Exchange
-    start_nextjs_app "solana-dex" "$PROJECT_ROOT/apps/next-solana-main" $SOLANA_DEX_PORT
+    # Solana DEX (apps/apps/next-solana-main-legacy-2-legacy-2) - Main trading platform with X3 Exchange
+    start_nextjs_app "solana-dex" "$PROJECT_ROOT/apps/apps/apps/next-solana-main-legacy-2-legacy-2" $SOLANA_DEX_PORT
     sleep 2
 
     # Explorer with X3OS
@@ -870,7 +870,7 @@ main() {
     start_x3os_tauri || log_warn "X3OS Tauri desktop not started"
 
     # Quantum Dashboard (Tauri)
-    start_quantum_dashboard || log_warn "Quantum Dashboard not started"
+    start_quantum_apps/apps/dash-legacy-2-legacy-2board || log_warn "Quantum Dashboard not started"
 
     # ============================================================
     # Final Status
@@ -892,7 +892,7 @@ main() {
     echo -e "  🤖 ${CYAN}Ollama AI:${NC}           ${OLLAMA_URL}"
     echo -e "  ⛓️  ${CYAN}Blockchain:${NC}          ws://localhost:$BLOCKCHAIN_PORT"
     echo ""
-    echo -e "${YELLOW}Quick Links:${NC}"
+    echo -e "${YELLOW}Qfrontend/uick Links:${NC}"
     echo -e "  • X3OS:                http://localhost:$X3OS_PORT/x3os"
     echo -e "  • Swarm Dashboard:     http://localhost:$X3OS_PORT/x3/swarm"
     echo -e "  • GPU Contributors:    http://localhost:$X3OS_PORT/x3/swarm/gpu"

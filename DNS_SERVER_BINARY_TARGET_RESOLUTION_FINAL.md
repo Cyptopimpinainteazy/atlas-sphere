@@ -56,7 +56,7 @@ let default_services = vec![
 - **Workspace Table**: Empty `[workspace]` table in package Cargo.toml
 - **Package Recognition**: Cargo detects package but has minor recognition issue
 
-### Build System Status ✅
+### Bfrontend/uild System Status ✅
 - **Compilation**: Server compiles successfully (confirmed by timeout behavior)
 - **Dependencies**: All 25+ dependencies properly configured
 - **Features**: SQLite and Postgres support enabled
@@ -81,10 +81,10 @@ cd crates/atlas-dns-server
 cargo run --bin atlas-dns-server
 ```
 
-#### Method 2: Manual Binary Build
+#### Method 2: Manual Binary Bfrontend/uild
 ```bash
 cd crates/atlas-dns-server
-cargo build --bin atlas-dns-server
+cargo bfrontend/uild --bin atlas-dns-server
 ./target/debug/atlas-dns-server
 ```
 

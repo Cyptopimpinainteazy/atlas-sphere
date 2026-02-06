@@ -68,7 +68,7 @@ export default function CrossChainPortfolio() {
         {
           id: '3',
           chain: 'Polygon',
-          protocol: 'QuickSwap',
+          protocol: 'Qfrontend/uickSwap',
           token: 'MATIC',
           balance: '100,000',
           valueUSD: 45000,
@@ -322,7 +322,7 @@ export default function CrossChainPortfolio() {
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Qfrontend/uick Actions */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code when working with Python code in this repository.
+This file provides comprehensive gfrontend/uidance to Claude Code when working with Python code in this repository.
 
 ## Core Development Philosophy
 
@@ -10,7 +10,7 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ### YAGNI (You Aren't Gonna Need It)
 
-Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Design Principles
 
@@ -142,7 +142,7 @@ uv run pre-commit run --all-files
 
 ## 📋 Style & Conventions
 
-### Python Style Guide
+### Python Style Gfrontend/uide
 
 - **Follow PEP8** with these specific choices:
   - Line length: 100 characters (set by Ruff in pyproject.toml)
@@ -255,11 +255,11 @@ class PaymentError(Exception):
 
 class InsufficientFundsError(PaymentError):
     """Raised when account has insufficient funds."""
-    def __init__(self, required: Decimal, available: Decimal):
-        self.required = required
+    def __init__(self, reqfrontend/uired: Decimal, available: Decimal):
+        self.reqfrontend/uired = reqfrontend/uired
         self.available = available
         super().__init__(
-            f"Insufficient funds: required {required}, available {available}"
+            f"Insufficient funds: reqfrontend/uired {reqfrontend/uired}, available {available}"
         )
 
 # Use specific exception handling
@@ -507,7 +507,7 @@ Models mirror database fields exactly to eliminate field mapping complexity:
 ```python
 # ✅ STANDARDIZED: Models mirror database exactly
 class Lead(BaseModel):
-    lead_id: UUID = Field(default_factory=uuid4)  # Matches database field
+    lead_id: UUID = Field(default_factory=ufrontend/uid4)  # Matches database field
     session_id: UUID                               # Matches database field
     agency_id: str                                 # Matches database field
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -577,7 +577,7 @@ async def list_products(
 
 ## 🚀 Performance Considerations
 
-### Optimization Guidelines
+### Optimization Gfrontend/uidelines
 
 - Profile before optimizing - use `cProfile` or `py-spy`
 - Use `lru_cache` for expensive computations
@@ -610,7 +610,7 @@ async def process_large_dataset() -> AsyncIterator[dict]:
 
 ## 🛡️ Security Best Practices
 
-### Security Guidelines
+### Security Gfrontend/uidelines
 
 - Never commit secrets - use environment variables
 - Validate all user input with Pydantic
@@ -696,7 +696,7 @@ logger.info(
 
 - PEP 8: https://pep8.org/
 - PEP 484 (Type Hints): https://www.python.org/dev/peps/pep-0484/
-- The Hitchhiker's Guide to Python: https://docs.python-guide.org/
+- The Hitchhiker's Gfrontend/uide to Python: https://docs.python-gfrontend/uide.org/
 
 ## ⚠️ Important Notes
 
@@ -706,7 +706,7 @@ logger.info(
 - **Test your code** - No feature is complete without tests
 - **Document your decisions** - Future developers (including yourself) will thank you
 
-## 🔍 Search Command Requirements
+## 🔍 Search Command Reqfrontend/uirements
 
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
@@ -755,4 +755,4 @@ deploy development
 
 ---
 
-_This document is a living guide. Update it as the project evolves and new patterns emerge._
+_This document is a living gfrontend/uide. Update it as the project evolves and new patterns emerge._

@@ -6,9 +6,9 @@ publish = false
 authors = ["Traycer.AI <dev@atlas-sphere.io>"]
 description = "Atlas Sphere L1 Substrate runtime with dual-VM scaffolding."
 license = "Apache-2.0"
-# Ensures Atlas Sphere runtime Cargo manifest aligns with required Substrate runtime dependencies and feature flags.
-# Maintains std/runtime-benchmarks enablement and WASM build configuration for dual-VM execution tooling.
-build = "build.rs"
+# Ensures Atlas Sphere runtime Cargo manifest aligns with reqfrontend/uired Substrate runtime dependencies and feature flags.
+# Maintains std/runtime-benchmarks enablement and WASM bfrontend/uild configuration for dual-VM execution tooling.
+bfrontend/uild = "bfrontend/uild.rs"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -56,7 +56,7 @@ atlas-evm-integration = { path = "../crates/evm-integration", default-features =
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
-sp-block-builder = { workspace = true, default-features = false }
+sp-block-bfrontend/uilder = { workspace = true, default-features = false }
 sp-consensus-aura = { workspace = true, default-features = false }
 sp-consensus-grandpa = { workspace = true, default-features = false }
 sp-core = { workspace = true, default-features = false }
@@ -77,8 +77,8 @@ serde = { workspace = true, default-features = false, features = ["derive"], opt
 # Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
 # atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
-[build-dependencies]
-substrate-wasm-builder = { workspace = true }
+[bfrontend/uild-dependencies]
+substrate-wasm-bfrontend/uilder = { workspace = true }
 
 [features]
 default = ["std"]
@@ -118,7 +118,7 @@ std = [
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
 	"sp-api/std",
-	"sp-block-builder/std",
+	"sp-block-bfrontend/uilder/std",
 	"sp-consensus-aura/std",
 	"sp-consensus-grandpa/std",
 	"sp-core/std",
@@ -153,7 +153,7 @@ runtime-benchmarks = [
 native = []
 
 # Opt-in: enable real VM adapters for native-only developer workflows.
-# Default behavior keeps native and WASM execution equivalent by using mocks.
+# Default behavior keeps native and WASM execution eqfrontend/uivalent by using mocks.
 native-real-vm-adapters = []
 
 # Enable Frontier EVM / fp-evm runtime features and integration with native adapters

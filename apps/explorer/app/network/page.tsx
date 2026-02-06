@@ -12,7 +12,7 @@ import {
   ArrowRight,
   ExternalLink,
 } from 'lucide-react';
-import { HexagonCluster } from '../../components/ui/Logo';
+import { HexagonCluster } from '../../components/frontend/frontend/ui/Logo';
 import { useNetworkStats, useAuthorities } from '@/hooks/useSubstrate';
 
 const sections = [
@@ -65,7 +65,7 @@ const explorers = [
   },
   {
     name: 'X3 Explorer',
-    description: 'Simple and fast explorer for quick lookups',
+    description: 'Simple and fast explorer for qfrontend/uick lookups',
     url: '#',
     features: ['Fast Search', 'Mobile Friendly', 'Real-time Updates'],
   },
@@ -261,10 +261,10 @@ export default function NetworkPage() {
       <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Help Build the Network
+            Help Bfrontend/uild the Network
           </h2>
           <p className="text-gray-500 mb-8">
-            Become a validator, run an RPC node, or build infrastructure tools for the X3 STAR ecosystem.
+            Become a validator, run an RPC node, or bfrontend/uild infrastructure tools for the X3 STAR ecosystem.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/network/validators" className="btn-primary">

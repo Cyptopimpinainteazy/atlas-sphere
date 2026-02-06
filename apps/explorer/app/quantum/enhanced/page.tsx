@@ -11,7 +11,7 @@ import {
 } from '@/components/quantum/KineticScroll';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
-// Dynamic imports for heavy components
+// Dynamic archive/archive/imports for heavy components
 const QuantumLandingPage = dynamic(() => import('./page'), {
   ssr: false,
   loading: () => (

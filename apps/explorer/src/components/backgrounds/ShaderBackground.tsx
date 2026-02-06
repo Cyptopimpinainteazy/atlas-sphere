@@ -7,7 +7,7 @@
  * Styles:
  * - Neon Grid: Pulsing cyber grid with bloom
  * - Quantum Grid: Probabilistic wave interference patterns
- * - Liquid Metal: Fluid dynamics simulation
+ * - Liqfrontend/uid Metal: Flfrontend/uid dynamics simulation
  * - Procedural Fractals: Infinite zoom fractals
  * - Neural Network: Synaptic connection visualization
  */
@@ -23,7 +23,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 export type BackgroundStyle = 
   | 'neon-grid' 
   | 'quantum-grid' 
-  | 'liquid-metal' 
+  | 'liqfrontend/uid-metal' 
   | 'procedural-fractal'
   | 'neural-network'
   | 'particle-field'
@@ -259,8 +259,8 @@ float snoise(vec2 v) {
   return 130.0 * dot(m, g);
 }
 
-// Fluid dynamics simulation (simplified)
-float fluid(vec2 uv, float time) {
+// Flfrontend/uid dynamics simulation (simplified)
+float flfrontend/uid(vec2 uv, float time) {
   float n1 = snoise(uv * 2.0 + time * 0.3);
   float n2 = snoise(uv * 4.0 - time * 0.5);
   float n3 = snoise(uv * 8.0 + time * 0.2);
@@ -279,13 +279,13 @@ void main() {
   
   float time = u_time * u_speed;
   
-  // Fluid displacement
-  float displacement = fluid(uv, time);
+  // Flfrontend/uid displacement
+  float displacement = flfrontend/uid(uv, time);
   vec2 displaced = uv + displacement * 0.1;
   
-  // Surface normal from fluid
-  float dx = fluid(displaced + vec2(0.01, 0.0), time) - fluid(displaced - vec2(0.01, 0.0), time);
-  float dy = fluid(displaced + vec2(0.0, 0.01), time) - fluid(displaced - vec2(0.0, 0.01), time);
+  // Surface normal from flfrontend/uid
+  float dx = flfrontend/uid(displaced + vec2(0.01, 0.0), time) - flfrontend/uid(displaced - vec2(0.01, 0.0), time);
+  float dy = flfrontend/uid(displaced + vec2(0.0, 0.01), time) - flfrontend/uid(displaced - vec2(0.0, 0.01), time);
   vec3 normal = normalize(vec3(-dx * 5.0, -dy * 5.0, 1.0));
   
   // View and light directions
@@ -545,7 +545,7 @@ void main() {
 const SHADERS: Record<BackgroundStyle, string> = {
   'neon-grid': NEON_GRID_SHADER,
   'quantum-grid': QUANTUM_GRID_SHADER,
-  'liquid-metal': LIQUID_METAL_SHADER,
+  'liqfrontend/uid-metal': LIQUID_METAL_SHADER,
   'procedural-fractal': FRACTAL_SHADER,
   'neural-network': NEURAL_NETWORK_SHADER,
   'particle-field': NEON_GRID_SHADER, // Fallback
@@ -622,7 +622,7 @@ export const ShaderBackground: React.FC<ShaderBackgroundProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return false;
 
-    const gl = canvas.getContext('webgl2', {
+    const gl = canvas.getContext('frontend/webgl2', {
       alpha: true,
       premultipliedAlpha: false,
       antialias: quality === 'high',

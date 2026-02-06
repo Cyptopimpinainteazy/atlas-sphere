@@ -444,7 +444,7 @@ fn execute_multi_leg_batch_works() {
 fn execute_fails_with_slippage_exceeded() {
     new_test_ext().execute_with(|| {
         let amount = 1_000_000_000_000_000_000u128;
-        // Mock returns 98%, but we require 99%
+        // Mock returns 98%, but we reqfrontend/uire 99%
         let min_out = amount * 99 / 100;
 
         let legs = vec![evm_leg(amount, min_out)];

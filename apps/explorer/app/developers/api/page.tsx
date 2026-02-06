@@ -19,7 +19,7 @@ import {
 interface RpcMethod {
   name: string;
   description: string;
-  params: { name: string; type: string; description: string; required: boolean }[];
+  params: { name: string; type: string; description: string; reqfrontend/uired: boolean }[];
   returns: string;
   example: {
     request: string;
@@ -33,9 +33,9 @@ const rpcMethods: RpcMethod[] = [
     name: 'atlasKernel_getCanonicalBalance',
     description: 'Query the canonical ledger balance for a specific account and asset.',
     params: [
-      { name: 'account', type: 'AccountId', description: 'The account address to query', required: true },
-      { name: 'asset_id', type: 'u32', description: 'The asset ID (0 for native token)', required: true },
-      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', required: false },
+      { name: 'account', type: 'AccountId', description: 'The account address to query', reqfrontend/uired: true },
+      { name: 'asset_id', type: 'u32', description: 'The asset ID (0 for native token)', reqfrontend/uired: true },
+      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', reqfrontend/uired: false },
     ],
     returns: 'Balance (u128)',
     example: {
@@ -59,8 +59,8 @@ const rpcMethods: RpcMethod[] = [
     name: 'atlasKernel_getAssetMetadata',
     description: 'Get metadata for a registered asset including symbol and decimals.',
     params: [
-      { name: 'asset_id', type: 'u32', description: 'The asset ID to query', required: true },
-      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', required: false },
+      { name: 'asset_id', type: 'u32', description: 'The asset ID to query', reqfrontend/uired: true },
+      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', reqfrontend/uired: false },
     ],
     returns: 'AssetMetadata { symbol: String, decimals: u8 }',
     example: {
@@ -87,8 +87,8 @@ const rpcMethods: RpcMethod[] = [
     name: 'atlasKernel_isAuthorized',
     description: 'Check if an account is authorized to submit Comit transactions.',
     params: [
-      { name: 'account', type: 'AccountId', description: 'The account address to check', required: true },
-      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', required: false },
+      { name: 'account', type: 'AccountId', description: 'The account address to check', reqfrontend/uired: true },
+      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', reqfrontend/uired: false },
     ],
     returns: 'bool',
     example: {
@@ -112,7 +112,7 @@ const rpcMethods: RpcMethod[] = [
     name: 'atlasKernel_getAuthorizedAccounts',
     description: 'List all accounts that are authorized to submit Comit transactions.',
     params: [
-      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', required: false },
+      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', reqfrontend/uired: false },
     ],
     returns: 'Vec<AccountId>',
     example: {
@@ -139,7 +139,7 @@ const rpcMethods: RpcMethod[] = [
     name: 'atlasKernel_getAuthorities',
     description: 'Get the current set of network authorities (validators).',
     params: [
-      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', required: false },
+      { name: 'at', type: 'BlockHash', description: 'Optional block hash to query at', reqfrontend/uired: false },
     ],
     returns: 'Vec<AuthorityId>',
     example: {
@@ -286,15 +286,15 @@ export default function ApiPage() {
                       <div key={param.name} className="flex items-start text-sm">
                         <code className="text-cyan-400 font-mono mr-2">{param.name}</code>
                         <span className="text-gray-600 mr-2">({param.type})</span>
-                        {param.required && (
-                          <span className="badge badge-warning text-xs mr-2">required</span>
+                        {param.reqfrontend/uired && (
+                          <span className="badge badge-warning text-xs mr-2">reqfrontend/uired</span>
                         )}
                         <span className="text-gray-400">- {param.description}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">No parameters required</p>
+                  <p className="text-gray-600 text-sm">No parameters reqfrontend/uired</p>
                 )}
 
                 <h4 className="text-sm font-semibold text-white mt-4 mb-2">Returns</h4>

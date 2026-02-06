@@ -45,7 +45,7 @@ export default function SecurityPage() {
               <Lock className="w-6 h-6 text-orange-400 mb-2" />
               <h3 className="font-semibold text-white mb-1">Authorization System</h3>
               <p className="text-sm text-gray-500">
-                Comit submissions require explicit account authorization through governance
+                Comit submissions reqfrontend/uire explicit account authorization through governance
               </p>
             </div>
             <div className="glass-card p-4">

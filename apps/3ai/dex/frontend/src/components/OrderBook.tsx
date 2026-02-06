@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Text, VStack, HStack } from '@chakra-ui/react';
+import { Box, Table, Thead, Tbody, Tr, Th, Td, Text, VStack, HStack } from '@chakra-frontend/frontend/ui/react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 

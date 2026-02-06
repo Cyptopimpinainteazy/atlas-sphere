@@ -7,10 +7,10 @@ export default function BestPracticesPage() {
   return (
     <DocLayout
       title="Best Practices"
-      description="Guidelines for building robust cross-VM applications"
+      description="Gfrontend/uidelines for bfrontend/uilding robust cross-VM applications"
     >
       <p className="lead text-xl text-gray-400 mb-8">
-        Follow these best practices to build secure, efficient, and maintainable 
+        Follow these best practices to bfrontend/uild secure, efficient, and maintainable 
         applications on X3 Atlas Sphere.
       </p>
 
@@ -32,20 +32,20 @@ const comit = api.tx.atlasKernel.submitComit(...);`}
       <CodeBlock language="solidity">
 {`// GOOD: Validate all inputs
 function processSwap(
-    uint256 amountIn,
-    uint256 minAmountOut,
+    frontend/uint256 amountIn,
+    frontend/uint256 minAmountOut,
     address recipient
 ) external {
-    require(amountIn > 0, "Zero amount");
-    require(minAmountOut > 0, "Zero min output");
-    require(recipient != address(0), "Zero address");
-    require(recipient != address(this), "Self-transfer");
+    reqfrontend/uire(amountIn > 0, "Zero amount");
+    reqfrontend/uire(minAmountOut > 0, "Zero min output");
+    reqfrontend/uire(recipient != address(0), "Zero address");
+    reqfrontend/uire(recipient != address(this), "Self-transfer");
     
     // ... proceed with swap
 }
 
 // BAD: Missing validation
-function unsafeSwap(uint256 amount, address recipient) external {
+function unsafeSwap(frontend/uint256 amount, address recipient) external {
     // Direct processing without checks - vulnerable!
     token.transfer(recipient, amount);
 }`}
@@ -56,17 +56,17 @@ function unsafeSwap(uint256 amount, address recipient) external {
 {`import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract SafeProtocol is ReentrancyGuard {
-    mapping(address => uint256) public balances;
+    mapping(address => frontend/uint256) public balances;
     
-    function withdraw(uint256 amount) external nonReentrant {
-        require(balances[msg.sender] >= amount, "Insufficient");
+    function withdraw(frontend/uint256 amount) external nonReentrant {
+        reqfrontend/uire(balances[msg.sender] >= amount, "Insufficient");
         
         // Update state BEFORE external call
         balances[msg.sender] -= amount;
         
         // External call last
         (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
+        reqfrontend/uire(success, "Transfer failed");
     }
 }`}
       </CodeBlock>
@@ -131,15 +131,15 @@ if (balance.data.free.lt(fee)) {
 {`// GOOD: Idempotent - safe for retry
 mapping(bytes32 => bool) public processedRequests;
 
-function processRequest(bytes32 requestId, uint256 amount) external {
-    require(!processedRequests[requestId], "Already processed");
+function processRequest(bytes32 requestId, frontend/uint256 amount) external {
+    reqfrontend/uire(!processedRequests[requestId], "Already processed");
     processedRequests[requestId] = true;
     
     // Process...
 }
 
 // BAD: Not idempotent - retry causes double processing
-function unsafeProcess(uint256 amount) external {
+function unsafeProcess(frontend/uint256 amount) external {
     balances[msg.sender] += amount; // Will double on retry
 }`}
       </CodeBlock>
@@ -152,9 +152,9 @@ event SwapExecuted(
     address indexed user,
     address tokenIn,
     address tokenOut,
-    uint256 amountIn,
-    uint256 amountOut,
-    uint256 timestamp
+    frontend/uint256 amountIn,
+    frontend/uint256 amountOut,
+    frontend/uint256 timestamp
 );
 
 function swap(...) external {

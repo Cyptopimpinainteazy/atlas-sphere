@@ -9,7 +9,7 @@ import {
   Flex,
   IconButton,
   useColorModeValue
-} from '@chakra-ui/react';
+} from '@chakra-frontend/frontend/ui/react';
 import { FaPaperPlane, FaRobot } from 'react-icons/fa';
 import { ABBY_CONFIG } from '../../config/constants';
 
@@ -156,13 +156,13 @@ const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({ onSend
         p={4} 
         overflowY="auto"
         css={{
-          '&::-webkit-scrollbar': {
+          '&::-frontend/webkit-scrollbar': {
             width: '4px',
           },
-          '&::-webkit-scrollbar-track': {
+          '&::-frontend/webkit-scrollbar-track': {
             background: 'transparent',
           },
-          '&::-webkit-scrollbar-thumb': {
+          '&::-frontend/webkit-scrollbar-thumb': {
             background: '#888',
             borderRadius: '2px',
           },

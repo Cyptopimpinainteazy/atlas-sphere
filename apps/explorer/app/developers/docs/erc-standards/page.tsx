@@ -40,8 +40,8 @@ contract MintableToken is ERC20 {
         minter = msg.sender;
     }
 
-    function mint(address to, uint256 amount) external {
-        require(msg.sender == minter, "Not minter");
+    function mint(address to, frontend/uint256 amount) external {
+        reqfrontend/uire(msg.sender == minter, "Not minter");
         _mint(to, amount);
     }
 }`}
@@ -61,31 +61,31 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MyNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
-    uint256 private _nextTokenId;
+    frontend/uint256 private _nextTokenId;
 
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {}
 
-    function safeMint(address to, string memory uri) public onlyOwner returns (uint256) {
-        uint256 tokenId = _nextTokenId++;
+    function safeMint(address to, string memory uri) public onlyOwner returns (frontend/uint256) {
+        frontend/uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         return tokenId;
     }
 
-    // Required overrides
-    function _update(address to, uint256 tokenId, address auth)
+    // Reqfrontend/uired overrides
+    function _update(address to, frontend/uint256 tokenId, address auth)
         internal override(ERC721, ERC721Enumerable) returns (address)
     {
         return super._update(to, tokenId, auth);
     }
 
-    function _increaseBalance(address account, uint128 value)
+    function _increaseBalance(address account, frontend/uint128 value)
         internal override(ERC721, ERC721Enumerable)
     {
         super._increaseBalance(account, value);
     }
 
-    function tokenURI(uint256 tokenId)
+    function tokenURI(frontend/uint256 tokenId)
         public view override(ERC721, ERC721URIStorage) returns (string memory)
     {
         return super.tokenURI(tokenId);
@@ -111,10 +111,10 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract GameItems is ERC1155, Ownable {
-    uint256 public constant GOLD = 0;
-    uint256 public constant SILVER = 1;
-    uint256 public constant SWORD = 2;
-    uint256 public constant SHIELD = 3;
+    frontend/uint256 public constant GOLD = 0;
+    frontend/uint256 public constant SILVER = 1;
+    frontend/uint256 public constant SWORD = 2;
+    frontend/uint256 public constant SHIELD = 3;
 
     constructor() ERC1155("https://game.atlas-sphere.io/api/items/{id}.json") Ownable(msg.sender) {
         // Mint fungible currencies
@@ -126,14 +126,14 @@ contract GameItems is ERC1155, Ownable {
         _mint(msg.sender, SHIELD, 1, "");
     }
 
-    function mint(address to, uint256 id, uint256 amount, bytes memory data) public onlyOwner {
+    function mint(address to, frontend/uint256 id, frontend/uint256 amount, bytes memory data) public onlyOwner {
         _mint(to, id, amount, data);
     }
 
     function mintBatch(
         address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
+        frontend/uint256[] memory ids,
+        frontend/uint256[] memory amounts,
         bytes memory data
     ) public onlyOwner {
         _mintBatch(to, ids, amounts, data);
@@ -154,8 +154,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface IAtlasBridge {
-    function lockForSVM(address token, uint256 amount, bytes32 svmRecipient) external;
-    function unlockFromSVM(address token, address recipient, uint256 amount) external;
+    function lockForSVM(address token, frontend/uint256 amount, bytes32 svmRecipient) external;
+    function unlockFromSVM(address token, address recipient, frontend/uint256 amount) external;
 }
 
 contract BridgeableToken is ERC20 {
@@ -167,7 +167,7 @@ contract BridgeableToken is ERC20 {
     }
 
     // Lock tokens to be used on SVM side
-    function bridgeToSVM(uint256 amount, bytes32 svmRecipient) external {
+    function bridgeToSVM(frontend/uint256 amount, bytes32 svmRecipient) external {
         transfer(address(bridge), amount);
         bridge.lockForSVM(address(this), amount, svmRecipient);
     }

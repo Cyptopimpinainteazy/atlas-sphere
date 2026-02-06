@@ -4,7 +4,7 @@
  * A conversational AI assistant for Atlas Sphere documentation.
  * Features semantic search, code generation, and multi-turn dialogue.
  * 
- * Built for 2030-era UX with holographic styling and voice support.
+ * Bfrontend/uilt for 2030-era UX with holographic styling and voice support.
  */
 
 'use client';
@@ -123,7 +123,7 @@ export const DocAssistant: React.FC<DocAssistantProps> = ({
   useEffect(() => {
     if (enableVoice && typeof window !== 'undefined') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).frontend/webkitSpeechRecognition;
       if (SpeechRecognitionAPI) {
         recognitionRef.current = new SpeechRecognitionAPI();
         recognitionRef.current.continuous = false;
@@ -763,7 +763,7 @@ console.log('Comit hash:', receipt.comitHash);`,
 
   if (queryLower.includes('evm') || queryLower.includes('solidity')) {
     return {
-      content: `The **EVM layer** in Atlas Sphere is Ethereum-compatible. You can deploy standard Solidity contracts and interact with them using familiar tools like ethers.js or web3.js.
+      content: `The **EVM layer** in Atlas Sphere is Ethereum-compatible. You can deploy standard Solidity contracts and interact with them using familiar tools like ethers.js or frontend/web3.js.
 
 Here's a basic token contract:`,
       codeBlocks: [
@@ -872,9 +872,9 @@ console.log('Current block:', blockNumber);`,
       ],
       references: [
         {
-          title: 'Testnet Guide',
+          title: 'Testnet Gfrontend/uide',
           section: 'Getting Started',
-          url: '/docs/quickstart#testnet',
+          url: '/docs/qfrontend/uickstart#testnet',
           relevance: 0.97,
         },
       ],

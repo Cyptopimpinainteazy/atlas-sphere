@@ -63,9 +63,9 @@ mkdir -p "$SCRIPT_DIR/logs"
 mkdir -p "$SCRIPT_DIR/test-results"
 mkdir -p "$SCRIPT_DIR/monitoring/data"
 
-# Build and start services
-log_info "Building and starting services..."
-docker-compose -f "$COMPOSE_FILE" up -d --build
+# Bfrontend/uild and start services
+log_info "Bfrontend/uilding and starting services..."
+docker-compose -f "$COMPOSE_FILE" up -d --bfrontend/uild
 
 # Wait for services to be healthy
 log_info "Waiting for services to be healthy..."

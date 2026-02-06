@@ -6,7 +6,7 @@ TypeScript SDK for Atlas Sphere - the dual-VM (EVM + SVM) Layer-1 blockchain ena
 
 - **Full Type Safety**: Comprehensive TypeScript types mirroring runtime structures
 - **Dual-VM Support**: Native utilities for both EVM and SVM payload construction
-- **Fluent Builder API**: Intuitive `ComitBuilder` for transaction construction
+- **Fluent Bfrontend/uilder API**: Intfrontend/uitive `ComitBfrontend/uilder` for transaction construction
 - **Efficient Queries**: Cached query client with batch operations
 - **Event Subscriptions**: Real-time block and Comit event subscriptions
 - **Comprehensive Errors**: Typed error hierarchy for precise error handling
@@ -21,12 +21,12 @@ yarn add @atlas-sphere/ts-sdk
 pnpm add @atlas-sphere/ts-sdk
 ```
 
-## Quick Start
+## Qfrontend/uick Start
 
 ```typescript
 import {
   AtlasSphereClient,
-  ComitBuilder,
+  ComitBfrontend/uilder,
   encodeTransfer,
   encodeSystemTransfer,
 } from '@atlas-sphere/ts-sdk';
@@ -41,8 +41,8 @@ await client.connect();
 const info = await client.getChainInfo();
 console.log(`Connected to ${info.name} v${info.version}`);
 
-// Build a dual-VM Comit
-const comit = new ComitBuilder()
+// Bfrontend/uild a dual-VM Comit
+const comit = new ComitBfrontend/uilder()
   // EVM: Transfer ERC20 tokens
   .withEvmPayload({
     to: '0x1234567890abcdef1234567890abcdef12345678',
@@ -56,7 +56,7 @@ const comit = new ComitBuilder()
   })
   // Auto-calculate fee based on gas/compute estimates
   .withFee('auto')
-  .build();
+  .bfrontend/uild();
 
 // Submit and wait for finalization
 const result = await client.submitComit(comit, signerAccount);
@@ -84,13 +84,13 @@ interface Comit {
 }
 ```
 
-### Building Comits
+### Bfrontend/uilding Comits
 
-Use `ComitBuilder` for type-safe Comit construction:
+Use `ComitBfrontend/uilder` for type-safe Comit construction:
 
 ```typescript
 // EVM-only Comit
-const evmComit = new ComitBuilder()
+const evmComit = new ComitBfrontend/uilder()
   .withEvmPayload({
     to: contractAddress,
     data: calldata,
@@ -98,31 +98,31 @@ const evmComit = new ComitBuilder()
   })
   .withEvmGasLimit(500000n)
   .withFee('auto')
-  .build();
+  .bfrontend/uild();
 
 // SVM-only Comit
-const svmComit = new ComitBuilder()
+const svmComit = new ComitBfrontend/uilder()
   .withSvmPayload({
     programId: programId,
     data: instructionData,
   })
   .withSvmComputeUnits(200000n)
   .withFee('auto')
-  .build();
+  .bfrontend/uild();
 
 // Dual-VM Comit (both EVM and SVM)
-const dualComit = new ComitBuilder()
+const dualComit = new ComitBfrontend/uilder()
   .withEvmPayload(evmData)
   .withSvmPayload(svmData)
   .withFee('auto')
-  .build();
+  .bfrontend/uild();
 
 // Shorthand factories
 import { evmComit, svmComit, dualComit } from '@atlas-sphere/ts-sdk';
 
-const evm = evmComit({ to: '0x...', data: '0x...' }).withFee('auto').build();
-const svm = svmComit({ programId: '0x...', data: '0x...' }).withFee('auto').build();
-const dual = dualComit(evmPayload, svmPayload).withFee('auto').build();
+const evm = evmComit({ to: '0x...', data: '0x...' }).withFee('auto').bfrontend/uild();
+const svm = svmComit({ programId: '0x...', data: '0x...' }).withFee('auto').bfrontend/uild();
+const dual = dualComit(evmPayload, svmPayload).withFee('auto').bfrontend/uild();
 ```
 
 ### Querying State
@@ -213,7 +213,7 @@ const transferData = encodeTransfer(recipient, amount);
 
 // Encode custom function call
 const customCall = encodeFunctionCall(
-  'myFunction(uint256,address)',
+  'myFunction(frontend/uint256,address)',
   [encodeUint256(value), encodeAddress(addr)]
 );
 
@@ -285,7 +285,7 @@ try {
   } else if (error instanceof InvalidNonceError) {
     console.error(`Invalid nonce: expected ${error.expected}, got ${error.provided}`);
   } else if (error instanceof InsufficientBalanceError) {
-    console.error(`Insufficient balance: need ${error.required}, have ${error.available}`);
+    console.error(`Insufficient balance: need ${error.reqfrontend/uired}, have ${error.available}`);
   } else if (error instanceof UnauthorizedError) {
     console.error(`Account ${error.account} not authorized`);
   } else if (error instanceof EvmExecutionError) {
@@ -348,9 +348,9 @@ Main client for Atlas Sphere blockchain interaction.
 | `subscribeFinalizedBlocks(callback)`      | Subscribe to finalized blocks       |
 | `subscribeComitEvents(account, callback)` | Subscribe to Comit events           |
 
-### ComitBuilder
+### ComitBfrontend/uilder
 
-Fluent builder for Comit construction.
+Fluent bfrontend/uilder for Comit construction.
 
 | Method                    | Description                              |
 | ------------------------- | ---------------------------------------- |
@@ -361,8 +361,8 @@ Fluent builder for Comit construction.
 | `withSvmComputeUnits(cu)` | Set SVM compute units                    |
 | `withOrigin(account)`     | Set origin for prepare_root              |
 | `withNonce(nonce)`        | Set nonce for prepare_root               |
-| `build()`                 | Build ComitInput                         |
-| `buildComit()`            | Build full Comit (requires origin/nonce) |
+| `bfrontend/uild()`                 | Bfrontend/uild ComitInput                         |
+| `bfrontend/uildComit()`            | Bfrontend/uild full Comit (reqfrontend/uires origin/nonce) |
 
 ### QueryClient
 

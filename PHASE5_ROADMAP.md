@@ -48,7 +48,7 @@ pub struct CompileCmd {
 
 **Verification**:
 ```bash
-cargo build -p x3-cli
+cargo bfrontend/uild -p x3-cli
 ./target/debug/x3 compile --help  # Should show --opt-level flag
 ./target/debug/x3 compile test.x3 -O 3  # Should work
 ```
@@ -234,12 +234,12 @@ From Phase 4:
 - ✅ `Compiler::compile_mir()` - Public API ready to use
 - ✅ `CompilationOptions` - Config system ready
 - ✅ `OptLevel` enum - O0/O1/O2/O3 levels
-- ✅ Documentation - Architecture guide included
+- ✅ Documentation - Architecture gfrontend/uide included
 
 From Phase 3:
 - ✅ `x3-opt` - 14-pass optimizer (110 tests passing)
 - ✅ `Benchmark harness` - Gas reduction measured (20-50%)
-- ✅ Test suite - Comprehensive (119 tests)
+- ✅ Test sfrontend/uite - Comprehensive (119 tests)
 
 ## 💡 Implementation Tips
 
@@ -304,7 +304,7 @@ Once CLI/node integration is complete:
 
 ---
 
-## 📖 Quick Reference
+## 📖 Qfrontend/uick Reference
 
 ### Key Files to Modify
 - `crates/x3-cli/src/main.rs` - Add CLI flags
@@ -324,7 +324,7 @@ OptLevel { None, Basic, Default, Aggressive }
 
 ### Testing Commands
 ```bash
-cargo build -p x3-cli
+cargo bfrontend/uild -p x3-cli
 cargo test  # Should include new E2E tests
 cargo bench # Should show compilation benchmarks
 ```

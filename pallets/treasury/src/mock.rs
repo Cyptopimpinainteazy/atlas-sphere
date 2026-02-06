@@ -9,7 +9,7 @@ use frame_support::{
 use frame_system::EnsureRoot;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage, Percent,
+    Bfrontend/uildStorage, Percent,
 };
 
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -104,10 +104,10 @@ pub const DAVE: u64 = 4;
 pub const EVE: u64 = 5;
 pub const TREASURY: u64 = 6;
 
-/// Build test externalities.
+/// Bfrontend/uild test externalities.
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = frame_system::GenesisConfig::<Test>::default()
-        .build_storage()
+        .bfrontend/uild_storage()
         .unwrap();
 
     pallet_balances::GenesisConfig::<Test> {

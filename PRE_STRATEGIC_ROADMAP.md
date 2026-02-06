@@ -87,7 +87,7 @@ PhiSimplify → DeadCodeElimination → CopyPropagation
 
 ## 🏗️ PRE Implementation Scope
 
-### Core Components to Build
+### Core Components to Bfrontend/uild
 
 1. **Anticipability Analysis** (150-200 lines)
    - Expression X is **anticipated** at block B if all paths from B compute X before using any operand
@@ -129,13 +129,13 @@ PhiSimplify → DeadCodeElimination → CopyPropagation
 
 ### Design B: Lazy LCM (Lazy Code Motion)
 - **Pro**: Better cache behavior, easier to understand
-- **Con**: Requires careful φ-safe handling
+- **Con**: Reqfrontend/uires careful φ-safe handling
 - **Best For**: JIT/dynamic compilation
 - **Time Est**: 6-8 hours
 
 ### Design C: Chow-style Value Numbering
 - **Pro**: Integrates with existing value numbering, superb precision
-- **Con**: Requires refactoring numbering module
+- **Con**: Reqfrontend/uires refactoring numbering module
 - **Best For**: Maximum accuracy, existing infrastructure
 - **Time Est**: 8-10 hours
 
@@ -177,15 +177,15 @@ After PRE:
 ### Immediate (Next 30 min)
 1. **Agree on Design**: Recommend Morel-Renvoise (Design A)
 2. **Decide Scope**: Full PRE, or phased (phase 1: constants-only)?
-3. **Timeline**: Confirm 4-6 hour build window
+3. **Timeline**: Confirm 4-6 hour bfrontend/uild window
 
 ### Phase 1: Foundation (1-2 hours)
-- Build anticipability analysis pass
+- Bfrontend/uild anticipability analysis pass
 - Unit tests for anticipability
 - Verify correctness on test CFGs
 
 ### Phase 2: Analysis (1 hour)
-- Build availability analysis
+- Bfrontend/uild availability analysis
 - Combine anticipability + availability for PRE detection
 - Unit tests
 
@@ -196,7 +196,7 @@ After PRE:
 
 ### Phase 4: Polish (1 hour)
 - Performance tuning
-- Comprehensive test suite
+- Comprehensive test sfrontend/uite
 - Documentation
 
 ---
@@ -231,7 +231,7 @@ Future:    80%+ (Global + advanced heuristics tier)
 
 Positioning:
 - 60%: Good research compiler (LLVM Junior)
-- 70%: Sophisticated compiler (LLVM Equivalent)
+- 70%: Sophisticated compiler (LLVM Eqfrontend/uivalent)
 - 80%+: Advanced compiler (LLVM+ / Research Tier)
 ```
 

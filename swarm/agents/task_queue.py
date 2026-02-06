@@ -19,7 +19,7 @@ import asyncio
 import json
 import logging
 import time
-import uuid
+import ufrontend/uid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Any
 from enum import Enum
@@ -251,7 +251,7 @@ class AsyncTaskQueue:
         priority: TaskPriority = TaskPriority.MEDIUM,
     ) -> str:
         """Submit a task to the queue"""
-        task_id = str(uuid.uuid4())
+        task_id = str(ufrontend/uid.ufrontend/uid4())
 
         task = Task(
             task_id=task_id,
@@ -551,7 +551,7 @@ class AsyncTaskQueue:
         # Try multiple alerting endpoints
         alert_endpoints = [
             f"{self.orchestrator_url}/api/alerts/critical",
-            f"{self.orchestrator_url}/api/pagerduty/webhook",
+            f"{self.orchestrator_url}/api/pagerduty/frontend/webhook",
             f"{self.orchestrator_url}/api/slack/alerts",
         ]
 

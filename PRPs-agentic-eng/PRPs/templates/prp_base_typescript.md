@@ -5,7 +5,7 @@ description: |
 
 ## Goal
 
-**Feature Goal**: [Specific, measurable end state of what needs to be built]
+**Feature Goal**: [Specific, measurable end state of what needs to be bfrontend/uilt]
 
 **Deliverable**: [Concrete artifact - React component, API route, integration, etc.]
 
@@ -29,7 +29,7 @@ description: |
 
 ## What
 
-[User-visible behavior and technical requirements]
+[User-visible behavior and technical reqfrontend/uirements]
 
 ### Success Criteria
 
@@ -71,14 +71,14 @@ _Before writing this PRP, validate: "If someone knew nothing about this codebase
 
 ```
 
-### Known Gotchas of our codebase & Library Quirks
+### Known Gotchas of our codebase & Library Qfrontend/uirks
 
 ```typescript
-// CRITICAL: [Library name] requires [specific setup]
+// CRITICAL: [Library name] reqfrontend/uires [specific setup]
 // Example: Next.js 15 App Router - Route handlers must export named functions
 // Example: 'use client' directive must be at top of file, affects entire component tree
 // Example: Server Components can't use browser APIs or event handlers
-// Example: We use TypeScript strict mode and require proper typing
+// Example: We use TypeScript strict mode and reqfrontend/uire proper typing
 ```
 
 ## Implementation Blueprint
@@ -160,7 +160,7 @@ export function {Domain}Component({ data, onAction }: {Domain}Props) {
   // CRITICAL: Server Components for data fetching, Client Components for interactivity
 
   return (
-    // PATTERN: Consistent styling approach (see components/ui/)
+    // PATTERN: Consistent styling approach (see components/frontend/frontend/ui/)
     <div className="existing-class-pattern">
       {/* Follow existing component composition patterns */}
     </div>
@@ -170,14 +170,14 @@ export function {Domain}Component({ data, onAction }: {Domain}Props) {
 // Example: API route pattern
 export async function GET(request: Request): Promise<Response> {
   // PATTERN: Request validation and error handling (see app/api/existing/route.ts)
-  // GOTCHA: [TypeScript-specific constraint or Next.js requirement]
+  // GOTCHA: [TypeScript-specific constraint or Next.js reqfrontend/uirement]
   // RETURN: Response object with proper TypeScript typing
 }
 
 // Example: Custom hook pattern
 export function use{Domain}Action(): {Domain}ActionResult {
   // PATTERN: Hook structure with TypeScript generics (see hooks/useExisting.ts)
-  // GOTCHA: [React hook rules and TypeScript typing requirements]
+  // GOTCHA: [React hook rules and TypeScript typing reqfrontend/uirements]
 }
 ```
 
@@ -224,7 +224,7 @@ npm run type-check             # Full TypeScript validation
 npm test -- __tests__/{domain}.test.tsx
 npm test -- __tests__/use{Hook}.test.ts
 
-# Full test suite for affected areas
+# Full test sfrontend/uite for affected areas
 npm test -- components/{domain}/
 npm test -- hooks/
 
@@ -251,9 +251,9 @@ curl -X POST http://localhost:3000/api/{resource} \
   -d '{"test": "data"}' \
   | jq .  # Pretty print JSON response
 
-# Production build validation
-npm run build
-# Expected: Successful build with no TypeScript errors or warnings
+# Production bfrontend/uild validation
+npm run bfrontend/uild
+# Expected: Successful bfrontend/uild with no TypeScript errors or warnings
 
 # Component rendering validation (if SSR/SSG)
 curl http://localhost:3000/{page} | grep -q "expected-content"
@@ -266,8 +266,8 @@ curl http://localhost:3000/{page} | grep -q "expected-content"
 ```bash
 # TypeScript/Next.js Specific Validation:
 
-# Production build performance
-npm run build && npm run analyze  # Bundle analyzer if available
+# Production bfrontend/uild performance
+npm run bfrontend/uild && npm run analyze  # Bundle analyzer if available
 
 # Type safety validation
 npx tsc --noEmit --strict        # Strict TypeScript checking
@@ -302,7 +302,7 @@ axe-mcp --scan http://localhost:3000/{pages}
 - [ ] No linting errors: `npm run lint`
 - [ ] No type errors: `npx tsc --noEmit`
 - [ ] No formatting issues: `npm run format --check`
-- [ ] Production build succeeds: `npm run build`
+- [ ] Production bfrontend/uild succeeds: `npm run bfrontend/uild`
 
 ### Feature Validation
 
@@ -310,7 +310,7 @@ axe-mcp --scan http://localhost:3000/{pages}
 - [ ] Manual testing successful: [specific commands from Level 3]
 - [ ] Error cases handled gracefully with proper TypeScript error types
 - [ ] Integration points work as specified
-- [ ] User persona requirements satisfied (if applicable)
+- [ ] User persona reqfrontend/uirements satisfied (if applicable)
 
 ### Code Quality Validation
 

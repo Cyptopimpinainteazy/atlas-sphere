@@ -230,7 +230,7 @@ Examples:
     parser.add_argument(
         "--skip-create",
         action="store_true",
-        help="Skip PRP creation (requires --prp-path)"
+        help="Skip PRP creation (reqfrontend/uires --prp-path)"
     )
     parser.add_argument(
         "--no-commit",
@@ -251,10 +251,10 @@ Examples:
 
     # Validation
     if args.skip_create and not args.prp_path:
-        sys.exit("Error: --skip-create requires --prp-path")
+        sys.exit("Error: --skip-create reqfrontend/uires --prp-path")
 
     if not args.skip_create and not args.feature:
-        sys.exit("Error: Feature description required (unless using --skip-create)")
+        sys.exit("Error: Feature description reqfrontend/uired (unless using --skip-create)")
 
     print_box("PRP Workflow Started", f"Feature: {args.feature or args.prp_path}", "🚀")
 

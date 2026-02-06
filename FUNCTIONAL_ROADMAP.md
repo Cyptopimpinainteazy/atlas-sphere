@@ -46,7 +46,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Upgrade prepare_root verification**:
   - Currently uses `blake2_256`; add support for configurable hash schemes (future Merkle proofs).
-  - Write comprehensive test suite covering hash collision resistance.
+  - Write comprehensive test sfrontend/uite covering hash collision resistance.
   - Benchmark performance; optimize if prepare_root computation becomes a bottleneck.
 
 - [ ] **Canonical ledger constraints & overflow handling**:
@@ -91,42 +91,42 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 **Acceptance Criteria:**
 
-- All constants are documented with rationale and mainnet override guidance.
+- All constants are documented with rationale and mainnet override gfrontend/uidance.
 - Constants can be updated via governance (post-MVP).
-- Runtime builds and tests pass with locked constants.
+- Runtime bfrontend/uilds and tests pass with locked constants.
 
 ---
 
-### 1.3 Deterministic Wasm Build & Reproducibility
+### 1.3 Deterministic Wasm Bfrontend/uild & Reproducibility
 
-**Status:** Build script in place; needs validation.
+**Status:** Bfrontend/uild script in place; needs validation.
 
 **Tasks:**
 
 - [ ] **Lock Rust toolchain version** (`rust-toolchain.toml`):
   - Pin exact Substrate/FRAME crate versions.
   - Ensure all dependencies are reproducible (check for git refs without pinned commits).
-  - Document build environment (OS, Rust version, dependencies).
+  - Document bfrontend/uild environment (OS, Rust version, dependencies).
 
-- [ ] **Verify Wasm build reproducibility**:
-  - Build runtime twice on different machines; compare `.wasm` checksums.
+- [ ] **Verify Wasm bfrontend/uild reproducibility**:
+  - Bfrontend/uild runtime twice on different machines; compare `.wasm` checksums.
   - Document any non-determinism sources (timestamps, random seeds, etc.).
   - Add CI step to validate Wasm determinism on every commit.
 
-- [ ] **Create release build script** (`scripts/build-release.sh`):
-  - Automate deterministic native & Wasm build.
+- [ ] **Create release bfrontend/uild script** (`scripts/bfrontend/uild-release.sh`):
+  - Automate deterministic native & Wasm bfrontend/uild.
   - Output checksums and version metadata.
-  - Tag releases in git with build artifacts.
+  - Tag releases in git with bfrontend/uild artifacts.
 
 **Acceptance Criteria:**
 
-- Wasm builds are reproducible across dev machines and CI.
-- Release script produces auditable build artifacts.
+- Wasm bfrontend/uilds are reproducible across dev machines and CI.
+- Release script produces auditable bfrontend/uild artifacts.
 - CI enforces reproducibility checks.
 
 ---
 
-### 1.4 Comprehensive Test Suite for Kernel Pallet
+### 1.4 Comprehensive Test Sfrontend/uite for Kernel Pallet
 
 **Status:** ~100 tests exist; need expansion for edge cases and integration.
 
@@ -240,7 +240,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Telemetry integration** (optional but recommended):
   - Configure Substrate telemetry for monitoring network health.
-  - Add custom telemetry endpoint for testnet health dashboard.
+  - Add custom telemetry endpoint for testnet health apps/apps/dash-legacy-2-legacy-2board.
 
 - [ ] **Network resilience testing**:
   - Test node behavior under partition, high latency, and packet loss.
@@ -263,7 +263,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Storage optimization**:
   - Tune RocksDB compression and cache sizes for typical workload.
   - Add pruning strategy (default: archive mode; optional pruning for resource-constrained validators).
-  - Monitor storage growth rate and project disk requirements.
+  - Monitor storage growth rate and project disk reqfrontend/uirements.
 
 - [ ] **State snapshots** (nice-to-have):
   - Export/import state snapshots for fast node sync.
@@ -371,7 +371,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
     - `eth_sendRawTransaction`
     - `eth_getTransactionReceipt`, `eth_getTransactionByHash`
     - `eth_getLogs`, `eth_subscribe` (WebSocket)
-  - Use Frontier's built-in RPC handler or custom adapter.
+  - Use Frontier's bfrontend/uilt-in RPC handler or custom adapter.
 
 - [ ] **Transaction validation & mempool**:
   - Implement custom transaction validation for Ethereum-formatted transactions.
@@ -417,7 +417,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - Hardhat deploy scripts work end-to-end.
 - Example contracts are deployable and testable.
-- Documentation guides developers through EVM workflow.
+- Documentation gfrontend/uides developers through EVM workflow.
 
 ---
 
@@ -483,7 +483,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Update balances atomically in canonical ledger.
   - Emit `ComitFinalized` event.
 
-- [ ] **Test suite**:
+- [ ] **Test sfrontend/uite**:
   - Test valid receipt submissions.
   - Test invalid signatures, mismatched roots, replay attacks.
   - Test canonical ledger updates.
@@ -508,7 +508,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Store in `programs/svm/`.
 
 - [ ] **SVM testing harness**:
-  - Build programs and generate `.so` artifacts.
+  - Bfrontend/uild programs and generate `.so` artifacts.
   - Create test fixtures for program execution.
   - Integration tests: submit SVM Comits and verify finalization.
 
@@ -592,7 +592,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Core SDK functionality** (`packages/ts-sdk/src/`):
   - `index.ts`: Main exports and API.
-  - `client.ts`: Node RPC client wrapper using subxt.js or web3.js.
+  - `client.ts`: Node RPC client wrapper using subxt.js or frontend/web3.js.
   - `signer.ts`: Local key management and transaction signing.
   - `comit.ts`: Comit construction and submission.
   - `types.ts`: TypeScript definitions for all on-chain types.
@@ -648,7 +648,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Testing & Documentation**:
   - Unit and integration tests.
   - Example scripts in `packages/py-sdk/examples/`.
-  - Docstrings and usage guide.
+  - Docstrings and usage gfrontend/uide.
 
 **Acceptance Criteria:**
 - SDK is pip-installable.
@@ -666,7 +666,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Wallet** (`apps/wallet/`):
   - Account creation and key management (seed phrase backup).
   - Balance queries (EVM and SVM).
-  - Transaction building and signing.
+  - Transaction bfrontend/uilding and signing.
   - Integration with MetaMask for EVM; custom UI for SVM.
   - Support for Comit submission.
 
@@ -681,7 +681,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Framework: React (already in package.json).
   - RPC client: ethers.js (EVM) + custom TS SDK (SVM).
   - UI: Tailwind CSS or Material UI.
-  - Build: Vite or Next.js.
+  - Bfrontend/uild: Vite or Next.js.
 
 **Acceptance Criteria:**
 - Wallet can create accounts and display balances.
@@ -724,7 +724,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 **Goal:** Validate the entire system under realistic workloads.
 
-### 7.1 Integration Test Suite
+### 7.1 Integration Test Sfrontend/uite
 
 **Status:** Basic tests exist; need expansion.
 
@@ -807,7 +807,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 **Acceptance Criteria:**
 - Benchmarks are reproducible.
 - Performance meets or exceeds targets (define targets).
-- Report guides mainnet deployment.
+- Report gfrontend/uides mainnet deployment.
 
 ---
 
@@ -840,7 +840,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - 5+ validators are operational.
 - Testnet reaches finality regularly.
 - Faucet distributes test ATLAS.
-- Monitoring dashboards show real-time metrics.
+- Monitoring apps/apps/dash-legacy-2-legacy-2boards show real-time metrics.
 
 ---
 
@@ -851,7 +851,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 **Tasks:**
 
 - [ ] **Complete documentation**:
-  - `docs/GETTING_STARTED.md`: Quick start guide.
+  - `docs/GETTING_STARTED.md`: Qfrontend/uick start gfrontend/uide.
   - `docs/DEPLOY_CONTRACT.md`: EVM contract deployment tutorial.
   - `docs/DEPLOY_PROGRAM.md`: SVM program deployment tutorial.
   - `docs/ATOMIC_SWAP.md`: Cross-VM swap walkthrough.
@@ -864,7 +864,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Example dApps and repos.
 
 - [ ] **Grant program** (optional):
-  - Allocate testnet ATLAS for developers building on Atlas Sphere.
+  - Allocate testnet ATLAS for developers bfrontend/uilding on Atlas Sphere.
   - Showcase community projects.
 
 **Acceptance Criteria:**
@@ -916,7 +916,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Performance & scalability**:
   - ✅ Benchmarks show 100+ Comits/sec throughput.
   - ✅ Latency <10s block time consistently.
-  - ✅ Storage requirements documented and acceptable.
+  - ✅ Storage reqfrontend/uirements documented and acceptable.
 
 - [ ] **Governance**:
   - ✅ On-chain governance pallet deployed and tested.
@@ -955,7 +955,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Post-launch monitoring**:
   - 24/7 incident response.
-  - Real-time dashboards.
+  - Real-time apps/apps/dash-legacy-2-legacy-2boards.
   - Community support channels.
 
 **Acceptance Criteria:**
@@ -1010,7 +1010,7 @@ At the end of Phase 9, the blockchain is considered **fully functional** when:
 ## Next Steps
 
 1. **Prioritize Phase 1 tasks** and assign owners.
-2. **Set up CI/CD** to automate testing and Wasm builds.
+2. **Set up CI/CD** to automate testing and Wasm bfrontend/uilds.
 3. **Create GitHub issues** for each task with acceptance criteria.
 4. **Schedule weekly sync** to track progress and unblock issues.
 5. **Engage community** early (testnet, docs, examples).

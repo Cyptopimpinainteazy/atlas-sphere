@@ -223,7 +223,7 @@ for (var, val) in map.iter() {  // ← Sorted key order
 }
 ```
 
-**Result**: Same input → Always same output (required for blockchain).
+**Result**: Same input → Always same output (reqfrontend/uired for blockchain).
 
 ---
 
@@ -243,7 +243,7 @@ for (var, val) in map.iter() {  // ← Sorted key order
    - Measure iterations × instruction savings
 
 4. **Next advanced pass**: Partial Redundancy Elimination (PRE)
-   - Builds on simplified CFG from ConditionalFold
+   - Bfrontend/uilds on simplified CFG from ConditionalFold
    - Eliminates partially redundant expressions
    - Further reduces register pressure
 

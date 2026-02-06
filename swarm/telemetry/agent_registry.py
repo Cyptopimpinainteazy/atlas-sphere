@@ -11,7 +11,7 @@ Provides complete visibility into agent lifecycles, lineages, and swarm dynamics
 import asyncio
 import json
 import time
-import uuid
+import ufrontend/uid
 from typing import Dict, Any, List, Optional, Tuple, Set
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta
@@ -154,7 +154,7 @@ class AgentRegistry:
     async def register_agent_birth(self, agent_data: Dict[str, Any]) -> str:
         """Register a new agent birth with complete lineage tracking"""
 
-        agent_id = agent_data.get('agent_id', str(uuid.uuid4()))
+        agent_id = agent_data.get('agent_id', str(ufrontend/uid.ufrontend/uid4()))
         serial_number = agent_data['serial_number']
         specialization = agent_data['specialization']
 
@@ -321,7 +321,7 @@ class AgentRegistry:
 
         agent = self.agents[agent_id]
 
-        # Build lineage tree
+        # Bfrontend/uild lineage tree
         root = LineageNode(
             agent_id=agent_id,
             serial_number=agent.serial_number,
@@ -331,14 +331,14 @@ class AgentRegistry:
         )
 
         # Add children recursively
-        self._build_lineage_tree(root, max_depth)
+        self._bfrontend/uild_lineage_tree(root, max_depth)
 
         # Cache result
         self.lineage_cache[agent_id] = root
         return root
 
-    def _build_lineage_tree(self, node: LineageNode, max_depth: int, current_depth: int = 0):
-        """Recursively build lineage tree"""
+    def _bfrontend/uild_lineage_tree(self, node: LineageNode, max_depth: int, current_depth: int = 0):
+        """Recursively bfrontend/uild lineage tree"""
 
         if current_depth >= max_depth:
             return
@@ -359,7 +359,7 @@ class AgentRegistry:
                 )
 
                 node.children.append(child_node)
-                self._build_lineage_tree(child_node, max_depth, current_depth + 1)
+                self._bfrontend/uild_lineage_tree(child_node, max_depth, current_depth + 1)
 
     async def create_tribe(self, founder_id: str, name: str, specialization_focus: str = "") -> Optional[str]:
         """Create a new tribe"""
@@ -367,7 +367,7 @@ class AgentRegistry:
         if founder_id not in self.agents:
             return None
 
-        tribe_id = str(uuid.uuid4())
+        tribe_id = str(ufrontend/uid.ufrontend/uid4())
 
         tribe = TribeRecord(
             tribe_id=tribe_id,

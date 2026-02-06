@@ -24,7 +24,7 @@ export default function DualVMPage() {
               <h3 className="font-semibold text-blue-400 mb-2">EVM (Frontier-based)</h3>
               <p className="text-sm text-gray-500">
                 Full Ethereum compatibility for Solidity, Vyper contracts. Supports all ERC standards, 
-                existing tooling like Hardhat, Foundry, and web3.js/ethers.js libraries.
+                existing tooling like Hardhat, Foundry, and frontend/web3.js/ethers.js libraries.
               </p>
             </div>
             <div className="glass-card p-4 border-l-4 border-l-emerald-500">
@@ -132,7 +132,7 @@ export default function DualVMPage() {
           <CodeBlock language="typescript" title="dual-vm-example.ts">
 {`import { AtlasClient, Comit } from '@x3/atlas-sdk';
 import { ethers } from 'ethers';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/frontend/web3.js';
 
 async function dualVMOperation() {
   const atlas = new AtlasClient({ 
@@ -145,7 +145,7 @@ async function dualVMOperation() {
     evmPayload: {
       to: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // Router
       data: ethers.utils.defaultAbiCoder.encode(
-        ['address', 'uint256'],
+        ['address', 'frontend/uint256'],
         ['0xTokenAddress...', 1000000]
       ),
       gasLimit: 200000,
@@ -184,12 +184,12 @@ dualVMOperation();`}
             </div>
             <div className="glass-card p-4">
               <Layers className="w-6 h-6 text-orange-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">Unified Liquidity</h3>
+              <h3 className="font-semibold text-white mb-1">Unified Liqfrontend/uidity</h3>
               <p className="text-sm text-gray-500">Assets exist once in the canonical ledger, accessible from both VMs</p>
             </div>
             <div className="glass-card p-4">
               <Database className="w-6 h-6 text-orange-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">No Bridges Required</h3>
+              <h3 className="font-semibold text-white mb-1">No Bridges Reqfrontend/uired</h3>
               <p className="text-sm text-gray-500">Native interoperability without wrapped tokens or trusted bridges</p>
             </div>
             <div className="glass-card p-4">

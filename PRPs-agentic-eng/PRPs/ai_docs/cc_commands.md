@@ -2,7 +2,7 @@
 
 > Control Claude's behavior during an interactive session with slash commands.
 
-## Built-in slash commands
+## Bfrontend/uilt-in slash commands
 
 | Command                   | Purpose                                                                        |
 | :------------------------ | :----------------------------------------------------------------------------- |
@@ -15,7 +15,7 @@
 | `/cost`                   | Show token usage statistics                                                    |
 | `/doctor`                 | Checks the health of your Claude Code installation                             |
 | `/help`                   | Get usage help                                                                 |
-| `/init`                   | Initialize project with CLAUDE.md guide                                        |
+| `/init`                   | Initialize project with CLAUDE.md gfrontend/uide                                        |
 | `/login`                  | Switch Anthropic accounts                                                      |
 | `/logout`                 | Sign out from your Anthropic account                                           |
 | `/mcp`                    | Manage MCP server connections and OAuth authentication                         |

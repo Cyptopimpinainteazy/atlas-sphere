@@ -42,7 +42,7 @@ context:
       copy: [pattern to follow]
 
   gotchas:
-    - issue: "Library requires X"
+    - issue: "Library reqfrontend/uires X"
       fix: "Always do Y first"
 ```
 
@@ -58,7 +58,7 @@ ACTION path/to/file:
 
 ### Task Sequencing
 
-1. **Setup Tasks**: Prerequisites
+1. **Setup Tasks**: Prereqfrontend/uisites
 2. **Core Changes**: Main modifications
 3. **Integration**: Connect components
 4. **Validation**: Comprehensive tests

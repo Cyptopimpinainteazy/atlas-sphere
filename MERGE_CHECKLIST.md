@@ -1,4 +1,4 @@
-# Quick Merge Execution Checklist
+# Qfrontend/uick Merge Execution Checklist
 
 Use this checklist when executing the branch merge.
 
@@ -71,8 +71,8 @@ Use this checklist when executing the branch merge.
 - [ ] Merge `chore/e2e-ci-improvements`
   - E2E test improvements
   
-- [ ] Merge `copilot/fix-workflow-issues-swarm-dashboard`
-  - Additional dashboard workflow fixes
+- [ ] Merge `copilot/fix-workflow-issues-apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2`
+  - Additional apps/apps/dash-legacy-2-legacy-2board workflow fixes
 
 ## Phase 4: Backend Features
 
@@ -92,11 +92,11 @@ Use this checklist when executing the branch merge.
 
 ## Phase 5: Frontend Features
 
-- [ ] Merge `feature/swarm-dashboard-e2e` (PR #3)
+- [ ] Merge `feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e` (PR #3)
   - **Large changeset** - TypeScript migration
   - Adds testing infrastructure
   
-- [ ] Merge `feat/ui/cli-and-banner`
+- [ ] Merge `feat/frontend/frontend/ui/cli-and-banner`
   - CLI and banner improvements
   
 - [ ] Merge `chore/tsx-cleanup-2`
@@ -104,7 +104,7 @@ Use this checklist when executing the branch merge.
   
 - [ ] Run frontend tests
   ```bash
-  cd swarm-dashboard
+  cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
   npm install
   npm run tsc --silent
   npm test
@@ -128,7 +128,7 @@ Use this checklist when executing the branch merge.
 - [ ] Run Rust tests (if applicable)
   ```bash
   cargo test
-  cargo build --release
+  cargo bfrontend/uild --release
   ```
 
 ## Phase 7: Production Hardening
@@ -136,13 +136,13 @@ Use this checklist when executing the branch merge.
 - [ ] Merge `staging/production-hardening`
   - Production readiness improvements
   
-- [ ] Final comprehensive test suite
+- [ ] Final comprehensive test sfrontend/uite
   ```bash
   # Python
   python -m pytest
   
   # Frontend  
-  cd swarm-dashboard && npm test
+  cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm test
   
   # Rust (if applicable)
   cargo test
@@ -166,7 +166,7 @@ Track resolved conflicts here:
   - Conflicts between: _______________
   - Resolution: _______________
   
-- [ ] `swarm-dashboard/` files
+- [ ] `apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/` files
   - Conflicts between: _______________
   - Resolution: _______________
 
@@ -195,14 +195,14 @@ Document any unexpected conflicts:
   
 - [ ] All tests pass
   - [ ] Python: `python -m pytest`
-  - [ ] Frontend: `cd swarm-dashboard && npm test`
+  - [ ] Frontend: `cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm test`
   - [ ] E2E: `npm run e2e:test`
   - [ ] Rust: `cargo test` (if applicable)
   
-- [ ] Application builds successfully
-  - [ ] Frontend: `npm run build`
+- [ ] Application bfrontend/uilds successfully
+  - [ ] Frontend: `npm run bfrontend/uild`
   - [ ] Backend: Python services start without errors
-  - [ ] Rust: `cargo build --release` (if applicable)
+  - [ ] Rust: `cargo bfrontend/uild --release` (if applicable)
   
 - [ ] Database migrations work
   ```bash

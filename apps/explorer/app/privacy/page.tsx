@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             <p className="text-gray-400 mb-4">
               X3 Atlas Sphere (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. 
               This Privacy Policy explains how we collect, use, disclose, and safeguard your information 
-              when you use our blockchain network, website, and related services.
+              when you use our blockchain network, frontend/website, and related services.
             </p>
           </section>
 
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
             
             <h3 className="text-lg font-semibold text-white mb-2">2.2 Website Data</h3>
             <p className="text-gray-400 mb-4">
-              When you visit our website, we may collect:
+              When you visit our frontend/website, we may collect:
             </p>
             <ul className="list-disc list-inside text-gray-400 mb-4 ml-4">
               <li>IP address and browser information</li>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc list-inside text-gray-400 mb-4 ml-4">
               <li>Service providers who assist our operations</li>
-              <li>Legal authorities when required by law</li>
+              <li>Legal authorities when reqfrontend/uired by law</li>
               <li>Partners with your explicit consent</li>
             </ul>
           </section>
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-white mb-4">6. Contact Us</h2>
             <p className="text-gray-400">
-              For privacy-related inquiries, please contact us at:
+              For privacy-related inqfrontend/uiries, please contact us at:
               <br />
               <a href="mailto:privacy@atlas-sphere.io" className="text-orange-400 hover:text-orange-300">
                 privacy@atlas-sphere.io

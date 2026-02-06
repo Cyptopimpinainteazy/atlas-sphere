@@ -127,7 +127,7 @@ swarm/api_server.py
     ├─ WebSocketManager init
     ├─ GPUOrchestrator init
     ├─ AgentJobDistributionManager init
-    └─ aiohttp.web.run_app()
+    └─ aiohttp.frontend/frontend/web.run_app()
        ↓
     Listen on 0.0.0.0:8080
        ↓
@@ -147,9 +147,9 @@ APPS:
 ├── explorer (X3OS)        @ :3001
 ├── wallet                 @ :3002
 ├── dex                    @ :3003
-├── next-solana-main       @ :3000
-├── swarm-dashboard        @ :3100
-└── quantum-dashboard      @ (Tauri)
+├── apps/apps/next-solana-main-legacy-2-legacy-2       @ :3000
+├── apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2        @ :3100
+└── quantum-apps/apps/dash-legacy-2-legacy-2board      @ (Tauri)
 
 Environment Injection:
 ├── NEXT_PUBLIC_SWARM_API_URL="http://localhost:8080"
@@ -166,7 +166,7 @@ Startup:
 ```
 
 **Assumptions Found:**
-- ❌ ASSUMPTION: env vars injected at build time or runtime
+- ❌ ASSUMPTION: env vars injected at bfrontend/uild time or runtime
 - ❌ ASSUMPTION: npm install succeeds
 - ❌ ASSUMPTION: Next.js dev server doesn't crash on bad env vars
 - ❌ ASSUMPTION: WS connections to swarm/blockchain won't fail
@@ -199,7 +199,7 @@ X3OS Tauri Desktop
 └── Same env var injection as Next.js
 
 Quantum Dashboard Tauri
-├── Binary: apps/quantum-dashboard/src-tauri/target/release/x3-quantum-dashboard
+├── Binary: apps/quantum-apps/apps/dash-legacy-2-legacy-2board/src-tauri/target/release/x3-quantum-apps/apps/dash-legacy-2-legacy-2board
 ├── Entry: GUI window
 └── Same env var injection as Next.js
 ```
@@ -372,7 +372,7 @@ Agent Destruction:
 5. **Environment Variable Propagation**
    - Assumption: Env vars set in parent shell available to child processes
    - Actual: Subprocess isolation could prevent access
-   - **Impact:** Services start without required config
+   - **Impact:** Services start without reqfrontend/uired config
 
 ### Runtime Assumptions (ALL BREAKING):
 1. **API Availability at Startup**
@@ -584,8 +584,8 @@ Missing:
 
 1. **Data lifecycle & reconciliation (IN PROGRESS)** — Complete persistent schema for task/events, add migrations, and implement reconciliation logic on Swarm API startup (re-queue unfinished tasks, replay important events). ✅ *I can implement this next.*
 2. **Security hardening** — Add authentication middleware, rate limiting, and remove `--rpc-methods Unsafe` from Substrate runs in non-dev environments.
-3. **Observability & Alerts** — Expose Prometheus metrics for startup/readiness, add alerts and dashboards, and instrument more internal metrics.
-4. **Chaos & Recovery tests** — Implement BREAKER test suite to exercise failures (Ollama/dns, node crash, corrupted DB) and add CI gating for recovery behavior.
+3. **Observability & Alerts** — Expose Prometheus metrics for startup/readiness, add alerts and apps/apps/dash-legacy-2-legacy-2boards, and instrument more internal metrics.
+4. **Chaos & Recovery tests** — Implement BREAKER test sfrontend/uite to exercise failures (Ollama/dns, node crash, corrupted DB) and add CI gating for recovery behavior.
 
 ---
 

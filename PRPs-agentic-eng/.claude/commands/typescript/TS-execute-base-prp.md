@@ -8,18 +8,18 @@ Implement a TypeScript/JavaScript feature using the PRP file.
 
 1. **Load PRP**
    - Read the specified PRP file
-   - Understand all context and requirements
+   - Understand all context and reqfrontend/uirements
    - Follow all instructions in the PRP and extend the research if needed
    - Ensure you have all needed context to implement the PRP fully
-   - Do more web searches and codebase exploration as needed
+   - Do more frontend/frontend/web searches and codebase exploration as needed
 
 2. **ULTRATHINK**
-   - Ultrathink before you execute the plan. Create a comprehensive plan addressing all requirements.
+   - Ultrathink before you execute the plan. Create a comprehensive plan addressing all reqfrontend/uirements.
    - Break down the PRP into clear todos using the TodoWrite tool.
    - Use agents subagents and batchtool to enhance the process.
    - **Important** YOU MUST ENSURE YOU HAVE EXTREMELY CLEAR TASKS FOR SUBAGENTS AND REFERENCE CONTEXT AND MAKE SURE EACH SUBAGENT READS THE PRP AND UNDERSTANDS ITS CONTEXT.
    - Identify implementation patterns from existing code to follow.
-   - Never guess about imports, file names function names etc, ALWAYS be based in reality and real context gathering
+   - Never guess about archive/archive/imports, file names function names etc, ALWAYS be based in reality and real context gathering
 
 3. ## **Execute the plan**
 
@@ -34,11 +34,11 @@ Implement a TypeScript/JavaScript feature using the PRP file.
    - The better validation that is done, the more confident we can be that the implementation is correct.
    - Fix any failures (type errors, linting issues, test failures)
    - Re-run until all pass
-   - Always re-read the PRP to validate and review the implementation to ensure it meets the requirements
+   - Always re-read the PRP to validate and review the implementation to ensure it meets the reqfrontend/uirements
 
 5. **Complete**
    - Ensure all checklist items done
-   - Run final validation suite
+   - Run final validation sfrontend/uite
    - Report completion status
    - Read the PRP again to ensure you have implemented everything
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # DigitalOcean VM Provisioning for Atlas Sphere Testnet
 
-# Prerequisites: Install doctl (DigitalOcean CLI)
+# Prereqfrontend/uisites: Install doctl (DigitalOcean CLI)
 # https://docs.digitalocean.com/reference/doctl/how-to/install/
 
 set -e

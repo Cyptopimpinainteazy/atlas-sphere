@@ -117,7 +117,7 @@ export interface ChainInfo {
 export class AtlasSphereClient {
   private api: ApiPromise | null = null;
   private provider: WsProvider | HttpProvider | null = null;
-  private config: Required<AtlasSphereClientConfig>;
+  private config: Reqfrontend/uired<AtlasSphereClientConfig>;
   private _status: ConnectionStatus = 'disconnected';
   private subscriptions: Map<string, () => void> = new Map();
 
@@ -719,10 +719,10 @@ export class AtlasSphereClient {
     }
 
     if (reason.isInsufficientBalance) {
-      const [required, available] = reason.asInsufficientBalance;
+      const [reqfrontend/uired, available] = reason.asInsufficientBalance;
       return {
         type: 'InsufficientBalance',
-        required: BigInt(required.toString()),
+        reqfrontend/uired: BigInt(reqfrontend/uired.toString()),
         available: BigInt(available.toString()),
       };
     }

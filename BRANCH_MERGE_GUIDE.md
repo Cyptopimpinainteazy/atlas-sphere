@@ -1,6 +1,6 @@
-# Branch Merge Guide - Consolidating All Features into Main
+# Branch Merge Gfrontend/uide - Consolidating All Features into Main
 
-This guide provides instructions for merging all feature branches into the `main` branch to create a unified codebase with all features and improvements.
+This gfrontend/uide provides instructions for merging all feature branches into the `main` branch to create a unified codebase with all features and improvements.
 
 ## Current State
 
@@ -49,24 +49,24 @@ These branches contain critical fixes and should be merged first:
    - Adds package-lock.json
    - Updates Lighthouse CI action version
 
-8. **copilot/fix-workflow-issues-swarm-dashboard** (`bc9c085`)
-   - Swarm dashboard workflow fixes
+8. **copilot/fix-workflow-issues-apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2** (`bc9c085`)
+   - Swarm apps/apps/dash-legacy-2-legacy-2board workflow fixes
 
 ### Phase 4: Feature Branches (Priority: Medium)
 
-9. **feature/swarm-dashboard-e2e** (PR #3) - `23573a3`
+9. **feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e** (PR #3) - `23573a3`
    - TypeScript migration for UI components
    - Jest + ts-jest + Testing Library setup
    - Playwright e2e tests
    - **Large changeset** - review carefully
 
-10. **feature/dashboard-mvp-final** (`65356ed`)
+10. **feature/apps/apps/dash-legacy-2-legacy-2board-mvp-final** (`65356ed`)
     - Dashboard MVP final version
 
-11. **feature/dashboard-mvp-clean** (`23573a3`)
-    - Dashboard MVP clean version (same SHA as swarm-dashboard-e2e)
+11. **feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean** (`23573a3`)
+    - Dashboard MVP clean version (same SHA as apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e)
 
-12. **feat/ui/cli-and-banner** (`0664823`)
+12. **feat/frontend/frontend/ui/cli-and-banner** (`0664823`)
     - CLI and banner UI features
 
 13. **feat/async-reputation-pg-repo** (`758c527`)
@@ -97,7 +97,7 @@ These branches contain critical fixes and should be merged first:
 18. **test/alembic-lint-fail** (`1301d12`)
     - Test branch for Alembic lint failures (may not need to merge)
 
-### Phase 8: Copilot PRs (Review Required)
+### Phase 8: Copilot PRs (Review Reqfrontend/uired)
 
 19. **copilot/sub-pr-1** (PR #2) - BMAD workflow documentation fixes
 20. **copilot/sub-pr-3** (PR #4) - Contract compilation optimization  
@@ -132,11 +132,11 @@ git merge --no-ff copilot/fix-all-pull-requests -m "Merge: Fix command injection
 # Phase 3: CI/Workflow
 git merge --no-ff chore/e2e-ci-improvements -m "Merge: E2E CI improvements"
 git merge --no-ff copilot/fix-workflow-errors -m "Merge: Fix workflow errors"
-git merge --no-ff copilot/fix-workflow-issues-swarm-dashboard -m "Merge: Fix swarm dashboard workflow"
+git merge --no-ff copilot/fix-workflow-issues-apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 -m "Merge: Fix swarm apps/apps/dash-legacy-2-legacy-2board workflow"
 
 # Phase 4: Features
-git merge --no-ff feature/swarm-dashboard-e2e -m "Merge: Swarm dashboard e2e tests"
-git merge --no-ff feat/ui/cli-and-banner -m "Merge: CLI and banner UI"
+git merge --no-ff feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e -m "Merge: Swarm apps/apps/dash-legacy-2-legacy-2board e2e tests"
+git merge --no-ff feat/frontend/frontend/ui/cli-and-banner -m "Merge: CLI and banner UI"
 git merge --no-ff feat/async-reputation-pg-repo -m "Merge: Async reputation repository"
 git merge --no-ff feature/sigill-aggregator-helper -m "Merge: Signal aggregator"
 
@@ -171,8 +171,8 @@ for branch in \
   copilot/fix-all-pull-requests \
   chore/e2e-ci-improvements \
   copilot/fix-workflow-errors \
-  feature/swarm-dashboard-e2e \
-  feat/ui/cli-and-banner \
+  feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e \
+  feat/frontend/frontend/ui/cli-and-banner \
   feat/async-reputation-pg-repo \
   chore/tsx-cleanup-2 \
   feature/atlas-kernel-task1 \
@@ -218,13 +218,13 @@ git add <resolved-files>
 git commit -m "Resolve merge conflicts from <branch-name>"
 ```
 
-## Testing Requirements
+## Testing Reqfrontend/uirements
 
 After each phase or major merge:
 
-### Frontend (swarm-dashboard)
+### Frontend (apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2)
 ```bash
-cd swarm-dashboard
+cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
 npm install
 npm run tsc --silent
 npm test
@@ -241,7 +241,7 @@ cd alembic && alembic upgrade head && alembic downgrade base
 ### Rust/Substrate (if applicable)
 ```bash
 cargo test
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 ## Post-Merge Cleanup
@@ -274,7 +274,7 @@ git revert -m 1 <merge-commit-sha>
 
 ## Notes
 
-- Some branches may have identical SHAs (e.g., `feature/dashboard-mvp-clean` and `feature/swarm-dashboard-e2e`) - these are duplicates
+- Some branches may have identical SHAs (e.g., `feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean` and `feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e`) - these are duplicates
 - Review all PR descriptions before merging to understand changes
 - Consider merging PR #3 and PR #1 carefully as they contain large changesets
 - The security fixes in PR #6 and PR #9 should be prioritized
@@ -288,5 +288,5 @@ git revert -m 1 <merge-commit-sha>
 - [ ] Documentation is up to date
 - [ ] No duplicate code
 - [ ] Security scan passes
-- [ ] Application builds successfully
+- [ ] Application bfrontend/uilds successfully
 - [ ] Database migrations work correctly

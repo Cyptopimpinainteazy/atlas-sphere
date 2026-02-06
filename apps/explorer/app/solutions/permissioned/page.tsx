@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   Lock,
-  Building2,
+  Bfrontend/uilding2,
   Shield,
   Eye,
   Users,
@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Server,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const features = [
   {
@@ -28,7 +28,7 @@ const features = [
     icon: <Eye className="w-6 h-6" />,
   },
   {
-    name: 'Compliance Built-in',
+    name: 'Compliance Bfrontend/uilt-in',
     description: 'KYC/AML enforcement at protocol level',
     icon: <FileCheck className="w-6 h-6" />,
   },
@@ -42,8 +42,8 @@ const features = [
 const useCases = [
   {
     title: 'Enterprise DeFi',
-    description: 'Institutional-grade financial applications with compliance requirements',
-    icon: <Building2 className="w-6 h-6" />,
+    description: 'Institutional-grade financial applications with compliance reqfrontend/uirements',
+    icon: <Bfrontend/uilding2 className="w-6 h-6" />,
     features: ['Whitelisted participants', 'Auditable transactions', 'Regulatory compliance'],
   },
   {
@@ -70,7 +70,7 @@ const deploymentOptions = [
   {
     name: 'Permissioned Subnet',
     description: 'Deploy as a subnet connected to X3 mainnet',
-    pros: ['Mainnet security', 'Cross-chain bridging', 'Shared liquidity'],
+    pros: ['Mainnet security', 'Cross-chain bridging', 'Shared liqfrontend/uidity'],
   },
   {
     name: 'Private Chain',

@@ -74,7 +74,7 @@ test passes::cond_fold::tests::do_not_fold_when_unknown ... ok
 test result: ok. 3 passed; 0 failed
 ```
 
-Full x3-opt test suite: **120/120 passing** ✅
+Full x3-opt test sfrontend/uite: **120/120 passing** ✅
 
 ---
 
@@ -104,7 +104,7 @@ $ cargo test -p x3-opt --lib passes::cond_fold
 test result: ok. 3 passed; 0 failed
 ```
 
-### Step 5: ✅ Full Suite Green
+### Step 5: ✅ Full Sfrontend/uite Green
 ```bash
 $ cargo test -p x3-opt --lib
 test result: ok. 120 passed; 0 failed
@@ -191,7 +191,7 @@ if let Some(ConstVal::Const(lit)) = env.get(&cond) {
 # Just ConditionalFold tests
 cargo test -p x3-opt --lib passes::cond_fold
 
-# Full optimizer suite
+# Full optimizer sfrontend/uite
 cargo test -p x3-opt --lib
 
 # With output
@@ -273,4 +273,4 @@ This reduces branching complexity and unlocks downstream DCE/peephole passes.
 
 **Status**: ✅ **INTEGRATION COMPLETE**  
 **Quality**: Production-ready  
-**Next**: Measure impact on x3-bench test suite
+**Next**: Measure impact on x3-bench test sfrontend/uite

@@ -2,7 +2,7 @@
 
 **Highlights**
 - Coordinator and Node binaries for Linux (x86_64)
-- Quickstart, default configs, systemd service files
+- Qfrontend/uickstart, default configs, systemd service files
 - Dockerfile + docker-compose for NVIDIA GPU runtime
 - Unit & integration tests passing
 
@@ -23,8 +23,8 @@
 3. Mark as published (or keep as draft for review)
 
 **Post-publish**
-- Update website/docs with a download link and SHA256 checksum
+- Update frontend/website/docs with a download link and SHA256 checksum
 - Add a short `docs/gpu-node-setup.md` link to the release notes
 
 **Notes**
-- If you want cross-arch builds (arm64), we can add CI (GitHub Actions) to produce images and binaries automatically, sign artifacts, and produce checksums.
+- If you want cross-arch bfrontend/uilds (arm64), we can add CI (GitHub Actions) to produce images and binaries automatically, sign artifacts, and produce checksums.

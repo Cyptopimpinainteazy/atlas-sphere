@@ -1,10 +1,10 @@
 #!/bin/bash
-# Atlas Sphere Testnet v1 - Build and Key Generation
-# Day -1: Build binary, generate chain spec, create keys
+# Atlas Sphere Testnet v1 - Bfrontend/uild and Key Generation
+# Day -1: Bfrontend/uild binary, generate chain spec, create keys
 
 set -e
 
-echo "🔨 Atlas Sphere Testnet v1 - Build & Key Generation"
+echo "🔨 Atlas Sphere Testnet v1 - Bfrontend/uild & Key Generation"
 echo "===================================================="
 echo ""
 
@@ -22,13 +22,13 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Step 1: Build release binary
-echo "📦 Step 1/4: Building release binary..."
+# Step 1: Bfrontend/uild release binary
+echo "📦 Step 1/4: Bfrontend/uilding release binary..."
 echo "  This will take 10-30 minutes depending on your hardware..."
 echo ""
 
 START_TIME=$(date +%s)
-SKIP_WASM_BUILD=1 cargo build --release
+SKIP_WASM_BUILD=1 cargo bfrontend/uild --release
 
 END_TIME=$(date +%s)
 BUILD_TIME=$((END_TIME - START_TIME))
@@ -36,11 +36,11 @@ BUILD_MINUTES=$((BUILD_TIME / 60))
 BUILD_SECONDS=$((BUILD_TIME % 60))
 
 if [ -f "$BUILD_DIR/atlas-sphere-node" ]; then
-    echo -e "${GREEN}✅ Build successful in ${BUILD_MINUTES}m ${BUILD_SECONDS}s${NC}"
+    echo -e "${GREEN}✅ Bfrontend/uild successful in ${BUILD_MINUTES}m ${BUILD_SECONDS}s${NC}"
     echo "   Binary: $BUILD_DIR/atlas-sphere-node"
     echo "   Size: $(du -h $BUILD_DIR/atlas-sphere-node | cut -f1)"
 else
-    echo "❌ Build failed! Binary not found at $BUILD_DIR/atlas-sphere-node"
+    echo "❌ Bfrontend/uild failed! Binary not found at $BUILD_DIR/atlas-sphere-node"
     exit 1
 fi
 
@@ -56,19 +56,19 @@ echo "📋 Step 2/4: Generating chain specifications..."
 
 # Development chain spec (for reference)
 echo "  Generating dev chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain dev \
+$BUILD_DIR/atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode --chain dev \
     > "$CHAIN_SPEC_DIR/atlas-dev-plain.json"
 echo -e "${GREEN}✅ Created: atlas-dev-plain.json${NC}"
 
 # Local testnet chain spec (base for customization)
 echo "  Generating local testnet chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain local \
+$BUILD_DIR/atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode --chain local \
     > "$CHAIN_SPEC_DIR/atlas-testnet-plain.json"
 echo -e "${GREEN}✅ Created: atlas-testnet-plain.json${NC}"
 
 # Staging chain spec (more production-like)
 echo "  Generating staging chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain staging \
+$BUILD_DIR/atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode --chain staging \
     > "$CHAIN_SPEC_DIR/atlas-staging-plain.json"
 echo -e "${GREEN}✅ Created: atlas-staging-plain.json${NC}"
 
@@ -86,7 +86,7 @@ read -p "Press Enter after editing the chain spec, or Ctrl+C to exit and edit la
 # Convert to raw format (after user edits)
 echo ""
 echo "  Converting to raw format..."
-$BUILD_DIR/atlas-sphere-node build-spec \
+$BUILD_DIR/atlas-sphere-node bfrontend/uild-spec \
     --chain "$CHAIN_SPEC_DIR/atlas-testnet-plain.json" \
     --raw \
     > "$CHAIN_SPEC_DIR/atlas-testnet-raw.json"
@@ -361,7 +361,7 @@ echo -e "${GREEN}✅ Created: $KEYS_DIR/.gitignore (keys directory protected)${N
 # Summary
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-echo "✅ Day -1 Build & Key Generation Complete!"
+echo "✅ Day -1 Bfrontend/uild & Key Generation Complete!"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "📦 Binary:"

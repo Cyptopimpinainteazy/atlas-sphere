@@ -1,10 +1,10 @@
 /**
- * Tests for ComitBuilder
+ * Tests for ComitBfrontend/uilder
  */
 
 import type { HexString } from '@polkadot/util/types';
 import {
-  ComitBuilder,
+  ComitBfrontend/uilder,
   comit,
   evmComit,
   svmComit,
@@ -14,38 +14,38 @@ import {
   MAX_EVM_PAYLOAD_SIZE,
 } from '../src';
 
-describe('ComitBuilder', () => {
+describe('ComitBfrontend/uilder', () => {
   describe('construction', () => {
-    it('should create empty builder', () => {
-      const builder = new ComitBuilder();
-      expect(builder.isValid()).toBe(false);
+    it('should create empty bfrontend/uilder', () => {
+      const bfrontend/uilder = new ComitBfrontend/uilder();
+      expect(bfrontend/uilder.isValid()).toBe(false);
     });
 
     it('should create with factory function', () => {
-      const builder = comit();
-      expect(builder).toBeInstanceOf(ComitBuilder);
+      const bfrontend/uilder = comit();
+      expect(bfrontend/uilder).toBeInstanceOf(ComitBfrontend/uilder);
     });
   });
 
   describe('EVM payload', () => {
     it('should accept hex string payload', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
 
     it('should accept Uint8Array payload', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload(new Uint8Array([0x12, 0x34]))
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
 
     it('should accept options object', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload({
           to: ('0x' + '11'.repeat(20)) as HexString,
           data: '0xabcd',
@@ -53,102 +53,102 @@ describe('ComitBuilder', () => {
         })
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
 
     it('should reject payload exceeding size limit', () => {
       const largePayload = new Uint8Array(MAX_EVM_PAYLOAD_SIZE + 1);
 
       expect(() => {
-        new ComitBuilder().withEvmPayload(largePayload);
+        new ComitBfrontend/uilder().withEvmPayload(largePayload);
       }).toThrow(PayloadSizeError);
     });
 
     it('should set gas limit', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withEvmGasLimit(500000n)
         .withFee('auto');
 
-      const input = builder.build();
+      const input = bfrontend/uilder.bfrontend/uild();
       expect(input.fee).toBeGreaterThan(0n);
     });
   });
 
   describe('SVM payload', () => {
     it('should accept hex string payload', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withSvmPayload('0x5678')
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
 
     it('should accept options object', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withSvmPayload({
           programId: ('0x' + '22'.repeat(32)) as HexString,
           data: '0xef01',
         })
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
 
     it('should set compute units', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withSvmPayload('0x5678')
         .withSvmComputeUnits(100000n)
         .withFee('auto');
 
-      const input = builder.build();
+      const input = bfrontend/uilder.bfrontend/uild();
       expect(input.fee).toBeGreaterThan(0n);
     });
   });
 
   describe('dual-VM', () => {
     it('should accept both EVM and SVM payloads', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withSvmPayload('0x5678')
         .withFee(2000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
 
-      const input = builder.build();
+      const input = bfrontend/uilder.bfrontend/uild();
       expect(input.evmPayload).toBeDefined();
       expect(input.svmPayload).toBeDefined();
     });
 
     it('should work with dualComit factory', () => {
-      const builder = dualComit('0x1234', '0x5678');
+      const bfrontend/uilder = dualComit('0x1234', '0x5678');
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
     });
   });
 
   describe('fee handling', () => {
     it('should accept explicit fee', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withFee(5000n);
 
-      const input = builder.build();
+      const input = bfrontend/uilder.bfrontend/uild();
       expect(input.fee).toBe(5000n);
     });
 
     it('should calculate auto fee', () => {
-      const builder = new ComitBuilder()
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withFee('auto');
 
-      const input = builder.build();
+      const input = bfrontend/uilder.bfrontend/uild();
       expect(input.fee).toBeGreaterThan(0n);
     });
 
     it('should reject negative fee', () => {
       expect(() => {
-        new ComitBuilder()
+        new ComitBfrontend/uilder()
           .withEvmPayload('0x1234')
           .withFee(-100n);
       }).toThrow(ValidationError);
@@ -156,24 +156,24 @@ describe('ComitBuilder', () => {
   });
 
   describe('validation', () => {
-    it('should require at least one payload', () => {
-      const builder = new ComitBuilder().withFee(1000n);
+    it('should reqfrontend/uire at least one payload', () => {
+      const bfrontend/uilder = new ComitBfrontend/uilder().withFee(1000n);
 
-      const errors = builder.validate();
+      const errors = bfrontend/uilder.validate();
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0]).toContain('payload');
     });
 
-    it('should validate on build', () => {
-      const builder = new ComitBuilder();
+    it('should validate on bfrontend/uild', () => {
+      const bfrontend/uilder = new ComitBfrontend/uilder();
 
-      expect(() => builder.build()).toThrow(ValidationError);
+      expect(() => bfrontend/uilder.bfrontend/uild()).toThrow(ValidationError);
     });
   });
 
   describe('cloning', () => {
-    it('should clone builder state', () => {
-      const original = new ComitBuilder()
+    it('should clone bfrontend/uilder state', () => {
+      const original = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withFee(1000n);
 
@@ -183,8 +183,8 @@ describe('ComitBuilder', () => {
       clone.withSvmPayload('0x5678');
 
       // Original should be unchanged
-      const originalInput = original.build();
-      const cloneInput = clone.build();
+      const originalInput = original.bfrontend/uild();
+      const cloneInput = clone.bfrontend/uild();
 
       expect(originalInput.svmPayload?.length).toBe(0);
       expect(cloneInput.svmPayload?.length).toBeGreaterThan(0);
@@ -192,33 +192,33 @@ describe('ComitBuilder', () => {
   });
 
   describe('reset', () => {
-    it('should reset builder to initial state', () => {
-      const builder = new ComitBuilder()
+    it('should reset bfrontend/uilder to initial state', () => {
+      const bfrontend/uilder = new ComitBfrontend/uilder()
         .withEvmPayload('0x1234')
         .withFee(1000n);
 
-      expect(builder.isValid()).toBe(true);
+      expect(bfrontend/uilder.isValid()).toBe(true);
 
-      builder.reset();
+      bfrontend/uilder.reset();
 
-      expect(builder.isValid()).toBe(false);
+      expect(bfrontend/uilder.isValid()).toBe(false);
     });
   });
 });
 
 describe('factory functions', () => {
-  it('evmComit should create EVM-only builder', () => {
-    const builder = evmComit('0x1234');
-    expect(builder.isValid()).toBe(true);
+  it('evmComit should create EVM-only bfrontend/uilder', () => {
+    const bfrontend/uilder = evmComit('0x1234');
+    expect(bfrontend/uilder.isValid()).toBe(true);
   });
 
-  it('svmComit should create SVM-only builder', () => {
-    const builder = svmComit('0x5678');
-    expect(builder.isValid()).toBe(true);
+  it('svmComit should create SVM-only bfrontend/uilder', () => {
+    const bfrontend/uilder = svmComit('0x5678');
+    expect(bfrontend/uilder.isValid()).toBe(true);
   });
 
-  it('dualComit should create dual-VM builder', () => {
-    const builder = dualComit('0x1234', '0x5678');
-    expect(builder.isValid()).toBe(true);
+  it('dualComit should create dual-VM bfrontend/uilder', () => {
+    const bfrontend/uilder = dualComit('0x1234', '0x5678');
+    expect(bfrontend/uilder.isValid()).toBe(true);
   });
 });

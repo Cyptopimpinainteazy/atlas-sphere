@@ -201,7 +201,7 @@ impl BtcAdaptorSignature {
     /// Verify adaptor signature is valid for given message and pubkey
     pub fn verify(&self, _message: &[u8; 32], _pubkey: &[u8; 33]) -> bool {
         // TODO: Implement Schnorr adaptor signature verification
-        // This requires secp256k1 operations
+        // This reqfrontend/uires secp256k1 operations
         true // Placeholder
     }
 

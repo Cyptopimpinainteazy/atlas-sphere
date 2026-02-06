@@ -56,8 +56,8 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 echo ""
 
-# Verify prerequisites
-echo -e "${YELLOW}Checking prerequisites...${NC}"
+# Verify prereqfrontend/uisites
+echo -e "${YELLOW}Checking prereqfrontend/uisites...${NC}"
 
 if [ ! -f "$BINARY" ]; then
     echo -e "${RED}Error: Binary not found at $BINARY${NC}"
@@ -69,7 +69,7 @@ if [ ! -f "$CHAIN_SPEC" ]; then
     exit 1
 fi
 
-echo -e "${GREEN}✓ Prerequisites OK${NC}"
+echo -e "${GREEN}✓ Prereqfrontend/uisites OK${NC}"
 echo ""
 
 # Test SSH connectivity

@@ -1,5 +1,5 @@
 // scripts/deployV2.js
-const { ethers } = require("hardhat");
+const { ethers } = reqfrontend/uire("hardhat");
 
 async function main() {
   console.log("Deploying OrderbookV2 contract...");

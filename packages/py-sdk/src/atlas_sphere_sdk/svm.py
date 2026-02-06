@@ -30,7 +30,7 @@ class SvmClient:
     Client for SVM (Solana) specific operations.
     
     Provides Solana-compatible interfaces for:
-    - Program instruction building
+    - Program instruction bfrontend/uilding
     - Account metadata handling
     - Compute unit estimation
     """
@@ -69,7 +69,7 @@ class SvmClient:
             is_writable=is_writable,
         )
     
-    def build_instruction(
+    def bfrontend/uild_instruction(
         self,
         program_id: bytes,
         accounts: List[SvmAccount],
@@ -77,7 +77,7 @@ class SvmClient:
         compute_limit: int = 200_000,
     ) -> SvmInstruction:
         """
-        Build an SVM instruction.
+        Bfrontend/uild an SVM instruction.
         
         Args:
             program_id: 32-byte program public key
@@ -98,7 +98,7 @@ class SvmClient:
             compute_limit=compute_limit,
         )
     
-    def build_transfer(
+    def bfrontend/uild_transfer(
         self,
         from_pubkey: bytes,
         to_pubkey: bytes,
@@ -106,7 +106,7 @@ class SvmClient:
         system_program: Optional[bytes] = None,
     ) -> SvmInstruction:
         """
-        Build a system transfer instruction.
+        Bfrontend/uild a system transfer instruction.
         
         Args:
             from_pubkey: Sender public key
@@ -144,7 +144,7 @@ class SvmClient:
             instruction: SvmInstruction to convert
             
         Returns:
-            Bytes payload for ComitBuilder.with_svm_payload()
+            Bytes payload for ComitBfrontend/uilder.with_svm_payload()
         """
         # Format:
         # program_id (32) + num_accounts (1) + 

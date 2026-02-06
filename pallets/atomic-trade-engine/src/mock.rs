@@ -12,7 +12,7 @@ use pallet_atlas_kernel::{adapters::*, ExecutionReceipt};
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage,
+    Bfrontend/uildStorage,
 };
 use sp_std::vec::Vec;
 
@@ -111,7 +111,7 @@ impl EvmExecutorAdapter for TradeEngineEvmAdapter {
 
         let amount_out = amount_in.saturating_mul(98) / 100;
 
-        // Return data: ABI-encoded uint256 output amount
+        // Return data: ABI-encoded frontend/uint256 output amount
         let mut return_data = vec![0u8; 32];
         return_data[16..32].copy_from_slice(&amount_out.to_be_bytes());
 
@@ -202,7 +202,7 @@ impl X3ExecutorAdapter for TradeEngineX3Adapter {
 
         let amount_out = amount_in.saturating_mul(99) / 100;
 
-        // Return data: ABI-encoded uint256 output amount
+        // Return data: ABI-encoded frontend/uint256 output amount
         let mut return_data = vec![0u8; 32];
         return_data[16..32].copy_from_slice(&amount_out.to_be_bytes());
 
@@ -292,10 +292,10 @@ impl pallet_atomic_trade_engine::Config for Test {
     type WeightInfo = ();
 }
 
-/// Build genesis storage for testing
+/// Bfrontend/uild genesis storage for testing
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = system::GenesisConfig::<Test>::default()
-        .build_storage()
+        .bfrontend/uild_storage()
         .unwrap();
 
     pallet_balances::GenesisConfig::<Test> {

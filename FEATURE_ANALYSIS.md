@@ -8,7 +8,7 @@ This document provides a detailed analysis of each feature branch to understand 
 
 #### copilot/fix-security-bug-issues (PR #9)
 **Status**: Draft PR  
-**Target**: feature/swarm-dashboard-e2e  
+**Target**: feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e  
 **Priority**: HIGH
 
 **Changes**:
@@ -16,7 +16,7 @@ This document provides a detailed analysis of each feature branch to understand 
 - Adds PostgreSQL port mapping (5432:5432) for test connectivity
 - Fixes incorrect ABI loading in `tools/fund_allocations.py` (was using RewardDistributor ABI for token operations)
 - Eliminates repeated contract compilation (RewardDistributor.sol compiled 5 times → 1 time)
-- Removes duplicate Flask app initialization in `dash/metrics_server.py`
+- Removes duplicate Flask app initialization in `apps/apps/dash-legacy-2-legacy-2/metrics_server.py`
 - Fixes invalid `encodeABI()` usage in `tools/process_finalized_payouts.py`
 - Adds `.gitignore` for Python cache, node_modules, Solidity artifacts
 
@@ -71,28 +71,28 @@ This document provides a detailed analysis of each feature branch to understand 
 
 #### copilot/fix-workflow-errors (PR #7)
 **Status**: Draft PR  
-**Target**: feature/swarm-dashboard-e2e  
+**Target**: feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e  
 **Priority**: MEDIUM
 
 **Changes**:
-- Generates `swarm-dashboard/package-lock.json` from `package.json`
+- Generates `apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/package-lock.json` from `package.json`
 - Updates `.github/workflows/ci-swarm.yml` from `treosh/lighthouse-ci-action@v6` → `@v12`
-- Adds `.gitignore` for node_modules and build artifacts
+- Adds `.gitignore` for node_modules and bfrontend/uild artifacts
 
 **Impact**: Fixes failing workflows
 
-#### copilot/fix-workflow-issues-swarm-dashboard
+#### copilot/fix-workflow-issues-apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
 **SHA**: `bc9c085`  
 **Changes**:
-- Additional swarm dashboard workflow fixes
-- Details require branch inspection
+- Additional swarm apps/apps/dash-legacy-2-legacy-2board workflow fixes
+- Details reqfrontend/uire branch inspection
 
 **Impact**: Workflow stability
 
 ### 🎨 Frontend & Dashboard Features
 
-#### feature/swarm-dashboard-e2e (PR #3)
-**SHA**: `23573a3c` (same as feature/dashboard-mvp-clean)  
+#### feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e (PR #3)
+**SHA**: `23573a3c` (same as feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean)  
 **Status**: Open, not draft  
 **Target**: main  
 **Priority**: HIGH
@@ -103,26 +103,26 @@ This document provides a detailed analysis of each feature branch to understand 
 - Adds typed hook: `src/hooks/useMediaMetrics.ts`
 - Adds `tsconfig.json` with strict compiler options (`noUncheckedIndexedAccess`)
 - Sets up Jest + ts-jest + Testing Library for unit tests
-- Adds Playwright smoke e2e test: `e2e/tests/dashboard-smoke.spec.ts`
+- Adds Playwright smoke e2e test: `e2e/tests/apps/apps/dash-legacy-2-legacy-2board-smoke.spec.ts`
 - Configures coverage reporting (uploaded as workflow artifact)
 
-**Impact**: Large changeset - brings dashboard to TypeScript with testing
+**Impact**: Large changeset - brings apps/apps/dash-legacy-2-legacy-2board to TypeScript with testing
 
-#### feature/dashboard-mvp-final
+#### feature/apps/apps/dash-legacy-2-legacy-2board-mvp-final
 **SHA**: `65356ed`  
 **Changes**:
-- Final version of dashboard MVP
-- May be an iteration on dashboard-mvp-clean
+- Final version of apps/apps/dash-legacy-2-legacy-2board MVP
+- May be an iteration on apps/apps/dash-legacy-2-legacy-2board-mvp-clean
 
 **Impact**: Dashboard finalization
 
-#### feature/dashboard-mvp-clean
-**SHA**: `23573a3c` (identical to swarm-dashboard-e2e)  
-**Changes**: Same as swarm-dashboard-e2e
+#### feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean
+**SHA**: `23573a3c` (identical to apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e)  
+**Changes**: Same as apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
 
 **Impact**: Duplicate branch - can be skipped
 
-#### feat/ui/cli-and-banner
+#### feat/frontend/frontend/ui/cli-and-banner
 **SHA**: `0664823`  
 **Changes**:
 - CLI interface improvements
@@ -153,7 +153,7 @@ This document provides a detailed analysis of each feature branch to understand 
 **SHA**: `d4819df`  
 **Changes**:
 - Signal (SIGILL) aggregator helper utilities
-- Details require inspection
+- Details reqfrontend/uire inspection
 
 **Impact**: Signal handling improvement
 
@@ -170,7 +170,7 @@ This document provides a detailed analysis of each feature branch to understand 
 - AMM adapter interfaces (UniswapV2/V3, Raydium, Orca Whirlpool, Atlas native)
 - Trade graph pathfinding with BFS and arbitrage detection
 - Cross-VM route optimization (EVM ↔ SVM)
-- Comprehensive test suite (~25 tests)
+- Comprehensive test sfrontend/uite (~25 tests)
 - Benchmarking for weight generation
 - Runtime integration with configured limits (MaxTradeLegs=16, MaxCheckpoints=8)
 
@@ -195,7 +195,7 @@ This document provides a detailed analysis of each feature branch to understand 
 
 #### copilot/sub-pr-3 (PR #4)
 **Status**: Open (not draft)  
-**Target**: feature/swarm-dashboard-e2e  
+**Target**: feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e  
 **Priority**: MEDIUM
 
 **Changes**:
@@ -208,14 +208,14 @@ This document provides a detailed analysis of each feature branch to understand 
 
 #### copilot/sub-pr-3-again (PR #5)
 **Status**: Draft PR  
-**Target**: feature/swarm-dashboard-e2e  
+**Target**: feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e  
 **Priority**: LOW
 
 **Changes**:
 - Additional code review feedback from PR #3
-- Cleanup imports, logging, API usage
+- Cleanup archive/archive/imports, logging, API usage
 - Replaces bare exception handlers with logging module
-- Removes unused imports
+- Removes unused archive/archive/imports
 - Updates deprecated ethers.js API (`ethers.utils.verifyMessage` → `ethers.verifyMessage`)
 
 **Impact**: Code quality improvements
@@ -227,8 +227,8 @@ This document provides a detailed analysis of each feature branch to understand 
 
 **Changes**:
 - Sets up `.github/copilot-instructions.md`
-- Repository-specific guidelines for Copilot
-- Documents build, test, CI/CD processes
+- Repository-specific gfrontend/uidelines for Copilot
+- Documents bfrontend/uild, test, CI/CD processes
 
 **Impact**: Developer experience - helps AI coding assistants
 
@@ -282,8 +282,8 @@ This document provides a detailed analysis of each feature branch to understand 
    - Sub-PR-3 optimizes compilation
    - Resolution: Both changes are complementary, combine them
 
-4. **`swarm-dashboard/` directory**
-   - Multiple PRs touch dashboard code
+4. **`apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/` directory**
+   - Multiple PRs touch apps/apps/dash-legacy-2-legacy-2board code
    - TypeScript migration, tests, cleanup
    - Resolution: Careful review needed, prefer TypeScript versions
 
@@ -323,7 +323,7 @@ python -m pytest
 ### Phase 3-4 (CI + Features)
 ```bash
 # Frontend
-cd swarm-dashboard
+cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2
 npm install
 npm run tsc
 npm test
@@ -337,7 +337,7 @@ npm run e2e:test
 # If Cargo.toml exists
 cargo check
 cargo test
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 ## Recommended Merge Order (Prioritized)
@@ -350,8 +350,8 @@ cargo build --release
 6. ✅ **ci/codecov-action** - Adds coverage reporting
 7. ✅ **copilot/sub-pr-3** - Performance: Reduces compilation
 8. ✅ **feat/async-reputation-pg-repo** - Async reputation system
-9. ✅ **feature/swarm-dashboard-e2e** - Dashboard TypeScript migration + tests
-10. ✅ **feat/ui/cli-and-banner** - UI improvements
+9. ✅ **feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e** - Dashboard TypeScript migration + tests
+10. ✅ **feat/frontend/frontend/ui/cli-and-banner** - UI improvements
 11. ✅ **chore/tsx-cleanup-2** - TypeScript cleanup
 12. ✅ **feature/sigill-aggregator-helper** - Signal handling
 13. ✅ **feature/atlas-kernel-task1** - Atomic Trade Engine (REBASE to main first!)
@@ -361,7 +361,7 @@ cargo build --release
 ## Skip These Branches
 - ❌ **test/alembic-lint-fail** - Test branch, intentional failure
 - ❌ **opt/yolo-20251209T114158** - Experimental
-- ❌ **feature/dashboard-mvp-clean** - Duplicate of swarm-dashboard-e2e
+- ❌ **feature/apps/apps/dash-legacy-2-legacy-2board-mvp-clean** - Duplicate of apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
 - ❌ **copilot/merge-all-feature-branches** - Current working branch
 
 ## Special Notes
@@ -369,12 +369,12 @@ cargo build --release
 ### Branch Targeting Issues
 - **feature/atlas-kernel-task1** targets `master` not `main` → Needs rebase
 - **copilot/sub-pr-1** targets a copilot branch, not main → Deprioritize
-- Several PRs target `feature/swarm-dashboard-e2e` → Merge that first as base
+- Several PRs target `feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e` → Merge that first as base
 
 ### Dependency Chain
 ```
 main
- ├─ feature/swarm-dashboard-e2e (merge first)
+ ├─ feature/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e (merge first)
  │   ├─ copilot/fix-security-bug-issues (PR #9)
  │   ├─ copilot/fix-workflow-errors (PR #7)
  │   ├─ copilot/sub-pr-3 (PR #4)

@@ -35,7 +35,7 @@ interface ComputeJob {
   title: string;
   requester: string;
   budget: number;
-  gpuRequirements: { minVram: number; minTflops: number };
+  gpuReqfrontend/uirements: { minVram: number; minTflops: number };
   deadline: Date;
   bids: number;
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
@@ -52,10 +52,10 @@ const MOCK_PROVIDERS: GPUProvider[] = [
 ];
 
 const MOCK_JOBS: ComputeJob[] = [
-  { id: 1, title: 'LLM Fine-tuning - GPT4-style 7B', requester: '0xaa12...3456', budget: 2500, gpuRequirements: { minVram: 80, minTflops: 300 }, deadline: new Date(Date.now() + 86400000), bids: 3, status: 'OPEN', type: 'FINE_TUNING' },
-  { id: 2, title: 'Stable Diffusion Batch Inference', requester: '0xbb34...7890', budget: 450, gpuRequirements: { minVram: 24, minTflops: 50 }, deadline: new Date(Date.now() + 43200000), bids: 7, status: 'OPEN', type: 'INFERENCE' },
-  { id: 3, title: 'RAG Pipeline Training', requester: '0xcc56...1234', budget: 1200, gpuRequirements: { minVram: 48, minTflops: 200 }, deadline: new Date(Date.now() + 172800000), bids: 2, status: 'OPEN', type: 'TRAINING' },
-  { id: 4, title: 'Video Rendering - 4K Animation', requester: '0xdd78...5678', budget: 800, gpuRequirements: { minVram: 48, minTflops: 80 }, deadline: new Date(Date.now() + 28800000), bids: 5, status: 'IN_PROGRESS', type: 'RENDERING' },
+  { id: 1, title: 'LLM Fine-tuning - GPT4-style 7B', requester: '0xaa12...3456', budget: 2500, gpuReqfrontend/uirements: { minVram: 80, minTflops: 300 }, deadline: new Date(Date.now() + 86400000), bids: 3, status: 'OPEN', type: 'FINE_TUNING' },
+  { id: 2, title: 'Stable Diffusion Batch Inference', requester: '0xbb34...7890', budget: 450, gpuReqfrontend/uirements: { minVram: 24, minTflops: 50 }, deadline: new Date(Date.now() + 43200000), bids: 7, status: 'OPEN', type: 'INFERENCE' },
+  { id: 3, title: 'RAG Pipeline Training', requester: '0xcc56...1234', budget: 1200, gpuReqfrontend/uirements: { minVram: 48, minTflops: 200 }, deadline: new Date(Date.now() + 172800000), bids: 2, status: 'OPEN', type: 'TRAINING' },
+  { id: 4, title: 'Video Rendering - 4K Animation', requester: '0xdd78...5678', budget: 800, gpuReqfrontend/uirements: { minVram: 48, minTflops: 80 }, deadline: new Date(Date.now() + 28800000), bids: 5, status: 'IN_PROGRESS', type: 'RENDERING' },
 ];
 
 export default function GPUMarketplace() {
@@ -294,11 +294,11 @@ export default function GPUMarketplace() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div className="bg-black/40 rounded-lg p-3">
                     <div className="text-xs text-gray-500">Min VRAM</div>
-                    <div className="text-white font-mono">{job.gpuRequirements.minVram} GB</div>
+                    <div className="text-white font-mono">{job.gpuReqfrontend/uirements.minVram} GB</div>
                   </div>
                   <div className="bg-black/40 rounded-lg p-3">
                     <div className="text-xs text-gray-500">Min TFLOPS</div>
-                    <div className="text-white font-mono">{job.gpuRequirements.minTflops}</div>
+                    <div className="text-white font-mono">{job.gpuReqfrontend/uirements.minTflops}</div>
                   </div>
                   <div className="bg-black/40 rounded-lg p-3">
                     <div className="text-xs text-gray-500">Deadline</div>

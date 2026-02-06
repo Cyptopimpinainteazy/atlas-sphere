@@ -139,7 +139,7 @@ pub trait HealthApi {
     #[method(name = "system_health")]
     fn health(&self) -> RpcResult<HealthStatus>;
 
-    /// Returns node version and build info
+    /// Returns node version and bfrontend/uild info
     #[method(name = "system_version")]
     fn version(&self) -> RpcResult<NodeVersion>;
 
@@ -1301,8 +1301,8 @@ where
     module.merge(ChainSubscriptionApiServer::into_rpc(chain_sub))?;
 
     // If the `frontier` feature is enabled, try to add Frontier JSON-RPC modules
-    // (full `eth_*`, `net_*`, `web3_*` endpoints). This is compiled conditionally
-    // so that builds without Frontier dependencies continue to work.
+    // (full `eth_*`, `net_*`, `frontend/web3_*` endpoints). This is compiled conditionally
+    // so that bfrontend/uilds without Frontier dependencies continue to work.
     #[cfg(feature = "frontier")]
     {
         // TODO: Implement frontier RPC module when needed

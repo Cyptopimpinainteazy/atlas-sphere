@@ -34,7 +34,7 @@ Block 1 dominates Block 3 (left path always goes through 1)
 
 ### 2. Condition Canonicalization ✅
 **What**: Normalize messy condition forms into standard patterns
-**How**: Strip negations, reorder operands, map equivalences
+**How**: Strip negations, reorder operands, map eqfrontend/uivalences
 **Benefit**: Reliable condition matching
 
 ```
@@ -360,7 +360,7 @@ Goal: Wire allocations into code generation
 ### Phase 4: Superoptimization
 ```
 Currently: Foundation laid (telemetry + rule miner)
-Goal: Brute-force search for equivalent low-cost sequences
+Goal: Brute-force search for eqfrontend/uivalent low-cost sequences
       with cost model and safety verification
 ```
 
@@ -409,7 +409,7 @@ Goal: Brute-force search for equivalent low-cost sequences
 
 **Dominance-Based Conditional Folding** is the spinal alignment before heavy lifting. It:
 
-1. ✅ **Builds the map** (CFG with dominators)
+1. ✅ **Bfrontend/uilds the map** (CFG with dominators)
 2. ✅ **Tracks facts** (forward constant propagation)
 3. ✅ **Folds branches** (condition environment + lattice)
 4. ✅ **Enables downstream** (cleaner input for DCE, copy prop)
@@ -418,7 +418,7 @@ Goal: Brute-force search for equivalent low-cost sequences
 
 ---
 
-**Built**: December 9, 2025
+**Bfrontend/uilt**: December 9, 2025
 **Tests**: 79/79 ✅
 **Status**: Production Ready
 **Quality**: Enterprise Grade

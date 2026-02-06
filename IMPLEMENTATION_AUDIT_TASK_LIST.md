@@ -30,7 +30,7 @@
   - [ ] 2.2.1 Implement RPC Aggregator with failover
   - [ ] 2.2.2 Add smart batching for mempool
   - [ ] 2.2.3 Implement Prometheus metrics
-  - [ ] 2.2.4 Create Grafana dashboards
+  - [ ] 2.2.4 Create Grafana apps/apps/dash-legacy-2-legacy-2boards
   - [ ] 2.2.5 Implement alert system
 
 ## Phase 3: Security & Developer Tools
@@ -38,7 +38,7 @@
   - [ ] 3.1.1 Ensure VM interpreter sandboxing
   - [ ] 3.1.2 Implement bytecode verifier
   - [ ] 3.1.3 Verify signed receipts system
-  - [ ] 3.1.4 Add comprehensive testing suite
+  - [ ] 3.1.4 Add comprehensive testing sfrontend/uite
   - [ ] 3.1.5 Implement fuzzing harness
 
 - [ ] 3.2 Complete Developer Tools

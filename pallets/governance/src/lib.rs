@@ -124,7 +124,7 @@ pub mod pallet {
         /// The Scheduler's pallet origin type.
         type PalletsOrigin: From<frame_system::RawOrigin<Self::AccountId>>;
 
-        /// Minimum deposit required to submit a proposal.
+        /// Minimum deposit reqfrontend/uired to submit a proposal.
         #[pallet::constant]
         type ProposalDeposit: Get<BalanceOf<Self>>;
 
@@ -294,7 +294,7 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn ai_authorizations)]
     pub type AIAuthorizations<T: Config> =
-        StorageMap<_, Blake2_128Concat, u64, AuthorizationRequirements<T>, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, u64, AuthorizationReqfrontend/uirements<T>, OptionQuery>;
 
     /// Sandboxed executions
     #[pallet::storage]
@@ -505,7 +505,7 @@ pub mod pallet {
         NotAIReviewer,
         /// Simulation failed
         SimulationFailed,
-        /// Authorization requirements not met
+        /// Authorization reqfrontend/uirements not met
         AuthorizationFailed,
         /// Sandbox execution failed
         SandboxExecutionFailed,
@@ -527,9 +527,9 @@ pub mod pallet {
         pub _phantom: PhantomData<T>,
     }
 
-    #[pallet::genesis_build]
-    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
-        fn build(&self) {
+    #[pallet::genesis_bfrontend/uild]
+    impl<T: Config> Bfrontend/uildGenesisConfig for GenesisConfig<T> {
+        fn bfrontend/uild(&self) {
             // Initialize default governance config
             GovernanceConfig::<T>::put(GovernanceParams {
                 quorum: T::Quorum::get(),
@@ -785,7 +785,7 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Fast-track a proposal (requires FastTrackOrigin).
+        /// Fast-track a proposal (reqfrontend/uires FastTrackOrigin).
         #[pallet::call_index(4)]
         #[pallet::weight(T::WeightInfo::fast_track())]
         pub fn fast_track(
@@ -818,7 +818,7 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Cancel a proposal (requires CancelOrigin).
+        /// Cancel a proposal (reqfrontend/uires CancelOrigin).
         #[pallet::call_index(5)]
         #[pallet::weight(T::WeightInfo::cancel_proposal())]
         pub fn cancel_proposal(origin: OriginFor<T>, proposal_id: u32) -> DispatchResult {
@@ -998,7 +998,7 @@ pub mod pallet {
             proposal_type: AIProposalType,
             payload: BoundedVec<u8, T::MaxAIProposalPayload>,
             impact_assessment: ImpactAssessment,
-            simulation_requirements: SimulationRequirements,
+            simulation_reqfrontend/uirements: SimulationReqfrontend/uirements,
         ) -> DispatchResult {
             let proposer = T::AISubmitOrigin::ensure_origin(origin)?;
             ensure!(
@@ -1015,7 +1015,7 @@ pub mod pallet {
                 proposal_type: proposal_type.clone(),
                 payload,
                 impact_assessment,
-                simulation_requirements,
+                simulation_reqfrontend/uirements,
                 proposed_at: current_block,
                 status: AIProposalStatus::Proposed,
             };
@@ -1076,7 +1076,7 @@ pub mod pallet {
         #[pallet::call_index(11)]
         #[pallet::weight(T::WeightInfo::vote())]
         pub fn authorize_ai_proposal(origin: OriginFor<T>, proposal_id: u64) -> DispatchResult {
-            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization required
+            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization reqfrontend/uired
 
             AIProposals::<T>::try_mutate(proposal_id, |maybe_proposal| {
                 let proposal = maybe_proposal
@@ -1091,9 +1091,9 @@ pub mod pallet {
                 let config = AIConfig::<T>::get();
                 let execution_block = current_block.saturating_add(config.default_time_lock.into());
 
-                // Set up authorization requirements
-                let auth_reqs = AuthorizationRequirements {
-                    multisig_threshold: 3, // Require 3 signatures
+                // Set up authorization reqfrontend/uirements
+                let auth_reqs = AuthorizationReqfrontend/uirements {
+                    multisig_threshold: 3, // Reqfrontend/uire 3 signatures
                     time_lock_blocks: config.default_time_lock.into(),
                     reviewer_approvals: config.min_reviewer_approvals,
                 };
@@ -1115,7 +1115,7 @@ pub mod pallet {
         #[pallet::call_index(12)]
         #[pallet::weight(T::WeightInfo::submit_proposal())]
         pub fn execute_ai_proposal(origin: OriginFor<T>, proposal_id: u64) -> DispatchResult {
-            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization required
+            T::EmergencyOrigin::ensure_origin(origin)?; // High authorization reqfrontend/uired
 
             let proposal =
                 AIProposals::<T>::get(proposal_id).ok_or(Error::<T>::AIProposalNotFound)?;
@@ -1144,8 +1144,8 @@ pub mod pallet {
 
             // Create sandboxed execution
             let sandbox = SandboxedExecution {
-                gas_ceiling: proposal.simulation_requirements.gas_limit,
-                block_limit: proposal.simulation_requirements.simulation_blocks,
+                gas_ceiling: proposal.simulation_reqfrontend/uirements.gas_limit,
+                block_limit: proposal.simulation_reqfrontend/uirements.simulation_blocks,
                 rollback_checkpoint: Self::create_rollback_checkpoint(),
                 status: ExecutionStatus::Executing,
             };
@@ -1451,10 +1451,10 @@ pub mod pallet {
             let simulation_result = SimulationResult {
                 success: true, // Assume success for now
                 gas_used: proposal
-                    .simulation_requirements
+                    .simulation_reqfrontend/uirements
                     .gas_limit
                     .saturating_sub(100_000),
-                execution_time: proposal.simulation_requirements.simulation_blocks,
+                execution_time: proposal.simulation_reqfrontend/uirements.simulation_blocks,
                 state_changes: Default::default(),
                 warnings: Default::default(),
             };

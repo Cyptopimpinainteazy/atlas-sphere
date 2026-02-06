@@ -50,7 +50,7 @@ tokio = { version = "1.34", features = ["full"] }
 async-trait = "0.1"
 crossbeam = "0.8"
 parking_lot = "0.12"
-dashmap = "5.5"
+apps/apps/dash-legacy-2-legacy-2map = "5.5"
 flume = "0.11"
 rayon = "1.8"
 
@@ -79,7 +79,7 @@ prost = "0.12"
 # Chain adapters
 ethers = "2.0"
 solana-sdk = "1.17"
-web3 = "0.19"
+frontend/web3 = "0.19"
 
 # Utilities
 thiserror = "1.0"

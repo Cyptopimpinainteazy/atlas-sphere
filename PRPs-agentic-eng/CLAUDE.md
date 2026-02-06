@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides gfrontend/uidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Nature
 
-This is a **PRP (Product Requirement Prompt) Framework** repository, not a traditional software project. The core concept: **"PRP = PRD + curated codebase intelligence + agent/runbook"** - designed to enable AI agents to ship production-ready code on the first pass.
+This is a **PRP (Product Reqfrontend/uirement Prompt) Framework** repository, not a traditional software project. The core concept: **"PRP = PRD + curated codebase intelligence + agent/runbook"** - designed to enable AI agents to ship production-ready code on the first pass.
 
 ## Core Architecture
 
@@ -79,11 +79,11 @@ uv run PRPs/scripts/prp_runner.py --prp [prp-name] --output-format stream-json
 3. **Information Dense**: Use keywords and patterns from the codebase
 4. **Progressive Success**: Start simple, validate, then enhance
 
-### PRP Structure Requirements
+### PRP Structure Reqfrontend/uirements
 
 - **Goal**: Specific end state and desires
 - **Why**: Business value and user impact
-- **What**: User-visible behavior and technical requirements
+- **What**: User-visible behavior and technical reqfrontend/uirements
 - **All Needed Context**: Documentation URLs, code examples, gotchas, patterns
 - **Implementation Blueprint**: Pseudocode with critical details and task lists
 - **Validation Loop**: Executable commands for syntax, tests, integration
@@ -123,7 +123,7 @@ curl -X POST http://localhost:8000/endpoint -H "Content-Type: application/json" 
 
 ### When Executing PRPs
 
-1. **Load PRP**: Read and understand all context and requirements
+1. **Load PRP**: Read and understand all context and reqfrontend/uirements
 2. **ULTRATHINK**: Create comprehensive plan, break down into todos, use subagents, batch tool etc check prps/ai_docs/
 3. **Execute**: Implement following the blueprint
 4. **Validate**: Run each validation command, fix failures

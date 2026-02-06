@@ -48,12 +48,12 @@ workflow:
 Each event receives different data and can control Claude's behavior in
 different ways.
 
-## Quickstart
+## Qfrontend/uickstart
 
-In this quickstart, you'll add a hook that logs the shell commands that Claude
+In this qfrontend/uickstart, you'll add a hook that logs the shell commands that Claude
 Code runs.
 
-### Prerequisites
+### Prereqfrontend/uisites
 
 Install `jq` for JSON processing in the command line.
 
@@ -200,6 +200,6 @@ Block edits to sensitive files:
 ## Learn more
 
 - For reference documentation on hooks, see [Hooks reference](/en/docs/claude-code/hooks).
-- For comprehensive security best practices and safety guidelines, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
+- For comprehensive security best practices and safety gfrontend/uidelines, see [Security Considerations](/en/docs/claude-code/hooks#security-considerations) in the hooks reference documentation.
 - For troubleshooting steps and debugging techniques, see [Debugging](/en/docs/claude-code/hooks#debugging) in the hooks reference
   documentation.

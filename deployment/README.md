@@ -1,10 +1,10 @@
-# 🎯 Atlas Sphere Deployment - Complete Guide
+# 🎯 Atlas Sphere Deployment - Complete Gfrontend/uide
 
 ## 📚 Documentation Index
 
-### Quick Start
+### Qfrontend/uick Start
 - **[QUICKSTART.md](QUICKSTART.md)** - Choose your deployment path (3 options)
-- **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** - Complete in-house deployment guide
+- **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** - Complete in-house deployment gfrontend/uide
 - **[PUBLIC_RPC.md](PUBLIC_RPC.md)** - Run public RPC (dev/local/staging/testnet) safely
 
 ### Deployment Scripts
@@ -12,8 +12,8 @@
 - **[deploy-multi-server.sh](deploy-multi-server.sh)** - Multi-server deployment automation
 - **[manage-testnet.sh](manage-testnet.sh)** - Control and monitor your testnet
 
-### Build & Keys
-- **[build-and-keygen.sh](build-and-keygen.sh)** - Build binary and generate validator keys
+### Bfrontend/uild & Keys
+- **[bfrontend/uild-and-keygen.sh](bfrontend/uild-and-keygen.sh)** - Bfrontend/uild binary and generate validator keys
 - **[keys/](keys/)** - Validator keys and bootnode key (KEEP SECURE!)
 - **[chain-specs/](chain-specs/)** - Chain specification files
 
@@ -120,7 +120,7 @@ deployment/keys/
 
 ### Firewall Configuration
 
-**Required ports:**
+**Reqfrontend/uired ports:**
 - `30333`: P2P communication (ALL validators/bootnodes)
 - `9944-9947`: RPC (ONLY from trusted IPs)
 - `9615`: Prometheus metrics (OPTIONAL, trusted networks only)
@@ -220,15 +220,15 @@ top -p $(pgrep -d',' atlas-sphere-node)
 
 ## 📋 Pre-Deployment Checklist
 
-### System Requirements
+### System Reqfrontend/uirements
 - [ ] Ubuntu 22.04+ (or compatible Linux)
 - [ ] 8GB+ RAM per validator
 - [ ] 100GB+ SSD storage
 - [ ] Static IP or dynamic DNS
 - [ ] Open ports: 30333, 9944
 
-### Prerequisites
-- [ ] Binary built: `./target/release/atlas-sphere-node`
+### Prereqfrontend/uisites
+- [ ] Binary bfrontend/uilt: `./target/release/atlas-sphere-node`
 - [ ] Keys generated: `deployment/keys/*`
 - [ ] Chain spec created: `deployment/chain-specs/atlas-testnet-raw.json`
 - [ ] SSH access configured (for multi-server)
@@ -310,13 +310,13 @@ sudo journalctl -u atlas-validator-01 -f
 
 **Choose your deployment path:**
 
-1. **Quick test?** → Run dev mode: `./target/release/atlas-sphere-node --dev --tmp`
+1. **Qfrontend/uick test?** → Run dev mode: `./target/release/atlas-sphere-node --dev --tmp`
 2. **Local testnet?** → Run: `./deploy-local-testnet.sh`
 3. **Multi-server?** → Edit and run: `./deploy-multi-server.sh`
 
 **Questions? Check:**
 - [QUICKSTART.md](QUICKSTART.md) for fast paths
-- [IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md) for detailed guide
+- [IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md) for detailed gfrontend/uide
 - [manage-testnet.sh](manage-testnet.sh) for operations
 
 ---

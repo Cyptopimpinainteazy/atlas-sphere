@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { Suspense } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box } from '@chakra-frontend/frontend/ui/react';
 
 interface SceneProps {
   children: React.ReactNode;

@@ -198,6 +198,6 @@ export const STORAGE_PREFIXES = {
 export const EVM_SELECTORS = {
   /** Error(string) - standard revert with message */
   error: '0x08c379a0',
-  /** Panic(uint256) - panic code */
+  /** Panic(frontend/uint256) - panic code */
   panic: '0x4e487b71',
 } as const;

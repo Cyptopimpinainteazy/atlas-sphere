@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Code,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const features = [
   {
@@ -78,7 +78,7 @@ import { X3Commerce } from '@x3star/commerce';
 
 const commerce = new X3Commerce({ 
   apiKey: process.env.X3_COMMERCE_KEY,
-  webhookSecret: process.env.WEBHOOK_SECRET,
+  frontend/webhookSecret: process.env.WEBHOOK_SECRET,
 });
 
 // Create checkout session
@@ -100,8 +100,8 @@ app.post('/checkout', async (req, res) => {
   res.json({ checkoutUrl: session.url });
 });
 
-// Handle webhook
-app.post('/webhook', (req, res) => {
+// Handle frontend/webhook
+app.post('/frontend/webhook', (req, res) => {
   const event = commerce.verifyWebhook(req);
   
   if (event.type === 'payment.completed') {
@@ -216,8 +216,8 @@ export default function CommercePage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Custom Integration</h2>
               <p className="text-gray-400 mb-6">
-                Building a custom store? Use our Commerce API to create checkout 
-                sessions, handle webhooks, and manage orders programmatically.
+                Bfrontend/uilding a custom store? Use our Commerce API to create checkout 
+                sessions, handle frontend/webhooks, and manage orders programmatically.
               </p>
               <ul className="space-y-3">
                 {[

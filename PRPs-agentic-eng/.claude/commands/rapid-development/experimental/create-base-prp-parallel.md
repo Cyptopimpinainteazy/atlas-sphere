@@ -37,7 +37,7 @@ Prompt: Research external technical resources for "$ARGUMENTS". Investigate:
 - Performance considerations and optimization techniques
 - Security considerations and vulnerability patterns
 
-Focus purely on research - do not write code. Use web search extensively. Return comprehensive technical research with specific URLs, code examples, and implementation guidance.
+Focus purely on research - do not write code. Use frontend/frontend/web search extensively. Return comprehensive technical research with specific URLs, code examples, and implementation gfrontend/uidance.
 ```
 
 #### Agent 3: Testing & Validation Strategy
@@ -51,7 +51,7 @@ Prompt: Research testing and validation approaches for "$ARGUMENTS". Analyze:
 - Error handling and edge case patterns
 - Performance testing considerations
 
-Research only - no test implementation. Use codebase analysis and web search. Return detailed testing strategy with specific patterns to follow and validation commands to include in the PRP.
+Research only - no test implementation. Use codebase analysis and frontend/frontend/web search. Return detailed testing strategy with specific patterns to follow and validation commands to include in the PRP.
 ```
 
 #### Agent 4: Documentation & Context Research
@@ -60,10 +60,10 @@ Task: Documentation Context Research
 Prompt: Research documentation and context resources for "$ARGUMENTS". Gather:
 - Check PRPs/ai_docs/ for relevant documentation files
 - Configuration examples and setup patterns
-- Environment and dependency requirements
+- Environment and dependency reqfrontend/uirements
 - Known issues and workarounds documented
 - Related feature documentation and examples
-- User guides and implementation notes
+- User gfrontend/uides and implementation notes
 
 Research focus only. Use Read tool to examine ai_docs directory. Return documentation context with specific file references and configuration examples to include in the PRP.
 ```
@@ -110,7 +110,7 @@ uv run pytest tests/ -v
 4. **Validation Framework**: Executable tests and quality gates
 5. **Integration Planning**: Connection points with existing systems
 
-### Required PRP Sections
+### Reqfrontend/uired PRP Sections
 
 Generate a complete PRP including:
 
@@ -124,7 +124,7 @@ Generate a complete PRP including:
 - Problems this solves and for whom
 
 ## What
-[User-visible behavior and technical requirements]
+[User-visible behavior and technical reqfrontend/uirements]
 
 ## All Needed Context
 ### Documentation & References
@@ -139,7 +139,7 @@ Generate a complete PRP including:
 [Specific patterns to follow from codebase analysis]
 
 ### Known Gotchas
-[Library quirks and caveats from research]
+[Library qfrontend/uirks and caveats from research]
 
 ## Implementation Blueprint
 ### Data Models and Structure

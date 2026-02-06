@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Globe,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const upcomingEvents = [
   {
@@ -27,12 +27,12 @@ const upcomingEvents = [
     featured: true,
   },
   {
-    title: 'Building Cross-VM dApps',
+    title: 'Bfrontend/uilding Cross-VM dApps',
     type: 'Workshop',
     date: 'February 28, 2024',
     location: 'Online',
     mode: 'Virtual',
-    description: 'Hands-on workshop on building atomic cross-VM transactions',
+    description: 'Hands-on workshop on bfrontend/uilding atomic cross-VM transactions',
     attendees: 200,
     featured: false,
   },

@@ -1,6 +1,6 @@
 # Atlas Sphere Testnet v1 - Deployment Package Ready! 🚀
 
-**Status**: Day -2 Complete, Day -1 In Progress (Build Running)  
+**Status**: Day -2 Complete, Day -1 In Progress (Bfrontend/uild Running)  
 **Date**: November 8, 2025  
 **Deployment Team**: Ready to execute
 
@@ -14,9 +14,9 @@
 - ✅ `deployment/infrastructure-setup.sh` - Main setup script
 - ✅ `deployment/inventory.yaml` - Infrastructure inventory template
 - ✅ `deployment/provision-digitalocean.sh` - DigitalOcean automation
-- ✅ `deployment/provision-aws.md` - AWS EC2 guide
-- ✅ `deployment/provision-manual.md` - Manual/VPS provider guide
-- ✅ `deployment/dns-config.md` - DNS configuration guide
+- ✅ `deployment/provision-aws.md` - AWS EC2 gfrontend/uide
+- ✅ `deployment/provision-manual.md` - Manual/VPS provider gfrontend/uide
+- ✅ `deployment/dns-config.md` - DNS configuration gfrontend/uide
 - ✅ `deployment/configure-firewall.sh` - Firewall setup script
 - ✅ `~/.ssh/atlas-testnet-deploy` - SSH key generated
 
@@ -37,25 +37,25 @@
 
 ---
 
-### ⏳ Build & Key Generation (Day -1) - IN PROGRESS
+### ⏳ Bfrontend/uild & Key Generation (Day -1) - IN PROGRESS
 
 **Currently Running:**
-- 🔨 `cargo build --release` (10-30 minutes)
-- Output: `deployment/build.log`
+- 🔨 `cargo bfrontend/uild --release` (10-30 minutes)
+- Output: `deployment/bfrontend/uild.log`
 
 **Created Files:**
-- ✅ `deployment/build-and-keygen.sh` - Build and key generation script
+- ✅ `deployment/bfrontend/uild-and-keygen.sh` - Bfrontend/uild and key generation script
 
-**What Will Be Generated (after build completes):**
+**What Will Be Generated (after bfrontend/uild completes):**
 - `target/release/atlas-sphere-node` - Release binary (~200MB)
 - `deployment/chain-specs/atlas-testnet-raw.json` - Chain specification
 - `deployment/keys/validator-0X-summary.txt` - Validator keys (3-5 sets)
 - `deployment/keys/bootnode-info.txt` - Bootnode configuration
 - `deployment/keys/sudo-key.txt` - Development sudo key
 
-**What You Need to Do After Build:**
-1. Wait for `cargo build --release` to finish
-2. Run `./deployment/build-and-keygen.sh` to generate keys
+**What You Need to Do After Bfrontend/uild:**
+1. Wait for `cargo bfrontend/uild --release` to finish
+2. Run `./deployment/bfrontend/uild-and-keygen.sh` to generate keys
 3. **CRITICAL**: Backup keys immediately (encrypted!)
    ```bash
    tar czf - deployment/keys | gpg -e -r admin@atlas-sphere.io \
@@ -90,21 +90,21 @@
 
 **What You Need to Do:**
 1. Ensure infrastructure provisioned (Day -2)
-2. Ensure build complete and keys generated (Day -1)
+2. Ensure bfrontend/uild complete and keys generated (Day -1)
 3. Run: `./deployment/deploy-nodes-day1.sh`
 4. Follow prompts to enter IPs for each node
 5. Monitor logs for first blocks!
 
 ---
 
-## 🚀 Quick Start Deployment
+## 🚀 Qfrontend/uick Start Deployment
 
 ### Option 1: Automated (Recommended for DigitalOcean)
 
 ```bash
 # Day -2: Provision infrastructure
 ./deployment/infrastructure-setup.sh
-./deployment/provision-digitalocean.sh  # Or follow AWS/manual guide
+./deployment/provision-digitalocean.sh  # Or follow AWS/manual gfrontend/uide
 
 # Update inventory with actual IPs
 vim deployment/inventory.yaml
@@ -112,9 +112,9 @@ vim deployment/inventory.yaml
 # Configure DNS
 # Follow deployment/dns-config.md
 
-# Day -1: Build and generate keys (CURRENTLY RUNNING)
-# Wait for cargo build --release to finish...
-./deployment/build-and-keygen.sh
+# Day -1: Bfrontend/uild and generate keys (CURRENTLY RUNNING)
+# Wait for cargo bfrontend/uild --release to finish...
+./deployment/bfrontend/uild-and-keygen.sh
 
 # BACKUP KEYS!
 tar czf - deployment/keys | gpg -e -r your@email.com \
@@ -128,7 +128,7 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
 
 ### Option 2: Manual Step-by-Step
 
-1. **Provision VMs** (your cloud provider dashboard)
+1. **Provision VMs** (your cloud provider apps/apps/dash-legacy-2-legacy-2board)
    - 3-5 validators (4GB RAM, 2 vCPU)
    - 2+ RPC nodes (8GB RAM, 4 vCPU)
    - 1 bootnode (2GB RAM, 1 vCPU)
@@ -140,9 +140,9 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
    - Point faucet.testnet.atlas-sphere.io → Faucet server
    - Point metrics.testnet.atlas-sphere.io → Grafana server
 
-3. **Build Binary**
+3. **Bfrontend/uild Binary**
    ```bash
-   cargo build --release
+   cargo bfrontend/uild --release
    ```
 
 4. **Generate Keys**
@@ -158,12 +158,12 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
 
 5. **Generate Chain Spec**
    ```bash
-   ./target/release/atlas-sphere-node build-spec \
+   ./target/release/atlas-sphere-node bfrontend/uild-spec \
      --chain local > atlas-testnet-plain.json
    
    # Edit: name, id, bootnodes, initial authorities
    
-   ./target/release/atlas-sphere-node build-spec \
+   ./target/release/atlas-sphere-node bfrontend/uild-spec \
      --chain atlas-testnet-plain.json --raw \
      > atlas-testnet-raw.json
    ```
@@ -182,8 +182,8 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
 | Task | Status | Time Estimate | Notes |
 |------|--------|---------------|-------|
 | **Day -2: Infrastructure** | ✅ Complete | 2-4 hours | Scripts created, ready to provision |
-| **Day -1: Build & Keys** | ⏳ In Progress | 10-30 min build | `cargo build --release` running |
-| **Day 1: Deploy Nodes** | 📋 Ready | 2-3 hours | Script ready, pending build |
+| **Day -1: Bfrontend/uild & Keys** | ⏳ In Progress | 10-30 min bfrontend/uild | `cargo bfrontend/uild --release` running |
+| **Day 1: Deploy Nodes** | 📋 Ready | 2-3 hours | Script ready, pending bfrontend/uild |
 | **Day 2: RPC + Faucet** | 📝 Planned | 2-3 hours | Script to be created |
 | **Day 3: Monitoring** | 📝 Planned | 2-3 hours | Script to be created |
 | **Day 4: Testing** | 📝 Planned | 4-6 hours | Comprehensive testing |
@@ -227,9 +227,9 @@ deployment/
 ├── provision-manual.md              ✅ Created
 ├── dns-config.md                    ✅ Created
 ├── configure-firewall.sh            ✅ Created
-├── build-and-keygen.sh              ✅ Created
+├── bfrontend/uild-and-keygen.sh              ✅ Created
 ├── deploy-nodes-day1.sh             ✅ Created
-├── build.log                        ⏳ In progress
+├── bfrontend/uild.log                        ⏳ In progress
 ├── chain-specs/
 │   ├── atlas-dev-plain.json         ⏳ Will be generated
 │   ├── atlas-testnet-plain.json     ⏳ Will be generated
@@ -251,14 +251,14 @@ deployment/
 ## ⚡ Next Actions (Priority Order)
 
 ### Immediate (Now)
-1. ✅ Wait for `cargo build --release` to complete (check with: `tail -f deployment/build.log`)
+1. ✅ Wait for `cargo bfrontend/uild --release` to complete (check with: `tail -f deployment/bfrontend/uild.log`)
 2. Provision VMs using your preferred method:
    - DigitalOcean: `./deployment/provision-digitalocean.sh`
    - AWS: Follow `deployment/provision-aws.md`
    - Manual: Follow `deployment/provision-manual.md`
 
-### After Build Completes
-3. Run `./deployment/build-and-keygen.sh`
+### After Bfrontend/uild Completes
+3. Run `./deployment/bfrontend/uild-and-keygen.sh`
 4. **IMMEDIATELY backup keys** (encrypted!)
 5. Update `deployment/inventory.yaml` with actual IPs
 
@@ -272,10 +272,10 @@ deployment/
 
 ## 🆘 Troubleshooting
 
-### Build Taking Too Long
+### Bfrontend/uild Taking Too Long
 ```bash
-# Check build progress
-tail -f deployment/build.log
+# Check bfrontend/uild progress
+tail -f deployment/bfrontend/uild.log
 
 # Typical times:
 # - Fast machine (16+ cores): 5-10 min
@@ -283,7 +283,7 @@ tail -f deployment/build.log
 # - Slow machine (2 cores): 20-30 min
 ```
 
-### Build Fails
+### Bfrontend/uild Fails
 ```bash
 # Common fixes:
 # 1. Update Rust
@@ -291,7 +291,7 @@ rustup update stable
 
 # 2. Clean and retry
 cargo clean
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 ### Can't SSH to VMs
@@ -318,7 +318,7 @@ ssh atlas@VM_IP 'sudo ufw enable'
 
 **During Deployment:**
 - **Technical Issues**: Check TESTNET_DEPLOYMENT_GUIDE.md troubleshooting section
-- **Script Errors**: Review script output, check prerequisites
+- **Script Errors**: Review script output, check prereqfrontend/uisites
 - **Infrastructure**: Consult your cloud provider docs
 
 **After Launch:**
@@ -330,16 +330,16 @@ ssh atlas@VM_IP 'sudo ufw enable'
 
 ## 🎉 Ready to Deploy!
 
-All infrastructure scripts are created and ready. Build is currently running.
+All infrastructure scripts are created and ready. Bfrontend/uild is currently running.
 
 **Estimated Time to Public Launch**: 5-7 days
 
-**Next Milestone**: Complete Day -1 (build + keys) → Proceed to Day 1 (node deployment)
+**Next Milestone**: Complete Day -1 (bfrontend/uild + keys) → Proceed to Day 1 (node deployment)
 
 ---
 
 **Status**: 🟢 ON TRACK  
-**Build Progress**: Check `deployment/build.log`  
+**Bfrontend/uild Progress**: Check `deployment/bfrontend/uild.log`  
 **Last Updated**: November 8, 2025
 
 **Let's launch Atlas Sphere Testnet v1! 🚀**

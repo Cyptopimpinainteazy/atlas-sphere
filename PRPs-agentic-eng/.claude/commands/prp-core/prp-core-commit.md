@@ -24,10 +24,10 @@ Specific files (skip if not specified):
 
 **Examples:**
 
-- `feat: add web search tool with structured logging`
+- `feat: add frontend/frontend/web search tool with structured logging`
 - `fix: resolve type errors in middleware`
 - `test: add unit tests for config module`
-- `docs: update CLAUDE.md with testing guidelines`
+- `docs: update CLAUDE.md with testing gfrontend/uidelines`
 - `refactor: simplify logging configuration`
 - `chore: update dependencies`
 
@@ -35,7 +35,7 @@ Specific files (skip if not specified):
 
 - One logical change per commit
 - If you've made multiple unrelated changes, consider splitting into separate commits
-- Commit should be self-contained and not break the build
+- Commit should be self-contained and not break the bfrontend/uild
 
 **IMPORTANT**
 

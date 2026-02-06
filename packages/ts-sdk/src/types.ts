@@ -252,7 +252,7 @@ export interface ComitFailedEvent {
  */
 export type ComitFailureReason =
   | { type: 'InvalidNonce'; expected: Nonce; provided: Nonce }
-  | { type: 'InsufficientBalance'; required: Balance; available: Balance }
+  | { type: 'InsufficientBalance'; reqfrontend/uired: Balance; available: Balance }
   | { type: 'EvmExecutionFailed'; gasUsed: bigint; error: string }
   | { type: 'SvmExecutionFailed'; computeUnits: bigint; error: string }
   | { type: 'VerificationFailed'; reason: string }

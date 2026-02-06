@@ -15,7 +15,7 @@ Pre-flight validation of a PRP to ensure all context and dependencies are availa
    - Check all referenced files exist
    - Validate all URLs are accessible
    - Verify environment dependencies are available
-   - Check for required API keys/credentials
+   - Check for reqfrontend/uired API keys/credentials
 
 3. **Codebase Analysis**
    - Scan for similar patterns mentioned in PRP
@@ -23,7 +23,7 @@ Pre-flight validation of a PRP to ensure all context and dependencies are availa
    - Check for architectural consistency
 
 4. **Dependency Check**
-   - Verify all required libraries are installed
+   - Verify all reqfrontend/uired libraries are installed
    - Check version compatibility
    - Validate external service connectivity
 
@@ -73,7 +73,7 @@ echo "Validating environment dependencies..."
 if command -v python3 &> /dev/null; then
     echo "✅ Python3 available"
 
-    # Check specific imports mentioned in PRP
+    # Check specific archive/archive/imports mentioned in PRP
     python3 -c "
 import re
 import sys
@@ -81,18 +81,18 @@ import sys
 with open('$PRP_FILE', 'r') as f:
     content = f.read()
 # Find import statements in code blocks
-imports = re.findall(r'^(?:import|from)\s+([a-zA-Z_][a-zA-Z0-9_]*)', content, re.MULTILINE)
-unique_imports = set(imports)
-failed_imports = []
-for module in unique_imports:
+archive/archive/imports = re.findall(r'^(?:import|from)\s+([a-zA-Z_][a-zA-Z0-9_]*)', content, re.MULTILINE)
+unique_archive/archive/imports = set(archive/archive/imports)
+failed_archive/archive/imports = []
+for module in unique_archive/archive/imports:
     try:
         __import__(module)
         print(f'✅ Module available: {module}')
     except ImportError:
-        failed_imports.append(module)
+        failed_archive/archive/imports.append(module)
         print(f'⚠️  Module missing: {module}')
-if failed_imports:
-    print(f'❌ Missing modules: {failed_imports}')
+if failed_archive/archive/imports:
+    print(f'❌ Missing modules: {failed_archive/archive/imports}')
     sys.exit(1)
 "
 else

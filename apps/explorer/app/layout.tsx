@@ -6,12 +6,12 @@ import FloatingNeuralTerminal from '@/components/ai/FloatingNeuralTerminal';
 
 export const metadata = {
   title: 'X3 Atlas Sphere - Dual VM Layer-1 Blockchain',
-  description: 'Next-generation Layer-1 blockchain with native EVM and SVM interoperability. Build cross-chain applications with atomic execution.',
+  description: 'Next-generation Layer-1 blockchain with native EVM and SVM interoperability. Bfrontend/uild cross-chain applications with atomic execution.',
   keywords: 'blockchain, EVM, SVM, cross-chain, DeFi, Web3, smart contracts, Solana, Ethereum',
   openGraph: {
     title: 'X3 Atlas Sphere - Dual VM Layer-1 Blockchain',
     description: 'Next-generation Layer-1 blockchain with native EVM and SVM interoperability.',
-    type: 'website',
+    type: 'frontend/website',
     locale: 'en_US',
     siteName: 'X3 Atlas Sphere',
   },

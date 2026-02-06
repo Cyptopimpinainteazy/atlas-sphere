@@ -17,12 +17,12 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const devTools = [
   {
     name: 'X3 CLI',
-    description: 'Command-line interface for building, testing, and deploying X3 STAR applications',
+    description: 'Command-line interface for bfrontend/uilding, testing, and deploying X3 STAR applications',
     icon: <Terminal className="w-6 h-6" />,
     features: ['Project scaffolding', 'Local devnet', 'Contract deployment'],
     installCmd: 'npm install -g @x3star/cli',
@@ -30,7 +30,7 @@ const devTools = [
   },
   {
     name: 'Comit SDK',
-    description: 'TypeScript SDK for building cross-VM applications with type safety',
+    description: 'TypeScript SDK for bfrontend/uilding cross-VM applications with type safety',
     icon: <Code2 className="w-6 h-6" />,
     features: ['Full TypeScript support', 'Cross-VM transactions', 'Event subscriptions'],
     installCmd: 'npm install @x3star/sdk',
@@ -105,10 +105,10 @@ export default function ToolsPage() {
             </Link>
             <div className="badge badge-info mt-4 mb-4">Developer Tools</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Build Faster with X3 Tools
+              Bfrontend/uild Faster with X3 Tools
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Everything you need to build, test, and deploy applications on X3 STAR. 
+              Everything you need to bfrontend/uild, test, and deploy applications on X3 STAR. 
               From CLI tools to SDKs, we've got you covered.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -210,7 +210,7 @@ export default function ToolsPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Wrench className="w-12 h-12 text-orange-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-white mb-4">
-            Start Building Today
+            Start Bfrontend/uilding Today
           </h2>
           <p className="text-gray-400 mb-8">
             Get up and running in minutes with our comprehensive tooling.

@@ -5,14 +5,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
+    "bfrontend/uild": "tsc",
+    "bfrontend/uild:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run bfrontend/uild"
   },
   "files": [
     "dist",
@@ -34,7 +34,7 @@
     "@polkadot/types": "^14.0.1",
     "@polkadot/util": "^13.0.0",
     "@polkadot/util-crypto": "^13.0.0",
-    "@solana/web3.js": "^1.87.0",
+    "@solana/frontend/web3.js": "^1.87.0",
     "axios": "^1.6.0",
     "ethers": "^6.8.0",
     "eventemitter3": "^5.0.0"

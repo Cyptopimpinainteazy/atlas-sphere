@@ -6,11 +6,11 @@ const nextConfig = {
   // Enable experimental features
   experimental: {
     appDir: true,
-    serverComponentsExternalPackages: ["@solana/web3.js"],
+    serverComponentsExternalPackages: ["@solana/frontend/web3.js"],
   },
 
   // Webpack configuration for WASM support
-  webpack: (config, { isServer }) => {
+  frontend/webpack: (config, { isServer }) => {
     // Enable WebAssembly
     config.experiments = {
       ...config.experiments,
@@ -21,7 +21,7 @@ const nextConfig = {
     // Handle WASM files
     config.module.rules.push({
       test: /\.wasm$/,
-      type: "webassembly/async",
+      type: "frontend/webassembly/async",
     });
 
     if (!isServer) {
@@ -30,9 +30,9 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
-        crypto: require.resolve("crypto-browserify"),
-        stream: require.resolve("stream-browserify"),
-        buffer: require.resolve("buffer"),
+        crypto: reqfrontend/uire.resolve("crypto-browserify"),
+        stream: reqfrontend/uire.resolve("stream-browserify"),
+        buffer: reqfrontend/uire.resolve("buffer"),
       };
     }
 
@@ -42,7 +42,7 @@ const nextConfig = {
   // Image optimization
   images: {
     domains: ["assets.atlas-sphere.io"],
-    formats: ["image/avif", "image/webp"],
+    formats: ["image/avif", "image/frontend/webp"],
   },
 
   // Environment variables exposed to browser

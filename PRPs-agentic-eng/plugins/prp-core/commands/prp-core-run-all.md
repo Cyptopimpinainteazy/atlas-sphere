@@ -18,7 +18,7 @@ Execute the complete PRP workflow from feature idea to GitHub PR. This workflow 
 
 **Delegation Strategy**: Use Task tool to delegate to subagent.
 
-**Why subagent**: Branch creation is a simple, isolated task that doesn't require conversation context.
+**Why subagent**: Branch creation is a simple, isolated task that doesn't reqfrontend/uire conversation context.
 
 **Task Tool Invocation**:
 ```
@@ -55,7 +55,7 @@ subagent_type: "general-purpose"
 description: "Generate comprehensive feature PRP"
 prompt: "You must execute the slash command /prp-core:prp-core-create with the argument: '$ARGUMENTS'
 
-This command will guide you through creating a comprehensive Product Requirement Prompt. Follow ALL phases:
+This command will gfrontend/uide you through creating a comprehensive Product Reqfrontend/uirement Prompt. Follow ALL phases:
 
 Phase 1: Feature Understanding
 - Analyze the feature request thoroughly
@@ -90,7 +90,7 @@ subagent_type: "general-purpose"
 **Validation**:
 1. Verify PRP file exists at reported path
 2. Verify file is not empty
-3. Verify it contains required sections (STEP-BY-STEP TASKS, VALIDATION COMMANDS)
+3. Verify it contains reqfrontend/uired sections (STEP-BY-STEP TASKS, VALIDATION COMMANDS)
 
 ---
 
@@ -100,10 +100,10 @@ subagent_type: "general-purpose"
 
 **Why main agent**:
 - PRP execution is complex and long-running (10-50+ tasks)
-- Requires full conversation context and memory
+- Reqfrontend/uires full conversation context and memory
 - Needs user interaction capability for clarifications
 - Must manage state across many sequential operations
-- Benefits from conversation history and continuity
+- Benefits from conversation history and continfrontend/uity
 
 **Direct Execution**:
 
@@ -117,7 +117,7 @@ This will:
 2. Execute every task in STEP-BY-STEP TASKS sequentially
 3. Validate after each task
 4. Fix failures and re-validate before proceeding
-5. Run full validation suite on completion
+5. Run full validation sfrontend/uite on completion
 6. Move completed PRP to .claude/PRPs/features/completed/
 
 **IMPORTANT**:
@@ -229,7 +229,7 @@ The feature is now ready for review!
 If any step fails:
 1. **STOP immediately** - do not proceed to next step
 2. Report which step failed and the error message
-3. Provide actionable guidance for fixing the issue
+3. Provide actionable gfrontend/uidance for fixing the issue
 4. Do NOT attempt automatic retry without user confirmation
 
 ---
@@ -244,9 +244,9 @@ If any step fails:
 
 **Main Agent Execution (Step 3)**:
 - Complex, multi-task execution
-- Requires conversation continuity
+- Reqfrontend/uires conversation continfrontend/uity
 - Needs full context and state management
-- May require user interaction
+- May reqfrontend/uire user interaction
 - Long-running operation (10-50+ sequential tasks)
 
 This hybrid approach optimizes:

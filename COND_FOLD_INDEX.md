@@ -6,7 +6,7 @@
 
 ---
 
-## 🎯 Quick Navigation
+## 🎯 Qfrontend/uick Navigation
 
 ### For Project Managers & Decision Makers
 👉 **Start here**: [COND_FOLD_EXECUTIVE_SUMMARY.md](COND_FOLD_EXECUTIVE_SUMMARY.md)
@@ -70,8 +70,8 @@
    └─ Executive summary (for decision makers)
    └─ Technical report (for architects)
    └─ Before/after examples (for understanding)
-   └─ Quick reference (for developers)
-   └─ Complete FAQ & debugging guide
+   └─ Qfrontend/uick reference (for developers)
+   └─ Complete FAQ & debugging gfrontend/uide
 
 ✅ Clean Integration
    └─ 0 compilation errors
@@ -110,7 +110,7 @@ test passes::cond_fold::tests::fold_false_branch ... ok
 test passes::cond_fold::tests::do_not_fold_when_unknown ... ok
 ```
 
-### Full Test Suite (120/120 ✅)
+### Full Test Sfrontend/uite (120/120 ✅)
 ```bash
 cargo test -p x3-opt --lib
 test result: ok. 120 passed; 0 failed; 0 ignored
@@ -142,7 +142,7 @@ block0:
 
 ---
 
-## 🚀 Quick Start Commands
+## 🚀 Qfrontend/uick Start Commands
 
 ### Test Everything
 ```bash
@@ -150,9 +150,9 @@ cd /home/lojak/Desktop/X3-atlas-sphere
 cargo test -p x3-opt --lib
 ```
 
-### Build for Production
+### Bfrontend/uild for Production
 ```bash
-cargo build --release
+cargo bfrontend/uild --release
 ```
 
 ### Benchmark Impact
@@ -197,9 +197,9 @@ cargo run -p x3-bench --release
 |--------|-------|
 | Lines of Code | 417 |
 | Unit Tests | 3 |
-| Suite Tests | 120 |
+| Sfrontend/uite Tests | 120 |
 | Test Pass Rate | 100% |
-| Build Time | 2.10s |
+| Bfrontend/uild Time | 2.10s |
 | Compilation Errors | 0 |
 | New Warnings | 0 |
 | Determinism | ✅ Guaranteed |
@@ -211,7 +211,7 @@ cargo run -p x3-bench --release
 
 ### In Same Directory
 - [PHASE6_COMPLETE.md](PHASE6_COMPLETE.md) — Phase 6 (Register Allocator, Peephole Autogen)
-- [BUILD_COMPLETE.md](BUILD_COMPLETE.md) — Build verification
+- [BUILD_COMPLETE.md](BUILD_COMPLETE.md) — Bfrontend/uild verification
 - [PHASES_1_TO_7_COMPLETE.md](PHASES_1_TO_7_COMPLETE.md) — Overall project phases
 
 ### In Codebase
@@ -221,7 +221,7 @@ cargo run -p x3-bench --release
 
 ---
 
-## ❓ FAQ Quick Links
+## ❓ FAQ Qfrontend/uick Links
 
 **Q: Is it deterministic?**  
 A: Yes, absolutely. Uses BTreeMap and sorted iteration.  
@@ -233,11 +233,11 @@ A: Positive. Removes branches = fewer bytecode = better gas.
 
 **Q: How do I run the tests?**  
 A: `cargo test -p x3-opt --lib passes::cond_fold`  
-→ See [COND_FOLD_QUICK_REFERENCE.md#-quick-test](COND_FOLD_QUICK_REFERENCE.md#-quick-test)
+→ See [COND_FOLD_QUICK_REFERENCE.md#-qfrontend/uick-test](COND_FOLD_QUICK_REFERENCE.md#-qfrontend/uick-test)
 
 **Q: Can I disable it?**  
-A: Yes, build a custom optimizer pass list.  
-→ See [COND_FOLD_QUICK_REFERENCE.md#-quick-faq](COND_FOLD_QUICK_REFERENCE.md#-quick-faq)
+A: Yes, bfrontend/uild a custom optimizer pass list.  
+→ See [COND_FOLD_QUICK_REFERENCE.md#-qfrontend/uick-faq](COND_FOLD_QUICK_REFERENCE.md#-qfrontend/uick-faq)
 
 **Q: What about side effects?**  
 A: Handled conservatively. Calls set vars to Overdefined.  
@@ -249,7 +249,7 @@ A: Handled conservatively. Calls set vars to Overdefined.
 
 - [x] Production-grade code (417 lines, fully tested)
 - [x] Complete integration (3 passing unit tests)
-- [x] Full test suite passing (120/120)
+- [x] Full test sfrontend/uite passing (120/120)
 - [x] Zero compilation errors
 - [x] Zero new warnings
 - [x] Determinism guaranteed
@@ -257,7 +257,7 @@ A: Handled conservatively. Calls set vars to Overdefined.
 - [x] Executive summary
 - [x] Technical report
 - [x] Before/after examples
-- [x] Quick reference guide
+- [x] Qfrontend/uick reference gfrontend/uide
 - [x] FAQ and debugging tips
 - [x] Navigation index (this file)
 
@@ -290,6 +290,6 @@ A: Handled conservatively. Calls set vars to Overdefined.
 ---
 
 **Last Updated**: December 9, 2025  
-**Build Status**: ✅ Clean  
+**Bfrontend/uild Status**: ✅ Clean  
 **Test Status**: ✅ 120/120 passing  
 **Documentation**: ✅ Complete

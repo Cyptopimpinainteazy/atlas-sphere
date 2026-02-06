@@ -117,7 +117,7 @@ Claude Code supports the following environment variables to control its behavior
 | `CLAUDE_CODE_USE_VERTEX`                   | Use [Vertex](/en/docs/claude-code/google-vertex-ai)                                                                                                                |
 | `CLAUDE_CODE_SKIP_BEDROCK_AUTH`            | Skip AWS authentication for Bedrock (e.g. when using an LLM gateway)                                                                                               |
 | `CLAUDE_CODE_SKIP_VERTEX_AUTH`             | Skip Google authentication for Vertex (e.g. when using an LLM gateway)                                                                                             |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Equivalent of setting `DISABLE_AUTOUPDATER`, `DISABLE_BUG_COMMAND`, `DISABLE_ERROR_REPORTING`, and `DISABLE_TELEMETRY`                                             |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Eqfrontend/uivalent of setting `DISABLE_AUTOUPDATER`, `DISABLE_BUG_COMMAND`, `DISABLE_ERROR_REPORTING`, and `DISABLE_TELEMETRY`                                             |
 | `CLAUDE_CODE_DISABLE_TERMINAL_TITLE`       | Set to `1` to disable automatic terminal title updates based on conversation context                                                                               |
 | `DISABLE_AUTOUPDATER`                      | Set to `1` to disable automatic updates. This takes precedence over the `autoUpdates` configuration setting.                                                       |
 | `DISABLE_BUG_COMMAND`                      | Set to `1` to disable the `/bug` command                                                                                                                           |
@@ -164,7 +164,7 @@ To set a global configuration, use `claude config set -g <key> <value>`:
 
 Claude Code has access to a set of powerful tools that help it understand and modify your codebase:
 
-| Tool             | Description                                          | Permission Required |
+| Tool             | Description                                          | Permission Reqfrontend/uired |
 | :--------------- | :--------------------------------------------------- | :------------------ |
 | **Bash**         | Executes shell commands in your environment          | Yes                 |
 | **Edit**         | Makes targeted edits to specific files               | Yes                 |
@@ -178,7 +178,7 @@ Claude Code has access to a set of powerful tools that help it understand and mo
 | **Task**         | Runs a sub-agent to handle complex, multi-step tasks | No                  |
 | **TodoWrite**    | Creates and manages structured task lists            | No                  |
 | **WebFetch**     | Fetches content from a specified URL                 | Yes                 |
-| **WebSearch**    | Performs web searches with domain filtering          | Yes                 |
+| **WebSearch**    | Performs frontend/frontend/web searches with domain filtering          | Yes                 |
 | **Write**        | Creates or overwrites files                          | Yes                 |
 
 Permission rules can be configured using `/allowed-tools` or in [permission settings](/en/docs/claude-code/settings#available-settings).
@@ -186,7 +186,7 @@ Permission rules can be configured using `/allowed-tools` or in [permission sett
 ### Extending tools with hooks
 
 You can run custom commands before or after any tool executes using
-[Claude Code hooks](/en/docs/claude-code/hooks-guide).
+[Claude Code hooks](/en/docs/claude-code/hooks-gfrontend/uide).
 
 For example, you could automatically run a Python formatter after Claude
 modifies Python files, or prevent modifications to production configuration
@@ -211,7 +211,7 @@ In addition, Claude Code provides dedicated integrations for popular IDEs, which
 
 ## Features
 
-- **Quick launch**: Use `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) to open
+- **Qfrontend/uick launch**: Use `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) to open
   Claude Code directly from your editor, or click the Claude Code button in the
   UI
 - **Diff viewing**: Code changes can be displayed directly in the IDE diff
@@ -281,7 +281,7 @@ IDE integrations work with Claude Code's configuration system:
   - For VSCodium: `codium` command should be available
   - If not installed, use `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
     and search for "Shell Command: Install 'code' command in PATH" (or the
-    equivalent for your IDE)
+    eqfrontend/uivalent for your IDE)
 - Check that VS Code has permission to install extensions
 
 ### JetBrains plugin not working
@@ -293,7 +293,7 @@ IDE integrations work with Claude Code's configuration system:
   installed in the remote host and not locally on the client
 
 For additional help, refer to our
-[troubleshooting guide](/en/docs/claude-code/troubleshooting).
+[troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting).
 
 # Add Claude Code to your IDE
 
@@ -308,7 +308,7 @@ In addition, Claude Code provides dedicated integrations for popular IDEs, which
 
 ## Features
 
-- **Quick launch**: Use `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) to open
+- **Qfrontend/uick launch**: Use `Cmd+Esc` (Mac) or `Ctrl+Esc` (Windows/Linux) to open
   Claude Code directly from your editor, or click the Claude Code button in the
   UI
 - **Diff viewing**: Code changes can be displayed directly in the IDE diff
@@ -378,7 +378,7 @@ IDE integrations work with Claude Code's configuration system:
   - For VSCodium: `codium` command should be available
   - If not installed, use `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
     and search for "Shell Command: Install 'code' command in PATH" (or the
-    equivalent for your IDE)
+    eqfrontend/uivalent for your IDE)
 - Check that VS Code has permission to install extensions
 
 ### JetBrains plugin not working
@@ -390,13 +390,13 @@ IDE integrations work with Claude Code's configuration system:
   installed in the remote host and not locally on the client
 
 For additional help, refer to our
-[troubleshooting guide](/en/docs/claude-code/troubleshooting).
+[troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting).
 
 # Manage Claude's memory
 
 > Learn how to manage Claude Code's memory across sessions with different memory locations and best practices.
 
-Claude Code can remember your preferences across sessions, like style guidelines and common commands in your workflow.
+Claude Code can remember your preferences across sessions, like style gfrontend/uidelines and common commands in your workflow.
 
 ## Determine memory type
 
@@ -410,9 +410,9 @@ Claude Code offers three memory locations, each serving a different purpose:
 
 All memory files are automatically loaded into Claude Code's context when launched.
 
-## CLAUDE.md imports
+## CLAUDE.md archive/archive/imports
 
-CLAUDE.md files can import additional files using `@path/to/import` syntax. The following example imports 3 files:
+CLAUDE.md files can import additional files using `@path/to/import` syntax. The following example archive/archive/imports 3 files:
 
 ```
 See @README for project overview and @package.json for available npm commands for this project.
@@ -421,14 +421,14 @@ See @README for project overview and @package.json for available npm commands fo
 - git workflow @docs/git-instructions.md
 ```
 
-Both relative and absolute paths are allowed. In particular, importing files in user's home dir is a convenient way for your team members to provide individual instructions that are not checked into the repository. Previously CLAUDE.local.md served a similar purpose, but is now deprecated in favor of imports since they work better across multiple git worktrees.
+Both relative and absolute paths are allowed. In particular, importing files in user's home dir is a convenient way for your team members to provide individual instructions that are not checked into the repository. Previously CLAUDE.local.md served a similar purpose, but is now deprecated in favor of archive/archive/imports since they work better across multiple git worktrees.
 
 ```
 # Individual Preferences
 - @~/.claude/my-project-instructions.md
 ```
 
-To avoid potential collisions, imports are not evaluated inside markdown code spans and code blocks.
+To avoid potential collisions, archive/archive/imports are not evaluated inside markdown code spans and code blocks.
 
 ```
 This code span will not be treated as an import: `@anthropic-ai/claude-code`
@@ -442,7 +442,7 @@ Claude Code reads memories recursively: starting in the cwd, Claude Code recurse
 
 Claude will also discover CLAUDE.md nested in subtrees under your current working directory. Instead of loading them at launch, they are only included when Claude reads files in those subtrees.
 
-## Quickly add memories with the `#` shortcut
+## Qfrontend/uickly add memories with the `#` shortcut
 
 The fastest way to add a memory is to start your input with the `#` character:
 
@@ -469,7 +469,7 @@ Bootstrap a CLAUDE.md for your codebase with the following command:
 <Tip>
   Tips:
 
-- Include frequently used commands (build, test, lint) to avoid repeated searches
+- Include frequently used commands (bfrontend/uild, test, lint) to avoid repeated searches
 - Document code style preferences and naming conventions
 - Add important architectural patterns specific to your project
 - CLAUDE.md memories can be used for both instructions shared with your team and for your individual preferences.

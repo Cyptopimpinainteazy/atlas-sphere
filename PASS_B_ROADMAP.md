@@ -173,7 +173,7 @@ Redundancy:
 
 ### Phase 2: Anticipability Analysis (1 hour)
 - [ ] `compute_anticipability()` function
-  - [ ] Build expression set for each block
+  - [ ] Bfrontend/uild expression set for each block
   - [ ] Bottom-up traversal (reverse post-order)
   - [ ] Meet-operator for lattice merge
   - [ ] Iterate until fixpoint
@@ -209,13 +209,13 @@ Redundancy:
 
 ### Phase 6: Integration & Testing (1 hour)
 - [ ] Add to optimizer pipeline
-- [ ] Run full test suite (should still pass 79+ tests from Pass A)
+- [ ] Run full test sfrontend/uite (should still pass 79+ tests from Pass A)
 - [ ] Benchmark impact measurement
 - [ ] Documentation & examples
 
 ---
 
-## 🧪 Test Suite Design
+## 🧪 Test Sfrontend/uite Design
 
 ### Basic Correctness (5 tests)
 1. **test_simple_redundancy_fold**
@@ -271,7 +271,7 @@ Redundancy:
 
 5. **test_preserve_critical_edges**
    ```rust
-   // Don't hoist across critical edges (would require edge splitting)
+   // Don't hoist across critical edges (would reqfrontend/uire edge splitting)
    // PRE correctly identifies as non-movable
    ```
 
@@ -335,7 +335,7 @@ Redundancy:
 Hour 0-1:   Data structures + anticipability analysis
 Hour 1-2:   Availability analysis + phi node creation
 Hour 2-3:   Redundancy detection + IR transformation
-Hour 3-4:   Integration + basic test suite
+Hour 3-4:   Integration + basic test sfrontend/uite
 Hour 4-5:   Edge case tests + benchmarking
 Hour 5-6:   Documentation + final validation
 ```
@@ -383,11 +383,11 @@ PRE is complete when:
 1. ✅ All 11+ tests pass
 2. ✅ No compilation errors or warnings (pre-existing allowed)
 3. ✅ Integration with optimizer pipeline verified
-4. ✅ 5-15% instruction reduction on benchmark suite
+4. ✅ 5-15% instruction reduction on benchmark sfrontend/uite
 5. ✅ Documentation complete with examples
 6. ✅ Determinism verified (BTreeSet/BTreeMap)
 7. ✅ Zero unsafe code
-8. ✅ Compilation time < 15s for debug build
+8. ✅ Compilation time < 15s for debug bfrontend/uild
 
 ---
 
@@ -405,7 +405,7 @@ Once PRE is complete:
 ## 📝 Status
 
 **Ready to Begin?** ✅ YES
-- All prerequisites completed
+- All prereqfrontend/uisites completed
 - Test framework in place
 - Pipeline architecture clear
 - Documentation template prepared
@@ -416,7 +416,7 @@ Once PRE is complete:
 
 ---
 
-**Let's build the hinge point!** 🚀
+**Let's bfrontend/uild the hinge point!** 🚀
 
 Generated: December 9, 2025  
 Status: Ready for Implementation  

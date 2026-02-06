@@ -14,12 +14,12 @@ class TestSvmClient:
         svm = SvmClient(mock_client)
         assert svm._client is mock_client
     
-    def test_build_instruction(self):
-        """Test building an instruction."""
+    def test_bfrontend/uild_instruction(self):
+        """Test bfrontend/uilding an instruction."""
         mock_client = Mock()
         svm = SvmClient(mock_client)
         
-        instruction = svm.build_instruction(
+        instruction = svm.bfrontend/uild_instruction(
             program_id=bytes(32),
             accounts=[],
             data=b"\x01\x02\x03",
@@ -29,12 +29,12 @@ class TestSvmClient:
         assert instruction.program_id == bytes(32)
         assert instruction.data == b"\x01\x02\x03"
     
-    def test_build_transfer(self):
-        """Test building a transfer instruction."""
+    def test_bfrontend/uild_transfer(self):
+        """Test bfrontend/uilding a transfer instruction."""
         mock_client = Mock()
         svm = SvmClient(mock_client)
         
-        instruction = svm.build_transfer(
+        instruction = svm.bfrontend/uild_transfer(
             from_pubkey=bytes(32),
             to_pubkey=bytes(32),
             lamports=1_000_000,

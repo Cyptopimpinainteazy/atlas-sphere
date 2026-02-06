@@ -1,10 +1,10 @@
-# WASM Runtime Build Issue - RESOLVED ✅
+# WASM Runtime Bfrontend/uild Issue - RESOLVED ✅
 
 ## Problem Summary
-The runtime WASM build was failing due to a Substrate SDK dependency issue where `sp-wasm-interface` → `wasmtime` → `wasmtime-runtime` → `memfd` → `rustix` → `errno`, and the `errno` crate explicitly doesn't support WASM targets.
+The runtime WASM bfrontend/uild was failing due to a Substrate SDK dependency issue where `sp-wasm-interface` → `wasmtime` → `wasmtime-runtime` → `memfd` → `rustix` → `errno`, and the `errno` crate explicitly doesn't support WASM targets.
 
 ## Root Cause
-Substrate v1.0.0's `sp-runtime-interface` includes `sp-wasm-interface` which depends on `wasmtime` even for WASM target builds. The `wasmtime` dependency chain eventually pulls in `errno` v0.3.14, which has:
+Substrate v1.0.0's `sp-runtime-interface` includes `sp-wasm-interface` which depends on `wasmtime` even for WASM target bfrontend/uilds. The `wasmtime` dependency chain eventually pulls in `errno` v0.3.14, which has:
 ```rust
 compile_error!("The target OS is \"unknown\" or \"none\", so it's unsupported by the errno crate.");
 ```
@@ -28,7 +28,7 @@ cargo update -p tempfile:3.23.0 --precise 3.8.1
 ```
 
 ### 2. Implemented SKIP_WASM_BUILD Workaround
-**Modified `/home/lojak/Desktop/atlas-sphere/runtime/build.rs`:**
+**Modified `/home/lojak/Desktop/atlas-sphere/runtime/bfrontend/uild.rs`:**
 ```rust
 fn main() {
     use std::env;
@@ -44,13 +44,13 @@ fn main() {
         return;
     }
     
-    substrate_wasm_builder::WasmBuilder::new()
+    substrate_wasm_bfrontend/uilder::WasmBfrontend/uilder::new()
         .with_current_project()
         .export_heap_base()
         .import_memory()
         .enable_feature("disable-runtime-api")
         .set_file_name("atlas_sphere_runtime.wasm")
-        .build();
+        .bfrontend/uild();
 }
 ```
 
@@ -61,16 +61,16 @@ disable-runtime-api = []
 
 ## Current Status: WORKING ✅
 
-### Build Command
+### Bfrontend/uild Command
 ```bash
-SKIP_WASM_BUILD=1 cargo build --release
+SKIP_WASM_BUILD=1 cargo bfrontend/uild --release
 ```
 
 ### Binary Details
 - **Size**: 52MB
 - **Location**: `target/release/atlas-sphere-node`
 - **Type**: ELF 64-bit LSB pie executable
-- **Build Time**: ~35 seconds (incremental)
+- **Bfrontend/uild Time**: ~35 seconds (incremental)
 
 ## Testnet Deployment Impact
 
@@ -85,7 +85,7 @@ SKIP_WASM_BUILD=1 cargo build --release
 
 ### ⚠️ Limitation
 - **No Runtime Upgrades**: The WASM runtime blob is `None`, so forkless runtime upgrades via `set_code` extrinsic are not possible
-- **Genesis-Only Runtime**: The runtime is compiled into the node binary, requiring full node upgrades for runtime changes
+- **Genesis-Only Runtime**: The runtime is compiled into the node binary, reqfrontend/uiring full node upgrades for runtime changes
 
 ### Impact on Testnet Launch
 **MINIMAL** - For initial testnet launch (Days -2 through 5):
@@ -100,7 +100,7 @@ SKIP_WASM_BUILD=1 cargo build --release
 
 ### Option A: Wait for Substrate SDK Fix
 Monitor these upstream issues:
-- Substrate GitHub issues for WASM build problems
+- Substrate GitHub issues for WASM bfrontend/uild problems
 - Polkadot SDK releases (v1.1.0, v1.2.0, etc.)
 - When fixed upstream, update dependencies
 
@@ -114,14 +114,14 @@ Create custom fork that:
 When stable:
 - Migrate to newer Polkadot SDK
 - Check if issue is resolved
-- Test WASM build without SKIP_WASM_BUILD
+- Test WASM bfrontend/uild without SKIP_WASM_BUILD
 
 ## Testing Commands
 
 ### Local Dev Mode (with SKIP_WASM_BUILD)
 ```bash
-# Build
-SKIP_WASM_BUILD=1 cargo build --release
+# Bfrontend/uild
+SKIP_WASM_BUILD=1 cargo bfrontend/uild --release
 
 # Run dev node (single validator, local testnet)
 ./target/release/atlas-sphere-node --dev --tmp
@@ -129,8 +129,8 @@ SKIP_WASM_BUILD=1 cargo build --release
 
 ### Multi-Node Local Test (Genesis Chain)
 ```bash
-# Build
-SKIP_WASM_BUILD=1 cargo build --release
+# Bfrontend/uild
+SKIP_WASM_BUILD=1 cargo bfrontend/uild --release
 
 # Validator 1
 ./target/release/atlas-sphere-node \
@@ -150,7 +150,7 @@ SKIP_WASM_BUILD=1 cargo build --release
 
 ### Production Deployment
 ```bash
-# Use existing binaries built with SKIP_WASM_BUILD=1
+# Use existing binaries bfrontend/uilt with SKIP_WASM_BUILD=1
 # Follow deployment/deploy-nodes-day1.sh script
 # No changes needed - script will work as-is
 ```

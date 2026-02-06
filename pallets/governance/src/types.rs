@@ -179,13 +179,13 @@ pub struct VoteLock<Balance, BlockNumber> {
 pub struct GovernanceParams<Balance: Default, BlockNumber: Default> {
     /// Minimum percentage of issuance that must vote.
     pub quorum: Percent,
-    /// Percentage of votes required for approval.
+    /// Percentage of votes reqfrontend/uired for approval.
     pub approval_threshold: Percent,
     /// Duration of voting period in blocks.
     pub voting_period: BlockNumber,
     /// Delay between approval and enactment.
     pub enactment_period: BlockNumber,
-    /// Deposit required to submit proposal.
+    /// Deposit reqfrontend/uired to submit proposal.
     pub proposal_deposit: Balance,
 }
 
@@ -242,8 +242,8 @@ pub struct AIProposal<T: GovernanceConfig> {
     pub payload: BoundedVec<u8, <T as GovernanceConfig>::MaxAIProposalPayload>,
     /// Expected impact assessment
     pub impact_assessment: ImpactAssessment,
-    /// Simulation requirements
-    pub simulation_requirements: SimulationRequirements,
+    /// Simulation reqfrontend/uirements
+    pub simulation_reqfrontend/uirements: SimulationReqfrontend/uirements,
     /// Proposed at block
     pub proposed_at: BlockNumberFor<T>,
     /// Status
@@ -291,16 +291,16 @@ pub enum Subsystem {
     Storage,
 }
 
-/// Simulation requirements for AI proposals
+/// Simulation reqfrontend/uirements for AI proposals
 #[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
-pub struct SimulationRequirements {
-    /// Required simulation duration (blocks)
+pub struct SimulationReqfrontend/uirements {
+    /// Reqfrontend/uired simulation duration (blocks)
     pub simulation_blocks: u32,
     /// Gas limit for simulation
     pub gas_limit: u64,
-    /// Required success rate (0-100)
+    /// Reqfrontend/uired success rate (0-100)
     pub success_rate_threshold: u8,
-    /// Deterministic test requirements
+    /// Deterministic test reqfrontend/uirements
     pub deterministic_tests: bool,
 }
 
@@ -344,15 +344,15 @@ pub struct StateChange {
     pub new_value: BoundedVec<u8, ConstU32<1024>>,
 }
 
-/// Authorization requirements for AI proposals
+/// Authorization reqfrontend/uirements for AI proposals
 #[derive(Clone, Encode, Decode, TypeInfo, MaxEncodedLen, Debug, PartialEq, Eq)]
 #[scale_info(skip_type_params(T))]
-pub struct AuthorizationRequirements<T: GovernanceConfig> {
-    /// Required multisig approvals
+pub struct AuthorizationReqfrontend/uirements<T: GovernanceConfig> {
+    /// Reqfrontend/uired multisig approvals
     pub multisig_threshold: u32,
     /// Time lock duration (blocks)
     pub time_lock_blocks: BlockNumberFor<T>,
-    /// Required reviewer approvals
+    /// Reqfrontend/uired reviewer approvals
     pub reviewer_approvals: u32,
 }
 

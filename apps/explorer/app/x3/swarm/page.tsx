@@ -290,7 +290,7 @@ export default function SwarmDashboard() {
               </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Qfrontend/uick Stats Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               {/* Recent Activity */}
               <div className="bg-black/40 rounded-2xl border border-gray-800/50 p-6">
@@ -330,10 +330,10 @@ export default function SwarmDashboard() {
                 </div>
               </div>
 
-              {/* Quick Links */}
+              {/* Qfrontend/uick Links */}
               <div className="bg-black/40 rounded-2xl border border-gray-800/50 p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <span>🚀</span> Quick Actions
+                  <span>🚀</span> Qfrontend/uick Actions
                 </h3>
                 <div className="space-y-3">
                   <Link href="/x3/swarm/predictions" className="block p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg hover:bg-yellow-500/20 transition">

@@ -13,7 +13,7 @@
 - [ ] Analyze root-level configuration files (Cargo.toml, package.json)
 - [ ] Map main directory structure and organization
 - [ ] Identify primary language and framework
-- [ ] Document build/run commands
+- [ ] Document bfrontend/uild/run commands
 
 ### Phase 2: Architecture Analysis  
 - [ ] Examine main applications (wallet, cli, explorer, etc.)
@@ -35,7 +35,7 @@
 
 ### Phase 5: Documentation & Standards
 - [ ] Locate architecture and design documentation
-- [ ] Extract coding standards and guidelines
+- [ ] Extract coding standards and gfrontend/uidelines
 - [ ] Document best practices and anti-patterns
 - [ ] Map external library integration patterns
 

@@ -43,7 +43,7 @@ Paste in the original story shared by the user below:
 
 - {VERB/KEYWORD}: {Specific implementation detail}
 - {PATTERN}: {Existing pattern to follow from codebase}
-- {IMPORTS}: {Required imports or dependencies}
+- {IMPORTS}: {Reqfrontend/uired archive/archive/imports or dependencies}
 - {GOTCHA}: {Known issues or constraints to avoid}
 - **VALIDATE**: `{executable validation command}`
 
@@ -100,7 +100,7 @@ ruff format src/
 uv run pytest src/services/tests/test_{domain}_service.py -v
 uv run pytest src/tools/tests/test_{action}_{resource}.py -v
 
-# Full test suite for affected areas
+# Full test sfrontend/uite for affected areas
 uv run pytest src/services/tests/ -v
 uv run pytest src/tools/tests/ -v
 
@@ -149,11 +149,11 @@ For example:
 ```bash
 # MCP Server Validation Examples:
 
-# Playwright MCP (for web interfaces)
+# Playwright MCP (for frontend/frontend/web interfaces)
 playwright-mcp --url http://localhost:8000 --test-user-journey
 
 # Docker MCP (for containerized services)
-docker-mcp --build --test --cleanup
+docker-mcp --bfrontend/uild --test --cleanup
 
 # Database MCP (for data operations)
 database-mcp --validate-schema --test-queries --check-performance
@@ -165,7 +165,7 @@ database-mcp --validate-schema --test-queries --check-performance
 
 - [ ] All tasks completed
 - [ ] Each task validation passed
-- [ ] Full test suite passes
+- [ ] Full test sfrontend/uite passes
 - [ ] No linting errors
 - [ ] All available validation gates passed
 - [ ] Story acceptance criteria met

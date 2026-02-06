@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - Quick Start Guide
+# Atlas Sphere Testnet v1 - Qfrontend/uick Start Gfrontend/uide
 
 **⚡ Get started with Atlas Sphere Testnet in 5 minutes!**
 
@@ -202,14 +202,14 @@ chmod +x atlas-sphere-node-linux-amd64
   --rpc-port 9944
 ```
 
-### Option 2: Build from Source
+### Option 2: Bfrontend/uild from Source
 ```bash
 # Clone repository
 git clone https://github.com/atlas-sphere/atlas-sphere-node.git
 cd atlas-sphere-node
 
-# Build release
-cargo build --release
+# Bfrontend/uild release
+cargo bfrontend/uild --release
 
 # Run testnet sync
 ./target/release/atlas-sphere-node \
@@ -285,7 +285,7 @@ cargo build --release
 
 ## 📖 Additional Resources
 
-- **Full Deployment Guide**: `TESTNET_DEPLOYMENT_GUIDE.md`
+- **Full Deployment Gfrontend/uide**: `TESTNET_DEPLOYMENT_GUIDE.md`
 - **Technical Architecture**: `docs/ARCHITECTURE.md`
 - **API Documentation**: `README.md` (sections 10-13)
 - **Testnet Announcement**: `TESTNET_ANNOUNCEMENT.md`
@@ -300,6 +300,6 @@ cargo build --release
 4. ✅ Run a local sync node
 5. ✅ Join Discord and share feedback
 6. ✅ Star the GitHub repo
-7. ✅ Build an app on Atlas Sphere!
+7. ✅ Bfrontend/uild an app on Atlas Sphere!
 
-**Happy Building! 🎉**
+**Happy Bfrontend/uilding! 🎉**

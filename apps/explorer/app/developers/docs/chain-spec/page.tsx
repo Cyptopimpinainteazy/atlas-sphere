@@ -11,13 +11,13 @@ export default function ChainSpecPage() {
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Chain specifications define the genesis state and network parameters for X3 Atlas Sphere.
-        Learn how to use built-in specs or create custom ones.
+        Learn how to use bfrontend/uilt-in specs or create custom ones.
       </p>
 
-      <h2>Built-in Chain Specs</h2>
+      <h2>Bfrontend/uilt-in Chain Specs</h2>
       <CodeBlock language="bash">
 {`# List available chain specs
-./atlas-sphere-node build-spec --list
+./atlas-sphere-node bfrontend/uild-spec --list
 
 # Available specs:
 # - dev       : Single-node development
@@ -28,7 +28,7 @@ export default function ChainSpecPage() {
 
       <h2>Using a Chain Spec</h2>
       <CodeBlock language="bash">
-{`# Start with built-in spec
+{`# Start with bfrontend/uilt-in spec
 ./atlas-sphere-node --chain testnet
 
 # Start with custom spec file
@@ -41,13 +41,13 @@ export default function ChainSpecPage() {
       <h2>Generating Chain Specs</h2>
       <CodeBlock language="bash">
 {`# Generate plain spec (readable JSON)
-./atlas-sphere-node build-spec \\
+./atlas-sphere-node bfrontend/uild-spec \\
   --chain testnet \\
   --disable-default-bootnode \\
   > custom-spec.json
 
 # Convert to raw spec (production)
-./atlas-sphere-node build-spec \\
+./atlas-sphere-node bfrontend/uild-spec \\
   --chain custom-spec.json \\
   --raw \\
   > custom-spec-raw.json`}
@@ -166,7 +166,7 @@ export default function ChainSpecPage() {
       <h2>Local Testnet Setup</h2>
       <CodeBlock language="bash">
 {`# Generate spec for local 3-node testnet
-./atlas-sphere-node build-spec \\
+./atlas-sphere-node bfrontend/uild-spec \\
   --chain local \\
   --disable-default-bootnode \\
   > local-testnet.json
@@ -174,7 +174,7 @@ export default function ChainSpecPage() {
 # Edit local-testnet.json to add your validators
 
 # Convert to raw
-./atlas-sphere-node build-spec \\
+./atlas-sphere-node bfrontend/uild-spec \\
   --chain local-testnet.json \\
   --raw \\
   > local-testnet-raw.json

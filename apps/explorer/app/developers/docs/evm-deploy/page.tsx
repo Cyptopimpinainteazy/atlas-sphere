@@ -21,8 +21,8 @@ export default function EvmDeployPage() {
       <ul>
         <li><strong>Hardhat</strong> - Recommended for most projects</li>
         <li><strong>Foundry</strong> - For Rust-preferring developers</li>
-        <li><strong>Remix IDE</strong> - Quick deployments via browser</li>
-        <li><strong>Direct RPC</strong> - Using ethers.js or web3.js</li>
+        <li><strong>Remix IDE</strong> - Qfrontend/uick deployments via browser</li>
+        <li><strong>Direct RPC</strong> - Using ethers.js or frontend/web3.js</li>
       </ul>
 
       <h2>Network Configuration</h2>
@@ -60,7 +60,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract AtlasToken is ERC20 {
-    constructor(uint256 initialSupply) ERC20("Atlas Token", "ATL") {
+    constructor(frontend/uint256 initialSupply) ERC20("Atlas Token", "ATL") {
         _mint(msg.sender, initialSupply);
     }
 }`}
@@ -131,7 +131,7 @@ async function verify(address: string, constructorArgs: any[]) {
 
       <Callout type="info" title="Cross-VM Contracts">
         For contracts that interact with SVM programs via Comits, see the 
-        <a href="/developers/docs/creating-comits" className="text-orange-400 hover:text-orange-300 ml-1">Creating Comits</a> guide.
+        <a href="/developers/docs/creating-comits" className="text-orange-400 hover:text-orange-300 ml-1">Creating Comits</a> gfrontend/uide.
       </Callout>
     </DocLayout>
   );

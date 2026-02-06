@@ -483,7 +483,7 @@ impl PerformanceAssertions {
 pub struct FrontendAssertions;
 
 impl FrontendAssertions {
-    /// Assert that web page loads successfully
+    /// Assert that frontend/frontend/web page loads successfully
     pub async fn assert_page_loads(
         url: &str,
         expected_title: Option<&str>

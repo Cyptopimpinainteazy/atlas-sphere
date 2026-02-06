@@ -57,7 +57,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ```
 
-This command installs the appropriate build of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
+This command installs the appropriate bfrontend/uild of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
 
 <Tip>
   Make sure that you have the installation directory in your system PATH.
@@ -71,7 +71,7 @@ Alternatively, if Claude Code will run, you can migrate to a local installation:
 claude migrate-installer
 ```
 
-This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is required for future updates.
+This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is reqfrontend/uired for future updates.
 
 After migration, restart your shell, and then verify your installation:
 
@@ -125,7 +125,7 @@ Claude Code is designed to work with most development environments, but may cons
 
 1. Use `/compact` regularly to reduce context size
 2. Close and restart Claude Code between major tasks
-3. Consider adding large build directories to your `.gitignore` file
+3. Consider adding large bfrontend/uild directories to your `.gitignore` file
 
 ### Command hangs or freezes
 
@@ -153,7 +153,7 @@ If you're experiencing issues not covered here:
 1. Use the `/bug` command within Claude Code to report problems directly to Anthropic
 2. Check the [GitHub repository](https://github.com/anthropics/claude-code) for known issues
 3. Run `/doctor` to check the health of your Claude Code installation
-4. Ask Claude directly about its capabilities and features - Claude has built-in access to its documentation
+4. Ask Claude directly about its capabilities and features - Claude has bfrontend/uilt-in access to its documentation
 
 # Troubleshooting
 
@@ -214,7 +214,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ```
 
-This command installs the appropriate build of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
+This command installs the appropriate bfrontend/uild of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
 
 <Tip>
   Make sure that you have the installation directory in your system PATH.
@@ -228,7 +228,7 @@ Alternatively, if Claude Code will run, you can migrate to a local installation:
 claude migrate-installer
 ```
 
-This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is required for future updates.
+This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is reqfrontend/uired for future updates.
 
 After migration, restart your shell, and then verify your installation:
 
@@ -282,7 +282,7 @@ Claude Code is designed to work with most development environments, but may cons
 
 1. Use `/compact` regularly to reduce context size
 2. Close and restart Claude Code between major tasks
-3. Consider adding large build directories to your `.gitignore` file
+3. Consider adding large bfrontend/uild directories to your `.gitignore` file
 
 ### Command hangs or freezes
 
@@ -310,7 +310,7 @@ If you're experiencing issues not covered here:
 1. Use the `/bug` command within Claude Code to report problems directly to Anthropic
 2. Check the [GitHub repository](https://github.com/anthropics/claude-code) for known issues
 3. Run `/doctor` to check the health of your Claude Code installation
-4. Ask Claude directly about its capabilities and features - Claude has built-in access to its documentation
+4. Ask Claude directly about its capabilities and features - Claude has bfrontend/uilt-in access to its documentation
 
 # Troubleshooting
 
@@ -371,7 +371,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ```
 
-This command installs the appropriate build of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
+This command installs the appropriate bfrontend/uild of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
 
 <Tip>
   Make sure that you have the installation directory in your system PATH.
@@ -385,7 +385,7 @@ Alternatively, if Claude Code will run, you can migrate to a local installation:
 claude migrate-installer
 ```
 
-This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is required for future updates.
+This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is reqfrontend/uired for future updates.
 
 After migration, restart your shell, and then verify your installation:
 
@@ -439,7 +439,7 @@ Claude Code is designed to work with most development environments, but may cons
 
 1. Use `/compact` regularly to reduce context size
 2. Close and restart Claude Code between major tasks
-3. Consider adding large build directories to your `.gitignore` file
+3. Consider adding large bfrontend/uild directories to your `.gitignore` file
 
 ### Command hangs or freezes
 
@@ -467,7 +467,7 @@ If you're experiencing issues not covered here:
 1. Use the `/bug` command within Claude Code to report problems directly to Anthropic
 2. Check the [GitHub repository](https://github.com/anthropics/claude-code) for known issues
 3. Run `/doctor` to check the health of your Claude Code installation
-4. Ask Claude directly about its capabilities and features - Claude has built-in access to its documentation
+4. Ask Claude directly about its capabilities and features - Claude has bfrontend/uilt-in access to its documentation
 
 # Troubleshooting
 
@@ -528,7 +528,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ```
 
-This command installs the appropriate build of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
+This command installs the appropriate bfrontend/uild of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
 
 <Tip>
   Make sure that you have the installation directory in your system PATH.
@@ -542,7 +542,7 @@ Alternatively, if Claude Code will run, you can migrate to a local installation:
 claude migrate-installer
 ```
 
-This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is required for future updates.
+This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is reqfrontend/uired for future updates.
 
 After migration, restart your shell, and then verify your installation:
 
@@ -596,7 +596,7 @@ Claude Code is designed to work with most development environments, but may cons
 
 1. Use `/compact` regularly to reduce context size
 2. Close and restart Claude Code between major tasks
-3. Consider adding large build directories to your `.gitignore` file
+3. Consider adding large bfrontend/uild directories to your `.gitignore` file
 
 ### Command hangs or freezes
 
@@ -624,7 +624,7 @@ If you're experiencing issues not covered here:
 1. Use the `/bug` command within Claude Code to report problems directly to Anthropic
 2. Check the [GitHub repository](https://github.com/anthropics/claude-code) for known issues
 3. Run `/doctor` to check the health of your Claude Code installation
-4. Ask Claude directly about its capabilities and features - Claude has built-in access to its documentation
+4. Ask Claude directly about its capabilities and features - Claude has bfrontend/uilt-in access to its documentation
 
 # LLM gateway configuration
 
@@ -641,10 +641,10 @@ LLM gateways provide a centralized proxy layer between Claude Code and model pro
 ## LiteLLM configuration
 
 <Note>
-  LiteLLM is a third-party proxy service. Anthropic doesn't endorse, maintain, or audit LiteLLM's security or functionality. This guide is provided for informational purposes and may become outdated. Use at your own discretion.
+  LiteLLM is a third-party proxy service. Anthropic doesn't endorse, maintain, or audit LiteLLM's security or functionality. This gfrontend/uide is provided for informational purposes and may become outdated. Use at your own discretion.
 </Note>
 
-### Prerequisites
+### Prereqfrontend/uisites
 
 - Claude Code updated to the latest version
 - LiteLLM Proxy Server deployed and accessible
@@ -778,13 +778,13 @@ For more detailed information, refer to the [LiteLLM documentation](https://docs
 
 Claude Code supports OpenTelemetry (OTel) metrics and events for monitoring and observability.
 
-All metrics are time series data exported via OpenTelemetry's standard metrics protocol, and events are exported via OpenTelemetry's logs/events protocol. It is the user's responsibility to ensure their metrics and logs backends are properly configured and that the aggregation granularity meets their monitoring requirements.
+All metrics are time series data exported via OpenTelemetry's standard metrics protocol, and events are exported via OpenTelemetry's logs/events protocol. It is the user's responsibility to ensure their metrics and logs backends are properly configured and that the aggregation granularity meets their monitoring reqfrontend/uirements.
 
 <Note>
   OpenTelemetry support is currently in beta and details are subject to change.
 </Note>
 
-## Quick Start
+## Qfrontend/uick Start
 
 Configure OpenTelemetry using environment variables:
 
@@ -800,7 +800,7 @@ export OTEL_LOGS_EXPORTER=otlp          # Options: otlp, console
 export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 
-# 4. Set authentication (if required)
+# 4. Set authentication (if reqfrontend/uired)
 export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer your-token"
 
 # 5. For debugging: reduce export intervals
@@ -852,7 +852,7 @@ Example managed settings configuration:
 
 | Environment Variable                            | Description                                               | Example Values                       |
 | ----------------------------------------------- | --------------------------------------------------------- | ------------------------------------ |
-| `CLAUDE_CODE_ENABLE_TELEMETRY`                  | Enables telemetry collection (required)                   | `1`                                  |
+| `CLAUDE_CODE_ENABLE_TELEMETRY`                  | Enables telemetry collection (reqfrontend/uired)                   | `1`                                  |
 | `OTEL_METRICS_EXPORTER`                         | Metrics exporter type(s) (comma-separated)                | `console`, `otlp`, `prometheus`      |
 | `OTEL_LOGS_EXPORTER`                            | Logs/events exporter type(s) (comma-separated)            | `console`, `otlp`                    |
 | `OTEL_EXPORTER_OTLP_PROTOCOL`                   | Protocol for OTLP exporter (all signals)                  | `grpc`, `http/json`, `http/protobuf` |
@@ -876,13 +876,13 @@ The following environment variables control which attributes are included in met
 | ----------------------------------- | ---------------------------------------------- | ------------- | ------------------ |
 | `OTEL_METRICS_INCLUDE_SESSION_ID`   | Include session.id attribute in metrics        | `true`        | `false`            |
 | `OTEL_METRICS_INCLUDE_VERSION`      | Include app.version attribute in metrics       | `false`       | `true`             |
-| `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` | Include user.account_uuid attribute in metrics | `true`        | `false`            |
+| `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` | Include user.account_ufrontend/uid attribute in metrics | `true`        | `false`            |
 
-These variables help control the cardinality of metrics, which affects storage requirements and query performance in your metrics backend. Lower cardinality generally means better performance and lower storage costs but less granular data for analysis.
+These variables help control the cardinality of metrics, which affects storage reqfrontend/uirements and query performance in your metrics backend. Lower cardinality generally means better performance and lower storage costs but less granular data for analysis.
 
 ### Dynamic Headers
 
-For enterprise environments that require dynamic authentication, you can configure a script to generate headers dynamically:
+For enterprise environments that reqfrontend/uire dynamic authentication, you can configure a script to generate headers dynamically:
 
 #### Settings Configuration
 
@@ -894,7 +894,7 @@ Add to your `.claude/settings.json`:
 }
 ```
 
-#### Script Requirements
+#### Script Reqfrontend/uirements
 
 The script must output valid JSON with string key-value pairs representing HTTP headers:
 
@@ -908,11 +908,11 @@ echo "{\"Authorization\": \"Bearer $(get-token.sh)\", \"X-API-Key\": \"$(get-api
 
 **Headers are fetched only at startup, not during runtime.** This is due to OpenTelemetry exporter architecture limitations.
 
-For scenarios requiring frequent token refresh, use an OpenTelemetry Collector as a proxy that can refresh its own headers.
+For scenarios reqfrontend/uiring frequent token refresh, use an OpenTelemetry Collector as a proxy that can refresh its own headers.
 
 ### Multi-Team Organization Support
 
-Organizations with multiple teams or departments can add custom attributes to distinguish between different groups using the `OTEL_RESOURCE_ATTRIBUTES` environment variable:
+Organizations with multiple teams or departments can add custom attributes to distingfrontend/uish between different groups using the `OTEL_RESOURCE_ATTRIBUTES` environment variable:
 
 ```bash
 # Add custom attributes for team identification
@@ -923,7 +923,7 @@ These custom attributes will be included in all metrics and events, allowing you
 
 - Filter metrics by team or department
 - Track costs per cost center
-- Create team-specific dashboards
+- Create team-specific apps/apps/dash-legacy-2-legacy-2boards
 - Set up alerts for specific teams
 
 ### Example Configurations
@@ -982,7 +982,7 @@ All metrics and events share these standard attributes:
 | `session.id`        | Unique session identifier                                     | `OTEL_METRICS_INCLUDE_SESSION_ID` (default: true)   |
 | `app.version`       | Current Claude Code version                                   | `OTEL_METRICS_INCLUDE_VERSION` (default: false)     |
 | `organization.id`   | Organization UUID (when authenticated)                        | Always included when available                      |
-| `user.account_uuid` | Account UUID (when authenticated)                             | `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` (default: true) |
+| `user.account_ufrontend/uid` | Account UUID (when authenticated)                             | `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` (default: true) |
 | `terminal.type`     | Terminal type (e.g., `iTerm.app`, `vscode`, `cursor`, `tmux`) | Always included when detected                       |
 
 ### Metrics
@@ -1194,7 +1194,7 @@ Common alerts to consider:
 - Unusual token consumption
 - High session volume from specific users
 
-All metrics can be segmented by `user.account_uuid`, `organization.id`, `session.id`, `model`, and `app.version`.
+All metrics can be segmented by `user.account_ufrontend/uid`, `organization.id`, `session.id`, `model`, and `app.version`.
 
 ### Event Analysis
 
@@ -1225,7 +1225,7 @@ Your choice of metrics and logs backends will determine the types of analyses yo
 - **Columnar stores (e.g., ClickHouse)**: Structured event analysis
 - **Full-featured observability platforms (e.g., Honeycomb, Datadog)**: Correlation between metrics and events
 
-For organizations requiring Daily/Weekly/Monthly Active User (DAU/WAU/MAU) metrics, consider backends that support efficient unique value queries.
+For organizations reqfrontend/uiring Daily/Weekly/Monthly Active User (DAU/WAU/MAU) metrics, consider backends that support efficient unique value queries.
 
 ## Service Information
 
@@ -1241,10 +1241,10 @@ All metrics and events are exported with the following resource attributes:
 
 ## ROI Measurement Resources
 
-For a comprehensive guide on measuring return on investment for Claude Code, including telemetry setup, cost analysis, productivity metrics, and automated reporting, see the [Claude Code ROI Measurement Guide](https://github.com/anthropics/claude-code-monitoring-guide). This repository provides ready-to-use Docker Compose configurations, Prometheus and OpenTelemetry setups, and templates for generating productivity reports integrated with tools like Linear.
+For a comprehensive gfrontend/uide on measuring return on investment for Claude Code, including telemetry setup, cost analysis, productivity metrics, and automated reporting, see the [Claude Code ROI Measurement Gfrontend/uide](https://github.com/anthropics/claude-code-monitoring-gfrontend/uide). This repository provides ready-to-use Docker Compose configurations, Prometheus and OpenTelemetry setups, and templates for generating productivity reports integrated with tools like Linear.
 
 ## Security/Privacy Considerations
 
-- Telemetry is opt-in and requires explicit configuration
+- Telemetry is opt-in and reqfrontend/uires explicit configuration
 - Sensitive information like API keys or file contents are never included in metrics or events
 - User prompt content is redacted by default - only prompt length is recorded. To enable user prompt logging, set `OTEL_LOG_USER_PROMPTS=1`

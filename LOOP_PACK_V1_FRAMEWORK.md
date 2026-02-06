@@ -18,7 +18,7 @@
   - `LoopId`: Unique loop identifier
 - **Functions:**
   - `detect_loops(module)` → LoopTree
-  - `build_cfg()` - Control flow graph construction
+  - `bfrontend/uild_cfg()` - Control flow graph construction
   - `compute_dominators()` - Dominator tree via Lengauer-Tarjan
   - `find_induction_vars()` - Pattern-based induction variable recognition
   - `extract_loop_body()` - Natural loop body extraction
@@ -91,7 +91,7 @@
 ### 5. Integration Layer (92 lines)
 - **File:** `crates/x3-opt/src/loop_pack_v1.rs`
 - **Function:** `run_loop_optimizations(module)`
-  - Orchestrates full Loop-Pack v1 suite
+  - Orchestrates full Loop-Pack v1 sfrontend/uite
   - Runs all 4 passes on detected loops
   - Returns total improvements count
 - **Integration Points:**
@@ -147,7 +147,7 @@
 ## Next Steps for Production
 
 ### 1. **Finalize MIR Wiring** (1-2 hours)
-   - Adapt `build_cfg()` to actual `MirFunction.blocks` structure
+   - Adapt `bfrontend/uild_cfg()` to actual `MirFunction.blocks` structure
    - Implement `compute_dominators()` with correct block iteration
    - Update `find_induction_vars()` to scan actual MIR statements
    - Add real CFG successor extraction from MIR terminators
@@ -163,7 +163,7 @@
    - Enable/disable via OptLevel configuration
 
 ### 4. **Measure & Tune** (1-2 hours)
-   - Run on benchmark suite
+   - Run on benchmark sfrontend/uite
    - Compare gas savings vs YOLO baseline
    - Adjust heuristics based on real data
 
@@ -194,7 +194,7 @@
 
 ## Benchmark Expectations (Once Integrated)
 
-**Test Suite:** 8 real X3 samples (arithmetic-heavy, loop-heavy, branch-heavy)
+**Test Sfrontend/uite:** 8 real X3 samples (arithmetic-heavy, loop-heavy, branch-heavy)
 
 **Predicted Deltas:**
 - arithmetic_loop: -3 to -8 gas (strength reduction)
@@ -241,7 +241,7 @@ Files:
 ## Performance Timeline
 
 **Current:** YOLO infrastructure + 13-pass pipeline = **33.5% gas reduction**
-**After Loop-Pack v1:** Full loop optimization suite = **40-50% total reduction**
+**After Loop-Pack v1:** Full loop optimization sfrontend/uite = **40-50% total reduction**
 **Roadmap:** Loop fusion + vector hoisting = **50-60% target**
 
 **All code production-ready for immediate engineering sprint.**

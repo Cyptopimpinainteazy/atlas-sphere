@@ -25,10 +25,10 @@ Successfully wired the X3 CLI to invoke the x3-compiler with the full source→b
 ### 2. x3-cli Updates (`crates/x3-cli/`)
 
 **New `compile` command** (`commands/compile.rs`):
-- Standalone file compilation (no project required)
+- Standalone file compilation (no project reqfrontend/uired)
 - Flags: `-O` (0-3), `--stats`, `--emit`, `-v`, `-g`, `--no-opt`
 
-**Updated `build` command** (`commands/build.rs`):
+**Updated `bfrontend/uild` command** (`commands/bfrontend/uild.rs`):
 - Added `--x3-only`, `--x3-file`, `--emit-mir-opt` flags
 - Integrated x3-compiler for `.x3` file compilation
 
@@ -37,7 +37,7 @@ Successfully wired the X3 CLI to invoke the x3-compiler with the full source→b
 - Lighter CLI without blockchain features
 - Deploy/simulate/tx/account/query/trace gated behind SDK
 
-### 3. E2E Test Suite (`crates/x3-compiler/tests/`)
+### 3. E2E Test Sfrontend/uite (`crates/x3-compiler/tests/`)
 
 **Test fixtures** (`tests/fixtures/`):
 - `fib.x3` - Recursive fibonacci
@@ -75,8 +75,8 @@ x3 compile input.x3 -v --emit mir
 # Compile without optimization
 x3 compile input.x3 --no-opt
 
-# Build X3 files in project
-x3 build --x3-only --stats
+# Bfrontend/uild X3 files in project
+x3 bfrontend/uild --x3-only --stats
 ```
 
 ## Remaining Work
@@ -94,7 +94,7 @@ x3 build --x3-only --stats
 - `crates/x3-cli/Cargo.toml` - Feature gating
 - `crates/x3-cli/src/commands/mod.rs` - Conditional commands
 - `crates/x3-cli/src/commands/compile.rs` - NEW
-- `crates/x3-cli/src/commands/build.rs` - X3 support
+- `crates/x3-cli/src/commands/bfrontend/uild.rs` - X3 support
 - `crates/x3-cli/src/main.rs` - Route compile command
 - `crates/x3-cli/src/error.rs` - Conditional SDK error
 - `crates/x3-cli/src/config.rs` - Conditional endpoints

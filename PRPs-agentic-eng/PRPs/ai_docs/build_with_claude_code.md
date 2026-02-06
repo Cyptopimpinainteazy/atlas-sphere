@@ -2,7 +2,7 @@
 
 > Learn about programmatically integrating Claude Code into your applications with the Claude Code SDK.
 
-The Claude Code SDK enables running Claude Code as a subprocess, providing a way to build AI-powered coding assistants and tools that leverage Claude's capabilities.
+The Claude Code SDK enables running Claude Code as a subprocess, providing a way to bfrontend/uild AI-powered coding assistants and tools that leverage Claude's capabilities.
 
 The SDK is available for command line, TypeScript, and Python usage.
 
@@ -15,7 +15,7 @@ The Claude Code SDK supports multiple authentication methods:
 To use the Claude Code SDK directly with Anthropic's API, we recommend creating a dedicated API key:
 
 1. Create an Anthropic API key in the [Anthropic Console](https://console.anthropic.com/)
-2. Then, set the `ANTHROPIC_API_KEY` environment variable. We recommend storing this key securely (e.g., using a Github [secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions))
+2. Then, set the `ANTHROPIC_API_KEY` environment variable. We recommend storing this key securely (e.g., using a Github [secret](https://docs.github.com/en/actions/security-for-github-actions/security-gfrontend/uides/using-secrets-in-github-actions))
 
 ### Third-Party API credentials
 
@@ -45,7 +45,7 @@ $ echo "Explain this code" | claude -p
 $ claude -p "Generate a hello world function" --output-format json
 
 # Stream JSON output as it arrives
-$ claude -p "Build a React component" --output-format stream-json
+$ claude -p "Bfrontend/uild a React component" --output-format stream-json
 ```
 
 ### TypeScript
@@ -88,7 +88,7 @@ The Python SDK is available as [`claude-code-sdk`](https://github.com/anthropics
 pip install claude-code-sdk
 ```
 
-**Prerequisites:**
+**Prereqfrontend/uisites:**
 
 - Python 3.10+
 - Node.js
@@ -159,13 +159,13 @@ $ claude -p --continue "Add error handling"
 
 ### Custom system prompts
 
-You can provide custom system prompts to guide Claude's behavior:
+You can provide custom system prompts to gfrontend/uide Claude's behavior:
 
 ```bash
 # Override system prompt (only works with --print)
-$ claude -p "Build a REST API" --system-prompt "You are a senior backend engineer. Focus on security, performance, and maintainability."
+$ claude -p "Bfrontend/uild a REST API" --system-prompt "You are a senior backend engineer. Focus on security, performance, and maintainability."
 
-# System prompt with specific requirements
+# System prompt with specific reqfrontend/uirements
 $ claude -p "Create a database schema" --system-prompt "You are a database architect. Use PostgreSQL best practices and include proper indexing."
 ```
 
@@ -173,7 +173,7 @@ You can also append instructions to the default system prompt:
 
 ```bash
 # Append system prompt (only works with --print)
-$ claude -p "Build a REST API" --append-system-prompt "After writing code, be sure to code review yourself."
+$ claude -p "Bfrontend/uild a REST API" --append-system-prompt "After writing code, be sure to code review yourself."
 ```
 
 ### MCP Configuration
@@ -379,7 +379,7 @@ Response format:
 Streams each message as it is received:
 
 ```bash
-$ claude -p "Build an application" --output-format stream-json
+$ claude -p "Bfrontend/uild an application" --output-format stream-json
 ```
 
 Each conversation begins with an initial `init` system message, followed by a list of user and assistant messages, followed by a final `result` system message with stats. Each message is emitted as a separate JSON object.
@@ -470,9 +470,9 @@ $ echo "Explain this code" | claude -p
 
 ### Streaming JSON input
 
-A stream of messages provided via `stdin` where each message represents a user turn. This allows multiple turns of a conversation without re-launching the `claude` binary and allows providing guidance to the model while it is processing a request.
+A stream of messages provided via `stdin` where each message represents a user turn. This allows multiple turns of a conversation without re-launching the `claude` binary and allows providing gfrontend/uidance to the model while it is processing a request.
 
-Each message is a JSON 'User message' object, following the same format as the output message schema. Messages are formatted using the [jsonl](https://jsonlines.org/) format where each line of input is a complete JSON object. Streaming JSON input requires `-p` and `--output-format stream-json`.
+Each message is a JSON 'User message' object, following the same format as the output message schema. Messages are formatted using the [jsonl](https://jsonlines.org/) format where each line of input is a complete JSON object. Streaming JSON input reqfrontend/uires `-p` and `--output-format stream-json`.
 
 Currently this is limited to text-only user messages.
 
@@ -572,4 +572,4 @@ The Claude Code SDK enables powerful integrations with your development workflow
 
 - [CLI usage and controls](/en/docs/claude-code/cli-reference) - Complete CLI documentation
 - [GitHub Actions integration](/en/docs/claude-code/github-actions) - Automate your GitHub workflow with Claude
-- [Common workflows](/en/docs/claude-code/common-workflows) - Step-by-step guides for common use cases
+- [Common workflows](/en/docs/claude-code/common-workflows) - Step-by-step gfrontend/uides for common use cases

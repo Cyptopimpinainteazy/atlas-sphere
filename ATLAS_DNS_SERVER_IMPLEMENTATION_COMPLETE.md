@@ -110,7 +110,7 @@ The DNS server automatically initializes with Atlas Sphere service domains:
 | `rpc.x3` | 10.0.1.200 | RPC Endpoints |
 | `xchange.x3` | 10.0.2.100 | DEX/Exchange |
 | `wallet.x3` | 10.0.2.200 | Web Wallet |
-| `dashboard.x3` | 10.0.2.300 | Analytics Dashboard |
+| `apps/apps/dash-legacy-2-legacy-2board.x3` | 10.0.2.300 | Analytics Dashboard |
 | `explorer.x3` | 10.0.2.400 | Network Explorer |
 | `docs.x3` | 10.0.3.100 | Documentation Portal |
 | `status.x3` | 10.0.3.200 | Network Status |
@@ -125,7 +125,7 @@ The DNS server automatically initializes with Atlas Sphere service domains:
 │  Main Server (server.rs)                                    │
 │  ├── Request Handler                                        │
 │  ├── Query Processing                                       │
-│  └── Response Building                                      │
+│  └── Response Bfrontend/uilding                                      │
 ├─────────────────────────────────────────────────────────────┤
 │  Core Components                                            │
 │  ├── Zone Manager (zone.rs)                                 │
@@ -154,8 +154,8 @@ export ATLAS_ENV=development
 export ATLAS_DNS_SERVER_BIND_ADDRESS=127.0.0.1:5353
 export ATLAS_DNS_API_BIND_ADDRESS=127.0.0.1:8080
 
-# Build and run
-cargo build --bin atlas-dns-server
+# Bfrontend/uild and run
+cargo bfrontend/uild --bin atlas-dns-server
 cargo run --bin atlas-dns-server
 ```
 
@@ -166,8 +166,8 @@ export ATLAS_ENV=production
 export ATLAS_DNS_SERVER_BIND_ADDRESS=0.0.0.0:53
 export ATLAS_DNS_API_BIND_ADDRESS=127.0.0.1:8080
 
-# Build optimized
-cargo build --release --bin atlas-dns-server
+# Bfrontend/uild optimized
+cargo bfrontend/uild --release --bin atlas-dns-server
 sudo ./target/release/atlas-dns-server
 ```
 
@@ -202,11 +202,11 @@ The DNS server integrates with Atlas Sphere blockchain for:
 
 ## 🔒 Security Features
 
-- **DNSSEC Ready**: Built-in DNSSEC signing support
+- **DNSSEC Ready**: Bfrontend/uilt-in DNSSEC signing support
 - **Rate Limiting**: Configurable query rate limiting
 - **Input Validation**: Comprehensive domain name validation
 - **Error Handling**: Secure error responses
-- **API Authentication**: Configurable API key requirements
+- **API Authentication**: Configurable API key reqfrontend/uirements
 
 ## 📈 Monitoring and Metrics
 
@@ -238,10 +238,10 @@ curl http://127.0.0.1:8080/domains
 
 ### Phase 3: Production Deployment
 - [ ] Anycast DNS setup
-- [ ] Monitoring dashboard (Grafana)
+- [ ] Monitoring apps/apps/dash-legacy-2-legacy-2board (Grafana)
 - [ ] Automated testing and CI/CD
 - [ ] Production configuration templates
-- [ ] Documentation and user guides
+- [ ] Documentation and user gfrontend/uides
 
 ### Phase 4: Integration
 - [ ] Atlas Sphere service integration

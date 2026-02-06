@@ -25,12 +25,12 @@ BINARY="$PROJECT_ROOT/target/release/atlas-sphere-node"
 CHAIN_SPEC="$DEPLOY_DIR/chain-specs/atlas-testnet-raw.json"
 KEYS_DIR="$DEPLOY_DIR/keys"
 
-# Verify prerequisites
-echo -e "${YELLOW}Checking prerequisites...${NC}"
+# Verify prereqfrontend/uisites
+echo -e "${YELLOW}Checking prereqfrontend/uisites...${NC}"
 
 if [ ! -f "$BINARY" ]; then
     echo -e "${RED}Error: Binary not found at $BINARY${NC}"
-    echo "Run: cd $PROJECT_ROOT && SKIP_WASM_BUILD=1 cargo build --release"
+    echo "Run: cd $PROJECT_ROOT && SKIP_WASM_BUILD=1 cargo bfrontend/uild --release"
     exit 1
 fi
 
@@ -248,7 +248,7 @@ echo -e "${BLUE}================================${NC}"
 echo ""
 
 for service in atlas-bootnode atlas-validator-01 atlas-validator-02 atlas-validator-03; do
-    if sudo systemctl is-active --quiet $service; then
+    if sudo systemctl is-active --qfrontend/uiet $service; then
         echo -e "${GREEN}✓ $service is running${NC}"
     else
         echo -e "${RED}✗ $service is NOT running${NC}"

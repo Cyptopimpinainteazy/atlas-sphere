@@ -1,13 +1,13 @@
-# DNS Server Build & Test Task List
+# DNS Server Bfrontend/uild & Test Task List
 
-## Priority 1: Build Configuration & Compilation
+## Priority 1: Bfrontend/uild Configuration & Compilation
 - [ ] 1.1 Investigate binary target recognition issue
 - [ ] 1.2 Check atlas-dns-server crate compilation directly
 - [ ] 1.3 Resolve any dependency or compilation errors
 - [ ] 1.4 Verify binary target configuration in Cargo.toml
 
 ## Priority 2: DNS Server Functionality
-- [ ] 2.1 Build atlas-dns-server binary successfully
+- [ ] 2.1 Bfrontend/uild atlas-dns-server binary successfully
 - [ ] 2.2 Test basic DNS server startup
 - [ ] 2.3 Verify testnet.x3 domain resolution
 - [ ] 2.4 Test A record resolution for testnet.x3
@@ -22,12 +22,12 @@
 
 ## Priority 4: Documentation & Final Steps
 - [ ] 4.1 Update DNS server documentation
-- [ ] 4.2 Create deployment guide for testnet.x3
+- [ ] 4.2 Create deployment gfrontend/uide for testnet.x3
 - [ ] 4.3 Document API usage examples
 - [ ] 4.4 Prepare production deployment checklist
 
 ## Current Status
-- Binary target not recognized by cargo build --bin atlas-dns-server
+- Binary target not recognized by cargo bfrontend/uild --bin atlas-dns-server
 - Files exist in crates/atlas-dns-server/src/ including main.rs
 - Cargo.toml has binary target configured but not being detected
 - Need to investigate crate compilation directly

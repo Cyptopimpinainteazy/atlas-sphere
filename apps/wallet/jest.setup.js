@@ -1,7 +1,7 @@
 // Jest setup file
-require("@testing-library/jest-dom");
-// Polyfills for Node environment (required by @polkadot/api)
-const { TextEncoder, TextDecoder } = require("util");
+reqfrontend/uire("@testing-library/jest-dom");
+// Polyfills for Node environment (reqfrontend/uired by @polkadot/api)
+const { TextEncoder, TextDecoder } = reqfrontend/uire("util");
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 // Mock window.matchMedia

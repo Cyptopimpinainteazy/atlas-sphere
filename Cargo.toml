@@ -101,7 +101,7 @@ sp-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", def
 sp-consensus = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-session = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-block-bfrontend/uilder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -112,7 +112,7 @@ sp-version = { git = "https://github.com/paritytech/substrate", rev = "948fbd2",
 sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 log = { version = "0.4.20", default-features = false }
 serde = { version = "1.0.195", features = ["derive"], default-features = false }
-substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+substrate-wasm-bfrontend/uilder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 
 # Substrate client (node) workspace deps used by `node` member
@@ -166,20 +166,20 @@ proc-macro2 = { version = "1.0.103", features = ["span-locations"] }
 # prevents newer versions from being pulled in
 ahash = { version = "0.8.11" }
 tempfile = { version = "3.8.1" }
-# Pin base64ct to avoid edition2024 requirement in newer versions
+# Pin base64ct to avoid edition2024 reqfrontend/uirement in newer versions
 base64ct = { version = "=1.6.0" }
 
 # CLI & RPC ecosystem
 clap = { version = "4.4.18", features = ["derive"] }
 jsonrpsee = { version = "0.22.5", default-features = false, features = ["macros", "client", "server"] }
 
-# Build profiles - reduce codegen-units to avoid LLVM SIGSEGV crashes in 1.85
+# Bfrontend/uild profiles - reduce codegen-units to avoid LLVM SIGSEGV crashes in 1.85
 [profile.release]
 codegen-units = 1
 lto = "thin"
 opt-level = 3
 
-[profile.release.build-override]
+[profile.release.bfrontend/uild-override]
 opt-level = 3
 codegen-units = 1
 

@@ -1,4 +1,4 @@
-# Atlas Sphere - Integration & Compilation Guide
+# Atlas Sphere - Integration & Compilation Gfrontend/uide
 
 ## 🎯 IMPLEMENTATION COMPLETE
 
@@ -247,12 +247,12 @@ grep -n "pub mod\|pub use" node/src/lib.rs | head -15
 
 ```bash
 # Compile individual crates
-cargo build -p atlas-kernel 2>&1 | head -20
-cargo build -p evm-integration 2>&1 | head -20
-cargo build -p node 2>&1 | head -20
+cargo bfrontend/uild -p atlas-kernel 2>&1 | head -20
+cargo bfrontend/uild -p evm-integration 2>&1 | head -20
+cargo bfrontend/uild -p node 2>&1 | head -20
 
 # Compile full workspace
-cargo build --all 2>&1 | tail -5
+cargo bfrontend/uild --all 2>&1 | tail -5
 ```
 
 ### Step 3: Check Exports Are Accessible
@@ -262,7 +262,7 @@ cargo build --all 2>&1 | tail -5
 cargo doc --no-deps 2>&1 | grep -i "documenting"
 
 # List public items
-cargo build --all 2>&1 | grep -i "warning\|error" | wc -l
+cargo bfrontend/uild --all 2>&1 | grep -i "warning\|error" | wc -l
 ```
 
 ---
@@ -276,13 +276,13 @@ cargo build --all 2>&1 | grep -i "warning\|error" | wc -l
 - [ ] Run initial compilation test
 
 ### Phase 1 Integration (Consensus)
-- [ ] Add `authority` module to pallet imports
+- [ ] Add `authority` module to pallet archive/archive/imports
 - [ ] Implement Config trait for authority
 - [ ] Add to construct_runtime! macro
 - [ ] Run tests for authority management
 
 ### Phase 2 Integration (EVM)
-- [ ] Add `state` module to EVM integration imports
+- [ ] Add `state` module to EVM integration archive/archive/imports
 - [ ] Create storage types for EVM state
 - [ ] Integrate with account management
 - [ ] Test EVM state operations
@@ -354,8 +354,8 @@ curl -X POST http://localhost:9944 \
 ### 1. Local Development
 
 ```bash
-# Build and run local node
-cargo build --release
+# Bfrontend/uild and run local node
+cargo bfrontend/uild --release
 ./target/release/atlas-sphere --dev --tmp
 
 # Verify all modules load
@@ -365,8 +365,8 @@ cargo build --release
 ### 2. Testnet Deployment
 
 ```bash
-# Build for testnet
-cargo build --release --features testnet
+# Bfrontend/uild for testnet
+cargo bfrontend/uild --release --features testnet
 
 # Run on testnet
 ./target/release/atlas-sphere --chain testnet
@@ -378,10 +378,10 @@ curl http://localhost:9944 -d '{"jsonrpc":"2.0","method":"system_health","params
 ### 3. Mainnet Deployment
 
 ```bash
-# Build for mainnet
-cargo build --release --features mainnet
+# Bfrontend/uild for mainnet
+cargo bfrontend/uild --release --features mainnet
 
-# Verify security audit (if required)
+# Verify security audit (if reqfrontend/uired)
 # Deploy to mainnet
 ./target/release/atlas-sphere --chain mainnet
 ```
@@ -440,7 +440,7 @@ wc -l node/src/metrics.rs
 1. Copy the module files to your crate
 2. Add `pub mod <module_name>;` to your `lib.rs`
 3. Import in your code: `use your_crate::<module>::*;`
-4. Implement required traits
+4. Implement reqfrontend/uired traits
 5. Use the public API
 
 ### Common Integration Patterns

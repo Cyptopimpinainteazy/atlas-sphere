@@ -12,10 +12,10 @@ X3-Atlas-Sphere is a sophisticated Layer-1 blockchain implementing a revolutiona
 
 **Key Findings:**
 - **Multi-Language Ecosystem**: Rust (backend/core) + TypeScript/Next.js (frontend)
-- **Substrate-Based**: Built on Substrate framework with custom runtime
+- **Substrate-Based**: Bfrontend/uilt on Substrate framework with custom runtime
 - **Tri-VM Architecture**: EVM (Ethereum) + SVM (Solana) + X3 (Native) execution
 - **Comprehensive Testing**: Unit tests, integration tests, CI/CD pipeline
-- **Professional Documentation**: Architecture docs, API specs, developer guides
+- **Professional Documentation**: Architecture docs, API specs, developer gfrontend/uides
 
 ---
 
@@ -39,7 +39,7 @@ atlas-sphere/
 ├── apps/                          # Frontend applications
 │   ├── wallet/                   # Next.js wallet application
 │   ├── explorer/                 # Blockchain explorer
-│   ├── analytics/                # Analytics dashboard
+│   ├── analytics/                # Analytics apps/apps/dash-legacy-2-legacy-2board
 │   └── dex/                      # Decentralized exchange
 ├── crates/                       # Rust crates (core logic)
 │   ├── x3-compiler/             # X3 language compiler
@@ -96,9 +96,9 @@ members = [
 
 **Benefits:**
 - **Dependency Isolation**: Each crate manages its own dependencies
-- **Incremental Compilation**: Build only changed crates
+- **Incremental Compilation**: Bfrontend/uild only changed crates
 - **Clear Boundaries**: Well-defined interfaces between components
-- **Parallel Builds**: Cargo can build crates in parallel
+- **Parallel Bfrontend/uilds**: Cargo can bfrontend/uild crates in parallel
 
 ### 3. Frontend Architecture Pattern
 
@@ -188,7 +188,7 @@ const useWalletData = () => {
 // Component: PascalCase
 export const WalletDashboard: React.FC<ComponentProps> = ({ children }) => {
   return (
-    <div className="wallet-dashboard">
+    <div className="wallet-apps/apps/dash-legacy-2-legacy-2board">
       {children}
     </div>
   );
@@ -429,23 +429,23 @@ describe('Live SDK Integration', () => {
 
 ---
 
-## Build & Validation Commands
+## Bfrontend/uild & Validation Commands
 
-### 1. Rust Build Commands
+### 1. Rust Bfrontend/uild Commands
 
-**Development Build:**
+**Development Bfrontend/uild:**
 ```bash
-# Fast development build
-cargo build
+# Fast development bfrontend/uild
+cargo bfrontend/uild
 
-# Watch for changes (requires cargo-watch)
-cargo watch -x "build"
+# Watch for changes (reqfrontend/uires cargo-watch)
+cargo watch -x "bfrontend/uild"
 
-# Full release build
-cargo build --release
+# Full release bfrontend/uild
+cargo bfrontend/uild --release
 
-# Build specific crate
-cargo build -p x3-compiler
+# Bfrontend/uild specific crate
+cargo bfrontend/uild -p x3-compiler
 ```
 
 **Testing Commands:**
@@ -456,7 +456,7 @@ cargo test --all
 # Run tests for specific crate
 cargo test -p x3-integration
 
-# Run with coverage (requires cargo-tarpaulin)
+# Run with coverage (reqfrontend/uires cargo-tarpaulin)
 cargo tarpaulin --out Html --workspace
 
 # Run benchmarks
@@ -478,7 +478,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo audit
 ```
 
-### 2. Frontend Build Commands
+### 2. Frontend Bfrontend/uild Commands
 
 **Development:**
 ```bash
@@ -495,10 +495,10 @@ npm run test:watch
 npm run type-check
 ```
 
-**Production Build:**
+**Production Bfrontend/uild:**
 ```bash
-# Build for production
-npm run build
+# Bfrontend/uild for production
+npm run bfrontend/uild
 
 # Start production server
 npm start
@@ -541,8 +541,8 @@ jobs:
       - name: Cargo tests (release)
         run: cargo test --workspace --release --all-features
       
-      - name: Build runtime WASM
-        run: cargo build -p atlas-sphere-runtime --release --target wasm32-unknown-unknown
+      - name: Bfrontend/uild runtime WASM
+        run: cargo bfrontend/uild -p atlas-sphere-runtime --release --target wasm32-unknown-unknown
 ```
 
 ---
@@ -575,7 +575,7 @@ solana_rbpf = { version = "0.8", default-features = false }
   "@polkadot/api": "^14.0.1",
   "@polkadot/types": "^14.0.1",
   "@solana/wallet-adapter-base": "^0.9.0",
-  "@solana/web3.js": "^1.87.0",
+  "@solana/frontend/web3.js": "^1.87.0",
   "ethers": "^6.8.0",
   "viem": "^1.19.0",
   "wagmi": "^1.4.0",

@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Atlas DEX - Dual-VM Decentralized Exchange',
   description: 'Trade across EVM and SVM with atomic cross-chain swaps on Atlas Sphere',
-  keywords: ['DEX', 'DeFi', 'EVM', 'SVM', 'Solana', 'Ethereum', 'swap', 'liquidity'],
+  keywords: ['DEX', 'DeFi', 'EVM', 'SVM', 'Solana', 'Ethereum', 'swap', 'liqfrontend/uidity'],
 };
 
 export default function RootLayout({

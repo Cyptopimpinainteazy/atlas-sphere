@@ -14,7 +14,7 @@ export default function SvmDeployPage() {
         Programs can be deployed to testnet or your local development node.
       </p>
 
-      <h2>Prerequisites</h2>
+      <h2>Prereqfrontend/uisites</h2>
       <CodeBlock language="bash">
 {`# Install Solana CLI
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
@@ -50,8 +50,8 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"`}
       </CodeBlock>
 
       <CodeBlock language="bash">
-{`# Build program
-anchor build
+{`# Bfrontend/uild program
+anchor bfrontend/uild
 
 # Deploy
 anchor deploy
@@ -65,8 +65,8 @@ anchor upgrade target/deploy/my_program.so --program-id PROGRAM_ADDRESS`}
 
       <h2>Deploy with Solana CLI</h2>
       <CodeBlock language="bash">
-{`# Build your program
-cargo build-bpf
+{`# Bfrontend/uild your program
+cargo bfrontend/uild-bpf
 
 # Deploy program
 solana program deploy target/deploy/my_program.so
@@ -152,7 +152,7 @@ curl -X POST https://faucet.testnet.atlas-sphere.io/api/request \\
         Programs have size limits. Optimize by:
       </p>
       <ul>
-        <li>Using <code>cargo build-bpf</code> with release mode</li>
+        <li>Using <code>cargo bfrontend/uild-bpf</code> with release mode</li>
         <li>Removing unused dependencies</li>
         <li>Splitting into multiple programs</li>
       </ul>

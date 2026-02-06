@@ -34,7 +34,7 @@
   - [x] 2.2.1 RPC Aggregator with failover - Status: **COMPLETE**
   - [x] 2.2.2 Smart batching for mempool - Status: **COMPLETE**
   - [x] 2.2.3 Prometheus metrics - Status: **COMPLETE**
-  - [x] 2.2.4 Grafana dashboards - Status: **COMPLETE**
+  - [x] 2.2.4 Grafana apps/apps/dash-legacy-2-legacy-2boards - Status: **COMPLETE**
   - [x] 2.2.5 Alert system - Status: **COMPLETE**
 
 ## Priority 3: Security & Developer Tools - ALL COMPLETE ✅

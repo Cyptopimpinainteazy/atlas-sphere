@@ -1,6 +1,6 @@
 //! Error handling for Analytics Service
 
-use actix_web::{HttpResponse, ResponseError};
+use actix_frontend/frontend/web::{HttpResponse, ResponseError};
 use std::fmt;
 
 #[derive(Debug)]

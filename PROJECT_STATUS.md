@@ -25,7 +25,7 @@
   - 1,284 lines of tests
   - Full dual-VM support (EVM + SVM)
   - Type-safe API with comprehensive types
-  - Fluent Comit builder
+  - Fluent Comit bfrontend/uilder
   - Auto-fee calculation
   - Event subscriptions
   - Polkadot.js integration
@@ -36,7 +36,7 @@
   - CLI entry point
 - **x3 CLI** - ✅ COMPLETE
   - `--opt-level` / `-O` flags working (0-3)
-  - compile, build, repl commands
+  - compile, bfrontend/uild, repl commands
   - Optimization statistics output
 
 #### Frontend Applications (90%)
@@ -55,7 +55,7 @@
    - `-O` / `--opt-level` flags already implemented
    - Fixed repl.rs compilation errors (CompilationOptions fields)
    - Fixed OptLevel::Standard → OptLevel::Default variant name
-   - x3 compile/build show optimization flags in help
+   - x3 compile/bfrontend/uild show optimization flags in help
 
 3. **Production Testnet Deployment** - READY
    - Release binary exists (50MB)
@@ -131,7 +131,7 @@
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              Production SDK Suite                              │
+│              Production SDK Sfrontend/uite                              │
 │          TypeScript + Python + Rust                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -140,13 +140,13 @@
 
 ## 🛠️ Developer Experience
 
-### Quick Start Commands
+### Qfrontend/uick Start Commands
 ```bash
 # Start development node
 ./target/release/atlas-sphere-node --dev
 
-# Build TypeScript SDK
-cd packages/ts-sdk && npm install && npm run build
+# Bfrontend/uild TypeScript SDK
+cd packages/ts-sdk && npm install && npm run bfrontend/uild
 
 # Start wallet app
 cd apps/wallet && npm install && npm run dev
@@ -195,12 +195,12 @@ chain_getBlockHash()
 - ✅ Main README.md
 - ✅ TypeScript SDK documentation
 - ✅ API specifications
-- ✅ Deployment guides
+- ✅ Deployment gfrontend/uides
 
 ### Needs Update
 - ⚠️ Completion status files (consolidation in progress)
 - ⚠️ Development setup instructions
-- ⚠️ Contributing guidelines
+- ⚠️ Contributing gfrontend/uidelines
 
 ### In Progress
 - 🔄 BMAD documentation consolidation

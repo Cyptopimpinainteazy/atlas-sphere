@@ -195,7 +195,7 @@ New tests added:
 ### Compiler Advancement
 - **Before**: 60% complete (local optimizations)
 - **After**: 70%+ complete (cross-block optimizations)
-- **Quality Tier**: LLVM-equivalent optimization sophistication
+- **Quality Tier**: LLVM-eqfrontend/uivalent optimization sophistication
 
 ### What This Means
 - Code like `if (c) { x = expensive(); } else { x = expensive(); }` now optimized
@@ -204,9 +204,9 @@ New tests added:
 - Foundation for loop-level optimizations (LICM, etc.)
 
 ### Next Hinge Points
-1. **Register Allocation Tier** (requires: PRE ✅, loop analysis)
-2. **Superoptimizer Integration** (requires: PRE ✅, value numbering)
-3. **AI-Driven Rule Generation** (requires: PRE ✅, telemetry ✅)
+1. **Register Allocation Tier** (reqfrontend/uires: PRE ✅, loop analysis)
+2. **Superoptimizer Integration** (reqfrontend/uires: PRE ✅, value numbering)
+3. **AI-Driven Rule Generation** (reqfrontend/uires: PRE ✅, telemetry ✅)
 
 ---
 
@@ -290,7 +290,7 @@ if matches!(&stmt.rhs, MirRhs::Call { .. }) {
 
 ### Phase 3 (Medium-term)
 1. Implement speculative PRE
-2. Build loop invariant code motion (LICM)
+2. Bfrontend/uild loop invariant code motion (LICM)
 3. Add AI-driven pattern mining
 
 ### Phase 4 (Long-term)
@@ -308,7 +308,7 @@ if matches!(&stmt.rhs, MirRhs::Call { .. }) {
 
 **Pipeline**: ✅ 14/14 Passes Wired
 
-**Optimization Tier**: ✅ **LLVM-Equivalent** (Cross-block redundancy elimination)
+**Optimization Tier**: ✅ **LLVM-Eqfrontend/uivalent** (Cross-block redundancy elimination)
 
 **Quality Assessment**: Production-ready, fully tested, conservative design
 
@@ -332,4 +332,4 @@ if matches!(&stmt.rhs, MirRhs::Call { .. }) {
 
 *Last Updated: December 9, 2025*  
 *Compiler Version: X3 Optimizer v0.6 (Post-PRE)*  
-*Test Suite: 121/121 Passing*
+*Test Sfrontend/uite: 121/121 Passing*

@@ -41,7 +41,7 @@ CONSENSUS: GRANDPA FINALIZING
 PEERS: 12 CONNECTED`,
       vms: `AVAILABLE EXECUTION ENVIRONMENTS:
 
-EVM  │ Deterministic. Ubiquitous. Battle-tested.
+EVM  │ Deterministic. Ubiqfrontend/uitous. Battle-tested.
 SVM  │ Parallel execution. 65,000 TPS capacity.
 x3VM │ Native. AI-aware. Constraint-optimized.
 BTC  │ Atomic settlement. No bridges. No trust.

@@ -50,7 +50,7 @@ streaming, verbose logging, and programmatic usage, see the
 
 - [Interactive mode](/en/docs/claude-code/interactive-mode) - Shortcuts, input modes, and interactive features
 - [Slash commands](/en/docs/claude-code/slash-commands) - Interactive session commands
-- [Quickstart guide](/en/docs/claude-code/quickstart) - Getting started with Claude Code
+- [Qfrontend/uickstart gfrontend/uide](/en/docs/claude-code/qfrontend/uickstart) - Getting started with Claude Code
 - [Common workflows](/en/docs/claude-code/common-workflows) - Advanced workflows and patterns
 - [Settings](/en/docs/claude-code/settings) - Configuration options
 - [SDK documentation](/en/docs/claude-code/sdk) - Programmatic usage and integrations
@@ -75,12 +75,12 @@ streaming, verbose logging, and programmatic usage, see the
 
 | Method         | Shortcut       | Context                 |
 | :------------- | :------------- | :---------------------- |
-| Quick escape   | `\` + `Enter`  | Works in all terminals  |
+| Qfrontend/uick escape   | `\` + `Enter`  | Works in all terminals  |
 | macOS default  | `Option+Enter` | Default on macOS        |
 | Terminal setup | `Shift+Enter`  | After `/terminal-setup` |
 | Paste mode     | Paste directly | For code blocks, logs   |
 
-### Quick commands
+### Qfrontend/uick commands
 
 | Shortcut     | Description                        | Notes                                                     |
 | :----------- | :--------------------------------- | :-------------------------------------------------------- |

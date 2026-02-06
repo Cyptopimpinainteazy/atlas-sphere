@@ -30,8 +30,8 @@ echo "  Domain: $DOMAIN"
 echo "  VM Provider: $VM_PROVIDER"
 echo ""
 
-# Step 1: Check prerequisites
-echo "📋 Step 1/5: Checking prerequisites..."
+# Step 1: Check prereqfrontend/uisites
+echo "📋 Step 1/5: Checking prereqfrontend/uisites..."
 if ! command -v ssh &> /dev/null; then
     echo "❌ ssh not found. Please install OpenSSH client."
     exit 1
@@ -144,16 +144,16 @@ EOF
 echo "✅ Created inventory file: $INVENTORY_FILE"
 echo "   ⚠️  IMPORTANT: Update this file with actual IPs after provisioning VMs!"
 
-# Step 4: Create VM provisioning guides for different providers
+# Step 4: Create VM provisioning gfrontend/uides for different providers
 echo ""
-echo "📚 Step 4/5: Creating provider-specific guides..."
+echo "📚 Step 4/5: Creating provider-specific gfrontend/uides..."
 
-# DigitalOcean guide
+# DigitalOcean gfrontend/uide
 cat > "deployment/provision-digitalocean.sh" << 'EOF'
 #!/bin/bash
 # DigitalOcean VM Provisioning for Atlas Sphere Testnet
 
-# Prerequisites: Install doctl (DigitalOcean CLI)
+# Prereqfrontend/uisites: Install doctl (DigitalOcean CLI)
 # https://docs.digitalocean.com/reference/doctl/how-to/install/
 
 set -e
@@ -220,11 +220,11 @@ EOF
 chmod +x "deployment/provision-digitalocean.sh"
 echo "✅ Created: deployment/provision-digitalocean.sh"
 
-# AWS guide
+# AWS gfrontend/uide
 cat > "deployment/provision-aws.md" << 'EOF'
 # AWS EC2 VM Provisioning for Atlas Sphere Testnet
 
-## Prerequisites
+## Prereqfrontend/uisites
 - AWS CLI installed: `aws --version`
 - AWS credentials configured: `aws configure`
 
@@ -300,13 +300,13 @@ aws ec2 describe-instances \
 EOF
 echo "✅ Created: deployment/provision-aws.md"
 
-# Local/Manual guide
+# Local/Manual gfrontend/uide
 cat > "deployment/provision-manual.md" << 'EOF'
 # Manual VM Provisioning for Atlas Sphere Testnet
 
 ## If using VPS provider (Hetzner, Linode, Vultr, etc.)
 
-### VM Requirements
+### VM Reqfrontend/uirements
 
 #### Validators (need 3-5)
 - **CPU**: 2 vCPU
@@ -339,7 +339,7 @@ cat > "deployment/provision-manual.md" << 'EOF'
 ## Provisioning Steps
 
 ### 1. Create VMs
-Using your provider's web interface or CLI:
+Using your provider's frontend/frontend/web interface or CLI:
 - Create VMs with specs above
 - Use Ubuntu 22.04 LTS
 - Add your SSH public key (`~/.ssh/atlas-testnet-deploy.pub`)
@@ -363,7 +363,7 @@ Run on each VM:
 sudo apt-get update && sudo apt-get upgrade -y
 
 # Install essentials
-sudo apt-get install -y curl wget git build-essential ufw
+sudo apt-get install -y curl wget git bfrontend/uild-essential ufw
 
 # Configure firewall (example for validator)
 sudo ufw default deny incoming
@@ -410,7 +410,7 @@ echo "🌐 Step 5/5: Creating DNS configuration..."
 cat > "deployment/dns-config.md" << 'EOF'
 # DNS Configuration for Atlas Sphere Testnet
 
-## Required DNS Records
+## Reqfrontend/uired DNS Records
 
 After provisioning VMs, create these DNS records in your DNS provider:
 
@@ -423,10 +423,10 @@ faucet.testnet.atlas-sphere.io   → FAUCET_SERVER_IP
 metrics.testnet.atlas-sphere.io  → GRAFANA_IP
 ```
 
-## Provider-Specific Guides
+## Provider-Specific Gfrontend/uides
 
 ### Cloudflare
-1. Log in to Cloudflare dashboard
+1. Log in to Cloudflare apps/apps/dash-legacy-2-legacy-2board
 2. Select your domain
 3. Go to DNS → Records
 4. Add A records:
@@ -571,6 +571,6 @@ echo ""
 echo "4. Run firewall setup on each node:"
 echo "   ssh atlas@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator"
 echo ""
-echo "5. Proceed to Day -1: Build binary and generate keys"
+echo "5. Proceed to Day -1: Bfrontend/uild binary and generate keys"
 echo ""
 echo "════════════════════════════════════════════════════════════════"

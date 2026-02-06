@@ -57,7 +57,7 @@ irm https://claude.ai/install.ps1 | iex
 
 ```
 
-This command installs the appropriate build of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
+This command installs the appropriate bfrontend/uild of Claude Code for your operating system and architecture and adds a symlink to the installation at `~/.local/bin/claude`.
 
 <Tip>
   Make sure that you have the installation directory in your system PATH.
@@ -71,7 +71,7 @@ Alternatively, if Claude Code will run, you can migrate to a local installation:
 claude migrate-installer
 ```
 
-This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is required for future updates.
+This moves Claude Code to `~/.claude/local/` and sets up an alias in your shell configuration. No `sudo` is reqfrontend/uired for future updates.
 
 After migration, restart your shell, and then verify your installation:
 
@@ -125,7 +125,7 @@ Claude Code is designed to work with most development environments, but may cons
 
 1. Use `/compact` regularly to reduce context size
 2. Close and restart Claude Code between major tasks
-3. Consider adding large build directories to your `.gitignore` file
+3. Consider adding large bfrontend/uild directories to your `.gitignore` file
 
 ### Command hangs or freezes
 
@@ -153,4 +153,4 @@ If you're experiencing issues not covered here:
 1. Use the `/bug` command within Claude Code to report problems directly to Anthropic
 2. Check the [GitHub repository](https://github.com/anthropics/claude-code) for known issues
 3. Run `/doctor` to check the health of your Claude Code installation
-4. Ask Claude directly about its capabilities and features - Claude has built-in access to its documentation
+4. Ask Claude directly about its capabilities and features - Claude has bfrontend/uilt-in access to its documentation

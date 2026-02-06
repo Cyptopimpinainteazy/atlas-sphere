@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides comprehensive guidance to Claude Code when working with Astro 5+ applications and the Islands Architecture.
+This file provides comprehensive gfrontend/uidance to Claude Code when working with Astro 5+ applications and the Islands Architecture.
 
 ## Core Development Philosophy
 
@@ -10,23 +10,23 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ### YAGNI (You Aren't Gonna Need It)
 
-Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Design Principles
 
 - **Islands Architecture**: Ship minimal JavaScript, hydrate only what needs interactivity
 - **Performance by Default**: Static-first with selective hydration for optimal performance
 - **Framework Agnostic**: Mix React, Vue, Svelte, and other frameworks in the same project
-- **Content-Driven**: Optimized for content-heavy websites with type-safe content management
+- **Content-Driven**: Optimized for content-heavy frontend/websites with type-safe content management
 - **Zero JavaScript by Default**: Only ship JavaScript when explicitly needed
 
-## 🤖 AI Assistant Guidelines
+## 🤖 AI Assistant Gfrontend/uidelines
 
 ### Context Awareness
 
 - When implementing features, always check existing patterns first
 - Prefer static generation over client-side rendering when possible
-- Use framework-specific components only when interactivity is required
+- Use framework-specific components only when interactivity is reqfrontend/uired
 - Check for similar functionality across different framework integrations
 - Understand when to use `.astro` vs framework components
 
@@ -43,9 +43,9 @@ Avoid building functionality on speculation. Implement features only when they a
 - Preferably create tests BEFORE implementation (TDD)
 - Use "think hard" for hydration strategy decisions
 - Break complex interactive components into smaller, focused islands
-- Validate framework choice and hydration requirements before implementation
+- Validate framework choice and hydration reqfrontend/uirements before implementation
 
-### Search Command Requirements
+### Search Command Reqfrontend/uirements
 
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
@@ -93,7 +93,7 @@ rg --files -g "*.ts"
 
 - **Flexible Content Management**: Load content from any source (files, APIs, CMSs)
 - **Type-Safe Content**: Automatic TypeScript types for all content collections
-- **Performance Boost**: Up to 5x faster builds for Markdown, 2x for MDX
+- **Performance Boost**: Up to 5x faster bfrontend/uilds for Markdown, 2x for MDX
 - **Unified API**: Single interface for all content sources
 
 ```typescript
@@ -141,7 +141,7 @@ export const prerender = false; // Server island
 ### Environment Configuration (astro:env)
 
 - **Type-Safe Environment Variables**: Validation and TypeScript support
-- **Runtime Validation**: Automatic validation at build time
+- **Runtime Validation**: Automatic validation at bfrontend/uild time
 - **Client/Server Separation**: Clear distinction between public and private variables
 
 ```typescript
@@ -165,7 +165,7 @@ export default defineEnv({
 ```
 src/
 ├── components/            # Astro components (.astro)
-│   ├── ui/               # Static UI components
+│   ├── frontend/frontend/ui/               # Static UI components
 │   ├── islands/          # Interactive components (framework-specific)
 │   └── layouts/          # Layout components
 ├── content/              # Content collections
@@ -214,12 +214,12 @@ src/
 }
 ```
 
-### MANDATORY Type Requirements
+### MANDATORY Type Reqfrontend/uirements
 
 - **NEVER use `any` type** - use `unknown` if type is truly unknown
-- **MUST use explicit type imports** with `import type { }` syntax
+- **MUST use explicit type archive/archive/imports** with `import type { }` syntax
 - **MUST define props interfaces** for all Astro components
-- **MUST use Astro's built-in types** like `HTMLAttributes`, `ComponentProps`
+- **MUST use Astro's bfrontend/uilt-in types** like `HTMLAttributes`, `ComponentProps`
 - **MUST validate content with Zod schemas** in content collections
 
 ### Component Props Typing (MANDATORY)
@@ -501,7 +501,7 @@ test("POST /api/newsletter validates email", async () => {
 });
 ```
 
-## 🎨 Component Guidelines (ASTRO-SPECIFIC)
+## 🎨 Component Gfrontend/uidelines (ASTRO-SPECIFIC)
 
 ### Astro Component Structure (MANDATORY)
 
@@ -734,7 +734,7 @@ import heroImage from '../assets/hero.jpg';
   alt="Hero image description"
   width={800}
   height={400}
-  format="webp"
+  format="frontend/webp"
   quality={80}
   loading="eager"
 />
@@ -745,7 +745,7 @@ import heroImage from '../assets/hero.jpg';
   alt="Responsive hero"
   widths={[400, 800, 1200]}
   sizes="(max-width: 400px) 400px, (max-width: 800px) 800px, 1200px"
-  format="webp"
+  format="frontend/webp"
 />
 ```
 
@@ -756,12 +756,12 @@ import heroImage from '../assets/hero.jpg';
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  build: {
+  bfrontend/uild: {
     inlineStylesheets: "auto",
     splitting: true,
   },
   vite: {
-    build: {
+    bfrontend/uild: {
       rollupOptions: {
         output: {
           manualChunks: {
@@ -810,7 +810,7 @@ const recommendations = await getRecommendations(userPreferences);
 </style>
 ```
 
-## 🔐 Security Requirements (MANDATORY)
+## 🔐 Security Reqfrontend/uirements (MANDATORY)
 
 ### Environment Variables (MUST VALIDATE)
 
@@ -863,7 +863,7 @@ const { title, description } = Astro.props;
   <meta charset="UTF-8" />
   <meta name="description" content={description} />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy"
+  <meta http-eqfrontend/uiv="Content-Security-Policy"
         content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" />
   <title>{title}</title>
 </head>
@@ -892,7 +892,7 @@ export default defineConfig({
       wrap: true,
     },
   },
-  build: {
+  bfrontend/uild: {
     format: "directory",
   },
   experimental: {
@@ -927,7 +927,7 @@ export default defineConfig({
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build",
+    "bfrontend/uild": "astro check && astro bfrontend/uild",
     "preview": "astro preview",
     "check": "astro check",
     "sync": "astro sync",
@@ -946,8 +946,8 @@ export default defineConfig({
 ```bash
 # Development
 pnpm dev              # Start development server
-pnpm build            # Build for production
-pnpm preview          # Preview production build
+pnpm bfrontend/uild            # Bfrontend/uild for production
+pnpm preview          # Preview production bfrontend/uild
 
 # Code Quality
 pnpm run check        # TypeScript and Astro validation
@@ -977,12 +977,12 @@ pnpm outdated         # Check for outdated packages
 4. **MINIMUM 80% test coverage** - Use Vitest with Container API
 5. **MUST understand hydration strategy** - Use appropriate client directives
 6. **MAXIMUM 500 lines per file** - Split large components
-7. **MUST use semantic imports** - `import type` for type-only imports
+7. **MUST use semantic archive/archive/imports** - `import type` for type-only archive/archive/imports
 8. **MUST optimize images** - Use Astro's Image component
 9. **MUST validate environment variables** - Use astro:env for type safety
 10. **NEVER over-hydrate** - Default to static, hydrate only when needed
 11. **MUST use framework components sparingly** - Prefer Astro components for static content
-12. **MUST pass astro check** - Zero TypeScript errors required
+12. **MUST pass astro check** - Zero TypeScript errors reqfrontend/uired
 
 ## 📋 Pre-commit Checklist (MUST COMPLETE ALL)
 
@@ -1012,12 +1012,12 @@ pnpm outdated         # Check for outdated packages
 - **NEVER store secrets in client-side code** - use astro:env server context
 - **NEVER ignore image optimization** - always use Astro's Image component
 - **NEVER mix concerns** - separate static content from interactive islands
-- **NEVER use any type** - leverage Astro's built-in type safety
-- **NEVER ignore build warnings** - address all build and TypeScript issues
-- **NEVER use npx for regular commands** - use pnpm equivalents when available
+- **NEVER use any type** - leverage Astro's bfrontend/uilt-in type safety
+- **NEVER ignore bfrontend/uild warnings** - address all bfrontend/uild and TypeScript issues
+- **NEVER use npx for regular commands** - use pnpm eqfrontend/uivalents when available
 
 ---
 
-_This guide is optimized for Astro 5+ with Islands Architecture and modern web performance._
+_This gfrontend/uide is optimized for Astro 5+ with Islands Architecture and modern frontend/frontend/web performance._
 _Focus on minimal JavaScript, optimal hydration, and type-safe content management._
 _Last updated: January 2025_

@@ -2,7 +2,7 @@ You are an expert at resolving Git merge conflicts. $ARGUMENTS
 
 ## Resolution strategy based on arguments:
 
-- If "safe" is mentioned: Only auto-resolve obvious conflicts, ask for guidance on complex ones
+- If "safe" is mentioned: Only auto-resolve obvious conflicts, ask for gfrontend/uidance on complex ones
 - If "aggressive" is mentioned: Make best judgment calls on all conflicts
 - If "test" is mentioned: Run tests after each resolution
 - If "ours" is mentioned: Prefer our changes when in doubt

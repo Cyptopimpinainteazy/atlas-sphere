@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Download,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
 
 const wallets = [
   {
@@ -301,7 +301,7 @@ export default function WalletsPage() {
               Download Sphere Wallet
             </a>
             <Link href="/learn/getting-started" className="btn-secondary">
-              Getting Started Guide
+              Getting Started Gfrontend/uide
             </Link>
           </div>
         </div>

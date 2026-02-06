@@ -4,17 +4,17 @@ import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 import Link from 'next/link';
 import { Terminal, Code, CheckCircle, Coins } from 'lucide-react';
 
-export default function QuickstartPage() {
+export default function Qfrontend/uickstartPage() {
   return (
     <DocLayout 
-      title="Quick Start" 
+      title="Qfrontend/uick Start" 
       description="Get up and running with X3 Atlas Sphere in under 5 minutes"
       lastUpdated="December 2024"
     >
       <div className="space-y-8">
-        {/* Prerequisites */}
+        {/* Prereqfrontend/uisites */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Prerequisites</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Prereqfrontend/uisites</h2>
           <p className="text-gray-400 mb-4">Before you begin, make sure you have:</p>
           <ul className="space-y-2">
             {[
@@ -211,7 +211,7 @@ console.log('Confirmed in block:', receipt?.blockNumber);`}
             </Link>
             <Link href="/developers/docs/dual-vm" className="glass-card-hover p-4 block card-lift">
               <Code className="w-6 h-6 text-orange-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">Dual VM Guide</h3>
+              <h3 className="font-semibold text-white mb-1">Dual VM Gfrontend/uide</h3>
               <p className="text-xs text-gray-500">Deploy on EVM and SVM</p>
             </Link>
             <Link href="/developers/docs/comits" className="glass-card-hover p-4 block card-lift">

@@ -16,7 +16,7 @@ We've included a [reference implementation](https://github.com/anthropics/claude
 
 ## Key features
 
-- **Production-ready Node.js**: Built on Node.js 20 with essential development dependencies
+- **Production-ready Node.js**: Bfrontend/uilt on Node.js 20 with essential development dependencies
 - **Security by design**: Custom firewall restricting network access to only necessary services
 - **Developer-friendly tools**: Includes git, ZSH with productivity enhancements, fzf, and more
 - **Seamless VS Code integration**: Pre-configured extensions and optimized settings

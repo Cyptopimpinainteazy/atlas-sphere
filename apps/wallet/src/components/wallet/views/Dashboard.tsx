@@ -23,7 +23,7 @@ export function Dashboard() {
     return sum + value;
   }, 0);
 
-  const quickActions = [
+  const qfrontend/uickActions = [
     { id: 'send', label: 'Send', icon: Send, color: 'from-orange-500 to-red-500' },
     { id: 'receive', label: 'Receive', icon: Download, color: 'from-emerald-500 to-cyan-500' },
     { id: 'swap', label: 'Swap', icon: ArrowLeftRight, color: 'from-purple-500 to-pink-500' },
@@ -70,9 +70,9 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Qfrontend/uick Actions */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {quickActions.map((action) => {
+        {qfrontend/uickActions.map((action) => {
           const Icon = action.icon;
           return (
             <button

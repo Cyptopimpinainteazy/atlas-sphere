@@ -38,7 +38,7 @@
 - Idle GPU optimization during sleep hours
 - System monitoring (CPU, memory, GPU, battery)
 - Priority-based task scheduler
-- Task types: ModelTraining, RouteOptimization, ZkProofGeneration, IndexBuilding, NetworkAnalysis
+- Task types: ModelTraining, RouteOptimization, ZkProofGeneration, IndexBfrontend/uilding, NetworkAnalysis
 - 5 modules: tasks.rs, monitor.rs, scheduler.rs, config.rs, lib.rs
 
 ### 7. Quantum-Resistant Cryptography ✅
@@ -57,7 +57,7 @@
 - Smart routing with Dijkstra's algorithm
 - Bridge support: Atlas Bridge, Wormhole, Across, Stargate, LayerZero
 - Route optimization with multi-factor cost
-- 5 modules: types.rs, builder.rs, executor.rs, routes.rs, lib.rs
+- 5 modules: types.rs, bfrontend/uilder.rs, executor.rs, routes.rs, lib.rs
 
 ## 📊 BUILD STATUS
 

@@ -326,15 +326,15 @@ export function useComitSubmission() {
 
       switch (type) {
         case 'evm':
-          if (!evmPayload) throw new Error('EVM payload required');
+          if (!evmPayload) throw new Error('EVM payload reqfrontend/uired');
           result = await sdkIntegration.submitEvmComit(signer, evmPayload, fee);
           break;
         case 'svm':
-          if (!svmPayload) throw new Error('SVM payload required');
+          if (!svmPayload) throw new Error('SVM payload reqfrontend/uired');
           result = await sdkIntegration.submitSvmComit(signer, svmPayload, fee);
           break;
         case 'dual':
-          if (!evmPayload || !svmPayload) throw new Error('Both payloads required');
+          if (!evmPayload || !svmPayload) throw new Error('Both payloads reqfrontend/uired');
           result = await sdkIntegration.submitDualComit(signer, evmPayload, svmPayload, fee);
           break;
       }

@@ -1,7 +1,7 @@
 /**
- * ComitBuilder - Fluent builder for constructing Comit transactions
+ * ComitBfrontend/uilder - Fluent bfrontend/uilder for constructing Comit transactions
  *
- * Provides a type-safe, chainable API for building cross-VM transactions.
+ * Provides a type-safe, chainable API for bfrontend/uilding cross-VM transactions.
  */
 
 import type { HexString } from '@polkadot/util/types';
@@ -65,9 +65,9 @@ export interface SvmPayloadOptions {
 }
 
 /**
- * Builder state tracking
+ * Bfrontend/uilder state tracking
  */
-interface BuilderState {
+interface Bfrontend/uilderState {
   evmPayload?: Uint8Array;
   svmPayload?: Uint8Array;
   fee?: Balance;
@@ -79,15 +79,15 @@ interface BuilderState {
 }
 
 // =============================================================================
-// ComitBuilder
+// ComitBfrontend/uilder
 // =============================================================================
 
 /**
- * Fluent builder for constructing Comit transactions
+ * Fluent bfrontend/uilder for constructing Comit transactions
  *
  * @example
  * ```typescript
- * const comit = new ComitBuilder()
+ * const comit = new ComitBfrontend/uilder()
  *   .withEvmPayload({
  *     to: '0x1234...',
  *     data: '0xabcd...',
@@ -98,13 +98,13 @@ interface BuilderState {
  *     data: instructionData,
  *   })
  *   .withFee('auto')
- *   .build();
+ *   .bfrontend/uild();
  *
  * const result = await client.submitComit(comit, signerAccount);
  * ```
  */
-export class ComitBuilder {
-  private state: BuilderState = {};
+export class ComitBfrontend/uilder {
+  private state: Bfrontend/uilderState = {};
 
   // ===========================================================================
   // EVM Payload Methods
@@ -269,11 +269,11 @@ export class ComitBuilder {
   }
 
   // ===========================================================================
-  // Build Methods
+  // Bfrontend/uild Methods
   // ===========================================================================
 
   /**
-   * Validate the current builder state
+   * Validate the current bfrontend/uilder state
    */
   validate(): string[] {
     const errors: string[] = [];
@@ -290,7 +290,7 @@ export class ComitBuilder {
       errors.push(`Combined payload size ${evmSize + svmSize} exceeds maximum ${MAX_COMBINED_PAYLOAD_SIZE}`);
     }
 
-    // Fee required for build
+    // Fee reqfrontend/uired for bfrontend/uild
     if (this.state.fee === undefined && !this.canAutoCalculateFee()) {
       // Will auto-calculate, so not an error
     }
@@ -299,21 +299,21 @@ export class ComitBuilder {
   }
 
   /**
-   * Check if builder is in a valid state for building
+   * Check if bfrontend/uilder is in a valid state for bfrontend/uilding
    */
   isValid(): boolean {
     return this.validate().length === 0;
   }
 
   /**
-   * Build the ComitInput for submission
+   * Bfrontend/uild the ComitInput for submission
    *
-   * @throws ValidationError if builder state is invalid
+   * @throws ValidationError if bfrontend/uilder state is invalid
    */
-  build(): ComitInput {
+  bfrontend/uild(): ComitInput {
     const errors = this.validate();
     if (errors.length > 0) {
-      throw new ValidationError('ComitBuilder', errors.join('; '));
+      throw new ValidationError('ComitBfrontend/uilder', errors.join('; '));
     }
 
     const evmPayload = this.state.evmPayload ?? new Uint8Array(0);
@@ -341,21 +341,21 @@ export class ComitBuilder {
   }
 
   /**
-   * Build the complete Comit structure (requires origin and nonce)
+   * Bfrontend/uild the complete Comit structure (reqfrontend/uires origin and nonce)
    *
    * @throws ValidationError if origin or nonce not set
    */
-  buildComit(): Comit {
+  bfrontend/uildComit(): Comit {
     if (!this.state.origin) {
-      throw new ValidationError('origin', 'Origin must be set to build complete Comit');
+      throw new ValidationError('origin', 'Origin must be set to bfrontend/uild complete Comit');
     }
     if (this.state.nonce === undefined) {
-      throw new ValidationError('nonce', 'Nonce must be set to build complete Comit');
+      throw new ValidationError('nonce', 'Nonce must be set to bfrontend/uild complete Comit');
     }
 
     const errors = this.validate();
     if (errors.length > 0) {
-      throw new ValidationError('ComitBuilder', errors.join('; '));
+      throw new ValidationError('ComitBfrontend/uilder', errors.join('; '));
     }
 
     const evmPayload = this.state.evmPayload ?? new Uint8Array(0);
@@ -384,7 +384,7 @@ export class ComitBuilder {
   }
 
   /**
-   * Reset the builder to initial state
+   * Reset the bfrontend/uilder to initial state
    */
   reset(): this {
     this.state = {};
@@ -392,10 +392,10 @@ export class ComitBuilder {
   }
 
   /**
-   * Clone the builder with current state
+   * Clone the bfrontend/uilder with current state
    */
-  clone(): ComitBuilder {
-    const clone = new ComitBuilder();
+  clone(): ComitBfrontend/uilder {
+    const clone = new ComitBfrontend/uilder();
     clone.state = { ...this.state };
     if (this.state.evmPayload) {
       clone.state.evmPayload = new Uint8Array(this.state.evmPayload);
@@ -500,34 +500,34 @@ export class ComitBuilder {
 // =============================================================================
 
 /**
- * Create a new ComitBuilder
+ * Create a new ComitBfrontend/uilder
  */
-export function comit(): ComitBuilder {
-  return new ComitBuilder();
+export function comit(): ComitBfrontend/uilder {
+  return new ComitBfrontend/uilder();
 }
 
 /**
- * Create a ComitBuilder with EVM-only payload
+ * Create a ComitBfrontend/uilder with EVM-only payload
  */
-export function evmComit(payload: HexString | Uint8Array | EvmPayloadOptions): ComitBuilder {
-  return new ComitBuilder().withEvmPayload(payload);
+export function evmComit(payload: HexString | Uint8Array | EvmPayloadOptions): ComitBfrontend/uilder {
+  return new ComitBfrontend/uilder().withEvmPayload(payload);
 }
 
 /**
- * Create a ComitBuilder with SVM-only payload
+ * Create a ComitBfrontend/uilder with SVM-only payload
  */
-export function svmComit(payload: HexString | Uint8Array | SvmPayloadOptions): ComitBuilder {
-  return new ComitBuilder().withSvmPayload(payload);
+export function svmComit(payload: HexString | Uint8Array | SvmPayloadOptions): ComitBfrontend/uilder {
+  return new ComitBfrontend/uilder().withSvmPayload(payload);
 }
 
 /**
- * Create a ComitBuilder with both EVM and SVM payloads
+ * Create a ComitBfrontend/uilder with both EVM and SVM payloads
  */
 export function dualComit(
   evmPayload: HexString | Uint8Array | EvmPayloadOptions,
   svmPayload: HexString | Uint8Array | SvmPayloadOptions
-): ComitBuilder {
-  return new ComitBuilder()
+): ComitBfrontend/uilder {
+  return new ComitBfrontend/uilder()
     .withEvmPayload(evmPayload)
     .withSvmPayload(svmPayload);
 }

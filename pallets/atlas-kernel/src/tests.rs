@@ -5,7 +5,7 @@ use sp_core::{hashing::blake2_256, H256};
 use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, ComitFailureReason, Nonces};
 
 use crate::mock::{
-    self, new_test_ext, AssetId, AtlasId, AtlasKernel, Balance, ExtBuilder, RuntimeEvent,
+    self, new_test_ext, AssetId, AtlasId, AtlasKernel, Balance, ExtBfrontend/uilder, RuntimeEvent,
     RuntimeOrigin, System, ALICE, BOB, CHARLIE, INITIAL_BALANCE,
 };
 
@@ -299,7 +299,7 @@ fn submit_comit_rejects_when_prepare_root_mismatch() {
         let comit_id = H256::from_low_u64_be(6);
         let evm_payload = vec![1, 2];
         let svm_payload = vec![3, 4];
-        let fee: Balance = 26; // Must be >= required fee to reach verification check
+        let fee: Balance = 26; // Must be >= reqfrontend/uired fee to reach verification check
         let correct_root = compute_prepare_root(comit_id, &evm_payload, &svm_payload, 0, fee);
         let mismatched_root = H256::from_low_u64_be(999);
         assert_ne!(mismatched_root, correct_root);
@@ -1102,7 +1102,7 @@ fn account_registry_not_overwritten_on_repeated_submission() {
 }
 
 #[test]
-fn comit_submission_emits_all_required_event_fields() {
+fn comit_submission_emits_all_reqfrontend/uired_event_fields() {
     new_test_ext().execute_with(|| {
         let comit_id = H256::from_low_u64_be(2000);
         let evm_payload = vec![1, 2, 3, 4, 5];
@@ -1288,22 +1288,22 @@ fn asset_registration_emits_correct_metadata() {
 
 #[test]
 fn submit_comit_insufficient_balance_fails() {
-    // Create test with Alice having only 10 balance (less than required 26)
-    ExtBuilder::default()
+    // Create test with Alice having only 10 balance (less than reqfrontend/uired 26)
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, 10u128), (BOB, INITIAL_BALANCE)])
         .authorized_accounts(vec![ALICE, BOB])
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             let comit_id = H256::from_low_u64_be(10000);
             let evm_payload = vec![1];
             let svm_payload = vec![2];
             let nonce = 0;
-            // Required fee will be (21000/1000) + (5000/1000) = 26
+            // Reqfrontend/uired fee will be (21000/1000) + (5000/1000) = 26
             let fee = 26u128;
             let prepare_root =
                 compute_prepare_root(comit_id, &evm_payload, &svm_payload, nonce, fee);
 
-            // Check Alice has insufficient balance for the required fee
+            // Check Alice has insufficient balance for the reqfrontend/uired fee
             let initial_balance = <mock::Balances as frame_support::traits::Currency<
                 mock::AccountId,
             >>::free_balance(&ALICE);
@@ -1333,10 +1333,10 @@ fn submit_comit_insufficient_balance_fails() {
 #[test]
 fn submit_comit_rejects_unauthorized_account() {
     // Create test with no authorized accounts
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE), (BOB, INITIAL_BALANCE)])
         .authorized_accounts(vec![]) // No one authorized
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             let comit_id = H256::from_low_u64_be(9001);
             let evm_payload = vec![1, 2, 3];
@@ -1367,10 +1367,10 @@ fn submit_comit_rejects_unauthorized_account() {
 
 #[test]
 fn authorize_account_enables_comit_submission() {
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE)])
         .authorized_accounts(vec![]) // Start with no one authorized
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             let comit_id = H256::from_low_u64_be(9002);
             let evm_payload = vec![1];
@@ -1414,10 +1414,10 @@ fn authorize_account_enables_comit_submission() {
 
 #[test]
 fn deauthorize_account_blocks_comit_submission() {
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE)])
         .authorized_accounts(vec![ALICE]) // ALICE starts authorized
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             let comit_id_1 = H256::from_low_u64_be(9003);
             let comit_id_2 = H256::from_low_u64_be(9004);
@@ -1466,7 +1466,7 @@ fn deauthorize_account_blocks_comit_submission() {
 }
 
 #[test]
-fn authorize_account_requires_governance_origin() {
+fn authorize_account_reqfrontend/uires_governance_origin() {
     new_test_ext().execute_with(|| {
         // Regular signed origin should fail
         assert_noop!(
@@ -1480,7 +1480,7 @@ fn authorize_account_requires_governance_origin() {
 }
 
 #[test]
-fn deauthorize_account_requires_governance_origin() {
+fn deauthorize_account_reqfrontend/uires_governance_origin() {
     new_test_ext().execute_with(|| {
         // Regular signed origin should fail
         assert_noop!(
@@ -1495,10 +1495,10 @@ fn deauthorize_account_requires_governance_origin() {
 
 #[test]
 fn authorization_events_emitted_correctly() {
-    ExtBuilder::default()
+    ExtBfrontend/uilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE)])
         .authorized_accounts(vec![])
-        .build()
+        .bfrontend/uild()
         .execute_with(|| {
             // Authorize
             assert_ok!(AtlasKernel::authorize_account(RuntimeOrigin::root(), ALICE));
@@ -1549,13 +1549,13 @@ fn register_asset_rejects_empty_symbol() {
 }
 
 #[test]
-fn register_asset_rejects_symbol_starting_with_dash() {
+fn register_asset_rejects_symbol_starting_with_apps/apps/dash-legacy-2-legacy-2() {
     new_test_ext().execute_with(|| {
         assert_noop!(
             AtlasKernel::register_asset(
                 RuntimeOrigin::root(),
                 1u32,
-                b"-TOKEN".to_vec(), // Starts with dash
+                b"-TOKEN".to_vec(), // Starts with apps/apps/dash-legacy-2-legacy-2
                 12
             ),
             AtlasError::InvalidSymbolFormat
@@ -1579,7 +1579,7 @@ fn register_asset_rejects_symbol_starting_with_underscore() {
 }
 
 #[test]
-fn register_asset_allows_dash_underscore_in_middle() {
+fn register_asset_allows_apps/apps/dash-legacy-2-legacy-2_underscore_in_middle() {
     new_test_ext().execute_with(|| {
         // Dash in middle is OK
         assert_ok!(AtlasKernel::register_asset(

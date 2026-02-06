@@ -12,7 +12,7 @@ The **Dominance-Based Conditional Folding Pass** is the spinal alignment of the 
 
 ### Phase 1: CFG & Dominator Construction
 
-The pass starts by building:
+The pass starts by bfrontend/uilding:
 - **Control Flow Graph (CFG)**: Successors and predecessors for each block
 - **Dominator Tree**: Computed via iterative dataflow algorithm
 
@@ -329,13 +329,13 @@ for x in 1..10:
 ```
 MirFunction
     ↓
-Cfg::from_function()  [Build CFG + successor/predecessor maps]
+Cfg::from_function()  [Bfrontend/uild CFG + successor/predecessor maps]
     ↓
 collect_vars()        [Find all variables in function]
     ↓
 forward_const_prop()  [Iterative dataflow with meet/transfer]
     ↓
-Condition Env         [Build CE from propagated constants]
+Condition Env         [Bfrontend/uild CE from propagated constants]
     ↓
 fold_branches()       [Traverse tree, fold branches using CE]
     ↓

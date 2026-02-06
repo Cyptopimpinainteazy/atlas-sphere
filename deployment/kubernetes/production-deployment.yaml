@@ -24,7 +24,7 @@ metadata:
 data:
   testnet-raw.json: |
     # Chain spec will be generated and inserted here
-    # Generated via: atlas-sphere-node build-spec --chain=testnet --raw
+    # Generated via: atlas-sphere-node bfrontend/uild-spec --chain=testnet --raw
 
 ---
 # Secret - Validator keys (sealed secret in production)
@@ -511,7 +511,7 @@ metadata:
     nginx.ingress.kubernetes.io/limit-rps: "10"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/websocket-services: bootnode
+    nginx.ingress.kubernetes.io/frontend/websocket-services: bootnode
 spec:
   tls:
   - hosts:

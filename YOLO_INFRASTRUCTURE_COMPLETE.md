@@ -225,7 +225,7 @@ All 84 tests passing:
 ## Next Steps
 
 - Integrate with CI/CD for automated benchmark tracking
-- Build dashboard for round-by-round gas reduction
+- Bfrontend/uild apps/apps/dash-legacy-2-legacy-2board for round-by-round gas reduction
 - Use per-pass metrics to tune pass ordering
 - Feed telemetry into swarm superoptimizer
 ```
@@ -234,7 +234,7 @@ All 84 tests passing:
 
 ## Compilation & Test Results
 
-### Build Status
+### Bfrontend/uild Status
 ```
 ✅ cargo check -p x3-opt     CLEAN
 ✅ cargo check -p x3-bench   CLEAN
@@ -276,7 +276,7 @@ All 84 tests passing:
 - [x] comparator.rs created & integrated into x3-bench
 - [x] tools/yolo_run.sh created & made executable
 - [x] serde_json dependency added to x3-bench/Cargo.toml
-- [x] All imports & use paths verified
+- [x] All archive/archive/imports & use paths verified
 - [x] default_passes() function added to optimizer.rs
 - [x] 81 existing tests still passing
 - [x] 3 new YOLO smoke tests passing
@@ -285,11 +285,11 @@ All 84 tests passing:
 
 ---
 
-## Quick Start (for running locally)
+## Qfrontend/uick Start (for running locally)
 
 ### 1. Verify compilation
 ```bash
-cargo build -p x3-opt -p x3-bench --release
+cargo bfrontend/uild -p x3-opt -p x3-bench --release
 ```
 
 ### 2. Run unit tests
@@ -362,7 +362,7 @@ Once these artifacts are committed, the final 20% of the optimizer lights up:
 
 ### Followed by:
 - **Register Allocator Phase 5**: apply_to_codegen() wire-up
-- **Superoptimizer Core**: AI-driven pattern search + SMT equiv checking
+- **Superoptimizer Core**: AI-driven pattern search + SMT eqfrontend/uiv checking
 - **AI-Driven Pass Tuning**: Swarm optimization of pass ordering
 
 This is how you go from "good compiler" to **"this should not be legal to use against competitors"**.

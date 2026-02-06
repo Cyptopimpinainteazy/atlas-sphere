@@ -8,7 +8,7 @@ and matches trades on your custom EVM chain.
 import os
 import time
 from decimal import Decimal
-from web3 import Web3
+from frontend/web3 import Web3
 from eth_account import Account
 from dotenv import load_dotenv
 
@@ -30,8 +30,8 @@ QUOTE_TOKEN = os.getenv('QUOTE_TOKEN', ETH_ADDRESS)
 ORDERBOOK_ABI = [
     {
         "inputs": [
-            {"internalType": "uint256", "name": "price", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount", "type": "uint256"},
+            {"internalType": "frontend/uint256", "name": "price", "type": "frontend/uint256"},
+            {"internalType": "frontend/uint256", "name": "amount", "type": "frontend/uint256"},
             {"internalType": "bool", "name": "isBuy", "type": "bool"},
             {"internalType": "address", "name": "baseToken", "type": "address"},
             {"internalType": "address", "name": "quoteToken", "type": "address"}
@@ -43,8 +43,8 @@ ORDERBOOK_ABI = [
     },
     {
         "inputs": [
-            {"internalType": "uint256", "name": "buyOrderId", "type": "uint256"},
-            {"internalType": "uint256", "name": "sellOrderId", "type": "uint256"}
+            {"internalType": "frontend/uint256", "name": "buyOrderId", "type": "frontend/uint256"},
+            {"internalType": "frontend/uint256", "name": "sellOrderId", "type": "frontend/uint256"}
         ],
         "name": "matchOrders",
         "outputs": [],
@@ -58,8 +58,8 @@ ORDERBOOK_ABI = [
         ],
         "name": "getBestPrices",
         "outputs": [
-            {"internalType": "uint256", "name": "bid", "type": "uint256"},
-            {"internalType": "uint256", "name": "ask", "type": "uint256"}
+            {"internalType": "frontend/uint256", "name": "bid", "type": "frontend/uint256"},
+            {"internalType": "frontend/uint256", "name": "ask", "type": "frontend/uint256"}
         ],
         "stateMutability": "view",
         "type": "function"
@@ -67,7 +67,7 @@ ORDERBOOK_ABI = [
     {
         "inputs": [],
         "name": "orderIdCounter",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "outputs": [{"internalType": "frontend/uint256", "name": "", "type": "frontend/uint256"}],
         "stateMutability": "view",
         "type": "function"
     }
@@ -79,7 +79,7 @@ ERC20_ABI = [
         "constant": False,
         "inputs": [
             {"name": "_spender", "type": "address"},
-            {"name": "_value", "type": "uint256"}
+            {"name": "_value", "type": "frontend/uint256"}
         ],
         "name": "approve",
         "outputs": [{"name": "", "type": "bool"}],
@@ -89,12 +89,12 @@ ERC20_ABI = [
 
 class OrderbookBot:
     def __init__(self):
-        self.web3 = Web3(Web3.HTTPProvider(RPC_URL))
-        if not self.web3.is_connected():
+        self.frontend/web3 = Web3(Web3.HTTPProvider(RPC_URL))
+        if not self.frontend/web3.is_connected():
             raise Exception("Cannot connect to RPC")
 
         self.account = Account.from_key(PRIVATE_KEY)
-        self.contract = self.web3.eth.contract(
+        self.contract = self.frontend/web3.eth.contract(
             address=Web3.to_checksum_address(CONTRACT_ADDRESS),
             abi=ORDERBOOK_ABI
         )
@@ -111,11 +111,11 @@ class OrderbookBot:
             total_cost = int(Decimal(str(price)) * Decimal(str(amount)))
             self._approve_token(QUOTE_TOKEN, total_cost)
 
-        # Build transaction
+        # Bfrontend/uild transaction
         tx_data = {
             'from': self.account.address,
-            'nonce': self.web3.eth.get_transaction_count(self.account.address),
-            'gasPrice': self.web3.eth.gas_price
+            'nonce': self.frontend/web3.eth.get_transaction_count(self.account.address),
+            'gasPrice': self.frontend/web3.eth.gas_price
         }
 
         # Add value for ETH transfers
@@ -147,10 +147,10 @@ class OrderbookBot:
             is_buy,
             Web3.to_checksum_address(BASE_TOKEN),
             Web3.to_checksum_address(QUOTE_TOKEN)
-        ).build_transaction(tx_data)
+        ).bfrontend/uild_transaction(tx_data)
 
-        signed_tx = self.web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
-        tx_hash = self.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        signed_tx = self.frontend/web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
+        tx_hash = self.frontend/web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         print(f"Order placed. TX: {tx_hash.hex()}")
 
         return tx_hash
@@ -161,17 +161,17 @@ class OrderbookBot:
 
         tx_data = {
             'from': self.account.address,
-            'nonce': self.web3.eth.get_transaction_count(self.account.address),
-            'gasPrice': self.web3.eth.gas_price,
+            'nonce': self.frontend/web3.eth.get_transaction_count(self.account.address),
+            'gasPrice': self.frontend/web3.eth.gas_price,
             'gas': 300000
         }
 
         tx = self.contract.functions.matchOrders(
             buy_order_id, sell_order_id
-        ).build_transaction(tx_data)
+        ).bfrontend/uild_transaction(tx_data)
 
-        signed_tx = self.web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
-        tx_hash = self.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        signed_tx = self.frontend/web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
+        tx_hash = self.frontend/web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         print(f"Orders matched. TX: {tx_hash.hex()}")
 
         return tx_hash
@@ -187,28 +187,28 @@ class OrderbookBot:
 
     def _approve_token(self, token_address, amount):
         """Approve token spending"""
-        token_contract = self.web3.eth.contract(
+        token_contract = self.frontend/web3.eth.contract(
             address=Web3.to_checksum_address(token_address),
             abi=ERC20_ABI
         )
 
         tx_data = {
             'from': self.account.address,
-            'nonce': self.web3.eth.get_transaction_count(self.account.address),
-            'gasPrice': self.web3.eth.gas_price,
+            'nonce': self.frontend/web3.eth.get_transaction_count(self.account.address),
+            'gasPrice': self.frontend/web3.eth.gas_price,
             'gas': 100000
         }
 
         tx = token_contract.functions.approve(
             CONTRACT_ADDRESS, amount
-        ).build_transaction(tx_data)
+        ).bfrontend/uild_transaction(tx_data)
 
-        signed_tx = self.web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
-        tx_hash = self.web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        signed_tx = self.frontend/web3.eth.account.sign_transaction(tx, PRIVATE_KEY)
+        tx_hash = self.frontend/web3.eth.send_raw_transaction(signed_tx.raw_transaction)
         print(f"Token approved. TX: {tx_hash.hex()}")
 
         # Wait for confirmation
-        self.web3.eth.wait_for_transaction_receipt(tx_hash)
+        self.frontend/web3.eth.wait_for_transaction_receipt(tx_hash)
 
 def main():
     bot = OrderbookBot()

@@ -335,7 +335,7 @@ export const ScotchCassetteShowcase: React.FC<ScotchShowcaseProps> = ({
       duration: '1000+',
       catalogNumber: 'DEX-004',
       sphereColor: 'chrome' as const,
-      features: ['Best price routing', 'Concentrated liquidity', 'Limit orders', 'Portfolio tracking'],
+      features: ['Best price routing', 'Concentrated liqfrontend/uidity', 'Limit orders', 'Portfolio tracking'],
     },
   ];
 

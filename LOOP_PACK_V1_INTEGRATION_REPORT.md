@@ -109,7 +109,7 @@ Overall Pipeline: 32 → 25 (21.9% total reduction)
 - **Note:** Test modules are small synthetic examples; real-world code expected to show higher Loop-Pack contribution
 
 ### Observations
-1. **Loop-Pack v1 is integrated but quiet:** The pass is present and running, but the synthetic test modules don't trigger many loop optimizations (they're too simple for LICM/strength reduction to show dramatic wins)
+1. **Loop-Pack v1 is integrated but qfrontend/uiet:** The pass is present and running, but the synthetic test modules don't trigger many loop optimizations (they're too simple for LICM/strength reduction to show dramatic wins)
 
 2. **LICM target shows promise:** The pure LICM test case achieves 50% reduction, showing the underlying algorithm works
 
@@ -148,7 +148,7 @@ The benchmark uses synthetic MIR modules with simplified control flow. Real-worl
 ## 📈 Next Steps
 
 The pipeline is production-ready. Recommended next actions:
-1. Run full test suite: `cargo test -p x3-opt --lib` (110/110 passing)
+1. Run full test sfrontend/uite: `cargo test -p x3-opt --lib` (110/110 passing)
 2. Merge to main branch
 3. Profile against real blockchain workloads
 4. Consider tuning pass configuration for specific optimization targets

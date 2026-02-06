@@ -3,7 +3,7 @@
 //! This module provides benchmarks for all extrinsics in the Atlas Kernel pallet.
 //! Run benchmarks with:
 //! ```bash
-//! cargo build --release --features runtime-benchmarks
+//! cargo bfrontend/uild --release --features runtime-benchmarks
 //! ./target/release/atlas-sphere-node benchmark pallet \
 //!     --chain=dev \
 //!     --pallet=pallet_atlas_kernel \
@@ -26,7 +26,7 @@ use sp_std::vec;
 /// Helper to create a valid EVM payload for benchmarking
 fn create_evm_payload<T: Config>(size: u32) -> Vec<u8> {
     // Simple EVM payload: transfer-like calldata
-    // 0xa9059cbb = transfer(address,uint256) selector
+    // 0xa9059cbb = transfer(address,frontend/uint256) selector
     let mut payload = vec![0xa9, 0x05, 0x9c, 0xbb];
     // Pad with zeros to reach desired size
     payload.extend(vec![0u8; size.saturating_sub(4) as usize]);
@@ -309,5 +309,5 @@ mod benchmarks {
         Ok(())
     }
 
-    impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
+    impl_benchmark_test_sfrontend/uite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
 }
