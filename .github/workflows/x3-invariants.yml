@@ -1,0 +1,77 @@
+name: x3-invariants
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build (cargo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+      - name: cargo build
+        run: cargo build --all --locked --workspace
+      - name: Upload build log
+        if: failure()
+        run: echo "See cargo build output in job logs"
+
+  tla-check:
+    name: TLA+ checks
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run TLA+ checks (placeholder)
+        run: |
+          echo "Running TLA+ checks"
+          mkdir -p ./artifacts
+          echo "TODO: run Apalache/TLC or other TLA+ model checker here" > ./artifacts/tla-check.log
+      - name: Upload tla-check log
+        uses: actions/upload-artifact@v4
+        with:
+          name: tla-check-log
+          path: ./artifacts/tla-check.log
+
+  simulator-replay:
+    name: Deterministic Simulator Replay
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run simulator replay tests
+        run: |
+          echo "Running simulator replay tests"
+          mkdir -p ./artifacts
+          # Replace with real test invocation
+          echo "TODO: run simulator replay test - ensure deterministic output" > ./artifacts/simulator.log
+      - name: Upload simulator log
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-log
+          path: ./artifacts/simulator.log
+
+  slashing-property-test:
+    name: Slashing property tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run slashing property tests
+        run: |
+          echo "Running slashing property tests"
+          mkdir -p ./artifacts
+          # Replace with concrete property-based tests invocation
+          echo "TODO: run property-based tests for slashing" > ./artifacts/slashing.log
+      - name: Upload slashing log
+        uses: actions/upload-artifact@v4
+        with:
+          name: slashing-log
+          path: ./artifacts/slashing.log
