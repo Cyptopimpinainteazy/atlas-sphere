@@ -29,23 +29,32 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Run Apalache (if spec present)
+      - name: Run TLA+ checks (Apalache via script)
         run: |
-          echo "Running TLA+ checks (Apalache)"
+          echo "Running TLA+ checks using scripts/ci/tla_check.sh"
           mkdir -p ./artifacts
-          if [ -f X3.tla ]; then
-            docker run --rm -v "$PWD":/src informalsystems/apalache:latest apalache-mc check /src/X3.tla 2>&1 | tee ./artifacts/tla-check.log
-          elif [ -f spec/X3.tla ]; then
-            docker run --rm -v "$PWD":/src informalsystems/apalache:latest apalache-mc check /src/spec/X3.tla 2>&1 | tee ./artifacts/tla-check.log
-          else
-            echo "X3.tla not found; skipping Apalache check" | tee ./artifacts/tla-check.log
-            echo "::warning::X3.tla not found; skipping Apalache check"
-          fi
+          chmod +x ./scripts/ci/tla_check.sh
+          ./scripts/ci/tla_check.sh
       - name: Upload tla-check log
         uses: actions/upload-artifact@v4
         with:
           name: tla-check-log
           path: ./artifacts/tla-check.log
+
+  x3-invariants:
+    name: x3-invariants
+    runs-on: ubuntu-latest
+    needs: [tla-check, simulator-replay, slashing-property-test]
+    steps:
+      - name: All invariants passed
+        run: |
+          echo "All x3 invariants jobs passed" > ./artifacts/x3-invariants.txt
+          ls -la ./artifacts || true
+      - name: Upload x3-invariants artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x3-invariants
+          path: ./artifacts/x3-invariants.txt
 
   simulator-replay:
     name: Deterministic Simulator Replay

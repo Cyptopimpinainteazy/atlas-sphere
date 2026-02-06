@@ -9,17 +9,17 @@
 **Roadmap owner:** @team/core  
 **Month owners:** Add per-month owners using the `monthly-checklist` issue template.  
 
-**Month owners (placeholders — update with GitHub handles):**
-- Month 1: @team/core
-- Month 2: @team/core
-- Month 3: @team/core
-- Month 4: @team/core
-- Month 5: @team/core
-- Month 6: @team/core
-- Month 7: @team/core
-- Month 8: @team/core
+**Month owners (linked to monthly issues):**
+- Month 1: @team/core — Issue #1257
+- Month 2: @team/core — Issue #1258
+- Month 3: @team/core — Issue #1259
+- Month 4: @team/core — Issue #1260
+- Month 5: @team/core — Issue #1261
+- Month 6: @team/core — Issue #1262
+- Month 7: @team/core — Issue #1263
+- Month 8: @team/core — Issue #1264
 
-*(Replace placeholders with actual owner handles; you can create per-month issues using the `monthly-checklist` template.)*
+*(Per-month issues created using the `monthly-checklist` template. Replace `@team/core` with specific GitHub handles and set `Target Completion` dates in each issue.)*
 
 **Required CI checks (machine-checkable acceptance gates):**
 - `build` — builds: `cargo build --all --locked` (artifact: `build.log`)
