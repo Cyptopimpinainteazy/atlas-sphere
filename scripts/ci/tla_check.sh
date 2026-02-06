@@ -6,20 +6,27 @@ mkdir -p "$ARTIFACT_DIR"
 LOG="$ARTIFACT_DIR/tla-check.log"
 : > "$LOG"
 
-echo "Searching for .tla specs (spec/, formal/, root X3.tla)..." | tee -a "$LOG"
+echo "Searching for .tla specs (repo-wide) and excluding .git, node_modules, target..." | tee -a "$LOG"
 
-# Collect candidate TLA files
+# Collect candidate TLA files (repo-wide)
 FILES=()
-# prefer root X3.tla if present
-if [ -f X3.tla ]; then
-  FILES+=("X3.tla")
-fi
-# search common spec directories
 while IFS= read -r -d $'\0' f; do
   # make path relative to repo root when using docker mount
   rel="${f#$PWD/}"
   FILES+=("$rel")
-done < <(find spec formal -type f -name '*.tla' -print0 2>/dev/null || true)
+done < <(find . -type f -name '*.tla' -not -path './.git/*' -not -path './node_modules/*' -not -path './target/*' -print0)
+
+# Optional: prefer top-level X3.tla if present
+if [ -f ./X3.tla ]; then
+  # move to front if not already first
+  for i in "${!FILES[@]}"; do
+    if [ "${FILES[$i]}" = "./X3.tla" ] || [ "${FILES[$i]}" = "X3.tla" ]; then
+      unset 'FILES[$i]'
+      break
+    fi
+  done
+  FILES=("X3.tla" "${FILES[@]}")
+fi
 
 if [ ${#FILES[@]} -eq 0 ]; then
   echo "No TLA files found; skipping Apalache check" | tee -a "$LOG"
