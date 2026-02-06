@@ -17,6 +17,16 @@ jobs:
         with:
           toolchain: stable
           profile: minimal
+      - name: Ensure `patches/environmental` is present
+        run: |
+          echo "Ensuring patches/environmental exists for workspace patches"
+          mkdir -p patches
+          if [ ! -d patches/environmental ]; then
+            echo "Cloning paritytech/environmental (shallow) into patches/environmental"
+            git clone --depth 1 https://github.com/paritytech/environmental patches/environmental
+          else
+            echo "patches/environmental already present"
+          fi
       - name: cargo build
         run: cargo build --all --locked --workspace
       - name: Upload build log
