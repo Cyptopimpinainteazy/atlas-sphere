@@ -29,11 +29,18 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Run TLA+ checks (placeholder)
+      - name: Run Apalache (if spec present)
         run: |
-          echo "Running TLA+ checks"
+          echo "Running TLA+ checks (Apalache)"
           mkdir -p ./artifacts
-          echo "TODO: run Apalache/TLC or other TLA+ model checker here" > ./artifacts/tla-check.log
+          if [ -f X3.tla ]; then
+            docker run --rm -v "$PWD":/src informalsystems/apalache:latest apalache-mc check /src/X3.tla 2>&1 | tee ./artifacts/tla-check.log
+          elif [ -f spec/X3.tla ]; then
+            docker run --rm -v "$PWD":/src informalsystems/apalache:latest apalache-mc check /src/spec/X3.tla 2>&1 | tee ./artifacts/tla-check.log
+          else
+            echo "X3.tla not found; skipping Apalache check" | tee ./artifacts/tla-check.log
+            echo "::warning::X3.tla not found; skipping Apalache check"
+          fi
       - name: Upload tla-check log
         uses: actions/upload-artifact@v4
         with:
@@ -46,12 +53,14 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Run simulator replay tests
+      - name: Build workspace
+        run: cargo build --all --locked --workspace
+      - name: Run simulator replay test
         run: |
           echo "Running simulator replay tests"
           mkdir -p ./artifacts
-          # Replace with real test invocation
-          echo "TODO: run simulator replay test - ensure deterministic output" > ./artifacts/simulator.log
+          # Run the simulator integration test and capture output
+          cargo test -p x3-evolution --test simulator_replay -- --nocapture 2>&1 | tee ./artifacts/simulator.log
       - name: Upload simulator log
         uses: actions/upload-artifact@v4
         with:
@@ -68,8 +77,7 @@ jobs:
         run: |
           echo "Running slashing property tests"
           mkdir -p ./artifacts
-          # Replace with concrete property-based tests invocation
-          echo "TODO: run property-based tests for slashing" > ./artifacts/slashing.log
+          cargo test -p swarm-media --test slashing_properties -- --nocapture 2>&1 | tee ./artifacts/slashing.log
       - name: Upload slashing log
         uses: actions/upload-artifact@v4
         with:

@@ -22,3 +22,4 @@ hex = "0.4"
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"
+proptest = "1.0"

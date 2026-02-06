@@ -9,6 +9,18 @@
 **Roadmap owner:** @team/core  
 **Month owners:** Add per-month owners using the `monthly-checklist` issue template.  
 
+**Month owners (placeholders — update with GitHub handles):**
+- Month 1: @team/core
+- Month 2: @team/core
+- Month 3: @team/core
+- Month 4: @team/core
+- Month 5: @team/core
+- Month 6: @team/core
+- Month 7: @team/core
+- Month 8: @team/core
+
+*(Replace placeholders with actual owner handles; you can create per-month issues using the `monthly-checklist` template.)*
+
 **Required CI checks (machine-checkable acceptance gates):**
 - `build` — builds: `cargo build --all --locked` (artifact: `build.log`)
 - `x3-invariants` — TLA+ + property tests (artifact: `tla-check.log`)
