@@ -63,12 +63,8 @@ jobs:
           DOCKER_COMPOSE_PROJECT: ${{ env.DOCKER_COMPOSE_PROJECT }}
           E2E_DETERMINISTIC_TRIPLE_RUN: ${{ env.E2E_DETERMINISTIC_TRIPLE_RUN }}
         run: |
-          set -o pipefail
-          mkdir -p artifacts/run-${{ matrix.run }}/logs
-          echo "Running state_root_replay test (logs -> artifacts/run-${{ matrix.run }}/logs/state_root_replay.log)"
-          if ! cargo test --test state_root_replay -- --nocapture 2>&1 | tee artifacts/run-${{ matrix.run }}/logs/state_root_replay.log; then
-            echo "E2E test failed — see artifacts for logs"; exit 1
-          fi
+          chmod +x tests/e2e/ci_run_state_root_test.sh
+          tests/e2e/ci_run_state_root_test.sh "run-${{ matrix.run }}" artifacts/run-${{ matrix.run }}/logs
 
       - name: Collect diagnostics (always)
         if: always()

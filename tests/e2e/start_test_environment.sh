@@ -49,6 +49,37 @@ export TEST_ENVIRONMENT=testnet
 export ATLAS_NODE_ENV=testnet
 export DOCKER_BUILDKIT=1
 
+# Load deterministic configuration if in CI or explicitly enabled
+if [ "${CI:-false}" = "true" ] || [ "${E2E_DETERMINISTIC_TRIPLE_RUN:-0}" = "1" ]; then
+  if [ -f "$SCRIPT_DIR/fixtures/deterministic_config.toml" ]; then
+    export ATLAS_E2E_DETERMINISTIC_SEED="atlas-e2e-deterministic-seed-001"
+    export ATLAS_E2E_GENESIS_TIMESTAMP="1707388800"
+    export ATLAS_E2E_BLOCK_TIME_MILLIS="6000"
+    log_info "Deterministic mode enabled: seed=$ATLAS_E2E_DETERMINISTIC_SEED timestamp=$ATLAS_E2E_GENESIS_TIMESTAMP"
+  fi
+fi
+
+# Load deterministic configuration if running in deterministic mode
+if [ "${E2E_DETERMINISTIC_TRIPLE_RUN:-0}" = "1" ]; then
+    echo "Loading deterministic configuration..."
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    FIXTURE_FILE="$SCRIPT_DIR/fixtures/deterministic_config.toml"
+    if [ -f "$FIXTURE_FILE" ]; then
+        # Export deterministic settings as environment variables
+        export ATLAS_E2E_DETERMINISTIC_SEED="0x1234567890abcdef1234567890abcdef"
+        export ATLAS_E2E_GENESIS_TIMESTAMP="1707340800"
+        export ATLAS_E2E_BLOCK_TIME_MS="6000"
+        export ATLAS_E2E_SESSION_LENGTH="6"
+        export ATLAS_E2E_NUM_VALIDATORS="3"
+        export ATLAS_E2E_GAS_LIMIT="8000000"
+        export ATLAS_E2E_STRUCTURED_LOGGING="true"
+        export ATLAS_E2E_DIAGNOSTIC_MODE="true"
+        log_info "Deterministic config loaded from $FIXTURE_FILE"
+    else
+        log_warning "Deterministic config requested but fixture not found at $FIXTURE_FILE"
+    fi
+fi
+
 log_info "Starting X3-Atlas-Sphere E2E Test Environment..."
 log_info "Test Environment: $TEST_ENVIRONMENT"
 log_info "Project Root: $PROJECT_ROOT"
