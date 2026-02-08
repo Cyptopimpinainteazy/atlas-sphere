@@ -1,0 +1,110 @@
+name: E2E: CHAIN-CONSENSUS-001 (state-root replay)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 3 * * *' # nightly UTC
+
+concurrency:
+  group: e2e-state-root-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-state-root:
+    name: E2E state-root replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DOCKER_COMPOSE_PROJECT: e2e-${{ github.run_id }}
+      E2E_DETERMINISTIC_TRIPLE_RUN: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build workspace (precompile tests)
+        run: cargo test -p x3-compiler --no-run
+
+      - name: Start E2E environment
+        env:
+          DOCKER_COMPOSE_PROJECT: ${{ env.DOCKER_COMPOSE_PROJECT }}
+        run: |
+          chmod +x tests/e2e/start_test_environment.sh
+          set -e
+          echo "Bringing up E2E test environment (project ${DOCKER_COMPOSE_PROJECT})"
+          DOCKER_COMPOSE_PROJECT="${DOCKER_COMPOSE_PROJECT}" tests/e2e/start_test_environment.sh up &
+          # Wait for RPC to be up (best-effort; adjust port if your setup differs)
+          echo "Waiting for node RPC to respond on http://127.0.0.1:9933/"
+          for i in $(seq 1 30); do
+            if curl -sSf http://127.0.0.1:9933/ >/dev/null 2>&1; then
+              echo "Node RPC reachable"
+              break
+            fi
+            echo "retry $i..."
+            sleep 5
+          done
+
+      - name: Run CHAIN-CONSENSUS-001 state-root replay test
+        env:
+          DOCKER_COMPOSE_PROJECT: ${{ env.DOCKER_COMPOSE_PROJECT }}
+          E2E_DETERMINISTIC_TRIPLE_RUN: ${{ env.E2E_DETERMINISTIC_TRIPLE_RUN }}
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/logs
+          echo "Running state_root_replay test (logs -> artifacts/logs/state_root_replay.log)"
+          if ! cargo test --test state_root_replay -- --nocapture 2>&1 | tee artifacts/logs/state_root_replay.log; then
+            echo "E2E test failed — see artifacts for logs"; exit 1
+          fi
+
+      - name: Collect diagnostics (always)
+        if: always()
+        env:
+          DOCKER_COMPOSE_PROJECT: ${{ env.DOCKER_COMPOSE_PROJECT }}
+        run: |
+          mkdir -p artifacts/logs
+          echo "Collecting docker-compose logs..."
+          docker compose -p "${DOCKER_COMPOSE_PROJECT}" logs --no-color > artifacts/logs/docker-compose.log || true
+          echo "Listing docker containers..."
+          docker ps -a > artifacts/logs/docker-ps.log || true
+          echo "Collecting dmesg tail..."
+          dmesg | tail -n 200 > artifacts/logs/dmesg.log || true
+
+      - name: Sanitize artifacts (always)
+        if: always()
+        run: |
+          chmod +x scripts/ci/sanitize_artifacts.sh
+          scripts/ci/sanitize_artifacts.sh artifacts || true
+
+      - name: Upload artifacts (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-state-root-artifacts-${{ github.run_id }}
+          path: artifacts
+
+      - name: Tear down E2E environment (always)
+        if: always()
+        env:
+          DOCKER_COMPOSE_PROJECT: ${{ env.DOCKER_COMPOSE_PROJECT }}
+        run: |
+          echo "Tearing down E2E environment (project ${DOCKER_COMPOSE_PROJECT})"
+          DOCKER_COMPOSE_PROJECT="${DOCKER_COMPOSE_PROJECT}" tests/e2e/start_test_environment.sh down || docker compose -p "${DOCKER_COMPOSE_PROJECT}" down -v || true
