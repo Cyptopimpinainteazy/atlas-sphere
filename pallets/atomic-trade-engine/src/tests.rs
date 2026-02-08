@@ -14,6 +14,10 @@ use crate::*;
 use frame_support::traits::Currency;
 use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_core::H256;
+use invariant_macros::invariant;
+
+//! Invariants: PALLET-TRADE-001
+
 
 // ============================================================================
 // Helper Functions
@@ -63,6 +67,7 @@ fn cross_vm_leg(amount: u128, min_out: u128) -> TradeLegInput {
 // ============================================================================
 
 #[test]
+#[invariant("PALLET-TRADE-001")]
 fn create_trade_batch_works() {
     new_test_ext().execute_with(|| {
         let account = account(1);
@@ -444,7 +449,7 @@ fn execute_multi_leg_batch_works() {
 fn execute_fails_with_slippage_exceeded() {
     new_test_ext().execute_with(|| {
         let amount = 1_000_000_000_000_000_000u128;
-        // Mock returns 98%, but we reqfrontend/uire 99%
+        // Mock returns 98%, but we require 99%
         let min_out = amount * 99 / 100;
 
         let legs = vec![evm_leg(amount, min_out)];

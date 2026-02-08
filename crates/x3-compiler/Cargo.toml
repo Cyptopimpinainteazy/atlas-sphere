@@ -23,3 +23,8 @@ x3-verifier = { path = "../x3-verifier" }
 
 # Error handling
 thiserror = "1.0"
+
+[dev-dependencies]
+blake2 = "0.10"
+invariant-macros = { path = "../../crates/invariant-macros" }
+

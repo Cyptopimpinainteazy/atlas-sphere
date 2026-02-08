@@ -1,0 +1,57 @@
+# Invariant Registry for X3 / Atlas Sphere
+# Format:
+# id = "LAYER-COMPONENT-NNN"
+# description = "Human readable description"
+# severity = "CRITICAL|HIGH|MEDIUM|LOW"
+# layer = "LANG|VM|PALLET|CONSENSUS|SWARM|AI|API|FRONTEND|INFRA|GOVERNANCE"
+# tested_by = ["tests/path.rs::test_name", ...]
+# property = "Optional formal predicate"
+
+[[invariant]]
+id = "CHAIN-CONSENSUS-001"
+description = "State root after replaying all blocks from genesis must be identical to current state root"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["tests/e2e/chain-lifecycle::full_replay_state_root"]
+property = "replay(genesis, blocks) -> state_root == node_state_root"
+
+[[invariant]]
+id = "LANG-COMPILE-001"
+description = "Identical source code produces identical bytecode hash across platforms"
+severity = "CRITICAL"
+layer = "LANG"
+tested_by = ["tests/unit/x3-lang/compiler/test_deterministic_compilation::compile_idempotent"]
+property = "forall s: hash(compile(s)) is constant across runs"
+
+[[invariant]]
+id = "PALLET-TRADE-001"
+description = "AMM constant product invariant k = x * y is maintained within rounding tolerance after every swap"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/atomic-trade-engine/src/tests.rs::events_are_emitted_correctly", "tests/integration/settlement-flow::amm_invariant_checks"]
+property = "forall swap: |x' * y' - x * y| <= epsilon"
+
+[[invariant]]
+id = "VM-EXEC-001"
+description = "Same bytecode with same inputs produces identical outputs and state changes on any compliant node"
+severity = "CRITICAL"
+layer = "VM"
+tested_by = ["tests/unit/x3-lang/vm/test_vm_determinism.rs::vm_replay_bit_exact"]
+property = "execute(bytecode, input, entropy) deterministic => identical trace"
+
+# Add the minimal set required for Phase 1 (more to be added later)
+[[invariant]]
+id = "CHAIN-STATE-001"
+description = "Total supply of native token is conserved across all state transitions"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["pallets/treasury/src/tests.rs::treasury_balance_conservation"]
+property = "sum(balances) == initial_supply + minted - burned"
+
+[[invariant]]
+id = "PALLET-SETTLE-001"
+description = "Settlement escrow locks funds atomically before cross-chain execution"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/x3-settlement-engine/src/tests.rs::escrow_lifecycle"]
+property = "lock -> escrowed && reserved == amount"
