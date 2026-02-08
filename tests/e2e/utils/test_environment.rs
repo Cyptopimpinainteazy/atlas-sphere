@@ -175,7 +175,102 @@ impl TestEnvironment {
         sleep(Duration::from_secs(5)).await; // Simulate deployment time
         Ok(())
     }
+    /// Get state root for latest or specific block
+    pub async fn get_state_root(&self, block_hash: Option<&str>) -> TestResult<String> {
+        let client = reqwest::Client::new();
+        let params = if let Some(hash) = block_hash {
+            serde_json::json!([hash])
+        } else {
+            serde_json::json!([])
+        };
 
+        let resp = client.post(&format!("{}/rpc", self.config.rpc_url))
+            .json(&serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "chain_getHeader",
+                "params": params
+            }))
+            .send()
+            .await
+            .map_err(|e| format!("RPC error: {}", e))?;
+
+        let body: serde_json::Value = resp.json().await.map_err(|e| format!("Invalid JSON: {}", e))?;
+        let header = body.get("result").and_then(|r| r.get("header")).ok_or("Missing header in RPC response")?;
+        let state_root = header.get("stateRoot").and_then(|s| s.as_str()).ok_or("Missing stateRoot in header")?;
+        Ok(state_root.to_string())
+    }
+
+    /// Export extrinsics for a range of blocks (inclusive). Returns vector of extrinsic hex strings in order by block then by index.
+    pub async fn export_extrinsics(&self, from: u64, to: u64) -> TestResult<Vec<String>> {
+        let client = reqwest::Client::new();
+        let mut extrinsics: Vec<String> = Vec::new();
+
+        for block_num in from..=to {
+            // Get block hash
+            let resp = client.post(&format!("{}/rpc", self.config.rpc_url))
+                .json(&serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "chain_getBlockHash",
+                    "params": [format!("0x{:x}", block_num)]
+                }))
+                .send()
+                .await
+                .map_err(|e| format!("RPC error: {}", e))?;
+
+            let body: serde_json::Value = resp.json().await.map_err(|e| format!("Invalid JSON: {}", e))?;
+            let block_hash = body.get("result").and_then(|r| r.as_str()).ok_or("Missing block hash")?.to_string();
+
+            // Fetch block
+            let resp = client.post(&format!("{}/rpc", self.config.rpc_url))
+                .json(&serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "chain_getBlock",
+                    "params": [block_hash]
+                }))
+                .send()
+                .await
+                .map_err(|e| format!("RPC error: {}", e))?;
+
+            let body: serde_json::Value = resp.json().await.map_err(|e| format!("Invalid JSON: {}", e))?;
+            if let Some(exs) = body.get("result").and_then(|r| r.get("block")).and_then(|b| b.get("extrinsics")) {
+                if let Some(arr) = exs.as_array() {
+                    for ex in arr {
+                        if let Some(hex) = ex.as_str() {
+                            extrinsics.push(hex.to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(extrinsics)
+    }
+
+    /// Submit a list of signed extrinsic hex strings to a target RPC endpoint.
+    pub async fn submit_extrinsics_to_rpc(&self, target_rpc: &str, extrinsics: &[String]) -> TestResult<()> {
+        let client = reqwest::Client::new();
+        for ex in extrinsics {
+            let resp = client.post(&format!("{}/rpc", target_rpc))
+                .json(&serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "author_submitExtrinsic",
+                    "params": [ex]
+                }))
+                .send()
+                .await
+                .map_err(|e| format!("RPC error submit_extrinsic: {}", e))?;
+
+            let body: serde_json::Value = resp.json().await.map_err(|e| format!("Invalid JSON: {}", e))?;
+            if body.get("error").is_some() {
+                return Err(format!("Extrinsic submission error: {:?}", body).into());
+            }
+        }
+        Ok(())
+    }
     async fn deploy_ai_swarm_contracts(&self) -> TestResult<()> {
         info!("Deploying AI swarm contracts");
         

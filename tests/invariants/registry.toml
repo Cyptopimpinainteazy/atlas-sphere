@@ -12,7 +12,7 @@ id = "CHAIN-CONSENSUS-001"
 description = "State root after replaying all blocks from genesis must be identical to current state root"
 severity = "CRITICAL"
 layer = "CONSENSUS"
-tested_by = ["tests/e2e/chain-lifecycle::full_replay_state_root"]
+tested_by = ["tests/e2e/chain-lifecycle::full_replay_state_root", "tests/e2e/state_root_replay::chain_replay_matches_state_root"]
 property = "replay(genesis, blocks) -> state_root == node_state_root"
 
 [[invariant]]
