@@ -79,8 +79,8 @@ const earnActivities = [
   {
     id: 'lp',
     icon: <Target className="w-8 h-8" />,
-    title: 'Provide Liqfrontend/uidity',
-    description: 'Add liqfrontend/uidity to X3 pools and earn boosted points',
+    title: 'Provide Liquidity',
+    description: 'Add liquidity to X3 pools and earn boosted points',
     pointsPerAction: '2/hour',
     multiplier: '4x',
     status: 'active',
@@ -151,7 +151,7 @@ const faqItems = [
   },
   {
     question: 'How do I start earning points?',
-    answer: 'Connect your wallet to start earning! Every interaction with X3 Atlas Sphere earns you points. Bridge assets between chains, swap tokens on our DEX, stake X3, or provide liqfrontend/uidity to earn continuous rewards. The more active you are, the more points you accumulate.',
+    answer: 'Connect your wallet to start earning! Every interaction with X3 Atlas Sphere earns you points. Bridge assets between chains, swap tokens on our DEX, stake X3, or provide liquidity to earn continuous rewards. The more active you are, the more points you accumulate.',
   },
   {
     question: 'Do points expire?',
@@ -253,7 +253,7 @@ export default function EarnPage() {
             <div>
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6">
                 <Sparkles className="w-4 h-4 text-orange-400 mr-2" />
-                <span className="text-sm text-orange-300">Earn Rewards • Bfrontend/uild Your Future</span>
+                <span className="text-sm text-orange-300">Earn Rewards • Build Your Future</span>
               </div>
 
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
@@ -266,7 +266,7 @@ export default function EarnPage() {
                 Bridge, swap, stake, and refer friends to maximize your rewards.
               </p>
 
-              {/* Qfrontend/uick Stats */}
+              {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {globalStats.map((stat, i) => (
                   <div key={i} className="p-4 rounded-xl bg-[#111111] border border-[#1a1a1a]">
@@ -346,7 +346,7 @@ export default function EarnPage() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-[#0a0a0a] border border-apps/apps/dash-legacy-2-legacy-2ed border-[#333333] text-center">
+                  <div className="p-4 rounded-xl bg-[#0a0a0a] border border-apps/dash-legacy-2-legacy-2ed border-[#333333] text-center">
                     <p className="text-gray-500 text-sm">Connect your wallet to view your points balance and start earning</p>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -560,18 +560,18 @@ export default function EarnPage() {
                     <span className="text-sm text-gray-400">7-Day Streak</span>
                     <span className="badge badge-success">+10%</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a0a0a] border border-apps/apps/dash-legacy-2-legacy-2ed border-[#333333]">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a0a0a] border border-apps/dash-legacy-2-legacy-2ed border-[#333333]">
                     <span className="text-sm text-gray-600">Weekend Bonus</span>
                     <span className="text-xs text-gray-600">Sat-Sun</span>
                   </div>
                 </div>
               </div>
 
-              {/* Qfrontend/uick Actions */}
+              {/* Quick Actions */}
               <div className="glass-card p-6">
                 <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
                   <Rocket className="w-5 h-5 text-purple-400" />
-                  Qfrontend/uick Actions
+                  Quick Actions
                 </h3>
                 <div className="space-y-2">
                   <Link href="/swap" className="w-full btn-secondary flex items-center justify-center text-sm py-2">
@@ -620,7 +620,7 @@ export default function EarnPage() {
                 step: 2,
                 icon: <Globe className="w-8 h-8" />,
                 title: 'Use the Platform',
-                description: 'Bridge assets, swap tokens, stake X3, or provide liqfrontend/uidity. Every action earns you points.',
+                description: 'Bridge assets, swap tokens, stake X3, or provide liquidity. Every action earns you points.',
               },
               {
                 step: 3,

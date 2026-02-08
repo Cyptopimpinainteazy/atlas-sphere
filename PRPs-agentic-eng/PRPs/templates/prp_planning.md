@@ -2,12 +2,12 @@ name: "Planning PRP Template - PRD Generation with Diagrams"
 description: |
 
 ## Purpose
-Generate comprehensive Product Reqfrontend/uirements Documents (PRDs) with visual diagrams, turning rough ideas into detailed specifications ready for implementation PRPs.
+Generate comprehensive Product Requirements Documents (PRDs) with visual diagrams, turning rough ideas into detailed specifications ready for implementation PRPs.
 
 ## Philosophy
 1. **Research First**: Gather context before planning
 2. **Visual Thinking**: Use diagrams to clarify concepts
-3. **Validation Bfrontend/uilt-in**: Include challenges and edge cases
+3. **Validation Built-in**: Include challenges and edge cases
 4. **Implementation Ready**: Output feeds directly into other PRPs
 
 ---
@@ -204,7 +204,7 @@ challenges:
       mitigation: "Implement caching layer"
     
     - risk: "Third-party API reliability"
-      mitigation: "Bfrontend/uild fallback mechanisms"
+      mitigation: "Build fallback mechanisms"
   
   business_risks:
     - risk: "User adoption"
@@ -257,7 +257,7 @@ REVIEW with stakeholders:
 The final PRD should be structured as:
 
 1. **Executive Summary** (1 page)
-2. **Detailed Reqfrontend/uirements** (with diagrams)
+2. **Detailed Requirements** (with diagrams)
 3. **Technical Architecture** (with diagrams)
 4. **Implementation Plan** (with timeline)
 5. **Appendices** (research, alternatives considered)
@@ -276,7 +276,7 @@ python validate_prd_structure.py generated_prd.md
 ```
 
 ## Anti-Patterns to Avoid
-- ❌ Vague reqfrontend/uirements without acceptance criteria
+- ❌ Vague requirements without acceptance criteria
 - ❌ Missing edge cases and error scenarios
 - ❌ Diagrams that don't match the text
 - ❌ Technical jargon without explanation
@@ -292,7 +292,7 @@ python validate_prd_structure.py generated_prd.md
 
 ## Template Usage Example
 
-Input: "Bfrontend/uild a notification system for our app"
+Input: "Build a notification system for our app"
 
 Output would include:
 - User flow diagrams for different notification types

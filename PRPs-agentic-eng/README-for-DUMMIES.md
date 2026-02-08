@@ -1,13 +1,13 @@
 # PRP Commands for Dummies 🏗️
-*Bfrontend/uilding Software Like a Master Architect*
+*Building Software Like a Master Architect*
 
 ## What is This Thing?
 
-Imagine you want to bfrontend/uild a house. You wouldn't just grab a hammer and start hitting wood, right? You'd hire an architect to draw plans, a structural engineer to figure out the foundation, and skilled bfrontend/uilders to follow the blueprints.
+Imagine you want to build a house. You wouldn't just grab a hammer and start hitting wood, right? You'd hire an architect to draw plans, a structural engineer to figure out the foundation, and skilled builders to follow the blueprints.
 
-**The PRP Framework works exactly the same way for bfrontend/uilding software.**
+**The PRP Framework works exactly the same way for building software.**
 
-Instead of randomly writing code and hoping it works, you use specialized "AI construction workers" who follow detailed blueprints to bfrontend/uild your software features correctly the first time.
+Instead of randomly writing code and hoping it works, you use specialized "AI construction workers" who follow detailed blueprints to build your software features correctly the first time.
 
 ---
 
@@ -28,11 +28,11 @@ Think of the PRP commands as different specialists in a construction company:
 ### **📐 The Detail Architect** (`/prp-base-create`)
 - **What they do:** Create incredibly detailed construction manuals with every nail, screw, and measurement specified
 - **When to use:** When you need comprehensive implementation instructions
-- **Example:** Step-by-step instructions for bfrontend/uilding the entire like button feature
+- **Example:** Step-by-step instructions for building the entire like button feature
 
 ### **🔧 The Renovation Specialist** (`/prp-spec-create`)
-- **What they do:** Plan how to change existing bfrontend/uildings (like converting a garage into a bedroom)
-- **When to use:** When you need to modify existing code rather than bfrontend/uild something new
+- **What they do:** Plan how to change existing buildings (like converting a garage into a bedroom)
+- **When to use:** When you need to modify existing code rather than build something new
 - **Example:** Changing from simple authentication to OAuth2
 
 ### **✅ The Project Foreman** (`/prp-task-create`)
@@ -40,10 +40,10 @@ Think of the PRP commands as different specialists in a construction company:
 - **When to use:** For small, specific tasks that need careful execution
 - **Example:** "Add a dark mode toggle to the settings page"
 
-### **🔨 The Master Bfrontend/uilder** (`/prp-base-execute`)
-- **What they do:** Actually bfrontend/uild the entire feature following the detailed plans
-- **When to use:** After you have comprehensive bfrontend/uilding plans
-- **Example:** Takes the like button plans and bfrontend/uilds the working feature
+### **🔨 The Master Builder** (`/prp-base-execute`)
+- **What they do:** Actually build the entire feature following the detailed plans
+- **When to use:** After you have comprehensive building plans
+- **Example:** Takes the like button plans and builds the working feature
 
 ### **🏠 The Renovation Team** (`/prp-spec-execute`)
 - **What they do:** Execute renovation plans, carefully transforming existing structures
@@ -58,7 +58,7 @@ Think of the PRP commands as different specialists in a construction company:
 ### **🏃‍♂️ The Emergency Response Team** (`/task-list-init`)
 - **What they do:** Create rapid action plans for urgent situations
 - **When to use:** Hackathons, urgent fixes, or when you need to move fast
-- **Example:** "Bfrontend/uild a social apps/apps/dash-legacy-2-legacy-2board in 2 days"
+- **Example:** "Build a social apps/dash-legacy-2-legacy-2board in 2 days"
 
 ---
 
@@ -66,16 +66,16 @@ Think of the PRP commands as different specialists in a construction company:
 
 **This is the KEY part that makes everything work!**
 
-Just like real construction, each specialist bfrontend/uilds on the work of the previous one:
+Just like real construction, each specialist builds on the work of the previous one:
 
 ```
-🏗️ Master Architect creates bfrontend/uilding plans
+🏗️ Master Architect creates building plans
     ↓ (Plans get passed to...)
 📋 Structural Engineer creates connection specs  
     ↓ (Both plans and specs get passed to...)
 📐 Detail Architect creates construction manual
     ↓ (Manual gets passed to...)
-🔨 Master Bfrontend/uilder bfrontend/uilds the actual feature
+🔨 Master Builder builds the actual feature
 ```
 
 **IMPORTANT:** Each step uses the output from previous steps - they're not isolated tools!
@@ -84,7 +84,7 @@ Just like real construction, each specialist bfrontend/uilds on the work of the 
 
 ## The Step-by-Step Process 📋
 
-### **For Bfrontend/uilding New Features (Most Common)**
+### **For Building New Features (Most Common)**
 
 **Step 1: Get the Big Picture**
 ```bash
@@ -107,7 +107,7 @@ Just like real construction, each specialist bfrontend/uilds on the work of the 
 - Creates: `PRPs/user-profile-implementation.md` (construction manual)
 - Contains: Step-by-step implementation with all context needed
 
-**Step 4: Bfrontend/uild It**
+**Step 4: Build It**
 ```bash
 /prp-base-execute PRPs/user-profile-implementation.md
 ```
@@ -153,7 +153,7 @@ Just like real construction, each specialist bfrontend/uilds on the work of the 
 
 **Step 1: Create Action Plan**
 ```bash
-/task-list-init "hackathon project: social media apps/apps/dash-legacy-2-legacy-2board with posts, likes, and user profiles"
+/task-list-init "hackathon project: social media apps/dash-legacy-2-legacy-2board with posts, likes, and user profiles"
 ```
 - Creates: `PRPs/checklist.md` (emergency action plan)
 - Contains: Prioritized task list with status tracking
@@ -164,9 +164,9 @@ Just like real construction, each specialist bfrontend/uilds on the work of the 
 
 ---
 
-## Complete Real Example: Bfrontend/uilding a "Like Button" 💖
+## Complete Real Example: Building a "Like Button" 💖
 
-Let's bfrontend/uild a social media like button from scratch, step by step:
+Let's build a social media like button from scratch, step by step:
 
 ### **Step 1: The Master Architect Does Their Magic** 🏗️
 ```bash
@@ -178,7 +178,7 @@ Let's bfrontend/uild a social media like button from scratch, step by step:
 - Creates user flow diagrams
 - Designs database schema for likes
 - Plans real-time update architecture
-- Specifies analytics reqfrontend/uirements
+- Specifies analytics requirements
 - Creates comprehensive PRD document
 
 **Result:** `PRPs/like-button-prd.md` with complete architectural plans
@@ -217,11 +217,11 @@ Let's bfrontend/uild a social media like button from scratch, step by step:
 - Defines 4-level quality checking process
 - Creates comprehensive construction manual
 
-**Result:** `PRPs/like-button-implementation.md` with everything needed to bfrontend/uild it
+**Result:** `PRPs/like-button-implementation.md` with everything needed to build it
 
 ---
 
-### **Step 4: The Master Bfrontend/uilder Constructs the Feature** 🔨
+### **Step 4: The Master Builder Constructs the Feature** 🔨
 ```bash
 /prp-base-execute PRPs/like-button-implementation.md
 ```
@@ -251,7 +251,7 @@ Let's bfrontend/uild a social media like button from scratch, step by step:
 
 ---
 
-### **Step 5: Adding a Qfrontend/uick Enhancement** ✅
+### **Step 5: Adding a Quick Enhancement** ✅
 ```bash
 /prp-task-create "add animated heart floating effect when users like posts for better visual feedback"
 ```
@@ -268,13 +268,13 @@ Let's bfrontend/uild a social media like button from scratch, step by step:
 
 ## The Quality Control System 🔍
 
-Every feature goes through 4 levels of quality control, just like bfrontend/uilding inspections:
+Every feature goes through 4 levels of quality control, just like building inspections:
 
 ### **Level 1: Foundation Check** 
 ```bash
 ruff check --fix && mypy .
 ```
-*Like checking if the foundation is level and meets bfrontend/uilding codes*
+*Like checking if the foundation is level and meets building codes*
 
 ### **Level 2: Room-by-Room Check**
 ```bash
@@ -309,7 +309,7 @@ curl -X POST http://localhost:8000/api/posts/123/like
 
 ### **Use `/prp-base-create` when:**
 - You need comprehensive implementation instructions
-- You're bfrontend/uilding something completely new
+- You're building something completely new
 - You want all the context and examples included
 - You need the full 4-level validation process
 
@@ -327,13 +327,13 @@ curl -X POST http://localhost:8000/api/posts/123/like
 
 ### **Use the execute commands when:**
 - You have the corresponding plan/spec/task document
-- You're ready to actually bfrontend/uild/change the code
+- You're ready to actually build/change the code
 - You want systematic, validated implementation
 - You trust the AI to follow the detailed instructions
 
 ### **Use `/task-list-init` when:**
 - You're in a hackathon or time crunch
-- You need a qfrontend/uick overview of what needs to be done
+- You need a quick overview of what needs to be done
 - You want to track progress manually
 - You're doing rapid prototyping
 
@@ -349,7 +349,7 @@ curl -X POST http://localhost:8000/api/posts/123/like
 ```
 
 ```bash
-# RIGHT - each command bfrontend/uilds on the previous
+# RIGHT - each command builds on the previous
 /prp-planning-create "user authentication with social login"
 /api-contract-define "create API for authentication described in PRPs/user-auth-prd.md"
 /prp-base-create "implement authentication using PRPs/user-auth-prd.md and PRPs/contracts/user-auth-api-contract.md"
@@ -395,22 +395,22 @@ Instead of "add authentication," say "add OAuth2 authentication with Google and 
 Let each command run through all 4 quality levels. The validation catches issues before they become problems.
 
 ### **🏗️ Think Like an Architect**
-Plan the foundation before bfrontend/uilding the walls. Design the overall structure before implementing individual components.
+Plan the foundation before building the walls. Design the overall structure before implementing individual components.
 
 ### **📚 Include Context**
 When creating implementation PRPs, reference existing code patterns, documentation URLs, and similar implementations in your codebase.
 
 ---
 
-## Qfrontend/uick Reference Card 📋
+## Quick Reference Card 📋
 
 | Command | Purpose | Input | Output |
 |---------|---------|-------|--------|
 | `/prp-planning-create` | Master planning | Rough idea | Comprehensive PRD with diagrams |
 | `/api-contract-define` | Technical specs | Feature + PRD reference | API contracts and interfaces |
-| `/prp-base-create` | Implementation manual | Feature + all references | Complete construction gfrontend/uide |
-| `/prp-base-execute` | Bfrontend/uild new feature | Implementation PRP path | Working feature |
-| `/prp-spec-create` | Renovation plans | Change reqfrontend/uirements | Current→desired transformation |
+| `/prp-base-create` | Implementation manual | Feature + all references | Complete construction guide |
+| `/prp-base-execute` | Build new feature | Implementation PRP path | Working feature |
+| `/prp-spec-create` | Renovation plans | Change requirements | Current→desired transformation |
 | `/prp-spec-execute` | Execute changes | Spec PRP path | Modified code |
 | `/prp-task-create` | Focused work orders | Specific task | Detailed task list |
 | `/prp-task-execute` | Do specific tasks | Task PRP path | Completed task |
@@ -422,24 +422,24 @@ When creating implementation PRPs, reference existing code patterns, documentati
 
 ### **Your First Feature (5 minutes)**
 
-1. **Pick something simple** like "add a footer to the frontend/website with copyright and links"
+1. **Pick something simple** like "add a footer to the website with copyright and links"
 
 2. **Plan it:**
    ```bash
-   /prp-planning-create "frontend/website footer with copyright, privacy policy link, and contact link"
+   /prp-planning-create "website footer with copyright, privacy policy link, and contact link"
    ```
 
-3. **Create implementation gfrontend/uide:**
+3. **Create implementation guide:**
    ```bash
    /prp-base-create "implement footer using architecture from PRPs/frontend/website-footer-prd.md"
    ```
 
-4. **Bfrontend/uild it:**
+4. **Build it:**
    ```bash
    /prp-base-execute PRPs/frontend/website-footer-implementation.md
    ```
 
-5. **Celebrate!** 🎉 You just used AI to bfrontend/uild a feature with proper planning, documentation, and quality control!
+5. **Celebrate!** 🎉 You just used AI to build a feature with proper planning, documentation, and quality control!
 
 ---
 
@@ -457,7 +457,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 - **What they do:** Generate comprehensive onboarding documentation for new developers
 - **When to use:** New team members join, documenting undocumented projects
 - **Example:** `/onboarding`
-- **Result:** Creates ONBOARDING.md and QUICKSTART.md with complete setup gfrontend/uides
+- **Result:** Creates ONBOARDING.md and QUICKSTART.md with complete setup guides
 
 #### **💾 /smart-commit or /commit - Smart Git Commits**
 - **What they do:** Analyze changes and create properly formatted commit messages
@@ -487,7 +487,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 
 ### **Code Quality Commands** 🎨
 
-#### **🔧 /refactor-simple - Qfrontend/uick Refactoring Analysis**
+#### **🔧 /refactor-simple - Quick Refactoring Analysis**
 - **What they do:** Scan code for refactoring opportunities (Python-focused)
 - **When to use:** Before merging, cleaning technical debt
 - **Example:** `/refactor-simple`
@@ -537,7 +537,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 - **Example:** `/hackathon-research "AI-powered code review tool"`
 - **Result:** Comprehensive analysis with best approach recommendation
 
-#### **🎯 /user-story-rapid - Qfrontend/uick User Story Creation**
+#### **🎯 /user-story-rapid - Quick User Story Creation**
 - **What they do:** Generate user stories with acceptance criteria rapidly
 - **When to use:** Sprint planning, feature definition
 - **Example:** `/user-story-rapid "user profile management"`
@@ -609,7 +609,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 
 ---
 
-## Command Categories Qfrontend/uick Reference 📚
+## Command Categories Quick Reference 📚
 
 ### **For Starting Work:**
 - `/prime-core` - Load project context
@@ -619,7 +619,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 ### **For Planning Features:**
 - `/prp-planning-create` - Comprehensive planning
 - `/hackathon-research` - Evaluate approaches
-- `/user-story-rapid` - Qfrontend/uick user stories
+- `/user-story-rapid` - Quick user stories
 
 ### **For Implementation:**
 - `/prp-base-create` → `/prp-base-execute` - New features
@@ -639,7 +639,7 @@ When creating implementation PRPs, reference existing code patterns, documentati
 ### **For Rapid Development:**
 - `/hackathon-research` - Fast analysis
 - `/parallel-prp-creation` - Batch creation
-- `/task-list-init` - Qfrontend/uick task tracking
+- `/task-list-init` - Quick task tracking
 
 ---
 
@@ -677,12 +677,12 @@ Always reference previous outputs:
 
 ## Remember: You're the Architect, AI is Your Construction Crew 🏗️
 
-- **You decide WHAT to bfrontend/uild** (the vision, reqfrontend/uirements, business goals)
-- **AI figures out HOW to bfrontend/uild it** (technical implementation, code patterns, testing)
+- **You decide WHAT to build** (the vision, requirements, business goals)
+- **AI figures out HOW to build it** (technical implementation, code patterns, testing)
 - **The PRP system ensures quality** (proper planning, validation, documentation)
 
 This isn't about replacing human creativity - it's about amplifying your ideas with systematic, high-quality implementation.
 
 ---
 
-**Ready to bfrontend/uild something amazing? Start with `/prime-core`, then `/prp-planning-create` and watch your ideas come to life!** ✨
+**Ready to build something amazing? Start with `/prime-core`, then `/prp-planning-create` and watch your ideas come to life!** ✨

@@ -2,7 +2,7 @@
  * Live Integration Tests - Tests against actual running Atlas Sphere dev node
  * 
  * Run with: npm run test:live
- * Reqfrontend/uires: Dev node running on localhost:9944
+ * Requires: Dev node running on localhost:9944
  * 
  * NOTE: Current node implementation only exposes custom RPC methods 
  * (atlasKernel_*, system_health, eth_chainId, etc.) but NOT the standard

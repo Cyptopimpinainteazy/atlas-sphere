@@ -96,7 +96,7 @@ task_name:
    - Find mitigations
    - Set go/no-go criteria
 
-## Context Reqfrontend/uirements
+## Context Requirements
 
 - Current implementation details
 - Target architecture examples

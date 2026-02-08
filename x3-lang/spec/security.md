@@ -14,8 +14,8 @@ Bytecode validation
 - Opcode validation: check if opcode is within the supported set.
 - Flags and modes validation: ensure flags are valid for opcode.
 - Extended immediate validation: ensure immediate size and alignment valid.
-- Control flow validation: bfrontend/uild CFG and ensure no entry to the middle of an instruction.
-- Side-effect analysis: verify external calls are only allowed within atomic windows when cross-VM safety is reqfrontend/uired.
+- Control flow validation: build CFG and ensure no entry to the middle of an instruction.
+- Side-effect analysis: verify external calls are only allowed within atomic windows when cross-VM safety is required.
 
 Cross-VM atomicity
 - Cross-VM operations produce signed receipts by adapters.
@@ -32,7 +32,7 @@ Verification complexity
 
 Determinism guarantees
 - PRNG allowed only via `VRF(seed)` which uses a verified seed from block header, not runtime.
-- No floating point nondeterminism allowed between nodes; FP operations reqfrontend/uire defined rounding and bits.
+- No floating point nondeterminism allowed between nodes; FP operations require defined rounding and bits.
 
 Safety mitigations
 - All external adapters sandbox access to underlying chain storage.

@@ -28,7 +28,7 @@ import {
   Link
 } from 'lucide-react';
 
-// Dynamic archive/archive/imports for quantum showcase components
+// Dynamic imports for quantum showcase components
 const ScotchCassetteShowcase = dynamic(
   () => import('@/components/quantum/ScotchVHSShowcase').then(mod => ({ default: mod.ScotchCassetteShowcase })),
   { ssr: false, loading: () => <div className="h-96 animate-pulse bg-slate-800/50 rounded-2xl" /> }
@@ -371,12 +371,12 @@ export default function EcosystemPage() {
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 backdrop-blur-xl rounded-3xl p-12 border border-purple-500/30 text-center">
           <h2 className="text-5xl font-bold text-white mb-6">Join the Ecosystem</h2>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Bfrontend/uild on the most advanced multi-chain infrastructure with AI-powered optimization 
+            Build on the most advanced multi-chain infrastructure with AI-powered optimization 
             and enterprise-grade security across 103+ networks.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-105 flex items-center justify-center gap-2">
-              Start Bfrontend/uilding <ArrowRight className="w-5 h-5" />
+              Start Building <ArrowRight className="w-5 h-5" />
             </button>
             <button className="border border-purple-500 text-purple-300 px-10 py-4 rounded-xl font-semibold text-lg hover:bg-purple-500/10 transition-all">
               Read Documentation

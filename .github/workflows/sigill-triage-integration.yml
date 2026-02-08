@@ -3,7 +3,7 @@ name: SIGILL triage integration test
 on:
   pull_request:
     paths:
-      - 'swarm-dashboard/**'
+      - 'apps/swarm-dashboard/**'
 
 permissions:
   issues: write

@@ -13,7 +13,7 @@ const MOCK_POOLS = [
     apr: 24.5,
     volume24h: 890_000,
     fees24h: 2_670,
-    myLiqfrontend/uidity: 0,
+    myLiquidity: 0,
   },
   {
     id: 2,
@@ -23,7 +23,7 @@ const MOCK_POOLS = [
     apr: 18.2,
     volume24h: 1_250_000,
     fees24h: 3_750,
-    myLiqfrontend/uidity: 0,
+    myLiquidity: 0,
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ const MOCK_POOLS = [
     apr: 32.1,
     volume24h: 2_100_000,
     fees24h: 6_300,
-    myLiqfrontend/uidity: 0,
+    myLiquidity: 0,
   },
   {
     id: 4,
@@ -43,7 +43,7 @@ const MOCK_POOLS = [
     apr: 45.8,
     volume24h: 560_000,
     fees24h: 1_680,
-    myLiqfrontend/uidity: 0,
+    myLiquidity: 0,
     isCrossVM: true,
   },
 ];
@@ -84,9 +84,9 @@ export default function PoolsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Liqfrontend/uidity Pools</h1>
+          <h1 className="text-3xl font-bold">Liquidity Pools</h1>
           <p className="text-muted-foreground mt-1">
-            Provide liqfrontend/uidity and earn fees from trades
+            Provide liquidity and earn fees from trades
           </p>
         </div>
         <button className="flex items-center gap-2 px-6 py-3 rounded-xl gradient-primary font-medium hover:opacity-90 transition">
@@ -222,7 +222,7 @@ export default function PoolsPage() {
                 </td>
                 <td className="py-4 px-4 text-right">
                   <button className="px-4 py-2 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition">
-                    Add Liqfrontend/uidity
+                    Add Liquidity
                   </button>
                 </td>
               </tr>

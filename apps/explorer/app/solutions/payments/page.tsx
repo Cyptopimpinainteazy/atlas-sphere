@@ -9,12 +9,12 @@ import {
   Shield,
   QrCode,
   Smartphone,
-  Bfrontend/uilding2,
+  Building2,
   ArrowLeftRight,
   CheckCircle2,
   Code,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const paymentFeatures = [
   {
@@ -43,11 +43,11 @@ const integrations = [
   {
     name: 'Payment Links',
     description: 'Generate shareable payment links for any amount',
-    features: ['No code reqfrontend/uired', 'Custom amounts', 'QR codes', 'Expiration'],
+    features: ['No code required', 'Custom amounts', 'QR codes', 'Expiration'],
   },
   {
     name: 'Checkout Widget',
-    description: 'Embed a payment button on any frontend/website',
+    description: 'Embed a payment button on any website',
     features: ['One-line integration', 'Custom styling', 'Multi-currency', 'Callbacks'],
   },
   {
@@ -186,7 +186,7 @@ export default function PaymentsPage() {
                   'Accept any supported cryptocurrency',
                   'Auto-convert to stablecoins',
                   'Webhook notifications',
-                  'Detailed analytics apps/apps/dash-legacy-2-legacy-2board',
+                  'Detailed analytics apps/dash-legacy-2-legacy-2board',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center text-gray-400">
                     <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-3" />

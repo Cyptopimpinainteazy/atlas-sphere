@@ -15,7 +15,7 @@ show_status() {
     echo -e "${BLUE}=== Atlas Sphere Testnet Status ===${NC}"
     echo ""
     for service in "${SERVICES[@]}"; do
-        if sudo systemctl is-active --qfrontend/uiet "$service"; then
+        if sudo systemctl is-active --quiet "$service"; then
             status="${GREEN}RUNNING${NC}"
         else
             status="${RED}STOPPED${NC}"

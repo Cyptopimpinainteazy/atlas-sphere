@@ -37,7 +37,7 @@ const docSections: DocSection[] = [
     icon: <Zap className="w-5 h-5" />,
     items: [
       { title: 'Introduction', href: '/developers/docs/intro', description: 'Overview of X3 Atlas Sphere' },
-      { title: 'Qfrontend/uick Start', href: '/developers/docs/qfrontend/uickstart', description: 'Get up and running in minutes' },
+      { title: 'Quick Start', href: '/developers/docs/quickstart', description: 'Get up and running in minutes' },
       { title: 'Installation', href: '/developers/docs/installation', description: 'Install dependencies and tools' },
       { title: 'Configuration', href: '/developers/docs/configuration', description: 'Configure your environment' },
     ],
@@ -83,7 +83,7 @@ const docSections: DocSection[] = [
     title: 'Cross-VM Operations',
     icon: <Layers className="w-5 h-5" />,
     items: [
-      { title: 'Creating Comits', href: '/developers/docs/creating-comits', description: 'Bfrontend/uild cross-VM transactions' },
+      { title: 'Creating Comits', href: '/developers/docs/creating-comits', description: 'Build cross-VM transactions' },
       { title: 'Atomic Execution', href: '/developers/docs/atomic-execution', description: 'All-or-nothing execution' },
       { title: 'Cross-VM Assets', href: '/developers/docs/cross-vm-assets', description: 'Unified asset management' },
       { title: 'Error Handling', href: '/developers/docs/error-handling', description: 'Handle failures gracefully' },
@@ -104,7 +104,7 @@ const docSections: DocSection[] = [
   },
 ];
 
-const qfrontend/uickLinks = [
+const quickLinks = [
   { title: 'RPC API Reference', href: '/developers/api', icon: <Globe className="w-4 h-4" /> },
   { title: 'Cookbook Examples', href: '/developers/cookbook', icon: <BookOpen className="w-4 h-4" /> },
   { title: 'GitHub Repository', href: 'https://github.com/atlas-sphere', icon: <Code className="w-4 h-4" /> },
@@ -176,13 +176,13 @@ export default function DocLayout({ children, title, description, lastUpdated }:
                 />
               </div>
 
-              {/* Qfrontend/uick Links */}
+              {/* Quick Links */}
               <div className="glass-card p-4">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  Qfrontend/uick Links
+                  Quick Links
                 </h3>
                 <div className="space-y-1">
-                  {qfrontend/uickLinks.map((link) => (
+                  {quickLinks.map((link) => (
                     <Link
                       key={link.title}
                       href={link.href}

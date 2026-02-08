@@ -29,11 +29,11 @@ jobs:
         with:
           name: swarm-dashboard-coverage
           path: |
-            swarm-dashboard/coverage/**
+            apps/swarm-dashboard/coverage/**
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: swarm-dashboard/coverage/lcov.info
+          files: apps/swarm-dashboard/coverage/lcov.info
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,18 +65,18 @@ jobs:
         with:
           name: swarm-dashboard-test-results
           path: |
-            swarm-dashboard/e2e/test-results/**
-            swarm-dashboard/e2e/axe-violations.json
-            swarm-dashboard/e2e/test-results/*.zip
-            swarm-dashboard/e2e/test-results/*.tar
-            swarm-dashboard/e2e/test-results/junit.xml
+            apps/swarm-dashboard/e2e/test-results/**
+            apps/swarm-dashboard/e2e/axe-violations.json
+            apps/swarm-dashboard/e2e/test-results/*.zip
+            apps/swarm-dashboard/e2e/test-results/*.tar
+            apps/swarm-dashboard/e2e/test-results/junit.xml
       - name: Post test summary to PR
         if: always() && github.event_name == 'pull_request'
         uses: dorny/test-reporter@v1
         continue-on-error: true
         with:
           name: Playwright E2E
-          path: swarm-dashboard/e2e/test-results/junit.xml
+          path: apps/swarm-dashboard/e2e/test-results/junit.xml
           reporter: junit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

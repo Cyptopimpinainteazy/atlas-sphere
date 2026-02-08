@@ -9,7 +9,7 @@ import ChainStatusContainer from '@/components/ChainStatusContainer';
    Production-Grade Execution Console
    
    NON-NEGOTIABLES:
-   - This is an OPERATING SYSTEM, not a frontend/website
+   - This is an OPERATING SYSTEM, not a website
    - Desktop never scrolls
    - All content lives in windows
    - Motion is informative, not decorative
@@ -49,7 +49,7 @@ const TERMINAL_COMMANDS: Record<string, string> = {
 │ AVAILABLE VIRTUAL MACHINES              │
 ├─────────────────────────────────────────┤
 │ [EVM]  Ethereum Virtual Machine         │
-│        Deterministic. Ubiqfrontend/uitous.       │
+│        Deterministic. Ubiquitous.       │
 │        Compatible with all ERC standards│
 ├─────────────────────────────────────────┤
 │ [SVM]  Solana Virtual Machine           │
@@ -549,7 +549,7 @@ function TerminalApp({ isFocused }: { isFocused: boolean }) {
         <span className="animate-pulse text-[#00FF00]">▮</span>
       </div>
       
-      {/* Qfrontend/uick Commands */}
+      {/* Quick Commands */}
       <div className="border-t border-[#1a1a1a] p-2 flex gap-2">
         {['status', 'vms', 'atomic', 'why', 'blocks'].map(cmd => (
           <button
@@ -1103,7 +1103,7 @@ export default function X3StarOS() {
     { id: '3', name: 'mev-shield-daemon', category: 'Infrastructure', cpu: 92, memory: '4.1 GB', status: 'running' },
     { id: '4', name: 'quant-strategy-alpha', category: 'Quant', cpu: 67, memory: '8.2 GB', status: 'running' },
     { id: '5', name: 'ai-intent-parser', category: 'AI Agents', cpu: 34, memory: '3.8 GB', status: 'idle' },
-    { id: '6', name: 'liqfrontend/uidation-bot', category: 'Arbitrage', cpu: 12, memory: '512 MB', status: 'idle' },
+    { id: '6', name: 'liquidation-bot', category: 'Arbitrage', cpu: 12, memory: '512 MB', status: 'idle' },
     { id: '7', name: 'consensus-validator', category: 'Infrastructure', cpu: 88, memory: '1.8 GB', status: 'running' },
     { id: '8', name: 'ai-execution-agent', category: 'AI Agents', cpu: 56, memory: '6.4 GB', status: 'running' },
   ]);

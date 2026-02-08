@@ -277,7 +277,7 @@ export const HolographicCardShowcase: React.FC<{ className?: string }> = ({ clas
     { title: 'ATLAS VALIDATOR', subtitle: 'Genesis Node #001', rarity: 'mythic' as const, stats: [{ label: 'STAKE', value: '100K' }, { label: 'APY', value: '12.5%' }, { label: 'UPTIME', value: '99.9%' }, { label: 'BLOCKS', value: '1.2M' }] },
     { title: 'QUANTUM CORE', subtitle: 'Processing Unit', rarity: 'legendary' as const, stats: [{ label: 'QUBITS', value: '128' }, { label: 'SPEED', value: '10ns' }, { label: 'ERROR', value: '0.01%' }, { label: 'GATES', value: '∞' }] },
     { title: 'NEURAL AGENT', subtitle: 'AI Unit #42', rarity: 'epic' as const, stats: [{ label: 'IQ', value: '300' }, { label: 'TASKS', value: '10K' }, { label: 'LEARN', value: '99%' }, { label: 'TRUST', value: '97%' }] },
-    { title: 'DEFI SHARD', subtitle: 'Liqfrontend/uidity Fragment', rarity: 'rare' as const, stats: [{ label: 'TVL', value: '$2.4M' }, { label: 'VOL', value: '$500K' }, { label: 'FEES', value: '0.3%' }, { label: 'PAIRS', value: '47' }] },
+    { title: 'DEFI SHARD', subtitle: 'Liquidity Fragment', rarity: 'rare' as const, stats: [{ label: 'TVL', value: '$2.4M' }, { label: 'VOL', value: '$500K' }, { label: 'FEES', value: '0.3%' }, { label: 'PAIRS', value: '47' }] },
   ];
 
   return (

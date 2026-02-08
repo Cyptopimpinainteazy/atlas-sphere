@@ -72,7 +72,7 @@ async def search_web_tool(
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(
-                "https://api.search.brave.com/res/v1/web/search",
+                "https://api.search.brave.com/res/v1/frontend/web/search",
                 headers=headers,
                 params=params,
                 timeout=30.0

@@ -1,6 +1,6 @@
 # AWS EC2 VM Provisioning for Atlas Sphere Testnet
 
-## Prereqfrontend/uisites
+## Prerequisites
 - AWS CLI installed: `aws --version`
 - AWS credentials configured: `aws configure`
 

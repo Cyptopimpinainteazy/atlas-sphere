@@ -16,7 +16,7 @@ pub enum SpendingTrack {
     Medium,
     /// Large spending - high threshold (~67%)
     Large,
-    /// Critical spending - reqfrontend/uires all signers (100%)
+    /// Critical spending - requires all signers (100%)
     Critical,
 }
 

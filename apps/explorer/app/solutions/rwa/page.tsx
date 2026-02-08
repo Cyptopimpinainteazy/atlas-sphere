@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   Map,
-  Bfrontend/uilding2,
+  Building2,
   FileCheck,
   Shield,
   Globe,
@@ -14,14 +14,14 @@ import {
   CheckCircle2,
   ArrowRight,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const assetClasses = [
   {
     name: 'Real Estate',
     description: 'Tokenize commercial and residential properties',
-    icon: <Bfrontend/uilding2 className="w-6 h-6" />,
-    examples: ['Commercial bfrontend/uildings', 'Residential properties', 'REITs', 'Fractional ownership'],
+    icon: <Building2 className="w-6 h-6" />,
+    examples: ['Commercial buildings', 'Residential properties', 'REITs', 'Fractional ownership'],
     marketSize: '$326T',
   },
   {
@@ -33,9 +33,9 @@ const assetClasses = [
   },
   {
     name: 'Securities',
-    description: 'Compliant tokenized securities and eqfrontend/uity',
+    description: 'Compliant tokenized securities and equity',
     icon: <TrendingUp className="w-6 h-6" />,
-    examples: ['Private eqfrontend/uity', 'Bonds', 'Funds', 'Stock'],
+    examples: ['Private equity', 'Bonds', 'Funds', 'Stock'],
     marketSize: '$115T',
   },
   {
@@ -50,12 +50,12 @@ const assetClasses = [
 const features = [
   {
     title: 'Programmable Compliance',
-    description: 'Bfrontend/uild regulatory reqfrontend/uirements directly into tokens with transfer restrictions and hooks',
+    description: 'Build regulatory requirements directly into tokens with transfer restrictions and hooks',
     icon: <FileCheck className="w-5 h-5" />,
   },
   {
-    title: 'Cross-VM Liqfrontend/uidity',
-    description: 'Access liqfrontend/uidity from both EVM and SVM ecosystems without bridging',
+    title: 'Cross-VM Liquidity',
+    description: 'Access liquidity from both EVM and SVM ecosystems without bridging',
     icon: <Globe className="w-5 h-5" />,
   },
   {
@@ -107,7 +107,7 @@ export default function RWAPage() {
             </h1>
             <p className="text-xl text-gray-400 mb-8">
               Bridge traditional finance with blockchain. Tokenize real estate, 
-              commodities, securities, and more with bfrontend/uilt-in compliance.
+              commodities, securities, and more with built-in compliance.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
@@ -192,10 +192,10 @@ export default function RWAPage() {
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">Bfrontend/uilt-in Compliance</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Built-in Compliance</h2>
               <p className="text-gray-400 mb-6">
                 X3 STAR's token extensions enable programmable compliance that travels 
-                with the token. Bfrontend/uild regulatory reqfrontend/uirements directly into assets.
+                with the token. Build regulatory requirements directly into assets.
               </p>
               <ul className="space-y-3">
                 {complianceFeatures.map((feature, i) => (

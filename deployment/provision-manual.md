@@ -2,7 +2,7 @@
 
 ## If using VPS provider (Hetzner, Linode, Vultr, etc.)
 
-### VM Reqfrontend/uirements
+### VM Requirements
 
 #### Validators (need 3-5)
 - **CPU**: 2 vCPU
@@ -35,7 +35,7 @@
 ## Provisioning Steps
 
 ### 1. Create VMs
-Using your provider's frontend/frontend/web interface or CLI:
+Using your provider's web interface or CLI:
 - Create VMs with specs above
 - Use Ubuntu 22.04 LTS
 - Add your SSH public key (`~/.ssh/atlas-testnet-deploy.pub`)
@@ -59,7 +59,7 @@ Run on each VM:
 sudo apt-get update && sudo apt-get upgrade -y
 
 # Install essentials
-sudo apt-get install -y curl wget git bfrontend/uild-essential ufw
+sudo apt-get install -y curl wget git build-essential ufw
 
 # Configure firewall (example for validator)
 sudo ufw default deny incoming

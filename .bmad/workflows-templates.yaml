@@ -32,7 +32,7 @@ workflows:
           - run: cargo clippy --all-targets -- -D warnings
           - run: cargo test --workspace --release
           - run: chmod +x ./RUN_ALL_TESTS.sh && ./RUN_ALL_TESTS.sh
-          - run: cargo bfrontend/uild -p atlas-sphere-runtime --release --target wasm32-unknown-unknown --no-default-features
+          - run: cargo build -p atlas-sphere-runtime --release --target wasm32-unknown-unknown --no-default-features
       - name: feature-coverage
         template: rust-cargo-ci
         steps:
@@ -44,7 +44,7 @@ workflows:
 
   - id: ci-swarm
     name: Swarm Dashboard CI
-    description: Swarm apps/apps/dash-legacy-2-legacy-2board CI workflow (Node.js tests)
+    description: Swarm apps/dash-legacy-2-legacy-2board CI workflow (Node.js tests)
     filename: ci-swarm.yml
     triggers:
       - type: push
@@ -52,7 +52,7 @@ workflows:
       - type: pull_request
         branches: [main]
         paths:
-          - "apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
+          - "apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
           - "tools/**"
           - "alembic/**"
           - ".github/workflows/ci-swarm.yml"
@@ -160,7 +160,7 @@ workflows:
           - checkout
           - rust-toolchain
           - cargo-cache
-          - run: cargo bfrontend/uild --release --all-targets
+          - run: cargo build --release --all-targets
       - name: prod-deploy
         needs: [prod-gate]
         template: production-deploy
@@ -210,23 +210,23 @@ workflows:
               name: ollama-test-results
               path: test-results/
 
-  - id: ollama-bfrontend/uild-image
-    name: Ollama Bfrontend/uild Image
-    description: Bfrontend/uild and push ollama container image
-    filename: ollama-bfrontend/uild-image.yml
+  - id: ollama-build-image
+    name: Ollama Build Image
+    description: Build and push ollama container image
+    filename: ollama-build-image.yml
     triggers:
       - type: push
         branches: [main]
         paths:
           - "docker/ollama/**"
-          - ".github/workflows/ollama-bfrontend/uild-image.yml"
+          - ".github/workflows/ollama-build-image.yml"
     jobs:
-      - name: bfrontend/uild-and-push
-        template: docker-bfrontend/uild
+      - name: build-and-push
+        template: docker-build
         steps:
           - checkout
           - docker-setup
-          - run: docker bfrontend/uild -t ollama:latest -f docker/ollama/Dockerfile .
+          - run: docker build -t ollama:latest -f docker/ollama/Dockerfile .
           - run: docker push ollama:latest
 
   - id: ollama-triage-test
@@ -265,16 +265,16 @@ workflows:
           - run: cargo test --package ollama-triage -- --test-threads 1
 
   # Dashboard Workflows
-  - id: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
+  - id: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e
     name: Swarm Dashboard E2E
-    description: Swarm apps/apps/dash-legacy-2-legacy-2board E2E testing
-    filename: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml
+    description: Swarm apps/dash-legacy-2-legacy-2board E2E testing
+    filename: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml
     triggers:
       - type: pull_request
         branches: [main]
         paths:
-          - "apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
-          - ".github/workflows/apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml"
+          - "apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
+          - ".github/workflows/apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml"
     jobs:
       - name: e2e
         template: node-e2e
@@ -282,17 +282,17 @@ workflows:
           - checkout
           - node-setup
           - node-cache
-          - run: cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npm run e2e
+          - run: cd apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npm run e2e
 
-  - id: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage
+  - id: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage
     name: Swarm Dashboard Axe Triage
-    description: Accessibility testing for swarm apps/apps/dash-legacy-2-legacy-2board
-    filename: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml
+    description: Accessibility testing for swarm apps/dash-legacy-2-legacy-2board
+    filename: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml
     triggers:
       - type: pull_request
         branches: [main]
         paths:
-          - "apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
+          - "apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
     jobs:
       - name: axe-triage
         template: node-ci
@@ -300,17 +300,17 @@ workflows:
           - checkout
           - node-setup
           - node-cache
-          - run: cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npx axe-core scan . --exit
+          - run: cd apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npx axe-core scan . --exit
 
-  - id: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke
+  - id: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke
     name: Swarm Dashboard Pipeline Smoke
-    description: Swarm apps/apps/dash-legacy-2-legacy-2board pipeline smoke test
-    filename: apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml
+    description: Swarm apps/dash-legacy-2-legacy-2board pipeline smoke test
+    filename: apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml
     triggers:
       - type: pull_request
         branches: [main]
         paths:
-          - "apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
+          - "apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2/**"
     jobs:
       - name: smoke
         template: node-ci
@@ -318,7 +318,7 @@ workflows:
           - checkout
           - node-setup
           - node-cache
-          - run: cd apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npm run test
+          - run: cd apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2 && npm install && npm run test
 
   - id: swarm-media-integration
     name: Swarm Media Integration
@@ -362,7 +362,7 @@ workflows:
         steps:
           - checkout
           - python-setup
-          - run: cd alembic && pip install -r reqfrontend/uirements.txt
+          - run: cd alembic && pip install -r requirements.txt
           - run: cd alembic && python -m pytest tests/
 
   - id: docker-publish
@@ -377,11 +377,11 @@ workflows:
           - ".github/workflows/docker-publish.yml"
     jobs:
       - name: publish
-        template: docker-bfrontend/uild
+        template: docker-build
         steps:
           - checkout
           - docker-setup
-          - run: docker bfrontend/uild -t atlas-sphere:latest .
+          - run: docker build -t atlas-sphere:latest .
           - run: docker push atlas-sphere:latest
 
   - id: playwright-e2e
@@ -519,13 +519,13 @@ templates:
     description: Basic Cargo test job (checkout, toolchain, cache, cargo test)
     
   production-gate:
-    description: Production deployment gate (bfrontend/uild checks)
+    description: Production deployment gate (build checks)
     
   production-deploy:
-    description: Production deployment job (reqfrontend/uires approval)
+    description: Production deployment job (requires approval)
     
-  docker-bfrontend/uild:
-    description: Docker bfrontend/uild and push job
+  docker-build:
+    description: Docker build and push job
     
   node-e2e:
     description: Node.js E2E testing job (playwright, etc)
@@ -542,4 +542,4 @@ step-templates:
   node-setup-v20: "uses: actions/setup-node@v4\n        with:\n          node-version: 20"
   node-cache: "uses: actions/cache@v4\n        with:\n          path: node_modules\n          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}\n          restore-keys: |\n            ${{ runner.os }}-npm-"
   python-setup: "uses: actions/setup-python@v4\n        with:\n          python-version: '3.11'"
-  docker-setup: "uses: docker/setup-bfrontend/uildx-action@v2"
+  docker-setup: "uses: docker/setup-buildx-action@v2"

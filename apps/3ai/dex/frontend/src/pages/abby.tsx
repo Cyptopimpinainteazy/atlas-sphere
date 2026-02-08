@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Heading, Text, VStack } from '@chakra-frontend/frontend/ui/react';
+import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react';
 import AbbyContainer from '../components/abby/AbbyContainer';
 
 const AbbyPage: React.FC = () => {

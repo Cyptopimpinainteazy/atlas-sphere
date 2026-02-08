@@ -5,7 +5,7 @@
 
 #![cfg_attr(rustfmt, rustfmt_skip)]
 #![allow(unused_parens)]
-#![allow(unused_archive/archive/imports)]
+#![allow(unused_imports)]
 #![allow(missing_docs)]
 
 use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};

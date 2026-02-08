@@ -1,4 +1,4 @@
-Qfrontend/uick refactoring check for Python code focusing on:
+Quick refactoring check for Python code focusing on:
 - Vertical slice boundaries
 - Function complexity
 - Type safety with Pydantic v2

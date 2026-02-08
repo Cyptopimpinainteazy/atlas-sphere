@@ -3,7 +3,7 @@
 /// Provides per-connection and per-method rate limiting to prevent DoS attacks
 /// and abuse of RPC endpoints.
 ///
-/// Note: The RpcServiceBfrontend/uilder and RpcServiceT integration reqfrontend/uires jsonrpsee 0.20+
+/// Note: The RpcServiceBuilder and RpcServiceT integration requires jsonrpsee 0.20+
 /// which conflicts with substrate's pinned version. The standalone RateLimiter and
 /// CorsConfig are still usable for manual rate limiting checks.
 use std::collections::HashMap;

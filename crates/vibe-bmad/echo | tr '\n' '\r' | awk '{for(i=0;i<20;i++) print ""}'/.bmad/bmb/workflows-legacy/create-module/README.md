@@ -81,7 +81,7 @@ workflow create-module --input module-brief-{name}-{date}.md
 │   ├── install-config.yaml
 │   └── installer.js
 ├── README.md           # Module documentation
-├── TODO.md            # Development roadmap
+├── docs/reports/TODO.md            # Development roadmap
 └── config.yaml        # Runtime configuration
 ```
 

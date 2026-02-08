@@ -268,8 +268,8 @@ pub enum ExternalChainId {
 pub struct FinalityConfig {
     /// Chain ID
     pub chain: ExternalChainId,
-    /// Reqfrontend/uired confirmations for finality
-    pub confirmations_reqfrontend/uired: u32,
+    /// Required confirmations for finality
+    pub confirmations_required: u32,
     /// Average block time in milliseconds
     pub block_time_ms: u64,
     /// Proof type to use

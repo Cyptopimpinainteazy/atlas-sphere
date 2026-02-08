@@ -7,14 +7,14 @@
 //! - Health checks
 
 use actix_cors::Cors;
-use actix_frontend/frontend/web::{middleware, frontend/frontend/web, App, HttpResponse, HttpServer};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer};
 use chrono::{DateTime, Utc};
 use deadpool_postgres::{Config, Pool, Runtime};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::NoTls;
 use tracing::{error, info, Level};
 use tracing_subscriber::FmtSubscriber;
-use ufrontend/uid::Ufrontend/uid;
+use uuid::Uuid;
 
 mod db;
 mod error;
@@ -65,13 +65,13 @@ pub struct AppState {
 // Main Entry Point
 // =============================================================================
 
-#[actix_frontend/frontend/web::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Load .env file if present
     let _ = dotenvy::dotenv();
 
     // Initialize tracing
-    let subscriber = FmtSubscriber::bfrontend/uilder()
+    let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set tracing subscriber");
@@ -95,7 +95,7 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to run migrations");
 
-    let app_state = frontend/frontend/web::Data::new(AppState { pool });
+    let app_state = web::Data::new(AppState { pool });
 
     let bind_addr = format!("{}:{}", config.host, config.port);
     info!("Listening on {}", bind_addr);
@@ -112,32 +112,32 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(middleware::Logger::default())
             // Health endpoints
-            .route("/health", frontend/frontend/web::get().to(handlers::health_check))
-            .route("/ready", frontend/frontend/web::get().to(handlers::readiness_check))
+            .route("/health", web::get().to(handlers::health_check))
+            .route("/ready", web::get().to(handlers::readiness_check))
             // Event endpoints
-            .route("/api/v1/events", frontend/frontend/web::post().to(handlers::record_event))
-            .route("/api/v1/events", frontend/frontend/web::get().to(handlers::get_events))
+            .route("/api/v1/events", web::post().to(handlers::record_event))
+            .route("/api/v1/events", web::get().to(handlers::get_events))
             .route(
                 "/api/v1/events/{event_id}",
-                frontend/frontend/web::get().to(handlers::get_event),
+                web::get().to(handlers::get_event),
             )
             // Metrics endpoints
             .route(
                 "/api/v1/metrics/summary",
-                frontend/frontend/web::get().to(handlers::get_metrics_summary),
+                web::get().to(handlers::get_metrics_summary),
             )
             .route(
                 "/api/v1/metrics/timeseries",
-                frontend/frontend/web::get().to(handlers::get_timeseries),
+                web::get().to(handlers::get_timeseries),
             )
             // Comit-specific analytics
             .route(
                 "/api/v1/comits/stats",
-                frontend/frontend/web::get().to(handlers::get_comit_stats),
+                web::get().to(handlers::get_comit_stats),
             )
             .route(
                 "/api/v1/comits/by-account/{account}",
-                frontend/frontend/web::get().to(handlers::get_comits_by_account),
+                web::get().to(handlers::get_comits_by_account),
             )
     })
     .bind(&bind_addr)?

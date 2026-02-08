@@ -1,8 +1,8 @@
 # 3aiXchange - Decentralized Exchange on 3ai Chain
 
-3aiXchange is a high-performance decentralized exchange (DEX) bfrontend/uilt on the 3ai blockchain, featuring an on-chain order book, low-latency trading, and seamless cross-chain asset transfers.
+3aiXchange is a high-performance decentralized exchange (DEX) built on the 3ai blockchain, featuring an on-chain order book, low-latency trading, and seamless cross-chain asset transfers.
 
-## 🚀 Qfrontend/uick Start
+## 🚀 Quick Start
 
 ### 1. Launch Your OP Stack Chain
 
@@ -11,13 +11,13 @@ Run locally:
 npx @eth-optimism/bundle dev
 ```
 
-Or deploy to production with [Condfrontend/uit](https://condfrontend/uit.xyz/) or [Caldera](https://caldera.xyz/).
+Or deploy to production with [Conduit](https://conduit.xyz/) or [Caldera](https://caldera.xyz/).
 
 ### 2. Install Dependencies
 
 ```bash
 npm install --save-dev hardhat @openzeppelin/contracts
-pip install frontend/web3 eth-account python-dotenv
+pip install web3 eth-account python-dotenv
 ```
 
 ### 3. Configure Environment
@@ -137,7 +137,7 @@ npx hardhat run deploy/deploy.js --network localhost
 
 ## 🛠️ Extending
 
-### Add Liqfrontend/uidity Mining
+### Add Liquidity Mining
 
 Add farming rewards by creating an `OrderbookFarming` contract that distributes tokens based on trading volume.
 
@@ -160,7 +160,7 @@ Enhance the bot with:
 
 - **Audits**: Consider formal audits for production deployment
 - **Access Control**: Add role-based permissions for admin functions
-- **Circfrontend/uit Breakers**: Implement emergency pause mechanisms
+- **Circuit Breakers**: Implement emergency pause mechanisms
 - **Rate Limiting**: Prevent transaction spam
 
 ## 📚 Resources
@@ -176,4 +176,4 @@ This is a foundation - customize and extend for your specific use case. The modu
 
 ---
 
-**Bfrontend/uilt for the decentralized future. 🚀**
+**Built for the decentralized future. 🚀**

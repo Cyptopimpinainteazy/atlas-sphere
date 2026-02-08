@@ -3,15 +3,15 @@
 import React from 'react';
 import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
-export default function HardhatGfrontend/uidePage() {
+export default function HardhatGuidePage() {
   return (
     <DocLayout
-      title="Hardhat Development Gfrontend/uide"
-      description="Complete gfrontend/uide to using Hardhat for X3 Atlas Sphere development"
+      title="Hardhat Development Guide"
+      description="Complete guide to using Hardhat for X3 Atlas Sphere development"
     >
       <p className="lead text-xl text-gray-400 mb-8">
-        Hardhat is the recommended development environment for bfrontend/uilding EVM smart contracts
-        on X3 Atlas Sphere. This gfrontend/uide covers setup, testing, and deployment workflows.
+        Hardhat is the recommended development environment for building EVM smart contracts
+        on X3 Atlas Sphere. This guide covers setup, testing, and deployment workflows.
       </p>
 
       <h2>Project Setup</h2>

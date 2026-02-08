@@ -1,11 +1,11 @@
-const hre = reqfrontend/uire("hardhat");
+const hre = require("hardhat");
 
 async function main() {
   // Get the contract factory
   const OrderbookV2 = await hre.ethers.getContractFactory("OrderbookV2");
   
   // Deploy the contract with the fee recipient address
-  // For testing, we'll use the first account from Hardhat's bfrontend/uilt-in accounts
+  // For testing, we'll use the first account from Hardhat's built-in accounts
   const [deployer] = await hre.ethers.getSigners();
   const feeRecipient = deployer.address; // Using deployer as fee recipient for testing
   

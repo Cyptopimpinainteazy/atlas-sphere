@@ -12,7 +12,7 @@
  * - Cross-VM bridge visualization (EVM ↔ SVM tunnels)
  * - Time-based animation with scrubbing
  * 
- * @reqfrontend/uires WebGPU-capable browser (Chrome 113+, Edge 113+)
+ * @requires WebGPU-capable browser (Chrome 113+, Edge 113+)
  * @fallback WebGL2 with reduced features
  */
 
@@ -121,7 +121,7 @@ struct Block {
 @group(0) @binding(1) var<storage, read> blocks: array<Block>;
 
 struct VertexOutput {
-  @bfrontend/uiltin(position) position: vec4<f32>,
+  @builtin(position) position: vec4<f32>,
   @location(0) worldPosition: vec3<f32>,
   @location(1) normal: vec3<f32>,
   @location(2) color: vec4<f32>,
@@ -147,8 +147,8 @@ const ICOSAHEDRON_VERTICES = array<vec3<f32>, 12>(
 
 @vertex
 fn vertexMain(
-  @bfrontend/uiltin(vertex_index) vertexIndex: u32,
-  @bfrontend/uiltin(instance_index) instanceIndex: u32,
+  @builtin(vertex_index) vertexIndex: u32,
+  @builtin(instance_index) instanceIndex: u32,
 ) -> VertexOutput {
   let block = blocks[instanceIndex];
   
@@ -295,7 +295,7 @@ struct SimParams {
 @group(0) @binding(1) var<uniform> params: SimParams;
 
 @compute @workgroup_size(64)
-fn main(@bfrontend/uiltin(global_invocation_id) id: vec3<u32>) {
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
   let index = id.x;
   if (index >= params.blockCount) {
     return;
@@ -401,14 +401,14 @@ export const ChainExplorer3D: React.FC<ChainExplorer3DProps> = ({
       }
 
       const device = await adapter.requestDevice({
-        reqfrontend/uiredFeatures: [],
-        reqfrontend/uiredLimits: {
+        requiredFeatures: [],
+        requiredLimits: {
           maxStorageBufferBindingSize: 128 * 1024 * 1024, // 128MB for blocks
         },
       });
 
       const canvas = canvasRef.current;
-      const context = canvas.getContext('frontend/webgpu');
+      const context = canvas.getContext('webgpu');
       
       if (!context) {
         throw new Error('Could not get WebGPU context');
@@ -563,7 +563,7 @@ export const ChainExplorer3D: React.FC<ChainExplorer3DProps> = ({
     uniformData[18] = camera.position[2];
     // time
     uniformData[19] = performance.now() / 1000;
-    // block count (as frontend/uint)
+    // block count (as uint)
     new Uint32Array(uniformData.buffer, 80, 1)[0] = blocksRef.current.length;
     // selected block
     new Int32Array(uniformData.buffer, 84, 1)[0] = selectedBlock ? blocksRef.current.indexOf(selectedBlock) : -1;

@@ -350,7 +350,7 @@ export default function StakePage() {
               </div>
             )}
 
-            {/* Qfrontend/uick Links */}
+            {/* Quick Links */}
             <div className="grid grid-cols-2 gap-3">
               <Link href="/earn" className="p-4 rounded-xl bg-[#111111] border border-[#1a1a1a] hover:border-orange-500/30 transition-colors text-center">
                 <Gift className="w-6 h-6 text-orange-400 mx-auto mb-2" />

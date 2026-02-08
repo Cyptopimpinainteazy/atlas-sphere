@@ -17,7 +17,7 @@ export default defineConfig({
   component: {
     devServer: {
       framework: 'next',
-      bundler: 'frontend/webpack',
+      bundler: 'webpack',
     }
   }
 })

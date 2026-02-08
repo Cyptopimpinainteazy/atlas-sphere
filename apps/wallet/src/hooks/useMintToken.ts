@@ -63,7 +63,7 @@ export function useMintToken() {
       // Dynamic import for SSR safety
       const sdk = await import('@atlas-sphere/ts-sdk').catch(() => null);
       
-      updateState({ status: 'preparing', progress: 25, message: 'Bfrontend/uilding token contract...' });
+      updateState({ status: 'preparing', progress: 25, message: 'Building token contract...' });
       
       let mintResult: MintResult;
 
@@ -139,9 +139,9 @@ export function useMintToken() {
 // Internal functions for token minting
 
 async function mintDualVMToken(config: TokenMintConfig, ownerAddress: string): Promise<MintResult> {
-  // Bfrontend/uild Comit transaction for dual-VM deployment
-  const evmPayload = bfrontend/uildEvmCreatePayload(config);
-  const svmPayload = bfrontend/uildSvmCreatePayload(config);
+  // Build Comit transaction for dual-VM deployment
+  const evmPayload = buildEvmCreatePayload(config);
+  const svmPayload = buildSvmCreatePayload(config);
   
   // Simulate network delay
   await simulateDelay(2000);
@@ -162,7 +162,7 @@ async function mintDualVMToken(config: TokenMintConfig, ownerAddress: string): P
 }
 
 async function mintEvmToken(config: TokenMintConfig, ownerAddress: string): Promise<MintResult> {
-  const payload = bfrontend/uildEvmCreatePayload(config);
+  const payload = buildEvmCreatePayload(config);
   
   await simulateDelay(1500);
   
@@ -174,7 +174,7 @@ async function mintEvmToken(config: TokenMintConfig, ownerAddress: string): Prom
 }
 
 async function mintSvmToken(config: TokenMintConfig, ownerAddress: string): Promise<MintResult> {
-  const payload = bfrontend/uildSvmCreatePayload(config);
+  const payload = buildSvmCreatePayload(config);
   
   await simulateDelay(1000);
   
@@ -185,7 +185,7 @@ async function mintSvmToken(config: TokenMintConfig, ownerAddress: string): Prom
   };
 }
 
-function bfrontend/uildEvmCreatePayload(config: TokenMintConfig): Uint8Array {
+function buildEvmCreatePayload(config: TokenMintConfig): Uint8Array {
   // ERC-20 contract constructor data
   // In production, this would be actual Solidity contract bytecode
   const encoder = new TextEncoder();
@@ -203,7 +203,7 @@ function bfrontend/uildEvmCreatePayload(config: TokenMintConfig): Uint8Array {
   payload.set(symbolBytes, 34);
   payload[42] = config.decimals;
   
-  // Encode supply as frontend/uint256 (simplified)
+  // Encode supply as uint256 (simplified)
   const supply = BigInt(config.totalSupply) * BigInt(10 ** config.decimals);
   const supplyHex = supply.toString(16).padStart(64, '0');
   for (let i = 0; i < 32; i++) {
@@ -216,7 +216,7 @@ function bfrontend/uildEvmCreatePayload(config: TokenMintConfig): Uint8Array {
   return payload;
 }
 
-function bfrontend/uildSvmCreatePayload(config: TokenMintConfig): Uint8Array {
+function buildSvmCreatePayload(config: TokenMintConfig): Uint8Array {
   // SPL Token create instruction
   const encoder = new TextEncoder();
   const payload = new Uint8Array(256);

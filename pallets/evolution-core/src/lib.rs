@@ -36,7 +36,7 @@
 //! ## Security
 //!
 //! - All mutations are sandboxed and simulated before application
-//! - Critical parameters reqfrontend/uire governance approval
+//! - Critical parameters require governance approval
 //! - Auto-evolution bounded by safety limits
 //! - Automatic rollback on failure detection
 
@@ -342,9 +342,9 @@ pub mod pallet {
         pub ai_agents: Vec<T::AccountId>,
     }
 
-    #[pallet::genesis_bfrontend/uild]
-    impl<T: Config> Bfrontend/uildGenesisConfig for GenesisConfig<T> {
-        fn bfrontend/uild(&self) {
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
             EvolutionEnabled::<T>::put(self.evolution_enabled);
             AutoEvolutionEnabled::<T>::put(self.auto_evolution_enabled);
             CurrentParams::<T>::put(self.initial_params.clone());
@@ -545,9 +545,9 @@ pub mod pallet {
 
                 // Check if quorum reached
                 let total_agents = AIAgentApprovers::<T>::iter().count() as u32;
-                let reqfrontend/uired = T::MinApprovalQuorum::get().mul_ceil(total_agents);
+                let required = T::MinApprovalQuorum::get().mul_ceil(total_agents);
 
-                if proposal.approvals >= reqfrontend/uired && proposal.simulation_passed {
+                if proposal.approvals >= required && proposal.simulation_passed {
                     Self::apply_mutation(proposal_id)?;
                 }
 
@@ -763,7 +763,7 @@ pub mod pallet {
                             params.jit_threshold = *new_threshold;
                         }
                         MutationType::BlockTime { .. } => {
-                            // Block time reqfrontend/uires consensus changes
+                            // Block time requires consensus changes
                         }
                         MutationType::CustomParam { param_id, value } => match param_id {
                             0 => params.gas_multiplier = *value as u32,

@@ -59,7 +59,7 @@ const concepts = [
       'Single source of truth for balances',
       'No wrapped tokens needed',
       'Cross-VM asset transfers',
-      'Unified liqfrontend/uidity pools',
+      'Unified liquidity pools',
     ],
   },
   {
@@ -295,7 +295,7 @@ export default function CoreConceptsPage() {
             <Link href="/learn/tutorials" className="glass-card-hover p-6 card-lift">
               <Zap className="w-8 h-8 text-indigo-400 mb-4" />
               <h3 className="font-semibold text-white mb-2">Hands-on Tutorials</h3>
-              <p className="text-sm text-gray-400">Start bfrontend/uilding with step-by-step gfrontend/uides.</p>
+              <p className="text-sm text-gray-400">Start building with step-by-step guides.</p>
             </Link>
           </div>
         </div>

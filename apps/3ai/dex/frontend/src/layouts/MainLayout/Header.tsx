@@ -1,5 +1,5 @@
-import { Box, Flex, IconButton, useColorMode, useColorModeValue, Image } from '@chakra-frontend/frontend/ui/react';
-import { MoonIcon, SunIcon } from '@chakra-frontend/frontend/ui/icons';
+import { Box, Flex, IconButton, useColorMode, useColorModeValue, Image } from '@chakra-ui/react';
+import { MoonIcon, SunIcon } from '@chakra-ui/icons';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
 
 export const Header = () => {

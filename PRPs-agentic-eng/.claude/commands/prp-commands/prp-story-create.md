@@ -32,7 +32,7 @@ Analyze the story to determine:
 - **Complexity**: Low, Medium, High
 - **Affected Systems**: Which components/services need changes
 
-Get a deep understanding about the story/task before proceeding so that you can effectively gfrontend/uide the rest of the process.
+Get a deep understanding about the story/task before proceeding so that you can effectively guide the rest of the process.
 
 ### Phase 2: Codebase Intelligence Gathering
 
@@ -89,7 +89,7 @@ Read and understand the template @PRPs/templates/prp_story_task.md
 
 **Task Action Types**:
 
-We use the concept of information dense keywords to describe the action to be taken, below is a gfrontend/uidance.
+We use the concept of information dense keywords to describe the action to be taken, below is a guidance.
 But you can use your own words to describe the action to be taken as long as you follow this same principle.
 
 Examples:

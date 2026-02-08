@@ -12,7 +12,7 @@ Transform rough ideas into comprehensive PRDs with rich visual documentation.
    - Map to business goals if provided
 
 2. **Market & Technical Research**
-   - Do deep frontend/frontend/web search for the following:
+   - Do deep web search for the following:
      - Market analysis
      - Competitor analysis
      - Technical feasibility study
@@ -24,7 +24,7 @@ Transform rough ideas into comprehensive PRDs with rich visual documentation.
      - Target user personas?
      - Key pain points?
      - Success metrics?
-     - Constraints/reqfrontend/uirements?
+     - Constraints/requirements?
 
 ## PRD Generation
 
@@ -72,25 +72,25 @@ diagrams_needed:
 **Acceptance Criteria:**
 - [ ] Specific behavior
 - [ ] Edge case handling
-- [ ] Performance reqfrontend/uirement
+- [ ] Performance requirement
 
 **Technical Notes:**
 - Implementation approach
 - API implications
-- Data reqfrontend/uirements
+- Data requirements
 ```
 
 ### Implementation Strategy
 - Phases with dependencies (no dates)
 - Priority ordering
 - MVP vs enhanced features
-- Technical prereqfrontend/uisites
+- Technical prerequisites
 
 ## User Interaction Points
 
 1. **Idea Validation**
    - Confirm understanding
-   - Clarify ambigfrontend/uities
+   - Clarify ambiguities
    - Set boundaries
 
 2. **Research Review**
@@ -103,7 +103,7 @@ diagrams_needed:
    - Risk acknowledgment
    - Success metric agreement
 
-## Diagram Gfrontend/uidelines
+## Diagram Guidelines
 - Use Mermaid for all diagrams
 - Include legends where needed
 - Show error paths

@@ -3,7 +3,7 @@ name: swarm-dashboard axe triage
 on:
   pull_request:
     paths:
-      - 'swarm-dashboard/**'
+      - 'apps/swarm-dashboard/**'
       - '.github/workflows/swarm-dashboard-axe-triage.yml'
 
 jobs:
@@ -23,13 +23,13 @@ jobs:
           ASSIGNEE: ${{ vars.AXE_TRIAGE_ASSIGNEE }}
         run: |
           echo "Preparing to create triage issue for Axe violations (axe-triage job)..."
-          if [ -f swarm-dashboard/e2e/axe-violations.json ]; then
+          if [ -f apps/swarm-dashboard/e2e/axe-violations.json ]; then
             TITLE="A11y: Axe accessibility violations detected (PR #${PR})"
             hits=$(gh api search/issues -f q="repo:${REPO} is:issue is:open in:title \"${TITLE}\"" --jq '.total_count' 2>/dev/null || echo 0)
             echo "Found existing issues: $hits"
             if [ "$hits" -eq 0 ]; then
               echo "Creating new issue: $TITLE"
-              summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
+              summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' apps/swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
               BODY="Axe accessibility check found violations on PR #${PR}:\n\n${summary}\n\nSee attached artifact 'axe-violations.json' for full details."
               if [ -n "${ASSIGNEE}" ]; then
                 echo "Assignee configured: ${ASSIGNEE} — assigning issue"

@@ -92,8 +92,8 @@ console.log('Authorized accounts:', authorizedAccounts);`}
             feature enabled, authorization checks are skipped. This allows for easier testing.
           </p>
           <CodeBlock language="bash" title="Enable Dev Bypass">
-{`# Bfrontend/uild with dev-bypass feature
-cargo bfrontend/uild --release --features dev-bypass
+{`# Build with dev-bypass feature
+cargo build --release --features dev-bypass
 
 # Or use the dev node which has it enabled by default
 ./run-dev-node.sh`}

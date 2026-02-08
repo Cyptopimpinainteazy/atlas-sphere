@@ -5,7 +5,7 @@ description: |
 
 ## Goal
 
-**Feature Goal**: [Specific, measurable end state of what needs to be bfrontend/uilt]
+**Feature Goal**: [Specific, measurable end state of what needs to be built]
 
 **Deliverable**: [Concrete artifact - API endpoint, service class, integration, etc.]
 
@@ -29,7 +29,7 @@ description: |
 
 ## What
 
-[User-visible behavior and technical reqfrontend/uirements]
+[User-visible behavior and technical requirements]
 
 ### Success Criteria
 
@@ -71,11 +71,11 @@ _Before writing this PRP, validate: "If someone knew nothing about this codebase
 
 ```
 
-### Known Gotchas of our codebase & Library Qfrontend/uirks
+### Known Gotchas of our codebase & Library Quirks
 
 ```python
-# CRITICAL: [Library name] reqfrontend/uires [specific setup]
-# Example: FastAPI reqfrontend/uires async functions for endpoints
+# CRITICAL: [Library name] requires [specific setup]
+# Example: FastAPI requires async functions for endpoints
 # Example: This ORM doesn't support batch inserts over 1000 records
 ```
 
@@ -148,9 +148,9 @@ async def {domain}_operation(self, request: {Domain}Request) -> {Domain}Response
     # PATTERN: Input validation first (follow src/services/existing_service.py)
     validated = self.validate_request(request)
 
-    # GOTCHA: [Library-specific constraint or reqfrontend/uirement]
+    # GOTCHA: [Library-specific constraint or requirement]
     # PATTERN: Error handling approach (reference existing service pattern)
-    # CRITICAL: [Non-obvious reqfrontend/uirement or configuration detail]
+    # CRITICAL: [Non-obvious requirement or configuration detail]
 
     return {Domain}Response(status="success", data=result)
 
@@ -202,7 +202,7 @@ ruff format src/
 uv run pytest src/services/tests/test_{domain}_service.py -v
 uv run pytest src/tools/tests/test_{action}_{resource}.py -v
 
-# Full test sfrontend/uite for affected areas
+# Full test suite for affected areas
 uv run pytest src/services/tests/ -v
 uv run pytest src/tools/tests/ -v
 
@@ -245,11 +245,11 @@ psql $DATABASE_URL -c "SELECT 1;" || echo "Database connection failed"
 ```bash
 # MCP Server Validation Examples:
 
-# Playwright MCP (for frontend/frontend/web interfaces)
+# Playwright MCP (for web interfaces)
 playwright-mcp --url http://localhost:8000 --test-user-journey
 
 # Docker MCP (for containerized services)
-docker-mcp --bfrontend/uild --test --cleanup
+docker-mcp --build --test --cleanup
 
 # Database MCP (for data operations)
 database-mcp --validate-schema --test-queries --check-performance
@@ -257,19 +257,19 @@ database-mcp --validate-schema --test-queries --check-performance
 # Custom Business Logic Validation
 # [Add domain-specific validation commands here]
 
-# Performance Testing (if performance reqfrontend/uirements)
+# Performance Testing (if performance requirements)
 ab -n 100 -c 10 http://localhost:8000/{endpoint}
 
-# Security Scanning (if security reqfrontend/uirements)
+# Security Scanning (if security requirements)
 bandit -r src/
 
-# Load Testing (if scalability reqfrontend/uirements)
+# Load Testing (if scalability requirements)
 # wrk -t12 -c400 -d30s http://localhost:8000/{endpoint}
 
 # API Documentation Validation (if API endpoints)
 # swagger-codegen validate -i openapi.json
 
-# Expected: All creative validations pass, performance meets reqfrontend/uirements
+# Expected: All creative validations pass, performance meets requirements
 ```
 
 ## Final Validation Checklist
@@ -288,7 +288,7 @@ bandit -r src/
 - [ ] Manual testing successful: [specific commands from Level 3]
 - [ ] Error cases handled gracefully with proper error messages
 - [ ] Integration points work as specified
-- [ ] User persona reqfrontend/uirements satisfied (if applicable)
+- [ ] User persona requirements satisfied (if applicable)
 
 ### Code Quality Validation
 

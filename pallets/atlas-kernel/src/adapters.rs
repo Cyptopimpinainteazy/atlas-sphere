@@ -320,9 +320,9 @@ impl X3ExecutorAdapter for () {
 pub mod real_adapters {
     //! Real VM adapters using solana-rbpf and X3 VM
     //!
-    //! These are only available in std bfrontend/uilds due to external dependencies.
+    //! These are only available in std builds due to external dependencies.
     //! Note: FrontierEvmAdapter uses a standalone EVM implementation because
-    //! the Frontier executor reqfrontend/uires runtime type parameters not available here.
+    //! the Frontier executor requires runtime type parameters not available here.
 
     use super::*;
     use atlas_svm_integration::{RbpfSvmExecutor, SvmConfig, SvmExecutor};

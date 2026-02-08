@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 
-interface Liqfrontend/uidMetalBlobProps {
+interface LiquidMetalBlobProps {
   size?: number;
   color?: string;
   colorSecondary?: string;
@@ -12,9 +12,9 @@ interface Liqfrontend/uidMetalBlobProps {
 }
 
 /**
- * Liqfrontend/uidMetalBlob - Morphing liqfrontend/uid metal blob with reflection
+ * LiquidMetalBlob - Morphing liquid metal blob with reflection
  */
-export const Liqfrontend/uidMetalBlob: React.FC<Liqfrontend/uidMetalBlobProps> = ({
+export const LiquidMetalBlob: React.FC<LiquidMetalBlobProps> = ({
   size = 200,
   color = '#c0c0c0',
   colorSecondary = '#404040',
@@ -39,7 +39,7 @@ export const Liqfrontend/uidMetalBlob: React.FC<Liqfrontend/uidMetalBlobProps> =
 
   return (
     <div
-      className={`liqfrontend/uid-metal-blob ${className}`}
+      className={`liquid-metal-blob ${className}`}
       style={{
         width: size,
         height: size,
@@ -111,25 +111,25 @@ export const Liqfrontend/uidMetalBlob: React.FC<Liqfrontend/uidMetalBlobProps> =
 };
 
 /**
- * Liqfrontend/uidMetalText - Text with liqfrontend/uid metal effect
+ * LiquidMetalText - Text with liquid metal effect
  */
-export const Liqfrontend/uidMetalText: React.FC<{
+export const LiquidMetalText: React.FC<{
   text: string;
   fontSize?: string;
   className?: string;
 }> = ({ text, fontSize = '6rem', className = '' }) => {
   return (
-    <div className={`liqfrontend/uid-metal-text ${className}`} style={{ position: 'relative' }}>
+    <div className={`liquid-metal-text ${className}`} style={{ position: 'relative' }}>
       <svg width="0" height="0">
         <defs>
-          <linearGradient id="liqfrontend/uidTextGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="liquidTextGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#f0f0f0" />
             <stop offset="25%" stopColor="#c0c0c0" />
             <stop offset="50%" stopColor="#ffffff" />
             <stop offset="75%" stopColor="#808080" />
             <stop offset="100%" stopColor="#d0d0d0" />
           </linearGradient>
-          <filter id="liqfrontend/uidTextEffect">
+          <filter id="liquidTextEffect">
             <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise">
               <animate attributeName="baseFrequency" values="0.02;0.04;0.02" dur="10s" repeatCount="indefinite" />
             </feTurbulence>
@@ -148,7 +148,7 @@ export const Liqfrontend/uidMetalText: React.FC<{
           backgroundClip: 'text',
           color: 'transparent',
           textShadow: '0 5px 15px rgba(0,0,0,0.3)',
-          filter: 'url(#liqfrontend/uidTextEffect)',
+          filter: 'url(#liquidTextEffect)',
         }}
         animate={{
           backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
@@ -166,9 +166,9 @@ export const Liqfrontend/uidMetalText: React.FC<{
 };
 
 /**
- * Liqfrontend/uidMetalButton - Chrome/metal button with liqfrontend/uid effect
+ * LiquidMetalButton - Chrome/metal button with liquid effect
  */
-export const Liqfrontend/uidMetalButton: React.FC<{
+export const LiquidMetalButton: React.FC<{
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
@@ -177,7 +177,7 @@ export const Liqfrontend/uidMetalButton: React.FC<{
 
   return (
     <motion.button
-      className={`liqfrontend/uid-metal-button ${className}`}
+      className={`liquid-metal-button ${className}`}
       onClick={onClick}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
@@ -236,11 +236,11 @@ export const Liqfrontend/uidMetalButton: React.FC<{
 };
 
 /**
- * Liqfrontend/uidMetalShowcase - Display liqfrontend/uid metal effects
+ * LiquidMetalShowcase - Display liquid metal effects
  */
-export const Liqfrontend/uidMetalShowcase: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const LiquidMetalShowcase: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`liqfrontend/uid-metal-showcase ${className}`} style={{
+    <div className={`liquid-metal-showcase ${className}`} style={{
       background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%)',
       padding: '4rem 2rem',
       borderRadius: '1rem',
@@ -249,20 +249,20 @@ export const Liqfrontend/uidMetalShowcase: React.FC<{ className?: string }> = ({
       alignItems: 'center',
       gap: '3rem',
     }}>
-      <Liqfrontend/uidMetalText text="LIQUID METAL" />
+      <LiquidMetalText text="LIQUID METAL" />
       
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Liqfrontend/uidMetalBlob size={150} color="#c0c0c0" colorSecondary="#606060" />
-        <Liqfrontend/uidMetalBlob size={150} color="#ffd700" colorSecondary="#b8860b" />
-        <Liqfrontend/uidMetalBlob size={150} color="#00ffea" colorSecondary="#008080" />
+        <LiquidMetalBlob size={150} color="#c0c0c0" colorSecondary="#606060" />
+        <LiquidMetalBlob size={150} color="#ffd700" colorSecondary="#b8860b" />
+        <LiquidMetalBlob size={150} color="#00ffea" colorSecondary="#008080" />
       </div>
       
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Liqfrontend/uidMetalButton>CONNECT WALLET</Liqfrontend/uidMetalButton>
-        <Liqfrontend/uidMetalButton>SWAP TOKENS</Liqfrontend/uidMetalButton>
+        <LiquidMetalButton>CONNECT WALLET</LiquidMetalButton>
+        <LiquidMetalButton>SWAP TOKENS</LiquidMetalButton>
       </div>
     </div>
   );
 };
 
-export default Liqfrontend/uidMetalBlob;
+export default LiquidMetalBlob;

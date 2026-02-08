@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 🎉 Atlas Sphere Testnet v1 - Deployment Summary
-# Day -1 COMPLETE - All Bfrontend/uild Artifacts Ready!
+# Day -1 COMPLETE - All Build Artifacts Ready!
 
 cat << 'EOF'
 
@@ -27,7 +27,7 @@ Next: Provision infrastructure OR deploy if infrastructure ready
 1. ✅ Release Binary
    Location: target/release/atlas-sphere-node
    Size: 52 MB
-   Bfrontend/uild Time: 1 minute
+   Build Time: 1 minute
    Status: Production-ready
 
 2. ✅ Cryptographic Keys (3 validators)
@@ -84,17 +84,17 @@ SCENARIO 1: Infrastructure NOT Ready Yet
      ./deployment/provision-digitalocean.sh
    
    AWS EC2 (manual):
-     Follow gfrontend/uide: deployment/provision-aws.md
+     Follow guide: deployment/provision-aws.md
    
    Other VPS provider (manual):
-     Follow gfrontend/uide: deployment/provision-manual.md
+     Follow guide: deployment/provision-manual.md
 
 2. Update inventory with actual IPs:
      vim deployment/inventory.yaml
 
 3. Configure DNS records:
      Follow: deployment/dns-config.md
-     Reqfrontend/uired domains:
+     Required domains:
        • rpc.testnet.atlas-sphere.io
        • bootnode.testnet.atlas-sphere.io
        • faucet.testnet.atlas-sphere.io
@@ -148,7 +148,7 @@ SCENARIO 2: Infrastructure Ready → Deploy Now!
 🚀 DEPLOYMENT TIMELINE:
 
   ✅ Day -2: Infrastructure Scripts Created
-  ✅ Day -1: Bfrontend/uild & Keys Complete ← YOU ARE HERE
+  ✅ Day -1: Build & Keys Complete ← YOU ARE HERE
   
   ⬜ Day -2 ACTION: Provision Infrastructure (1-2 hours if manual, 10 min if automated)
   ⬜ Day 1: Deploy Bootnode + Validators (2-3 hours)
@@ -167,7 +167,7 @@ Binary:          target/release/atlas-sphere-node
 Chain Spec:      deployment/chain-specs/atlas-testnet-raw.json
 Keys:            deployment/keys/  (SECURE THIS!)
 Inventory:       deployment/inventory.yaml
-Bfrontend/uild Log:       deployment/bfrontend/uild.log
+Build Log:       deployment/build.log
 
 Deployment Scripts:
   Infrastructure:   ./deployment/infrastructure-setup.sh (already run)
@@ -176,9 +176,9 @@ Deployment Scripts:
   Firewall Setup:   deployment/configure-firewall.sh
 
 Documentation:
-  Full Gfrontend/uide:       TESTNET_DEPLOYMENT_GUIDE.md
+  Full Guide:       docs/reports/TESTNET_DEPLOYMENT_GUIDE.md
   Completion Report: deployment/DAY_MINUS_1_COMPLETE.md
-  Roadmap:          TESTNET_ROADMAP.md
+  Roadmap:          docs/reports/TESTNET_ROADMAP.md
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -199,7 +199,7 @@ Ready to deploy? Choose your next action:
 
   🏗️  Need infrastructure?    → ./deployment/provision-digitalocean.sh
   🚀 Infrastructure ready?    → ./deployment/deploy-nodes-day1.sh
-  📖 Need gfrontend/uidance?           → cat TESTNET_DEPLOYMENT_GUIDE.md
+  📖 Need guidance?           → cat docs/reports/TESTNET_DEPLOYMENT_GUIDE.md
   🔐 Backup keys?             → tar czf - deployment/keys | gpg -e -r you@email.com > backup.tar.gz.gpg
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════

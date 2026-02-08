@@ -10,4 +10,4 @@ providers:
     disableDeletion: false
     editable: true
     options:
-      path: /etc/grafana/provisioning/apps/apps/dash-legacy-2-legacy-2boards
+      path: /etc/grafana/provisioning/apps/dash-legacy-2-legacy-2boards

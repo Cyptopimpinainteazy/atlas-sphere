@@ -11,7 +11,7 @@ export default function KeysPage() {
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Proper key management is critical for securing your accounts and validator operations.
-        This gfrontend/uide covers key types, generation, and security best practices.
+        This guide covers key types, generation, and security best practices.
       </p>
 
       <Callout type="warning" title="Security Critical">

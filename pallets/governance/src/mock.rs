@@ -10,7 +10,7 @@ use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    Bfrontend/uildStorage, Percent,
+    BuildStorage, Percent,
 };
 
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -138,10 +138,10 @@ impl pallet_governance::Config for Test {
     type EmergencyOrigin = frame_system::EnsureSigned<u64>;
 }
 
-/// Bfrontend/uild genesis storage for testing
+/// Build genesis storage for testing
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = system::GenesisConfig::<Test>::default()
-        .bfrontend/uild_storage()
+        .build_storage()
         .unwrap();
 
     pallet_balances::GenesisConfig::<Test> {

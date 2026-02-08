@@ -1,6 +1,6 @@
 # PRP Core Plugin
 
-Complete PRP (Product Reqfrontend/uirement Prompt) workflow automation for Claude Code.
+Complete PRP (Product Requirement Prompt) workflow automation for Claude Code.
 
 ## Overview
 
@@ -39,7 +39,7 @@ Execute a PRP file until fully complete with validation.
 - Ingests and analyzes the complete PRP
 - Executes every task sequentially
 - Validates after each step
-- Runs full validation sfrontend/uite on completion
+- Runs full validation suite on completion
 - Moves completed PRP to `completed/` directory
 
 **Success Criteria:**
@@ -130,7 +130,7 @@ claude
 # Install plugin
 /plugin install prp-core@prp-marketplace
 
-# Restart Claude Code (reqfrontend/uired)
+# Restart Claude Code (required)
 # Exit (Ctrl+C) and run 'claude' again
 
 # Verify installation
@@ -163,7 +163,7 @@ Team members who trust the repository will automatically have the plugin install
 
 ## Usage
 
-### Qfrontend/uick Start
+### Quick Start
 
 ```bash
 # 1. Create a feature PRP
@@ -224,15 +224,15 @@ A PRP is a comprehensive implementation document that contains:
 ### PRP Structure
 
 Every PRP includes:
-- **Feature Description** - What we're bfrontend/uilding and why
+- **Feature Description** - What we're building and why
 - **Context References** - Files, patterns, documentation
 - **Implementation Plan** - Phased approach with tasks
 - **Step-by-Step Tasks** - Atomic, ordered, independently testable
 - **Testing Strategy** - Unit, integration, edge cases
 - **Validation Commands** - Executable verification (syntax, tests, manual)
-- **Acceptance Criteria** - Measurable completion reqfrontend/uirements
+- **Acceptance Criteria** - Measurable completion requirements
 
-## Reqfrontend/uirements
+## Requirements
 
 - Claude Code installed
 - Git configured
@@ -301,7 +301,7 @@ Ensure Claude Code restarted after installation. Check available commands:
 
 ### Validation Issues
 
-If validation commands fail, ensure your environment has the reqfrontend/uired tools:
+If validation commands fail, ensure your environment has the required tools:
 
 ```bash
 # Install Python linters
@@ -364,5 +364,5 @@ MIT License - See repository for details
 ## See Also
 
 - [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
-- [Plugin Development Gfrontend/uide](https://docs.claude.com/en/docs/claude-code/plugins)
+- [Plugin Development Guide](https://docs.claude.com/en/docs/claude-code/plugins)
 - [PRP Methodology](https://github.com/Wirasm/PRPs-agentic-eng/blob/main/CLAUDE.md)

@@ -41,7 +41,7 @@ Current reality:
 - Run `cargo test --all`, targeted pallet suites like `cargo test -p pallet-atlas-kernel`, and `./RUN_ALL_TESTS.sh` for full integration coverage.
 - Enforce formatting/linting with `cargo fmt --all` and `cargo clippy --all-targets --all-features -- -D warnings` as part of CI.
 - Validate OpenSpec proposals via `openspec validate <change-id> --strict` before implementation; spec scenarios must be concrete and executable.
-- Expect frontend/local tooling to have their own scripts (`npm run test`, etc.) where relevant; new UI work should ship with storybook or React testing as needed.
+- Expect local tooling to have their own scripts (`npm run test`, etc.) where relevant; new UI work should ship with storybook or React testing as needed.
 
 ### RPC Surface (Current)
 

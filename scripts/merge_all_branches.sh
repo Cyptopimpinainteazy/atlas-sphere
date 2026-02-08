@@ -161,7 +161,7 @@ main() {
     # Phase 4: Feature Branches
     log_info "=== Phase 4: Feature Branches ==="
     merge_branch "feature/swarm-dashboard-e2e" "Merge: Swarm dashboard e2e tests" || true
-    merge_branch "feat/ui/cli-and-banner" "Merge: CLI and banner UI" || true
+    merge_branch "feat/frontend/ui/cli-and-banner" "Merge: CLI and banner UI" || true
     merge_branch "feat/async-reputation-pg-repo" "Merge: Async reputation repository" || true
     merge_branch "feature/sigill-aggregator-helper" "Merge: Signal aggregator" || true
     

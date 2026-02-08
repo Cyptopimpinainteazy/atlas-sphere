@@ -10,7 +10,7 @@ const nextConfig = {
   },
 
   // Webpack configuration for WASM support
-  frontend/webpack: (config, { isServer }) => {
+  webpack: (config, { isServer }) => {
     // Enable WebAssembly
     config.experiments = {
       ...config.experiments,
@@ -21,7 +21,7 @@ const nextConfig = {
     // Handle WASM files
     config.module.rules.push({
       test: /\.wasm$/,
-      type: "frontend/webassembly/async",
+      type: "webassembly/async",
     });
 
     if (!isServer) {
@@ -30,9 +30,9 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
-        crypto: reqfrontend/uire.resolve("crypto-browserify"),
-        stream: reqfrontend/uire.resolve("stream-browserify"),
-        buffer: reqfrontend/uire.resolve("buffer"),
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+        buffer: require.resolve("buffer"),
       };
     }
 

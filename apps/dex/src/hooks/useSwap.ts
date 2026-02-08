@@ -128,10 +128,10 @@ async function fetchQuote(
     const rate = fromPrice / toPrice;
     const outputAmount = inputAmount * rate;
 
-    // Calculate price impact based on liqfrontend/uidity (simplified)
-    const liqfrontend/uidityDepth = 1000000; // Assume $1M liqfrontend/uidity
+    // Calculate price impact based on liquidity (simplified)
+    const liquidityDepth = 1000000; // Assume $1M liquidity
     const tradeValue = inputAmount * fromPrice;
-    const priceImpact = Math.min((tradeValue / liqfrontend/uidityDepth) * 100, 50);
+    const priceImpact = Math.min((tradeValue / liquidityDepth) * 100, 50);
 
     // Apply slippage for minimum output
     const minOutput = outputAmount * (1 - slippage / 100);
@@ -164,7 +164,7 @@ async function fetchQuote(
 }
 
 // =============================================================================
-// Payload Bfrontend/uilders
+// Payload Builders
 // =============================================================================
 
 function bigintToBytes(value: bigint, length: number): Uint8Array {
@@ -177,14 +177,14 @@ function bigintToBytes(value: bigint, length: number): Uint8Array {
   return bytes;
 }
 
-async function bfrontend/uildEvmSwapPayload(
+async function buildEvmSwapPayload(
   fromToken: Token,
   toToken: Token,
   quote: SwapQuote
 ): Promise<Uint8Array> {
   const sdk = await loadSDK();
   
-  // Bfrontend/uild EVM swap call data
+  // Build EVM swap call data
   const swapSelector = '0x38ed1739'; // swapExactTokensForTokens
   const amountIn = sdk.parseBalance(quote.inputAmount, fromToken.decimals);
   const amountOutMin = sdk.parseBalance(quote.minOutput, toToken.decimals);
@@ -201,14 +201,14 @@ async function bfrontend/uildEvmSwapPayload(
   return payload;
 }
 
-async function bfrontend/uildSvmSwapPayload(
+async function buildSvmSwapPayload(
   fromToken: Token,
   toToken: Token,
   quote: SwapQuote
 ): Promise<Uint8Array> {
   const sdk = await loadSDK();
   
-  // Bfrontend/uild SVM swap instruction data
+  // Build SVM swap instruction data
   const instructionTag = 0x01; // Swap instruction
   const amountIn = sdk.parseBalance(quote.inputAmount, fromToken.decimals);
   const amountOutMin = sdk.parseBalance(quote.minOutput, toToken.decimals);
@@ -248,11 +248,11 @@ async function executeSwapTransaction(
   try {
     if (isCrossVm) {
       // Cross-VM swap using Dual Comit
-      const evmPayload = await bfrontend/uildEvmSwapPayload(fromToken, toToken, quote);
-      const svmPayload = await bfrontend/uildSvmSwapPayload(fromToken, toToken, quote);
+      const evmPayload = await buildEvmSwapPayload(fromToken, toToken, quote);
+      const svmPayload = await buildSvmSwapPayload(fromToken, toToken, quote);
       
-      const comitBfrontend/uilder = sdk.dualComit(evmPayload, svmPayload).withFee(quote.fee);
-      const comitInput = comitBfrontend/uilder.bfrontend/uild();
+      const comitBuilder = sdk.dualComit(evmPayload, svmPayload).withFee(quote.fee);
+      const comitInput = comitBuilder.build();
       
       const result = await client.submitComit(comitInput, signerAddress);
       
@@ -266,10 +266,10 @@ async function executeSwapTransaction(
       };
     } else if (fromToken.vm === 'evm') {
       // EVM-only swap
-      const evmPayload = await bfrontend/uildEvmSwapPayload(fromToken, toToken, quote);
+      const evmPayload = await buildEvmSwapPayload(fromToken, toToken, quote);
       
-      const comitBfrontend/uilder = sdk.evmComit(evmPayload).withFee(quote.fee);
-      const comitInput = comitBfrontend/uilder.bfrontend/uild();
+      const comitBuilder = sdk.evmComit(evmPayload).withFee(quote.fee);
+      const comitInput = comitBuilder.build();
       
       const result = await client.submitComit(comitInput, signerAddress);
       
@@ -283,10 +283,10 @@ async function executeSwapTransaction(
       };
     } else {
       // SVM-only swap
-      const svmPayload = await bfrontend/uildSvmSwapPayload(fromToken, toToken, quote);
+      const svmPayload = await buildSvmSwapPayload(fromToken, toToken, quote);
       
-      const comitBfrontend/uilder = sdk.svmComit(svmPayload).withFee(quote.fee);
-      const comitInput = comitBfrontend/uilder.bfrontend/uild();
+      const comitBuilder = sdk.svmComit(svmPayload).withFee(quote.fee);
+      const comitInput = comitBuilder.build();
       
       const result = await client.submitComit(comitInput, signerAddress);
       

@@ -269,7 +269,7 @@ pub mod pallet {
         /// Held through 50% drop and recovered
         DiamondHands,
         /// First cross-chain trade
-        BridgeBfrontend/uilder,
+        BridgeBuilder,
         /// Million dollar trade
         Millionaire,
         /// Trade during high volatility

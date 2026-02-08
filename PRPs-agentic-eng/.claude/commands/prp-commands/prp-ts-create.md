@@ -11,7 +11,7 @@ Create a comprehensive TypeScript PRP that enables **one-pass implementation suc
 - Start by reading and understanding the prp concepts PRPs/README.md
 - The PRP content you create
 - Its training data knowledge
-- Access to codebase files (but needs gfrontend/uidance on which ones)
+- Access to codebase files (but needs guidance on which ones)
 
 **Therefore**: Your research and context curation directly determines implementation success. Incomplete context = implementation failure.
 
@@ -88,13 +88,13 @@ Save as: `PRPs/{feature-name}.md`
 
 - [ ] Passes "No Prior Knowledge" test from TypeScript template
 - [ ] All YAML references are specific and accessible (TypeScript/React docs, component examples)
-- [ ] Implementation tasks include exact TypeScript naming and placement gfrontend/uidance
+- [ ] Implementation tasks include exact TypeScript naming and placement guidance
 - [ ] Validation commands are TypeScript/React-specific and verified working
 - [ ] TypeScript interface definitions and component prop types are specified
 
 ### Template Structure Compliance
 
-- [ ] All reqfrontend/uired TypeScript template sections completed
+- [ ] All required TypeScript template sections completed
 - [ ] Goal section has specific Feature Goal, Deliverable, Success Definition
 - [ ] Implementation Tasks follow TypeScript dependency ordering (types → components → pages → tests)
 - [ ] Final Validation Checklist includes TypeScript/React-specific validation
@@ -103,7 +103,7 @@ Save as: `PRPs/{feature-name}.md`
 
 - [ ] No generic references - all are specific to TypeScript/React patterns
 - [ ] File patterns include specific TypeScript examples to follow (interfaces, components, hooks)
-- [ ] URLs include section anchors for exact TypeScript/React gfrontend/uidance
+- [ ] URLs include section anchors for exact TypeScript/React guidance
 - [ ] Task specifications use information-dense keywords from TypeScript/React codebase
 - [ ] Component patterns specify Server vs Client component usage
 - [ ] Type definitions are comprehensive and follow existing patterns
@@ -112,6 +112,6 @@ Save as: `PRPs/{feature-name}.md`
 
 **Confidence Score**: Rate 1-10 for one-pass TypeScript implementation success likelihood
 
-**Quality Standard**: Minimum 8/10 reqfrontend/uired before PRP approval
+**Quality Standard**: Minimum 8/10 required before PRP approval
 
 **Validation**: The completed PRP should enable an AI agent unfamiliar with the TypeScript/React codebase to implement the feature successfully using only the PRP content and codebase access, with full type safety and React best practices.

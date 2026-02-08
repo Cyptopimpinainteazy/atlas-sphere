@@ -11,7 +11,7 @@ Subagents are pre-configured AI personalities that Claude Code can delegate task
 - Has a specific purpose and expertise area
 - Uses its own context window separate from the main conversation
 - Can be configured with specific tools it's allowed to use
-- Includes a custom system prompt that gfrontend/uides its behavior
+- Includes a custom system prompt that guides its behavior
 
 When Claude Code encounters a task that matches a subagent's expertise, it can delegate that task to the specialized subagent, which works independently and returns results.
 
@@ -35,7 +35,7 @@ When Claude Code encounters a task that matches a subagent's expertise, it can d
   </Card>
 </CardGroup>
 
-## Qfrontend/uick start
+## Quick start
 
 To create your first subagent:
 
@@ -105,7 +105,7 @@ the subagent should follow.
 
 #### Configuration fields
 
-| Field         | Reqfrontend/uired | Description                                                                                 |
+| Field         | Required | Description                                                                                 |
 | :------------ | :------- | :------------------------------------------------------------------------------------------ |
 | `name`        | Yes      | Unique identifier using lowercase letters and hyphens                                       |
 | `description` | Yes      | Natural language description of the subagent's purpose                                      |
@@ -138,8 +138,8 @@ The `/agents` command provides a comprehensive interface for subagent management
 
 This opens an interactive menu where you can:
 
-- View all available subagents (bfrontend/uilt-in, user, and project)
-- Create new subagents with gfrontend/uided setup
+- View all available subagents (built-in, user, and project)
+- Create new subagents with guided setup
 - Edit existing custom subagents, including their tool access
 - Delete custom subagents
 - See which subagents are active when duplicates exist
@@ -278,7 +278,7 @@ You are a data scientist specializing in SQL and BigQuery analysis.
 
 When invoked:
 
-1. Understand the data analysis reqfrontend/uirement
+1. Understand the data analysis requirement
 2. Write efficient SQL queries
 3. Use BigQuery command line tools (bq) when appropriate
 4. Analyze and summarize results
@@ -308,7 +308,7 @@ Always ensure queries are efficient and cost-effective.
 
 - **Design focused subagents**: Create subagents with single, clear responsibilities rather than trying to make one subagent do everything. This improves performance and makes subagents more predictable.
 
-- **Write detailed prompts**: Include specific instructions, examples, and constraints in your system prompts. The more gfrontend/uidance you provide, the better the subagent will perform.
+- **Write detailed prompts**: Include specific instructions, examples, and constraints in your system prompts. The more guidance you provide, the better the subagent will perform.
 
 - **Limit tool access**: Only grant tools that are necessary for the subagent's purpose. This improves security and helps the subagent focus on relevant actions.
 
@@ -331,10 +331,10 @@ Claude Code intelligently selects subagents based on context. Make your `descrip
 ## Performance considerations
 
 - **Context efficiency**: Agents help preserve main context, enabling longer overall sessions
-- **Latency**: Subagents start off with a clean slate each time they are invoked and may add latency as they gather context that they reqfrontend/uire to do their job effectively.
+- **Latency**: Subagents start off with a clean slate each time they are invoked and may add latency as they gather context that they require to do their job effectively.
 
 ## Related documentation
 
-- [Slash commands](/en/docs/claude-code/slash-commands) - Learn about other bfrontend/uilt-in commands
+- [Slash commands](/en/docs/claude-code/slash-commands) - Learn about other built-in commands
 - [Settings](/en/docs/claude-code/settings) - Configure Claude Code behavior
 - [Hooks](/en/docs/claude-code/hooks) - Automate workflows with event handlers

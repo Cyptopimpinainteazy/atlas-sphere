@@ -50,7 +50,7 @@
 //!
 //! ## Security
 //!
-//! - All receipts reqfrontend/uire valid executor signatures
+//! - All receipts require valid executor signatures
 //! - Merkle proofs verify state transitions
 //! - Redundant verification for high-value operations
 //! - Slashing for invalid submissions
@@ -354,9 +354,9 @@ pub mod pallet {
         pub initial_executors: Vec<T::AccountId>,
     }
 
-    #[pallet::genesis_bfrontend/uild]
-    impl<T: Config> Bfrontend/uildGenesisConfig for GenesisConfig<T> {
-        fn bfrontend/uild(&self) {
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
             VerificationEnabled::<T>::put(self.verification_enabled);
             for executor in &self.initial_executors {
                 let record = ExecutorRecord {
@@ -487,7 +487,7 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        /// Register as an executor (stake reqfrontend/uired)
+        /// Register as an executor (stake required)
         #[pallet::call_index(0)]
         #[pallet::weight(T::WeightInfo::register_executor())]
         pub fn register_executor(origin: OriginFor<T>, stake: BalanceOf<T>) -> DispatchResult {
@@ -844,7 +844,7 @@ pub mod pallet {
                 &job.submitter,
                 executor,
                 executor_amount,
-                frame_support::traits::ExistenceReqfrontend/uirement::KeepAlive,
+                frame_support::traits::ExistenceRequirement::KeepAlive,
             )?;
 
             // Update executor total rewards

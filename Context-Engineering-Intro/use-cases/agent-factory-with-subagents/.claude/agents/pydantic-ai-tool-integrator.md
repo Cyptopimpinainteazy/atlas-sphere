@@ -171,7 +171,7 @@ async def search_web_tool(
     
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "https://api.search.brave.com/res/v1/web/search",
+            "https://api.search.brave.com/res/v1/frontend/web/search",
             headers={"X-Subscription-Token": api_key},
             params={"q": query, "count": count}
         )

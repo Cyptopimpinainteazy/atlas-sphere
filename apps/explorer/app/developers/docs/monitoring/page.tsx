@@ -14,7 +14,7 @@ export default function MonitoringPage() {
         Learn how to set up observability for X3 Atlas Sphere infrastructure.
       </p>
 
-      <h2>Bfrontend/uilt-in Metrics</h2>
+      <h2>Built-in Metrics</h2>
       <p>
         X3 nodes expose Prometheus metrics on port 9615 by default:
       </p>
@@ -164,17 +164,17 @@ scrape_configs:
 
       <h2>Grafana Dashboard</h2>
       <p>
-        Import our pre-bfrontend/uilt apps/apps/dash-legacy-2-legacy-2board for X3 Atlas Sphere:
+        Import our pre-built apps/dash-legacy-2-legacy-2board for X3 Atlas Sphere:
       </p>
       <CodeBlock language="bash">
-{`# Download apps/apps/dash-legacy-2-legacy-2board JSON
-curl -O https://raw.githubusercontent.com/Cyptopimpinainteazy/atlas-sphere/main/monitoring/grafana-apps/apps/dash-legacy-2-legacy-2board.json
+{`# Download apps/dash-legacy-2-legacy-2board JSON
+curl -O https://raw.githubusercontent.com/Cyptopimpinainteazy/atlas-sphere/main/monitoring/grafana-apps/dash-legacy-2-legacy-2board.json
 
 # Import via Grafana UI or API
 curl -X POST \\
   -H "Content-Type: application/json" \\
-  -d @grafana-apps/apps/dash-legacy-2-legacy-2board.json \\
-  http://admin:password@localhost:3000/api/apps/apps/dash-legacy-2-legacy-2boards/db`}
+  -d @grafana-apps/dash-legacy-2-legacy-2board.json \\
+  http://admin:password@localhost:3000/api/apps/dash-legacy-2-legacy-2boards/db`}
       </CodeBlock>
 
       <h2>Logging</h2>
@@ -220,7 +220,7 @@ index = "atlas-logs-%Y-%m-%d"`}
 {`./atlas-sphere-node \\
   --telemetry-url "wss://telemetry.atlas-sphere.io/submit 0"
 
-# View telemetry apps/apps/dash-legacy-2-legacy-2board
+# View telemetry apps/dash-legacy-2-legacy-2board
 # https://telemetry.atlas-sphere.io`}
       </CodeBlock>
 

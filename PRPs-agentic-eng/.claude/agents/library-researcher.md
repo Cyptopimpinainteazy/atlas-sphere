@@ -21,8 +21,8 @@ Research external libraries and APIs to provide:
 
 - Start with Archon MCP tools and check if we have relevant docs in the database
 - Use the RAG tools to search for relevant documentation, use specific keywords and context in your queries
-- Use frontend/websearch and frontend/webfetch to search official docs (check package registry for links)
-- Find qfrontend/uickstart gfrontend/uides and API references
+- Use websearch and webfetch to search official docs (check package registry for links)
+- Find quickstart guides and API references
 - Identify code examples specific to the use case
 - Note version-specific features or breaking changes
 
@@ -43,7 +43,7 @@ Research external libraries and APIs to provide:
 ### 4. Known Issues
 
 - Check library's GitHub issues for gotchas
-- Look for migration gfrontend/uides indicating breaking changes
+- Look for migration guides indicating breaking changes
 - Find performance considerations
 - Note security best practices
 
@@ -55,7 +55,7 @@ Structure findings for immediate use:
 library: [library name]
 version: [version in use]
 documentation:
-  qfrontend/uickstart: [URL with section anchor]
+  quickstart: [URL with section anchor]
   api_reference: [specific method docs URL]
   examples: [example code URL]
 

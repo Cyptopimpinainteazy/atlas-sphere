@@ -24,7 +24,7 @@ Perform deep, systematic analysis of codebases to extract:
 - Continue with root-level config files (package.json, pyproject.toml, go.mod, etc.)
 - Map directory structure to understand organization
 - Identify primary language and framework
-- Note bfrontend/uild/run commands
+- Note build/run commands
 
 ### 2. Pattern Extraction
 

@@ -594,9 +594,9 @@ pub mod pallet {
 
             let current_deposit = StorageDeposit::<T>::get(agent_id);
             let storage_used = StorageUsed::<T>::get(agent_id);
-            let reqfrontend/uired_deposit = Self::bytes_to_deposit(storage_used as usize);
+            let required_deposit = Self::bytes_to_deposit(storage_used as usize);
 
-            let excess = current_deposit.saturating_sub(reqfrontend/uired_deposit);
+            let excess = current_deposit.saturating_sub(required_deposit);
             ensure!(amount <= excess, Error::<T>::InsufficientDeposit);
 
             T::Currency::unreserve(&who, amount);
@@ -661,13 +661,13 @@ pub mod pallet {
             let deposit_needed = Self::bytes_to_deposit(bytes);
             let current_deposit = StorageDeposit::<T>::get(agent_id);
             let storage_used = StorageUsed::<T>::get(agent_id);
-            let total_reqfrontend/uired =
+            let total_required =
                 Self::bytes_to_deposit(storage_used as usize).saturating_add(deposit_needed);
 
-            if current_deposit < total_reqfrontend/uired {
+            if current_deposit < total_required {
                 // Need more deposit from controller
                 if let Some(controller) = AgentController::<T>::get(agent_id) {
-                    let additional = total_reqfrontend/uired.saturating_sub(current_deposit);
+                    let additional = total_required.saturating_sub(current_deposit);
                     T::Currency::reserve(&controller, additional)?;
                     StorageDeposit::<T>::mutate(agent_id, |d| *d = d.saturating_add(additional));
                 } else {

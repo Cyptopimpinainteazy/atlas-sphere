@@ -16,12 +16,12 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const grantTracks = [
   {
     name: 'Infrastructure',
-    description: 'Bfrontend/uild core infrastructure, tooling, and developer experience',
+    description: 'Build core infrastructure, tooling, and developer experience',
     funding: 'Up to $100K',
     icon: <Shield className="w-6 h-6" />,
     examples: ['RPC providers', 'Indexers', 'Developer tools', 'SDKs'],
@@ -37,7 +37,7 @@ const grantTracks = [
   },
   {
     name: 'Consumer Apps',
-    description: 'Bfrontend/uild user-facing applications that showcase X3 STAR',
+    description: 'Build user-facing applications that showcase X3 STAR',
     funding: 'Up to $50K',
     icon: <Users className="w-6 h-6" />,
     examples: ['Wallets', 'Social apps', 'Games', 'NFT platforms'],
@@ -131,7 +131,7 @@ const faqs = [
   },
   {
     question: 'Do I need to open source my project?',
-    answer: 'Not necessarily. While we encourage open source development, we also fund projects with proprietary components. The specific reqfrontend/uirements depend on the grant track and project type.',
+    answer: 'Not necessarily. While we encourage open source development, we also fund projects with proprietary components. The specific requirements depend on the grant track and project type.',
   },
 ];
 
@@ -164,8 +164,8 @@ export default function GrantsPage() {
               X3 STAR Grants Program
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Get funding to bfrontend/uild on X3 STAR. We support developers, researchers, and 
-              teams bfrontend/uilding the future of cross-VM blockchain technology.
+              Get funding to build on X3 STAR. We support developers, researchers, and 
+              teams building the future of cross-VM blockchain technology.
             </p>
             <div className="flex flex-wrap gap-4">
               <a href="#apply" className="btn-primary">
@@ -305,7 +305,7 @@ export default function GrantsPage() {
               Ready to Apply?
             </h2>
             <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-              Submit your grant application today and join the bfrontend/uilders shaping the 
+              Submit your grant application today and join the builders shaping the 
               future of X3 STAR. Our team is here to support you every step of the way.
             </p>
             <div className="flex flex-wrap justify-center gap-4">

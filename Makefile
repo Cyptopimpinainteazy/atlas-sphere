@@ -1,13 +1,13 @@
 .PHONY: bmad-generate-steps bmad-generate-workflows bmad-validate bmad-clean help
 
-# BMAD Bfrontend/uild Automation - Phase 1 & 2
+# BMAD Build Automation - Phase 1 & 2
 # Purpose: Consolidation generation and validation for steps and workflows
 # Usage: make bmad-generate-steps
 #        make bmad-generate-workflows
 #        make bmad-validate
 
 help:
-	@echo "BMAD Consolidation Bfrontend/uild Targets:"
+	@echo "BMAD Consolidation Build Targets:"
 	@echo "  Phase 1 (Steps):"
 	@echo "    make bmad-generate-steps      - Generate .bmad/steps/ from YAML config"
 	@echo "    make bmad-validate-steps      - Validate generated step files"

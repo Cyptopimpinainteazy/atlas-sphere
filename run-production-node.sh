@@ -17,8 +17,8 @@ if [ "$(id -u)" = "0" ]; then
     exit 1
 fi
 
-# Reqfrontend/uired configuration
-NODE_NAME="${NODE_NAME:?NODE_NAME environment variable reqfrontend/uired}"
+# Required configuration
+NODE_NAME="${NODE_NAME:?NODE_NAME environment variable required}"
 BASE_PATH="${BASE_PATH:-/var/lib/atlas-sphere}"
 CHAIN="${CHAIN:-local}"  # dev, local, staging, testnet, or a custom chainspec path
 
@@ -36,7 +36,7 @@ RPC_CORS="${RPC_CORS:-https://explorer.atlas-sphere.io,https://dex.atlas-sphere.
 
 # Verify binary exists
 if [ ! -f "./target/release/atlas-sphere-node" ]; then
-    echo "❌ Binary not found. Bfrontend/uild with: cargo bfrontend/uild --release"
+    echo "❌ Binary not found. Build with: cargo build --release"
     exit 1
 fi
 
@@ -45,7 +45,7 @@ if [ -f "${CHAIN}" ]; then
     :
 elif [ "${CHAIN}" != "dev" ] && [ "${CHAIN}" != "local" ] && [ "${CHAIN}" != "staging" ] && [ "${CHAIN}" != "testnet" ]; then
     echo "⚠️  CHAIN='${CHAIN}' is not one of dev/local/staging/testnet and is not a file path."
-    echo "   The node will attempt to resolve it via bfrontend/uilt-in chain spec loading."
+    echo "   The node will attempt to resolve it via built-in chain spec loading."
 fi
 
 echo ""
@@ -63,7 +63,7 @@ case "${CHAIN}" in
         CHAIN_ARG="--dev"
         ;;
     local)
-        # Uses the bfrontend/uilt-in local testnet chainspec loader.
+        # Uses the built-in local testnet chainspec loader.
         CHAIN_ARG="--chain local"
         ;;
     staging)
@@ -90,7 +90,7 @@ case "${CHAIN}" in
         if [ -f "${CHAIN}" ]; then
             CHAIN_ARG="--chain ${CHAIN}"
         else
-            # Fall back to bfrontend/uilt-in resolution (or a custom chain ID).
+            # Fall back to built-in resolution (or a custom chain ID).
             CHAIN_ARG="--chain ${CHAIN}"
         fi
         ;;

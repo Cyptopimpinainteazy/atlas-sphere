@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides gfrontend/uidance to Claude Code when working with React 19 applications.
+This file provides guidance to Claude Code when working with React 19 applications.
 
 ## Core Development Philosophy
 
@@ -10,11 +10,11 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ### YAGNI (You Aren't Gonna Need It)
 
-Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Component-First Architecture
 
-Bfrontend/uild with reusable, composable components. Each component should have a single, clear responsibility and be self-contained with its own styles, tests, and logic co-located.
+Build with reusable, composable components. Each component should have a single, clear responsibility and be self-contained with its own styles, tests, and logic co-located.
 
 ### Performance by Default
 
@@ -26,7 +26,7 @@ With React 19's compiler, manual optimizations are largely unnecessary. Focus on
 - **Composition Over Inheritance**: MUST use React's composition model
 - **Fail Fast**: MUST validate inputs early with Zod, throw errors immediately
 
-## 🤖 AI Assistant Gfrontend/uidelines
+## 🤖 AI Assistant Guidelines
 
 ### Context Awareness
 
@@ -49,7 +49,7 @@ With React 19's compiler, manual optimizations are largely unnecessary. Focus on
 - Break complex tasks into smaller, testable units
 - Validate understanding before implementation
 
-### Search Command Reqfrontend/uirements
+### Search Command Requirements
 
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
@@ -92,7 +92,7 @@ rg --files -g "*.tsx"
 ### Core Features
 
 - **Server Components**: Use for data fetching and static content
-- **Actions**: Handle async operations with bfrontend/uilt-in pending states
+- **Actions**: Handle async operations with built-in pending states
 - **use() API**: Simplified data fetching and context consumption
 - **Document Metadata**: Native support for SEO tags
 - **Enhanced Suspense**: Better loading states and error boundaries
@@ -145,7 +145,7 @@ import { useActionState, ReactElement } from 'react';
  */
 function ContactForm(): ReactElement {
   /**
-   * Form action handler with bfrontend/uilt-in state management.
+   * Form action handler with built-in state management.
    *
    * @param previousState - Previous form state (unused in this implementation)
    * @param formData - Raw form data from submission
@@ -201,7 +201,7 @@ src/
 └── test/                 # Test utilities and setup
 ```
 
-## 🎯 TypeScript Configuration (STRICT REQUIREMENTS) Assume strict reqfrontend/uirements even if project settings are looser
+## 🎯 TypeScript Configuration (STRICT REQUIREMENTS) Assume strict requirements even if project settings are looser
 
 ### MUST follow These Compiler Options
 
@@ -221,7 +221,7 @@ src/
 }
 ```
 
-### MANDATORY Type Reqfrontend/uirements
+### MANDATORY Type Requirements
 
 - **NEVER use `any` type** - use `unknown` if type is truly unknown
 - **MUST have explicit return types** for all functions and components
@@ -298,7 +298,7 @@ const apiCall = async (data?: string) => {
 ### Component Templates
 
 ````typescript
-// Qfrontend/uick component with all states
+// Quick component with all states
 export function FeatureComponent(): ReactElement {
   const { data, isLoading, error } = useQuery({
     queryKey: ['feature'],
@@ -327,7 +327,7 @@ export function FeatureComponent(): ReactElement {
 import { z } from 'zod';
 
 // MUST use branded types for ALL IDs
-const UserIdSchema = z.string().ufrontend/uid().brand<'UserId'>();
+const UserIdSchema = z.string().uuid().brand<'UserId'>();
 type UserId = z.infer<typeof UserIdSchema>;
 
 // MUST include validation for ALL fields
@@ -418,7 +418,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, userEvent } from '@testing-library/react';
 
 /**
- * Test sfrontend/uite for UserProfile component.
+ * Test suite for UserProfile component.
  *
  * Tests user interactions, state management, and error handling.
  * Mocks external dependencies to ensure isolated unit tests.
@@ -488,7 +488,7 @@ Object.defineProperty(import.meta, "env", {
 });
 ```
 
-### Test Configuration Reqfrontend/uirements
+### Test Configuration Requirements
 
 ```json
 // tsconfig.node.json MUST include ALL Node.js config files
@@ -541,7 +541,7 @@ Object.defineProperty(import.meta, "env", {
 }
 ```
 
-## 🎨 Component Gfrontend/uidelines (STRICT REQUIREMENTS)
+## 🎨 Component Guidelines (STRICT REQUIREMENTS)
 
 ### MANDATORY JSDoc Documentation
 
@@ -645,17 +645,17 @@ const Button: React.FC<ButtonProps> = (
 
 // 2. Complex logic (REQUIRED when cognitive complexity > 5)
 /**
- * Validates user permissions against reqfrontend/uired roles.
+ * Validates user permissions against required roles.
  *
  * Uses a hierarchical role system where admin > editor > viewer.
  * Checks are performed using bitwise operations for performance.
  */
-function checkPermissions(userRole: Role, reqfrontend/uiredRole: Role): boolean {
+function checkPermissions(userRole: Role, requiredRole: Role): boolean {
   // Admin can access everything
   if (userRole === Role.Admin) return true;
 
   // Check hierarchical permissions
-  return (userRole & reqfrontend/uiredRole) === reqfrontend/uiredRole;
+  return (userRole & requiredRole) === requiredRole;
 }
 
 // 3. TODOs (MUST include issue number)
@@ -681,7 +681,7 @@ const delay = Math.min(
 - **MUST add file-level @fileoverview** for each module
 - **NEVER use single-line comments** for documentation (// is only for inline explanations)
 
-### MANDATORY TypeScript Reqfrontend/uirements
+### MANDATORY TypeScript Requirements
 
 ```typescript
 // ✅ REQUIRED: Explicit types, clear props
@@ -808,7 +808,7 @@ function useUser(id: UserId) {
 }
 ````
 
-## 🔐 Security Reqfrontend/uirements (MANDATORY)
+## 🔐 Security Requirements (MANDATORY)
 
 ### Input Validation (MUST IMPLEMENT ALL)
 
@@ -824,7 +824,7 @@ function useUser(id: UserId) {
 - **MUST handle errors gracefully** without exposing internals
 - **NEVER log sensitive data** (passwords, tokens, PII)
 
-## 🚀 Performance Gfrontend/uidelines
+## 🚀 Performance Guidelines
 
 ### React 19 Optimizations
 
@@ -837,13 +837,13 @@ function useUser(id: UserId) {
 
 ```typescript
 /**
- * @fileoverview Vite configuration for optimized production bfrontend/uilds
+ * @fileoverview Vite configuration for optimized production builds
  * @module vite.config
  */
 
 // vite.config.ts
 export default defineConfig({
-  bfrontend/uild: {
+  build: {
     rollupOptions: {
       output: {
         /**
@@ -885,7 +885,7 @@ export default defineConfig({
 {
   "scripts": {
     "dev": "vite",
-    "bfrontend/uild": "tsc && vite bfrontend/uild",
+    "build": "tsc && vite build",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext ts,tsx --max-warnings 0",
@@ -904,7 +904,7 @@ export default defineConfig({
 - [ ] ESLint passes with ZERO warnings
 - [ ] SonarQube quality gate PASSED
 - [ ] ALL states handled (loading, error, empty, success)
-- [ ] Accessibility reqfrontend/uirements met (ARIA labels, keyboard nav)
+- [ ] Accessibility requirements met (ARIA labels, keyboard nav)
 - [ ] ZERO console.log statements
 - [ ] ALL functions have complete JSDoc documentation
 - [ ] Component props are fully documented
@@ -935,19 +935,19 @@ export default defineConfig({
 
 ### June 2025 - TypeScript Strict Compliance Update
 
-Added comprehensive gfrontend/uidance based on real-world troubleshooting of 54+ TypeScript/ESLint errors:
+Added comprehensive guidance based on real-world troubleshooting of 54+ TypeScript/ESLint errors:
 
 - **Testing Framework Integration**: Vitest globals, React refresh exceptions, cross-platform compatibility
 - **React 19 TypeScript Patterns**: JSX.Element → ReactElement migration, modern import patterns
 - **ExactOptionalPropertyTypes**: Undefined vs null handling, conditional spreads, API body types
 - **Branded Type Safety**: Schema.parse() patterns, system boundary validation
 - **Component Integration**: Prop name verification, callback type accuracy, interface consistency
-- **Project Configuration**: Complete TypeScript project references, ESLint coverage reqfrontend/uirements
+- **Project Configuration**: Complete TypeScript project references, ESLint coverage requirements
 
 These additions ensure zero TypeScript errors and complete IDE/CLI alignment in strict mode.
 
 ---
 
-_This gfrontend/uide is a living document. Update it as new patterns emerge and tools evolve._
+_This guide is a living document. Update it as new patterns emerge and tools evolve._
 _Focus on quality over speed, maintainability over cleverness._
 _Last updated: December 2024_

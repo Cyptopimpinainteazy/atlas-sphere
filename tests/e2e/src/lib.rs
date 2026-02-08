@@ -1,6 +1,7 @@
 //! End-to-End Integration Tests for X3-Atlas-Sphere
 //! 
 //! This module provides comprehensive E2E testing for the entire X3-Atlas-Sphere ecosystem,
+//! Invariants: CHAIN-CONSENSUS-001
 //! including blockchain functionality, smart contracts, GPU swarm, DNS server, and more.
 
 pub mod utils {
@@ -31,10 +32,10 @@ static TEST_RUNTIME: once_cell::sync::OnceCell<Runtime> = once_cell::sync::OnceC
 /// Initialize the global test runtime
 pub fn init_test_runtime() -> &'static Runtime {
     TEST_RUNTIME.get_or_init(|| {
-        tokio::runtime::Bfrontend/uilder::new_multi_thread()
+        tokio::runtime::Builder::new_multi_thread()
             .worker_threads(4)
             .enable_all()
-            .bfrontend/uild()
+            .build()
             .expect("Failed to create test runtime")
     })
 }

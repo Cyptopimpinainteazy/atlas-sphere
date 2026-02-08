@@ -1,5 +1,5 @@
 """
-Comit Transaction Bfrontend/uilder for Atlas Sphere.
+Comit Transaction Builder for Atlas Sphere.
 
 Provides a fluent API for constructing and submitting Comit transactions
 that execute atomically across EVM and SVM.
@@ -57,22 +57,22 @@ class ComitTransaction:
         }
 
 
-class ComitBfrontend/uilder:
+class ComitBuilder:
     """
-    Fluent bfrontend/uilder for Comit transactions.
+    Fluent builder for Comit transactions.
     
     Example:
         >>> comit = (
-        ...     ComitBfrontend/uilder()
+        ...     ComitBuilder()
         ...     .with_evm_call(contract_addr, calldata, gas_limit=500000)
         ...     .with_svm_instruction(program_id, instruction_data)
-        ...     .bfrontend/uild(keypair)
+        ...     .build(keypair)
         ... )
         >>> result = client.submit_comit(comit)
     """
     
     def __init__(self):
-        """Initialize empty Comit bfrontend/uilder."""
+        """Initialize empty Comit builder."""
         self._evm_payload: Optional[bytes] = None
         self._svm_payload: Optional[bytes] = None
         self._evm_gas_limit: int = 10_000_000
@@ -84,7 +84,7 @@ class ComitBfrontend/uilder:
         self,
         payload: bytes,
         gas_limit: int = 10_000_000,
-    ) -> "ComitBfrontend/uilder":
+    ) -> "ComitBuilder":
         """
         Set raw EVM bytecode payload.
         
@@ -109,7 +109,7 @@ class ComitBfrontend/uilder:
         data: bytes,
         value: int = 0,
         gas_limit: int = 500_000,
-    ) -> "ComitBfrontend/uilder":
+    ) -> "ComitBuilder":
         """
         Add an EVM contract call.
         
@@ -133,7 +133,7 @@ class ComitBfrontend/uilder:
         self,
         payload: bytes,
         compute_limit: int = 200_000,
-    ) -> "ComitBfrontend/uilder":
+    ) -> "ComitBuilder":
         """
         Set raw SVM (Solana) instruction payload.
         
@@ -158,7 +158,7 @@ class ComitBfrontend/uilder:
         instruction_data: bytes,
         accounts: Optional[List[Tuple[bytes, bool, bool]]] = None,
         compute_limit: int = 200_000,
-    ) -> "ComitBfrontend/uilder":
+    ) -> "ComitBuilder":
         """
         Add a Solana-style instruction.
         
@@ -187,7 +187,7 @@ class ComitBfrontend/uilder:
         
         return self.with_svm_payload(bytes(payload), compute_limit)
     
-    def with_nonce(self, nonce: int) -> "ComitBfrontend/uilder":
+    def with_nonce(self, nonce: int) -> "ComitBuilder":
         """
         Set explicit nonce (otherwise fetched from chain).
         
@@ -200,7 +200,7 @@ class ComitBfrontend/uilder:
         self._nonce = nonce
         return self
     
-    def with_comit_id(self, comit_id: str) -> "ComitBfrontend/uilder":
+    def with_comit_id(self, comit_id: str) -> "ComitBuilder":
         """
         Set explicit Comit ID (otherwise generated).
         
@@ -223,7 +223,7 @@ class ComitBfrontend/uilder:
         errors = []
         
         if not self._evm_payload and not self._svm_payload:
-            errors.append("At least one payload (EVM or SVM) is reqfrontend/uired")
+            errors.append("At least one payload (EVM or SVM) is required")
         
         total_size = len(self._evm_payload or b"") + len(self._svm_payload or b"")
         if total_size > MAX_COMBINED_SIZE:
@@ -252,13 +252,13 @@ class ComitBfrontend/uilder:
         )
         return "0x" + hashlib.blake2b(data, digest_size=32).hexdigest()
     
-    def bfrontend/uild(self, keypair: Keypair, nonce: Optional[int] = None) -> ComitTransaction:
+    def build(self, keypair: Keypair, nonce: Optional[int] = None) -> ComitTransaction:
         """
-        Bfrontend/uild the Comit transaction.
+        Build the Comit transaction.
         
         Args:
             keypair: Keypair for signing
-            nonce: Override nonce (uses bfrontend/uilder's nonce if set)
+            nonce: Override nonce (uses builder's nonce if set)
             
         Returns:
             ComitTransaction ready for submission
@@ -272,7 +272,7 @@ class ComitBfrontend/uilder:
         
         actual_nonce = nonce or self._nonce
         if actual_nonce is None:
-            raise InvalidPayloadError("Nonce is reqfrontend/uired (set via with_nonce or pass to bfrontend/uild)")
+            raise InvalidPayloadError("Nonce is required (set via with_nonce or pass to build)")
         
         comit_id = self._comit_id or self._generate_comit_id(keypair)
         prepare_root = self._compute_prepare_root()
@@ -318,7 +318,7 @@ def submit_comit(
             f"Account {keypair.ss58_address} is not authorized for Comit submissions"
         )
     
-    # Bfrontend/uild extrinsic call
+    # Build extrinsic call
     call = substrate.compose_call(
         call_module="AtlasKernel",
         call_function="submit_comit",

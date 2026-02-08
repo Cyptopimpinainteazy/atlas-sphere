@@ -18,8 +18,8 @@ def call_llm(prompt: str, content: str) -> str:
         # Summarize intent and produce a short rationale
         return json.dumps({"planner_id": key, "rationale": f"Proposed because {content[:200]}"})
 
-    if 'BUILDER' in prompt.upper() or 'Bfrontend/uilder' in prompt:
-        return json.dumps({"bfrontend/uilder_id": key, "summary": f"Diff details: {len(content)} chars"})
+    if 'BUILDER' in prompt.upper() or 'Builder' in prompt:
+        return json.dumps({"builder_id": key, "summary": f"Diff details: {len(content)} chars"})
 
     if 'AUDITOR' in prompt.upper() or 'Auditor' in prompt:
         # Heuristics: block if suspicious keywords present

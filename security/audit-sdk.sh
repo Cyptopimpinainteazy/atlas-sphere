@@ -257,7 +257,7 @@ The following detailed reports have been generated:
 
 ---
 
-*This is an automated report. Manual review and validation is reqfrontend/uired.*
+*This is an automated report. Manual review and validation is required.*
 EOF
 
 log_result SUCCESS "Summary report generated: ${REPORT_DIR}/audit-summary-${TIMESTAMP}.md"

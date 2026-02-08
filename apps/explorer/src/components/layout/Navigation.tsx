@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import Logo from '../frontend/frontend/ui/Logo';
+import Logo from '../frontend/ui/Logo';
 
 // Dynamic import with SSR disabled to prevent hydration mismatch
 const WalletButton = dynamic(
@@ -33,7 +33,7 @@ import {
   Wallet,
   Gamepad2,
   CreditCard,
-  Bfrontend/uilding2,
+  Building2,
   Coins,
   Map,
   Smartphone,
@@ -92,7 +92,7 @@ const navigation: NavItem[] = [
         label: 'Tutorials',
         href: '/learn/tutorials',
         icon: <BookOpen className="w-5 h-5" />,
-        description: 'Step-by-step learning gfrontend/uides',
+        description: 'Step-by-step learning guides',
       },
       {
         label: 'Core Concepts',
@@ -133,7 +133,7 @@ const navigation: NavItem[] = [
         label: 'Learning Center',
         href: '/developers/learning',
         icon: <Rocket className="w-5 h-5" />,
-        description: 'Start bfrontend/uilding today',
+        description: 'Start building today',
       },
       {
         label: 'SDKs & Tools',
@@ -180,7 +180,7 @@ const navigation: NavItem[] = [
         label: 'Games Tooling',
         href: '/solutions/games',
         icon: <Gamepad2 className="w-5 h-5" />,
-        description: 'Bfrontend/uild blockchain games',
+        description: 'Build blockchain games',
       },
       {
         label: 'Payments Tooling',
@@ -191,7 +191,7 @@ const navigation: NavItem[] = [
       {
         label: 'Commerce Tooling',
         href: '/solutions/commerce',
-        icon: <Bfrontend/uilding2 className="w-5 h-5" />,
+        icon: <Building2 className="w-5 h-5" />,
         description: 'E-commerce solutions',
       },
       {
@@ -240,7 +240,7 @@ const navigation: NavItem[] = [
         label: 'RPC Providers',
         href: '/network/rpc-providers',
         icon: <Database className="w-5 h-5" />,
-        description: 'Bfrontend/uild crypto apps that scale',
+        description: 'Build crypto apps that scale',
       },
       {
         label: 'Network Status',
@@ -300,7 +300,7 @@ const navigation: NavItem[] = [
         label: 'Grants',
         href: '/community/grants',
         icon: <Briefcase className="w-5 h-5" />,
-        description: 'Funding for bfrontend/uilders',
+        description: 'Funding for builders',
       },
       {
         label: 'Events',
@@ -408,7 +408,7 @@ export default function Navigation() {
             </button>
             <WalletButton />
             <Link href="/developers/docs" className="btn-secondary text-sm">
-              Start Bfrontend/uilding
+              Start Building
             </Link>
           </div>
 
@@ -467,7 +467,7 @@ export default function Navigation() {
                 href="/developers/docs"
                 className="block w-full btn-secondary text-center"
               >
-                Start Bfrontend/uilding
+                Start Building
               </Link>
               <Link
                 href="https://faucet.testnet.atlas-sphere.io"

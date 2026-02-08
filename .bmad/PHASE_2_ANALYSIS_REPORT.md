@@ -48,7 +48,7 @@ All workflows use standard GitHub Actions triggers:
 - **pull_request** triggers: Multiple workflows (selective path filtering)
 - **schedule** triggers: Scheduled workflows (cron-based)
 - **manual** triggers: Deployment workflows (workflow_dispatch)
-- **frontend/webhook** triggers: External event-based workflows
+- **webhook** triggers: External event-based workflows
 
 **Template-able**: ✅ Full trigger section can be templated
 
@@ -62,7 +62,7 @@ All workflows use standard GitHub Actions triggers:
 **Most Common Job Names**:
 - `test` (3 occurrences)
 - `aggregate`, `smoke` (2 each)
-- Various specialized: `bfrontend/uild-and-publish`, `prod-gate`, etc.
+- Various specialized: `build-and-publish`, `prod-gate`, etc.
 
 **Template-able**: ✅ Job definitions highly standardized
 
@@ -74,7 +74,7 @@ All workflows use standard GitHub Actions triggers:
 - Most steps use standard GitHub Actions marketplace
 
 **Most Reused Actions** (Out of 24 workflows):
-- `actions/checkout` — **34 uses** (near-ubiqfrontend/uitous)
+- `actions/checkout` — **34 uses** (near-ubiquitous)
 - `actions/upload-artifact` — **11 uses**
 - `actions/setup-node` — **10 uses**
 - `actions/cache` — **10 uses**
@@ -82,7 +82,7 @@ All workflows use standard GitHub Actions triggers:
 **Common Patterns**:
 1. **Checkout pattern**: `actions/checkout@v3` or `@v4`
 2. **Cache pattern**: Node modules, Cargo, Docker layers
-3. **Bfrontend/uild pattern**: `npm run bfrontend/uild`, `cargo bfrontend/uild`, Docker bfrontend/uilds
+3. **Build pattern**: `npm run build`, `cargo build`, Docker builds
 4. **Test pattern**: `npm test`, `cargo test`, custom scripts
 5. **Deploy pattern**: Artifact upload, push to registry
 
@@ -105,10 +105,10 @@ All workflows use standard GitHub Actions triggers:
    - Rust: `dtolnay/rust-toolchain`
    - Python: `actions/setup-python`
 
-4. **Bfrontend/uild steps** (varies)
-   - npm: `npm run bfrontend/uild`
-   - Cargo: `cargo bfrontend/uild`
-   - Docker: `docker/bfrontend/uild-push-action`
+4. **Build steps** (varies)
+   - npm: `npm run build`
+   - Cargo: `cargo build`
+   - Docker: `docker/build-push-action`
 
 5. **Test steps** (varies)
    - npm: `npm run test`
@@ -166,7 +166,7 @@ All workflows use standard GitHub Actions triggers:
 ### Approach: Generator-Based (Like Phase 1)
 
 **Why generators over inheritance/references**:
-1. GitHub Actions reqfrontend/uires complete, self-contained YAML files
+1. GitHub Actions requires complete, self-contained YAML files
 2. Runtime composition not supported in Actions YAML
 3. Generation at git push time ensures clarity and auditability
 4. Generated files can still be inspected for troubleshooting
@@ -189,7 +189,7 @@ workflows:
     
   - name: ci-swarm
     type: base-ci
-    description: "Swarm apps/apps/dash-legacy-2-legacy-2board CI"
+    description: "Swarm apps/dash-legacy-2-legacy-2board CI"
     triggers:
       - push
       - pull_request
@@ -249,9 +249,9 @@ templates:
 
 4. **Job templates** (reusable patterns)
    - `base-test-job`: Standard test job
-   - `base-bfrontend/uild-job`: Standard bfrontend/uild job
+   - `base-build-job`: Standard build job
    - `base-deploy-job`: Standard deployment job
-   - Step patterns: checkout, cache, bfrontend/uild, test, deploy
+   - Step patterns: checkout, cache, build, test, deploy
 
 ---
 
@@ -301,7 +301,7 @@ templates:
 ### Risk 5: Status Check Dependencies
 **Impact**: Medium | **Probability**: High
 
-**Risk**: GitHub reqfrontend/uires workflows to have specific names for branch protection rules.
+**Risk**: GitHub requires workflows to have specific names for branch protection rules.
 
 **Mitigation**:
 - Preserve exact workflow names in template config
@@ -342,7 +342,7 @@ templates:
 5. Validate generated workflows
 
 **Estimated Timeline**:
-- Phase 2b (Bfrontend/uild Integration): 1.5 hours
+- Phase 2b (Build Integration): 1.5 hours
 - Phase 2c (Testing & Validation): 2 hours
 - Phase 2d (Finalization): 0.5 hours
 - **Total Phase 2**: ~5 hours
@@ -369,7 +369,7 @@ templates:
  5. docker-publish.yml                   (1.2 KB)
  6. e2e-integration-tests.yml            (9.4 KB)
  7. e2e-kms-regtest.yml                  (2.8 KB)
- 8. ollama-bfrontend/uild-image.yml               (1.7 KB)
+ 8. ollama-build-image.yml               (1.7 KB)
  9. ollama-integration.yml               (1.7 KB)
 10. ollama-integration-scheduled.yml     (8.1 KB)
 11. ollama-triage-scheduled.yml          (1.4 KB)
@@ -382,9 +382,9 @@ templates:
 18. sigill-triage-integration.yml        (12.1 KB)
 19. startup_smoke.yml                    (? KB)
 20. summary.yml                          (? KB)
-21. apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml       (? KB)
-22. apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml              (5.2 KB)
-23. apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml   (? KB)
+21. apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml       (? KB)
+22. apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml              (5.2 KB)
+23. apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml   (? KB)
 24. swarm-media-integration.yml          (4.8 KB)
 
 Total: 92,630 bytes | Average: 3,859 bytes

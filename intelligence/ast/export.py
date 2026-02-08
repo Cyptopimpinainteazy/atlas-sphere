@@ -1,6 +1,6 @@
 import json
 from intelligence.ast.ast_diff import AstDiffer
-from intelligence.ast.heatmap import bfrontend/uild_heatmap
+from intelligence.ast.heatmap import build_heatmap
 from pathlib import Path
 from datetime import datetime
 
@@ -10,7 +10,7 @@ AST_HEATMAP_FILE = Path('.md_supervisor/ast_heatmaps.json')
 def analyze_file(before: str, after: str, file_path: str | None = None) -> dict:
     differ = AstDiffer()
     changes = differ.diff(before, after)
-    heat = bfrontend/uild_heatmap(changes)
+    heat = build_heatmap(changes)
     # Serialize changes with safe dicts (dataclasses may have non-serializable types)
     serialized_changes = []
     for c in changes:

@@ -10,7 +10,7 @@ import {
   Shield,
   Gamepad2,
   CreditCard,
-  Bfrontend/uilding2,
+  Building2,
   BarChart3,
   Bot,
   Map,
@@ -22,12 +22,12 @@ import {
   ArrowRight,
   ChevronRight,
 } from 'lucide-react';
-import { HexagonCluster } from '../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../components/frontend/ui/Logo';
 
 const toolsCategories = [
   {
     title: 'Developer Tools',
-    description: 'Bfrontend/uild, test, and deploy applications on X3 STAR',
+    description: 'Build, test, and deploy applications on X3 STAR',
     icon: <Boxes className="w-8 h-8" />,
     href: '/solutions/tools',
     color: 'from-orange-500 to-amber-500',
@@ -62,7 +62,7 @@ const toolsCategories = [
   },
   {
     title: 'Games Tooling',
-    description: 'Everything you need to bfrontend/uild blockchain games',
+    description: 'Everything you need to build blockchain games',
     icon: <Gamepad2 className="w-8 h-8" />,
     href: '/solutions/games',
     color: 'from-pink-500 to-fuchsia-500',
@@ -77,7 +77,7 @@ const toolsCategories = [
   {
     title: 'Commerce Tooling',
     description: 'E-commerce integrations and NFT commerce',
-    icon: <Bfrontend/uilding2 className="w-8 h-8" />,
+    icon: <Building2 className="w-8 h-8" />,
     href: '/solutions/commerce',
     color: 'from-amber-500 to-yellow-500',
   },
@@ -105,7 +105,7 @@ const useCases = [
   {
     title: 'Institutional Payments',
     description: 'Enterprise payment rails and settlement',
-    icon: <Bfrontend/uilding2 className="w-6 h-6" />,
+    icon: <Building2 className="w-6 h-6" />,
     href: '/solutions/institutional',
   },
   {
@@ -194,7 +194,7 @@ export default function SolutionsPage() {
               <span className="text-sm text-amber-300">Solutions</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Bfrontend/uild <span className="text-amber-400">Without Limits</span>
+              Build <span className="text-amber-400">Without Limits</span>
             </h1>
             <p className="text-xl text-gray-500 mb-8">
               Comprehensive tools and solutions for every use case. From DeFi to gaming, 
@@ -202,7 +202,7 @@ export default function SolutionsPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
-                Start Bfrontend/uilding
+                Start Building
               </Link>
               <Link href="/solutions/hub" className="btn-secondary">
                 Explore Solutions Hub
@@ -277,12 +277,12 @@ export default function SolutionsPage() {
               <p className="text-gray-500 mb-6">
                 Tokenize real estate, commodities, art, and more. X3 STAR's dual VM 
                 architecture enables compliant RWA tokenization with programmable 
-                transfer restrictions and cross-chain liqfrontend/uidity.
+                transfer restrictions and cross-chain liquidity.
               </p>
               <ul className="space-y-3 mb-6">
                 {[
                   'Compliant token transfers with on-chain rules',
-                  'Cross-VM liqfrontend/uidity for tokenized assets',
+                  'Cross-VM liquidity for tokenized assets',
                   'Integration with traditional finance rails',
                   'Institutional-grade custody solutions',
                 ].map((item, i) => (
@@ -339,7 +339,7 @@ export default function SolutionsPage() {
                 Mobile-First Blockchain
               </h2>
               <p className="text-gray-500 mb-6">
-                Bfrontend/uild mobile apps that leverage blockchain without complexity. 
+                Build mobile apps that leverage blockchain without complexity. 
                 X3 STAR's mobile SDKs make it easy to integrate wallet functionality, 
                 NFTs, and payments into any mobile application.
               </p>
@@ -385,10 +385,10 @@ export default function SolutionsPage() {
       <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to bfrontend/uild your solution?
+            Ready to build your solution?
           </h2>
           <p className="text-gray-500 mb-8">
-            Connect with our solutions team to discuss your project reqfrontend/uirements.
+            Connect with our solutions team to discuss your project requirements.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/contact" className="btn-primary">

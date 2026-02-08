@@ -22,14 +22,14 @@ const steps = [
   {
     number: '01',
     title: 'Set Up Your Environment',
-    description: 'Install the reqfrontend/uired tools and configure your development environment for X3 Atlas Sphere.',
+    description: 'Install the required tools and configure your development environment for X3 Atlas Sphere.',
     icon: <Terminal className="w-6 h-6" />,
     time: '10 min',
     items: [
       'Install Rust and Cargo',
       'Add WASM target',
       'Clone the repository',
-      'Bfrontend/uild the node',
+      'Build the node',
     ],
   },
   {
@@ -73,7 +73,7 @@ const steps = [
   },
 ];
 
-const qfrontend/uickLinks = [
+const quickLinks = [
   {
     title: 'Documentation',
     description: 'Complete reference for X3 Atlas Sphere',
@@ -94,7 +94,7 @@ const qfrontend/uickLinks = [
   },
   {
     title: 'Tutorials',
-    description: 'Step-by-step learning gfrontend/uides',
+    description: 'Step-by-step learning guides',
     href: '/learn/tutorials',
     icon: <Layers className="w-5 h-5" />,
   },
@@ -114,11 +114,11 @@ export default function GettingStartedPage() {
               <span className="text-sm text-emerald-300">Getting Started</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Start bfrontend/uilding on <span className="text-emerald-400">X3 Atlas Sphere</span>
+              Start building on <span className="text-emerald-400">X3 Atlas Sphere</span>
             </h1>
             <p className="text-xl text-gray-500 mb-8">
               Get up and running with the first dual VM blockchain in under 30 minutes. 
-              This gfrontend/uide will walk you through everything you need to know.
+              This guide will walk you through everything you need to know.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="#setup" className="btn-primary flex items-center">
@@ -134,10 +134,10 @@ export default function GettingStartedPage() {
         </div>
       </section>
 
-      {/* Prereqfrontend/uisites */}
+      {/* Prerequisites */}
       <section className="py-16 border-t border-[#1a1a1a] bg-black">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">Prereqfrontend/uisites</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Prerequisites</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-3">Operating System</h3>
@@ -153,19 +153,19 @@ export default function GettingStartedPage() {
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-3">Rust Toolchain</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Rust stable with WASM target for bfrontend/uilding the runtime.
+                Rust stable with WASM target for building the runtime.
               </p>
               <div className="code-block text-xs">
                 <code>rustup target add wasm32-unknown-unknown</code>
               </div>
             </div>
             <div className="glass-card p-6">
-              <h3 className="font-semibold text-white mb-3">Bfrontend/uild Dependencies</h3>
+              <h3 className="font-semibold text-white mb-3">Build Dependencies</h3>
               <p className="text-sm text-gray-500 mb-4">
-                cmake, pkg-config, OpenSSL, libclang reqfrontend/uired.
+                cmake, pkg-config, OpenSSL, libclang required.
               </p>
               <div className="code-block text-xs">
-                <code>sudo apt install bfrontend/uild-essential cmake pkg-config libssl-dev clang</code>
+                <code>sudo apt install build-essential cmake pkg-config libssl-dev clang</code>
               </div>
             </div>
           </div>
@@ -220,14 +220,14 @@ export default function GettingStartedPage() {
         </div>
       </section>
 
-      {/* Qfrontend/uick Start Code */}
+      {/* Quick Start Code */}
       <section className="py-16 bg-[#050505]">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">Qfrontend/uick Start Commands</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Quick Start Commands</h2>
           
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="glass-card p-6">
-              <h3 className="font-semibold text-white mb-4">1. Clone and Bfrontend/uild</h3>
+              <h3 className="font-semibold text-white mb-4">1. Clone and Build</h3>
               <div className="code-block">
                 <pre className="text-sm text-gray-400">
 {`# Clone the repository
@@ -237,8 +237,8 @@ cd atlas-sphere
 # Install Rust dependencies
 rustup target add wasm32-unknown-unknown
 
-# Bfrontend/uild the node
-cargo bfrontend/uild --release`}
+# Build the node
+cargo build --release`}
                 </pre>
               </div>
             </div>
@@ -290,13 +290,13 @@ https://explorer.testnet.atlas-sphere.io`}
         </div>
       </section>
 
-      {/* Qfrontend/uick Links */}
+      {/* Quick Links */}
       <section className="py-16 bg-black">
         <div className="container-wide">
           <h2 className="text-2xl font-bold text-white mb-8">Continue Learning</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {qfrontend/uickLinks.map((link, index) => (
+            {quickLinks.map((link, index) => (
               <Link
                 key={index}
                 href={link.href}

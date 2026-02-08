@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       case 'block': {
         const blockId = searchParams.get('id');
         if (!blockId) {
-          return NextResponse.json({ error: 'Block ID reqfrontend/uired' }, { status: 400 });
+          return NextResponse.json({ error: 'Block ID required' }, { status: 400 });
         }
         const block = await getBlock(isNaN(Number(blockId)) ? blockId : Number(blockId));
         if (!block) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       case 'block-extrinsics': {
         const blockIdForExts = searchParams.get('blockId');
         if (!blockIdForExts) {
-          return NextResponse.json({ error: 'Block ID reqfrontend/uired' }, { status: 400 });
+          return NextResponse.json({ error: 'Block ID required' }, { status: 400 });
         }
         const extrinsics = await getBlockExtrinsics(
           isNaN(Number(blockIdForExts)) ? blockIdForExts : Number(blockIdForExts)
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       case 'account': {
         const address = searchParams.get('address');
         if (!address) {
-          return NextResponse.json({ error: 'Address reqfrontend/uired' }, { status: 400 });
+          return NextResponse.json({ error: 'Address required' }, { status: 400 });
         }
         const account = await getAccountInfo(address);
         if (!account) {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         const account = searchParams.get('account');
         const assetId = parseInt(searchParams.get('assetId') || '0');
         if (!account) {
-          return NextResponse.json({ error: 'Account reqfrontend/uired' }, { status: 400 });
+          return NextResponse.json({ error: 'Account required' }, { status: 400 });
         }
         const balance = await getCanonicalBalance(account, assetId);
         return NextResponse.json({ balance });

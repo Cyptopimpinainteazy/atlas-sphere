@@ -1,8 +1,8 @@
 # Atlas Sphere L1
 
-[![Bfrontend/uild Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
-Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liqfrontend/uidity without trusted intermediaries.
+Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liquidity without trusted intermediaries.
 
 ## Table of Contents
 
@@ -10,8 +10,8 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to h
 2. [Current Status](#current-status)
 3. [Architecture Overview](#architecture-overview)
 4. [Development Setup](#development-setup)
-5. [Bfrontend/uild Instructions](#bfrontend/uild-instructions)
-6. [Qfrontend/uick Start](#qfrontend/uick-start)
+5. [Build Instructions](#build-instructions)
+6. [Quick Start](#quick-start)
 7. [Running a Node](#running-a-node)
 8. [Consensus](#consensus)
 9. [Network Configuration](#network-configuration)
@@ -19,7 +19,7 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to h
 11. [Basic Usage Examples](#basic-usage-examples)
 12. [Account Authorization](#account-authorization)
 13. [Testing & Quality Gates](#testing--quality-gates)
-14. [Contribution Gfrontend/uidelines](#contribution-gfrontend/uidelines)
+14. [Contribution Guidelines](#contribution-guidelines)
 15. [Roadmap Snapshot](#roadmap-snapshot)
 16. [Resources & Further Reading](#resources--further-reading)
 17. [License](#license)
@@ -30,8 +30,8 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to h
 
 - **Dual-VM Execution (EVM + SVM):** Run Solidity/Vyper contracts and Sealevel programs side-by-side with deterministic consensus ordering. Atlas Sphere exposes a unified account abstraction to simplify cross-VM asset flows.
 - **Native Asset Layer:** The Atlas native asset powers staking, fee markets, and rewards. Additional assets can be registered via asset pallets and used across both VMs without wrapping.
-- **Atomic Cross-Chain Operations:** Bfrontend/uilt-in message-lane primitives let developers submit atomic transactions that span multiple domains, eliminating the need for fragile multi-step bridging.
-- **High-Performance Substrate Foundation:** Bfrontend/uilt on Substrate for modularity, runtime upgrades, and rich tooling while maintaining a custom runtime tuned for Atlas’ heterogeneous VM workloads.
+- **Atomic Cross-Chain Operations:** Built-in message-lane primitives let developers submit atomic transactions that span multiple domains, eliminating the need for fragile multi-step bridging.
+- **High-Performance Substrate Foundation:** Built on Substrate for modularity, runtime upgrades, and rich tooling while maintaining a custom runtime tuned for Atlas’ heterogeneous VM workloads.
 
 ## Current Status
 
@@ -47,7 +47,7 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to h
 
 **Testnet RPC**: `http://rpc.testnet.atlas-sphere.io:9944`  
 **Faucet**: `https://faucet.testnet.atlas-sphere.io`  
-**See**: `TESTNET_ANNOUNCEMENT.md` for details
+**See**: `docs/reports/TESTNET_ANNOUNCEMENT.md` for details
 
 ---
 
@@ -63,19 +63,19 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-bfrontend/uilt to h
 ### Developer Tools: BMAD Method
 The repository includes a small integration wrapper for BMAD Method under `crates/vibe-bmad`. BMAD is an AI-driven agile development tool that helps with planning, workflows and architecture decisions.
 
-Qfrontend/uick usage:
+Quick usage:
 ```sh
 cd crates/vibe-bmad
 npm run install-bmad
 npm run workflow-init
 ```
-BMAD reqfrontend/uires Node.js >= 20. See `crates/vibe-bmad/README.md` for more details.
+BMAD requires Node.js >= 20. See `crates/vibe-bmad/README.md` for more details.
 
 ---
 
 ## Development Setup
 
-### Prereqfrontend/uisites
+### Prerequisites
 
 - **Operating System:** Linux or macOS (Windows via WSL2 recommended).
 - **Rust Toolchain:** `rustup` with the stable toolchain (or project-specified override via `rust-toolchain.toml`).
@@ -90,13 +90,13 @@ BMAD reqfrontend/uires Node.js >= 20. See `crates/vibe-bmad/README.md` for more 
   rustup show active-toolchain
   cargo --version
   ```
-- **Bfrontend/uild Dependencies:** `cmake`, `pkg-config`, `openssl`, `libclang`, and `clang` (reqfrontend/uired by Substrate).
+- **Build Dependencies:** `cmake`, `pkg-config`, `openssl`, `libclang`, and `clang` (required by Substrate).
   ```bash
   # Debian/Ubuntu
   sudo apt update
-  sudo apt install -y bfrontend/uild-essential cmake pkg-config libssl-dev git clang libclang-dev
+  sudo apt install -y build-essential cmake pkg-config libssl-dev git clang libclang-dev
   ```
-- **Substrate Dependencies:** Refer to the [official Substrate prereqfrontend/uisites](https://docs.substrate.io/install/) for platform-specific instructions.
+- **Substrate Dependencies:** Refer to the [official Substrate prerequisites](https://docs.substrate.io/install/) for platform-specific instructions.
 - **Optional:** `just`, `direnv`, Docker, and Polkadot.js apps for local interactions.
 
 ### Repository Setup
@@ -108,31 +108,31 @@ cd atlas-sphere
 
 ---
 
-## Bfrontend/uild Instructions
+## Build Instructions
 
 Compile the Atlas Sphere node and runtime artifacts:
 
 ```bash
-cargo bfrontend/uild --release
+cargo build --release
 ```
 
 Key artifacts:
 
 - `target/release/atlas-sphere-node` – Native node binary.
-- `runtime/wasm/atlas_sphere_runtime.compact.wasm` – Runtime WASM (generated via bfrontend/uild script).
+- `runtime/wasm/atlas_sphere_runtime.compact.wasm` – Runtime WASM (generated via build script).
 
-For iterative development bfrontend/uilds:
+For iterative development builds:
 
 ```bash
-cargo bfrontend/uild
+cargo build
 ```
 
-## Qfrontend/uick Start
+## Quick Start
 
-1. **Bfrontend/uild the binaries**
+1. **Build the binaries**
 
    ```bash
-   cargo bfrontend/uild --release
+   cargo build --release
    ```
 
 2. **Launch a development node**
@@ -163,9 +163,9 @@ cargo bfrontend/uild
         -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getCanonicalBalance","params":["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",0,null]}'
    ```
 
-4. **Submit Comit extrinsic (future - reqfrontend/uires WebSocket)**
+4. **Submit Comit extrinsic (future - requires WebSocket)**
 
-   ⚠️ **Note:** WebSocket server is not yet exposed. The following `subxt` examples reqfrontend/uire WebSocket support (future enhancement):
+   ⚠️ **Note:** WebSocket server is not yet exposed. The following `subxt` examples require WebSocket support (future enhancement):
 
    ```bash
    # Future: once WebSocket is enabled
@@ -243,10 +243,10 @@ Generate custom chain specs:
 
 ```bash
 # Export plain chain spec
-./target/release/atlas-sphere-node bfrontend/uild-spec --disable-default-bootnode > atlas.json
+./target/release/atlas-sphere-node build-spec --disable-default-bootnode > atlas.json
 
 # Export raw chain spec (ready for launch)
-./target/release/atlas-sphere-node bfrontend/uild-spec --chain atlas.json --raw --disable-default-bootnode > atlas-raw.json
+./target/release/atlas-sphere-node build-spec --chain atlas.json --raw --disable-default-bootnode > atlas-raw.json
 ```
 
 Distribute the raw chain spec to validators to ensure consensus on initial state.
@@ -317,7 +317,7 @@ curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
 
 ### 3. Execute SVM Programs (Roadmap)
 
-- Bfrontend/uild SVM program with Solana toolchain.
+- Build SVM program with Solana toolchain.
 - Submit via Atlas Sphere SVM adaptor pallet (forthcoming).
 - Monitor execution via RPC subscription.
 
@@ -336,14 +336,14 @@ The Atlas Kernel implements an account authorization system that controls which 
 
 **Authorize an Account:**
 ```rust
-// Reqfrontend/uires root privileges (via sudo in development)
+// Requires root privileges (via sudo in development)
 atlasKernel.authorize_account(account_id)
 // Some tooling may expose this as camelCase: authorizeAccount
 ```
 
 **Deauthorize an Account:**
 ```rust
-// Reqfrontend/uires root privileges (via sudo in development)
+// Requires root privileges (via sudo in development)
 atlasKernel.deauthorize_account(account_id)
 // Some tooling may expose this as camelCase: deauthorizeAccount
 ```
@@ -445,14 +445,14 @@ Runtime checks:
 
 ```bash
 cargo test -p atlas-sphere-runtime
-cargo bfrontend/uild -p atlas-sphere-runtime --release --features runtime-benchmarks
+cargo build -p atlas-sphere-runtime --release --features runtime-benchmarks
 ```
 
-Continuous Integration (GitHub Actions) enforces these gates, alongside WASM runtime bfrontend/uilds for determinism.
+Continuous Integration (GitHub Actions) enforces these gates, alongside WASM runtime builds for determinism.
 
 ---
 
-## Contribution Gfrontend/uidelines
+## Contribution Guidelines
 
 1. **Fork & Branch:** Create feature branches from `main`.
 2. **Coding Standards:** Follow Rust best practices, ensure `cargo fmt` and `cargo clippy` pass.
@@ -461,7 +461,7 @@ Continuous Integration (GitHub Actions) enforces these gates, alongside WASM run
 5. **PR Review:** Request review from Atlas Sphere maintainers; expect automated checks before merge.
 6. **Security:** Report vulnerabilities privately to the core team (security@atlas-sphere.io) before public disclosure.
 
-Please read `CONTRIBUTING.md` (forthcoming) for detailed policies, CLA reqfrontend/uirements, and governance.
+Please read `CONTRIBUTING.md` (forthcoming) for detailed policies, CLA requirements, and governance.
 
 ---
 
@@ -481,7 +481,7 @@ Progress is tracked publicly via our GitHub Projects board.
 - Atlas Sphere Documentation (coming soon): [https://docs.atlas-sphere.io](https://docs.atlas-sphere.io)
 - Atlas Sphere Cross-Chain Primer: [https://labs.atlas-sphere.io/cross-chain-primer](https://labs.atlas-sphere.io/cross-chain-primer)
 - Substrate Developer Hub: [https://docs.substrate.io](https://docs.substrate.io)
-- FRAME Runtime Overview: [https://docs.substrate.io/bfrontend/uild/runtime/](https://docs.substrate.io/bfrontend/uild/runtime/)
+- FRAME Runtime Overview: [https://docs.substrate.io/build/runtime/](https://docs.substrate.io/build/runtime/)
 - Substrate Node Template: [https://github.com/substrate-developer-hub/substrate-node-template](https://github.com/substrate-developer-hub/substrate-node-template)
 - Polkadot.js Apps: [https://polkadot.js.org/apps/](https://polkadot.js.org/apps/)
 - Solana Sealevel Docs: [https://docs.solana.com/developing/programming-model/overview](https://docs.solana.com/developing/programming-model/overview)

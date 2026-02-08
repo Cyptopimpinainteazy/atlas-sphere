@@ -62,12 +62,12 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({ // mocked ts-sdk (shallow)
     subscribeComitEvents: jest.fn(async () => 'sub_3'),
     unsubscribe: jest.fn(async () => true),
   })) as any,
-  ComitBfrontend/uilder: jest.fn().mockImplementation(() => ({
+  ComitBuilder: jest.fn().mockImplementation(() => ({
     withEvmPayload: jest.fn().mockReturnThis(),
     withSvmPayload: jest.fn().mockReturnThis(),
     withFee: jest.fn().mockReturnThis(),
     withNonce: jest.fn().mockReturnThis(),
-    bfrontend/uild: jest.fn().mockReturnValue({
+    build: jest.fn().mockReturnValue({
       evmPayload: new Uint8Array([0x60, 0x80]),
       svmPayload: undefined,
       fee: BigInt(1000000),
@@ -75,7 +75,7 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({ // mocked ts-sdk (shallow)
   })),
   evmComit: jest.fn().mockReturnValue({
     withFee: jest.fn().mockReturnThis(),
-    bfrontend/uild: jest.fn().mockReturnValue({
+    build: jest.fn().mockReturnValue({
       evmPayload: new Uint8Array([0x60, 0x80]),
       svmPayload: undefined,
       fee: BigInt(1000000),
@@ -83,7 +83,7 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({ // mocked ts-sdk (shallow)
   }),
   svmComit: jest.fn().mockReturnValue({
     withFee: jest.fn().mockReturnThis(),
-    bfrontend/uild: jest.fn().mockReturnValue({
+    build: jest.fn().mockReturnValue({
       evmPayload: undefined,
       svmPayload: new Uint8Array([0x79, 0x00]),
       fee: BigInt(500000),
@@ -91,7 +91,7 @@ jest.mock('@atlas-sphere/ts-sdk', () => ({ // mocked ts-sdk (shallow)
   }),
   dualComit: jest.fn().mockReturnValue({
     withFee: jest.fn().mockReturnThis(),
-    bfrontend/uild: jest.fn().mockReturnValue({
+    build: jest.fn().mockReturnValue({
       evmPayload: new Uint8Array([0x60, 0x80]),
       svmPayload: new Uint8Array([0x79, 0x00]),
       fee: BigInt(1500000),
@@ -349,7 +349,7 @@ describe('SDK Integration', () => {
 
 describe('SDK Integration Error Handling', () => {
   it('should handle connection failures gracefully', async () => {
-    // This would reqfrontend/uire modifying the mock to throw, but demonstrates the pattern
+    // This would require modifying the mock to throw, but demonstrates the pattern
     await sdkIntegration.disconnect();
     
     // Test passes if no errors thrown with successful mock

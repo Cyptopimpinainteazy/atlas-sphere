@@ -479,7 +479,7 @@ Created by {{user_name}} on {{date}}
 <step n="9" goal="Generate component roadmap">
 Create a development roadmap for remaining components:
 
-**TODO.md file:**
+**docs/reports/TODO.md file:**
 
 ```markdown
 # {{module_name}} Development Roadmap

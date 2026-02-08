@@ -5,22 +5,22 @@
   "structure": {
     "gallery": {
       "description": "Images for horizontal scroll galleries (400x400 recommended)",
-      "formats": ["jpg", "png", "frontend/webp"],
+      "formats": ["jpg", "png", "webp"],
       "count": 12
     },
     "heroes": {
       "description": "Hero section backgrounds (1920x1080 recommended)",
-      "formats": ["jpg", "frontend/webp"],
+      "formats": ["jpg", "webp"],
       "count": 4
     },
     "cube": {
       "description": "6 images for the rotating 3D cube (400x400 square)",
-      "formats": ["jpg", "png", "frontend/webp"],
+      "formats": ["jpg", "png", "webp"],
       "count": 6
     },
     "slider": {
       "description": "Background and mask images for masked hero slider",
-      "formats": ["jpg", "frontend/webp"],
+      "formats": ["jpg", "webp"],
       "count": 8
     }
   },

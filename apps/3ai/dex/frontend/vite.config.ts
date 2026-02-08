@@ -71,17 +71,17 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version),
       'import.meta.env.VITE_BUILD_TIME': JSON.stringify(new Date().toISOString()),
     },
-    // Bfrontend/uild configuration
-    bfrontend/uild: {
+    // Build configuration
+    build: {
       outDir: 'dist',
       sourcemap: mode !== 'production',
-      minify: mode === 'production' ? 'esbfrontend/uild' : false,
+      minify: mode === 'production' ? 'esbuild' : false,
       target: 'esnext',
       rollupOptions: {
         output: {
           manualChunks: {
             react: ['react', 'react-dom', 'react-router-dom'],
-            chakra: ['@chakra-frontend/frontend/ui/react', '@emotion/react', '@emotion/styled', 'framer-motion'],
+            chakra: ['@chakra-ui/react', '@emotion/react', '@emotion/styled', 'framer-motion'],
             wagmi: ['wagmi', 'viem'],
           },
         },

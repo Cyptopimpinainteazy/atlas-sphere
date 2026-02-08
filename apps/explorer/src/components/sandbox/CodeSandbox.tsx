@@ -5,7 +5,7 @@
  * Features real-time compilation, syntax highlighting, and error display.
  * 
  * Supported languages:
- * - JavaScript/TypeScript (via eval/esbfrontend/uild)
+ * - JavaScript/TypeScript (via eval/esbuild)
  * - Solidity (via ethers + simulated EVM)
  * - Rust snippets (via WASM compilation)
  * - Shell commands (simulated)
@@ -57,8 +57,8 @@ export interface CodeSandboxProps {
   onExecute?: (result: ExecutionResult) => void;
   /** Enable AI assistance */
   aiAssist?: boolean;
-  /** External file archive/archive/imports */
-  archive/archive/imports?: Record<string, unknown>;
+  /** External file imports */
+  imports?: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -81,7 +81,7 @@ function highlightCode(code: string, language: SupportedLanguage): string {
   const keywords: Record<SupportedLanguage, string[]> = {
     javascript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'class', 'extends', 'import', 'export', 'from', 'async', 'await', 'try', 'catch', 'throw', 'new', 'this', 'true', 'false', 'null', 'undefined'],
     typescript: ['const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while', 'class', 'extends', 'import', 'export', 'from', 'async', 'await', 'try', 'catch', 'throw', 'new', 'this', 'true', 'false', 'null', 'undefined', 'interface', 'type', 'enum', 'as', 'implements'],
-    solidity: ['pragma', 'solidity', 'contract', 'function', 'public', 'private', 'external', 'internal', 'view', 'pure', 'payable', 'returns', 'memory', 'storage', 'calldata', 'mapping', 'struct', 'event', 'emit', 'reqfrontend/uire', 'modifier', 'constructor', 'address', 'frontend/uint256', 'bool', 'string', 'bytes'],
+    solidity: ['pragma', 'solidity', 'contract', 'function', 'public', 'private', 'external', 'internal', 'view', 'pure', 'payable', 'returns', 'memory', 'storage', 'calldata', 'mapping', 'struct', 'event', 'emit', 'require', 'modifier', 'constructor', 'address', 'uint256', 'bool', 'string', 'bytes'],
     rust: ['fn', 'let', 'mut', 'const', 'pub', 'mod', 'use', 'struct', 'enum', 'impl', 'trait', 'for', 'while', 'loop', 'if', 'else', 'match', 'return', 'self', 'Self', 'true', 'false', 'Some', 'None', 'Ok', 'Err', 'Result', 'Option'],
     shell: ['echo', 'export', 'cd', 'ls', 'mkdir', 'rm', 'cp', 'mv', 'cat', 'grep', 'awk', 'sed', 'curl', 'wget', 'npm', 'yarn', 'cargo', 'git', 'docker'],
     json: [],
@@ -132,7 +132,7 @@ function highlightCode(code: string, language: SupportedLanguage): string {
 async function executeCode(
   code: string,
   language: SupportedLanguage,
-  archive/archive/imports: Record<string, unknown> = {}
+  imports: Record<string, unknown> = {}
 ): Promise<ExecutionResult> {
   const startTime = performance.now();
   const logs: string[] = [];
@@ -157,7 +157,7 @@ async function executeCode(
           setTimeout: () => {},
           setInterval: () => {},
           fetch: globalThis.fetch,
-          ...archive/archive/imports,
+          ...imports,
         };
 
         // Wrap in async IIFE for top-level await
@@ -285,7 +285,7 @@ export const CodeSandbox: React.FC<CodeSandboxProps> = ({
   onChange,
   onExecute,
   aiAssist = true,
-  archive/archive/imports = {},
+  imports = {},
 }) => {
   const [code, setCode] = useState(initialCode);
   const [result, setResult] = useState<ExecutionResult | null>(null);
@@ -316,12 +316,12 @@ export const CodeSandbox: React.FC<CodeSandboxProps> = ({
     setIsRunning(true);
     setShowOutput(true);
     
-    const execResult = await executeCode(code, selectedLanguage, archive/archive/imports);
+    const execResult = await executeCode(code, selectedLanguage, imports);
     setResult(execResult);
     onExecute?.(execResult);
     
     setIsRunning(false);
-  }, [code, selectedLanguage, archive/archive/imports, onExecute]);
+  }, [code, selectedLanguage, imports, onExecute]);
 
   // Auto-run on mount
   useEffect(() => {

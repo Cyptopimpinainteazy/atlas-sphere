@@ -95,11 +95,11 @@ This document captures the planned approach for integrating Solana Virtual Machi
 ## Solana Toolchain Compatibility
 
 - **Program Compilation**  
-  - Developers can compile programs using the standard Rust Solana toolchain (`cargo bfrontend/uild-bpf` / `cargo bfrontend/uild-sbf`).  
-  - Bfrontend/uild artifacts (`.so` files) are deployed to Atlas Sphere via sidecar APIs that mirror Solana’s deploy instructions.
+  - Developers can compile programs using the standard Rust Solana toolchain (`cargo build-bpf` / `cargo build-sbf`).  
+  - Build artifacts (`.so` files) are deployed to Atlas Sphere via sidecar APIs that mirror Solana’s deploy instructions.
 
 - **Transaction Encoding**  
-  - Serialized Solana transactions are accepted directly. The SVM pallet includes utilities for converting standard Solana wire formats to the reqfrontend/uired SCALE-encoded payloads.
+  - Serialized Solana transactions are accepted directly. The SVM pallet includes utilities for converting standard Solana wire formats to the required SCALE-encoded payloads.
 
 - **CLI Support**  
   - The sidecar will expose a compatibility layer for `solana-cli`, enabling commands like `solana transfer` routed through Atlas Sphere.
@@ -137,7 +137,7 @@ This document captures the planned approach for integrating Solana Virtual Machi
 
 - **Economic Incentives**: How will sidecar operators be rewarded or slashed for correct/incorrect receipts?
 - **State Proofs**: What is the optimal commitment scheme for Solana account state to minimize receipt size while preserving security?
-- **Concurrency**: How will the runtime handle conflicting receipts for the same Comit (e.g., eqfrontend/uivocation by a malicious sidecar)?
+- **Concurrency**: How will the runtime handle conflicting receipts for the same Comit (e.g., equivocation by a malicious sidecar)?
 - **Governance**: Which programs and assets should be whitelisted by default, and how are changes approved?
 
 ---
@@ -147,7 +147,7 @@ This document captures the planned approach for integrating Solana Virtual Machi
 1. Finalize the SVM pallet interface and storage schema.
 2. Implement the sidecar prototype with deterministic execution and receipt generation.
 3. Define SCALE-encoded receipt structures and integrate them with the Atlas Kernel.
-4. Bfrontend/uild developer tooling (CLI adapters, Anchor plugins).
+4. Build developer tooling (CLI adapters, Anchor plugins).
 5. Stand up testnet infrastructure for end-to-end validation.
 
 --- 

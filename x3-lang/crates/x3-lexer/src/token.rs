@@ -276,7 +276,7 @@ pub enum Keyword {
     Emit,
     Log,
     Assert,
-    Reqfrontend/uire,
+    Require,
     Revert,
 
     // ===== Boolean Literals =====
@@ -388,7 +388,7 @@ impl Keyword {
             "emit" => Some(Keyword::Emit),
             "log" => Some(Keyword::Log),
             "assert" => Some(Keyword::Assert),
-            "reqfrontend/uire" => Some(Keyword::Reqfrontend/uire),
+            "require" => Some(Keyword::Require),
             "revert" => Some(Keyword::Revert),
 
             // Boolean
@@ -485,7 +485,7 @@ impl Keyword {
             Keyword::Emit => "emit",
             Keyword::Log => "log",
             Keyword::Assert => "assert",
-            Keyword::Reqfrontend/uire => "reqfrontend/uire",
+            Keyword::Require => "require",
             Keyword::Revert => "revert",
             Keyword::True => "true",
             Keyword::False => "false",

@@ -7,7 +7,7 @@ route:
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 1h
-  receiver: 'frontend/frontend/web.hook'
+  receiver: 'web.hook'
   routes:
   - match:
       severity: critical
@@ -17,8 +17,8 @@ route:
     receiver: 'warning-alerts'
 
 receivers:
-- name: 'frontend/frontend/web.hook'
-  frontend/webhook_configs:
+- name: 'web.hook'
+  webhook_configs:
   - url: 'http://localhost:5001/'
     send_resolved: true
 

@@ -28,12 +28,12 @@ from typing import Any, Dict, Iterator
 
 ROOT = Path(__file__).resolve().parent.parent  # project root
 
-META_HEADER = """Ingest and understand the Product Reqfrontend/uirement Prompt (PRP) below in detail.
+META_HEADER = """Ingest and understand the Product Requirement Prompt (PRP) below in detail.
 
     # WORKFLOW GUIDANCE:
 
     ## Planning Phase
-    - Think hard before you code. Create a comprehensive plan addressing all reqfrontend/uirements.
+    - Think hard before you code. Create a comprehensive plan addressing all requirements.
     - Break down complex tasks into smaller, manageable steps.
     - Use the TodoWrite tool to create and track your implementation plan.
     - Identify implementation patterns from existing code to follow.
@@ -46,13 +46,13 @@ META_HEADER = """Ingest and understand the Product Reqfrontend/uirement Prompt (
     - Use type hints to ensure type safety.
 
     ## Testing Phase
-    - Test each component thoroughly as you bfrontend/uild it.
+    - Test each component thoroughly as you build it.
     - Use the provided validation gates to verify your implementation.
-    - Verify that all reqfrontend/uirements have been satisfied.
+    - Verify that all requirements have been satisfied.
     - Run the project tests when finished and output "DONE" when they pass.
 
     ## Example Implementation Approach:
-    1. Analyze the PRP reqfrontend/uirements in detail
+    1. Analyze the PRP requirements in detail
     2. Search for and understand existing patterns in the codebase
     3. Search the Web and gather additional context and examples
     4. Create a step-by-step implementation plan with TodoWrite
@@ -64,7 +64,7 @@ META_HEADER = """Ingest and understand the Product Reqfrontend/uirement Prompt (
     """
 
 
-def bfrontend/uild_prompt(prp_path: Path) -> str:
+def build_prompt(prp_path: Path) -> str:
     return META_HEADER + prp_path.read_text()
 
 
@@ -253,7 +253,7 @@ def main() -> None:
         sys.exit(f"PRP not found: {prp_path}")
 
     os.chdir(ROOT)  # ensure relative paths match PRP expectations
-    prompt = bfrontend/uild_prompt(prp_path)
+    prompt = build_prompt(prp_path)
     run_model(
         prompt,
         model=args.model,

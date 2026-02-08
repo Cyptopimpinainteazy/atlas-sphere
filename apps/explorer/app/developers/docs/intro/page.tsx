@@ -19,7 +19,7 @@ export default function IntroPage() {
             X3 Atlas Sphere is a revolutionary Layer-1 blockchain that enables native interoperability 
             between the <strong className="text-white">Ethereum Virtual Machine (EVM)</strong> and 
             the <strong className="text-white">Solana Virtual Machine (SVM)</strong>. For the first time, 
-            developers can bfrontend/uild applications that leverage both ecosystems simultaneously with atomic execution guarantees.
+            developers can build applications that leverage both ecosystems simultaneously with atomic execution guarantees.
           </p>
           <p className="text-gray-400">
             The core innovation is the <span className="text-orange-400 font-semibold">Atlas Kernel</span> - a 
@@ -50,7 +50,7 @@ export default function IntroPage() {
             <div className="glass-card p-4">
               <Globe className="w-6 h-6 text-orange-400 mb-2" />
               <h3 className="font-semibold text-white mb-1">Cross-Chain Composability</h3>
-              <p className="text-sm text-gray-500">Bfrontend/uilt-in message lanes for multi-chain operations</p>
+              <p className="text-sm text-gray-500">Built-in message lanes for multi-chain operations</p>
             </div>
           </div>
         </section>
@@ -59,7 +59,7 @@ export default function IntroPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Architecture Overview</h2>
           <p className="text-gray-400 mb-4">
-            X3 Atlas Sphere is bfrontend/uilt on Substrate, leveraging its modular runtime architecture. 
+            X3 Atlas Sphere is built on Substrate, leveraging its modular runtime architecture. 
             The blockchain consists of several key components:
           </p>
           <ul className="list-disc list-inside text-gray-400 space-y-2 ml-4">
@@ -76,9 +76,9 @@ export default function IntroPage() {
           Join our Discord to stay updated on the latest developments.
         </Callout>
 
-        {/* Qfrontend/uick Example */}
+        {/* Quick Example */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Qfrontend/uick Example</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Quick Example</h2>
           <p className="text-gray-400 mb-4">
             Here&apos;s a simple example of querying the network using JavaScript:
           </p>
@@ -110,9 +110,9 @@ main();`}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Next Steps</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            <Link href="/developers/docs/qfrontend/uickstart" className="glass-card-hover p-4 block card-lift">
+            <Link href="/developers/docs/quickstart" className="glass-card-hover p-4 block card-lift">
               <h3 className="font-semibold text-white mb-1 flex items-center">
-                Qfrontend/uick Start Gfrontend/uide <ArrowRight className="w-4 h-4 ml-2" />
+                Quick Start Guide <ArrowRight className="w-4 h-4 ml-2" />
               </h3>
               <p className="text-sm text-gray-500">Get up and running in under 5 minutes</p>
             </Link>

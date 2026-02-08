@@ -26,7 +26,7 @@ export default function CanonicalLedgerPage() {
                 <Database className="w-5 h-5 text-orange-400 flex-shrink-0" />
                 <div>
                   <span className="text-white font-medium">Single Source of Truth</span>
-                  <p className="text-xs text-gray-500">No wrapped tokens or fragmented liqfrontend/uidity</p>
+                  <p className="text-xs text-gray-500">No wrapped tokens or fragmented liquidity</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">

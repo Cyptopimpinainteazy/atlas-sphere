@@ -41,9 +41,9 @@ Save to: PRPs/specs/{{challenge|slugify}}-tech-spec.md"
 Task 2 - User Experience Agent:
 "Analyze {{challenge}} from UX perspective:
 - User journeys and flows
-- UI component reqfrontend/uirements
+- UI component requirements
 - Interaction patterns
-- Accessibility reqfrontend/uirements
+- Accessibility requirements
 - Error handling UX
 - Loading and feedback states
 Save to: PRPs/specs/{{challenge|slugify}}-ux-spec.md"
@@ -51,17 +51,17 @@ Save to: PRPs/specs/{{challenge|slugify}}-ux-spec.md"
 Task 3 - Business Logic Agent:
 "Define business rules and logic for {{challenge}}:
 - Core business rules
-- Validation reqfrontend/uirements
+- Validation requirements
 - Edge cases and exceptions
 - Data integrity rules
 - Business process flows
-- Integration reqfrontend/uirements
+- Integration requirements
 Save to: PRPs/specs/{{challenge|slugify}}-business-spec.md"
 
 Task 4 - Testing Strategy Agent:
 "Create comprehensive testing strategy:
 - Test scenarios and cases
-- Performance test reqfrontend/uirements
+- Performance test requirements
 - Security test cases
 - Integration test approach
 - Demo test scenarios
@@ -206,7 +206,7 @@ Use the Task tool to run these 5 frontend agents in PARALLEL:
 Task 16 - Component Tree Agent:
 "In the frontend project:
 1. Create feature folder structure
-2. Bfrontend/uild all React components
+2. Build all React components
 3. Add TypeScript interfaces
 4. Implement component states
 5. Write component tests
@@ -276,7 +276,7 @@ Task 22 - Demo Preparation Agent:
 "Prepare for demo:
 1. Create demo script with timing
 2. Set up demo data
-3. Create metrics apps/apps/dash-legacy-2-legacy-2board
+3. Create metrics apps/dash-legacy-2-legacy-2board
 4. Prepare backup scenarios
 5. Test full demo flow
 6. Generate presentation points
@@ -305,7 +305,7 @@ Task 24 - Frontend QA Agent:
 1. npm test -- --coverage
 2. npm run lint
 3. npm run type-check
-4. npm run bfrontend/uild
+4. npm run build
 5. Lighthouse audit
 Report all metrics and any failures."
 
@@ -321,7 +321,7 @@ Report comprehensive quality metrics."
 
 ## Execution Monitoring
 
-Create a real-time apps/apps/dash-legacy-2-legacy-2board showing:
+Create a real-time apps/dash-legacy-2-legacy-2board showing:
 
 ```
 ## Parallel Execution Status
@@ -375,7 +375,7 @@ Create a real-time apps/apps/dash-legacy-2-legacy-2board showing:
 1. **Phase Gates**: Each phase must complete before next
 2. **Failure Handling**: If an agent fails, reassign to another
 3. **Synthesis Points**: After each phase, synthesize results
-4. **Progress Tracking**: Update apps/apps/dash-legacy-2-legacy-2board in real-time
+4. **Progress Tracking**: Update apps/dash-legacy-2-legacy-2board in real-time
 5. **Time Boxing**: Each agent has strict time limits
 
 ## Emergency Protocols

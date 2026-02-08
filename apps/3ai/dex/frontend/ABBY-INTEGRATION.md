@@ -1,6 +1,6 @@
 # ABBY AI Assistant Integration
 
-ABBY is the AI assistant for 3aiXchange, providing users with an interactive and intfrontend/uitive way to interact with the DEX.
+ABBY is the AI assistant for 3aiXchange, providing users with an interactive and intuitive way to interact with the DEX.
 
 ## Features
 

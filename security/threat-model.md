@@ -46,7 +46,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 ### Key Components
 1. **AtlasSphereClient**: Main connection and RPC client
-2. **ComitBfrontend/uilder**: Fluent API for transaction construction
+2. **ComitBuilder**: Fluent API for transaction construction
 3. **QueryClient**: Cached state queries
 4. **EVM Module**: Ethereum ABI encoding, address conversion
 5. **SVM Module**: Solana pubkey handling, Anchor discriminators
@@ -73,7 +73,7 @@ The `@atlas-sphere/ts-sdk` provides:
 ┌─────────────────────────────────────────────────────────────────┐
 │                  @atlas-sphere/ts-sdk                            │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Client     │  │ ComitBfrontend/uilder │  │ QueryClient  │          │
+│  │   Client     │  │ ComitBuilder │  │ QueryClient  │          │
 │  │  Connection  │  │ Transaction  │  │   Caching    │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
@@ -121,7 +121,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 1. **User Application**: Assumed to be running in potentially hostile environment (browser)
 2. **RPC Node**: Assumed to be honest (configurable, user responsibility)
-3. **Dependencies**: Assumed to be secure (reqfrontend/uires audit)
+3. **Dependencies**: Assumed to be secure (requires audit)
 4. **Cryptographic Libraries**: Assumed to be correctly implemented
 5. **Network Transport**: Assumed to be protected by TLS (WebSocket Secure)
 
@@ -148,7 +148,7 @@ The `@atlas-sphere/ts-sdk` provides:
 - **Attack Vector**: Stolen private key or compromised signing flow
 - **Impact**: Unauthorized transactions executed
 - **Mitigations**:
-  - ✅ All transactions reqfrontend/uire cryptographic signature
+  - ✅ All transactions require cryptographic signature
   - ✅ Nonce management prevents replay attacks
   - ⚠️ Implement transaction preview before signing
   - ⚠️ Add rate limiting per account
@@ -186,7 +186,7 @@ The `@atlas-sphere/ts-sdk` provides:
   - ⚠️ Use npm audit in CI/CD pipeline
   - ⚠️ Pin exact dependency versions
   - ⚠️ Enable Dependabot security alerts
-  - ⚠️ Implement Subresource Integrity (SRI) for CDN bfrontend/uilds
+  - ⚠️ Implement Subresource Integrity (SRI) for CDN builds
 
 #### T3: Cache Poisoning
 - **Severity**: MEDIUM
@@ -264,7 +264,7 @@ The `@atlas-sphere/ts-sdk` provides:
 - **Impact**: Service unavailability for all users
 - **Mitigations**:
   - ⚠️ Implement client-side rate limiting
-  - ⚠️ Add request quefrontend/uing and backoff
+  - ⚠️ Add request queuing and backoff
   - ⚠️ Detect and throttle abusive patterns
   - ✅ QueryClient caching reduces redundant requests
 
@@ -297,7 +297,7 @@ The `@atlas-sphere/ts-sdk` provides:
 - **Impact**: Unauthorized actions executed (depends on on-chain auth)
 - **Mitigations**:
   - ✅ Authorization enforced on-chain (Atlas Kernel)
-  - ⚠️ SDK validates reqfrontend/uired signatures before submission
+  - ⚠️ SDK validates required signatures before submission
   - ⚠️ Clear error messages for authorization failures
   - ⚠️ No client-side authorization logic (defense in depth)
 
@@ -307,7 +307,7 @@ The `@atlas-sphere/ts-sdk` provides:
 - **Attack Vector**: Race condition, parallel submissions
 - **Impact**: Transaction reordering, potential double-spend
 - **Mitigations**:
-  - ✅ Automatic nonce management in ComitBfrontend/uilder
+  - ✅ Automatic nonce management in ComitBuilder
   - ⚠️ Implement nonce collision detection
   - ⚠️ Add transaction sequencing validation
   - ⚠️ Warn on out-of-order nonce detection
@@ -338,7 +338,7 @@ The `@atlas-sphere/ts-sdk` provides:
   - Controls: HTTPS, input validation
 
 #### Browser Environment
-- **XSS Injection**: Malicious scripts in frontend/frontend/web context
+- **XSS Injection**: Malicious scripts in web context
   - Risk: Key theft, transaction hijacking
   - Controls: CSP, input sanitization
 - **Malicious Extensions**: Fake wallet extensions
@@ -403,7 +403,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 2. **Logging Leakage**: Accidental console.log of keys
    - Mitigation: Code review, linting rules
-   - Mitigation: Disable logs in production bfrontend/uilds
+   - Mitigation: Disable logs in production builds
 
 3. **Error Reporting**: Keys in error messages/stack traces
    - Mitigation: Sanitize errors before reporting
@@ -411,8 +411,8 @@ The `@atlas-sphere/ts-sdk` provides:
 
 #### Medium Risk
 1. **Browser Cache**: Keys in localStorage (user app issue)
-   - Gfrontend/uidance: Recommend encrypted storage
-   - Gfrontend/uidance: SessionStorage for temporary keys
+   - Guidance: Recommend encrypted storage
+   - Guidance: SessionStorage for temporary keys
 
 2. **Network Transmission**: Keys sent over network (should never happen)
    - Control: Code audit to ensure keys never transmitted
@@ -422,7 +422,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 1. **Implement Key Zeroization**: Attempt to overwrite key material after use
 2. **Use Web Crypto API**: For key generation and signing where possible
-3. **Add Key Handling Gfrontend/uidelines**: Documentation for secure key management
+3. **Add Key Handling Guidelines**: Documentation for secure key management
 4. **Implement Key Validation**: Check key format and strength
 5. **Add Security Warnings**: Alert developers to key handling risks
 
@@ -436,7 +436,7 @@ The `@atlas-sphere/ts-sdk` provides:
    ```typescript
    // Add endpoint validation
    if (process.env.NODE_ENV === 'production' && !endpoint.startsWith('wss://')) {
-     throw new SecurityError('Production reqfrontend/uires secure WebSocket (wss://)');
+     throw new SecurityError('Production requires secure WebSocket (wss://)');
    }
    ```
 
@@ -467,7 +467,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 1. **Transaction Preview Component**
    - Display all transaction parameters clearly
-   - Reqfrontend/uire explicit user confirmation
+   - Require explicit user confirmation
    - Show calculated fees and gas limits
 
 2. **Node Identity Verification**
@@ -622,7 +622,7 @@ The `@atlas-sphere/ts-sdk` provides:
    - Implement secure memory handling
    - Add linting rules to prevent key logging
    - Use Web Crypto API for sensitive operations
-   - Add developer security gfrontend/uidelines
+   - Add developer security guidelines
 
 2. **Dependency Security**
    - Enable npm audit in CI/CD (block on HIGH/CRITICAL)
@@ -631,14 +631,14 @@ The `@atlas-sphere/ts-sdk` provides:
    - Pin exact versions for critical dependencies
 
 3. **Secure Transport Enforcement**
-   - Reqfrontend/uire WSS in production bfrontend/uilds
+   - Require WSS in production builds
    - Add node identity verification
    - Implement certificate pinning option
 
 ### High Priority (Address Within Sprint)
 
 1. **Transaction Preview & Validation**
-   - Bfrontend/uild transaction preview component
+   - Build transaction preview component
    - Add address checksum validation
    - Implement amount/fee confirmation dialogs
    - Show clear parameter display
@@ -658,7 +658,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 1. **Rate Limiting & DoS Protection**
    - Implement client-side rate limiting
-   - Add request quefrontend/uing and backoff
+   - Add request queuing and backoff
    - Monitor and limit cache/subscription memory
 
 2. **Audit Logging**
@@ -683,7 +683,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 ## Conclusion
 
-The Atlas Sphere TypeScript SDK demonstrates solid foundational security with cryptographic signing and on-chain authorization. However, several areas reqfrontend/uire immediate attention:
+The Atlas Sphere TypeScript SDK demonstrates solid foundational security with cryptographic signing and on-chain authorization. However, several areas require immediate attention:
 
 1. **Private key handling** needs hardening to prevent memory/log exposure
 2. **Dependency security** must be actively monitored and updated

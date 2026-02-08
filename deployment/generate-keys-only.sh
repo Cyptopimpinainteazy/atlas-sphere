@@ -204,7 +204,7 @@ cat >> "$MANIFEST_FILE" << 'EOF'
 
 ## 🔐 Security Best Practices
 
-### Immediate Actions Reqfrontend/uired
+### Immediate Actions Required
 
 1. **Backup Keys (Encrypted)**
    ```bash
@@ -212,7 +212,7 @@ cat >> "$MANIFEST_FILE" << 'EOF'
    tar czf - deployment/keys | gpg -e -r your@email.com \
      > atlas-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
    
-   # Password-protected zip (reqfrontend/uires zip package)
+   # Password-protected zip (requires zip package)
    zip -r -e atlas-testnet-keys-$(date +%Y%m%d).zip deployment/keys/
    ```
 
@@ -294,12 +294,12 @@ echo "1. BACKUP the keys (see command above)"
 echo "2. Update chain spec with validator authorities:"
 echo "   • Edit: deployment/chain-specs/atlas-testnet-plain.json"
 echo "   • Add validator SS58 addresses to 'initialAuthorities'"
-echo "   • Regenerate raw spec: ./target/release/atlas-sphere-node bfrontend/uild-spec \\"
+echo "   • Regenerate raw spec: ./target/release/atlas-sphere-node build-spec \\"
 echo "       --chain deployment/chain-specs/atlas-testnet-plain.json --raw \\"
 echo "       > deployment/chain-specs/atlas-testnet-raw.json"
 echo ""
 echo "3. Provision infrastructure (if not done yet):"
-echo "   • Run: ./deployment/provision-digitalocean.sh (or AWS/manual gfrontend/uide)"
+echo "   • Run: ./deployment/provision-digitalocean.sh (or AWS/manual guide)"
 echo "   • Update: deployment/inventory.yaml with actual IPs"
 echo ""
 echo "4. Deploy nodes:"

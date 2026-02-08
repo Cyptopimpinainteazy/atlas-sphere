@@ -3,11 +3,11 @@
 import React from 'react';
 import DocLayout, { CodeBlock, Callout } from '@/components/docs/DocLayout';
 
-export default function FoundryGfrontend/uidePage() {
+export default function FoundryGuidePage() {
   return (
     <DocLayout
-      title="Foundry Development Gfrontend/uide"
-      description="Bfrontend/uild and test smart contracts with Foundry on X3 Atlas Sphere"
+      title="Foundry Development Guide"
+      description="Build and test smart contracts with Foundry on X3 Atlas Sphere"
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Foundry is a blazing fast, portable toolkit for Ethereum development written in Rust.
@@ -71,11 +71,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AtlasToken is ERC20, Ownable {
-    constructor(frontend/uint256 initialSupply) ERC20("Atlas Token", "ATL") Ownable(msg.sender) {
+    constructor(uint256 initialSupply) ERC20("Atlas Token", "ATL") Ownable(msg.sender) {
         _mint(msg.sender, initialSupply);
     }
 
-    function mint(address to, frontend/uint256 amount) external onlyOwner {
+    function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
 }`}
@@ -95,7 +95,7 @@ contract AtlasTokenTest is Test {
     address public alice;
     address public bob;
 
-    frontend/uint256 constant INITIAL_SUPPLY = 1_000_000 ether;
+    uint256 constant INITIAL_SUPPLY = 1_000_000 ether;
 
     function setUp() public {
         owner = address(this);
@@ -111,7 +111,7 @@ contract AtlasTokenTest is Test {
     }
 
     function test_Transfer() public {
-        frontend/uint256 amount = 100 ether;
+        uint256 amount = 100 ether;
         token.transfer(alice, amount);
         
         assertEq(token.balanceOf(alice), amount);
@@ -119,7 +119,7 @@ contract AtlasTokenTest is Test {
     }
 
     function test_TransferEvent() public {
-        frontend/uint256 amount = 100 ether;
+        uint256 amount = 100 ether;
         
         vm.expectEmit(true, true, false, true);
         emit IERC20.Transfer(owner, alice, amount);
@@ -127,7 +127,7 @@ contract AtlasTokenTest is Test {
         token.transfer(alice, amount);
     }
 
-    function testFuzz_Transfer(frontend/uint256 amount) public {
+    function testFuzz_Transfer(uint256 amount) public {
         amount = bound(amount, 0, INITIAL_SUPPLY);
         token.transfer(alice, amount);
         assertEq(token.balanceOf(alice), amount);
@@ -139,7 +139,7 @@ contract AtlasTokenTest is Test {
     }
 
     function test_Mint() public {
-        frontend/uint256 amount = 1000 ether;
+        uint256 amount = 1000 ether;
         token.mint(alice, amount);
         assertEq(token.balanceOf(alice), amount);
     }
@@ -183,7 +183,7 @@ import "../src/AtlasToken.sol";
 
 contract DeployScript is Script {
     function run() external {
-        frontend/uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         
         vm.startBroadcast(deployerPrivateKey);
         
@@ -209,10 +209,10 @@ forge verify-contract CONTRACT_ADDRESS AtlasToken --chain 5330`}
       <h2>Useful Cast Commands</h2>
       <CodeBlock language="bash">
 {`# Call view function
-cast call TOKEN_ADDRESS "balanceOf(address)(frontend/uint256)" USER_ADDRESS --rpc-url x3_testnet
+cast call TOKEN_ADDRESS "balanceOf(address)(uint256)" USER_ADDRESS --rpc-url x3_testnet
 
 # Send transaction
-cast send TOKEN_ADDRESS "transfer(address,frontend/uint256)" RECIPIENT 1000000000000000000 \\
+cast send TOKEN_ADDRESS "transfer(address,uint256)" RECIPIENT 1000000000000000000 \\
   --rpc-url x3_testnet --private-key $PRIVATE_KEY
 
 # Get block number

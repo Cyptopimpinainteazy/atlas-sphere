@@ -1,4 +1,4 @@
-import { extendTheme, type ThemeConfig } from '@chakra-frontend/frontend/ui/react';
+import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
 
 // Color mode configuration
 const config: ThemeConfig = {
@@ -36,8 +36,8 @@ const colors = {
 
 // Typography
 const fonts = {
-  heading: 'Inter, system-frontend/frontend/ui, sans-serif',
-  body: 'Inter, system-frontend/frontend/ui, sans-serif',
+  heading: 'Inter, system-ui, sans-serif',
+  body: 'Inter, system-ui, sans-serif',
   mono: 'Menlo, monospace',
 };
 

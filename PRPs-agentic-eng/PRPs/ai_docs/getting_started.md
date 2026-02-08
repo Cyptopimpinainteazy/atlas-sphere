@@ -4,7 +4,7 @@
 
 ## Get started in 30 seconds
 
-Prereqfrontend/uisites: [Node.js 18 or newer](https://nodejs.org/en/download/)
+Prerequisites: [Node.js 18 or newer](https://nodejs.org/en/download/)
 
 ```bash
 # Install Claude Code
@@ -17,15 +17,15 @@ cd your-awesome-project
 claude
 ```
 
-That's it! You're ready to start coding with Claude. [Continue with Qfrontend/uickstart (5 mins) →](/en/docs/claude-code/qfrontend/uickstart)
+That's it! You're ready to start coding with Claude. [Continue with Quickstart (5 mins) →](/en/docs/claude-code/quickstart)
 
 (Got specific setup needs or hit issues? See [advanced setup](/en/docs/claude-code/setup) or [troubleshooting](/en/docs/claude-code/troubleshooting).)
 
 ## What Claude Code does for you
 
-- **Bfrontend/uild features from descriptions**: Tell Claude what you want to bfrontend/uild in plain English. It will make a plan, write the code, and ensure it works.
+- **Build features from descriptions**: Tell Claude what you want to build in plain English. It will make a plan, write the code, and ensure it works.
 - **Debug and fix issues**: Describe a bug or paste an error message. Claude Code will analyze your codebase, identify the problem, and implement a fix.
-- **Navigate any codebase**: Ask anything about your team's codebase, and get a thoughtful answer back. Claude Code maintains awareness of your entire project structure, can find up-to-date information from the frontend/frontend/web, and with [MCP](/en/docs/claude-code/mcp) can pull from external datasources like Google Drive, Figma, and Slack.
+- **Navigate any codebase**: Ask anything about your team's codebase, and get a thoughtful answer back. Claude Code maintains awareness of your entire project structure, can find up-to-date information from the web, and with [MCP](/en/docs/claude-code/mcp) can pull from external datasources like Google Drive, Figma, and Slack.
 - **Automate tedious tasks**: Fix fiddly lint issues, resolve merge conflicts, and write release notes. Do all this in a single command from your developer machines, or automatically in CI.
 
 ## Why developers love Claude Code
@@ -33,17 +33,17 @@ That's it! You're ready to start coding with Claude. [Continue with Qfrontend/ui
 - **Works in your terminal**: Not another chat window. Not another IDE. Claude Code meets you where you already work, with the tools you already love.
 - **Takes action**: Claude Code can directly edit files, run commands, and create commits. Need more? [MCP](/en/docs/claude-code/mcp) lets Claude read your design docs in Google Drive, update your tickets in Jira, or use _your_ custom developer tooling.
 - **Unix philosophy**: Claude Code is composable and scriptable. `tail -f app.log | claude -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `claude -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.
-- **Enterprise-ready**: Use Anthropic's API, or host on AWS or GCP. Enterprise-grade [security](/en/docs/claude-code/security), [privacy](/en/docs/claude-code/data-usage), and [compliance](https://trust.anthropic.com/) is bfrontend/uilt-in.
+- **Enterprise-ready**: Use Anthropic's API, or host on AWS or GCP. Enterprise-grade [security](/en/docs/claude-code/security), [privacy](/en/docs/claude-code/data-usage), and [compliance](https://trust.anthropic.com/) is built-in.
 
 ## Next steps
 
 <CardGroup>
-  <Card title="Qfrontend/uickstart" icon="rocket" href="/en/docs/claude-code/qfrontend/uickstart">
+  <Card title="Quickstart" icon="rocket" href="/en/docs/claude-code/quickstart">
     See Claude Code in action with practical examples
   </Card>
 
   <Card title="Common workflows" icon="graduation-cap" href="/en/docs/claude-code/common-workflows">
-    Step-by-step gfrontend/uides for common workflows
+    Step-by-step guides for common workflows
   </Card>
 
   <Card title="Troubleshooting" icon="wrench" href="/en/docs/claude-code/troubleshooting">
@@ -83,13 +83,13 @@ That's it! You're ready to start coding with Claude. [Continue with Qfrontend/ui
   </Card>
 </CardGroup>
 
-# Qfrontend/uickstart
+# Quickstart
 
-# Qfrontend/uickstart
+# Quickstart
 
 > Welcome to Claude Code!
 
-This qfrontend/uickstart gfrontend/uide will have you using AI-powered coding assistance in just a few minutes. By the end, you'll understand how to use Claude Code for common development tasks.
+This quickstart guide will have you using AI-powered coding assistance in just a few minutes. By the end, you'll understand how to use Claude Code for common development tasks.
 
 ## Before you begin
 
@@ -223,7 +223,7 @@ Claude Code makes Git operations conversational:
 You can also prompt for more complex Git operations:
 
 ```
-> create a new branch called feature/qfrontend/uickstart
+> create a new branch called feature/quickstart
 ```
 
 ```
@@ -296,7 +296,7 @@ Here are the most important commands for daily use:
 | Command             | What it does                      | Example                             |
 | ------------------- | --------------------------------- | ----------------------------------- |
 | `claude`            | Start interactive mode            | `claude`                            |
-| `claude "task"`     | Run a one-time task               | `claude "fix the bfrontend/uild error"`      |
+| `claude "task"`     | Run a one-time task               | `claude "fix the build error"`      |
 | `claude -p "query"` | Run one-off query, then exit      | `claude -p "explain this function"` |
 | `claude -c`         | Continue most recent conversation | `claude -c`                         |
 | `claude -r`         | Resume a previous conversation    | `claude -r`                         |
@@ -329,7 +329,7 @@ See the [CLI reference](/en/docs/claude-code/cli-reference) for a complete list 
     ```
 
     ```
-    > 3. bfrontend/uild a frontend/webpage that allows users to see and edit their information
+    > 3. build a webpage that allows users to see and edit their information
     ```
 
   </Accordion>
@@ -342,7 +342,7 @@ See the [CLI reference](/en/docs/claude-code/cli-reference) for a complete list 
     ```
 
     ```
-    > bfrontend/uild a apps/apps/dash-legacy-2-legacy-2board showing products that are most frequently returned by our UK customers
+    > build a apps/dash-legacy-2-legacy-2board showing products that are most frequently returned by our UK customers
     ```
 
   </Accordion>
@@ -360,7 +360,7 @@ Now that you've learned the basics, explore more advanced features:
 
 <CardGroup cols={3}>
   <Card title="Common workflows" icon="graduation-cap" href="/en/docs/claude-code/common-workflows">
-    Step-by-step gfrontend/uides for common tasks
+    Step-by-step guides for common tasks
   </Card>
 
   <Card title="CLI reference" icon="terminal" href="/en/docs/claude-code/cli-reference">
@@ -375,7 +375,7 @@ Now that you've learned the basics, explore more advanced features:
 ## Getting help
 
 - **In Claude Code**: Type `/help` or ask "how do I..."
-- **Documentation**: You're here! Browse other gfrontend/uides
+- **Documentation**: You're here! Browse other guides
 - **Community**: Join our [Discord](https://www.anthropic.com/discord) for tips and support
 
 # Common Workflows
@@ -388,9 +388,9 @@ Each task in this document includes clear instructions, example commands, and be
 
 ## Understand new codebases
 
-### Get a qfrontend/uick codebase overview
+### Get a quick codebase overview
 
-Suppose you've just joined a new project and need to understand its structure qfrontend/uickly.
+Suppose you've just joined a new project and need to understand its structure quickly.
 
 <Steps>
   <Step title="Navigate to the project root directory">
@@ -789,7 +789,7 @@ Suppose you need to work with images in your codebase, and you want Claude's hel
 
 ## Reference files and directories
 
-Use @ to qfrontend/uickly include files or directories without waiting for Claude to read them.
+Use @ to quickly include files or directories without waiting for Claude to read them.
 
 <Steps>
   <Step title="Reference a single file">
@@ -833,7 +833,7 @@ Use @ to qfrontend/uickly include files or directories without waiting for Claud
 
 ## Use extended thinking
 
-Suppose you're working on complex architectural decisions, challenging bugs, or planning multi-step implementations that reqfrontend/uire deep reasoning.
+Suppose you're working on complex architectural decisions, challenging bugs, or planning multi-step implementations that require deep reasoning.
 
 <Steps>
   <Step title="Provide context and ask Claude to think">
@@ -874,7 +874,7 @@ The way you prompt for thinking results in varying levels of thinking depth:
 - "think" triggers basic extended thinking
 - intensifying phrases such as "think more", "think a lot", "think harder", or "think longer" triggers deeper thinking
 
-For more extended thinking prompting tips, see [Extended thinking tips](/en/docs/bfrontend/uild-with-claude/prompt-engineering/extended-thinking-tips).
+For more extended thinking prompting tips, see [Extended thinking tips](/en/docs/build-with-claude/prompt-engineering/extended-thinking-tips).
 </Tip>
 
 <Note>
@@ -932,9 +932,9 @@ Claude Code provides two options for resuming previous conversations:
   Tips:
 
 - Conversation history is stored locally on your machine
-- Use `--continue` for qfrontend/uick access to your most recent conversation
+- Use `--continue` for quick access to your most recent conversation
 - Use `--resume` when you need to select a specific past conversation
-- When resuming, you'll see the entire conversation history before continfrontend/uing
+- When resuming, you'll see the entire conversation history before continuing
 - The resumed conversation starts with the same model and configuration as the original
 
 How it works:
@@ -1041,7 +1041,7 @@ Suppose you need to work on multiple tasks simultaneously with complete code iso
 
 Suppose you want to use Claude Code as a linter or code reviewer.
 
-**Add Claude to your bfrontend/uild script:**
+**Add Claude to your build script:**
 
 ```json
 // package.json
@@ -1069,7 +1069,7 @@ Suppose you want to pipe data into Claude, and get back data in a structured for
 **Pipe data through Claude:**
 
 ```bash
-cat bfrontend/uild-error.txt | claude -p 'concisely explain the root cause of this bfrontend/uild error' > output.txt
+cat build-error.txt | claude -p 'concisely explain the root cause of this build error' > output.txt
 ```
 
 <Tip>
@@ -1125,7 +1125,7 @@ Suppose you need Claude's output in a specific format, especially when integrati
 
 ## Create custom slash commands
 
-Claude Code supports custom slash commands that you can create to qfrontend/uickly execute specific prompts or tasks.
+Claude Code supports custom slash commands that you can create to quickly execute specific prompts or tasks.
 
 For more details, see the [Slash commands](/en/docs/claude-code/slash-commands) reference page.
 
@@ -1235,7 +1235,7 @@ Suppose you want to create personal slash commands that work across all your pro
 
 ## Ask Claude about its capabilities
 
-Claude has bfrontend/uilt-in access to its documentation and can answer questions about its own features and limitations.
+Claude has built-in access to its documentation and can answer questions about its own features and limitations.
 
 ### Example questions
 

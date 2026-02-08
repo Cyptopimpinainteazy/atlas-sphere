@@ -7,7 +7,7 @@
 //!
 //! To regenerate:
 //! ```bash
-//! cargo bfrontend/uild --release --features runtime-benchmarks
+//! cargo build --release --features runtime-benchmarks
 //! ./target/release/atlas-sphere-node benchmark pallet \
 //!     --chain=dev \
 //!     --pallet=pallet_atlas_kernel \
@@ -20,7 +20,7 @@
 
 #![cfg_attr(rustfmt, rustfmt_skip)]
 #![allow(unused_parens)]
-#![allow(unused_archive/archive/imports)]
+#![allow(unused_imports)]
 #![allow(missing_docs)]
 
 use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
@@ -187,7 +187,7 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
     }
 }
 
-// For testing and non-benchmarked bfrontend/uilds
+// For testing and non-benchmarked builds
 impl WeightInfo for () {
     fn submit_comit() -> Weight {
         Weight::from_parts(50_000_000, 128_000)

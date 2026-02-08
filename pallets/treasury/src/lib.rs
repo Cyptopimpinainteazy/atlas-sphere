@@ -10,7 +10,7 @@
 //! ## Overview
 //!
 //! The treasury pallet manages protocol funds with multiple security layers.
-//! Spending proposals reqfrontend/uire multi-sig approval based on the spending track.
+//! Spending proposals require multi-sig approval based on the spending track.
 //! AI agents can be delegated to execute yield strategies within defined limits.
 //!
 //! ## Spending Tracks
@@ -44,7 +44,7 @@ pub mod pallet {
     use super::*;
     use frame_support::{
         pallet_prelude::*,
-        traits::{Currency, ExistenceReqfrontend/uirement, ReservableCurrency},
+        traits::{Currency, ExistenceRequirement, ReservableCurrency},
         Blake2_128Concat, PalletId,
     };
     use frame_system::pallet_prelude::*;
@@ -355,9 +355,9 @@ pub mod pallet {
         pub initial_signers: Vec<T::AccountId>,
     }
 
-    #[pallet::genesis_bfrontend/uild]
-    impl<T: Config> Bfrontend/uildGenesisConfig for GenesisConfig<T> {
-        fn bfrontend/uild(&self) {
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
             let signers: BoundedVec<T::AccountId, T::MaxSigners> =
                 self.initial_signers.clone().try_into().unwrap_or_else(|_| {
                     // This should never happen in practice as initial_signers is validated
@@ -508,7 +508,7 @@ pub mod pallet {
         #[pallet::call_index(3)]
         #[pallet::weight(T::WeightInfo::reject_proposal())]
         pub fn reject_proposal(origin: OriginFor<T>, proposal_id: u32) -> DispatchResult {
-            // Reqfrontend/uires appropriate origin based on track
+            // Requires appropriate origin based on track
             let proposal = Proposals::<T>::get(proposal_id).ok_or(Error::<T>::ProposalNotFound)?;
 
             match proposal.track {
@@ -687,7 +687,7 @@ pub mod pallet {
                     &treasury_account,
                     &agent,
                     amount,
-                    ExistenceReqfrontend/uirement::KeepAlive,
+                    ExistenceRequirement::KeepAlive,
                 )?;
 
                 strategy.current_allocation = new_allocation;
@@ -729,7 +729,7 @@ pub mod pallet {
                     &agent,
                     &treasury_account,
                     returned_amount,
-                    ExistenceReqfrontend/uirement::KeepAlive,
+                    ExistenceRequirement::KeepAlive,
                 )?;
 
                 // Update strategy stats
@@ -861,7 +861,7 @@ pub mod pallet {
                 &who,
                 &treasury_account,
                 amount,
-                ExistenceReqfrontend/uirement::KeepAlive,
+                ExistenceRequirement::KeepAlive,
             )?;
 
             Stats::<T>::mutate(|stats| {
@@ -943,7 +943,7 @@ pub mod pallet {
                 &treasury_account,
                 &proposal.beneficiary,
                 proposal.amount,
-                ExistenceReqfrontend/uirement::AllowDeath,
+                ExistenceRequirement::AllowDeath,
             )?;
 
             // Return bond
@@ -991,7 +991,7 @@ pub mod pallet {
                             &treasury_account,
                             &payment.beneficiary,
                             payment.amount,
-                            ExistenceReqfrontend/uirement::KeepAlive,
+                            ExistenceRequirement::KeepAlive,
                         )
                         .is_ok()
                         {

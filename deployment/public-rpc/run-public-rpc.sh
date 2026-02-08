@@ -9,7 +9,7 @@ set -euo pipefail
 # Environment variables:
 # - node_name:          Human-readable node name (default: atlas-rpc)
 # - base_path:          Data dir (default: /var/lib/atlas-sphere/rpc)
-# - chain:              dev|local|staging|testnet|<path>|<bfrontend/uiltin id> (default: testnet)
+# - chain:              dev|local|staging|testnet|<path>|<builtin id> (default: testnet)
 # - chain_spec_dir:     Directory with deployment specs (default: deployment/chain-specs)
 # - rpc_port:           RPC port (default: 9944)
 # - p2p_port:           P2P port (default: 30333)
@@ -21,9 +21,9 @@ set -euo pipefail
 # - rpc_max_request_size_mb:             Max request size in MB (default: 10)
 # - rpc_max_response_size_mb:            Max response size in MB (default: 50)
 # - rpc_max_subscriptions_per_connection:Max WS subscriptions per connection (default: 20)
-# - reqfrontend/uire_confirm_public_rpc:          true|false (default: false)
-# - confirm_public_rpc:                  Set to "yes" when reqfrontend/uire_confirm_public_rpc=true
-# - reqfrontend/uire_safe_rpc_methods_on_public:  true|false (default: true)
+# - require_confirm_public_rpc:          true|false (default: false)
+# - confirm_public_rpc:                  Set to "yes" when require_confirm_public_rpc=true
+# - require_safe_rpc_methods_on_public:  true|false (default: true)
 # - node_bin:           Path to atlas-sphere-node binary
 
 node_name="${node_name:-atlas-rpc}"
@@ -44,16 +44,16 @@ rpc_max_request_size_mb="${rpc_max_request_size_mb:-10}"
 rpc_max_response_size_mb="${rpc_max_response_size_mb:-50}"
 rpc_max_subscriptions_per_connection="${rpc_max_subscriptions_per_connection:-20}"
 
-reqfrontend/uire_confirm_public_rpc="${reqfrontend/uire_confirm_public_rpc:-false}"
+require_confirm_public_rpc="${require_confirm_public_rpc:-false}"
 confirm_public_rpc="${confirm_public_rpc:-}"
 
-reqfrontend/uire_safe_rpc_methods_on_public="${reqfrontend/uire_safe_rpc_methods_on_public:-true}"
+require_safe_rpc_methods_on_public="${require_safe_rpc_methods_on_public:-true}"
 
 node_bin="${node_bin:-./target/release/atlas-sphere-node}"
 
 if [ ! -x "${node_bin}" ]; then
   echo "❌ node_bin not found or not executable: ${node_bin}"
-  echo "   Bfrontend/uild with: cargo bfrontend/uild --release"
+  echo "   Build with: cargo build --release"
   exit 1
 fi
 
@@ -99,16 +99,16 @@ case "${rpc_bind}" in
   public)
     # WARNING: This exposes RPC directly to the Internet.
     # Prefer nginx + TLS + allowlists.
-    # Substrate reqfrontend/uires the explicit unsafe flag for non-local access.
-    if [ "${reqfrontend/uire_confirm_public_rpc}" = "true" ] && [ "${confirm_public_rpc}" != "yes" ]; then
+    # Substrate requires the explicit unsafe flag for non-local access.
+    if [ "${require_confirm_public_rpc}" = "true" ] && [ "${confirm_public_rpc}" != "yes" ]; then
       echo "❌ Refusing to expose public RPC without explicit confirmation."
-      echo "   Set: confirm_public_rpc=yes (or set reqfrontend/uire_confirm_public_rpc=false)"
+      echo "   Set: confirm_public_rpc=yes (or set require_confirm_public_rpc=false)"
       exit 1
     fi
 
-    if [ "${reqfrontend/uire_safe_rpc_methods_on_public}" = "true" ] && [ "${rpc_methods}" != "Safe" ]; then
+    if [ "${require_safe_rpc_methods_on_public}" = "true" ] && [ "${rpc_methods}" != "Safe" ]; then
       echo "❌ Refusing to expose public RPC with rpc_methods=${rpc_methods}."
-      echo "   Set rpc_methods=Safe (recommended), or set reqfrontend/uire_safe_rpc_methods_on_public=false."
+      echo "   Set rpc_methods=Safe (recommended), or set require_safe_rpc_methods_on_public=false."
       exit 1
     fi
 

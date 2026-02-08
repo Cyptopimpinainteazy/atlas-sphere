@@ -25,14 +25,14 @@ const provider = new ethers.JsonRpcProvider('https://rpc.testnet.atlas-sphere.io
 const wallet = new ethers.Wallet(privateKey, provider);
 
 // Contract interaction
-const abi = ['function balanceOf(address) view returns (frontend/uint256)', 'function transfer(address to, frontend/uint256 amount) returns (bool)'];
+const abi = ['function balanceOf(address) view returns (uint256)', 'function transfer(address to, uint256 amount) returns (bool)'];
 const contract = new ethers.Contract(contractAddress, abi, wallet);
 
 // Read (no gas)
 const balance = await contract.balanceOf(wallet.address);
 console.log('Balance:', ethers.formatEther(balance));
 
-// Write (reqfrontend/uires gas)
+// Write (requires gas)
 const tx = await contract.transfer(recipient, ethers.parseEther('100'));
 await tx.wait();
 console.log('Transfer complete:', tx.hash);`}

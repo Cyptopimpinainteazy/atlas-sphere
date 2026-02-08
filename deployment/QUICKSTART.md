@@ -1,4 +1,4 @@
-# 🚀 Atlas Sphere: In-House Deployment - Qfrontend/uick Start
+# 🚀 Atlas Sphere: In-House Deployment - Quick Start
 
 ## You Have 3 Options:
 
@@ -56,7 +56,7 @@ cd /home/lojak/Desktop/atlas-sphere/deployment
 ./deploy-multi-server.sh
 ```
 
-**Prereqfrontend/uisites:**
+**Prerequisites:**
 - SSH access to all servers (passwordless)
 - Ubuntu 22.04+ on all servers
 - Ports 30333 (P2P) and 9944 (RPC) open
@@ -66,11 +66,11 @@ cd /home/lojak/Desktop/atlas-sphere/deployment
 ## 📚 Full Documentation
 
 See **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** for:
-- Server reqfrontend/uirements
+- Server requirements
 - Manual setup steps
 - Firewall configuration
 - Monitoring setup
-- Troubleshooting gfrontend/uide
+- Troubleshooting guide
 
 ---
 
@@ -86,7 +86,7 @@ See **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** for:
 
 ---
 
-## ⚡ System Reqfrontend/uirements
+## ⚡ System Requirements
 
 ### Minimum (Per Node):
 - CPU: 4 cores
@@ -102,7 +102,7 @@ See **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** for:
 
 ---
 
-## 🆘 Qfrontend/uick Troubleshooting
+## 🆘 Quick Troubleshooting
 
 **Binary won't start?**
 ```bash

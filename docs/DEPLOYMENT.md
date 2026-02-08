@@ -94,6 +94,19 @@ docker run -d \
 
 ---
 
+## Agent Deployment Guidance
+
+### Pro Tip: Staged Agent Rollout
+- Assign every agent a unique ID, a role type, and a logging hook before deployment.
+- Roll out in phases:
+  1. Governance + security agents first.
+  2. Trading + analytics agents second.
+  3. Experimental simulation agents last.
+
+This ordering reduces blast radius while validating controls and observability early.
+
+---
+
 ## Validator Setup
 
 ### Generate Keys

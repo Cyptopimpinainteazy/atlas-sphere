@@ -15,7 +15,7 @@ Pre-flight validation of a PRP to ensure all context and dependencies are availa
    - Check all referenced files exist
    - Validate all URLs are accessible
    - Verify environment dependencies are available
-   - Check for reqfrontend/uired API keys/credentials
+   - Check for required API keys/credentials
 
 3. **Codebase Analysis**
    - Scan for similar patterns mentioned in PRP
@@ -23,7 +23,7 @@ Pre-flight validation of a PRP to ensure all context and dependencies are availa
    - Check for architectural consistency
 
 4. **Dependency Check**
-   - Verify all reqfrontend/uired libraries are installed
+   - Verify all required libraries are installed
    - Check version compatibility
    - Validate external service connectivity
 

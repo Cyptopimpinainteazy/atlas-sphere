@@ -161,7 +161,7 @@ function extractMetrics(rawMetrics: PrometheusMetric[]): ParsedMetrics {
 
   return {
     // Node info
-    nodeVersion: findStringMetric('substrate_bfrontend/uild_info'),
+    nodeVersion: findStringMetric('substrate_build_info'),
     chainName: findStringMetric('substrate_node_roles'),
     nodeRoles: findStringMetric('substrate_node_roles'),
     

@@ -17,9 +17,9 @@ PRPs enable working code on the first attempt through:
 
 1. **Load PRP**
    - Read the specified PRP file completely
-   - Absorb all context, patterns, reqfrontend/uirements and gather codebase intelligence
+   - Absorb all context, patterns, requirements and gather codebase intelligence
    - Use the provided documentation references and file patterns, consume the right documentation before the appropriate todo/task
-   - Trust the PRP's context and gfrontend/uidance - it's designed for one-pass success
+   - Trust the PRP's context and guidance - it's designed for one-pass success
    - If needed do additional codebase exploration and research as needed
 
 2. **ULTRATHINK & Plan**

@@ -1,5 +1,5 @@
-import { Button, Text, useDisclosure } from '@chakra-frontend/frontend/ui/react';
-import type { ButtonProps } from '@chakra-frontend/frontend/ui/react';
+import { Button, Text, useDisclosure } from '@chakra-ui/react';
+import type { ButtonProps } from '@chakra-ui/react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { shortenAddress } from '../utils/address';
 import { WalletModal } from './WalletModal';

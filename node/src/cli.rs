@@ -17,7 +17,7 @@ use std::path::PathBuf;
     author,
     version,
     about = "Run and manage the 3i Atlas Sphere L1 blockchain node",
-    long_about = "Atlas Sphere is a dual-VM (EVM + SVM) Layer-1 bfrontend/uilt \
+    long_about = "Atlas Sphere is a dual-VM (EVM + SVM) Layer-1 built \
     for atomic cross-chain operations and native asset orchestration. \
     Use this CLI to operate validator, collator, and archival nodes, or \
     to inspect and craft chain specifications.",
@@ -41,8 +41,8 @@ pub struct Cli {
 /// specification authoring, and runtime state inspection routines.
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    /// Bfrontend/uild a chainspec to bootstrap new networks or inspect configuration.
-    Bfrontend/uildSpec(sc_cli::Bfrontend/uildSpecCmd),
+    /// Build a chainspec to bootstrap new networks or inspect configuration.
+    BuildSpec(sc_cli::BuildSpecCmd),
     /// Validate blocks against the runtime execution logic.
     CheckBlock(CheckBlockCmd),
     /// Export blocks to a file for archival or debugging purposes.
@@ -55,7 +55,7 @@ pub enum Commands {
     PurgeChain(PurgeChainCmd),
     /// Revert the chain to a previous state.
     Revert(RevertCmd),
-    /// Run bfrontend/uilt-in benchmarking harnesses.
+    /// Run built-in benchmarking harnesses.
     #[cfg(feature = "runtime-benchmarks")]
     Benchmark(frame_benchmarking_cli::BenchmarkCmd),
     /// Execute try-runtime checks against on-chain state.

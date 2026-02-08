@@ -3,8 +3,8 @@
  * Deposits ETH or ERC20 tokens from L1 (Ethereum) to L2 (your OP Stack chain)
  */
 
-const ethers = reqfrontend/uire('ethers');
-const { getContractFactory, getSigners } = reqfrontend/uire('hardhat');
+const ethers = require('ethers');
+const { getContractFactory, getSigners } = require('hardhat');
 
 // Replace with your deployed addresses
 const L1_STANDARD_BRIDGE = '0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1'; // OP Stack L1 Bridge
@@ -39,8 +39,8 @@ async function main() {
             {
                 "inputs": [
                     {"internalType": "address", "name": "_to", "type": "address"},
-                    {"internalType": "frontend/uint256", "name": "_amount", "type": "frontend/uint256"},
-                    {"internalType": "frontend/uint32", "name": "_minGasLimit", "type": "frontend/uint32"},
+                    {"internalType": "uint256", "name": "_amount", "type": "uint256"},
+                    {"internalType": "uint32", "name": "_minGasLimit", "type": "uint32"},
                     {"internalType": "bytes", "name": "_extraData", "type": "bytes"}
                 ],
                 "name": "depositETH",
@@ -77,7 +77,7 @@ async function main() {
                 "constant": false,
                 "inputs": [
                     {"name": "_spender", "type": "address"},
-                    {"name": "_value", "type": "frontend/uint256"}
+                    {"name": "_value", "type": "uint256"}
                 ],
                 "name": "approve",
                 "outputs": [{"name": "", "type": "bool"}],
@@ -98,8 +98,8 @@ async function main() {
                 "inputs": [
                     {"internalType": "address", "name": "_l1Token", "type": "address"},
                     {"internalType": "address", "name": "_l2Token", "type": "address"},
-                    {"internalType": "frontend/uint256", "name": "_amount", "type": "frontend/uint256"},
-                    {"internalType": "frontend/uint32", "name": "_minGasLimit", "type": "frontend/uint32"},
+                    {"internalType": "uint256", "name": "_amount", "type": "uint256"},
+                    {"internalType": "uint32", "name": "_minGasLimit", "type": "uint32"},
                     {"internalType": "bytes", "name": "_extraData", "type": "bytes"}
                 ],
                 "name": "depositERC20",
@@ -134,7 +134,7 @@ async function main() {
         const balance = await l2Provider.getBalance(deployer.address);
         console.log(`L2 ETH Balance: ${ethers.utils.formatEther(balance)}`);
     } else {
-        const erc20Abi = [{"constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "frontend/uint256"}], "stateMutability": "view", "type": "function"}];
+        const erc20Abi = [{"constant": true, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}], "stateMutability": "view", "type": "function"}];
         const l2Token = new ethers.Contract(L2_ERC20_ADDRESS, erc20Abi, l2Signer);
         const balance = await l2Token.balanceOf(deployer.address);
         console.log(`L2 Token Balance: ${balance.toString()}`);

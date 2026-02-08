@@ -155,10 +155,10 @@
 │    • Comments: Every algorithm section documented                        │
 │                                                                             │
 │  Documentation:                                                            │
-│    • DOMINANCE_BASED_COND_FOLD.md (350+ lines)                           │
-│    • COND_FOLD_IMPLEMENTATION.md (400+ lines)                            │
-│    • COND_FOLD_SUMMARY.md (450+ lines)                                   │
-│    • OPTIMIZATION_PASS_A_STATUS.md (comprehensive status)                │
+│    • docs/reports/DOMINANCE_BASED_COND_FOLD.md (350+ lines)                           │
+│    • docs/reports/COND_FOLD_IMPLEMENTATION.md (400+ lines)                            │
+│    • archive/reports/COND_FOLD_SUMMARY.md (450+ lines)                                   │
+│    • docs/reports/OPTIMIZATION_PASS_A_STATUS.md (comprehensive status)                │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -245,19 +245,19 @@
 │    • crates/x3-opt/src/optimizer.rs                (modified - import)    │
 │                                                                             │
 │  Documentation:                                                            │
-│    • DOMINANCE_BASED_COND_FOLD.md                  (detailed gfrontend/uide)      │
-│    • COND_FOLD_IMPLEMENTATION.md                   (implementation deep-dive)
-│    • COND_FOLD_SUMMARY.md                          (executive summary)    │
-│    • OPTIMIZATION_PASS_A_STATUS.md                 (comprehensive status) │
+│    • docs/reports/DOMINANCE_BASED_COND_FOLD.md                  (detailed guide)      │
+│    • docs/reports/COND_FOLD_IMPLEMENTATION.md                   (implementation deep-dive)
+│    • archive/reports/COND_FOLD_SUMMARY.md                          (executive summary)    │
+│    • docs/reports/OPTIMIZATION_PASS_A_STATUS.md                 (comprehensive status) │
 │    • PASS_A_COMPLETE.txt                           (this file)            │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─ QUICK START ──────────────────────────────────────────────────────────────┐
 │                                                                             │
-│  Bfrontend/uild:                                                                    │
+│  Build:                                                                    │
 │    $ cd /home/lojak/Desktop/X3-atlas-sphere                               │
-│    $ cargo bfrontend/uild --release                                                │
+│    $ cargo build --release                                                │
 │                                                                             │
 │  Test:                                                                     │
 │    $ cargo test -p x3-opt --lib                                           │
@@ -276,7 +276,7 @@
 │  ✅ Code implemented (416 lines)                                           │
 │  ✅ Tests passing (79/79)                                                 │
 │  ✅ Compilation clean (0 errors)                                          │
-│  ✅ Documentation complete (5 gfrontend/uides)                                     │
+│  ✅ Documentation complete (5 guides)                                     │
 │  ✅ Pipeline integrated (position 5/13)                                   │
 │  ✅ Determinism verified (BTreeMap)                                       │
 │  ✅ Idempotence verified (tests)                                          │
@@ -297,7 +297,7 @@
 ║                                                                            ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-Bfrontend/uilt: December 9, 2025
+Built: December 9, 2025
 Version: 1.0
 Quality: Production Grade
 Next: PRE Enhancement + Superoptimizer

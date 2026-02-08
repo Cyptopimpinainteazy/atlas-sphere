@@ -77,4 +77,4 @@ Reserved opcodes: 0xC0..0xFE - experimental or JIT hints
 
 Notes
 - All opcodes must be validated by the verifier, including operand sizes and flags.
-- Opcode encodings and flags are fixed; any change reqfrontend/uires version bump.
+- Opcode encodings and flags are fixed; any change requires version bump.

@@ -2,7 +2,7 @@
 //!
 //! This module performs:
 //! - simple lowering from AST to a linear sequence of bytecode instructions
-//! - simple stack/register allocation sfrontend/uitable for naive codegen
+//! - simple stack/register allocation suitable for naive codegen
 //! - deterministic error reporting
 
 use x3_ast::ast::*;
@@ -23,7 +23,7 @@ impl LowerCtx {
     }
 }
 
-/// A lowered instruction sfrontend/uitable for encoding into bytecode.
+/// A lowered instruction suitable for encoding into bytecode.
 #[derive(Clone, Debug)]
 pub struct LoweredInstr {
     pub opcode: u8,

@@ -1,6 +1,6 @@
 # Frontier EVM Integration Plan
 
-This document outlines how the Atlas Sphere runtime will integrate [Frontier](https://github.com/paritytech/frontier) to provide an Ethereum-compatible execution environment while preserving the **canonical ledger** enforced by the Atlas Kernel. The primary objective is to deliver a seamless dual-VM developer experience where EVM accounts and contracts share liqfrontend/uidity and state guarantees with the Solana VM (SVM) via Comit transactions.
+This document outlines how the Atlas Sphere runtime will integrate [Frontier](https://github.com/paritytech/frontier) to provide an Ethereum-compatible execution environment while preserving the **canonical ledger** enforced by the Atlas Kernel. The primary objective is to deliver a seamless dual-VM developer experience where EVM accounts and contracts share liquidity and state guarantees with the Solana VM (SVM) via Comit transactions.
 
 ---
 
@@ -25,7 +25,7 @@ This document outlines how the Atlas Sphere runtime will integrate [Frontier](ht
 - Hook into the EVM pallet’s `OnChargeTransaction` and `OnBalanceChange` pipelines to:
   - Call a new Atlas Kernel runtime API `apply_evm_delta(account, asset_id, delta)`.
   - Emit Comit events that can be used for cross-VM reconciliation or audits.
-- Reject writes when the Atlas Kernel determines a Comit reqfrontend/uirement is unmet (e.g., insufficient balance after considering pending Comit locks).
+- Reject writes when the Atlas Kernel determines a Comit requirement is unmet (e.g., insufficient balance after considering pending Comit locks).
 
 ---
 
@@ -54,7 +54,7 @@ Self-destruct flows follow the same pattern: canonical balances are reconciled t
 
 ## Ethereum JSON-RPC Compatibility
 
-- Expose the standard Frontier RPC endpoints (`eth_*`, `net_*`, `frontend/web3_*`) via the node service.
+- Expose the standard Frontier RPC endpoints (`eth_*`, `net_*`, `web3_*`) via the node service.
 - Map chain metadata so clients recognize Atlas Sphere as an EVM-compatible network (unique `chainId`, `networkId`, genesis hash).
 - Implement custom middleware for:
   - Translating ATLAS-denominated gas prices into gwei for UI friendliness.
@@ -65,7 +65,7 @@ Self-destruct flows follow the same pattern: canonical balances are reconciled t
 - Publish a chain configuration JSON (RPC URL, chain ID, native currency) for easy MetaMask addition.
 - Provide browser-side scripts or wallet connectors that:
   - Fetch Atlas Kernel asset metadata for display.
-  - Warn users when a transaction reqfrontend/uires Comit finalization to settle (future enhancement).
+  - Warn users when a transaction requires Comit finalization to settle (future enhancement).
 
 ---
 

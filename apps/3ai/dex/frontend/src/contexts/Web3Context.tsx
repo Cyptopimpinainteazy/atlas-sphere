@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Web3Provider } from '@ethersproject/providers';
-import { InjectedConnector } from '@frontend/web3-react/injected-connector';
-import { useWeb3React } from '@frontend/web3-react/core';
-import { Web3ReactProvider } from '@frontend/web3-react/core';
+import { InjectedConnector } from '@web3-react/injected-connector';
+import { useWeb3React } from '@web3-react/core';
+import { Web3ReactProvider } from '@web3-react/core';
 import { ethers } from 'ethers';
 
 export const injectedConnector = new InjectedConnector({

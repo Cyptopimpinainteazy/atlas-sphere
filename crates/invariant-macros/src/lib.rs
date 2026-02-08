@@ -38,36 +38,55 @@ pub fn invariant(attr: TokenStream, item: TokenStream) -> TokenStream {
     let ident = syn::Ident::new(&format!("_INVARIANT_{}", id.replace('-', "_")), proc_macro2::Span::call_site());
     let lit_out = LitStr::new(&id, proc_macro2::Span::call_site());
 
-    // Optional registry check: if INVARIANT_REGISTRY_PATH is set, verify the id exists there
-    if let Ok(reg_path) = std::env::var("INVARIANT_REGISTRY_PATH") {
-        // Decide strict mode if either inline flag or env var is set
-        let strict_mode = strict_flag || std::env::var("INVARIANT_REGISTRY_STRICT").unwrap_or_default() == "1";
-        match std::fs::read_to_string(&reg_path) {
-            Ok(contents) => {
-                match contents.parse::<toml::Value>() {
-                    Ok(toml_val) => {
-                        let found = toml_val
-                            .get("invariant")
-                            .and_then(|v| v.as_array())
-                            .map(|arr| arr.iter().any(|it| it.get("id").and_then(|s| s.as_str()) == Some(&id)))
-                            .unwrap_or(false);
-                        if !found {
-                            // Only error strictly if strict mode is enabled
+    // Optional registry check: if INVARIANT_REGISTRY_PATH is set, OR if a registry exists
+    // relative to the macro crate's manifest directory, verify the ID exists
+    let strict_mode = strict_flag || std::env::var("INVARIANT_REGISTRY_STRICT").unwrap_or_default() == "1";
+    
+    // Try three sources for the registry path:
+    // 1. INVARIANT_REGISTRY_PATH env var (set in CI/tests)
+    // 2. INVARIANT_REGISTRY_FIXTURE env var (for trybuild, use fixtures/)
+    // 3. Relative to CARGO_MANIFEST_DIR (in trybuild context)
+    let registry_paths = vec![
+        std::env::var("INVARIANT_REGISTRY_PATH").ok(),
+        std::env::var("INVARIANT_REGISTRY_FIXTURE").ok(),
+        std::env::var("CARGO_MANIFEST_DIR")
+            .ok()
+            .map(|m| format!("{}/tests/fixtures/valid_registry.toml", m)),
+    ];
+    
+    for reg_path_opt in registry_paths {
+        if let Some(reg_path) = reg_path_opt {
+            match std::fs::read_to_string(&reg_path) {
+                Ok(contents) => {
+                    match contents.parse::<toml::Value>() {
+                        Ok(toml_val) => {
+                            let found = toml_val
+                                .get("invariant")
+                                .and_then(|v| v.as_array())
+                                .map(|arr| arr.iter().any(|it| it.get("id").and_then(|s| s.as_str()) == Some(&id)))
+                                .unwrap_or(false);
+                            if !found {
+                                // Only error strictly if strict mode is enabled
+                                if strict_mode {
+                                    return syn::Error::new(lit.span(), format!("Invariant ID '{}' not found in registry: {}", id, reg_path)).to_compile_error().into();
+                                }
+                            } else {
+                                // Found! Stop checking other paths
+                                break;
+                            }
+                        }
+                        Err(_) => {
                             if strict_mode {
-                                return syn::Error::new(lit.span(), format!("Invariant ID '{}' not found in registry: {}", id, reg_path)).to_compile_error().into();
+                                return syn::Error::new(lit.span(), format!("Failed to parse INVARIANT_REGISTRY_PATH at {}", reg_path)).to_compile_error().into();
                             }
                         }
                     }
-                    Err(_) => {
-                        if strict_mode {
-                            return syn::Error::new(lit.span(), format!("Failed to parse INVARIANT_REGISTRY_PATH at {}", reg_path)).to_compile_error().into();
-                        }
-                    }
                 }
-            }
-            Err(_) => {
-                if strict_mode {
-                    return syn::Error::new(lit.span(), format!("Failed to read INVARIANT_REGISTRY_PATH at {}", reg_path)).to_compile_error().into();
+                Err(_) => {
+                    if strict_mode && std::env::var("INVARIANT_REGISTRY_PATH").is_ok() {
+                        return syn::Error::new(lit.span(), format!("Failed to read INVARIANT_REGISTRY_PATH at {}", reg_path)).to_compile_error().into();
+                    }
+                    // If INVARIANT_REGISTRY_FIXTURE or CARGO_MANIFEST_DIR path, just continue (might not exist)
                 }
             }
         }

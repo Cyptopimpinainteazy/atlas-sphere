@@ -12,7 +12,7 @@ const MOCK_MARKETS = [
     status: 'ACTIVE',
     yesPrice: 0.67,
     noPrice: 0.33,
-    totalLiqfrontend/uidity: '234,567 ATLAS',
+    totalLiquidity: '234,567 ATLAS',
     volume24h: '12,345 ATLAS',
     resolutionTime: '2025-03-31',
     aiConsensus: { yes: 8, no: 3, avgConfidence: 78 },
@@ -24,7 +24,7 @@ const MOCK_MARKETS = [
     status: 'ACTIVE',
     yesPrice: 0.45,
     noPrice: 0.55,
-    totalLiqfrontend/uidity: '156,234 ATLAS',
+    totalLiquidity: '156,234 ATLAS',
     volume24h: '8,901 ATLAS',
     resolutionTime: '2025-03-31',
     aiConsensus: { yes: 5, no: 6, avgConfidence: 65 },
@@ -36,7 +36,7 @@ const MOCK_MARKETS = [
     status: 'ACTIVE',
     yesPrice: 0.38,
     noPrice: 0.62,
-    totalLiqfrontend/uidity: '89,012 ATLAS',
+    totalLiquidity: '89,012 ATLAS',
     volume24h: '5,678 ATLAS',
     resolutionTime: '2025-02-28',
     aiConsensus: { yes: 4, no: 7, avgConfidence: 72 },
@@ -48,7 +48,7 @@ const MOCK_MARKETS = [
     status: 'ACTIVE',
     yesPrice: 0.82,
     noPrice: 0.18,
-    totalLiqfrontend/uidity: '456,789 ATLAS',
+    totalLiquidity: '456,789 ATLAS',
     volume24h: '34,567 ATLAS',
     resolutionTime: '2025-01-31',
     aiConsensus: { yes: 12, no: 2, avgConfidence: 91 },
@@ -60,7 +60,7 @@ const MOCK_MARKETS = [
     status: 'ACTIVE',
     yesPrice: 0.56,
     noPrice: 0.44,
-    totalLiqfrontend/uidity: '123,456 ATLAS',
+    totalLiquidity: '123,456 ATLAS',
     volume24h: '7,890 ATLAS',
     resolutionTime: '2025-06-30',
     aiConsensus: { yes: 6, no: 5, avgConfidence: 68 },
@@ -72,7 +72,7 @@ const MOCK_AI_SIGNALS = [
   { agent: 'agent-pred-001', market: 1, prediction: true, confidence: 85, reasoning: 'ETH supply dynamics post-merge favor price appreciation', timestamp: '2m ago' },
   { agent: 'agent-pred-002', market: 1, prediction: true, confidence: 72, reasoning: 'Institutional inflows increasing, spot ETF approval likely', timestamp: '5m ago' },
   { agent: 'agent-pred-003', market: 4, prediction: true, confidence: 94, reasoning: 'Current volume trajectory suggests $5B easily achievable', timestamp: '8m ago' },
-  { agent: 'agent-pred-004', market: 2, prediction: false, confidence: 68, reasoning: 'Competition from new DEXes may fragment liqfrontend/uidity', timestamp: '12m ago' },
+  { agent: 'agent-pred-004', market: 2, prediction: false, confidence: 68, reasoning: 'Competition from new DEXes may fragment liquidity', timestamp: '12m ago' },
   { agent: 'agent-pred-005', market: 3, prediction: false, confidence: 76, reasoning: 'Fed rate cuts will compress DeFi yields', timestamp: '15m ago' },
 ];
 
@@ -104,7 +104,7 @@ export default function PredictionMarkets() {
   };
 
   const totalVolume = markets.reduce((acc, m) => acc + parseInt(m.volume24h.replace(/,/g, '')), 0);
-  const totalLiqfrontend/uidity = markets.reduce((acc, m) => acc + parseInt(m.totalLiqfrontend/uidity.replace(/,/g, '')), 0);
+  const totalLiquidity = markets.reduce((acc, m) => acc + parseInt(m.totalLiquidity.replace(/,/g, '')), 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-yellow-950/10 to-slate-950">
@@ -140,8 +140,8 @@ export default function PredictionMarkets() {
             <div className="text-2xl font-bold text-white font-mono">{totalVolume.toLocaleString()} ATLAS</div>
           </div>
           <div className="bg-black/60 border border-yellow-500/20 rounded-xl p-4">
-            <div className="text-xs text-gray-500 font-mono uppercase">Total Liqfrontend/uidity</div>
-            <div className="text-2xl font-bold text-cyan-400 font-mono">{totalLiqfrontend/uidity.toLocaleString()} ATLAS</div>
+            <div className="text-xs text-gray-500 font-mono uppercase">Total Liquidity</div>
+            <div className="text-2xl font-bold text-cyan-400 font-mono">{totalLiquidity.toLocaleString()} ATLAS</div>
           </div>
           <div className="bg-black/60 border border-yellow-500/20 rounded-xl p-4">
             <div className="text-xs text-gray-500 font-mono uppercase">AI Signals Today</div>
@@ -212,7 +212,7 @@ export default function PredictionMarkets() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-4">
                     <span className="text-gray-500">
-                      💧 <span className="text-white">{market.totalLiqfrontend/uidity}</span>
+                      💧 <span className="text-white">{market.totalLiquidity}</span>
                     </span>
                     <span className="text-gray-500">
                       📈 <span className="text-cyan-400">{market.volume24h}</span> 24h

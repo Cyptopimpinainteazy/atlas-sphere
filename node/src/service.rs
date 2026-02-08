@@ -43,9 +43,9 @@ impl sc_executor::NativeExecutionDispatch for AtlasSphereExecutorDispatch {
 
 /// Executor for Atlas Sphere
 ///
-/// In normal bfrontend/uilds we use `NativeElseWasmExecutor` so the node can
+/// In normal builds we use `NativeElseWasmExecutor` so the node can
 /// execute both natively and via the embedded WASM runtime. For
-/// `skip-wasm-bfrontend/uild` development bfrontend/uilds, we force a pure native
+/// `skip-wasm-build` development builds, we force a pure native
 /// executor to avoid deserializing a missing or dummy WASM blob.
 pub type Executor = NativeElseWasmExecutor<AtlasSphereExecutorDispatch>;
 
@@ -129,7 +129,7 @@ pub fn new_partial(
     // Create executor
     let executor = Executor::new(config.wasm_method, None, 8, 64);
 
-    // Bfrontend/uild partial components
+    // Build partial components
     let (client, backend, keystore_container, task_manager) =
         sc_service::new_full_parts::<Block, RuntimeApi, _>(
             &config,
@@ -192,7 +192,7 @@ pub fn new_partial(
             },
             spawner: &task_manager.spawn_essential_handle(),
             registry: config.prometheus_registry(),
-            check_for_eqfrontend/uivocation: Default::default(),
+            check_for_equivocation: Default::default(),
             telemetry: telemetry.as_ref().map(|x| x.handle()),
             compatibility_mode: Default::default(),
         })?;
@@ -239,20 +239,20 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         Vec::default(),
     ));
 
-    // Bfrontend/uild networking service
+    // Build networking service
     let (network, _system_rpc_tx, _tx_handler_controller, network_starter, sync_service) =
-        sc_service::bfrontend/uild_network(sc_service::Bfrontend/uildNetworkParams {
+        sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
             net_config,
             client: client.clone(),
             transaction_pool: transaction_pool.clone(),
             spawn_handle: task_manager.spawn_handle(),
             import_queue,
-            block_announce_validator_bfrontend/uilder: None,
+            block_announce_validator_builder: None,
             warp_sync_params: Some(sc_service::WarpSyncParams::WithProvider(warp_sync)),
         })?;
 
-    // Bfrontend/uild RPC extensions module
+    // Build RPC extensions module
     let chain_name = config.chain_spec.name().to_string();
     let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone(), chain_name)
         .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
@@ -274,14 +274,14 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let rpc_server_handle = task_manager.spawn_essential_handle();
     let rate_limiter_clone = rate_limiter.clone();
     rpc_server_handle.spawn("rpc-server", None, async move {
-        use jsonrpsee::server::ServerBfrontend/uilder;
+        use jsonrpsee::server::ServerBuilder;
         use std::time::Duration;
 
         // Security settings for production
         // - Reasonable message size limits to prevent memory exhaustion
         // - Ping/pong for WebSocket keep-alive
         // - Connection limits
-        let server = ServerBfrontend/uilder::default()
+        let server = ServerBuilder::default()
             .max_connections(max_connections)
             // Enable ping/pong for WebSocket keep-alive
             .ping_interval(Duration::from_secs(30))
@@ -290,7 +290,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             .max_response_body_size(50 * 1024 * 1024) // 50 MB max response (for large queries)
             // Limit subscription buffer to prevent memory issues
             .max_subscriptions_per_connection(10)
-            .bfrontend/uild(rpc_addr)
+            .build(rpc_addr)
             .await
             .map_err(|e| {
                 log::error!("Failed to start RPC server: {:?}", e);
@@ -401,7 +401,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             link: grandpa_link,
             network,
             sync: Arc::new(sync_service),
-            voting_rule: sc_consensus_grandpa::VotingRulesBfrontend/uilder::default().bfrontend/uild(),
+            voting_rule: sc_consensus_grandpa::VotingRulesBuilder::default().build(),
             prometheus_registry,
             shared_voter_state: SharedVoterState::empty(),
             telemetry: telemetry.as_ref().map(|x| x.handle()),

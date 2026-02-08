@@ -11,7 +11,7 @@ export default function ValidatorPage() {
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Validators secure the X3 Atlas Sphere network by producing blocks and participating 
-        in consensus. This gfrontend/uide covers validator setup and operation.
+        in consensus. This guide covers validator setup and operation.
       </p>
 
       <Callout type="warning" title="Testnet Only">
@@ -19,7 +19,7 @@ export default function ValidatorPage() {
         Mainnet will feature permissionless validation.
       </Callout>
 
-      <h2>System Reqfrontend/uirements</h2>
+      <h2>System Requirements</h2>
       <ul>
         <li><strong>CPU</strong>: 8+ cores, 3.0 GHz</li>
         <li><strong>RAM</strong>: 32 GB minimum, 64 GB recommended</li>
@@ -31,17 +31,17 @@ export default function ValidatorPage() {
       <h2>Installation</h2>
       <CodeBlock language="bash">
 {`# Install dependencies
-sudo apt update && sudo apt install -y bfrontend/uild-essential git clang curl libssl-dev
+sudo apt update && sudo apt install -y build-essential git clang curl libssl-dev
 
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source ~/.cargo/env
 rustup target add wasm32-unknown-unknown
 
-# Clone and bfrontend/uild
+# Clone and build
 git clone https://github.com/Cyptopimpinainteazy/atlas-sphere.git
 cd atlas-sphere
-cargo bfrontend/uild --release
+cargo build --release
 
 # Verify binary
 ./target/release/atlas-sphere-node --version`}

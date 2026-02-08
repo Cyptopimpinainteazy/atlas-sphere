@@ -3,7 +3,7 @@
 **Objective**: Analyze 24 GitHub workflow files and design consolidation strategy  
 **Status**: 🔄 **IN PROGRESS (Phase 2a)**  
 **Previous**: Phase 1 completed (steps consolidation ✅)  
-**Next**: Phase 2b (Bfrontend/uild integration)
+**Next**: Phase 2b (Build integration)
 
 ---
 
@@ -20,7 +20,7 @@
 ├── docker-publish.yml              (1.2 KB)
 ├── e2e-integration-tests.yml       (9.4 KB)
 ├── e2e-kms-regtest.yml             (2.8 KB)
-├── ollama-bfrontend/uild-image.yml          (1.7 KB)
+├── ollama-build-image.yml          (1.7 KB)
 ├── ollama-integration-scheduled.yml (8.1 KB)
 ├── ollama-integration.yml          (1.7 KB)
 ├── ollama-triage-scheduled.yml     (1.4 KB)
@@ -33,9 +33,9 @@
 ├── sigill-triage-integration.yml   (? KB)
 ├── startup_smoke.yml               (? KB)
 ├── summary.yml                     (? KB)
-├── apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml  (? KB)
-├── apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml         (? KB)
-├── apps/apps/swarm-apps/apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml (? KB)
+├── apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-axe-triage.yml  (? KB)
+├── apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e.yml         (? KB)
+├── apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-pipeline-smoke.yml (? KB)
 └── swarm-media-integration.yml     (? KB)
 ```
 
@@ -50,7 +50,7 @@
 - [ ] Identify common patterns:
   - Trigger patterns (on: push, pull_request, schedule, manual)
   - Job structure (runs-on, steps, env vars)
-  - Common step types (checkout, cache, bfrontend/uild, test, deploy)
+  - Common step types (checkout, cache, build, test, deploy)
   - Repeated tool configurations
 
 ### Task 2: Consolidation Strategy Design
@@ -102,7 +102,7 @@
 1. **What is the duplication pattern in workflows?**
    - Expected: 70-80% structural similarity (based on Phase 1 findings)
    
-2. **Are workflows sfrontend/uitable for consolidation?**
+2. **Are workflows suitable for consolidation?**
    - Challenge: GitHub Actions may have stricter YAML parsing
    - Solution: Generate workflows at git push time (not runtime)
 
@@ -123,15 +123,15 @@
 - Tasks: Analyze patterns, design strategy, create config schema
 - Output: Type analysis report, config schema, template design
 
-**Phase 2b (Bfrontend/uild Integration)**
+**Phase 2b (Build Integration)**
 - Duration: 1.5 hours
-- Tasks: Implement processor, create templates, integrate bfrontend/uild
+- Tasks: Implement processor, create templates, integrate build
 - Output: Working processor, templates, Makefile targets
 
 **Phase 2c (Testing & Validation)**
 - Duration: 2 hours
 - Tasks: Unit tests, validation, integration tests
-- Output: Test sfrontend/uite, validation reports
+- Output: Test suite, validation reports
 
 **Phase 2d (Finalization)**
 - Duration: 0.5 hours

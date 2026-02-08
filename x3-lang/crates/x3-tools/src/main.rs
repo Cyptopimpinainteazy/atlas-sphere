@@ -5,7 +5,7 @@ use x3_compiler::lowering;
 use x3_vm::x3_vm::{VMConfig, VM};
 
 fn main() {
-    // Bfrontend/uild a trivial program AST
+    // Build a trivial program AST
     let span = x3_common::Span::DUMMY;
     let program = Program::new(vec![x3_common::Spanned::new(
         Item::Function(Function {

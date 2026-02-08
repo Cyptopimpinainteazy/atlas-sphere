@@ -18,9 +18,9 @@ PRPs enable working TypeScript/React code on the first attempt through:
 
 1. **Load PRP**
    - Read the specified TypeScript PRP file completely
-   - Absorb all context, patterns, reqfrontend/uirements and gather codebase intelligence
+   - Absorb all context, patterns, requirements and gather codebase intelligence
    - Use the provided documentation references and file patterns, consume the right documentation before the appropriate todo/task
-   - Trust the PRP's context and gfrontend/uidance - it's designed for one-pass success
+   - Trust the PRP's context and guidance - it's designed for one-pass success
    - If needed do additional codebase exploration and research as needed
    - Pay special attention to TypeScript interfaces, component patterns, and Next.js App Router structure
 
@@ -46,7 +46,7 @@ PRPs enable working TypeScript/React code on the first attempt through:
    **Execute the 4-level validation system from the TypeScript PRP:**
    - **Level 1**: Run TypeScript syntax & style validation commands from PRP (ESLint, tsc, Prettier)
    - **Level 2**: Execute component and hook unit test validation from PRP
-   - **Level 3**: Run Next.js integration testing commands from PRP (dev server, API routes, production bfrontend/uild)
+   - **Level 3**: Run Next.js integration testing commands from PRP (dev server, API routes, production build)
    - **Level 4**: Execute TypeScript/React-specific validation from PRP (E2E, performance, accessibility)
 
    **Each level must pass before proceeding to the next.**
@@ -62,5 +62,5 @@ PRPs enable working TypeScript/React code on the first attempt through:
 **Failure Protocol**: When validation fails, use the TypeScript/React patterns and gotchas from the PRP to fix issues, then re-run validation until passing. Pay special attention to:
 - TypeScript compilation errors and type mismatches
 - React hydration issues between server and client
-- Next.js App Router specific reqfrontend/uirements
+- Next.js App Router specific requirements
 - Component prop interface violations

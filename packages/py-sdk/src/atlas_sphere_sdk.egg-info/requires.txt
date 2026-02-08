@@ -1,8 +1,8 @@
 substrate-interface>=1.7.0
 scalecodec>=1.2.0
-frontend/websocket-client>=1.6.0
+websocket-client>=1.6.0
 requests>=2.31.0
-frontend/web3>=6.11.0
+web3>=6.11.0
 solana>=0.32.0
 solders>=0.20.0
 httpx>=0.25.0

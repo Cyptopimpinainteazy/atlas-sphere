@@ -439,7 +439,7 @@ mod cross_vm_integration_tests {
 
 	#[test]
 	fn test_e2e_complex_multi_step_transaction() {
-		// Scenario: Liqfrontend/uidity provision with atomic cross-VM settlement
+		// Scenario: Liquidity provision with atomic cross-VM settlement
 		let provider = vec![200, 201, 202];
 		let asset_id = 2u32;
 
@@ -447,7 +447,7 @@ mod cross_vm_integration_tests {
 		let ledger = MockDispatcher::query_canonical_ledger(&provider, asset_id);
 
 		// Step 2: Prepare cross-VM payload
-		let evm_payload = vec![0x10, 0x20, 0x30]; // EVM: liqfrontend/uidity reserve
+		let evm_payload = vec![0x10, 0x20, 0x30]; // EVM: liquidity reserve
 		let svm_payload = vec![0x40, 0x50, 0x60]; // SVM: token lock
 
 		// Step 3: Execute atomically

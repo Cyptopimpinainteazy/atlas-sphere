@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { ChakraProvider, ColorModeScript, Box, Text } from '@chakra-frontend/frontend/ui/react';
+import { ChakraProvider, ColorModeScript, Box, Text } from '@chakra-ui/react';
 import { Web3Provider } from './providers/Web3Provider';
 import theme from './theme';
 import App from './App';

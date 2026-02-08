@@ -12,7 +12,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### 🎯 What Changed
 - **Consolidated BMAD documentation** from 6+ scattered locations into `/docs/bmad/`
-- **Unified project status** with `PROJECT_STATUS.md` replacing 25+ conflicting status files
+- **Unified project status** with `docs/reports/PROJECT_STATUS.md` replacing 25+ conflicting status files
 - **Organized implementation guides** into logical categories
 - **Created comprehensive audit trail** with detailed reports
 
@@ -22,7 +22,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### 🚀 Getting Started
 - **[Atlas Sphere Overview](../README.md)** - Project introduction and quick start
-- **[Project Status](../PROJECT_STATUS.md)** - Current project status (unified source)
+- **[Project Status](../docs/reports/PROJECT_STATUS.md)** - Current project status (unified source)
 - **[Implementation Checklist](IMPLEMENTATION_CHECKLIST.md)** - Development tasks and priorities
 
 ### 🏗️ Core Architecture
@@ -53,8 +53,8 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### 📊 Audit & Organization Reports
 - **[Documentation Index](DOCUMENTATION_INDEX.md)** - Complete documentation catalog
-- **[Markdown Files Audit Report](MARKDOWN_FILES_AUDIT_REPORT.md)** - Comprehensive audit findings
-- **[Organization Completion Report](MARKDOWN_FILES_ORGANIZATION_COMPLETE.md)** - Reorganization summary
+- **[Markdown Files Audit Report](archive/reports/MARKDOWN_FILES_AUDIT_REPORT.md)** - Comprehensive audit findings
+- **[Organization Completion Report](archive/reports/MARKDOWN_FILES_ORGANIZATION_COMPLETE.md)** - Reorganization summary
 
 ---
 
@@ -63,7 +63,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 ### ✅ Completed (Major Milestones)
 - **Complete inventory** of 400+ markdown files
 - **BMAD consolidation** from 6+ locations to single `/docs/bmad/` directory
-- **Unified status reporting** with `PROJECT_STATUS.md`
+- **Unified status reporting** with `docs/reports/PROJECT_STATUS.md`
 - **Implementation guides organization** into `/docs/implementation/`
 - **Archive structure** created for historical files
 - **Comprehensive audit documentation** with detailed findings
@@ -85,14 +85,14 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### For New Contributors
 1. **Start here**: [README.md](../README.md) for project overview
-2. **Current status**: [PROJECT_STATUS.md](../PROJECT_STATUS.md) for project health
+2. **Current status**: [docs/reports/PROJECT_STATUS.md](../docs/reports/PROJECT_STATUS.md) for project health
 3. **Development**: [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md) for tasks
 4. **Architecture**: Browse core architecture section above
 
 ### For Documentation Maintainers
 1. **BMAD updates**: Always use `/docs/bmad/` directory
 2. **Implementation docs**: Place in `/docs/implementation/`
-3. **Status updates**: Update `PROJECT_STATUS.md` (replaces multiple files)
+3. **Status updates**: Update `docs/reports/PROJECT_STATUS.md` (replaces multiple files)
 4. **New documentation**: Follow structure in this index
 
 ### For Technical Reference
@@ -113,7 +113,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### After Major Reorganization
 - ✅ **Unified BMAD documentation** in `/docs/bmad/`
-- ✅ **Single status source** with `PROJECT_STATUS.md`
+- ✅ **Single status source** with `docs/reports/PROJECT_STATUS.md`
 - ✅ **Organized implementation guides** in logical categories
 - ✅ **Comprehensive audit trail** with detailed reports
 - ✅ **Clear documentation hierarchy** with this index
@@ -152,14 +152,14 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### Common Paths
 - **Main Project**: `../README.md`
-- **Current Status**: `../PROJECT_STATUS.md`
+- **Current Status**: `../docs/reports/PROJECT_STATUS.md`
 - **BMAD Framework**: `/docs/bmad/`
 - **Implementation**: `/docs/implementation/`
 - **Audit Reports**: This directory
 
 ---
 
-**Note**: This documentation structure represents a major reorganization completed on December 10, 2025. For details on the audit and organization process, see `MARKDOWN_FILES_AUDIT_REPORT.md` and `MARKDOWN_FILES_ORGANIZATION_COMPLETE.md`.
+**Note**: This documentation structure represents a major reorganization completed on December 10, 2025. For details on the audit and organization process, see `archive/reports/MARKDOWN_FILES_AUDIT_REPORT.md` and `archive/reports/MARKDOWN_FILES_ORGANIZATION_COMPLETE.md`.
 
 ---
 

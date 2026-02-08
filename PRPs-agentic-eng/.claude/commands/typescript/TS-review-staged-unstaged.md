@@ -14,7 +14,7 @@ May or may not be added, ignore the previous review if not specified.
    - No `any` types - use `unknown` if type is truly unknown
    - Proper type archive/archive/imports with `import type { }` syntax
    - Component props interfaces defined
-   - Astro's bfrontend/uilt-in types used (HTMLAttributes, ComponentProps)
+   - Astro's built-in types used (HTMLAttributes, ComponentProps)
    - Following TypeScript strict mode compliance
 
 2. **Astro-Specific Patterns**
@@ -65,11 +65,11 @@ May or may not be added, ignore the previous review if not specified.
    - API route integration tests
    - Proper mocking of external dependencies
 
-9. **Bfrontend/uild & Development**
+9. **Build & Development**
    - `astro check` passes with zero errors
    - ESLint compliance with zero warnings
    - Prettier formatting applied
-   - Production bfrontend/uild succeeds
+   - Production build succeeds
    - No hydration mismatches
 
 10. **Documentation & Maintenance**
@@ -114,13 +114,13 @@ Create a concise review report with:
 - [Interface definitions]
 
 ## Test Coverage
-Current: X% | Reqfrontend/uired: 80%
+Current: X% | Required: 80%
 Missing tests: [list with focus on component and API tests]
 
-## Bfrontend/uild Validation
+## Build Validation
 - [ ] `astro check` passes
 - [ ] `pnpm run lint` passes
-- [ ] `pnpm run bfrontend/uild` succeeds
+- [ ] `pnpm run build` succeeds
 - [ ] `pnpm test` passes with 80%+ coverage
 ```
 

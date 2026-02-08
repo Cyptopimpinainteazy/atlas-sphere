@@ -11,7 +11,7 @@ use sp_core::H256;
 use sp_io::TestExternalities;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    Bfrontend/uildStorage,
+    BuildStorage,
 };
 
 pub type AccountId = u64;
@@ -125,12 +125,12 @@ impl pallet_atlas_kernel::Config for Test {
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
-pub struct ExtBfrontend/uilder {
+pub struct ExtBuilder {
     balances: Vec<(AccountId, Balance)>,
     authorized_accounts: Vec<AccountId>,
 }
 
-impl Default for ExtBfrontend/uilder {
+impl Default for ExtBuilder {
     fn default() -> Self {
         Self {
             balances: vec![],
@@ -139,7 +139,7 @@ impl Default for ExtBfrontend/uilder {
     }
 }
 
-impl ExtBfrontend/uilder {
+impl ExtBuilder {
     pub fn balances(mut self, balances: Vec<(AccountId, Balance)>) -> Self {
         self.balances = balances;
         self
@@ -150,10 +150,10 @@ impl ExtBfrontend/uilder {
         self
     }
 
-    pub fn bfrontend/uild(self) -> TestExternalities {
+    pub fn build(self) -> TestExternalities {
         let mut storage = frame_system::GenesisConfig::<Test>::default()
-            .bfrontend/uild_storage()
-            .expect("Failed to bfrontend/uild system genesis storage");
+            .build_storage()
+            .expect("Failed to build system genesis storage");
 
         // Apply balances genesis
         pallet_balances::GenesisConfig::<Test> {
@@ -178,20 +178,20 @@ impl ExtBfrontend/uilder {
 }
 
 pub fn new_test_ext() -> TestExternalities {
-    ExtBfrontend/uilder::default()
+    ExtBuilder::default()
         .balances(vec![
             (ALICE, INITIAL_BALANCE),
             (BOB, INITIAL_BALANCE),
             (CHARLIE, INITIAL_BALANCE),
         ])
         .authorized_accounts(vec![ALICE, BOB, CHARLIE])
-        .bfrontend/uild()
+        .build()
 }
 
 #[test]
 fn migration_runs_and_sets_storage_version() {
     // Ensure migration sets storage version to declared value
-    ExtBfrontend/uilder::default().bfrontend/uild().execute_with(|| {
+    ExtBuilder::default().build().execute_with(|| {
         use frame_support::traits::StorageVersion;
         // Simulate older version
         StorageVersion::new(0).put::<pallet_atlas_kernel::Pallet<Test>>();

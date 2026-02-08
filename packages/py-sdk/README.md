@@ -15,7 +15,7 @@ cd packages/py-sdk
 pip install -e ".[dev]"
 ```
 
-## Qfrontend/uick Start
+## Quick Start
 
 ### Connect to Node
 
@@ -53,10 +53,10 @@ with AtlasClient("ws://localhost:9944") as client:
     print(f"Canonical balance: {balance}")
 ```
 
-### Bfrontend/uild and Submit Comit Transaction
+### Build and Submit Comit Transaction
 
 ```python
-from atlas_sphere_sdk import AtlasClient, ComitBfrontend/uilder
+from atlas_sphere_sdk import AtlasClient, ComitBuilder
 from substrateinterface import Keypair
 
 # Create keypair
@@ -66,9 +66,9 @@ with AtlasClient("ws://localhost:9944") as client:
     # Get current nonce
     nonce = client.get_nonce(keypair.ss58_address)
     
-    # Bfrontend/uild Comit transaction
+    # Build Comit transaction
     comit = (
-        ComitBfrontend/uilder()
+        ComitBuilder()
         .with_evm_call(
             to="0x1234567890abcdef1234567890abcdef12345678",
             data=b"\x12\x34",  # function calldata
@@ -79,7 +79,7 @@ with AtlasClient("ws://localhost:9944") as client:
             instruction_data=b"\x01\x02\x03",
             compute_limit=200_000,
         )
-        .bfrontend/uild(keypair, nonce=nonce)
+        .build(keypair, nonce=nonce)
     )
     
     # Submit
@@ -104,10 +104,10 @@ with AtlasClient("ws://localhost:9944") as client:
     chain_id = evm.get_chain_id()
     gas_price = evm.get_gas_price()
     
-    # Bfrontend/uild contract call
-    tx = evm.bfrontend/uild_contract_call(
+    # Build contract call
+    tx = evm.build_contract_call(
         to="0x1234567890abcdef1234567890abcdef12345678",
-        function_signature="transfer(address,frontend/uint256)",
+        function_signature="transfer(address,uint256)",
         "0xrecipient...",
         1000000000000000000,  # 1 token
     )
@@ -125,8 +125,8 @@ from atlas_sphere_sdk.svm import SvmClient
 with AtlasClient("ws://localhost:9944") as client:
     svm = SvmClient(client)
     
-    # Bfrontend/uild transfer instruction
-    instruction = svm.bfrontend/uild_transfer(
+    # Build transfer instruction
+    instruction = svm.build_transfer(
         from_pubkey=sender_pubkey,
         to_pubkey=recipient_pubkey,
         lamports=1_000_000,
@@ -189,27 +189,27 @@ atlas-sphere watch --finalized
 - `subscribe_new_heads(callback)` - Subscribe to new blocks
 - `subscribe_finalized_heads(callback)` - Subscribe to finalized blocks
 
-### ComitBfrontend/uilder
+### ComitBuilder
 
 - `with_evm_payload(payload, gas_limit)` - Set raw EVM payload
 - `with_evm_call(to, data, value, gas_limit)` - Add EVM contract call
 - `with_svm_payload(payload, compute_limit)` - Set raw SVM payload
 - `with_svm_instruction(...)` - Add Solana-style instruction
 - `with_nonce(nonce)` - Set explicit nonce
-- `bfrontend/uild(keypair, nonce)` - Bfrontend/uild transaction
+- `build(keypair, nonce)` - Build transaction
 
 ### EvmClient
 
 - `get_chain_id()` - Get EVM chain ID
 - `get_gas_price()` - Get gas price
-- `bfrontend/uild_contract_call(...)` - Bfrontend/uild contract call
-- `bfrontend/uild_deployment(...)` - Bfrontend/uild contract deployment
+- `build_contract_call(...)` - Build contract call
+- `build_deployment(...)` - Build contract deployment
 - `to_comit_payload(tx)` - Convert to Comit payload
 
 ### SvmClient
 
-- `bfrontend/uild_instruction(...)` - Bfrontend/uild instruction
-- `bfrontend/uild_transfer(...)` - Bfrontend/uild transfer instruction
+- `build_instruction(...)` - Build instruction
+- `build_transfer(...)` - Build transfer instruction
 - `to_comit_payload(instruction)` - Convert to Comit payload
 
 ## Development

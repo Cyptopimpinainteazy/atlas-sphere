@@ -16,13 +16,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'swarm-dashboard/package-lock.json'
+          cache-dependency-path: 'apps/swarm-dashboard/package-lock.json'
 
       - name: Cache node modules
         uses: actions/cache@v4
         with:
-          path: swarm-dashboard/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          path: apps/swarm-dashboard/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('apps/swarm-dashboard/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('apps/swarm-dashboard/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -57,9 +57,9 @@ jobs:
         if: always()
         run: |
           echo "Checking for axe violations artifact..."
-          if [ -f swarm-dashboard/e2e/axe-violations.json ]; then
+          if [ -f apps/swarm-dashboard/e2e/axe-violations.json ]; then
             echo "found=true" >> $GITHUB_OUTPUT
-            summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
+            summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' apps/swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
             body="Axe accessibility check reported violations on this run:\n\n${summary}\n\nFull JSON is available as a workflow artifact (axe-violations.json)."
             echo "Posting comment to PR #${{ github.event.pull_request.number }}"
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments -f body="$body"
@@ -72,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: axe-violations
-          path: swarm-dashboard/e2e/axe-violations.json
+          path: apps/swarm-dashboard/e2e/axe-violations.json
 
       - name: Create triage issue for Axe violations (if none exists)
         if: steps.check_axe.outputs.found == 'true'
@@ -86,7 +86,7 @@ jobs:
           hits=$(gh api search/issues -f q="repo:${REPO} is:issue is:open in:title \"${TITLE}\"" --jq '.total_count')
           echo "Found existing issues: $hits"
           if [ "$hits" -eq 0 ]; then
-            summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
+            summary=$(jq -r '.[] | "- \(.id) (impact: \(.impact)) — \(.nodes|length) nodes"' apps/swarm-dashboard/e2e/axe-violations.json | sed ':a;N;$!ba;s/\n/\\n/g')
             BODY="Axe accessibility check found violations on PR #${PR}:\n\n${summary}\n\nSee attached artifact 'axe-violations.json' for full details."
             if [ -n "${ASSIGNEE}" ]; then
               ISSUE=$(gh api repos/${REPO}/issues -f title="$TITLE" -f body="$BODY" -f labels='["accessibility","triage"]' -f assignees='["'"${ASSIGNEE}"'"']' --jq '.number')

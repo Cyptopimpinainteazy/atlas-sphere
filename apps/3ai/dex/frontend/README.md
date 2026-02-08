@@ -1,10 +1,10 @@
 # 3aiXchange DEX Frontend
 
-A decentralized exchange (DEX) frontend bfrontend/uilt with React, TypeScript, Chakra UI, and Vite.
+A decentralized exchange (DEX) frontend built with React, TypeScript, Chakra UI, and Vite.
 
 ## 🚀 Getting Started
 
-### Prereqfrontend/uisites
+### Prerequisites
 
 - Node.js (v16 or later)
 - npm or yarn
@@ -35,8 +35,8 @@ A decentralized exchange (DEX) frontend bfrontend/uilt with React, TypeScript, C
 ### Available Scripts
 
 - `npm run dev` - Start development server
-- `npm run bfrontend/uild` - Bfrontend/uild for production
-- `npm run preview` - Preview production bfrontend/uild
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 - `npm run type-check` - Run TypeScript type checking
 
@@ -66,15 +66,15 @@ src/
 
 - [React](https://reactjs.org/) - UI library
 - [TypeScript](https://www.typescriptlang.org/) - Type checking
-- [Chakra UI](https://chakra-frontend/frontend/ui.com/) - Component library
-- [Vite](https://vitejs.dev/) - Bfrontend/uild tool
+- [Chakra UI](https://chakra-ui.com/) - Component library
+- [Vite](https://vitejs.dev/) - Build tool
 - [React Query](https://tanstack.com/query) - Data fetching
 - [Ethers.js](https://docs.ethers.org/v5/) - Ethereum interaction
 - [Wagmi](https://wagmi.sh/) - React Hooks for Ethereum
 
 ### Environment Variables
 
-See `.env.example` for reqfrontend/uired environment variables.
+See `.env.example` for required environment variables.
 
 ## 🤝 Contributing
 
@@ -90,7 +90,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Chakra UI](https://chakra-frontend/frontend/ui.com/)
+- [Chakra UI](https://chakra-ui.com/)
 - [Vite](https://vitejs.dev/)
 - [React Query](https://tanstack.com/query)
 - [Ethers.js](https://docs.ethers.org/v5/)

@@ -364,7 +364,7 @@ pub struct EvmPayload {
 pub struct SvmPayload {
 	/// Identifier of the Solana program to invoke.
 	pub program_id: [u8; 32],
-	/// Account keys reqfrontend/uired for the program invocation.
+	/// Account keys required for the program invocation.
 	pub accounts: Vec<[u8; 32]>,
 	/// Instruction data passed to the program.
 	pub data: Vec<u8>,

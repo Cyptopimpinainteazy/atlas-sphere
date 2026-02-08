@@ -3,7 +3,7 @@ from intelligence.ast.ast_diff import AstNodeChange
 from typing import Dict
 
 
-def bfrontend/uild_heatmap(changes: list[AstNodeChange]) -> Dict[int, float]:
+def build_heatmap(changes: list[AstNodeChange]) -> Dict[int, float]:
     """Returns mapping: line -> accumulated heat score."""
     heat = defaultdict(float)
     for c in changes:

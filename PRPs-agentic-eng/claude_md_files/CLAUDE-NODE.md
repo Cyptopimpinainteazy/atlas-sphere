@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides comprehensive gfrontend/uidance to Claude Code when working with Node.js 23 applications.
+This file provides comprehensive guidance to Claude Code when working with Node.js 23 applications.
 
 ## Core Development Philosophy
 
@@ -8,16 +8,16 @@ This file provides comprehensive gfrontend/uidance to Claude Code when working w
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
 
 ### YAGNI (You Aren't Gonna Need It)
-Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Design Principles
-- **Modular Architecture**: Bfrontend/uild with small, focused modules that do one thing well
+- **Modular Architecture**: Build with small, focused modules that do one thing well
 - **Error-First Callbacks**: Always handle errors as the first parameter in callbacks
 - **Async by Default**: Use async/await for all I/O operations
 - **Fail Fast**: Validate inputs early and throw meaningful errors immediately
 - **Security First**: Never trust user input, always validate and sanitize
 
-## 🤖 AI Assistant Gfrontend/uidelines
+## 🤖 AI Assistant Guidelines
 
 ### Context Awareness
 - When implementing features, always check existing patterns first
@@ -37,7 +37,7 @@ Avoid bfrontend/uilding functionality on speculation. Implement features only wh
 - Break complex tasks into smaller, testable units
 - Validate understanding before implementation
 
-### Search Command Reqfrontend/uirements
+### Search Command Requirements
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
 ```bash
@@ -82,13 +82,13 @@ node index.ts
 ### Performance Features
 - **Virtual Threads**: Leverage Java 21-style virtual threads for better concurrency
 - **HTTP/2 by Default**: Improved multiplexing and server push capabilities
-- **Native Fetch API**: Bfrontend/uilt-in fetch() without external dependencies
+- **Native Fetch API**: Built-in fetch() without external dependencies
 - **WebAssembly Support**: Enhanced WASM integration for performance-critical code
 
 ### Security Enhancements
 - **Permission Model**: Granular permissions for file system, network, and child processes
 - **Secure by Default**: Stricter defaults for crypto and TLS
-- **Bfrontend/uilt-in CSP**: Content Security Policy support at the platform level
+- **Built-in CSP**: Content Security Policy support at the platform level
 
 ## 🏗️ Project Structure (Domain-Driven Design)
 
@@ -116,7 +116,7 @@ project-root/
 │       ├── types/         # Shared types
 │       └── utils/         # Helpers
 ├── tests/                 # Integration tests
-├── scripts/               # Bfrontend/uild/deploy scripts
+├── scripts/               # Build/deploy scripts
 ├── .env.example           # Environment template
 ├── package.json
 ├── tsconfig.json          # If using TypeScript
@@ -146,7 +146,7 @@ project-root/
 ### Essential Dependencies
 ```bash
 # Production dependencies
-npm install fastify          # High-performance frontend/frontend/web framework
+npm install fastify          # High-performance web framework
 npm install @fastify/helmet  # Security headers
 npm install pino            # Fast JSON logger
 npm install ajv             # JSON schema validation
@@ -202,7 +202,7 @@ addFormats(ajv);
 const userSchema = {
   type: 'object',
   properties: {
-    id: { type: 'string', format: 'ufrontend/uid' },
+    id: { type: 'string', format: 'uuid' },
     email: { type: 'string', format: 'email' },
     username: { 
       type: 'string', 
@@ -212,7 +212,7 @@ const userSchema = {
     },
     age: { type: 'integer', minimum: 18, maximum: 100 }
   },
-  reqfrontend/uired: ['email', 'username'],
+  required: ['email', 'username'],
   additionalProperties: false
 };
 
@@ -255,7 +255,7 @@ describe('UserService', () => {
 });
 ```
 
-### Coverage Reqfrontend/uirements
+### Coverage Requirements
 - Minimum 80% statement coverage
 - Minimum 80% branch coverage
 - Critical paths: 90%+ coverage
@@ -309,7 +309,7 @@ console.log({
 }
 ```
 
-## 🔐 Security Reqfrontend/uirements
+## 🔐 Security Requirements
 
 ### Environment Variables
 ```javascript
@@ -317,7 +317,7 @@ console.log({
 // node --env-file=.env src/index.js
 
 // Validate all environment variables at startup
-const reqfrontend/uiredEnvVars = [
+const requiredEnvVars = [
   'NODE_ENV',
   'PORT',
   'DATABASE_URL',
@@ -325,9 +325,9 @@ const reqfrontend/uiredEnvVars = [
   'REDIS_URL'
 ];
 
-for (const envVar of reqfrontend/uiredEnvVars) {
+for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
-    throw new Error(`Missing reqfrontend/uired environment variable: ${envVar}`);
+    throw new Error(`Missing required environment variable: ${envVar}`);
   }
 }
 
@@ -504,7 +504,7 @@ ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "--env-file=.env", "src/index.js"]
 ```
 
-## ⚠️ Critical Gfrontend/uidelines
+## ⚠️ Critical Guidelines
 
 1. **NEVER block the event loop** - Use worker threads for CPU-intensive tasks
 2. **ALWAYS validate inputs** - Use AJV schemas for all external data
@@ -517,7 +517,7 @@ CMD ["node", "--env-file=.env", "src/index.js"]
 9. **NEVER trust user input** - Sanitize and validate everything
 10. **ALWAYS use security headers** - Helmet with proper CSP
 11. **MONITOR performance** - Track event loop lag and memory usage
-12. **USE native features** - Prefer bfrontend/uilt-in modules over external dependencies
+12. **USE native features** - Prefer built-in modules over external dependencies
 
 ## 📋 Pre-commit Checklist
 
@@ -555,5 +555,5 @@ node --trace-event-categories=node.perf src/index.js  # Performance tracing
 
 ---
 
-*Keep this gfrontend/uide updated as patterns evolve. Performance and security over convenience, always.*
+*Keep this guide updated as patterns evolve. Performance and security over convenience, always.*
 *Last updated: June 2025*

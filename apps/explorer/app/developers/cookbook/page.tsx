@@ -321,7 +321,7 @@ export default function CookbookPage() {
               X3 STAR Cookbook
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Ready-to-use code snippets and examples for bfrontend/uilding on X3 Atlas Sphere. 
+              Ready-to-use code snippets and examples for building on X3 Atlas Sphere. 
               Copy, paste, and customize for your application.
             </p>
 

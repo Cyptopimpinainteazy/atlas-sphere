@@ -3,7 +3,7 @@
 This document explains how the Axe accessibility triage automation works and how to configure it.
 
 Summary
-- The repository runs Playwright e2e tests which include a small axe-core accessibility scan that writes `swarm-dashboard/e2e/axe-violations.json` when violations are detected.
+- The repository runs Playwright e2e tests which include a small axe-core accessibility scan that writes `apps/swarm-dashboard/e2e/axe-violations.json` when violations are detected.
 - The e2e workflow (`.github/workflows/swarm-dashboard-e2e.yml`) will post a comment to the PR and upload the `axe-violations.json` artifact when violations are present.
 - A separate workflow (`.github/workflows/swarm-dashboard-axe-triage.yml`) runs on pull requests as a safety net and will create a triage issue (labels: `accessibility`, `triage`) when `axe-violations.json` is present.
 
@@ -18,7 +18,7 @@ Behavior and safeguards
 
 Triage steps (quick)
 1. Download `axe-violations.json` from the workflow run artifacts.
-2. Reproduce locally using the demo (`swarm-dashboard/e2e/index.html`) or run Playwright locally.
+2. Reproduce locally using the demo (`apps/swarm-dashboard/e2e/index.html`) or run Playwright locally.
 3. Inspect each violation (impact, selector, nodes); provide reproduction steps in the issue if needed.
 4. Assign (or accept auto-assignment), set priority, and attach any follow-up artifacts.
 

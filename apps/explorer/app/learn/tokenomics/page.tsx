@@ -168,7 +168,7 @@ export default function TokenomicsPage() {
               <div className="p-4 rounded-xl bg-[#0a0a0a]">
                 <RefreshCw className="w-6 h-6 text-blue-400 mb-3" />
                 <h4 className="font-semibold text-white mb-2">No Wrapped Tokens</h4>
-                <p className="text-sm text-gray-500">Assets exist once - no fragmented liqfrontend/uidity</p>
+                <p className="text-sm text-gray-500">Assets exist once - no fragmented liquidity</p>
               </div>
               <div className="p-4 rounded-xl bg-[#0a0a0a]">
                 <Zap className="w-6 h-6 text-yellow-400 mb-3" />
@@ -201,7 +201,7 @@ export default function TokenomicsPage() {
               <div className="bg-[#0a0a0a] rounded-lg p-4 font-mono text-xs mb-4 overflow-x-auto">
                 <pre className="text-gray-300">
 {`// On Ethereum mainnet
-function bridgeToX3(frontend/uint256 amount, bytes32 x3Recipient) {
+function bridgeToX3(uint256 amount, bytes32 x3Recipient) {
     // 1. Lock tokens on Ethereum
     token.transferFrom(msg.sender, lockContract, amount);
     
@@ -325,7 +325,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
             <div className="bg-[#0a0a0a] rounded-xl p-6 mb-8 font-mono text-sm overflow-x-auto">
               <div className="text-gray-500 mb-4">{`// User wants to: Swap 100 wETH (EVM) → 2000 USDC (SVM)`}</div>
               <pre className="text-gray-300">
-{`1. Bfrontend/uild Dual Comit:
+{`1. Build Dual Comit:
    ┌────────────────────────────────────────┐
    │ Comit Transaction                      │
    │ ├─ EVM Payload: swap(wETH, 100)       │
@@ -464,7 +464,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
               },
               {
                 icon: <Database className="w-6 h-6 text-purple-400" />,
-                title: 'Unified Liqfrontend/uidity',
+                title: 'Unified Liquidity',
                 desc: 'No wrapped tokens - assets exist once, accessible from both VMs',
               },
               {
@@ -485,7 +485,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
               {
                 icon: <Globe className="w-6 h-6 text-cyan-400" />,
                 title: 'True Interoperability',
-                desc: 'Bfrontend/uild dApps that leverage best of Ethereum AND Solana ecosystems',
+                desc: 'Build dApps that leverage best of Ethereum AND Solana ecosystems',
               },
             ].map((item, i) => (
               <div key={i} className="glass-card p-6">
@@ -506,7 +506,7 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
               <div>
                 <h2 className="text-2xl font-bold text-white mb-4">Get X3 Tokens</h2>
                 <p className="text-gray-400 mb-6">
-                  Ready to start bfrontend/uilding or transacting on Atlas Sphere? Get testnet X3 tokens 
+                  Ready to start building or transacting on Atlas Sphere? Get testnet X3 tokens 
                   from our faucet to experiment with the dual-VM architecture.
                 </p>
                 <div className="flex flex-wrap gap-4">
@@ -518,10 +518,10 @@ AssetRegistry: wSOL → AssetId(100), decimals: 9`}
                     Testnet Faucet
                   </Link>
                   <Link 
-                    href="/developers/docs/qfrontend/uickstart" 
+                    href="/developers/docs/quickstart" 
                     className="btn-secondary px-6 py-3 inline-flex items-center"
                   >
-                    Qfrontend/uick Start Gfrontend/uide
+                    Quick Start Guide
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </div>

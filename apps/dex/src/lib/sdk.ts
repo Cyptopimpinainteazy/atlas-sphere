@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AtlasSphereClient,
-  ComitBfrontend/uilder,
+  ComitBuilder,
   evmComit,
   svmComit,
   dualComit,
@@ -289,13 +289,13 @@ export function useComitSubmission() {
     
     try {
       const client = await getClient();
-      const bfrontend/uilder = evmComit(evmPayload);
+      const builder = evmComit(evmPayload);
       if (fee) {
-        bfrontend/uilder.withFee(fee);
+        builder.withFee(fee);
       } else {
-        bfrontend/uilder.withFee('auto');
+        builder.withFee('auto');
       }
-      const comitInput = bfrontend/uilder.bfrontend/uild();
+      const comitInput = builder.build();
       
       const result = await client.submitComit(comitInput, signer);
       
@@ -334,13 +334,13 @@ export function useComitSubmission() {
     
     try {
       const client = await getClient();
-      const bfrontend/uilder = svmComit(svmPayload);
+      const builder = svmComit(svmPayload);
       if (fee) {
-        bfrontend/uilder.withFee(fee);
+        builder.withFee(fee);
       } else {
-        bfrontend/uilder.withFee('auto');
+        builder.withFee('auto');
       }
-      const comitInput = bfrontend/uilder.bfrontend/uild();
+      const comitInput = builder.build();
       
       const result = await client.submitComit(comitInput, signer);
       
@@ -380,13 +380,13 @@ export function useComitSubmission() {
     
     try {
       const client = await getClient();
-      const bfrontend/uilder = dualComit(evmPayload, svmPayload);
+      const builder = dualComit(evmPayload, svmPayload);
       if (fee) {
-        bfrontend/uilder.withFee(fee);
+        builder.withFee(fee);
       } else {
-        bfrontend/uilder.withFee('auto');
+        builder.withFee('auto');
       }
-      const comitInput = bfrontend/uilder.bfrontend/uild();
+      const comitInput = builder.build();
       
       const result = await client.submitComit(comitInput, signer);
       

@@ -12,7 +12,7 @@ The helper script lives at:
 - `deployment/public-rpc/run-public-rpc.sh`
 
 It supports:
-- `chain=dev|local|staging|testnet|<path>|<bfrontend/uiltin id>`
+- `chain=dev|local|staging|testnet|<path>|<builtin id>`
 - `rpc_bind=localhost|public` (default `localhost`)
 
 ### Example: testnet RPC node (localhost-bound)

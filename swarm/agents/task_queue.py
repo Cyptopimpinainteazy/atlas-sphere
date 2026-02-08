@@ -19,7 +19,7 @@ import asyncio
 import json
 import logging
 import time
-import ufrontend/uid
+import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Any
 from enum import Enum
@@ -78,6 +78,12 @@ class TaskPriority(Enum):
     CRITICAL = 3
 
 
+class TaskSeverity(Enum):
+    """Task severity levels for governance gating"""
+    MINOR = "minor"
+    MAJOR = "major"
+
+
 @dataclass
 class Task:
     """Individual task in the queue"""
@@ -86,6 +92,7 @@ class Task:
     task_type: str  # e.g., "collect_metrics", "analyze_block", "send_email"
     payload: Dict[str, Any]  # Task-specific data
     priority: TaskPriority
+    severity: TaskSeverity
     status: TaskStatus
     created_at_timestamp: float
     started_at_timestamp: Optional[float] = None
@@ -94,6 +101,7 @@ class Task:
     max_retries: int = 3
     error_message: Optional[str] = None
     result: Optional[Dict[str, Any]] = None
+    openspec_change_id: Optional[str] = None
 
     def is_expired(self, ttl_seconds: int = 86400) -> bool:
         """Check if task has exceeded TTL"""
@@ -147,11 +155,13 @@ class AsyncTaskQueue:
         orchestrator_url: str = "http://localhost:8080",
         heartbeat_interval_secs: int = 30,
         max_concurrent_tasks: int = 10,
+        openspec_validator: Optional[Callable[[str], Any]] = None,
     ):
         self.queue_name = queue_name
         self.orchestrator_url = orchestrator_url
         self.heartbeat_interval_secs = heartbeat_interval_secs
         self.max_concurrent_tasks = max_concurrent_tasks
+        self.openspec_validator = openspec_validator
 
         self.session: Optional[aiohttp.ClientSession] = None
         self.is_running = False
@@ -251,7 +261,27 @@ class AsyncTaskQueue:
         priority: TaskPriority = TaskPriority.MEDIUM,
     ) -> str:
         """Submit a task to the queue"""
-        task_id = str(ufrontend/uid.ufrontend/uid4())
+        task_id = str(uuid.uuid4())
+
+        severity_value = (payload.get("severity") or "minor").lower()
+        severity = TaskSeverity.MAJOR if severity_value == "major" else TaskSeverity.MINOR
+        openspec_change_id = payload.get("openspec_change_id")
+
+        if severity == TaskSeverity.MAJOR:
+            if not openspec_change_id:
+                raise ValueError("openspec_change_id required for major tasks")
+            if self.openspec_validator is not None:
+                validation = self.openspec_validator(openspec_change_id)
+                if hasattr(validation, "ok"):
+                    ok = validation.ok
+                    output = validation.output
+                elif isinstance(validation, tuple):
+                    ok, output = validation
+                else:
+                    ok = bool(validation)
+                    output = str(validation)
+                if not ok:
+                    raise ValueError(f"OpenSpec validation failed: {output}")
 
         task = Task(
             task_id=task_id,
@@ -259,8 +289,10 @@ class AsyncTaskQueue:
             task_type=task_type,
             payload=payload,
             priority=priority,
+            severity=severity,
             status=TaskStatus.PENDING,
             created_at_timestamp=time.time(),
+            openspec_change_id=openspec_change_id,
         )
 
         try:
@@ -275,10 +307,12 @@ class AsyncTaskQueue:
                     'task_type': task_type,
                     'payload': payload,
                     'priority': int(priority.value),
+                    'severity': severity.value,
                     'status': task.status.value,
                     'created_at_timestamp': task.created_at_timestamp,
                     'retry_count': task.retry_count,
                     'max_retries': task.max_retries,
+                    'openspec_change_id': openspec_change_id,
                 })
             except Exception as e:
                 logger.warning(f"Failed to persist task {task_id}: {e}")
@@ -290,7 +324,13 @@ class AsyncTaskQueue:
 
             # Append event for submission
             try:
-                append_event('task_submitted', {'task_id': task_id, 'agent_id': agent_id, 'task_type': task_type})
+                append_event('task_submitted', {
+                    'task_id': task_id,
+                    'agent_id': agent_id,
+                    'task_type': task_type,
+                    'openspec_change_id': openspec_change_id,
+                    'severity': severity.value,
+                })
             except Exception:
                 pass
 
@@ -336,10 +376,12 @@ class AsyncTaskQueue:
                         task_type=r['task_type'],
                         payload=r.get('payload', {}),
                         priority=TaskPriority(int(r.get('priority', 1))),
+                        severity=TaskSeverity(r.get('severity', 'minor')),
                         status=TaskStatus.PENDING,
                         created_at_timestamp=r.get('created_at_timestamp', time.time()),
                         retry_count=r.get('retry_count', 0),
                         max_retries=r.get('max_retries', 3),
+                        openspec_change_id=r.get('openspec_change_id'),
                     )
 
                     # Persist status update to 'pending' to reflect restart

@@ -26,7 +26,7 @@ module.exports = {
         warning: "hsl(var(--warning))",
       },
       fontFamily: {
-        sans: ["Inter", "system-frontend/frontend/ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       animation: {

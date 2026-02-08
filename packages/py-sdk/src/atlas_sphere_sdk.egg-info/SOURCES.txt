@@ -12,7 +12,7 @@ src/atlas_sphere_sdk.egg-info/PKG-INFO
 src/atlas_sphere_sdk.egg-info/SOURCES.txt
 src/atlas_sphere_sdk.egg-info/dependency_links.txt
 src/atlas_sphere_sdk.egg-info/entry_points.txt
-src/atlas_sphere_sdk.egg-info/reqfrontend/uires.txt
+src/atlas_sphere_sdk.egg-info/requires.txt
 src/atlas_sphere_sdk.egg-info/top_level.txt
 tests/test_comit.py
 tests/test_evm.py

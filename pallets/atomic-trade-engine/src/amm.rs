@@ -2,9 +2,9 @@
 //!
 //! Provides unified interfaces for interacting with various AMM protocols:
 //! - UniswapV2 (EVM) - Constant product AMM
-//! - UniswapV3 (EVM) - Concentrated liqfrontend/uidity AMM
+//! - UniswapV3 (EVM) - Concentrated liquidity AMM
 //! - Raydium (SVM) - Solana AMM
-//! - Orca Whirlpool (SVM) - Concentrated liqfrontend/uidity on Solana
+//! - Orca Whirlpool (SVM) - Concentrated liquidity on Solana
 //! - Atlas AMM - Native cross-VM AMM
 
 use crate::types::{AmmProtocol, VmType};
@@ -55,8 +55,8 @@ pub trait AmmAdapter {
     /// Get the VM type
     fn vm_type() -> VmType;
 
-    /// Bfrontend/uild swap calldata for the AMM
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError>;
+    /// Build swap calldata for the AMM
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError>;
 
     /// Parse swap result from execution receipt
     fn parse_swap_result(return_data: &[u8], gas_used: u64) -> Result<SwapResult, DispatchError>;
@@ -94,20 +94,20 @@ impl AmmAdapter for UniswapV2Adapter {
         VmType::Evm
     }
 
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
         let mut calldata = Vec::new();
 
         // Function selector: swapExactTokensForTokens
         calldata.extend_from_slice(&[0x38, 0xed, 0x17, 0x39]);
 
-        // amount_in (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.amount_in));
+        // amount_in (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.amount_in));
 
-        // amount_out_min (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.min_amount_out));
+        // amount_out_min (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.min_amount_out));
 
-        // path offset (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(160));
+        // path offset (uint256)
+        calldata.extend_from_slice(&encode_uint256(160));
 
         // to (address)
         let mut to_padded = [0u8; 32];
@@ -115,11 +115,11 @@ impl AmmAdapter for UniswapV2Adapter {
         to_padded[32 - to_len..].copy_from_slice(&params.recipient[..to_len]);
         calldata.extend_from_slice(&to_padded);
 
-        // deadline (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.deadline as u128));
+        // deadline (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.deadline as u128));
 
         // path array length
-        calldata.extend_from_slice(&encode_frontend/uint256(2));
+        calldata.extend_from_slice(&encode_uint256(2));
 
         // path[0] = token_in
         calldata.extend_from_slice(params.token_in.as_bytes());
@@ -133,7 +133,7 @@ impl AmmAdapter for UniswapV2Adapter {
     fn parse_swap_result(return_data: &[u8], gas_used: u64) -> Result<SwapResult, DispatchError> {
         let amount_out = if return_data.len() >= 64 {
             let offset = return_data.len() - 32;
-            decode_frontend/uint256(&return_data[offset..])?
+            decode_uint256(&return_data[offset..])?
         } else {
             return Err(DispatchError::Other("Invalid return data"));
         };
@@ -186,7 +186,7 @@ impl AmmAdapter for UniswapV2Adapter {
 // UniswapV3 Adapter (EVM)
 // ============================================================================
 
-/// UniswapV3 concentrated liqfrontend/uidity AMM adapter
+/// UniswapV3 concentrated liquidity AMM adapter
 pub struct UniswapV3Adapter;
 
 impl AmmAdapter for UniswapV3Adapter {
@@ -198,7 +198,7 @@ impl AmmAdapter for UniswapV3Adapter {
         VmType::Evm
     }
 
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
         let mut calldata = Vec::new();
 
         // Function selector: exactInputSingle
@@ -214,7 +214,7 @@ impl AmmAdapter for UniswapV3Adapter {
         token_out_padded[12..].copy_from_slice(&params.token_out.as_bytes()[..20]);
         calldata.extend_from_slice(&token_out_padded);
 
-        // fee (frontend/uint24) - default 3000
+        // fee (uint24) - default 3000
         let fee: u32 = if params.extra_data.len() >= 4 {
             u32::from_be_bytes([
                 params.extra_data[0],
@@ -225,7 +225,7 @@ impl AmmAdapter for UniswapV3Adapter {
         } else {
             3000
         };
-        calldata.extend_from_slice(&encode_frontend/uint256(fee as u128));
+        calldata.extend_from_slice(&encode_uint256(fee as u128));
 
         // recipient (address)
         let mut recipient_padded = [0u8; 32];
@@ -233,16 +233,16 @@ impl AmmAdapter for UniswapV3Adapter {
         recipient_padded[32 - recip_len..].copy_from_slice(&params.recipient[..recip_len]);
         calldata.extend_from_slice(&recipient_padded);
 
-        // deadline (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.deadline as u128));
+        // deadline (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.deadline as u128));
 
-        // amountIn (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.amount_in));
+        // amountIn (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.amount_in));
 
-        // amountOutMinimum (frontend/uint256)
-        calldata.extend_from_slice(&encode_frontend/uint256(params.min_amount_out));
+        // amountOutMinimum (uint256)
+        calldata.extend_from_slice(&encode_uint256(params.min_amount_out));
 
-        // sqrtPriceLimitX96 (frontend/uint160) - 0 means no limit
+        // sqrtPriceLimitX96 (uint160) - 0 means no limit
         calldata.extend_from_slice(&[0u8; 32]);
 
         Ok(calldata)
@@ -250,7 +250,7 @@ impl AmmAdapter for UniswapV3Adapter {
 
     fn parse_swap_result(return_data: &[u8], gas_used: u64) -> Result<SwapResult, DispatchError> {
         let amount_out = if return_data.len() >= 32 {
-            decode_frontend/uint256(&return_data[..32])?
+            decode_uint256(&return_data[..32])?
         } else {
             return Err(DispatchError::Other("Invalid return data"));
         };
@@ -299,7 +299,7 @@ impl AmmAdapter for RaydiumAdapter {
         VmType::Svm
     }
 
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
         let mut instruction_data = Vec::new();
 
         // Raydium swap instruction discriminator
@@ -357,7 +357,7 @@ impl AmmAdapter for RaydiumAdapter {
 // Orca Whirlpool Adapter (SVM)
 // ============================================================================
 
-/// Orca Whirlpool concentrated liqfrontend/uidity adapter
+/// Orca Whirlpool concentrated liquidity adapter
 pub struct OrcaWhirlpoolAdapter;
 
 impl AmmAdapter for OrcaWhirlpoolAdapter {
@@ -369,7 +369,7 @@ impl AmmAdapter for OrcaWhirlpoolAdapter {
         VmType::Svm
     }
 
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
         let mut instruction_data = Vec::new();
 
         // Orca Whirlpool swap instruction discriminator
@@ -449,7 +449,7 @@ impl AmmAdapter for AtlasAmmAdapter {
         VmType::CrossVm
     }
 
-    fn bfrontend/uild_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
+    fn build_swap_calldata(params: &SwapParams) -> Result<Vec<u8>, DispatchError> {
         let mut calldata = Vec::new();
 
         // Operation code: 0x01 = swap
@@ -524,17 +524,17 @@ impl AmmAdapter for AtlasAmmAdapter {
 // Helper Functions
 // ============================================================================
 
-/// Encode u128 as frontend/uint256 (32 bytes, big-endian, zero-padded)
-fn encode_frontend/uint256(value: u128) -> [u8; 32] {
+/// Encode u128 as uint256 (32 bytes, big-endian, zero-padded)
+fn encode_uint256(value: u128) -> [u8; 32] {
     let mut result = [0u8; 32];
     result[16..].copy_from_slice(&value.to_be_bytes());
     result
 }
 
-/// Decode frontend/uint256 to u128 (ignores upper 128 bits)
-fn decode_frontend/uint256(data: &[u8]) -> Result<u128, DispatchError> {
+/// Decode uint256 to u128 (ignores upper 128 bits)
+fn decode_uint256(data: &[u8]) -> Result<u128, DispatchError> {
     if data.len() < 32 {
-        return Err(DispatchError::Other("Data too short for frontend/uint256"));
+        return Err(DispatchError::Other("Data too short for uint256"));
     }
     let mut bytes = [0u8; 16];
     bytes.copy_from_slice(&data[16..32]);
@@ -569,7 +569,7 @@ mod tests {
             extra_data: vec![],
         };
 
-        let calldata = UniswapV2Adapter::bfrontend/uild_swap_calldata(&params).unwrap();
+        let calldata = UniswapV2Adapter::build_swap_calldata(&params).unwrap();
         assert_eq!(&calldata[..4], &[0x38, 0xed, 0x17, 0x39]);
         assert!(calldata.len() > 100);
     }
@@ -586,7 +586,7 @@ mod tests {
             extra_data: vec![],
         };
 
-        let calldata = RaydiumAdapter::bfrontend/uild_swap_calldata(&params).unwrap();
+        let calldata = RaydiumAdapter::build_swap_calldata(&params).unwrap();
         assert_eq!(
             &calldata[..8],
             &[0xf8, 0xc6, 0x9e, 0x91, 0xe1, 0x75, 0x87, 0xc8]
@@ -607,10 +607,10 @@ mod tests {
     }
 
     #[test]
-    fn test_encode_decode_frontend/uint256() {
+    fn test_encode_decode_uint256() {
         let original: u128 = 123_456_789_012_345_678_901_234u128;
-        let encoded = encode_frontend/uint256(original);
-        let decoded = decode_frontend/uint256(&encoded).unwrap();
+        let encoded = encode_uint256(original);
+        let decoded = decode_uint256(&encoded).unwrap();
         assert_eq!(original, decoded);
     }
 

@@ -1,15 +1,15 @@
-# Product Reqfrontend/uirement Prompt (PRP) Concept
+# Product Requirement Prompt (PRP) Concept
 
-"Over-specifying what to bfrontend/uild while under-specifying the context, and how to bfrontend/uild it, is why so many AI-driven coding attempts stall at 80%. A Product Reqfrontend/uirement Prompt (PRP) fixes that by fusing the disciplined scope of a classic Product Reqfrontend/uirements Document (PRD) with the “context-is-king” mindset of modern prompt engineering."
+"Over-specifying what to build while under-specifying the context, and how to build it, is why so many AI-driven coding attempts stall at 80%. A Product Requirement Prompt (PRP) fixes that by fusing the disciplined scope of a classic Product Requirements Document (PRD) with the “context-is-king” mindset of modern prompt engineering."
 
 ## What is a PRP?
 
-Product Reqfrontend/uirement Prompt (PRP)
+Product Requirement Prompt (PRP)
 A PRP is a structured prompt that supplies an AI coding agent with everything it needs to deliver a vertical slice of working software—no more, no less.
 
 ### How it differs from a PRD
 
-A traditional PRD clarifies what the product must do and why customers need it, but deliberately avoids how it will be bfrontend/uilt.
+A traditional PRD clarifies what the product must do and why customers need it, but deliberately avoids how it will be built.
 
 A PRP keeps the goal and justification sections of a PRD yet adds three AI-critical layers:
 
@@ -19,7 +19,7 @@ A PRP keeps the goal and justification sections of a PRD yet adds three AI-criti
 
 ### Implementation Details and Strategy
 
-- In contrast of a traditional PRD, a PRP explicitly states how the product will be bfrontend/uilt. This includes the use of API endpoints, test runners, or agent patterns (ReAct, Plan-and-Execute) to use. Usage of typehints, dependencies, architectural patterns and other tools to ensure the code is bfrontend/uilt correctly.
+- In contrast of a traditional PRD, a PRP explicitly states how the product will be built. This includes the use of API endpoints, test runners, or agent patterns (ReAct, Plan-and-Execute) to use. Usage of typehints, dependencies, architectural patterns and other tools to ensure the code is built correctly.
 
 ### Validation Gates
 
@@ -41,4 +41,4 @@ The industry mantra “Garbage In → Garbage Out” applies doubly to prompt en
 A PRP is PRD + curated codebase intelligence + agent/runbook—the minimum viable packet an AI needs to plausibly ship production-ready code on the first pass.
 
 The PRP can be small and focusing on a single task or large and covering multiple tasks.
-The true power of PRP is in the ability to chain tasks together in a PRP to bfrontend/uild, self-validate and ship complex features.
+The true power of PRP is in the ability to chain tasks together in a PRP to build, self-validate and ship complex features.

@@ -1,1 +1,1 @@
-"""Atlas Sphere SDK test sfrontend/uite."""
+"""Atlas Sphere SDK test suite."""

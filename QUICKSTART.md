@@ -2,7 +2,7 @@
 
 Get up and running in 5 minutes.
 
-## Prereqfrontend/uisites
+## Prerequisites
 
 - Python 3.10+
 - Node.js 18+
@@ -15,18 +15,18 @@ Get up and running in 5 minutes.
 cd /path/to/atlas-sphere-master
 
 # Python dependencies
-pip install -r md_supervisor/reqfrontend/uirements.txt
+pip install -r md_supervisor/requirements.txt
 
 # VS Code extension dependencies
-cd apps/apps/md-supervisor-vscode-legacy-2-legacy-2 && npm install
+cd apps/md-supervisor-vscode && npm install
 ```
 
-## Step 2: Bfrontend/uild Ollama Models (Optional)
+## Step 2: Build Ollama Models (Optional)
 
 If you have Ollama running locally:
 
 ```bash
-for model in planner bfrontend/uilder fixer auditor closer; do
+for model in planner builder fixer auditor closer; do
  ollama create x3-$model -f ollama/Modelfile.$model
 done
 ```
@@ -55,7 +55,7 @@ def get_price():
 
 ```bash
 # Install extension
-code --install-extension ./apps/apps/md-supervisor-vscode-legacy-2-legacy-2
+code --install-extension ./apps/md-supervisor-vscode
 
 # Or open panel
 cmd+shift+p → "Open md_supervisor Panel"
@@ -65,7 +65,7 @@ cmd+shift+p → "Open md_supervisor Panel"
 
 - **Timeline**: See change ingestion → deduplication → commits
 - **AST Heatmap**: Visualize semantic code changes
-- **PnL Impact**: (Reqfrontend/uires trader integration)
+- **PnL Impact**: (Requires trader integration)
 - **Agent Decisions**: Review courtroom votes
 - **Rollback Button**: Revert last commit
 
@@ -73,7 +73,7 @@ cmd+shift+p → "Open md_supervisor Panel"
 
 ```bash
 ./bin/x3-md-supervisor full          # Full cycle: ingest → apply → commit
-./bin/x3-md-supervisor gfrontend/frontend/ui           # Launch VS Code extension
+./bin/x3-md-supervisor gui           # Launch VS Code extension
 ./bin/x3-md-supervisor replay        # Analyze without applying
 ./bin/x3-md-supervisor rollback      # Undo last commit
 ./bin/x3-md-supervisor status        # Health check
@@ -95,7 +95,7 @@ cat .md_supervisor/launcher.log
 ## Environment Variables
 
 ```bash
-# Use OpenRouter fallback (reqfrontend/uires API key)
+# Use OpenRouter fallback (requires API key)
 export OPENROUTER_API_KEY="sk-..."
 
 # Disable auto-rollback
@@ -120,11 +120,11 @@ python3 -m md_supervisor --help
 ```
 
 **Ollama not running?**
-System falls back to OpenRouter (reqfrontend/uires API key).
+System falls back to OpenRouter (requires API key).
 
 **Extension won't load?**
 ```bash
-code --install-extension ./apps/apps/md-supervisor-vscode-legacy-2-legacy-2 --force
+code --install-extension ./apps/md-supervisor-vscode --force
 ```
 
 **Permissions?**

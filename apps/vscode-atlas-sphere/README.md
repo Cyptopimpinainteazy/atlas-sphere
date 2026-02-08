@@ -44,7 +44,7 @@ The extension adds an Atlas Sphere activity bar with:
 - **Accounts** - Development accounts
 - **Recent Comits** - Transaction history
 
-## Reqfrontend/uirements
+## Requirements
 
 - VS Code 1.85.0 or later
 - `atlas-lsp` binary (for full language server features)
@@ -72,10 +72,10 @@ npm run compile
 cargo install --path crates/atlas-lsp
 ```
 
-Or bfrontend/uild from source:
+Or build from source:
 ```bash
 cd crates/atlas-lsp
-cargo bfrontend/uild --release
+cargo build --release
 # Binary at target/release/atlas-lsp
 ```
 

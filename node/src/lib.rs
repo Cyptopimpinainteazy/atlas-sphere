@@ -13,7 +13,7 @@
 /// CLI interface definitions for the Atlas Sphere node binary.
 ///
 /// This module is only compiled when the `cli` feature flag is active, which is
-/// the default for native bfrontend/uilds of the node binary.
+/// the default for native builds of the node binary.
 #[cfg(feature = "cli")]
 #[cfg_attr(docsrs, doc(cfg(feature = "cli")))]
 pub mod cli;
@@ -21,7 +21,7 @@ pub mod cli;
 /// Command dispatching and execution helpers for CLI invocations.
 ///
 /// This module is conditionally compiled with the `cli` feature flag to ensure
-/// the node can still bfrontend/uild for Wasm hosts or other environments where a native
+/// the node can still build for Wasm hosts or other environments where a native
 /// CLI is unnecessary.
 #[cfg(feature = "cli")]
 #[cfg_attr(docsrs, doc(cfg(feature = "cli")))]

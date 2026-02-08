@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   ArrowRight,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const learningPaths = [
   {
@@ -27,7 +27,7 @@ const learningPaths = [
   },
   {
     title: 'EVM Development',
-    description: 'Bfrontend/uild dApps using Solidity and EVM tools',
+    description: 'Build dApps using Solidity and EVM tools',
     duration: '8 hours',
     modules: 12,
     level: 'Intermediate',
@@ -35,7 +35,7 @@ const learningPaths = [
   },
   {
     title: 'SVM Development',
-    description: 'Bfrontend/uild programs using Rust and the Solana Virtual Machine',
+    description: 'Build programs using Rust and the Solana Virtual Machine',
     duration: '10 hours',
     modules: 14,
     level: 'Intermediate',
@@ -60,12 +60,12 @@ const certifications = [
 const resources = [
   {
     title: 'Video Tutorials',
-    description: 'Step-by-step video gfrontend/uides',
+    description: 'Step-by-step video guides',
     icon: <PlayCircle className="w-6 h-6" />,
     count: '50+ videos',
   },
   {
-    title: 'Written Gfrontend/uides',
+    title: 'Written Guides',
     description: 'In-depth documentation',
     icon: <FileText className="w-6 h-6" />,
     count: '100+ articles',

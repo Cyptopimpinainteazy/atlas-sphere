@@ -5,14 +5,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "bfrontend/uild": "tsc",
-    "bfrontend/uild:watch": "tsc --watch",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
-    "prepublishOnly": "npm run bfrontend/uild"
+    "prepublishOnly": "npm run build"
   },
   "files": [
     "dist",

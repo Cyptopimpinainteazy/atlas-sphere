@@ -9,16 +9,16 @@
  *
  * @example
  * ```typescript
- * import { AtlasSphereClient, ComitBfrontend/uilder } from '@atlas-sphere/ts-sdk';
+ * import { AtlasSphereClient, ComitBuilder } from '@atlas-sphere/ts-sdk';
  *
  * const client = new AtlasSphereClient({ endpoint: 'ws://localhost:9944' });
  * await client.connect();
  *
- * const comit = new ComitBfrontend/uilder()
+ * const comit = new ComitBuilder()
  *   .withEvmPayload({ to: '0x...', data: '0x...', value: 0n })
  *   .withSvmPayload({ programId: '0x...', data: '0x...' })
  *   .withFee('auto')
- *   .bfrontend/uild();
+ *   .build();
  *
  * const result = await client.submitComit(comit, signerAccount);
  * ```
@@ -87,11 +87,11 @@ export type {
 } from './client';
 
 // =============================================================================
-// Comit Bfrontend/uilder
+// Comit Builder
 // =============================================================================
 
 export {
-  ComitBfrontend/uilder,
+  ComitBuilder,
   comit,
   evmComit,
   svmComit,
@@ -111,6 +111,18 @@ export {
   QueryClient,
   createQueryClient,
 } from './query';
+
+// Collateral exports
+export {
+  CollateralManagerClient,
+} from './collateral';
+
+export type {
+  BondId,
+  BondState,
+  DepositReceipt,
+  WithdrawRequest,
+} from './collateral';
 
 export type {
   QueryOptions,

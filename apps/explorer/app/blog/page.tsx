@@ -5,11 +5,11 @@ export const metadata: Metadata = {
   title: 'X3 Atlas Ecosystem - Revolutionizing Blockchain Infrastructure',
   description: 'Explore how X3 Atlas is redefining blockchain technology through cutting-edge infrastructure solutions and unparalleled ecosystem integration',
   openGraph: {
-    type: 'frontend/website',
+    type: 'website',
     locale: 'en_US',
     url: 'https://x3atlas.xyz/blog',
     title: 'X3 Atlas Ecosystem - Blockchain Innovation Ledger',
-    description: 'Next-gen blockchain solutions powering enterprise adoption and frontend/web3 evolution',
+    description: 'Next-gen blockchain solutions powering enterprise adoption and web3 evolution',
     images: [
       {
         url: '/blog/og-image.jpg', // USER PROVIDED IMAGE NEEDED
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'X3 Atlas Ecosystem - Blockchain Innovation Ledger',
-    description: 'Next-gen blockchain solutions powering enterprise adoption and frontend/web3 evolution',
+    description: 'Next-gen blockchain solutions powering enterprise adoption and web3 evolution',
     images: ['/blog/og-image.jpg'], // USER PROVIDED IMAGE NEEDED
   },
 }
@@ -42,7 +42,7 @@ export default function Blog() {
     {
       slug: 'defi-ecosystem',
       title: 'Institutional DeFi Architecture',
-      excerpt: 'Multi-chain liqfrontend/uidity aggregation meets compliance-ready financial primitives'
+      excerpt: 'Multi-chain liquidity aggregation meets compliance-ready financial primitives'
     },
     {
       slug: 'gaming-infrastructure',
@@ -62,7 +62,7 @@ export default function Blog() {
     {
       slug: 'permissioned-networks',
       title: 'Regulation-Ready Private Chains',
-      excerpt: 'Enterprise blockchain solutions with bfrontend/uilt-in compliance controls'
+      excerpt: 'Enterprise blockchain solutions with built-in compliance controls'
     },
     {
       slug: 'rwa',
@@ -77,7 +77,7 @@ export default function Blog() {
     {
       slug: 'developer-tools',
       title: 'Full-Stack Web3 Toolkit',
-      excerpt: 'Everything developers need to bfrontend/uild on the next generation of blockchain infrastructure'
+      excerpt: 'Everything developers need to build on the next generation of blockchain infrastructure'
     },
     {
       slug: 'wallet-solutions',

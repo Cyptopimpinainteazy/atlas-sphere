@@ -2,12 +2,12 @@
 
 > Install, authenticate, and start using Claude Code on your development machine.
 
-## System reqfrontend/uirements
+## System requirements
 
 - **Operating Systems**: macOS 10.15+, Ubuntu 20.04+/Debian 10+, or Windows 10+ (with WSL 1, WSL 2, or Git for Windows)
 - **Hardware**: 4GB+ RAM
 - **Software**: [Node.js 18+](https://nodejs.org/en/download)
-- **Network**: Internet connection reqfrontend/uired for authentication and AI processing
+- **Network**: Internet connection required for authentication and AI processing
 - **Shell**: Works best in Bash, Zsh or Fish
 - **Location**: [Anthropic supported countries](https://www.anthropic.com/supported-countries)
 
@@ -38,8 +38,8 @@ claude
 
 Claude Code offers the following authentication options:
 
-1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Reqfrontend/uires active billing at [console.anthropic.com](https://console.anthropic.com).
-2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the frontend/frontend/web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
+1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Requires active billing at [console.anthropic.com](https://console.anthropic.com).
+2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
 3. **Enterprise platforms**: Configure Claude Code to use [Amazon Bedrock or Google Vertex AI](/en/docs/claude-code/third-party-integrations) for enterprise deployments with your existing cloud infrastructure.
 
 <Note>
@@ -54,7 +54,7 @@ Claude Code offers the following authentication options:
 
 **Option 2: Claude Code on native Windows with Git Bash**
 
-- Reqfrontend/uires [Git for Windows](https://git-scm.com/downloads/win)
+- Requires [Git for Windows](https://git-scm.com/downloads/win)
 - For portable Git installations, specify the path to your `bash.exe`:
   ```powershell
   $env:CLAUDE_CODE_GIT_BASH_PATH="C:\Program Files\Git\bin\bash.exe"
@@ -62,9 +62,9 @@ Claude Code offers the following authentication options:
 
 ## Alternative installation methods
 
-Claude Code offers multiple installation methods to sfrontend/uit different environments.
+Claude Code offers multiple installation methods to suit different environments.
 
-If you encounter any issues during installation, consult the [troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
+If you encounter any issues during installation, consult the [troubleshooting guide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
 
 <Tip>
   Run `claude doctor` after installation to check your installation type and version.
@@ -157,12 +157,12 @@ claude update
 
 > Install, authenticate, and start using Claude Code on your development machine.
 
-## System reqfrontend/uirements
+## System requirements
 
 - **Operating Systems**: macOS 10.15+, Ubuntu 20.04+/Debian 10+, or Windows 10+ (with WSL 1, WSL 2, or Git for Windows)
 - **Hardware**: 4GB+ RAM
 - **Software**: [Node.js 18+](https://nodejs.org/en/download)
-- **Network**: Internet connection reqfrontend/uired for authentication and AI processing
+- **Network**: Internet connection required for authentication and AI processing
 - **Shell**: Works best in Bash, Zsh or Fish
 - **Location**: [Anthropic supported countries](https://www.anthropic.com/supported-countries)
 
@@ -193,8 +193,8 @@ claude
 
 Claude Code offers the following authentication options:
 
-1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Reqfrontend/uires active billing at [console.anthropic.com](https://console.anthropic.com).
-2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the frontend/frontend/web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
+1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Requires active billing at [console.anthropic.com](https://console.anthropic.com).
+2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
 3. **Enterprise platforms**: Configure Claude Code to use [Amazon Bedrock or Google Vertex AI](/en/docs/claude-code/third-party-integrations) for enterprise deployments with your existing cloud infrastructure.
 
 <Note>
@@ -209,7 +209,7 @@ Claude Code offers the following authentication options:
 
 **Option 2: Claude Code on native Windows with Git Bash**
 
-- Reqfrontend/uires [Git for Windows](https://git-scm.com/downloads/win)
+- Requires [Git for Windows](https://git-scm.com/downloads/win)
 - For portable Git installations, specify the path to your `bash.exe`:
   ```powershell
   $env:CLAUDE_CODE_GIT_BASH_PATH="C:\Program Files\Git\bin\bash.exe"
@@ -217,9 +217,9 @@ Claude Code offers the following authentication options:
 
 ## Alternative installation methods
 
-Claude Code offers multiple installation methods to sfrontend/uit different environments.
+Claude Code offers multiple installation methods to suit different environments.
 
-If you encounter any issues during installation, consult the [troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
+If you encounter any issues during installation, consult the [troubleshooting guide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
 
 <Tip>
   Run `claude doctor` after installation to check your installation type and version.
@@ -312,12 +312,12 @@ claude update
 
 > Install, authenticate, and start using Claude Code on your development machine.
 
-## System reqfrontend/uirements
+## System requirements
 
 - **Operating Systems**: macOS 10.15+, Ubuntu 20.04+/Debian 10+, or Windows 10+ (with WSL 1, WSL 2, or Git for Windows)
 - **Hardware**: 4GB+ RAM
 - **Software**: [Node.js 18+](https://nodejs.org/en/download)
-- **Network**: Internet connection reqfrontend/uired for authentication and AI processing
+- **Network**: Internet connection required for authentication and AI processing
 - **Shell**: Works best in Bash, Zsh or Fish
 - **Location**: [Anthropic supported countries](https://www.anthropic.com/supported-countries)
 
@@ -348,8 +348,8 @@ claude
 
 Claude Code offers the following authentication options:
 
-1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Reqfrontend/uires active billing at [console.anthropic.com](https://console.anthropic.com).
-2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the frontend/frontend/web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
+1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Requires active billing at [console.anthropic.com](https://console.anthropic.com).
+2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
 3. **Enterprise platforms**: Configure Claude Code to use [Amazon Bedrock or Google Vertex AI](/en/docs/claude-code/third-party-integrations) for enterprise deployments with your existing cloud infrastructure.
 
 <Note>
@@ -364,7 +364,7 @@ Claude Code offers the following authentication options:
 
 **Option 2: Claude Code on native Windows with Git Bash**
 
-- Reqfrontend/uires [Git for Windows](https://git-scm.com/downloads/win)
+- Requires [Git for Windows](https://git-scm.com/downloads/win)
 - For portable Git installations, specify the path to your `bash.exe`:
   ```powershell
   $env:CLAUDE_CODE_GIT_BASH_PATH="C:\Program Files\Git\bin\bash.exe"
@@ -372,9 +372,9 @@ Claude Code offers the following authentication options:
 
 ## Alternative installation methods
 
-Claude Code offers multiple installation methods to sfrontend/uit different environments.
+Claude Code offers multiple installation methods to suit different environments.
 
-If you encounter any issues during installation, consult the [troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
+If you encounter any issues during installation, consult the [troubleshooting guide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
 
 <Tip>
   Run `claude doctor` after installation to check your installation type and version.
@@ -467,12 +467,12 @@ claude update
 
 > Install, authenticate, and start using Claude Code on your development machine.
 
-## System reqfrontend/uirements
+## System requirements
 
 - **Operating Systems**: macOS 10.15+, Ubuntu 20.04+/Debian 10+, or Windows 10+ (with WSL 1, WSL 2, or Git for Windows)
 - **Hardware**: 4GB+ RAM
 - **Software**: [Node.js 18+](https://nodejs.org/en/download)
-- **Network**: Internet connection reqfrontend/uired for authentication and AI processing
+- **Network**: Internet connection required for authentication and AI processing
 - **Shell**: Works best in Bash, Zsh or Fish
 - **Location**: [Anthropic supported countries](https://www.anthropic.com/supported-countries)
 
@@ -503,8 +503,8 @@ claude
 
 Claude Code offers the following authentication options:
 
-1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Reqfrontend/uires active billing at [console.anthropic.com](https://console.anthropic.com).
-2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the frontend/frontend/web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
+1. **Anthropic Console**: The default option. Connect through the Anthropic Console and complete the OAuth process. Requires active billing at [console.anthropic.com](https://console.anthropic.com).
+2. **Claude App (with Pro or Max plan)**: Subscribe to Claude's [Pro or Max plan](https://www.anthropic.com/pricing) for a unified subscription that includes both Claude Code and the web interface. Get more value at the same price point while managing your account in one place. Log in with your Claude.ai account. During launch, choose the option that matches your subscription type.
 3. **Enterprise platforms**: Configure Claude Code to use [Amazon Bedrock or Google Vertex AI](/en/docs/claude-code/third-party-integrations) for enterprise deployments with your existing cloud infrastructure.
 
 <Note>
@@ -519,7 +519,7 @@ Claude Code offers the following authentication options:
 
 **Option 2: Claude Code on native Windows with Git Bash**
 
-- Reqfrontend/uires [Git for Windows](https://git-scm.com/downloads/win)
+- Requires [Git for Windows](https://git-scm.com/downloads/win)
 - For portable Git installations, specify the path to your `bash.exe`:
   ```powershell
   $env:CLAUDE_CODE_GIT_BASH_PATH="C:\Program Files\Git\bin\bash.exe"
@@ -527,9 +527,9 @@ Claude Code offers the following authentication options:
 
 ## Alternative installation methods
 
-Claude Code offers multiple installation methods to sfrontend/uit different environments.
+Claude Code offers multiple installation methods to suit different environments.
 
-If you encounter any issues during installation, consult the [troubleshooting gfrontend/uide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
+If you encounter any issues during installation, consult the [troubleshooting guide](/en/docs/claude-code/troubleshooting#linux-permission-issues).
 
 <Tip>
   Run `claude doctor` after installation to check your installation type and version.

@@ -5,7 +5,7 @@ description: |
 Transform the monolithic mcp-crawl4ai-rag codebase into a maintainable vertical slice architecture with proper separation of concerns, type safety, and comprehensive testing.
 
 ## Core Principles
-1. **Foundation First**: Bfrontend/uild core structure before moving functionality
+1. **Foundation First**: Build core structure before moving functionality
 2. **Type Safety**: Use Pydantic models for all data validation
 3. **Test as You Go**: Add pytest tests for each component
 4. **Progressive Validation**: Verify each phase before proceeding
@@ -17,7 +17,7 @@ Transform the monolithic mcp-crawl4ai-rag codebase into a maintainable vertical 
 Refactor the current monolithic codebase (src/crawl4ai_mcp.py: 1054 lines, src/utils.py: 738 lines) into a well-structured vertical slice architecture with proper separation of concerns, comprehensive type safety, and unit tests for all components.
 
 ## Why
-- Current files exceed 500-line limit (CLAUDE.md reqfrontend/uirement)
+- Current files exceed 500-line limit (CLAUDE.md requirement)
 - Business logic mixed with MCP tool definitions
 - No type safety or request/response validation
 - Missing unit tests make changes risky
@@ -45,13 +45,13 @@ Transform the codebase into a vertical slice architecture where:
 ```yaml
 # MUST READ - Include these in your context window
 - file: PRPs/ai_docs/uv_practices.md
-  why: Complete UV package management gfrontend/uide - read sections on pyproject.toml setup and pytest integration
+  why: Complete UV package management guide - read sections on pyproject.toml setup and pytest integration
   
 - file: PRPs/ai_docs/uv_tools.md
   why: UV tools documentation for running tests and linting
   
 - file: CLAUDE.md
-  why: Project coding standards - especially file size limits and testing reqfrontend/uirements
+  why: Project coding standards - especially file size limits and testing requirements
   
 - url: https://docs.pydantic.dev/latest/concepts/models/
   why: Pydantic v2 model creation and validation patterns
@@ -60,7 +60,7 @@ Transform the codebase into a vertical slice architecture where:
   why: Pytest fixture patterns for test setup
   
 - docfile: PRPs/ai_docs/refactor_plan.md
-  why: Complete refactor reqfrontend/uirements and target structure
+  why: Complete refactor requirements and target structure
 ```
 
 ### Current Codebase tree
@@ -126,11 +126,11 @@ mcp-crawl4ai-rag/
 │           └── test_reranking.py
 ```
 
-### Known Gotchas of our codebase & Library Qfrontend/uirks
+### Known Gotchas of our codebase & Library Quirks
 ```python
-# CRITICAL: FastMCP reqfrontend/uires async functions for all tools
+# CRITICAL: FastMCP requires async functions for all tools
 # CRITICAL: Pydantic v2 is used - use model_dump() not dict()
-# CRITICAL: UV reqfrontend/uires src/ layout for editable installs
+# CRITICAL: UV requires src/ layout for editable installs
 # CRITICAL: Supabase client is synchronous but used in async context
 # CRITICAL: Environment variables must be loaded with override=True
 # CRITICAL: Cross-encoder model loading can fail - needs try/except
@@ -278,7 +278,7 @@ Task 12 - Final cleanup:
 UPDATE archive/archive/imports throughout codebase
 DELETE src/crawl4ai_mcp.py
 DELETE src/utils.py
-RUN full test sfrontend/uite
+RUN full test suite
 ```
 
 ### Per task pseudocode as needed
@@ -356,7 +356,7 @@ from mcp.server.fastmcp import Context
 
 @mcp.tool()
 async def crawl_single_page(ctx: Context, url: str) -> str:
-    """Crawl a single frontend/frontend/web page and store its content."""
+    """Crawl a single web page and store its content."""
     # PATTERN: Tool is just a thin wrapper
     service = CrawlingService(ctx.crawler, ctx.supabase_client)
     request = CrawlRequest(url=url)

@@ -16,7 +16,7 @@ import {
   Plus,
   ArrowUp,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const categories = [
   { name: 'All', count: 1247, color: 'bg-gray-500' },
@@ -63,7 +63,7 @@ const recentTopics = [
     id: 2,
     title: 'Cross-VM swap failing with error 0x11',
     category: 'Support',
-    author: 'defi_bfrontend/uilder',
+    author: 'defi_builder',
     authorAvatar: 'DB',
     replies: 8,
     views: 234,
@@ -116,7 +116,7 @@ const recentTopics = [
   },
   {
     id: 7,
-    title: 'Tutorial: Bfrontend/uilding a cross-VM NFT marketplace',
+    title: 'Tutorial: Building a cross-VM NFT marketplace',
     category: 'Development',
     author: 'nft_wizard',
     authorAvatar: 'NW',
@@ -140,7 +140,7 @@ const recentTopics = [
 
 const topContributors = [
   { name: 'atlas_expert', posts: 234, reputation: 4523 },
-  { name: 'defi_bfrontend/uilder', posts: 189, reputation: 3812 },
+  { name: 'defi_builder', posts: 189, reputation: 3812 },
   { name: 'validator_mike', posts: 156, reputation: 3245 },
   { name: 'nft_wizard', posts: 134, reputation: 2987 },
   { name: 'community_voice', posts: 112, reputation: 2654 },

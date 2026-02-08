@@ -15,7 +15,7 @@ import {
   ExternalLink,
   CheckCircle2,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const gameFeatures = [
   {
@@ -43,7 +43,7 @@ const gameFeatures = [
     color: 'from-yellow-500 to-amber-500',
   },
   {
-    name: 'Gfrontend/uilds & DAOs',
+    name: 'Guilds & DAOs',
     description: 'Player-owned organizations with governance',
     icon: <Users className="w-6 h-6" />,
     color: 'from-blue-500 to-cyan-500',
@@ -84,7 +84,7 @@ const games = [
     name: 'Crypto Kingdoms',
     genre: 'Strategy',
     players: '18K+',
-    description: 'Bfrontend/uild and conquer in this strategy game',
+    description: 'Build and conquer in this strategy game',
     image: '🏰',
   },
   {
@@ -136,16 +136,16 @@ export default function GamesPage() {
             </Link>
             <div className="badge badge-pink mt-4 mb-4">Gaming</div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Bfrontend/uild Web3 Games
+              Build Web3 Games
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Everything you need to bfrontend/uild blockchain games. NFT assets, play-to-earn 
+              Everything you need to build blockchain games. NFT assets, play-to-earn 
               mechanics, tournaments, and seamless player experiences.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
                 <Gamepad2 className="w-4 h-4 mr-2" />
-                Start Bfrontend/uilding
+                Start Building
               </Link>
               <Link href="/community/grants" className="btn-secondary">
                 Gaming Grants
@@ -181,7 +181,7 @@ export default function GamesPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Game SDK</h2>
               <p className="text-gray-400 mb-6">
-                Our game SDK makes blockchain integration seamless. Focus on bfrontend/uilding 
+                Our game SDK makes blockchain integration seamless. Focus on building 
                 great games while we handle the blockchain complexity.
               </p>
               <ul className="space-y-3">
@@ -259,14 +259,14 @@ export default function GamesPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Sparkles className="w-12 h-12 text-orange-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Bfrontend/uild Your Game?
+            Ready to Build Your Game?
           </h2>
           <p className="text-gray-400 mb-8">
             Get started with our game SDK and join the growing ecosystem of X3 STAR games.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">
-              Game Dev Gfrontend/uide
+              Game Dev Guide
             </Link>
             <Link href="/community/grants" className="btn-secondary">
               Apply for Grant

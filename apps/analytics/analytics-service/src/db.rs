@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Pool;
 use tokio_postgres::Row;
-use ufrontend/uid::Ufrontend/uid;
+use uuid::Uuid;
 
 use crate::error::ServiceError;
 use crate::models::*;
@@ -157,7 +157,7 @@ pub async fn insert_event(pool: &Pool, event: &Event) -> Result<Event, ServiceEr
 }
 
 /// Get event by ID
-pub async fn get_event_by_id(pool: &Pool, event_id: Ufrontend/uid) -> Result<Option<Event>, ServiceError> {
+pub async fn get_event_by_id(pool: &Pool, event_id: Uuid) -> Result<Option<Event>, ServiceError> {
     let client = pool.get().await?;
 
     let row = client
@@ -185,7 +185,7 @@ pub async fn query_events(
     let limit = params.limit.unwrap_or(100).min(1000);
     let offset = params.offset.unwrap_or(0);
 
-    // Bfrontend/uild WHERE clause dynamically
+    // Build WHERE clause dynamically
     let mut conditions = Vec::new();
     let mut param_values: Vec<Box<dyn tokio_postgres::types::ToSql + Sync + Send>> = Vec::new();
     let mut param_idx = 1;

@@ -124,7 +124,7 @@
 
 ### Development Roadmap
 
-- [ ] TODO.md or roadmap section exists
+- [ ] docs/reports/TODO.md or roadmap section exists
 - [ ] Planned components listed
 - [ ] Development phases identified
 - [ ] Quick commands for adding components

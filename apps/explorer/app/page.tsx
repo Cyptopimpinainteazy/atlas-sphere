@@ -35,7 +35,7 @@ const PrometheusWidget = dynamic(
   }
 );
 
-// Dynamic archive/archive/imports for quantum showcase components
+// Dynamic imports for quantum showcase components
 const HorizontalScrollTrack = dynamic(
   () => import('@/components/quantum/HorizontalGallery').then(mod => ({ default: mod.HorizontalScrollTrack })),
   { ssr: false, loading: () => <div className="h-80 animate-pulse bg-slate-800/50 rounded-2xl" /> }
@@ -122,7 +122,7 @@ const featureGrid: Feature[] = [
   },
   {
     icon: Layers,
-    title: 'Full DeFi Sfrontend/uite',
+    title: 'Full DeFi Suite',
     description: 'Lending, staking, launchpads, NFTs and more',
     stats: '15+ protocols',
     color: 'from-red-500 to-pink-500'
@@ -210,7 +210,7 @@ export default function HomePage() {
   useEffect(() => {
     const activityTexts = [
       'Cross-chain swap: BTC to ETH on Polygon',
-      'Liqfrontend/uidation protected: $89K position saved',
+      'Liquidation protected: $89K position saved',
       'AI arbitrage: +$1,890 profit executed',
       'NFT launch: 100 items sold in 3min',
       'Staking rewards: 15.7% APY claimed'
@@ -351,7 +351,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Qfrontend/uick Navigation */}
+      {/* Quick Navigation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h2 className="text-4xl font-bold text-center text-white mb-12">Explore the Ecosystem</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

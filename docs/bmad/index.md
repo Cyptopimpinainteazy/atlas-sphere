@@ -92,7 +92,7 @@ This directory contains the consolidated BMAD documentation, which was previousl
 
 ---
 
-**Note**: This consolidation resolves a major documentation duplication issue identified in the markdown files audit (December 10, 2025). For more details on the audit process, see `MARKDOWN_FILES_AUDIT_REPORT.md`.
+**Note**: This consolidation resolves a major documentation duplication issue identified in the markdown files audit (December 10, 2025). For more details on the audit process, see `archive/reports/MARKDOWN_FILES_AUDIT_REPORT.md`.
 
 ---
 

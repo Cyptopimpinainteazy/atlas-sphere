@@ -16,7 +16,7 @@ import {
   Code,
   Smartphone,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const actionTypes = [
   {
@@ -73,10 +73,10 @@ const useCases = [
 ];
 
 const codeExample = `// Create an Action link
-import { ActionBfrontend/uilder } from '@x3star/actions';
+import { ActionBuilder } from '@x3star/actions';
 
 // Create a payment action
-const paymentAction = ActionBfrontend/uilder.payment({
+const paymentAction = ActionBuilder.payment({
   recipient: '0x742d35Cc6634C0532925a3b844Bc9e7595f...',
   amount: '25.00',
   currency: 'USDC',
@@ -131,7 +131,7 @@ export default function ActionsPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
-                Start Bfrontend/uilding
+                Start Building
               </Link>
               <Link href="/developers/cookbook" className="btn-secondary">
                 View Examples
@@ -176,7 +176,7 @@ export default function ActionsPage() {
                   'Rich previews on Twitter, Discord, Telegram',
                   'One-click transactions from any platform',
                   'Customizable appearance and branding',
-                  'Bfrontend/uilt-in analytics and tracking',
+                  'Built-in analytics and tracking',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center text-gray-400">
                     <Zap className="w-5 h-5 text-orange-400 mr-3" />
@@ -233,7 +233,7 @@ export default function ActionsPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Easy to Create</h2>
               <p className="text-gray-400 mb-6">
-                Bfrontend/uild Actions and Blinks with our SDK. Generate shareable links, 
+                Build Actions and Blinks with our SDK. Generate shareable links, 
                 QR codes, and rich previews in just a few lines of code.
               </p>
               <Link href="/developers/docs" className="btn-primary">
@@ -261,7 +261,7 @@ export default function ActionsPage() {
             Create Your First Action
           </h2>
           <p className="text-gray-400 mb-8">
-            Start bfrontend/uilding shareable blockchain experiences today.
+            Start building shareable blockchain experiences today.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">

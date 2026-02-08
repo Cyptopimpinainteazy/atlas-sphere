@@ -4,7 +4,7 @@ use x3_ast::ast::*;
 use x3_common::{BytePos, Span, Spanned, Symbol};
 
 #[test]
-fn bfrontend/uild_and_serialize_sample_agent() {
+fn build_and_serialize_sample_agent() {
     let span = Span::new(BytePos(0), BytePos(0), 0);
     let id = Some(NodeId(1));
 

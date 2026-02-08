@@ -16,19 +16,19 @@ pub fn run() -> CliResult<()> {
     let cli = Cli::parse();
 
     match &cli.subcommand {
-        Some(Commands::Bfrontend/uildSpec(cmd)) => {
+        Some(Commands::BuildSpec(cmd)) => {
             let runner = cli.create_runner(cmd).map_err(|e| {
-                error!("Failed to initialize runner for `bfrontend/uild-spec`: {e}");
+                error!("Failed to initialize runner for `build-spec`: {e}");
                 e
             })?;
 
             runner.sync_run(|config| {
                 info!(
-                    "Bfrontend/uilding Atlas Sphere chain specification (raw: {})",
+                    "Building Atlas Sphere chain specification (raw: {})",
                     cmd.raw
                 );
                 cmd.run(config.chain_spec, config.network).map_err(|e| {
-                    error!("`bfrontend/uild-spec` command failed: {e}");
+                    error!("`build-spec` command failed: {e}");
                     e
                 })
             })
@@ -42,7 +42,7 @@ pub fn run() -> CliResult<()> {
             runner.async_run(|config| {
                 info!("Checking blocks with the current runtime logic");
                 let partial = service::new_partial(&config).map_err(|e| {
-                    error!("Unable to bfrontend/uild partial components for `check-block`: {e}");
+                    error!("Unable to build partial components for `check-block`: {e}");
                     CliError::Service(e)
                 })?;
 
@@ -65,7 +65,7 @@ pub fn run() -> CliResult<()> {
             runner.async_run(|config| {
                 info!("Exporting blocks to file");
                 let partial = service::new_partial(&config).map_err(|e| {
-                    error!("Unable to bfrontend/uild partial components for `export-blocks`: {e}");
+                    error!("Unable to build partial components for `export-blocks`: {e}");
                     CliError::Service(e)
                 })?;
 
@@ -87,7 +87,7 @@ pub fn run() -> CliResult<()> {
             runner.async_run(|config| {
                 info!("Exporting full runtime state snapshot");
                 let partial = service::new_partial(&config).map_err(|e| {
-                    error!("Unable to bfrontend/uild partial components for `export-state`: {e}");
+                    error!("Unable to build partial components for `export-state`: {e}");
                     CliError::Service(e)
                 })?;
 
@@ -109,7 +109,7 @@ pub fn run() -> CliResult<()> {
             runner.async_run(|config| {
                 info!("Importing blocks into the local database");
                 let partial = service::new_partial(&config).map_err(|e| {
-                    error!("Unable to bfrontend/uild partial components for `import-blocks`: {e}");
+                    error!("Unable to build partial components for `import-blocks`: {e}");
                     CliError::Service(e)
                 })?;
 
@@ -146,7 +146,7 @@ pub fn run() -> CliResult<()> {
             runner.async_run(|config| {
                 info!("Reverting chain state by {:?} blocks", cmd.num);
                 let partial = service::new_partial(&config).map_err(|e| {
-                    error!("Unable to bfrontend/uild partial components for `revert`: {e}");
+                    error!("Unable to build partial components for `revert`: {e}");
                     CliError::Service(e)
                 })?;
 
@@ -437,7 +437,7 @@ fn make_rpc_call(
         (host_port, 9944u16)
     };
 
-    // Bfrontend/uild JSON-RPC request
+    // Build JSON-RPC request
     let request_body = serde_json::json!({
         "jsonrpc": "2.0",
         "method": method,
@@ -446,7 +446,7 @@ fn make_rpc_call(
     });
     let body = request_body.to_string();
 
-    // Bfrontend/uild HTTP request
+    // Build HTTP request
     let http_request = format!(
         "POST {} HTTP/1.1\r\n\
          Host: {}:{}\r\n\

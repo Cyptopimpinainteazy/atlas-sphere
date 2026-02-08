@@ -312,7 +312,7 @@ const vms = useVMStatuses();
 1. System bar flashes red
 2. Dock icons dim
 3. All processing indicators freeze
-4. Manual intervention reqfrontend/uired
+4. Manual intervention required
 
 ### Atomic Abort
 
@@ -494,7 +494,7 @@ The finished product should make users think:
 > "This looks like something I'm not qualified to use —  
 > but I need to be."
 
-If it feels like a frontend/website, you failed.  
+If it feels like a website, you failed.  
 If it feels like a terminal you could lose money in, you succeeded.
 
 ---

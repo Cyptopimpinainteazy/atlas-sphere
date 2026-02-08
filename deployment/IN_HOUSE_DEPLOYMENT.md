@@ -1,11 +1,11 @@
-# 🏠 In-House Server Deployment Gfrontend/uide
+# 🏠 In-House Server Deployment Guide
 
-## Qfrontend/uick Overview
+## Quick Overview
 Deploy Atlas Sphere testnet on your own hardware/servers with full control and zero cloud costs.
 
 ---
 
-## 📋 Server Reqfrontend/uirements
+## 📋 Server Requirements
 
 ### Minimum Specs (Per Node)
 - **CPU**: 4 cores (8+ recommended for validators)
@@ -16,7 +16,7 @@ Deploy Atlas Sphere testnet on your own hardware/servers with full control and z
 
 ### Network Setup
 ```bash
-Reqfrontend/uired Ports:
+Required Ports:
 - 30333: P2P (validator/bootnode)
 - 9944: RPC/WebSocket (RPC nodes only)
 - 9615: Prometheus metrics (optional)
@@ -29,7 +29,7 @@ Reqfrontend/uired Ports:
 Perfect for testing everything locally on ONE machine:
 
 ```bash
-# Already have the binary bfrontend/uilt!
+# Already have the binary built!
 cd /home/lojak/Desktop/atlas-sphere
 
 # Run in dev mode (single validator, instant blocks)
@@ -74,7 +74,7 @@ One Beefy Server:
 
 ### Option A: Copy to Remote Servers
 ```bash
-# From your bfrontend/uild machine
+# From your build machine
 cd /home/lojak/Desktop/atlas-sphere
 
 # Copy to each server
@@ -346,7 +346,7 @@ sudo iptables -A INPUT -p tcp --dport 9944 -s YOUR_IP -j ACCEPT
 
 ## 📊 Monitoring Your Testnet
 
-### Qfrontend/uick Health Check
+### Quick Health Check
 ```bash
 # Check if nodes are running
 ps aux | grep atlas-sphere-node

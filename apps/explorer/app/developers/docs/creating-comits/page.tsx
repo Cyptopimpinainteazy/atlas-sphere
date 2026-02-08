@@ -7,7 +7,7 @@ export default function CreatingComitsPage() {
   return (
     <DocLayout
       title="Creating Comit Transactions"
-      description="Bfrontend/uild atomic cross-VM transactions that execute on both EVM and SVM"
+      description="Build atomic cross-VM transactions that execute on both EVM and SVM"
     >
       <p className="lead text-xl text-gray-400 mb-8">
         Comit transactions are the core innovation of X3 Atlas Sphere—atomic operations 
@@ -53,17 +53,17 @@ const api = await ApiPromise.create({ provider: wsProvider });
 const keyring = new Keyring({ type: 'sr25519' });
 const account = keyring.addFromUri('//Alice');
 
-// Bfrontend/uild EVM payload (e.g., ERC20 transfer)
+// Build EVM payload (e.g., ERC20 transfer)
 const erc20Interface = new ethers.Interface([
-  'function transfer(address to, frontend/uint256 amount)'
+  'function transfer(address to, uint256 amount)'
 ]);
 const evmPayload = erc20Interface.encodeFunctionData('transfer', [
   recipientAddress,
   ethers.parseEther('100')
 ]);
 
-// Bfrontend/uild SVM payload (e.g., SPL token mint)
-const svmPayload = bfrontend/uildSplMintInstruction(
+// Build SVM payload (e.g., SPL token mint)
+const svmPayload = buildSplMintInstruction(
   mintAddress,
   destinationAta,
   mintAuthority,
@@ -119,7 +119,7 @@ function calculatePrepareRoot(
   svmPayload: Uint8Array
 ): string {
   const encoded = ethers.solidityPacked(
-    ['bytes32', 'frontend/uint64', 'bytes', 'bytes'],
+    ['bytes32', 'uint64', 'bytes', 'bytes'],
     [origin, nonce, evmPayload, svmPayload]
   );
   return keccak256(encoded);

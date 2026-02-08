@@ -4,7 +4,7 @@ services:
   # Blockchain Node
   atlas-node:
     image: atlas-sphere:latest
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: Dockerfile.test
     container_name: atlas-testnet-node
@@ -95,7 +95,7 @@ services:
     volumes:
       - ./mock-data:/usr/share/nginx/html
     healthcheck:
-      test: ["CMD", "wget", "--qfrontend/uiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -104,7 +104,7 @@ services:
 
   mock-gpu-swarm:
     image: atlas-sphere:gpu-mock
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: Dockerfile.gpu-mock
     container_name: atlas-testnet-gpu-swarm
@@ -124,7 +124,7 @@ services:
 
   mock-external-chains:
     image: atlas-sphere:chains-mock
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: Dockerfile.chains-mock
     container_name: atlas-testnet-external-chains
@@ -146,7 +146,7 @@ services:
   # Test Runner Service
   e2e-test-runner:
     image: atlas-sphere:test-runner
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: Dockerfile.test-runner
     container_name: atlas-testnet-e2e-runner
@@ -183,10 +183,10 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--frontend/frontend/web.console.libraries=/etc/prometheus/console_libraries'
-      - '--frontend/frontend/web.console.templates=/etc/prometheus/consoles'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
-      - '--frontend/frontend/web.enable-lifecycle'
+      - '--web.enable-lifecycle'
     networks:
       - testnet
 
@@ -200,7 +200,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/apps/apps/dash-legacy-2-legacy-2boards:/etc/grafana/provisioning/apps/apps/dash-legacy-2-legacy-2boards
+      - ./monitoring/grafana/apps/dash-legacy-2-legacy-2boards:/etc/grafana/provisioning/apps/dash-legacy-2-legacy-2boards
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
     depends_on:
       - prometheus

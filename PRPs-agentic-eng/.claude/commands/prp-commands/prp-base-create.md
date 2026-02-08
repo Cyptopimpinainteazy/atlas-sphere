@@ -11,7 +11,7 @@ Create a comprehensive PRP that enables **one-pass implementation success** thro
 - Start by reading and understanding the prp concepts PRPs/README.md
 - The PRP content you create
 - Its training data knowledge
-- Access to codebase files (but needs gfrontend/uidance on which ones)
+- Access to codebase files (but needs guidance on which ones)
 
 **Therefore**: Your research and context curation directly determines implementation success. Incomplete context = implementation failure.
 
@@ -84,12 +84,12 @@ Save as: `PRPs/{feature-name}.md`
 
 - [ ] Passes "No Prior Knowledge" test from template
 - [ ] All YAML references are specific and accessible
-- [ ] Implementation tasks include exact naming and placement gfrontend/uidance
+- [ ] Implementation tasks include exact naming and placement guidance
 - [ ] Validation commands are project-specific and verified working
 
 ### Template Structure Compliance
 
-- [ ] All reqfrontend/uired template sections completed
+- [ ] All required template sections completed
 - [ ] Goal section has specific Feature Goal, Deliverable, Success Definition
 - [ ] Implementation Tasks follow dependency ordering
 - [ ] Final Validation Checklist is comprehensive
@@ -98,7 +98,7 @@ Save as: `PRPs/{feature-name}.md`
 
 - [ ] No generic references - all are specific and actionable
 - [ ] File patterns point at specific examples to follow
-- [ ] URLs include section anchors for exact gfrontend/uidance
+- [ ] URLs include section anchors for exact guidance
 - [ ] Task specifications use information-dense keywords from codebase
 
 ## Success Metrics

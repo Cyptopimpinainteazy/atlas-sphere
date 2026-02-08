@@ -17,13 +17,13 @@ import {
   AlertCircle,
   ExternalLink,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 import { useAuthorities } from '@/hooks/useSubstrate';
 
-const reqfrontend/uirements = [
+const requirements = [
   { label: 'Minimum Stake', value: '10,000 X3', icon: <Coins className="w-5 h-5" /> },
   { label: 'Hardware', value: '4 CPU, 16GB RAM, 500GB SSD', icon: <Server className="w-5 h-5" /> },
-  { label: 'Uptime Reqfrontend/uirement', value: '99.5%', icon: <Clock className="w-5 h-5" /> },
+  { label: 'Uptime Requirement', value: '99.5%', icon: <Clock className="w-5 h-5" /> },
   { label: 'Network', value: '100 Mbps dedicated', icon: <TrendingUp className="w-5 h-5" /> },
 ];
 
@@ -57,14 +57,14 @@ const benefits = [
 const steps = [
   {
     step: 1,
-    title: 'Meet Reqfrontend/uirements',
-    description: 'Ensure you meet the minimum hardware and stake reqfrontend/uirements',
-    status: 'reqfrontend/uired',
+    title: 'Meet Requirements',
+    description: 'Ensure you meet the minimum hardware and stake requirements',
+    status: 'required',
   },
   {
     step: 2,
     title: 'Set Up Node',
-    description: 'Bfrontend/uild and configure the X3 Atlas Sphere node (cargo bfrontend/uild --release)',
+    description: 'Build and configure the X3 Atlas Sphere node (cargo build --release)',
     status: 'technical',
   },
   {
@@ -77,7 +77,7 @@ const steps = [
     step: 4,
     title: 'Stake X3',
     description: 'Bond your X3 tokens to activate your validator',
-    status: 'reqfrontend/uired',
+    status: 'required',
   },
   {
     step: 5,
@@ -89,11 +89,11 @@ const steps = [
 
 const faqs = [
   {
-    question: 'What is the minimum stake reqfrontend/uired to become a validator?',
-    answer: 'The minimum stake reqfrontend/uired is 10,000 X3 tokens for testnet. This stake is bonded and can be slashed if the validator misbehaves or goes offline for extended periods.',
+    question: 'What is the minimum stake required to become a validator?',
+    answer: 'The minimum stake required is 10,000 X3 tokens for testnet. This stake is bonded and can be slashed if the validator misbehaves or goes offline for extended periods.',
   },
   {
-    question: 'What are the hardware reqfrontend/uirements?',
+    question: 'What are the hardware requirements?',
     answer: 'We recommend at least 4 CPU cores, 16GB RAM, and 500GB SSD storage. You\'ll also need a stable internet connection with at least 100 Mbps bandwidth.',
   },
   {
@@ -141,20 +141,20 @@ export default function ValidatorsPage() {
                 Get Started
               </Link>
               <Link href="/developers/docs" className="btn-secondary">
-                Read Validator Gfrontend/uide
+                Read Validator Guide
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Reqfrontend/uirements */}
+      {/* Requirements */}
       <section className="py-16 border-t border-[#1a1a1a]">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">Reqfrontend/uirements</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Requirements</h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {reqfrontend/uirements.map((req, index) => (
+            {requirements.map((req, index) => (
               <div key={index} className="glass-card p-6">
                 <div className="p-2 rounded-lg bg-orange-500/20 text-orange-400 w-fit mb-4">
                   {req.icon}
@@ -215,7 +215,7 @@ export default function ValidatorsPage() {
           
           <div className="mt-8 text-center">
             <Link href="/developers/docs" className="btn-primary">
-              View Full Validator Gfrontend/uide
+              View Full Validator Guide
             </Link>
           </div>
         </div>
@@ -358,7 +358,7 @@ export default function ValidatorsPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">
-              Validator Setup Gfrontend/uide
+              Validator Setup Guide
             </Link>
             <Link href="/community/forum" className="btn-secondary">
               Join Validator Community

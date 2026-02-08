@@ -50,7 +50,7 @@ const ValidatorGlobe = dynamic(() => import('@/components/quantum/ValidatorGlobe
 });
 
 const HolographicCardShowcase = dynamic(
-  () => import('@atlas-sphere/shared/components/quantum-frontend/frontend/ui/HolographicCard').then(mod => mod.HolographicCardShowcase) as any,
+  () => import('@atlas-sphere/shared/components/quantum-ui/HolographicCard').then(mod => mod.HolographicCardShowcase) as any,
   { ssr: false, loading: () => <SectionPlaceholder title="VALIDATOR NFT CARDS" /> }
 );
 
@@ -635,7 +635,7 @@ export default function QuantumLandingPage() {
                 <div>
                   <div className="text-xs tracking-widest text-white/60">EXPERIENCE</div>
                   <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mt-2">The Future of Execution: EVM + SVM</h2>
-                  <p className="text-white/70 mt-2 max-w-2xl">Cross-VM atomic transactions, validator visibility, and a GPU swarm bfrontend/uilt for AI workloads.</p>
+                  <p className="text-white/70 mt-2 max-w-2xl">Cross-VM atomic transactions, validator visibility, and a GPU swarm built for AI workloads.</p>
                 </div>
                 <div className="flex gap-3">
                   <Link href="/x3" className="px-5 py-2 rounded-xl bg-white text-black font-semibold">X3</Link>

@@ -108,7 +108,7 @@ def token_active_and_scopes(token: str) -> Optional[dict]:
     return {'active': True, 'scope': scope, 'claims': payload}
 
 
-def request_has_scope(request, reqfrontend/uired_scope: str) -> bool:
+def request_has_scope(request, required_scope: str) -> bool:
     token = _extract_bearer(request)
     if not token:
         return False
@@ -117,4 +117,4 @@ def request_has_scope(request, reqfrontend/uired_scope: str) -> bool:
         return False
     scope_str = info.get('scope') or ''
     scopes = set(s.strip() for s in scope_str.split() if s.strip())
-    return reqfrontend/uired_scope in scopes
+    return required_scope in scopes

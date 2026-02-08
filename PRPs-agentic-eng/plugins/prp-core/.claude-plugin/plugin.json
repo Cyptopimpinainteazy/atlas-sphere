@@ -1,7 +1,7 @@
 {
   "name": "prp-core",
   "version": "1.0.0",
-  "description": "Complete PRP (Product Reqfrontend/uirement Prompt) workflow automation - create, execute, commit, and PR commands with orchestration scripts",
+  "description": "Complete PRP (Product Requirement Prompt) workflow automation - create, execute, commit, and PR commands with orchestration scripts",
   "author": {
     "name": "Wirasm",
     "email": "hello@rasmuswiding.com"
@@ -12,7 +12,7 @@
     "prp",
     "workflow",
     "automation",
-    "product-reqfrontend/uirements",
+    "product-requirements",
     "implementation",
     "git",
     "ci-cd"

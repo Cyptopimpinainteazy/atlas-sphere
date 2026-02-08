@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Brave Search Configuration
     brave_api_key: str = Field(...)
     brave_search_url: str = Field(
-        default="https://api.search.brave.com/res/v1/web/search"
+        default="https://api.search.brave.com/res/v1/frontend/web/search"
     )
     
     # Application Configuration

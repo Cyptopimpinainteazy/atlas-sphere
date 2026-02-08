@@ -19,13 +19,18 @@ import os
 from typing import Dict, Any, Optional, List, Set
 from dataclasses import dataclass, asdict
 import aiohttp
-from aiohttp import frontend/frontend/web, WSMsgType
+from aiohttp import web, WSMsgType
 import aiohttp_cors
 
 from swarm.core.orchestrator import GPUOrchestrator, AgentJobDistributionManager
-from swarm.infra.gpu_manager import GPUManager, GPUCapabilities, GPUWorkloadType, TaskPriority
+from swarm.infra.gpu_manager import GPUManager, GPUCapabilities
 from swarm.telemetry.agent_registry import agent_registry
 from swarm.errors import error_middleware, APIError, ExternalServiceError
+from swarm.agents.task_queue import AsyncTaskQueue, TaskPriority as AgentTaskPriority
+from swarm.social.draft_pipeline import generate_social_draft
+from swarm.social.config import load_config as load_social_config
+from swarm.storage import sqlite_store
+from swarm.openspec_integration import OpenSpecValidator, create_change_skeleton, resolve_openspec_bin, resolve_workspace_root
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,8 +83,8 @@ class WebSocketManager:
     """Manages WebSocket connections for real-time updates"""
 
     def __init__(self):
-        self.connections: Set[frontend/frontend/web.WebSocketResponse] = set()
-        self.subscriptions: Dict[str, Set[frontend/frontend/web.WebSocketResponse]] = {
+        self.connections: Set[web.WebSocketResponse] = set()
+        self.subscriptions: Dict[str, Set[web.WebSocketResponse]] = {
             'swarm-health': set(),
             'gpu-tasks': set(),
             'agent-activity': set(),
@@ -90,17 +95,17 @@ class WebSocketManager:
             'governance-events': set(),
         }
 
-    async def add_connection(self, ws: frontend/frontend/web.WebSocketResponse):
+    async def add_connection(self, ws: web.WebSocketResponse):
         self.connections.add(ws)
         logger.info(f"WebSocket connected. Total: {len(self.connections)}")
 
-    async def remove_connection(self, ws: frontend/frontend/web.WebSocketResponse):
+    async def remove_connection(self, ws: web.WebSocketResponse):
         self.connections.discard(ws)
         for channel in self.subscriptions.values():
             channel.discard(ws)
         logger.info(f"WebSocket disconnected. Total: {len(self.connections)}")
 
-    async def subscribe(self, ws: frontend/frontend/web.WebSocketResponse, channel: str):
+    async def subscribe(self, ws: web.WebSocketResponse, channel: str):
         if channel in self.subscriptions:
             self.subscriptions[channel].add(ws)
             logger.debug(f"Subscribed to {channel}")
@@ -170,6 +175,13 @@ class SwarmAPIServer:
         # WebSocket manager
         self.ws_manager = WebSocketManager()
 
+        # Jury manager (local only)
+        from swarm.jury import JuryManager
+        self.jury_manager = JuryManager()
+
+        # OpenSpec integration
+        self.openspec_validator = OpenSpecValidator()
+
         # Blockchain WS session
         self.blockchain_ws_session = None
 
@@ -183,6 +195,14 @@ class SwarmAPIServer:
             'total_requests': 0,
             'endpoints': {}
         }
+
+        # Social agent queue (draft-only v1)
+        self.social_queue = AsyncTaskQueue(
+            queue_name="social-agent",
+            orchestrator_url=f"http://{self.host}:{self.port}",
+            max_concurrent_tasks=2,
+        )
+        self.social_queue.register_handler("social_draft", self._handle_social_draft)
 
         # Long-running job storage (in-memory)
         self._parameter_sweep_jobs = {}
@@ -241,13 +261,20 @@ class SwarmAPIServer:
         self._app = None
         self._background_tasks: List[asyncio.Task] = []
 
-    def setup_routes(self, app: frontend/frontend/web.Application):
+    def setup_routes(self, app: web.Application):
         """Setup all API routes"""
 
         # Health and status
         app.router.add_get('/health', self.health_check)
         app.router.add_get('/healthz', self.health_check)  # k8s compatibility
         app.router.add_get('/api/status', self.get_status)
+
+        # OpenSpec endpoints
+        app.router.add_get('/api/openspec/status', self.openspec_status)
+        app.router.add_post('/api/openspec/change/create', self.openspec_create_change)
+        app.router.add_post('/api/openspec/change/validate', self.openspec_validate_change)
+        app.router.add_get('/api/openspec/change/status/{change_id}', self.openspec_change_status)
+        app.router.add_post('/api/openspec/change/attach', self.openspec_attach_change)
 
         # GPU Contributor endpoints
         app.router.add_post('/api/gpu/register', self.register_gpu_contributor)
@@ -265,12 +292,23 @@ class SwarmAPIServer:
         app.router.add_post('/api/tasks/{task_id}/result', self.submit_task_result)
         app.router.add_get('/api/tasks', self.list_tasks)
 
-        # Swarm health endpoints (for apps/apps/dash-legacy-2-legacy-2board)
+        # Jury endpoints (local only)
+        app.router.add_post('/api/jury/session', self.create_jury_session)
+        app.router.add_post('/api/jury/vote', self.jury_vote)
+        app.router.add_get('/api/jury/session/{session_id}', self.get_jury_session)
+
+        # Swarm health endpoints (for apps/dash-legacy-2-legacy-2board)
         app.router.add_get('/api/swarm/health', self.get_swarm_health)
         app.router.add_get('/api/swarm/agents', self.get_swarm_agents)
         app.router.add_get('/api/swarm/activity', self.get_swarm_activity)
         app.router.add_post('/api/swarm/command', self.send_swarm_command)
         app.router.add_get('/api/swarm/metrics', self.get_swarm_metrics)
+
+        # Social agent draft endpoints
+        app.router.add_post('/api/social/drafts', self.create_social_draft)
+        app.router.add_get('/api/social/drafts', self.list_social_drafts)
+        app.router.add_get('/api/social/drafts/{draft_id}', self.get_social_draft)
+        app.router.add_get('/api/social/config', self.get_social_config)
 
         # Job distribution endpoints
         app.router.add_get('/api/jobs/distribution', self.get_job_distribution)
@@ -310,7 +348,7 @@ class SwarmAPIServer:
         app.router.add_get('/api/agents/top-performers', self.get_top_performers)
 
         # WebSocket endpoint
-        app.router.add_get('/ws', self.frontend/websocket_handler)
+        app.router.add_get('/ws', self.websocket_handler)
 
         # AI (fallback) endpoints
         app.router.add_post('/api/ai/ask', self.ai_ask)
@@ -338,11 +376,11 @@ class SwarmAPIServer:
         # Prometheus metrics
         app.router.add_get('/metrics', self.prometheus_metrics)
 
-    async def health_check(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def health_check(self, request: web.Request) -> web.Response:
         """Health check endpoint"""
         self._track_request('/health')
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'status': 'healthy',
             'service': 'swarm-api',
             'version': '1.0.0',
@@ -355,13 +393,13 @@ class SwarmAPIServer:
             'queue_depth': self.gpu_manager.queue_depth()
         })
 
-    async def get_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_status(self, request: web.Request) -> web.Response:
         """Detailed status endpoint"""
         self._track_request('/api/status')
 
         snapshot = self.gpu_orchestrator.snapshot()
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'server': {
                 'host': self.host,
                 'port': self.port,
@@ -373,11 +411,92 @@ class SwarmAPIServer:
                 'connected': self.blockchain_connected
             },
             'swarm': snapshot,
-            'frontend/websocket_connections': len(self.ws_manager.connections),
+            'websocket_connections': len(self.ws_manager.connections),
             'api_stats': self.api_stats
         })
 
-    async def ai_ask(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def _handle_social_draft(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        result = await asyncio.to_thread(generate_social_draft, payload)
+        return {"draft_id": result.draft_id, "status": "draft"}
+
+    async def create_social_draft(self, request: web.Request) -> web.Response:
+        """Submit a social draft generation task (draft-only v1)."""
+        self._track_request('/api/social/drafts')
+
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({'error': 'Invalid JSON body'}, status=400)
+
+        config = load_social_config()
+        networks = config.get("networks") or []
+        actions = config.get("actions") or []
+
+        network = (body.get("network") or "").strip().lower()
+        action = (body.get("action") or "post").strip().lower()
+        topic = (body.get("topic") or "Atlas Sphere").strip()
+
+        if not network or network not in networks:
+            return web.json_response({'error': 'network_not_allowed'}, status=400)
+        if action not in actions:
+            return web.json_response({'error': 'action_not_allowed'}, status=400)
+
+        payload = {
+            "network": network,
+            "action": action,
+            "topic": topic,
+            "intent": (body.get("intent") or "growth").strip(),
+            "keywords": body.get("keywords") or [],
+            "severity": "minor",
+            "openspec_change_id": "add-social-agent-swarm"
+        }
+
+        task_id = await self.social_queue.submit_task(
+            agent_id="social-agent",
+            task_type="social_draft",
+            payload=payload,
+            priority=AgentTaskPriority.MEDIUM,
+        )
+
+        return web.json_response({"task_id": task_id})
+
+    async def list_social_drafts(self, request: web.Request) -> web.Response:
+        """List recent social drafts."""
+        self._track_request('/api/social/drafts')
+
+        try:
+            limit = int(request.query.get("limit", "50"))
+        except Exception:
+            limit = 50
+
+        sqlite_store.init_social_tables()
+        drafts = sqlite_store.list_social_drafts(limit=limit)
+        return web.json_response({"count": len(drafts), "drafts": drafts})
+
+    async def get_social_draft(self, request: web.Request) -> web.Response:
+        """Get a specific social draft by ID."""
+        self._track_request('/api/social/drafts/{draft_id}')
+        draft_id = request.match_info.get("draft_id")
+        sqlite_store.init_social_tables()
+        draft = sqlite_store.load_social_draft(draft_id)
+        if not draft:
+            return web.json_response({'error': 'draft_not_found'}, status=404)
+        return web.json_response(draft)
+
+    async def get_social_config(self, request: web.Request) -> web.Response:
+        """Return social agent configuration (non-secret fields)."""
+        self._track_request('/api/social/config')
+        config = load_social_config()
+        safe = {
+            "version": config.get("version", 1),
+            "mode": config.get("mode", {}),
+            "networks": config.get("networks", []),
+            "actions": config.get("actions", []),
+            "guardrails": config.get("guardrails", {}),
+        }
+        return web.json_response(safe)
+
+    async def ai_ask(self, request: web.Request) -> web.Response:
         """AI ask endpoint (intended as a fallback provider).
 
         Proxies to a Grok-Api server compatible with https://github.com/realasfngl/Grok-Api.
@@ -391,11 +510,11 @@ class SwarmAPIServer:
         try:
             body = await request.json()
         except Exception:
-            return frontend/frontend/web.json_response({'error': 'Invalid JSON body'}, status=400)
+            return web.json_response({'error': 'Invalid JSON body'}, status=400)
 
         question = (body.get('question') or body.get('message') or '').strip()
         if not question:
-            return frontend/frontend/web.json_response({'error': 'question (or message) is reqfrontend/uired'}, status=400)
+            return web.json_response({'error': 'question (or message) is required'}, status=400)
 
         system_prompt = (body.get('system_prompt') or '').strip()
         context = (body.get('context') or '').strip()
@@ -429,7 +548,7 @@ class SwarmAPIServer:
                 async with session.post(grok_api_url, json=payload) as resp:
                     raw = await resp.text()
                     if resp.status >= 400:
-                        return frontend/frontend/web.json_response(
+                        return web.json_response(
                             {
                                 'error': 'Grok-Api request failed',
                                 'status': resp.status,
@@ -441,7 +560,7 @@ class SwarmAPIServer:
                     try:
                         data = json.loads(raw)
                     except Exception:
-                        return frontend/frontend/web.json_response(
+                        return web.json_response(
                             {
                                 'error': 'Grok-Api returned non-JSON response',
                                 'body': raw[:2000],
@@ -450,16 +569,16 @@ class SwarmAPIServer:
                         )
 
         except asyncio.TimeoutError:
-            return frontend/frontend/web.json_response({'error': 'Grok-Api timeout'}, status=504)
+            return web.json_response({'error': 'Grok-Api timeout'}, status=504)
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': f'Grok-Api unreachable: {e}'}, status=503)
+            return web.json_response({'error': f'Grok-Api unreachable: {e}'}, status=503)
 
         # Normalize into a small, stable envelope.
         response_text = data.get('response')
         if response_text is None and isinstance(data.get('data'), dict):
             response_text = data['data'].get('response')
 
-        return frontend/frontend/web.json_response(
+        return web.json_response(
             {
                 'answer': response_text,
                 'model': model,
@@ -467,7 +586,7 @@ class SwarmAPIServer:
             }
         )
 
-    async def rag_ingest(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def rag_ingest(self, request: web.Request) -> web.Response:
         """Ingest files/folders into a lightweight vector store.
 
         JSON body:
@@ -487,19 +606,19 @@ class SwarmAPIServer:
         overlap = int(body.get('overlap', 200))
 
         try:
-            from swarm.rag import bfrontend/uild_index
-            res = bfrontend/uild_index(paths, index_path=out, chunk_size=chunk_size, overlap=overlap, verbose=False)
-            return frontend/frontend/web.json_response({'success': True, 'result': res})
+            from swarm.rag import build_index
+            res = build_index(paths, index_path=out, chunk_size=chunk_size, overlap=overlap, verbose=False)
+            return web.json_response({'success': True, 'result': res})
         except Exception as e:
             logger.exception('RAG ingest failed')
             # Normalize into an ExternalServiceError so middleware returns a stable JSON shape
             raise ExternalServiceError('RAG ingest failed', details=str(e))
 
-    async def rag_query(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def rag_query(self, request: web.Request) -> web.Response:
         """Query the RAG index and produce an answer using the AI backend.
 
         JSON body:
-          - question: str (reqfrontend/uired)
+          - question: str (required)
           - index_path: optional (default: /tmp/rag_index.npz)
           - top_k: int (default: 4)
           - model: optional model name to forward to AI backend
@@ -512,7 +631,7 @@ class SwarmAPIServer:
 
         question = (body.get('question') or '').strip()
         if not question:
-            return frontend/frontend/web.json_response({'error': 'question is reqfrontend/uired'}, status=400)
+            return web.json_response({'error': 'question is required'}, status=400)
 
         index_path = body.get('index_path', '/tmp/rag_index.npz')
         top_k = int(body.get('top_k', 4))
@@ -542,7 +661,7 @@ class SwarmAPIServer:
                 async with session.post(grok_api_url, json=payload) as resp:
                     raw = await resp.text()
                     if resp.status >= 400:
-                        return frontend/frontend/web.json_response({'error': 'AI backend failed', 'status': resp.status, 'body': raw[:2000]}, status=502)
+                        return web.json_response({'error': 'AI backend failed', 'status': resp.status, 'body': raw[:2000]}, status=502)
                     try:
                         data = json.loads(raw)
                     except Exception:
@@ -550,13 +669,13 @@ class SwarmAPIServer:
 
             response_text = data.get('response') or (isinstance(data.get('data'), dict) and data['data'].get('response')) or ''
 
-            return frontend/frontend/web.json_response({'answer': response_text, 'context': context})
+            return web.json_response({'answer': response_text, 'context': context})
 
         except Exception as e:
             logger.exception('RAG query failed')
             raise ExternalServiceError('RAG query failed', details=str(e))
 
-    async def rag_ingest_async(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def rag_ingest_async(self, request: web.Request) -> web.Response:
         """Start background ingestion job and return job_id."""
         self._track_request('/api/rag/ingest_async')
         try:
@@ -573,12 +692,12 @@ class SwarmAPIServer:
             if not hasattr(self, '_rag_job_manager'):
                 self._rag_job_manager = RAGJobManager()
             job_id = self._rag_job_manager.start_ingest(paths, out=out, chunk_size=chunk_size, overlap=overlap)
-            return frontend/frontend/web.json_response({'job_id': job_id, 'status': 'started'})
+            return web.json_response({'job_id': job_id, 'status': 'started'})
         except Exception as e:
             logger.exception('Failed to start async ingest')
             raise ExternalServiceError('Failed to start async ingest', details=str(e))
 
-    async def rag_ingest_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def rag_ingest_status(self, request: web.Request) -> web.Response:
         self._track_request('/api/rag/ingest_status/{job_id}')
         job_id = request.match_info.get('job_id')
         try:
@@ -586,26 +705,26 @@ class SwarmAPIServer:
                 self._rag_job_manager = __import__('swarm.rag.jobs', fromlist=['RAGJobManager']).RAGJobManager()
             job = self._rag_job_manager.get_job(job_id)
             if not job:
-                return frontend/frontend/web.json_response({'error': 'job not found'}, status=404)
-            return frontend/frontend/web.json_response(job)
+                return web.json_response({'error': 'job not found'}, status=404)
+            return web.json_response(job)
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def rag_ingest_list(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def rag_ingest_list(self, request: web.Request) -> web.Response:
         self._track_request('/api/rag/ingest_list')
         try:
             if not hasattr(self, '_rag_job_manager'):
                 self._rag_job_manager = __import__('swarm.rag.jobs', fromlist=['RAGJobManager']).RAGJobManager()
             jobs = self._rag_job_manager.list_jobs()
-            return frontend/frontend/web.json_response({'jobs': jobs})
+            return web.json_response({'jobs': jobs})
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
     # ============================================
     # GPU Contributor Endpoints
     # ============================================
 
-    async def register_gpu_contributor(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def register_gpu_contributor(self, request: web.Request) -> web.Response:
         """Register a new GPU contributor"""
         self._track_request('/api/gpu/register')
 
@@ -614,7 +733,7 @@ class SwarmAPIServer:
 
             contributor_id = data.get('contributor_id') or data.get('walletAddress')
             if not contributor_id:
-                return frontend/frontend/web.json_response({'error': 'contributor_id reqfrontend/uired'}, status=400)
+                return web.json_response({'error': 'contributor_id required'}, status=400)
 
             # Parse GPU capabilities
             gpu_info = data.get('gpuInfo', {})
@@ -643,7 +762,7 @@ class SwarmAPIServer:
             swarm_event = SwarmEvent(event_type='agent_birth', agent_id=contributor_id)
             await self.ws_manager.broadcast('swarm-events', asdict(swarm_event))
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'contributor_id': contributor_id,
                 'message': 'GPU contributor registered successfully'
@@ -651,9 +770,9 @@ class SwarmAPIServer:
 
         except Exception as e:
             logger.error(f"Failed to register contributor: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def gpu_heartbeat(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def gpu_heartbeat(self, request: web.Request) -> web.Response:
         """Handle GPU contributor heartbeat"""
         self._track_request('/api/gpu/heartbeat')
 
@@ -662,7 +781,7 @@ class SwarmAPIServer:
             contributor_id = data.get('contributor_id')
 
             if not contributor_id:
-                return frontend/frontend/web.json_response({'error': 'contributor_id reqfrontend/uired'}, status=400)
+                return web.json_response({'error': 'contributor_id required'}, status=400)
 
             self.gpu_orchestrator.heartbeat(
                 contributor_id=contributor_id,
@@ -672,13 +791,13 @@ class SwarmAPIServer:
                 uptime_s=data.get('uptime_s')
             )
 
-            return frontend/frontend/web.json_response({'success': True, 'acknowledged': True})
+            return web.json_response({'success': True, 'acknowledged': True})
 
         except Exception as e:
             logger.error(f"Heartbeat failed: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def unregister_gpu_contributor(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def unregister_gpu_contributor(self, request: web.Request) -> web.Response:
         """Unregister a GPU contributor"""
         self._track_request('/api/gpu/unregister')
 
@@ -687,7 +806,7 @@ class SwarmAPIServer:
             contributor_id = data.get('contributor_id') or data.get('walletAddress')
 
             if not contributor_id:
-                return frontend/frontend/web.json_response({'error': 'contributor_id reqfrontend/uired'}, status=400)
+                return web.json_response({'error': 'contributor_id required'}, status=400)
 
             self.gpu_manager.mark_offline(contributor_id)
 
@@ -701,21 +820,21 @@ class SwarmAPIServer:
             swarm_event = SwarmEvent(event_type='agent_death', agent_id=contributor_id)
             await self.ws_manager.broadcast('swarm-events', asdict(swarm_event))
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'message': 'Contributor unregistered'
             })
 
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def list_contributors(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def list_contributors(self, request: web.Request) -> web.Response:
         """List all GPU contributors"""
         self._track_request('/api/gpu/contributors')
 
         contributors = self.gpu_manager.list_contributors()
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'total': len(contributors),
             'online': sum(1 for c in contributors if c.online),
             'contributors': [
@@ -740,7 +859,7 @@ class SwarmAPIServer:
             ]
         })
 
-    async def get_gpu_stats(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_gpu_stats(self, request: web.Request) -> web.Response:
         """Get GPU network statistics"""
         self._track_request('/api/gpu/stats')
 
@@ -753,7 +872,7 @@ class SwarmAPIServer:
             if online_contributors else 0.0
         )
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'total_contributors': len(contributors),
             'online_contributors': len(online_contributors),
             'total_vram_mb': total_vram,
@@ -768,7 +887,7 @@ class SwarmAPIServer:
     # Task Management Endpoints
     # ============================================
 
-    async def submit_task(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def submit_task(self, request: web.Request) -> web.Response:
         """Submit a new task to the swarm"""
         self._track_request('/api/tasks/submit')
 
@@ -777,11 +896,28 @@ class SwarmAPIServer:
 
             workload_type = GPUWorkloadType(data.get('workload_type', 'general_compute'))
             priority = TaskPriority[data.get('priority', 'NORMAL').upper()]
+            payload = data.get('payload', {})
+            openspec_change_id = data.get('openspec_change_id')
+            severity = (data.get('severity') or 'minor').lower()
+            if openspec_change_id:
+                payload['openspec_change_id'] = openspec_change_id
+            payload['severity'] = severity
+
+            if severity == 'major':
+                if not openspec_change_id:
+                    return web.json_response({'error': 'openspec_change_id required for major tasks'}, status=400)
+                validation = self.openspec_validator.validate_change(openspec_change_id)
+                if not validation.ok:
+                    return web.json_response({
+                        'error': 'OpenSpec validation failed',
+                        'change_id': openspec_change_id,
+                        'output': validation.output,
+                    }, status=400)
 
             task_id = self.gpu_orchestrator.enqueue_task(
                 workload_type=workload_type,
-                payload=data.get('payload', {}),
-                reqfrontend/uired_vram_mb=data.get('reqfrontend/uired_vram_mb', 0),
+                payload=payload,
+                required_vram_mb=data.get('required_vram_mb', 0),
                 min_compute_score=data.get('min_compute_score', 0.0),
                 max_runtime_s=data.get('max_runtime_s'),
                 priority=priority
@@ -794,17 +930,19 @@ class SwarmAPIServer:
                 'workload_type': workload_type.value
             })
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'task_id': task_id,
-                'status': 'queued'
+                'status': 'queued',
+                'openspec_change_id': openspec_change_id,
+                'severity': severity,
             })
 
         except Exception as e:
             logger.error(f"Task submission failed: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def get_task(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_task(self, request: web.Request) -> web.Response:
         """Get task details"""
         self._track_request('/api/tasks/{task_id}')
 
@@ -812,9 +950,9 @@ class SwarmAPIServer:
         task = self.gpu_manager.get_task(task_id)
 
         if not task:
-            return frontend/frontend/web.json_response({'error': 'Task not found'}, status=404)
+            return web.json_response({'error': 'Task not found'}, status=404)
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'task_id': task.task_id,
             'workload_type': task.workload_type.value,
             'status': task.status.value,
@@ -824,10 +962,12 @@ class SwarmAPIServer:
             'started_at': task.started_at,
             'finished_at': task.finished_at,
             'result': task.result,
-            'error': task.error
+            'error': task.error,
+            'openspec_change_id': (task.payload or {}).get('openspec_change_id'),
+            'severity': (task.payload or {}).get('severity', 'minor'),
         })
 
-    async def get_task_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_task_status(self, request: web.Request) -> web.Response:
         """Get task status"""
         self._track_request('/api/tasks/{task_id}/status')
 
@@ -835,11 +975,11 @@ class SwarmAPIServer:
         task = self.gpu_manager.get_task(task_id)
 
         if not task:
-            return frontend/frontend/web.json_response({'error': 'Task not found'}, status=404)
+            return web.json_response({'error': 'Task not found'}, status=404)
 
-        return frontend/frontend/web.json_response({'task_id': task_id, 'status': task.status.value})
+        return web.json_response({'task_id': task_id, 'status': task.status.value})
 
-    async def cancel_task(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def cancel_task(self, request: web.Request) -> web.Response:
         """Cancel a task"""
         self._track_request('/api/tasks/{task_id}/cancel')
 
@@ -852,9 +992,9 @@ class SwarmAPIServer:
                 'task_id': task_id
             })
 
-        return frontend/frontend/web.json_response({'success': success})
+        return web.json_response({'success': success})
 
-    async def request_task(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def request_task(self, request: web.Request) -> web.Response:
         """Request a task for a GPU contributor"""
         self._track_request('/api/tasks/request')
 
@@ -863,32 +1003,32 @@ class SwarmAPIServer:
             contributor_id = data.get('contributor_id')
 
             if not contributor_id:
-                return frontend/frontend/web.json_response({'error': 'contributor_id reqfrontend/uired'}, status=400)
+                return web.json_response({'error': 'contributor_id required'}, status=400)
 
             result = self.gpu_orchestrator.request_task(contributor_id)
 
             if result.task:
-                return frontend/frontend/web.json_response({
+                return web.json_response({
                     'success': True,
                     'task': {
                         'task_id': result.task.task_id,
                         'workload_type': result.task.workload_type.value,
                         'payload': result.task.payload,
-                        'reqfrontend/uired_vram_mb': result.task.reqfrontend/uired_vram_mb,
+                        'required_vram_mb': result.task.required_vram_mb,
                         'max_runtime_s': result.task.max_runtime_s
                     }
                 })
             else:
-                return frontend/frontend/web.json_response({
+                return web.json_response({
                     'success': False,
                     'reason': result.reason,
                     'task': None
                 })
 
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def submit_task_result(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def submit_task_result(self, request: web.Request) -> web.Response:
         """Submit task result from a GPU contributor"""
         self._track_request('/api/tasks/{task_id}/result')
 
@@ -925,39 +1065,189 @@ class SwarmAPIServer:
                 )
                 await self.ws_manager.broadcast('agent-events', asdict(agent_event))
 
-            return frontend/frontend/web.json_response({'success': submitted})
+            return web.json_response({'success': submitted})
 
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def list_tasks(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def list_tasks(self, request: web.Request) -> web.Response:
         """List tasks"""
         self._track_request('/api/tasks')
 
         limit = int(request.query.get('limit', '100'))
         tasks = self.gpu_manager.list_tasks(limit=limit)
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'total': len(tasks),
             'tasks': [
                 {
                     'task_id': t.task_id,
-                    'workload_type': t.workload_type.value,
-                    'status': t.status.value,
+                    'workload_type': getattr(t.workload_type, 'value', str(t.workload_type)),
+                    'status': getattr(t.status, 'value', str(t.status)),
                     'created_at': t.created_at,
-                    'assigned_to': t.assigned_to
+                    'assigned_to': t.assigned_to,
+                    'openspec_change_id': (t.payload or {}).get('openspec_change_id'),
+                    'severity': (t.payload or {}).get('severity', 'minor'),
                 }
                 for t in tasks
             ]
         })
 
     # ============================================
+    # OpenSpec Integration Endpoints
+    # ============================================
+
+    async def openspec_status(self, request: web.Request) -> web.Response:
+        """Report OpenSpec CLI availability and workspace context"""
+        self._track_request('/api/openspec/status')
+
+        openspec_bin = resolve_openspec_bin()
+        workspace_root = resolve_workspace_root()
+
+        return web.json_response({
+            'available': bool(openspec_bin),
+            'openspec_bin': openspec_bin,
+            'workspace_root': workspace_root,
+        })
+
+    async def openspec_create_change(self, request: web.Request) -> web.Response:
+        """Create a minimal OpenSpec change skeleton."""
+        self._track_request('/api/openspec/change/create')
+
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+
+        change_id = (data.get('change_id') or '').strip()
+        capability = (data.get('capability') or 'orchestra-ops').strip()
+        if not change_id:
+            return web.json_response({'error': 'change_id is required'}, status=400)
+
+        artifacts = create_change_skeleton(change_id, capability)
+        return web.json_response({'success': True, 'change_id': change_id, 'artifacts': artifacts})
+
+    async def openspec_validate_change(self, request: web.Request) -> web.Response:
+        """Validate an OpenSpec change."""
+        self._track_request('/api/openspec/change/validate')
+
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+
+        change_id = (data.get('change_id') or '').strip()
+        if not change_id:
+            return web.json_response({'error': 'change_id is required'}, status=400)
+
+        result = self.openspec_validator.validate_change(change_id)
+        return web.json_response({
+            'change_id': change_id,
+            'ok': result.ok,
+            'output': result.output,
+            'timestamp': result.timestamp,
+        })
+
+    async def openspec_change_status(self, request: web.Request) -> web.Response:
+        """Return cached validation status for a change."""
+        self._track_request('/api/openspec/change/status/{change_id}')
+
+        change_id = request.match_info.get('change_id', '')
+        status = self.openspec_validator.get_status(change_id)
+        if not status:
+            return web.json_response({'error': 'status not found'}, status=404)
+
+        return web.json_response({
+            'change_id': status.change_id,
+            'ok': status.ok,
+            'output': status.output,
+            'timestamp': status.timestamp,
+        })
+
+    async def openspec_attach_change(self, request: web.Request) -> web.Response:
+        """Attach an OpenSpec change ID to an existing queued task."""
+        self._track_request('/api/openspec/change/attach')
+
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+
+        task_id = (data.get('task_id') or '').strip()
+        change_id = (data.get('change_id') or '').strip()
+        if not task_id or not change_id:
+            return web.json_response({'error': 'task_id and change_id are required'}, status=400)
+
+        task = self.gpu_manager.get_task(task_id)
+        if not task:
+            return web.json_response({'error': 'task not found'}, status=404)
+
+        if task.payload is None:
+            task.payload = {}
+        task.payload['openspec_change_id'] = change_id
+
+        return web.json_response({'success': True, 'task_id': task_id, 'change_id': change_id})
+
+    # ============================================
     # Swarm Health Endpoints (Dashboard)
     # ============================================
 
-    async def get_swarm_health(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
-        """Get swarm health status - main apps/apps/dash-legacy-2-legacy-2board endpoint"""
+    async def get_swarm_health(self, request: web.Request) -> web.Response:
+        """Get swarm health status - main apps/dash-legacy-2-legacy-2board endpoint"""
         self._track_request('/api/swarm/health')
+
+    # ============================================
+    # Jury endpoints (minimal local implementation)
+    # ============================================
+
+    async def create_jury_session(self, request: web.Request) -> web.Response:
+        """Create a new jury session for a set of tasks"""
+        try:
+            data = await request.json()
+            tasks = data.get('tasks', [])
+            session = self.jury_manager.create_session(tasks=tasks)
+            return web.json_response({'success': True, 'session_id': session.session_id, 'state': session.state})
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)}, status=500)
+
+    async def jury_vote(self, request: web.Request) -> web.Response:
+        """Submit a vote commitment or reveal for a jury session"""
+        try:
+            data = await request.json()
+            session_id = data.get('session_id')
+            contributor_id = data.get('contributor_id')
+
+            if data.get('type') == 'commit':
+                commitment = data.get('commitment')
+                ok = self.jury_manager.submit_commit(session_id, contributor_id, commitment)
+                return web.json_response({'success': ok})
+
+            elif data.get('type') == 'reveal':
+                vote = data.get('vote')
+                nonce = data.get('nonce')
+                ok = self.jury_manager.submit_reveal(session_id, contributor_id, vote, nonce)
+                return web.json_response({'success': ok})
+
+            elif data.get('type') == 'aggregate':
+                res = self.jury_manager.aggregate(session_id)
+                return web.json_response({'success': res is not None, 'result': res})
+
+            elif data.get('type') == 'advance':
+                ok = self.jury_manager.advance_to_reveal(session_id)
+                return web.json_response({'success': ok})
+
+            else:
+                return web.json_response({'error': 'unknown vote type'}, status=400)
+
+        except Exception as e:
+            return web.json_response({'success': False, 'error': str(e)}, status=500)
+
+    async def get_jury_session(self, request: web.Request) -> web.Response:
+        session_id = request.match_info['session_id']
+        s = self.jury_manager.get_session(session_id)
+        if not s:
+            return web.json_response({'error': 'not found'}, status=404)
+        return web.json_response({'session_id': s.session_id, 'state': s.state, 'tasks': s.tasks, 'yes': sum(1 for r in s.reveals.values() if r.vote), 'no': sum(1 for r in s.reveals.values() if not r.vote)})
 
         contributors = self.gpu_manager.list_contributors()
         online_contributors = [c for c in contributors if c.online]
@@ -980,7 +1270,7 @@ class SwarmAPIServer:
         else:
             health_status = 'critical'
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'healthStatus': health_status,
             'activeAgents': len(online_contributors),
             'totalAgents': len(contributors),
@@ -1000,8 +1290,8 @@ class SwarmAPIServer:
             }
         })
 
-    async def get_swarm_agents(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
-        """Get list of swarm agents for apps/apps/dash-legacy-2-legacy-2board"""
+    async def get_swarm_agents(self, request: web.Request) -> web.Response:
+        """Get list of swarm agents for apps/dash-legacy-2-legacy-2board"""
         self._track_request('/api/swarm/agents')
 
         # Combine GPU contributors and agent registry
@@ -1019,7 +1309,7 @@ class SwarmAPIServer:
                 'lastSeen': c.last_heartbeat_at
             })
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'total': len(agents),
             'online': sum(1 for a in agents if a['status'] == 'online'),
             'agents': agents,
@@ -1030,7 +1320,7 @@ class SwarmAPIServer:
             }
         })
 
-    async def get_swarm_activity(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_swarm_activity(self, request: web.Request) -> web.Response:
         """Get recent swarm activity"""
         self._track_request('/api/swarm/activity')
 
@@ -1043,7 +1333,7 @@ class SwarmAPIServer:
             {
                 'type': 'task',
                 'task_id': t.task_id,
-                'status': t.status.value,
+                'status': getattr(t.status, 'value', str(t.status)),
                 'timestamp': t.finished_at or t.started_at or t.created_at
             }
             for t in tasks
@@ -1052,12 +1342,12 @@ class SwarmAPIServer:
         # Sort by timestamp
         activity.sort(key=lambda x: x['timestamp'], reverse=True)
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'timeframe': timeframe,
             'activity': activity[:50]
         })
 
-    async def send_swarm_command(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def send_swarm_command(self, request: web.Request) -> web.Response:
         """Send command to swarm agent"""
         self._track_request('/api/swarm/command')
 
@@ -1074,23 +1364,23 @@ class SwarmAPIServer:
                 'timestamp': time.time()
             })
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'command': command,
                 'agentId': agent_id
             })
 
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def get_swarm_metrics(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_swarm_metrics(self, request: web.Request) -> web.Response:
         """Get detailed swarm metrics"""
         self._track_request('/api/swarm/metrics')
 
         snapshot = self.gpu_orchestrator.snapshot()
         swarm_metrics = agent_registry.get_swarm_metrics()
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'gpu': snapshot,
             'agents': {
                 'total': swarm_metrics.total_agents,
@@ -1108,25 +1398,25 @@ class SwarmAPIServer:
     # Job Distribution Endpoints
     # ============================================
 
-    async def get_job_distribution(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_job_distribution(self, request: web.Request) -> web.Response:
         """Get job distribution statistics"""
         self._track_request('/api/jobs/distribution')
 
         stats = self.job_manager.get_distribution_stats()
-        return frontend/frontend/web.json_response(stats)
+        return web.json_response(stats)
 
-    async def reallocate_jobs(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def reallocate_jobs(self, request: web.Request) -> web.Response:
         """Trigger job reallocation"""
         self._track_request('/api/jobs/reallocate')
 
         result = self.job_manager.reallocate_based_on_performance()
-        return frontend/frontend/web.json_response(result)
+        return web.json_response(result)
 
     # ============================================
     # Quantum Evolution Endpoints
     # ============================================
 
-    async def quantum_evolution_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_evolution_status(self, request: web.Request) -> web.Response:
         """Get quantum evolution optimizer status"""
         self._track_request('/api/quantum/evolution/status')
 
@@ -1134,7 +1424,7 @@ class SwarmAPIServer:
             from swarm.quantum.evolution_optimizer import get_optimizer, QUANTUM_AVAILABLE
             optimizer = get_optimizer()
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'enabled': True,
                 'quantum_available': QUANTUM_AVAILABLE,
                 'use_quantum': optimizer.use_quantum,
@@ -1150,13 +1440,13 @@ class SwarmAPIServer:
                 ]
             })
         except ImportError as e:
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'enabled': False,
                 'error': str(e),
                 'quantum_available': False
             })
 
-    async def quantum_evolution_optimize(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_evolution_optimize(self, request: web.Request) -> web.Response:
         """Run quantum-enhanced evolution optimization"""
         self._track_request('/api/quantum/evolution/optimize')
 
@@ -1167,7 +1457,7 @@ class SwarmAPIServer:
             swarm_metrics = agent_registry.get_swarm_metrics()
             gpu_stats = self.job_manager.get_distribution_stats()
 
-            # Bfrontend/uild swarm state dict
+            # Build swarm state dict
             agents_data = []
             for agent_id in agent_registry.agents:
                 agent = agent_registry.get_agent_details(agent_id)
@@ -1184,7 +1474,7 @@ class SwarmAPIServer:
             # Add simulated agents if none exist (for testing)
             if not agents_data:
                 import random
-                specs = ['trader', 'bfrontend/uilder', 'marketer', 'ecommerce', 'freelancer']
+                specs = ['trader', 'builder', 'marketer', 'ecommerce', 'freelancer']
                 agents_data = [
                     {
                         'id': f'agent_{i}',
@@ -1221,19 +1511,19 @@ class SwarmAPIServer:
                 }
             })
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'recommendation': recommendation
             })
 
         except Exception as e:
             logger.exception("Quantum evolution optimization failed")
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': False,
                 'error': str(e)
             }, status=500)
 
-    async def quantum_evolution_apply(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_evolution_apply(self, request: web.Request) -> web.Response:
         """Apply quantum evolution recommendation to swarm"""
         self._track_request('/api/quantum/evolution/apply')
 
@@ -1271,13 +1561,20 @@ class SwarmAPIServer:
                 # In production, submit extrinsic to swarm-evolution pallet
                 logger.info(f"Would submit evolution config to chain: {recommendation}")
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'success': True,
                 'applied_changes': applied_changes,
                 'timestamp': time.time()
             })
 
-    async def settlement_trigger(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+        except Exception as e:
+            logger.exception("Failed to apply quantum evolution recommendation")
+            return web.json_response({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+    async def settlement_trigger(self, request: web.Request) -> web.Response:
         """Trigger a settlement event to the blockchain adapter/relayer
 
         Expected payload: { shipmentId: str, parts: [str], amount: int }
@@ -1287,7 +1584,7 @@ class SwarmAPIServer:
             data = await request.json()
             shipment_id = data.get('shipmentId')
             if not shipment_id:
-                return frontend/frontend/web.json_response({'success': False, 'error': 'missing shipmentId'}, status=400)
+                return web.json_response({'success': False, 'error': 'missing shipmentId'}, status=400)
 
             # Forward to adapter endpoint; adapter should be available at ADAPTER_URL
             adapter_url = os.environ.get('BLOCKCHAIN_ADAPTER_URL', 'http://localhost:4001/events/delivery')
@@ -1295,24 +1592,17 @@ class SwarmAPIServer:
                 async with sess.post(adapter_url, json=data, timeout=30) as resp:
                     resp_text = await resp.text()
                     if resp.status >= 400:
-                        return frontend/frontend/web.json_response({'success': False, 'error': f'adapter error: {resp.status}', 'body': resp_text}, status=502)
+                        return web.json_response({'success': False, 'error': f'adapter error: {resp.status}', 'body': resp_text}, status=502)
 
             # Log and acknowledge
             logger.info(f"Settlement triggered for shipment: {shipment_id}")
-            return frontend/frontend/web.json_response({'success': True, 'shipmentId': shipment_id})
+            return web.json_response({'success': True, 'shipmentId': shipment_id})
 
         except Exception as e:
             logger.exception('Failed to trigger settlement')
-            return frontend/frontend/web.json_response({'success': False, 'error': str(e)}, status=500)
+            return web.json_response({'success': False, 'error': str(e)}, status=500)
 
-        except Exception as e:
-            logger.exception("Failed to apply quantum evolution recommendation")
-            return frontend/frontend/web.json_response({
-                'success': False,
-                'error': str(e)
-            }, status=500)
-
-    async def quantum_evolution_history(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_evolution_history(self, request: web.Request) -> web.Response:
         """Get quantum evolution optimization history"""
         self._track_request('/api/quantum/evolution/history')
 
@@ -1323,24 +1613,24 @@ class SwarmAPIServer:
             limit = int(request.query.get('limit', 10))
             history = optimizer.get_history(limit)
 
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'history': history,
                 'total_optimizations': len(optimizer.history)
             })
 
         except ImportError as e:
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'history': [],
                 'error': str(e)
             })
 
-    async def quantum_benchmark(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_benchmark(self, request: web.Request) -> web.Response:
         """
         Run REAL quantum vs classical benchmark.
 
         Solves the same optimization problem with both:
         1. Classical greedy algorithm
-        2. Quantum QAOA circfrontend/uit (Qiskit simulator)
+        2. Quantum QAOA circuit (Qiskit simulator)
 
         Returns actual energy values and timing - NO MOCK DATA.
         """
@@ -1492,7 +1782,7 @@ class SwarmAPIServer:
             quantum_energy = None
             selected_quantum = []
             qaoa_iterations = 0
-            qaoa_circfrontend/uit_depth = 0
+            qaoa_circuit_depth = 0
 
             try:
                 from swarm.quantum.evolution_optimizer import QUANTUM_AVAILABLE
@@ -1508,7 +1798,7 @@ class SwarmAPIServer:
                     max_iter = int(data.get('max_iter', 50 if difficulty == 'hard' else 30))
 
                     qaoa = PortfolioQAOA(n_assets=n, n_select=k, p_layers=p_layers, shots=shots)
-                    qaoa_circfrontend/uit_depth = p_layers * 2 * n  # Approximate circfrontend/uit depth
+                    qaoa_circuit_depth = p_layers * 2 * n  # Approximate circuit depth
 
                     # Convert to portfolio format
                     # Scale values to returns and correlations to covariance
@@ -1624,7 +1914,7 @@ class SwarmAPIServer:
             try:
                 import os, csv
                 tele_path = '/tmp/quantum_telemetry.csv'
-                header = ['timestamp','problem_size','selection_size','difficulty','value_mean','value_std','corr_mean','corr_std','top_value','bottom_value','classical_energy','classical_time_ms','sa_energy','sa_time_ms','quantum_energy','quantum_time_ms','qaoa_circfrontend/uit_depth','qaoa_iterations','refinement_applied','refined_found_optimal','improvement_pct','quantum_won']
+                header = ['timestamp','problem_size','selection_size','difficulty','value_mean','value_std','corr_mean','corr_std','top_value','bottom_value','classical_energy','classical_time_ms','sa_energy','sa_time_ms','quantum_energy','quantum_time_ms','qaoa_circuit_depth','qaoa_iterations','refinement_applied','refined_found_optimal','improvement_pct','quantum_won']
                 row = {
                     'timestamp': float(time.time()),
                     'problem_size': int(n),
@@ -1642,7 +1932,7 @@ class SwarmAPIServer:
                     'sa_time_ms': float(sa_time * 1000) if 'sa_time' in locals() else None,
                     'quantum_energy': float(quantum_energy) if quantum_energy is not None else None,
                     'quantum_time_ms': float(quantum_time * 1000) if 'quantum_time' in locals() else None,
-                    'qaoa_circfrontend/uit_depth': int(qaoa_circfrontend/uit_depth) if 'qaoa_circfrontend/uit_depth' in locals() else 0,
+                    'qaoa_circuit_depth': int(qaoa_circuit_depth) if 'qaoa_circuit_depth' in locals() else 0,
                     'qaoa_iterations': int(qaoa_iterations) if 'qaoa_iterations' in locals() else 0,
                     'refinement_applied': bool(refinement_applied) if 'refinement_applied' in locals() else False,
                     'refined_found_optimal': bool(refined_found_optimal) if 'refined_found_optimal' in locals() else False,
@@ -1676,7 +1966,7 @@ class SwarmAPIServer:
                 improvement = 0.0
 
             # Convert numpy types to Python native for JSON
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 # Core results
                 'classical_result': float(classical_energy),
                 'quantum_result': float(quantum_energy) if quantum_energy is not None else None,
@@ -1707,7 +1997,7 @@ class SwarmAPIServer:
                 'quantum_gap_pct': float(quantum_gap) if quantum_gap is not None else None,
 
                 # QAOA details (proof of real quantum work)
-                'qaoa_circfrontend/uit_depth': int(qaoa_circfrontend/uit_depth) if qaoa_circfrontend/uit_depth else 0,
+                'qaoa_circuit_depth': int(qaoa_circuit_depth) if qaoa_circuit_depth else 0,
                 'qaoa_iterations': int(qaoa_iterations) if qaoa_iterations else 0,
                 'refinement_applied': bool(refinement_applied) if 'refinement_applied' in locals() else False,
                 'refinement_skipped_reason': refinement_skipped_reason if 'refinement_skipped_reason' in locals() else None,
@@ -1740,7 +2030,7 @@ class SwarmAPIServer:
                     'timestamp', 'problem_size', 'selection_size', 'difficulty',
                     'value_mean', 'value_std', 'corr_mean', 'corr_std', 'top_value', 'bottom_value',
                     'classical_result', 'quantum_result', 'improvement_pct', 'quantum_won',
-                    'qaoa_iterations', 'qaoa_circfrontend/uit_depth', 'refinement_applied', 'refinement_skipped_reason', 'refined_found_optimal',
+                    'qaoa_iterations', 'qaoa_circuit_depth', 'refinement_applied', 'refinement_skipped_reason', 'refined_found_optimal',
                     'sa_energy', 'sa_found_optimal', 'quantum_time_ms', 'classical_time_ms'
                 ]
                 write_header = not os.path.exists(telemetry_path)
@@ -1752,7 +2042,7 @@ class SwarmAPIServer:
                         time.time(), int(n), int(k), difficulty,
                         value_mean, value_std, corr_mean, corr_std, top_value, bottom_value,
                         float(classical_energy), float(quantum_energy) if quantum_energy is not None else None, float(improvement), bool(quantum_won),
-                        int(qaoa_iterations) if qaoa_iterations else 0, int(qaoa_circfrontend/uit_depth) if qaoa_circfrontend/uit_depth else 0, bool(refinement_applied), refinement_skipped_reason if 'refinement_skipped_reason' in locals() else None, bool(refined_found_optimal) if 'refined_found_optimal' in locals() else False,
+                        int(qaoa_iterations) if qaoa_iterations else 0, int(qaoa_circuit_depth) if qaoa_circuit_depth else 0, bool(refinement_applied), refinement_skipped_reason if 'refinement_skipped_reason' in locals() else None, bool(refined_found_optimal) if 'refined_found_optimal' in locals() else False,
                         float(sa_energy) if 'sa_energy' in locals() else None, bool(sa_found_optimal) if 'sa_found_optimal' in locals() else False, float(quantum_time * 1000), float(classical_time * 1000)
                     ])
             except Exception as e:
@@ -1760,7 +2050,7 @@ class SwarmAPIServer:
 
         except Exception as e:
             logger.exception("Quantum benchmark failed")
-            return frontend/frontend/web.json_response({
+            return web.json_response({
                 'error': str(e),
                 'classical_result': -10.0,
                 'quantum_result': -10.0,
@@ -1770,7 +2060,7 @@ class SwarmAPIServer:
                 'quantum_won': False
             }, status=500)
 
-    async def quantum_sample_problem(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_sample_problem(self, request: web.Request) -> web.Response:
         """Return a deterministic problem instance for a given size/difficulty or seed."""
         self._track_request('/api/quantum/sample_problem')
 
@@ -1814,13 +2104,13 @@ class SwarmAPIServer:
                     correlations[i][j] = max(0, min((correlations[i][j] + correlations[j][i]) / 2, 0.8))
                 correlations[i][i] = 0
 
-            return frontend/frontend/web.json_response({'seed': int(seed), 'size': n, 'k': int(k), 'values': values, 'correlations': correlations})
+            return web.json_response({'seed': int(seed), 'size': n, 'k': int(k), 'values': values, 'correlations': correlations})
 
         except Exception as e:
             logger.exception('Failed to generate sample problem')
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def quantum_parameter_sweep(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_parameter_sweep(self, request: web.Request) -> web.Response:
         """Run a simple parameter sweep over p_layers and shots for a single problem.
 
         Expects JSON body with:
@@ -1921,9 +2211,9 @@ class SwarmAPIServer:
         best_by_imp = max(results, key=lambda x: x['avg_improvement_pct']) if results else None
         best_by_win = max(results, key=lambda x: x['win_rate']) if results else None
 
-        return frontend/frontend/web.json_response({'results': results, 'best_by_improvement': best_by_imp, 'best_by_win': best_by_win, 'estimated_total_seconds': estimated_total_seconds, 'config_count': config_count, 'max_workers': max_workers})
+        return web.json_response({'results': results, 'best_by_improvement': best_by_imp, 'best_by_win': best_by_win, 'estimated_total_seconds': estimated_total_seconds, 'config_count': config_count, 'max_workers': max_workers})
 
-    async def quantum_parameter_sweep_start(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_parameter_sweep_start(self, request: web.Request) -> web.Response:
         """Start parameter sweep as a background job and return job_id"""
         self._track_request('/api/quantum/parameter_sweep/start')
         try:
@@ -1931,8 +2221,8 @@ class SwarmAPIServer:
         except:
             data = {}
 
-        import time, ufrontend/uid
-        job_id = ufrontend/uid.ufrontend/uid4().hex
+        import time, uuid
+        job_id = uuid.uuid4().hex
         job = {
             'id': job_id,
             'status': 'pending',
@@ -1962,11 +2252,11 @@ class SwarmAPIServer:
             await store.start_job(job_id, job)
         except Exception as e:
             logger.exception('Failed to enqueue job in JobStore')
-            return frontend/frontend/web.json_response({'error': 'failed_to_enqueue_job', 'details': str(e)}, status=500)
+            return web.json_response({'error': 'failed_to_enqueue_job', 'details': str(e)}, status=500)
 
-        return frontend/frontend/web.json_response({'job_id': job_id, 'status': 'queued'})
+        return web.json_response({'job_id': job_id, 'status': 'queued'})
 
-    async def quantum_parameter_sweep_list(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_parameter_sweep_list(self, request: web.Request) -> web.Response:
         """List recent parameter sweep jobs"""
         self._track_request('/api/quantum/parameter_sweep/list')
         try:
@@ -1987,9 +2277,9 @@ class SwarmAPIServer:
             }
             for j in jobs
         ]
-        return frontend/frontend/web.json_response({'jobs': jobs_summary})
+        return web.json_response({'jobs': jobs_summary})
 
-    async def quantum_parameter_sweep_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_parameter_sweep_status(self, request: web.Request) -> web.Response:
         self._track_request('/api/quantum/parameter_sweep/{job_id}')
         job_id = request.match_info.get('job_id')
         job = self._parameter_sweep_jobs.get(job_id)
@@ -2002,10 +2292,10 @@ class SwarmAPIServer:
                 job = None
 
         if not job:
-            return frontend/frontend/web.json_response({'error': 'job not found'}, status=404)
-        return frontend/frontend/web.json_response(job)
+            return web.json_response({'error': 'job not found'}, status=404)
+        return web.json_response(job)
 
-    async def quantum_parameter_sweep_list(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_parameter_sweep_list(self, request: web.Request) -> web.Response:
         """List persisted parameter sweep jobs"""
         self._track_request('/api/quantum/parameter_sweep/list')
         try:
@@ -2015,7 +2305,7 @@ class SwarmAPIServer:
         except Exception:
             jobs = list(self._parameter_sweep_jobs.values())
         summary = [ { 'id': j['id'], 'status': j.get('status'), 'created': j.get('created'), 'params': j.get('params') } for j in jobs ]
-        return frontend/frontend/web.json_response({'total': len(summary), 'jobs': summary})
+        return web.json_response({'total': len(summary), 'jobs': summary})
 
     def _persist_sweep_jobs(self):
         try:
@@ -2027,7 +2317,7 @@ class SwarmAPIServer:
         except Exception as e:
             logger.warning(f'Failed to persist sweep jobs: {e}')
 
-    async def quantum_meta_predict(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_predict(self, request: web.Request) -> web.Response:
         """Predict whether refinement will help using trained meta-classifier
 
         Expects JSON body with features (value_mean, value_std, corr_mean, corr_std, classical_time_ms, base_quantum_time_ms, qaoa_iterations)
@@ -2047,22 +2337,22 @@ class SwarmAPIServer:
             feat = [[float(data.get('value_mean', 0.0)), float(data.get('value_std', 0.0)), float(data.get('corr_mean', 0.0)), float(data.get('corr_std', 0.0)), float(data.get('classical_time_ms', 0.0)), float(data.get('base_quantum_time_ms', 0.0)), int(data.get('qaoa_iterations', 0))]]
             proba = float(clf.predict_proba(feat)[0,1]) if hasattr(clf, 'predict_proba') else 0.0
             pred = int(clf.predict(feat)[0])
-            return frontend/frontend/web.json_response({'predict_help': bool(pred), 'probability': float(proba)})
+            return web.json_response({'predict_help': bool(pred), 'probability': float(proba)})
         except Exception as e:
             logger.warning(f"Meta-classifier prediction failed: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def quantum_meta_report(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_report(self, request: web.Request) -> web.Response:
         """Return the latest training report"""
         self._track_request('/api/quantum/meta/report')
         try:
             with open('/tmp/quantum_meta_report.txt') as f:
                 txt = f.read()
-            return frontend/frontend/web.Response(text=txt, content_type='text/plain')
+            return web.Response(text=txt, content_type='text/plain')
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def quantum_meta_retrain(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_retrain(self, request: web.Request) -> web.Response:
         """Kick off model retraining in background"""
         self._track_request('/api/quantum/meta/retrain')
         try:
@@ -2070,8 +2360,8 @@ class SwarmAPIServer:
         except:
             body = {}
 
-        import threading, subprocess, ufrontend/uid, time
-        job_id = ufrontend/uid.ufrontend/uid4().hex
+        import threading, subprocess, uuid, time
+        job_id = uuid.uuid4().hex
         self._last_retrain_job = {'id': job_id, 'status': 'started', 'created': time.time()}
 
         def _run_train():
@@ -2082,7 +2372,7 @@ class SwarmAPIServer:
                 subprocess.run(['python3', 'scripts/train_quantum_meta.py'], check=True)
                 self._last_retrain_job['status'] = 'finished'
                 self._last_retrain_job['finished'] = time.time()
-                # Notify subscribers and frontend/websocket clients
+                # Notify subscribers and websocket clients
                 try:
                     self._notify_subscribers('Meta retrain finished', 'The meta-classifier retraining completed successfully', url=None)
                 except Exception:
@@ -2098,9 +2388,9 @@ class SwarmAPIServer:
 
         t = threading.Thread(target=_run_train, daemon=True)
         t.start()
-        return frontend/frontend/web.json_response({'status': 'started', 'job_id': job_id})
+        return web.json_response({'status': 'started', 'job_id': job_id})
 
-    async def quantum_meta_status(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_status(self, request: web.Request) -> web.Response:
         """Return latest retrain status and metrics"""
         self._track_request('/api/quantum/meta/status')
         try:
@@ -2116,20 +2406,20 @@ class SwarmAPIServer:
                 status['persisted'] = persisted
             except Exception:
                 status['persisted'] = None
-            return frontend/frontend/web.json_response(status)
+            return web.json_response(status)
         except Exception as e:
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def quantum_meta_dataset(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_dataset(self, request: web.Request) -> web.Response:
         """Return the pairwise dataset CSV if present"""
         self._track_request('/api/quantum/meta/dataset')
         import os
         p = '/tmp/qaoa_refine_pairwise_dataset.csv'
         if not os.path.exists(p):
-            return frontend/frontend/web.json_response({'error': 'dataset not found'}, status=404)
-        return frontend/frontend/web.FileResponse(p)
+            return web.json_response({'error': 'dataset not found'}, status=404)
+        return web.FileResponse(p)
 
-    async def quantum_meta_inspect(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def quantum_meta_inspect(self, request: web.Request) -> web.Response:
         """Return basic model metadata and feature importances"""
         self._track_request('/api/quantum/meta/inspect')
         try:
@@ -2157,24 +2447,24 @@ class SwarmAPIServer:
                     info['last_training_report'] = None
             except Exception:
                 pass
-            return frontend/frontend/web.json_response(info)
+            return web.json_response(info)
         except Exception as e:
             logger.warning(f"Meta inspect failed: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_vapid(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_vapid(self, request: web.Request) -> web.Response:
         """Return VAPID public key or status for client push subscription."""
         self._track_request('/api/notifications/vapid')
         try:
             public_key = os.getenv('VAPID_PUBLIC_KEY')
             if not public_key:
-                return frontend/frontend/web.json_response({'configured': False, 'error': 'VAPID_PUBLIC_KEY not set'}, status=404)
-            return frontend/frontend/web.json_response({'configured': True, 'publicKey': public_key, 'vapid_public': public_key})
+                return web.json_response({'configured': False, 'error': 'VAPID_PUBLIC_KEY not set'}, status=404)
+            return web.json_response({'configured': True, 'publicKey': public_key, 'vapid_public': public_key})
         except Exception as e:
             logger.warning(f"VAPID endpoint failed: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_subscribe(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_subscribe(self, request: web.Request) -> web.Response:
         """Accept a push subscription object from clients and persist it."""
         self._track_request('/api/notifications/subscribe')
         try:
@@ -2195,13 +2485,13 @@ class SwarmAPIServer:
             existing.append({'subscription': sub, 'created': time.time()})
             with open(path, 'w') as f:
                 json.dump(existing, f, indent=2)
-            return frontend/frontend/web.json_response({'success': True})
+            return web.json_response({'success': True})
         except Exception as e:
             logger.warning(f"Failed to persist subscription: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_send(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
-        """Send a push notification to all stored subscriptions (reqfrontend/uires pyfrontend/webpush & VAPID keys)."""
+    async def notifications_send(self, request: web.Request) -> web.Response:
+        """Send a push notification to all stored subscriptions (requires pywebpush & VAPID keys)."""
         self._track_request('/api/notifications/send')
         try:
             data = await request.json()
@@ -2215,15 +2505,15 @@ class SwarmAPIServer:
             import os
             needed = os.getenv('NOTIFICATIONS_ADMIN_TOKEN')
             if needed and (request.headers.get('X-Admin-Token') or (request.headers.get('Authorization') or '').replace('Bearer ','')) != needed:
-                return frontend/frontend/web.json_response({'error': 'admin token reqfrontend/uired'}, status=401)
+                return web.json_response({'error': 'admin token required'}, status=401)
 
             count = self._notify_subscribers(title, body, url)
-            return frontend/frontend/web.json_response({'sent': count})
+            return web.json_response({'sent': count})
         except Exception as e:
             logger.warning(f'Failed to send notifications: {e}')
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_send_single(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_send_single(self, request: web.Request) -> web.Response:
         """Send a push notification to a single subscription identified by endpoint."""
         self._track_request('/api/notifications/send_single')
         try:
@@ -2236,19 +2526,19 @@ class SwarmAPIServer:
         url = data.get('url')
 
         if not endpoint:
-            return frontend/frontend/web.json_response({'error': 'endpoint reqfrontend/uired'}, status=400)
+            return web.json_response({'error': 'endpoint required'}, status=400)
 
         # Admin guard (optional)
         import os
         needed = os.getenv('NOTIFICATIONS_ADMIN_TOKEN')
         if needed and (request.headers.get('X-Admin-Token') or (request.headers.get('Authorization') or '').replace('Bearer ','')) != needed:
-            return frontend/frontend/web.json_response({'error': 'admin token reqfrontend/uired'}, status=401)
+            return web.json_response({'error': 'admin token required'}, status=401)
 
         try:
             import json
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'sent': 0, 'error': 'no subscriptions stored'}, status=404)
+                return web.json_response({'sent': 0, 'error': 'no subscriptions stored'}, status=404)
             with open(path) as f:
                 subs = json.load(f)
             target = None
@@ -2258,21 +2548,23 @@ class SwarmAPIServer:
                     target = sub
                     break
             if not target:
-                return frontend/frontend/web.json_response({'sent': 0, 'error': 'subscription not found'}, status=404)
+                return web.json_response({'sent': 0, 'error': 'subscription not found'}, status=404)
 
-            # Attempt single frontend/webpush
+            # Attempt single webpush
             try:
-                from pyfrontend/webpush import frontend/webpush
+                from pywebpush import webpush
                 import json
                 vapid_private = os.getenv('VAPID_PRIVATE_KEY')
                 vapid_claims = { 'sub': os.getenv('VAPID_CONTACT', 'mailto:admin@example.com') }
-                frontend/webpush(subscription_info=target, data=json.dumps({'title': title, 'body': body, 'url': url}), vapid_private_key=vapid_private, vapid_claims=vapid_claims, ttl=60)
-                return frontend/frontend/web.json_response({'sent': 1})
+                webpush(subscription_info=target, data=json.dumps({'title': title, 'body': body, 'url': url}), vapid_private_key=vapid_private, vapid_claims=vapid_claims, ttl=60)
+                return web.json_response({'sent': 1})
             except Exception as e:
-                logger.warning(f'Failed to send to single subscription: {e}')
-                return frontend/frontend/web.json_response({'sent': 0, 'error': str(e)}, status=500)
-
-    async def notifications_remove_by_age(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+                    logger.warning(f'Failed to send to single subscription: {e}')
+                    return web.json_response({'sent': 0, 'error': str(e)}, status=500)
+        except Exception as e:
+            logger.exception(f'Failed to send notifications: {e}')
+            return web.json_response({'sent': 0, 'error': str(e)}, status=500)
+    async def notifications_remove_by_age(self, request: web.Request) -> web.Response:
         """Remove subscriptions older than N days. Request body: {days: int} Returns {removed: int}."""
         self._track_request('/api/notifications/remove_by_age')
         try:
@@ -2281,19 +2573,19 @@ class SwarmAPIServer:
             data = {}
         days = int(data.get('days', 30))
         if days <= 0:
-            return frontend/frontend/web.json_response({'error': 'days must be positive'}, status=400)
+            return web.json_response({'error': 'days must be positive'}, status=400)
 
         # Admin guard (optional)
         import os, time
         needed = os.getenv('NOTIFICATIONS_ADMIN_TOKEN')
         if needed and (request.headers.get('X-Admin-Token') or (request.headers.get('Authorization') or '').replace('Bearer ','')) != needed:
-            return frontend/frontend/web.json_response({'error': 'admin token reqfrontend/uired'}, status=401)
+            return web.json_response({'error': 'admin token required'}, status=401)
 
         try:
             import json, os
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'removed': 0})
+                return web.json_response({'removed': 0})
             with open(path) as f:
                 subs = json.load(f)
             cutoff = time.time() - (days * 24 * 3600)
@@ -2301,12 +2593,12 @@ class SwarmAPIServer:
             removed = len(subs) - len(filtered)
             with open(path, 'w') as f:
                 json.dump(filtered, f, indent=2)
-            return frontend/frontend/web.json_response({'removed': removed})
+            return web.json_response({'removed': removed})
         except Exception as e:
             logger.warning(f'Failed to remove_by_age: {e}')
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_unsubscribe(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_unsubscribe(self, request: web.Request) -> web.Response:
         """Client callable endpoint to unsubscribe (remove) their subscription by endpoint or full subscription object."""
         self._track_request('/api/notifications/unsubscribe')
         try:
@@ -2316,12 +2608,12 @@ class SwarmAPIServer:
         sub = data.get('subscription')
         endpoint = data.get('endpoint') or (sub.get('endpoint') if isinstance(sub, dict) else None)
         if not endpoint:
-            return frontend/frontend/web.json_response({'error': 'endpoint reqfrontend/uired'}, status=400)
+            return web.json_response({'error': 'endpoint required'}, status=400)
         try:
             import json, os
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'removed': 0})
+                return web.json_response({'removed': 0})
             with open(path) as f:
                 subs = json.load(f)
             initial = len(subs)
@@ -2329,14 +2621,14 @@ class SwarmAPIServer:
             removed = initial - len(filtered)
             with open(path, 'w') as f:
                 json.dump(filtered, f, indent=2)
-            return frontend/frontend/web.json_response({'removed': removed})
+            return web.json_response({'removed': removed})
         except Exception as e:
             logger.warning(f'Failed to unsubscribe: {e}')
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
 
     def _notify_subscribers(self, title: str, body: str, url: Optional[str] = None) -> int:
-        """Helper to send push notifications using pyfrontend/webpush if available. Returns number sent."""
+        """Helper to send push notifications using pywebpush if available. Returns number sent."""
         try:
             import json
             path = '/tmp/notifications_subscriptions.json'
@@ -2348,10 +2640,10 @@ class SwarmAPIServer:
             if not subs:
                 return 0
             try:
-                from pyfrontend/webpush import frontend/webpush, WebPushException
+                from pywebpush import webpush, WebPushException
             except Exception:
-                logger.warning('pyfrontend/webpush not installed; cannot send frontend/frontend/web push')
-                # Fallback: broadcast via frontend/websocket channel 'swarm-events' for active clients
+                logger.warning('pywebpush not installed; cannot send web push')
+                # Fallback: broadcast via websocket channel 'swarm-events' for active clients
                 payload = {'title': title, 'body': body, 'url': url}
                 try:
                     asyncio.get_event_loop().create_task(self.ws_manager.broadcast('swarm-events', {'event': 'push_notification', 'payload': payload}))
@@ -2368,8 +2660,8 @@ class SwarmAPIServer:
             for entry in subs:
                 sub = entry.get('subscription')
                 try:
-                    # use frontend/webpush with explicit TTL and appropriate headers for compatibility
-                    frontend/webpush(subscription_info=sub, data=json.dumps({'title': title, 'body': body, 'url': url}), vapid_private_key=vapid_private, vapid_claims=vapid_claims, ttl=60)
+                    # use webpush with explicit TTL and appropriate headers for compatibility
+                    webpush(subscription_info=sub, data=json.dumps({'title': title, 'body': body, 'url': url}), vapid_private_key=vapid_private, vapid_claims=vapid_claims, ttl=60)
                     sent += 1
                 except Exception as e:
                     logger.warning(f'Failed to send to one subscription: {e}')
@@ -2390,10 +2682,10 @@ class SwarmAPIServer:
             logger.warning(f'Notify subscribers error: {e}')
             return 0
 
-    async def notifications_list(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_list(self, request: web.Request) -> web.Response:
         """Return stored push subscriptions for debugging (internal use).
 
-        If `NOTIFICATIONS_ADMIN_TOKEN` is set, this endpoint reqfrontend/uires the admin token
+        If `NOTIFICATIONS_ADMIN_TOKEN` is set, this endpoint requires the admin token
         in header `X-Admin-Token` or `Authorization: Bearer <token>`.
         """
         self._track_request('/api/notifications/list')
@@ -2402,7 +2694,7 @@ class SwarmAPIServer:
             import os
             needed = os.getenv('NOTIFICATIONS_ADMIN_TOKEN')
             if needed and (request.headers.get('X-Admin-Token') or (request.headers.get('Authorization') or '').replace('Bearer ','') ) != needed:
-                return frontend/frontend/web.json_response({'error': 'admin token reqfrontend/uired'}, status=401)
+                return web.json_response({'error': 'admin token required'}, status=401)
         except Exception:
             pass
 
@@ -2410,7 +2702,7 @@ class SwarmAPIServer:
             import json, os
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'total': 0, 'subscriptions': []})
+                return web.json_response({'total': 0, 'subscriptions': []})
             with open(path) as f:
                 subs = json.load(f)
             # Return a trimmed view (don't include auth keys in logs) for safety in UI
@@ -2425,12 +2717,12 @@ class SwarmAPIServer:
                     sanitized.append(safe)
                 except Exception:
                     sanitized.append({'raw': str(s)})
-            return frontend/frontend/web.json_response({'total': len(sanitized), 'subscriptions': sanitized})
+            return web.json_response({'total': len(sanitized), 'subscriptions': sanitized})
         except Exception as e:
             logger.warning(f"Failed to read subscriptions: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_remove(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_remove(self, request: web.Request) -> web.Response:
         """Remove stored subscriptions matching an endpoint. Request body: {endpoint: str} Returns {removed: int}."""
         self._track_request('/api/notifications/remove')
         try:
@@ -2439,12 +2731,12 @@ class SwarmAPIServer:
             data = {}
         endpoint = data.get('endpoint')
         if not endpoint:
-            return frontend/frontend/web.json_response({'error': 'endpoint reqfrontend/uired'}, status=400)
+            return web.json_response({'error': 'endpoint required'}, status=400)
         try:
             import json, os
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'removed': 0})
+                return web.json_response({'removed': 0})
             with open(path) as f:
                 subs = json.load(f)
             initial = len(subs)
@@ -2454,12 +2746,12 @@ class SwarmAPIServer:
             with open(path, 'w') as f:
                 json.dump(filtered, f, indent=2)
             # Return a concise sanitized view
-            return frontend/frontend/web.json_response({'removed': removed})
+            return web.json_response({'removed': removed})
         except Exception as e:
             logger.warning(f'Failed to remove subscription: {e}')
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
-    async def notifications_remove(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def notifications_remove(self, request: web.Request) -> web.Response:
         """Remove a subscription by endpoint (POST {endpoint: '...'}).
         Accepts either full subscription object or { endpoint: string }.
         Returns { removed: int, total: int }"""
@@ -2476,12 +2768,12 @@ class SwarmAPIServer:
                 elif 'subscription' in data and isinstance(data['subscription'], dict):
                     endpoint = data['subscription'].get('endpoint')
             if not endpoint:
-                return frontend/frontend/web.json_response({'error': 'endpoint reqfrontend/uired'}, status=400)
+                return web.json_response({'error': 'endpoint required'}, status=400)
 
             import json, os
             path = '/tmp/notifications_subscriptions.json'
             if not os.path.exists(path):
-                return frontend/frontend/web.json_response({'removed': 0, 'total': 0})
+                return web.json_response({'removed': 0, 'total': 0})
             with open(path) as f:
                 subs = json.load(f)
             before = len(subs)
@@ -2490,16 +2782,16 @@ class SwarmAPIServer:
             # persist
             with open(path, 'w') as f:
                 json.dump(subs, f, indent=2)
-            return frontend/frontend/web.json_response({'removed': removed, 'total': len(subs)})
+            return web.json_response({'removed': removed, 'total': len(subs)})
         except Exception as e:
             logger.warning(f"Failed to remove subscription: {e}")
-            return frontend/frontend/web.json_response({'error': str(e)}, status=500)
+            return web.json_response({'error': str(e)}, status=500)
 
     # ============================================
     # Agent Registry Endpoints
     # ============================================
 
-    async def get_agent_details(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_agent_details(self, request: web.Request) -> web.Response:
         """Get agent details"""
         self._track_request('/api/agents/{agent_id}')
 
@@ -2507,11 +2799,11 @@ class SwarmAPIServer:
         details = agent_registry.get_agent_details(agent_id)
 
         if not details:
-            return frontend/frontend/web.json_response({'error': 'Agent not found'}, status=404)
+            return web.json_response({'error': 'Agent not found'}, status=404)
 
-        return frontend/frontend/web.json_response(details)
+        return web.json_response(details)
 
-    async def search_agents(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def search_agents(self, request: web.Request) -> web.Response:
         """Search agents"""
         self._track_request('/api/agents/search')
 
@@ -2522,20 +2814,20 @@ class SwarmAPIServer:
             query['min_performance'] = float(request.query['min_performance'])
 
         results = agent_registry.search_agents(query)
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'query': query,
             'total': len(results),
             'agents': results
         })
 
-    async def get_top_performers(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def get_top_performers(self, request: web.Request) -> web.Response:
         """Get top performing agents"""
         self._track_request('/api/agents/top-performers')
 
         limit = int(request.query.get('limit', '10'))
         metrics = agent_registry.get_swarm_metrics()
 
-        return frontend/frontend/web.json_response({
+        return web.json_response({
             'limit': limit,
             'performers': [
                 {'agent_id': p[0], 'performance_score': p[1]}
@@ -2547,9 +2839,9 @@ class SwarmAPIServer:
     # WebSocket Handler
     # ============================================
 
-    async def frontend/websocket_handler(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.WebSocketResponse:
+    async def websocket_handler(self, request: web.Request) -> web.WebSocketResponse:
         """Handle WebSocket connections"""
-        ws = frontend/frontend/web.WebSocketResponse()
+        ws = web.WebSocketResponse()
         await ws.prepare(request)
 
         await self.ws_manager.add_connection(ws)
@@ -2615,7 +2907,7 @@ class SwarmAPIServer:
     # Prometheus Metrics
     # ============================================
 
-    async def prometheus_metrics(self, request: frontend/frontend/web.Request) -> frontend/frontend/web.Response:
+    async def prometheus_metrics(self, request: web.Request) -> web.Response:
         """Prometheus metrics endpoint"""
         contributors = self.gpu_manager.list_contributors()
         online_count = sum(1 for c in contributors if c.online)
@@ -2645,12 +2937,12 @@ class SwarmAPIServer:
             f'# TYPE swarm_uptime_seconds gauge',
             f'swarm_uptime_seconds {time.time() - self.start_time}',
             f'',
-            f'# HELP swarm_frontend/websocket_connections Active WebSocket connections',
-            f'# TYPE swarm_frontend/websocket_connections gauge',
-            f'swarm_frontend/websocket_connections {len(self.ws_manager.connections)}',
+            f'# HELP swarm_websocket_connections Active WebSocket connections',
+            f'# TYPE swarm_websocket_connections gauge',
+            f'swarm_websocket_connections {len(self.ws_manager.connections)}',
         ]
 
-        return frontend/frontend/web.Response(text='\n'.join(metrics), content_type='text/plain')
+        return web.Response(text='\n'.join(metrics), content_type='text/plain')
 
     # ============================================
     # Background Tasks
@@ -2785,7 +3077,7 @@ class SwarmAPIServer:
 
     async def start(self):
         """Start the API server"""
-        app = frontend/frontend/web.Application(middlewares=[error_middleware])
+        app = web.Application(middlewares=[error_middleware])
 
         # Setup CORS
         cors = aiohttp_cors.setup(app, defaults={
@@ -2810,12 +3102,13 @@ class SwarmAPIServer:
         asyncio.create_task(self._broadcast_metrics_loop())
         asyncio.create_task(self._sweep_timeouts_loop())
         asyncio.create_task(self._check_blockchain_loop())
+        asyncio.create_task(self.social_queue.start())
 
         logger.info(f"Starting Swarm API Server on {self.host}:{self.port}")
 
-        runner = frontend/frontend/web.AppRunner(app)
+        runner = web.AppRunner(app)
         await runner.setup()
-        site = frontend/frontend/web.TCPSite(runner, self.host, self.port)
+        site = web.TCPSite(runner, self.host, self.port)
         await site.start()
 
         logger.info(f"Swarm API Server started on http://{self.host}:{self.port}")

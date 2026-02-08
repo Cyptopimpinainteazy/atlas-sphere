@@ -112,7 +112,7 @@ def invoke_command(
     template = command_path.read_text()
     prompt = expand_template(template, arguments)
 
-    # Bfrontend/uild command
+    # Build command
     if interactive:
         # Interactive mode: pipe via stdin
         cmd = [

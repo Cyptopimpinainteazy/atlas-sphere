@@ -6,7 +6,7 @@ from intelligence.ast.ast_diff import AstNodeChange
 def export_ast_pnl(before_src: str, after_src: str, pnl_logs: list) -> dict:
     ast_data = analyze_file(before_src, after_src)
 
-    # rebfrontend/uild AstNodeChange objects from serialized changes
+    # rebuild AstNodeChange objects from serialized changes
     ast_changes = []
     for c in ast_data.get('changes', []):
         ast_changes.append(AstNodeChange(

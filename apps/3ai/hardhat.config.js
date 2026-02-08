@@ -1,5 +1,5 @@
-reqfrontend/uire("@nomicfoundation/hardhat-toolbox");
-reqfrontend/uire("dotenv").config();
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

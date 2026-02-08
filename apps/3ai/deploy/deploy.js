@@ -1,4 +1,4 @@
-const { ethers } = reqfrontend/uire("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
   console.log("Deploying Orderbook contract...");

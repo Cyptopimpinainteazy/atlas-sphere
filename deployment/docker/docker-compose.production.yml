@@ -10,7 +10,7 @@ version: '3.9'
 # - Analytics Service
 # - PostgreSQL database
 # - Prometheus monitoring
-# - Grafana apps/apps/dash-legacy-2-legacy-2boards
+# - Grafana apps/dash-legacy-2-legacy-2boards
 # ============================================================================
 
 services:
@@ -18,7 +18,7 @@ services:
   # Bootnode - P2P network bootstrapping
   # ==========================================================================
   bootnode:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.node
     image: atlas-sphere/node:latest
@@ -59,7 +59,7 @@ services:
   # Validator Node 1
   # ==========================================================================
   validator-01:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.node
     image: atlas-sphere/node:latest
@@ -105,7 +105,7 @@ services:
   # Validator Node 2
   # ==========================================================================
   validator-02:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.node
     image: atlas-sphere/node:latest
@@ -151,7 +151,7 @@ services:
   # Validator Node 3
   # ==========================================================================
   validator-03:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.node
     image: atlas-sphere/node:latest
@@ -197,7 +197,7 @@ services:
   # RPC Gateway - Public-facing load balanced RPC
   # ==========================================================================
   rpc-gateway:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.rpc-gateway
     image: atlas-sphere/rpc-gateway:latest
@@ -237,7 +237,7 @@ services:
     environment:
       POSTGRES_DB: atlas_analytics
       POSTGRES_USER: ${POSTGRES_USER:-atlas}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD reqfrontend/uired}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -258,7 +258,7 @@ services:
   # Analytics Service - Event tracking and metrics
   # ==========================================================================
   analytics:
-    bfrontend/uild:
+    build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.analytics
     image: atlas-sphere/analytics:latest
@@ -297,8 +297,8 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
-      - '--frontend/frontend/web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--frontend/frontend/web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - atlas-network
     logging:
@@ -308,7 +308,7 @@ services:
         max-file: "3"
 
   # ==========================================================================
-  # Grafana - Visualization apps/apps/dash-legacy-2-legacy-2boards
+  # Grafana - Visualization apps/dash-legacy-2-legacy-2boards
   # ==========================================================================
   grafana:
     image: grafana/grafana:latest
@@ -317,12 +317,12 @@ services:
     ports:
       - "3001:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD reqfrontend/uired}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD required}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_SERVER_ROOT_URL: "https://metrics.atlas-sphere.io"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./config/grafana-apps/apps/dash-legacy-2-legacy-2boards:/etc/grafana/provisioning/apps/apps/dash-legacy-2-legacy-2boards:ro
+      - ./config/grafana-apps/dash-legacy-2-legacy-2boards:/etc/grafana/provisioning/apps/dash-legacy-2-legacy-2boards:ro
       - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
     depends_on:
       - prometheus

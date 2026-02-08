@@ -1,5 +1,5 @@
-const { ApiPromise, WsProvider } = reqfrontend/uire('@polkadot/api');
-const { Keyring } = reqfrontend/uire('@polkadot/keyring');
+const { ApiPromise, WsProvider } = require('@polkadot/api');
+const { Keyring } = require('@polkadot/keyring');
 
 async function main() {
   const ws = process.env.WS || 'ws://127.0.0.1:9944';

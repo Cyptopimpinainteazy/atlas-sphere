@@ -11,9 +11,9 @@ export default function InstallationPage() {
       lastUpdated="December 2024"
     >
       <div className="space-y-8">
-        {/* System Reqfrontend/uirements */}
+        {/* System Requirements */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">System Reqfrontend/uirements</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">System Requirements</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -73,7 +73,7 @@ npm --version   # Should output 10.x.x`}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Install Rust (Optional)</h2>
           <p className="text-gray-400 mb-4">
-            Reqfrontend/uired only if you plan to run a node or bfrontend/uild Substrate pallets:
+            Required only if you plan to run a node or build Substrate pallets:
           </p>
           <CodeBlock language="bash" title="Terminal">
 {`# Install Rust
@@ -190,7 +190,7 @@ async function verify() {
   console.log('✅ Connected to X3 Atlas Sphere');
   console.log('   Chain:', info.chain);
   console.log('   Block:', info.blockNumber);
-  console.log('\\nSetup complete! You are ready to bfrontend/uild.');
+  console.log('\\nSetup complete! You are ready to build.');
 }
 
 verify().catch(console.error);`}
@@ -203,8 +203,8 @@ verify().catch(console.error);`}
         </section>
 
         <Callout type="success" title="You're All Set!">
-          With all tools installed, you&apos;re ready to start bfrontend/uilding on X3 Atlas Sphere. 
-          Head to the Qfrontend/uick Start gfrontend/uide to create your first application.
+          With all tools installed, you&apos;re ready to start building on X3 Atlas Sphere. 
+          Head to the Quick Start guide to create your first application.
         </Callout>
       </div>
     </DocLayout>

@@ -11,7 +11,7 @@ export default function SvmAccountsPage() {
     >
       <p className="lead text-xl text-gray-400 mb-8">
         The SVM uses an account-based model where all state is stored in accounts.
-        Understanding accounts is crucial for bfrontend/uilding efficient SVM programs.
+        Understanding accounts is crucial for building efficient SVM programs.
       </p>
 
       <h2>Account Structure</h2>

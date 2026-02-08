@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Logo from '../frontend/frontend/ui/Logo';
+import Logo from '../frontend/ui/Logo';
 import {
   Twitter,
   Github,
@@ -209,7 +209,7 @@ export default function Footer() {
             <span>© 2025 X3 Atlas Sphere. All rights reserved.</span>
             <span className="mx-2">•</span>
             <span className="flex items-center">
-              Bfrontend/uilt with <Heart className="w-4 h-4 mx-1 text-red-500" /> by the Atlas team
+              Built with <Heart className="w-4 h-4 mx-1 text-red-500" /> by the Atlas team
             </span>
           </div>
           <div className="flex items-center space-x-6 text-sm text-gray-600">

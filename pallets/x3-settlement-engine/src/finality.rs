@@ -36,7 +36,7 @@ impl FinalityOracle {
         match chain {
             ExternalChainId::Bitcoin | ExternalChainId::BitcoinTestnet => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 6,
+                confirmations_required: 6,
                 block_time_ms: 600_000, // 10 minutes
                 proof_type: ProofType::BitcoinSpv,
                 challenge_period_seconds: 0,
@@ -44,7 +44,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Ethereum => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 12,
+                confirmations_required: 12,
                 block_time_ms: 12_000, // 12 seconds
                 proof_type: ProofType::MerkleTrie,
                 challenge_period_seconds: 0,
@@ -52,7 +52,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Arbitrum => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 250, // ~0.25 seconds
                 proof_type: ProofType::Optimistic,
                 challenge_period_seconds: 604800, // 7 days for fraud proof
@@ -60,7 +60,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Base => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 2_000,
                 proof_type: ProofType::Optimistic,
                 challenge_period_seconds: 604800,
@@ -68,7 +68,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Optimism => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 2_000,
                 proof_type: ProofType::Optimistic,
                 challenge_period_seconds: 604800,
@@ -76,7 +76,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Polygon => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 128,
+                confirmations_required: 128,
                 block_time_ms: 2_000,
                 proof_type: ProofType::MerkleTrie,
                 challenge_period_seconds: 0,
@@ -84,7 +84,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Avalanche => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 2_000, // Sub-second finality
                 proof_type: ProofType::MerkleTrie,
                 challenge_period_seconds: 0,
@@ -92,7 +92,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Bnb => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 15,
+                confirmations_required: 15,
                 block_time_ms: 3_000,
                 proof_type: ProofType::MerkleTrie,
                 challenge_period_seconds: 0,
@@ -100,7 +100,7 @@ impl FinalityOracle {
             },
             ExternalChainId::Solana | ExternalChainId::SolanaDevnet => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 400,
                 proof_type: ProofType::SolanaProof,
                 challenge_period_seconds: 0,
@@ -108,7 +108,7 @@ impl FinalityOracle {
             },
             ExternalChainId::X3Native => FinalityConfig {
                 chain,
-                confirmations_reqfrontend/uired: 1,
+                confirmations_required: 1,
                 block_time_ms: 6_000, // 6 second blocks
                 proof_type: ProofType::LightClient,
                 challenge_period_seconds: 0,
@@ -118,7 +118,7 @@ impl FinalityOracle {
                 // Default config for unknown EVM chains
                 FinalityConfig {
                     chain: ExternalChainId::EvmChain(chain_id),
-                    confirmations_reqfrontend/uired: 20, // Conservative
+                    confirmations_required: 20, // Conservative
                     block_time_ms: 12_000,
                     proof_type: ProofType::MerkleTrie,
                     challenge_period_seconds: 0,
@@ -132,17 +132,17 @@ impl FinalityOracle {
     ///
     /// Score indicates confidence that transaction won't be reverted
     pub fn finality_score(config: &FinalityConfig, confirmations: u32) -> u32 {
-        if confirmations >= config.confirmations_reqfrontend/uired {
+        if confirmations >= config.confirmations_required {
             100
         } else {
-            // Linear scale up to reqfrontend/uired confirmations
-            (confirmations * 100) / config.confirmations_reqfrontend/uired
+            // Linear scale up to required confirmations
+            (confirmations * 100) / config.confirmations_required
         }
     }
 
     /// Calculate reorg probability in basis points
     pub fn reorg_probability(config: &FinalityConfig, confirmations: u32) -> u32 {
-        if confirmations >= config.confirmations_reqfrontend/uired {
+        if confirmations >= config.confirmations_required {
             return 0;
         }
 
@@ -173,11 +173,11 @@ impl FinalityOracle {
 
     /// Estimate time until finality (in seconds)
     pub fn time_to_finality(config: &FinalityConfig, current_confirmations: u32) -> u64 {
-        if current_confirmations >= config.confirmations_reqfrontend/uired {
+        if current_confirmations >= config.confirmations_required {
             return 0;
         }
 
-        let remaining = config.confirmations_reqfrontend/uired - current_confirmations;
+        let remaining = config.confirmations_required - current_confirmations;
         (remaining as u64 * config.block_time_ms) / 1000
     }
 
@@ -185,9 +185,9 @@ impl FinalityOracle {
     pub fn should_wait(config: &FinalityConfig, confirmations: u32, urgency: Urgency) -> bool {
         match urgency {
             Urgency::Immediate => confirmations < 1,
-            Urgency::Normal => confirmations < config.confirmations_reqfrontend/uired,
+            Urgency::Normal => confirmations < config.confirmations_required,
             Urgency::Conservative => {
-                confirmations < config.confirmations_reqfrontend/uired.saturating_mul(2)
+                confirmations < config.confirmations_required.saturating_mul(2)
             }
         }
     }
@@ -283,7 +283,7 @@ mod tests {
     #[test]
     fn test_btc_finality_config() {
         let config = FinalityOracle::default_config(ExternalChainId::Bitcoin);
-        assert_eq!(config.confirmations_reqfrontend/uired, 6);
+        assert_eq!(config.confirmations_required, 6);
         assert_eq!(config.block_time_ms, 600_000);
     }
 

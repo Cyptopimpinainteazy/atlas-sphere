@@ -39,7 +39,7 @@ context:
       copy: [pattern name]
 
   gotchas:
-    - issue: "Library X reqfrontend/uires Y"
+    - issue: "Library X requires Y"
       fix: "Always do Z first"
 ```
 
@@ -162,7 +162,7 @@ DEBUG api_error:
 4. TEST still passes
 5. UPDATE remaining usages incrementally
 6. DELETE old structure
-7. TEST full sfrontend/uite passes
+7. TEST full suite passes
 ```
 
 ## Tips for Effective Tasks

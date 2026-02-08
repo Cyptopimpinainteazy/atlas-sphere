@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         k.wallet === pendingAction.wallet &&
         k.verified === true
       )
-      if (!hasKyc) return NextResponse.json({ error: 'kyc_reqfrontend/uired' }, { status: 403 })
+      if (!hasKyc) return NextResponse.json({ error: 'kyc_required' }, { status: 403 })
     }
 
     // simple threshold: if approvals >= GOV_APPROVAL_THRESHOLD finalize

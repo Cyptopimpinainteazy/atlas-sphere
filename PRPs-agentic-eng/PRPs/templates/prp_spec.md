@@ -4,7 +4,7 @@
 
 ## High-Level Objective
 
-- [High level goal goes here - what do you want to bfrontend/uild?]
+- [High level goal goes here - what do you want to build?]
 
 ## Mid-Level Objective
 
@@ -15,9 +15,9 @@
 ## Implementation Notes
 
 - [Important technical details - what are the important technical details?]
-- [Dependencies and reqfrontend/uirements - what are the dependencies and reqfrontend/uirements?]
+- [Dependencies and requirements - what are the dependencies and requirements?]
 - [Coding standards to follow - what are the coding standards to follow?]
-- [Other technical gfrontend/uidance - what are other technical gfrontend/uidance?]
+- [Other technical guidance - what are other technical guidance?]
 
 ## Context
 

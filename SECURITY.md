@@ -72,12 +72,12 @@ We appreciate security researchers and will:
 2. Use the authorized accounts system
 3. Validate all inputs in smart contracts
 4. Test cross-VM interactions thoroughly
-5. Follow secure coding gfrontend/uidelines
+5. Follow secure coding guidelines
 
 ## Contact
 
 - Security issues: security@atlas-sphere.io
-- General inqfrontend/uiries: contact@atlas-sphere.io
+- General inquiries: contact@atlas-sphere.io
 
 ## PGP Key
 

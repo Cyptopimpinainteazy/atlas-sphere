@@ -5,7 +5,7 @@
 mod tests {
     #[test]
     fn stub() {
-        // This ensures the tests module exists so formatting and bfrontend/uilds can run.
+        // This ensures the tests module exists so formatting and builds can run.
         assert!(true);
     }
 }

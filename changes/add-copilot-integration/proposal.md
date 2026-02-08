@@ -4,7 +4,7 @@ Integrate Copilot to assist with OpenSpec development by leveraging its code gen
 ## What Changes
 - Integrate Copilot into the development workflow
 - Utilize Copilot for generating spec content, code implementations, and documentation
-- Establish gfrontend/uidelines for when and how to use Copilot effectively
+- Establish guidelines for when and how to use Copilot effectively
 
 ## Impact
 - Improved development efficiency and consistency

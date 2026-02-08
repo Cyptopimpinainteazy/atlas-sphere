@@ -58,8 +58,8 @@ let bytecode = Compiler::compile_mir(
 
 ### New Files
 - crates/x3-compiler/ (new crate)
-- BLOCKCHAIN_INTEGRATION_PHASE4.md (architecture gfrontend/uide)
-- PHASE4_BLOCKCHAIN_INTEGRATION_COMPLETE.md (session summary)
+- docs/reports/BLOCKCHAIN_INTEGRATION_PHASE4.md (architecture guide)
+- archive/reports/PHASE4_BLOCKCHAIN_INTEGRATION_COMPLETE.md (session summary)
 
 ### Modified Files
 - Cargo.toml (added x3-compiler member)
@@ -73,7 +73,7 @@ let bytecode = Compiler::compile_mir(
 
 ✅ x3-opt: 110/110 tests passing (14-pass pipeline verified)
 ✅ x3-compiler: 2/2 tests passing (config system verified)
-✅ Full workspace: Bfrontend/uilds cleanly (3m08s check time)
+✅ Full workspace: Builds cleanly (3m08s check time)
 
 ## Next Steps (Phase 5)
 
@@ -102,4 +102,4 @@ Closes: Integration of YOLO + Loop-Pack v1 into blockchain (Phase 4 complete)
 
 - YOLO optimization details: crates/x3-opt/README.md
 - Benchmark results: Phase 3 completion docs
-- Architecture gfrontend/uide: BLOCKCHAIN_INTEGRATION_PHASE4.md
+- Architecture guide: docs/reports/BLOCKCHAIN_INTEGRATION_PHASE4.md

@@ -7,7 +7,7 @@ interface X3Script {
   id: string;
   name: string;
   description: string;
-  category: 'arbitrage' | 'liqfrontend/uidation' | 'mev' | 'liqfrontend/uidity' | 'utility';
+  category: 'arbitrage' | 'liquidation' | 'mev' | 'liquidity' | 'utility';
   author: string;
   executions: number;
   success_rate: number;
@@ -46,18 +46,18 @@ fn execute(amount: u256, min_profit: u256) -> u256 {
   {
     id: '2',
     name: 'flash.x3',
-    description: 'Flash loan liqfrontend/uidation with multi-protocol support',
-    category: 'liqfrontend/uidation',
+    description: 'Flash loan liquidation with multi-protocol support',
+    category: 'liquidation',
     author: '5FHne...94ty',
     executions: 3421,
     success_rate: 87.5,
     avg_profit: '0.12 ETH',
-    code: `// flash.x3 - Flash Liqfrontend/uidation
+    code: `// flash.x3 - Flash Liquidation
 @swarm @atomic
-fn liqfrontend/uidate(borrower: address, debt: u256) -> u256 {
+fn liquidate(borrower: address, debt: u256) -> u256 {
     let borrowed = flash_borrow(AAVE, debt_asset, debt);
     
-    call(AAVE, "liqfrontend/uidationCall", 
+    call(AAVE, "liquidationCall", 
         (collateral, debt_asset, borrower, debt));
     
     let seized = balance_of(collateral, self);
@@ -95,18 +95,18 @@ fn distribute_epoch(epoch: u256) -> u256 {
   {
     id: '4',
     name: 'jit_lp.x3',
-    description: 'Just-in-time liqfrontend/uidity provision for large swaps',
-    category: 'liqfrontend/uidity',
+    description: 'Just-in-time liquidity provision for large swaps',
+    category: 'liquidity',
     author: '5HGjWA...UMaw',
     executions: 2156,
     success_rate: 91.3,
     avg_profit: '0.02 ETH',
-    code: `// jit_lp.x3 - JIT Liqfrontend/uidity
+    code: `// jit_lp.x3 - JIT Liquidity
 @swarm @atomic @mempool
 fn provide_jit(pool: address, pending: SwapData) -> u256 {
     let (price, tick) = call(pool, "slot0");
     
-    // Concentrate liqfrontend/uidity around pending swap
+    // Concentrate liquidity around pending swap
     let tick_lower = tick - TICK_RANGE;
     let tick_upper = tick + TICK_RANGE;
     
@@ -166,7 +166,7 @@ export default function ScriptsPage() {
             />
           </div>
           <div className="flex gap-2">
-            {['all', 'arbitrage', 'liqfrontend/uidation', 'mev', 'liqfrontend/uidity'].map((cat) => (
+            {['all', 'arbitrage', 'liquidation', 'mev', 'liquidity'].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
@@ -225,9 +225,9 @@ function ScriptCard({ script, selected, onClick }: {
 }) {
   const categoryColors = {
     arbitrage: 'text-green-400 bg-green-400/10',
-    liqfrontend/uidation: 'text-red-400 bg-red-400/10',
+    liquidation: 'text-red-400 bg-red-400/10',
     mev: 'text-yellow-400 bg-yellow-400/10',
-    liqfrontend/uidity: 'text-blue-400 bg-blue-400/10',
+    liquidity: 'text-blue-400 bg-blue-400/10',
     utility: 'text-purple-400 bg-purple-400/10',
   };
 

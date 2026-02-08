@@ -1,6 +1,6 @@
 // Application constants
 export const APP_NAME = '3aiXchange DEX';
-export const APP_DESCRIPTION = 'Decentralized exchange bfrontend/uilt on the 3ai blockchain';
+export const APP_DESCRIPTION = 'Decentralized exchange built on the 3ai blockchain';
 
 // Default network configuration
 export const DEFAULT_CHAIN_ID = 3333;

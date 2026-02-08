@@ -4,13 +4,13 @@ from governance.courtroom.llm import call_llm
 
 def run_courtroom(change: dict) -> dict:
     planner = call_llm('PLANNER_PROMPT', change.get('intent', '') + '\n' + change.get('summary', ''))
-    bfrontend/uilder = call_llm('BUILDER_PROMPT', change.get('diff', ''))
+    builder = call_llm('BUILDER_PROMPT', change.get('diff', ''))
     auditor = call_llm('AUDITOR_PROMPT', change.get('diff', ''))
 
     # Compose evidence for judge
     evidence = {
         'planner': json.loads(planner) if planner else {},
-        'bfrontend/uilder': json.loads(bfrontend/uilder) if bfrontend/uilder else {},
+        'builder': json.loads(builder) if builder else {},
         'auditor': json.loads(auditor) if auditor else {},
     }
 

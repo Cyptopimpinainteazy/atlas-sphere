@@ -2,15 +2,15 @@
 
 This module implements a minimal loader and Ollama client so local services can use skills from the `third_party/agent-skills` collection.
 
-Qfrontend/uick usage
+Quick usage
 
 - Install dependencies:
 
 ```
-pip install -r swarm/reqfrontend/uirements.txt
+pip install -r swarm/requirements.txt
 ```
 
-- Run a qfrontend/uick test (reqfrontend/uires Ollama running locally at `http://localhost:11434`):
+- Run a quick test (requires Ollama running locally at `http://localhost:11434`):
 
 ```
 python swarm/skills_adapter.py react-best-practices

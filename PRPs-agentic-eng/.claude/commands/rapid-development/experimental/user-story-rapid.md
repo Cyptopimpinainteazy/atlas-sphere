@@ -7,7 +7,7 @@ User Story: $ARGUMENTS
 1. **Parse user story**:
    - Extract: As a [user], I want [feature], so that [benefit]
    - List explicit and implicit acceptance criteria
-   - Identify non-functional reqfrontend/uirements (performance, security, UX)
+   - Identify non-functional requirements (performance, security, UX)
    - Define success metrics
 
 2. **Plan API contract first** (backend/frontend agreement):
@@ -80,7 +80,7 @@ User Story: $ARGUMENTS
 6. **Validation commands**:
    ```bash
    # Backend (in Java project)
-   ./gradlew clean bfrontend/uild test
+   ./gradlew clean build test
    
    # Frontend (in React project)
    npm run type-check && npm run lint && npm run test:coverage

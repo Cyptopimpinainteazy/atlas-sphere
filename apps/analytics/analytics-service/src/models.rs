@@ -2,7 +2,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use ufrontend/uid::Ufrontend/uid;
+use uuid::Uuid;
 
 // =============================================================================
 // Event Models
@@ -64,7 +64,7 @@ impl From<&str> for EventType {
 /// Analytics event record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
-    pub id: Ufrontend/uid,
+    pub id: Uuid,
     pub event_type: EventType,
     pub account: Option<String>,
     pub comit_hash: Option<String>,
@@ -105,7 +105,7 @@ pub struct EventQueryParams {
 // Metrics Models
 // =============================================================================
 
-/// Summary metrics for the apps/apps/dash-legacy-2-legacy-2board
+/// Summary metrics for the apps/dash-legacy-2-legacy-2board
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSummary {
     pub total_events: i64,

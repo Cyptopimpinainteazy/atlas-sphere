@@ -19,7 +19,7 @@ async function main() {
   const providerUrl = process.env.EVM_RPC_URL;
   const pk = process.env.EVM_DEPLOYER_PRIVATE_KEY;
   if (!providerUrl || !pk) {
-    console.error('EVM_RPC_URL and EVM_DEPLOYER_PRIVATE_KEY reqfrontend/uired');
+    console.error('EVM_RPC_URL and EVM_DEPLOYER_PRIVATE_KEY required');
     process.exit(1);
   }
   const { abi, bytecode } = await compile();

@@ -10,7 +10,7 @@ export default function AtomicExecutionPage() {
       description="How X3 ensures atomic execution across EVM and SVM"
     >
       <p className="lead text-xl text-gray-400 mb-8">
-        X3 Atlas Sphere guarantees atomic execution across both VMs. This gfrontend/uide explains 
+        X3 Atlas Sphere guarantees atomic execution across both VMs. This guide explains 
         how atomicity is achieved and what guarantees your applications can rely on.
       </p>
 
@@ -73,7 +73,7 @@ contract Example {
         
         // This revert rolls back EVERYTHING
         // Including the SVM portion of the Comit
-        reqfrontend/uire(condition, "Failed");
+        require(condition, "Failed");
     }
 }`}
       </CodeBlock>
@@ -127,9 +127,9 @@ submission and execution.`}
       <CodeBlock language="solidity">
 {`// GOOD: Check conditions upfront
 contract SafeSwap {
-    function swapForSVM(frontend/uint256 amount) external {
+    function swapForSVM(uint256 amount) external {
         // Check balance first
-        reqfrontend/uire(token.balanceOf(msg.sender) >= amount, "Insufficient");
+        require(token.balanceOf(msg.sender) >= amount, "Insufficient");
         
         // All checks pass, do the transfer
         token.transferFrom(msg.sender, address(this), amount);
@@ -141,13 +141,13 @@ contract SafeSwap {
 
 // BAD: Side effects before checks
 contract UnsafeSwap {
-    function badSwap(frontend/uint256 amount) external {
+    function badSwap(uint256 amount) external {
         // External call first (bad pattern anyway)
         externalContract.notify(amount);
         
         // Check after - if this fails, notify already happened
         // But wait - Comit rollback will revert notify too!
-        reqfrontend/uire(token.balanceOf(msg.sender) >= amount);
+        require(token.balanceOf(msg.sender) >= amount);
     }
 }`}
       </CodeBlock>

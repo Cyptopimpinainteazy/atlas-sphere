@@ -187,7 +187,7 @@ pub mod pallet {
         #[pallet::call_index(0)]
         #[pallet::weight(10_000)]
         pub fn check_invariants(origin: OriginFor<T>) -> DispatchResult {
-            // Should reqfrontend/uire root
+            // Should require root
             let _who = ensure_root(origin)?;
 
             Self::assert_invariants()?;

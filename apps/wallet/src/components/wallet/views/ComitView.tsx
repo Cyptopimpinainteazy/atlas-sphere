@@ -107,7 +107,7 @@ export function ComitView() {
         </div>
       )}
 
-      {/* Comit Bfrontend/uilder */}
+      {/* Comit Builder */}
       <div className="glass-card p-6">
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* EVM Payload */}

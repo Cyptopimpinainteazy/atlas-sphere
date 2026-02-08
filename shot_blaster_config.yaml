@@ -1,5 +1,5 @@
 ---
-# Shot Blaster Configuration for x3_md_supervisor Full Bfrontend/uild
+# Shot Blaster Configuration for x3_md_supervisor Full Build
 # This configuration orchestrates the four-agent swarm for autonomous code governance
 
 mode: yolo
@@ -11,7 +11,7 @@ fail_on:
   - placeholder
   - stub
   - missing_file
-  - unwired_frontend/frontend/ui
+  - unwired_ui
   - fake_logic
   - syntax_error
   - linker_error
@@ -57,9 +57,9 @@ models:
     fallback_model: deepseek/deepseek-r1:free
     timeout: 60
 
-  bfrontend/uilder:
+  builder:
     provider: ollama
-    model: x3-bfrontend/uilder
+    model: x3-builder
     fallback: openrouter
     fallback_model: qwen/qwen-2.5-coder-32b-instruct:free
     timeout: 120
@@ -89,7 +89,7 @@ agents:
     parallelizable: true
     retry_on_failure: true
 
-  bfrontend/uilder:
+  builder:
     role: implement
     strict: true
     parallelizable: false
@@ -132,14 +132,14 @@ gates:
       tool: semgrep
       blocking: true
 
-# Output reqfrontend/uirements
+# Output requirements
 output_rules:
   - full_files_only
   - no_partial_code
   - deterministic_order
   - deterministic_hashing
   - audit_logging_mandatory
-  - error_explanations_reqfrontend/uired
+  - error_explanations_required
 
 # Performance constraints
 performance:

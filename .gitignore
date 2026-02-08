@@ -99,3 +99,4 @@ Thumbs.db
 *.gpg
 atlas-testnet-keys*.tar.gz*
 patches/environmental/
+.aider*

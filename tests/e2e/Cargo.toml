@@ -16,7 +16,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ufrontend/uid = { version = "1.0", features = ["v4"] }
+uuid = { version = "1.0", features = ["v4"] }
 url = "2.4"
 reqwest = { version = "0.11", features = ["json"] }
 once_cell = "1.19"
@@ -37,7 +37,7 @@ sc-chain-spec = { workspace = true }
 sc-transaction-pool = { workspace = true }
 pallet-balances = { workspace = true }
 pallet-timestamp = { workspace = true }
-substrate-wasm-bfrontend/uilder = { workspace = true }
+substrate-wasm-builder = { workspace = true }
 
 # EVM dependencies
 pallet-evm = { workspace = true }
@@ -59,6 +59,13 @@ x3-integration = { path = "../../crates/x3-integration" }
 # Add any test-specific dependencies here
 rstest = "0.17"
 mockall = "0.11"
+httptest = "0.6"
+
+# Added for wait_for_rpc helper
+rand = "0.8"
+thiserror = "1.0"
+
+[workspace]
 
 [[test]]
 name = "integration_tests"

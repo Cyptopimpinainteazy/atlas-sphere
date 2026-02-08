@@ -132,13 +132,13 @@ export default function X3LandingPage() {
                 X3: The Language of <span className="text-purple-400">MEV</span>
               </h2>
               <p className="text-gray-400 mb-6">
-                Purpose-bfrontend/uilt for trading, MEV extraction, and DeFi automation. 
-                30+ bfrontend/uilt-in functions, atomic execution guarantees, and swarm-native annotations.
+                Purpose-built for trading, MEV extraction, and DeFi automation. 
+                30+ built-in functions, atomic execution guarantees, and swarm-native annotations.
               </p>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center gap-3">
                   <span className="text-green-400">✓</span>
-                  Flash loan primitives bfrontend/uilt-in
+                  Flash loan primitives built-in
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="text-green-400">✓</span>
@@ -224,7 +224,7 @@ fn execute(amount: u256) -> u256 {
       <section className="container mx-auto px-6 py-24">
         <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-3xl border border-purple-500/30 p-12 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Bfrontend/uild on the Future?
+            Ready to Build on the Future?
           </h2>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
             Join the next generation of blockchain development. Write adaptive smart contracts,
@@ -235,7 +235,7 @@ fn execute(amount: u256) -> u256 {
               href="/developers"
               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium transition transform hover:scale-105"
             >
-              Start Bfrontend/uilding
+              Start Building
             </Link>
             <Link 
               href="https://docs.atlas-sphere.io/x3"

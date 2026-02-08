@@ -67,6 +67,76 @@ def init_db(db_path: str = DEFAULT_DB_PATH):
     conn.commit()
     conn.close()
 
+
+def init_social_tables(db_path: str = DEFAULT_DB_PATH):
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS social_drafts (
+        draft_id TEXT PRIMARY KEY,
+        payload_json TEXT,
+        created_at INTEGER
+    )
+    ''')
+
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS social_audit (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT,
+        payload_json TEXT,
+        timestamp INTEGER
+    )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+
+def save_social_draft(draft_id: str, payload: Dict[str, Any], db_path: str = DEFAULT_DB_PATH):
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cur.execute('''
+    INSERT INTO social_drafts(draft_id, payload_json, created_at)
+    VALUES (?, ?, strftime('%s','now'))
+    ON CONFLICT(draft_id) DO UPDATE SET
+      payload_json=excluded.payload_json,
+      created_at=strftime('%s','now')
+    ''', (draft_id, json.dumps(payload)))
+    conn.commit()
+    conn.close()
+
+
+def load_social_draft(draft_id: str, db_path: str = DEFAULT_DB_PATH) -> Optional[Dict[str, Any]]:
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cur.execute('SELECT payload_json FROM social_drafts WHERE draft_id = ?', (draft_id,))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return json.loads(row['payload_json']) if row['payload_json'] else {}
+
+
+def list_social_drafts(limit: int = 50, db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cur.execute('SELECT payload_json FROM social_drafts ORDER BY created_at DESC LIMIT ?', (limit,))
+    rows = cur.fetchall()
+    conn.close()
+    return [json.loads(r['payload_json']) if r['payload_json'] else {} for r in rows]
+
+
+def append_social_audit(event_type: str, payload: Dict[str, Any], db_path: str = DEFAULT_DB_PATH):
+    conn = _get_conn(db_path)
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO social_audit(event_type, payload_json, timestamp) VALUES (?, ?, strftime(\"%s\",\"now\"))',
+        (event_type, json.dumps(payload)),
+    )
+    conn.commit()
+    conn.close()
+
 def save_agent_snapshot(agent_id: str, serial_number: str, specialization: str, data: Dict[str, Any], db_path: str = DEFAULT_DB_PATH):
     conn = _get_conn(db_path)
     cur = conn.cursor()

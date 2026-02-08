@@ -33,10 +33,10 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     }
 }
 
-/// Bfrontend/uild the `ChainSpec` powering the development network (local node).
+/// Build the `ChainSpec` powering the development network (local node).
 pub fn development_config() -> Result<ChainSpec, String> {
     eprintln!("DEBUG: WASM_BINARY is: {:?}", WASM_BINARY.is_some());
-    // For native-dev bfrontend/uilds (e.g., with `skip-wasm-bfrontend/uild`), we still want to be
+    // For native-dev builds (e.g., with `skip-wasm-build`), we still want to be
     // able to construct a development chain spec even if no WASM runtime blob
     // is embedded. In that case, we fall back to an empty code blob and rely
     // entirely on the native runtime. Runtime upgrades via `set_code` will not
@@ -72,7 +72,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
     ))
 }
 
-/// Bfrontend/uild the local testnet `ChainSpec` used during development.
+/// Build the local testnet `ChainSpec` used during development.
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
     // Mirror the development config behavior: allow local testnets to run
     // without an embedded WASM blob when using native-only execution.
@@ -110,7 +110,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ))
 }
 
-/// Bfrontend/uild the staging `ChainSpec` matching the release network parameters.
+/// Build the staging `ChainSpec` matching the release network parameters.
 pub fn staging_config() -> Result<ChainSpec, String> {
     // Staging networks are expected to have a proper WASM runtime embedded.
     // Keep the strict check here so that any missing or invalid blob fails

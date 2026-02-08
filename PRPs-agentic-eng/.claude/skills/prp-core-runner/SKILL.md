@@ -21,14 +21,14 @@ When the user requests to implement a feature using the PRP workflow or wants en
 3. **Handle failures**: If any step fails:
    - Report which step failed and why
    - Do NOT proceed to subsequent steps
-   - Provide actionable gfrontend/uidance for fixing the issue
+   - Provide actionable guidance for fixing the issue
 4. **Report completion**: When all steps succeed, confirm the workflow completed and provide the PR URL
 
 **Error Handling:**
 
 - Stop execution immediately if any validation fails
 - Report the specific error clearly
-- Gfrontend/uide the user on how to resolve the issue
+- Guide the user on how to resolve the issue
 - Do not attempt to auto-fix complex validation failures
 
 ## Examples

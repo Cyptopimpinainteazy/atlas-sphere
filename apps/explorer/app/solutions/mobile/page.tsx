@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Code,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const mobileFeatures = [
   {
@@ -128,7 +128,7 @@ export default function MobilePage() {
               Mobile-First Blockchain
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Bfrontend/uild native mobile apps with blockchain capabilities. Native SDKs for 
+              Build native mobile apps with blockchain capabilities. Native SDKs for 
               iOS, Android, React Native, and Flutter.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -246,9 +246,9 @@ export default function MobilePage() {
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">Apps Bfrontend/uilt on X3 STAR</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Apps Built on X3 STAR</h2>
               <p className="text-gray-400 mb-6">
-                Join the growing ecosystem of mobile apps bfrontend/uilding on X3 STAR.
+                Join the growing ecosystem of mobile apps building on X3 STAR.
               </p>
               <div className="space-y-4">
                 {apps.map((app, index) => (
@@ -274,10 +274,10 @@ export default function MobilePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Smartphone className="w-12 h-12 text-orange-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-white mb-4">
-            Bfrontend/uild Your Mobile App
+            Build Your Mobile App
           </h2>
           <p className="text-gray-400 mb-8">
-            Get started with our mobile SDK and bfrontend/uild the next great blockchain app.
+            Get started with our mobile SDK and build the next great blockchain app.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">

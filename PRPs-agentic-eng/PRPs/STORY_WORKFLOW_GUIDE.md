@@ -1,4 +1,4 @@
-# Story PRP Workflow Gfrontend/uide
+# Story PRP Workflow Guide
 
 ## Overview
 
@@ -157,7 +157,7 @@ The system automatically discovers and includes:
 - New products or major features
 - Complex architectural changes
 - Multi-system integrations
-- Features reqfrontend/uiring extensive context
+- Features requiring extensive context
 
 ## Troubleshooting
 

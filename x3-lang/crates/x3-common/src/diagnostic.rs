@@ -234,15 +234,15 @@ impl From<X3Error> for Diagnostic {
     }
 }
 
-/// Bfrontend/uilds and emits diagnostics.
-pub struct DiagnosticBfrontend/uilder<'a> {
+/// Builds and emits diagnostics.
+pub struct DiagnosticBuilder<'a> {
     source_map: &'a SourceMap,
     diagnostics: Vec<Diagnostic>,
 }
 
-impl<'a> DiagnosticBfrontend/uilder<'a> {
+impl<'a> DiagnosticBuilder<'a> {
     pub fn new(source_map: &'a SourceMap) -> Self {
-        DiagnosticBfrontend/uilder {
+        DiagnosticBuilder {
             source_map,
             diagnostics: Vec::new(),
         }

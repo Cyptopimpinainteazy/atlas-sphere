@@ -70,6 +70,7 @@ pub use pallet::*;
 
 pub mod btc_gateway;
 pub mod escrow;
+pub mod collateral;
 pub mod finality;
 pub mod intent;
 pub mod invariants;

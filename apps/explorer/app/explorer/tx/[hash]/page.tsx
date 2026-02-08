@@ -102,7 +102,7 @@ export default function TransactionDetailPage() {
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h3 className="font-medium text-blue-900 mb-2">Transaction Lookup</h3>
               <p className="text-sm text-blue-700">
-                Full transaction details reqfrontend/uire indexing. For development, use the block explorer 
+                Full transaction details require indexing. For development, use the block explorer 
                 to view extrinsics by block, or implement a transaction indexer service.
               </p>
               <div className="mt-3">

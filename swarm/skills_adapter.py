@@ -162,7 +162,7 @@ if __name__ == "__main__":
     p.add_argument("--skills-dir", default=None)
     args = p.parse_args()
     try:
-        out = ask_skill(args.skill, "Run a qfrontend/uick test using the skill.", skills_dir=args.skills_dir, model=args.model)
+        out = ask_skill(args.skill, "Run a quick test using the skill.", skills_dir=args.skills_dir, model=args.model)
         print(out)
     except Exception as e:
         print("ERROR:", e)

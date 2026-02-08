@@ -5,7 +5,7 @@ import path from 'path';
 import { submitProvenance, submitSettlement } from './worker';
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
-const config = fs.existsSync(CONFIG_PATH) ? JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')) : reqfrontend/uire('./config.example.json');
+const config = fs.existsSync(CONFIG_PATH) ? JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8')) : require('./config.example.json');
 
 const app = express();
 app.use(bodyParser.json());

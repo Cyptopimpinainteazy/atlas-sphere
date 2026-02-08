@@ -110,16 +110,16 @@ export class AISwarmIntegrator {
 
   private async processViaSwarm(task: SwarmTask): Promise<SwarmResponse | null> {
     try {
-      const sfrontend/uitableNodes = Array.from(this.nodes.values())
+      const suitableNodes = Array.from(this.nodes.values())
         .filter(node => 
           node.status === 'active' && 
           node.capabilities.includes('ai') &&
           node.load < 80
         );
 
-      if (sfrontend/uitableNodes.length === 0) return null;
+      if (suitableNodes.length === 0) return null;
 
-      const selectedNode = sfrontend/uitableNodes[0];
+      const selectedNode = suitableNodes[0];
       
       const response = await fetch(`${SWARM_CONFIG.nodeUrl}/api/ai/process`, {
         method: 'POST',

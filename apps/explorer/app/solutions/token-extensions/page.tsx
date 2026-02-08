@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Code,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const extensions = [
   {
@@ -63,9 +63,9 @@ const extensions = [
 ];
 
 const codeExample = `// Create a token with transfer hooks and restrictions
-import { TokenBfrontend/uilder, TransferHook, TransferRestriction } from '@x3star/token-extensions';
+import { TokenBuilder, TransferHook, TransferRestriction } from '@x3star/token-extensions';
 
-const token = await TokenBfrontend/uilder.create({
+const token = await TokenBuilder.create({
   name: 'Compliant Token',
   symbol: 'CMPL',
   decimals: 18,
@@ -90,7 +90,7 @@ console.log('Token created:', token.mint);`;
 const benefits = [
   {
     title: 'Programmable Compliance',
-    description: 'Bfrontend/uild regulatory reqfrontend/uirements directly into tokens',
+    description: 'Build regulatory requirements directly into tokens',
   },
   {
     title: 'Cross-VM Compatible',
@@ -126,12 +126,12 @@ export default function TokenExtensionsPage() {
               Programmable Tokens
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Create tokens with bfrontend/uilt-in functionality. Transfer hooks, restrictions, 
+              Create tokens with built-in functionality. Transfer hooks, restrictions, 
               confidential transfers, and more—all native to X3 STAR.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/developers/docs" className="btn-primary">
-                Start Bfrontend/uilding
+                Start Building
               </Link>
               <Link href="/developers/cookbook" className="btn-secondary">
                 View Examples
@@ -175,8 +175,8 @@ export default function TokenExtensionsPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">Simple to Implement</h2>
               <p className="text-gray-400 mb-6">
-                Create tokens with advanced features using our intfrontend/uitive SDK. 
-                Combine extensions to bfrontend/uild exactly what you need.
+                Create tokens with advanced features using our intuitive SDK. 
+                Combine extensions to build exactly what you need.
               </p>
               <ul className="space-y-3">
                 {benefits.map((benefit, i) => (
@@ -212,7 +212,7 @@ export default function TokenExtensionsPage() {
             <div className="glass-card p-6">
               <h3 className="font-semibold text-white mb-4">Security Tokens</h3>
               <p className="text-gray-400 mb-4">
-                Issue compliant security tokens with bfrontend/uilt-in transfer restrictions 
+                Issue compliant security tokens with built-in transfer restrictions 
                 for investor accreditation and holding periods.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -254,11 +254,11 @@ export default function TokenExtensionsPage() {
             Create Your First Extended Token
           </h2>
           <p className="text-gray-400 mb-8">
-            Follow our gfrontend/uide to create tokens with advanced features in minutes.
+            Follow our guide to create tokens with advanced features in minutes.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">
-              Token Extension Gfrontend/uide
+              Token Extension Guide
             </Link>
             <Link href="/developers/cookbook" className="btn-secondary">
               Code Examples

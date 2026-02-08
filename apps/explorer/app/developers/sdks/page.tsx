@@ -14,7 +14,7 @@ import {
   Download,
   Copy,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const sdks = [
   {
@@ -150,7 +150,7 @@ export default function SDKsPage() {
               SDKs & Developer Tools
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Bfrontend/uild on X3 STAR with official SDKs for every platform. 
+              Build on X3 STAR with official SDKs for every platform. 
               JavaScript, Python, Rust, Go, and mobile frameworks.
             </p>
             <div className="flex flex-wrap gap-4">
@@ -285,11 +285,11 @@ export default function SDKsPage() {
       {/* Code Example */}
       <section className="py-16 bg-[#050505]">
         <div className="container-wide">
-          <h2 className="text-2xl font-bold text-white mb-8">Qfrontend/uick Start Example</h2>
+          <h2 className="text-2xl font-bold text-white mb-8">Quick Start Example</h2>
           
           <div className="glass-card p-0 overflow-hidden">
             <div className="p-3 border-b border-[#1a1a1a] flex items-center justify-between">
-              <span className="text-sm text-gray-400">qfrontend/uickstart.ts</span>
+              <span className="text-sm text-gray-400">quickstart.ts</span>
               <button className="text-xs text-gray-500 hover:text-white flex items-center gap-1">
                 <Copy className="w-4 h-4" />
                 Copy
@@ -307,10 +307,10 @@ export default function SDKsPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Package className="w-12 h-12 text-orange-400 mx-auto mb-6" />
           <h2 className="text-3xl font-bold text-white mb-4">
-            Start Bfrontend/uilding Today
+            Start Building Today
           </h2>
           <p className="text-gray-400 mb-8">
-            Pick your favorite language and start bfrontend/uilding on X3 STAR.
+            Pick your favorite language and start building on X3 STAR.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/developers/docs" className="btn-primary">

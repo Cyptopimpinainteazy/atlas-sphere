@@ -23,7 +23,7 @@ pub enum VmType {
     Svm,
     /// Atlas X3 Virtual Machine
     X3,
-    /// Cross-VM operation (reqfrontend/uires both)
+    /// Cross-VM operation (requires both)
     CrossVm,
 }
 
@@ -45,7 +45,7 @@ pub enum VmType {
 pub enum AmmProtocol {
     /// Uniswap V2 style AMM (EVM)
     UniswapV2,
-    /// Uniswap V3 concentrated liqfrontend/uidity (EVM)
+    /// Uniswap V3 concentrated liquidity (EVM)
     UniswapV3,
     /// Raydium AMM (SVM)
     Raydium,
@@ -78,9 +78,9 @@ pub struct Asset {
     pub address: Vec<u8>,
 }
 
-/// Liqfrontend/uidity pool information for trade routing.
+/// Liquidity pool information for trade routing.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-pub struct Liqfrontend/uidityPool {
+pub struct LiquidityPool {
     /// Pool identifier
     pub pool_id: H256,
     /// AMM protocol
@@ -101,7 +101,7 @@ pub struct Liqfrontend/uidityPool {
     pub address: Vec<u8>,
 }
 
-impl Liqfrontend/uidityPool {
+impl LiquidityPool {
     /// Calculate output amount for a given input using constant product formula.
     ///
     /// Formula: amount_out = (reserve_out * amount_in * (10000 - fee_bps)) / (reserve_in * 10000 + amount_in * (10000 - fee_bps))
@@ -138,7 +138,7 @@ impl Liqfrontend/uidityPool {
         Some(result.as_u128())
     }
 
-    /// Calculate reqfrontend/uired input amount for a desired output.
+    /// Calculate required input amount for a desired output.
     ///
     /// Formula: amount_in = (reserve_in * amount_out * 10000) / ((reserve_out - amount_out) * (10000 - fee_bps))
     /// Uses U256 for intermediate calculations to avoid overflow with large token amounts.
@@ -424,8 +424,8 @@ pub struct LimitOrder<AccountId> {
 mod tests {
     use super::*;
 
-    fn create_test_pool() -> Liqfrontend/uidityPool {
-        Liqfrontend/uidityPool {
+    fn create_test_pool() -> LiquidityPool {
+        LiquidityPool {
             pool_id: H256::from_low_u64_be(1),
             protocol: AmmProtocol::UniswapV2,
             vm_type: VmType::Evm,
@@ -470,7 +470,7 @@ mod tests {
 
         let amount_in = pool.get_amount_in(desired_out, pool.token_b).unwrap();
 
-        // Should reqfrontend/uire some token_a to get this output
+        // Should require some token_a to get this output
         assert!(amount_in > 0);
     }
 

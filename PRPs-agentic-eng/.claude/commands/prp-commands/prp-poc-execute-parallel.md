@@ -3,14 +3,14 @@
 ## POC Directory: $ARGUMENTS
 
 Usage: `/prp-poc-execute-parallel [poc_directory_pattern]`
-Example: `/prp-poc-execute-parallel "PRPs/poc-apps/apps/dash-legacy-2-legacy-2board-*"`
+Example: `/prp-poc-execute-parallel "PRPs/poc-apps/dash-legacy-2-legacy-2board-*"`
 
 ## Mission: Parallel POC Implementation Success
 
 Transform multiple React POC PRPs into working demonstrations simultaneously through **coordinated parallel execution** using specialized UI/UX and User Journey agents.
 
-**Critical Understanding**: Each POC reqfrontend/uires specialized execution:
-- **UI-focused implementation** leveraging @frontend/frontend/ui-ux-agent expertise
+**Critical Understanding**: Each POC requires specialized execution:
+- **UI-focused implementation** leveraging @ui-ux-agent expertise
 - **User journey validation** using @user-journey-agent insights  
 - **Parallel development** without interference between POCs
 - **Coordinated validation** ensuring all POCs demonstrate successfully
@@ -20,16 +20,16 @@ Transform multiple React POC PRPs into working demonstrations simultaneously thr
 ### Agent Orchestration Pattern
 
 For **N POCs** discovered, create **N execution pairs**:
-- **N UI-UX Implementation Agents**: Each bfrontend/uilding the specific UI approach
+- **N UI-UX Implementation Agents**: Each building the specific UI approach
 - **N User Journey Validation Agents**: Each ensuring journey flows work correctly
 
 **Execution Agent Assignment:**
 ```yaml
-POC 1: @frontend/frontend/ui-ux-agent (Bfrontend/uild minimal/clean interface) + @user-journey-agent (Validate power user flows)
-POC 2: @frontend/frontend/ui-ux-agent (Bfrontend/uild polished/professional interface) + @user-journey-agent (Validate casual user flows)
-POC 3: @frontend/frontend/ui-ux-agent (Bfrontend/uild experimental/modern interface) + @user-journey-agent (Validate admin user flows)
-POC 4: @frontend/frontend/ui-ux-agent (Bfrontend/uild apps/apps/dash-legacy-2-legacy-2board/data-heavy interface) + @user-journey-agent (Validate mobile-first flows)
-POC 5: @frontend/frontend/ui-ux-agent (Bfrontend/uild component-library interface) + @user-journey-agent (Validate accessibility flows)
+POC 1: @ui-ux-agent (Build minimal/clean interface) + @user-journey-agent (Validate power user flows)
+POC 2: @ui-ux-agent (Build polished/professional interface) + @user-journey-agent (Validate casual user flows)
+POC 3: @ui-ux-agent (Build experimental/modern interface) + @user-journey-agent (Validate admin user flows)
+POC 4: @ui-ux-agent (Build apps/dash-legacy-2-legacy-2board/data-heavy interface) + @user-journey-agent (Validate mobile-first flows)
+POC 5: @ui-ux-agent (Build component-library interface) + @user-journey-agent (Validate accessibility flows)
 ```
 
 ## Pre-Execution Setup
@@ -46,7 +46,7 @@ POC 5: @frontend/frontend/ui-ux-agent (Bfrontend/uild component-library interfac
 
 2. **Discover POC PRPs**
    - Scan for POC PRP files matching the pattern
-   - Extract POC specifications and reqfrontend/uirements
+   - Extract POC specifications and requirements
    - Plan directory structure and routing
 
 3. **Setup Project Structure**
@@ -72,14 +72,14 @@ POC 5: @frontend/frontend/ui-ux-agent (Bfrontend/uild component-library interfac
 
 ```yaml
 # For each discovered POC, spawn specialized agent pair
-Task 1 - @frontend/frontend/ui-ux-agent Implementation for POC 1:
+Task 1 - @ui-ux-agent Implementation for POC 1:
 "Read and implement PRP: 'PRPs/poc-{name}-{variant1}.md'
-Focus on: Bfrontend/uilding the UI components and styling specified in the PRP.
-Reqfrontend/uirements:
+Focus on: Building the UI components and styling specified in the PRP.
+Requirements:
 - Follow the UI approach defined in the PRP context
 - Implement all components with TypeScript interfaces
 - Apply the styling approach (minimal/clean as specified)
-- Create responsive layouts following the PRP reqfrontend/uirements
+- Create responsive layouts following the PRP requirements
 - Use mock data integration as specified
 Directory: src/poc-{name}-{variant1}/
 Return: Complete UI implementation with all components functional"
@@ -87,35 +87,35 @@ Return: Complete UI implementation with all components functional"
 Task 2 - @user-journey-agent Validation for POC 1:
 "Read and validate PRP implementation: 'PRPs/poc-{name}-{variant1}.md'
 Focus on: Ensuring user journey flows work as specified in the PRP.
-Reqfrontend/uirements:
+Requirements:
 - Test all user interactions defined in the PRP
 - Validate navigation flows and state management
-- Ensure mock data scenarios cover user journey reqfrontend/uirements
+- Ensure mock data scenarios cover user journey requirements
 - Test user flow completion from start to finish
 - Document any journey friction points discovered
 Directory: src/poc-{name}-{variant1}/
 Return: Journey validation report and any flow improvements needed"
 
-Task 3 - @frontend/frontend/ui-ux-agent Implementation for POC 2:
+Task 3 - @ui-ux-agent Implementation for POC 2:
 "Read and implement PRP: 'PRPs/poc-{name}-{variant2}.md'
-Focus on: Bfrontend/uilding the UI components and styling specified in the PRP.
-Reqfrontend/uirements:
+Focus on: Building the UI components and styling specified in the PRP.
+Requirements:
 - Follow the UI approach defined in the PRP context (polished/professional)
 - Implement all components with premium aesthetics
 - Create brand-aligned styling and professional presentation
-- Bfrontend/uild stakeholder-ready demonstration interface
+- Build stakeholder-ready demonstration interface
 - Integrate realistic mock data for presentations
 Directory: src/poc-{name}-{variant2}/
 Return: Complete UI implementation with professional polish"
 
 Task 4 - @user-journey-agent Validation for POC 2:
 "Read and validate PRP implementation: 'PRPs/poc-{name}-{variant2}.md'
-Focus on: Ensuring casual user journey flows work intfrontend/uitively.
-Reqfrontend/uirements:
-- Test simplified navigation and gfrontend/uided experiences
+Focus on: Ensuring casual user journey flows work intuitively.
+Requirements:
+- Test simplified navigation and guided experiences
 - Validate progressive disclosure and help systems
 - Ensure beginner-friendly interaction patterns work
-- Test complete user onboarding and gfrontend/uidance flows
+- Test complete user onboarding and guidance flows
 - Document usability for non-expert users
 Directory: src/poc-{name}-{variant2}/
 Return: Casual user validation report and usability assessment"
@@ -125,7 +125,7 @@ Return: Casual user validation report and usability assessment"
 
 ### Step 3: Main Navigation Implementation
 
-**After all POCs are bfrontend/uilt, create navigation hub:**
+**After all POCs are built, create navigation hub:**
 
 ```typescript
 // App.tsx - Main navigation between POCs
@@ -162,7 +162,7 @@ function App() {
    ```bash
    npm run lint          # All POCs pass linting
    npm run type-check    # All TypeScript errors resolved
-   npm run bfrontend/uild         # Production bfrontend/uild succeeds
+   npm run build         # Production build succeeds
    npm run test          # All POC smoke tests pass
    ```
 
@@ -174,7 +174,7 @@ function App() {
 
 3. **User Journey Validation (Agent-Specific)**
    - Power user flows efficient and feature-complete
-   - Casual user flows intfrontend/uitive and gfrontend/uided
+   - Casual user flows intuitive and guided
    - Admin flows comprehensive and control-focused  
    - Mobile flows touch-optimized and responsive
    - Accessibility flows screen reader compatible
@@ -197,7 +197,7 @@ function App() {
 
 3. **Dependency Management**
    - Consolidate common dependencies
-   - Resolve version conflicts between POC reqfrontend/uirements
+   - Resolve version conflicts between POC requirements
    - Optimize bundle size across all POCs
    - Manage shared vs POC-specific packages
 
@@ -208,7 +208,7 @@ function App() {
 **Multi-POC Validation Checklist:**
 
 **Technical Completeness:**
-- [ ] **All POCs Bfrontend/uild Successfully**: No TypeScript or bfrontend/uild errors across any POC
+- [ ] **All POCs Build Successfully**: No TypeScript or build errors across any POC
 - [ ] **Shared Infrastructure Works**: Navigation, routing, shared components functional
 - [ ] **Isolated Functionality**: Each POC operates independently without interference
 - [ ] **Performance Acceptable**: All POCs load and perform adequately for demos
@@ -243,8 +243,8 @@ function App() {
 - Performance and workflow benefits
 
 ## POC 2: Polished Casual User (3 minutes)
-- Target audience: General users needing gfrontend/uidance
-- Gfrontend/uided experience demonstration
+- Target audience: General users needing guidance
+- Guided experience demonstration
 - Ease of use and accessibility benefits
 
 ## POC 3: Experimental Admin (3 minutes)
@@ -258,7 +258,7 @@ function App() {
 - Touch interaction and responsive benefits
 
 ## POC 5: Component-Library Accessible (3 minutes)
-- Target audience: Inclusive design reqfrontend/uirements
+- Target audience: Inclusive design requirements
 - Accessibility features demonstration
 - Design system and consistency benefits
 
@@ -286,7 +286,7 @@ function App() {
 
 ### Common Issues & Solutions
 
-**Bfrontend/uild Conflicts:**
+**Build Conflicts:**
 - Isolate POC-specific dependencies
 - Use namespace prefixes for shared utilities
 - Implement CSS-in-JS for style isolation

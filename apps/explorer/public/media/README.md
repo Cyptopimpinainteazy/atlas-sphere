@@ -3,8 +3,8 @@
 Place your custom media files in this directory to use them on the quantum landing page.
 
 ## Supported File Types
-- **Images**: `.jpg`, `.jpeg`, `.png`, `.gif`, `.frontend/webp`, `.svg`
-- **Videos**: `.mp4`, `.frontend/webm`
+- **Images**: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`
+- **Videos**: `.mp4`, `.webm`
 - **Icons**: `.svg`, `.ico`
 
 ## Directory Structure

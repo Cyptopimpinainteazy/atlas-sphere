@@ -78,7 +78,7 @@ export default function SwapPage() {
                 </div>
                 <div className="flex-1 text-left">
                   <h3 className="text-white font-bold">2. Router Finds Best Path</h3>
-                  <p className="text-slate-400 text-sm">Optimal route through liqfrontend/uidity pools</p>
+                  <p className="text-slate-400 text-sm">Optimal route through liquidity pools</p>
                 </div>
               </div>
               

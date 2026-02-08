@@ -16,7 +16,7 @@ pub trait AstVisitor {
     fn visit_enum(&mut self, _e: &EnumDecl) {}
 }
 
-// Helper module alias for Spanned to avoid cyclic dependencies in archive/archive/imports
+// Helper module alias for Spanned to avoid cyclic dependencies in imports
 mod spanned {
     pub use x3_common::Spanned;
 }

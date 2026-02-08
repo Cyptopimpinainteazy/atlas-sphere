@@ -11,10 +11,10 @@ echo "🌌 Atlas Sphere Development Node Launcher"
 echo "==========================================="
 echo ""
 
-# Check if the binary is bfrontend/uilt
+# Check if the binary is built
 if [ ! -f "target/release/atlas-sphere-node" ]; then
-    echo "⚠️  Binary not found. Bfrontend/uilding with: cargo bfrontend/uild --release"
-    cargo bfrontend/uild --release
+    echo "⚠️  Binary not found. Building with: cargo build --release"
+    cargo build --release
 fi
 
 # Default configuration

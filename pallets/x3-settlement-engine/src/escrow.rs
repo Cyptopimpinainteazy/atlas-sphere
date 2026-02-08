@@ -160,7 +160,7 @@ impl EvmHtlcParams {
     pub fn encode_calldata(&self) -> Vec<u8> {
         let mut data = Vec::with_capacity(196);
 
-        // Function selector: createHTLC(bytes32,address,address,frontend/uint256,address,frontend/uint256)
+        // Function selector: createHTLC(bytes32,address,address,uint256,address,uint256)
         data.extend_from_slice(&[0x12, 0x34, 0x56, 0x78]); // Placeholder selector
 
         // secret_hash (bytes32)
@@ -174,7 +174,7 @@ impl EvmHtlcParams {
         data.extend_from_slice(&[0u8; 12]);
         data.extend_from_slice(&self.refund_address);
 
-        // timeout (frontend/uint256)
+        // timeout (uint256)
         let mut timeout_bytes = [0u8; 32];
         timeout_bytes[24..].copy_from_slice(&self.timeout.to_be_bytes());
         data.extend_from_slice(&timeout_bytes);
@@ -183,7 +183,7 @@ impl EvmHtlcParams {
         data.extend_from_slice(&[0u8; 12]);
         data.extend_from_slice(&self.token);
 
-        // amount (frontend/uint256)
+        // amount (uint256)
         let mut amount_bytes = [0u8; 32];
         amount_bytes[16..].copy_from_slice(&self.amount.to_be_bytes());
         data.extend_from_slice(&amount_bytes);

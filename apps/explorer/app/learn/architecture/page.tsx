@@ -13,7 +13,7 @@ import {
   GitBranch,
   Box,
 } from 'lucide-react';
-import { HexagonCluster } from '../../../components/frontend/frontend/ui/Logo';
+import { HexagonCluster } from '../../../components/frontend/ui/Logo';
 
 const layers = [
   {

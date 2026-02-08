@@ -13,7 +13,7 @@ description: "Execute a feature PRP until fully complete"
 - Execute every task in the STEP-BY-STEP TASKS section sequentially
 - Validate after each task using the task's validation command
 - If validation fails, fix and re-validate before proceeding
-- Run full validation sfrontend/uite from the PRP when all tasks complete
+- Run full validation suite from the PRP when all tasks complete
 - **Critical**: Don't stop until the entire plan is fulfilled and all validation passes
 - Use TodoWrite to track progress through tasks
 - Trust the PRP's strategic direction, but verify tactical details (archive/archive/imports, paths, names)

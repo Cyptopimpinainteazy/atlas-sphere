@@ -231,7 +231,7 @@ async def search_brave(query: str, api_key: str, count: int = 10) -> List[BraveS
         
         # GOTCHA: Brave API returns 401 if API key invalid
         response = await client.get(
-            "https://api.search.brave.com/res/v1/web/search",
+            "https://api.search.brave.com/res/v1/frontend/web/search",
             headers=headers,
             params=params,
             timeout=30.0  # CRITICAL: Set timeout to avoid hanging

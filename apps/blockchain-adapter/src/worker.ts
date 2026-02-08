@@ -16,7 +16,7 @@ export async function submitProvenance(evmRpcUrl: string, payload: any) {
   console.log('[adapter] submitProvenance to', evmRpcUrl, payload);
   const provider = new ethers.JsonRpcProvider(evmRpcUrl);
   const pk = process.env.EVM_DEPLOYER_PRIVATE_KEY;
-  if (!pk) throw new Error('EVM_DEPLOYER_PRIVATE_KEY reqfrontend/uired in env');
+  if (!pk) throw new Error('EVM_DEPLOYER_PRIVATE_KEY required in env');
   const wallet = new ethers.Wallet(pk, provider);
 
   if (!deployed || !deployed.address || !deployed.abi) {
@@ -36,7 +36,7 @@ export async function submitSettlement(x3vmRpcUrl: string, payload: any) {
   const wsUrl = process.env.X3VM_WS_URL || x3vmRpcUrl.replace('http', 'ws');
   // Attempt to use the typed encoder to create a settlement extrinsic (pallet.method configurable)
   try {
-    const { encodeSettlementExtrinsic } = reqfrontend/uire('../../scripts/relayer/src/handlers/x3vm-encoder');
+    const { encodeSettlementExtrinsic } = require('../../scripts/relayer/src/handlers/x3vm-encoder');
     // Try common pallets first
     const candidates = [ ['settlement','settle'], ['swarm','settle'], ['swarmEvolution','apply'] ];
     for (const [pallet, method] of candidates) {
@@ -64,10 +64,10 @@ export async function submitSettlement(x3vmRpcUrl: string, payload: any) {
   const signerSuri = process.env.X3VM_SIGNER_SURI; // e.g. '//Alice' or mnemonic
   if (!signerSuri) {
     await api.disconnect();
-    throw new Error('X3VM_SIGNER_SURI reqfrontend/uired in env');
+    throw new Error('X3VM_SIGNER_SURI required in env');
   }
 
-  const keyring = reqfrontend/uire('@polkadot/keyring').default;
+  const keyring = require('@polkadot/keyring').default;
   const kr = new keyring({ type: 'sr25519' });
   const pair = kr.addFromUri(signerSuri);
 

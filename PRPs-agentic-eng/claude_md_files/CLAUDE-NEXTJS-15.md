@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides comprehensive gfrontend/uidance to Claude Code when working with Next.js 15 applications with React 19 and TypeScript.
+This file provides comprehensive guidance to Claude Code when working with Next.js 15 applications with React 19 and TypeScript.
 
 ## Core Development Philosophy
 
@@ -8,16 +8,16 @@ This file provides comprehensive gfrontend/uidance to Claude Code when working w
 Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
 
 ### YAGNI (You Aren't Gonna Need It)
-Avoid bfrontend/uilding functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 
 ### Design Principles
 - **Dependency Inversion**: High-level modules should not depend on low-level modules. Both should depend on abstractions.
 - **Open/Closed Principle**: Software entities should be open for extension but closed for modification.
 - **Vertical Slice Architecture**: Organize by features, not layers
-- **Component-First**: Bfrontend/uild with reusable, composable components with single responsibility
+- **Component-First**: Build with reusable, composable components with single responsibility
 - **Fail Fast**: Validate inputs early, throw errors immediately
 
-## 🤖 AI Assistant Gfrontend/uidelines
+## 🤖 AI Assistant Guidelines
 
 ### Context Awareness
 - When implementing features, always check existing patterns first
@@ -37,7 +37,7 @@ Avoid bfrontend/uilding functionality on speculation. Implement features only wh
 - Break complex tasks into smaller, testable units
 - Validate understanding before implementation
 
-### Search Command Reqfrontend/uirements
+### Search Command Requirements
 **CRITICAL**: Always use `rg` (ripgrep) instead of traditional `grep` and `find` commands:
 
 ```bash
@@ -88,7 +88,7 @@ rg --files -g "*.tsx"
 
 ### React 19 Features
 - **React Compiler**: Eliminates need for `useMemo`, `useCallback`, and `React.memo`
-- **Actions**: Handle async operations with bfrontend/uilt-in pending states
+- **Actions**: Handle async operations with built-in pending states
 - **use() API**: Simplified data fetching and context consumption
 - **Document Metadata**: Native support for SEO tags
 - **Enhanced Suspense**: Better loading states and error boundaries
@@ -122,7 +122,7 @@ src/
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Home page
 ├── components/            # Shared UI components
-│   ├── frontend/frontend/ui/                # Base components (shadcn/frontend/frontend/ui)
+│   ├── ui/                # Base components (shadcn/frontend/ui)
 │   └── common/            # Application-specific shared components
 ├── features/              # Feature-based modules (RECOMMENDED)
 │   └── [feature]/
@@ -177,7 +177,7 @@ src/
 }
 ```
 
-### MANDATORY Type Reqfrontend/uirements
+### MANDATORY Type Requirements
 - **NEVER use `any` type** - use `unknown` if type is truly unknown
 - **MUST have explicit return types** for all functions and components
 - **MUST use proper generic constraints** for reusable components
@@ -212,7 +212,7 @@ src/
 ### Recommended Additional Dependencies
 ```bash
 # UI and Styling
-npm install @radix-frontend/frontend/ui/react-* class-variance-authority clsx tailwind-merge
+npm install @radix-ui/react-* class-variance-authority clsx tailwind-merge
 
 # Form Handling and Validation
 npm install react-hook-form @hookform/resolvers zod
@@ -237,7 +237,7 @@ npm install -D @testing-library/react @testing-library/jest-dom vitest jsdom
 import { z } from 'zod';
 
 // MUST use branded types for ALL IDs
-const UserIdSchema = z.string().ufrontend/uid().brand<'UserId'>();
+const UserIdSchema = z.string().uuid().brand<'UserId'>();
 type UserId = z.infer<typeof UserIdSchema>;
 
 // Environment validation (REQUIRED)
@@ -348,7 +348,7 @@ import { render, screen, userEvent } from '@testing-library/react';
 import { UserProfile } from '../UserProfile';
 
 /**
- * Test sfrontend/uite for UserProfile component.
+ * Test suite for UserProfile component.
  * 
  * Tests user interactions, state management, and error handling.
  * Mocks external dependencies to ensure isolated unit tests.
@@ -374,7 +374,7 @@ describe('UserProfile', () => {
 });
 ```
 
-## 🎨 Component Gfrontend/uidelines (STRICT REQUIREMENTS)
+## 🎨 Component Guidelines (STRICT REQUIREMENTS)
 
 ### MANDATORY Component Documentation
 
@@ -542,7 +542,7 @@ function useUpdateUser() {
 }
 ```
 
-## 🔐 Security Reqfrontend/uirements (MANDATORY)
+## 🔐 Security Requirements (MANDATORY)
 
 ### Input Validation (MUST IMPLEMENT ALL)
 - **MUST sanitize ALL user inputs** with Zod before processing
@@ -567,7 +567,7 @@ const envSchema = z.object({
 export const env = envSchema.parse(process.env);
 ```
 
-## 🚀 Performance Gfrontend/uidelines
+## 🚀 Performance Guidelines
 
 ### Next.js 15 Optimizations
 - **Use Server Components** by default for data fetching
@@ -590,7 +590,7 @@ const nextConfig = {
     formats: ['image/frontend/webp', 'image/avif'],
   },
   // Bundle analyzer
-  frontend/webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
       config.optimization.splitChunks.chunks = 'all';
     }
@@ -618,7 +618,7 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-frontend/frontend/web-vitals", "next/typescript"),
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
@@ -640,14 +640,14 @@ export default eslintConfig;
 {
   "scripts": {
     "dev": "next dev",
-    "bfrontend/uild": "next bfrontend/uild",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "lint:fix": "next lint --fix",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "test:frontend/frontend/ui": "vitest --frontend/frontend/ui",
+    "test:ui": "vitest --ui",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
@@ -680,7 +680,7 @@ export default eslintConfig;
 - [ ] Zod schemas validate ALL external data
 - [ ] ALL states handled (loading, error, empty, success)
 - [ ] Error boundaries implemented for features
-- [ ] Accessibility reqfrontend/uirements met (ARIA labels, keyboard nav)
+- [ ] Accessibility requirements met (ARIA labels, keyboard nav)
 - [ ] No console.log statements in production code
 - [ ] Environment variables validated with Zod
 - [ ] Component files under 200 lines
@@ -701,6 +701,6 @@ export default eslintConfig;
 
 ---
 
-*This gfrontend/uide is optimized for Next.js 15 with React 19. Keep it updated as frameworks evolve.*
+*This guide is optimized for Next.js 15 with React 19. Keep it updated as frameworks evolve.*
 *Focus on type safety, performance, and maintainability in all development decisions.*
 *Last updated: January 2025*

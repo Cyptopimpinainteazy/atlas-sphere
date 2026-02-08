@@ -2,7 +2,7 @@
 //!
 //! Run benchmarks with:
 //! ```bash
-//! cargo bfrontend/uild --release --features runtime-benchmarks
+//! cargo build --release --features runtime-benchmarks
 //! ./target/release/atlas-sphere-node benchmark pallet \
 //!     --chain dev \
 //!     --pallet pallet_atomic_trade_engine \
@@ -234,5 +234,5 @@ mod benchmarks {
         Ok(())
     }
 
-    impl_benchmark_test_sfrontend/uite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
+    impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
 }

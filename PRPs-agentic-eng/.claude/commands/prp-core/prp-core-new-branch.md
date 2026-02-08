@@ -58,11 +58,11 @@ Use conventional branch naming:
 
 - Check if branch name already exists:
   ```bash
-  if git show-ref --verify --qfrontend/uiet refs/heads/<branch-name>; then
+  if git show-ref --verify --quiet refs/heads/<branch-name>; then
     echo "Branch <branch-name> already exists"
     # Append version suffix
     COUNTER=2
-    while git show-ref --verify --qfrontend/uiet refs/heads/<branch-name>-v$COUNTER; do
+    while git show-ref --verify --quiet refs/heads/<branch-name>-v$COUNTER; do
       COUNTER=$((COUNTER + 1))
     done
     BRANCH_NAME="<branch-name>-v$COUNTER"

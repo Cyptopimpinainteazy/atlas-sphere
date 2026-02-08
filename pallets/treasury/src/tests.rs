@@ -167,7 +167,7 @@ fn cannot_double_approve() {
     new_test_ext().execute_with(|| {
         let description: BoundedVec<_, _> = b"Test".to_vec().try_into().unwrap();
 
-        // Use a large amount to get into a higher track reqfrontend/uiring more approvals
+        // Use a large amount to get into a higher track requiring more approvals
         assert_ok!(Treasury::submit_proposal(
             RuntimeOrigin::signed(ALICE),
             BOB,

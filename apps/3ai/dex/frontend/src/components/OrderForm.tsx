@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, FormControl, FormLabel, Input, Select, VStack, HStack, Text, useToast } from '@chakra-frontend/frontend/ui/react';
+import { Box, Button, FormControl, FormLabel, Input, Select, VStack, HStack, Text, useToast } from '@chakra-ui/react';
 import { useWeb3 } from '../contexts/Web3Context';
 import axios from 'axios';
 import { API_URL } from '../config';
@@ -46,7 +46,7 @@ export const OrderForm: React.FC = () => {
 
     if (!price && orderType !== 'MARKET') {
       toast({
-        title: 'Price reqfrontend/uired',
+        title: 'Price required',
         description: 'Please enter a price for limit orders',
         status: 'error',
         duration: 5000,
@@ -57,7 +57,7 @@ export const OrderForm: React.FC = () => {
 
     if (!amount) {
       toast({
-        title: 'Amount reqfrontend/uired',
+        title: 'Amount required',
         description: 'Please enter an amount',
         status: 'error',
         duration: 5000,

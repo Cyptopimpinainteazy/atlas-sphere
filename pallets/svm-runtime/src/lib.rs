@@ -556,7 +556,7 @@ pub mod pallet {
                 &who,
                 burn_amount,
                 frame_support::traits::WithdrawReasons::TRANSFER,
-                frame_support::traits::ExistenceReqfrontend/uirement::KeepAlive,
+                frame_support::traits::ExistenceRequirement::KeepAlive,
             )?;
 
             if Accounts::<T>::contains_key(&svm_pubkey) {
@@ -633,7 +633,7 @@ mod tests {
     use sp_core::H256;
     use sp_runtime::{
         traits::{BlakeTwo256, IdentityLookup},
-        Bfrontend/uildStorage,
+        BuildStorage,
     };
 
     type Block = frame_system::mocking::MockBlock<Test>;
@@ -703,7 +703,7 @@ mod tests {
 
     pub fn new_test_ext() -> sp_io::TestExternalities {
         frame_system::GenesisConfig::<Test>::default()
-            .bfrontend/uild_storage()
+            .build_storage()
             .unwrap()
             .into()
     }

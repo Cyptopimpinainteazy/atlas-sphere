@@ -41,7 +41,7 @@ So that <benefit/value>
 - Map directory structure and architectural patterns
 - Identify service/component boundaries and integration points
 - Locate configuration files (pyproject.toml, package.json, etc.)
-- Find environment setup and bfrontend/uild processes
+- Find environment setup and build processes
 
 **2. Pattern Recognition** (Use specialized subagents when beneficial)
 - Search for similar implementations in codebase
@@ -58,13 +58,13 @@ So that <benefit/value>
 - Catalog external libraries relevant to feature
 - Understand how libraries are integrated (check archive/archive/imports, configs)
 - Find relevant documentation in PRPs/ai_docs/ if available
-- Note library versions and compatibility reqfrontend/uirements
+- Note library versions and compatibility requirements
 
 **4. Testing Patterns**
 - Identify test framework and structure (pytest, jest, etc.)
 - Find similar test examples for reference
 - Understand test organization (unit vs integration)
-- Note coverage reqfrontend/uirements and testing standards
+- Note coverage requirements and testing standards
 
 **5. Integration Points**
 - Identify existing files that need updates
@@ -73,8 +73,8 @@ So that <benefit/value>
 - Understand database/model patterns if applicable
 - Identify authentication/authorization patterns if relevant
 
-**Clarify Ambigfrontend/uities:**
-- If reqfrontend/uirements are unclear at this point, ask the user to clarify before you continue
+**Clarify Ambiguities:**
+- If requirements are unclear at this point, ask the user to clarify before you continue
 - Get specific implementation preferences (libraries, approaches, patterns)
 - Resolve architectural decisions before proceeding
 
@@ -87,11 +87,11 @@ So that <benefit/value>
 - Find official documentation with specific section anchors
 - Locate implementation examples and tutorials
 - Identify common gotchas and known issues
-- Check for breaking changes and migration gfrontend/uides
+- Check for breaking changes and migration guides
 
 **Technology Trends:**
 - Research current best practices for the technology stack
-- Find relevant blog posts, gfrontend/uides, or case studies
+- Find relevant blog posts, guides, or case studies
 - Identify performance optimization patterns
 - Document security considerations
 
@@ -100,9 +100,9 @@ So that <benefit/value>
 ## Relevant Documentation
 
 - [Library Official Docs](https://example.com/docs#section)
-  - Specific feature implementation gfrontend/uide
+  - Specific feature implementation guide
   - Why: Needed for X functionality
-- [Framework Gfrontend/uide](https://example.com/gfrontend/uide#integration)
+- [Framework Guide](https://example.com/guide#integration)
   - Integration patterns section
   - Why: Shows how to connect components
 ```
@@ -154,7 +154,7 @@ So that <benefit/value>
 **Feature Type**: [New Capability/Enhancement/Refactor/Bug Fix]
 **Estimated Complexity**: [Low/Medium/High]
 **Primary Systems Affected**: [List of main components/services]
-**Dependencies**: [External libraries or services reqfrontend/uired]
+**Dependencies**: [External libraries or services required]
 
 ---
 
@@ -178,7 +178,7 @@ So that <benefit/value>
 
 - [Documentation Link 1](https://example.com/doc1#section)
   - Specific section: Authentication setup
-  - Why: Reqfrontend/uired for implementing secure endpoints
+  - Why: Required for implementing secure endpoints
 - [Documentation Link 2](https://example.com/doc2#integration)
   - Specific section: Database integration
   - Why: Shows proper async database patterns
@@ -244,7 +244,7 @@ So that <benefit/value>
 
 IMPORTANT: Execute every task in order, top to bottom. Each task is atomic and independently testable.
 
-### Task Format Gfrontend/uidelines
+### Task Format Guidelines
 
 Use information-dense keywords for clarity:
 - **CREATE**: New files or components
@@ -258,7 +258,7 @@ Use information-dense keywords for clarity:
 
 - **IMPLEMENT**: {Specific implementation detail}
 - **PATTERN**: {Reference to existing pattern - file:line}
-- **IMPORTS**: {Reqfrontend/uired archive/archive/imports and dependencies}
+- **IMPORTS**: {Required archive/archive/imports and dependencies}
 - **GOTCHA**: {Known issues or constraints to avoid}
 - **VALIDATE**: `{executable validation command}`
 
@@ -272,11 +272,11 @@ Use information-dense keywords for clarity:
 
 ### Unit Tests
 
-<Scope and reqfrontend/uirements based on project standards>
+<Scope and requirements based on project standards>
 
 ### Integration Tests
 
-<Scope and reqfrontend/uirements based on project standards>
+<Scope and requirements based on project standards>
 
 ### Edge Cases
 
@@ -318,12 +318,12 @@ Execute every command to ensure zero regressions and 100% feature correctness.
 
 - [ ] Feature implements all specified functionality
 - [ ] All validation commands pass with zero errors
-- [ ] Unit test coverage meets reqfrontend/uirements (80%+)
+- [ ] Unit test coverage meets requirements (80%+)
 - [ ] Integration tests verify end-to-end workflows
 - [ ] Code follows project conventions and patterns
 - [ ] No regressions in existing functionality
 - [ ] Documentation is updated (if applicable)
-- [ ] Performance meets reqfrontend/uirements (if applicable)
+- [ ] Performance meets requirements (if applicable)
 - [ ] Security considerations addressed (if applicable)
 
 ---
@@ -333,7 +333,7 @@ Execute every command to ensure zero regressions and 100% feature correctness.
 - [ ] All tasks completed in order
 - [ ] Each task validation passed immediately
 - [ ] All validation commands executed successfully
-- [ ] Full test sfrontend/uite passes (unit + integration)
+- [ ] Full test suite passes (unit + integration)
 - [ ] No linting or type checking errors
 - [ ] Manual testing confirms feature works
 - [ ] Acceptance criteria all met

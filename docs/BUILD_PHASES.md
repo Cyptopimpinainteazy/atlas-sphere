@@ -157,7 +157,7 @@ atlas-sphere/
 │   ├── rust/                   # Rust SDK for runtime interaction
 │   │   ├── Cargo.toml
 │   │   └── src/lib.rs
-│   ├── ts/                     # TypeScript SDK for frontend/dApp
+│   ├── ts/                     # TypeScript SDK for dApp
 │   │   ├── package.json
 │   │   └── src/index.ts
 │   └── python/                 # Python SDK for bots, AI, strategy

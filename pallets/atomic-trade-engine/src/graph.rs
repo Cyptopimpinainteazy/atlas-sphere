@@ -7,7 +7,7 @@
 //! - Price impact minimization
 
 use crate::types::{
-    AmmProtocol, ArbitrageOpportunity, Liqfrontend/uidityPool, RouteStep, TradeRoute, VmType,
+    AmmProtocol, ArbitrageOpportunity, LiquidityPool, RouteStep, TradeRoute, VmType,
 };
 use codec::{Decode, Encode};
 use frame_support::pallet_prelude::*;
@@ -41,8 +41,8 @@ pub struct GraphEdge {
     pub protocol: AmmProtocol,
     /// VM type
     pub vm_type: VmType,
-    /// Available liqfrontend/uidity (for prioritization)
-    pub liqfrontend/uidity: u128,
+    /// Available liquidity (for prioritization)
+    pub liquidity: u128,
     /// Fee in basis points
     pub fee_bps: u32,
 }
@@ -60,8 +60,8 @@ pub struct GraphNode {
 pub struct TradeGraph {
     /// Nodes indexed by token ID
     pub nodes: BTreeMap<H256, GraphNode>,
-    /// All pools for qfrontend/uick lookup
-    pub pools: BTreeMap<H256, Liqfrontend/uidityPool>,
+    /// All pools for quick lookup
+    pub pools: BTreeMap<H256, LiquidityPool>,
 }
 
 impl TradeGraph {
@@ -74,8 +74,8 @@ impl TradeGraph {
     }
 
     /// Add a pool to the graph (creates bidirectional edges)
-    pub fn add_pool(&mut self, pool: Liqfrontend/uidityPool) {
-        let liqfrontend/uidity = pool
+    pub fn add_pool(&mut self, pool: LiquidityPool) {
+        let liquidity = pool
             .reserve_a
             .checked_mul(pool.reserve_b)
             .and_then(integer_sqrt)
@@ -88,7 +88,7 @@ impl TradeGraph {
             token_to: pool.token_b,
             protocol: pool.protocol,
             vm_type: pool.vm_type,
-            liqfrontend/uidity,
+            liquidity,
             fee_bps: pool.fee_bps,
         };
 
@@ -99,7 +99,7 @@ impl TradeGraph {
             token_to: pool.token_a,
             protocol: pool.protocol,
             vm_type: pool.vm_type,
-            liqfrontend/uidity,
+            liquidity,
             fee_bps: pool.fee_bps,
         };
 
@@ -144,7 +144,7 @@ impl TradeGraph {
             pool.reserve_a = reserve_a;
             pool.reserve_b = reserve_b;
 
-            let new_liqfrontend/uidity = reserve_a
+            let new_liquidity = reserve_a
                 .checked_mul(reserve_b)
                 .and_then(integer_sqrt)
                 .unwrap_or(0);
@@ -152,14 +152,14 @@ impl TradeGraph {
             if let Some(node) = self.nodes.get_mut(&pool.token_a) {
                 for edge in &mut node.edges {
                     if edge.pool_id == pool_id {
-                        edge.liqfrontend/uidity = new_liqfrontend/uidity;
+                        edge.liquidity = new_liquidity;
                     }
                 }
             }
             if let Some(node) = self.nodes.get_mut(&pool.token_b) {
                 for edge in &mut node.edges {
                     if edge.pool_id == pool_id {
-                        edge.liqfrontend/uidity = new_liqfrontend/uidity;
+                        edge.liquidity = new_liquidity;
                     }
                 }
             }
@@ -295,7 +295,7 @@ impl TradeGraphResolver {
 
             let amount_out = pool
                 .get_amount_out(current_amount, edge.token_from)
-                .ok_or(DispatchError::Other("Insufficient liqfrontend/uidity"))?;
+                .ok_or(DispatchError::Other("Insufficient liquidity"))?;
 
             let step_impact = pool
                 .calculate_price_impact(current_amount, edge.token_from)
@@ -504,8 +504,8 @@ impl TradeGraphResolver {
 mod tests {
     use super::*;
 
-    fn create_test_pool(id: u64, token_a: u64, token_b: u64, vm: VmType) -> Liqfrontend/uidityPool {
-        Liqfrontend/uidityPool {
+    fn create_test_pool(id: u64, token_a: u64, token_b: u64, vm: VmType) -> LiquidityPool {
+        LiquidityPool {
             pool_id: H256::from_low_u64_be(id),
             protocol: AmmProtocol::UniswapV2,
             vm_type: vm,

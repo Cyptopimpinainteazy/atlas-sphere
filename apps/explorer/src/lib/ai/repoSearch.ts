@@ -38,7 +38,7 @@ const ALLOWED_EXT = new Set([
 ]);
 
 const SKIP_DIR = new Set([
-  '.git', 'node_modules', 'target', '.next', '.turbo', 'dist', 'bfrontend/uild', '.cache',
+  '.git', 'node_modules', 'target', '.next', '.turbo', 'dist', 'build', '.cache',
 ]);
 
 function tokenize(question: string) {

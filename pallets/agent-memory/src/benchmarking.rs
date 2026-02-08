@@ -158,5 +158,5 @@ mod benchmarks {
         withdraw_deposit(RawOrigin::Signed(caller), 0, 5_000u32.into());
     }
 
-    impl_benchmark_test_sfrontend/uite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
+    impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);
 }

@@ -3,7 +3,7 @@ name: swarm-dashboard pipeline smoke
 on:
   pull_request:
     paths:
-      - 'swarm-dashboard/**'
+      - 'apps/swarm-dashboard/**'
   schedule:
     - cron: '0 3 * * *' # daily at 03:00 UTC
 
@@ -20,13 +20,13 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'swarm-dashboard/package-lock.json'
+          cache-dependency-path: 'apps/swarm-dashboard/package-lock.json'
 
       - name: Cache node modules
         uses: actions/cache@v4
         with:
-          path: swarm-dashboard/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          path: apps/swarm-dashboard/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('apps/swarm-dashboard/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('swarm-dashboard/package-lock.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('apps/swarm-dashboard/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
@@ -61,4 +61,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
-          path: swarm-dashboard/test-results/**
+          path: apps/swarm-dashboard/test-results/**

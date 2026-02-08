@@ -78,7 +78,7 @@ export function PortfolioView() {
             </button>
             
             <button
-              onClick={() => setActiveView('apps/apps/dash-legacy-2-legacy-2board')}
+              onClick={() => setActiveView('apps/dash-legacy-2-legacy-2board')}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg transition-colors"
             >
               <span className="text-gray-300">Back to Dashboard</span>

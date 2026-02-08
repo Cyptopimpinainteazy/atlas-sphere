@@ -35,7 +35,7 @@ Register model
 - Vector registers V0..V7 (for SIMD operations) 128-bit lanes (e.g., 4x32-bit lanes) - each vector register is 16 bytes.
 
 Register semantics
-- R0 is conventionally zero for some operations; not reqfrontend/uired to be read-only but can be optimized as such.
+- R0 is conventionally zero for some operations; not required to be read-only but can be optimized as such.
 - R31 reserved for return values for ABI when returning a single integer.
 
 Stack/memory model
@@ -99,14 +99,14 @@ Limitations and safety
 
 ABI and debug
 - Bytecode includes a header with debug metadata: symbol table, source map (span -> offset), and relocation entries.
-- The header is optional for release bfrontend/uilds; reqfrontend/uired for on-chain verification.
+- The header is optional for release builds; required for on-chain verification.
 
 Mutation friendliness
 - Fixed-width instruction ensures mutation operations (bit flips, opcode swap) always land on valid boundaries.
 
 Cross-VM atomicity
 - ATOMIC_BEGIN opens an atomic window where cross-VM calls must be committed together via ATOMIC_COMMIT or ATOMIC_ROLLBACK.
-- Cross-VM calls produce receipts; commit reqfrontend/uires signatures/cryptographic proof.
+- Cross-VM calls produce receipts; commit requires signatures/cryptographic proof.
 
 Compatibility
 - Bytecode is designed to be portable across CPU and GPU and amenable to JIT compilation.

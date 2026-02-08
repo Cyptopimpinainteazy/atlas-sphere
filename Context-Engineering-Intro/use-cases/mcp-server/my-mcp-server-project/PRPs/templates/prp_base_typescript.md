@@ -160,7 +160,7 @@ export function {Domain}Component({ data, onAction }: {Domain}Props) {
   // CRITICAL: Server Components for data fetching, Client Components for interactivity
 
   return (
-    // PATTERN: Consistent styling approach (see components/ui/)
+    // PATTERN: Consistent styling approach (see components/frontend/ui/)
     <div className="existing-class-pattern">
       {/* Follow existing component composition patterns */}
     </div>

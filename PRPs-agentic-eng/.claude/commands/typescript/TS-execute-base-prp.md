@@ -8,13 +8,13 @@ Implement a TypeScript/JavaScript feature using the PRP file.
 
 1. **Load PRP**
    - Read the specified PRP file
-   - Understand all context and reqfrontend/uirements
+   - Understand all context and requirements
    - Follow all instructions in the PRP and extend the research if needed
    - Ensure you have all needed context to implement the PRP fully
-   - Do more frontend/frontend/web searches and codebase exploration as needed
+   - Do more web searches and codebase exploration as needed
 
 2. **ULTRATHINK**
-   - Ultrathink before you execute the plan. Create a comprehensive plan addressing all reqfrontend/uirements.
+   - Ultrathink before you execute the plan. Create a comprehensive plan addressing all requirements.
    - Break down the PRP into clear todos using the TodoWrite tool.
    - Use agents subagents and batchtool to enhance the process.
    - **Important** YOU MUST ENSURE YOU HAVE EXTREMELY CLEAR TASKS FOR SUBAGENTS AND REFERENCE CONTEXT AND MAKE SURE EACH SUBAGENT READS THE PRP AND UNDERSTANDS ITS CONTEXT.
@@ -34,11 +34,11 @@ Implement a TypeScript/JavaScript feature using the PRP file.
    - The better validation that is done, the more confident we can be that the implementation is correct.
    - Fix any failures (type errors, linting issues, test failures)
    - Re-run until all pass
-   - Always re-read the PRP to validate and review the implementation to ensure it meets the reqfrontend/uirements
+   - Always re-read the PRP to validate and review the implementation to ensure it meets the requirements
 
 5. **Complete**
    - Ensure all checklist items done
-   - Run final validation sfrontend/uite
+   - Run final validation suite
    - Report completion status
    - Read the PRP again to ensure you have implemented everything
 

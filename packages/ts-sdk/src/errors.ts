@@ -87,13 +87,13 @@ export class InvalidNonceError extends ComitSubmissionError {
  * Error thrown when account has insufficient balance
  */
 export class InsufficientBalanceError extends ComitSubmissionError {
-  public readonly reqfrontend/uired: Balance;
+  public readonly required: Balance;
   public readonly available: Balance;
 
-  constructor(reqfrontend/uired: Balance, available: Balance) {
-    super(`Insufficient balance: reqfrontend/uired ${reqfrontend/uired}, available ${available}`);
+  constructor(required: Balance, available: Balance) {
+    super(`Insufficient balance: required ${required}, available ${available}`);
     this.name = 'InsufficientBalanceError';
-    this.reqfrontend/uired = reqfrontend/uired;
+    this.required = required;
     this.available = available;
     Object.setPrototypeOf(this, InsufficientBalanceError.prototype);
   }
@@ -289,7 +289,7 @@ export function reasonToError(reason: ComitFailureReason, comitId?: Hash): Comit
     case 'InvalidNonce':
       return new InvalidNonceError(reason.expected, reason.provided);
     case 'InsufficientBalance':
-      return new InsufficientBalanceError(reason.reqfrontend/uired, reason.available);
+      return new InsufficientBalanceError(reason.required, reason.available);
     case 'Unauthorized':
       return new UnauthorizedError('unknown');
     case 'RateLimitExceeded':

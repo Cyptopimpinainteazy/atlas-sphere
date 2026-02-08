@@ -4,7 +4,7 @@ use x3_common::{
     BinOp, DurationUnit, FloatSuffix, IntBase, IntSuffix, SizeUnit, Span, Spanned, Symbol, UnOp,
 };
 
-/// Node ID - deterministic, 0-based index assigned during parsing/lowering when reqfrontend/uired.
+/// Node ID - deterministic, 0-based index assigned during parsing/lowering when required.
 /// Internally is a simple u32 wrapper for compactness and reproducibility.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct NodeId(pub u32);
