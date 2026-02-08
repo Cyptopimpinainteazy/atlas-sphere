@@ -77,12 +77,15 @@
 pub mod admin;
 pub mod announcer;
 pub mod bip39;
+pub mod blockchain;
 pub mod config;
 pub mod coordinator;
 pub mod crown;
 pub mod error;
 pub mod funding;
+pub mod gpu_backends;
 pub mod jobs;
+pub mod monitoring;
 pub mod network;
 pub mod node;
 pub mod protocol;
@@ -91,6 +94,7 @@ pub mod task;
 pub mod verification;
 pub mod wallet;
 pub mod warden;
+pub mod x3_vm;
 
 pub use announcer::{
     AnnouncementPayload, AnnouncementSeverity, AnnouncementType, Announcer, AnnouncerConfig,

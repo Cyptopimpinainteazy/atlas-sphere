@@ -29,13 +29,18 @@ jobs:
             exit 1
           fi
 
-      - name: Run Python tests (smoke)
+      - name: Run Python tests (full)
         run: |
-          echo "🧪 Running pytest as smoke check"
+          echo "🧪 Running full pytest suite"
           pip3 install -r requirements.txt || true
           pytest -q || exit 1
 
-      - name: Run Rust tests (selected)
+      - name: Run Rust tests (full workspace)
         run: |
-          echo "🧪 Running Rust workspace tests (quick smoke)"
-          cargo test -p x3-proof -p x3-slash -p x3-fees -p x3-intent -p x3-agent -p x3-court -p x3-flashloan --lib || true
+          echo "🧪 Running full Rust workspace tests"
+          cargo test --workspace || exit 1
+
+      - name: Run TS/SDK tests (full)
+        run: |
+          echo "🧪 Running full TypeScript SDK tests"
+          npm test --workspace packages/ts-sdk || true

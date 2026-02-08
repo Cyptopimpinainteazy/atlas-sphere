@@ -29,7 +29,86 @@ from swarm.errors import error_middleware, APIError, ExternalServiceError
 from swarm.agents.task_queue import AsyncTaskQueue, TaskPriority as AgentTaskPriority
 from swarm.social.draft_pipeline import generate_social_draft
 from swarm.social.config import load_config as load_social_config
-from swarm.storage import sqlite_store
+# Lazy sqlite store import to avoid crashing at module import time if system sqlite is incompatible.
+_sqlite_store = None
+
+def get_sqlite_store():
+    global _sqlite_store
+    if _sqlite_store is not None:
+        return _sqlite_store
+    try:
+        import swarm.storage.sqlite_store as sqlite_store
+        _sqlite_store = sqlite_store
+        return _sqlite_store
+    except Exception as e:
+        logger.warning(f"Sqlite store unavailable during import: {e}")
+        _sqlite_store = None
+        return None
+
+
+# Prefer Postgres if configured
+_pg_store = None
+
+def get_postgres_store():
+    global _pg_store
+    if _pg_store is not None:
+        return _pg_store
+    # Only try if env var present
+    from os import getenv
+    dsn = getenv('POSTGRES_URL') or getenv('DATABASE_URL')
+    if not dsn:
+        return None
+    try:
+        import swarm.storage.pg_store as pg_store
+        # attempt a quick init to verify connectivity
+        pg_store.init_social_tables()
+        _pg_store = pg_store
+        logger.info('Connected to Postgres store')
+        return _pg_store
+    except Exception as e:
+        logger.warning(f'Postgres store unavailable: {e}')
+        _pg_store = None
+        return None
+
+# Lightweight fallback JSON store for social drafts when sqlite is unavailable
+_FALLBACK_SOCIAL_STORE = '/tmp/swarm_social_drafts.json'
+
+def _fallback_save_social_draft(draft_id, payload):
+    try:
+        data = {}
+        if os.path.exists(_FALLBACK_SOCIAL_STORE):
+            with open(_FALLBACK_SOCIAL_STORE) as f:
+                data = json.load(f)
+        data[draft_id] = {'payload': payload, 'created_at': int(time.time())}
+        with open(_FALLBACK_SOCIAL_STORE, 'w') as f:
+            json.dump(data, f)
+        return True
+    except Exception as e:
+        logger.warning(f"Fallback social store save failed: {e}")
+        return False
+
+
+def _fallback_load_social_draft(draft_id):
+    try:
+        if os.path.exists(_FALLBACK_SOCIAL_STORE):
+            with open(_FALLBACK_SOCIAL_STORE) as f:
+                data = json.load(f)
+            return data.get(draft_id, {}).get('payload')
+    except Exception:
+        return None
+
+
+def _fallback_list_social_drafts(limit=50):
+    try:
+        if os.path.exists(_FALLBACK_SOCIAL_STORE):
+            with open(_FALLBACK_SOCIAL_STORE) as f:
+                data = json.load(f)
+            items = [v.get('payload') for k, v in data.items()]
+            # No created_at sorting in simple fallback; return up to limit
+            return items[:limit]
+    except Exception:
+        return []
+
 from swarm.openspec_integration import OpenSpecValidator, create_change_skeleton, resolve_openspec_bin, resolve_workspace_root
 
 logging.basicConfig(
@@ -267,6 +346,10 @@ class SwarmAPIServer:
         # Health and status
         app.router.add_get('/health', self.health_check)
         app.router.add_get('/healthz', self.health_check)  # k8s compatibility
+        # Readiness alias used by launcher readiness probes
+        app.router.add_get('/ready', self.health_check)
+        # Simple heartbeat endpoint used by external scripts
+        app.router.add_post('/api/heartbeat', self.heartbeat)
         app.router.add_get('/api/status', self.get_status)
 
         # OpenSpec endpoints
@@ -393,6 +476,15 @@ class SwarmAPIServer:
             'queue_depth': self.gpu_manager.queue_depth()
         })
 
+    async def heartbeat(self, request: web.Request) -> web.Response:
+        """Simple heartbeat used by orchestration scripts"""
+        self._track_request('/api/heartbeat')
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        return web.json_response({'status': 'ok', 'received': data})
+
     async def get_status(self, request: web.Request) -> web.Response:
         """Detailed status endpoint"""
         self._track_request('/api/status')
@@ -469,16 +561,58 @@ class SwarmAPIServer:
         except Exception:
             limit = 50
 
-        sqlite_store.init_social_tables()
-        drafts = sqlite_store.list_social_drafts(limit=limit)
+        # Prefer Postgres if available, else sqlite, then fallback JSON
+        psql = get_postgres_store()
+        if psql:
+            try:
+                psql.init_social_tables()
+                drafts = psql.list_social_drafts(limit=limit)
+                return web.json_response({"count": len(drafts), "drafts": drafts})
+            except Exception as e:
+                logger.warning(f"Postgres operation failed: {e}")
+
+        sql = get_sqlite_store()
+        if sql:
+            try:
+                sql.init_social_tables()
+                drafts = sql.list_social_drafts(limit=limit)
+                return web.json_response({"count": len(drafts), "drafts": drafts})
+            except Exception as e:
+                logger.warning(f"Sqlite operation failed: {e}")
+        # Fallback
+        drafts = _fallback_list_social_drafts(limit=limit)
         return web.json_response({"count": len(drafts), "drafts": drafts})
 
     async def get_social_draft(self, request: web.Request) -> web.Response:
         """Get a specific social draft by ID."""
         self._track_request('/api/social/drafts/{draft_id}')
         draft_id = request.match_info.get("draft_id")
-        sqlite_store.init_social_tables()
-        draft = sqlite_store.load_social_draft(draft_id)
+
+        # Prefer Postgres -> sqlite -> fallback
+        psql = get_postgres_store()
+        if psql:
+            try:
+                psql.init_social_tables()
+                draft = psql.load_social_draft(draft_id)
+                if not draft:
+                    return web.json_response({'error': 'draft_not_found'}, status=404)
+                return web.json_response(draft)
+            except Exception as e:
+                logger.warning(f"Postgres operation failed: {e}")
+
+        sql = get_sqlite_store()
+        if sql:
+            try:
+                sql.init_social_tables()
+                draft = sql.load_social_draft(draft_id)
+                if not draft:
+                    return web.json_response({'error': 'draft_not_found'}, status=404)
+                return web.json_response(draft)
+            except Exception as e:
+                logger.warning(f"Sqlite operation failed: {e}")
+
+        # Fallback
+        draft = _fallback_load_social_draft(draft_id)
         if not draft:
             return web.json_response({'error': 'draft_not_found'}, status=404)
         return web.json_response(draft)
@@ -2972,10 +3106,23 @@ class SwarmAPIServer:
                             data = json.loads(msg.data)
                             if 'params' in data and 'result' in data['params']:
                                 block_data = data['params']['result']
+                                # Normalize block number (may be hex string like '0x1' or an integer)
+                                _bn = block_data.get('number', '0x0')
+                                try:
+                                    if isinstance(_bn, int):
+                                        block_number = _bn
+                                    else:
+                                        block_number = int(str(_bn), 16)
+                                except Exception:
+                                    try:
+                                        block_number = int(str(_bn))
+                                    except Exception:
+                                        block_number = 0
+
                                 event = ChainEvent(
                                     event_type='new_block',
                                     block_hash=block_data.get('hash'),
-                                    block_number=int(block_data.get('number', '0x0'), 16),
+                                    block_number=block_number,
                                     timestamp=time.time()
                                 )
                                 await self.ws_manager.broadcast('chain-events', asdict(event))

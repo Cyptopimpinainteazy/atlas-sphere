@@ -200,6 +200,43 @@ pub mod pallet {
 
     /// Finality Oracle: Chain confirmation depths
     #[pallet::storage]
+    pub type FinalityOracle<T: Config> = StorageMap<_, Blake2_128Concat, ExternalChainId, FinalityConfig, OptionQuery>;
+
+    // ========================================================================
+    // Collateral / Bonds
+    // ========================================================================
+
+    /// Bond record storage: bond_id -> BondRecord
+    #[pallet::storage]
+    #[pallet::getter(fn bonds)]
+    pub type Bonds<T: Config> = StorageMap<_, Blake2_128Concat, H256, BondRecord<T::AccountId, BalanceOf<T>>, OptionQuery>;
+
+    /// Mapping from owner -> vector of bond ids (bounded for simplicity)
+    #[pallet::storage]
+    #[pallet::getter(fn bonds_by_owner)]
+    pub type BondsByOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<H256, ConstU32<100>>, ValueQuery>;
+
+    #[pallet::type_value]
+    pub fn DefaultBondCounter() -> u64 { 0 }
+
+    /// Next bond counter (for simple unique id seed)
+    #[pallet::storage]
+    #[pallet::getter(fn bond_counter)]
+    pub type BondCounter<T: Config> = StorageValue<_, u64, ValueQuery, DefaultBondCounter>;
+
+    // Bond record stored on-chain
+    #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, PartialEq, Eq)]
+    #[scale_info(skip_type_params(AccountId, Balance))]
+    pub struct BondRecord<AccountId, Balance> {
+        pub id: H256,
+        pub owner: AccountId,
+        pub asset: Vec<u8>,
+        pub amount: Balance,
+        pub bond_type: u8,
+        pub state: u8, // 0=Locked,1=Withdrawable,2=Slashed
+        pub created_at: u64,
+    }
+
     #[pallet::getter(fn chain_finality)]
     pub type ChainFinality<T: Config> =
         StorageMap<_, Blake2_128Concat, ExternalChainId, FinalityConfig, OptionQuery>;
@@ -260,6 +297,25 @@ pub mod pallet {
             intent_id: H256,
             chain: ExternalChainId,
             tx_hash: H256,
+        },
+
+        /// Bond deposited on-chain
+        BondDeposited {
+            bond_id: H256,
+            owner: T::AccountId,
+            amount: BalanceOf<T>,
+        },
+
+        /// Bond withdrawn/finalized
+        BondWithdrawn {
+            bond_id: H256,
+            owner: T::AccountId,
+            amount: BalanceOf<T>,
+        },
+
+        /// Bond slashed
+        BondSlashed {
+            bond_id: H256,
         },
 
         /// External proof submitted to X3
@@ -370,6 +426,94 @@ pub mod pallet {
         PartialExecutionDetected,
         /// Cross-VM reentrancy detected (CRITICAL)
         CrossVmReentrancyDetected,
+        /// Bond not found
+        BondNotFound,
+        /// Not the owner of the bond
+        NotBondOwner,
+        /// Bond is not locked (cannot withdraw yet)
+        BondNotLocked,
+        /// Bond is not withdrawable
+        BondNotWithdrawable,
+        /// Too many bonds for owner
+        TooManyBonds,
+        /// Bond already slashed
+        BondAlreadySlashed,
+    }
+
+    // ============================================================================
+    // Collateral helpers (storage-backed PoC)
+    // ============================================================================
+
+    /// Internal helper: create a bond record (storage-backed)
+    pub fn create_bond(
+        who: &T::AccountId,
+        asset: Vec<u8>,
+        amount: BalanceOf<T>,
+        bond_type: u8,
+    ) -> Result<H256, DispatchError> {
+        // create id from counter + randomness
+        let mut counter = BondCounter::<T>::get();
+        counter = counter.wrapping_add(1);
+        BondCounter::<T>::put(counter);
+
+        let mut seed = [0u8; 32];
+        seed[0..8].copy_from_slice(&counter.to_le_bytes());
+        let id = H256::from(seed);
+
+        let now = <frame_system::Pallet<T>>::unix_time().saturated_into::<u64>();
+        let record = BondRecord {
+            id,
+            owner: who.clone(),
+            asset: asset.clone(),
+            amount,
+            bond_type,
+            state: 0, // Locked
+            created_at: now,
+        };
+
+        Bonds::<T>::insert(id, record);
+
+        // map owner -> add bond id
+        let mut list = BondsByOwner::<T>::get(who);
+        list.try_push(id).map_err(|_| DispatchError::Other("TooManyBonds"))?;
+        BondsByOwner::<T>::insert(who, list);
+
+        Self::deposit_event(Event::BondDeposited { bond_id: id, owner: who.clone(), amount });
+        Ok(id)
+    }
+
+    /// Internal helper: request withdraw
+    pub fn request_withdrawal(bond_id: H256) -> Result<(), DispatchError> {
+        Bonds::<T>::try_mutate_exists(bond_id, |maybe| {
+            let mut b = maybe.as_mut().ok_or(DispatchError::Other("BondNotFound"))?;
+            if b.state != 0 { return Err(DispatchError::Other("NotLocked")); }
+            b.state = 1; // Withdrawable
+            Ok(())
+        })
+    }
+
+    /// Internal helper: finalize withdrawal (removes bond)
+    pub fn finalize_withdraw(bond_id: H256) -> Result<(), DispatchError> {
+        let b = Bonds::<T>::take(bond_id).ok_or(DispatchError::Other("BondNotFound"))?;
+        // remove from owner list
+        BondsByOwner::<T>::mutate(&b.owner, |list| {
+            if let Some(pos) = list.iter().position(|x| *x == bond_id) {
+                list.remove(pos);
+            }
+        });
+        Self::deposit_event(Event::BondWithdrawn { bond_id, owner: b.owner, amount: b.amount });
+        Ok(())
+    }
+
+    /// Internal helper: slash bond (mark slashed)
+    pub fn slash_bond(bond_id: H256) -> Result<(), DispatchError> {
+        Bonds::<T>::try_mutate(bond_id, |maybe| {
+            let mut b = maybe.as_mut().ok_or(DispatchError::Other("BondNotFound"))?;
+            b.state = 2; // Slashed
+            Ok(())
+        })?;
+        Self::deposit_event(Event::BondSlashed { bond_id });
+        Ok(())
     }
 
     // ============================================================================
@@ -674,6 +818,72 @@ pub mod pallet {
             // Process refund
             Self::process_refund(intent_id, &intent, RefundReason::Timeout)?;
 
+            Ok(())
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        // COLLATERAL / BONDING
+        // ────────────────────────────────────────────────────────────────────
+
+        #[pallet::call_index(20)]
+        #[pallet::weight(T::SettlementWeightInfo::lock_escrow())]
+        pub fn deposit_bond(
+            origin: OriginFor<T>,
+            asset: Vec<u8>,
+            amount: BalanceOf<T>,
+            bond_type: u8,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Reserve funds from caller
+            T::Currency::reserve(&who, amount)?;
+
+            let _id = Self::create_bond(&who, asset, amount, bond_type)?;
+
+            Ok(())
+        }
+
+        #[pallet::call_index(21)]
+        #[pallet::weight(T::SettlementWeightInfo::lock_escrow())]
+        pub fn request_bond_withdraw(origin: OriginFor<T>, bond_id: H256) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Ensure owner
+            let rec = Bonds::<T>::get(bond_id).ok_or(Error::<T>::BondNotFound)?;
+            ensure!(rec.owner == who, Error::<T>::NotBondOwner);
+            ensure!(rec.state == 0, Error::<T>::BondNotLocked);
+
+            Self::request_withdrawal(bond_id)?;
+            Ok(())
+        }
+
+        #[pallet::call_index(22)]
+        #[pallet::weight(T::SettlementWeightInfo::refund_settlement())]
+        pub fn finalize_bond_withdraw(origin: OriginFor<T>, bond_id: H256) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let rec = Bonds::<T>::get(bond_id).ok_or(Error::<T>::BondNotFound)?;
+            ensure!(rec.owner == who, Error::<T>::NotBondOwner);
+            ensure!(rec.state == 1, Error::<T>::BondNotWithdrawable);
+
+            // Unreserve and remove
+            T::Currency::unreserve(&who, rec.amount);
+            Self::finalize_withdraw(bond_id)?;
+            Ok(())
+        }
+
+        #[pallet::call_index(23)]
+        #[pallet::weight(T::SettlementWeightInfo::refund_settlement())]
+        pub fn slash_bond(origin: OriginFor<T>, bond_id: H256) -> DispatchResult {
+            ensure_root(origin)?;
+
+            let rec = Bonds::<T>::get(bond_id).ok_or(Error::<T>::BondNotFound)?;
+            ensure!(rec.state != 2, Error::<T>::BondAlreadySlashed);
+
+            // Slash reserved balance
+            let _ = T::Currency::slash_reserved(&rec.owner, rec.amount);
+
+            Self::slash_bond(bond_id)?;
             Ok(())
         }
 

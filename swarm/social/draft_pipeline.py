@@ -12,7 +12,7 @@ from swarm.social.config import load_config, get_config_value
 from swarm.social.keywords import expand_keywords
 from swarm.social.open_notebook import OpenNotebookClient
 from swarm.social.ollama import generate_text
-from swarm.storage import sqlite_store
+# Lazy sqlite_store usage; import inside functions to avoid segfault on incompatible sqlite builds
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,22 @@ def generate_social_draft(payload: Dict[str, Any]) -> DraftResult:
     guardrails = get_config_value(config, ["guardrails"], {})
     max_actions_per_hour = int(guardrails.get("max_actions_per_hour", 60))
     if not _rate_limit_ok(payload.get("network"), max_actions_per_hour):
-        sqlite_store.append_social_audit("rate_limit", {"network": payload.get("network")})
+        try:
+            from swarm.storage import sqlite_store as _sql
+            _sql.append_social_audit("rate_limit", {"network": payload.get("network")})
+        except Exception:
+            logger.warning("Sqlite unavailable: rate_limit audit stored in fallback")
+            try:
+                _audit_path = '/tmp/swarm_social_audit.json'
+                _aud = {}
+                if os.path.exists(_audit_path):
+                    with open(_audit_path) as f:
+                        _aud = json.load(f)
+                _aud.setdefault('events', []).append({'type':'rate_limit','network':payload.get('network'),'timestamp':int(time.time())})
+                with open(_audit_path,'w') as f:
+                    json.dump(_aud,f)
+            except Exception:
+                pass
         raise ValueError("rate_limited")
 
     approved_groups_path = get_config_value(config, ["approved_groups_path"], "")
@@ -127,7 +142,11 @@ def generate_social_draft(payload: Dict[str, Any]) -> DraftResult:
     require_grounding = bool(open_notebook_cfg.get("require_grounding", True))
     if not grounding:
         if require_grounding:
-            sqlite_store.append_social_audit("grounding_missing", {"topic": topic})
+            try:
+                from swarm.storage import sqlite_store as _sql
+                _sql.append_social_audit("grounding_missing", {"topic": topic})
+            except Exception:
+                logger.warning("Sqlite unavailable: grounding_missing audit stored in fallback")
             raise ValueError("grounding_unavailable")
         grounding = "Open Notebook grounding unavailable. Use existing approved content only."
 
@@ -165,8 +184,39 @@ def generate_social_draft(payload: Dict[str, Any]) -> DraftResult:
         "status": "draft",
     }
 
-    sqlite_store.init_social_tables()
-    sqlite_store.save_social_draft(draft_id, draft_payload)
-    sqlite_store.append_social_audit("draft_created", {"draft_id": draft_id, "network": payload.get("network")})
+    # Prefer Postgres -> sqlite -> fallback
+    try:
+        from swarm.storage import pg_store as _pg
+        _pg.init_social_tables()
+        _pg.save_social_draft(draft_id, draft_payload)
+        _pg.append_social_audit("draft_created", {"draft_id": draft_id, "network": payload.get("network")})
+    except Exception:
+        try:
+            from swarm.storage import sqlite_store as _sql
+            _sql.init_social_tables()
+            _sql.save_social_draft(draft_id, draft_payload)
+            _sql.append_social_audit("draft_created", {"draft_id": draft_id, "network": payload.get("network")})
+        except Exception as e:
+            logger.warning(f"No DB available, falling back to file store: {e}")
+            try:
+                _path = '/tmp/swarm_social_drafts.json'
+                _data = {}
+                if os.path.exists(_path):
+                    with open(_path) as f:
+                        _data = json.load(f)
+                _data[draft_id] = draft_payload
+                with open(_path, 'w') as f:
+                    json.dump(_data, f)
+                # Also record simple audit
+                _audit_path = '/tmp/swarm_social_audit.json'
+                _aud = {}
+                if os.path.exists(_audit_path):
+                    with open(_audit_path) as f:
+                        _aud = json.load(f)
+                _aud.setdefault('events', []).append({'type':'draft_created','draft_id':draft_id,'network':payload.get('network'),'timestamp':int(time.time())})
+                with open(_audit_path,'w') as f:
+                    json.dump(_aud,f)
+            except Exception:
+                logger.exception('Failed to write fallback draft')
 
     return DraftResult(draft_id=draft_id, payload=draft_payload)

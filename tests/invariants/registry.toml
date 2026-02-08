@@ -55,3 +55,17 @@ severity = "CRITICAL"
 layer = "PALLET"
 tested_by = ["pallets/x3-settlement-engine/src/tests.rs::escrow_lifecycle"]
 property = "lock -> escrowed && reserved == amount"
+
+[[invariant]]
+id = "FRONTEND-TELEMETRY-001"
+description = "Telemetry stream updates propagate to the UI hook state"
+severity = "MEDIUM"
+layer = "FRONTEND"
+tested_by = ["apps/atlas-desktop/tests/unit/telemetryStream.test.tsx::useTelemetryStream"]
+
+[[invariant]]
+id = "FRONTEND-TELEMETRY-002"
+description = "Live telemetry panel renders loading and error states safely"
+severity = "MEDIUM"
+layer = "FRONTEND"
+tested_by = ["apps/atlas-desktop/tests/unit/liveTelemetryPanel.test.tsx::LiveTelemetryPanel"]

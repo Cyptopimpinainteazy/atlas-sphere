@@ -29,9 +29,9 @@ futures = "0.3"
 async-trait = "0.1"
 
 # Networking
-# libp2p will be added later for full P2P implementation
-# libp2p = { version = "0.53", features = ["tcp", "noise", "yamux", "gossipsub", "mdns", "kad", "identify", "ping"] }
+libp2p = { version = "0.53", features = ["tcp", "noise", "yamux", "gossipsub", "mdns", "kad", "identify", "ping"] }
 quinn = "0.10"
+hyper-util = "0.1"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

@@ -441,6 +441,19 @@ start_nextjs_app() {
 
     # Check for app directory
     if [ ! -d "$app_dir/app" ] && [ ! -d "$app_dir/pages" ] && [ ! -d "$app_dir/src/app" ] && [ ! -d "$app_dir/src" ]; then
+        # Try to detect a Next.js app inside a monorepo packages/ subfolder
+        for candidate in "$app_dir"/packages/*; do
+            if [ -d "$candidate" ] && [ -f "$candidate/package.json" ]; then
+                if [ -d "$candidate/app" ] || [ -d "$candidate/pages" ] || [ -d "$candidate/src/app" ] || [ -d "$candidate/src" ]; then
+                    log_info "Detected Next.js app for $app_name under $candidate"
+                    app_dir="$candidate"
+                    break
+                fi
+            fi
+        done
+    fi
+
+    if [ ! -d "$app_dir/app" ] && [ ! -d "$app_dir/pages" ] && [ ! -d "$app_dir/src/app" ] && [ ! -d "$app_dir/src" ]; then
         log_warn "$app_name has no Next.js app structure, skipping..."
         return 1
     fi

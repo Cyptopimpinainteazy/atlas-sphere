@@ -54,8 +54,34 @@ class GPUManager:
         t = self.queue.pop(0)
         t.status = 'assigned'
         t.assigned_to = contributor_id
+        # record assignment time for timeout handling
+        try:
+            t.assigned_at = time.time()
+        except Exception:
+            pass
         c.active_task_id = t.task_id
         return type('R', (), {'task': t, 'reason': None})()
+
+    def sweep_timeouts(self, heartbeat_timeout_s: int = 120, task_timeout_s: int = 3600):
+        """Sweep stale contributors and tasks."""
+        now = time.time()
+        # Contributors: mark offline if no heartbeat recently
+        for c in list(self.contributors.values()):
+            last = getattr(c, 'last_heartbeat_at', None)
+            if last is None or (now - last) > heartbeat_timeout_s:
+                c.online = False
+        # Tasks: mark assigned tasks as failed if exceeded timeout
+        for t in list(self.tasks.values()):
+            if t.status == 'assigned':
+                assigned_at = getattr(t, 'assigned_at', None)
+                max_runtime = getattr(t, 'max_runtime_s', None) or task_timeout_s
+                if assigned_at and (now - assigned_at) > max_runtime:
+                    t.status = 'failed'
+                    # clear contributor active task
+                    if t.assigned_to and t.assigned_to in self.contributors:
+                        self.contributors[t.assigned_to].tasks_failed += 1
+                        self.contributors[t.assigned_to].active_task_id = None
+                    t.assigned_to = None
 
     def submit_result(self, contributor_id: str, task_id: str, success: bool, result=None, error=None) -> bool:
         t = self.tasks.get(task_id)

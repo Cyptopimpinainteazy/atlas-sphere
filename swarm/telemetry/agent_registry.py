@@ -117,11 +117,21 @@ class AgentRegistry:
         self.max_history_days = max_history_days
         logger.info(f"Agent Registry initialized with {max_history_days} day history retention")
 
-        # Initialize persistence (SQLite by default)
+        # Initialize persistence: prefer Postgres, then SQLite, otherwise continue with in-memory
         try:
-            from swarm.storage.sqlite_store import init_db, load_all_agents
-            init_db()
-            persisted = load_all_agents()
+            # Try Postgres first
+            try:
+                from swarm.storage.pg_store import init_db, load_all_agents
+                init_db()
+                persisted = load_all_agents()
+                logger.info("Using Postgres persistence store")
+            except Exception:
+                # Fallback to sqlite
+                from swarm.storage.sqlite_store import init_db, load_all_agents
+                init_db()
+                persisted = load_all_agents()
+                logger.info("Using SQLite persistence store")
+
             if persisted:
                 logger.info(f"Loading {len(persisted)} agents from persistent store")
                 # Convert persisted payloads into AgentRecord-like objects
@@ -746,5 +756,37 @@ class AgentRegistry:
             'children': [self._serialize_lineage_tree(child) for child in node.children]
         }
 
-# Global registry instance
-agent_registry = AgentRegistry()
+# Global registry instance - lazily initialized to avoid importing SQLite at module import time
+class _LazyAgentRegistry:
+    """Proxy that lazily constructs the real AgentRegistry on first access."""
+    def __init__(self):
+        self._real = None
+
+    def _ensure(self):
+        if self._real is not None:
+            return
+        try:
+            self._real = AgentRegistry()
+        except Exception as e:
+            logger.warning(f"AgentRegistry construction failed: {e}; falling back to in-memory stub")
+            # Provide a minimal in-memory stub with the same public methods used by the API.
+            class _Stub:
+                def __init__(self):
+                    self.agents = {}
+                    self.tribes = {}
+                def list_contributors(self):
+                    return []
+                def list_tasks(self, limit=100):
+                    return []
+                def get_agent_details(self, agent_id):
+                    return None
+                def create_jury_session(self, *a, **k):
+                    raise NotImplementedError
+            self._real = _Stub()
+
+    def __getattr__(self, name):
+        self._ensure()
+        return getattr(self._real, name)
+
+# Initialize lazy proxy
+agent_registry = _LazyAgentRegistry()

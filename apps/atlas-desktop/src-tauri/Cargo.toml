@@ -1,0 +1,19 @@
+[package]
+name = "atlas_desktop_backend"
+version = "0.1.0"
+edition = "2021"
+description = "Atlas Desktop backend for the operator panels"
+rust-version = "1.78"
+build = "build.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", default-features = true , features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+time = "=0.3.36"
+tokio = { version = "1", features = ["time"] }
