@@ -39,4 +39,6 @@ Adopt a hybrid approach:
 
 Start with a minimal `CollateralManager` trait and `InMemoryCollateral` PoC in `pallets/x3-settlement-engine/src/collateral.rs` (done). Next: storage-backed implementation (StorageMap), events, extrinsics for deposit/withdraw, and unit+integration tests.
 
+Update 2026-02-08: Implemented storage-backed `Bond` storage (`Bonds`, `BondsByOwner`, `BondCounter`), internal helpers (`create_bond`, `request_withdrawal`, `finalize_withdraw`, `slash_bond`), and public FRAME extrinsics: `deposit_bond`, `request_bond_withdraw`, `finalize_bond_withdraw`, and `slash_bond`. Unit tests exercise both internal helpers and dispatchable flows. Remaining work: SDK RPC bindings, UI wiring, e2e tests, and OpenTelemetry/metrics.
+
 "Done" requires: ADR merged, pallet extrinsics implemented and covered by unit tests, SDK bindings, e2e deterministic test passing.
