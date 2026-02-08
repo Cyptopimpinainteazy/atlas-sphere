@@ -63,42 +63,66 @@ mkdir -p "$SCRIPT_DIR/logs"
 mkdir -p "$SCRIPT_DIR/test-results"
 mkdir -p "$SCRIPT_DIR/monitoring/data"
 
-# Bfrontend/uild and start services
-log_info "Bfrontend/uilding and starting services..."
-docker-compose -f "$COMPOSE_FILE" up -d --bfrontend/uild
+# Build and start services
+log_info "Building and starting services..."
+docker-compose -f "$COMPOSE_FILE" up -d --build
 
 # Wait for services to be healthy
 log_info "Waiting for services to be healthy..."
 
-# Function to wait for service
-wait_for_service() {
+# Function to wait for service using specialized checks
+wait_for_rpc_service() {
     local service_name=$1
     local url=$2
-    local max_attempts=60
-    local attempt=0
-    
-    log_info "Waiting for $service_name to be ready..."
-    
-    while [ $attempt -lt $max_attempts ]; do
-        if curl -f -s "$url" > /dev/null 2>&1; then
-            log_success "$service_name is ready!"
+    local method=${3:-system_health}
+    local timeout=${4:-300}
+
+    log_info "Waiting for $service_name RPC ($method) at $url"
+    if tests/e2e/wait_for_rpc.sh "$url" "$method" "$timeout"; then
+        log_success "$service_name is ready!"
+        return 0
+    else
+        log_error "$service_name RPC did not become ready"
+        return 1
+    fi
+}
+
+wait_for_port() {
+    local service_name=$1
+    local host=$2
+    local port=$3
+    local timeout=${4:-120}
+
+    log_info "Waiting for $service_name on $host:$port"
+    local start=$(date +%s)
+    local interval=1
+    while true; do
+        if (echo > /dev/tcp/$host/$port) >/dev/null 2>&1; then
+            log_success "$service_name port $port is reachable"
             return 0
         fi
-        
-        attempt=$((attempt + 1))
-        echo -n "."
-        sleep 2
+        now=$(date +%s)
+        elapsed=$((now - start))
+        if [ $elapsed -ge $timeout ]; then
+            log_error "$service_name failed to start within $timeout seconds"
+            return 1
+        fi
+        sleep $interval
+        # exponential backoff with cap
+        if [ $interval -lt 8 ]; then
+            interval=$((interval * 2))
+            if [ $interval -gt 8 ]; then interval=8; fi
+        fi
     done
-    
-    log_error "$service_name failed to start within expected time"
-    return 1
 }
 
 # Wait for critical services
 echo ""
-wait_for_service "Atlas Node" "http://localhost:9933/health"
-wait_for_service "Redis" "http://localhost:6379"
-wait_for_service "PostgreSQL" "http://localhost:5432"
+# For Atlas Node use JSON-RPC health check
+wait_for_rpc_service "Atlas Node" "http://localhost:9933/" system_health 300
+# For Redis and PostgreSQL, wait for port availability
+wait_for_port "Redis" "localhost" 6379 120
+wait_for_port "PostgreSQL" "localhost" 5432 120
 
 # Wait for mock services (optional)
 echo ""
