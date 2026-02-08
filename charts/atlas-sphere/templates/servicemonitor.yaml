@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: atlas-sphere-servicemonitor
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: atlas-sphere
+  endpoints:
+    - port: http
+      interval: {{ .Values.prometheus.scrapeInterval }}
+      path: /metrics
+      honorLabels: true
