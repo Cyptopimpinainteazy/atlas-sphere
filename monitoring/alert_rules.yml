@@ -1,0 +1,169 @@
+groups:
+  - name: jury_anchoring_alerts
+    interval: 30s
+    rules:
+      # Critical: Service Down
+      - alert: JuryAnchoreServiceDown
+        expr: up{job="jury-anchorer"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jury Anchorer Service Down"
+          description: "Jury anchorer service at {{ $labels.instance }} has been down for 5 minutes"
+
+      - alert: BlockchainNodeDown
+        expr: up{job="blockchain-node"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Blockchain Node Down"
+          description: "Blockchain node is unreachable for 2 minutes"
+
+      # Critical: High Failure Rate
+      - alert: HighAnchorFailureRate
+        expr: |
+          (rate(jury_anchoring_failures_total[5m]) / rate(jury_anchoring_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High Anchor Failure Rate"
+          description: "Anchor failure rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # Warning: High Latency
+      - alert: HighAnchorLatency
+        expr: |
+          histogram_quantile(0.95, rate(jury_anchoring_latency_seconds_bucket[5m])) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Anchor Latency"
+          description: "P95 anchor latency is {{ $value | humanizeDuration }} (threshold: 10s)"
+
+      # Warning: Blockchain Not Syncing
+      - alert: BlockchainNotSyncing
+        expr: |
+          (rate(substrate_block_height_total[5m]) < 0.1)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Blockchain Node Not Syncing"
+          description: "Blockchain is not producing new blocks"
+
+      # Warning: Database Connection Issues
+      - alert: DatabaseConnectionErrors
+        expr: |
+          rate(pg_client_failures_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database Connection Errors"
+          description: "Database connection errors detected: {{ $value }}"
+
+      # Warning: High Database Latency
+      - alert: HighDatabaseLatency
+        expr: |
+          histogram_quantile(0.95, rate(pg_stat_statements_query_time_sum[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Database Query Latency"
+          description: "P95 database latency is {{ $value | humanizeDuration }} (threshold: 1s)"
+
+      # Warning: Memory Usage High
+      - alert: HighMemoryUsage
+        expr: |
+          (process_resident_memory_bytes{job="jury-anchorer"} / 1024 / 1024 / 1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Memory Usage"
+          description: "Jury anchorer memory usage is {{ $value | humanize }}GB"
+
+      # Warning: CPU Usage High
+      - alert: HighCPUUsage
+        expr: |
+          rate(process_cpu_seconds_total{job="jury-anchorer"}[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU Usage"
+          description: "Jury anchorer CPU usage is {{ $value | humanizePercentage }}"
+
+      # Info: Anchor Success Count
+      - alert: LowAnchorVolume
+        expr: |
+          rate(jury_anchoring_success_total[1h]) < 1
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "Low Anchor Volume"
+          description: "Average anchor rate is {{ $value | humanize }} per second"
+
+  - name: blockchain_alerts
+    interval: 30s
+    rules:
+      # Critical: RPC Endpoint Failing
+      - alert: RPCEndpointFailing
+        expr: |
+          (rate(substrate_rpc_errors_total[5m]) / rate(substrate_rpc_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RPC Endpoint High Error Rate"
+          description: "RPC error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Warning: Block Time Degradation
+      - alert: SlowBlockProduction
+        expr: |
+          histogram_quantile(0.95, rate(substrate_block_time_seconds_bucket[5m])) > 12
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow Block Production"
+          description: "Block time is {{ $value | humanizeDuration }} (expected: 6s)"
+
+      # Warning: Memory Pool Congestion
+      - alert: HighMemoryPoolSize
+        expr: |
+          substrate_mempool_pending_transactions > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory Pool Congestion"
+          description: "{{ $value | humanize }} pending transactions in mempool"
+
+  - name: service_health
+    interval: 30s
+    rules:
+      # Critical: Service Certificate Expiring
+      - alert: CertificateExpiringSoon
+        expr: |
+          (ssl_cert_not_after - time()) / 86400 < 7
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL Certificate Expiring Soon"
+          description: "Certificate expires in {{ $value | humanize }} days"
+
+      # Info: Service Restart
+      - alert: ServiceRestart
+        expr: |
+          rate(process_start_time_seconds[5m]) > 0
+        labels:
+          severity: info
+        annotations:
+          summary: "Service Has Been Restarted"
+          description: "Service at {{ $labels.instance }} was restarted"

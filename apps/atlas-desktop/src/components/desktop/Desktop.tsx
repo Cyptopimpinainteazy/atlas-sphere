@@ -5,14 +5,14 @@
  * - Three.js eyeball in the centre background
  * - Icon grid with all registered applications
  * - Window manager for floating application windows
- * - Taskbar at the bottom
+ * - Bottom navigation bar with two-column layout
  * - Right-click context menu
  */
 import React, { useCallback, useState, useMemo } from "react";
 import Eyeball from "@/components/eyeball/Eyeball";
 import IconGrid from "@/components/icons/IconGrid";
 import WindowManager from "@/components/desktop/WindowManager";
-import Taskbar from "@/components/desktop/Taskbar";
+import BottomNavBar from "@/components/desktop/BottomNavBar";
 import ContextMenu, {
   type ContextMenuItem,
 } from "@/components/common/ContextMenu";
@@ -23,7 +23,15 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useApplicationRegistry } from "@/hooks/useApplicationRegistry";
 import { useWindowManager } from "@/hooks/useWindowManager";
 
-const Desktop: React.FC = () => {
+interface DesktopProps {
+  isTerminalOpen?: boolean;
+  onTerminalToggle?: () => void;
+}
+
+const Desktop: React.FC<DesktopProps> = ({ 
+  isTerminalOpen = true, 
+  onTerminalToggle 
+}) => {
   // Initialise the application registry on mount
   useApplicationRegistry();
 
@@ -107,7 +115,7 @@ const Desktop: React.FC = () => {
       </div>
 
       {/* ── Icon grid (left side) ──────────────────────── */}
-      <div className="absolute top-4 left-4 bottom-14 w-[320px] lg:w-[400px]">
+      <div className="absolute top-4 left-4 bottom-4 w-[320px] lg:w-[400px]">
         <IconGrid applications={applications} onLaunch={launch} />
       </div>
 
@@ -118,8 +126,11 @@ const Desktop: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Taskbar ────────────────────────────────────── */}
-      <Taskbar />
+      {/* ── Bottom Navigation Bar ──────────────────────── */}
+      <BottomNavBar 
+        onTerminalToggle={onTerminalToggle}
+        isTerminalOpen={isTerminalOpen}
+      />
 
       {/* ── Context menu ───────────────────────────────── */}
       {ctxMenu && (

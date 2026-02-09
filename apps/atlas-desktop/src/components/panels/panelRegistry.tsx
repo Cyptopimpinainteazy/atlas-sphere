@@ -13,6 +13,15 @@ const StoragePanel     = lazy(() => import("@/components/panels/StoragePanel"));
 const DevToolsPanel    = lazy(() => import("@/components/panels/DevToolsPanel"));
 const SecurityPanel    = lazy(() => import("@/components/panels/SecurityPanel"));
 const LiveTelemetryPanel = lazy(() => import("@/components/panels/LiveTelemetryPanel"));
+const MonitoringDashboard = lazy(() => import("@/components/monitoring/MonitoringDashboard"));
+const DocumentationPanel = lazy(() => import("@/components/documentation/Documentation"));
+
+/* AGI Substrate panels */
+const SelfModelViewer = lazy(() => import("@/components/monitoring/SelfModelViewer"));
+const GoalGenomeViewer = lazy(() => import("@/components/monitoring/GoalGenomeViewer"));
+const WorldSimViewer = lazy(() => import("@/components/monitoring/WorldSimViewer"));
+const SelfImprovementViewer = lazy(() => import("@/components/monitoring/SelfImprovementViewer"));
+const TripwireMonitor = lazy(() => import("@/components/monitoring/TripwireMonitor"));
 
 /**
  * Map of appId → lazy-loaded panel component.
@@ -25,6 +34,8 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "dev-tools":       DevToolsPanel,
   "security-vault":  SecurityPanel,
   "live-telemetry":  LiveTelemetryPanel,
+  "system-monitoring": MonitoringDashboard,
+  "documentation":   DocumentationPanel,
 
   // Aliases: existing apps can also route to panels
   "swarm-dashboard":        SwarmHealthPanel,
@@ -32,6 +43,13 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "htlc-manager":           StoragePanel,
   "dev-dashboard":          DevToolsPanel,
   "x3-intelligence":        SecurityPanel,
+
+  // AGI Substrate panels
+  "self-model":             SelfModelViewer,
+  "goal-genome":            GoalGenomeViewer,
+  "world-sim":              WorldSimViewer,
+  "self-improvement":       SelfImprovementViewer,
+  "tripwire-monitor":       TripwireMonitor,
 };
 
 /**

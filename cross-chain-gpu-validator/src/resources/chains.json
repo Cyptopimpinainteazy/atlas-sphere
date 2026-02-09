@@ -1,0 +1,920 @@
+[
+  {
+    "chain_id": "eth",
+    "chain_name": "Ethereum Mainnet",
+    "rpc_url": "https://mainnet.infura.io/v3/${INFURA_API_KEY}",
+    "chain_numeric_id": 1,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "exp",
+    "chain_name": "Expanse Network",
+    "rpc_url": "https://node.expanse.tech",
+    "chain_numeric_id": 2,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "rop",
+    "chain_name": "Ropsten",
+    "rpc_url": "https://ropsten.infura.io/v3/${INFURA_API_KEY}",
+    "chain_numeric_id": 3,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "rin",
+    "chain_name": "Rinkeby",
+    "rpc_url": "https://rinkeby.infura.io/v3/${INFURA_API_KEY}",
+    "chain_numeric_id": 4,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gor",
+    "chain_name": "Goerli",
+    "rpc_url": "https://goerli.infura.io/v3/${INFURA_API_KEY}",
+    "chain_numeric_id": 5,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tch",
+    "chain_name": "ThaiChain",
+    "rpc_url": "https://rpc.dome.cloud",
+    "chain_numeric_id": 7,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "ubq",
+    "chain_name": "Ubiq",
+    "rpc_url": "https://rpc.octano.dev",
+    "chain_numeric_id": 8,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "quai",
+    "chain_name": "Quai Network Mainnet",
+    "rpc_url": "https://rpc.quai.network/cyprus1",
+    "chain_numeric_id": 9,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "oeth",
+    "chain_name": "OP Mainnet",
+    "rpc_url": "https://mainnet.optimism.io",
+    "chain_numeric_id": 10,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "meta",
+    "chain_name": "Metadium Mainnet",
+    "rpc_url": "https://api.metadium.com/prod",
+    "chain_numeric_id": 11,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "kal",
+    "chain_name": "Metadium Testnet",
+    "rpc_url": "https://api.metadium.com/dev",
+    "chain_numeric_id": 12,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dstg",
+    "chain_name": "Diode Testnet Staging",
+    "rpc_url": "https://staging.diode.io:8443/",
+    "chain_numeric_id": 13,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "flr",
+    "chain_name": "Flare Mainnet",
+    "rpc_url": "https://flare-api.flare.network/ext/C/rpc",
+    "chain_numeric_id": 14,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "diode",
+    "chain_name": "Diode Prenet",
+    "rpc_url": "https://prenet.diode.io:8443/",
+    "chain_numeric_id": 15,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "cflr",
+    "chain_name": "Songbird Testnet Coston",
+    "rpc_url": "https://coston-api.flare.network/ext/C/rpc",
+    "chain_numeric_id": 16,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tfi",
+    "chain_name": "ThaiChain 2.0 ThaiFi",
+    "rpc_url": "https://rpc.thaifi.com",
+    "chain_numeric_id": 17,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tst",
+    "chain_name": "ThunderCore Testnet",
+    "rpc_url": "https://testnet-rpc.thundercore.com",
+    "chain_numeric_id": 18,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "sgb",
+    "chain_name": "Songbird Canary-Network",
+    "rpc_url": "https://songbird-api.flare.network/ext/C/rpc",
+    "chain_numeric_id": 19,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "esc",
+    "chain_name": "Elastos Smart Chain",
+    "rpc_url": "https://api.elastos.io/eth",
+    "chain_numeric_id": 20,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "esct",
+    "chain_name": "Elastos Smart Chain Testnet",
+    "rpc_url": "https://api-testnet.elastos.io/eth",
+    "chain_numeric_id": 21,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "kardiachain",
+    "chain_name": "KardiaChain Mainnet",
+    "rpc_url": "https://rpc.kardiachain.io",
+    "chain_numeric_id": 24,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "cro",
+    "chain_name": "Cronos Mainnet",
+    "rpc_url": "https://evm.cronos.org",
+    "chain_numeric_id": 25,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "l1test",
+    "chain_name": "Genesis L1 testnet",
+    "rpc_url": "https://testrpc.genesisl1.org",
+    "chain_numeric_id": 26,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "shib",
+    "chain_name": "ShibaChain",
+    "rpc_url": "https://rpc.shibchain.org",
+    "chain_numeric_id": 27,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "bobarinkeby",
+    "chain_name": "Boba Network Rinkeby Testnet",
+    "rpc_url": "https://rinkeby.boba.network/",
+    "chain_numeric_id": 28,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "l1",
+    "chain_name": "Genesis L1",
+    "rpc_url": "https://rpc.genesisl1.org",
+    "chain_numeric_id": 29,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "rsk",
+    "chain_name": "Rootstock Mainnet",
+    "rpc_url": "https://public-node.rsk.co",
+    "chain_numeric_id": 30,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "trsk",
+    "chain_name": "Rootstock Testnet",
+    "rpc_url": "https://public-node.testnet.rsk.co",
+    "chain_numeric_id": 31,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "goodt",
+    "chain_name": "GoodData Testnet",
+    "rpc_url": "https://test2.goodata.io",
+    "chain_numeric_id": 32,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "good",
+    "chain_name": "GoodData Mainnet",
+    "rpc_url": "https://rpc.goodata.io",
+    "chain_numeric_id": 33,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "scai",
+    "chain_name": "SecureChain Mainnet",
+    "rpc_url": "https://mainnet-rpc.scai.network",
+    "chain_numeric_id": 34,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tbwg",
+    "chain_name": "TBWG Chain",
+    "rpc_url": "https://rpc.tbwg.io",
+    "chain_numeric_id": 35,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dx",
+    "chain_name": "Dxchain Mainnet",
+    "rpc_url": "https://mainnet.dxchain.com",
+    "chain_numeric_id": 36,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "xpla",
+    "chain_name": "Xpla Mainnet",
+    "rpc_url": "https://dimension-evm-rpc.xpla.dev",
+    "chain_numeric_id": 37,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "val",
+    "chain_name": "Valorbit",
+    "rpc_url": "https://rpc.valorbit.com/v2",
+    "chain_numeric_id": 38,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "u2u",
+    "chain_name": "U2U Solaris Mainnet",
+    "rpc_url": "https://rpc-mainnet.u2u.xyz",
+    "chain_numeric_id": 39,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "telosevm",
+    "chain_name": "Telos EVM Mainnet",
+    "rpc_url": "https://rpc.telos.net",
+    "chain_numeric_id": 40,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "telosevmtestnet",
+    "chain_name": "Telos EVM Testnet",
+    "rpc_url": "https://rpc.testnet.telos.net",
+    "chain_numeric_id": 41,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "lukso",
+    "chain_name": "LUKSO Mainnet",
+    "rpc_url": "https://42.rpc.thirdweb.com",
+    "chain_numeric_id": 42,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "pangolin",
+    "chain_name": "Darwinia Pangolin Testnet",
+    "rpc_url": "https://pangolin-rpc.darwinia.network",
+    "chain_numeric_id": 43,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "crab",
+    "chain_name": "Crab Network",
+    "rpc_url": "https://crab-rpc.darwinia.network",
+    "chain_numeric_id": 44,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "pangoro",
+    "chain_name": "Darwinia Pangoro Testnet",
+    "rpc_url": "https://pangoro-rpc.darwinia.network",
+    "chain_numeric_id": 45,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "darwinia",
+    "chain_name": "Darwinia Network",
+    "rpc_url": "https://rpc.darwinia.network",
+    "chain_numeric_id": 46,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "aic",
+    "chain_name": "Acria IntelliChain",
+    "rpc_url": "https://aic.acria.ai",
+    "chain_numeric_id": 47,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "etmp",
+    "chain_name": "Ennothem Mainnet Proterozoic",
+    "rpc_url": "https://rpc.etm.network",
+    "chain_numeric_id": 48,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "etmptest",
+    "chain_name": "Ennothem Testnet Pioneer",
+    "rpc_url": "https://rpc.pioneer.etm.network",
+    "chain_numeric_id": 49,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "xdc",
+    "chain_name": "XDC Network",
+    "rpc_url": "https://erpc.xinfin.network",
+    "chain_numeric_id": 50,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "txdc",
+    "chain_name": "XDC Apothem Network",
+    "rpc_url": "https://rpc.apothem.network",
+    "chain_numeric_id": 51,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "cet",
+    "chain_name": "CoinEx Smart Chain Mainnet",
+    "rpc_url": "https://rpc.coinex.net",
+    "chain_numeric_id": 52,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tcet",
+    "chain_name": "CoinEx Smart Chain Testnet",
+    "rpc_url": "https://testnet-rpc.coinex.net/",
+    "chain_numeric_id": 53,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "op",
+    "chain_name": "Openpiece Mainnet",
+    "rpc_url": "https://mainnet.openpiece.io",
+    "chain_numeric_id": 54,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "zyx",
+    "chain_name": "Zyx Mainnet",
+    "rpc_url": "https://rpc-1.zyx.network/",
+    "chain_numeric_id": 55,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "bnb",
+    "chain_name": "BNB Smart Chain Mainnet",
+    "rpc_url": "https://bsc-dataseed1.bnbchain.org",
+    "chain_numeric_id": 56,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "sys",
+    "chain_name": "Syscoin Mainnet",
+    "rpc_url": "https://rpc.syscoin.org",
+    "chain_numeric_id": 57,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "ontologymainnet",
+    "chain_name": "Ontology Mainnet",
+    "rpc_url": "http://dappnode1.ont.io:20339",
+    "chain_numeric_id": 58,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "eos-legacy",
+    "chain_name": "EOS EVM Legacy",
+    "rpc_url": "https://api.eosargentina.io",
+    "chain_numeric_id": 59,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "go",
+    "chain_name": "GoChain",
+    "rpc_url": "https://rpc.gochain.io",
+    "chain_numeric_id": 60,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "etc",
+    "chain_name": "Ethereum Classic",
+    "rpc_url": "https://etc.rivet.link",
+    "chain_numeric_id": 61,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "metc",
+    "chain_name": "Mordor Testnet",
+    "rpc_url": "https://rpc.mordor.etccooperative.org",
+    "chain_numeric_id": 63,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "ellaism",
+    "chain_name": "Ellaism",
+    "rpc_url": "https://jsonrpc.ellaism.org",
+    "chain_numeric_id": 64,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tokt",
+    "chain_name": "OKExChain Testnet",
+    "rpc_url": "https://exchaintestrpc.okex.org",
+    "chain_numeric_id": 65,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "okt",
+    "chain_name": "OKXChain Mainnet",
+    "rpc_url": "https://exchainrpc.okex.org",
+    "chain_numeric_id": 66,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dbm",
+    "chain_name": "DBChain Testnet",
+    "rpc_url": "http://test-rpc.dbmbp.com",
+    "chain_numeric_id": 67,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "so1",
+    "chain_name": "SoterOne Mainnet",
+    "rpc_url": "https://rpc.soter.one",
+    "chain_numeric_id": 68,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "okov",
+    "chain_name": "Optimism Kovan",
+    "rpc_url": "https://kovan.optimism.io/",
+    "chain_numeric_id": 69,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "hsc",
+    "chain_name": "Hoo Smart Chain",
+    "rpc_url": "https://http-mainnet.hoosmartchain.com",
+    "chain_numeric_id": 70,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "cfxtest",
+    "chain_name": "Conflux eSpace (Testnet)",
+    "rpc_url": "https://evmtestnet.confluxrpc.com",
+    "chain_numeric_id": 71,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dxc",
+    "chain_name": "DxChain Testnet",
+    "rpc_url": "https://testnet-http.dxchain.com",
+    "chain_numeric_id": 72,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "fncy",
+    "chain_name": "FNCY",
+    "rpc_url": "https://fncy-seed1.fncy.world",
+    "chain_numeric_id": 73,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "idchain",
+    "chain_name": "IDChain Mainnet",
+    "rpc_url": "https://idchain.one/rpc/",
+    "chain_numeric_id": 74,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dsc",
+    "chain_name": "Decimal Smart Chain Mainnet",
+    "rpc_url": "https://node.decimalchain.com/web3/",
+    "chain_numeric_id": 75,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "mix",
+    "chain_name": "Mix",
+    "rpc_url": "https://rpc2.mix-blockchain.org:8647",
+    "chain_numeric_id": 76,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "spoa",
+    "chain_name": "POA Network Sokol",
+    "rpc_url": "https://sokol.poa.network",
+    "chain_numeric_id": 77,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "primuschain",
+    "chain_name": "PrimusChain mainnet",
+    "rpc_url": "https://ethnode.primusmoney.com/mainnet",
+    "chain_numeric_id": 78,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "zenith",
+    "chain_name": "Zenith Mainnet",
+    "rpc_url": "https://dataserver-us-1.zenithchain.co/",
+    "chain_numeric_id": 79,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "genechain",
+    "chain_name": "GeneChain",
+    "rpc_url": "https://rpc.genechain.io",
+    "chain_numeric_id": 80,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "joc",
+    "chain_name": "Japan Open Chain Mainnet",
+    "rpc_url": "https://rpc-1.japanopenchain.org:8545",
+    "chain_numeric_id": 81,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "meter",
+    "chain_name": "Meter Mainnet",
+    "rpc_url": "https://rpc.meter.io",
+    "chain_numeric_id": 82,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "metertest",
+    "chain_name": "Meter Testnet",
+    "rpc_url": "https://rpctest.meter.io",
+    "chain_numeric_id": 83,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "linqto-devnet",
+    "chain_name": "Linqto Devnet",
+    "rpc_url": "https://linqto-dev.com",
+    "chain_numeric_id": 84,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gttest",
+    "chain_name": "GateChain Testnet",
+    "rpc_url": "https://testnet.gatenode.cc",
+    "chain_numeric_id": 85,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gt",
+    "chain_name": "GateChain Mainnet",
+    "rpc_url": "https://evm.gatenode.cc",
+    "chain_numeric_id": 86,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "nnw",
+    "chain_name": "Nova Network",
+    "rpc_url": "https://connect.novanetwork.io",
+    "chain_numeric_id": 87,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "vic",
+    "chain_name": "Viction",
+    "rpc_url": "https://rpc.viction.xyz",
+    "chain_numeric_id": 88,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "vict",
+    "chain_name": "Viction Testnet",
+    "rpc_url": "https://rpc-testnet.viction.xyz",
+    "chain_numeric_id": 89,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gar-s0",
+    "chain_name": "Garizon Stage0",
+    "rpc_url": "https://s0.garizon.net/rpc",
+    "chain_numeric_id": 90,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gar-s1",
+    "chain_name": "Garizon Stage1",
+    "rpc_url": "https://s1.garizon.net/rpc",
+    "chain_numeric_id": 91,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gar-s2",
+    "chain_name": "Garizon Stage2",
+    "rpc_url": "https://s2.garizon.net/rpc",
+    "chain_numeric_id": 92,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gar-s3",
+    "chain_name": "Garizon Stage3",
+    "rpc_url": "https://s3.garizon.net/rpc",
+    "chain_numeric_id": 93,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "sdlt",
+    "chain_name": "SwissDLT",
+    "rpc_url": "https://rpc.swissdlt.ch",
+    "chain_numeric_id": 94,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "camdl",
+    "chain_name": "CamDL Mainnet",
+    "rpc_url": "https://rpc1.camdl.gov.kh/",
+    "chain_numeric_id": 95,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "kub",
+    "chain_name": "KUB Mainnet",
+    "rpc_url": "https://rpc.bitkubchain.io",
+    "chain_numeric_id": 96,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "bnbt",
+    "chain_name": "BNB Smart Chain Testnet",
+    "rpc_url": "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+    "chain_numeric_id": 97,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "six",
+    "chain_name": "Six Protocol",
+    "rpc_url": "https://sixnet-rpc-evm.sixprotocol.net",
+    "chain_numeric_id": 98,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "poa",
+    "chain_name": "POA Network Core",
+    "rpc_url": "https://core.poa.network",
+    "chain_numeric_id": 99,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "gno",
+    "chain_name": "Gnosis",
+    "rpc_url": "https://rpc.gnosischain.com",
+    "chain_numeric_id": 100,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "eti",
+    "chain_name": "EtherInc",
+    "rpc_url": "https://api.einc.io/jsonrpc/mainnet",
+    "chain_numeric_id": 101,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tw3g",
+    "chain_name": "Web3Games Testnet",
+    "rpc_url": "https://testnet-rpc-0.web3games.org/evm",
+    "chain_numeric_id": 102,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "wlc",
+    "chain_name": "WorldLand Mainnet",
+    "rpc_url": "https://seoul.worldland.foundation",
+    "chain_numeric_id": 103,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "tklc",
+    "chain_name": "Kaiba Lightning Chain Testnet",
+    "rpc_url": "https://klc.live/",
+    "chain_numeric_id": 104,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "dw3g",
+    "chain_name": "Web3Games Devnet",
+    "rpc_url": "https://devnet.web3games.org/evm",
+    "chain_numeric_id": 105,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  },
+  {
+    "chain_id": "vlx",
+    "chain_name": "Velas EVM Mainnet",
+    "rpc_url": "https://evmexplorer.velas.com/rpc",
+    "chain_numeric_id": 106,
+    "is_evm": true,
+    "is_svm": false,
+    "supports_gpu": true
+  }
+]

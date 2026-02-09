@@ -75,6 +75,7 @@
 //! - Deterministic execution verified by multiple nodes
 
 pub mod admin;
+pub mod agent_bridge;
 pub mod announcer;
 pub mod bip39;
 pub mod blockchain;
@@ -96,6 +97,9 @@ pub mod wallet;
 pub mod warden;
 pub mod x3_vm;
 
+pub use agent_bridge::{
+    AgentBridge, AgentStats, AgentTaskRequest, AgentTaskResponse, AgentTaskResult,
+};
 pub use announcer::{
     AnnouncementPayload, AnnouncementSeverity, AnnouncementType, Announcer, AnnouncerConfig,
     AnnouncerStats, CrownAnnouncementPayload, FundingAnnouncementPayload,

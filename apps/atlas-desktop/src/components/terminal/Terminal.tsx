@@ -86,7 +86,7 @@ export function Terminal({ isOpen = true, onClose }: TerminalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-14 left-4 w-[480px] max-w-[95vw] h-[300px] max-h-[60vh]
+    <div className="fixed bottom-32 right-4 w-[480px] max-w-[95vw] h-[300px] max-h-[60vh]
       glass-panel border border-[#ff6b35]/30 shadow-2xl z-40 flex flex-col rounded-lg">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#ff6b35]/20 bg-[#0a0e27]/80">

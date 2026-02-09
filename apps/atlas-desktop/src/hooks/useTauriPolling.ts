@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type UseTauriPollingResult<T> = {
@@ -27,9 +27,9 @@ export function useTauriPolling<T>(command: string, intervalMs = 5000): UseTauri
       if (!mounted.current) return;
       setData(payload);
       setError(null);
-    } catch (err) {
+    } catch (err: unknown) {
       if (!mounted.current) return;
-      const message = typeof err === "string" ? err : err?.message ?? "Unknown error";
+      const message = typeof err === "string" ? err : (err as Record<string, string>)?.message ?? "Unknown error";
       setError(message);
     } finally {
       if (!mounted.current) return;

@@ -34,11 +34,11 @@ const TitleBar: React.FC<TitleBarProps> = ({
     }}
     onMouseDown={onDragStart}
     role="toolbar"
-    aria-label={`${win.title} window controls`}
+    aria-label={`${win.title || "Window"} controls`}
   >
     {/* Title */}
     <span className="flex-1 text-xs font-medium text-text-primary truncate mr-2">
-      {win.title}
+      {win.title || "Untitled"}
     </span>
 
     {/* Window controls */}
@@ -197,7 +197,7 @@ const WindowContainer: React.FC<WindowContainerProps> = ({
       style={style}
       onMouseDown={() => focusWindow(win.id)}
       role="dialog"
-      aria-label={win.title}
+      aria-label={win.title || "Application Window"}
     >
       <TitleBar
         window={win}
@@ -213,9 +213,9 @@ const WindowContainer: React.FC<WindowContainerProps> = ({
           <div className="flex items-center justify-center h-full text-text-secondary text-sm">
             <div className="text-center">
               <div className="text-3xl mb-2 opacity-40">
-                {win.title.charAt(0).toUpperCase()}
+                {(win.title || "?").charAt(0).toUpperCase()}
               </div>
-              <div className="text-xs text-text-secondary/60">{win.title}</div>
+              <div className="text-xs text-text-secondary/60">{win.title || "Untitled Window"}</div>
             </div>
           </div>
         )}

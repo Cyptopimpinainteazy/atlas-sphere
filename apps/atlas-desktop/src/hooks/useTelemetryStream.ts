@@ -50,7 +50,7 @@ export function useTelemetryStream(): TelemetryStreamState {
         setError(null);
       } catch (err) {
         if (!mounted) return;
-        const message = typeof err === "string" ? err : err?.message ?? "Unknown error";
+        const message = typeof err === "string" ? err : (err as Record<string, string>)?.message ?? "Unknown error";
         setError(message);
       } finally {
         if (mounted) setLoading(false);

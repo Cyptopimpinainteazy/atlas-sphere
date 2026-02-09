@@ -2,14 +2,17 @@
 
 use chrono::Utc;
 use rand::Rng;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use std::fmt;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tauri::{AppHandle, Builder, Emitter, State, generate_handler};
 use tokio::time::sleep;
+use sysinfo::System;
+use uuid::Uuid;
 
 const TELEMETRY_EVENT: &str = "telemetry_update";
+const IPFS_LOCAL: &str = "http://127.0.0.1:5001";
 
 #[derive(Debug, Serialize)]
 struct IpcError {
@@ -36,12 +39,96 @@ impl fmt::Display for IpcError {
 
 impl std::error::Error for IpcError {}
 
+/* ─── System Metrics ─────────────────────────────── */
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SystemMetrics {
+  cpu: CpuMetrics,
+  memory: MemoryMetrics,
+  disk: Vec<DiskMetrics>,
+  updated_at: String,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CpuMetrics {
+  usage_percent: f32,
+  cores: u32,
+  frequency: u64,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MemoryMetrics {
+  used: u64,
+  total: u64,
+  usage_percent: f32,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DiskMetrics {
+  name: String,
+  used: u64,
+  total: u64,
+  usage_percent: f32,
+}
+
+/* ─── IPFS Storage & Filecoin-type System ────────── */
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IpfsStorageData {
+  node_id: String,
+  pinned_objects: Vec<PinnedContent>,
+  storage_used: u64,
+  storage_capacity: u64,
+  storage_market: Vec<StorageDeal>,
+  total_pins: u32,
+  updated_at: String,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PinnedContent {
+  cid: String,
+  name: String,
+  size: u64,
+  pinned_at: String,
+  replicas: u32,
+  earning_potential: f64,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct StorageDeal {
+  id: String,
+  client: String,
+  size: u64,
+  price_per_epoch: f64,
+  duration_epochs: u32,
+  status: StorageDealStatus,
+  earned: f64,
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum StorageDealStatus {
+  Active,
+  Pending,
+  Expired,
+  Slashed,
+}
+
 #[derive(Clone)]
 struct TelemetryState {
   swarm: Arc<RwLock<SwarmHealthData>>,
   network: Arc<RwLock<NetworkControlData>>,
   storage: Arc<RwLock<StorageMonitorData>>,
   ide: Arc<RwLock<IdeTelemetryData>>,
+  system: Arc<RwLock<SystemMetrics>>,
+  ipfs: Arc<RwLock<IpfsStorageData>>,
 }
 
 impl TelemetryState {
@@ -51,6 +138,8 @@ impl TelemetryState {
       network: Arc::new(RwLock::new(seed_network_control())),
       storage: Arc::new(RwLock::new(seed_storage_monitor())),
       ide: Arc::new(RwLock::new(seed_ide_telemetry())),
+      system: Arc::new(RwLock::new(get_system_metrics())),
+      ipfs: Arc::new(RwLock::new(seed_ipfs_storage())),
     }
   }
 
@@ -552,6 +641,16 @@ fn launch_ide_ipc(state: State<TelemetryState>) -> Result<IdeTelemetryData, IpcE
   Ok(state.ide.read().expect("ide read lock").clone())
 }
 
+#[tauri::command]
+fn launch_system_metrics(state: State<TelemetryState>) -> Result<SystemMetrics, IpcError> {
+  Ok(state.system.read().expect("system read lock").clone())
+}
+
+#[tauri::command]
+fn launch_ipfs_storage(state: State<TelemetryState>) -> Result<IpfsStorageData, IpcError> {
+  Ok(state.ipfs.read().expect("ipfs read lock").clone())
+}
+
 fn seed_ide_telemetry() -> IdeTelemetryData {
   IdeTelemetryData {
     builds: vec![
@@ -620,11 +719,124 @@ fn start_mock_stream(app: AppHandle, state: TelemetryState) {
       update_network(&state, &mut rng);
       update_storage(&state, &mut rng);
       update_ide(&state, &mut rng);
+      update_system_metrics(&state);
+      update_ipfs_storage(&state, &mut rng);
 
       let snapshot = state.snapshot();
       let _ = app.emit(TELEMETRY_EVENT, snapshot);
     }
   });
+}
+
+/* ─── Real System Monitoring ─────────────────────── */
+
+fn get_system_metrics() -> SystemMetrics {
+  let mut sys = System::new_all();
+  sys.refresh_all();
+
+  let cpu_info = sys.global_cpu_info();
+  let cpu_usage = cpu_info.cpu_usage();
+  let total_memory = sys.total_memory();
+  let used_memory = sys.used_memory();
+
+  SystemMetrics {
+    cpu: CpuMetrics {
+      usage_percent: cpu_usage,
+      cores: sys.cpus().len() as u32,
+      frequency: sys.cpus().get(0).map(|c| c.frequency()).unwrap_or(0),
+    },
+    memory: MemoryMetrics {
+      used: used_memory * 1024,
+      total: total_memory * 1024,
+      usage_percent: (used_memory as f32 / total_memory as f32) * 100.0,
+    },
+    disk: vec![
+      DiskMetrics {
+        name: "System".into(),
+        used: used_memory * 1024,
+        total: total_memory * 1024,
+        usage_percent: (used_memory as f32 / total_memory as f32) * 100.0,
+      }
+    ],
+    updated_at: Utc::now().to_rfc3339(),
+  }
+}
+
+fn update_system_metrics(state: &TelemetryState) {
+  let metrics = get_system_metrics();
+  *state.system.write().expect("system write lock") = metrics;
+}
+
+/* ─── IPFS Storage & Filecoin-type System ────────── */
+
+fn seed_ipfs_storage() -> IpfsStorageData {
+  IpfsStorageData {
+    node_id: Uuid::new_v4().to_string(),
+    pinned_objects: vec![
+      PinnedContent {
+        cid: "bafy2bzaceayutrxdyedzv2n7yguwq4py2w4xfa2z4aceo4vq3bsfzb5zraea".into(),
+        name: "atlas-runtime.wasm".into(),
+        size: 4_812_300,
+        pinned_at: Utc::now().to_rfc3339(),
+        replicas: 5,
+        earning_potential: 150.50,
+      },
+      PinnedContent {
+        cid: "bafy2bzaceayp7fq2kmx3vhyikpohczb73f7mw7bnvp6u4zvvqfqiduxpvrhq".into(),
+        name: "training-data.tar".into(),
+        size: 18_432_000,
+        pinned_at: (Utc::now() - chrono::Duration::days(2)).to_rfc3339(),
+        replicas: 3,
+        earning_potential: 420.75,
+      },
+    ],
+    storage_used: 4_812_300 + 18_432_000,
+    storage_capacity: 500_000_000_000,  // 500GB
+    storage_market: vec![
+      StorageDeal {
+        id: "deal-001".into(),
+        client: "atlas-ai-lab".into(),
+        size: 4_812_300,
+        price_per_epoch: 0.5,
+        duration_epochs: 520,
+        status: StorageDealStatus::Active,
+        earned: 260.0,
+      },
+      StorageDeal {
+        id: "deal-002".into(),
+        client: "research-collective".into(),
+        size: 18_432_000,
+        price_per_epoch: 1.25,
+        duration_epochs: 260,
+        status: StorageDealStatus::Active,
+        earned: 325.0,
+      },
+    ],
+    total_pins: 2,
+    updated_at: Utc::now().to_rfc3339(),
+  }
+}
+
+fn update_ipfs_storage(state: &TelemetryState, rng: &mut impl Rng) {
+  let mut data = state.ipfs.write().expect("ipfs write lock");
+  
+  // Simulate storage earning updates
+  for deal in data.storage_market.iter_mut() {
+    if matches!(deal.status, StorageDealStatus::Active) {
+      deal.earned += deal.price_per_epoch * rng.gen_range(0.8..1.2);
+    }
+  }
+  
+  // Simulate new replicas
+  for pin in data.pinned_objects.iter_mut() {
+    if rng.gen_bool(0.2) && pin.replicas < 10 {
+      pin.replicas += 1;
+      pin.earning_potential += 25.0;
+    }
+  }
+  
+  data.storage_used = data.pinned_objects.iter().map(|p| p.size).sum();
+  data.updated_at = Utc::now().to_rfc3339();
 }
 
 fn update_swarm(state: &TelemetryState, rng: &mut impl Rng) {
@@ -767,6 +979,8 @@ fn main() {
       launch_network_control,
       launch_storage_monitor,
       launch_ide_ipc,
+      launch_system_metrics,
+      launch_ipfs_storage,
     ])
     .setup(move |app| {
       start_mock_stream(app.handle().clone(), telemetry_state.clone());
@@ -775,3 +989,6 @@ fn main() {
     .run(tauri::generate_context!())
     .expect("failed to run tauri application");
 }
+
+#[cfg(test)]
+mod tests;

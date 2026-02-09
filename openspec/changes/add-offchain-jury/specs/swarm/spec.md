@@ -41,3 +41,35 @@ Agents found misaligned SHALL be retired, studied, and relevant data used to tra
 #### Scenario: Agent retires to scrap yard
 - **WHEN** an agent is flagged as misaligned by majority or audit
 - **THEN** the system SHALL retire the agent and persist evidence per the audit spec
+
+### Requirement: Commit-Reveal Voting Protocol
+Jury voting SHALL follow a two-phase commit-reveal protocol to prevent vote collusion and coercion.
+
+#### Scenario: Commit phase
+- **WHEN** a jury session begins
+- **THEN** each juror submits a commitment `C = SHA256(vote || nonce)` without revealing the vote
+
+#### Scenario: Reveal phase
+- **WHEN** commit period expires
+- **THEN** each juror submits plaintext `(vote, nonce)` and system verifies `SHA256(vote || nonce) == commitment`
+- **AND** once all reveals are received, vote tallies are computed and published
+
+#### Scenario: Vote anonymity until reveal
+- **WHEN** voting is in progress
+- **THEN** individual votes remain sealed and anonymous to other jurors
+- **AND** only aggregate outcomes are published after reveal phase
+
+### Requirement: Jury Quorum and Approval Threshold
+The jury voting outcome SHALL require a 66% majority (2/3 threshold) with minimum 3 members.
+
+#### Scenario: Sufficient quorum and approval
+- **WHEN** jury votes: 4 Yes, 1 No (5 members total)
+- **THEN** approval is granted because 4/5 = 80% > 66%
+
+#### Scenario: Quorum not met
+- **WHEN** jury votes: 2 Yes, 2 No (4 members, below minimum 3 for 66%)
+- **THEN** vote result is INCONCLUSIVE and task cannot execute
+
+#### Scenario: Insufficient approval
+- **WHEN** jury votes: 1 Yes, 5 No (6 members total)
+- **THEN** task is REJECTED because 1/6 = 16.7% < 66%

@@ -1335,53 +1335,227 @@ class SwarmAPIServer:
     # ============================================
 
     async def create_jury_session(self, request: web.Request) -> web.Response:
-        """Create a new jury session for a set of tasks"""
+        """Create a new jury session for a set of task intentions.
+        
+        Request body:
+        {
+            "task_ids": ["task-1", "task-2"],  # Task IDs to vote on
+            "members": [
+                {"agent_id": "juror-1", "section": "governance", "is_on_chain": false},
+                ...
+            ],  # Optional; default 3-member jury if not provided
+            "commit_timeout_s": 300,  # Optional; seconds until commit phase expires
+            "reveal_timeout_s": 300   # Optional; seconds until reveal phase expires
+        }
+        
+        Response:
+        {
+            "success": true,
+            "session_id": "uuid",
+            "state": "commit",
+            "jury_size": 3,
+            "deadline": 1707123456
+        }
+        """
         try:
             data = await request.json()
-            tasks = data.get('tasks', [])
-            session = self.jury_manager.create_session(tasks=tasks)
-            return web.json_response({'success': True, 'session_id': session.session_id, 'state': session.state})
+            task_ids = data.get('task_ids', [])
+            members = data.get('members')  # Optional
+            commit_timeout_s = data.get('commit_timeout_s', self.jury_manager.DEFAULT_COMMIT_TIMEOUT_S)
+            reveal_timeout_s = data.get('reveal_timeout_s', self.jury_manager.DEFAULT_REVEAL_TIMEOUT_S)
+            
+            # Convert member dicts to JuryMember objects if provided
+            if members:
+                from swarm.jury.manager import JuryMember
+                members = [
+                    JuryMember(
+                        agent_id=m.get('agent_id'),
+                        section=m.get('section', 'general'),
+                        is_on_chain=m.get('is_on_chain', False),
+                        readonly_snapshot=m.get('readonly_snapshot'),
+                    )
+                    for m in members
+                ]
+            
+            session = self.jury_manager.create_session(
+                task_ids=task_ids,
+                members=members,
+                commit_timeout_s=commit_timeout_s,
+                reveal_timeout_s=reveal_timeout_s,
+            )
+            
+            return web.json_response({
+                'success': True,
+                'session_id': session.session_id,
+                'state': session.state.value,
+                'jury_size': len(session.members),
+                'commit_deadline': session.commit_deadline,
+                'reveal_deadline': session.reveal_deadline,
+            })
+        except ValueError as e:
+            return web.json_response({'success': False, 'error': str(e)}, status=400)
         except Exception as e:
+            logger.error(f"Error creating jury session: {e}", exc_info=True)
             return web.json_response({'success': False, 'error': str(e)}, status=500)
 
     async def jury_vote(self, request: web.Request) -> web.Response:
-        """Submit a vote commitment or reveal for a jury session"""
+        """Submit a vote commitment, reveal, or aggregate votes in a jury session.
+        
+        Request body (commit phase):
+        {
+            "type": "commit",
+            "session_id": "uuid",
+            "member_id": "juror-1",
+            "commitment": "sha256_hex"  # SHA256(vote|nonce)
+        }
+        
+        Request body (reveal phase):
+        {
+            "type": "reveal",
+            "session_id": "uuid",
+            "member_id": "juror-1",
+            "vote": true,  # Vote value
+            "nonce": "secret"  # Nonce used in commitment
+        }
+        
+        Request body (advance to reveal):
+        {
+            "type": "advance",
+            "session_id": "uuid"
+        }
+        
+        Request body (aggregate results):
+        {
+            "type": "aggregate",
+            "session_id": "uuid"
+        }
+        
+        Response:
+        {
+            "success": true,
+            "result": {...}  // Depends on operation type
+        }
+        """
         try:
             data = await request.json()
             session_id = data.get('session_id')
-            contributor_id = data.get('contributor_id')
+            vote_type = data.get('type')
 
-            if data.get('type') == 'commit':
+            if vote_type == 'commit':
+                member_id = data.get('member_id')
                 commitment = data.get('commitment')
-                ok = self.jury_manager.submit_commit(session_id, contributor_id, commitment)
+                ok = self.jury_manager.submit_commit(session_id, member_id, commitment)
                 return web.json_response({'success': ok})
 
-            elif data.get('type') == 'reveal':
+            elif vote_type == 'reveal':
+                member_id = data.get('member_id')
                 vote = data.get('vote')
                 nonce = data.get('nonce')
-                ok = self.jury_manager.submit_reveal(session_id, contributor_id, vote, nonce)
-                return web.json_response({'success': ok})
+                ok = self.jury_manager.submit_reveal(session_id, member_id, vote, nonce)
+                return web.json_response({
+                    'success': ok,
+                    'message': 'Vote revealed successfully' if ok else 'Vote reveal failed (commitment mismatch?)'
+                })
 
-            elif data.get('type') == 'aggregate':
-                res = self.jury_manager.aggregate(session_id)
-                return web.json_response({'success': res is not None, 'result': res})
+            elif vote_type == 'aggregate':
+                result = self.jury_manager.aggregate(session_id)
+                if result:
+                    return web.json_response({
+                        'success': True,
+                        'result': result,
+                        'outcome': 'APPROVED' if result['result'] else 'REJECTED'
+                    })
+                else:
+                    return web.json_response({
+                        'success': False,
+                        'error': 'Aggregation failed (session not in reveal phase?)'
+                    }, status=400)
 
-            elif data.get('type') == 'advance':
+            elif vote_type == 'advance':
                 ok = self.jury_manager.advance_to_reveal(session_id)
-                return web.json_response({'success': ok})
+                return web.json_response({
+                    'success': ok,
+                    'message': 'Advanced to reveal phase' if ok else 'Advance failed'
+                })
 
             else:
-                return web.json_response({'error': 'unknown vote type'}, status=400)
+                return web.json_response({
+                    'success': False,
+                    'error': f'Unknown vote type: {vote_type}'
+                }, status=400)
 
         except Exception as e:
+            logger.error(f"Error processing jury vote: {e}", exc_info=True)
             return web.json_response({'success': False, 'error': str(e)}, status=500)
 
     async def get_jury_session(self, request: web.Request) -> web.Response:
-        session_id = request.match_info['session_id']
-        s = self.jury_manager.get_session(session_id)
-        if not s:
-            return web.json_response({'error': 'not found'}, status=404)
-        return web.json_response({'session_id': s.session_id, 'state': s.state, 'tasks': s.tasks, 'yes': sum(1 for r in s.reveals.values() if r.vote), 'no': sum(1 for r in s.reveals.values() if not r.vote)})
+        """Retrieve jury session details and voting state.
+        
+        Response:
+        {
+            "session_id": "uuid",
+            "state": "commit|reveal|completed|cancelled",
+            "task_ids": ["task-1"],
+            "jury": [
+                {"agent_id": "juror-1", "section": "governance", "vote_status": "pending|committed|revealed"}
+            ],
+            "results": {
+                "yes": 2,
+                "no": 1,
+                "total": 3,
+                "quorum_met": true,
+                "outcome": "APPROVED"
+            }
+        }
+        """
+        try:
+            session_id = request.match_info['session_id']
+            s = self.jury_manager.get_session(session_id)
+            
+            if not s:
+                return web.json_response({'error': 'Session not found'}, status=404)
+            
+            # Build jury member status
+            jury = []
+            for member in s.members:
+                vote_status = 'pending'
+                if member.agent_id in s.commitments:
+                    vote_status = 'committed'
+                if member.agent_id in s.reveals:
+                    vote_status = 'revealed'
+                
+                jury.append({
+                    'agent_id': member.agent_id,
+                    'section': member.section,
+                    'is_on_chain': member.is_on_chain,
+                    'vote_status': vote_status,
+                })
+            
+            # Build results summary
+            results = None
+            if s.state.value == 'completed':
+                results = {
+                    'yes': sum(1 for r in s.reveals.values() if r.vote),
+                    'no': sum(1 for r in s.reveals.values() if not r.vote),
+                    'total': len(s.members),
+                    'quorum_met': s.quorum_met,
+                    'outcome': 'APPROVED' if s.result else 'REJECTED',
+                }
+            
+            return web.json_response({
+                'session_id': s.session_id,
+                'state': s.state.value,
+                'task_ids': s.task_ids,
+                'jury': jury,
+                'created_at': s.created_at,
+                'commit_deadline': s.commit_deadline,
+                'reveal_deadline': s.reveal_deadline,
+                'results': results,
+                'audit_trail': self.jury_manager.get_session_audit_trail(session_id) if s.state.value == 'completed' else None,
+            })
+        except Exception as e:
+            logger.error(f"Error retrieving jury session: {e}", exc_info=True)
+            return web.json_response({'success': False, 'error': str(e)}, status=500)
 
         contributors = self.gpu_manager.list_contributors()
         online_contributors = [c for c in contributors if c.online]

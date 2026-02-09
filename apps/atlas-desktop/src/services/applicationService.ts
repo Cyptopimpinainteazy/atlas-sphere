@@ -194,6 +194,30 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "file", path: "/assets/icons/storage.svg", color: "#26c6da" },
     launchCommand: { type: "tauri", target: "launch_htlc_manager" },
   },
+  {
+    id: "system-monitoring",
+    name: "System Monitor",
+    description: "Real-time CPU, memory, disk, and IPFS storage metrics",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#64b5f6" },
+    launchCommand: { type: "internal", target: "system-monitoring" },
+  },
+  {
+    id: "documentation",
+    name: "Documentation",
+    description: "GPU Swarm Dashboard & CI/CD documentation and guides",
+    category: "utility",
+    icon: { type: "placeholder", category: "utility", color: "#4fc3f7" },
+    launchCommand: { type: "internal", target: "documentation" },
+  },
+  {
+    id: "validators",
+    name: "Validators",
+    description: "Monitor validator network status, performance, and connectivity",
+    category: "blockchain",
+    icon: { type: "file", path: "/assets/icons/validators.svg", color: "#00d2ff" },
+    launchCommand: { type: "url", target: "http://localhost:3013" },
+  },
 ];
 
 /* ── Service functions ─────────────────────────────────────── */
@@ -265,6 +289,12 @@ export async function launchApplication(app: Application): Promise<void> {
       case "url": {
         // Open in system browser or embedded webview
         window.open(app.launchCommand.target, "_blank");
+        store.updateProcessStatus(app.id, "running");
+        break;
+      }
+
+      case "internal": {
+        // Internal Tauri app launched as a window
         store.updateProcessStatus(app.id, "running");
         break;
       }

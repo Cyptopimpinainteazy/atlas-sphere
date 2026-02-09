@@ -37,10 +37,24 @@ The Orchestra introduces an off-chain jury layer to review major tasks and law p
 4. Add rotation and isolation controls.
 5. Incrementally enable major-task gating.
 
-## Open Questions
-- What cryptographic scheme will be used for anonymous vote commitment?
-- What is the exact severity taxonomy for major tasks in each subsystem?
-- What minimum quorum should be enforced for jury votes?
+## Open Questions (Resolved)
+- **What cryptographic scheme will be used for anonymous vote commitment?**
+  - Decision: Commit-reveal protocol with SHA256 hash commitments
+  - Implementation: During commit phase, juror submits `H(vote || nonce)`. During reveal phase, juror submits `(vote, nonce)` and system verifies `SHA256(vote || nonce) == commitment`. All votes remain anonymous until reveal phase completes.
+  - Rationale: Prevents vote manipulation while maintaining anonymity; widely-used cryptographic pattern.
+
+- **What is the exact severity taxonomy for major tasks in each subsystem?**
+  - Decision: Adopt severity gating rules per category below
+  - **MAJOR** (requires jury): Governance changes, treasury/payments >T, agent role changes, security patches, schema migrations, security boundary changes, scoring rule changes
+  - **MINOR** (core approval only): Config updates, monitoring/telemetry changes, documentation, minor bug fixes, routine operations
+  - **CONTEXT**: Additional subsystems may define custom rules in their spec files (extensible model)
+  - Rationale: Balances safety (core rules are clear) with velocity (routine ops bypass jury)
+
+- **What minimum quorum should be enforced for jury votes?**
+  - Decision: Majority rule with 66% threshold and 3-member minimum quorum
+  - Formula: `approval_count / jury_size >= 0.66` AND `jury_size >= 3`
+  - Rationale: 2/3 supermajority protects against collusion; 3+ members prevent single-agent veto ("at least 2 must agree")
+  - Bootstrap: Start with 5-member jury (4 must approve for major task)
 
 ## Next Ten Agent Roles (Initial Expansion)
 1. Score Guardian - monitors invariant violations in task proposals.

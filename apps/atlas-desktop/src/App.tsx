@@ -102,7 +102,7 @@ const AppContent: React.FC = () => {
 
       {/* UI Overlay */}
       <div className="fixed inset-0 z-20">
-        <Desktop />
+        <Desktop isTerminalOpen={isTerminalOpen} onTerminalToggle={() => setIsTerminalOpen(!isTerminalOpen)} />
       </div>
 
       {/* Interactive Terminal */}
@@ -110,16 +110,6 @@ const AppContent: React.FC = () => {
         isOpen={isTerminalOpen} 
         onClose={() => setIsTerminalOpen(false)} 
       />
-
-      {/* Terminal Toggle (if closed) */}
-      {!isTerminalOpen && (
-        <button
-          onClick={() => setIsTerminalOpen(true)}
-          className="fixed bottom-4 right-4 px-3 py-1 text-xs font-mono bg-[#ff6b35]/20 border border-[#ff6b35]/50 text-[#ff6b35] rounded hover:bg-[#ff6b35]/30 transition z-40"
-        >
-          term
-        </button>
-      )}
     </ThemeProvider>
   );
 };

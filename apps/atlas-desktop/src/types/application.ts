@@ -56,7 +56,7 @@ export interface ApplicationIcon {
 
 export interface LaunchCommand {
   /** Execution method */
-  type: "tauri" | "process" | "url";
+  type: "tauri" | "process" | "url" | "internal";
   /** Command name, binary path, or URL */
   target: string;
   /** CLI arguments */

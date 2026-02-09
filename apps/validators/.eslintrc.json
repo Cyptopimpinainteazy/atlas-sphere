@@ -1,0 +1,6 @@
+{
+  "extends": "../../eslintrc.base.json",
+  "rules": {
+    "react/prop-types": "off"
+  }
+}

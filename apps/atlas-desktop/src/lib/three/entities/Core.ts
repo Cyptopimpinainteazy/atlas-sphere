@@ -3,7 +3,7 @@ import { Config } from '../config';
 
 export class Core {
   group: THREE.Group;
-  particles: THREE.Points;
+  particles: THREE.Points | null = null;
   time = 0;
 
   constructor() {
@@ -43,7 +43,9 @@ export class Core {
     });
 
     this.particles = new THREE.Points(geometry, material);
-    this.group.add(this.particles);
+    if (this.particles) {
+      this.group.add(this.particles);
+    }
   }
 
   private createNucleus() {
@@ -64,7 +66,9 @@ export class Core {
     this.time = time * 0.0001;
 
     // Rotate particle cloud
-    this.particles.rotation.y += 0.0003;
+    if (this.particles) {
+      this.particles.rotation.y += 0.0003;
+    }
 
     // Pulsing nucleus
     const scale = 1 + Math.sin(this.time) * 0.1;
