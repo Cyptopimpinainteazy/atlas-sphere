@@ -257,6 +257,14 @@ fn get_instruction_size(opcode: x3_backend::opcode::Opcode, _code: &[u8]) -> usi
         Opcode::SvmCreateAccount => 9,
         Opcode::SvmGetData | Opcode::SvmSetData => 5,
         Opcode::SvmGetRent | Opcode::SvmGetClock => 3,
+
+        // GPU host-call ops
+        Opcode::GpuSha256Batch => 7,
+        Opcode::GpuEd25519Verify => 7,
+        Opcode::GpuPohChain => 7,
+        Opcode::GpuSha256Streamed => 7,
+        Opcode::GpuDeviceCount => 3,
+        Opcode::GpuBenchmark => 5,
     }
 }
 

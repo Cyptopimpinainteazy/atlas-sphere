@@ -60,13 +60,13 @@ for i in $(seq 1 "$MAX_ROUNDS"); do
             STREAK_NO_IMPROVE=0
             echo "  ✓ Improvement"
         else
-            ((STREAK_NO_IMPROVE++))
+            STREAK_NO_IMPROVE=$((STREAK_NO_IMPROVE + 1))
             echo "  ✗ No improvement (streak: $STREAK_NO_IMPROVE)"
         fi
         PREV_GAS="$NEW_GAS"
     else
         echo "Round $i report not found"
-        ((STREAK_NO_IMPROVE++))
+        STREAK_NO_IMPROVE=$((STREAK_NO_IMPROVE + 1))
     fi
 
     if [ "$STREAK_NO_IMPROVE" -ge 3 ]; then
@@ -82,7 +82,7 @@ echo "  Aggregating Results..."
 echo "=========================================="
 
 # Aggregate into summary.json
-python3 - <<'PYEOF'
+python3 - "$OUTDIR" <<'PYEOF'
 import json
 import glob
 import os

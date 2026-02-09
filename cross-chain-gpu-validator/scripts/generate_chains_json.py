@@ -14,7 +14,7 @@ import requests
 
 URL = "https://chainid.network/chains.json"
 OUT = Path(__file__).resolve().parents[1] / "src" / "resources" / "chains.json"
-N = 102
+# No cap — take all discovered chains
 
 EVM_FEATURES = {"EIP155", "EIP1559"}
 
@@ -63,7 +63,7 @@ def main() -> None:
     selected.sort(key=sort_key)
 
     out = []
-    for c in selected[:N]:
+    for c in selected:
         rpc = canonical_rpc(c)
         if not rpc:
             continue
