@@ -286,6 +286,91 @@ def bench_ed25519_gpu() -> dict | None:
     return None
 
 
+def bench_keccak_gpu(count: int = 500_000, iterations: int = 5) -> dict | None:
+    """GPU Keccak-256 batch hashing via libkeccak256_batch.so."""
+    import ctypes as _ct
+
+    lib_path = Path(__file__).resolve().parents[2] / "cross-chain-gpu-validator" / "kernels" / "build" / "libkeccak256_batch.so"
+    if not lib_path.exists():
+        return None
+    try:
+        lib = _ct.CDLL(str(lib_path))
+        lib.keccak256_batch_host.argtypes = [_ct.c_void_p, _ct.c_int, _ct.c_void_p]
+        lib.keccak256_batch_host.restype = _ct.c_int
+    except OSError:
+        return None
+
+    data = os.urandom(count * 32)
+    out = (_ct.c_ubyte * (count * 32))()
+
+    # Warmup
+    lib.keccak256_batch_host(_ct.c_char_p(data), _ct.c_int(count), _ct.byref(out))
+
+    times = []
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        lib.keccak256_batch_host(_ct.c_char_p(data), _ct.c_int(count), _ct.byref(out))
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    throughput = count / avg if avg > 0 else 0
+    return {
+        "operation": "Keccak-256 GPU",
+        "mode": "GPU (CUDA)",
+        "batch_size": count,
+        "iterations": iterations,
+        "avg_time_ms": round(avg * 1000, 2),
+        "ops_per_sec": round(throughput),
+    }
+
+
+def bench_secp256k1_gpu(count: int = 10_000, iterations: int = 5) -> dict | None:
+    """GPU secp256k1 ECDSA Shamir-trick (u1*G + u2*Q) via libsecp256k1_batch.so."""
+    import ctypes as _ct
+
+    lib_path = Path(__file__).resolve().parents[2] / "cross-chain-gpu-validator" / "kernels" / "build" / "libsecp256k1_batch.so"
+    if not lib_path.exists():
+        return None
+    try:
+        lib = _ct.CDLL(str(lib_path))
+        lib.secp256k1_ecdsa_verify_host.argtypes = [
+            _ct.c_void_p, _ct.c_void_p, _ct.c_void_p, _ct.c_int, _ct.c_void_p
+        ]
+        lib.secp256k1_ecdsa_verify_host.restype = _ct.c_int
+    except OSError:
+        return None
+
+    # Random u1, u2, pubkeys (throughput test, not correctness)
+    u1_data = os.urandom(count * 32)
+    u2_data = os.urandom(count * 32)
+    pk_data = os.urandom(count * 64)
+    out = (_ct.c_ubyte * (count * 32))()
+
+    # Warmup
+    lib.secp256k1_ecdsa_verify_host(
+        _ct.c_char_p(u1_data), _ct.c_char_p(u2_data), _ct.c_char_p(pk_data),
+        _ct.c_int(count), _ct.byref(out))
+
+    times = []
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        lib.secp256k1_ecdsa_verify_host(
+            _ct.c_char_p(u1_data), _ct.c_char_p(u2_data), _ct.c_char_p(pk_data),
+            _ct.c_int(count), _ct.byref(out))
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    throughput = count / avg if avg > 0 else 0
+    return {
+        "operation": "secp256k1 GPU",
+        "mode": "GPU (CUDA)",
+        "batch_size": count,
+        "iterations": iterations,
+        "avg_time_ms": round(avg * 1000, 2),
+        "ops_per_sec": round(throughput),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
@@ -326,6 +411,8 @@ def main() -> None:
         ("SHA-256 GPU", bench_sha256_gpu),
         ("PoH GPU", bench_poh_gpu),
         ("Ed25519 GPU", bench_ed25519_gpu),
+        ("Keccak-256 GPU", bench_keccak_gpu),
+        ("secp256k1 GPU", bench_secp256k1_gpu),
     ]
     for label, fn in gpu_benchmarks:
         try:
@@ -334,9 +421,12 @@ def main() -> None:
                 r["operation"] = label
                 r["mode"] = "GPU (CUDA)"
                 results.append(r)
-                key = "throughput_hashes_per_sec" if "throughput" in str(r) else "ops_per_sec"
-                ops = r.get("throughput_hashes_per_sec", r.get("throughput_sigs_per_sec", 0))
-                print(f"  [{label}] {ops:>12,.0f} ops/sec  (GPU)")
+                ops = r.get("ops_per_sec",
+                            r.get("throughput_hashes_per_sec",
+                                   r.get("throughput_sigs_per_sec", 0)))
+                if isinstance(ops, float):
+                    ops = round(ops)
+                print(f"  [{label}] {ops:>12,} ops/sec  (GPU)")
             else:
                 print(f"  [{label}] GPU not available, skipped")
         except Exception as e:

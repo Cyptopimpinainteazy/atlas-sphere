@@ -5,16 +5,16 @@
       "mode": "CPU (hashlib)",
       "batch_size": 200000,
       "iterations": 5,
-      "avg_time_ms": 108.78,
-      "ops_per_sec": 1838517
+      "avg_time_ms": 106.3,
+      "ops_per_sec": 1881485
     },
     {
       "operation": "Ed25519 sig verify",
       "mode": "CPU (PyNaCl/libsodium)",
       "batch_size": 10000,
       "iterations": 5,
-      "avg_time_ms": 635.59,
-      "ops_per_sec": 15733
+      "avg_time_ms": 626.9,
+      "ops_per_sec": 15951
     },
     {
       "operation": "PoH (SHA-256 chain)",
@@ -23,30 +23,30 @@
       "chain_length": 50000,
       "total_hashes": 3200000,
       "iterations": 3,
-      "avg_time_ms": 1761.13,
-      "ops_per_sec": 1817017
+      "avg_time_ms": 1716.32,
+      "ops_per_sec": 1864449
     },
     {
       "operation": "Keccak-256",
       "mode": "CPU (hashlib.sha3_256)",
       "batch_size": 200000,
       "iterations": 5,
-      "avg_time_ms": 179.18,
-      "ops_per_sec": 1116182
+      "avg_time_ms": 183.01,
+      "ops_per_sec": 1092861
     },
     {
       "operation": "secp256k1 ECDSA verify",
       "mode": "CPU (cryptography/OpenSSL)",
       "batch_size": 5000,
       "iterations": 3,
-      "avg_time_ms": 1930.85,
-      "ops_per_sec": 2590
+      "avg_time_ms": 1867.92,
+      "ops_per_sec": 2677
     },
     {
       "count": 500000,
       "iterations": 5,
-      "avg_time_ms": 50.455868199060205,
-      "throughput_hashes_per_sec": 9909650.112993458,
+      "avg_time_ms": 49.49694620081573,
+      "throughput_hashes_per_sec": 10101633.300192565,
       "gpu_available": true,
       "operation": "SHA-256 GPU",
       "mode": "GPU (CUDA)"
@@ -56,8 +56,8 @@
       "chain_length": 2000,
       "total_hashes": 4096000,
       "iterations": 5,
-      "avg_time_ms": 7.502170999941882,
-      "throughput_hashes_per_sec": 545975291.6897963,
+      "avg_time_ms": 7.429214000876527,
+      "throughput_hashes_per_sec": 551336924.6755764,
       "gpu_available": true,
       "operation": "PoH GPU",
       "mode": "GPU (CUDA)"
@@ -65,13 +65,29 @@
     {
       "batch_size": 10000,
       "iterations": 10,
-      "avg_time_ms": 169.76235030015232,
-      "throughput_sigs_per_sec": 58905.87625771712,
+      "avg_time_ms": 169.0450450998469,
+      "throughput_sigs_per_sec": 59155.830294188585,
       "gpu_available": true,
       "multi_gpu": true,
       "operation": "Ed25519 GPU",
       "mode": "GPU (CUDA)"
+    },
+    {
+      "operation": "Keccak-256 GPU",
+      "mode": "GPU (CUDA)",
+      "batch_size": 500000,
+      "iterations": 5,
+      "avg_time_ms": 10.95,
+      "ops_per_sec": 45675955
+    },
+    {
+      "operation": "secp256k1 GPU",
+      "mode": "GPU (CUDA)",
+      "batch_size": 10000,
+      "iterations": 5,
+      "avg_time_ms": 2721.96,
+      "ops_per_sec": 3674
     }
   ],
-  "timestamp": "2026-02-09T18:34:46"
+  "timestamp": "2026-02-09T19:54:00"
 }
