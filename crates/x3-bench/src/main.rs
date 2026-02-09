@@ -88,6 +88,8 @@ fn main() -> Result<()> {
         "new_bytes",
         "bytes_delta",
         "notes",
+        "compile_baseline_us",
+        "compile_optimized_us",
     ])?;
     for r in &results {
         wtr.serialize(r)?;
@@ -101,6 +103,19 @@ fn main() -> Result<()> {
         let total_gas: u64 = results.iter().map(|r| r.new_gas).sum();
         let total_instrs: usize = results.iter().map(|r| r.new_instrs).sum();
         let total_bytes: usize = results.iter().map(|r| r.new_bytes).sum();
+        let total_baseline_us: u64 = results.iter().map(|r| r.compile_baseline_us).sum();
+        let total_optimized_us: u64 = results.iter().map(|r| r.compile_optimized_us).sum();
+        let n = results.len() as f64;
+        let baseline_tps = if total_baseline_us > 0 {
+            n / (total_baseline_us as f64 / 1_000_000.0)
+        } else {
+            0.0
+        };
+        let optimized_tps = if total_optimized_us > 0 {
+            n / (total_optimized_us as f64 / 1_000_000.0)
+        } else {
+            0.0
+        };
         let report = serde_json::json!({
             "global": {
                 "gas": total_gas,
@@ -108,6 +123,10 @@ fn main() -> Result<()> {
                 "bytes": total_bytes,
                 "samples": results.len(),
                 "mode": mode_label,
+                "baseline_compile_us": total_baseline_us,
+                "optimized_compile_us": total_optimized_us,
+                "baseline_tps": (baseline_tps * 100.0).round() / 100.0,
+                "optimized_tps": (optimized_tps * 100.0).round() / 100.0,
             }
         });
         let report_path = outdir.join("report.json");

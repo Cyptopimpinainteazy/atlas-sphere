@@ -5,6 +5,7 @@ use prettytable::{row, Table};
 use serde::Serialize;
 use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 use crate::pipeline::{compile_optimized, compile_unoptimized};
 use x3_opt::telemetry::{mine_frequent_ngrams, RunTelemetry};
@@ -35,6 +36,10 @@ pub struct BenchResult {
     pub bytes_delta: isize,
 
     pub notes: String,
+
+    // Timing (microseconds)
+    pub compile_baseline_us: u64,
+    pub compile_optimized_us: u64,
 
     // Raw artifacts for debugging (not serialized to CSV)
     #[serde(skip_serializing)]
@@ -79,6 +84,7 @@ pub fn run_benchmarks_and_report(
         println!("└─────────────────────────────────────────────────────────────");
 
         // OLD pipeline (no optimizer)
+        let t0 = Instant::now();
         let old_result = match compile_unoptimized(src) {
             Ok(r) => r,
             Err(e) => {
@@ -86,6 +92,7 @@ pub fn run_benchmarks_and_report(
                 continue;
             }
         };
+        let baseline_us = t0.elapsed().as_micros() as u64;
 
         let old_instrs = old_result.stats.instruction_count;
         let old_gas = old_result.stats.gas_estimate;
@@ -98,11 +105,13 @@ pub fn run_benchmarks_and_report(
         );
 
         // NEW pipeline (with optimizer)
+        let t1 = Instant::now();
         let new_result =
             match compile_optimized(src, cfg.max_opt_iters, Some(&mut telemetry), Some(*name)) {
                 Ok(r) => r,
                 Err(e) => {
                     println!("  ⚠️  Optimizer error (using baseline): {}", e);
+                    let opt_us = t1.elapsed().as_micros() as u64;
                     // Use old results as fallback
                     results.push(BenchResult {
                         name: (*name).to_string(),
@@ -116,6 +125,8 @@ pub fn run_benchmarks_and_report(
                         new_bytes: old_bytes,
                         bytes_delta: 0,
                         notes: format!("optimizer error: {}", e),
+                        compile_baseline_us: baseline_us,
+                        compile_optimized_us: opt_us,
                         old_bytecode: old_bytecode.clone(),
                         new_bytecode: old_bytecode,
                         source: src.to_string(),
@@ -123,6 +134,7 @@ pub fn run_benchmarks_and_report(
                     continue;
                 }
             };
+        let optimized_us = t1.elapsed().as_micros() as u64;
 
         let new_instrs = new_result.stats.instruction_count;
         let new_gas = new_result.stats.gas_estimate;
@@ -168,6 +180,11 @@ pub fn run_benchmarks_and_report(
             format!("{}{}", bytes_delta, bytes_indicator)
         ]);
 
+        println!(
+            "  ⏱  Timing: baseline={}µs optimized={}µs",
+            baseline_us, optimized_us
+        );
+
         results.push(BenchResult {
             name: (*name).to_string(),
             old_instrs,
@@ -180,6 +197,8 @@ pub fn run_benchmarks_and_report(
             new_bytes,
             bytes_delta,
             notes,
+            compile_baseline_us: baseline_us,
+            compile_optimized_us: optimized_us,
             old_bytecode,
             new_bytecode,
             source: src.to_string(),
@@ -222,6 +241,22 @@ pub fn run_benchmarks_and_report(
             if gas_reduction_pct > 0.0 {
                 println!("  Gas Reduction: {:.1}%", gas_reduction_pct);
             }
+        }
+
+        // TPS derivation: each sample = 1 "transaction" compile+optimize cycle
+        let total_baseline_us: u64 = results.iter().map(|r| r.compile_baseline_us).sum();
+        let total_optimized_us: u64 = results.iter().map(|r| r.compile_optimized_us).sum();
+        let total_wall_us = total_baseline_us + total_optimized_us;
+        let n = results.len() as f64;
+        if total_wall_us > 0 {
+            let baseline_tps = n / (total_baseline_us as f64 / 1_000_000.0);
+            let optimized_tps = n / (total_optimized_us as f64 / 1_000_000.0);
+            let combined_tps = (n * 2.0) / (total_wall_us as f64 / 1_000_000.0);
+            println!();
+            println!("  ⚡ TPS (compile throughput):");
+            println!("     Baseline compile:   {:.0} tx/sec", baseline_tps);
+            println!("     Optimized compile:  {:.0} tx/sec", optimized_tps);
+            println!("     Combined pipeline:  {:.0} tx/sec", combined_tps);
         }
     }
 
