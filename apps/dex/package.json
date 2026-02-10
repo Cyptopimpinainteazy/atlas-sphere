@@ -9,9 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
+    "@polkadot/api": "^16.5.4",
+    "@tanstack/react-query": "^5.90.20",
+    "autoprefixer": "^10.4.24",
+    "clsx": "^2.1.1",
+    "decimal.js": "^10.6.0",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.563.0",
     "next": "^14.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "react-hot-toast": "^2.6.0",
+    "tailwindcss": "^4.1.18",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
