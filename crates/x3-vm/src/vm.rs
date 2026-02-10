@@ -238,6 +238,19 @@ impl VM {
         self.gas_used
     }
 
+    /// Set a register value directly.
+    ///
+    /// Useful for testing or pre-initializing registers before execution.
+    /// Panics if the register index is out of bounds.
+    pub fn set_register(&mut self, idx: usize, value: Value) {
+        self.regs[idx] = value;
+    }
+
+    /// Get a register value.
+    pub fn get_register(&self, idx: usize) -> &Value {
+        &self.regs[idx]
+    }
+
     /// Call a function by index.
     pub fn call_function(&mut self, func_idx: usize, args: &[Value]) -> VMResult<ExecutionResult> {
         // Validate function index
@@ -921,6 +934,139 @@ impl VM {
             }
 
             // ================================================================
+            // GPU Intrinsics (0xD0 – 0xD5)
+            // Dispatch to registered hostcalls which call real CUDA kernels
+            // via libloading FFI (see gpu_hostcalls.rs).
+            //
+            // Encoding:
+            //   GpuSha256Batch:    [0xD0] dst:u8 inputs:u8 count:u8   → 4 bytes
+            //   GpuEd25519Verify:  [0xD1] dst:u8 sigs:u8 count:u8     → 4 bytes
+            //   GpuPohChain:       [0xD2] dst:u8 seeds:u8 count:u8 chain_len:u8 → 5 bytes
+            //   GpuSha256Streamed: [0xD3] dst:u8 inputs:u8 count:u8 streams:u8  → 5 bytes
+            //   GpuDeviceCount:    [0xD4] dst:u8                       → 2 bytes
+            //   GpuBenchmark:      [0xD5] dst:u8 count:u8 streams:u8  → 4 bytes
+            // ================================================================
+
+            Opcode::GpuSha256Batch => {
+                // gpu_sha256_batch(inputs: Bytes, count: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let inputs_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let args = vec![self.regs[inputs_reg].clone(), self.regs[count_reg].clone()];
+                let result = self.hostcalls.invoke(0xD0, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 4))
+            }
+
+            Opcode::GpuEd25519Verify => {
+                // gpu_ed25519_verify(sigs: Bytes, count: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let sigs_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let args = vec![self.regs[sigs_reg].clone(), self.regs[count_reg].clone()];
+                let result = self.hostcalls.invoke(0xD1, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 4))
+            }
+
+            Opcode::GpuPohChain => {
+                // gpu_poh_chain(seeds: Bytes, num_chains: I64, chain_length: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let seeds_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let chain_len_reg = self.read_u8(ip + 4)? as usize;
+                let args = vec![
+                    self.regs[seeds_reg].clone(),
+                    self.regs[count_reg].clone(),
+                    self.regs[chain_len_reg].clone(),
+                ];
+                let result = self.hostcalls.invoke(0xD2, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 5))
+            }
+
+            Opcode::GpuSha256Streamed => {
+                // gpu_sha256_streamed(inputs: Bytes, count: I64, streams: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let inputs_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let streams_reg = self.read_u8(ip + 4)? as usize;
+                let args = vec![
+                    self.regs[inputs_reg].clone(),
+                    self.regs[count_reg].clone(),
+                    self.regs[streams_reg].clone(),
+                ];
+                let result = self.hostcalls.invoke(0xD3, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 5))
+            }
+
+            Opcode::GpuDeviceCount => {
+                // gpu_device_count() → I64
+                let dst = self.read_u8(ip + 1)? as usize;
+                let result = self.hostcalls.invoke(0xD4, &[])
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 2))
+            }
+
+            Opcode::GpuBenchmark => {
+                // gpu_benchmark(count: I64, streams: I64) → Bytes (JSON)
+                let dst = self.read_u8(ip + 1)? as usize;
+                let count_reg = self.read_u8(ip + 2)? as usize;
+                let streams_reg = self.read_u8(ip + 3)? as usize;
+                let args = vec![self.regs[count_reg].clone(), self.regs[streams_reg].clone()];
+                let result = self.hostcalls.invoke(0xD5, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 4))
+            }
+
+            Opcode::GpuKeccak256Batch => {
+                // gpu_keccak256_batch(inputs: Bytes, count: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let inputs_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let args = vec![self.regs[inputs_reg].clone(), self.regs[count_reg].clone()];
+                let result = self.hostcalls.invoke(0xD6, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 4))
+            }
+
+            Opcode::GpuSecp256k1Verify => {
+                // gpu_secp256k1_verify(sigs: Bytes, count: I64) → Bytes
+                let dst = self.read_u8(ip + 1)? as usize;
+                let sigs_reg = self.read_u8(ip + 2)? as usize;
+                let count_reg = self.read_u8(ip + 3)? as usize;
+                let args = vec![self.regs[sigs_reg].clone(), self.regs[count_reg].clone()];
+                let result = self.hostcalls.invoke(0xD7, &args)
+                    .map_err(|e| self.error_at(ip, e.kind))?;
+                if let Some(v) = result {
+                    self.regs[dst] = v;
+                }
+                Ok(StepResult::Continue(ip + 4))
+            }
+
+            // ================================================================
             // Unimplemented opcodes return error
             // ================================================================
             _ => {
@@ -993,6 +1139,13 @@ impl VM {
             Opcode::Shl | Opcode::Shr | Opcode::UShr => 1,
             Opcode::AtomicBegin | Opcode::AtomicCommit => 5,
             Opcode::AtomicRollback => 10,
+            // GPU intrinsics — expensive (real CUDA kernel launch)
+            Opcode::GpuSha256Batch | Opcode::GpuEd25519Verify | Opcode::GpuPohChain
+                | Opcode::GpuKeccak256Batch => 500,
+            Opcode::GpuSecp256k1Verify => 600, // ECC scalar mul is heavier
+            Opcode::GpuSha256Streamed => 750, // stream pipeline setup overhead
+            Opcode::GpuDeviceCount => 10,      // device query only
+            Opcode::GpuBenchmark => 1000,      // full benchmark run
             _ => 1,
         }
     }

@@ -265,6 +265,8 @@ fn get_instruction_size(opcode: x3_backend::opcode::Opcode, _code: &[u8]) -> usi
         Opcode::GpuSha256Streamed => 7,
         Opcode::GpuDeviceCount => 3,
         Opcode::GpuBenchmark => 5,
+        Opcode::GpuKeccak256Batch => 7,
+        Opcode::GpuSecp256k1Verify => 7,
     }
 }
 

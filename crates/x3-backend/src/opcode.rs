@@ -544,6 +544,41 @@ pub enum Opcode {
     SvmGetClock = 0xC7,
 
     // ========================================================================
+    // GPU Compute Intrinsics (0xD0 - 0xDF)
+    // ========================================================================
+    /// GPU SHA-256 batch hash: dst = gpu_sha256_batch(inputs, count)
+    /// `gpu_sha256_batch dst:reg inputs:reg count:reg`
+    GpuSha256Batch = 0xD0,
+
+    /// GPU Ed25519 batch verify: dst = gpu_ed25519_verify(sigs, count)
+    /// `gpu_ed25519_verify dst:reg sigs:reg count:reg`
+    GpuEd25519Verify = 0xD1,
+
+    /// GPU PoH chain: dst = gpu_poh_chain(seeds, count, chain_length)
+    /// `gpu_poh_chain dst:reg seeds:reg count:reg chain_len:reg`
+    GpuPohChain = 0xD2,
+
+    /// GPU SHA-256 streamed batch (with CUDA stream pipelining).
+    /// `gpu_sha256_streamed dst:reg inputs:reg count:reg streams:reg`
+    GpuSha256Streamed = 0xD3,
+
+    /// GPU device info query: dst = gpu_device_count()
+    /// `gpu_device_count dst:reg`
+    GpuDeviceCount = 0xD4,
+
+    /// GPU pipeline benchmark: dst = gpu_benchmark(count, streams)
+    /// `gpu_benchmark dst:reg count:reg streams:reg`
+    GpuBenchmark = 0xD5,
+
+    /// GPU Keccak-256 batch hash: dst = gpu_keccak256_batch(inputs, count)
+    /// `gpu_keccak256_batch dst:reg inputs:reg count:reg`
+    GpuKeccak256Batch = 0xD6,
+
+    /// GPU secp256k1 ECDSA batch verify: dst = gpu_secp256k1_verify(sigs, count)
+    /// `gpu_secp256k1_verify dst:reg sigs:reg count:reg`
+    GpuSecp256k1Verify = 0xD7,
+
+    // ========================================================================
     // Debug/Meta (0xF0 - 0xFF)
     // ========================================================================
     /// Debug print register value.
@@ -683,6 +718,15 @@ impl Opcode {
             0xC6 => Opcode::SvmGetRent,
             0xC7 => Opcode::SvmGetClock,
 
+            0xD0 => Opcode::GpuSha256Batch,
+            0xD1 => Opcode::GpuEd25519Verify,
+            0xD2 => Opcode::GpuPohChain,
+            0xD3 => Opcode::GpuSha256Streamed,
+            0xD4 => Opcode::GpuDeviceCount,
+            0xD5 => Opcode::GpuBenchmark,
+            0xD6 => Opcode::GpuKeccak256Batch,
+            0xD7 => Opcode::GpuSecp256k1Verify,
+
             0xF0 => Opcode::DebugPrint,
             0xF1 => Opcode::Breakpoint,
             0xF2 => Opcode::Assert,
@@ -815,6 +859,15 @@ impl Opcode {
             Opcode::SvmGetRent => "svm_get_rent",
             Opcode::SvmGetClock => "svm_get_clock",
 
+            Opcode::GpuSha256Batch => "gpu_sha256_batch",
+            Opcode::GpuEd25519Verify => "gpu_ed25519_verify",
+            Opcode::GpuPohChain => "gpu_poh_chain",
+            Opcode::GpuSha256Streamed => "gpu_sha256_streamed",
+            Opcode::GpuDeviceCount => "gpu_device_count",
+            Opcode::GpuBenchmark => "gpu_benchmark",
+            Opcode::GpuKeccak256Batch => "gpu_keccak256_batch",
+            Opcode::GpuSecp256k1Verify => "gpu_secp256k1_verify",
+
             Opcode::DebugPrint => "debug_print",
             Opcode::Breakpoint => "breakpoint",
             Opcode::Assert => "assert",
@@ -871,6 +924,13 @@ impl Opcode {
                 | Opcode::SvmCreateAccount
                 | Opcode::SvmTransfer
                 | Opcode::SvmSetData
+                | Opcode::GpuSha256Batch
+                | Opcode::GpuEd25519Verify
+                | Opcode::GpuPohChain
+                | Opcode::GpuSha256Streamed
+                | Opcode::GpuBenchmark
+                | Opcode::GpuKeccak256Batch
+                | Opcode::GpuSecp256k1Verify
                 | Opcode::DebugPrint
                 | Opcode::Panic
         )
@@ -910,7 +970,22 @@ impl Opcode {
 
     /// Check if this opcode crosses VM boundaries (reads/writes other VM state)
     pub fn crosses_vm_boundary(self) -> bool {
-        self.is_evm_intrinsic() || self.is_svm_intrinsic()
+        self.is_evm_intrinsic() || self.is_svm_intrinsic() || self.is_gpu_intrinsic()
+    }
+
+    /// Check if this opcode dispatches GPU compute
+    pub fn is_gpu_intrinsic(self) -> bool {
+        matches!(
+            self,
+            Opcode::GpuSha256Batch
+                | Opcode::GpuEd25519Verify
+                | Opcode::GpuPohChain
+                | Opcode::GpuSha256Streamed
+                | Opcode::GpuDeviceCount
+                | Opcode::GpuBenchmark
+                | Opcode::GpuKeccak256Batch
+                | Opcode::GpuSecp256k1Verify
+        )
     }
 
     /// Check if this opcode is part of atomic transaction semantics
@@ -982,7 +1057,12 @@ impl Opcode {
             | Opcode::AtomicBegin
             | Opcode::AtomicCommit
             | Opcode::AtomicRollback
-            | Opcode::Emit => "very_expensive",
+            | Opcode::Emit
+            | Opcode::GpuSha256Batch
+            | Opcode::GpuEd25519Verify
+            | Opcode::GpuPohChain
+            | Opcode::GpuSha256Streamed
+            | Opcode::GpuBenchmark => "very_expensive",
 
             // Unknown/special
             _ => "unknown",
@@ -1131,6 +1211,36 @@ pub enum Instruction {
         data: Register,
     },
     SvmTransfer(Register, Register, Register),
+
+    // GPU Compute intrinsics
+    GpuSha256Batch {
+        dst: Register,
+        inputs: Register,
+        count: Register,
+    },
+    GpuEd25519Verify {
+        dst: Register,
+        sigs: Register,
+        count: Register,
+    },
+    GpuPohChain {
+        dst: Register,
+        seeds: Register,
+        count: Register,
+        chain_len: Register,
+    },
+    GpuSha256Streamed {
+        dst: Register,
+        inputs: Register,
+        count: Register,
+        streams: Register,
+    },
+    GpuDeviceCount(Register),
+    GpuBenchmark {
+        dst: Register,
+        count: Register,
+        streams: Register,
+    },
 
     DebugPrint(Register),
     Breakpoint,
