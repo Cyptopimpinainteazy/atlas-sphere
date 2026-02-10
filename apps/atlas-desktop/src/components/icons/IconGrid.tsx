@@ -21,19 +21,13 @@ export interface IconGridProps {
 }
 
 /**
- * 3-row side layout: icons flow left→right in 3 rows, scrolling horizontally
- * if they overflow. On smaller screens we allow overflow-x scroll.
+ * 3-column layout: icons arranged in 3 columns, flowing top→bottom, then left→right
+ * On smaller screens we allow overflow-y scroll.
  */
-const ROWS_MAP: Record<IconSize, string> = {
-  small: "grid-rows-3",
-  medium: "grid-rows-3",
-  large: "grid-rows-3",
-};
-
 const COLS_MAP: Record<IconSize, string> = {
-  small: "grid-cols-[repeat(auto-fill,minmax(56px,1fr))]",
-  medium: "grid-cols-[repeat(auto-fill,minmax(72px,1fr))]",
-  large: "grid-cols-[repeat(auto-fill,minmax(100px,1fr))]",
+  small: "grid-cols-3",
+  medium: "grid-cols-3",
+  large: "grid-cols-3",
 };
 
 const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
@@ -60,7 +54,7 @@ const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
 
   return (
     <div
-      className={`grid ${ROWS_MAP[iconSize]} ${COLS_MAP[iconSize]} gap-3 p-4 overflow-y-auto max-h-full auto-rows-min grid-flow-col`}
+      className={`grid ${COLS_MAP[iconSize]} gap-3 p-4 overflow-y-auto max-h-full auto-rows-min`}
       role="list"
       aria-label="Application launcher"
     >
