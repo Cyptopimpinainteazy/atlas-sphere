@@ -16,6 +16,7 @@ import FeaturedAppCard from "@/components/icons/FeaturedAppCard";
 import WindowManager from "@/components/desktop/WindowManager";
 import BenchmarksCarousel from "@/components/results/BenchmarksCarousel";
 import BottomNavBar from "@/components/desktop/BottomNavBar";
+import TopNavBar from "@/components/desktop/TopNavBar";
 import ContextMenu, {
   type ContextMenuItem,
 } from "@/components/common/ContextMenu";
@@ -111,15 +112,20 @@ const Desktop: React.FC<DesktopProps> = ({
 
   return (
     <div
-      className="relative w-full h-full no-select"
+      className="relative w-full h-full no-select flex flex-col"
       onContextMenu={handleContextMenu}
     >
-      {/* ── Eyeball background (centre) ────────────────── */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
-        <div className="w-[400px] h-[400px]" style={{ pointerEvents: 'none' }}>
-          <Eyeball />
+      {/* ── Top Navigation Bar ────────────────────────── */}
+      <TopNavBar />
+
+      {/* ── Main Desktop Area ─────────────────────────── */}
+      <div className="flex-1 relative">
+        {/* ── Eyeball background (centre) ────────────────── */}
+        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
+          <div className="w-[400px] h-[400px]" style={{ pointerEvents: 'none' }}>
+            <Eyeball />
+          </div>
         </div>
-      </div>
 
       {/* ── Icon grid (left side) ──────────────────────── */}
       <div className="absolute top-4 left-4 bottom-4 w-[320px] lg:w-[400px]">
@@ -190,6 +196,7 @@ const Desktop: React.FC<DesktopProps> = ({
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   );
 };

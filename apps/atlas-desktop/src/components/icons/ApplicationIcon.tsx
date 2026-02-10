@@ -47,7 +47,8 @@ function PlaceholderIcon({
         width: size,
         height: size,
         background: `linear-gradient(135deg, ${bg}33 0%, ${bg}18 100%)`,
-        border: `2.5px solid ${bg}55`,
+        border: `4px solid ${bg}77`,
+        boxShadow: `0 0 15px ${bg}44, inset 0 0 15px ${bg}22`,
       }}
     >
       <span style={{ fontSize: size * 0.4 }}>{emoji}</span>
@@ -109,7 +110,12 @@ const ApplicationIcon: React.FC<ApplicationIconProps> = ({
           src={app.icon.path}
           alt={app.name}
           className="rounded-xl object-contain"
-          style={{ width: dims.icon, height: dims.icon, border: `2.5px solid ${app.icon.color ?? '#ff6b35'}55` }}
+          style={{ 
+            width: dims.icon, 
+            height: dims.icon, 
+            border: `4px solid ${app.icon.color ?? '#ff6b35'}77`,
+            boxShadow: `0 0 15px ${app.icon.color ?? '#ff6b35'}44, inset 0 0 15px ${app.icon.color ?? '#ff6b35'}22`
+          }}
           draggable={false}
         />
       ) : (
@@ -120,12 +126,13 @@ const ApplicationIcon: React.FC<ApplicationIconProps> = ({
         />
       )}
 
-      {/* Glow on hover */}
+      {/* Enhanced Glow on hover */}
       <div
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100
-          transition-opacity duration-200 pointer-events-none"
+          transition-all duration-300 pointer-events-none"
         style={{
-          boxShadow: "0 0 20px #ff6b35aa",
+          boxShadow: `0 0 25px ${app.icon.color ?? '#ff6b35'}88, 0 0 50px ${app.icon.color ?? '#ff6b35'}44, 0 0 75px ${app.icon.color ?? '#ff6b35'}22`,
+          filter: 'blur(1px)',
         }}
       />
 
