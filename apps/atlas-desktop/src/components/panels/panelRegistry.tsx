@@ -16,6 +16,9 @@ const LiveTelemetryPanel = lazy(() => import("@/components/panels/LiveTelemetryP
 const MonitoringDashboard = lazy(() => import("@/components/monitoring/MonitoringDashboard"));
 const DocumentationPanel = lazy(() => import("@/components/documentation/Documentation"));
 
+/* Blockchain Connector */
+const BlockchainConnectorPanel = lazy(() => import("@/components/panels/BlockchainConnectorPanel"));
+
 /* AGI Substrate panels */
 const SelfModelViewer = lazy(() => import("@/components/monitoring/SelfModelViewer"));
 const GoalGenomeViewer = lazy(() => import("@/components/monitoring/GoalGenomeViewer"));
@@ -50,6 +53,9 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "world-sim":              WorldSimViewer,
   "self-improvement":       SelfImprovementViewer,
   "tripwire-monitor":       TripwireMonitor,
+
+  // Enterprise Blockchain Connector
+  "blockchain-connector":   BlockchainConnectorPanel,
 };
 
 /**

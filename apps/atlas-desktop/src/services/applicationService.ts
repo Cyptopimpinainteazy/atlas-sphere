@@ -65,6 +65,14 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "file", path: "/assets/icons/telemetry.svg", color: "#ff8c42" },
     launchCommand: { type: "tauri", target: "launch_swarm_health" },
   },
+  {
+    id: "blockchain-connector",
+    name: "Blockchain Connector",
+    description: "Enterprise multi-chain connector — 40+ networks, benchmarks, GPU testing, billing",
+    category: "blockchain",
+    icon: { type: "placeholder", category: "blockchain", color: "#ff6b35" },
+    launchCommand: { type: "internal", target: "blockchain-connector" },
+  },
   /* ── Existing Applications ───────────────────────────────── */
   {
     id: "explorer",
