@@ -4,6 +4,8 @@
 **Last Updated**: December 10, 2025  
 **Status**: ✅ **MAJOR REORGANIZATION COMPLETE** - Consolidated from 400+ scattered files
 
+**Master Index**: [docs/master/INDEX.md](master/INDEX.md)
+
 ---
 
 ## 📋 Documentation Overview
@@ -22,7 +24,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### 🚀 Getting Started
 - **[Atlas Sphere Overview](../README.md)** - Project introduction and quick start
-- **[Project Status](../docs/reports/PROJECT_STATUS.md)** - Current project status (unified source)
+- **[Project Status](master/status/PROJECT_STATUS.md)** - Current project status (unified source)
 - **[Implementation Checklist](IMPLEMENTATION_CHECKLIST.md)** - Development tasks and priorities
 
 ### 🏗️ Core Architecture
@@ -85,7 +87,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### For New Contributors
 1. **Start here**: [README.md](../README.md) for project overview
-2. **Current status**: [docs/reports/PROJECT_STATUS.md](../docs/reports/PROJECT_STATUS.md) for project health
+2. **Current status**: [docs/master/status/PROJECT_STATUS.md](master/status/PROJECT_STATUS.md) for project health
 3. **Development**: [IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md) for tasks
 4. **Architecture**: Browse core architecture section above
 
@@ -152,7 +154,7 @@ This directory contains the consolidated documentation for the Atlas Sphere proj
 
 ### Common Paths
 - **Main Project**: `../README.md`
-- **Current Status**: `../docs/reports/PROJECT_STATUS.md`
+- **Current Status**: `master/status/PROJECT_STATUS.md`
 - **BMAD Framework**: `/docs/bmad/`
 - **Implementation**: `/docs/implementation/`
 - **Audit Reports**: This directory

@@ -478,6 +478,7 @@ Progress is tracked publicly via our GitHub Projects board.
 
 ## Resources & Further Reading
 
+- Local master docs index: [docs/master/INDEX.md](docs/master/INDEX.md)
 - Atlas Sphere Documentation (coming soon): [https://docs.atlas-sphere.io](https://docs.atlas-sphere.io)
 - Atlas Sphere Cross-Chain Primer: [https://labs.atlas-sphere.io/cross-chain-primer](https://labs.atlas-sphere.io/cross-chain-primer)
 - Substrate Developer Hub: [https://docs.substrate.io](https://docs.substrate.io)

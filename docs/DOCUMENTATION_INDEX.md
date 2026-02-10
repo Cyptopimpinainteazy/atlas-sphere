@@ -2,6 +2,8 @@
 
 > **Status**: Canonical | **Version**: 1.0.0 | **Last Updated**: 2025-12-10
 
+**Master Index**: [docs/master/INDEX.md](master/INDEX.md)
+
 ## Complete Documentation Set
 
 This index provides unified access to all canonical documentation for the Atlas Sphere blockchain platform, the X3 language, and the X3Script DSL.
