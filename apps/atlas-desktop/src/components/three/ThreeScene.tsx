@@ -55,6 +55,16 @@ export function ThreeScene({ onSceneReady }: ThreeSceneProps) {
       className="fixed inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 0, background: '#050508' }}
     >
+      {/* Metatron's Cube sacred geometry pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none metatron-cube"
+        style={{ zIndex: 0, opacity: 0.25 }}
+      />
+      {/* Spiral emanating from center */}
+      <div
+        className="absolute inset-0 pointer-events-none center-spiral"
+        style={{ zIndex: 0 }}
+      />
       {/* Cinematic vignette overlay */}
       <div
         className="absolute inset-0 pointer-events-none"

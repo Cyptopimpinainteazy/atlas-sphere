@@ -1,8 +1,10 @@
-// Slashing Page — slash history and constitution reference
+// Slashing Page — slash history and constitution reference with analytics
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SlashSeverity } from "../types";
 import type { SlashEvent } from "../types";
+import { getSlashEvents } from "../services/api";
+import { SlashSeverityChart, type SlashCounts } from "../components/Charts";
 
 const DEMO_SLASHES: SlashEvent[] = [
   {
@@ -52,12 +54,15 @@ const DEMO_SLASHES: SlashEvent[] = [
   },
 ];
 
-function severityColor(severity: SlashSeverity): string {
+function severityColor(severity: SlashSeverity): "red" | "amber" | "muted" {
   switch (severity) {
-    case SlashSeverity.Critical: return "badge-red";
-    case SlashSeverity.Major: return "badge-red";
-    case SlashSeverity.Moderate: return "badge-amber";
-    case SlashSeverity.Minor: return "badge-muted";
+    case SlashSeverity.Critical:
+    case SlashSeverity.Major:
+      return "red";
+    case SlashSeverity.Moderate:
+      return "amber";
+    case SlashSeverity.Minor:
+      return "muted";
   }
 }
 
@@ -69,15 +74,60 @@ function relativeTime(ts: number): string {
 }
 
 export function SlashingPage() {
-  const [slashes] = useState<SlashEvent[]>(DEMO_SLASHES);
+  const [slashes, setSlashes] = useState<SlashEvent[]>(DEMO_SLASHES);
+  const [loading, setLoading] = useState(false);
 
-  const totalSlashed = slashes.reduce((s, e) => s + e.amountSlashed, 0);
+  useEffect(() => {
+    setLoading(true);
+    getSlashEvents(undefined, 1, 100)
+      .then((res) => {
+        if (res && res.items) {
+          setSlashes(res.items);
+        }
+      })
+      .catch(() => {
+        // Use demo data
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalSlashed = useMemo(() => slashes.reduce((s, e) => s + e.amountSlashed, 0), [slashes]);
+
+  const severityDistribution: SlashCounts[] = useMemo(() => {
+    const counts: Record<SlashSeverity, number> = {
+      [SlashSeverity.Critical]: 0,
+      [SlashSeverity.Major]: 0,
+      [SlashSeverity.Moderate]: 0,
+      [SlashSeverity.Minor]: 0,
+    };
+    slashes.forEach((s) => {
+      counts[s.severity]++;
+    });
+    return Object.entries(counts).map(([severity, count]) => ({
+      severity: severity as SlashSeverity,
+      count,
+    }));
+  }, [slashes]);
+
+  const topSlashedAgents = useMemo(() => {
+    const agentTotals: Record<string, { count: number; amount: number }> = {};
+    slashes.forEach((s) => {
+      if (!agentTotals[s.agentId]) {
+        agentTotals[s.agentId] = { count: 0, amount: 0 };
+      }
+      agentTotals[s.agentId].count++;
+      agentTotals[s.agentId].amount += s.amountSlashed;
+    });
+    return Object.entries(agentTotals)
+      .sort((a, b) => b[1].amount - a[1].amount)
+      .slice(0, 5);
+  }, [slashes]);
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>Slashing Ledger</h1>
-        <span className="subtitle">Immutable. Deterministic. Automatic.</span>
+        <span className="subtitle">Immutable. Deterministic. Automatic {loading ? "(Loading...)" : ""}</span>
       </div>
 
       <div className="stats-grid">
@@ -103,9 +153,59 @@ export function SlashingPage() {
         </div>
       </div>
 
+      {/* Analytics Charts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="card">
+          <div className="card-header">
+            <h2>Slash Severity Distribution</h2>
+          </div>
+          {severityDistribution.length > 0 && <SlashSeverityChart data={severityDistribution} />}
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h2>Top Slashed Agents</h2>
+          </div>
+          <div style={{ padding: 16 }}>
+            {topSlashedAgents.length > 0 ? (
+              topSlashedAgents.map(([agentId, { count, amount }], idx) => (
+                <div key={agentId} style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                    {idx + 1}. {agentId}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                    <span className="secondary">Events: {count}</span>
+                    <span className="red mono">Amount: {amount.toLocaleString()}</span>
+                  </div>
+                  <div
+                    style={{
+                      height: 6,
+                      background: "var(--bg-tertiary)",
+                      borderRadius: 3,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${Math.min((amount / (totalSlashed || 1)) * 100, 100)}%`,
+                        background: "var(--accent-red)",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="muted">No slash data available.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="card">
         <div className="card-header">
           <h2>Slash History</h2>
+          <span className="secondary mono" style={{ fontSize: 11 }}>{slashes.length} events</span>
         </div>
         <div className="table-wrapper">
           <table>
@@ -126,7 +226,7 @@ export function SlashingPage() {
                   <td className="mono" style={{ fontSize: 12 }}>{slash.id}</td>
                   <td className="mono" style={{ fontSize: 12 }}>{slash.agentId}</td>
                   <td>
-                    <span className={`badge ${severityColor(slash.severity)}`}>
+                    <span className={`badge badge-${severityColor(slash.severity)}`}>
                       {slash.severity}
                     </span>
                   </td>

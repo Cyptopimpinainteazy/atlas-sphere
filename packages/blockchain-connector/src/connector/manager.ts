@@ -15,6 +15,7 @@ import type {
 } from "../types";
 import { getChain, CHAIN_REGISTRY } from "../chains/registry";
 import { createAdapter, type IChainAdapter } from "../adapters";
+import { HealthMonitor } from "./health-monitor";
 
 interface ManagedConnector {
   instance: ConnectorInstance;
@@ -23,6 +24,13 @@ interface ManagedConnector {
 
 export class ConnectorManager {
   private connectors = new Map<string, ManagedConnector>();
+  private monitor?: HealthMonitor;
+
+  constructor(opts?: { enableHealthMonitor?: boolean; intervalMs?: number; concurrency?: number; timeoutMs?: number }) {
+    if (opts?.enableHealthMonitor) {
+      this.monitor = new HealthMonitor({ concurrency: opts.concurrency || 50, timeoutMs: opts.timeoutMs || 10000, intervalMs: opts.intervalMs || 60000 });
+    }
+  }
 
   /**
    * Create a new connector to a blockchain.
@@ -77,6 +85,15 @@ export class ConnectorManager {
       instance.status = "connected";
       instance.updatedAt = new Date().toISOString();
       instance.options.endpoint = connectedEndpoint;
+
+      // If a health monitor is enabled, probe and register endpoints for background checks
+      if (this.monitor) {
+        // probe chosen endpoint now and also schedule all chain endpoints for periodic checks
+        await this.monitor.probeEndpoint(connectedEndpoint).catch(() => {});
+        if (chain.defaultRpcUrls && chain.defaultRpcUrls.length > 0) {
+          this.monitor.startPeriodic(chain.defaultRpcUrls);
+        }
+      }
 
       // Fetch initial metrics
       const metrics = await adapter.getMetrics().catch(() => this.emptyMetrics());

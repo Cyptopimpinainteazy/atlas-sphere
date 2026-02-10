@@ -112,7 +112,7 @@ struct StorageDeal {
   earned: f64,
 }
 
-#[derive(Serialize, Clone, Deserialize)]
+#[derive(Serialize, Clone, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
 enum StorageDealStatus {
   Active,
@@ -129,17 +129,24 @@ struct TelemetryState {
   ide: Arc<RwLock<IdeTelemetryData>>,
   system: Arc<RwLock<SystemMetrics>>,
   ipfs: Arc<RwLock<IpfsStorageData>>,
+  /// Reusable sysinfo handle — creating System::new_all() is very expensive;
+  /// we keep one instance and call refresh_*() on it each tick instead.
+  sys_handle: Arc<std::sync::Mutex<System>>,
 }
 
 impl TelemetryState {
   fn new() -> Self {
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let initial_metrics = read_system_metrics(&sys);
     Self {
       swarm: Arc::new(RwLock::new(seed_swarm_health())),
       network: Arc::new(RwLock::new(seed_network_control())),
       storage: Arc::new(RwLock::new(seed_storage_monitor())),
       ide: Arc::new(RwLock::new(seed_ide_telemetry())),
-      system: Arc::new(RwLock::new(get_system_metrics())),
+      system: Arc::new(RwLock::new(initial_metrics)),
       ipfs: Arc::new(RwLock::new(seed_ipfs_storage())),
+      sys_handle: Arc::new(std::sync::Mutex::new(sys)),
     }
   }
 
@@ -713,7 +720,7 @@ fn seed_ide_telemetry() -> IdeTelemetryData {
 fn start_mock_stream(app: AppHandle, state: TelemetryState) {
   tauri::async_runtime::spawn(async move {
     loop {
-      sleep(Duration::from_millis(1500)).await;
+      sleep(Duration::from_millis(3000)).await;
       let mut rng = rand::thread_rng();
       update_swarm(&state, &mut rng);
       update_network(&state, &mut rng);
@@ -730,10 +737,8 @@ fn start_mock_stream(app: AppHandle, state: TelemetryState) {
 
 /* ─── Real System Monitoring ─────────────────────── */
 
-fn get_system_metrics() -> SystemMetrics {
-  let mut sys = System::new_all();
-  sys.refresh_all();
-
+/// Read metrics from an already-refreshed System handle (cheap).
+fn read_system_metrics(sys: &System) -> SystemMetrics {
   let cpu_info = sys.global_cpu_info();
   let cpu_usage = cpu_info.cpu_usage();
   let total_memory = sys.total_memory();
@@ -743,19 +748,27 @@ fn get_system_metrics() -> SystemMetrics {
     cpu: CpuMetrics {
       usage_percent: cpu_usage,
       cores: sys.cpus().len() as u32,
-      frequency: sys.cpus().get(0).map(|c| c.frequency()).unwrap_or(0),
+      frequency: sys.cpus().first().map(|c| c.frequency()).unwrap_or(0),
     },
     memory: MemoryMetrics {
       used: used_memory * 1024,
       total: total_memory * 1024,
-      usage_percent: (used_memory as f32 / total_memory as f32) * 100.0,
+      usage_percent: if total_memory > 0 {
+        (used_memory as f32 / total_memory as f32) * 100.0
+      } else {
+        0.0
+      },
     },
     disk: vec![
       DiskMetrics {
         name: "System".into(),
         used: used_memory * 1024,
         total: total_memory * 1024,
-        usage_percent: (used_memory as f32 / total_memory as f32) * 100.0,
+        usage_percent: if total_memory > 0 {
+          (used_memory as f32 / total_memory as f32) * 100.0
+        } else {
+          0.0
+        },
       }
     ],
     updated_at: Utc::now().to_rfc3339(),
@@ -763,7 +776,11 @@ fn get_system_metrics() -> SystemMetrics {
 }
 
 fn update_system_metrics(state: &TelemetryState) {
-  let metrics = get_system_metrics();
+  let mut sys = state.sys_handle.lock().expect("sys_handle lock");
+  sys.refresh_cpu();
+  sys.refresh_memory();
+  let metrics = read_system_metrics(&sys);
+  drop(sys); // release mutex before acquiring RwLock
   *state.system.write().expect("system write lock") = metrics;
 }
 

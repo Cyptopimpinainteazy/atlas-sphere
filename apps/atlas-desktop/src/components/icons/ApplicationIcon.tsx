@@ -47,7 +47,7 @@ function PlaceholderIcon({
         width: size,
         height: size,
         background: `linear-gradient(135deg, ${bg}33 0%, ${bg}18 100%)`,
-        border: `1px solid ${bg}44`,
+        border: `2.5px solid ${bg}55`,
       }}
     >
       <span style={{ fontSize: size * 0.4 }}>{emoji}</span>
@@ -109,7 +109,7 @@ const ApplicationIcon: React.FC<ApplicationIconProps> = ({
           src={app.icon.path}
           alt={app.name}
           className="rounded-xl object-contain"
-          style={{ width: dims.icon, height: dims.icon }}
+          style={{ width: dims.icon, height: dims.icon, border: `2.5px solid ${app.icon.color ?? '#ff6b35'}55` }}
           draggable={false}
         />
       ) : (

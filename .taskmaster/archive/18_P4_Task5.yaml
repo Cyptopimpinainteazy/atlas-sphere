@@ -1,0 +1,11 @@
+id: "18"
+title: "P4 Day 1: Run Integration Tests"
+description: "Execute all 30+ tests in mock mode to confirm harness stability."
+assignee: "VIOLA"
+status: "pending"
+priority: "medium"
+dependencies: ["16"]
+metadata:
+  blueprint_task: 5
+  phase: 4
+  day: 1

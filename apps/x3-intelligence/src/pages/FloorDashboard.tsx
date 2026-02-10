@@ -1,8 +1,16 @@
-// Floor Dashboard — live stats and execution feed
+// Floor Dashboard — live stats and execution feed with professional charts
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { FloorStats, ArbIntent } from "../types";
 import { IntentState } from "../types";
+import { getFloorStats, getIntents } from "../services/api";
+import { Button, Metric, ProgressBar, Badge } from "../components/UIComponents";
+import {
+  VolumeTrendChart,
+  IntentStatePie,
+  TrendPoint,
+  StateDistribution,
+} from "../components/Charts";
 
 // Demo data for static rendering — replaced by API in production.
 const DEMO_STATS: FloorStats = {
@@ -21,8 +29,22 @@ const DEMO_FEED: ArbIntent[] = [
     agentId: "agent-alpha",
     state: IntentState.Finalized,
     legs: [
-      { chain: "ETH", protocol: "UniV3", tokenIn: "WETH", tokenOut: "USDC", amountIn: "10.0", expectedOut: "18,421.50" },
-      { chain: "ARB", protocol: "Camelot", tokenIn: "USDC", tokenOut: "WETH", amountIn: "18,421.50", expectedOut: "10.04" },
+      {
+        chain: "ETH",
+        protocol: "UniV3",
+        tokenIn: "WETH",
+        tokenOut: "USDC",
+        amountIn: "10.0",
+        expectedOut: "18,421.50",
+      },
+      {
+        chain: "ARB",
+        protocol: "Camelot",
+        tokenIn: "USDC",
+        tokenOut: "WETH",
+        amountIn: "18,421.50",
+        expectedOut: "10.04",
+      },
     ],
     feeCap: 42.0,
     feeActual: 38.2,
@@ -35,7 +57,14 @@ const DEMO_FEED: ArbIntent[] = [
     agentId: "agent-bravo",
     state: IntentState.Executing,
     legs: [
-      { chain: "SOL", protocol: "Raydium", tokenIn: "SOL", tokenOut: "USDC", amountIn: "500", expectedOut: "48,250.00" },
+      {
+        chain: "SOL",
+        protocol: "Raydium",
+        tokenIn: "SOL",
+        tokenOut: "USDC",
+        amountIn: "500",
+        expectedOut: "48,250.00",
+      },
     ],
     feeCap: 25.0,
     feeActual: null,
@@ -48,7 +77,14 @@ const DEMO_FEED: ArbIntent[] = [
     agentId: "agent-delta",
     state: IntentState.Slashed,
     legs: [
-      { chain: "ETH", protocol: "UniV3", tokenIn: "USDC", tokenOut: "DAI", amountIn: "50,000", expectedOut: "49,995" },
+      {
+        chain: "ETH",
+        protocol: "UniV3",
+        tokenIn: "USDC",
+        tokenOut: "DAI",
+        amountIn: "50,000",
+        expectedOut: "49,995",
+      },
     ],
     feeCap: 12.0,
     feeActual: null,
@@ -60,13 +96,18 @@ const DEMO_FEED: ArbIntent[] = [
 
 function stateColor(state: IntentState): string {
   switch (state) {
-    case IntentState.Finalized: return "badge-green";
+    case IntentState.Finalized:
+      return "badge-green";
     case IntentState.Executing:
-    case IntentState.Executed: return "badge-blue";
-    case IntentState.Slashed: return "badge-red";
+    case IntentState.Executed:
+      return "badge-blue";
+    case IntentState.Slashed:
+      return "badge-red";
     case IntentState.Expired:
-    case IntentState.Cancelled: return "badge-muted";
-    default: return "badge-amber";
+    case IntentState.Cancelled:
+      return "badge-muted";
+    default:
+      return "badge-amber";
   }
 }
 
@@ -77,53 +118,200 @@ function timeSince(ts: number): string {
   return `${Math.floor(seconds / 3600)}h ago`;
 }
 
-export function FloorDashboard() {
-  const [stats] = useState<FloorStats>(DEMO_STATS);
-  const [feed] = useState<ArbIntent[]>(DEMO_FEED);
-  const [_tick, setTick] = useState(0);
+// Small SVG sparkline for visuals (no external deps)
+function Sparkline({ data, color = "#00d4aa" }: { data: number[]; color?: string }) {
+  const w = 220;
+  const h = 48;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const points = data.map((v, i) => {
+    const x = (i / Math.max(1, data.length - 1)) * w;
+    const y = h - ((v - min) / (max - min || 1)) * h;
+    return `${x},${y}`;
+  });
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        points={points.join(" ")}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
-  // Re-render every second for relative timestamps
+export function FloorDashboard() {
+  const [stats, setStats] = useState<FloorStats>(DEMO_STATS);
+  const [feed, setFeed] = useState<ArbIntent[]>(DEMO_FEED);
+  const [volumeSeries, setVolumeSeries] = useState<number[]>([
+    84_291_003.21, 82_100_000, 80_500_000, 83_000_000, 84_291_003.21,
+  ]);
+  const [successSeries, setSuccessSeries] = useState<number[]>([
+    92, 93, 94, 94.5, 94.7,
+  ]);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  // Fetch live data when available; if not, simulate
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+    let mounted = true;
+
+    async function fetchLive() {
+      try {
+        const s = await getFloorStats();
+        const r = await getIntents(1, 10);
+        if (!mounted) return;
+        setStats(s);
+        setFeed((prev) => [...r.items.slice(0, 10)]);
+        setVolumeSeries((v) => [
+          ...v.slice(-4),
+          Number(s.totalVolume.replace(/[,]/g, "")),
+        ]);
+        setSuccessSeries((srs) => [...srs.slice(-4), s.avgSuccessRate]);
+      } catch (e) {
+        // No backend? Simulate a new intent occasionally
+      }
+    }
+
+    if (autoRefresh) {
+      fetchLive();
+    }
+    const interval = setInterval(() => {
+      if (autoRefresh) {
+        fetchLive();
+
+        // Simulate new intent for lively demo
+        setFeed((prev) => {
+          const id = `0x${Math.random().toString(16).slice(2, 8)}`;
+          const newIntent: ArbIntent = {
+            id,
+            agentId: `agent-${Math.random().toString(36).slice(2, 7)}`,
+            state:
+              Math.random() > 0.8 ? IntentState.Slashed : IntentState.Executing,
+            legs: [
+              {
+                chain: "ETH",
+                protocol: "UniV3",
+                tokenIn: "WETH",
+                tokenOut: "USDC",
+                amountIn: "1.0",
+                expectedOut: "1842.10",
+              },
+            ],
+            feeCap: 10,
+            feeActual: null,
+            createdAt: Date.now(),
+            executedAt: null,
+            proofHash: null,
+          };
+          return [newIntent, ...prev].slice(0, 20);
+        });
+      }
+    }, 3000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [autoRefresh]);
+
+  const volRounded = useMemo(() => stats.totalVolume, [stats.totalVolume]);
+
+  const trendData: TrendPoint[] = useMemo(() => {
+    return volumeSeries.map((vol, i) => ({
+      timestamp: `${i}h ago`,
+      volume: vol,
+      successRate: successSeries[i] || 0,
+    }));
+  }, [volumeSeries, successSeries]);
+
+  const stateDistribution: StateDistribution[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    feed.forEach((intent) => {
+      counts[intent.state] = (counts[intent.state] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [feed]);
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>X3 Floor</h1>
         <span className="subtitle">Arbitrage jurisdiction — live</span>
+        <Button
+          variant={autoRefresh ? "success" : "secondary"}
+          size="sm"
+          onClick={() => setAutoRefresh(!autoRefresh)}
+          style={{ marginLeft: "auto" }}
+        >
+          {autoRefresh ? "🔄 Live" : "⏸ Paused"}
+        </Button>
       </div>
 
-      {/* Stats */}
+      {/* Key Metrics */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-label">Active Agents</div>
           <div className="stat-value green">{stats.activeAgents}</div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Total Intents</div>
           <div className="stat-value">{stats.totalIntents.toLocaleString()}</div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Volume (USDC)</div>
-          <div className="stat-value">{stats.totalVolume}</div>
+          <div className="stat-value">{volRounded}</div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Success Rate</div>
           <div className="stat-value green">{stats.avgSuccessRate}%</div>
+          <div style={{ margin: "8px 0" }}>
+            <ProgressBar
+              value={stats.avgSuccessRate}
+              max={100}
+              color="green"
+            />
+          </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Total Slashes</div>
           <div className="stat-value red">{stats.totalSlashes}</div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Disputes</div>
           <div className="stat-value amber">{stats.totalDisputes}</div>
         </div>
+
         <div className="stat-card">
           <div className="stat-label">Active Flashloans</div>
           <div className="stat-value blue">{stats.activeFlashloans}</div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="card">
+          <div className="card-header">
+            <h2>Volume & Success Trend</h2>
+          </div>
+          <VolumeTrendChart data={trendData} />
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h2>Intent State Distribution</h2>
+          </div>
+          <IntentStatePie data={stateDistribution} />
         </div>
       </div>
 
@@ -131,7 +319,9 @@ export function FloorDashboard() {
       <div className="card">
         <div className="card-header">
           <h2>Execution Feed</h2>
-          <span className="secondary mono" style={{ fontSize: 11 }}>LIVE</span>
+          <span className="secondary mono" style={{ fontSize: 11 }}>
+            LIVE • {feed.length} items
+          </span>
         </div>
         <div className="table-wrapper">
           <table>
@@ -142,7 +332,6 @@ export function FloorDashboard() {
                 <th>State</th>
                 <th>Route</th>
                 <th>Fee</th>
-                <th>Proof</th>
                 <th>Time</th>
               </tr>
             </thead>
@@ -152,15 +341,16 @@ export function FloorDashboard() {
                   <td className="mono hash">{intent.id}</td>
                   <td className="mono" style={{ fontSize: 12 }}>{intent.agentId}</td>
                   <td>
-                    <span className={`badge ${stateColor(intent.state)}`}>
+                    <Badge variant={stateColor(intent.state) as any}>
                       {intent.state}
-                    </span>
+                    </Badge>
                   </td>
                   <td style={{ fontSize: 12 }}>
                     {intent.legs.map((leg, i) => (
                       <span key={i}>
                         {i > 0 && " → "}
-                        <span className="secondary">{leg.chain}</span>:{leg.tokenIn}→{leg.tokenOut}
+                        <span className="secondary">{leg.chain}</span>:
+                        {leg.tokenIn}→{leg.tokenOut}
                       </span>
                     ))}
                   </td>
@@ -172,7 +362,6 @@ export function FloorDashboard() {
                     )}
                     <span className="muted"> / {intent.feeCap.toFixed(1)}</span>
                   </td>
-                  <td className="hash">{intent.proofHash ?? "—"}</td>
                   <td className="secondary" style={{ fontSize: 12 }}>
                     {timeSince(intent.createdAt)}
                   </td>

@@ -19,7 +19,7 @@ interface State {
  * Catches React component errors and displays graceful error UI
  */
 export class ErrorBoundary extends React.Component<Props, State> {
-  private resetTimeout: NodeJS.Timeout | null = null;
+  private resetTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(_error: Error): Partial<State> {
     return { hasError: true };
   }
 
@@ -68,7 +68,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.setState({ hasError: false, error: null, errorCount: 0 });
   };
 
-  render(): ReactElement {
+  render(): ReactNode {
     if (this.state.hasError && this.state.error) {
       return (
         this.props.fallback || (
@@ -115,7 +115,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </div>
 
                 {/* Debug Info (only in development) */}
-                {process.env.NODE_ENV === 'development' && (
+                {(import.meta as any).env.DEV && (
                   <details className="mb-4">
                     <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-300">
                       Debug Information

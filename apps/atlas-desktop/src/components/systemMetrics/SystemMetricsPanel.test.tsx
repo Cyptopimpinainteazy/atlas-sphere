@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import { SystemMetricsPanel } from "./SystemMetricsPanel";
 import * as TauriApi from "@tauri-apps/api/core";
 import * as TauriEvent from "@tauri-apps/api/event";
-import * as errorHandler from "../../utils/errorHandler";
+// Unused: import * as errorHandler from "../../utils/errorHandler";
 
 vi.mock("@tauri-apps/api/core");
 vi.mock("@tauri-apps/api/event");

@@ -1,4 +1,5 @@
 import { Routes, Route, NavLink } from "react-router-dom";
+import { useState } from "react";
 import { FloorDashboard } from "./pages/FloorDashboard";
 import { IntentsPage } from "./pages/IntentsPage";
 import { AgentsPage } from "./pages/AgentsPage";
@@ -6,8 +7,13 @@ import { SlashingPage } from "./pages/SlashingPage";
 import { ProofExplorer } from "./pages/ProofExplorer";
 import { FloorRules } from "./pages/FloorRules";
 import { BondsPage } from "./pages/BondsPage";
+import { GuidePage } from "./pages/GuidePage";
+import { WhyPage } from "./pages/WhyPage";
+import { HelpModal } from "./components/HelpModal";
 
 export function App() {
+  const [showHelp, setShowHelp] = useState(false);
+
   return (
     <>
       <nav className="nav">
@@ -33,6 +39,16 @@ export function App() {
         <NavLink to="/rules" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
           Rules
         </NavLink>
+        <NavLink to="/guide" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+          How to Use
+        </NavLink>
+        <NavLink to="/why" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+          Why
+        </NavLink>
+
+        <button className="help-button" onClick={() => setShowHelp(true)} title="Quick help">
+          ?
+        </button>
       </nav>
 
       <Routes>
@@ -43,9 +59,11 @@ export function App() {
         <Route path="/proofs" element={<ProofExplorer />} />
         <Route path="/bonds" element={<BondsPage />} />
         <Route path="/rules" element={<FloorRules />} />
+        <Route path="/guide" element={<GuidePage />} />
+        <Route path="/why" element={<WhyPage />} />
       </Routes>
-    </>
-      </Routes>
+
+      <HelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </>
   );
 }

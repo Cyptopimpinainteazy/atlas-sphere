@@ -11,11 +11,14 @@
 //! [VERSION: u32]
 //! [FLAGS: u32]
 //! [CHECKSUM: u32]
+//! [MIN_VERSION: u32]
+//! [FEATURES: u32]
 //! [CONST_POOL: count(u32) + entries...]
 //! [FUNCTIONS: count(u32) + FunctionEntry*]
 //! [GLOBALS: count(u32) + GlobalEntry*]
 //! [CODE: len(u32) + bytes...]
-//! [DEBUG: optional]
+//! [DEBUG_INFO: marker(u8) + optional data]
+//! [METADATA: marker(u8) + optional data]
 //! ```
 
 use crate::bc_format::{ConstValue, FunctionEntry, MAGIC, VERSION};
@@ -40,7 +43,7 @@ use crate::opcode::Opcode;
 pub fn assemble_simple_module() -> Vec<u8> {
     let mut out: Vec<u8> = Vec::new();
 
-    // === Header (16 bytes) ===
+    // === Header (24 bytes) ===
     // Magic: "X3BC"
     out.extend_from_slice(MAGIC);
     // Version: u32
@@ -48,6 +51,10 @@ pub fn assemble_simple_module() -> Vec<u8> {
     // Flags: u32 (none)
     out.extend_from_slice(&0u32.to_le_bytes());
     // Checksum: u32 (placeholder, not validated yet)
+    out.extend_from_slice(&0u32.to_le_bytes());
+    // Min version: u32
+    out.extend_from_slice(&VERSION.to_le_bytes());
+    // Features: u32 (none)
     out.extend_from_slice(&0u32.to_le_bytes());
 
     // === Constant Pool ===
@@ -140,7 +147,10 @@ pub fn assemble_simple_module() -> Vec<u8> {
     out.extend_from_slice(&(code.len() as u32).to_le_bytes());
     out.extend_from_slice(&code);
 
-    // No debug info (implicit)
+    // Debug info: not present (marker byte 0)
+    out.push(0u8);
+    // Metadata: not present (marker byte 0)
+    out.push(0u8);
 
     out
 }
@@ -156,11 +166,13 @@ pub fn assemble_simple_module() -> Vec<u8> {
 pub fn assemble_param_module() -> Vec<u8> {
     let mut out: Vec<u8> = Vec::new();
 
-    // Header
+    // Header (24 bytes)
     out.extend_from_slice(MAGIC);
     out.extend_from_slice(&VERSION.to_le_bytes());
     out.extend_from_slice(&0u32.to_le_bytes()); // flags
     out.extend_from_slice(&0u32.to_le_bytes()); // checksum
+    out.extend_from_slice(&VERSION.to_le_bytes()); // min_version
+    out.extend_from_slice(&0u32.to_le_bytes()); // features
 
     // Empty const pool
     out.extend_from_slice(&0u32.to_le_bytes());
@@ -194,6 +206,11 @@ pub fn assemble_param_module() -> Vec<u8> {
     out.extend_from_slice(&(code.len() as u32).to_le_bytes());
     out.extend_from_slice(&code);
 
+    // Debug info: not present
+    out.push(0u8);
+    // Metadata: not present
+    out.push(0u8);
+
     out
 }
 
@@ -211,11 +228,13 @@ pub fn assemble_param_module() -> Vec<u8> {
 pub fn assemble_branch_module() -> Vec<u8> {
     let mut out: Vec<u8> = Vec::new();
 
-    // Header
+    // Header (24 bytes)
     out.extend_from_slice(MAGIC);
     out.extend_from_slice(&VERSION.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes()); // flags
+    out.extend_from_slice(&0u32.to_le_bytes()); // checksum
+    out.extend_from_slice(&VERSION.to_le_bytes()); // min_version
+    out.extend_from_slice(&0u32.to_le_bytes()); // features
 
     // Empty const pool
     out.extend_from_slice(&0u32.to_le_bytes());
@@ -268,6 +287,11 @@ pub fn assemble_branch_module() -> Vec<u8> {
     out.extend_from_slice(&(code.len() as u32).to_le_bytes());
     out.extend_from_slice(&code);
 
+    // Debug info: not present
+    out.push(0u8);
+    // Metadata: not present
+    out.push(0u8);
+
     out
 }
 
@@ -275,11 +299,13 @@ pub fn assemble_branch_module() -> Vec<u8> {
 pub fn assemble_halt_module() -> Vec<u8> {
     let mut out: Vec<u8> = Vec::new();
 
-    // Header
+    // Header (24 bytes)
     out.extend_from_slice(MAGIC);
     out.extend_from_slice(&VERSION.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes());
-    out.extend_from_slice(&0u32.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes()); // flags
+    out.extend_from_slice(&0u32.to_le_bytes()); // checksum
+    out.extend_from_slice(&VERSION.to_le_bytes()); // min_version
+    out.extend_from_slice(&0u32.to_le_bytes()); // features
 
     // Empty const pool
     out.extend_from_slice(&0u32.to_le_bytes());
@@ -304,6 +330,11 @@ pub fn assemble_halt_module() -> Vec<u8> {
     // Code section
     out.extend_from_slice(&(code.len() as u32).to_le_bytes());
     out.extend_from_slice(&code);
+
+    // Debug info: not present
+    out.push(0u8);
+    // Metadata: not present
+    out.push(0u8);
 
     out
 }

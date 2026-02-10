@@ -110,7 +110,7 @@ const BottomNavBar: React.FC<{
                 <span className="text-xl">{item.emoji}</span>
               </button>
             );
-          })}
+          })}Assistant Concertmaster
         </div>
 
         {/* Divider */}

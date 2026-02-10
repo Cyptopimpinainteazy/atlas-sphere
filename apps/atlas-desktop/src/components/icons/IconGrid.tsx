@@ -10,6 +10,9 @@ import type { Application } from "@/types/application";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useDesktopStore, type IconSize } from "@/stores/desktopStore";
 
+/** App ID that gets its own featured card (excluded from the grid) */
+export const FEATURED_APP_ID = "blockchain-connector";
+
 export interface IconGridProps {
   /** Applications to display */
   applications: Application[];
@@ -17,10 +20,20 @@ export interface IconGridProps {
   onLaunch: (appId: string) => void;
 }
 
-const COLUMNS_MAP: Record<IconSize, string> = {
-  small: "grid-cols-6 sm:grid-cols-8 lg:grid-cols-10",
-  medium: "grid-cols-4 sm:grid-cols-5 lg:grid-cols-6",
-  large: "grid-cols-3 sm:grid-cols-4",
+/**
+ * 3-row side layout: icons flow left→right in 3 rows, scrolling horizontally
+ * if they overflow. On smaller screens we allow overflow-x scroll.
+ */
+const ROWS_MAP: Record<IconSize, string> = {
+  small: "grid-rows-3",
+  medium: "grid-rows-3",
+  large: "grid-rows-3",
+};
+
+const COLS_MAP: Record<IconSize, string> = {
+  small: "grid-cols-[repeat(auto-fill,minmax(56px,1fr))]",
+  medium: "grid-cols-[repeat(auto-fill,minmax(72px,1fr))]",
+  large: "grid-cols-[repeat(auto-fill,minmax(100px,1fr))]",
 };
 
 const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
@@ -34,7 +47,10 @@ const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
     [onLaunch],
   );
 
-  if (applications.length === 0) {
+  // Exclude the featured app — it renders as a separate hero card
+  const gridApps = applications.filter((a) => a.id !== FEATURED_APP_ID);
+
+  if (gridApps.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-text-secondary text-sm">
         No applications registered
@@ -44,11 +60,11 @@ const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
 
   return (
     <div
-      className={`grid ${COLUMNS_MAP[iconSize]} gap-4 p-4 overflow-y-auto max-h-full`}
+      className={`grid ${ROWS_MAP[iconSize]} ${COLS_MAP[iconSize]} gap-3 p-4 overflow-y-auto max-h-full auto-rows-min grid-flow-col`}
       role="list"
       aria-label="Application launcher"
     >
-      {applications.map((app) => (
+      {gridApps.map((app) => (
         <div key={app.id} role="listitem">
           <ApplicationIcon
             app={app}

@@ -118,3 +118,22 @@ export function getFlashloans(
 ): Promise<PaginatedResponse<FlashloanRecord>> {
   return fetchJson(`/flashloans?page=${page}&pageSize=${pageSize}`);
 }
+
+// ─── Bonds (frontend helpers; backend endpoints may be placeholder) ─────────
+export interface BondState {
+  balance: number;
+  lockedUntil: number | null;
+  pendingWithdrawals: Array<{ amount: number; txHash?: string; createdAt: number }>;
+}
+
+export function getBondState(): Promise<BondState> {
+  return fetchJson(`/bonds/state`);
+}
+
+export function depositBond(amount: number): Promise<{ txHash: string }>{
+  return fetchJson(`/bonds/deposit?amount=${amount}`);
+}
+
+export function requestWithdraw(amount: number): Promise<{ txHash: string }>{
+  return fetchJson(`/bonds/withdraw?amount=${amount}`);
+}

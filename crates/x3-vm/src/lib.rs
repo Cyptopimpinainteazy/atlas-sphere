@@ -59,6 +59,7 @@
 
 pub mod bridge;
 pub mod error;
+pub mod gpu_hostcalls;
 pub mod hostcall;
 pub mod verifier;
 pub mod vm;
@@ -66,6 +67,7 @@ pub mod vm;
 // Re-exports
 pub use bridge::{BridgeConfig, BridgeError, X3VMBridge};
 pub use error::{VMError, VMErrorKind, VMResult, VerifierError, VerifierErrorKind};
+pub use gpu_hostcalls::{GpuConfig, GpuHostcalls};
 pub use hostcall::{Hostcall, HostcallRegistry};
 pub use verifier::{opcode_gas_cost, DecodedInstr, Verifier, VerifyOptions};
 pub use vm::{ExecutionResult, Frame, VMConfig, Value, VM};

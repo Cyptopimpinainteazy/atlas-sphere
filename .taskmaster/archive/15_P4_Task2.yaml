@@ -1,0 +1,12 @@
+id: "15"
+title: "P4 Day 1: Code Structure & Review"
+description: "Review core acceleration files and document potential bottlenecks."
+assignee: "CONCERTMASTER"
+status: "pending"
+priority: "high"
+dependencies: ["14"]
+metadata:
+  blueprint_task: 2
+  phase: 4
+  day: 1
+  focus: ["crates/gpu-swarm/src/solana_accelerators.py", "SolanaSignatureVerifier"]

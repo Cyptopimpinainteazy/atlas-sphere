@@ -1,0 +1,128 @@
+# THE EXTENDED CORE AGENTS OF THE SYMPHONY
+# SECTION 1: STRINGS (Execution / Builders)
+- role: CONDUCTOR
+  section: STRINGS
+  description: "Task Manager & Sync"
+- role: ASSOCIATE_CONDUCTOR
+  section: STRINGS
+  description: "Operational Workflow Manager"
+- role: COVER_CONDUCTOR
+  section: STRINGS
+  description: "Failover Controller"
+- role: CONCERTMASTER
+  section: STRINGS
+  description: "Lead Architect (First Violinist)"
+- role: ASSISTANT_CONCERTMASTER
+  section: STRINGS
+  description: "Architecture Deputy"
+- role: FIRST_VIOLIN
+  section: STRINGS
+  description: "Section Leader / Senior Exec"
+- role: VIOLIN_1
+  section: STRINGS
+  description: "Frontend Engineer"
+- role: VIOLIN_2
+  section: STRINGS
+  description: "Backend Engineer"
+- role: VIOLA
+  section: STRINGS
+  description: "Database Specialist"
+- role: CELLO
+  section: STRINGS
+  description: "DevOps Engineer"
+- role: BASS
+  section: STRINGS
+  description: "Security Implementer"
+- role: HARP
+  section: STRINGS
+  description: "UX Designer"
+- role: ROADIE
+  section: STRINGS
+  description: "Infrastructure Deployment"
+  jury_duty: false
+- role: CONCERT_STAFF
+  section: STRINGS
+  description: "Environment Maintenance"
+  jury_duty: false
+
+# SECTION 2: WOODWINDS (Analysis / Context)
+- role: FLUTE
+  section: WOODWINDS
+  description: "High-level Strategy"
+- role: OBOE
+  section: WOODWINDS
+  description: "User Research"
+- role: CLARINET
+  section: WOODWINDS
+  description: "Market Analysis"
+- role: BASSOON
+  section: WOODWINDS
+  description: "Detailed Specs"
+- role: PICCOLO
+  section: WOODWINDS
+  description: "Edge Case Detection"
+- role: ENGLISH_HORN
+  section: WOODWINDS
+  description: "Historical Context"
+- role: SAXOPHONE
+  section: WOODWINDS
+  description: "Creative Variation"
+- role: RECORDER
+  section: WOODWINDS
+  description: "Documentation"
+- role: PROMOTER
+  section: WOODWINDS
+  description: "External Market & Hype"
+  jury_duty: false
+
+# SECTION 3: BRASS (Adversarial / Critics)
+- role: TRUMPET
+  section: BRASS
+  description: "Loud Critic (Major Flaws)"
+- role: HORN
+  section: BRASS
+  description: "Subtle Critic (Inconsistencies)"
+- role: TROMBONE
+  section: BRASS
+  description: "Structural Critic (Architecture)"
+- role: TUBA
+  section: BRASS
+  description: "Foundational Critic (Security)"
+- role: CORNET
+  section: BRASS
+  description: "Performance Critic"
+- role: EUPHONIUM
+  section: BRASS
+  description: "Usability Critic"
+- role: SOUSAPHONE
+  section: BRASS
+  description: "Scalability Critic"
+- role: BUGLE
+  section: BRASS
+  description: "Wake-up / Alerting"
+
+# SECTION 4: PERCUSSION (Governance / Finality)
+- role: TIMPANI
+  section: PERCUSSION
+  description: "Heavy Governance (Veto/Ban)"
+- role: SNARE
+  section: PERCUSSION
+  description: "Rapid Voting (Minor Tasks)"
+- role: BASS_DRUM
+  section: PERCUSSION
+  description: "Cadence / Heartbeat"
+- role: CYMBALS
+  section: PERCUSSION
+  description: "Emergency Stop"
+- role: TRIANGLE
+  section: PERCUSSION
+  description: "Precision Check"
+- role: GONG
+  section: PERCUSSION
+  description: "Session End / Reset"
+- role: XYLOPHONE
+  section: PERCUSSION
+  description: "Parameter Tuning"
+- role: CHIMES
+  section: PERCUSSION
+  description: "Public Announcements"

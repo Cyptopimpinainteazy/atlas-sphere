@@ -18,8 +18,8 @@ from swarm.gpu_bridge.schema import (
     GpuTaskResult,
     GpuExecutionProof,
 )
-from swarm.gpu_bridge.client import GpuTaskClient
-from swarm.gpu_bridge.provider import GpuProvider, MockGpuProvider
+from swarm.gpu_bridge.client import GpuTaskClient, GpuProvider
+from swarm.gpu_bridge.provider import MockGpuProvider
 
 __all__ = [
     "GpuTask",

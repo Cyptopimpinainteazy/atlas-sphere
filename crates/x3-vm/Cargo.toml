@@ -11,6 +11,9 @@ repository = "https://github.com/atlas-sphere/x3"
 x3-backend = { path = "../x3-backend" }
 x3-common = { path = "../x3-common" }
 
+# Dynamic library loading for GPU FFI
+libloading = "0.8"
+
 # Error handling
 thiserror = "1.0"
 

@@ -3,12 +3,21 @@
  *
  * Wraps the entire application with the ThemeProvider and renders the
  * Desktop environment with 3D scene, terminal, and UI overlay.
+ * 
+ * Two modes:
+ *  - Normal: Just eyeball (standard users)
+ *  - Exclusive: Eyeball + Pyramid + Metatron (exclusive rights holders)
  */
 import React, { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ThreeScene } from "@/components/three/ThreeScene";
 import { Terminal } from "@/components/terminal/Terminal";
 import Desktop from "@/components/desktop/Desktop";
+import { PerformanceMonitor } from "@/components/debug/PerformanceMonitor";
+import { ForegroundParallax } from "@/components/effects/ForegroundParallax";
+import { AppModeProvider } from "@/contexts/AppModeContext";
+import SalesPage from "@/pages/sales";
 
 /* ── Error Boundary ────────────────────────────────────────── */
 
@@ -96,28 +105,49 @@ const AppContent: React.FC = () => {
   }, []);
 
   return (
-    <ThemeProvider>
-      {/* 3D Scene Background */}
-      <ThreeScene />
+    <Routes>
+      <Route path="/sales" element={<SalesPage />} />
+      <Route path="*" element={
+        <ThemeProvider>
+          {/* Performance Monitor - Press P to toggle */}
+          <PerformanceMonitor />
 
-      {/* UI Overlay */}
-      <div className="fixed inset-0 z-20">
-        <Desktop isTerminalOpen={isTerminalOpen} onTerminalToggle={() => setIsTerminalOpen(!isTerminalOpen)} />
-      </div>
+          {/* 3D Scene Background - behind pyramid */}
+          <ThreeScene />
 
-      {/* Interactive Terminal */}
-      <Terminal 
-        isOpen={isTerminalOpen} 
-        onClose={() => setIsTerminalOpen(false)} 
-      />
-    </ThemeProvider>
+          {/* White glow behind pyramid */}
+          <div className="pyramid-glow" aria-hidden="true" />
+
+          {/* Background Pyramids - shadow behind main */}
+          <div className="pyramid-shadow" aria-hidden="true" />
+          <div className="pyramid-bg" aria-hidden="true" />
+
+          {/* Transparent foreground overlay - makes pyramid look like it's in background */}
+          {/* Responds to cursor for parallax depth effect */}
+          <ForegroundParallax />
+
+          {/* UI Overlay */}
+          <div className="fixed inset-0 z-20">
+            <Desktop isTerminalOpen={isTerminalOpen} onTerminalToggle={() => setIsTerminalOpen(!isTerminalOpen)} />
+          </div>
+
+          {/* Interactive Terminal */}
+          <Terminal 
+            isOpen={isTerminalOpen} 
+            onClose={() => setIsTerminalOpen(false)} 
+          />
+        </ThemeProvider>
+      } />
+    </Routes>
   );
 };
 
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <AppContent />
+      <AppModeProvider>
+        <AppContent />
+      </AppModeProvider>
     </ErrorBoundary>
   );
 };

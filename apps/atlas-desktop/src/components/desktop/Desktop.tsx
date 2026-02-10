@@ -11,7 +11,10 @@
 import React, { useCallback, useState, useMemo } from "react";
 import Eyeball from "@/components/eyeball/Eyeball";
 import IconGrid from "@/components/icons/IconGrid";
+import { FEATURED_APP_ID } from "@/components/icons/IconGrid";
+import FeaturedAppCard from "@/components/icons/FeaturedAppCard";
 import WindowManager from "@/components/desktop/WindowManager";
+import BenchmarksCarousel from "@/components/results/BenchmarksCarousel";
 import BottomNavBar from "@/components/desktop/BottomNavBar";
 import ContextMenu, {
   type ContextMenuItem,
@@ -36,7 +39,11 @@ const Desktop: React.FC<DesktopProps> = ({
   useApplicationRegistry();
 
   const applications = useApplicationStore((s) => s.applications);
+  const isRunning = useApplicationStore((s) => s.isRunning);
   const { launch } = useWindowManager();
+
+  // Featured app for the hero card (top-right)
+  const featuredApp = applications.find((a) => a.id === FEATURED_APP_ID);
   const { toggle: toggleTheme, isDark } = useTheme();
   const iconSize = useDesktopStore((s) => s.iconSize);
   const setIconSize = useDesktopStore((s) => s.setIconSize);
@@ -108,8 +115,8 @@ const Desktop: React.FC<DesktopProps> = ({
       onContextMenu={handleContextMenu}
     >
       {/* ── Eyeball background (centre) ────────────────── */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[320px] h-[320px] opacity-90">
+      <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
+        <div className="w-[400px] h-[400px]" style={{ pointerEvents: 'none' }}>
           <Eyeball />
         </div>
       </div>
@@ -118,6 +125,21 @@ const Desktop: React.FC<DesktopProps> = ({
       <div className="absolute top-4 left-4 bottom-4 w-[320px] lg:w-[400px]">
         <IconGrid applications={applications} onLaunch={launch} />
       </div>
+
+
+      {/* ── Featured App Card (top-right) ──────────────── */}
+      {featuredApp && (
+        <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-4">
+          <FeaturedAppCard
+            app={featuredApp}
+            isRunning={isRunning(featuredApp.id)}
+            onLaunch={launch}
+          />
+          <div className="mt-4 w-[420px]">
+            <BenchmarksCarousel />
+          </div>
+        </div>
+      )}
 
       {/* ── Window manager layer ───────────────────────── */}
       <div className="absolute inset-0 pointer-events-none">

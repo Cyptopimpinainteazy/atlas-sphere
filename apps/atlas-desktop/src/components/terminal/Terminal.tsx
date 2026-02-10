@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { executeCommand, formatTerminalOutput } from './terminalCommands';
+import { lazy, Suspense } from 'react';
+
+const TerminalChatBot = lazy(() => import('./TerminalChatBot'));
 
 interface TerminalEntry {
   type: 'command' | 'output' | 'error';
@@ -136,6 +139,13 @@ export function Terminal({ isOpen = true, onClose }: TerminalProps) {
             autoFocus
           />
           {isExecuting && <span className="text-[#ff6b35] font-mono text-xs animate-pulse">executing...</span>}
+        </div>
+        {/* Chatbot below input */}
+        <div className="mt-2">
+          {/* Lazy load to avoid circular import issues */}
+          <Suspense fallback={<div className="text-[#ff8c42]/50 text-xs font-mono">Loading chatbot...</div>}>
+            <TerminalChatBot />
+          </Suspense>
         </div>
       </div>
     </div>

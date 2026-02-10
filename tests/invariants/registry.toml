@@ -69,3 +69,31 @@ description = "Live telemetry panel renders loading and error states safely"
 severity = "MEDIUM"
 layer = "FRONTEND"
 tested_by = ["apps/atlas-desktop/tests/unit/liveTelemetryPanel.test.tsx::LiveTelemetryPanel"]
+
+[[invariant]]
+id = "INFRA-CCGV-001"
+description = "GPU batch hashing matches CPU reference"
+severity = "HIGH"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_gpu_parity.py::test_keccak_batch_matches_cpu_reference"]
+
+[[invariant]]
+id = "INFRA-CCGV-002"
+description = "Atomic swaps commit only when both chains validate"
+severity = "CRITICAL"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_atomic_invariant.py::test_atomic_commit_requires_both_sides", "tests/cross_chain_gpu_validator/test_atomic_invariant.py::test_atomic_rollback_on_failure"]
+
+[[invariant]]
+id = "INFRA-CCGV-003"
+description = "Benchmark reports include combined TPS metrics"
+severity = "MEDIUM"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_benchmark_report.py::test_benchmark_report"]
+
+[[invariant]]
+id = "INFRA-CCGV-004"
+description = "Metrics snapshots expose required fields"
+severity = "LOW"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_metrics.py::test_metrics_snapshot_fields"]

@@ -25,10 +25,10 @@ export interface EyeballTrackingConfig {
 }
 
 const DEFAULT_CONFIG: EyeballTrackingConfig = {
-  easing: 0.08,
-  maxPitch: Math.PI / 6,
-  maxYaw: Math.PI / 5,
-  returnDuration: 800,
+  easing: 1.0,
+  maxPitch: Math.PI / 4,
+  maxYaw: Math.PI / 3,
+  returnDuration: 50,
   dilationRange: [0.3, 1.0],
 };
 
@@ -132,11 +132,15 @@ export function useEyeballTracking(
     const tick = () => {
       if (!running) return;
 
-      const easeFactor = activeRef.current
-        ? cfg.easing
-        : cfg.easing * 0.5; // slower return to neutral
-
-      currentQuat.current.slerp(targetQuat.current, easeFactor);
+      // If easing is 1.0 or higher, skip slerp entirely for instant tracking
+      if (cfg.easing >= 1.0) {
+        currentQuat.current.copy(targetQuat.current);
+      } else {
+        const easeFactor = activeRef.current
+          ? cfg.easing
+          : cfg.easing * 0.5; // slower return to neutral
+        currentQuat.current.slerp(targetQuat.current, easeFactor);
+      }
 
       // Extract Euler from interpolated quaternion
       const euler = new THREE.Euler().setFromQuaternion(

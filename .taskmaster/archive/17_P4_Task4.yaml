@@ -1,0 +1,13 @@
+id: "17"
+title: "P4 Day 1: Measure CPU Baseline"
+description: "Establish current CPU performance metrics before GPU optimization."
+assignee: "VIOLIN_1"
+status: "pending"
+priority: "medium"
+dependencies: ["16"]
+metadata:
+  blueprint_task: 4
+  phase: 4
+  day: 1
+  commands:
+    - "python3 scripts/p4_utils/baseline_measurement.py"

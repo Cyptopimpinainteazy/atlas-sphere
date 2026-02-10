@@ -671,6 +671,58 @@ impl Verifier {
                 let dst = read_u16(1)? as u64;
                 Ok((3, vec![dst]))
             }
+
+            // ================================================================
+            // GPU Intrinsics (0xD0 - 0xD5)
+            // ================================================================
+
+            // gpu_sha256_batch: opcode dst:u8 inputs:u8 count:u8 (4 bytes)
+            Opcode::GpuSha256Batch => {
+                let dst = read_u8(1)? as u64;
+                let inputs = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                Ok((4, vec![dst, inputs, count]))
+            }
+
+            // gpu_ed25519_verify: opcode dst:u8 sigs:u8 count:u8 (4 bytes)
+            Opcode::GpuEd25519Verify => {
+                let dst = read_u8(1)? as u64;
+                let sigs = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                Ok((4, vec![dst, sigs, count]))
+            }
+
+            // gpu_poh_chain: opcode dst:u8 seeds:u8 count:u8 chain_len:u8 (5 bytes)
+            Opcode::GpuPohChain => {
+                let dst = read_u8(1)? as u64;
+                let seeds = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                let chain_len = read_u8(4)? as u64;
+                Ok((5, vec![dst, seeds, count, chain_len]))
+            }
+
+            // gpu_sha256_streamed: opcode dst:u8 inputs:u8 count:u8 streams:u8 (5 bytes)
+            Opcode::GpuSha256Streamed => {
+                let dst = read_u8(1)? as u64;
+                let inputs = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                let streams = read_u8(4)? as u64;
+                Ok((5, vec![dst, inputs, count, streams]))
+            }
+
+            // gpu_device_count: opcode dst:u8 (2 bytes)
+            Opcode::GpuDeviceCount => {
+                let dst = read_u8(1)? as u64;
+                Ok((2, vec![dst]))
+            }
+
+            // gpu_benchmark: opcode dst:u8 count:u8 streams:u8 (4 bytes)
+            Opcode::GpuBenchmark => {
+                let dst = read_u8(1)? as u64;
+                let count = read_u8(2)? as u64;
+                let streams = read_u8(3)? as u64;
+                Ok((4, vec![dst, count, streams]))
+            }
         }
     }
 
@@ -946,6 +998,12 @@ pub fn opcode_gas_cost(opcode: u8) -> u64 {
             Opcode::SvmGetRent => 100,
             Opcode::SvmGetClock => 100,
 
+            // GPU intrinsics (very expensive — real CUDA kernel launch)
+            Opcode::GpuSha256Batch | Opcode::GpuEd25519Verify | Opcode::GpuPohChain => 500,
+            Opcode::GpuSha256Streamed => 750,
+            Opcode::GpuDeviceCount => 10,
+            Opcode::GpuBenchmark => 1000,
+
             // Debug (0 gas in dev, forbidden on-chain)
             Opcode::DebugPrint => 0,
             Opcode::Breakpoint => 0,
@@ -959,18 +1017,21 @@ pub fn opcode_gas_cost(opcode: u8) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use x3_backend::bc_format::{BytecodeModule, ConstPool};
+    use x3_backend::bc_format::{BytecodeModule, ConstPool, FeatureFlags, VersionInfo};
     use x3_backend::opcode::Opcode;
 
     fn make_simple_module(code: Vec<u8>) -> BytecodeModule {
         BytecodeModule {
-            version: VERSION,
+            version: VersionInfo::new(1, 0, 0),
+            min_version: VersionInfo::new(1, 0, 0),
             flags: Default::default(),
+            features: FeatureFlags(0),
             const_pool: ConstPool::new(),
             functions: vec![],
             globals: vec![],
             code,
             debug_info: None,
+            metadata: None,
         }
     }
 

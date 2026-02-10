@@ -17,7 +17,7 @@ interface DocFile {
   title: string;
   path: string;
   description: string;
-  category: "getting-started" | "deployment" | "ci-cd" | "reference" | "architecture";
+  category: "getting-started" | "deployment" | "ci-cd" | "reference" | "architecture" | "blockchain-connector";
 }
 
 const DOCUMENTATION_FILES: DocFile[] = [
@@ -134,6 +134,32 @@ const DOCUMENTATION_FILES: DocFile[] = [
     description: "Build metrics and performance analysis",
     category: "architecture",
   },
+
+  // Blockchain Connector
+  {
+    id: "blockchain-connector-overview",
+    name: "BLOCKCHAIN_CONNECTOR.md",
+    title: "Blockchain Connector — Overview",
+    path: "/docs/BLOCKCHAIN_CONNECTOR.md",
+    description: "Enterprise multi-chain connector: architecture, GPU advantage, and supported networks",
+    category: "blockchain-connector",
+  },
+  {
+    id: "blockchain-connector-api",
+    name: "BLOCKCHAIN_CONNECTOR_API.md",
+    title: "Connector API Reference",
+    path: "/docs/BLOCKCHAIN_CONNECTOR_API.md",
+    description: "REST + WebSocket + gRPC endpoints, SDK methods, and type definitions",
+    category: "blockchain-connector",
+  },
+  {
+    id: "blockchain-connector-benchmarks",
+    name: "BLOCKCHAIN_CONNECTOR_BENCHMARKS.md",
+    title: "Benchmark & Test Profiles",
+    path: "/docs/BLOCKCHAIN_CONNECTOR_BENCHMARKS.md",
+    description: "8 test profiles, GPU crypto benchmarks, and scoring methodology",
+    category: "blockchain-connector",
+  },
 ];
 
 const CATEGORY_COLORS: Record<DocFile["category"], string> = {
@@ -142,6 +168,7 @@ const CATEGORY_COLORS: Record<DocFile["category"], string> = {
   "ci-cd": "text-purple-400",
   reference: "text-yellow-400",
   architecture: "text-orange-400",
+  "blockchain-connector": "text-red-400",
 };
 
 const Documentation: React.FC = () => {
@@ -167,6 +194,7 @@ const Documentation: React.FC = () => {
       "ci-cd": [] as DocFile[],
       reference: [] as DocFile[],
       architecture: [] as DocFile[],
+      "blockchain-connector": [] as DocFile[],
     };
 
     filteredDocs.forEach((doc) => {
@@ -212,6 +240,7 @@ const Documentation: React.FC = () => {
                   {category === "ci-cd" && "⚙️ CI/CD"}
                   {category === "reference" && "📖 Reference"}
                   {category === "architecture" && "🏗️ Architecture"}
+                  {category === "blockchain-connector" && "⛓ Blockchain Connector"}
                 </div>
 
                 {docs.map((doc) => (

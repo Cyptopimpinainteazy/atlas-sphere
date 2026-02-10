@@ -152,7 +152,6 @@ fn test_get_system_metrics_returns_valid_metrics() {
 
             // Disk percentage should match calculation
             let calculated_percent = (disk.used as f32 / disk.total as f32) * 100.0;
-            let max_used = disk.total;
             assert!(
                 (calculated_percent - disk.usage_percent).abs() < 1.0,
                 "Disk percentage calculation off by more than 1%"
@@ -370,4 +369,3 @@ fn test_get_system_metrics_returns_valid_metrics() {
         let percentage = (used as f32 / capacity as f32) * 100.0;
         assert!(percentage <= 100.0, "Storage percentage should not exceed 100%");
     }
-}

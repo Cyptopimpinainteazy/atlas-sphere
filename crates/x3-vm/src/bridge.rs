@@ -27,6 +27,7 @@
 //! ```
 
 use crate::{ExecutionResult, VMConfig, VMError, VMErrorKind, Value, VM};
+use crate::gpu_hostcalls::GpuHostcalls;
 
 // Re-export x3-backend types for bytecode helpers
 pub use x3_backend::bc_format_helpers;
@@ -38,6 +39,8 @@ pub struct BridgeConfig {
     pub enable_svm: bool,
     /// Enable EVM hostcalls
     pub enable_evm: bool,
+    /// Enable GPU compute hostcalls (CUDA dispatch)
+    pub enable_gpu: bool,
     /// Gas limit for bridge operations
     pub gas_limit: u64,
     /// Maximum CPI depth for Solana calls
@@ -52,6 +55,7 @@ impl Default for BridgeConfig {
             // behind the `bridge-mocks` feature.
             enable_svm: false,
             enable_evm: false,
+            enable_gpu: true, // GPU hostcalls are safe (read-only compute, no state mutation)
             gas_limit: 1_000_000,
             max_cpi_depth: 4,
         }
@@ -68,6 +72,7 @@ fn bridge_disabled_error(name: &str) -> VMError {
 /// X3VM Bridge for cross-VM execution
 pub struct X3VMBridge {
     config: BridgeConfig,
+    gpu: Option<GpuHostcalls>,
 }
 
 impl X3VMBridge {
@@ -78,7 +83,12 @@ impl X3VMBridge {
 
     /// Create a new X3VM bridge with custom configuration
     pub fn with_config(config: BridgeConfig) -> Self {
-        Self { config }
+        let gpu = if config.enable_gpu {
+            Some(GpuHostcalls::new())
+        } else {
+            None
+        };
+        Self { config, gpu }
     }
 
     /// Execute X3 bytecode with bridge hostcalls enabled
@@ -104,6 +114,11 @@ impl X3VMBridge {
 
     /// Register cross-VM hostcalls
     fn register_hostcalls(&self, vm: &mut VM) {
+        // GPU compute hostcalls (0xD0 - 0xDF)
+        if let Some(ref gpu) = self.gpu {
+            gpu.register_on_vm(vm);
+        }
+
         // SVM hostcalls
         if self.config.enable_svm {
             vm.register_hostcall(0x10, "svm_transfer", 3, |args| {
@@ -271,7 +286,6 @@ impl std::error::Error for BridgeError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::bc_format_helpers;
 
     #[test]
     fn test_bridge_execute_simple() {
@@ -302,6 +316,7 @@ mod tests {
         let config = BridgeConfig {
             enable_svm: true,
             enable_evm: false,
+            enable_gpu: true,
             gas_limit: 500_000,
             max_cpi_depth: 2,
         };

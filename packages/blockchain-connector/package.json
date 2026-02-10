@@ -34,7 +34,8 @@
     "ethers": "^6.11.0",
     "@solana/web3.js": "^1.87.0",
     "ws": "^8.16.0",
-    "prom-client": "^15.1.0"
+    "prom-client": "^15.1.0",
+    "@polkadot/api": "^9.0.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

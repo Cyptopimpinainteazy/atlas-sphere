@@ -103,7 +103,7 @@ function renderMarkdown(markdown: string): string {
   html = html.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
 
   // Code blocks
-  html = html.replace(/```(.*?)\n([\s\S]*?)```/gm, (match, lang, code) => {
+  html = html.replace(/```(.*?)\n([\s\S]*?)```/gm, (_match, _lang, code) => {
     const trimmed = code.trim();
     return `<pre class="bg-codeblock-bg text-codeblock-text rounded-lg p-4 overflow-x-auto mb-4 border border-border-default">
       <code>${escapeHtml(trimmed)}</code>

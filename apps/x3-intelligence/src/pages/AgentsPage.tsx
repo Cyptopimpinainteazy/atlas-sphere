@@ -1,8 +1,10 @@
-// Agents Page — registry, reputation, and history
+// Agents Page — registry, reputation, and history with visual analytics
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AgentStatus } from "../types";
 import type { Agent } from "../types";
+import { Button, ProgressBar, Badge, Metric } from "../components/UIComponents";
+import { AgentReputationChart, BondDistributionChart } from "../components/Charts";
 
 const DEMO_AGENTS: Agent[] = [
   {
@@ -59,10 +61,14 @@ const DEMO_AGENTS: Agent[] = [
 
 function statusColor(status: AgentStatus): string {
   switch (status) {
-    case AgentStatus.Active: return "badge-green";
-    case AgentStatus.Suspended: return "badge-amber";
-    case AgentStatus.Deactivated: return "badge-red";
-    case AgentStatus.Deregistered: return "badge-muted";
+    case AgentStatus.Active:
+      return "badge-green";
+    case AgentStatus.Suspended:
+      return "badge-amber";
+    case AgentStatus.Deactivated:
+      return "badge-red";
+    case AgentStatus.Deregistered:
+      return "badge-muted";
   }
 }
 
@@ -79,12 +85,44 @@ function daysSince(ts: number): string {
 
 export function AgentsPage() {
   const [agents] = useState<Agent[]>(DEMO_AGENTS);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+  const activeAgents = useMemo(() => agents.filter((a) => a.status === AgentStatus.Active), [agents]);
+  const avgSuccessRate = useMemo(
+    () => activeAgents.reduce((s, a) => s + a.successRate, 0) / Math.max(activeAgents.length, 1),
+    [activeAgents]
+  );
+  const totalBond = useMemo(() => agents.reduce((s, a) => s + a.bondAmount, 0), [agents]);
+  const totalSlashes = useMemo(() => agents.reduce((s, a) => s + a.totalSlashes, 0), [agents]);
+
+  const reputationChartData = useMemo(
+    () =>
+      agents
+        .filter((a) => a.status === AgentStatus.Active)
+        .map((a) => ({
+          agent: a.id,
+          reputation: a.reputation,
+          successRate: a.successRate,
+        })),
+    [agents]
+  );
+
+  const bondChartData = useMemo(
+    () =>
+      agents
+        .filter((a) => a.bondAmount > 0)
+        .map((a) => ({
+          agent: a.id,
+          bond: a.bondAmount,
+        })),
+    [agents]
+  );
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>Agent Registry</h1>
-        <span className="subtitle">{agents.filter((a) => a.status === AgentStatus.Active).length} active</span>
+        <span className="subtitle">{activeAgents.length} active agents</span>
       </div>
 
       {/* Summary stats */}
@@ -95,26 +133,84 @@ export function AgentsPage() {
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Bond Locked</div>
-          <div className="stat-value mono">
-            {agents.reduce((s, a) => s + a.bondAmount, 0).toLocaleString()}
-          </div>
+          <div className="stat-value mono">{totalBond.toLocaleString()}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Avg Success Rate</div>
-          <div className="stat-value green">
-            {(agents.filter((a) => a.status === AgentStatus.Active).reduce((s, a) => s + a.successRate, 0) /
-              agents.filter((a) => a.status === AgentStatus.Active).length).toFixed(1)}%
-          </div>
+          <div className="stat-value green">{avgSuccessRate.toFixed(1)}%</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Slashes</div>
-          <div className="stat-value red">
-            {agents.reduce((s, a) => s + a.totalSlashes, 0)}
-          </div>
+          <div className="stat-value red">{totalSlashes}</div>
         </div>
       </div>
 
+      {/* Analytics Charts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="card">
+          <div className="card-header">
+            <h2>Agent Reputation & Success Rate</h2>
+          </div>
+          <AgentReputationChart data={reputationChartData} />
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h2>Bond Distribution</h2>
+          </div>
+          <BondDistributionChart data={bondChartData} />
+        </div>
+      </div>
+
+      {/* Top Performers */}
       <div className="card">
+        <div className="card-header">
+          <h2>Top Performers</h2>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {agents
+            .filter((a) => a.status === AgentStatus.Active)
+            .sort((a, b) => b.reputation - a.reputation)
+            .slice(0, 3)
+            .map((agent) => (
+              <div
+                key={agent.id}
+                style={{
+                  padding: 16,
+                  background: "var(--bg-tertiary)",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div style={{ marginBottom: 12 }}>
+                  <div className="metric-label">{agent.id}</div>
+                  <div style={{ marginTop: 4 }}>
+                    <Badge variant="green">Active</Badge>
+                  </div>
+                </div>
+                <Metric label="Reputation" value={agent.reputation.toFixed(1)} highlight />
+                <Metric label="Success Rate" value={`${agent.successRate.toFixed(1)}%`} />
+                <Metric label="Executions" value={agent.totalExecutions.toLocaleString()} />
+                <Metric label="Bond" value={`${(agent.bondAmount / 1000).toFixed(0)}K`} unit="USDC" />
+              </div>
+            ))}
+        </div>
+      </div>
+
+      {/* Full Registry Table */}
+      <div className="card" style={{ marginTop: 24 }}>
+        <div className="card-header">
+          <h2>Full Agent Registry</h2>
+          <span className="secondary mono" style={{ fontSize: 11 }}>
+            {agents.length} total
+          </span>
+        </div>
         <div className="table-wrapper">
           <table>
             <thead>
@@ -127,27 +223,36 @@ export function AgentsPage() {
                 <th>Executions</th>
                 <th>Slashes</th>
                 <th>Registered</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {agents.map((agent) => (
                 <tr key={agent.id}>
-                  <td className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{agent.id}</td>
+                  <td className="mono" style={{ fontSize: 12, fontWeight: 600 }}>
+                    {agent.id}
+                  </td>
                   <td>
-                    <span className={`badge ${statusColor(agent.status)}`}>
+                    <Badge variant={statusColor(agent.status) as any}>
                       {agent.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="mono">{agent.bondAmount.toLocaleString()}</td>
                   <td>
-                    <span className={`mono ${repColor(agent.reputation)}`}>
-                      {agent.reputation.toFixed(1)}
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span className={`mono ${repColor(agent.reputation)}`}>
+                        {agent.reputation.toFixed(1)}
+                      </span>
+                      <ProgressBar value={agent.reputation} max={100} color="green" />
+                    </div>
                   </td>
                   <td>
-                    <span className={`mono ${repColor(agent.successRate)}`}>
-                      {agent.successRate.toFixed(1)}%
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span className={`mono ${repColor(agent.successRate)}`}>
+                        {agent.successRate.toFixed(1)}%
+                      </span>
+                      <ProgressBar value={agent.successRate} max={100} color="blue" />
+                    </div>
                   </td>
                   <td className="mono">{agent.totalExecutions.toLocaleString()}</td>
                   <td className="mono">
@@ -157,7 +262,18 @@ export function AgentsPage() {
                       <span className="muted">0</span>
                     )}
                   </td>
-                  <td className="secondary" style={{ fontSize: 12 }}>{daysSince(agent.registeredAt)}</td>
+                  <td className="secondary" style={{ fontSize: 12 }}>
+                    {daysSince(agent.registeredAt)}
+                  </td>
+                  <td>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setSelectedAgent(agent)}
+                    >
+                      View
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -394,8 +394,8 @@ class TestGpuLifecycleIntegration:
         predictions = PredictionMarket(storage=storage)
         scoreboard = AccuracyScoreboard(storage=storage)
         reaper = ReaperEngine(storage=storage)
-        postmortem = PostmortemAnalyzer()
-        scar_prop = ScarPropagator()
+        postmortem = PostmortemAnalyzer(storage=storage)
+        scar_prop = ScarPropagator(storage=storage)
         tripwire = TripwireDetector(storage=storage)
 
         mock_provider = MockGpuProvider()
@@ -417,7 +417,7 @@ class TestGpuLifecycleIntegration:
         # Register an agent
         config = AgentConfig(
             agent_id="gpu-test-agent",
-            domain=Domain.FINANCE,
+            domain=Domain.MARKET,
             initial_mandates=["compute"],
             initial_budget=100.0,
         )
@@ -479,8 +479,8 @@ class TestGpuLifecycleIntegration:
             prediction_market=PredictionMarket(storage=storage),
             scoreboard=AccuracyScoreboard(storage=storage),
             reaper=ReaperEngine(storage=storage),
-            postmortem_analyzer=PostmortemAnalyzer(),
-            scar_propagator=ScarPropagator(),
+            postmortem_analyzer=PostmortemAnalyzer(storage=storage),
+            scar_propagator=ScarPropagator(storage=storage),
             tripwire=TripwireDetector(storage=storage),
             # No gpu_client
         )
@@ -491,7 +491,7 @@ class TestGpuLifecycleIntegration:
 
         config = AgentConfig(
             agent_id="no-gpu-agent",
-            domain=Domain.FINANCE,
+            domain=Domain.MARKET,
             initial_mandates=["trade"],
             initial_budget=50.0,
         )
@@ -504,7 +504,7 @@ class TestGpuLifecycleIntegration:
         orch, mock = orchestrator_with_gpu
 
         agent = orch.living_agents[0]
-        initial_budget = agent._ledger.resource_budget
+        initial_budget = agent.resource_budget
 
         # Submit a task with known compute units
         task = GpuTask(

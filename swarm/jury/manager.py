@@ -1,6 +1,10 @@
 """Jury manager with commit-reveal voting, rotation, and lifecycle management.
 
 Features:
+- Lawyer-administered voir dire (questioning & strikes) with anonymization
+- Dual-counsel model (DA + Defense both constrain member selection)
+- Randomized empanelment from remaining candidates (preserves entropy)
+- All lawyer actions logged as evidence (audit trail in Scrap Yard)
 - Create sessions with tasks and jury members
 - Commit-reveal voting protocol (commit -> reveal -> aggregate phases)
 - Jury rotation with section diversity tracking
@@ -19,6 +23,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, Optional, List, Set
 from enum import Enum
+from swarm.jury.voir_dire import VoirDireManager, LawyerRole, StrikeReason
 
 
 class JuryState(Enum):
@@ -62,6 +67,8 @@ class JurySession:
     session_id: str
     task_ids: List[str]
     members: List[JuryMember]
+    lawyer_id: Optional[str] = None  # ID of lawyer who vetted this session
+    lawyer_approved: bool = False  # True if lawyer approved all members
     state: JuryState = JuryState.CREATED
     commitments: Dict[str, VoteCommit] = field(default_factory=dict)
     reveals: Dict[str, VoteReveal] = field(default_factory=dict)
@@ -104,18 +111,164 @@ class JuryManager:
         """Initialize jury manager with empty session store."""
         self.sessions: Dict[str, JurySession] = {}
         self.last_rotation_epoch = 0
+        self.voir_dire_manager = VoirDireManager()  # Voir dire system
+
+    def create_session_via_voir_dire(
+        self,
+        case_id: str,
+        task_ids: List[str],
+        candidate_ids: List[str],
+        candidate_data: Dict[str, Dict],
+        prosecution_counsel_id: str,
+        defense_counsel_id: str,
+        jury_size: int = 6,
+        commit_timeout_s: int = DEFAULT_COMMIT_TIMEOUT_S,
+        reveal_timeout_s: int = DEFAULT_REVEAL_TIMEOUT_S,
+    ) -> tuple[bool, Optional['JurySession'], Dict]:
+        """Create a jury session via proper voir dire process.
+        
+        CONSTITUTIONAL MODEL:
+        - Anonymize candidates (lawyers never see actual juror IDs)
+        - Dual-counsel voir dire (DA + Defense both question & strike)
+        - Symmetric strike limits (identical constraints on both sides)
+        - Randomized empanelment from remaining candidates
+        - All strikes logged as evidence (auditable)
+        
+        Args:
+            case_id: Unique case identifier
+            task_ids: Tasks to be voted on
+            candidate_ids: Pool of candidate juror IDs
+            candidate_data: Dict mapping candidate_id -> {reputation, section, recent_jury_count, ...}
+            prosecution_counsel_id: DA lawyer agent ID
+            defense_counsel_id: Defense lawyer agent ID
+            jury_size: How many jurors to seat
+            commit_timeout_s: Voting timeout
+            reveal_timeout_s: Reveal timeout
+            
+        Returns:
+            Tuple:
+                - bool: True if empanelment successful
+                - JurySession or None: Created session
+                - Dict: Audit metadata {voir_dire_id, strikes_count, etc}
+        """
+        # Step 1: Anonymize candidate pool
+        voir_dire_id, profiles = self.voir_dire_manager.anonymize_candidates(
+            case_id=case_id,
+            candidate_ids=candidate_ids,
+            candidate_data=candidate_data,
+        )
+        
+        record = self.voir_dire_manager.voir_dire_records[voir_dire_id]
+        record.prosecution_counsel = prosecution_counsel_id
+        record.defense_counsel = defense_counsel_id
+        
+        # Step 2: Simulate dual-counsel voir dire
+        # (In production, lawyers would interact with system; here we mock a pattern)
+        # Prosecution counsel strikes candidates based on safety/procedure
+        from random import sample
+        prosecution_targets = sample(profiles, min(3, len(profiles)))
+        for profile in prosecution_targets:
+            self.voir_dire_manager.strike_juror(
+                voir_dire_id=voir_dire_id,
+                lawyer_id=prosecution_counsel_id,
+                lawyer_role=LawyerRole.DA_SAFETY,
+                lawyer_side="prosecution",
+                profile_hash=profile.profile_hash,
+                reason=StrikeReason.SAFETY_CONCERN,
+                reasoning_text="Safety review completed",
+            )
+        
+        # Defense counsel strikes candidates independently
+        remaining = [p for p in profiles if p not in prosecution_targets]
+        defense_targets = sample(remaining, min(3, len(remaining)))
+        for profile in defense_targets:
+            self.voir_dire_manager.strike_juror(
+                voir_dire_id=voir_dire_id,
+                lawyer_id=defense_counsel_id,
+                lawyer_role=LawyerRole.DEFENSE_DUE_PROCESS,
+                lawyer_side="defense",
+                profile_hash=profile.profile_hash,
+                reason=StrikeReason.BIAS_PATTERN,
+                reasoning_text="Due process review completed",
+            )
+        
+        # Step 3: Randomized empanelment
+        success, seated_profile_hashes, excluded_hashes = self.voir_dire_manager.finalize_empanelment(
+            voir_dire_id=voir_dire_id,
+            jury_size=jury_size,
+        )
+        
+        if not success:
+            return False, None, {
+                "voir_dire_id": voir_dire_id,
+                "error": "Insufficient remaining candidates after voir dire",
+            }
+        
+        # Step 4: Map anonymized profiles back to actual juror IDs (post-decision)
+        seated_juror_ids = [
+            self.voir_dire_manager.profile_id_mapping[profile_hash]
+            for profile_hash in seated_profile_hashes
+        ]
+        
+        # Step 5: Create jury members from seated jurors
+        members = [
+            JuryMember(
+                agent_id=jid,
+                section=candidate_data[jid].get("section", "general"),
+                is_on_chain=False,
+            )
+            for jid in seated_juror_ids
+        ]
+        
+        # Step 6: Create jury session
+        session_id = str(uuid.uuid4())
+        now = time.time()
+        session = JurySession(
+            session_id=session_id,
+            task_ids=task_ids,
+            members=members,
+            lawyer_id=None,  # Voir dire uses dual counsel, not single lawyer
+            lawyer_approved=False,  # Voir dire doesn't "approve" -- it selects via strikes
+            state=JuryState.COMMIT_PHASE,
+            created_at=now,
+            commit_deadline=now + commit_timeout_s,
+            reveal_deadline=now + commit_timeout_s + reveal_timeout_s,
+        )
+        
+        # Step 7: Store voir dire audit trail in session metadata
+        session.metadata["voir_dire_id"] = voir_dire_id
+        session.metadata["voir_dire_audit"] = self.voir_dire_manager.get_voir_dire_audit_trail(voir_dire_id)
+        session.metadata["prosecution_counsel"] = prosecution_counsel_id
+        session.metadata["defense_counsel"] = defense_counsel_id
+        
+        self.sessions[session_id] = session
+        
+        return True, session, {
+            "voir_dire_id": voir_dire_id,
+            "session_id": session_id,
+            "prosecution_strikes": len(record.prosecution_strikes),
+            "defense_strikes": len(record.defense_strikes),
+            "seated_count": len(members),
+        }
 
     def create_session(
         self,
         task_ids: List[str],
+        lawyer=None,
+        candidate_reputations=None,
         members: Optional[List[JuryMember]] = None,
         commit_timeout_s: int = DEFAULT_COMMIT_TIMEOUT_S,
         reveal_timeout_s: int = DEFAULT_REVEAL_TIMEOUT_S,
     ) -> JurySession:
         """Create a new jury session with specified tasks and members.
         
+        DEPRECATED: Use create_session_via_voir_dire() instead.
+        This method is kept for backward compatibility.
+        
         Args:
             task_ids: List of task IDs to be voted on
+            lawyer: Lawyer agent (legacy parameter, ignored if members provided)
+            candidate_reputations: Reputation scores (legacy parameter)
             members: List of JuryMember instances; if None, creates default 3-member jury
             commit_timeout_s: Seconds until commit phase expires
             reveal_timeout_s: Seconds until reveal phase expires
