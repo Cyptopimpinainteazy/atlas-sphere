@@ -28,14 +28,16 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src/",
-    "start:server": "tsx src/server/index.ts"
+    "start:server": "tsx src/server/index.ts",
+    "start:dev-server": "tsx -r ts-node/register src/server/dev-server.ts"
   },
   "dependencies": {
     "ethers": "^6.11.0",
     "@solana/web3.js": "^1.87.0",
     "ws": "^8.16.0",
     "prom-client": "^15.1.0",
-    "@polkadot/api": "^9.0.0"
+    "@polkadot/api": "^9.0.0",
+    "node-fetch": "^3.4.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
