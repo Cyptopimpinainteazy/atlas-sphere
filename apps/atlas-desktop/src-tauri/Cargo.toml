@@ -25,4 +25,6 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 rusqlite = { version = "0.31", features = ["bundled"] }
 bcrypt = "0.15"
 base64 = "0.22"
+scraper = "0.20"
+glob = "0.3"
 lettre = { version = "0.11", default-features = false, features = ["tokio1-rustls-tls", "smtp-transport", "builder"] }

@@ -1,0 +1,3 @@
+{"category": "system", "severity": "info", "actor": "autonomic", "action": "start", "target": "control_plane", "reason": "initializing", "result": "logged", "details": {}, "ts": 1770840629.200688}
+{"category": "system", "severity": "info", "actor": "autonomic", "action": "started", "target": "control_plane", "reason": "all subsystems running", "result": "logged", "details": {}, "ts": 1770840629.2010868}
+{"category": "system", "severity": "info", "actor": "autonomic", "action": "stopped", "target": "control_plane", "reason": "clean shutdown", "result": "logged", "details": {}, "ts": 1770840641.2060626}

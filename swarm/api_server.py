@@ -334,6 +334,15 @@ class SwarmAPIServer:
 
         logger.info(f"Swarm API Server initialized on {host}:{port}")
 
+        # Autonomic Control Plane (self-monitoring / self-healing)
+        self._autonomic = None
+        try:
+            from swarm.autonomic import AutonomicControlPlane
+            self._autonomic = AutonomicControlPlane()
+            logger.info("Autonomic Control Plane initialized")
+        except Exception:
+            logger.warning("Autonomic Control Plane not available", exc_info=True)
+
         # Server lifecycle helpers (populated when server is started)
         self._runner = None
         self._site = None
@@ -419,6 +428,11 @@ class SwarmAPIServer:
         # Push notification endpoints
         app.router.add_get('/api/notifications/vapid', self.notifications_vapid)
         app.router.add_post('/api/notifications/subscribe', self.notifications_subscribe)
+
+        # Autonomic Control Plane endpoints
+        if self._autonomic:
+            from swarm.autonomic.api_routes import register_autonomic_routes
+            register_autonomic_routes(app, self._autonomic)
         app.router.add_post('/api/notifications/send', self.notifications_send)
         app.router.add_post('/api/notifications/send_single', self.notifications_send_single)
         app.router.add_get('/api/notifications/list', self.notifications_list)
@@ -458,6 +472,14 @@ class SwarmAPIServer:
 
         # Prometheus metrics
         app.router.add_get('/metrics', self.prometheus_metrics)
+
+        # Autonomic Control Plane API routes
+        if self._autonomic:
+            try:
+                from swarm.autonomic.api_routes import register_autonomic_routes
+                register_autonomic_routes(app, self._autonomic)
+            except Exception:
+                logger.warning("Failed to register autonomic routes", exc_info=True)
 
     async def health_check(self, request: web.Request) -> web.Response:
         """Health check endpoint"""
@@ -3425,6 +3447,13 @@ class SwarmAPIServer:
         asyncio.create_task(self._check_blockchain_loop())
         asyncio.create_task(self.social_queue.start())
 
+        # Start Autonomic Control Plane
+        if self._autonomic:
+            try:
+                await self._autonomic.start()
+            except Exception:
+                logger.warning("Autonomic Control Plane failed to start", exc_info=True)
+
         logger.info(f"Starting Swarm API Server on {self.host}:{self.port}")
 
         runner = web.AppRunner(app)
@@ -3441,6 +3470,17 @@ class SwarmAPIServer:
     def stop(self):
         """Stop the server"""
         self.running = False
+        # Stop Autonomic Control Plane
+        if self._autonomic:
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self._autonomic.stop())
+                else:
+                    loop.run_until_complete(self._autonomic.stop())
+            except Exception:
+                logger.warning("Error stopping autonomic control plane", exc_info=True)
         logger.info("Swarm API Server stopping...")
 
 

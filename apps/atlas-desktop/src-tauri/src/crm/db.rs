@@ -146,7 +146,148 @@ impl CrmDb {
             CREATE INDEX IF NOT EXISTS idx_crm_activities_owner ON crm_activities(owner_user_id);
             CREATE INDEX IF NOT EXISTS idx_crm_activities_contact ON crm_activities(contact_id);
             CREATE INDEX IF NOT EXISTS idx_crm_sent_emails_owner ON crm_sent_emails(owner_user_id);
+
+            /* ── Agent Tasks ── */
+            CREATE TABLE IF NOT EXISTS crm_agent_tasks (
+                id                  TEXT PRIMARY KEY,
+                agent_id            TEXT NOT NULL,
+                owner_user_id       TEXT NOT NULL,
+                assigned_to_user_id TEXT NOT NULL,
+                task_type           TEXT NOT NULL DEFAULT '',
+                prompt              TEXT NOT NULL DEFAULT '',
+                result              TEXT DEFAULT '',
+                status              TEXT DEFAULT 'pending',
+                leads_generated     INTEGER DEFAULT 0,
+                created_at          TEXT NOT NULL,
+                completed_at        TEXT DEFAULT ''
+            );
+
+            /* ── Agent Conversations ── */
+            CREATE TABLE IF NOT EXISTS crm_agent_conversations (
+                id          TEXT PRIMARY KEY,
+                agent_id    TEXT NOT NULL,
+                user_id     TEXT NOT NULL,
+                role        TEXT NOT NULL DEFAULT 'user',
+                content     TEXT NOT NULL DEFAULT '',
+                created_at  TEXT NOT NULL
+            );
+
+            /* ── Lead Funnel (shared pipeline — King sees all) ── */
+            CREATE TABLE IF NOT EXISTS crm_lead_funnel (
+                id              TEXT PRIMARY KEY,
+                contact_id      TEXT NOT NULL,
+                owner_user_id   TEXT NOT NULL,
+                funnel_stage    TEXT DEFAULT 'discovered',
+                agent_id        TEXT DEFAULT '',
+                score           INTEGER DEFAULT 50,
+                notes           TEXT DEFAULT '',
+                shared_with_king INTEGER DEFAULT 1,
+                created_at      TEXT NOT NULL,
+                updated_at      TEXT NOT NULL
+            );
+
+            /* ── User Email Assignments (x3star.net) ── */
+            CREATE TABLE IF NOT EXISTS crm_user_emails (
+                id              TEXT PRIMARY KEY,
+                user_id         TEXT NOT NULL,
+                email_address   TEXT NOT NULL UNIQUE,
+                smtp_username   TEXT DEFAULT '',
+                created_at      TEXT NOT NULL,
+                active          INTEGER DEFAULT 1
+            );
+
+            /* ── User Proxy Assignments ── */
+            CREATE TABLE IF NOT EXISTS crm_user_proxies (
+                id          TEXT PRIMARY KEY,
+                user_id     TEXT NOT NULL,
+                proxy_host  TEXT NOT NULL,
+                proxy_port  INTEGER DEFAULT 0,
+                proxy_type  TEXT DEFAULT 'socks5',
+                username    TEXT DEFAULT '',
+                password    TEXT DEFAULT '',
+                active      INTEGER DEFAULT 1,
+                created_at  TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_crm_agent_tasks_owner ON crm_agent_tasks(owner_user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_agent_convos ON crm_agent_conversations(agent_id, user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_lead_funnel_owner ON crm_lead_funnel(owner_user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_lead_funnel_stage ON crm_lead_funnel(funnel_stage);
+            CREATE INDEX IF NOT EXISTS idx_crm_user_emails_user ON crm_user_emails(user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_user_proxies_user ON crm_user_proxies(user_id);
+
+            /* ── v2: Contact sorting fields ── */
+            /* SQLite ALTER TABLE ADD COLUMN is idempotent-safe with IF NOT EXISTS absent,
+               so we use a helper table approach instead */
         ")?;
+
+        // Add network, ranking columns to crm_contacts (safe: ignore if already exists)
+        let _ = conn.execute_batch("ALTER TABLE crm_contacts ADD COLUMN network TEXT DEFAULT '';");
+        let _ = conn.execute_batch("ALTER TABLE crm_contacts ADD COLUMN ranking INTEGER DEFAULT 0;");
+
+        // Index for sorting
+        let _ = conn.execute_batch("CREATE INDEX IF NOT EXISTS idx_crm_contacts_network ON crm_contacts(network);");
+        let _ = conn.execute_batch("CREATE INDEX IF NOT EXISTS idx_crm_contacts_ranking ON crm_contacts(ranking);");
+        let _ = conn.execute_batch("CREATE INDEX IF NOT EXISTS idx_crm_contacts_country ON crm_contacts(country);");
+
+        /* ── v3: RAG document cache ── */
+        conn.execute_batch("
+            CREATE TABLE IF NOT EXISTS crm_rag_docs (
+                id          TEXT PRIMARY KEY,
+                file_path   TEXT NOT NULL UNIQUE,
+                content     TEXT NOT NULL,
+                token_count INTEGER DEFAULT 0,
+                indexed_at  TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_crm_rag_docs_path ON crm_rag_docs(file_path);
+
+            /* ── Media library ── */
+            CREATE TABLE IF NOT EXISTS crm_media (
+                id          TEXT PRIMARY KEY,
+                file_name   TEXT NOT NULL,
+                file_path   TEXT NOT NULL,
+                file_type   TEXT DEFAULT '',
+                file_size   INTEGER DEFAULT 0,
+                tags        TEXT DEFAULT '',
+                created_at  TEXT NOT NULL
+            );
+
+            /* ── v4: 90-Day Rollout Phases ── */
+            CREATE TABLE IF NOT EXISTS crm_rollout_phases (
+                id          TEXT PRIMARY KEY,
+                phase_num   INTEGER NOT NULL,
+                title       TEXT NOT NULL,
+                description TEXT DEFAULT '',
+                start_day   INTEGER NOT NULL,
+                end_day     INTEGER NOT NULL,
+                status      TEXT DEFAULT 'pending',
+                milestones  TEXT DEFAULT '[]',
+                progress    INTEGER DEFAULT 0,
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_crm_rollout_status ON crm_rollout_phases(status);
+
+            /* ── v4: Generated Pages (homepage builder) ── */
+            CREATE TABLE IF NOT EXISTS crm_generated_pages (
+                id          TEXT PRIMARY KEY,
+                slug        TEXT NOT NULL UNIQUE,
+                title       TEXT NOT NULL,
+                page_type   TEXT DEFAULT 'landing',
+                html_content TEXT DEFAULT '',
+                meta_title  TEXT DEFAULT '',
+                meta_desc   TEXT DEFAULT '',
+                og_image    TEXT DEFAULT '',
+                seo_keywords TEXT DEFAULT '',
+                status      TEXT DEFAULT 'draft',
+                agent_id    TEXT DEFAULT '',
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_crm_pages_slug ON crm_generated_pages(slug);
+            CREATE INDEX IF NOT EXISTS idx_crm_pages_status ON crm_generated_pages(status);
+        ")?;
+
         Ok(())
     }
 }

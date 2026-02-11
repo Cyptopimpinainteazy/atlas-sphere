@@ -50,6 +50,13 @@ DEX_PORT=3003
 SOLANA_DEX_PORT=3000    # apps/next-solana-main
 QUANTUM_DASHBOARD_PORT=3100  # Quantum Advisor Dashboard
 ATLAS_DESKTOP_PORT=5173     # Atlas Desktop (Tauri) Vite dev server
+VALIDATORS_PORT=3004        # Validators dashboard
+X3_INTELLIGENCE_PORT=3005   # X3 Intelligence
+POLKADEX_PORT=3007          # Polkadex DEX
+
+# Service Ports
+ANALYTICS_SERVICE_PORT=8081     # Analytics Service (Rust)
+BLOCKCHAIN_ADAPTER_PORT=8082    # Blockchain Adapter (TypeScript)
 
 # URLs
 BLOCKCHAIN_WS="ws://localhost:$BLOCKCHAIN_PORT"
@@ -627,6 +634,123 @@ start_x3os_tauri() {
         return 0
     else
         log_error "Failed to start X3OS desktop; check $PROJECT_ROOT/logs/x3os-desktop.log"
+        return 1
+    fi
+}
+
+start_vite_app() {
+    local app_name=$1
+    local app_path=$2
+    local port=$3
+    
+    log_header "Starting $app_name"
+    
+    if [ ! -d "$app_path" ]; then
+        log_warn "$app_name not found at $app_path"
+        return 1
+    fi
+    
+    if port_in_use $port; then
+        log_success "$app_name already running on port $port"
+        return 0
+    fi
+    
+    cd "$app_path" || return 1
+    
+    if [ ! -d "node_modules" ]; then
+        log_info "Installing dependencies for $app_name..."
+        npm install
+    fi
+    
+    log_info "Starting $app_name on port $port..."
+    PORT=$port npm run dev > "$PROJECT_ROOT/logs/$app_name.log" 2>&1 &
+    local pid=$!
+    echo "$pid $app_name" >> "$PIDS_FILE"
+    
+    sleep 3
+    
+    if ps -p $pid > /dev/null; then
+        log_success "$app_name started (PID: $pid) on http://localhost:$port"
+        cd "$PROJECT_ROOT"
+        return 0
+    else
+        log_error "$app_name failed to start. Check logs/$app_name.log"
+        cd "$PROJECT_ROOT"
+        return 1
+    fi
+}
+
+start_analytics_service() {
+    log_header "Starting Analytics Service"
+    
+    local service_path="$PROJECT_ROOT/apps/analytics/analytics-service"
+    
+    if [ ! -d "$service_path" ]; then
+        log_warn "Analytics service not found"
+        return 1
+    fi
+    
+    if port_in_use $ANALYTICS_SERVICE_PORT; then
+        log_success "Analytics service already running"
+        return 0
+    fi
+    
+    cd "$service_path" || return 1
+    
+    log_info "Starting analytics service on port $ANALYTICS_SERVICE_PORT..."
+    PORT=$ANALYTICS_SERVICE_PORT cargo run --release > "$PROJECT_ROOT/logs/analytics-service.log" 2>&1 &
+    local pid=$!
+    echo "$pid analytics-service" >> "$PIDS_FILE"
+    
+    sleep 3
+    
+    if ps -p $pid > /dev/null; then
+        log_success "Analytics service started (PID: $pid)"
+        cd "$PROJECT_ROOT"
+        return 0
+    else
+        log_warn "Analytics service failed to start"
+        cd "$PROJECT_ROOT"
+        return 1
+    fi
+}
+
+start_blockchain_adapter() {
+    log_header "Starting Blockchain Adapter"
+    
+    local adapter_path="$PROJECT_ROOT/apps/blockchain-adapter"
+    
+    if [ ! -d "$adapter_path" ]; then
+        log_warn "Blockchain adapter not found"
+        return 1
+    fi
+    
+    if port_in_use $BLOCKCHAIN_ADAPTER_PORT; then
+        log_success "Blockchain adapter already running"
+        return 0
+    fi
+    
+    cd "$adapter_path" || return 1
+    
+    if [ ! -d "node_modules" ]; then
+        log_info "Installing adapter dependencies..."
+        npm install
+    fi
+    
+    log_info "Starting blockchain adapter on port $BLOCKCHAIN_ADAPTER_PORT..."
+    PORT=$BLOCKCHAIN_ADAPTER_PORT npx ts-node src/index.ts > "$PROJECT_ROOT/logs/blockchain-adapter.log" 2>&1 &
+    local pid=$!
+    echo "$pid blockchain-adapter" >> "$PIDS_FILE"
+    
+    sleep 2
+    
+    if ps -p $pid > /dev/null; then
+        log_success "Blockchain adapter started (PID: $pid)"
+        cd "$PROJECT_ROOT"
+        return 0
+    else
+        log_warn "Blockchain adapter failed to start"
+        cd "$PROJECT_ROOT"
         return 1
     fi
 }

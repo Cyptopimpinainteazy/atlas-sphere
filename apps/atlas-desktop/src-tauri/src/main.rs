@@ -2,6 +2,7 @@
 
 mod social;
 mod crm;
+mod admin_commands;
 
 use chrono::Utc;
 use rand::Rng;
@@ -1071,6 +1072,52 @@ fn main() {
       crm::commands::crm_send_email,
       crm::commands::crm_get_sent_emails,
       crm::commands::crm_get_stats,
+      // ── CRM Agents (AI-powered marketing team) ──
+      crm::agents::agents_get_roster,
+      crm::agents::agents_check_status,
+      crm::agents::agents_run_task,
+      crm::agents::agents_chat,
+      crm::agents::agents_get_history,
+      crm::agents::agents_get_tasks,
+      crm::agents::agents_create_lead,
+      crm::agents::agents_update_lead,
+      crm::agents::agents_get_leads,
+      crm::agents::agents_assign_email,
+      crm::agents::agents_get_user_email,
+      crm::agents::agents_assign_proxy,
+      crm::agents::agents_get_proxy,
+      crm::agents::agents_get_all_proxies,
+      crm::agents::agents_get_funnel_stats,
+      // ── Web Search & Research ──
+      crm::agents::agents_web_search,
+      crm::agents::agents_fetch_website,
+      // ── RAG System ──
+      crm::agents::agents_rag_index,
+      crm::agents::agents_rag_query,
+      crm::agents::agents_rag_stats,
+      // ── Contact Import & Sorting ──
+      crm::agents::agents_import_contacts,
+      crm::agents::agents_get_contacts_sorted,
+      crm::agents::agents_get_contact_filters,
+      // ── Proxy Toggle ──
+      crm::agents::agents_toggle_proxy,
+      // ── Media Folder ──
+      crm::agents::agents_scan_media,
+      crm::agents::agents_get_media,
+      // ── Personalized Messages ──
+      crm::agents::agents_personalized_message,
+      // ── 90-Day Rollout ──
+      crm::agents::agents_seed_rollout,
+      crm::agents::agents_get_rollout,
+      crm::agents::agents_update_rollout,
+      // ── Page Builder ──
+      crm::agents::agents_generate_page,
+      crm::agents::agents_get_pages,
+      crm::agents::agents_get_page_content,
+      crm::agents::agents_update_page_status,
+      crm::agents::agents_delete_page,
+      // ── Agent Hierarchy ──
+      crm::agents::agents_get_hierarchy,
     ])
     .setup(move |app| {
       // Initialize social database

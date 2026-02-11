@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import { useSocialStore } from "@/stores/socialStore";
+
+const SystemCommandPanel = React.lazy(() => import("../admin/SystemCommandPanel"));
 import HomePage from "./HomePage";
 import ProfilePage from "./ProfilePage";
 import EditProfilePage from "./EditProfilePage";
@@ -116,7 +118,7 @@ const SocialShell: React.FC = () => {
           <Route path="/browse" element={<BrowsePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/view/:userId" element={<ViewProfilePage />} />
-          <Route path="/admin/commands" element={React.createElement(require("../admin/SystemCommandPanel").default)} />
+          <Route path="/admin/commands" element={<Suspense fallback={<div>Loading...</div>}><SystemCommandPanel /></Suspense>} />
         </Routes>
       </div>
     </div>
