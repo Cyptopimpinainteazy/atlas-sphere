@@ -7,9 +7,11 @@ import ContactsPage from "./ContactsPage";
 import DealsPage from "./DealsPage";
 import EmailPage from "./EmailPage";
 import SettingsPage from "./SettingsPage";
+import AgentsPage from "./AgentsPage";
 
 const NAV_ITEMS = [
   { path: "/crm",          label: "Dashboard", icon: "📊" },
+  { path: "/crm/agents",    label: "AI Agents", icon: "🤖" },
   { path: "/crm/calendar",  label: "Calendar",  icon: "📅" },
   { path: "/crm/contacts",  label: "Contacts",  icon: "👥" },
   { path: "/crm/deals",     label: "Deals",     icon: "💰" },
@@ -82,6 +84,7 @@ const CrmShell: React.FC = () => {
       <main className="crm-main">
         <Routes>
           <Route index element={<DashboardPage />} />
+          <Route path="agents" element={<AgentsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="deals" element={<DealsPage />} />
