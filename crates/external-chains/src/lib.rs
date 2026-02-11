@@ -22,6 +22,8 @@ pub mod chains;
 pub mod error;
 pub mod router;
 pub mod settlement;
+pub mod rpc;
+pub mod env_config;
 
 pub use adapter::{ChainAdapter, ChainConfig, ChainMessage, CrossChainTransfer, TransferStatus};
 pub use assets::{AssetMetadata, AssetRegistry, MirroredAsset, TokenMapping};
@@ -29,6 +31,8 @@ pub use chains::{create_adapter, create_all_adapters};
 pub use error::ExternalChainError;
 pub use router::{SwapRouter, SwapRoute, AtomicSwapBundle, QuoteResult, quote_swap, find_best_route, build_atomic_swap};
 pub use settlement::{SettlementConfig, SettlementProof, SettlementVerifier, ProofType};
+pub use rpc::{RpcRegistry, ChainRpcConfig, RpcEndpoint, WsEndpoint, FlashLoanProvider, DexRouter, create_default_registry, arbitrum_mainnet_config};
+pub use env_config::{EnvConfig, NetworkEnv, ProviderCredentials, WalletConfig, FlashLoanConfig, BotConfig, FlashloanRouteConfig};
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;

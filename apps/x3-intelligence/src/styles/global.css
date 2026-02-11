@@ -400,6 +400,24 @@ select:focus {
   color: var(--accent-red);
 }
 
+/* ─── Arbitrage / Order-book ───────────────────────────────── */
+.order-book { display: flex; gap: 12px; align-items: flex-start; }
+.order-book-side { flex: 1; background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 8px; border: 1px solid var(--border); }
+.side-title { font-weight: 700; margin-bottom: 8px; }
+.order-rows { display: grid; grid-template-columns: 1fr 72px; gap: 6px; }
+.order-row { display: contents; padding: 4px 0; }
+.order-row .order-price { font-weight: 700; }
+.order-row.bid .order-price { color: var(--accent-green); }
+.order-row.ask .order-price { color: var(--accent-red); }
+.order-book-mid { width: 220px; text-align: center; display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center; }
+.mid-title { color: var(--text-muted); font-size: 12px; }
+.price-diff { padding: 8px; border-radius: 8px; border: 1px solid var(--border); }
+.price-diff.positive { background: rgba(0,210,170,0.06); color: var(--accent-green); }
+.price-diff.negative { background: rgba(255,68,68,0.04); color: var(--accent-red); }
+
+.flashloan-panel { padding: 8px 0; }
+
+
 /* ─── Modal ────────────────────────────────────────────────── */
 
 .modal-overlay {

@@ -723,6 +723,22 @@ impl Verifier {
                 let streams = read_u8(3)? as u64;
                 Ok((4, vec![dst, count, streams]))
             }
+
+            // gpu_keccak256_batch: opcode dst:u8 inputs:u8 count:u8 (4 bytes)
+            Opcode::GpuKeccak256Batch => {
+                let dst = read_u8(1)? as u64;
+                let inputs = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                Ok((4, vec![dst, inputs, count]))
+            }
+
+            // gpu_secp256k1_verify: opcode dst:u8 sigs:u8 count:u8 (4 bytes)
+            Opcode::GpuSecp256k1Verify => {
+                let dst = read_u8(1)? as u64;
+                let sigs = read_u8(2)? as u64;
+                let count = read_u8(3)? as u64;
+                Ok((4, vec![dst, sigs, count]))
+            }
         }
     }
 
@@ -1003,6 +1019,8 @@ pub fn opcode_gas_cost(opcode: u8) -> u64 {
             Opcode::GpuSha256Streamed => 750,
             Opcode::GpuDeviceCount => 10,
             Opcode::GpuBenchmark => 1000,
+            Opcode::GpuKeccak256Batch => 500,
+            Opcode::GpuSecp256k1Verify => 500,
 
             // Debug (0 gas in dev, forbidden on-chain)
             Opcode::DebugPrint => 0,
