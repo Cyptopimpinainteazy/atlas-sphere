@@ -1,0 +1,43 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const polkadexRoutes = [
+  { href: '/polkadex/trading', label: '📊 Trading' },
+  { href: '/polkadex/markets', label: '🔄 Markets' },
+  { href: '/polkadex/orders', label: '📋 Orders' },
+  { href: '/polkadex/portfolio', label: '💼 Portfolio' },
+  { href: '/polkadex/settings', label: '⚙️ Settings' },
+];
+
+export default function PolkadexLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  return (
+    <div className="min-h-screen bg-x3-black text-white">
+      {/* Top Navigation */}
+      <nav className="bg-x3-darker border-b border-x3-dark-gray sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto">
+          <span className="font-bold text-x3-orange mr-4">POLKADEX</span>
+          {polkadexRoutes.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              className={`px-3 py-2 text-sm font-medium whitespace-nowrap rounded transition-colors ${
+                pathname === route.href
+                  ? 'bg-x3-orange text-white'
+                  : 'text-gray-300 hover:bg-x3-dark-gray'
+              }`}
+            >
+              {route.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* Content */}
+      <main className="max-w-7xl mx-auto">{children}</main>
+    </div>
+  );
+}

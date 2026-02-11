@@ -765,7 +765,7 @@ pub mod pallet {
             let who = ensure_signed(origin)?;
 
             // Reserve funds from caller
-            T::Currency::reserve(&who, amount)?;
+            <T as Config>::Currency::reserve(&who, amount)?;
 
             let _id = Self::create_bond(&who, asset, amount, bond_type)?;
 
@@ -796,7 +796,7 @@ pub mod pallet {
             ensure!(rec.state == 1, Error::<T>::BondNotWithdrawable);
 
             // Unreserve and remove
-            T::Currency::unreserve(&who, rec.amount);
+            <T as Config>::Currency::unreserve(&who, rec.amount);
             Self::finalize_withdraw(bond_id)?;
             Ok(())
         }
@@ -810,7 +810,7 @@ pub mod pallet {
             ensure!(rec.state != 2, Error::<T>::BondAlreadySlashed);
 
             // Slash reserved balance
-            let _ = T::Currency::slash_reserved(&rec.owner, rec.amount);
+            let _ = <T as Config>::Currency::slash_reserved(&rec.owner, rec.amount);
 
             Self::slash_bond_internal(bond_id)?;
             Ok(())
@@ -987,7 +987,7 @@ pub mod pallet {
             seed[0..8].copy_from_slice(&counter.to_le_bytes());
             let id = H256::from(seed);
 
-            let now = <frame_system::Pallet<T>>::unix_time().saturated_into::<u64>();
+            let now = T::UnixTime::now().as_secs();
             let bounded_asset: BoundedVec<u8, ConstU32<64>> = asset.try_into().map_err(|_| Error::<T>::InvalidAssetSpec)?;
             let record = BondRecord {
                 id,
@@ -1038,7 +1038,7 @@ pub mod pallet {
             Bonds::<T>::try_mutate(bond_id, |maybe| {
                 let mut b = maybe.as_mut().ok_or(DispatchError::Other("BondNotFound"))?;
                 b.state = 2; // Slashed
-                Ok(())
+                Ok::<(), DispatchError>(())
             })?;
             Self::deposit_event(Event::BondSlashed { bond_id });
             Ok(())

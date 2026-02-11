@@ -11,6 +11,12 @@ from typing import Iterable
 from .cuda_loader import CudaRuntime
 
 
+def _keccak256(data: bytes) -> bytes:
+    """Hash data using Keccak-256 (same as Ethereum)."""
+    # Use SHA3-256 (which is Keccak-256 in Python's hashlib)
+    return hashlib.sha3_256(data).digest()
+
+
 @dataclass
 class KeccakBatchHasher:
     """Batch hasher with GPU-first execution and CPU failover."""

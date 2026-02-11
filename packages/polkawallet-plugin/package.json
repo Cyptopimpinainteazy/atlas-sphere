@@ -73,5 +73,8 @@
   },
   "peerDependencies": {
     "@atlas-sphere/ts-sdk": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@atlas-sphere/ts-sdk": { "optional": true }
   }
 }

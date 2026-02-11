@@ -1,4 +1,13 @@
 {
+  "private": true,
+  "workspaces": [
+    "packages/ts-sdk",
+    "packages/atomic-swap-sdk",
+    "packages/blockchain-adapter",
+    "packages/blockchain-connector",
+    "packages/polkawallet-plugin",
+    "packages/polkawallet-bridge-adapter"
+  ],
   "dependencies": {
     "@types/axios": "^0.9.36",
     "ethers": "^6.16.0",
@@ -11,12 +20,21 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@types/frontend/webpack-dev-server": "^4.7.1",
+    "@types/webpack-dev-server": "^4.7.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
     "typescript": "^5.9.3"
   },
   "scripts": {
     "test": "cypress run",
     "test:open": "cypress open",
+    "test:polkawallet": "npm test --workspace packages/polkawallet-plugin",
+    "test:bridge": "npm test --workspace packages/polkawallet-bridge-adapter",
+    "test:ts-sdk": "npm test --workspace packages/ts-sdk",
+    "test:all-packages": "npm test --workspaces --if-present",
+    "build:polkawallet": "npm run build --workspace packages/polkawallet-plugin",
+    "build:bridge": "npm run build --workspace packages/polkawallet-bridge-adapter",
+    "build:all-packages": "npm run build --workspaces --if-present",
     "bmad:install": "npm --prefix crates/vibe-bmad run install-bmad",
     "bmad:status": "npm --prefix crates/vibe-bmad run status",
     "bmad:ci-install": "npm --prefix crates/vibe-bmad run ci-install"

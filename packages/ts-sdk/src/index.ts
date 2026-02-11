@@ -313,6 +313,28 @@ export {
 } from './constants';
 
 // =============================================================================
+// X3 Chain Integration
+// =============================================================================
+
+export {
+  X3SettlementClient,
+  X3AtomicTradeClient,
+  X3DomainClient,
+  X3VerifierClient,
+  createX3SettlementClient,
+  createX3TradeClient,
+  createX3DomainClient,
+  createX3VerifierClient,
+} from './x3';
+
+export type {
+  X3VmType,
+  X3AmmProtocol,
+  X3TradeLeg,
+  X3SettlementOptions,
+} from './x3';
+
+// =============================================================================
 // Errors
 // =============================================================================
 

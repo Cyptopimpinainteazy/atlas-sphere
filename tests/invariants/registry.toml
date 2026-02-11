@@ -97,3 +97,27 @@ description = "Metrics snapshots expose required fields"
 severity = "LOW"
 layer = "INFRA"
 tested_by = ["tests/cross_chain_gpu_validator/test_metrics.py::test_metrics_snapshot_fields"]
+
+[[invariant]]
+id = "API-POLKAWALLET-001"
+description = "Polkawallet plugin registers all x3chain runtime types and exposes all 9 service classes"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/polkawallet-plugin/tests/plugin.test.ts::X3ChainCustomTypes", "packages/polkawallet-plugin/tests/plugin.test.ts::Package exports"]
+property = "init(plugin) => kernel, settlement, trades, domains, verifier, governance, treasury, svm, x3vm all accessible"
+
+[[invariant]]
+id = "API-POLKAWALLET-002"
+description = "Bridge adapter discovers valid routes between Atlas and all supported external chains"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/polkawallet-bridge-adapter/tests/bridge.test.ts::route discovery"]
+property = "forall (src, dst) in supported_pairs: getRoutes(src, dst).length > 0"
+
+[[invariant]]
+id = "API-POLKAWALLET-003"
+description = "TS SDK x3 clients correctly construct extrinsics for settlement, trades, domains, and verifier pallets"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/ts-sdk/tests/x3.test.ts::X3SettlementClient", "packages/ts-sdk/tests/x3.test.ts::X3AtomicTradeClient", "packages/ts-sdk/tests/x3.test.ts::X3DomainClient", "packages/ts-sdk/tests/x3.test.ts::X3VerifierClient"]
+property = "client.method(args) produces correct extrinsic targeting runtime pallet"

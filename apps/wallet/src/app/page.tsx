@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { WalletProvider } from '@/components/providers/WalletProvider';
 import { WalletDashboard } from '@/components/wallet/WalletDashboard';
 import { ConnectWallet } from '@/components/wallet/ConnectWallet';
@@ -24,7 +24,31 @@ function WalletApp() {
     return <ConnectWallet />;
   }
 
-  return <WalletDashboard />;
+  return (
+    <div>
+      {/* Top Navigation */}
+      <nav className="bg-x3-darker border-b border-x3-dark-gray p-4">
+        <div className="max-w-7xl mx-auto flex items-center gap-6">
+          <h1 className="text-lg font-bold">X3 STAR Wallet</h1>
+          <div className="flex gap-4 ml-auto">
+            <Link
+              href="/trading/floor"
+              className="px-4 py-2 bg-x3-orange hover:bg-orange-600 text-white rounded font-medium transition-colors flex items-center gap-2"
+            >
+              📊 X3 Trading
+            </Link>
+            <Link
+              href="/polkadex/trading"
+              className="px-4 py-2 bg-x3-orange hover:bg-orange-600 text-white rounded font-medium transition-colors flex items-center gap-2"
+            >
+              🔄 POLKADEX
+            </Link>
+          </div>
+        </div>
+      </nav>
+      <WalletDashboard />
+    </div>
+  );
 }
 
 export default function Home() {
