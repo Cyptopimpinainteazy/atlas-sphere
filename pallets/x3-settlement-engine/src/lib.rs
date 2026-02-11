@@ -1156,11 +1156,16 @@ pub mod pallet {
             let volume = intent.asset_a.amount.saturating_add(intent.asset_b.amount);
             TotalSettledVolume::<T>::mutate(|v| *v = v.saturating_add(volume));
 
+            let now = T::UnixTime::now().as_secs();
+            let settlement_time_ms = now
+                .saturating_sub(intent.created_at)
+                .saturating_mul(1000);
+
             Self::deposit_event(Event::X3Finalized {
                 intent_id,
                 maker_received: intent.asset_b.amount,
                 taker_received: intent.asset_a.amount,
-                settlement_time_ms: 0, // TODO: Calculate actual time
+                settlement_time_ms,
             });
 
             Ok(())

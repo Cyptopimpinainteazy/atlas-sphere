@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
 from typing import Iterable
 
 from cross_chain_gpu_validator.gpu import KeccakBatchHasher, Secp256k1BatchVerifier
+from cross_chain_gpu_validator.gpu.keccak_gpu import _keccak256
 from cross_chain_gpu_validator.chain_adapter import ChainValidator, ChainConfig, ChainTransaction
 from .state_root import merkle_root
 
@@ -49,9 +49,9 @@ class EvmValidator(ChainValidator):
             return self._validate_chain_transactions(txs)
 
     def _validate_evm_transactions(self, transactions: Iterable[EvmTransaction]) -> list[bool]:
-        """Validate legacy EvmTransaction format."""
+        """Validate legacy EvmTransaction format using real Keccak-256."""
         signatures = [tx.signature for tx in transactions]
-        messages = [hashlib.sha3_256(tx.payload).digest() for tx in transactions]
+        messages = [_keccak256(tx.payload) for tx in transactions]
         pubkeys = [tx.pubkey for tx in transactions]
         return self._sig_verifier.verify_batch(signatures, messages, pubkeys)
 

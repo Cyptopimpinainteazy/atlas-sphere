@@ -9,6 +9,117 @@ import ctypes
 
 from .cuda_loader import CudaRuntime
 
+# ---------------------------------------------------------------------------
+# Module-level secp256k1 curve constants (computed once at import time)
+# ---------------------------------------------------------------------------
+_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+_GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
+_GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
+_G: tuple[int, int] = (_GX, _GY)
+
+Point = tuple[int, int] | None
+
+# ---------------------------------------------------------------------------
+# Pure-Python elliptic-curve helpers (used by CPU fallback)
+# ---------------------------------------------------------------------------
+
+def _inv(x: int, mod: int = _P) -> int:
+    """Modular inverse via Python's built-in pow."""
+    return pow(x, -1, mod)
+
+
+def _point_add(p1: Point, p2: Point) -> Point:
+    if p1 is None:
+        return p2
+    if p2 is None:
+        return p1
+    x1, y1 = p1
+    x2, y2 = p2
+    if x1 == x2 and (y1 + y2) % _P == 0:
+        return None
+    if x1 == x2 and y1 == y2:
+        lam = (3 * x1 * x1) * _inv(2 * y1 % _P) % _P
+    else:
+        lam = (y2 - y1) * _inv((x2 - x1) % _P) % _P
+    x3 = (lam * lam - x1 - x2) % _P
+    y3 = (lam * (x1 - x3) - y1) % _P
+    return x3, y3
+
+
+def _point_neg(pt: Point) -> Point:
+    if pt is None:
+        return None
+    return (pt[0], (-pt[1]) % _P)
+
+
+def _scalar_mul_simple(k: int, point: Point) -> Point:
+    """Double-and-add scalar multiplication (for arbitrary points)."""
+    result: Point = None
+    addend = point
+    while k:
+        if k & 1:
+            result = _point_add(result, addend)
+        addend = _point_add(addend, addend)
+        k >>= 1
+    return result
+
+
+def _build_window_table(base: Point, window: int = 4) -> list[Point]:
+    """Pre-compute [0*base, 1*base, ..., (2^w-1)*base]."""
+    table: list[Point] = [None]
+    for i in range(1, 1 << window):
+        table.append(_point_add(table[i - 1], base))
+    return table
+
+
+def _scalar_mul_windowed(k: int, table: list[Point], window: int = 4) -> Point:
+    """Fixed-window scalar multiplication using a precomputed table."""
+    mask = (1 << window) - 1
+    result: Point = None
+    bits = k.bit_length()
+    # Process from most-significant window down
+    top = ((bits + window - 1) // window) * window
+    for i in range(top, 0, -window):
+        for _ in range(window):
+            result = _point_add(result, result)  # double
+        idx = (k >> (i - window)) & mask
+        if idx:
+            result = _point_add(result, table[idx])
+    return result
+
+
+# Pre-compute table for generator point G (done once at import)
+_G_TABLE = _build_window_table(_G, 4)
+
+
+def _scalar_mul_G(k: int) -> Point:
+    """Fast scalar multiplication k*G using precomputed window table."""
+    return _scalar_mul_windowed(k, _G_TABLE, 4)
+
+
+def _multi_scalar_mul(u1: int, u2: int, pubkey_point: Point) -> Point:
+    """Shamir's trick: compute u1*G + u2*Q in a single pass (~40% faster)."""
+    if u1 == 0 and u2 == 0:
+        return None
+    g = _G
+    q = pubkey_point
+    gq = _point_add(g, q)  # G + Q (precomputed)
+    result: Point = None
+    # Walk bits from MSB to LSB
+    length = max(u1.bit_length(), u2.bit_length())
+    for i in range(length - 1, -1, -1):
+        result = _point_add(result, result)  # double
+        b1 = (u1 >> i) & 1
+        b2 = (u2 >> i) & 1
+        if b1 and b2:
+            result = _point_add(result, gq)
+        elif b1:
+            result = _point_add(result, g)
+        elif b2:
+            result = _point_add(result, q)
+    return result
+
 
 @dataclass
 class Secp256k1BatchVerifier:
@@ -114,10 +225,7 @@ class Secp256k1BatchVerifier:
 
     @staticmethod
     def _curve_order() -> int:
-        return int(
-            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-            16,
-        )
+        return _N
 
     def _compute_u1_u2(
         self, signatures: list[bytes], messages: list[bytes]
@@ -153,61 +261,26 @@ class Secp256k1BatchVerifier:
         signatures: Iterable[bytes], messages: Iterable[bytes], pubkeys: Iterable[bytes]
     ) -> list[bool]:
         results: list[bool] = []
-        p = int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
-        n = int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
-        gx = int("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16)
-        gy = int("483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8", 16)
-
-        def inv(x: int, mod: int) -> int:
-            return pow(x, -1, mod)
-
-        def point_add(p1: tuple[int, int] | None, p2: tuple[int, int] | None) -> tuple[int, int] | None:
-            if p1 is None:
-                return p2
-            if p2 is None:
-                return p1
-            x1, y1 = p1
-            x2, y2 = p2
-            if x1 == x2 and (y1 + y2) % p == 0:
-                return None
-            if x1 == x2 and y1 == y2:
-                lam = (3 * x1 * x1) * inv(2 * y1 % p, p) % p
-            else:
-                lam = (y2 - y1) * inv((x2 - x1) % p, p) % p
-            x3 = (lam * lam - x1 - x2) % p
-            y3 = (lam * (x1 - x3) - y1) % p
-            return x3, y3
-
-        def scalar_mul(k: int, point: tuple[int, int] | None) -> tuple[int, int] | None:
-            result = None
-            addend = point
-            while k:
-                if k & 1:
-                    result = point_add(result, addend)
-                addend = point_add(addend, addend)
-                k >>= 1
-            return result
-
         for signature, message, pubkey in zip(signatures, messages, pubkeys):
             if len(signature) != 64 or len(message) != 32 or len(pubkey) != 64:
                 results.append(False)
                 continue
             r = int.from_bytes(signature[:32], "big")
             s = int.from_bytes(signature[32:], "big")
-            if r == 0 or s == 0 or r >= n or s >= n:
+            if r == 0 or s == 0 or r >= _N or s >= _N:
                 results.append(False)
                 continue
             z = int.from_bytes(message, "big")
-            w = inv(s, n)
-            u1 = (z * w) % n
-            u2 = (r * w) % n
-            point = scalar_mul(u1, (gx, gy))
+            w = _inv(s, _N)
+            u1 = (z * w) % _N
+            u2 = (r * w) % _N
             pub_x = int.from_bytes(pubkey[:32], "big")
             pub_y = int.from_bytes(pubkey[32:], "big")
-            point = point_add(point, scalar_mul(u2, (pub_x, pub_y)))
+            # Shamir's trick: u1*G + u2*Q in one pass
+            point = _multi_scalar_mul(u1, u2, (pub_x, pub_y))
             if point is None:
                 results.append(False)
                 continue
-            x_coord = point[0] % n
+            x_coord = point[0] % _N
             results.append(x_coord == r)
         return results

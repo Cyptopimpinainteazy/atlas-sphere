@@ -7,6 +7,8 @@ import os
 import time
 
 from cross_chain_gpu_validator.config import load_settings
+from cross_chain_gpu_validator.chain_adapter import ChainConfig, SignatureAlgorithm, HashAlgorithm
+from cross_chain_gpu_validator.chain_registry import ChainRegistry, load_default_chain_configs
 from cross_chain_gpu_validator.dashboard.server import run_dashboard
 from cross_chain_gpu_validator.evm import EvmValidator
 from cross_chain_gpu_validator.gpu import CudaRuntime, KeccakBatchHasher, Secp256k1BatchVerifier
@@ -39,18 +41,49 @@ def _run_orchestrator() -> None:
         parity_check=settings.gpu_parity_check,
         allow_failover=not settings.require_gpu,
     )
-    evm_validator = EvmValidator(sig_verifier, keccak_hasher)
-    svm_validator = SvmValidator(sig_verifier)
+    evm_config = ChainConfig(
+        chain_id="ethereum",
+        chain_name="Ethereum",
+        rpc_url=settings.evm_rpc_url,
+        sig_algorithm=SignatureAlgorithm.SECP256K1,
+        hash_algorithm=HashAlgorithm.KECCAK256,
+        sig_pubkey_size=64,
+        sig_signature_size=64,
+        hash_output_size=32,
+    )
+    svm_config = ChainConfig(
+        chain_id="solana",
+        chain_name="Solana",
+        rpc_url=settings.svm_rpc_url,
+        sig_algorithm=SignatureAlgorithm.ED25519,
+        hash_algorithm=HashAlgorithm.SHA256,
+        sig_pubkey_size=32,
+        sig_signature_size=64,
+        hash_output_size=32,
+    )
+    evm_validator = EvmValidator(evm_config, sig_verifier, keccak_hasher)
+    svm_validator = SvmValidator(svm_config, sig_verifier)
 
     registry = AtomicSwapRegistry(settings.redis_url)
     metrics = MetricsStore()
 
-    orchestrator = CrossChainOrchestrator(registry, svm_validator, evm_validator, metrics)
+    # Build chain registry and register validators
+    chain_registry = ChainRegistry()
+    chain_registry.register_chain(evm_config, evm_validator)
+    chain_registry.register_chain(svm_config, svm_validator)
+
+    # Register additional chains from default configs
+    default_configs = load_default_chain_configs()
+    for cid, cfg in default_configs.items():
+        if cid not in ("ethereum", "solana") and chain_registry.get_validator(cid) is None:
+            chain_registry._configs[cid] = cfg
+
+    orchestrator = CrossChainOrchestrator(registry, chain_registry, metrics)
     logger.info("orchestrator started", extra={"trace_id": "bootstrap", "span_id": "n/a"})
 
     while True:
         orchestrator.process_pending()
-        time.sleep(0.5)
+        time.sleep(settings.poll_interval_seconds)
 
 
 def _run_dashboard() -> None:

@@ -9,6 +9,7 @@ authors = [{ name = "Atlas Sphere" }]
 
 dependencies = [
   "redis>=5.0.0",
+  "pycryptodome>=3.19.0",
 ]
 
 [project.scripts]

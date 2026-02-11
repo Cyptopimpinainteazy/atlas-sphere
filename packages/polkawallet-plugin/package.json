@@ -1,0 +1,77 @@
+{
+  "name": "@atlas-sphere/polkawallet-plugin",
+  "version": "0.1.0",
+  "description": "Polkawallet JS API plugin for Atlas Sphere x3chain — full x3vm, atomic trades, governance, settlement, and domain registry support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./x3vm": {
+      "import": "./dist/x3vm/index.mjs",
+      "require": "./dist/x3vm/index.js",
+      "types": "./dist/x3vm/index.d.ts"
+    },
+    "./trades": {
+      "import": "./dist/trades/index.mjs",
+      "require": "./dist/trades/index.js",
+      "types": "./dist/trades/index.d.ts"
+    },
+    "./settlement": {
+      "import": "./dist/settlement/index.mjs",
+      "require": "./dist/settlement/index.js",
+      "types": "./dist/settlement/index.d.ts"
+    },
+    "./governance": {
+      "import": "./dist/governance/index.mjs",
+      "require": "./dist/governance/index.js",
+      "types": "./dist/governance/index.d.ts"
+    },
+    "./domains": {
+      "import": "./dist/domains/index.mjs",
+      "require": "./dist/domains/index.js",
+      "types": "./dist/domains/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "files": ["dist", "src", "README.md"],
+  "keywords": [
+    "polkawallet", "atlas-sphere", "x3chain", "x3vm", "x3-lang",
+    "atomic-trades", "cross-chain", "substrate", "blockchain", "defi"
+  ],
+  "author": "Atlas Sphere Team",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@polkadot/api": "^14.0.1",
+    "@polkadot/types": "^14.0.1",
+    "@polkadot/util": "^13.0.0",
+    "@polkadot/util-crypto": "^13.0.0",
+    "@polkadot/keyring": "^13.0.0",
+    "@polkadot/extension-dapp": "^0.52.0",
+    "eventemitter3": "^5.0.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "@atlas-sphere/ts-sdk": ">=0.1.0"
+  }
+}

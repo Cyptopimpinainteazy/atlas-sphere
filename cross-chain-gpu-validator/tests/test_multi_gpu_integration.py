@@ -152,7 +152,7 @@ class TestGpuHostcallsRust(unittest.TestCase):
         """Check that GPU opcode .rs constants don't collide."""
         opcode_file = os.path.join(
             os.path.dirname(__file__),
-            "..", "..", "..",
+            "..", "..",
             "crates", "x3-backend", "src", "opcode.rs",
         )
         if not os.path.exists(opcode_file):
