@@ -124,24 +124,31 @@ class MultiGpuScheduler:
             gpu.vram_used_mb = 0
             gpu.status = GpuStatus.IDLE
 
-        # Sort workloads: high-priority first, then by TPS descending
+        # Sort workloads: high-priority first, then by VRAM descending (best-fit-decreasing)
         sorted_chains = sorted(
             self.workloads.values(),
-            key=lambda w: (-w.priority, -w.target_tps),
+            key=lambda w: (-w.priority, -w.vram_estimate_mb, -w.target_tps),
         )
 
         assignments: Dict[int, List[str]] = {i: [] for i in range(self.gpu_count)}
 
+        # Phase 1: Group chains by kernel type for cache/context affinity
+        kernel_groups: Dict[str, List[ChainWorkload]] = {}
         for chain in sorted_chains:
-            best_gpu = self._find_best_gpu(chain)
-            if best_gpu is not None:
-                self.gpus[best_gpu].assigned_chains.append(chain.chain_id)
-                self.gpus[best_gpu].vram_used_mb += chain.vram_estimate_mb
-                self.gpus[best_gpu].status = GpuStatus.VALIDATING
-                chain.assigned_gpu = best_gpu
-                assignments[best_gpu].append(chain.chain_id)
-            else:
-                chain.assigned_gpu = None  # No GPU available
+            kernel_groups.setdefault(chain.kernel_type, []).append(chain)
+
+        # Phase 2: Assign groups, trying to co-locate same-kernel chains
+        for kernel_type, chains in kernel_groups.items():
+            for chain in chains:
+                best_gpu = self._find_best_gpu_affinity(chain, assignments)
+                if best_gpu is not None:
+                    self.gpus[best_gpu].assigned_chains.append(chain.chain_id)
+                    self.gpus[best_gpu].vram_used_mb += chain.vram_estimate_mb
+                    self.gpus[best_gpu].status = GpuStatus.VALIDATING
+                    chain.assigned_gpu = best_gpu
+                    assignments[best_gpu].append(chain.chain_id)
+                else:
+                    chain.assigned_gpu = None
 
         # Offer idle GPUs to swarm
         for gpu in self.gpus.values():
@@ -155,16 +162,47 @@ class MultiGpuScheduler:
 
         return assignments
 
-    def _find_best_gpu(self, chain: ChainWorkload) -> Optional[int]:
-        """Find GPU with most free VRAM that can fit this workload."""
-        best_id = None
-        best_free = -1
+    def _find_best_gpu_affinity(
+        self, chain: ChainWorkload, assignments: Dict[int, List[str]]
+    ) -> Optional[int]:
+        """Find GPU with kernel affinity preference and sufficient VRAM.
+
+        Prefers GPUs already running the same kernel type (avoids context
+        switches), then falls back to most-free-VRAM (best-fit-decreasing).
+        """
+        best_affinity_id: Optional[int] = None
+        best_affinity_free = -1
+        best_any_id: Optional[int] = None
+        best_any_free = -1
+
         for gpu in self.gpus.values():
-            if gpu.vram_free_mb >= chain.vram_estimate_mb:
-                if gpu.vram_free_mb > best_free:
-                    best_free = gpu.vram_free_mb
-                    best_id = gpu.device_id
-        return best_id
+            if gpu.vram_free_mb < chain.vram_estimate_mb:
+                continue
+
+            free = gpu.vram_free_mb
+
+            # Check if this GPU already has same kernel type
+            has_affinity = False
+            for existing_cid in gpu.assigned_chains:
+                existing = self.workloads.get(existing_cid)
+                if existing and existing.kernel_type == chain.kernel_type:
+                    has_affinity = True
+                    break
+
+            if has_affinity:
+                # Among affinity matches, pick the one with least free VRAM
+                # (tightest fit = less fragmentation)
+                if best_affinity_id is None or free < best_affinity_free:
+                    best_affinity_free = free
+                    best_affinity_id = gpu.device_id
+            else:
+                # General fallback: most free VRAM
+                if free > best_any_free:
+                    best_any_free = free
+                    best_any_id = gpu.device_id
+
+        # Prefer affinity match, fall back to any GPU with space
+        return best_affinity_id if best_affinity_id is not None else best_any_id
 
     def get_metrics(self) -> SchedulerMetrics:
         with self._lock:

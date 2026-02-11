@@ -49,6 +49,7 @@ WALLET_PORT=3002
 DEX_PORT=3003
 SOLANA_DEX_PORT=3000    # apps/next-solana-main
 QUANTUM_DASHBOARD_PORT=3100  # Quantum Advisor Dashboard
+ATLAS_DESKTOP_PORT=5173     # Atlas Desktop (Tauri) Vite dev server
 
 # URLs
 BLOCKCHAIN_WS="ws://localhost:$BLOCKCHAIN_PORT"
@@ -491,6 +492,100 @@ start_nextjs_app() {
     fi
 }
 
+start_atlas_desktop() {
+    log_header "Starting Atlas Desktop (Tauri)"
+
+    local app_dir="$PROJECT_ROOT/apps/atlas-desktop"
+
+    if [ ! -d "$app_dir" ] || [ ! -f "$app_dir/package.json" ]; then
+        log_warn "Atlas Desktop not found at $app_dir"
+        return 1
+    fi
+
+    # Check for pre-built Tauri binary first
+    local tauri_bin=""
+    local tauri_candidates=(
+        "$app_dir/src-tauri/target/release/atlas-desktop"
+        "$app_dir/src-tauri/target/release/atlas_desktop_backend"
+        "$app_dir/src-tauri/target/*/release/atlas-desktop"
+        "$app_dir/src-tauri/target/*/release/atlas_desktop_backend"
+    )
+
+    for c in "${tauri_candidates[@]}"; do
+        for f in $c; do
+            if [ -x "$f" ] && [ -f "$f" ]; then
+                tauri_bin="$f"
+                break 2
+            fi
+        done
+    done
+
+    cd "$app_dir"
+
+    # Install deps if needed
+    if [ ! -d "node_modules" ]; then
+        log_info "Installing dependencies for Atlas Desktop..."
+        npm install --silent 2>/dev/null || true
+    fi
+
+    # Set local-dev environment so Vite connects to the running node
+    export VITE_DOMAIN="localhost"
+    export VITE_APP_URL="http://localhost:$ATLAS_DESKTOP_PORT"
+    export VITE_RPC_HTTP="http://127.0.0.1:$BLOCKCHAIN_PORT"
+    export VITE_RPC_WS="ws://127.0.0.1:$BLOCKCHAIN_PORT"
+    export VITE_RPC_HTTP_LOCAL="http://127.0.0.1:$BLOCKCHAIN_PORT"
+    export VITE_RPC_WS_LOCAL="ws://127.0.0.1:$BLOCKCHAIN_PORT"
+    export VITE_API_URL="http://127.0.0.1:$SWARM_API_PORT"
+    export VITE_EXPLORER_URL="http://127.0.0.1:$X3OS_PORT"
+
+    if [ -n "$tauri_bin" ]; then
+        log_info "Launching Atlas Desktop from pre-built binary: $tauri_bin"
+        "$tauri_bin" > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+        local pid=$!
+        save_pid "atlas-desktop" $pid
+        sleep 2
+        if kill -0 "$pid" 2>/dev/null; then
+            log_success "Atlas Desktop started (PID: $pid)"
+            cd "$PROJECT_ROOT"
+            return 0
+        fi
+    fi
+
+    # Fallback: run in Tauri dev mode (starts Vite + Tauri together)
+    if [ -f "$app_dir/src-tauri/tauri.conf.json" ]; then
+        log_info "Starting Atlas Desktop in Tauri dev mode..."
+        npm run tauri:dev > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+        local pid=$!
+        save_pid "atlas-desktop" $pid
+
+        cd "$PROJECT_ROOT"
+
+        if wait_for_port $ATLAS_DESKTOP_PORT "Atlas Desktop" 90; then
+            log_success "Atlas Desktop Tauri started (PID: $pid)"
+            return 0
+        else
+            log_warn "Atlas Desktop may still be compiling (Tauri + Vite)..."
+            return 0
+        fi
+    fi
+
+    # Final fallback: Vite dev only (no Tauri shell)
+    log_info "Starting Atlas Desktop (Vite only) on port $ATLAS_DESKTOP_PORT..."
+    npm run dev > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+    local pid=$!
+    save_pid "atlas-desktop" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_port $ATLAS_DESKTOP_PORT "Atlas Desktop" 60; then
+        log_success "Atlas Desktop Vite started (PID: $pid)"
+        return 0
+    else
+        log_warn "Atlas Desktop may still be compiling..."
+        return 0
+    fi
+}
+
 start_x3os_tauri() {
     log_header "Starting X3OS Tauri Desktop"
 
@@ -761,6 +856,13 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} Quantum Dashboard   NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
+    # Atlas Desktop
+    if port_in_use $ATLAS_DESKTOP_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Atlas Desktop       http://localhost:$ATLAS_DESKTOP_PORT                ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Atlas Desktop       NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
 
     # GPU Status if nvidia-smi available
@@ -796,6 +898,7 @@ main() {
     echo -e "${MAGENTA}║  ${CYAN}Explorer:${NC}     http://localhost:$X3OS_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Wallet:${NC}       http://localhost:$WALLET_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}DEX:${NC}          http://localhost:$DEX_PORT                           ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}Atlas Desktop:${NC}http://localhost:$ATLAS_DESKTOP_PORT (Tauri)              ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Quantum:${NC}      http://localhost:$QUANTUM_DASHBOARD_PORT                          ║${NC}"
     echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -811,7 +914,7 @@ main() {
 
     # Cleanup existing processes on our ports
     log_header "Cleaning Up Existing Processes"
-    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT; do
+    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT; do
         kill_port $port
     done
 
@@ -880,6 +983,7 @@ main() {
     # ============================================================
     # Layer 4: Desktop (Tauri)
     # ============================================================
+    start_atlas_desktop || log_warn "Atlas Desktop not started"
     start_x3os_tauri || log_warn "X3OS Tauri desktop not started"
 
     # Quantum Dashboard (Tauri)
@@ -893,6 +997,7 @@ main() {
     echo ""
     echo -e "${GREEN}🎉 All services are starting! Access points:${NC}"
     echo ""
+    echo -e "  🖥️  ${CYAN}Atlas Desktop:${NC}       http://localhost:$ATLAS_DESKTOP_PORT (Tauri)"
     echo -e "  🖥️  ${CYAN}X3OS Desktop:${NC}        http://localhost:$X3OS_PORT/x3os"
     echo -e "  📊 ${CYAN}Explorer Dashboard:${NC}  http://localhost:$X3OS_PORT"
     echo -e "  💱 ${CYAN}Solana DEX (X3):${NC}     http://localhost:$SOLANA_DEX_PORT"
@@ -906,6 +1011,7 @@ main() {
     echo -e "  ⛓️  ${CYAN}Blockchain:${NC}          ws://localhost:$BLOCKCHAIN_PORT"
     echo ""
     echo -e "${YELLOW}Quick Links:${NC}"
+    echo -e "  • Atlas Desktop:       http://localhost:$ATLAS_DESKTOP_PORT (Tauri app)"
     echo -e "  • X3OS:                http://localhost:$X3OS_PORT/x3os"
     echo -e "  • Swarm Dashboard:     http://localhost:$X3OS_PORT/x3/swarm"
     echo -e "  • GPU Contributors:    http://localhost:$X3OS_PORT/x3/swarm/gpu"
@@ -943,7 +1049,7 @@ case "${1:-}" in
     --stop)
         log_info "Stopping all Atlas Sphere services..."
         cleanup_pids
-        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT; do
+        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT $ATLAS_DESKTOP_PORT; do
             kill_port $port
         done
         # Stop Ollama systemd if running

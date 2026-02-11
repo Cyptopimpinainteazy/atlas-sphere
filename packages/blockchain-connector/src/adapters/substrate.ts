@@ -59,13 +59,14 @@ export class SubstrateAdapter extends BaseChainAdapter {
 
   async getBlock(numberOrHash: string | number): Promise<Block> {
     if (!this.api) throw new Error("Not connected");
+    const api = this.api!;
     let hash;
     if (typeof numberOrHash === "number") {
-      hash = await this.api.rpc.chain.getBlockHash(numberOrHash);
+      hash = await api.rpc.chain.getBlockHash(numberOrHash);
     } else {
       hash = numberOrHash;
     }
-    const block = await this.api.rpc.chain.getBlock(hash);
+    const block = await api.rpc.chain.getBlock(hash as any);
     const header = block.block.header;
     return {
       hash: hash.toString(),
@@ -79,14 +80,101 @@ export class SubstrateAdapter extends BaseChainAdapter {
   }
 
   async getTransaction(hash: string): Promise<Transaction> {
-    // Substrate transactions are extrinsics; retrieving by hash is non-trivial
-    // Implementing a minimal stub that returns the hash and marks it pending
+    if (!this.api) throw new Error("Not connected");
+    const api = this.api!;
+    // Best-effort: scan last N blocks looking for an extrinsic whose computed hash matches.
+    const best = (await api.rpc.chain.getHeader()).number.toNumber();
+    const scan = 200; // scan recent 200 blocks at most
+    for (let i = best; i > Math.max(0, best - scan); i--) {
+      try {
+        const bh = await api.rpc.chain.getBlockHash(i);
+        const block = await api.rpc.chain.getBlock(bh);
+        for (const ext of block.block.extrinsics) {
+          try {
+            // compute hash of extrinsic bytes
+            // Note: registry.hash may not exist in all versions; fallback gracefully
+            const u8a = ext.toU8a ? ext.toU8a() : ext.toHex ? Buffer.from(ext.toHex().replace(/^0x/, ''), 'hex') : null;
+            if (u8a) {
+              const hashHex = (api as any).registry.hash(u8a).toHex?.() || (api as any).registry.hash(u8a).toString?.();
+              if (hashHex && hashHex.toLowerCase().replace(/^0x/, '') === hash.toLowerCase().replace(/^0x/, '')) {
+                // found
+                return {
+                  hash,
+                  from: "",
+                  value: "0",
+                  nonce: 0,
+                  raw: ext.toHex ? ext.toHex() : ext.toString(),
+                } as any;
+              }
+            }
+          } catch (e) {
+            // ignore per-extrinsic errors
+          }
+        }
+      } catch (e) {
+        // continue
+      }
+    }
+
+    throw new Error("Transaction not found in recent blocks");
+  }
+
+  async getMetrics(): Promise<any> {
+    if (!this.api) return {
+      blockHeight: 0,
+      tps: 0,
+      peerCount: 0,
+      latencyMs: 0,
+      totalRequests: this.requestCount,
+      totalErrors: this.errorCount,
+      uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
+      finalityLag: 0,
+    };
+
+    const header = await this.api.rpc.chain.getHeader();
     return {
-      hash,
-      from: "",
-      value: "0",
-      nonce: 0,
-      raw: null,
-    } as Transaction;
+      blockHeight: header.number.toNumber(),
+      tps: 0,
+      peerCount: 0,
+      latencyMs: 0,
+      totalRequests: this.requestCount,
+      totalErrors: this.errorCount,
+      uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
+      finalityLag: 0,
+    } as any;
+  }
+
+  /** Subscribe to new blocks and call handler with a canonical Block payload */
+  async subscribe(events: string[], filter: any, handler: (event: any) => void): Promise<{ unsubscribe: () => void }> {
+    if (!this.api) throw new Error("Not connected");
+    const api = this.api!;
+    const unsub = await api.rpc.chain.subscribeNewHeads(async (head) => {
+      try {
+        const bh = head.hash.toHex();
+        const block = await api.rpc.chain.getBlock(bh);
+        const header = block.block.header;
+        const payload = {
+          id: bh,
+          type: 'block',
+          connectorId: '',
+          chain: this.chain.id,
+          network: this.chain.network,
+          timestamp: new Date().toISOString(),
+          payload: {
+            hash: bh,
+            number: header.number.toNumber(),
+            parentHash: header.parentHash.toHex(),
+            timestamp: new Date().toISOString(),
+            txCount: block.block.extrinsics.length,
+            raw: block.toHex(),
+          }
+        };
+        handler(payload as any);
+      } catch (e) {
+        // swallow
+      }
+    });
+
+    return { unsubscribe: async () => { try { await unsub(); } catch {} } };
   }
 }

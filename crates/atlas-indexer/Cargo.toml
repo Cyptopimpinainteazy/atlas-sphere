@@ -22,7 +22,7 @@ futures = { workspace = true }
 subxt = { version = "0.32", features = ["substrate-compat"] }
 
 # Database
-sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "chrono", "uuid"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "uuid"] }
 
 # Serialization
 serde = { workspace = true, features = ["derive", "std"] }
@@ -44,7 +44,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
 # Metrics
-prometheus = "0.13"
+prometheus = "0.14.0"
 
 # HTTP server for metrics/health
 axum = "0.7"

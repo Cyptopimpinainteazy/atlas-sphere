@@ -1015,12 +1015,11 @@ pub fn opcode_gas_cost(opcode: u8) -> u64 {
             Opcode::SvmGetClock => 100,
 
             // GPU intrinsics (very expensive — real CUDA kernel launch)
-            Opcode::GpuSha256Batch | Opcode::GpuEd25519Verify | Opcode::GpuPohChain => 500,
+            Opcode::GpuSha256Batch | Opcode::GpuEd25519Verify | Opcode::GpuPohChain | Opcode::GpuKeccak256Batch => 500,
             Opcode::GpuSha256Streamed => 750,
             Opcode::GpuDeviceCount => 10,
             Opcode::GpuBenchmark => 1000,
-            Opcode::GpuKeccak256Batch => 500,
-            Opcode::GpuSecp256k1Verify => 500,
+            Opcode::GpuSecp256k1Verify => 600,
 
             // Debug (0 gas in dev, forbidden on-chain)
             Opcode::DebugPrint => 0,

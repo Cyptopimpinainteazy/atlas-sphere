@@ -4,10 +4,13 @@
  * Each window is a draggable, resizable floating container with a title bar,
  * minimize/maximize/close controls, and focus-on-click behaviour.
  */
-import React, { useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, lazy, Suspense } from "react";
 import type { WindowState } from "@/types/window";
 import { useDesktopStore } from "@/stores/desktopStore";
+import { useApplicationStore } from "@/stores/applicationStore";
 import { getPanelForApp } from "@/components/panels/panelRegistry";
+
+const IframePanel = lazy(() => import("@/components/panels/IframePanel"));
 
 /* ── Window Title Bar ──────────────────────────────────────── */
 interface TitleBarProps {
@@ -208,37 +211,61 @@ const WindowContainer: React.FC<WindowContainerProps> = ({
       />
 
       {/* Content area */}
-      <div className="flex-1 overflow-auto bg-bg-primary/80 rounded-b-lg">
-        {getPanelForApp(win.appId) ?? (
-          <div className="flex items-center justify-center h-full text-text-secondary text-sm">
-            <div className="text-center">
-              <div className="text-3xl mb-2 opacity-40">
-                {(win.title || "?").charAt(0).toUpperCase()}
-              </div>
-              <div className="text-xs text-text-secondary/60">{win.title || "Untitled Window"}</div>
-            </div>
-          </div>
-        )}
+      <div className="flex-1 overflow-hidden bg-bg-primary/80 rounded-b-lg">
+        <WindowContent appId={win.appId} title={win.title} />
       </div>
 
       {/* Resize handle */}
       {!isMax && (
         <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize bg-accent-primary/10 hover:bg-accent-primary/20 rounded-tl-lg transition-colors"
           onMouseDown={onResizeStart}
           role="separator"
           aria-label="Resize window"
         >
           <svg
-            className="absolute bottom-0.5 right-0.5 opacity-30"
-            width="8"
-            height="8"
+            className="absolute bottom-1 right-1 opacity-60"
+            width="12"
+            height="12"
             viewBox="0 0 8 8"
           >
             <path d="M7 1L1 7M7 4L4 7M7 7L7 7" stroke="#888" strokeWidth="1" strokeLinecap="round" />
           </svg>
         </div>
       )}
+    </div>
+  );
+};
+
+/* ── Window Content — resolves what to render inside each window ── */
+const WindowContent: React.FC<{ appId: string; title?: string }> = ({ appId, title }) => {
+  // 1. Check if there's a dedicated panel
+  const panel = getPanelForApp(appId);
+  if (panel) return <>{panel}</>;
+
+  // 2. Check if the app is a URL-type — render via iframe
+  const app = useApplicationStore.getState().getApp(appId);
+  if (app?.launchCommand.type === "url") {
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-full bg-[#0a0a0f]">
+          <div className="inline-block w-5 h-5 border-2 border-[#ff6b35]/30 border-t-[#ff6b35] rounded-full animate-spin" />
+        </div>
+      }>
+        <IframePanel url={app.launchCommand.target} title={app.name} />
+      </Suspense>
+    );
+  }
+
+  // 3. Fallback placeholder
+  return (
+    <div className="flex items-center justify-center h-full text-text-secondary text-sm">
+      <div className="text-center">
+        <div className="text-3xl mb-2 opacity-40">
+          {(title || "?").charAt(0).toUpperCase()}
+        </div>
+        <div className="text-xs text-text-secondary/60">{title || "Untitled Window"}</div>
+      </div>
     </div>
   );
 };

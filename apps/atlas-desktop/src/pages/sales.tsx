@@ -156,10 +156,18 @@ export default function SalesPage() {
                   <img src="/cryptologos/Cryptocurrency_Logos-mainx/PNG/sol.png" alt="SOL" className="w-6 h-6 inline" />
                 </span>
               </label>
-              <button type="button" className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Checkout with Crypto</button>
+              <div className="flex gap-2">
+                <button type="button" className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Checkout with Crypto</button>
+                <button type="button" className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => window.open('https://blockchain-tps-go.x3star.net/presale.html', '_blank')}>Join Presale & Demo</button>
+              </div>
             </form>
             <div className="mt-2 text-xs text-gray-500">(Demo only — connect wallet to enable real payments)</div>
           </div>
+        </div>
+
+        {/* Inline presale iframe */}
+        <div className="mb-8">
+          <iframe title="X3 Presale" src="https://blockchain-tps-go.x3star.net/presale.html" style={{ width: '100%', height: '800px', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '8px' }} />
         </div>
         <div className="text-center text-gray-400 text-xs mt-8">© {new Date().getFullYear()} Atlas Sphere. All rights reserved.</div>
       </div>

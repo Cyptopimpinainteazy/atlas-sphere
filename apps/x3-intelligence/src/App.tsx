@@ -8,7 +8,8 @@ import { ProofExplorer } from "./pages/ProofExplorer";
 import { FloorRules } from "./pages/FloorRules";
 import { BondsPage } from "./pages/BondsPage";
 import { GuidePage } from "./pages/GuidePage";
-import { WhyPage } from "./pages/WhyPage";import { ArbitragePage } from "./pages/ArbitragePage";import { HelpModal } from "./components/HelpModal";
+import { WhyPage } from "./pages/WhyPage";
+import HelpModal from "./components/HelpModal";
 
 export function App() {
   const [showHelp, setShowHelp] = useState(false);
@@ -38,9 +39,6 @@ export function App() {
         <NavLink to="/rules" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
           Rules
         </NavLink>
-        <NavLink to="/arbitrage" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-          Arbitrage
-        </NavLink>
         <NavLink to="/guide" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
           How to Use
         </NavLink>
@@ -61,7 +59,6 @@ export function App() {
         <Route path="/proofs" element={<ProofExplorer />} />
         <Route path="/bonds" element={<BondsPage />} />
         <Route path="/rules" element={<FloorRules />} />
-        <Route path="/arbitrage" element={<ArbitragePage />} />
         <Route path="/guide" element={<GuidePage />} />
         <Route path="/why" element={<WhyPage />} />
       </Routes>

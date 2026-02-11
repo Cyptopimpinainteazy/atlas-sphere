@@ -19,6 +19,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@polkadot/api": "^16.5.4",
+    "@polkadot/types": "^16.5.4",
+    "@polkadot/util": "^14.0.1",
+    "@polkadot/util-crypto": "^14.0.1",
     "@react-three/drei": "^9.108.0",
     "@react-three/fiber": "^8.16.0",
     "@tauri-apps/api": "^2.2.0",
@@ -27,10 +31,16 @@
     "@tauri-apps/plugin-notification": "^2.0.0",
     "@tauri-apps/plugin-os": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.0.6",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.563.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.13.0",
+    "recharts": "^3.7.0",
+    "swr": "^2.4.0",
     "three": "^0.168.0",
     "zod": "^3.22.0",
     "zustand": "^4.4.0"

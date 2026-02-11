@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 const host = process.env.TAURI_DEV_HOST;
+const domain = process.env.VITE_DOMAIN || "x3star.net";
 
 export default defineConfig({
   plugins: [react()],
@@ -14,9 +15,12 @@ export default defineConfig({
   clearScreen: false,
   server: {
     port: 5173,
-    host: host || false,
+    // Allow connections from Cloudflare Tunnel and local Tauri
+    host: host || "0.0.0.0",
     hmr: host ? { protocol: "ws", host, port: 5173 } : undefined,
     watch: { ignored: ["**/src-tauri/**"] },
+    // Allow the tunnel domain and localhost through Vite's host check
+    allowedHosts: [domain, `www.${domain}`, "localhost", "127.0.0.1"],
   },
   envPrefix: ["VITE_", "TAURI_"],
   build: {

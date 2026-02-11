@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
     // Resolve path aliases
     resolve: {
       alias: {
+        '@atlas-sphere/atomic-swap-sdk': path.resolve(__dirname, '../../../../packages/atomic-swap-sdk/src'),
         '@': path.resolve(__dirname, './src'),
         '@components': path.resolve(__dirname, './src/components'),
         '@pages': path.resolve(__dirname, './src/pages'),

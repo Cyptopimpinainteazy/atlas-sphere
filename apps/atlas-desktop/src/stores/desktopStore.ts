@@ -10,7 +10,6 @@ import type {
   WindowId,
   WindowPosition,
   WindowSize,
-  PersistedWindowState,
 } from "@/types/window";
 import {
   DEFAULT_WINDOW_SIZE,
@@ -46,8 +45,10 @@ export interface DesktopState {
   iconSize: IconSize;
   layout: DesktopLayout;
   iconOrder: string[]; // app IDs in display order
+  iconSizes: Record<string, IconSize>; // individual icon sizes by app ID
 
   setIconSize: (size: IconSize) => void;
+  setIconSizes: (sizes: Record<string, IconSize>) => void;
   setLayout: (layout: DesktopLayout) => void;
   setIconOrder: (order: string[]) => void;
 }
@@ -74,6 +75,7 @@ export const useDesktopStore = create<DesktopState>()(
       iconSize: "medium",
       layout: "grid",
       iconOrder: [],
+      iconSizes: {},
 
       /* ── Window actions ─────────────────────────────── */
       openWindow: (appId, title, accentColor) => {
@@ -212,6 +214,7 @@ export const useDesktopStore = create<DesktopState>()(
 
       /* ── Desktop preference actions ─────────────────── */
       setIconSize: (iconSize) => set({ iconSize }),
+      setIconSizes: (iconSizes) => set({ iconSizes }),
       setLayout: (layout) => set({ layout }),
       setIconOrder: (iconOrder) => set({ iconOrder }),
     }),
@@ -222,16 +225,17 @@ export const useDesktopStore = create<DesktopState>()(
         iconSize: state.iconSize,
         layout: state.layout,
         iconOrder: state.iconOrder,
-        // Persist window positions for restoration
-        windows: state.windows.map(
-          (w): PersistedWindowState => ({
-            id: w.id,
-            appId: w.appId,
-            position: w.position,
-            size: w.size,
-            isMaximized: w.isMaximized,
-          }),
-        ),
+        iconSizes: state.iconSizes,
+        // Don't persist windows - start fresh each time
+        // windows: state.windows.map(
+        //   (w): PersistedWindowState => ({
+        //     id: w.id,
+        //     appId: w.appId,
+        //     position: w.position,
+        //     size: w.size,
+        //     isMaximized: w.isMaximized,
+        //   }),
+        // ),
       }),
     },
   ),

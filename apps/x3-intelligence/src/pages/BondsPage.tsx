@@ -128,13 +128,16 @@ export function BondsPage() {
     (sum, w) => sum + w.amount,
     0
   );
-  const utilization = ((pendingTotal + (bond.lockedUntil ? 10000 : 0)) / bond.balance) * 100;
+  const utilization = bond.balance > 0 ? ((pendingTotal + (bond.lockedUntil ? 10000 : 0)) / bond.balance) * 100 : 0;
 
   return (
     <div className="page">
       <div className="page-header">
         <h1>Bonds & Collateral</h1>
         <span className="subtitle">Deposit, withdraw and inspect bond state</span>
+        <div style={{ marginLeft: 'auto' }}>
+          <Button variant="secondary" size="sm" onClick={() => alert('Bond docs: see /docs/bonds.md')}>Docs</Button>
+        </div>
       </div>
 
       <div className="card" style={{ display: 'grid', gap: 12 }}>
@@ -142,13 +145,17 @@ export function BondsPage() {
           <div style={{ flex: 1 }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>Current Bond</div>
             <div style={{ fontSize: 20, fontWeight: 600 }}>{bond ? bond.balance.toFixed(2) : '—'}</div>
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Utilization</div>
+              <ProgressBar value={utilization} max={100} color={utilization > 80 ? 'amber' : 'green'} />
+            </div>
           </div>
 
           <div style={{ width: 280 }}>
             <input className="input" placeholder="Amount (USDC)" value={amount} onChange={(e)=>setAmount(e.target.value)} />
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button className="btn primary" disabled={loading} onClick={onDeposit}>Deposit</button>
-              <button className="btn" disabled={loading} onClick={onWithdraw}>Request Withdraw</button>
+              <Button variant="primary" loading={operation === 'deposit' || loading} disabled={loading} onClick={onDeposit}>Deposit</Button>
+              <Button variant="secondary" loading={operation === 'withdraw' || loading} disabled={loading} onClick={onWithdraw}>Request Withdraw</Button>
             </div>
           </div>
         </div>

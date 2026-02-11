@@ -4,7 +4,9 @@ import { useState, useEffect, useMemo } from "react";
 import type { FloorStats, ArbIntent } from "../types";
 import { IntentState } from "../types";
 import { getFloorStats, getIntents } from "../services/api";
-import { Button, Metric, ProgressBar, Badge } from "../components/UIComponents";
+import { Button, Metric, ProgressBar, Badge, Loading } from "../components/UIComponents";
+import HelpModal from "../components/HelpModal";
+import { useWebSocket } from "../hooks/useWebSocket";
 import {
   VolumeTrendChart,
   IntentStatePie,
@@ -153,31 +155,38 @@ export function FloorDashboard() {
     92, 93, 94, 94.5, 94.7,
   ]);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Fetch live data when available; if not, simulate
   useEffect(() => {
     let mounted = true;
 
     async function fetchLive() {
+      setLoading(true);
       try {
         const s = await getFloorStats();
         const r = await getIntents(1, 10);
         if (!mounted) return;
         setStats(s);
-        setFeed((prev) => [...r.items.slice(0, 10)]);
+        setFeed(r.items.slice(0, 20));
         setVolumeSeries((v) => [
           ...v.slice(-4),
           Number(s.totalVolume.replace(/[,]/g, "")),
         ]);
         setSuccessSeries((srs) => [...srs.slice(-4), s.avgSuccessRate]);
       } catch (e) {
-        // No backend? Simulate a new intent occasionally
+        // No backend? keep demo data
+      } finally {
+        setLoading(false);
       }
     }
 
     if (autoRefresh) {
-      fetchLive();
+      fetchLive().finally(() => setInitialLoading(false));
     }
+
     const interval = setInterval(() => {
       if (autoRefresh) {
         fetchLive();
@@ -188,8 +197,7 @@ export function FloorDashboard() {
           const newIntent: ArbIntent = {
             id,
             agentId: `agent-${Math.random().toString(36).slice(2, 7)}`,
-            state:
-              Math.random() > 0.8 ? IntentState.Slashed : IntentState.Executing,
+            state: Math.random() > 0.85 ? IntentState.Slashed : IntentState.Executing,
             legs: [
               {
                 chain: "ETH",
@@ -217,6 +225,21 @@ export function FloorDashboard() {
     };
   }, [autoRefresh]);
 
+  // WebSocket live updates (optional backend push)
+  const WS_URL = import.meta.env.VITE_X3_WS || "ws://127.0.0.1:9945";
+  useWebSocket(WS_URL, (msg: any) => {
+    if (!msg || !msg.type) return;
+    if (msg.type === "intent:new") {
+      setFeed((prev) => [msg.payload, ...prev].slice(0, 20));
+    }
+    if (msg.type === "stats:update") {
+      setStats((s) => ({ ...s, ...msg.payload }));
+      if (msg.payload.totalVolume) {
+        setVolumeSeries((v) => [...v.slice(-4), Number(msg.payload.totalVolume)]);
+      }
+    }
+  });
+
   const volRounded = useMemo(() => stats.totalVolume, [stats.totalVolume]);
 
   const trendData: TrendPoint[] = useMemo(() => {
@@ -240,17 +263,28 @@ export function FloorDashboard() {
 
   return (
     <div className="page">
+      {initialLoading && (
+        <div className="loading-overlay">
+          <Loading size="lg" />
+        </div>
+      )}
+
       <div className="page-header">
         <h1>X3 Floor</h1>
         <span className="subtitle">Arbitrage jurisdiction — live</span>
-        <Button
-          variant={autoRefresh ? "success" : "secondary"}
-          size="sm"
-          onClick={() => setAutoRefresh(!autoRefresh)}
-          style={{ marginLeft: "auto" }}
-        >
-          {autoRefresh ? "🔄 Live" : "⏸ Paused"}
-        </Button>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Button
+            variant={autoRefresh ? "success" : "secondary"}
+            size="sm"
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            loading={loading}
+          >
+            {autoRefresh ? "🔄 Live" : "⏸ Paused"}
+          </Button>
+
+          <Button variant="secondary" size="sm" onClick={() => setHelpOpen(true)}>❓ Help</Button>
+        </div>
       </div>
 
       {/* Key Metrics */}
@@ -303,6 +337,9 @@ export function FloorDashboard() {
         <div className="card">
           <div className="card-header">
             <h2>Volume & Success Trend</h2>
+            <div style={{ marginLeft: 'auto' }}>
+              <Button size="sm" variant="secondary" onClick={() => setVolumeSeries((v)=>[...v, v[v.length-1]])}>+ Expand</Button>
+            </div>
           </div>
           <VolumeTrendChart data={trendData} />
         </div>
@@ -371,6 +408,15 @@ export function FloorDashboard() {
           </table>
         </div>
       </div>
+      {initialLoading && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ pointerEvents: 'auto' }}>
+            <Loading />
+          </div>
+        </div>
+      )}
+
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }

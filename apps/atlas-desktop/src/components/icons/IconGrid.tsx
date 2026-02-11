@@ -32,7 +32,16 @@ const COLS_MAP: Record<IconSize, string> = {
 
 const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
   const iconSize = useDesktopStore((s) => s.iconSize);
+  const iconSizes = useDesktopStore((s) => s.iconSizes);
+  const setIconSizes = useDesktopStore((s) => s.setIconSizes);
   const isRunning = useApplicationStore((s) => s.isRunning);
+
+  const handleResize = useCallback(
+    (appId: string, newSize: "small" | "medium" | "large") => {
+      setIconSizes({ ...iconSizes, [appId]: newSize });
+    },
+    [iconSizes, setIconSizes],
+  );
 
   const handleLaunch = useCallback(
     (appId: string) => {
@@ -54,7 +63,7 @@ const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
 
   return (
     <div
-      className={`grid ${COLS_MAP[iconSize]} gap-3 p-4 overflow-y-auto max-h-full auto-rows-min`}
+      className={`grid ${COLS_MAP[iconSize]} gap-3 p-4 overflow-y-auto max-h-full auto-rows-min overflow-visible`}
       role="list"
       aria-label="Application launcher"
     >
@@ -64,7 +73,8 @@ const IconGrid: React.FC<IconGridProps> = ({ applications, onLaunch }) => {
             app={app}
             isRunning={isRunning(app.id)}
             onLaunch={handleLaunch}
-            size={iconSize}
+            size={iconSizes[app.id] ?? iconSize}
+            onResize={handleResize}
           />
         </div>
       ))}

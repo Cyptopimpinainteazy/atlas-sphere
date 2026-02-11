@@ -1,7 +1,7 @@
 /**
  * PerformanceMonitor.tsx — Real-time FPS and frame time monitor
  * 
- * Press 'P' to toggle visibility
+ * Press 'Ctrl+P' to toggle visibility
  * Shows:
  *  - Current FPS
  *  - Frame time (ms)
@@ -46,7 +46,7 @@ window.__PERF_FLAGS__ = window.__PERF_FLAGS__ || {
 };
 
 export function PerformanceMonitor() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [stats, setStats] = useState<PerfStats>({ fps: 0, frameTime: 0 });
   const [flags, setFlags] = useState({ ...window.__PERF_FLAGS__ });
   const [baseline, setBaseline] = useState<number | null>(null);
@@ -57,7 +57,8 @@ export function PerformanceMonitor() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey) {
+      if (e.key.toLowerCase() === 'p' && e.ctrlKey) {
+        e.preventDefault();
         setVisible(v => !v);
       }
     };

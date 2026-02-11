@@ -92,7 +92,10 @@ impl<AccountId: Clone + PartialEq, Balance: Copy + PartialOrd + core::ops::Sub<O
     ) -> Result<H256, CollateralError> {
         // For PoC we accept any non-zero amount
         // Real impl must check balances, reserve funds via Currency trait
-        let id = H256::zero();
+        let idx = self.bonds.len() as u64;
+        let mut id_bytes = [0u8; 32];
+        id_bytes[..8].copy_from_slice(&idx.to_le_bytes());
+        let id = H256::from(id_bytes);
         let bond = Bond {
             id,
             owner: who,

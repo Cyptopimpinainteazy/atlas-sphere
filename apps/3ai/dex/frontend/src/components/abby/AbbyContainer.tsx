@@ -3,7 +3,8 @@ import { Box, useBreakpointValue } from '@chakra-ui/react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import Character from '../3d/Character';
-import ChatInterface, { ChatInterfaceRef } from './ChatInterface';
+import ChatInterface from './ChatInterface';
+import type { ChatInterfaceRef } from './ChatInterface';
 import { ABBY_CONFIG } from '../../config/constants';
 
 const AbbyContainer: React.FC = () => {

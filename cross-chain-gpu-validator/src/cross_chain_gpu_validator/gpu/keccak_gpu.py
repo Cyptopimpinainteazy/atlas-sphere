@@ -3,17 +3,35 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import hashlib
 import os
 import ctypes
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from .cuda_loader import CudaRuntime
 
 
 def _keccak256(data: bytes) -> bytes:
-    """Hash data using Keccak-256 (same as Ethereum)."""
-    # Use SHA3-256 (which is Keccak-256 in Python's hashlib)
+    """Compute real Keccak-256 (NOT SHA3-256 which uses different padding)."""
+    try:
+        from Crypto.Hash import keccak
+        return keccak.new(digest_bits=256, data=data).digest()
+    except ImportError:
+        pass
+    try:
+        import sha3  # pysha3
+        return sha3.keccak_256(data).digest()
+    except ImportError:
+        pass
+    # Last resort: pycryptodome not installed, warn and use sha3_256
+    # This will produce WRONG results for parity checks!
+    import hashlib
+    import warnings
+    warnings.warn(
+        "Neither pycryptodome nor pysha3 installed — falling back to SHA3-256 "
+        "which differs from Keccak-256. Install pycryptodome for correctness.",
+        RuntimeWarning,
+        stacklevel=3,
+    )
     return hashlib.sha3_256(data).digest()
 
 
@@ -52,16 +70,20 @@ class KeccakBatchHasher:
                 raise RuntimeError("Missing libkeccak256_batch.so for required GPU mode")
 
     def hash_batch(self, payloads: Iterable[bytes]) -> list[bytes]:
+        # Materialize once so we can replay for GPU + parity check
+        payloads_list: Sequence[bytes] = (
+            payloads if isinstance(payloads, (list, tuple)) else list(payloads)
+        )
         try:
             if self.runtime.available and self._lib is not None:
-                return self._hash_gpu(payloads)
+                return self._hash_gpu(payloads_list)
         except Exception:
             if self.allow_failover:
-                return self._hash_cpu(payloads)
+                return self._hash_cpu(payloads_list)
             raise
-        return self._hash_cpu(payloads)
+        return self._hash_cpu(payloads_list)
 
-    def _hash_gpu(self, payloads: Iterable[bytes]) -> list[bytes]:
+    def _hash_gpu(self, payloads: Sequence[bytes]) -> list[bytes]:
         packed_payloads = self._pack_bytes(payloads, 32, "payloads")
         count = len(packed_payloads) // 32
         digests = (ctypes.c_ubyte * (count * 32))()
@@ -92,4 +114,4 @@ class KeccakBatchHasher:
 
     @staticmethod
     def _hash_cpu(payloads: Iterable[bytes]) -> list[bytes]:
-        return [hashlib.sha3_256(payload).digest() for payload in payloads]
+        return [_keccak256(payload) for payload in payloads]

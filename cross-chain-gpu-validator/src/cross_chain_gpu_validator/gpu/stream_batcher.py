@@ -162,19 +162,66 @@ class StreamBatcher:
 
     def process_batch(self, kernel: KernelType, data: bytes,
                       count: int, **kwargs) -> Optional[BatchResult]:
-        """Route to the appropriate kernel processor."""
-        max_batch = self.max_batch_for_vram(kernel)
-        actual = min(count, max_batch)
+        """Route to the appropriate kernel processor.
 
+        For large batches exceeding VRAM limits, automatically chunks the work
+        and aggregates results. This prevents silent truncation of inputs.
+        """
+        max_batch = self.max_batch_for_vram(kernel)
+
+        if count <= max_batch:
+            return self._dispatch_single(kernel, data, count, **kwargs)
+
+        # Chunk large batches and aggregate
+        inp_size, _ = self._bytes_per_item(kernel)
+        total_count = 0
+        total_elapsed_ms = 0.0
+
+        offset = 0
+        remaining = count
+        while remaining > 0:
+            chunk_size = min(remaining, max_batch)
+            chunk_data = data[offset : offset + chunk_size * inp_size]
+
+            chunk_kwargs = {}
+            if kernel == KernelType.SECP256K1:
+                u1 = kwargs.get("u1", b"")
+                u2 = kwargs.get("u2", b"")
+                pk = kwargs.get("pubkeys", b"")
+                byte_off = (count - remaining) * 32  # u1/u2 are 32 bytes each
+                pk_off = (count - remaining) * 64    # pubkeys are 64 bytes each
+                chunk_kwargs["u1"] = u1[byte_off : byte_off + chunk_size * 32]
+                chunk_kwargs["u2"] = u2[byte_off : byte_off + chunk_size * 32]
+                chunk_kwargs["pubkeys"] = pk[pk_off : pk_off + chunk_size * 64]
+
+            result = self._dispatch_single(kernel, chunk_data, chunk_size, **chunk_kwargs)
+            if result is None:
+                return None
+            total_count += result.count
+            total_elapsed_ms += result.elapsed_ms
+
+            offset += chunk_size * inp_size
+            remaining -= chunk_size
+
+        return BatchResult(
+            kernel_type=kernel,
+            count=total_count,
+            elapsed_ms=total_elapsed_ms,
+            throughput_ops_sec=total_count / (total_elapsed_ms / 1000) if total_elapsed_ms > 0 else 0,
+        )
+
+    def _dispatch_single(self, kernel: KernelType, data: bytes,
+                         count: int, **kwargs) -> Optional[BatchResult]:
+        """Dispatch a single (non-chunked) kernel call."""
         if kernel == KernelType.SHA256:
-            return self.process_sha256(data[:actual * 32], actual)
+            return self.process_sha256(data[:count * 32], count)
         elif kernel == KernelType.KECCAK256:
-            return self.process_keccak256(data[:actual * 32], actual)
+            return self.process_keccak256(data[:count * 32], count)
         elif kernel == KernelType.ED25519:
-            return self.process_ed25519(data[:actual * 128], actual)
+            return self.process_ed25519(data[:count * 128], count)
         elif kernel == KernelType.SECP256K1:
             u1 = kwargs.get("u1", b"")
             u2 = kwargs.get("u2", b"")
             pk = kwargs.get("pubkeys", b"")
-            return self.process_secp256k1(u1, u2, pk, actual)
+            return self.process_secp256k1(u1, u2, pk, count)
         return None

@@ -102,6 +102,11 @@ function inferFamily(entry) {
     fs.writeFileSync(outJson, JSON.stringify(arr, null, 2), 'utf8');
     console.log('Wrote', outJson, 'with', arr.length, 'chains');
 
+    // Provide useful stats on RPC endpoints distribution
+    const counts = { totalChains: arr.length, totalEndpoints: 0 };
+    for (const c of arr) counts.totalEndpoints += (c.defaultRpcUrls || []).length;
+    console.log('Endpoints total:', counts.totalEndpoints);
+
     // Run generator to produce index.ts
     const { spawnSync } = require('child_process');
     const gen = spawnSync('node', [path.resolve(__dirname, 'generate-chain-registry.js'), outJson], { stdio: 'inherit' });

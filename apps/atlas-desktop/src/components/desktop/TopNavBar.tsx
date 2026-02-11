@@ -9,8 +9,10 @@
  * - Help menu with documentation
  */
 import React, { useState, useRef, useCallback } from 'react';
-import { useTheme } from '@/components/theme/ThemeProvider';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../theme/ThemeProvider';
 import { useDesktopStore } from '@/stores/desktopStore';
+import { useSocialStore } from '@/stores/socialStore';
 
 interface MenuItem {
   label?: string;
@@ -83,6 +85,43 @@ const TopNavBar: React.FC = () => {
   const iconSize = useDesktopStore((s) => s.iconSize);
   const setIconSize = useDesktopStore((s) => s.setIconSize);
   const minimizeAll = useDesktopStore((s) => s.minimizeAll);
+
+  // Social login state
+  const { isLoggedIn, currentUser, session, logout: socialLogout, restoreSession } = useSocialStore();
+  const navigate = useNavigate();
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
+  const [loginUser, setLoginUser] = useState('');
+  const [loginPass, setLoginPass] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const socialLogin = useSocialStore((s) => s.login);
+
+  // Restore session on mount
+  React.useEffect(() => { restoreSession(); }, []);
+
+  const handleQuickLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginUser || !loginPass) { setLoginError('Fill in both fields'); return; }
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      await socialLogin(loginUser, loginPass);
+      setShowLoginDropdown(false);
+      setLoginUser('');
+      setLoginPass('');
+    } catch (err: any) {
+      setLoginError(String(err));
+    }
+    setLoginLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await socialLogout();
+    setShowLoginDropdown(false);
+  };
+
+  const ROLE_ICON: Record<string, string> = { team: '🔶', admin: '👑', vip: '💎' };
+  const ROLE_COLOR: Record<string, string> = { team: '#ff6b35', admin: '#ff2d55', vip: '#a855f7' };
 
   const handleMenuClick = useCallback((menuName: string, event: React.MouseEvent) => {
     event.preventDefault();
@@ -181,11 +220,119 @@ const TopNavBar: React.FC = () => {
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Navigation Links */}
+        <div className="flex items-center gap-2 mr-4">
+          <button onClick={() => navigate('/social')} className="px-2 py-1 text-xs font-medium text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10 rounded transition-all">
+            🌐 Social
+          </button>
+          <button onClick={() => navigate('/crm')} className="px-2 py-1 text-xs font-medium text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10 rounded transition-all">
+            📅 CRM
+          </button>
+        </div>
+
+        {/* User / Login */}
+        <div className="relative flex items-center gap-2">
+          {isLoggedIn && currentUser ? (
+            <div className="flex items-center gap-2">
+              {currentUser.role && ROLE_ICON[currentUser.role] && (
+                <span style={{
+                  background: `${ROLE_COLOR[currentUser.role]}22`,
+                  border: `1px solid ${ROLE_COLOR[currentUser.role]}55`,
+                  color: ROLE_COLOR[currentUser.role],
+                  borderRadius: 8, padding: '1px 6px', fontSize: '0.55rem', fontWeight: 700,
+                }}>
+                  {ROLE_ICON[currentUser.role]}
+                </span>
+              )}
+              <button
+                onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-text-primary hover:bg-accent-primary/10 rounded transition-all"
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-[9px] font-bold text-white">
+                  {(currentUser.displayName || currentUser.username)[0].toUpperCase()}
+                </div>
+                <span className="max-w-[80px] truncate">{currentUser.displayName || session?.username}</span>
+              </button>
+              {showLoginDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowLoginDropdown(false)} />
+                  <div className="absolute right-0 top-9 z-50 glass-panel border border-border-default rounded-lg shadow-2xl min-w-[180px] py-1">
+                    <button onClick={() => { navigate('/social/profile'); setShowLoginDropdown(false); }}
+                      className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-accent-primary/10 transition-colors flex items-center gap-2">
+                      👤 My Profile
+                    </button>
+                    <button onClick={() => { navigate('/social/messages'); setShowLoginDropdown(false); }}
+                      className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-accent-primary/10 transition-colors flex items-center gap-2">
+                      ✉️ Messages
+                    </button>
+                    <button onClick={() => { navigate('/crm'); setShowLoginDropdown(false); }}
+                      className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-accent-primary/10 transition-colors flex items-center gap-2">
+                      📅 Calendar CRM
+                    </button>
+                    <div className="border-t border-border-default my-1" />
+                    <button onClick={handleSignOut}
+                      className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2">
+                      🚪 Sign Out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                className="flex items-center gap-1 px-3 py-1 text-xs font-medium bg-accent-primary/20 text-accent-primary hover:bg-accent-primary/30 rounded-lg transition-all"
+              >
+                🔑 Sign In
+              </button>
+              {showLoginDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowLoginDropdown(false)} />
+                  <div className="absolute right-0 top-9 z-50 glass-panel border border-border-default rounded-lg shadow-2xl min-w-[260px] p-4">
+                    <div className="text-sm font-semibold text-text-primary mb-3">AtlasSpace Login</div>
+                    {loginError && <div className="text-xs text-red-400 mb-2">{loginError}</div>}
+                    <form onSubmit={handleQuickLogin} className="flex flex-col gap-2">
+                      <input
+                        className="px-3 py-1.5 text-xs bg-bg-primary border border-border-default rounded text-text-primary focus:border-accent-primary outline-none"
+                        placeholder="Username"
+                        value={loginUser}
+                        onChange={e => setLoginUser(e.target.value)}
+                        autoFocus
+                      />
+                      <input
+                        className="px-3 py-1.5 text-xs bg-bg-primary border border-border-default rounded text-text-primary focus:border-accent-primary outline-none"
+                        type="password"
+                        placeholder="Password"
+                        value={loginPass}
+                        onChange={e => setLoginPass(e.target.value)}
+                      />
+                      <button
+                        type="submit"
+                        disabled={loginLoading}
+                        className="px-3 py-1.5 text-xs font-medium bg-accent-primary text-white rounded hover:bg-accent-primary/80 transition-colors disabled:opacity-50"
+                      >
+                        {loginLoading ? 'Signing in...' : 'Sign In'}
+                      </button>
+                    </form>
+                    <div className="mt-2 text-center">
+                      <button onClick={() => { navigate('/social'); setShowLoginDropdown(false); }}
+                        className="text-[10px] text-accent-primary hover:underline">
+                        Create Account / Use Team Code →
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Status Indicators */}
-        <div className="flex items-center gap-3 text-xs text-text-secondary">
+        <div className="flex items-center gap-3 text-xs text-text-secondary ml-3">
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span>Online</span>
+            <div className={`w-2 h-2 rounded-full ${isLoggedIn ? 'bg-green-500' : 'bg-gray-500'} animate-pulse`}></div>
+            <span>{isLoggedIn ? 'Online' : 'Offline'}</span>
           </div>
           <div className="flex items-center gap-1">
             <span>🕒</span>

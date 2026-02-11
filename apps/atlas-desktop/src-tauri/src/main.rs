@@ -1,12 +1,15 @@
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
+mod social;
+mod crm;
+
 use chrono::Utc;
 use rand::Rng;
 use serde::{Serialize, Deserialize};
 use std::fmt;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
-use tauri::{AppHandle, Builder, Emitter, State, generate_handler};
+use tauri::{AppHandle, Builder, Emitter, Manager, State, generate_handler};
 use tokio::time::sleep;
 use sysinfo::System;
 use uuid::Uuid;
@@ -998,8 +1001,86 @@ fn main() {
       launch_ide_ipc,
       launch_system_metrics,
       launch_ipfs_storage,
+      admin_commands::run_system_command,
+      // ── Social Network ──
+      social::commands::social_register,
+      social::commands::social_login,
+      social::commands::social_logout,
+      social::commands::social_get_profile,
+      social::commands::social_get_profile_by_username,
+      social::commands::social_update_profile,
+      social::commands::social_send_friend_request,
+      social::commands::social_respond_friend_request,
+      social::commands::social_get_friends,
+      social::commands::social_get_pending_requests,
+      social::commands::social_set_top_friends,
+      social::commands::social_remove_friend,
+      social::commands::social_send_message,
+      social::commands::social_get_inbox,
+      social::commands::social_get_sent_messages,
+      social::commands::social_mark_message_read,
+      social::commands::social_delete_message,
+      social::commands::social_post_bulletin,
+      social::commands::social_get_bulletins,
+      social::commands::social_post_comment,
+      social::commands::social_get_comments,
+      social::commands::social_delete_comment,
+      social::commands::social_create_blog_post,
+      social::commands::social_get_blog_posts,
+      social::commands::social_post_blog_comment,
+      social::commands::social_add_photo,
+      social::commands::social_get_photos,
+      social::commands::social_delete_photo,
+      social::commands::social_add_music,
+      social::commands::social_get_music,
+      social::commands::social_set_profile_song,
+      social::commands::social_post_status,
+      social::commands::social_get_feed,
+      social::commands::social_search_users,
+      social::commands::social_send_kudo,
+      social::commands::social_get_kudos,
+      social::commands::social_create_group,
+      social::commands::social_get_groups,
+      social::commands::social_join_group,
+      social::commands::social_get_stats,
+      social::commands::social_browse_users,
+      social::commands::social_get_team_codes,
+      social::commands::social_create_team_code,
+      social::commands::social_validate_team_code,
+      // ── CRM ──
+      crm::commands::crm_create_contact,
+      crm::commands::crm_update_contact,
+      crm::commands::crm_get_contacts,
+      crm::commands::crm_get_contact,
+      crm::commands::crm_delete_contact,
+      crm::commands::crm_create_event,
+      crm::commands::crm_update_event,
+      crm::commands::crm_get_events,
+      crm::commands::crm_delete_event,
+      crm::commands::crm_create_deal,
+      crm::commands::crm_update_deal,
+      crm::commands::crm_get_deals,
+      crm::commands::crm_delete_deal,
+      crm::commands::crm_create_activity,
+      crm::commands::crm_get_activities,
+      crm::commands::crm_create_email_template,
+      crm::commands::crm_get_email_templates,
+      crm::commands::crm_delete_email_template,
+      crm::commands::crm_save_smtp_config,
+      crm::commands::crm_get_smtp_config,
+      crm::commands::crm_send_email,
+      crm::commands::crm_get_sent_emails,
+      crm::commands::crm_get_stats,
     ])
     .setup(move |app| {
+      // Initialize social database
+      let app_dir = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+      let social_db = social::db::SocialDb::new(app_dir.clone())
+          .expect("failed to initialize social database");
+      app.manage(social_db);
+      let crm_db = crm::db::CrmDb::new(app_dir)
+          .expect("failed to initialize CRM database");
+      app.manage(crm_db);
       start_mock_stream(app.handle().clone(), telemetry_state.clone());
       Ok(())
     })

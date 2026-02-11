@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
-use trust_dns_proto::rr::{
+use hickory_proto::rr::{
     rdata, DNSClass as TrustDNSClass, Name, RData, Record, RecordType as TrustDnsRecordType,
 };
 

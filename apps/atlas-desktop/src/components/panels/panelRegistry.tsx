@@ -26,6 +26,62 @@ const WorldSimViewer = lazy(() => import("@/components/monitoring/WorldSimViewer
 const SelfImprovementViewer = lazy(() => import("@/components/monitoring/SelfImprovementViewer"));
 const TripwireMonitor = lazy(() => import("@/components/monitoring/TripwireMonitor"));
 
+/* ── Explorer Sub-App Panels (ported from apps/explorer) ──── */
+const AISwarmPanel       = lazy(() => import("@/components/panels/explorer/AISwarmPanel"));
+const BlogPanel          = lazy(() => import("@/components/panels/explorer/BlogPanel"));
+const BridgePanel        = lazy(() => import("@/components/panels/explorer/BridgePanel"));
+const CommunityPanel     = lazy(() => import("@/components/panels/explorer/CommunityPanel"));
+const EarnPanel          = lazy(() => import("@/components/panels/explorer/EarnPanel"));
+const EcosystemPanel     = lazy(() => import("@/components/panels/explorer/EcosystemPanel"));
+const BlockExplorerPanel = lazy(() => import("@/components/panels/explorer/BlockExplorerPanel"));
+const LearnPanel         = lazy(() => import("@/components/panels/explorer/LearnPanel"));
+const MetricsPanel       = lazy(() => import("@/components/panels/explorer/MetricsPanel"));
+const NetworkPanel2      = lazy(() => import("@/components/panels/explorer/NetworkPanel2"));
+const PortfolioPanel     = lazy(() => import("@/components/panels/explorer/PortfolioPanel"));
+const QuantumPanel       = lazy(() => import("@/components/panels/explorer/QuantumPanel"));
+const SecurityPanel2     = lazy(() => import("@/components/panels/explorer/SecurityPanel2"));
+const StakePanel         = lazy(() => import("@/components/panels/explorer/StakePanel"));
+const SwapPanel          = lazy(() => import("@/components/panels/explorer/SwapPanel"));
+const TreasuryPanel      = lazy(() => import("@/components/panels/explorer/TreasuryPanel"));
+const X3ChainPanel       = lazy(() => import("@/components/panels/explorer/X3ChainPanel"));
+const X3OSPanel          = lazy(() => import("@/components/panels/explorer/X3OSPanel"));
+const X3StarPanel        = lazy(() => import("@/components/panels/explorer/X3StarPanel"));
+const PrivacyPanel       = lazy(() => import("@/components/panels/explorer/PrivacyPanel"));
+const TermsPanel         = lazy(() => import("@/components/panels/explorer/TermsPanel"));
+
+/* ── Explorer Sub-Pages (deeper routes) ──── */
+const DevDocsPanel          = lazy(() => import("@/components/panels/explorer/DevDocsPanel"));
+const SolutionsDetailPanel  = lazy(() => import("@/components/panels/explorer/SolutionsDetailPanel"));
+const NetworkValidatorsPanel = lazy(() => import("@/components/panels/explorer/NetworkValidatorsPanel"));
+const LearnArchitecturePanel = lazy(() => import("@/components/panels/explorer/LearnArchitecturePanel"));
+const X3SubPagesPanel       = lazy(() => import("@/components/panels/explorer/X3SubPagesPanel"));
+const CommunitySubPanel     = lazy(() => import("@/components/panels/explorer/CommunitySubPanel"));
+const QuantumEnhancedPanel  = lazy(() => import("@/components/panels/explorer/QuantumEnhancedPanel"));
+const ExplorerHomePanel     = lazy(() => import("@/components/panels/explorer/ExplorerHomePanel"));
+const ExplorerDetailPanel   = lazy(() => import("@/components/panels/explorer/ExplorerDetailPanel"));
+
+/* ── Wallet (ported from apps/wallet) ──── */
+const WalletPanel = lazy(() => import("@/components/panels/wallet/WalletPanel"));
+
+/* ── X3 Intelligence (ported from apps/x3-intelligence) ──── */
+const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
+const X3AgentsPanel         = lazy(() => import("@/components/panels/x3intel/X3AgentsPanel"));
+const X3BondsPanel          = lazy(() => import("@/components/panels/x3intel/X3BondsPanel"));
+const X3GuidePanel          = lazy(() => import("@/components/panels/x3intel/X3GuidePanel"));
+const X3IntentsPanel        = lazy(() => import("@/components/panels/x3intel/X3IntentsPanel"));
+const X3SlashingPanel       = lazy(() => import("@/components/panels/x3intel/X3SlashingPanel"));
+const X3WhyPanel            = lazy(() => import("@/components/panels/x3intel/X3WhyPanel"));
+
+/* ── DEX (ported from apps/dex) ──── */
+const DexPanel       = lazy(() => import("@/components/panels/dex/DexPanel"));
+const DexPoolsPanel  = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
+
+/* ── Swarm Dashboard (ported from apps/swarm-dashboard) ──── */
+const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDashboardPanel"));
+
+/* ── Health Dashboard (ported from apps/health-dashboard) ──── */
+const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
+
 /**
  * Map of appId → lazy-loaded panel component.
  * Add new panels here as they are created.
@@ -41,11 +97,9 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "documentation":   DocumentationPanel,
 
   // Aliases: existing apps can also route to panels
-  "swarm-dashboard":        SwarmHealthPanel,
   "admin-command-center":   NetworkPanel,
   "htlc-manager":           StoragePanel,
   "dev-dashboard":          DevToolsPanel,
-  "x3-intelligence":        SecurityPanel,
 
   // AGI Substrate panels
   "self-model":             SelfModelViewer,
@@ -56,6 +110,73 @@ const PANEL_MAP: Record<string, ComponentType> = {
 
   // Enterprise Blockchain Connector
   "blockchain-connector":   BlockchainConnectorPanel,
+
+  /* ── Explorer Sub-Apps (native panels, no iframe needed) ── */
+  "ai-swarm":               AISwarmPanel,
+  "blog":                   BlogPanel,
+  "bridge":                 BridgePanel,
+  "community":              CommunityPanel,
+  "earn":                   EarnPanel,
+  "ecosystem":              EcosystemPanel,
+  "block-explorer":         BlockExplorerPanel,
+  "learn":                  LearnPanel,
+  "defi-metrics":           MetricsPanel,
+  "network-status":         NetworkPanel2,
+  "portfolio":              PortfolioPanel,
+  "quantum-landing":        QuantumPanel,
+  "security-page":          SecurityPanel2,
+  "stake":                  StakePanel,
+  "atomic-swap":            SwapPanel,
+  "treasury":               TreasuryPanel,
+  "x3-chain":               X3ChainPanel,
+  "x3os":                   X3OSPanel,
+  "x3star":                 X3StarPanel,
+  "privacy-policy":         PrivacyPanel,
+  "terms-of-service":       TermsPanel,
+  "developers-portal":      DevDocsPanel,       // full developer docs portal
+  "prometheus-metrics":     MetricsPanel,       // shares the metrics panel
+  "solutions":              SolutionsDetailPanel, // full solutions detail panel
+
+  /* ── Explorer Sub-Pages (deeper routes) ── */
+  "dev-docs":               DevDocsPanel,
+  "solutions-detail":       SolutionsDetailPanel,
+  "network-validators":     NetworkValidatorsPanel,
+  "learn-architecture":     LearnArchitecturePanel,
+  "x3-sub-pages":           X3SubPagesPanel,
+  "community-hub":          CommunitySubPanel,
+  "quantum-enhanced":       QuantumEnhancedPanel,
+  "explorer-home":          ExplorerHomePanel,
+  "explorer-detail":        ExplorerDetailPanel,
+
+  /* ── Wallet (ported from apps/wallet) ── */
+  "wallet":                 WalletPanel,
+  "wallet-dashboard":       WalletPanel,
+  "wallet-send":            WalletPanel,
+  "wallet-receive":         WalletPanel,
+  "wallet-swap":            WalletPanel,
+
+  /* ── X3 Intelligence (ported from apps/x3-intelligence) ── */
+  "x3-floor-dashboard":     X3FloorDashboardPanel,
+  "x3-agents":              X3AgentsPanel,
+  "x3-bonds":               X3BondsPanel,
+  "x3-guide":               X3GuidePanel,
+  "x3-intents":             X3IntentsPanel,
+  "x3-slashing":            X3SlashingPanel,
+  "x3-why":                 X3WhyPanel,
+  "x3-intelligence":        X3FloorDashboardPanel, // override old alias
+
+  /* ── DEX (ported from apps/dex) ── */
+  "dex":                    DexPanel,
+  "dex-swap":               DexPanel,
+  "dex-pools":              DexPoolsPanel,
+
+  /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ── */
+  "swarm-dashboard":        SwarmDashboardPanel,   // override old alias
+  "gpu-swarm-dashboard":    SwarmDashboardPanel,
+
+  /* ── Health Dashboard (ported from apps/health-dashboard) ── */
+  "health-dashboard":       HealthDashboardPanel,
+  "system-health":          HealthDashboardPanel,
 };
 
 /**

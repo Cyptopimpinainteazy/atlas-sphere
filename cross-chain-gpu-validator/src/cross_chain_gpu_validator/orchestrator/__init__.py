@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .orchestrator import CrossChainOrchestrator
+from .orchestrator import CrossChainOrchestrator, MultiChainOrchestrator, MultiChainSwapPayload, AtomicSwapPayload
 from .registry import AtomicSwapRegistry
 
-__all__ = ["CrossChainOrchestrator", "AtomicSwapRegistry"]
+__all__ = ["CrossChainOrchestrator", "MultiChainOrchestrator", "MultiChainSwapPayload", "AtomicSwapPayload", "AtomicSwapRegistry"]

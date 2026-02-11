@@ -128,7 +128,7 @@ const Desktop: React.FC<DesktopProps> = ({
         </div>
 
       {/* ── Icon grid (left side) ──────────────────────── */}
-      <div className="absolute top-4 left-4 bottom-4 w-[320px] lg:w-[400px]">
+      <div className="absolute top-4 left-4 bottom-4 w-[320px] lg:w-[400px] z-10">
         <IconGrid applications={applications} onLaunch={launch} />
       </div>
 

@@ -5,7 +5,7 @@
 use config::ConfigError;
 use std::io;
 use thiserror::Error;
-use trust_dns_proto::error::ProtoError;
+use hickory_proto::error::ProtoError;
 
 /// DNS Result type alias
 pub type DnsResult<T> = Result<T, DnsError>;

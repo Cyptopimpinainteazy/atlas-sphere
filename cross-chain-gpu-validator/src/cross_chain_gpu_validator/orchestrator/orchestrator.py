@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 import time
 from typing import Iterable
 
-from cross_chain_gpu_validator.chain_adapter import ChainTransaction
+from cross_chain_gpu_validator.chain_adapter import ChainTransaction, ChainValidator
 from cross_chain_gpu_validator.chain_registry import ChainRegistry
 from cross_chain_gpu_validator.metrics import MetricsStore
 from .registry import AtomicSwapRegistry
@@ -31,8 +32,24 @@ class AtomicSwapPayload:
     timeout_seconds: int = 30
 
 
+def _validate_chain(
+    validator: ChainValidator, txs: list[ChainTransaction]
+) -> bool:
+    """Validate all transactions for a single chain (run in worker thread)."""
+    results = validator.validate_transactions(txs)
+    return all(results)
+
+
 class MultiChainOrchestrator:
-    """Coordinates validation across N chains with atomic guarantees."""
+    """Coordinates validation across N chains with atomic guarantees.
+
+    Optimizations:
+    - Validates chains in parallel via ThreadPoolExecutor
+    - Batch-fetches swap records from Redis in one pipeline
+    - Pre-filters expired swaps before validation work
+    """
+
+    _MAX_WORKERS = 8  # cap parallel chain validations
 
     def __init__(
         self,
@@ -46,10 +63,12 @@ class MultiChainOrchestrator:
         self._rollbacks = 0
         self._approvals = 0
         self._payloads: dict[str, MultiChainSwapPayload] = {}
+        self._executor = ThreadPoolExecutor(
+            max_workers=self._MAX_WORKERS, thread_name_prefix="ccgv-val"
+        )
 
     def submit_swap(self, payload: MultiChainSwapPayload) -> None:
         """Submit a multi-chain atomic swap."""
-        # Validate all chains are registered
         if not self._chain_registry.validate_enabled_chains(payload.chain_transactions.keys()):
             raise ValueError("One or more chains in swap are not registered")
 
@@ -64,57 +83,72 @@ class MultiChainOrchestrator:
         self._payloads[payload.swap_id] = payload
 
     def process_pending(self) -> None:
-        """Process all pending atomic swaps."""
-        for swap_id in self._registry.pending_swaps():
-            record = self._registry.get_swap(swap_id)
+        """Process all pending atomic swaps with parallel chain validation."""
+        pending_ids = self._registry.pending_swaps()
+        if not pending_ids:
+            return
+
+        # Batch-fetch all records in one Redis pipeline
+        records = self._registry.get_swaps_batch(pending_ids)
+        now = time.time()
+
+        for swap_id, record in zip(pending_ids, records):
             if record is None:
                 continue
 
-            # Check timeout
-            if time.time() > record.timeout_at:
+            # Fast-path: expire without doing validation work
+            if now > record.timeout_at:
                 self._registry.update_status(swap_id, "FAILED")
                 self._rollbacks += 1
+                self._payloads.pop(swap_id, None)
                 continue
 
-            # Get payload
             payload = self._payloads.get(swap_id)
             if payload is None:
                 self._registry.update_status(swap_id, "FAILED")
                 self._rollbacks += 1
                 continue
 
-            # Validate all chains
-            all_valid = True
-            chain_results: dict[str, bool] = {}
+            all_valid = self._validate_swap_parallel(payload)
 
-            for chain_id, txs in payload.chain_transactions.items():
-                validator = self._chain_registry.get_validator(chain_id)
-                if validator is None:
-                    all_valid = False
-                    chain_results[chain_id] = False
-                    continue
-
-                results = validator.validate_transactions(txs)
-                chain_valid = all(results)
-                chain_results[chain_id] = chain_valid
-                if not chain_valid:
-                    all_valid = False
-
-            # Update registry with results
             self._registry.update_status(
-                swap_id,
-                "APPROVED" if all_valid else "FAILED"
+                swap_id, "APPROVED" if all_valid else "FAILED"
             )
-
             if all_valid:
                 self._approvals += 1
             else:
                 self._rollbacks += 1
 
+            # Free memory for completed swaps
+            self._payloads.pop(swap_id, None)
+
         self._update_metrics()
 
-    def validate_swap(self, payload: MultiChainSwapPayload) -> bool:
-        """Validate a swap without updating registry."""
+    def _validate_swap_parallel(self, payload: MultiChainSwapPayload) -> bool:
+        """Validate all chains concurrently via thread pool."""
+        chain_count = len(payload.chain_transactions)
+
+        # For 1-2 chains, skip thread overhead
+        if chain_count <= 2:
+            return self._validate_swap_sequential(payload)
+
+        futures = {}
+        for chain_id, txs in payload.chain_transactions.items():
+            validator = self._chain_registry.get_validator(chain_id)
+            if validator is None:
+                return False
+            futures[self._executor.submit(_validate_chain, validator, txs)] = chain_id
+
+        for future in as_completed(futures):
+            if not future.result():
+                # Cancel remaining futures on first failure (fail-fast)
+                for f in futures:
+                    f.cancel()
+                return False
+        return True
+
+    def _validate_swap_sequential(self, payload: MultiChainSwapPayload) -> bool:
+        """Validate chains sequentially (faster for 1-2 chains)."""
         for chain_id, txs in payload.chain_transactions.items():
             validator = self._chain_registry.get_validator(chain_id)
             if validator is None:
@@ -123,6 +157,10 @@ class MultiChainOrchestrator:
             if not all(results):
                 return False
         return True
+
+    def validate_swap(self, payload: MultiChainSwapPayload) -> bool:
+        """Validate a swap without updating registry."""
+        return self._validate_swap_parallel(payload)
 
     def get_swap_status(self, swap_id: str) -> dict | None:
         """Get status of a swap."""

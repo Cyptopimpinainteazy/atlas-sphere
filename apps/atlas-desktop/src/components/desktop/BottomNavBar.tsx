@@ -9,6 +9,7 @@
 import React from "react";
 import { useWindowManager } from "@/hooks/useWindowManager";
 import { useApplicationStore } from "@/stores/applicationStore";
+import { useDesktopStore } from "@/stores/desktopStore";
 
 interface NavItem {
   appId: string;
@@ -23,6 +24,7 @@ const BottomNavBar: React.FC<{
 }> = ({ onTerminalToggle, isTerminalOpen = true }) => {
   const { launch } = useWindowManager();
   const { isRunning } = useApplicationStore();
+  const clearAllWindows = useDesktopStore((s) => s.clearAllWindows);
 
   // Define navigation items in two columns
   const leftColumnItems: NavItem[] = [
@@ -112,6 +114,23 @@ const BottomNavBar: React.FC<{
             );
           })}Assistant Concertmaster
         </div>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-white/10" />
+
+        {/* Clear Windows button */}
+        <button
+          onClick={clearAllWindows}
+          className="flex items-center justify-center w-12 h-12 rounded-lg
+            transition-all duration-200 relative
+            bg-white/5 border border-orange-500/60 hover:border-orange-500"
+          title="Clear All Windows"
+          style={{
+            boxShadow: '0 0 20px rgba(249, 115, 22, 0.6), inset 0 0 15px rgba(249, 115, 22, 0.2)'
+          }}
+        >
+          <span className="text-xl">🗑️</span>
+        </button>
 
         {/* Divider */}
         <div className="w-px h-6 bg-white/10" />

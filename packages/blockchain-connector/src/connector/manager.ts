@@ -25,10 +25,80 @@ interface ManagedConnector {
 export class ConnectorManager {
   private connectors = new Map<string, ManagedConnector>();
   private monitor?: HealthMonitor;
+  private endpointToConnectors = new Map<string, Set<string>>();
 
   constructor(opts?: { enableHealthMonitor?: boolean; intervalMs?: number; concurrency?: number; timeoutMs?: number }) {
     if (opts?.enableHealthMonitor) {
       this.monitor = new HealthMonitor({ concurrency: opts.concurrency || 50, timeoutMs: opts.timeoutMs || 10000, intervalMs: opts.intervalMs || 60000 });
+    }
+  }
+
+  enableHealthMonitor(opts?: { intervalMs?: number; concurrency?: number; timeoutMs?: number }) {
+    if (!this.monitor) {
+      this.monitor = new HealthMonitor({ concurrency: opts?.concurrency || 50, timeoutMs: opts?.timeoutMs || 10000, intervalMs: opts?.intervalMs || 60000 });
+      // Log status changes and optionally trigger alerts (hook for external alerting)
+      this.monitor.on('status-change', (ev: any) => {
+        // ev: { endpoint, healthy, previous }
+        console.warn(`HealthMonitor: ${ev.endpoint} -> healthy=${ev.healthy} (previous=${ev.previous})`);
+        if (ev.healthy === false) {
+          const set = this.endpointToConnectors.get(ev.endpoint);
+          if (set) {
+            for (const id of set) {
+              const managed = this.connectors.get(id);
+              if (managed) {
+                // try to failover asynchronously
+                this.attemptFailover(managed).catch((e) => console.warn(`Failover for ${id} failed: ${e?.message || e}`));
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  private async chooseHealthyEndpoint(chain: ChainDescriptor, options: ConnectorOptions): Promise<string | null> {
+    const endpoints = options.endpoint ? [options.endpoint] : chain.defaultRpcUrls;
+    if (!endpoints || endpoints.length === 0) return null;
+
+    if (this.monitor) {
+      // ask monitor for a healthy endpoint (requires prior probes)
+      const healthy = this.monitor.getHealthyEndpoint(endpoints);
+      if (healthy) return healthy;
+      // if none known healthy, do a targeted probe of endpoints in parallel and return first healthy
+      const results = await this.monitor.probeEndpoints(endpoints, 10);
+      const first = results.find((r) => r.healthy);
+      if (first) return first.endpoint;
+    }
+
+    // Fallback: return the first available endpoint
+    return endpoints[0];
+  }
+
+  private async attemptFailover(managed: ManagedConnector): Promise<boolean> {
+    const chain = managed.instance.chain;
+    const endpoints = managed.instance.options.endpoint ? [managed.instance.options.endpoint] : chain.defaultRpcUrls;
+    if (!endpoints || endpoints.length === 0) return false;
+
+    if (!this.monitor) return false;
+
+    // Find another healthy endpoint (not equal to current)
+    const healthy = this.monitor.getHealthyEndpoint(endpoints.filter((e) => e !== managed.instance.options.endpoint));
+    if (!healthy) return false;
+
+    try {
+      await managed.adapter.disconnect().catch(() => {});
+      await managed.adapter.connect(healthy);
+      // quick health check
+      await managed.adapter.getLatestBlock();
+      managed.instance.options.endpoint = healthy;
+      managed.instance.status = "connected";
+      managed.instance.updatedAt = new Date().toISOString();
+      // refresh metrics
+      managed.instance.metrics = await managed.adapter.getMetrics().catch(() => this.emptyMetrics());
+      return true;
+    } catch (err: any) {
+      // failed to failover
+      return false;
     }
   }
 
@@ -61,11 +131,14 @@ export class ConnectorManager {
 
     this.connectors.set(id, { instance, adapter });
 
-    // Try endpoints in order and perform a quick health check (getLatestBlock) before committing.
+    // Choose a preferred endpoint (monitor-suggested) and fall back to sequential attempts
     let connectedEndpoint: string | null = null;
     const errors: string[] = [];
 
-    for (const ep of endpoints) {
+    const preferred = await this.chooseHealthyEndpoint(chain, options);
+    const tryOrder = preferred ? [preferred, ...endpoints.filter((e) => e !== preferred)] : endpoints;
+
+    for (const ep of tryOrder) {
       try {
         await adapter.connect(ep);
         try {
@@ -92,6 +165,12 @@ export class ConnectorManager {
         await this.monitor.probeEndpoint(connectedEndpoint).catch(() => {});
         if (chain.defaultRpcUrls && chain.defaultRpcUrls.length > 0) {
           this.monitor.startPeriodic(chain.defaultRpcUrls);
+          // register endpoint->connector mapping for failover handling
+          for (const ep of chain.defaultRpcUrls) {
+            const s = this.endpointToConnectors.get(ep) ?? new Set<string>();
+            s.add(id);
+            this.endpointToConnectors.set(ep, s);
+          }
         }
       }
 
@@ -136,6 +215,16 @@ export class ConnectorManager {
     } catch (err: any) {
       managed.instance.status = "degraded";
       managed.instance.error = err.message;
+      // Try to failover automatically
+      const failedOver = await this.attemptFailover(managed).catch(() => false);
+      if (failedOver) {
+        // re-run metrics after failover
+        const metrics = await managed.adapter.getMetrics().catch(() => this.emptyMetrics());
+        managed.instance.metrics = metrics;
+        managed.instance.status = "connected";
+        managed.instance.updatedAt = new Date().toISOString();
+        return metrics;
+      }
       throw err;
     }
   }
@@ -146,7 +235,14 @@ export class ConnectorManager {
   async getLatestBlock(id: string): Promise<Block> {
     const managed = this.connectors.get(id);
     if (!managed) throw new Error(`Connector ${id} not found`);
-    return managed.adapter.getLatestBlock();
+    try {
+      return await managed.adapter.getLatestBlock();
+    } catch (err: any) {
+      // Try automatic failover and retry once
+      const failedOver = await this.attemptFailover(managed).catch(() => false);
+      if (failedOver) return managed.adapter.getLatestBlock();
+      throw err;
+    }
   }
 
   /**
@@ -155,7 +251,13 @@ export class ConnectorManager {
   async getBlock(id: string, numberOrHash: string | number): Promise<Block> {
     const managed = this.connectors.get(id);
     if (!managed) throw new Error(`Connector ${id} not found`);
-    return managed.adapter.getBlock(numberOrHash);
+    try {
+      return await managed.adapter.getBlock(numberOrHash);
+    } catch (err: any) {
+      const failedOver = await this.attemptFailover(managed).catch(() => false);
+      if (failedOver) return managed.adapter.getBlock(numberOrHash);
+      throw err;
+    }
   }
 
   /**
@@ -164,7 +266,13 @@ export class ConnectorManager {
   async getTransaction(id: string, hash: string): Promise<Transaction> {
     const managed = this.connectors.get(id);
     if (!managed) throw new Error(`Connector ${id} not found`);
-    return managed.adapter.getTransaction(hash);
+    try {
+      return await managed.adapter.getTransaction(hash);
+    } catch (err: any) {
+      const failedOver = await this.attemptFailover(managed).catch(() => false);
+      if (failedOver) return managed.adapter.getTransaction(hash);
+      throw err;
+    }
   }
 
   /**

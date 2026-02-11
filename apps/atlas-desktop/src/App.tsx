@@ -10,14 +10,16 @@
  */
 import React, { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { ThreeScene } from "@/components/three/ThreeScene";
-import { Terminal } from "@/components/terminal/Terminal";
-import Desktop from "@/components/desktop/Desktop";
-import { PerformanceMonitor } from "@/components/debug/PerformanceMonitor";
-import { ForegroundParallax } from "@/components/effects/ForegroundParallax";
-import { AppModeProvider } from "@/contexts/AppModeContext";
-import SalesPage from "@/pages/sales";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
+import { ThreeScene } from "./components/three/ThreeScene";
+import { Terminal } from "./components/terminal/Terminal";
+import Desktop from "./components/desktop/Desktop";
+import { PerformanceMonitor } from "./components/debug/PerformanceMonitor";
+import { ForegroundParallax } from "./components/effects/ForegroundParallax";
+import { AppModeProvider } from "./contexts/AppModeContext";
+import SalesPage from "./pages/sales";
+import SocialApp from "./pages/social/SocialApp";
+import CrmApp from "./pages/crm/CrmApp";
 
 /* ── Error Boundary ────────────────────────────────────────── */
 
@@ -107,6 +109,8 @@ const AppContent: React.FC = () => {
   return (
     <Routes>
       <Route path="/sales" element={<SalesPage />} />
+      <Route path="/social/*" element={<SocialApp />} />
+      <Route path="/crm/*" element={<CrmApp />} />
       <Route path="*" element={
         <ThemeProvider>
           {/* Performance Monitor - Press P to toggle */}

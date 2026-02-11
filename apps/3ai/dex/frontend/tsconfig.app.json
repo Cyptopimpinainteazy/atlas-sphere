@@ -10,7 +10,9 @@
     /* Module Resolution */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@atlas-sphere/atomic-swap-sdk": ["../../../../packages/atomic-swap-sdk/src"],
+      "@atlas-sphere/atomic-swap-sdk/*": ["../../../../packages/atomic-swap-sdk/src/*"]
     },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
-    "@polkadot/api": "^16.5.4",
+    "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
     "autoprefixer": "^10.4.24",
     "clsx": "^2.1.1",
