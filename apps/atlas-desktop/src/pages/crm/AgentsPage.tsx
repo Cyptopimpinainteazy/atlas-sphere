@@ -3,7 +3,7 @@ import { useSocialStore } from "@/stores/socialStore";
 import * as agentSvc from "@/services/agentService";
 import type {
   AgentDef, AgentTask, AgentConversation, LeadFunnel, FunnelStats,
-  OllamaStatus, UserEmailAssignment, UserProxy, SearchResult, MediaFile,
+  OllamaStatus, UserEmailAssignment, UserProxy, SearchResult,
 } from "@/services/agentService";
 
 /* ════════════════════════════════════════════════════════
@@ -34,7 +34,7 @@ const inputStyle: React.CSSProperties = {
 
 const AgentsPage: React.FC = () => {
   const { session, currentUser } = useSocialStore();
-  const userId = session?.user_id ?? "";
+  const userId = session?.userId ?? "";
   const isKing = currentUser?.username === "King" && currentUser?.role === "admin";
 
   /* ── Core state ── */

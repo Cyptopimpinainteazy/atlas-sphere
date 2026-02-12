@@ -40,6 +40,7 @@ export interface DesktopState {
   moveWindow: (id: WindowId, pos: WindowPosition) => void;
   resizeWindow: (id: WindowId, size: WindowSize) => void;
   minimizeAll: () => void;
+  clearAllWindows: () => void;
 
   /* ── Desktop preferences ───────────────────────────── */
   iconSize: IconSize;
@@ -209,6 +210,12 @@ export const useDesktopStore = create<DesktopState>()(
             isMinimized: true,
             isFocused: false,
           })),
+          activeWindowId: null,
+        })),
+
+      clearAllWindows: () =>
+        set(() => ({
+          windows: [],
           activeWindowId: null,
         })),
 

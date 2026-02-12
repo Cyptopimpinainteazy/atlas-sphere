@@ -133,10 +133,10 @@ export const DEFAULT_APPLICATIONS: Application[] = [
   {
     id: "x3-intelligence",
     name: "X3 Intelligence",
-    description: "Arbitrage jurisdiction control surface and AI-powered blockchain intelligence",
+    description: "Real-time arbitrage control, cross-chain metrics, validator dashboard",
     category: "defi",
-    icon: { type: "placeholder", category: "defi", color: "#ef5350" },
-    launchCommand: { type: "url", target: "http://localhost:5176" },
+    icon: { type: "file", path: "/assets/icons/x3-intelligence.svg", color: "#00d4ff" },
+    launchCommand: { type: "url", target: "http://localhost:5173" },
   },
   {
     id: "dev-dashboard",
@@ -561,6 +561,15 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     category: "utility",
     icon: { type: "placeholder", category: "utility", color: "#00d4aa" },
     launchCommand: { type: "internal", target: "x3-why" },
+  },
+  /* ── X3 Protocol-Native CRM ────────────────────────────── */
+  {
+    id: "x3-crm",
+    name: "X3 CRM",
+    description: "Enterprise validator & partnership CRM — capacity mapping, deal tracking, revenue OS",
+    category: "service",
+    icon: { type: "file", path: "/assets/icons/crm.svg", color: "#00e676" },
+    launchCommand: { type: "internal", target: "x3-crm-dashboard" },
   },
 
   /* ── DEX (ported from apps/dex) ── */
