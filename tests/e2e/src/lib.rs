@@ -1,8 +1,10 @@
 //! End-to-End Integration Tests for X3-Atlas-Sphere
 //! 
 //! This module provides comprehensive E2E testing for the entire X3-Atlas-Sphere ecosystem,
-//! Invariants: CHAIN-CONSENSUS-001
-//! including blockchain functionality, smart contracts, GPU swarm, DNS server, and more.
+//! with focus on deterministic triple-run validation for consensus, GPU coordination, and settlement.
+//!
+//! Invariants: CHAIN-CONSENSUS-001, GPU-COORD-001, SETTLEMENT-001
+//! See: docs/adr/0002-e2e-determinism-triple-run.md
 
 pub mod utils {
     pub mod mod {
@@ -13,6 +15,10 @@ pub mod utils {
         pub mod assertions;
     }
 }
+
+pub mod wait_for_rpc;
+#[cfg(test)]
+pub mod deterministic_integration_tests;
 
 // Re-export utility modules for easier access in tests
 pub use utils::test_environment::*;
