@@ -8,7 +8,8 @@
 //! - WebGPU for browser-based nodes
 
 use crate::error::{SwarmError, SwarmResult};
-use crate::task::{Task, TaskResult};
+use crate::task::Task;
+use crate::protocol::TaskResult;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -54,7 +55,7 @@ pub struct GpuDeviceInfo {
 }
 
 /// GPU backend types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GpuBackendType {
     CUDA,
     Vulkan,

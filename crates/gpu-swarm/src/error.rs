@@ -96,6 +96,18 @@ pub enum SwarmError {
     /// Internal error
     #[error("Internal error: {0}")]
     Internal(String),
+
+    /// Invalid task
+    #[error("Invalid task: {0}")]
+    InvalidTask(String),
+
+    /// Blockchain error
+    #[error("Blockchain error: {0}")]
+    BlockchainError(String),
+
+    /// Execution error
+    #[error("Execution error: {0}")]
+    ExecutionError(String),
 }
 
 impl From<std::io::Error> for SwarmError {

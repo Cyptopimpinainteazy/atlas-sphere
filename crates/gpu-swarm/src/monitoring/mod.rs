@@ -28,7 +28,7 @@ pub async fn init_monitoring() -> Result<Arc<MetricsCollector>, Box<dyn std::err
     // Initialize metrics collector
     let collector = MetricsCollector::new(METRICS_REGISTRY.clone())?;
     
-    tracing::info!("✅ Monitoring subsystems initialized");
+    ::tracing::info!("✅ Monitoring subsystems initialized");
     
     Ok(Arc::new(collector))
 }

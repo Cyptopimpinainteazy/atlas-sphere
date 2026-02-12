@@ -12,17 +12,13 @@ use crate::error::{SwarmError, SwarmResult};
 use crate::node::NodeId;
 use crate::protocol::{MessageEnvelope, SwarmMessage};
 use async_trait::async_trait;
-use libp2p::gossipsub::{self, Publish};
-use libp2p::identify::{self, Identify};
+use libp2p::gossipsub;
+use libp2p::identify;
 use libp2p::identify::Config as IdentifyConfig;
-use libp2p::kad::{self, Kademlia, KademliaConfig, QueryResult, store::MemoryStore};
+use libp2p::kad::{self, store::MemoryStore};
 use libp2p::mdns;
-use libp2p::ping::{self, Ping};
-use libp2p::swarm::behaviour::ConnectionHandler;
-use libp2p::swarm::{
-    ConnectionId, Swarm, SwarmEvent, derive_prelude::*, IntoConnectionHandler,
-};
-use libp2p::{Multiaddr, PeerId as Libp2pPeerId, core::multiaddr::Protocol};
+use libp2p::ping;
+use libp2p::{Multiaddr, PeerId as Libp2pPeerId};
 use parking_lot::RwLock;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -317,7 +313,7 @@ impl NetworkManager {
     }
 
     /// Get event receiver
-    pub fn event_receiver(&self) -> dyn std::ops::Deref<Target = mpsc::Receiver<NetworkEvent>> {
+    pub fn event_receiver(&self) -> impl std::ops::Deref<Target = mpsc::Receiver<NetworkEvent>> + use<'_> {
         self.event_rx.read()
     }
 
@@ -342,7 +338,8 @@ impl NetworkManager {
         }
 
         // Connect to bootstrap peers
-        for bootstrap in &self.config.bootstrap_peers {
+        let bootstrap_peers = self.config.bootstrap_peers.clone();
+        for bootstrap in &bootstrap_peers {
             if let Err(e) = self.connect(bootstrap).await {
                 warn!("Failed to connect to bootstrap peer {}: {}", bootstrap, e);
             }

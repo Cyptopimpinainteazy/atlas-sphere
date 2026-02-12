@@ -5,7 +5,7 @@ use serde::Serialize;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::path::Path;
-use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscribedLayer};
+use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 use chrono::Utc;
 
 #[derive(Serialize)]
@@ -65,10 +65,7 @@ pub fn log_structured(level: &str, service: &str, message: &str, context: serde_
         level: level.to_string(),
         service: service.to_string(),
         message: message.to_string(),
-        trace_id: tracing::Span::current()
-            .extensions()
-            .get::<String>()
-            .cloned(),
+        trace_id: None, // TODO: extract trace_id when OpenTelemetry is integrated
         span_id: None,
         context,
     };

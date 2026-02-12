@@ -1,22 +1,13 @@
 // crates/gpu-swarm/src/monitoring/tracing.rs
-// OpenTelemetry/Jaeger tracing setup
+// Distributed tracing setup (OpenTelemetry/Jaeger can be added later)
 
-use opentelemetry::{global, sdk::trace::Tracer};
-use opentelemetry_jaeger::new_agent_pipeline;
 use std::error::Error;
-use tracing_subscriber::{layer::SubscribedLayer, util::SubscriberInitExt};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub fn setup_tracing() -> Result<(), Box<dyn Error>> {
-    // Create Jaeger exporter
-    let tracer = new_agent_pipeline()
-        .install_simple()?;
-
-    // Create tracing layer
-    let tracer_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-
-    // Setup structured logging with tracing
+    // Setup tracing subscriber with env-filter and stdout fmt layer
+    // TODO: Add OpenTelemetry/Jaeger integration when opentelemetry crates are added to Cargo.toml
     tracing_subscriber::registry()
-        .with(tracer_layer)
         .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -24,7 +15,7 @@ pub fn setup_tracing() -> Result<(), Box<dyn Error>> {
         )
         .init();
 
-    tracing::info!("✅ Jaeger tracing initialized");
+    ::tracing::info!("✅ Tracing initialized");
     Ok(())
 }
 

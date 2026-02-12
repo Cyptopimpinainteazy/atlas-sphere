@@ -5,7 +5,8 @@
 
 use crate::error::{SwarmError, SwarmResult};
 use crate::gpu_backends::{GpuExecutor, GpuExecutorManager, GpuBackendType};
-use crate::task::{Task, TaskResult};
+use crate::task::Task;
+use crate::protocol::TaskResult;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;

@@ -5,7 +5,8 @@
 
 use super::{GpuDeviceInfo, GpuBackendType, ExecutionProfile, PerformanceMetrics, GpuExecutor};
 use crate::error::{SwarmError, SwarmResult};
-use crate::task::{Task, TaskResult};
+use crate::task::Task;
+use crate::protocol::TaskResult;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -88,7 +89,7 @@ impl CudaExecutor {
                 available_memory: memory_bytes as u64,
                 backend: GpuBackendType::CUDA,
                 clock_speed_mhz: *clock,
-                memory_bandwidth_gbs: *bandwidth,
+                memory_bandwidth_gbs: *bandwidth as f32,
                 peak_fp32_tflops: *tflops,
                 is_available: true,
             });
@@ -145,25 +146,30 @@ impl GpuExecutor for CudaExecutor {
 
         // Store metrics
         let metrics = PerformanceMetrics {
-            task_id: task.id.clone(),
+            task_id: task.id.to_string(),
             backend: GpuBackendType::CUDA,
             execution_time_ms: elapsed.as_millis() as u64,
             peak_memory_bytes: (device_info.total_memory / 4) as u64,
             avg_gpu_utilization: 75,
             avg_memory_utilization: 50,
             power_consumption_w: 350.0,
-            achieved_gflops: device_info.peak_fp32_tflops * 0.7,
+            achieved_gflops: device_info.peak_fp32_tflops as f64 * 0.7,
             framework_overhead_ms: 5,
         };
 
         *self.last_metrics.lock().unwrap() = Some(metrics.clone());
 
         Ok(TaskResult {
-            task_id: task.id.clone(),
-            status: "completed".to_string(),
-            output: vec![1, 2, 3, 4], // Mock output
+            task_id: task.id,
+            executor: [0u8; 32],
+            success: true,
+            result_data: vec![1, 2, 3, 4],
+            result_hash: [0u8; 32],
+            compute_units: elapsed.as_millis() as u64,
             execution_time_ms: elapsed.as_millis() as u64,
-            verifiable: true,
+            execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+            error: None,
+            signature: crate::protocol::Signature::default(),
         })
     }
 
@@ -188,23 +194,28 @@ impl GpuExecutor for CudaExecutor {
         let elapsed = start.elapsed();
 
         let metrics = PerformanceMetrics {
-            task_id: task.id.clone(),
+            task_id: task.id.to_string(),
             backend: GpuBackendType::CUDA,
             execution_time_ms: elapsed.as_millis() as u64,
             peak_memory_bytes: (device_info.total_memory / 4) as u64,
             avg_gpu_utilization: 85,
             avg_memory_utilization: 60,
             power_consumption_w: 380.0,
-            achieved_gflops: device_info.peak_fp32_tflops * 0.8,
+            achieved_gflops: device_info.peak_fp32_tflops as f64 * 0.8,
             framework_overhead_ms: 5,
         };
 
         let task_result = TaskResult {
-            task_id: task.id.clone(),
-            status: "completed".to_string(),
-            output: vec![1, 2, 3, 4],
+            task_id: task.id,
+            executor: [0u8; 32],
+            success: true,
+            result_data: vec![1, 2, 3, 4],
+            result_hash: [0u8; 32],
+            compute_units: elapsed.as_millis() as u64,
             execution_time_ms: elapsed.as_millis() as u64,
-            verifiable: true,
+            execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+            error: None,
+            signature: crate::protocol::Signature::default(),
         };
 
         Ok((task_result, metrics))

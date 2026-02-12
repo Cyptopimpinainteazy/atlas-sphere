@@ -5,7 +5,8 @@
 
 use super::{GpuDeviceInfo, GpuBackendType, ExecutionProfile, PerformanceMetrics, GpuExecutor};
 use crate::error::{SwarmError, SwarmResult};
-use crate::task::{Task, TaskResult};
+use crate::task::Task;
+use crate::protocol::TaskResult;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -35,10 +36,7 @@ impl VulkanExecutor {
     }
 
     async fn check_vulkan_availability() -> bool {
-        #[cfg(feature = "vulkan")]
-        true
-        #[cfg(not(feature = "vulkan"))]
-        false
+        cfg!(feature = "vulkan")
     }
 
     async fn query_devices() -> SwarmResult<Vec<GpuDeviceInfo>> {
@@ -59,7 +57,7 @@ impl VulkanExecutor {
                 available_memory: (mem_gb * 1024 * 1024 * 1024) as u64,
                 backend: GpuBackendType::Vulkan,
                 clock_speed_mhz: clock,
-                memory_bandwidth_gbs: bw,
+                memory_bandwidth_gbs: bw as f32,
                 peak_fp32_tflops: tflops,
                 is_available: true,
             })
@@ -107,11 +105,16 @@ impl GpuExecutor for VulkanExecutor {
         let elapsed = start.elapsed();
 
         Ok(TaskResult {
-            task_id: task.id.clone(),
-            status: "completed".to_string(),
-            output: vec![1, 2, 3, 4],
+            task_id: task.id,
+            executor: [0u8; 32],
+            success: true,
+            result_data: vec![1, 2, 3, 4],
+            result_hash: [0u8; 32],
+            compute_units: elapsed.as_millis() as u64,
             execution_time_ms: elapsed.as_millis() as u64,
-            verifiable: true,
+            execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+            error: None,
+            signature: crate::protocol::Signature::default(),
         })
     }
 
@@ -128,24 +131,29 @@ impl GpuExecutor for VulkanExecutor {
         let elapsed = start.elapsed();
 
         let metrics = PerformanceMetrics {
-            task_id: task.id.clone(),
+            task_id: task.id.to_string(),
             backend: GpuBackendType::Vulkan,
             execution_time_ms: elapsed.as_millis() as u64,
             peak_memory_bytes: device_info.total_memory / 4,
             avg_gpu_utilization: 80,
             avg_memory_utilization: 55,
             power_consumption_w: 350.0,
-            achieved_gflops: device_info.peak_fp32_tflops * 0.75,
+            achieved_gflops: device_info.peak_fp32_tflops as f64 * 0.75,
             framework_overhead_ms: 8,
         };
 
         Ok((
             TaskResult {
-                task_id: task.id.clone(),
-                status: "completed".to_string(),
-                output: vec![1, 2, 3, 4],
+                task_id: task.id,
+                executor: [0u8; 32],
+                success: true,
+                result_data: vec![1, 2, 3, 4],
+                result_hash: [0u8; 32],
+                compute_units: elapsed.as_millis() as u64,
                 execution_time_ms: elapsed.as_millis() as u64,
-                verifiable: true,
+                execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+                error: None,
+                signature: crate::protocol::Signature::default(),
             },
             metrics,
         ))

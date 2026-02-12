@@ -167,10 +167,10 @@ impl AgentBridge {
 
         let task = Task::new(
             task_type,
-            request.payload.to_string().into_bytes(),
-            priority,
-        );
-        let task_id = task.id();
+            [0u8; 32],
+            0,
+        ).with_priority(priority);
+        let task_id = task.id;
 
         // Record ownership
         {
@@ -204,7 +204,8 @@ impl AgentBridge {
         &self,
         task_id: &str,
     ) -> SwarmResult<Option<AgentTaskResult>> {
-        let tid: TaskId = task_id.into();
+        let tid: TaskId = TaskId::parse_str(task_id)
+            .map_err(|e| SwarmError::InvalidTask(format!("Invalid task ID: {}", e)))?;
 
         // Get the agent owning this task
         let agent_id = {
@@ -232,12 +233,12 @@ impl AgentBridge {
                         task_id: task_id.to_string(),
                         agent_id,
                         status: "Completed".to_string(),
-                        result_data: serde_json::from_slice(&result.output)
+                        result_data: serde_json::from_slice(&result.result_data)
                             .unwrap_or(serde_json::Value::Null),
-                        result_hash: hex::encode(&result.output_hash),
+                        result_hash: hex::encode(result.result_hash),
                         error: None,
                         compute_units_used: result.compute_units,
-                        executor_node: result.executor.map(|n| n.to_string()),
+                        executor_node: Some(hex::encode(result.executor)),
                     }))
                 } else {
                     Ok(None)
@@ -254,13 +255,14 @@ impl AgentBridge {
                 executor_node: None,
             })),
             Some(_) => Ok(None), // Still in progress
-            None => Err(SwarmError::TaskNotFound(task_id.to_string())),
+            None => Err(SwarmError::TaskNotFound(tid)),
         }
     }
 
     /// Cancel a task.
     pub async fn cancel_task(&self, task_id: &str) -> SwarmResult<bool> {
-        let tid: TaskId = task_id.into();
+        let tid: TaskId = TaskId::parse_str(task_id)
+            .map_err(|e| SwarmError::InvalidTask(format!("Invalid task ID: {}", e)))?;
         self.coordinator.cancel_task(&tid).await
     }
 
@@ -289,14 +291,14 @@ impl AgentBridge {
 
     fn parse_task_type(s: &str) -> SwarmResult<TaskType> {
         match s {
-            "X3Bytecode" => Ok(TaskType::X3Bytecode),
-            "MempoolSimulation" => Ok(TaskType::MempoolSimulation),
-            "RouteOptimization" => Ok(TaskType::RouteOptimization),
-            "MLTraining" => Ok(TaskType::MLTraining),
-            "ProofGeneration" => Ok(TaskType::ProofGeneration),
-            "ArbitrageSearch" => Ok(TaskType::ArbitrageSearch),
+            "X3Bytecode" => Ok(TaskType::X3Bytecode { bytecode: vec![], input: vec![], gas_budget: 0 }),
+            "MempoolSimulation" => Ok(TaskType::MempoolSimulation { chain_id: 1, tx_count: 0, rpc_endpoint: String::new() }),
+            "RouteOptimization" => Ok(TaskType::RouteOptimization { source_token: String::new(), dest_token: String::new(), amount: String::new(), chains: vec![], max_hops: 3 }),
+            "MLTraining" => Ok(TaskType::MLTraining { model_id: String::new(), training_data_hash: String::new(), epochs: 1, batch_size: 32 }),
+            "ProofGeneration" => Ok(TaskType::ProofGeneration { circuit_id: String::new(), public_inputs: vec![], private_inputs: vec![] }),
+            "ArbitrageSearch" => Ok(TaskType::ArbitrageSearch { pairs: vec![], min_profit_bps: 0, max_gas: 0 }),
             "Custom" | "CausalAnalysis" | "AgentEvaluation"
-            | "PredictionBatch" | "Counterfactual" => Ok(TaskType::Custom),
+            | "PredictionBatch" | "Counterfactual" => Ok(TaskType::Custom { task_type: s.to_string(), payload: vec![] }),
             _ => Err(SwarmError::InvalidTask(format!(
                 "Unknown task type: {}",
                 s
@@ -332,15 +334,15 @@ mod tests {
     fn test_parse_task_type() {
         assert!(matches!(
             AgentBridge::parse_task_type("X3Bytecode"),
-            Ok(TaskType::X3Bytecode)
+            Ok(TaskType::X3Bytecode { .. })
         ));
         assert!(matches!(
             AgentBridge::parse_task_type("Custom"),
-            Ok(TaskType::Custom)
+            Ok(TaskType::Custom { .. })
         ));
         assert!(matches!(
             AgentBridge::parse_task_type("CausalAnalysis"),
-            Ok(TaskType::Custom)
+            Ok(TaskType::Custom { .. })
         ));
         assert!(AgentBridge::parse_task_type("BadType").is_err());
     }

@@ -1,7 +1,8 @@
 //! Metal GPU backend for Apple Silicon and Intel Macs
 use super::{GpuDeviceInfo, GpuBackendType, ExecutionProfile, PerformanceMetrics, GpuExecutor};
 use crate::error::{SwarmError, SwarmResult};
-use crate::task::{Task, TaskResult};
+use crate::task::Task;
+use crate::protocol::TaskResult;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -31,10 +32,7 @@ impl MetalExecutor {
     }
 
     async fn check_metal_availability() -> bool {
-        #[cfg(target_os = "macos")]
-        true
-        #[cfg(not(target_os = "macos"))]
-        false
+        cfg!(target_os = "macos")
     }
 
     async fn query_devices() -> SwarmResult<Vec<GpuDeviceInfo>> {
@@ -54,7 +52,7 @@ impl MetalExecutor {
                 available_memory: (mem_gb * 1024 * 1024 * 1024) as u64,
                 backend: GpuBackendType::Metal,
                 clock_speed_mhz: clock,
-                memory_bandwidth_gbs: bw,
+                memory_bandwidth_gbs: bw as f32,
                 peak_fp32_tflops: tflops,
                 is_available: true,
             })
@@ -102,11 +100,16 @@ impl GpuExecutor for MetalExecutor {
         let elapsed = start.elapsed();
 
         Ok(TaskResult {
-            task_id: task.id.clone(),
-            status: "completed".to_string(),
-            output: vec![1, 2, 3, 4],
+            task_id: task.id,
+            executor: [0u8; 32],
+            success: true,
+            result_data: vec![1, 2, 3, 4],
+            result_hash: [0u8; 32],
+            compute_units: elapsed.as_millis() as u64,
             execution_time_ms: elapsed.as_millis() as u64,
-            verifiable: true,
+            execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+            error: None,
+            signature: crate::protocol::Signature::default(),
         })
     }
 
@@ -123,24 +126,29 @@ impl GpuExecutor for MetalExecutor {
         let elapsed = start.elapsed();
 
         let metrics = PerformanceMetrics {
-            task_id: task.id.clone(),
+            task_id: task.id.to_string(),
             backend: GpuBackendType::Metal,
             execution_time_ms: elapsed.as_millis() as u64,
             peak_memory_bytes: device_info.total_memory / 4,
             avg_gpu_utilization: 88,
             avg_memory_utilization: 65,
             power_consumption_w: 150.0,
-            achieved_gflops: device_info.peak_fp32_tflops * 0.85,
+            achieved_gflops: device_info.peak_fp32_tflops as f64 * 0.85,
             framework_overhead_ms: 3,
         };
 
         Ok((
             TaskResult {
-                task_id: task.id.clone(),
-                status: "completed".to_string(),
-                output: vec![1, 2, 3, 4],
+                task_id: task.id,
+                executor: [0u8; 32],
+                success: true,
+                result_data: vec![1, 2, 3, 4],
+                result_hash: [0u8; 32],
+                compute_units: elapsed.as_millis() as u64,
                 execution_time_ms: elapsed.as_millis() as u64,
-                verifiable: true,
+                execution_proof: crate::protocol::ExecutionProof::new([0u8; 32]),
+                error: None,
+                signature: crate::protocol::Signature::default(),
             },
             metrics,
         ))

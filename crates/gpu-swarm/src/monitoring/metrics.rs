@@ -2,8 +2,8 @@
 // Prometheus metrics for GPU Swarm monitoring
 
 use prometheus::{
-    Counter, Gauge, Histogram, HistogramVec, Gauge Vec, Counter Vec, Registry,
-    HistogramOpts, GaugeOpts, CounterOpts, CounterVecOpts, GaugeVecOpts,
+    Counter, Gauge, Histogram, HistogramVec, GaugeVec, CounterVec, Registry,
+    HistogramOpts, Opts,
 };
 use std::sync::Arc;
 
@@ -55,43 +55,43 @@ impl MetricsCollector {
     pub fn new(registry: Registry) -> Result<Self, Box<dyn std::error::Error>> {
         // GPU Metrics
         let gpu_utilization = GaugeVec::new(
-            GaugeOpts::new("gpu_utilization_percent", "GPU utilization percentage"),
+            Opts::new("gpu_utilization_percent", "GPU utilization percentage"),
             &["device", "node", "backend"],
         )?;
         registry.register(Box::new(gpu_utilization.clone()))?;
 
         let gpu_temperature = GaugeVec::new(
-            GaugeOpts::new("gpu_temperature_celsius", "GPU temperature in Celsius"),
+            Opts::new("gpu_temperature_celsius", "GPU temperature in Celsius"),
             &["device", "node"],
         )?;
         registry.register(Box::new(gpu_temperature.clone()))?;
 
         let gpu_memory_used = GaugeVec::new(
-            GaugeOpts::new("gpu_memory_used_bytes", "GPU memory used in bytes"),
+            Opts::new("gpu_memory_used_bytes", "GPU memory used in bytes"),
             &["device", "node"],
         )?;
         registry.register(Box::new(gpu_memory_used.clone()))?;
 
         let gpu_memory_total = GaugeVec::new(
-            GaugeOpts::new("gpu_memory_total_bytes", "GPU total memory in bytes"),
+            Opts::new("gpu_memory_total_bytes", "GPU total memory in bytes"),
             &["device", "node"],
         )?;
         registry.register(Box::new(gpu_memory_total.clone()))?;
 
         let gpu_power_consumption = GaugeVec::new(
-            GaugeOpts::new("gpu_power_consumption_watts", "GPU power consumption in watts"),
+            Opts::new("gpu_power_consumption_watts", "GPU power consumption in watts"),
             &["device", "node"],
         )?;
         registry.register(Box::new(gpu_power_consumption.clone()))?;
 
         let gpu_thermal_throttle_events = CounterVec::new(
-            CounterOpts::new("gpu_thermal_throttle_events_total", "GPU thermal throttle events"),
+            Opts::new("gpu_thermal_throttle_events_total", "GPU thermal throttle events"),
             &["device", "node"],
         )?;
         registry.register(Box::new(gpu_thermal_throttle_events.clone()))?;
 
         let gpu_error_count = CounterVec::new(
-            CounterOpts::new("gpu_error_count_total", "Total GPU errors"),
+            Opts::new("gpu_error_count_total", "Total GPU errors"),
             &["device", "node", "error_type"],
         )?;
         registry.register(Box::new(gpu_error_count.clone()))?;
@@ -142,13 +142,13 @@ impl MetricsCollector {
         registry.register(Box::new(peer_count.clone()))?;
 
         let peer_connections = CounterVec::new(
-            CounterOpts::new("gpu_peer_connections_total", "Total peer connections established"),
+            Opts::new("gpu_peer_connections_total", "Total peer connections established"),
             &["peer_type"],
         )?;
         registry.register(Box::new(peer_connections.clone()))?;
 
         let peer_disconnections = CounterVec::new(
-            CounterOpts::new("gpu_peer_disconnections_total", "Total peer disconnections"),
+            Opts::new("gpu_peer_disconnections_total", "Total peer disconnections"),
             &["peer_type", "reason"],
         )?;
         registry.register(Box::new(peer_disconnections.clone()))?;
@@ -160,13 +160,13 @@ impl MetricsCollector {
         registry.register(Box::new(network_latency.clone()))?;
 
         let network_bandwidth = GaugeVec::new(
-            GaugeOpts::new("gpu_network_bandwidth_bytes_per_sec", "Network bandwidth in bytes/sec"),
+            Opts::new("gpu_network_bandwidth_bytes_per_sec", "Network bandwidth in bytes/sec"),
             &["direction", "peer"],
         )?;
         registry.register(Box::new(network_bandwidth.clone()))?;
 
         let network_packet_loss = GaugeVec::new(
-            GaugeOpts::new("gpu_network_packet_loss_percent", "Network packet loss percentage"),
+            Opts::new("gpu_network_packet_loss_percent", "Network packet loss percentage"),
             &["peer"],
         )?;
         registry.register(Box::new(network_packet_loss.clone()))?;
@@ -191,7 +191,7 @@ impl MetricsCollector {
         registry.register(Box::new(coordinator_request_latency.clone()))?;
 
         let coordinator_requests_total = CounterVec::new(
-            CounterOpts::new("coordinator_requests_total", "Total coordinator requests"),
+            Opts::new("coordinator_requests_total", "Total coordinator requests"),
             &["method", "status"],
         )?;
         registry.register(Box::new(coordinator_requests_total.clone()))?;
@@ -216,7 +216,7 @@ impl MetricsCollector {
         registry.register(Box::new(reward_fund_balance.clone()))?;
 
         let node_stake = GaugeVec::new(
-            GaugeOpts::new("node_stake_tokens", "Node stake in tokens"),
+            Opts::new("node_stake_tokens", "Node stake in tokens"),
             &["node"],
         )?;
         registry.register(Box::new(node_stake.clone()))?;
@@ -229,7 +229,7 @@ impl MetricsCollector {
         registry.register(Box::new(uptime_seconds.clone()))?;
 
         let health_check_failures = CounterVec::new(
-            CounterOpts::new("health_check_failures_total", "Total health check failures"),
+            Opts::new("health_check_failures_total", "Total health check failures"),
             &["component"],
         )?;
         registry.register(Box::new(health_check_failures.clone()))?;
