@@ -82,8 +82,8 @@ jobs:
       - name: Sanitize artifacts (always)
         if: always()
         run: |
-          chmod +x scripts/ci/sanitize_artifacts.sh
-          scripts/ci/sanitize_artifacts.sh artifacts/run-${{ matrix.run }} || true
+          chmod +x scripts/ci/sanitize_artifacts_v2.sh
+          scripts/ci/sanitize_artifacts_v2.sh artifacts/run-${{ matrix.run }} || true
 
       - name: Upload artifacts (always)
         if: always()
@@ -104,31 +104,29 @@ jobs:
     name: Compare triple-run artifacts
     runs-on: ubuntu-latest
     needs: e2e-state-root
-    env:
-      RUNS: "1 2 3"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts for each run
+      - name: Download artifacts for run 1
         uses: actions/download-artifact@v4
         with:
           name: e2e-state-root-artifacts-run-1-${{ github.run_id }}
-          path: artifacts/run-1 || true
+          path: artifacts/run-1
 
-      - name: Download run-2
+      - name: Download artifacts for run 2
         uses: actions/download-artifact@v4
         with:
           name: e2e-state-root-artifacts-run-2-${{ github.run_id }}
-          path: artifacts/run-2 || true
+          path: artifacts/run-2
 
-      - name: Download run-3
+      - name: Download artifacts for run 3
         uses: actions/download-artifact@v4
         with:
           name: e2e-state-root-artifacts-run-3-${{ github.run_id }}
-          path: artifacts/run-3 || true
+          path: artifacts/run-3
 
-      - name: Add compare script and run comparison
+      - name: Compare artifacts and verify determinism
         run: |
           chmod +x tests/e2e/compare_artifacts.sh
           tests/e2e/compare_artifacts.sh artifacts/run-1 artifacts/run-2 artifacts/run-3
