@@ -242,8 +242,8 @@ getrandom = { path = "patches/getrandom" }
 # Fix ahash to use getrandom 0.2 instead of 0.3 (0.3 doesn't support wasm32-unknown-unknown)
 ahash = { path = "patches/ahash" }
 # Experimental: attempt to unify `curve25519-dalek` across workspace to satisfy Solana and Substrate consumers
-# This is an investigative override — if CI shows incompatibilities, we will revert.
-curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" }
+# REVERTED: workspace unification proved incompatible with pinned Substrate deps — keeping isolated SVM integration test instead
+# (was: curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" })
 # Also patch getrandom 0.1.16 to version alias - leave upstream (substrate uses it differently)
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
