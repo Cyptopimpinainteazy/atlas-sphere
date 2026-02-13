@@ -127,14 +127,14 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Document SVM program deployment process
 - [x] Document cross-VM bridge usage
 - [x] Create "Quick Start" guide
-- [ ] Commit: "docs: update all core documentation"
+- [x] Commit: "docs: update all core documentation"
 
 ### Critical Task 4.3: Testnet Deployment
 
 - [ ] Deploy updated node to testnet
-- [ ] Verify 3+ validators running
+- [x] Verify 3+ validators running
 - [ ] Test all RPC endpoints on testnet
-- [ ] Deploy wallet and explorer frontends
+- [x] Deploy wallet and explorer frontends
 - [ ] Announce testnet update to community
 - [ ] Commit: "deploy: update testnet with dual-VM support"
 
