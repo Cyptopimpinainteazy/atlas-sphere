@@ -3,7 +3,7 @@
 
 use prometheus::{
     Counter, Gauge, Histogram, HistogramVec, GaugeVec, CounterVec, Registry,
-    HistogramOpts, Opts,
+    HistogramOpts, Opts, Encoder,
 };
 use std::sync::Arc;
 
@@ -21,6 +21,9 @@ pub struct MetricsCollector {
     pub task_queue_depth: Gauge,
     pub task_submitted_total: Counter,
     pub task_completed_total: Counter,
+    // Backwards-compatible aliases expected by tests
+    pub tasks_submitted: Counter,
+    pub tasks_completed: Counter,
     pub task_failed_total: Counter,
     pub task_execution_time: Histogram,
     pub task_execution_time_by_type: HistogramVec,
@@ -52,7 +55,8 @@ pub struct MetricsCollector {
 }
 
 impl MetricsCollector {
-    pub fn new(registry: Registry) -> Result<Self, Box<dyn std::error::Error>> {
+    /// Construct a collector from a provided `Registry`.
+    pub fn new_with_registry(registry: Registry) -> Result<Self, Box<dyn std::error::Error>> {
         // GPU Metrics
         let gpu_utilization = GaugeVec::new(
             Opts::new("gpu_utilization_percent", "GPU utilization percentage"),
@@ -241,6 +245,10 @@ impl MetricsCollector {
         )?;
         registry.register(Box::new(database_query_latency.clone()))?;
 
+        // create aliases for clone-before-move to avoid borrow-after-move
+        let tasks_submitted_alias = task_submitted_total.clone();
+        let tasks_completed_alias = task_completed_total.clone();
+
         Ok(Self {
             gpu_utilization,
             gpu_temperature,
@@ -251,7 +259,10 @@ impl MetricsCollector {
             gpu_error_count,
             task_queue_depth,
             task_submitted_total,
+            // aliases for older tests
+            tasks_submitted: tasks_submitted_alias,
             task_completed_total,
+            tasks_completed: tasks_completed_alias,
             task_failed_total,
             task_execution_time,
             task_execution_time_by_type,
@@ -273,5 +284,22 @@ impl MetricsCollector {
             health_check_failures,
             database_query_latency,
         })
+    }
+}
+
+impl MetricsCollector {
+    /// Backwards-compatible constructor used by tests (uses global registry)
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        // Use the global registry defined in the monitoring module
+        Ok(Self::new_with_registry(crate::monitoring::METRICS_REGISTRY.clone())?)
+    }
+
+    /// Gather text-format metrics from the global registry
+    pub fn gather_metrics(&self) -> String {
+        let encoder = prometheus::TextEncoder::new();
+        let metric_families = crate::monitoring::METRICS_REGISTRY.gather();
+        let mut buffer = Vec::new();
+        let _ = encoder.encode(&metric_families, &mut buffer);
+        String::from_utf8_lossy(&buffer).to_string()
     }
 }

@@ -11,9 +11,11 @@ pub struct Migration<T>(PhantomData<T>);
 
 impl<T: crate::Config> OnRuntimeUpgrade for Migration<T> {
     fn on_runtime_upgrade() -> Weight {
-        if StorageVersion::get::<pallet::Pallet<T>>() < pallet::STORAGE_VERSION {
-            StorageVersion::put::<pallet::Pallet<T>>(pallet::STORAGE_VERSION);
-            <Weight as From<u64>>::from(2u64)
+        // Avoid referencing the pallet's private `STORAGE_VERSION` from this module.
+        let target = StorageVersion::new(1);
+        if StorageVersion::get::<pallet::Pallet<T>>() < target {
+            StorageVersion::put::<pallet::Pallet<T>>(&target);
+            Weight::from_parts(2u64, 0)
         } else {
             Weight::zero()
         }

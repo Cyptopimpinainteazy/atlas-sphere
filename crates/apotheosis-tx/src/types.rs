@@ -141,7 +141,7 @@ pub struct RouteHop {
 }
 
 /// Type of route hop
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HopType {
     /// Cross-chain bridge
     Bridge,

@@ -181,6 +181,10 @@ pub struct VM {
     gas_used: u64,
     /// Atomic nesting depth.
     atomic_depth: usize,
+    /// Snapshot stack for atomic windows (regs, globals)
+    atomic_snapshots: Vec<(Vec<Value>, Vec<Value>)>,
+    /// Global storage (module.globals length)
+    globals: Vec<Value>,
     /// Hostcall registry.
     hostcalls: HostcallRegistry,
     /// Instruction count.
@@ -195,6 +199,19 @@ impl VM {
 
     /// Create a new VM with custom configuration.
     pub fn with_config(module: BytecodeModule, config: VMConfig) -> Self {
+        // initialize globals from module (use const pool initializers where present)
+        let mut globals: Vec<Value> = Vec::new();
+        for g in &module.globals {
+            let idx = g.init_const.0 as usize;
+            let val = module
+                .const_pool
+                .entries
+                .get(idx)
+                .map(|c| Value::from_const(c))
+                .unwrap_or(Value::Unit);
+            globals.push(val);
+        }
+
         Self {
             module,
             regs: vec![Value::Unit; MAX_REGISTERS],
@@ -203,6 +220,8 @@ impl VM {
             config,
             gas_used: 0,
             atomic_depth: 0,
+            atomic_snapshots: Vec::new(),
+            globals,
             hostcalls: HostcallRegistry::with_standard(),
             instruction_count: 0,
         }
@@ -249,6 +268,22 @@ impl VM {
     /// Get a register value.
     pub fn get_register(&self, idx: usize) -> &Value {
         &self.regs[idx]
+    }
+
+    /// Resolve a virtual register index to the underlying physical register
+    /// using the current frame base. Returns an error if out of bounds.
+    fn resolve_reg_checked(&self, reg: usize, ip: usize) -> VMResult<usize> {
+        let base = self.call_stack.last().map(|f| f.base).unwrap_or(0);
+        let idx = base + reg;
+        if idx >= self.regs.len() {
+            return Err(self.error_at(ip, VMErrorKind::RegisterOutOfBounds(reg as u16)));
+        }
+        Ok(idx)
+    }
+
+    /// Resolve register without IP (used in contexts where ip not available).
+    fn resolve_reg(&self, reg: usize) -> usize {
+        self.call_stack.last().map(|f| f.base).unwrap_or(0) + reg
     }
 
     /// Call a function by index.
@@ -357,9 +392,14 @@ impl VM {
                         // Top-level return
                         return Ok(value);
                     }
-                    // Set return value in caller's r0
+                    // Set return value in caller's r0 (respect caller base)
                     if let Some(v) = value {
-                        self.regs[0] = v;
+                        if let Some(caller) = self.call_stack.last() {
+                            let idx = caller.base + 0;
+                            self.regs[idx] = v;
+                        } else {
+                            self.regs[0] = v;
+                        }
                     }
                     // Resume at return address
                     if let Some(f) = self.call_stack.last_mut() {
@@ -410,7 +450,7 @@ impl VM {
 
             Opcode::Call => {
                 // call dst:reg func:u32 argc:u16 [args:reg...]
-                let dst = self.read_u8(ip + 1)? as usize;
+                let _dst = self.read_u8(ip + 1)? as usize; // dst currently unused; return is in r0
                 let func_idx = self.read_u32(ip + 2)? as usize;
                 let argc = self.read_u16(ip + 6)? as usize;
 
@@ -428,25 +468,42 @@ impl VM {
                     ));
                 }
 
-                // Read argument registers
+                // Read argument registers from caller (respect caller base)
                 let mut args = Vec::with_capacity(argc);
                 for i in 0..argc {
                     let arg_reg = self.read_u8(ip + 8 + i)? as usize;
-                    args.push(self.regs[arg_reg].clone());
+                    let resolved = self.resolve_reg(arg_reg);
+                    args.push(self.regs[resolved].clone());
                 }
 
                 let func = &self.module.functions[func_idx];
                 let ret_addr = ip + 8 + argc;
 
-                // Set up arguments in callee's registers
-                for (i, arg) in args.into_iter().enumerate() {
-                    self.regs[i] = arg;
+                // Compute callee base: caller.base + caller.local_count (simple stack-frame window)
+                let caller_base = self.call_stack.last().map(|f| f.base).unwrap_or(0);
+                let caller_local_count = self
+                    .call_stack
+                    .last()
+                    .map(|f| self.module.functions[f.func_idx].local_count as usize)
+                    .unwrap_or(0);
+                let callee_base = caller_base + caller_local_count;
+
+                // Bounds check for callee window
+                if callee_base + func.local_count as usize >= MAX_REGISTERS {
+                    return Err(self.error_at(ip, VMErrorKind::RegisterOutOfBounds(
+                        (callee_base + func.local_count as usize) as u16,
+                    )));
                 }
 
-                // Push frame
+                // Place args into callee register window
+                for (i, arg) in args.into_iter().enumerate() {
+                    self.regs[callee_base + i] = arg;
+                }
+
+                // Push new frame with computed base
                 self.call_stack.push(Frame {
                     ip: func.entry_point as usize,
-                    base: 0, // TODO: proper base for nested calls
+                    base: callee_base,
                     ret_addr,
                     func_idx,
                 });
@@ -456,7 +513,8 @@ impl VM {
 
             Opcode::Ret => {
                 let src = self.read_u8(ip + 1)? as usize;
-                let value = self.regs[src].clone();
+                let src_resolved = self.resolve_reg_checked(src, ip)?;
+                let value = self.regs[src_resolved].clone();
                 Ok(StepResult::Return(Some(value)))
             }
 
@@ -475,14 +533,17 @@ impl VM {
                     return Err(self.error_at(ip, VMErrorKind::ConstPoolOutOfBounds(idx)));
                 }
 
-                self.regs[dst] = Value::from_const(&self.module.const_pool.entries[idx]);
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = Value::from_const(&self.module.const_pool.entries[idx]);
                 Ok(StepResult::Continue(ip + 6))
             }
 
             Opcode::Mov => {
                 let dst = self.read_u8(ip + 1)? as usize;
                 let src = self.read_u8(ip + 2)? as usize;
-                self.regs[dst] = self.regs[src].clone();
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                let src_r = self.resolve_reg_checked(src, ip)?;
+                self.regs[dst_r] = self.regs[src_r].clone();
                 Ok(StepResult::Continue(ip + 3))
             }
 
@@ -504,25 +565,29 @@ impl VM {
             Opcode::LoadImm => {
                 let dst = self.read_u8(ip + 1)? as usize;
                 let val = self.read_i8(ip + 2)?;
-                self.regs[dst] = Value::I64(val as i64);
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = Value::I64(val as i64);
                 Ok(StepResult::Continue(ip + 3))
             }
 
             Opcode::LoadZero => {
                 let dst = self.read_u8(ip + 1)? as usize;
-                self.regs[dst] = Value::I64(0);
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = Value::I64(0);
                 Ok(StepResult::Continue(ip + 2))
             }
 
             Opcode::LoadTrue => {
                 let dst = self.read_u8(ip + 1)? as usize;
-                self.regs[dst] = Value::Bool(true);
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = Value::Bool(true);
                 Ok(StepResult::Continue(ip + 2))
             }
 
             Opcode::LoadFalse => {
                 let dst = self.read_u8(ip + 1)? as usize;
-                self.regs[dst] = Value::Bool(false);
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = Value::Bool(false);
                 Ok(StepResult::Continue(ip + 2))
             }
 
@@ -875,6 +940,9 @@ impl VM {
             // Atomic Operations
             // ================================================================
             Opcode::AtomicBegin => {
+                // snapshot regs + globals
+                self.atomic_snapshots
+                    .push((self.regs.clone(), self.globals.clone()));
                 self.atomic_depth += 1;
                 Ok(StepResult::Continue(ip + 3)) // opcode + id:u16
             }
@@ -883,6 +951,8 @@ impl VM {
                 if self.atomic_depth == 0 {
                     return Err(self.error_at(ip, VMErrorKind::AtomicEndWithoutBegin));
                 }
+                // commit: discard last snapshot
+                self.atomic_snapshots.pop();
                 self.atomic_depth -= 1;
                 Ok(StepResult::Continue(ip + 3)) // opcode + id:u16
             }
@@ -891,8 +961,12 @@ impl VM {
                 if self.atomic_depth == 0 {
                     return Err(self.error_at(ip, VMErrorKind::AtomicRollbackWithoutBegin));
                 }
-                // TODO: implement rollback
-                self.atomic_depth = 0;
+                // restore last snapshot
+                if let Some((regs_snap, globals_snap)) = self.atomic_snapshots.pop() {
+                    self.regs = regs_snap;
+                    self.globals = globals_snap;
+                }
+                self.atomic_depth -= 1;
                 return Err(self.error_at(ip, VMErrorKind::AtomicAborted));
             }
 

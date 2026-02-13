@@ -45,6 +45,7 @@ atlas-svm-integration = { path = "../../crates/svm-integration", default-feature
 sp-core = { workspace = true }
 sp-io = { workspace = true }
 pallet-balances = { workspace = true }
+invariant-macros = { path = "../../crates/invariant-macros" }
 
 [features]
 default = ["std"]

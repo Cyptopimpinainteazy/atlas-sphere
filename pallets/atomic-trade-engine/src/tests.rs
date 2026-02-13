@@ -16,7 +16,7 @@ use frame_support::{assert_noop, assert_ok, BoundedVec};
 use sp_core::H256;
 use invariant_macros::invariant;
 
-//! Invariants: PALLET-TRADE-001
+// Invariants: PALLET-TRADE-001
 
 
 // ============================================================================

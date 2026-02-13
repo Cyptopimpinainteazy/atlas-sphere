@@ -1549,7 +1549,7 @@ fn register_asset_rejects_empty_symbol() {
 }
 
 #[test]
-fn register_asset_rejects_symbol_starting_with_apps/dash-legacy-2-legacy-2() {
+fn register_asset_rejects_symbol_starting_with_dash() {
     new_test_ext().execute_with(|| {
         assert_noop!(
             AtlasKernel::register_asset(
@@ -1579,7 +1579,7 @@ fn register_asset_rejects_symbol_starting_with_underscore() {
 }
 
 #[test]
-fn register_asset_allows_apps/dash-legacy-2-legacy-2_underscore_in_middle() {
+fn register_asset_allows_dash_and_underscore_in_middle() {
     new_test_ext().execute_with(|| {
         // Dash in middle is OK
         assert_ok!(AtlasKernel::register_asset(

@@ -116,9 +116,9 @@ fn migration_sets_storage_version() {
         use frame_support::traits::StorageVersion;
         use crate::pallet;
 
-        StorageVersion::put::<pallet::Pallet<Test>>(StorageVersion::new(0));
-        let _w = crate::migrations::Migration::<Test>::on_runtime_upgrade();
-        assert!(StorageVersion::get::<pallet::Pallet<Test>>() >= pallet::STORAGE_VERSION);
+        StorageVersion::put::<pallet::Pallet<Test>>(&StorageVersion::new(0));
+        let _w = <crate::migrations::Migration<Test> as frame_support::traits::OnRuntimeUpgrade>::on_runtime_upgrade();
+        assert!(StorageVersion::get::<pallet::Pallet<Test>>() >= StorageVersion::new(1));
     })
 }
 

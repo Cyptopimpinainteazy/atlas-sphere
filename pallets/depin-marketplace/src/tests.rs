@@ -6,11 +6,12 @@
 //! - DEPIN-MARKET-005: Provider slashing on failure
 
 use crate::{mock::*, types::*, Error, Event};
+use frame_support::BoundedVec;
 use frame_support::{assert_noop, assert_ok};
 
 fn default_gpu_specs() -> GpuSpecification {
     GpuSpecification {
-        model: b"NVIDIA A100 80GB".to_vec(),
+        model: BoundedVec::try_from(b"NVIDIA A100 80GB".to_vec()).unwrap(),
         vram_mb: 81_920,
         compute_units: 108,
         tier: GpuTier::Datacenter,

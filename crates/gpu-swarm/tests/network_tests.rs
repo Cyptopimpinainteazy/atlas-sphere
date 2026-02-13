@@ -33,7 +33,7 @@ mod network_tests {
     #[tokio::test]
     async fn test_peer_reputation() {
         let config = NetworkConfig::default();
-        let manager = NetworkManager::new(config).unwrap();
+        let mut manager = NetworkManager::new(config).unwrap();
 
         let peer_id = manager
             .connect("/ip4/127.0.0.1/tcp/9001")
@@ -56,7 +56,7 @@ mod network_tests {
     #[tokio::test]
     async fn test_peer_blacklisting() {
         let config = NetworkConfig::default();
-        let manager = NetworkManager::new(config).unwrap();
+        let mut manager = NetworkManager::new(config).unwrap();
 
         let peer_id = manager
             .connect("/ip4/127.0.0.1/tcp/9002")
@@ -76,7 +76,7 @@ mod network_tests {
     #[tokio::test]
     async fn test_healthy_peers_filtering() {
         let config = NetworkConfig::default();
-        let manager = NetworkManager::new(config).unwrap();
+        let mut manager = NetworkManager::new(config).unwrap();
 
         // Add a good peer
         let good_peer = manager

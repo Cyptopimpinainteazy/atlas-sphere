@@ -1,7 +1,7 @@
 //! Mock runtime for x3-settlement-engine pallet tests.
 
 use crate as pallet_x3_settlement_engine;
-use frame_support::{derive_impl, parameter_types, traits::ConstU32};
+use frame_support::{derive_impl, parameter_types, traits::{ConstU32, ConstU64}};
 use frame_system::EnsureRoot;
 use sp_runtime::{traits::{BlakeTwo256, IdentityLookup}, BuildStorage};
 use sp_core::H256;
@@ -12,6 +12,7 @@ frame_support::construct_runtime!(
     pub enum Test {
         System: frame_system,
         Balances: pallet_balances,
+        AtlasKernel: pallet_atlas_kernel,
         Timestamp: pallet_timestamp,
         X3SettlementEngine: pallet_x3_settlement_engine,
     }
@@ -71,6 +72,31 @@ parameter_types! {
     pub const SomeDeposit: u128 = 1000;
 }
 
+impl pallet_atlas_kernel::Config for Test {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type Balance = u128;
+    type AssetId = u32;
+    type AtlasId = u32;
+    type MaxAssetsPerAccount = ConstU32<16>;
+    type MaxAssetSymbolLength = ConstU32<16>;
+    type MaxEvmPayloadLength = ConstU32<4096>;
+    type MaxSvmPayloadLength = ConstU32<4096>;
+    type MaxX3PayloadLength = ConstU32<4096>;
+    type MaxCombinedPayloadLength = ConstU32<8192>;
+    type MaxCombinedPayloadLengthV2 = ConstU32<12_288>;
+    type MaxAuthorities = ConstU32<100>;
+    type MinAuthorities = ConstU32<1>;
+    type DefaultEvmGasLimit = ConstU64<10_000_000>;
+    type DefaultSvmComputeLimit = ConstU64<200_000>;
+    type DefaultX3GasLimit = ConstU64<5_000_000>;
+    type WeightInfo = ();
+    type EvmAdapter = ();
+    type SvmAdapter = ();
+    type X3Adapter = ();
+    type GovernanceOrigin = frame_system::EnsureRoot<u64>;
+}
+
 impl pallet_x3_settlement_engine::Config for Test {
     type RuntimeEvent = RuntimeEvent;
     type SettlementWeightInfo = ();
@@ -81,7 +107,7 @@ impl pallet_x3_settlement_engine::Config for Test {
     type DefaultSettlementTimeout = frame_support::traits::ConstU64<60>;
     type MinBtcConfirmations = frame_support::traits::ConstU32<1>;
     type ChallengePeriod = frame_support::traits::ConstU64<10>;
-    type WeightInfo = ();
+    
 }
 
 // Test accounts

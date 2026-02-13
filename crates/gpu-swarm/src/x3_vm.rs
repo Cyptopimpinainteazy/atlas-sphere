@@ -121,7 +121,7 @@ impl X3VmExecutor {
     }
 
     /// Analyze X3 bytecode for optimization
-    fn analyze_bytecode(&self, bytecode: &[u8]) -> SwarmResult<X3ExecutionProfile> {
+    pub fn analyze_bytecode(&self, bytecode: &[u8]) -> SwarmResult<X3ExecutionProfile> {
         // In production: Parse X3 MIR instructions and determine:
         // - Memory requirements
         // - Parallelization opportunities
@@ -333,10 +333,11 @@ pub struct X3TaskSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures::executor::block_on;
 
     #[test]
     fn test_x3_bytecode_analysis() {
-        let executor = std::future::block_on(async {
+        let executor = block_on(async {
             let gpu_manager = Arc::new(GpuExecutorManager::new());
             X3VmExecutor::new(gpu_manager).await.unwrap()
         });
@@ -350,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_kernel_compilation() {
-        let executor = std::future::block_on(async {
+        let executor = block_on(async {
             let gpu_manager = Arc::new(GpuExecutorManager::new());
             X3VmExecutor::new(gpu_manager).await.unwrap()
         });

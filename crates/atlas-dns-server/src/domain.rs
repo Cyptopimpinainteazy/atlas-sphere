@@ -408,75 +408,46 @@ impl DnsRecord {
 
     /// Convert to trust-dns Record
     pub fn to_trust_dns_record(&self) -> DnsResult<Record> {
-        let mut record = Record::new();
-        record
-            .set_name(self.domain.to_name()?)
-            .set_ttl(self.ttl)
-            .set_dns_class(TrustDNSClass::from(self.class))
-            .set_record_type(self.record_type.to_trust_dns_type());
-
-        // Set record data based on type
-        match &self.data {
+        let name = self.domain.to_name()?;
+        
+        // Create record data based on type
+        let rdata = match &self.data {
             DnsRecordType::A(ip) => {
-                record.set_data(Some(RData::A(rdata::A(*ip))));
+                RData::A(rdata::A(*ip))
             }
             DnsRecordType::AAAA(ip) => {
-                record.set_data(Some(RData::AAAA(rdata::AAAA(*ip))));
+                RData::AAAA(rdata::AAAA(*ip))
             }
             DnsRecordType::CNAME(target) => {
                 let target_name = Name::from_str(target)
                     .map_err(|e| DnsError::invalid_domain_name(e.to_string()))?;
-                record.set_data(Some(RData::CNAME(rdata::CNAME(target_name))));
+                RData::CNAME(rdata::CNAME(target_name))
             }
             DnsRecordType::MX(mx) => {
                 let exchange_name = mx.exchange.to_name()?;
-                record.set_data(Some(RData::MX(rdata::MX::new(mx.priority, exchange_name))));
+                RData::MX(rdata::MX::new(mx.priority, exchange_name))
             }
             DnsRecordType::NS(nameserver) => {
                 let ns_name = Name::from_str(nameserver)
                     .map_err(|e| DnsError::invalid_domain_name(e.to_string()))?;
-                record.set_data(Some(RData::NS(rdata::NS(ns_name))));
+                RData::NS(rdata::NS(ns_name))
             }
             DnsRecordType::TXT(text) => {
-                record.set_data(Some(RData::TXT(rdata::TXT::new(vec![text.clone()]))));
+                RData::TXT(rdata::TXT::new(vec![text.clone()]))
             }
             DnsRecordType::SRV(srv) => {
                 let target_name = srv.target.to_name()?;
-                record.set_data(Some(RData::SRV(rdata::SRV::new(
+                RData::SRV(rdata::SRV::new(
                     srv.priority,
                     srv.weight,
                     srv.port,
                     target_name,
-                ))));
+                ))
             }
-            DnsRecordType::CAA(caa) => {
-                // Parse CAA record format: [flags] [tag] [value]
-                let parts: Vec<&str> = caa.splitn(3, ' ').collect();
-                if parts.len() >= 3 {
-                    let flags = parts[0].parse::<u8>().unwrap_or(0);
-                    let _tag = parts[1];
-                    let value = parts[2];
-                    // Use CAA::new_issue with proper types
-                    let name = Name::from_str(value).ok();
-                    record.set_data(Some(RData::CAA(rdata::CAA::new_issue(
-                        flags & 0x80 != 0,
-                        name,
-                        vec![],
-                    ))));
-                } else {
-                    return Err(DnsError::Validation(
-                        "Invalid CAA record format".to_string(),
-                    ));
-                }
-            }
-            DnsRecordType::HINFO(hinfo) => {
-                record.set_data(Some(RData::HINFO(rdata::HINFO::new(
-                    hinfo.cpu.clone(),
-                    hinfo.os.clone(),
-                ))));
-            }
-        }
-
+            _ => return Err(DnsError::Validation(format!("Unsupported record type: {:?}", self.data))),
+        };
+        
+        let record = Record::from_rdata(name, self.ttl, rdata);
         Ok(record)
     }
 

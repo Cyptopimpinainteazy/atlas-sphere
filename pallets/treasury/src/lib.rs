@@ -39,6 +39,8 @@ pub use weights::WeightInfo;
 pub mod types;
 pub use types::*;
 
+pub mod migrations;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;

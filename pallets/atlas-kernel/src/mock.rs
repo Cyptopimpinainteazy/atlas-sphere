@@ -196,7 +196,7 @@ fn migration_runs_and_sets_storage_version() {
         // Simulate older version
         StorageVersion::new(0).put::<pallet_atlas_kernel::Pallet<Test>>();
         // Run migration
-        let _w = crate::migrations::Migration::<Test>::on_runtime_upgrade();
+        let _w = <crate::migrations::Migration<Test> as frame_support::traits::OnRuntimeUpgrade>::on_runtime_upgrade();
         // Check it advanced
         assert!(
             StorageVersion::get::<pallet_atlas_kernel::Pallet<Test>>()

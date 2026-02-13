@@ -129,6 +129,7 @@ If you encounter the "Continue" button repeatedly during task execution, increas
 Open Command Palette (`Ctrl+Shift+P`) and search for:
 - `Ralph: Open Control Panel` - Open the main control panel
 - `Ralph: View Logs` - View detailed execution logs
+- `Run pentest` — run `./run-pentest-ralph.sh` to generate a sandboxed pentest report (writes `security/ralph-pentest-report.md`). Use `--allow-network` to enable optional scanners (Snyk, zap-cli) if installed and configured.
 
 ## Testing Ralph
 

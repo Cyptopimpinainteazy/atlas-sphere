@@ -230,7 +230,7 @@ impl AtlasDnsServer {
         
         // Parse the DNS message
         let request = Message::from_bytes(packet)
-            .map_err(|e| DnsError::Protocol(e))?;
+            .map_err(|e| DnsError::Serialization(e.to_string()))?;
         
         debug!("📨 DNS request from {}: {:?}", src, request.queries());
         
@@ -257,7 +257,7 @@ impl AtlasDnsServer {
         
         // Send response back
         let response_bytes = response.to_bytes()
-            .map_err(|e| DnsError::Protocol(e))?;
+            .map_err(|e| DnsError::Serialization(e.to_string()))?;
         
         // Create a new socket to send the response
         let send_socket = UdpSocket::bind("0.0.0.0:0").await
@@ -272,10 +272,11 @@ impl AtlasDnsServer {
     
     /// Process DNS request and build response
     async fn process_dns_request(&self, request: &Message) -> Message {
-        let mut response = Message::new();
-        response.set_id(request.id());
-        response.set_message_type(MessageType::Response);
-        response.set_op_code(OpCode::Query);
+        let mut response = Message::new(
+            request.id(),
+            MessageType::Response,
+            OpCode::Query,
+        );
         response.set_authoritative(true);
         response.set_recursion_desired(request.recursion_desired());
         response.set_recursion_available(false);
@@ -372,42 +373,39 @@ impl AtlasDnsServer {
                 continue;
             }
             
-            let mut record = Record::new();
-            record.set_name(query_name.clone());
-            record.set_ttl(dns_record.ttl);
-            record.set_record_type(record_type);
+            let mut record = Record::from_rdata(query_name.clone(), dns_record.ttl, RData::A(rdata::A(std::net::Ipv4Addr::new(0, 0, 0, 0))));
             
-            // Set the record data based on type
+            // Set the record data based on type (will overwrite initial data)
             match &dns_record.data {
                 DnsRecordType::A(ip) => {
-                    record.set_data(Some(RData::A(rdata::A(*ip))));
+                    record.set_data(RData::A(rdata::A(*ip)));
                 }
                 DnsRecordType::AAAA(ip) => {
-                    record.set_data(Some(RData::AAAA(rdata::AAAA(*ip))));
+                    record.set_data(RData::AAAA(rdata::AAAA(*ip)));
                 }
                 DnsRecordType::CNAME(target) => {
                     if let Ok(name) = Name::from_ascii(target) {
-                        record.set_data(Some(RData::CNAME(rdata::CNAME(name))));
+                        record.set_data(RData::CNAME(rdata::CNAME(name)));
                     }
                 }
                 DnsRecordType::TXT(text) => {
-                    record.set_data(Some(RData::TXT(rdata::TXT::new(vec![text.clone()]))));
+                    record.set_data(RData::TXT(rdata::TXT::new(vec![text.clone()])));
                 }
                 DnsRecordType::MX(mx) => {
                     if let Ok(name) = mx.exchange.to_name() {
-                        record.set_data(Some(RData::MX(rdata::MX::new(mx.priority, name))));
+                        record.set_data(RData::MX(rdata::MX::new(mx.priority, name)));
                     }
                 }
                 DnsRecordType::NS(nameserver) => {
                     if let Ok(name) = Name::from_ascii(nameserver) {
-                        record.set_data(Some(RData::NS(rdata::NS(name))));
+                        record.set_data(RData::NS(rdata::NS(name)));
                     }
                 }
                 DnsRecordType::SRV(srv) => {
                     if let Ok(target) = srv.target.to_name() {
-                        record.set_data(Some(RData::SRV(rdata::SRV::new(
+                        record.set_data(RData::SRV(rdata::SRV::new(
                             srv.priority, srv.weight, srv.port, target
-                        ))));
+                        )));
                     }
                 }
                 DnsRecordType::CAA(_) | DnsRecordType::HINFO(_) => {

@@ -28,7 +28,7 @@ impl Default for HashConfig {
 }
 
 /// Quantum-resistant hash with additional metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QuantumHash {
     /// The hash value
     pub value: Hash256,

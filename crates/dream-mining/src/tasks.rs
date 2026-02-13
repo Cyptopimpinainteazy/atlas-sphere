@@ -221,7 +221,7 @@ pub enum TaskPriority {
 }
 
 /// Task execution status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TaskStatus {
     /// Task is queued and waiting
     Pending,

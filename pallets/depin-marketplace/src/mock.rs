@@ -3,7 +3,7 @@
 use crate as pallet_depin_marketplace;
 use frame_support::{
     parameter_types,
-    traits::{ConstU16, ConstU32, ConstU64},
+    traits::{ConstU16, ConstU32, ConstU64, ConstU128},
     PalletId,
 };
 use frame_system as system;
@@ -11,6 +11,7 @@ use sp_core::H256;
 use sp_runtime::{
     testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
+    BuildStorage,
     Perbill,
 };
 
@@ -62,7 +63,7 @@ impl pallet_balances::Config for Test {
     type Balance = u128;
     type DustRemoval = ();
     type RuntimeEvent = RuntimeEvent;
-    type ExistentialDeposit = ConstU64<1>;
+    type ExistentialDeposit = ConstU128<1>;
     type AccountStore = System;
     type WeightInfo = ();
     type FreezeIdentifier = ();

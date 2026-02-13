@@ -7,7 +7,7 @@
 //! - Flash loan and DEX provider credentials
 
 use serde::{Deserialize, Serialize};
-use sp_std::{collections::btree_map::BTreeMap, string::String, vec::Vec};
+use std::collections::btree_map::BTreeMap;
 
 /// Network environment enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]

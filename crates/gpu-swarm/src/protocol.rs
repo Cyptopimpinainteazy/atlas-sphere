@@ -88,6 +88,9 @@ pub enum SwarmMessage {
     /// Heartbeat acknowledgment
     HeartbeatAck(HeartbeatAck),
 
+    /// Ping message for connectivity/liveness checks
+    Ping,
+
     // === Task Management ===
     /// New task submitted
     TaskSubmission(TaskSubmission),

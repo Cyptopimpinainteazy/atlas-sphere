@@ -376,6 +376,9 @@ code /home/lojak/Desktop/atlas-sphere-master/PRD.md
 | Open Ralph | Click Ralph icon in Activity Bar |
 | Command Palette | `Ctrl+Shift+P` → "Ralph: Open Control Panel" |
 | View Logs | `Ctrl+Shift+P` → "Ralph: View Logs" |
+| Run Pentest | `Ctrl+Shift+P` → "Ralph: Run Pentest" (or click the Pentest button in the Control Panel) |
+
+> CI now runs `npm audit` (and `snyk test` when SNYK_TOKEN is configured) and uploads results as `security/` artifacts; Ralph will surface any `security/` artifacts found in your workspace after a pentest run.
 | Sample PRD | `code PRD.md` |
 | Settings | `Ctrl+,` → Search "Ralph" |
 | Reload Window | `Ctrl+Shift+P` → "Developer: Reload Window" |

@@ -5,7 +5,6 @@
 use config::ConfigError;
 use std::io;
 use thiserror::Error;
-use hickory_proto::error::ProtoError;
 
 /// DNS Result type alias
 pub type DnsResult<T> = Result<T, DnsError>;
@@ -18,9 +17,6 @@ pub enum DnsError {
 
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
-
-    #[error("DNS protocol error: {0}")]
-    Protocol(#[from] ProtoError),
 
     #[error("Configuration error: {0}")]
     Config(#[from] ConfigError),
@@ -264,7 +260,6 @@ impl DnsError {
         match self {
             Self::Configuration(_) => ErrorCategory::Configuration,
             Self::Io(_) => ErrorCategory::Network,
-            Self::Protocol(_) => ErrorCategory::Network,
             Self::Database(_) => ErrorCategory::Database,
             Self::Blockchain(_) => ErrorCategory::Blockchain,
             Self::Validation(_) => ErrorCategory::Validation,
@@ -275,10 +270,7 @@ impl DnsError {
 
     /// Check if error is retryable
     pub fn is_retryable(&self) -> bool {
-        matches!(
-            self,
-            Self::Io(_) | Self::Protocol(_) | Self::Timeout(_) | Self::Network(_)
-        )
+        matches!(self, Self::Io(_) | Self::Timeout(_) | Self::Network(_))
     }
 
     /// Check if error is critical

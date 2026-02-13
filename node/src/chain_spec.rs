@@ -200,6 +200,8 @@ fn atlas_sphere_genesis(
         treasury: Default::default(),
         evolution_core: Default::default(),
         x3_verifier: Default::default(),
+        depin_marketplace: Default::default(),
+        private_execution: Default::default(),
         #[cfg(feature = "dev")]
         sudo: Default::default(),
     }

@@ -172,6 +172,34 @@ jobs:
           name: owasp-report
           path: 'reports/dependency-check-report.json'
 
+      - name: 🧩 Run npm audit (JS/TS repos)
+        if: exists('package.json')
+        run: |
+          mkdir -p security
+          npm ci --prefer-offline || npm install || true
+          npm audit --json > security/npm-audit-ci.json || true
+
+      - name: 🔎 Run Snyk dependency scan (if configured)
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          mkdir -p security
+          if [ -n "${SNYK_TOKEN:-}" ]; then
+            npm i -g snyk || true
+            snyk auth "$SNYK_TOKEN" || true
+            snyk test --json > security/snyk-ci.json || true
+          else
+            echo "SNYK_TOKEN not set — skipping Snyk scan"
+          fi
+
+      - name: 📤 Upload security reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: security/
+          retention-days: 7
+
   # Job 6: Build Docker image with layer caching
   build-docker:
     name: Build Docker Image
@@ -388,6 +416,8 @@ jobs:
           echo "   - Rust binaries (cached)"
           echo "   - Docker image: ${{ needs.build-docker.outputs.image }}"
           echo "   - OWASP report (uploaded)"
+          echo "   - npm-audit report (uploaded if package.json present)"
+          echo "   - snyk report (uploaded if SNYK_TOKEN provided)"
           echo ""
           if [ "${{ needs.validate.result }}" != "success" ] || \
              [ "${{ needs.test-rust.result }}" != "success" ] || \
