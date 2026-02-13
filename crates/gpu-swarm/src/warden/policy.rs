@@ -26,6 +26,8 @@ pub enum ComputeLane {
     Storage,
     /// Overflow Creators (startup bots, art bots, services)
     Overflow,
+    /// DePIN GPU Marketplace — external compute rental
+    Marketplace,
 }
 
 impl ComputeLane {
@@ -41,6 +43,7 @@ impl ComputeLane {
             Self::Strategy,
             Self::Storage,
             Self::Overflow,
+            Self::Marketplace,
         ]
     }
 
@@ -51,7 +54,7 @@ impl ComputeLane {
 
     /// Get revenue-generating lanes
     pub fn revenue_lanes() -> Vec<Self> {
-        vec![Self::Strategy, Self::AiAgents, Self::Overflow]
+        vec![Self::Strategy, Self::AiAgents, Self::Overflow, Self::Marketplace]
     }
 
     /// Get research/growth lanes
@@ -66,7 +69,7 @@ impl ComputeLane {
 
     /// Check if this lane generates revenue
     pub fn is_revenue(&self) -> bool {
-        matches!(self, Self::Strategy | Self::AiAgents | Self::Overflow)
+        matches!(self, Self::Strategy | Self::AiAgents | Self::Overflow | Self::Marketplace)
     }
 
     /// Get base priority (higher = more important)
@@ -80,6 +83,7 @@ impl ComputeLane {
             Self::Evolution => 50, // Experimental
             Self::Ecosystem => 40, // Growth
             Self::Storage => 30,   // Utility
+            Self::Marketplace => 25, // DePIN rental — preemptible
             Self::Overflow => 10,  // Only when spare capacity
         }
     }
@@ -95,6 +99,7 @@ impl ComputeLane {
             Self::Ecosystem => "Ecosystem Builders",
             Self::Strategy => "Strategy & Trading Bots",
             Self::Storage => "File Storage",
+            Self::Marketplace => "DePIN GPU Marketplace",
             Self::Overflow => "Overflow Creators",
         }
     }
@@ -275,6 +280,20 @@ impl Default for AllocationPolicy {
                 requires_gpu: true,
                 min_vram_mb: 512,
                 emergency_boost: 0.0, // Never runs during emergencies
+            },
+        );
+
+        // Marketplace: DePIN GPU rental — preemptible, revenue generating
+        lane_constraints.insert(
+            ComputeLane::Marketplace,
+            LaneConstraints {
+                min_allocation: 0.0,
+                max_allocation: 0.30, // Can use up to 30% of idle capacity
+                default_allocation: 0.0, // Only activated when providers opt in
+                can_disable: true,
+                requires_gpu: true,
+                min_vram_mb: 1024,
+                emergency_boost: 0.0, // Fully preempted during emergencies
             },
         );
 

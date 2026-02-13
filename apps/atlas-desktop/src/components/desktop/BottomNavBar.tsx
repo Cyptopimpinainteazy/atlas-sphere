@@ -36,6 +36,8 @@ const BottomNavBar: React.FC<{
   const rightColumnItems: NavItem[] = [
     { appId: "wallet", label: "Wallet", emoji: "💰" },
     { appId: "dex", label: "DEX", emoji: "💱" },
+    { appId: "dex-orderbook", label: "Orderbook", emoji: "📊" },
+    { appId: "infrastructure", label: "Infrastructure", emoji: "🏗️" },
     { appId: "system-monitoring", label: "System Monitor", emoji: "📈" },
     { appId: "documentation", label: "Documentation", emoji: "📚" },
   ];

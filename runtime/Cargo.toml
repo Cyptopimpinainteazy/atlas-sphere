@@ -53,6 +53,8 @@ pallet-x3-verifier = { path = "../pallets/x3-verifier", default-features = false
 pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", default-features = false }
 pallet-x3-settlement-engine = { path = "../pallets/x3-settlement-engine", default-features = false }
 pallet-swarm = { path = "../pallets/swarm", default-features = false }
+pallet-depin-marketplace = { path = "../pallets/depin-marketplace", default-features = false }
+pallet-private-execution = { path = "../pallets/private-execution", default-features = false }
 atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
 atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
@@ -117,6 +119,8 @@ std = [
 	"pallet-x3-domain-registry/std",
 	"pallet-x3-settlement-engine/std",
 	"pallet-swarm/std",
+	"pallet-depin-marketplace/std",
+	"pallet-private-execution/std",
 	"atlas-evm-integration/std",
 	"atlas-svm-integration/std",
 	"sp-api/std",

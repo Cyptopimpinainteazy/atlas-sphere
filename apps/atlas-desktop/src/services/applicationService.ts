@@ -589,6 +589,14 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "placeholder", category: "defi", color: "#7c4dff" },
     launchCommand: { type: "internal", target: "dex-pools" },
   },
+  {
+    id: "dex-orderbook",
+    name: "DEX Orderbook",
+    description: "Professional orderbook — bid/ask depth, limit & market orders, trade history",
+    category: "defi",
+    icon: { type: "placeholder", category: "defi", color: "#00e5ff" },
+    launchCommand: { type: "internal", target: "dex-orderbook" },
+  },
 
   /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ── */
   {
@@ -598,6 +606,16 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     category: "service",
     icon: { type: "placeholder", category: "service", color: "#00e676" },
     launchCommand: { type: "internal", target: "gpu-swarm-dashboard" },
+  },
+
+  /* ── Infrastructure Dashboard (ported from apps/infenstructior-dashboard) ── */
+  {
+    id: "infrastructure",
+    name: "Infrastructure Monitor",
+    description: "Bridge status, GPU lanes, RPC proxy, TPS metrics — live infra telemetry",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#3b82f6" },
+    launchCommand: { type: "internal", target: "infrastructure" },
   },
 
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */

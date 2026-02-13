@@ -211,6 +211,8 @@ construct_runtime!(
         X3DomainRegistry: pallet_x3_domain_registry,
         X3SettlementEngine: pallet_x3_settlement_engine,
         Swarm: pallet_swarm,
+        DepinMarketplace: pallet_depin_marketplace,
+        PrivateExecution: pallet_private_execution,
     }
 );
 
@@ -238,6 +240,8 @@ construct_runtime!(
         X3DomainRegistry: pallet_x3_domain_registry,
         X3SettlementEngine: pallet_x3_settlement_engine,
         Swarm: pallet_swarm,
+        DepinMarketplace: pallet_depin_marketplace,
+        PrivateExecution: pallet_private_execution,
     }
 );
 
@@ -1013,6 +1017,68 @@ impl pallet_swarm::Config for Runtime {
     type MaxTasksPerContributor = MaxTasksPerContributor;
     type MaxJuryVoters = MaxJuryVoters;
     type WeightInfo = pallet_swarm::weights::SubstrateWeight<Runtime>;
+}
+
+// ===== DePIN Marketplace Pallet Configuration =====
+parameter_types! {
+    pub const DepinMarketplacePalletId: PalletId = PalletId(*b"dp/mktpl");
+    pub const ValidatorShareBps: u16 = 5500;    // 55% to provider
+    pub const BurnShareBps: u16 = 2500;          // 25% burn
+    pub const StakerShareBps: u16 = 2000;        // 20% to stakers
+    pub const MinProviderStake: Balance = 1_000 * ATLAS;
+    pub const MaxJobsPerProvider: u32 = 16;
+    pub const MaxJobDuration: BlockNumber = 14400;   // ~1 day at 6s blocks
+    pub const MaxPendingOrders: u32 = 256;
+    pub const DepinSlashFraction: Perbill = Perbill::from_percent(10);
+}
+
+impl pallet_depin_marketplace::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BurnDestination = ();
+    type AdminOrigin = EnsureRootOrHalfCouncil;
+    type PalletId = DepinMarketplacePalletId;
+    type ValidatorShareBps = ValidatorShareBps;
+    type BurnShareBps = BurnShareBps;
+    type StakerShareBps = StakerShareBps;
+    type MinProviderStake = MinProviderStake;
+    type MaxJobsPerProvider = MaxJobsPerProvider;
+    type MaxJobDuration = MaxJobDuration;
+    type MaxPendingOrders = MaxPendingOrders;
+    type SlashFraction = DepinSlashFraction;
+    type WeightInfo = ();
+}
+
+// ===== Private Execution Pallet Configuration =====
+parameter_types! {
+    pub const PrivateExecutionPalletId: PalletId = PalletId(*b"pv/exec!");
+    pub const PrivateFeePremiumBps: u16 = 150;            // 1.5% premium
+    pub const MinConfidentialQuorum: u32 = 2;
+    pub const MaxConfidentialValidators: u32 = 100;
+    pub const MaxDiffsPerBlock: u32 = 32;
+    pub const MaxEncryptedPayloadSize: u32 = 65536;       // 64 KiB
+    pub const AttestationValidityPeriod: BlockNumber = 43200;  // ~3 days at 6s blocks
+    pub const ConfidentialValidatorShareBps: u16 = 6000;  // 60% to validators
+    pub const PrivateBurnShareBps: u16 = 2500;            // 25% burn
+    pub const PrivateStakerShareBps: u16 = 1500;          // 15% to stakers
+}
+
+impl pallet_private_execution::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type BurnDestination = ();
+    type AdminOrigin = EnsureRootOrHalfCouncil;
+    type PalletId = PrivateExecutionPalletId;
+    type PrivateFeePremiumBps = PrivateFeePremiumBps;
+    type MinConfidentialQuorum = MinConfidentialQuorum;
+    type MaxConfidentialValidators = MaxConfidentialValidators;
+    type MaxDiffsPerBlock = MaxDiffsPerBlock;
+    type MaxEncryptedPayloadSize = MaxEncryptedPayloadSize;
+    type AttestationValidityPeriod = AttestationValidityPeriod;
+    type ConfidentialValidatorShareBps = ConfidentialValidatorShareBps;
+    type PrivateBurnShareBps = PrivateBurnShareBps;
+    type PrivateStakerShareBps = PrivateStakerShareBps;
+    type WeightInfo = ();
 }
 
 // Session trait implementations for minimal runtime

@@ -83,6 +83,8 @@ pub enum JobType {
     ChainIndexing,
     /// Funding campaign (VC outreach, social, grants)
     FundingCampaign,
+    /// DePIN marketplace GPU rental job
+    MarketplaceRental,
 }
 
 impl JobType {
@@ -96,6 +98,7 @@ impl JobType {
             JobType::MempoolAnalysis => 0.8,
             JobType::ChainIndexing => 0.5,
             JobType::FundingCampaign => 0.3, // Low compute, high strategic value
+            JobType::MarketplaceRental => 1.2, // Revenue from external compute
         }
     }
 
@@ -109,6 +112,7 @@ impl JobType {
             JobType::MempoolAnalysis => Duration::from_secs(15),
             JobType::ChainIndexing => Duration::from_secs(120),
             JobType::FundingCampaign => Duration::from_secs(120),
+            JobType::MarketplaceRental => Duration::from_secs(3600), // Long-running rental
         }
     }
 }

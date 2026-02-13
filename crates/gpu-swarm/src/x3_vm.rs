@@ -78,7 +78,11 @@ impl X3VmExecutor {
         debug!("Executing X3 task: {}", task.id);
 
         // Parse X3 bytecode from task payload
-        let bytecode = &task.payload;
+        let bytecode = match &task.task_type {
+            crate::task::TaskType::X3Bytecode { bytecode, .. } => bytecode,
+            crate::task::TaskType::Custom { payload, .. } => payload,
+            _ => return Err(crate::error::SwarmError::InvalidPayload("Task type has no bytecode payload".into())),
+        };
 
         // Analyze bytecode for optimization
         let profile = self.analyze_bytecode(bytecode)?;
@@ -246,12 +250,12 @@ impl X3VmExecutor {
         let verify_result = self.execute_x3_task(task, timeout).await?;
 
         // Compare output
-        let matches = verify_result.output == original_result.output;
+        let matches = verify_result.result_data == original_result.result_data;
         info!(
             "X3 execution verification: {} (original: {} bytes, verify: {} bytes)",
             if matches { "PASS" } else { "FAIL" },
-            original_result.output.len(),
-            verify_result.output.len()
+            original_result.result_data.len(),
+            verify_result.result_data.len()
         );
 
         Ok(matches)

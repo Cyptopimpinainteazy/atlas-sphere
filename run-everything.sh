@@ -43,11 +43,21 @@ SWARM_API_PORT=8080
 PROMETHEUS_PORT=9090
 HTLC_COORDINATOR_PORT=8787  # HTLC Atomic Swap Coordinator
 
+# Infenstructior & TPS Services
+VALIDATOR_REGISTRY_PORT=7001
+TPS_BRIDGE_PORT=9999
+METRICS_DASHBOARD_PORT=8080
+LLM_ROUTER_PORT=3000
+LLM_METRICS_PORT=9091
+TPS_TRACKER_INFLUX_PORT=8086
+TPS_STREAMLIT_PORT=8501
+INFENSTRUCTIOR_DASHBOARD_PORT=5174
+
 # Frontend Ports
 X3OS_PORT=3001          # Explorer with X3OS at /x3os
 WALLET_PORT=3002
 DEX_PORT=3003
-SOLANA_DEX_PORT=3000    # apps/next-solana-main
+SOLANA_DEX_PORT=3006    # apps/next-solana-main (moved from 3000)
 QUANTUM_DASHBOARD_PORT=3100  # Quantum Advisor Dashboard
 ATLAS_DESKTOP_PORT=5173     # Atlas Desktop (Tauri) Vite dev server
 VALIDATORS_PORT=3004        # Validators dashboard
@@ -849,6 +859,174 @@ start_quantum_apps/dash-legacy-2-legacy-2board() {
     fi
 }
 
+start_llm_router() {
+    log_header "Starting LLM Router with Metrics"
+
+    if port_in_use $LLM_ROUTER_PORT; then
+        log_success "LLM Router already running on port $LLM_ROUTER_PORT"
+        return 0
+    fi
+
+    local llm_service_dir="$PROJECT_ROOT/llm-service"
+    if [ ! -d "$llm_service_dir" ] || [ ! -f "$llm_service_dir/start-with-metrics.js" ]; then
+        log_warn "LLM service not found at $llm_service_dir"
+        return 1
+    fi
+
+    log_info "Starting LLM Router on ports $LLM_ROUTER_PORT (router) and $LLM_METRICS_PORT (metrics)..."
+
+    cd "$llm_service_dir"
+    PORT=$LLM_ROUTER_PORT METRICS_PORT=$LLM_METRICS_PORT node start-with-metrics.js --config=../llm-config.json \
+        > "$PROJECT_ROOT/logs/llm-router.log" 2>&1 &
+    local pid=$!
+    save_pid "llm-router" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_health "http://localhost:$LLM_ROUTER_PORT/health" "LLM Router" 30; then
+        log_success "LLM Router started (PID: $pid)"
+        return 0
+    else
+        log_warn "LLM Router may still be starting..."
+        return 1
+    fi
+}
+
+start_validator_registry() {
+    log_header "Starting Validator Registry"
+
+    if port_in_use $VALIDATOR_REGISTRY_PORT; then
+        log_success "Validator Registry already running on port $VALIDATOR_REGISTRY_PORT"
+        return 0
+    fi
+
+    local registry_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    if [ ! -d "$registry_dir" ] || [ ! -f "$registry_dir/validator_registry.py" ]; then
+        log_warn "Validator Registry not found"
+        return 1
+    fi
+
+    log_info "Starting Validator Registry on port $VALIDATOR_REGISTRY_PORT..."
+
+    # Activate Python venv if available
+    if [ -f "$PROJECT_ROOT/cross-chain-gpu-validator/.venv/bin/activate" ]; then
+        source "$PROJECT_ROOT/cross-chain-gpu-validator/.venv/bin/activate"
+    fi
+
+    cd "$registry_dir"
+    mkdir -p logs
+    python3 validator_registry.py > "$PROJECT_ROOT/logs/validator-registry.log" 2>&1 &
+    local pid=$!
+    save_pid "validator-registry" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_health "http://localhost:$VALIDATOR_REGISTRY_PORT/health" "Validator Registry" 30; then
+        log_success "Validator Registry started (PID: $pid)"
+        return 0
+    else
+        log_warn "Validator Registry may still be starting..."
+        return 1
+    fi
+}
+
+start_tps_bridge() {
+    log_header "Starting TPS Bridge"
+
+    if port_in_use $TPS_BRIDGE_PORT; then
+        log_success "TPS Bridge already running on port $TPS_BRIDGE_PORT"
+        return 0
+    fi
+
+    local bridge_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    if [ ! -d "$bridge_dir" ] || [ ! -f "$bridge_dir/tps_bridge.py" ]; then
+        log_warn "TPS Bridge not found"
+        return 1
+    fi
+
+    log_info "Starting TPS Bridge on port $TPS_BRIDGE_PORT..."
+
+    cd "$bridge_dir"
+    python3 tps_bridge.py > "$PROJECT_ROOT/logs/tps-bridge.log" 2>&1 &
+    local pid=$!
+    save_pid "tps-bridge" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_health "http://localhost:$TPS_BRIDGE_PORT/health" "TPS Bridge" 30; then
+        log_success "TPS Bridge started (PID: $pid)"
+        return 0
+    else
+        log_warn "TPS Bridge may still be starting..."
+        return 1
+    fi
+}
+
+start_lane_orchestrator() {
+    log_header "Starting Lane Orchestrator"
+
+    local orchestrator_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    if [ ! -d "$orchestrator_dir" ] || [ ! -f "$orchestrator_dir/lane_orchestrator.py" ]; then
+        log_warn "Lane Orchestrator not found"
+        return 1
+    fi
+
+    log_info "Starting Lane Orchestrator (background service)..."
+
+    cd "$orchestrator_dir"
+    python3 lane_orchestrator.py > "$PROJECT_ROOT/logs/lane-orchestrator.log" 2>&1 &
+    local pid=$!
+    save_pid "lane-orchestrator" $pid
+
+    cd "$PROJECT_ROOT"
+
+    sleep 2
+    if kill -0 "$pid" 2>/dev/null; then
+        log_success "Lane Orchestrator started (PID: $pid)"
+        return 0
+    else
+        log_warn "Lane Orchestrator failed to start"
+        return 1
+    fi
+}
+
+start_infenstructior_dashboard() {
+    log_header "Starting Infenstructior Dashboard"
+
+    if port_in_use $INFENSTRUCTIOR_DASHBOARD_PORT; then
+        log_success "Infenstructior Dashboard already running on port $INFENSTRUCTIOR_DASHBOARD_PORT"
+        return 0
+    fi
+
+    local dashboard_dir="$PROJECT_ROOT/apps/infenstructior-dashboard"
+    if [ ! -d "$dashboard_dir" ]; then
+        log_warn "Infenstructior Dashboard not found at $dashboard_dir"
+        return 1
+    fi
+
+    cd "$dashboard_dir"
+
+    if [ ! -d "node_modules" ]; then
+        log_info "Installing Infenstructior Dashboard dependencies..."
+        npm install --silent 2>/dev/null || true
+    fi
+
+    log_info "Starting Infenstructior Dashboard on port $INFENSTRUCTIOR_DASHBOARD_PORT..."
+    PORT=$INFENSTRUCTIOR_DASHBOARD_PORT npm run dev > "$PROJECT_ROOT/logs/infenstructior-dashboard.log" 2>&1 &
+    local pid=$!
+    save_pid "infenstructior-dashboard" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_port $INFENSTRUCTIOR_DASHBOARD_PORT "Infenstructior Dashboard" 60; then
+        log_success "Infenstructior Dashboard started (PID: $pid)"
+        return 0
+    else
+        log_warn "Infenstructior Dashboard may still be compiling..."
+        return 0
+    fi
+}
+
 start_htlc_coordinator() {
     log_header "Starting HTLC Atomic Swap Coordinator"
 
@@ -945,6 +1123,34 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} HTLC Coordinator    NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
+    # LLM Router
+    if port_in_use $LLM_ROUTER_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} LLM Router          http://localhost:$LLM_ROUTER_PORT                  ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} LLM Router          NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
+    # Validator Registry
+    if port_in_use $VALIDATOR_REGISTRY_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Validator Registry  http://localhost:$VALIDATOR_REGISTRY_PORT                ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Validator Registry  NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
+    # TPS Bridge
+    if port_in_use $TPS_BRIDGE_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} TPS Bridge          http://localhost:$TPS_BRIDGE_PORT                ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} TPS Bridge          NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
+    # Infenstructior Dashboard
+    if port_in_use $INFENSTRUCTIOR_DASHBOARD_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Infenstructior      http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT                ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Infenstructior      NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
     # Solana DEX (apps/next-solana-main with X3 Exchange)
     if port_in_use $SOLANA_DEX_PORT; then
         echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Solana DEX          http://localhost:$SOLANA_DEX_PORT                  ${CYAN}║${NC}"
@@ -1016,6 +1222,10 @@ main() {
     echo -e "${MAGENTA}║  ${CYAN}GPU/AI:${NC}       ${OLLAMA_URL} (Ollama)                ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Blockchain:${NC}   ws://localhost:$BLOCKCHAIN_PORT                          ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Swarm API:${NC}    http://localhost:$SWARM_API_PORT                           ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}LLM Router:${NC}   http://localhost:$LLM_ROUTER_PORT                           ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}Validator:${NC}    http://localhost:$VALIDATOR_REGISTRY_PORT (Registry)       ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}TPS Bridge:${NC}   http://localhost:$TPS_BRIDGE_PORT (Infenstructior)        ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}Infenstructior:${NC} http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT (Dashboard) ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}HTLC Coord:${NC}   http://localhost:$HTLC_COORDINATOR_PORT (Atomic Swaps)     ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Solana DEX:${NC}   http://localhost:$SOLANA_DEX_PORT (X3 Exchange)             ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}X3OS:${NC}         http://localhost:$X3OS_PORT/x3os                      ║${NC}"
@@ -1038,7 +1248,7 @@ main() {
 
     # Cleanup existing processes on our ports
     log_header "Cleaning Up Existing Processes"
-    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT; do
+    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT; do
         kill_port $port
     done
 
@@ -1067,8 +1277,26 @@ main() {
     fi
 
     # ============================================================
-    # Layer 2: Swarm/Backend Services
+    # Layer 2: Backend Services & APIs
     # ============================================================
+    
+    # Start LLM Router (needed by many services)
+    start_llm_router || log_warn "LLM Router not started, continuing..."
+    sleep 1
+    
+    # Start Validator Registry (needed by TPS Bridge)
+    start_validator_registry || log_warn "Validator Registry not started, continuing..."
+    sleep 1
+    
+    # Start TPS Bridge
+    start_tps_bridge || log_warn "TPS Bridge not started, continuing..."
+    sleep 1
+    
+    # Start Lane Orchestrator
+    start_lane_orchestrator || log_warn "Lane Orchestrator not started, continuing..."
+    sleep 1
+    
+    # Start Swarm Server
     if ! start_swarm_server; then
         if [ "$STRICT" -eq 1 ]; then
             log_error "Swarm server failed readiness check and --strict is set; aborting startup"
@@ -1087,6 +1315,10 @@ main() {
     # Layer 3: Frontend Applications
     # ============================================================
     log_header "Starting Frontend Applications"
+    
+    # Infenstructior Dashboard
+    start_infenstructior_dashboard || log_warn "Infenstructior Dashboard not started"
+    sleep 2
 
     # Solana DEX (apps/next-solana-main) - Main trading platform with X3 Exchange
     start_nextjs_app "solana-dex" "$PROJECT_ROOT/apps/next-solana-main" $SOLANA_DEX_PORT
@@ -1131,6 +1363,10 @@ main() {
     echo -e "  ✨ ${CYAN}Quantum Dashboard:${NC}   http://localhost:$QUANTUM_DASHBOARD_PORT"
     echo -e "  🐝 ${CYAN}Swarm API:${NC}           http://localhost:$SWARM_API_PORT"
     echo -e "  🔐 ${CYAN}HTLC Coordinator:${NC}    http://localhost:$HTLC_COORDINATOR_PORT"
+    echo -e "  🤖 ${CYAN}LLM Router:${NC}          http://localhost:$LLM_ROUTER_PORT"
+    echo -e "  🔒 ${CYAN}Validator Registry:${NC}  http://localhost:$VALIDATOR_REGISTRY_PORT"
+    echo -e "  🌉 ${CYAN}TPS Bridge:${NC}          http://localhost:$TPS_BRIDGE_PORT"
+    echo -e "  📊 ${CYAN}Infenstructior:${NC}      http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT"
     echo -e "  🤖 ${CYAN}Ollama AI:${NC}           ${OLLAMA_URL}"
     echo -e "  ⛓️  ${CYAN}Blockchain:${NC}          ws://localhost:$BLOCKCHAIN_PORT"
     echo ""
@@ -1173,7 +1409,7 @@ case "${1:-}" in
     --stop)
         log_info "Stopping all Atlas Sphere services..."
         cleanup_pids
-        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT $ATLAS_DESKTOP_PORT; do
+        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT $HTLC_COORDINATOR_PORT; do
             kill_port $port
         done
         # Stop Ollama systemd if running
@@ -1205,14 +1441,20 @@ case "${1:-}" in
         echo "  --help      Show this help message"
         echo ""
         echo "Services Started:"
-        echo "  • Ollama (GPU/AI)     - Port $OLLAMA_PORT"
-        echo "  • Blockchain Node     - Port $BLOCKCHAIN_PORT"
-        echo "  • Swarm API Server    - Port $SWARM_API_PORT"
-        echo "  • Solana DEX          - Port $SOLANA_DEX_PORT"
-        echo "  • Explorer + X3OS     - Port $X3OS_PORT"
-        echo "  • Wallet              - Port $WALLET_PORT"
-        echo "  • DEX                 - Port $DEX_PORT"
-        echo "  • Quantum Dashboard   - Port $QUANTUM_DASHBOARD_PORT"
+        echo "  • Ollama (GPU/AI)            - Port $OLLAMA_PORT"
+        echo "  • Blockchain Node            - Port $BLOCKCHAIN_PORT"
+        echo "  • Swarm API Server           - Port $SWARM_API_PORT"
+        echo "  • LLM Router                 - Port $LLM_ROUTER_PORT"
+        echo "  • Validator Registry         - Port $VALIDATOR_REGISTRY_PORT"
+        echo "  • TPS Bridge                 - Port $TPS_BRIDGE_PORT"
+        echo "  • Infenstructior Dashboard   - Port $INFENSTRUCTIOR_DASHBOARD_PORT"
+        echo "  • HTLC Coordinator           - Port $HTLC_COORDINATOR_PORT"
+        echo "  • Solana DEX                 - Port $SOLANA_DEX_PORT"
+        echo "  • Explorer + X3OS            - Port $X3OS_PORT"
+        echo "  • Wallet                     - Port $WALLET_PORT"
+        echo "  • DEX                        - Port $DEX_PORT"
+        echo "  • Quantum Dashboard          - Port $QUANTUM_DASHBOARD_PORT"
+        echo "  • Atlas Desktop              - Port $ATLAS_DESKTOP_PORT"
         echo ""
         ;;
     *)

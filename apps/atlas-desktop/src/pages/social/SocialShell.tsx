@@ -60,6 +60,9 @@ const SocialShell: React.FC = () => {
       )}
       {/* Navigation Bar */}
       <nav className="social-nav">
+        <Link to="/" className="social-nav-back" style={{ textDecoration: "none", color: "#ff6b35", fontWeight: 700, fontSize: "0.85rem", marginRight: "8px", display: "flex", alignItems: "center", gap: "4px" }}>
+          ← Desktop
+        </Link>
         <Link to="/social" className="social-nav-logo" style={{ textDecoration: "none" }}>
           AtlasSpace
         </Link>
@@ -85,6 +88,7 @@ const SocialShell: React.FC = () => {
           <Link to="/social/groups">Groups</Link>
           <Link to="/social/browse">Browse</Link>
           <Link to="/social/search">Search</Link>
+          <Link to="/crm" style={{ color: "#ff6b35" }}>📅 CRM</Link>
           <button onClick={handleLogout}>Sign Out</button>
           <span style={{ color: "#666", fontSize: "0.7rem", padding: "0.4rem", display: "flex", alignItems: "center", gap: "4px" }}>
             {currentUser?.role && ROLE_BADGE[currentUser.role] && (

@@ -1,0 +1,123 @@
+{
+  "default_provider": "ollama",
+  "providers": {
+    "ollama": {
+      "type": "ollama",
+      "endpoint": "http://localhost:11434",
+      "model": "llama2:13b",
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "timeout_ms": 30000,
+      "system_prompt": "You are an expert StreamingFast Substreams developer. Provide concise, accurate guidance on Substreams development, Rust modules, protobuf schemas, SQL database sinks, and performance optimization. Focus on practical examples and best practices."
+    },
+    "openrouter": {
+      "type": "openrouter",
+      "endpoint": "https://openrouter.dev/api/v1",
+      "api_key": "${OPENROUTER_API_KEY}",
+      "model": "google/gemma-2-9b-it",
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "timeout_ms": 60000,
+      "system_prompt": "You are an expert StreamingFast Substreams developer. Provide concise, accurate guidance on Substreams development, Rust modules, protobuf schemas, SQL database sinks, and performance optimization. Focus on practical examples and best practices."
+    }
+  },
+  "model_mappings": {
+    "fast": {
+      "ollama": "llama2:13b",
+      "openrouter": "mistralai/mistral-7b-instruct",
+      "description": "Ultra-fast responses, good for quick queries (FREE on OpenRouter)"
+    },
+    "balanced": {
+      "ollama": "llama2:13b",
+      "openrouter": "google/gemma-2-9b-it",
+      "description": "Good balance of speed and quality (FREE Gemma-2 on OpenRouter)"
+    },
+    "coding": {
+      "ollama": "llama2:13b",
+      "openrouter": "meta-llama/llama-2-7b",
+      "description": "Optimized for code generation and technical explanations (FREE Llama-2 on OpenRouter)"
+    },
+    "quality": {
+      "ollama": "llama2:13b",
+      "openrouter": "nousresearch/nous-hermes-2-mistral-7b-dpo",
+      "description": "Best free model: Nous Hermes 2 (optimized for quality, FREE on OpenRouter)"
+    }
+  },
+  "skills": {
+    "substreams-dev": {
+      "description": "Substreams development and architecture guidance",
+      "context": "You are a Substreams development expert. Help with building substreams.yaml manifests, writing efficient Rust modules (map, store, index types), creating protobuf schemas for blockchain data, and performance optimization and debugging.",
+      "default_model": "balanced"
+    },
+    "substreams-sql": {
+      "description": "SQL database sink development for Substreams",
+      "context": "You are a Substreams SQL expert. Help with building SQL database sinks from Substreams data, database changes (CDC) for real-time consistency, relational mappings and table design, and PostgreSQL/ClickHouse patterns.",
+      "default_model": "balanced"
+    },
+    "substreams-testing": {
+      "description": "Testing strategies for Substreams",
+      "context": "You are a Substreams testing expert. Help with unit testing with real blockchain data, integration testing and end-to-end workflows, performance testing and benchmarking, and CI/CD integration for automated testing.",
+      "default_model": "balanced"
+    },
+    "substreams-sink": {
+      "description": "Building custom Substreams sinks",
+      "context": "You are a Substreams sink expert. Help with building sinks in Python, Go, JavaScript, and Rust. Explain cursor management, reorganization handling, error recovery, and resilience patterns.",
+      "default_model": "balanced"
+    },
+    "rust-expert": {
+      "description": "Rust programming and optimization",
+      "context": "You are a Rust programming expert. Help with idiomatic Rust, performance optimization, error handling, async/await patterns, and macros. Focus on production-ready code.",
+      "default_model": "coding"
+    }
+  },
+  "failover_chain": [
+    {
+      "provider": "ollama",
+      "model": "llama2:13b",
+      "priority": 1
+    },
+    {
+      "provider": "ollama",
+      "model": "qwen2.5-coder:14b",
+      "priority": 2
+    },
+    {
+      "provider": "openrouter",
+      "model": "google/gemma-2-9b-it",
+      "priority": 3
+    },
+    {
+      "provider": "openrouter",
+      "model": "nousresearch/nous-hermes-2-mistral-7b-dpo",
+      "priority": 4
+    },
+    {
+      "provider": "openrouter",
+      "model": "mistralai/mistral-7b-instruct",
+      "priority": 5
+    },
+    {
+      "provider": "openrouter",
+      "model": "meta-llama/llama-2-7b",
+      "priority": 6
+    }
+  ],
+  "retry_config": {
+    "max_retries": 3,
+    "backoff_multiplier": 1.5,
+    "initial_backoff_ms": 1000,
+    "timeout_ms": 30000
+  },
+  "caching": {
+    "enabled": true,
+    "ttl_seconds": 3600,
+    "max_size_mb": 100,
+    "storage_backend": "memory"
+  },
+  "telemetry": {
+    "enabled": true,
+    "log_queries": false,
+    "track_latency": true,
+    "track_costs": true
+  }
+}

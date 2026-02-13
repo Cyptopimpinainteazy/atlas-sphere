@@ -607,6 +607,46 @@ impl SwarmCoordinator {
         });
     }
     
+    /// Submit a task to the coordinator
+    pub async fn submit_task(&self, task: Task) -> SwarmResult<()> {
+        let task_id = task.id;
+        let priority = task.priority as u8;
+        
+        {
+            let mut scheduler = self.scheduler.write().await;
+            scheduler.submit(task)?;
+        }
+        
+        self.emit_event(CoordinatorEvent::TaskSubmitted { task_id, priority });
+        self.schedule_tasks().await?;
+        
+        Ok(())
+    }
+    
+    /// Get the status of a task
+    pub async fn get_task_status(&self, task_id: &TaskId) -> Option<TaskStatus> {
+        let scheduler = self.scheduler.read().await;
+        scheduler.get_status(*task_id)
+    }
+    
+    /// Get the result of a completed task.
+    /// Note: The scheduler does not currently store full results.
+    /// This is a stub that returns None until result storage is implemented.
+    pub async fn get_task_result(&self, _task_id: &TaskId) -> Option<TaskResult> {
+        // TODO: Implement result storage in the scheduler or a separate store
+        None
+    }
+    
+    /// Cancel a task
+    pub async fn cancel_task(&self, task_id: &TaskId) -> SwarmResult<bool> {
+        let mut scheduler = self.scheduler.write().await;
+        match scheduler.cancel(*task_id) {
+            Ok(()) => Ok(true),
+            Err(SwarmError::TaskNotFound(_)) => Ok(false),
+            Err(e) => Err(e),
+        }
+    }
+    
     /// Get current metrics
     pub async fn metrics(&self) -> CoordinatorMetrics {
         self.metrics.read().await.clone()

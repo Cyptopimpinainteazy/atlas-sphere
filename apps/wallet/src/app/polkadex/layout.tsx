@@ -3,15 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const polkadexRoutes = [
+const xdexRoutes = [
   { href: '/polkadex/trading', label: '📊 Trading' },
-  { href: '/polkadex/markets', label: '🔄 Markets' },
+  { href: '/polkadex/advanced', label: '⚡ Advanced' },
+  { href: '/polkadex/bots', label: '🤖 Bot Traders' },
+  { href: '/polkadex/scanner', label: '🎯 Scanner' },
+  { href: '/polkadex/analytics', label: '📈 Analytics' },
+  { href: '/polkadex/launchpad', label: '🚀 Launchpad' },
   { href: '/polkadex/orders', label: '📋 Orders' },
   { href: '/polkadex/portfolio', label: '💼 Portfolio' },
   { href: '/polkadex/settings', label: '⚙️ Settings' },
 ];
 
-export default function PolkadexLayout({ children }: { children: React.ReactNode }) {
+export default function XDEXLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -19,8 +23,8 @@ export default function PolkadexLayout({ children }: { children: React.ReactNode
       {/* Top Navigation */}
       <nav className="bg-x3-darker border-b border-x3-dark-gray sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto">
-          <span className="font-bold text-x3-orange mr-4">POLKADEX</span>
-          {polkadexRoutes.map((route) => (
+          <span className="font-bold text-x3-orange mr-4 text-lg">X-DEX</span>
+          {xdexRoutes.map((route) => (
             <Link
               key={route.href}
               href={route.href}

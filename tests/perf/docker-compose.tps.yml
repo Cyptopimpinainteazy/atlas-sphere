@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  # InfluxDB - Time-series database for TPS metrics
+  influxdb:
+    image: influxdb:2.7
+    container_name: atlas-sphere-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: atlas_sphere_tps
+      INFLUXDB_ADMIN_USER: admin
+      INFLUXDB_ADMIN_PASSWORD: atlas-sphere-admin
+      INFLUXDB_HTTP_AUTH_ENABLED: "false"  # Disable auth for testing
+    volumes:
+      - influxdb-storage:/var/lib/influxdb2
+      - ./influxdb-init.sh:/docker-entrypoint-initdb.d/init.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - atlas-sphere-perf
+
+  # TPS Tracker - Rust service that collects TPS metrics
+  tps-tracker:
+    build:
+      context: ../../crates/tps-tracker
+      dockerfile: Dockerfile
+    container_name: atlas-sphere-tps-tracker
+    environment:
+      RPC_URL: ${RPC_URL:-http://host.docker.internal:9944}
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_DB: atlas_sphere_tps
+      INFLUX_TOKEN: atlas-sphere-key
+      POLL_INTERVAL: 1
+      BUFFER_SIZE: 100
+      RUST_LOG: info
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    networks:
+      - atlas-sphere-perf
+    restart: unless-stopped
+
+  # Streamlit Dashboard - Real-time visualization
+  dashboard:
+    build:
+      context: tests/perf/tps-dashboard
+      dockerfile: Dockerfile
+    container_name: atlas-sphere-tps-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_DB: atlas_sphere_tps
+      INFLUX_TOKEN: atlas-sphere-key
+      STREAMLIT_SERVER_HEADLESS: "true"
+    depends_on:
+      - influxdb
+    networks:
+      - atlas-sphere-perf
+    restart: unless-stopped
+
+volumes:
+  influxdb-storage:
+    driver: local
+
+networks:
+  atlas-sphere-perf:
+    driver: bridge

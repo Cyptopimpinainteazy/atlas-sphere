@@ -102,6 +102,20 @@ pub enum TaskType {
         /// Serialized payload
         payload: Vec<u8>,
     },
+
+    /// DePIN Marketplace GPU rental task
+    MarketplaceRental {
+        /// Rental order ID (from pallet-depin-marketplace)
+        order_id: [u8; 16],
+        /// GPU tier required
+        gpu_tier: String,
+        /// Workload payload (container image hash or bytecode)
+        workload_payload: Vec<u8>,
+        /// Rental duration (seconds)
+        duration_secs: u64,
+        /// Whether the workload is sandboxed
+        sandboxed: bool,
+    },
 }
 
 /// A task to be executed by the swarm
@@ -226,6 +240,7 @@ impl Task {
             TaskType::ProofGeneration { .. } => 1_000_000,
             TaskType::ArbitrageSearch { pairs, .. } => pairs.len() as u64 * 5000,
             TaskType::Custom { payload, .. } => payload.len() as u64,
+            TaskType::MarketplaceRental { duration_secs, .. } => *duration_secs * 1000,
         }
     }
 }

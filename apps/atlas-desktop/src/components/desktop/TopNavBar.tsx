@@ -8,11 +8,14 @@
  * - Tools menu with developer options
  * - Help menu with documentation
  */
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../theme/ThemeProvider';
 import { useDesktopStore } from '@/stores/desktopStore';
 import { useSocialStore } from '@/stores/socialStore';
+import { useApplicationStore } from '@/stores/applicationStore';
+import { useWindowManager } from '@/hooks/useWindowManager';
+import type { ApplicationCategory } from '@/types/application';
 
 interface MenuItem {
   label?: string;
@@ -99,6 +102,43 @@ const TopNavBar: React.FC = () => {
   // Restore session on mount
   React.useEffect(() => { restoreSession(); }, []);
 
+  // Application registry & window manager for Apps dropdown
+  const applications = useApplicationStore((s) => s.applications);
+  const { launch } = useWindowManager();
+
+  const CATEGORY_META: Record<ApplicationCategory, { icon: string; label: string }> = {
+    blockchain: { icon: '⛓️', label: 'Blockchain' },
+    defi:       { icon: '💰', label: 'DeFi' },
+    analysis:   { icon: '📊', label: 'Analysis' },
+    service:    { icon: '🔧', label: 'Services' },
+    security:   { icon: '🛡️', label: 'Security' },
+    development:{ icon: '💻', label: 'Development' },
+    utility:    { icon: '🧰', label: 'Utilities' },
+    other:      { icon: '📦', label: 'Other' },
+  };
+
+  const CATEGORY_ORDER: ApplicationCategory[] = [
+    'blockchain', 'defi', 'analysis', 'service', 'security', 'development', 'utility', 'other',
+  ];
+
+  const groupedApps = useMemo(() => {
+    const groups: Partial<Record<ApplicationCategory, typeof applications>> = {};
+    for (const app of applications) {
+      const cat = app.category || 'other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat]!.push(app);
+    }
+    // Sort each group alphabetically by name
+    for (const cat of Object.keys(groups) as ApplicationCategory[]) {
+      groups[cat]!.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return groups;
+  }, [applications]);
+
+  const [showAppsMenu, setShowAppsMenu] = useState(false);
+  const [appsMenuFilter, setAppsMenuFilter] = useState('');
+  const appsButtonRef = useRef<HTMLButtonElement | null>(null);
+
   const handleQuickLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginUser || !loginPass) { setLoginError('Fill in both fields'); return; }
@@ -125,6 +165,7 @@ const TopNavBar: React.FC = () => {
 
   const handleMenuClick = useCallback((menuName: string, event: React.MouseEvent) => {
     event.preventDefault();
+    setShowAppsMenu(false);
     const rect = menuRefs.current[menuName]?.getBoundingClientRect();
     if (rect) {
       setMenuPosition({ top: rect.bottom + 4, left: rect.left });
@@ -216,6 +257,17 @@ const TopNavBar: React.FC = () => {
             {menuName}
           </button>
         ))}
+
+        {/* Apps Mega-Menu Button */}
+        <button
+          ref={appsButtonRef}
+          className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200
+            hover:bg-accent-primary/20 hover:text-accent-primary
+            ${showAppsMenu ? 'bg-accent-primary/30 text-accent-primary shadow-md' : 'text-text-secondary'}`}
+          onClick={() => { setOpenMenu(null); setShowAppsMenu(!showAppsMenu); setAppsMenuFilter(''); }}
+        >
+          🚀 Apps
+        </button>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -351,6 +403,77 @@ const TopNavBar: React.FC = () => {
           position={menuPosition}
         />
       ))}
+
+      {/* Apps Mega-Dropdown */}
+      {showAppsMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowAppsMenu(false)} />
+          <div
+            className="absolute z-50 glass-panel border border-border-default rounded-xl shadow-2xl"
+            style={{
+              top: (appsButtonRef.current?.getBoundingClientRect().bottom ?? 40) + 4,
+              left: Math.max(8, (appsButtonRef.current?.getBoundingClientRect().left ?? 0) - 60),
+              width: 'min(90vw, 820px)',
+              maxHeight: '70vh',
+            }}
+          >
+            {/* Search */}
+            <div className="p-3 border-b border-border-default">
+              <input
+                autoFocus
+                placeholder="Search apps…"
+                value={appsMenuFilter}
+                onChange={e => setAppsMenuFilter(e.target.value)}
+                className="w-full px-3 py-1.5 text-xs bg-bg-primary border border-border-default rounded-lg text-text-primary focus:border-accent-primary outline-none"
+              />
+            </div>
+
+            {/* Categorized grid */}
+            <div className="overflow-y-auto p-3" style={{ maxHeight: 'calc(70vh - 56px)' }}>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {CATEGORY_ORDER.map(cat => {
+                  const apps = groupedApps[cat];
+                  if (!apps || apps.length === 0) return null;
+                  const filtered = appsMenuFilter
+                    ? apps.filter(a => a.name.toLowerCase().includes(appsMenuFilter.toLowerCase()))
+                    : apps;
+                  if (filtered.length === 0) return null;
+                  return (
+                    <div key={cat}>
+                      <div className="text-[10px] uppercase tracking-wider text-text-secondary font-bold mb-2 flex items-center gap-1">
+                        <span>{CATEGORY_META[cat].icon}</span>
+                        <span>{CATEGORY_META[cat].label}</span>
+                        <span className="text-text-secondary/50">({filtered.length})</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        {filtered.map(app => (
+                          <button
+                            key={app.id}
+                            title={app.description || app.name}
+                            className="w-full text-left px-2 py-1.5 text-xs text-text-primary rounded-md
+                              hover:bg-accent-primary/15 hover:text-accent-primary transition-colors
+                              flex items-center gap-2 group"
+                            onClick={() => { launch(app.id); setShowAppsMenu(false); }}
+                          >
+                            <span className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
+                              style={{ background: app.icon.color || '#666' }}>
+                              {app.name[0]}
+                            </span>
+                            <span className="truncate">{app.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {appsMenuFilter && Object.values(groupedApps).every(apps => !apps?.some(a => a.name.toLowerCase().includes(appsMenuFilter.toLowerCase()))) && (
+                <div className="text-center text-xs text-text-secondary py-6">No apps match "{appsMenuFilter}"</div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

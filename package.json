@@ -26,6 +26,8 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
+    "start": "node llm-service/router.js",
+    "start:dev": "node llm-service/router.js --config ./llm-config.json",
     "test": "cypress run",
     "test:open": "cypress open",
     "test:polkawallet": "npm test --workspace packages/polkawallet-plugin",
@@ -37,6 +39,9 @@
     "build:all-packages": "npm run build --workspaces --if-present",
     "bmad:install": "npm --prefix crates/vibe-bmad run install-bmad",
     "bmad:status": "npm --prefix crates/vibe-bmad run status",
-    "bmad:ci-install": "npm --prefix crates/vibe-bmad run ci-install"
+    "bmad:ci-install": "npm --prefix crates/vibe-bmad run ci-install",
+    "llm:router": "node llm-service/router.js",
+    "llm:examples": "node llm-service/examples.js",
+    "llm:verify": "bash verify-llm-integration.sh"
   }
 }

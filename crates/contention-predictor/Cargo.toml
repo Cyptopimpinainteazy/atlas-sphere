@@ -1,0 +1,54 @@
+[package]
+name = "contention-predictor"
+version = "0.1.0"
+edition = "2021"
+description = "Predictive parallel execution engine — ML-based contention forecasting for GPU-accelerated transaction sharding"
+authors = ["Atlas Sphere Team"]
+license = "MIT"
+repository = "https://github.com/atlas-sphere/atlas-sphere"
+
+[features]
+default = ["cuda"]
+cuda = []
+tensorrt = []
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+
+# Math / ML
+ndarray = { version = "0.15", features = ["serde"] }
+
+# Crypto
+blake3 = "1.5"
+sha2 = "0.10"
+
+# Metrics & logging
+tracing = "0.1"
+
+# Utils
+thiserror = "1.0"
+anyhow = "1.0"
+parking_lot = "0.12"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# GPU swarm integration
+gpu-swarm = { path = "../gpu-swarm", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.9"
+criterion = "0.5"
+rand = "0.8"
+proptest = "1.4"
+
+[[bench]]
+name = "inference_latency"
+harness = false

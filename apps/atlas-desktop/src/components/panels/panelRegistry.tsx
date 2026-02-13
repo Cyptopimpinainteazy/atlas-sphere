@@ -73,11 +73,15 @@ const X3SlashingPanel       = lazy(() => import("@/components/panels/x3intel/X3S
 const X3WhyPanel            = lazy(() => import("@/components/panels/x3intel/X3WhyPanel"));
 
 /* ── DEX (ported from apps/dex) ──── */
-const DexPanel       = lazy(() => import("@/components/panels/dex/DexPanel"));
-const DexPoolsPanel  = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
+const DexPanel           = lazy(() => import("@/components/panels/dex/DexPanel"));
+const DexPoolsPanel      = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
+const DexOrderbookPanel  = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
 
 /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ──── */
 const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDashboardPanel"));
+
+/* ── Infrastructure Dashboard (ported from apps/infenstructior-dashboard) ──── */
+const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructure/InfrastructurePanel"));
 
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
@@ -169,10 +173,15 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "dex":                    DexPanel,
   "dex-swap":               DexPanel,
   "dex-pools":              DexPoolsPanel,
+  "dex-orderbook":          DexOrderbookPanel,
 
   /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ── */
   "swarm-dashboard":        SwarmDashboardPanel,   // override old alias
   "gpu-swarm-dashboard":    SwarmDashboardPanel,
+
+  /* ── Infrastructure Dashboard (ported from apps/infenstructior-dashboard) ── */
+  "infrastructure":         InfrastructurePanel,
+  "infra-dashboard":        InfrastructurePanel,
 
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */
   "health-dashboard":       HealthDashboardPanel,

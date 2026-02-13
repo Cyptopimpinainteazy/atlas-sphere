@@ -1,2 +1,8 @@
-swarm:583925
-htlc-coordinator:584013
+blockchain:2745
+llm-router:3397
+validator-registry:3676
+tps-bridge:3717
+lane-orchestrator:3853
+swarm:3908
+htlc-coordinator:3953
+infenstructior-dashboard:4005
