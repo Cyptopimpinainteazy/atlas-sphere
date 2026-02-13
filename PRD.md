@@ -54,15 +54,15 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [ ] Deploy and test a simple Solidity contract (ERC20 or Hello World)
 - [x] Verify EVM state syncs with canonical ledger
 - [ ] Add integration test for EVM contract execution
-- [ ] Commit: "feat: integrate real Frontier EVM with contract deployment"
+- [x] Commit: "feat: integrate real Frontier EVM with contract deployment"
 
 ### Critical Task 2.2: Real SVM Integration
 
-- [ ] Remove mock SVM executor from runtime
-- [ ] Wire SVM pallet into runtime properly
-- [ ] Enable SVM program deployment
+- [x] Remove mock SVM executor from runtime
+- [x] Wire SVM pallet into runtime properly
+- [x] Enable SVM program deployment
 - [ ] Deploy and test a simple Solana program (token or counter)
-- [ ] Verify SVM state syncs with canonical ledger
+- [x] Verify SVM state syncs with canonical ledger
 - [ ] Add integration test for SVM program execution
 - [ ] Commit: "feat: integrate real SVM with program deployment"
 
