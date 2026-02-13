@@ -73,7 +73,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [ ] Test atomic cross-VM transaction
 - [ ] Add integration test for cross-VM bridge
 - [x] Document cross-VM bridge usage
-- [ ] Commit: "feat: enable atomic cross-VM transactions"
+- [x] Commit: "feat: enable atomic cross-VM transactions"
 
 ---
 
@@ -81,10 +81,10 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 
 ### Critical Task 3.1: Complete TypeScript SDK
 
-- [ ] Implement SS58 decoding (utils.ts:206)
-- [ ] Add Base58 validation (utils.ts:271)
+- [x] Implement SS58 decoding (utils.ts:206)
+- [x] Add Base58 validation (utils.ts:271)
 - [ ] Implement all collateral RPC calls (collateral.ts:21,26,31,36)
-- [ ] Complete SHA256 in svm.ts (line 134)
+- [x] Complete SHA256 in svm.ts (line 134)
 - [ ] Add SDK integration test with live node
 - [ ] Commit: "feat: complete TypeScript SDK core functionality"
 
