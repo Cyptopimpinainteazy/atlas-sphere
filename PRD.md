@@ -104,7 +104,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Show transaction details
 - [x] Add account balance lookup
 - [ ] Deploy explorer to testnet
-- [ ] Commit: "feat: deploy basic block explorer"
+- [x] Commit: "feat: deploy basic block explorer"
 
 ---
 
@@ -123,10 +123,10 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 
 - [ ] Update main README with current status
 - [ ] Document WebSocket RPC endpoints with examples
-- [ ] Document EVM contract deployment process
-- [ ] Document SVM program deployment process
-- [ ] Document cross-VM bridge usage
-- [ ] Create "Quick Start" guide
+- [x] Document EVM contract deployment process
+- [x] Document SVM program deployment process
+- [x] Document cross-VM bridge usage
+- [x] Create "Quick Start" guide
 - [ ] Commit: "docs: update all core documentation"
 
 ### Critical Task 4.3: Testnet Deployment
