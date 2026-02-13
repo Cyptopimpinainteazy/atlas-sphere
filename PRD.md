@@ -95,14 +95,14 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Add transaction signing UI
 - [ ] Connect to Atlas node via WebSocket
 - [ ] Test sending transactions on testnet
-- [ ] Commit: "feat: add minimal functional wallet UI"
+- [x] Commit: "feat: add minimal functional wallet UI"
 
 ### Critical Task 3.3: Block Explorer MVP
 
-- [ ] Create basic explorer in `apps/explorer`
+- [x] Create basic explorer in `apps/explorer`
 - [ ] Display latest blocks
-- [ ] Show transaction details
-- [ ] Add account balance lookup
+- [x] Show transaction details
+- [x] Add account balance lookup
 - [ ] Deploy explorer to testnet
 - [ ] Commit: "feat: deploy basic block explorer"
 
