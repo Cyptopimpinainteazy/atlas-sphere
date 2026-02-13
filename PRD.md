@@ -86,13 +86,13 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [ ] Implement all collateral RPC calls (collateral.ts:21,26,31,36)
 - [x] Complete SHA256 in svm.ts (line 134)
 - [ ] Add SDK integration test with live node
-- [ ] Commit: "feat: complete TypeScript SDK core functionality"
+- [x] Commit: "feat: complete TypeScript SDK core functionality"
 
 ### Critical Task 3.2: Minimal Wallet UI
 
-- [ ] Create basic wallet interface in `apps/wallet`
-- [ ] Implement account creation and key management
-- [ ] Add transaction signing UI
+- [x] Create basic wallet interface in `apps/wallet`
+- [x] Implement account creation and key management
+- [x] Add transaction signing UI
 - [ ] Connect to Atlas node via WebSocket
 - [ ] Test sending transactions on testnet
 - [ ] Commit: "feat: add minimal functional wallet UI"
