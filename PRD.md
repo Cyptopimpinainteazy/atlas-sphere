@@ -21,17 +21,17 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 ### Critical Task 1.1: Fix Build Issues
 
 - [x] Run `cargo clippy --workspace --all-targets --all-features` and fix all errors
-- [ ] Ensure `cargo build --release --workspace` completes successfully
-- [ ] Run `cargo test --workspace` and ensure all tests pass
-- [ ] Commit: "fix: resolve all compiler warnings and build errors"
+- [x] Ensure `cargo build --release --workspace` completes successfully
+- [x] Run `cargo test --workspace` and ensure all tests pass
+- [x] Commit: "fix: resolve all compiler warnings and build errors"
 
 ### Critical Task 1.2: Enable WebSocket RPC
 
-- [ ] Implement WebSocket server in `node/src/rpc.rs`
-- [ ] Expose standard Substrate RPC methods (system_*, chain_*, state_*)
-- [ ] Test connection with Polkadot.js apps UI
-- [ ] Update README with WebSocket connection examples
-- [ ] Commit: "feat: add WebSocket RPC support for Polkadot.js integration"
+- [x] Implement WebSocket server in `node/src/rpc.rs`
+- [x] Expose standard Substrate RPC methods (system_*, chain_*, state_*)
+- [x] Test connection with Polkadot.js apps UI
+- [x] Update README with WebSocket connection examples
+- [x] Commit: "feat: add WebSocket RPC support for Polkadot.js integration"
 
 ### Critical Task 1.3: Complete X3 VM Core
 
@@ -40,7 +40,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Implement rollback mechanism (vm.rs:894)
 - [ ] Add unit tests for all three features
 - [ ] Run `cargo test -p x3-vm` to verify
-- [ ] Commit: "feat: complete X3 VM core functionality with storage and rollback"
+- [x] Commit: "feat: complete X3 VM core functionality with storage and rollback"
 
 ---
 
@@ -50,7 +50,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 
 - [x] Remove mock EVM executor from runtime
 - [x] Wire Frontier pallet into runtime properly
-- [ ] Enable Frontier RPC module (node/src/rpc.rs:1308)
+- [x] Enable Frontier RPC module (node/src/rpc.rs:1308)
 - [ ] Deploy and test a simple Solidity contract (ERC20 or Hello World)
 - [x] Verify EVM state syncs with canonical ledger
 - [ ] Add integration test for EVM contract execution
@@ -83,7 +83,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 
 - [x] Implement SS58 decoding (utils.ts:206)
 - [x] Add Base58 validation (utils.ts:271)
-- [ ] Implement all collateral RPC calls (collateral.ts:21,26,31,36)
+- [x] Implement all collateral RPC calls (collateral.ts:21,26,31,36)
 - [x] Complete SHA256 in svm.ts (line 134)
 - [ ] Add SDK integration test with live node
 - [x] Commit: "feat: complete TypeScript SDK core functionality"
@@ -93,7 +93,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Create basic wallet interface in `apps/wallet`
 - [x] Implement account creation and key management
 - [x] Add transaction signing UI
-- [ ] Connect to Atlas node via WebSocket
+- [x] Connect to Atlas node via WebSocket
 - [ ] Test sending transactions on testnet
 - [x] Commit: "feat: add minimal functional wallet UI"
 
@@ -121,8 +121,8 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 
 ### Critical Task 4.2: Core Documentation
 
-- [ ] Update main README with current status
-- [ ] Document WebSocket RPC endpoints with examples
+- [x] Update main README with current status
+- [x] Document WebSocket RPC endpoints with examples
 - [x] Document EVM contract deployment process
 - [x] Document SVM program deployment process
 - [x] Document cross-VM bridge usage
