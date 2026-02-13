@@ -550,15 +550,26 @@ impl VM {
             Opcode::LoadGlobal => {
                 let dst = self.read_u8(ip + 1)? as usize;
                 let idx = self.read_u32(ip + 2)? as usize;
-                // TODO: implement global variable storage
-                self.regs[dst] = Value::Unit;
+                if idx >= self.globals.len() {
+                    return Err(self.error_at(ip, VMErrorKind::GlobalOutOfBounds(idx as u32)));
+                }
+                let dst_r = self.resolve_reg_checked(dst, ip)?;
+                self.regs[dst_r] = self.globals[idx].clone();
                 Ok(StepResult::Continue(ip + 6))
             }
 
             Opcode::StoreGlobal => {
-                let _idx = self.read_u32(ip + 1)? as usize;
-                let _src = self.read_u8(ip + 5)? as usize;
-                // TODO: implement global variable storage
+                let idx = self.read_u32(ip + 1)? as usize;
+                let src = self.read_u8(ip + 5)? as usize;
+                if idx >= self.globals.len() {
+                    return Err(self.error_at(ip, VMErrorKind::GlobalOutOfBounds(idx as u32)));
+                }
+                let src_r = self.resolve_reg_checked(src, ip)?;
+                // enforce mutability if module metadata says so
+                if !self.module.globals.get(idx).map(|g| g.mutable).unwrap_or(false) {
+                    return Err(self.error_at(ip, VMErrorKind::UserPanic(format!("global {} is immutable", idx))));
+                }
+                self.globals[idx] = self.regs[src_r].clone();
                 Ok(StepResult::Continue(ip + 6))
             }
 
@@ -1317,5 +1328,292 @@ mod tests {
             Err(e) => assert!(matches!(e.kind, VMErrorKind::GasLimitExceeded)),
             _ => panic!("expected gas limit error"),
         }
+    }
+
+    #[test]
+    fn vm_call_frame_base_and_register_isolation() {
+        use x3_backend::bc_format::FunctionEntry;
+        use x3_backend::opcode::Opcode;
+
+        // Build a module with two functions: caller (0) and callee (1).
+        // Caller: LoadImm r1,100; Call func 1; Ret r1
+        // Callee: LoadImm r1,200; RetVoid
+        let mut code: Vec<u8> = Vec::new();
+        // -- func 0 (entry 0)
+        code.push(Opcode::LoadImm as u8); // dst r1
+        code.push(1u8);
+        code.push(100u8);
+
+        code.push(Opcode::Call as u8);
+        code.push(0u8); // dst (ignored)
+        code.extend_from_slice(&1u32.to_le_bytes()); // func idx 1
+        code.extend_from_slice(&0u16.to_le_bytes()); // argc 0
+
+        code.push(Opcode::Ret as u8);
+        code.push(1u8); // return r1
+
+        // -- func 1 (will start at offset = len so far)
+        let func1_entry = code.len() as u32;
+        code.push(Opcode::LoadImm as u8);
+        code.push(1u8);
+        code.push(200u8);
+        code.push(Opcode::RetVoid as u8);
+
+        // Build module bytes
+        let mut out: Vec<u8> = Vec::new();
+        use x3_backend::bc_format::{MAGIC, VERSION};
+        out.extend_from_slice(MAGIC);
+        out.extend_from_slice(&VERSION.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes()); // flags
+        out.extend_from_slice(&0u32.to_le_bytes()); // checksum
+        out.extend_from_slice(&VERSION.to_le_bytes()); // min_version
+        out.extend_from_slice(&0u32.to_le_bytes()); // features
+
+        // empty const pool
+        out.extend_from_slice(&0u32.to_le_bytes());
+
+        // functions table (2)
+        out.extend_from_slice(&2u32.to_le_bytes());
+        // func 0
+        let f0 = FunctionEntry {
+            name: "caller".to_string(),
+            entry_point: 0,
+            param_count: 0,
+            local_count: 2, // r0, r1
+            max_stack: 4,
+            return_type_tag: 1,
+        };
+        out.extend_from_slice(&(f0.name.len() as u16).to_le_bytes());
+        out.extend_from_slice(f0.name.as_bytes());
+        out.extend_from_slice(&f0.entry_point.to_le_bytes());
+        out.push(f0.param_count);
+        out.extend_from_slice(&f0.local_count.to_le_bytes());
+        out.extend_from_slice(&f0.max_stack.to_le_bytes());
+        out.push(f0.return_type_tag);
+        // func 1
+        let f1 = FunctionEntry {
+            name: "callee".to_string(),
+            entry_point: func1_entry,
+            param_count: 0,
+            local_count: 2,
+            max_stack: 2,
+            return_type_tag: 0,
+        };
+        out.extend_from_slice(&(f1.name.len() as u16).to_le_bytes());
+        out.extend_from_slice(f1.name.as_bytes());
+        out.extend_from_slice(&f1.entry_point.to_le_bytes());
+        out.push(f1.param_count);
+        out.extend_from_slice(&f1.local_count.to_le_bytes());
+        out.extend_from_slice(&f1.max_stack.to_le_bytes());
+        out.push(f1.return_type_tag);
+
+        // no globals
+        out.extend_from_slice(&0u32.to_le_bytes());
+
+        // code section
+        out.extend_from_slice(&(code.len() as u32).to_le_bytes());
+        out.extend_from_slice(&code);
+        out.push(0u8); // debug
+        out.push(0u8); // metadata
+
+        let mut vm = VM::from_bytes(&out).expect("module should load");
+        let result = vm.call_function(0, &[]).expect("execution should succeed");
+
+        // Caller r1 should remain 100 (callee's r1 must not clobber caller)
+        assert_eq!(result.value, Some(Value::I64(100)));
+        // Verify caller's r1 still present in regs at base 0 + 1
+        assert_eq!(vm.get_register(1), &Value::I64(100));
+    }
+
+    #[test]
+    fn vm_globals_load_store_and_atomic_rollback() {
+        use x3_backend::bc_format::{FunctionEntry, ConstValue, GlobalEntry};
+        use x3_backend::opcode::Opcode;
+
+        // Module that: initializes global0 = 7; then in main does:
+        // StoreGlobal and LoadGlobal and demonstrates rollback
+        let mut code: Vec<u8> = Vec::new();
+        // Test 1: store then load -> return updated value
+        // LoadImm r1, 13
+        code.push(Opcode::LoadImm as u8);
+        code.push(1u8);
+        code.push(13i8 as u8);
+        // StoreGlobal idx=0, src=r1
+        code.push(Opcode::StoreGlobal as u8);
+        code.extend_from_slice(&0u32.to_le_bytes());
+        code.push(1u8);
+        // LoadGlobal r2, idx=0
+        code.push(Opcode::LoadGlobal as u8);
+        code.push(2u8);
+        code.extend_from_slice(&0u32.to_le_bytes());
+        // Ret r2
+        code.push(Opcode::Ret as u8);
+        code.push(2u8);
+
+        // Build module bytes
+        let mut out: Vec<u8> = Vec::new();
+        use x3_backend::bc_format::{MAGIC, VERSION};
+        out.extend_from_slice(MAGIC);
+        out.extend_from_slice(&VERSION.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes());
+        out.extend_from_slice(&VERSION.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes());
+
+        // const pool: one integer 7
+        out.extend_from_slice(&1u32.to_le_bytes());
+        out.push(0u8); // integer tag
+        out.extend_from_slice(&7i64.to_le_bytes());
+
+        // functions (1)
+        out.extend_from_slice(&1u32.to_le_bytes());
+        let f = FunctionEntry {
+            name: "main".to_string(),
+            entry_point: 0,
+            param_count: 0,
+            local_count: 3,
+            max_stack: 4,
+            return_type_tag: 1,
+        };
+        out.extend_from_slice(&(f.name.len() as u16).to_le_bytes());
+        out.extend_from_slice(f.name.as_bytes());
+        out.extend_from_slice(&f.entry_point.to_le_bytes());
+        out.push(f.param_count);
+        out.extend_from_slice(&f.local_count.to_le_bytes());
+        out.extend_from_slice(&f.max_stack.to_le_bytes());
+        out.push(f.return_type_tag);
+
+        // globals: one mutable global with init const idx 0
+        out.extend_from_slice(&1u32.to_le_bytes());
+        // GlobalEntry: name_len(u16)+name + type_tag(u8)+mutable(bool as u8)+init_const(u32)
+        let gname = "g0";
+        out.extend_from_slice(&(gname.len() as u16).to_le_bytes());
+        out.extend_from_slice(gname.as_bytes());
+        out.push(1u8); // type tag (int)
+        out.push(1u8); // mutable
+        out.extend_from_slice(&0u32.to_le_bytes()); // init_const = 0
+
+        // code
+        out.extend_from_slice(&(code.len() as u32).to_le_bytes());
+        out.extend_from_slice(&code);
+        out.push(0u8);
+        out.push(0u8);
+
+        // Execute and verify store/load
+        let mut vm = VM::from_bytes(&out).expect("module should load");
+        let res = vm.call_function(0, &[]).expect("exec");
+        assert_eq!(res.value, Some(Value::I64(13)));
+
+        // Now test atomic rollback: build small module that begins atomic, writes, rollbacks
+        let mut code2: Vec<u8> = Vec::new();
+        // AtomicBegin id=0
+        code2.push(Opcode::AtomicBegin as u8);
+        code2.extend_from_slice(&0u16.to_le_bytes());
+        // LoadImm r0, 1
+        code2.push(Opcode::LoadImm as u8);
+        code2.push(0u8);
+        code2.push(1i8 as u8);
+        // StoreGlobal idx=0, src=r0
+        code2.push(Opcode::StoreGlobal as u8);
+        code2.extend_from_slice(&0u32.to_le_bytes());
+        code2.push(0u8);
+        // AtomicRollback id=0
+        code2.push(Opcode::AtomicRollback as u8);
+        code2.extend_from_slice(&0u16.to_le_bytes());
+        // LoadGlobal r1, idx=0
+        code2.push(Opcode::LoadGlobal as u8);
+        code2.push(1u8);
+        code2.extend_from_slice(&0u32.to_le_bytes());
+        // Ret r1
+        code2.push(Opcode::Ret as u8);
+        code2.push(1u8);
+
+        // build module using same const/global layout
+        let mut out2 = out.clone();
+        // replace code section (overwrite code len + bytes at the end of out)
+        // quick-and-dirty: reserialize header..const..func..globals then new code
+        // For simplicity reconstruct minimal module like above
+        let mut outb: Vec<u8> = Vec::new();
+        outb.extend_from_slice(MAGIC);
+        outb.extend_from_slice(&VERSION.to_le_bytes());
+        outb.extend_from_slice(&0u32.to_le_bytes());
+        outb.extend_from_slice(&0u32.to_le_bytes());
+        outb.extend_from_slice(&VERSION.to_le_bytes());
+        outb.extend_from_slice(&0u32.to_le_bytes());
+        // const pool (1)
+        outb.extend_from_slice(&1u32.to_le_bytes());
+        outb.push(0u8);
+        outb.extend_from_slice(&7i64.to_le_bytes());
+        // functions
+        outb.extend_from_slice(&1u32.to_le_bytes());
+        outb.extend_from_slice(&(f.name.len() as u16).to_le_bytes());
+        outb.extend_from_slice(f.name.as_bytes());
+        outb.extend_from_slice(&0u32.to_le_bytes());
+        outb.push(f.param_count);
+        outb.extend_from_slice(&f.local_count.to_le_bytes());
+        outb.extend_from_slice(&f.max_stack.to_le_bytes());
+        outb.push(f.return_type_tag);
+        // globals
+        outb.extend_from_slice(&1u32.to_le_bytes());
+        outb.extend_from_slice(&(gname.len() as u16).to_le_bytes());
+        outb.extend_from_slice(gname.as_bytes());
+        outb.push(1u8);
+        outb.push(1u8);
+        outb.extend_from_slice(&0u32.to_le_bytes());
+        // code2
+        outb.extend_from_slice(&(code2.len() as u32).to_le_bytes());
+        outb.extend_from_slice(&code2);
+        outb.push(0u8);
+        outb.push(0u8);
+
+        let mut vm2 = VM::from_bytes(&outb).expect("module should load");
+        let r = vm2.call_function(0, &[]).expect_err("atomic rollback should abort");
+        assert!(matches!(r.kind, VMErrorKind::AtomicAborted));
+
+        // After rollback, global value must remain initial (7)
+        // Execute a small module to read global
+        let mut check_code: Vec<u8> = Vec::new();
+        check_code.push(Opcode::LoadGlobal as u8);
+        check_code.push(0u8);
+        check_code.extend_from_slice(&0u32.to_le_bytes());
+        check_code.push(Opcode::Ret as u8);
+        check_code.push(0u8);
+
+        let mut outc: Vec<u8> = Vec::new();
+        outc.extend_from_slice(MAGIC);
+        outc.extend_from_slice(&VERSION.to_le_bytes());
+        outc.extend_from_slice(&0u32.to_le_bytes());
+        outc.extend_from_slice(&0u32.to_le_bytes());
+        outc.extend_from_slice(&VERSION.to_le_bytes());
+        outc.extend_from_slice(&0u32.to_le_bytes());
+        // const pool
+        outc.extend_from_slice(&1u32.to_le_bytes());
+        outc.push(0u8);
+        outc.extend_from_slice(&7i64.to_le_bytes());
+        // functions
+        outc.extend_from_slice(&1u32.to_le_bytes());
+        outc.extend_from_slice(&(f.name.len() as u16).to_le_bytes());
+        outc.extend_from_slice(f.name.as_bytes());
+        outc.extend_from_slice(&0u32.to_le_bytes());
+        outc.push(f.param_count);
+        outc.extend_from_slice(&f.local_count.to_le_bytes());
+        outc.extend_from_slice(&f.max_stack.to_le_bytes());
+        outc.push(f.return_type_tag);
+        // globals
+        outc.extend_from_slice(&1u32.to_le_bytes());
+        outc.extend_from_slice(&(gname.len() as u16).to_le_bytes());
+        outc.extend_from_slice(gname.as_bytes());
+        outc.push(1u8);
+        outc.push(1u8);
+        outc.extend_from_slice(&0u32.to_le_bytes());
+        // code
+        outc.extend_from_slice(&(check_code.len() as u32).to_le_bytes());
+        outc.extend_from_slice(&check_code);
+        outc.push(0u8);
+        outc.push(0u8);
+
+        let mut vmc = VM::from_bytes(&outc).expect("module should load");
+        let r = vmc.call_function(0, &[]).expect("read global");
+        assert_eq!(r.value, Some(Value::I64(7)));
     }
 }

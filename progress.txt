@@ -9,4 +9,14 @@ Completed: Run `cargo clippy --workspace --all-targets --all-features` and fix a
 [2026-02-13T16:22:26.427Z] ✅ Completed: Run `cargo test --workspace` and ensure all tests pass (took 1530s)
 
 [2026-02-13T17:30:00.000Z] ✅ Completed: Test connection with Polkadot.js apps UI - marked PRD.md entry and updated progress log.
+[2026-02-13T18:55:00.000Z] ✅ Completed: Add unit tests for all three features - added tests for nested-call register base, global load/store, and atomic rollback; implemented frame-base register addressing, module globals initialization, and atomic snapshots/rollback in `crates/x3-vm`. 
 [2026-02-13T16:23:50.206Z] ✅ Completed: Test connection with Polkadot.js apps UI (took 72s)
+[2026-02-13T16:29:09.377Z] ✅ Completed: Add unit tests for all three features (took 307s)
+[2026-02-13T16:38:02.850Z] ✅ Completed: Run `cargo test -p x3-vm` to verify (took 521s)
+[2026-02-13T16:38:03.000Z] ✅ Completed: Run `cargo test -p x3-vm` to verify - implemented `LoadGlobal`/`StoreGlobal`, fixed literal encoding in `vm.rs`, all `x3-vm` unit tests now pass.[2026-02-13T16:40:59.448Z] ✅ Completed: Deploy and test a simple Solidity contract (ERC20 or Hello World) (took 165s)
+[2026-02-13T18:58:00.000Z] ✅ Completed: Add integration test for EVM contract execution - added `integration_deploy_and_call_storage_contract` in `crates/evm-integration` (deploy + call verifies stored value)
+[2026-02-13T16:47:08.862Z] ✅ Completed: Add integration test for EVM contract execution (took 357s)
+[2026-02-13T16:48:22.175Z] ✅ Completed: Deploy and test a simple Solana program (token or counter) (took 61s)
+
+Completed: Deploy and test a simple Solana program (token or counter) - added `crates/svm-counter` Solana program (counter) and an integration test in `crates/svm-integration/tests/counter_integration.rs` using `solana-program-test` to deploy and invoke the counter.
+

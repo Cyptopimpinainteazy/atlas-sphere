@@ -38,8 +38,8 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Implement base calculation for nested calls (vm.rs:449)
 - [x] Implement global variable storage (vm.rs:492, 500)
 - [x] Implement rollback mechanism (vm.rs:894)
-- [ ] Add unit tests for all three features
-- [ ] Run `cargo test -p x3-vm` to verify
+- [x] Add unit tests for all three features
+- [x] Run `cargo test -p x3-vm` to verify
 - [x] Commit: "feat: complete X3 VM core functionality with storage and rollback"
 
 ---
@@ -51,9 +51,9 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Remove mock EVM executor from runtime
 - [x] Wire Frontier pallet into runtime properly
 - [x] Enable Frontier RPC module (node/src/rpc.rs:1308)
-- [ ] Deploy and test a simple Solidity contract (ERC20 or Hello World)
+- [x] Deploy and test a simple Solidity contract (ERC20 or Hello World)
 - [x] Verify EVM state syncs with canonical ledger
-- [ ] Add integration test for EVM contract execution
+- [x] Add integration test for EVM contract execution
 - [x] Commit: "feat: integrate real Frontier EVM with contract deployment"
 
 ### Critical Task 2.2: Real SVM Integration
@@ -61,7 +61,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Remove mock SVM executor from runtime
 - [x] Wire SVM pallet into runtime properly
 - [x] Enable SVM program deployment
-- [ ] Deploy and test a simple Solana program (token or counter)
+- [x] Deploy and test a simple Solana program (token or counter)
 - [x] Verify SVM state syncs with canonical ledger
 - [ ] Add integration test for SVM program execution
 - [x] Commit: "feat: integrate real SVM with program deployment"

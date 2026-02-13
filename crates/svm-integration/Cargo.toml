@@ -24,6 +24,8 @@ solana_rbpf = { workspace = true, optional = true }
 
 [dev-dependencies]
 sp-io = { workspace = true }
+solana-program = "1.14.19"
+solana-program-test = "1.14.19"
 
 [features]
 default = ["std"]

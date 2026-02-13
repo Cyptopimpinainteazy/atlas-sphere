@@ -16,6 +16,7 @@ members = [
     "pallets/swarm",
     "crates/evm-integration",
     "crates/svm-integration",
+    "crates/svm-counter",
     "crates/cross-vm-bridge",
     "crates/external-chains",
     "crates/atlas-sdk",
@@ -91,6 +92,7 @@ resolver = "2"
 parity-scale-codec = { version = "3.6.5", default-features = false, features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11.1", default-features = false, features = ["derive"] }
+curve25519-dalek = "3.2.1"
 
 # Common FRAME & Substrate workspace deps (referenced with `workspace = true` in members)
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
