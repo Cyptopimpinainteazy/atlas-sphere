@@ -64,15 +64,15 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [ ] Deploy and test a simple Solana program (token or counter)
 - [x] Verify SVM state syncs with canonical ledger
 - [ ] Add integration test for SVM program execution
-- [ ] Commit: "feat: integrate real SVM with program deployment"
+- [x] Commit: "feat: integrate real SVM with program deployment"
 
 ### Critical Task 2.3: Cross-VM Communication
 
-- [ ] Implement EVM-to-SVM asset transfer
-- [ ] Implement SVM-to-EVM asset transfer
+- [x] Implement EVM-to-SVM asset transfer
+- [x] Implement SVM-to-EVM asset transfer
 - [ ] Test atomic cross-VM transaction
 - [ ] Add integration test for cross-VM bridge
-- [ ] Document cross-VM bridge usage
+- [x] Document cross-VM bridge usage
 - [ ] Commit: "feat: enable atomic cross-VM transactions"
 
 ---
