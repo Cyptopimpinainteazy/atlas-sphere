@@ -3,9 +3,7 @@
 //! Run with: cargo bench -p quantum-swarm
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use quantum_swarm::quantum::{
-    Circuit, CircuitBuilder, QuantumBackend, QuantumGate, StatevectorBackend,
-};
+use quantum_swarm::quantum::{ QuantumCircuit, CircuitBuilder, QuantumBackend, LocalSimulator };
 
 /// Benchmark quantum circuit creation
 fn bench_circuit_creation(c: &mut Criterion) {
@@ -17,7 +15,7 @@ fn bench_circuit_creation(c: &mut Criterion) {
             num_qubits,
             |b, &qubits| {
                 b.iter(|| {
-                    let circuit = CircuitBuilder::new(qubits).h(0).cx(0, 1).build();
+                    let circuit = CircuitBuilder::new(qubits).h(0).cnot(0, 1).build();
                     black_box(circuit)
                 });
             },
@@ -32,9 +30,9 @@ fn bench_statevector_simulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("statevector_simulation");
 
     for num_qubits in [2, 4, 6, 8].iter() {
-        let circuit = CircuitBuilder::new(*num_qubits).h(0).cx(0, 1).build();
+        let circuit = CircuitBuilder::new(*num_qubits).h(0).cnot(0, 1).build();
 
-        let backend = StatevectorBackend::new(*num_qubits);
+        let backend = LocalSimulator::new(*num_qubits);
 
         group.bench_with_input(
             BenchmarkId::from_parameter(num_qubits),
@@ -54,9 +52,9 @@ fn bench_statevector_simulation(c: &mut Criterion) {
 /// Benchmark Bell state preparation
 fn bench_bell_state(c: &mut Criterion) {
     c.bench_function("bell_state_2_qubits", |b| {
-        let circuit = CircuitBuilder::new(2).h(0).cx(0, 1).build();
+        let circuit = CircuitBuilder::new(2).h(0).cnot(0, 1).build();
 
-        let backend = StatevectorBackend::new(2);
+        let backend = LocalSimulator::new(2);
 
         b.iter(|| {
             let result = backend.execute(&circuit, 100);
@@ -73,11 +71,11 @@ fn bench_ghz_state(c: &mut Criterion) {
         let mut builder = CircuitBuilder::new(*num_qubits);
         builder = builder.h(0);
         for i in 0..(*num_qubits - 1) {
-            builder = builder.cx(i, i + 1);
+            builder = builder.cnot(i, i + 1);
         }
         let circuit = builder.build();
 
-        let backend = StatevectorBackend::new(*num_qubits);
+        let backend = LocalSimulator::new(*num_qubits);
 
         group.bench_with_input(
             BenchmarkId::from_parameter(num_qubits),
