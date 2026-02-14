@@ -223,6 +223,12 @@ codegen-units = 1
 [patch.crates-io]
 # NOTE: local environmental patch directory is missing; fallback to crates.io version.
 # environmental = { path = "patches/environmental" }
+# Force a single `curve25519-dalek` version (3.2.1) workspace-wide to
+# resolve conflicts between `solana-program` (requires ^3.2.1) and
+# Substrate's `sp-io`/`ed25519-dalek` dependency chain.
+# We point at the upstream git tag to ensure consistent resolution for
+# both crates.io and git-backed dependencies.
+curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" }
 # Pin home to a rustc 1.85 compatible release (local patch).
 home = { path = "patches/home" }
 # Enable bulk-memory opcode parsing (0xFC prefix) so Substrate can deserialize rustc-generated WASM.
