@@ -16,6 +16,7 @@ members = [
     "pallets/swarm",
     "crates/evm-integration",
     "crates/svm-integration",
+    "crates/svm-counter",
     "crates/cross-vm-bridge",
     "crates/external-chains",
     "crates/atlas-sdk",
@@ -91,6 +92,7 @@ resolver = "2"
 parity-scale-codec = { version = "3.6.5", default-features = false, features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11.1", default-features = false, features = ["derive"] }
+curve25519-dalek = "3.2.1"
 
 # Common FRAME & Substrate workspace deps (referenced with `workspace = true` in members)
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -221,6 +223,12 @@ codegen-units = 1
 [patch.crates-io]
 # NOTE: local environmental patch directory is missing; fallback to crates.io version.
 # environmental = { path = "patches/environmental" }
+# Force a single `curve25519-dalek` version (3.2.1) workspace-wide to
+# resolve conflicts between `solana-program` (requires ^3.2.1) and
+# Substrate's `sp-io`/`ed25519-dalek` dependency chain.
+# We point at the upstream git tag to ensure consistent resolution for
+# both crates.io and git-backed dependencies.
+curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" }
 # Pin home to a rustc 1.85 compatible release (local patch).
 home = { path = "patches/home" }
 # Enable bulk-memory opcode parsing (0xFC prefix) so Substrate can deserialize rustc-generated WASM.
@@ -239,6 +247,9 @@ rfs = { path = "patches/rfs" }
 getrandom = { path = "patches/getrandom" }
 # Fix ahash to use getrandom 0.2 instead of 0.3 (0.3 doesn't support wasm32-unknown-unknown)
 ahash = { path = "patches/ahash" }
+# Experimental: attempt to unify `curve25519-dalek` across workspace to satisfy Solana and Substrate consumers
+# REVERTED: workspace unification proved incompatible with pinned Substrate deps — keeping isolated SVM integration test instead
+# (was: curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" })
 # Also patch getrandom 0.1.16 to version alias - leave upstream (substrate uses it differently)
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }

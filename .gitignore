@@ -93,6 +93,18 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime data & node artifacts
+data/
+*.pid
+*.pids
+.atlas-pids
+.gpu_*.pid
+.lane_orch.pid
+logs/
+ralph-logs/
+docs/logs/
+
 # Ignore runtime secrets and keys
 .ollama/
 *.enc

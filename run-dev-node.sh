@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Atlas Sphere Development Node Launcher
 # This script launches a local Atlas Sphere blockchain node in development mode
 
@@ -51,7 +51,14 @@ echo "  Prometheus: http://127.0.0.1:$PROMETHEUS_PORT/metrics"
 echo ""
 
 # Check if desktop app should be started
-START_DESKTOP="${START_DESKTOP:-true}"
+# Default to false in CI/limited environments; allow override with env var
+START_DESKTOP="${START_DESKTOP:-false}"
+
+# Verify `npm` is available before attempting to start desktop app
+if [ "$START_DESKTOP" = "true" ] && ! command -v npm >/dev/null 2>&1; then
+    echo "⚠️  npm not found in PATH; disabling desktop app start"
+    START_DESKTOP=false
+fi
 
 # Start the node with secure defaults in the background
 ./target/release/atlas-sphere-node \
@@ -78,9 +85,20 @@ echo ""
 
 # Wait for blockchain to initialize (checking RPC port)
 echo "⏳ Waiting for blockchain to be ready..."
-sleep 3
+sleep 2
 for i in {1..30}; do
-    if nc -z localhost $RPC_PORT 2>/dev/null || timeout 1 curl -s http://localhost:$RPC_PORT/health >/dev/null 2>&1; then
+    READY=1
+    if command -v nc >/dev/null 2>&1; then
+        if nc -z localhost "$RPC_PORT" 2>/dev/null; then
+            READY=0
+        fi
+    fi
+    if [ $READY -ne 0 ] && command -v curl >/dev/null 2>&1; then
+        if curl -s "http://localhost:$RPC_PORT/health" >/dev/null 2>&1; then
+            READY=0
+        fi
+    fi
+    if [ $READY -eq 0 ]; then
         echo "✅ Blockchain is ready!"
         break
     fi
