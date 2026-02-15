@@ -16,6 +16,18 @@ ingress:
     kubernetes.io/ingress.class: "nginx"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
+# Health & lifecycle
+healthPath: "/"
+lifecycle:
+  preStopSleepSeconds: 10
+
+# Horizontal Pod Autoscaler (optional)
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
 resources:
   requests:
     cpu: "250m"

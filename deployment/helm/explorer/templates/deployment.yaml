@@ -31,16 +31,23 @@ spec:
 {{ toYaml .Values.resources | indent 12 }}
           livenessProbe:
             httpGet:
-              path: /
+              path: {{ .Values.healthPath | quote }}
               port: {{ .Values.service.port }}
             initialDelaySeconds: 20
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /
+              path: {{ .Values.healthPath | quote }}
               port: {{ .Values.service.port }}
             initialDelaySeconds: 10
             periodSeconds: 5
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - "sleep {{ .Values.lifecycle.preStopSleepSeconds }}"
       nodeSelector: {{ toYaml .Values.nodeSelector | default "{}" | nindent 6 }}
       tolerations: {{ toYaml .Values.tolerations | default "[]" | nindent 6 }}
       affinity: {{ toYaml .Values.affinity | default "{}" | nindent 6 }}

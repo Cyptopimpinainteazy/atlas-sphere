@@ -36,8 +36,31 @@ Rollbacks & updates
 - Update values (example change replica count):
   helm upgrade explorer deployment/helm/explorer --set replicaCount=3 -n atlas-sphere
 
+Autoscaling (HPA)
+- Enable autoscaling using the chart values or overrides:
+  helm upgrade --install explorer deployment/helm/explorer \
+    --namespace atlas-sphere --set autoscaling.enabled=true \
+    --set autoscaling.minReplicas=2 --set autoscaling.maxReplicas=6 \
+    --set autoscaling.targetCPUUtilizationPercentage=70
+
+Canary / rollout example
+- Quick canary using a separate release & host (manual approach):
+  helm upgrade --install explorer-canary deployment/helm/explorer \
+    --namespace atlas-sphere --create-namespace \
+    --set image.tag=<CANARY_SHA> \
+    --set replicaCount=1 \
+    --set ingress.host=canary.explorer.testnet.atlas-sphere.io
+
+  Verify the canary pod and check behaviour; when ready promote by updating the main release image tag.
+
+Health-check & graceful shutdown
+- Chart exposes `healthPath` (default `/`) and `lifecycle.preStopSleepSeconds`.
+- To use a custom health endpoint:
+  helm upgrade explorer deployment/helm/explorer --set healthPath=/api/health -n atlas-sphere
+- Graceful termination is controlled by `lifecycle.preStopSleepSeconds` (default 10s).
+
 Notes
-- Chart path: `deployment/helm/explorer/` (values.yaml contains sensible defaults for testnet)
+- Chart path: `deployment/helm/explorer/` (default and env-specific values available)
 - TLS secret name expected by chart: `explorer-tls-cert` (adjust `values.yaml` if different)
 - CI updates image tag automatically and runs `helm upgrade --install explorer` when pushing to `main` (see `.github/workflows/production-deploy.yml`).
 
