@@ -1,0 +1,12 @@
+apiVersion: v2
+name: explorer
+description: "Atlas Sphere Block Explorer (Helm chart)"
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - explorer
+  - atlas-sphere
+maintainers:
+  - name: atlas-sphere
+    email: devops@atlas-sphere.io

@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Keyring } from '@polkadot/keyring';
 import { mnemonicToMiniSecret, u8aToHex } from '@polkadot/util-crypto';
-import QRCode from 'qr-code';
+import QRCode from 'qrcode';
 import keytar from 'keytar';
 import fs from 'fs-extra';
 import path from 'path';
