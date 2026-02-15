@@ -275,6 +275,20 @@ jobs:
           kubectl rollout status deployment/analytics -n atlas-sphere --timeout=5m
           kubectl rollout status deployment/explorer -n atlas-sphere --timeout=3m
 
+      - name: Install Helm (CI)
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Deploy Explorer (Helm)
+        run: |
+          # Use Helm chart in repo to deploy Explorer; override image built earlier
+          helm upgrade --install explorer deployment/helm/explorer \
+            --namespace atlas-sphere --create-namespace \
+            --set image.repository=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer \
+            --set image.tag=${{ github.sha }} \
+            --wait --timeout 120s
+
+
       - name: Verify deployment
         run: |
           kubectl get pods -n atlas-sphere
