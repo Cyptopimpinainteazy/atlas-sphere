@@ -10,6 +10,12 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 interface IframePanelProps {
   url: string;
   title?: string;
+  // optional sandbox attribute for increased isolation (pass through to iframe)
+  sandbox?: string;
+  // optional `allow` attribute (feature policy) for the iframe
+  allow?: string;
+  // optional referrer-policy for the iframe
+  referrerPolicy?: string;
 }
 
 type Status = "checking" | "loading" | "ready" | "unreachable";
@@ -17,18 +23,37 @@ type Status = "checking" | "loading" | "ready" | "unreachable";
 const HEALTH_TIMEOUT = 5_000; // ms to wait for fetch health check
 const LOAD_TIMEOUT = 12_000; // ms to wait for iframe to finish loading
 
-const IframePanel: React.FC<IframePanelProps> = ({ url, title }) => {
+const IframePanel: React.FC<IframePanelProps> = ({ url, title, sandbox, allow, referrerPolicy }) => {
   const [status, setStatus] = useState<Status>("checking");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const loadTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  /** Probe the URL with fetch to see if the server is alive */
+  /**
+   * Normalize special schemes (ipfs://, ispf://) into HTTP gateway URLs so
+   * fetch/iframe can consume them in the browser environment.
+   */
+  const normalizeUrl = (u: string) => {
+    try {
+      if (/^ipfs:\/\//i.test(u) || /^ispf:\/\//i.test(u)) {
+        // strip scheme and leading slashes
+        const cid = u.replace(/^ipfs:\/\//i, '').replace(/^ispf:\/\//i, '');
+        // prefer a local gateway when available (developer expectation)
+        return `http://127.0.0.1:8080/ipfs/${cid}/`;
+      }
+      return u;
+    } catch {
+      return u;
+    }
+  };
+
+  /** Probe the URL with fetch to see if the server is alive (normalizes IPFS/ISPF) */
   const checkReachable = useCallback(async () => {
     setStatus("checking");
+    const probeUrl = normalizeUrl(url);
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), HEALTH_TIMEOUT);
-      await fetch(url, {
+      await fetch(probeUrl, {
         mode: "no-cors", // we don't need to read the body, just verify reachability
         signal: controller.signal,
       });
@@ -131,11 +156,14 @@ const IframePanel: React.FC<IframePanelProps> = ({ url, title }) => {
 
       <iframe
         ref={iframeRef}
-        src={url}
+        src={typeof url === 'string' ? (typeof (normalizeUrl) === 'function' ? normalizeUrl(url) : url) : url}
         title={title || "Application"}
         className="w-full h-full border-0"
         onLoad={handleIframeLoad}
-        allow="clipboard-read; clipboard-write"
+        loading="lazy"
+        allow={allow ?? "clipboard-read; clipboard-write"}
+        sandbox={typeof sandbox !== 'undefined' ? sandbox : undefined}
+        referrerPolicy={referrerPolicy ?? "no-referrer"}
       />
     </div>
   );

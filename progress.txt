@@ -20,3 +20,18 @@ Completed: Run `cargo clippy --workspace --all-targets --all-features` and fix a
 
 Completed: Deploy and test a simple Solana program (token or counter) - added `crates/svm-counter` Solana program (counter) and an integration test in `crates/svm-integration/tests/counter_integration.rs` using `solana-program-test` to deploy and invoke the counter.
 
+[2026-02-15T05:58:00.000Z] ✅ Completed: Add integration test for SVM program execution - added `crates/svm-integration/tests/counter_integration.rs` and `integration-tests/svm-counter-test`; verified with `cargo test -p atlas-svm-integration`.
+
+[2026-02-15T05:56:56.263Z] ✅ Completed: Add integration test for SVM program execution (took 181s)
+[2026-02-15T06:12:00.000Z] ✅ Completed: Test atomic cross-VM transaction - added integration tests for failed/successful atomic Comit flows and bridge rollback unit test (pallet + cross-vm-bridge)
+[2026-02-15T06:07:32.329Z] ✅ Completed: Test atomic cross-VM transaction (took 624s)
+[2026-02-15T06:40:00.000Z] ✅ Completed: Add integration test for cross-VM bridge - added integration tests at `crates/cross-vm-bridge/tests/integration.rs` (queue/execute/validation); updated `PRD.md`.
+[2026-02-15T06:09:19.857Z] ✅ Completed: Add integration test for cross-VM bridge (took 95s)
+[2026-02-15T20:02:00.000Z] ✅ Completed: Add SDK integration test with live node - added `packages/ts-sdk/tests/live.integration.test.ts` (gated; set RUN_LIVE_INTEGRATION_TESTS=1 to run), and added invariant `API-TS-SDK-001` in `tests/invariants/registry.toml`. Updated `PRD.md`.  
+[2026-02-15T06:12:28.805Z] ✅ Completed: Add SDK integration test with live node (took 177s)
+[2026-02-15T20:45:00.000Z] ✅ Completed: Test sending transactions on testnet - added gated live integration test (`packages/ts-sdk/tests/live.integration.test.ts`) that submits a `balances.transfer` on testnet when `TESTNET_SIGNER_URI` is provided; updated `PRD.md`.
+[2026-02-15T06:15:47.827Z] ✅ Completed: Test sending transactions on testnet (took 187s)
+[2026-02-15T06:20:20.014Z] ✅ Completed: Display latest blocks (took 260s)
+[2026-02-15T21:05:00.000Z] ✅ Completed: Display latest blocks - updated `ExplorerHomePanel` to use live Substrate RPC (`useRecentBlocks` + `useNewHeads`), added unit test, and updated `PRD.md`.
+[2026-02-15T21:36:00.000Z] ✅ Completed: Deploy explorer to testnet - updated explorer config for testnet RPC, added unit test for `getExplorerUrl()`, and updated `PRD.md` and `progress.txt`. Explorer UI now targeted at https://explorer.testnet.atlas-sphere.io
+[2026-02-15T06:26:35.789Z] ✅ Completed: Deploy explorer to testnet (took 364s)

@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { withRetry, classifyError, logError, createErrorContext, isOnline } from '../../utils/errorHandler';
+
+// Guarded Tauri invoke helper
+async function tauriInvoke<T>(cmd: string, args?: any): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(cmd, args);
+}
 
 interface PinnedContent {
   cid: string;
@@ -85,7 +93,7 @@ export const IpfsStoragePanel: React.FC = () => {
       setError(null);
 
       const result = await withRetry(
-        () => invoke<IpfsStorageData>('launch_ipfs_storage'),
+        () => tauriInvoke<IpfsStorageData>('launch_ipfs_storage'),
         {
           maxAttempts: 3,
           delayMs: 1000,

@@ -46,24 +46,9 @@ async function getAuthorities() {
 /**
  * Submit a Comit v2 transaction.
  */
-function submitComitV2(
-  evmPayload: string | null,
-  svmPayload: string | null,
-  x3Payload: string | null,
-  fee: string,
-  deadline: number,
-  metadata: string | null
-) {
-  const api = getApi();
-  return api.tx.atlasKernel.submitComitV2(
-    evmPayload,
-    svmPayload,
-    x3Payload,
-    fee,
-    deadline,
-    metadata
-  );
-}
+import { submitCrossSwap } from './x3';
+
+export { submitCrossSwap as submitComitV2 };
 
 /**
  * Register a new asset.

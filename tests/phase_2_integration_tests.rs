@@ -62,41 +62,23 @@ mod cross_vm_integration_tests {
 				})
 			}
 
-			/// Verify bridge state consistency
-			pub fn validate_bridge_state(
-				before_state: &BridgeState,
-				after_state: &BridgeState,
-				execution_result: &MockExecutionResult,
-			) -> Result<(), String> {
-				// Verify nonce incremented
-				if !execution_result.success
-					&& after_state.last_nonce != before_state.last_nonce
-				{
-					return Err("Nonce incremented on failed execution".to_string());
-				}
-
-				// Verify state changes recorded
-				if execution_result.success
-					&& after_state.state_changes.is_empty()
-					&& !execution_result.state_changes.is_empty()
-				{
-					return Err("State changes not recorded".to_string());
-				}
-
-				// Verify cross-VM flag consistency
-				if execution_result.cross_vm_success
-					!= after_state.cross_vm_consistent
-				{
-					return Err("Cross-VM consistency flag mismatch".to_string());
-				}
-
-				Ok(())
-			}
-
-			/// Query canonical ledger
-			pub fn query_canonical_ledger(
-				account: &[u8],
-				asset_id: u32,
+		/// Simulate a failed cross-VM execution (partial failure) — used by tests that
+		/// verify atomic rollback behavior when one VM fails after the other succeeded.
+		pub fn execute_atomic_operation_fail(
+			evm_payload: &[u8],
+			svm_payload: &[u8],
+			_nonce: u64,
+		) -> Result<MockExecutionResult, String> {
+			// Return a failed execution result (no state changes recorded)
+			Ok(MockExecutionResult {
+				success: false,
+				evm_gas_used: 10_000,
+				svm_compute_units: 0,
+				state_changes: vec![],
+				logs: vec![],
+				cross_vm_success: false,
+			})
+		}
 			) -> CanonicalLedgerEntry {
 				// In real implementation, this queries on-chain state
 				CanonicalLedgerEntry {
@@ -260,6 +242,43 @@ mod cross_vm_integration_tests {
 		let exec_result = result.unwrap();
 		assert!(!exec_result.logs.is_empty());
 		assert_eq!(exec_result.logs[0].data, vec![10, 11, 12]);
+	}
+
+	// Verify that a partial/failed cross-VM execution results in no state changes
+	// and that the bridge validation rejects nonce/state updates (atomic rollback).
+	#[test]
+	fn test_atomic_execution_partial_failure_rolls_back() {
+		let evm_payload = vec![0x0A];
+		let svm_payload = vec![0x0B];
+		let nonce = 7u64;
+
+		// Simulate a failed execution (one VM failed after the other)
+		let failed = MockDispatcher::execute_atomic_operation_fail(&evm_payload, &svm_payload, nonce)
+			.unwrap();
+
+		assert!(!failed.success, "Execution should be reported as failed");
+
+		let before_state = BridgeState {
+			last_nonce: nonce,
+			state_changes: vec![],
+			cross_vm_consistent: true,
+		};
+
+		// After failed execution the bridge must NOT accept a nonce increment or apply state changes
+		let after_state = BridgeState {
+			last_nonce: nonce + 1, // illegal increment on failure
+			state_changes: vec![],
+			cross_vm_consistent: false,
+		};
+
+		let validation = MockDispatcher::validate_bridge_state(&before_state, &after_state, &failed);
+		assert!(validation.is_err());
+		assert!(validation.unwrap_err().contains("Nonce incremented on failed execution"));
+
+		// Finalization should be rejected for failed executions
+		let comit_id = H256::from_low_u64_be(0xDEADBEEF);
+		let finalize = MockDispatcher::record_finalization(comit_id, &failed);
+		assert!(finalize.is_err());
 	}
 
 	// ============================================================================

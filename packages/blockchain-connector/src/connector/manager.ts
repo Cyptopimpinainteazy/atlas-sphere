@@ -13,9 +13,10 @@ import type {
   Transaction,
   ChainDescriptor,
 } from "../types";
-import { getChain, CHAIN_REGISTRY } from "../chains/registry";
+import { getChain } from "../chains/registry";
 import { createAdapter, type IChainAdapter } from "../adapters";
 import { HealthMonitor } from "./health-monitor";
+import { chainDB } from "../chains/db";
 
 interface ManagedConnector {
   instance: ConnectorInstance;
@@ -70,8 +71,8 @@ export class ConnectorManager {
       if (first) return first.endpoint;
     }
 
-    // Fallback: return the first available endpoint
-    return endpoints[0];
+    // Fallback: use rotation from DB
+    return chainDB.getNextRpc(chain.id);
   }
 
   private async attemptFailover(managed: ManagedConnector): Promise<boolean> {
@@ -106,7 +107,7 @@ export class ConnectorManager {
    * Create a new connector to a blockchain.
    */
   async createConnector(options: ConnectorOptions): Promise<ConnectorInstance> {
-    const chain = getChain(options.chain) ?? this.findChainByNameOrId(options.chain);
+    const chain = getChain(options.chain) ?? chainDB.searchChains(options.chain)[0];
     if (!chain) {
       throw new Error(`Unknown chain: ${options.chain}. Available: ${CHAIN_REGISTRY.map(c => c.id).join(", ")}`);
     }
@@ -291,13 +292,6 @@ export class ConnectorManager {
    */
   getAdapter(id: string): IChainAdapter | undefined {
     return this.connectors.get(id)?.adapter;
-  }
-
-  private findChainByNameOrId(query: string): ChainDescriptor | undefined {
-    const q = query.toLowerCase();
-    return CHAIN_REGISTRY.find(
-      (c) => c.id === q || c.name.toLowerCase().includes(q) || String(c.chainId) === q,
-    );
   }
 
   private emptyMetrics(): ConnectorMetrics {

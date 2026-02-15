@@ -8,13 +8,14 @@
  * - Tools menu with developer options
  * - Help menu with documentation
  */
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../theme/ThemeProvider';
 import { useDesktopStore } from '@/stores/desktopStore';
 import { useSocialStore } from '@/stores/socialStore';
 import { useApplicationStore } from '@/stores/applicationStore';
 import { useWindowManager } from '@/hooks/useWindowManager';
+import { setAppNetwork } from '@/lib/substrate/client';
 import type { ApplicationCategory } from '@/types/application';
 
 interface MenuItem {
@@ -139,6 +140,38 @@ const TopNavBar: React.FC = () => {
   const [appsMenuFilter, setAppsMenuFilter] = useState('');
   const appsButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  // Network selector (persists to localStorage and reconnects Substrate client)
+  const NETWORK_OPTIONS = [
+    { id: 'local', label: 'Local' },
+    { id: 'testnet', label: 'Testnet' },
+    { id: 'mainnet', label: 'Mainnet' },
+  ] as const;
+
+  const [selectedNetwork, setSelectedNetwork] = useState<string>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = window.localStorage.getItem('atlas_active_network');
+        if (stored) return stored;
+      }
+    } catch (err) { /* ignore */ }
+    const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') || (typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'development');
+    return isDev ? 'local' : 'testnet';
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    const apply = async () => {
+      try {
+        // persist & ask substrate client to reconnect
+        await setAppNetwork(selectedNetwork as 'local' | 'testnet' | 'mainnet');
+      } catch (err) {
+        console.error('[TopNavBar] setAppNetwork failed', err);
+      }
+    };
+    if (mounted) apply();
+    return () => { mounted = false; };
+  }, [selectedNetwork]);
+
   const handleQuickLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginUser || !loginPass) { setLoginError('Fill in both fields'); return; }
@@ -206,6 +239,8 @@ const TopNavBar: React.FC = () => {
   ];
 
   const toolsMenuItems: MenuItem[] = [
+    { label: 'App Store', icon: '📦', shortcut: 'Ctrl+Shift+A', action: () => navigate('/appstore') },
+    { divider: true },
     { label: 'Developer Tools', icon: '🛠️', shortcut: 'F12', action: () => console.log('Dev Tools') },
     { label: 'Terminal', icon: '💻', shortcut: 'Ctrl+`', action: () => console.log('Terminal') },
     { label: 'Task Manager', icon: '📊', action: () => console.log('Task Manager') },
@@ -280,6 +315,20 @@ const TopNavBar: React.FC = () => {
           <button onClick={() => navigate('/crm')} className="px-2 py-1 text-xs font-medium text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10 rounded transition-all">
             📅 CRM
           </button>
+        </div>
+
+        {/* Network selector */}
+        <div className="flex items-center gap-2 mr-4">
+          <select
+            value={selectedNetwork}
+            onChange={e => setSelectedNetwork(e.target.value)}
+            className="text-xs bg-bg-primary border border-border-default rounded px-2 py-1 text-text-primary"
+            title="Select network"
+          >
+            {NETWORK_OPTIONS.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* User / Login */}
@@ -427,6 +476,32 @@ const TopNavBar: React.FC = () => {
                 className="w-full px-3 py-1.5 text-xs bg-bg-primary border border-border-default rounded-lg text-text-primary focus:border-accent-primary outline-none"
               />
             </div>
+
+            {/* Preinstalled / pinned apps (prominent) */}
+            {/** Show preinstalled apps first so they're easy to access */}
+            {(() => {
+              const preinstalledApps = applications.filter(a => !!a.preinstalled);
+              if (preinstalledApps.length === 0) return null;
+              return (
+                <div className="p-3 border-b border-border-default">
+                  <div className="text-[11px] text-text-secondary mb-2 font-semibold">Pinned / Preinstalled</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {preinstalledApps.map(app => (
+                      <button
+                        key={app.id}
+                        onClick={() => { launch(app.id); setShowAppsMenu(false); }}
+                        title={app.description || app.name}
+                        className="flex items-center gap-2 px-3 py-2 bg-bg-primary border border-border-default rounded-lg text-xs text-text-primary hover:bg-accent-primary/10 transition"
+                      >
+                        <span className="w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold text-white"
+                          style={{ background: app.icon.color || '#666' }}>{app.name[0]}</span>
+                        <span className="truncate max-w-[160px]">{app.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Categorized grid */}
             <div className="overflow-y-auto p-3" style={{ maxHeight: 'calc(70vh - 56px)' }}>

@@ -1,0 +1,32 @@
+# AgenC Operator Treasury Configuration
+
+[treasury]
+enabled = true
+x3_address = "X3Treasury_Multi_Chain_Address_REPLACE"
+share_percentage = 50
+auto_transfer = true
+transfer_interval_seconds = 300  # 5 minutes
+
+[agent_earnings]
+# Agent types and their treasury contribution
+trading_agent_share = 50
+data_agent_share = 50
+automation_agent_share = 50
+oracle_agent_share = 50
+
+[chains]
+ethereum = "0xX3_TREASURY_ETH"
+bsc = "0xX3_TREASURY_BSC"
+polygon = "0xX3_TREASURY_POLYGON"
+arbitrum = "0xX3_TREASURY_ARB"
+solana = "X3Treasury_SOL_ADDRESS"
+
+[security]
+verify_treasury_address = true
+log_all_transactions = true
+require_operator_approval = false  # Set to true for manual approval
+
+[reporting]
+enabled = true
+log_directory = "./logs/treasury"
+dashboard_enabled = true

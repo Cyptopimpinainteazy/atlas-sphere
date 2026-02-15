@@ -502,6 +502,33 @@ mod tests {
     }
 
     #[test]
+    fn test_atomic_swap_rollback_marks_rolled_back() {
+        let mut bridge = CrossVmBridge::new();
+
+        let op = CrossVmOperation::AtomicSwap {
+            evm_party: [0u8; 20],
+            svm_party: vec![0u8; 32],
+            evm_asset: [0u8; 20],
+            svm_asset: vec![0u8; 32],
+            evm_amount: 1_000,
+            svm_amount: 2_000,
+        };
+
+        // Queue and ensure pending
+        bridge.queue_operation(op.clone()).unwrap();
+        assert_eq!(bridge.pending_count(), 1);
+
+        // Simulate a rollback on the queued operation
+        assert!(bridge.rollback_operation(0).is_ok());
+
+        // After rollback the operation should no longer be pending
+        assert_eq!(bridge.pending_count(), 0);
+
+        // Rolled back ops are not counted as completed or failed
+        assert_eq!(bridge.completed_count(), 0);
+        assert_eq!(bridge.failed_count(), 0);
+    }
+    #[test]
     fn test_cross_vm_result() {
         let success_result = CrossVmResult::success(vec![1, 2, 3], 50_000);
         assert!(success_result.success);

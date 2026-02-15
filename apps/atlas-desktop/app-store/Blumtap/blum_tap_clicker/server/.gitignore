@@ -1,0 +1,6 @@
+blumtap/__pycache__
+blumtap/migrations
+db.sqlite3
+data.json
+blumtap_backend/__pycache__/
+static

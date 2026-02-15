@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+src-tauri/target/
+*.AppImage
+*.deb
+*.dmg
+*.msi
+*.exe
+
+# Environment and local config
+.env
+.env.local
+.env.*.local
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tauri development
+src-tauri/binaries/myntad-*
+!src-tauri/binaries/.gitkeep
+
+# Test outputs
+coverage/
+.nyc_output/

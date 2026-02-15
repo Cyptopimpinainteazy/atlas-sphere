@@ -3,6 +3,7 @@
 mod social;
 mod crm;
 mod admin_commands;
+mod wallet;
 
 use chrono::Utc;
 use rand::Rng;

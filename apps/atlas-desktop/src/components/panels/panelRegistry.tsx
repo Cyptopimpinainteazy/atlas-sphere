@@ -14,6 +14,7 @@ const DevToolsPanel    = lazy(() => import("@/components/panels/DevToolsPanel"))
 const SecurityPanel    = lazy(() => import("@/components/panels/SecurityPanel"));
 const LiveTelemetryPanel = lazy(() => import("@/components/panels/LiveTelemetryPanel"));
 const MonitoringDashboard = lazy(() => import("@/components/monitoring/MonitoringDashboard"));
+const WorldMonitorPanel = lazy(() => import("@/components/panels/WorldMonitorPanel"));
 const DocumentationPanel = lazy(() => import("@/components/documentation/Documentation"));
 
 /* Blockchain Connector */
@@ -86,6 +87,9 @@ const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructur
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
 
+/* ── Admin Dashboard ──── */
+const AdminPanel = lazy(() => import("@/components/panels/admin/AdminPanel"));
+
 /**
  * Map of appId → lazy-loaded panel component.
  * Add new panels here as they are created.
@@ -98,6 +102,7 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "security-vault":  SecurityPanel,
   "live-telemetry":  LiveTelemetryPanel,
   "system-monitoring": MonitoringDashboard,
+  "world-monitor":    WorldMonitorPanel,
   "documentation":   DocumentationPanel,
 
   // Aliases: existing apps can also route to panels
@@ -186,6 +191,10 @@ const PANEL_MAP: Record<string, ComponentType> = {
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */
   "health-dashboard":       HealthDashboardPanel,
   "system-health":          HealthDashboardPanel,
+
+  /* ── Admin Dashboard ── */
+  "admin-dashboard":        AdminPanel,
+  "admin-panel":            AdminPanel,
 };
 
 /**

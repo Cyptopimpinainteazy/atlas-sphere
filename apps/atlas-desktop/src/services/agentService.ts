@@ -3,7 +3,14 @@
  * 4 Layers: Strategic • Execution • Media • Growth
  * All powered by local Ollama (free, no API keys).
  */
-import { invoke } from "@tauri-apps/api/core";
+// Use a lazy guarded tauriInvoke helper to avoid browser crashes when Tauri is not present
+async function tauriInvoke<T>(cmd: string, args?: any): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(cmd, args);
+} 
 
 /* ─── Types ──────────────────────────────────────── */
 
@@ -99,24 +106,24 @@ export interface OllamaStatus {
 
 /* ─── Agent Roster ───────────────────────────────── */
 export const getAgentRoster = () =>
-  invoke<AgentDef[]>("agents_get_roster");
+  tauriInvoke<AgentDef[]>("agents_get_roster");
 
 export const checkAgentStatus = () =>
-  invoke<OllamaStatus>("agents_check_status");
+  tauriInvoke<OllamaStatus>("agents_check_status");
 
 /* ─── Agent Tasks ────────────────────────────────── */
 export const runAgentTask = (ownerUserId: string, agentId: string, prompt: string) =>
-  invoke<AgentTask>("agents_run_task", { owner_user_id: ownerUserId, agent_id: agentId, prompt });
+  tauriInvoke<AgentTask>("agents_run_task", { owner_user_id: ownerUserId, agent_id: agentId, prompt });
 
 export const getAgentTasks = (userId: string, isKing: boolean) =>
-  invoke<AgentTask[]>("agents_get_tasks", { user_id: userId, is_king: isKing });
+  tauriInvoke<AgentTask[]>("agents_get_tasks", { user_id: userId, is_king: isKing });
 
 /* ─── Agent Chat ─────────────────────────────────── */
 export const chatWithAgent = (userId: string, agentId: string, message: string) =>
-  invoke<AgentConversation>("agents_chat", { user_id: userId, agent_id: agentId, message });
+  tauriInvoke<AgentConversation>("agents_chat", { user_id: userId, agent_id: agentId, message });
 
 export const getAgentHistory = (userId: string, agentId: string) =>
-  invoke<AgentConversation[]>("agents_get_history", { user_id: userId, agent_id: agentId });
+  tauriInvoke<AgentConversation[]>("agents_get_history", { user_id: userId, agent_id: agentId });
 
 /* ─── Lead Funnel ────────────────────────────────── */
 export const createLead = (ownerUserId: string, input: {

@@ -187,6 +187,42 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     launchCommand: { type: "tauri", target: "launch_quantum_voyager" },
   },
   {
+    id: "deep-research",
+    name: "Deep Research",
+    description: "Research workbench for large-scale dataset analysis (preinstalled)",
+    category: "analysis",
+    preinstalled: true,
+    icon: { type: "placeholder", category: "analysis", color: "#42a5f5" },
+    launchCommand: { type: "tauri", target: "launch_deep_research" },
+  },
+  {
+    id: "world-monitor",
+    name: "World Monitor",
+    description: "Global monitoring dashboard and geospatial telemetry (preinstalled)",
+    category: "analysis",
+    preinstalled: true,
+    icon: { type: "placeholder", category: "analysis", color: "#26c6da" },
+    launchCommand: { type: "tauri", target: "launch_world_monitor" },
+  },
+  {
+    id: "clutch",
+    name: "Clutch",
+    description: "Developer toolkit and process manager (preinstalled)",
+    category: "development",
+    preinstalled: true,
+    icon: { type: "placeholder", category: "development", color: "#ffd700" },
+    launchCommand: { type: "tauri", target: "launch_clutch" },
+  },
+  {
+    id: "nvtop",
+    name: "nvtop",
+    description: "GPU process monitor (preinstalled)",
+    category: "utility",
+    preinstalled: true,
+    icon: { type: "placeholder", category: "utility", color: "#64b5f6" },
+    launchCommand: { type: "process", target: "nvtop" },
+  },
+  {
     id: "phase5-panel",
     name: "Phase 5 Panel",
     description: "Phase 5 deployment control panel",
@@ -626,6 +662,16 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     category: "service",
     icon: { type: "placeholder", category: "service", color: "#42a5f5" },
     launchCommand: { type: "internal", target: "health-dashboard" },
+  },
+
+  /* ── Admin Dashboard ── */
+  {
+    id: "admin-dashboard",
+    name: "Admin Dashboard",
+    description: "System administration — service health, allowlisted commands, diagnostics",
+    category: "security",
+    icon: { type: "placeholder", category: "security", color: "#ef4444" },
+    launchCommand: { type: "internal", target: "admin-dashboard" },
   },
 ];
 

@@ -49,17 +49,54 @@ export type NetworkEnv = NetworkId; // Alias for compatibility
 // =============================================================================
 
 /**
- * Get active network from environment or default
+ * Get active network from environment, localStorage or default
  */
+export const LOCAL_STORAGE_ACTIVE_NETWORK_KEY = 'atlas_active_network';
+
 export function getActiveNetwork(): NetworkId {
+  // 1) explicit runtime override (browser localStorage)
+  try {
+    if (IS_BROWSER) {
+      const stored = window.localStorage.getItem(LOCAL_STORAGE_ACTIVE_NETWORK_KEY) as NetworkId | null;
+      if (stored && stored in RPC_ENDPOINTS) return stored;
+    }
+  } catch (err) {
+    /* ignore localStorage errors */
+  }
+
+  // 2) environment variable override (build / server)
   const envNetwork = process.env.NEXT_PUBLIC_NETWORK as NetworkId | undefined;
-  
   if (envNetwork && envNetwork in RPC_ENDPOINTS) {
     return envNetwork;
   }
-  
-  // Default to local in development, testnet otherwise
+
+  // 3) sensible defaults
   return IS_DEV ? 'local' : 'testnet';
+}
+
+/**
+ * Persist the active network to localStorage (no-op on SSR)
+ */
+export function setActiveNetwork(network: NetworkId | null): void {
+  if (!IS_BROWSER) return;
+  try {
+    if (network === null) {
+      window.localStorage.removeItem(LOCAL_STORAGE_ACTIVE_NETWORK_KEY);
+    } else if (network in RPC_ENDPOINTS) {
+      window.localStorage.setItem(LOCAL_STORAGE_ACTIVE_NETWORK_KEY, network);
+    } else {
+      throw new Error(`Unknown network id: ${network}`);
+    }
+  } catch (err) {
+    console.warn('[chain] setActiveNetwork failed:', err);
+  }
+}
+
+/**
+ * Return a list of available network ids (preserves insertion order)
+ */
+export function getAvailableNetworks(): NetworkId[] {
+  return Object.keys(RPC_ENDPOINTS) as NetworkId[];
 }
 
 /**

@@ -8,7 +8,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { getWsEndpoint, getActiveNetwork, type NetworkId } from '../config/chain';
+import { getWsEndpoint, getActiveNetwork, setActiveNetwork, LOCAL_STORAGE_ACTIVE_NETWORK_KEY, type NetworkId } from '../config/chain';
 
 // =============================================================================
 // Types
@@ -42,6 +42,8 @@ export interface ChainContextState {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   reconnect: () => Promise<void>;
+  // Change active network at runtime (persists to localStorage & reconnects)
+  setNetwork: (network: NetworkId) => Promise<void>;
 }
 
 // Custom types for Atlas Kernel pallet
@@ -127,6 +129,7 @@ const defaultContext: ChainContextState = {
   connect: async () => {},
   disconnect: async () => {},
   reconnect: async () => {},
+  setNetwork: async (_network: NetworkId) => {},
 };
 
 const ChainContext = createContext<ChainContextState>(defaultContext);
@@ -144,7 +147,7 @@ export function ChainProvider({ children, autoConnect = true }: ChainProviderPro
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [network] = useState<NetworkId>(getActiveNetwork());
+  const [network, setNetwork] = useState<NetworkId>(getActiveNetwork());
   
   const [chainName, setChainName] = useState<string | null>(null);
   const [nodeVersion, setNodeVersion] = useState<string | null>(null);
@@ -339,6 +342,35 @@ export function ChainProvider({ children, autoConnect = true }: ChainProviderPro
     await connect();
   }, [disconnect, connect]);
 
+  // Change active network at runtime (persist + reconnect)
+  const handleSetNetwork = useCallback(async (newNetwork: NetworkId) => {
+    try {
+      setActiveNetwork(newNetwork);
+      setNetwork(newNetwork);
+      // Reconnect using the new endpoint
+      await reconnect();
+    } catch (err) {
+      console.error('[ChainProvider] setNetwork failed', err);
+    }
+  }, [reconnect]);
+
+  // Listen for storage changes (other windows / tabs)
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === LOCAL_STORAGE_ACTIVE_NETWORK_KEY) {
+        const next = (e.newValue as NetworkId) || getActiveNetwork();
+        setNetwork(next);
+        reconnect();
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', onStorage);
+      return () => window.removeEventListener('storage', onStorage);
+    }
+    return () => undefined;
+  }, [reconnect]);
+
   // Auto-connect on mount
   useEffect(() => {
     mountedRef.current = true;
@@ -370,6 +402,7 @@ export function ChainProvider({ children, autoConnect = true }: ChainProviderPro
     connect,
     disconnect,
     reconnect,
+    setNetwork: handleSetNetwork,
   };
 
   return (

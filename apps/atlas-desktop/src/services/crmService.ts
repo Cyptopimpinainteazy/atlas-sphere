@@ -1,7 +1,14 @@
 /**
  * crmService.ts — Tauri invoke wrappers for the CRM backend.
  */
-import { invoke } from "@tauri-apps/api/core";
+// Use a lazy, guarded tauri invoke helper to avoid runtime errors in browser dev
+async function tauriInvoke<T>(cmd: string, args?: any): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(cmd, args);
+} 
 
 /* ─── Types ──────────────────────────────────────── */
 

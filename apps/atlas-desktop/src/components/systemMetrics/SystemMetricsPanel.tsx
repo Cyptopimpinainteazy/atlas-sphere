@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { withRetry, classifyError, logError, createErrorContext, isOnline } from '../../utils/errorHandler';
+
+// Guarded Tauri invoke (avoids accessing __TAURI_INTERNALS__ in browser dev)
+async function tauriInvoke<T>(cmd: string, args?: any): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(cmd, args);
+}
 
 interface CpuMetrics {
   usage_percent: number;
@@ -84,7 +92,7 @@ export const SystemMetricsPanel: React.FC = () => {
       setError(null);
 
       const data = await withRetry(
-        () => invoke<SystemMetricsData>('launch_system_metrics'),
+        () => tauriInvoke<SystemMetricsData>('launch_system_metrics'),
         {
           maxAttempts: 3,
           delayMs: 1000,

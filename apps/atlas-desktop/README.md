@@ -47,6 +47,14 @@ npm run tauri dev
 npm run tauri build
 ```
 
+### Network selector & environment variables
+
+- Use the **Network** dropdown in the Top‑right `TopNavBar` to switch between `Local`, `Testnet` and `Mainnet` at runtime — the selection persists to `localStorage` and the Substrate client will reconnect automatically.
+- You can override endpoints with environment variables in `.env` / `.env.local`:
+  - `VITE_RPC_WS` / `VITE_RPC_HTTP` — primary public RPC endpoints
+  - `VITE_RPC_WS_LOCAL` / `VITE_RPC_HTTP_LOCAL` — local node endpoints (127.0.0.1)
+- Default public fallbacks: `wss://rpc.atlas-sphere.io:9944` and `https://rpc.atlas-sphere.io:9944`.
+
 ## Architecture
 
 ```

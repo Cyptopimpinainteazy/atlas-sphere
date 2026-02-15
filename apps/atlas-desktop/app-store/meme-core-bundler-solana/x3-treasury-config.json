@@ -1,0 +1,30 @@
+{
+  "treasury_integration": {
+    "enabled": true,
+    "x3_treasury_address": "X3Treasury_SOL_Address_REPLACE_IN_PRODUCTION",
+    "treasury_share": 0.5,
+    "comment": "50% of all meme coin launch fees route to X3 Treasury",
+    "solana_network": "mainnet-beta",
+    "auto_transfer": true
+  },
+  "launch_fees": {
+    "base_fee_sol": 0.1,
+    "bundling_fee_percentage": 2.0,
+    "liquidity_provision_fee": 1.0,
+    "treasury_portion": {
+      "base_fee": 0.05,
+      "bundling_fee": 1.0,
+      "liquidity_fee": 0.5
+    }
+  },
+  "fair_launch_config": {
+    "enable_treasury_contribution": true,
+    "treasury_lp_share": 50,
+    "vesting_enabled": false
+  },
+  "security": {
+    "verify_treasury_wallet": true,
+    "log_all_transfers": true,
+    "require_confirmation": false
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "enabled": true,
+  "treasury_split_percentage": 50,
+  "x3_treasury_address": "0xX3TreasuryMainWallet123456789abcdef",
+  "chain": "multi-chain",
+  "supported_chains": {
+    "ethereum": "0xX3TreasuryMainWallet123456789abcdef",
+    "bsc": "0xX3TreasuryBSCWallet123456789abcdef",
+    "polygon": "0xX3TreasuryPolygonWallet123456789abcdef",
+    "arbitrum": "0xX3TreasuryArbitrumWallet123456789abcdef",
+    "avalanche": "0xX3TreasuryAvalancheWallet123456789abcdef"
+  },
+  "app_info": {
+    "name": "Triangular Arbitrage",
+    "version": "1.2.2",
+    "type": "trading_bot",
+    "profit_source": "arbitrage_cycles"
+  },
+  "transaction_logging": {
+    "enabled": true,
+    "log_file": "treasury_transactions.log",
+    "include_exchange": true,
+    "include_cycle_info": true
+  },
+  "routing_config": {
+    "auto_split": true,
+    "split_on_profit_realization": true,
+    "minimum_split_amount_usd": 1.0,
+    "reserve_gas_fees": true
+  },
+  "integration": {
+    "method": "profit_interceptor",
+    "hook_location": "post_trade_settlement",
+    "wrapper_script": "x3_treasury_integration.py"
+  }
+}

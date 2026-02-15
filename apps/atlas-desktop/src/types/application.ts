@@ -25,6 +25,8 @@ export interface Application {
   icon: ApplicationIcon;
   /** How to launch this application */
   launchCommand: LaunchCommand;
+  /** Mark this app as preinstalled / locked into the desktop (optional) */
+  preinstalled?: boolean;
   /** System requirements for launch validation */
   systemRequirements?: SystemRequirements;
   /** Lifecycle management configuration */

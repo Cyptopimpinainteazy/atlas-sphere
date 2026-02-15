@@ -63,15 +63,15 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Enable SVM program deployment
 - [x] Deploy and test a simple Solana program (token or counter)
 - [x] Verify SVM state syncs with canonical ledger
-- [ ] Add integration test for SVM program execution
+- [x] Add integration test for SVM program execution
 - [x] Commit: "feat: integrate real SVM with program deployment"
 
 ### Critical Task 2.3: Cross-VM Communication
 
 - [x] Implement EVM-to-SVM asset transfer
 - [x] Implement SVM-to-EVM asset transfer
-- [ ] Test atomic cross-VM transaction
-- [ ] Add integration test for cross-VM bridge
+- [x] Test atomic cross-VM transaction
+- [x] Add integration test for cross-VM bridge
 - [x] Document cross-VM bridge usage
 - [x] Commit: "feat: enable atomic cross-VM transactions"
 
@@ -85,7 +85,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Add Base58 validation (utils.ts:271)
 - [x] Implement all collateral RPC calls (collateral.ts:21,26,31,36)
 - [x] Complete SHA256 in svm.ts (line 134)
-- [ ] Add SDK integration test with live node
+- [x] Add SDK integration test with live node
 - [x] Commit: "feat: complete TypeScript SDK core functionality"
 
 ### Critical Task 3.2: Minimal Wallet UI
@@ -94,16 +94,16 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Implement account creation and key management
 - [x] Add transaction signing UI
 - [x] Connect to Atlas node via WebSocket
-- [ ] Test sending transactions on testnet
+- [x] Test sending transactions on testnet
 - [x] Commit: "feat: add minimal functional wallet UI"
 
 ### Critical Task 3.3: Block Explorer MVP
 
 - [x] Create basic explorer in `apps/explorer`
-- [ ] Display latest blocks
+- [x] Display latest blocks
 - [x] Show transaction details
 - [x] Add account balance lookup
-- [ ] Deploy explorer to testnet
+- [x] Deploy explorer to testnet
 - [x] Commit: "feat: deploy basic block explorer"
 
 ---

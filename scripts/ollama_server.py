@@ -213,6 +213,9 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
                 "num_parallel": NUM_PARALLEL,
                 "keep_alive": KEEP_ALIVE,
                 "flash_attention": FLASH_ATTENTION,
+                # Embedding fallback used when a Qwen LLM model is supplied to the
+                # embeddings endpoint (see wrapper rewrite behaviour).
+                "embedding_fallback_model": os.getenv("OLLAMA_EMBEDDING_FALLBACK_MODEL", "mxbai-embed-large"),
             },
         }
         self._json(200, payload)
@@ -230,6 +233,24 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         hdrs = {}
         if self.headers.get("Content-Type"):
             hdrs["Content-Type"] = self.headers["Content-Type"]
+
+        # --- Special-case: embedding requests from tools that pass an LLM model name
+        # (e.g. 'qwen2.5-coder:14b'). Ollama may not expose embeddings for those
+        # LLM models — rewrite to a configured embedding-capable model so
+        # external tools (RooCode, etc.) that send a Qwen model name still get
+        # embeddings.
+        if path.startswith("/api/embeddings") or path.startswith("/v1/embeddings"):
+            try:
+                payload = json.loads(body.decode()) if body else {}
+            except Exception:
+                payload = {}
+
+            if isinstance(payload, dict):
+                new_payload = rewrite_embedding_payload(payload)
+                # If the payload was mutated or model changed, re-encode body for forwarding
+                if new_payload is not payload or payload.get("model") != new_payload.get("model"):
+                    body = json.dumps(new_payload).encode()
+
         status, resp_body, ct = _proxy(path, method="POST", body=body, headers=hdrs)
         self.send_response(status)
         self.send_header("Content-Type", ct)

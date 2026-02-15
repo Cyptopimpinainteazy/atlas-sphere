@@ -1,0 +1,31 @@
+{
+  "treasury": {
+    "enabled": true,
+    "x3_address": "X3Treasury_Multi_Chain_Address",
+    "share": 50,
+    "chains": {
+      "ethereum": "0xX3_TREASURY_ETH",
+      "bsc": "0xX3_TREASURY_BSC",
+      "polygon": "0xX3_TREASURY_POLYGON",
+      "arbitrum": "0xX3_TREASURY_ARB",
+      "avalanche": "0xX3_TREASURY_AVAX"
+    },
+    "fee_types": {
+      "transaction_fee": 50,
+      "swap_fee": 50,
+      "nft_trade_fee": 50
+    }
+  },
+  "wallet_features": {
+    "multi_chain": true,
+    "defi_integration": true,
+    "nft_support": true,
+    "hardware_wallet": true
+  },
+  "auto_treasury_routing": {
+    "enabled": true,
+    "threshold_eth": "0.01",
+    "threshold_bnb": "0.1",
+    "transfer_interval_blocks": 50
+  }
+}

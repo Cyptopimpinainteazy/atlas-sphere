@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { invoke } from '@tauri-apps/api/tauri';
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ export interface Transaction {
 export interface WalletAccount {
   address: string;
   name: string;
-  network: 'evm' | 'svm' | 'substrate';
+  network: 'evm' | 'svm' | 'substrate' | 'universal';
   balance: string;
   isAuthorized?: boolean;
 }
@@ -46,6 +47,17 @@ export type ActiveView =
   | 'comit'
   | 'mint';
 
+export interface UniversalWallet {
+  mnemonic: string;
+  seed_hex: string;
+  evm_address: string;
+  evm_private_key: string;
+  solana_address: string;
+  polkadot_address: string;
+  evm_chain_count: number;
+  warning: string;
+}
+
 export interface WalletState {
   isConnected: boolean;
   isLoading: boolean;
@@ -56,17 +68,22 @@ export interface WalletState {
   transactions: Transaction[];
   pendingComits: string[];
   activeView: ActiveView;
+  evmChainCount: number;
+  universalWallet: UniversalWallet | null;
 }
 
 export interface WalletActions {
   setConnected: (connected: boolean) => void;
   setLoading: (loading: boolean) => void;
   addAccount: (account: WalletAccount) => void;
-  setActiveAccount: (index: number) => void;
+  setAccounts: (accounts: WalletAccount[]) => void;
+  setActiveAccountIndex: (index: number) => void;
   setActiveView: (view: ActiveView) => void;
   setTokens: (tokens: Token[]) => void;
   addTransaction: (tx: Transaction) => void;
   disconnect: () => void;
+  setUniversalWallet: (wallet: UniversalWallet | null) => void;
+  setEvmChainCount: (count: number) => void;
 }
 
 // ── Demo data ───────────────────────────────────────────────────────────────
@@ -126,37 +143,43 @@ const DEMO_TRANSACTIONS: Transaction[] = [
 // ── Initial state ───────────────────────────────────────────────────────────
 
 const initialState: WalletState = {
-  isConnected: true,
+  isConnected: false,
   isLoading: false,
-  accounts: DEMO_ACCOUNTS,
+  accounts: [],
   activeAccountIndex: 0,
-  totalBalance: DEMO_TOKENS.reduce((s, t) => s + t.value, 0),
-  tokens: DEMO_TOKENS,
-  transactions: DEMO_TRANSACTIONS,
+  totalBalance: 0,
+  tokens: [],
+  transactions: [],
   pendingComits: [],
   activeView: 'dashboard',
+  evmChainCount: 0,
+  universalWallet: null,
 };
 
 // ── Store ───────────────────────────────────────────────────────────────────
 
 export const useWalletStore = create<WalletState & WalletActions>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
 
       setConnected: (connected) => set({ isConnected: connected }),
       setLoading: (loading) => set({ isLoading: loading }),
 
       addAccount: (account) =>
-        set((s) => ({ accounts: [...s.accounts, account] })),
+        set((state) => ({ accounts: [...state.accounts, account] })),
 
-      setActiveAccount: (index) => set({ activeAccountIndex: index }),
+      setAccounts: (accounts) => set({ accounts }),
+
+      setActiveAccountIndex: (index) => set({ activeAccountIndex: index }),
+
       setActiveView: (view) => set({ activeView: view }),
+
       setTokens: (tokens) =>
         set({ tokens, totalBalance: tokens.reduce((s, t) => s + t.value, 0) }),
 
       addTransaction: (tx) =>
-        set((s) => ({ transactions: [tx, ...s.transactions] })),
+        set((state) => ({ transactions: [tx, ...state.transactions] })),
 
       disconnect: () =>
         set({
@@ -168,8 +191,13 @@ export const useWalletStore = create<WalletState & WalletActions>()(
           transactions: [],
           pendingComits: [],
           activeView: 'dashboard',
+          universalWallet: null,
         }),
+
+      setUniversalWallet: (wallet) => set({ universalWallet: wallet }),
+
+      setEvmChainCount: (count) => set({ evmChainCount: count }),
     }),
-    { name: 'x3-wallet-storage' },
+    { name: 'atlas-universal-wallet' },
   ),
 );

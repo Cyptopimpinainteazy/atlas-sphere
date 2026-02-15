@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/polkawallet-plugin",
+  "name": "@atlas-sphere/x3-wallet",
   "version": "0.1.0",
   "description": "Polkawallet JS API plugin for Atlas Sphere x3chain — wraps @polkadot/api for x3vm, atomic trades, x3 lang, flashloans, governance, and all Atlas Sphere pallets",
   "main": "dist/main.js",

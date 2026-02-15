@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/mynta.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mynta Wallet</title>
+    <style>
+      /* Critical inline CSS - ensures something is visible even if main CSS fails */
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { 
+        height: 100%; 
+        width: 100%;
+        background: #0a0a0f;
+        color: white;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #root { min-height: 100%; }
+      
+      /* Loading state */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a0f;
+        z-index: 9999;
+      }
+      #initial-loader.hidden { display: none; }
+      #initial-loader h1 {
+        font-size: 28px;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      #initial-loader .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #222;
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      #initial-loader .status {
+        margin-top: 16px;
+        color: #666;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Initial loading indicator - hidden once React mounts -->
+    <div id="initial-loader">
+      <h1>🪙 Mynta Wallet</h1>
+      <div class="spinner"></div>
+      <p class="status">Loading...</p>
+    </div>
+    
+    <!-- React root -->
+    <div id="root"></div>
+    
+    <script>
+      // Minimal pre-React logging
+      console.log('[HTML] Document loaded, waiting for main.tsx...');
+      
+      // Hide loader once React has mounted
+      var checkMounted = setInterval(function() {
+        var root = document.getElementById('root');
+        var loader = document.getElementById('initial-loader');
+        if (root && root.children.length > 0 && loader) {
+          console.log('[HTML] React mounted, hiding loader');
+          loader.classList.add('hidden');
+          clearInterval(checkMounted);
+        }
+      }, 100);
+      
+      // Timeout after 15 seconds
+      setTimeout(function() {
+        clearInterval(checkMounted);
+        var loader = document.getElementById('initial-loader');
+        var root = document.getElementById('root');
+        if (loader && (!root || root.children.length === 0)) {
+          loader.innerHTML = '<h1 style="color: #ff6b6b;">Failed to Load</h1><p style="color: #888;">Check console (F12) for errors</p>';
+        }
+      }, 15000);
+    </script>
+    
+    <!-- Main application - uses type="module" for ES modules -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

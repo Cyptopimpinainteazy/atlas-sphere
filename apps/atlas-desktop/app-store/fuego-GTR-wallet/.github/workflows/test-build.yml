@@ -1,0 +1,99 @@
+name: Test Build - CI Fixes
+
+on:
+  push:
+    branches: [ cursor/install-dependencies-with-npm-ci-b638 ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            patchelf \
+            build-essential \
+            curl \
+            wget \
+            file
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # macOS dependencies are handled by Tauri automatically
+          echo "macOS dependencies handled by Tauri"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Test Rust compilation (check only)
+        working-directory: src-tauri
+        run: cargo check --verbose
+
+      - name: Build application (debug mode for speed)
+        run: npm run tauri build -- --debug
+        continue-on-error: true
+        id: build_step
+
+      - name: Report build status
+        run: |
+          if [ "${{ steps.build_step.outcome }}" == "success" ]; then
+            echo "✅ Build successful on ${{ matrix.os }}"
+          else
+            echo "❌ Build failed on ${{ matrix.os }}"
+            exit 1
+          fi
+
+      - name: Upload build artifacts (if successful)
+        if: steps.build_step.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-bundle-${{ matrix.os }}-debug
+          path: |
+            src-tauri/target/debug/bundle/**
+          if-no-files-found: warn

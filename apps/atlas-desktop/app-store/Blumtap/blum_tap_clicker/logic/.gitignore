@@ -1,0 +1,10 @@
+build
+dist
+blumtap.spec
+clicker.onefile-build
+clicker.dist
+clicker.build
+clicker.exe
+blumtap.exe
+commandfornuitka.txt
+image2base64code.txt

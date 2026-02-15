@@ -1,0 +1,7 @@
+# pack-refs with: peeled fully-peeled sorted 
+6e89c8b8551d00daf0e6a834a597420bdf3017b2 refs/remotes/origin/dependabot/npm_and_yarn/aera-wallet/tauri-apps/api-2.10.1
+c41c708b4d107bd1afe3255d0bf4a82fa33b0267 refs/remotes/origin/dependabot/npm_and_yarn/aera-wallet/tauri-apps/cli-2.10.0
+d4224add7081f4869b106b0eedf2d964fac5e8b4 refs/remotes/origin/dependabot/npm_and_yarn/aera-wallet/tauri-apps/plugin-shell-2.3.5
+d6dfd221af5689d3d37f7d1023c7910f420afe34 refs/remotes/origin/dependabot/npm_and_yarn/aera-wallet/typescript-5.9.3
+c5f94c8601becf8cf81fff91e2d84a5e69f3f698 refs/remotes/origin/dependabot/npm_and_yarn/aera-wallet/vite-7.3.1
+91a5b52d1dceba8dff6c17d8ccb3345819fbbec8 refs/remotes/origin/master

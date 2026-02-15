@@ -39,6 +39,7 @@ const BottomNavBar: React.FC<{
     { appId: "dex-orderbook", label: "Orderbook", emoji: "📊" },
     { appId: "infrastructure", label: "Infrastructure", emoji: "🏗️" },
     { appId: "system-monitoring", label: "System Monitor", emoji: "📈" },
+    { appId: "admin-dashboard", label: "Admin", emoji: "🛡️" },
     { appId: "documentation", label: "Documentation", emoji: "📚" },
   ];
 

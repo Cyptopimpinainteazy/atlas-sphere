@@ -122,6 +122,14 @@ layer = "API"
 tested_by = ["packages/ts-sdk/tests/x3.test.ts::X3SettlementClient", "packages/ts-sdk/tests/x3.test.ts::X3AtomicTradeClient", "packages/ts-sdk/tests/x3.test.ts::X3DomainClient", "packages/ts-sdk/tests/x3.test.ts::X3VerifierClient"]
 property = "client.method(args) produces correct extrinsic targeting runtime pallet"
 
+[[invariant]]
+id = "API-TS-SDK-001"
+description = "TypeScript SDK can connect to a live Atlas node and perform basic RPC queries (chain info, block number, balance, nonce)"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/ts-sdk/tests/live.integration.test.ts::connects to live node and queries basic RPCs"]
+property = "connect(endpoint) && getChainInfo() && getBlockNumber() && getBalance() succeed when node reachable"
+
 # ──────────────────────────────────────────────────────────────────
 # DEPIN-GPU-001: DePIN GPU Marketplace
 # Proposal: openspec/changes/DEPIN-GPU-001/proposal.md

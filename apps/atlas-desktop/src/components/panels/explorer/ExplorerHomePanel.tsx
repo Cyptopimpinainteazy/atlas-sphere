@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Search, Box, ArrowRightLeft, BarChart3, Shield, Wallet, Coins, Vote, Clock, CheckCircle } from 'lucide-react';
 
-const latestBlocks = [
+import { useEffect } from 'react';
+import { useRecentBlocks, useNewHeads } from '@/hooks/useSubstrate';
+
+const latestBlocksFallback = [
   { number: 1284520, hash: '0xa4f8e2d9...3456', extrinsics: 24, time: '6s ago' },
   { number: 1284519, hash: '0x3b5c91e7...7890', extrinsics: 18, time: '12s ago' },
   { number: 1284518, hash: '0xd7e2f8a4...2345', extrinsics: 31, time: '18s ago' },
@@ -36,6 +39,29 @@ const quickLinks = [
 
 const ExplorerHomePanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Live blocks (updates via SWR hook)
+  const { data: liveBlocks, isLoading: blocksLoading, mutate: mutateBlocks } = useRecentBlocks(6);
+  const { data: latestHead } = useNewHeads();
+
+  // Revalidate recent blocks on new head
+  useEffect(() => {
+    if (latestHead) mutateBlocks?.();
+  }, [latestHead, mutateBlocks]);
+
+  // helpers
+  const shortHash = (h?: string) => (h ? (h.length > 14 ? `${h.slice(0, 10)}…${h.slice(-6)}` : h) : '—');
+  const timeAgo = (ts?: number) => {
+    if (!ts) return '—';
+    const diff = Math.max(0, Math.floor((Date.now() - Number(ts)) / 1000));
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return `${Math.floor(diff / 3600)}h ago`;
+  };
+
+  const blocksToShow = (liveBlocks && liveBlocks.length > 0)
+    ? liveBlocks.map((b) => ({ number: b.number, hash: shortHash(b.hash), extrinsics: b.extrinsicsCount ?? 0, time: timeAgo(b.timestamp) }))
+    : latestBlocksFallback; 
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a0f] text-gray-300">
@@ -83,20 +109,37 @@ const ExplorerHomePanel: React.FC = () => {
               <h3 className="text-sm font-semibold text-white">Latest Blocks</h3>
             </div>
             <div className="divide-y divide-[#1a1a1a]/50">
-              {latestBlocks.map((b, i) => (
-                <div key={i} className="px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-mono text-[#ff6b35]">#{b.number.toLocaleString()}</span>
-                      <p className="text-xs font-mono text-gray-500 mt-0.5">{b.hash}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-300">{b.extrinsics} extrinsics</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1 justify-end"><Clock size={9} /> {b.time}</p>
+              {/* Use live recent blocks when available; fall back to mock */}
+              {(() => {
+                const { data: liveBlocks, isLoading } = useRecentBlocks(6);
+                // helper: short hash
+                const shortHash = (h?: string) => (h ? (h.length > 14 ? `${h.slice(0, 10)}…${h.slice(-6)}` : h) : '—');
+                const timeAgo = (ts?: number) => {
+                  if (!ts) return '—';
+                  const diff = Math.max(0, Math.floor((Date.now() - Number(ts)) / 1000));
+                  if (diff < 60) return `${diff}s ago`;
+                  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                  return `${Math.floor(diff / 3600)}h ago`;
+                };
+                const blocksToShow = (liveBlocks && liveBlocks.length > 0)
+                  ? liveBlocks.map((b) => ({ number: b.number, hash: shortHash(b.hash), extrinsics: b.extrinsicsCount ?? b.extrinsicsCount ?? 0, time: timeAgo(b.timestamp) }))
+                  : latestBlocksFallback;
+
+                return blocksToShow.map((b, i) => (
+                  <div key={i} className="px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-mono text-[#ff6b35]">#{Number(b.number).toLocaleString()}</span>
+                        <p className="text-xs font-mono text-gray-500 mt-0.5">{b.hash}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-300">{b.extrinsics} extrinsics</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1 justify-end"><Clock size={9} /> {b.time}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ));
+              })()}
             </div>
           </div>
 

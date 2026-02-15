@@ -18,7 +18,14 @@ export const bootstrapKing = async () => {
  * socialService.ts — Tauri invoke wrappers for the social network backend.
  * Every function maps 1:1 to a Rust #[tauri::command].
  */
-import { invoke } from "@tauri-apps/api/core";
+// Lazy guarded tauri invoke helper
+async function tauriInvoke<T>(cmd: string, args?: any): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(cmd, args);
+} 
 
 /* ─── Types ──────────────────────────────────────── */
 

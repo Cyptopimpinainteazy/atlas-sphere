@@ -173,6 +173,7 @@ jobs:
           - node
           - rpc-gateway
           - analytics
+          - explorer
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -261,8 +262,10 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           # Update image tags in deployment
-          sed -i "s|atlas-sphere/node:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-node:${{ github.sha }}|g" \
-            deployment/kubernetes/production-deployment.yaml
+          sed -i "s|atlas-sphere/node:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-node:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|atlas-sphere/rpc-gateway:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-rpc-gateway:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|atlas-sphere/analytics:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-analytics:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|atlas-sphere/explorer:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
           
           kubectl apply -f deployment/kubernetes/production-deployment.yaml
           
@@ -270,6 +273,7 @@ jobs:
           kubectl rollout status deployment/bootnode -n atlas-sphere --timeout=5m
           kubectl rollout status statefulset/validator -n atlas-sphere --timeout=5m
           kubectl rollout status deployment/analytics -n atlas-sphere --timeout=5m
+          kubectl rollout status deployment/explorer -n atlas-sphere --timeout=3m
 
       - name: Verify deployment
         run: |

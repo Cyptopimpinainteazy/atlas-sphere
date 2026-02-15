@@ -1,0 +1,4 @@
+# pack-refs with: peeled fully-peeled sorted 
+f9d36e6352eb5a05544aaee92a0b56368b67c82e refs/remotes/origin/main
+76a6c4187342b79b93625e23d414ea4823011ebc refs/remotes/origin/release
+76a6c4187342b79b93625e23d414ea4823011ebc refs/tags/app-v1.0.0

@@ -20,6 +20,10 @@ import { AppModeProvider } from "./contexts/AppModeContext";
 import SalesPage from "./pages/sales";
 import SocialApp from "./pages/social/SocialApp";
 import CrmApp from "./pages/crm/CrmApp";
+import { AppStorePage } from "./pages/appstore/AppStorePage";
+import Test from "./Test";
+
+console.log("📦 App.tsx loaded");
 
 /* ── Error Boundary ────────────────────────────────────────── */
 
@@ -92,9 +96,11 @@ class ErrorBoundary extends Component<
 /* ── App Component ─────────────────────────────────────────── */
 
 const AppContent: React.FC = () => {
+  console.log("🎨 AppContent: Component rendering");
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
 
   useEffect(() => {
+    console.log("🎨 AppContent: useEffect running");
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.altKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
@@ -108,9 +114,11 @@ const AppContent: React.FC = () => {
 
   return (
     <Routes>
+      <Route path="/test" element={<Test />} />
       <Route path="/sales" element={<SalesPage />} />
       <Route path="/social/*" element={<SocialApp />} />
       <Route path="/crm/*" element={<CrmApp />} />
+      <Route path="/appstore" element={<AppStorePage />} />
       <Route path="*" element={
         <ThemeProvider>
           {/* Performance Monitor - Press P to toggle */}
@@ -147,6 +155,7 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  console.log("🚀 App: Component rendering");
   return (
     <ErrorBoundary>
       <AppModeProvider>

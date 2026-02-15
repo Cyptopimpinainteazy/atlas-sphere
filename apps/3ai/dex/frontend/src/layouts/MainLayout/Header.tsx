@@ -1,6 +1,7 @@
 import { Box, Flex, IconButton, useColorMode, useColorModeValue, Image } from '@chakra-ui/react';
 import { MoonIcon, SunIcon } from '@chakra-ui/icons';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
+import { useState } from 'react';
 
 export const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -40,6 +41,19 @@ export const Header = () => {
             variant="ghost"
             mr={2}
           />
+
+          {/* Network selector — persists atlas_active_network and reloads to pick up endpoints */}
+          <select
+            defaultValue={typeof window !== 'undefined' ? (window.localStorage.getItem('atlas_active_network') || (process.env.NODE_ENV === 'development' ? 'local' : 'testnet')) : 'testnet'}
+            onChange={(e) => { if (typeof window !== 'undefined') { window.localStorage.setItem('atlas_active_network', e.target.value); window.location.reload(); } }}
+            className="mr-3 px-2 py-1 text-sm rounded bg-gray-100 dark:bg-gray-700"
+            title="Select network"
+          >
+            <option value="local">Local</option>
+            <option value="testnet">Testnet</option>
+            <option value="mainnet">Mainnet</option>
+          </select>
+
           <WalletConnectButton />
         </Flex>
       </Flex>

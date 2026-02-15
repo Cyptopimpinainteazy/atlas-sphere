@@ -1,0 +1,11 @@
+.env
+.idea
+.git
+.vscode
+poetry.lock
+db.sqlite3
+tests
+__init__.py
+git-assets/blum tap1.mp4
+blumtap_ssh
+blumtap_ssh.pub

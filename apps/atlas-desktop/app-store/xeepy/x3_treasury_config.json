@@ -1,0 +1,44 @@
+{
+  "enabled": true,
+  "treasury_split_percentage": 50,
+  "x3_treasury_address": "0xX3TreasuryMainWallet123456789abcdef",
+  "chain": "multi-chain",
+  "supported_chains": {
+    "ethereum": "0xX3TreasuryMainWallet123456789abcdef",
+    "bsc": "0xX3TreasuryBSCWallet123456789abcdef",
+    "solana": "X3TreasurySolanaPublicKey123456789abcdef"
+  },
+  "app_info": {
+    "name": "Xeepy Twitter Automation",
+    "version": "1.0.0",
+    "type": "automation_tool",
+    "revenue_source": "social_media_automation"
+  },
+  "transaction_logging": {
+    "enabled": true,
+    "log_file": "treasury_transactions.log",
+    "include_campaign_info": true,
+    "include_automation_metrics": true
+  },
+  "routing_config": {
+    "auto_split": true,
+    "split_on_revenue": true,
+    "minimum_split_amount_usd": 5.0,
+    "payment_interval": "daily"
+  },
+  "integration": {
+    "method": "revenue_interceptor",
+    "hook_location": "payment_processor",
+    "wrapper_script": "x3_treasury_integration.py"
+  },
+  "monetization": {
+    "enabled": true,
+    "services": [
+      "follower_growth",
+      "content_automation",
+      "analytics_reporting",
+      "engagement_boosting"
+    ],
+    "pricing_model": "subscription_or_revenue_share"
+  }
+}

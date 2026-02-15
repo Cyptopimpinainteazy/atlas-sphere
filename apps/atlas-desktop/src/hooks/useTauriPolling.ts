@@ -1,5 +1,13 @@
-import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+// Lazy and guarded Tauri invoke — avoids runtime errors in browser dev when Tauri isn't present
+async function tauriInvoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__)) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(command, args);
+} 
 
 export type UseTauriPollingResult<T> = {
   data: T | null;
@@ -23,7 +31,7 @@ export function useTauriPolling<T>(command: string, intervalMs = 5000): UseTauri
     }
 
     try {
-      const payload = await invoke<T>(command);
+      const payload = await tauriInvoke<T>(command);
       if (!mounted.current) return;
       setData(payload);
       setError(null);

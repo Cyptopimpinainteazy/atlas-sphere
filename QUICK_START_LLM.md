@@ -218,6 +218,9 @@ Edit `llm-config.json` to customize:
       "temperature": 0.7
     }
   }
+```
+
+Embedding compatibility note: if an external tool (for example RooCode) sends a Qwen LLM model name to the Ollama embeddings endpoint, the wrapper will transparently rewrite that model to an embedding-capable model. Configure the fallback embedding model with the environment variable `OLLAMA_EMBEDDING_FALLBACK_MODEL` (default: `mxbai-embed-large`). This lets tools that pass `qwen*` model names still receive valid embeddings.
 }
 ```
 

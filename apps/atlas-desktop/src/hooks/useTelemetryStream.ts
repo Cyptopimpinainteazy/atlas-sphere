@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+
+// Lazy/guarded Tauri invoke to avoid browser crashes when Tauri is not available
+async function tauriInvoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  if (typeof window === 'undefined' || (!(window as any).__TAURI_INTERNALS__ && !(window as any).__TAURI__))) {
+    throw new Error('Tauri runtime not available');
+  }
+  const mod = await import('@tauri-apps/api/core');
+  return mod.invoke<T>(command, args);
+}
+
 import { ipcListen } from "@/services/ipcService";
 import type {
   TelemetrySnapshot,
@@ -12,10 +21,10 @@ import { TELEMETRY_EVENT } from "@/types/panelTelemetry";
 
 async function loadSnapshot(): Promise<TelemetrySnapshot> {
   const [swarm, network, storage, ide] = await Promise.all([
-    invoke<SwarmHealthData>("launch_swarm_health"),
-    invoke<NetworkControlData>("launch_network_control"),
-    invoke<StorageMonitorData>("launch_storage_monitor"),
-    invoke<IdeTelemetryData>("launch_ide_ipc"),
+    tauriInvoke<SwarmHealthData>("launch_swarm_health"),
+    tauriInvoke<NetworkControlData>("launch_network_control"),
+    tauriInvoke<StorageMonitorData>("launch_storage_monitor"),
+    tauriInvoke<IdeTelemetryData>("launch_ide_ipc"),
   ]);
 
   return {

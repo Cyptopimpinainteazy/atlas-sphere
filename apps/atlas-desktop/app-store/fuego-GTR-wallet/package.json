@@ -1,0 +1,59 @@
+{
+  "name": "fuegogt-wallet",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FuegoGT Wallet - Modern, secure cryptocurrency wallet for Fuego (XFG)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "test": "echo \"No tests specified\" && exit 0",
+    "test:coverage": "echo \"No coverage tests specified\" && exit 0",
+    "test:integration": "echo \"No integration tests specified\" && exit 0",
+    "test:performance": "echo \"No performance tests specified\" && exit 0",
+    "test:a11y": "echo \"No accessibility tests specified\" && exit 0",
+    "lint": "echo \"No linting configured\" && exit 0",
+    "type-check": "tsc --noEmit",
+    "format": "echo \"No formatting configured\" && exit 0",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix"
+  },
+  "keywords": [
+    "cryptocurrency",
+    "wallet",
+    "fuego",
+    "xfg",
+    "cryptonote",
+    "tauri",
+    "rust",
+    "desktop",
+    "security"
+  ],
+  "author": "Fuego Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fuego-wallet/fuego-GTR-wallet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fuego-wallet/fuego-GTR-wallet/issues"
+  },
+  "homepage": "https://github.com/fuego-wallet/fuego-GTR-wallet#readme",
+  "dependencies": {
+    "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-opener": "^2.5.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

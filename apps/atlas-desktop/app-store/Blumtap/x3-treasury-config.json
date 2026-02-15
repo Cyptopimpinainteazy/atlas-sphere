@@ -1,0 +1,29 @@
+{
+  "treasury": {
+    "enabled": true,
+    "x3_wallet_address": "X3Treasury_Blum_Earnings",
+    "share_percentage": 50,
+    "comment": "50% of all earned Blum tokens route to X3 Treasury"
+  },
+  "blum_config": {
+    "auto_click": true,
+    "click_interval_ms": 100,
+    "multi_account": false,
+    "anti_detection": true
+  },
+  "rewards": {
+    "withdraw_threshold": 100,
+    "auto_withdraw": true,
+    "treasury_split": {
+      "treasury_wallet": "X3Treasury_Blum_Earnings",
+      "user_wallet": "USER_WALLET_ADDRESS",
+      "split_ratio": 50
+    }
+  },
+  "logging": {
+    "enabled": true,
+    "log_file": "./logs/blum-treasury.log",
+    "track_earnings": true,
+    "track_withdrawals": true
+  }
+}

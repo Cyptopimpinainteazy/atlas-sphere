@@ -12,14 +12,14 @@ import { AtlasDexClient } from '@atlas-sphere/atomic-swap-sdk';
 
 // Default DEX configuration — connects to local 3ai chain + Atlas Substrate
 const DEFAULT_CONFIG = {
-  substrateRpc: 'http://127.0.0.1:9944',
-  substrateWs: 'ws://127.0.0.1:9944',
+  substrateRpc: (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.atlas-sphere.io:9944',
+  substrateWs: (import.meta.env.VITE_RPC_WS as string) || 'wss://rpc.atlas-sphere.io:9944',
   chainEndpoints: {
     ethereum: import.meta.env.VITE_ETH_RPC || 'https://eth.llamarpc.com',
     'ethereum-sepolia': 'https://rpc.sepolia.org',
     solana: import.meta.env.VITE_SOL_RPC || 'https://api.mainnet-beta.solana.com',
     bitcoin: import.meta.env.VITE_BTC_API || 'https://blockstream.info/api',
-    'atlas-substrate': 'http://127.0.0.1:9944',
+    'atlas-substrate': (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.atlas-sphere.io:9944',
     polygon: 'https://polygon-rpc.com',
     arbitrum: 'https://arb1.arbitrum.io/rpc',
     optimism: 'https://mainnet.optimism.io',

@@ -8,7 +8,22 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { Header, SignedBlock } from '@polkadot/types/interfaces';
 
-const WS_ENDPOINT = 'ws://127.0.0.1:9944';
+function resolveWsEndpoint(): string {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('atlas_active_network');
+      if (stored === 'local') return (import.meta.env.VITE_RPC_WS_LOCAL as string) || 'ws://127.0.0.1:9944';
+      if (stored === 'testnet') return 'wss://rpc.testnet.atlas-sphere.io:9944';
+      if (stored === 'mainnet') return 'wss://rpc.atlas-sphere.io:9944';
+    }
+  } catch (err) {
+    /* ignore */
+  }
+  const envWs = (import.meta.env.VITE_RPC_WS as string) || (import.meta.env.VITE_RPC_WS_LOCAL as string);
+  const fallback = envWs || 'wss://rpc.atlas-sphere.io:9944';
+  console.log('[Substrate] Resolved WS endpoint →', fallback);
+  return fallback;
+}
 
 const ATLAS_TYPES = {
   Comit: {
@@ -100,7 +115,8 @@ export async function getApi(): Promise<ApiPromise> {
   if (apiInstance?.isConnected) return apiInstance;
   if (connectionPromise) return connectionPromise;
 
-  connectionPromise = createConnection(WS_ENDPOINT);
+  const endpoint = resolveWsEndpoint();
+  connectionPromise = createConnection(endpoint);
   try {
     apiInstance = await connectionPromise;
     return apiInstance;
@@ -143,5 +159,30 @@ export async function disconnect(): Promise<void> {
 }
 
 export function isConnected(): boolean { return apiInstance?.isConnected ?? false; }
+
+/**
+ * Change app-level network (persists to localStorage) and reconnect
+ */
+export async function setAppNetwork(network: 'local' | 'testnet' | 'mainnet'): Promise<void> {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('atlas_active_network', network);
+    }
+  } catch (err) {
+    console.warn('[Substrate] setAppNetwork failed to write localStorage', err);
+  }
+
+  // Force reconnect to pick up new endpoint
+  try {
+    await disconnect();
+  } catch (err) {
+    /* ignore */
+  }
+  try {
+    await getApi();
+  } catch (err) {
+    console.error('[Substrate] Reconnect after setAppNetwork failed', err);
+  }
+}
 
 export type { ApiPromise, Header, SignedBlock };

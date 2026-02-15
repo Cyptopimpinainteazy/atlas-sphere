@@ -66,6 +66,7 @@ members = [
     "crates/contention-predictor",
     "crates/private-mempool",
     "crates/confidential-gpu",
+    "apps/atlas-desktop/app-store/fuego-GTR-wallet/src-tauri",
 ]
 default-members = ["node"]
 resolver = "2"

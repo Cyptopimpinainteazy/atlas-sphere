@@ -1,0 +1,24 @@
+[package]
+name = "rig-client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+shared = { path = "../shared" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+reqwest = { workspace = true }
+uuid = { workspace = true }
+dotenv = { workspace = true }
+rustyline = "17.0.1"
+colored = "3.0.0"
+anthropic = "0.0.8"
+anthropic-sdk-rust = "0.1.1"
+async-trait = "0.1"
+futures = "0.3"
+regex = "1.5"
