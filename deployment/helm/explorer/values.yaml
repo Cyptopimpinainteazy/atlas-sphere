@@ -28,6 +28,15 @@ autoscaling:
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
 
+# Canary settings (NGINX ingress canary annotations)
+canary:
+  enabled: false
+  image:
+    tag: ""          # optional override for canary image tag
+  replicas: 1
+  weight: 10         # percentage of traffic routed to canary when enabled
+  resources: {}
+
 resources:
   requests:
     cpu: "250m"

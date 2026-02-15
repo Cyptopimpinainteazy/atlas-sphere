@@ -295,18 +295,26 @@ jobs:
           kubectl get services -n atlas-sphere
           kubectl get ingress -n atlas-sphere
 
-      - name: Run smoke tests
+      - name: Run smoke tests (RPC, analytics, explorer) and rollback on failure
         run: |
+          set -euo pipefail
+
           # Test RPC endpoints
           curl -f https://rpc.testnet.atlas-sphere.io/rpc \
             -H "Content-Type: application/json" \
-            -d '{"id":1, "jsonrpc":"2.0", "method":"system_health"}' \
-            || exit 1
-          
+            -d '{"id":1, "jsonrpc":"2.0", "method":"system_health"}'
+
           # Test analytics service
           kubectl port-forward -n atlas-sphere svc/analytics 8080:8080 &
           sleep 5
-          curl -f http://localhost:8080/health || exit 1
+          curl -f http://localhost:8080/health
+
+          # Test Explorer UI and rollback on failure
+          if ! curl -fsS --max-time 10 https://{{ env.EXPLORER_HOST:-explorer.testnet.atlas-sphere.io }}/ ; then
+            echo "Explorer smoke test FAILED — rolling back Helm release"
+            helm rollback explorer --namespace atlas-sphere || true
+            exit 1
+          fi
 
   # ============================================================================
   # Integration Tests
