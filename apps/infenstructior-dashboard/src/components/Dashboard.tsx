@@ -7,9 +7,10 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 interface DashboardProps {
   onLogout: () => void;
   onAdmin?: () => void;
+  onLeaderboard?: () => void;
 }
 
-export function Dashboard({ onLogout, onAdmin }: DashboardProps) {
+export function Dashboard({ onLogout, onAdmin, onLeaderboard }: DashboardProps) {
   const [stats, setStats] = useState<ValidatorStats | null>(null);
   const [bridgeStats, setBridgeStats] = useState<BridgeStats | null>(null);
   const [gpuLanes, setGpuLanes] = useState<GPULaneHealth[]>([]);
@@ -115,6 +116,15 @@ export function Dashboard({ onLogout, onAdmin }: DashboardProps) {
             <p className="text-gray-400">Validator: {api.getValidatorId()}</p>
           </div>
           <div className="flex items-center gap-3">
+            {onLeaderboard && (
+              <button
+                onClick={onLeaderboard}
+                className="flex items-center gap-2 px-4 py-2 text-yellow-300 hover:text-white bg-yellow-900/30 hover:bg-yellow-800/40 border border-yellow-700/50 rounded-lg transition-colors"
+              >
+                🏆
+                TPS Leaderboard
+              </button>
+            )}
             {onAdmin && (
               <button
                 onClick={onAdmin}

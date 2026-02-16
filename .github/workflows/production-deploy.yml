@@ -266,7 +266,28 @@ jobs:
           sed -i "s|atlas-sphere/rpc-gateway:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-rpc-gateway:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
           sed -i "s|atlas-sphere/analytics:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-analytics:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
           sed -i "s|atlas-sphere/explorer:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
-          
+
+          # Deploy Canary release for Explorer (Helm)
+          helm upgrade --install explorer-canary deployment/helm/explorer \
+            --namespace atlas-sphere --create-namespace \
+            --set canary.enabled=true \
+            --set canary.image.tag=${{ github.sha }} \
+            --set ingress.host=canary.explorer.testnet.atlas-sphere.io \
+            --wait --timeout 120s
+
+          # Run quick canary smoke-test (port-forward canary service)
+          kubectl port-forward -n atlas-sphere svc/explorer-canary 3001:3000 &
+          PF_PID=$!; sleep 3
+          if ! curl -fsS http://localhost:3001/; then
+            echo "Canary smoke test FAILED - uninstalling canary and aborting"
+            kill $PF_PID || true
+            helm uninstall explorer-canary -n atlas-sphere || true
+            exit 1
+          fi
+          kill $PF_PID || true
+
+          echo "Canary smoke test passed — proceeding with production deployment"
+
           kubectl apply -f deployment/kubernetes/production-deployment.yaml
           
           # Wait for rollout
@@ -288,6 +309,10 @@ jobs:
             --set image.tag=${{ github.sha }} \
             --wait --timeout 120s
 
+      - name: Promote canary (remove canary release)
+        run: |
+          # Main release now serving the validated image; remove canary to stop routing
+          helm uninstall explorer-canary -n atlas-sphere || true
 
       - name: Verify deployment
         run: |

@@ -4,9 +4,10 @@ import { LoginPage } from './components/LoginPage';
 import { Dashboard } from './components/Dashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { AdminDashboard } from './components/AdminDashboard';
+import { TpsLeaderboard } from './components/TpsLeaderboard';
 import { api } from './api';
 
-type Page = 'register' | 'login' | 'dashboard' | 'admin-login' | 'admin';
+type Page = 'register' | 'login' | 'dashboard' | 'admin-login' | 'admin' | 'leaderboard';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('register');
@@ -74,7 +75,10 @@ function App() {
         <LoginPage onLoginSuccess={handleLoginSuccess} onBackToRegister={goToRegister} />
       )}
       {currentPage === 'dashboard' && isAuthenticated && (
-        <Dashboard onLogout={handleLogout} onAdmin={handleAdminClick} />
+        <Dashboard onLogout={handleLogout} onAdmin={handleAdminClick} onLeaderboard={() => setCurrentPage('leaderboard')} />
+      )}
+      {currentPage === 'leaderboard' && isAuthenticated && (
+        <TpsLeaderboard onBack={() => setCurrentPage('dashboard')} />
       )}
       {currentPage === 'admin-login' && isAuthenticated && (
         <AdminLogin

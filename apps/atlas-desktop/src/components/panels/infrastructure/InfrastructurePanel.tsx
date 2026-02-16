@@ -5,6 +5,7 @@
  * Connects to the same backend endpoints as the standalone infenstructior-dashboard.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDesktopStore } from '@/stores/desktopStore';
 
 /* ── Types ─────────────────────────────────────────── */
 interface BridgeStats {
@@ -36,9 +37,29 @@ interface ChainStats {
   errors: number;
 }
 
+interface RpcPoolStats {
+  total_endpoints: number;
+  healthy_endpoints: number;
+  chains_covered: number;
+  combined_rps: number;
+  avg_latency_ms: number;
+  min_latency_ms: number;
+  by_provider: { provider: string; count: number; avg_latency: number; rps: number }[];
+  top_fastest: { chain_id: string; url: string; provider: string; latency_ms: number }[];
+  gas_savings: {
+    infura_growth_equiv: number;
+    alchemy_growth_equiv: number;
+    quicknode_build_equiv: number;
+    moralis_pro_equiv: number;
+    total_monthly_saved: number;
+    your_cost: number;
+  };
+}
+
 /* ── API helpers ───────────────────────────────────── */
 const BRIDGE_URL = 'http://localhost:9999';
 const RPC_PROXY_URL = 'http://localhost:8899';
+const CHAIN_DB_URL = 'http://localhost:7070';
 
 async function fetchJSON<T>(url: string): Promise<T | null> {
   try {
@@ -53,13 +74,15 @@ const InfrastructurePanel: React.FC = () => {
   const [bridge, setBridge] = useState<BridgeStats | null>(null);
   const [gpuLanes, setGpuLanes] = useState<GPULane[]>([]);
   const [chain, setChain] = useState<ChainStats | null>(null);
+  const [rpcPool, setRpcPool] = useState<RpcPoolStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [tpsHistory, setTpsHistory] = useState<number[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'partial' | 'offline'>('offline');
+  const openWindow = useDesktopStore((s) => s.openWindow);
 
   const loadStats = useCallback(async () => {
-    const [bridgeData, gpuData, chainData] = await Promise.all([
+    const [bridgeData, gpuData, chainData, rpcData] = await Promise.all([
       fetchJSON<BridgeStats>(`${BRIDGE_URL}/stats`),
       fetchJSON<{ lanes: GPULane[] }>(`${BRIDGE_URL}/gpu/health`).then(d => {
         if (d && Array.isArray((d as any))) return d as unknown as GPULane[];
@@ -67,13 +90,15 @@ const InfrastructurePanel: React.FC = () => {
         return [];
       }).catch(() => [] as GPULane[]),
       fetchJSON<{ proxy: ChainStats }>(`${RPC_PROXY_URL}/stats`).then(d => d?.proxy ?? null).catch(() => null),
+      fetchJSON<RpcPoolStats>(`${CHAIN_DB_URL}/api/rpc/stats`),
     ]);
 
-    const hasAny = bridgeData || gpuData.length > 0 || chainData;
+    const hasAny = bridgeData || gpuData.length > 0 || chainData || rpcData;
     setConnectionStatus(
-      bridgeData && chainData ? 'connected' :
+      (bridgeData && chainData) || rpcData ? 'connected' :
       hasAny ? 'partial' : 'offline'
     );
+    if (rpcData) setRpcPool(rpcData);
 
     if (bridgeData) {
       setBridge(bridgeData);
@@ -131,6 +156,9 @@ const InfrastructurePanel: React.FC = () => {
         <span style={{ ...c.statusDot(connectionStatus === 'connected') as any, background: statusColors[connectionStatus] }} />
         <span style={{ fontSize: '0.72rem', color: statusColors[connectionStatus] }}>{statusLabel[connectionStatus]}</span>
         <span style={{ fontSize: '0.65rem', color: '#555', marginLeft: 8 }}>{lastUpdate}</span>
+        <button onClick={() => openWindow('airdrops', 'Airdrops & Faucets', '#ec4899')} style={{ background: '#4a1942', border: 'none', borderRadius: 6, padding: '3px 8px', color: '#ec4899', cursor: 'pointer', fontSize: '0.72rem', marginLeft: 4, fontWeight: 600 }}>
+          🪂 Airdrops
+        </button>
         <button onClick={loadStats} style={{ background: 'transparent', border: '1px solid #2a2f3e', borderRadius: 6, padding: '3px 8px', color: '#999', cursor: 'pointer', fontSize: '0.72rem', marginLeft: 4 }}>
           ↻ Refresh
         </button>
@@ -189,6 +217,48 @@ const InfrastructurePanel: React.FC = () => {
                   <div style={c.sub}>Success Rate: {(gpuLanes.reduce((s, g) => s + g.success_rate, 0) / gpuLanes.length).toFixed(1)}%</div>
                   <div style={c.sub}>Total Req: {formatNum(gpuLanes.reduce((s, g) => s + g.total_requests, 0))}</div>
                 </>
+              )}
+            </div>
+
+            {/* Gas Savings */}
+            <div style={{ ...c.card, border: rpcPool ? '1px solid #065f46' : '1px solid #1f2937', background: rpcPool ? 'linear-gradient(135deg, #064e3b22, #111827)' : '#111827' }}>
+              <div style={c.cardTitle as React.CSSProperties}>💰 Gas Savings</div>
+              {rpcPool ? (
+                <>
+                  <div style={{ ...c.bigNum, color: '#10b981' }}>
+                    ${rpcPool.gas_savings.total_monthly_saved.toLocaleString()}<span style={{ fontSize: '0.7rem', color: '#6b7280' }}>/mo saved</span>
+                  </div>
+                  <div style={c.sub}>vs Infura: ${rpcPool.gas_savings.infura_growth_equiv.toLocaleString()}/mo</div>
+                  <div style={c.sub}>vs Alchemy: ${rpcPool.gas_savings.alchemy_growth_equiv.toLocaleString()}/mo</div>
+                  <div style={c.sub}>vs QuickNode: ${rpcPool.gas_savings.quicknode_build_equiv.toLocaleString()}/mo</div>
+                  <div style={{ ...c.sub, color: '#10b981', fontWeight: 700, marginTop: 4 }}>Your cost: $0.00 🎯</div>
+                  <button onClick={() => openWindow('rpc-stats', 'RPC Pool Stats', '#f59e0b')} style={{ marginTop: 8, background: '#065f46', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#10b981', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, width: '100%' }}>
+                    📊 View Full Stats →
+                  </button>
+                </>
+              ) : (
+                <div style={{ color: '#555', fontSize: '0.72rem', marginTop: 8 }}>Chain DB offline</div>
+              )}
+            </div>
+
+            {/* RPC Pool */}
+            <div style={c.card}>
+              <div style={c.cardTitle as React.CSSProperties}>🔗 RPC Pool</div>
+              {rpcPool ? (
+                <>
+                  <div style={{ ...c.bigNum, color: '#3b82f6' }}>
+                    {rpcPool.healthy_endpoints.toLocaleString()}<span style={{ fontSize: '0.7rem', color: '#6b7280' }}> healthy</span>
+                  </div>
+                  <div style={c.sub}>Total: {rpcPool.total_endpoints.toLocaleString()} endpoints</div>
+                  <div style={c.sub}>Chains: {rpcPool.chains_covered.toLocaleString()}</div>
+                  <div style={c.sub}>Combined: {rpcPool.combined_rps.toLocaleString()} req/s</div>
+                  <div style={c.sub}>Avg latency: {rpcPool.avg_latency_ms}ms (best: {rpcPool.min_latency_ms}ms)</div>
+                  <button onClick={() => openWindow('rpc-stats', 'RPC Pool Stats', '#f59e0b')} style={{ marginTop: 8, background: '#1e3a5f', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600, width: '100%' }}>
+                    🔗 Full RPC Dashboard →
+                  </button>
+                </>
+              ) : (
+                <div style={{ color: '#555', fontSize: '0.72rem', marginTop: 8 }}>Chain DB offline</div>
               )}
             </div>
 
@@ -260,13 +330,92 @@ const InfrastructurePanel: React.FC = () => {
           )}
 
           {/* Offline notice */}
-          {connectionStatus === 'offline' && (
+          {connectionStatus === 'offline' && !rpcPool && (
             <div style={{ margin: '0 14px 14px', padding: 20, background: '#1f1215', border: '1px solid #7f1d1d', borderRadius: 10, textAlign: 'center' }}>
               <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>🔌</div>
               <div style={{ fontWeight: 700, color: '#fca5a5', marginBottom: 4 }}>Infrastructure Offline</div>
               <div style={{ color: '#9ca3af', fontSize: '0.75rem' }}>
                 Could not connect to Bridge ({BRIDGE_URL}) or RPC Proxy ({RPC_PROXY_URL}).
                 <br />Start the infrastructure services and this panel will auto-connect.
+              </div>
+            </div>
+          )}
+
+          {/* RPC Provider Breakdown + Fastest Endpoints */}
+          {rpcPool && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 14px 14px' }}>
+              {/* Top Providers */}
+              <div style={c.card}>
+                <div style={c.cardTitle as React.CSSProperties}>📊 Top RPC Providers</div>
+                <div style={{ fontSize: '0.7rem' }}>
+                  <div style={{ display: 'flex', padding: '4px 0', color: '#555', fontWeight: 600, borderBottom: '1px solid #1f2937' }}>
+                    <span style={{ flex: 1 }}>Provider</span>
+                    <span style={{ width: 50, textAlign: 'right' }}>Count</span>
+                    <span style={{ width: 60, textAlign: 'right' }}>RPS</span>
+                    <span style={{ width: 70, textAlign: 'right' }}>Avg ms</span>
+                  </div>
+                  {rpcPool.by_provider.slice(0, 10).map((p, i) => (
+                    <div key={i} style={{ display: 'flex', padding: '3px 0', borderBottom: '1px solid #1a1f2e' }}>
+                      <span style={{ flex: 1, color: '#e0e0e0' }}>{p.provider}</span>
+                      <span style={{ width: 50, textAlign: 'right', color: '#9ca3af' }}>{p.count}</span>
+                      <span style={{ width: 60, textAlign: 'right', color: '#3b82f6' }}>{p.rps}</span>
+                      <span style={{ width: 70, textAlign: 'right', color: p.avg_latency < 100 ? '#10b981' : p.avg_latency < 300 ? '#f59e0b' : '#ef4444' }}>
+                        {Math.round(p.avg_latency)}ms
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fastest Endpoints */}
+              <div style={c.card}>
+                <div style={c.cardTitle as React.CSSProperties}>🏆 Fastest Endpoints</div>
+                <div style={{ fontSize: '0.7rem' }}>
+                  <div style={{ display: 'flex', padding: '4px 0', color: '#555', fontWeight: 600, borderBottom: '1px solid #1f2937' }}>
+                    <span style={{ width: 50 }}>Latency</span>
+                    <span style={{ width: 80 }}>Provider</span>
+                    <span style={{ flex: 1 }}>Chain</span>
+                  </div>
+                  {rpcPool.top_fastest.map((ep, i) => (
+                    <div key={i} style={{ display: 'flex', padding: '3px 0', borderBottom: '1px solid #1a1f2e' }}>
+                      <span style={{ width: 50, color: '#10b981', fontWeight: 600 }}>{Math.round(ep.latency_ms)}ms</span>
+                      <span style={{ width: 80, color: '#9ca3af' }}>{ep.provider}</span>
+                      <span style={{ flex: 1, color: '#e0e0e0' }}>{ep.chain_id}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Gas Savings Comparison Bar */}
+          {rpcPool && (
+            <div style={{ padding: '0 14px 14px' }}>
+              <div style={{ ...c.card, background: 'linear-gradient(135deg, #064e3b15, #111827)' }}>
+                <div style={c.cardTitle as React.CSSProperties}>💰 Monthly Cost Comparison</div>
+                <div style={{ fontSize: '0.72rem', marginTop: 6 }}>
+                  {[
+                    { name: 'Infura Growth', cost: rpcPool.gas_savings.infura_growth_equiv, color: '#f59e0b' },
+                    { name: 'Alchemy Growth', cost: rpcPool.gas_savings.alchemy_growth_equiv, color: '#8b5cf6' },
+                    { name: 'QuickNode Build', cost: rpcPool.gas_savings.quicknode_build_equiv, color: '#3b82f6' },
+                    { name: 'Moralis Pro', cost: rpcPool.gas_savings.moralis_pro_equiv, color: '#ec4899' },
+                    { name: 'Atlas Sphere', cost: 0, color: '#10b981' },
+                  ].map((plan, i) => {
+                    const maxCost = Math.max(rpcPool.gas_savings.infura_growth_equiv, rpcPool.gas_savings.quicknode_build_equiv, 1);
+                    const pct = plan.cost === 0 ? 1 : (plan.cost / maxCost) * 100;
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <span style={{ width: 110, color: '#9ca3af', textAlign: 'right' }}>{plan.name}</span>
+                        <div style={{ flex: 1, height: 14, background: '#1f2937', borderRadius: 4, overflow: 'hidden', position: 'relative' as const }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: plan.color, borderRadius: 4, transition: 'width 0.5s ease' }} />
+                        </div>
+                        <span style={{ width: 80, textAlign: 'right', fontWeight: 700, color: plan.cost === 0 ? '#10b981' : plan.color }}>
+                          {plan.cost === 0 ? 'FREE 🎯' : `$${plan.cost.toLocaleString()}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

@@ -83,6 +83,8 @@ const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDa
 
 /* ── Infrastructure Dashboard (ported from apps/infenstructior-dashboard) ──── */
 const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructure/InfrastructurePanel"));
+const RpcStatsPanel = lazy(() => import("@/components/panels/infrastructure/RpcStatsPanel"));
+const AirdropsPanel = lazy(() => import("@/components/panels/infrastructure/AirdropsPanel"));
 
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
@@ -187,6 +189,10 @@ const PANEL_MAP: Record<string, ComponentType> = {
   /* ── Infrastructure Dashboard (ported from apps/infenstructior-dashboard) ── */
   "infrastructure":         InfrastructurePanel,
   "infra-dashboard":        InfrastructurePanel,
+  "rpc-stats":              RpcStatsPanel,
+  "rpc-pool":               RpcStatsPanel,
+  "airdrops":               AirdropsPanel,
+  "airdrops-faucets":       AirdropsPanel,
 
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */
   "health-dashboard":       HealthDashboardPanel,

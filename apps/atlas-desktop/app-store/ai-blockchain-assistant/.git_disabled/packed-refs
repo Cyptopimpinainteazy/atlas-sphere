@@ -1,6 +1,0 @@
-# pack-refs with: peeled fully-peeled sorted 
-9575db6aabc5b09e72eaa1e5d69a80026b89a064 refs/remotes/origin/dev
-9211eb53f1acd544889757ab21e6880320539086 refs/remotes/origin/feat/update-agent
-18bb45b1b730bb976698f2d87cb42089f75f9f10 refs/remotes/origin/fix/agent
-0a228a276a1adc3fde0fb43968e5cb4e07216326 refs/remotes/origin/main
-eab8ec7820a114b3de5a07770e55ee311d0f2877 refs/remotes/origin/rigclient

@@ -4,6 +4,7 @@ const REGISTRY_URL = import.meta.env.VITE_REGISTRY_URL || 'http://localhost:7001
 const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:9999';
 const RPC_PROXY_URL = import.meta.env.VITE_RPC_PROXY_URL || 'http://localhost:8899';
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:7777';
+const CHAIN_DB_URL = import.meta.env.VITE_CHAIN_DB_URL || 'http://localhost:7070';
 
 export interface ValidatorCredentials {
   validator_id: string;
@@ -508,6 +509,117 @@ class InfenstructiorAPI {
   getValidatorId(): string | null {
     return localStorage.getItem('infra_validator_id');
   }
+
+  // ── Chain DB API (no auth required) ──
+
+  async getRpcStats(): Promise<RpcPoolStats> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/rpc/stats`);
+    return response.data;
+  }
+
+  async getTpsLeaderboard(params: {
+    category?: string; sort?: string; order?: string;
+    ecosystem?: string; limit?: number; offset?: number;
+  } = {}): Promise<TpsLeaderboardResponse> {
+    const qp = new URLSearchParams();
+    if (params.category) qp.set('category', params.category);
+    if (params.sort) qp.set('sort', params.sort);
+    if (params.order) qp.set('order', params.order);
+    if (params.ecosystem) qp.set('ecosystem', params.ecosystem);
+    if (params.limit) qp.set('limit', String(params.limit));
+    if (params.offset) qp.set('offset', String(params.offset));
+    const response = await axios.get(`${CHAIN_DB_URL}/api/tps/leaderboard?${qp}`);
+    return response.data;
+  }
+
+  async getTpsBenchmarkStatus(): Promise<TpsBenchmarkStatus> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/tps/benchmark/status`);
+    return response.data;
+  }
+
+  async getAirdrops(): Promise<{ airdrops: unknown[]; stats: Record<string, unknown> }> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/airdrops`);
+    return response.data;
+  }
+
+  async getFaucets(): Promise<{ faucets: unknown[]; stats: Record<string, unknown> }> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/faucets`);
+    return response.data;
+  }
+
+  async getWallets(): Promise<{ wallets: unknown[]; stats: Record<string, unknown> }> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/wallets`);
+    return response.data;
+  }
+
+  async getDiscoveries(): Promise<{ discoveries: unknown[]; stats: Record<string, unknown> }> {
+    const response = await axios.get(`${CHAIN_DB_URL}/api/discoveries`);
+    return response.data;
+  }
+}
+
+// ── Chain DB types ──
+
+export interface RpcPoolStats {
+  total_endpoints: number;
+  healthy_endpoints: number;
+  chains_covered: number;
+  combined_rps: number;
+  avg_latency_ms: number;
+  min_latency_ms: number;
+  by_provider: { provider: string; count: number; avg_latency: number; rps: number }[];
+  by_tier: { tier: string; count: number }[];
+  top_fastest: { chain_id: string; url: string; provider: string; latency_ms: number; rate_limit_rps: number }[];
+  gas_savings: {
+    infura_growth_equiv: number;
+    alchemy_growth_equiv: number;
+    quicknode_build_equiv: number;
+    moralis_pro_equiv: number;
+    total_monthly_saved: number;
+    your_cost: number;
+  };
+}
+
+export interface TpsLeaderboardEntry {
+  chain_id: string;
+  chain_name: string;
+  ecosystem: string;
+  chain_type: string;
+  native_token: string;
+  is_testnet: number;
+  tps_current: number;
+  tps_peak: number;
+  tps_theoretical: number;
+  total_txns_24h: number;
+  finality_seconds: number;
+  block_height: number | null;
+  measured_at: string | null;
+  best_latency_ms: number | null;
+  endpoint_count: number;
+  total_rps: number;
+}
+
+export interface TpsLeaderboardResponse {
+  leaderboard: TpsLeaderboardEntry[];
+  total: number;
+  stats: {
+    total_chains_measured: number;
+    avg_tps_all: number;
+    max_tps_all: number;
+    peak_tps_all: number;
+    total_txns_24h_all: number;
+  };
+  category: string;
+  sort: string;
+  order: string;
+}
+
+export interface TpsBenchmarkStatus {
+  measured: number;
+  total: number;
+  progress_pct: number;
+  last_updated: string | null;
+  top5: { chain_name: string; tps_current: number; tps_peak: number }[];
 }
 
 export const api = new InfenstructiorAPI();

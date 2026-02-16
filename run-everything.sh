@@ -68,6 +68,12 @@ POLKADEX_PORT=3007          # Polkadex DEX
 ANALYTICS_SERVICE_PORT=8081     # Analytics Service (Rust)
 BLOCKCHAIN_ADAPTER_PORT=8082    # Blockchain Adapter (TypeScript)
 
+# Cloudflare Tunnel & Placeholder
+PLACEHOLDER_PORT=7000           # Subdomain placeholder server
+CLOUDFLARE_TUNNEL_ID="6c118620-18cf-4795-80a8-6d44d37aecaa"
+CLOUDFLARE_TUNNEL_NAME="atlas-sphere"
+CLOUDFLARE_DOMAIN="x3star.net"
+
 # URLs
 BLOCKCHAIN_WS="ws://localhost:$BLOCKCHAIN_PORT"
 SWARM_API_URL="http://localhost:$SWARM_API_PORT"
@@ -1083,6 +1089,99 @@ start_htlc_coordinator() {
 }
 
 # ============================================================
+# Cloudflare Tunnel & Placeholder (x3star.net)
+# ============================================================
+
+start_placeholder_server() {
+    log_header "Starting Placeholder Server (x3star.net subdomains)"
+
+    local server_dir="$PROJECT_ROOT/infra/cloudflare-tunnel/placeholder"
+
+    if [ ! -f "$server_dir/server.js" ]; then
+        log_warn "Placeholder server not found at $server_dir/server.js"
+        return 1
+    fi
+
+    if port_in_use $PLACEHOLDER_PORT; then
+        log_success "Placeholder server already running on port $PLACEHOLDER_PORT"
+        return 0
+    fi
+
+    cd "$server_dir"
+
+    # Install deps if needed (currently none, but future-proof)
+    if [ -f "package.json" ] && [ ! -d "node_modules" ]; then
+        npm install --silent 2>/dev/null || true
+    fi
+
+    log_info "Starting placeholder server on port $PLACEHOLDER_PORT..."
+    node server.js > "$PROJECT_ROOT/logs/placeholder-server.log" 2>&1 &
+    local pid=$!
+    save_pid "placeholder-server" $pid
+
+    cd "$PROJECT_ROOT"
+
+    if wait_for_port $PLACEHOLDER_PORT "Placeholder Server" 15; then
+        log_success "Placeholder server started (PID: $pid)"
+        return 0
+    else
+        log_warn "Placeholder server may still be starting..."
+        return 0
+    fi
+}
+
+start_cloudflare_tunnel() {
+    log_header "Starting Cloudflare Tunnel ($CLOUDFLARE_DOMAIN)"
+
+    if ! command -v cloudflared &> /dev/null; then
+        log_warn "cloudflared not installed. Skipping tunnel..."
+        log_info "Install: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+        return 1
+    fi
+
+    # Check if tunnel is already connected
+    if pgrep -f "cloudflared tunnel run" >/dev/null 2>&1; then
+        log_success "Cloudflare Tunnel already running"
+        return 0
+    fi
+
+    # Verify credentials exist
+    local creds_file="$HOME/.cloudflared/${CLOUDFLARE_TUNNEL_ID}.json"
+    if [ ! -f "$creds_file" ]; then
+        log_error "Tunnel credentials not found: $creds_file"
+        log_info "Run: cloudflared tunnel login"
+        return 1
+    fi
+
+    log_info "Starting Cloudflare Tunnel: $CLOUDFLARE_TUNNEL_NAME..."
+    cloudflared tunnel run "$CLOUDFLARE_TUNNEL_NAME" > "$PROJECT_ROOT/logs/cloudflare-tunnel.log" 2>&1 &
+    local pid=$!
+    save_pid "cloudflare-tunnel" $pid
+
+    # Wait for tunnel to register (check log for connection confirmation)
+    local timeout=30
+    local elapsed=0
+    echo -n "  Waiting for tunnel connections..."
+    while [ $elapsed -lt $timeout ]; do
+        if grep -q "Registered tunnel connection" "$PROJECT_ROOT/logs/cloudflare-tunnel.log" 2>/dev/null; then
+            echo -e " ${GREEN}✓${NC}"
+            local conns
+            conns=$(grep -c "Registered tunnel connection" "$PROJECT_ROOT/logs/cloudflare-tunnel.log" 2>/dev/null || echo 0)
+            log_success "Cloudflare Tunnel connected ($conns connections, PID: $pid)"
+            log_info "Domain live: https://$CLOUDFLARE_DOMAIN"
+            return 0
+        fi
+        sleep $HEALTH_CHECK_INTERVAL
+        elapsed=$((elapsed + HEALTH_CHECK_INTERVAL))
+        echo -n "."
+    done
+
+    echo -e " ${YELLOW}?${NC}"
+    log_warn "Tunnel may still be connecting (PID: $pid). Check logs/cloudflare-tunnel.log"
+    return 0
+}
+
+# ============================================================
 # Status Display
 # ============================================================
 
@@ -1193,6 +1292,20 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} Atlas Desktop       NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
+    # Placeholder Server
+    if port_in_use $PLACEHOLDER_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Placeholder Server  http://localhost:$PLACEHOLDER_PORT                ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Placeholder Server  NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
+    # Cloudflare Tunnel
+    if pgrep -f "cloudflared tunnel run" >/dev/null 2>&1; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Cloudflare Tunnel   https://$CLOUDFLARE_DOMAIN              ${CYAN}║${NC}"
+    else
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Cloudflare Tunnel   NOT RUNNING                        ${CYAN}║${NC}"
+    fi
+
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
 
     # GPU Status if nvidia-smi available
@@ -1248,7 +1361,7 @@ main() {
 
     # Cleanup existing processes on our ports
     log_header "Cleaning Up Existing Processes"
-    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT; do
+    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT $PLACEHOLDER_PORT; do
         kill_port $port
     done
 
@@ -1346,6 +1459,17 @@ main() {
     start_quantum_apps/dash-legacy-2-legacy-2board || log_warn "Quantum Dashboard not started"
 
     # ============================================================
+    # Layer 5: Networking / Ingress (Cloudflare Tunnel)
+    # ============================================================
+    log_header "Starting Networking & Ingress"
+
+    # Placeholder server handles all undeployed subdomains on :7000
+    start_placeholder_server || log_warn "Placeholder server not started"
+
+    # Cloudflare Tunnel exposes local services to x3star.net
+    start_cloudflare_tunnel || log_warn "Cloudflare Tunnel not started (local-only mode)"
+
+    # ============================================================
     # Final Status
     # ============================================================
     log_header "Startup Complete"
@@ -1369,6 +1493,8 @@ main() {
     echo -e "  📊 ${CYAN}Infenstructior:${NC}      http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT"
     echo -e "  🤖 ${CYAN}Ollama AI:${NC}           ${OLLAMA_URL}"
     echo -e "  ⛓️  ${CYAN}Blockchain:${NC}          ws://localhost:$BLOCKCHAIN_PORT"
+    echo -e "  🌐 ${CYAN}Cloudflare Tunnel:${NC}   https://$CLOUDFLARE_DOMAIN"
+    echo -e "  📡 ${CYAN}Placeholder:${NC}         http://localhost:$PLACEHOLDER_PORT (subdomains)"
     echo ""
     echo -e "${YELLOW}Quick Links:${NC}"
     echo -e "  • Atlas Desktop:       http://localhost:$ATLAS_DESKTOP_PORT (Tauri app)"
@@ -1378,6 +1504,7 @@ main() {
     echo -e "  • AI Swarm:            http://localhost:$X3OS_PORT/ai-swarm"
     echo -e "  • Quantum Advisor:     http://localhost:$QUANTUM_DASHBOARD_PORT"
     echo -e "  • Metrics:             http://localhost:$SWARM_API_PORT/metrics"
+    echo -e "  • x3star.net:          https://$CLOUDFLARE_DOMAIN (Cloudflare Tunnel)"
     echo ""
     echo -e "${YELLOW}Logs:${NC} $PROJECT_ROOT/logs/"
     echo ""

@@ -1,6 +1,0 @@
-# pack-refs with: peeled fully-peeled sorted 
-ee7e8ba45cad51f7f54cede820af5ba442468a37 refs/remotes/origin/feature/agenc-one-polish
-ee7e8ba45cad51f7f54cede820af5ba442468a37 refs/remotes/origin/feature/android-3d-avatar-fix
-f31982ac767085148a800b25da09f1fefac05b5a refs/remotes/origin/feature/desktop-mobile-split
-c4c69820ac4758c3544c5f4543a3422271d6eb98 refs/remotes/origin/master
-c1e0bbf4b01c1e6784c8881dd701b0c69be16a68 refs/tags/v0.1.0-seeker

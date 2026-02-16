@@ -654,6 +654,26 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     launchCommand: { type: "internal", target: "infrastructure" },
   },
 
+  /* ── RPC Pool Stats (deep-dive from Infrastructure Monitor) ── */
+  {
+    id: "rpc-stats",
+    name: "RPC Pool Stats",
+    description: "Full RPC pool analytics — provider breakdown, gas savings, latency, fastest endpoints",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#f59e0b" },
+    launchCommand: { type: "internal", target: "rpc-stats" },
+  },
+
+  /* ── Airdrops & Faucets ── */
+  {
+    id: "airdrops",
+    name: "Airdrops & Faucets",
+    description: "Discovered airdrops, testnet faucets, auto-claim tracking, wallet balances",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#ec4899" },
+    launchCommand: { type: "internal", target: "airdrops" },
+  },
+
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */
   {
     id: "health-dashboard",

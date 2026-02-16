@@ -6,6 +6,9 @@ Simple interface for querying Substreams skills via HTTP
 import requests
 import json
 from typing import Optional, Dict, Any, List
+import os
+import random
+import sqlite3
 from dataclasses import dataclass
 from enum import Enum
 import time
@@ -15,6 +18,7 @@ class Provider(Enum):
     """Available LLM providers"""
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
+    ROTATED = "rotated"
 
 
 class SkillCategory(Enum):
@@ -81,6 +85,18 @@ class SubstreamsSkillsClient:
         self.timeout = timeout
         self.session = requests.Session()
 
+    def get_random_healthy_endpoint(self, provider: str = 'ollama') -> str:
+        """Get a random healthy LLM endpoint from the database"""
+        db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../infra-structure/db/chains.db'))
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT url FROM llm_endpoints WHERE provider = ? AND is_healthy = 1", (provider,))
+        urls = [row[0] for row in cur.fetchall()]
+        conn.close()
+        if urls:
+            return random.choice(urls)
+        raise ValueError(f"No healthy endpoints available for provider: {provider}")
+
     def _request(
         self,
         method: str,
@@ -99,6 +115,46 @@ class SubstreamsSkillsClient:
             raise RuntimeError(f"Request error: {e}")
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Invalid JSON response: {e}")
+
+    def _query_rotated(
+        self,
+        query: str,
+        model: Optional[str],
+        temperature: float,
+        use_failover: bool,
+    ) -> QueryResponse:
+        """Query a rotated Ollama endpoint directly"""
+        attempts = 3 if use_failover else 1
+        last_error = None
+
+        for _ in range(attempts):
+            try:
+                url = self.get_random_healthy_endpoint()
+                payload = {
+                    "model": model or "llama2",  # Default model, adjust as needed
+                    "prompt": query,
+                    "temperature": temperature,
+                    "stream": False,
+                }
+                start = time.time()
+                response = requests.post(f"{url}/api/generate", json=payload, timeout=self.timeout)
+                response.raise_for_status()
+                data = response.json()
+                response_time = int((time.time() - start) * 1000)
+                return QueryResponse(
+                    provider="rotated",
+                    model=payload["model"],
+                    response=data["response"],
+                    response_time=response_time,
+                    token_estimate=len(data["response"].split()),  # Rough estimate
+                    success=True,
+                    metadata={"context": data.get("context")},
+                )
+            except Exception as e:
+                last_error = e
+                continue
+
+        raise RuntimeError(f"All rotated query attempts failed: {last_error}")
 
     def query(
         self,
@@ -121,10 +177,16 @@ class SubstreamsSkillsClient:
         Returns:
             QueryResponse with the model's response
         """
+        effective_provider = provider or self.default_provider
+        effective_model = model or self.default_model
+
+        if effective_provider == "rotated":
+            return self._query_rotated(query, effective_model, temperature, use_failover)
+
         payload = {
             "query": query,
-            "provider": provider or self.default_provider,
-            "model": model or self.default_model,
+            "provider": effective_provider,
+            "model": effective_model,
             "temperature": temperature,
             "use_failover": use_failover,
         }
