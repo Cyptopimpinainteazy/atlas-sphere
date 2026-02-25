@@ -1,4 +1,4 @@
-//! NovaFlux - AI Influencer Persona for Atlas Sphere
+//! NovaFlux - AI Influencer Persona for X3 Chain
 //!
 //! NovaFlux is a neon, fast-talking, technically deep AI influencer who knows
 //! crypto, L2s, EVM, SVM, MEV, and dev ergonomics.
@@ -49,7 +49,7 @@ impl Default for NovaFluxConfig {
             shorts_wpm: 180,
             explainer_wpm: 140,
             default_cta: "Testnet link in bio.".to_string(),
-            project_name: "Atlas Sphere".to_string(),
+            project_name: "X3 Chain".to_string(),
             hooks: Self::default_hooks(),
             scripts: Self::default_scripts(),
         }

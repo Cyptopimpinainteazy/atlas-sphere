@@ -88,8 +88,8 @@ Estimated Timeline:
   3:00 PM - Health checks complete
   6:00 PM - Monitoring period ends
 
-Status Page: https://status.atlas.io
-Dashboard: https://grafana.atlas.io
+Status Page: https://status.x3.io
+Dashboard: https://grafana.x3.io
 ```
 
 **2:00 PM Message:**
@@ -102,7 +102,7 @@ Current Status: Staging → Production
   ⏳ Blockchain syncing (est. 10 min)
   ⏳ Health checks pending
 
-Monitor: https://grafana.atlas.io/d/jury-phase5
+Monitor: https://grafana.x3.io/d/jury-phase5
 ```
 
 **2:45 PM Message:**

@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - OpenSpec Deployment Checklist
+# X3 Chain Testnet v1 - OpenSpec Deployment Checklist
 
 **OpenSpec Change ID: osc-testnet-0001**  
 **Use this checklist to track OpenSpec-compliant testnet deployment progress.**
@@ -15,7 +15,7 @@
 
 ### Build & Testing (OpenSpec Compliant)
 - [ ] 2.1 Build release binary: `cargo build --release`
-- [ ] 2.2 Verify binary runs: `./target/release/atlas-sphere-node --version`
+- [ ] 2.2 Verify binary runs: `./target/release/x3-chain-node --version`
 - [ ] 2.3 Run all unit tests: `cargo test --all`
 - [ ] 2.4 Run integration tests: `./RUN_ALL_TESTS.sh`
 - [ ] 2.5 Test local node startup (dev mode): `./run-dev-node.sh`
@@ -23,22 +23,22 @@
 - [ ] 2.7 Test X3 language runtime: Execute examples from `x3-lang/examples/`
 
 ### Chain Specification (OpenSpec Enhanced)
-- [ ] 3.1 Generate dev chain spec: `atlas-sphere-node build-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
+- [ ] 3.1 Generate dev chain spec: `x3-chain-node build-spec --disable-default-bootnode --chain dev > x3-testnet-plain.json`
 - [ ] 3.2 Edit chain spec (name, id, bootnodes, validators)
-- [ ] 3.3 Convert to raw format: `atlas-sphere-node build-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
-- [ ] 3.4 Validate JSON syntax: `jq . atlas-testnet-raw.json`
+- [ ] 3.3 Convert to raw format: `x3-chain-node build-spec --chain x3-testnet-plain.json --raw > x3-testnet-raw.json`
+- [ ] 3.4 Validate JSON syntax: `jq . x3-testnet-raw.json`
 - [ ] 3.5 Commit chain spec to repository
 - [ ] 3.6 Document chain spec changes in OpenSpec
 
-### Atlas DNS Server Integration (NEW)
-- [ ] 4.1 Configure Atlas DNS server for testnet domains:
+### X3 DNS Server Integration (NEW)
+- [ ] 4.1 Configure X3 DNS server for testnet domains:
   - [ ] 4.1.1 `rpc.testnet.x3` → RPC load balancer IP
   - [ ] 4.1.2 `rpc2.testnet.x3` → Backup RPC node IP
   - [ ] 4.1.3 `bootnode.testnet.x3` → Bootnode IP
   - [ ] 4.1.4 `faucet.testnet.x3` → Faucet service IP
   - [ ] 4.1.5 `metrics.testnet.x3` → Grafana apps/dash-legacy-2-legacy-2board IP
 - [ ] 4.2 Test DNS resolution: `dig rpc.testnet.x3`
-- [ ] 4.3 Verify DNS server health: `cargo run --bin atlas-dns-server`
+- [ ] 4.3 Verify DNS server health: `cargo run --bin x3-dns-server`
 - [ ] 4.4 Update DNS server configuration with testnet zones
 
 ### Infrastructure Preparation (Enhanced)
@@ -46,7 +46,7 @@
 - [ ] 5.2 Provision 2+ RPC VMs (8GB RAM, 4 vCPU, 100GB SSD)
 - [ ] 5.3 Provision 1 bootnode VM (2GB RAM, 1 vCPU, 20GB SSD)
 - [ ] 5.4 Provision monitoring server (Prometheus + Grafana)
-- [ ] 5.5 Set up DNS records (using Atlas DNS server)
+- [ ] 5.5 Set up DNS records (using X3 DNS server)
 - [ ] 5.6 Configure firewall rules:
   - [ ] 5.6.1 Allow 30333 (P2P) from all
   - [ ] 5.6.2 Allow 9944 (RPC) from load balancer only
@@ -60,7 +60,7 @@
   - [ ] 6.1.3 Validator 3: (repeat)
   - [ ] 6.1.4 Validator 4: (optional)
   - [ ] 6.1.5 Validator 5: (optional)
-- [ ] 6.2 Generate bootnode key: `atlas-sphere-node key generate-node-key --file /var/lib/atlas/bootnode-key`
+- [ ] 6.2 Generate bootnode key: `x3-chain-node key generate-node-key --file /var/lib/x3/bootnode-key`
 - [ ] 6.3 Record all keys in secure vault (1Password, HashiCorp Vault)
 - [ ] 6.4 Generate sudo key for chain spec
 - [ ] 6.5 Share public keys with team (Aura SR25519 pubkeys, GRANDPA ED25519 pubkeys)
@@ -71,23 +71,23 @@
 ## 🚀 OpenSpec Deployment Phase
 
 ### Deploy Bootnode (Enhanced with DNS)
-- [ ] 7.1 Copy binary to bootnode server: `/usr/local/bin/atlas-sphere-node`
-- [ ] 7.2 Copy node key: `/var/lib/atlas/bootnode-key`
-- [ ] 7.3 Create systemd service: `/etc/systemd/system/atlas-bootnode.service`
-- [ ] 7.4 Start bootnode: `systemctl start atlas-bootnode`
-- [ ] 7.5 Verify bootnode running: `systemctl status atlas-bootnode`
+- [ ] 7.1 Copy binary to bootnode server: `/usr/local/bin/x3-chain-node`
+- [ ] 7.2 Copy node key: `/var/lib/x3/bootnode-key`
+- [ ] 7.3 Create systemd service: `/etc/systemd/system/x3-bootnode.service`
+- [ ] 7.4 Start bootnode: `systemctl start x3-bootnode`
+- [ ] 7.5 Verify bootnode running: `systemctl status x3-bootnode`
 - [ ] 7.6 Get bootnode peer ID from logs
 - [ ] 7.7 Confirm bootnode listening on port 30333: `netstat -tulnp | grep 30333`
-- [ ] 7.8 Update Atlas DNS server with bootnode.testnet.x3 record
+- [ ] 7.8 Update X3 DNS server with bootnode.testnet.x3 record
 - [ ] 7.9 Test bootnode DNS resolution: `dig bootnode.testnet.x3`
 
 ### Deploy Validator Nodes (After Bootnode - OpenSpec Enhanced)
 For each validator (repeat 3-5 times):
 - [ ] 8.1 Copy binary to validator server
-- [ ] 8.2 Copy chain spec: `/home/atlas/atlas-testnet-raw.json`
-- [ ] 8.3 Create data directory: `/home/atlas/data`
+- [ ] 8.2 Copy chain spec: `/home/x3/x3-testnet-raw.json`
+- [ ] 8.3 Create data directory: `/home/x3/data`
 - [ ] 8.4 Create systemd service with `--validator` flag
-- [ ] 8.5 Start validator: `systemctl start atlas-validator`
+- [ ] 8.5 Start validator: `systemctl start x3-validator`
 - [ ] 8.6 Insert Aura key: 
   ```bash
   curl http://localhost:9944 -H "Content-Type: application/json" \
@@ -100,7 +100,7 @@ For each validator (repeat 3-5 times):
   ```
 - [ ] 8.8 Verify keys inserted: Check logs for "Loaded authority keys"
 - [ ] 8.9 Verify node syncing: `curl -X POST http://localhost:9944 -d '{"id":1,"jsonrpc":"2.0","method":"system_health","params":[]}'`
-- [ ] 8.10 Monitor logs: `journalctl -u atlas-validator -f`
+- [ ] 8.10 Monitor logs: `journalctl -u x3-validator -f`
 
 **Validator Details (Enhanced with DNS):**
 - [ ] 8.11 Validator 1: IP `______`, DNS: `validator1.testnet.x3`, Aura Pubkey `______`, GRANDPA Pubkey `______`
@@ -112,13 +112,13 @@ For each validator (repeat 3-5 times):
 ### Deploy RPC Nodes (After Validators Running - OpenSpec Enhanced)
 For each RPC node (repeat 2+ times):
 - [ ] 9.1 Copy binary to RPC server
-- [ ] 9.2 Copy chain spec: `/home/atlas/atlas-testnet-raw.json`
-- [ ] 9.3 Create data directory: `/home/atlas/data`
+- [ ] 9.2 Copy chain spec: `/home/x3/x3-testnet-raw.json`
+- [ ] 9.3 Create data directory: `/home/x3/data`
 - [ ] 9.4 Create systemd service with `--rpc-external --rpc-methods Safe`
-- [ ] 9.5 Start RPC node: `systemctl start atlas-rpc`
+- [ ] 9.5 Start RPC node: `systemctl start x3-rpc`
 - [ ] 9.6 Verify node syncing: `curl http://localhost:9944 -X POST -d '{"id":1,"jsonrpc":"2.0","method":"system_health","params":[]}'`
 - [ ] 9.7 Verify RPC accessible externally (from outside network)
-- [ ] 9.8 Monitor logs: `journalctl -u atlas-rpc -f`
+- [ ] 9.8 Monitor logs: `journalctl -u x3-rpc -f`
 
 **RPC Node Details (Enhanced with DNS):**
 - [ ] 9.9 RPC 1: IP `______`, DNS: `rpc.testnet.x3`, Public URL `http://rpc.testnet.x3:9944`
@@ -148,13 +148,13 @@ For each RPC node (repeat 2+ times):
   - [ ] 11.4.4 Slow block production (>10s)
   - [ ] 11.4.5 Low peer count (<3)
   - [ ] 11.4.6 DNS resolution failures
-  - [ ] 11.4.7 Atlas DNS server health
+  - [ ] 11.4.7 X3 DNS server health
 
 ### Grafana Dashboards (Enhanced)
 - [ ] 12.1 Install Grafana on monitoring server
 - [ ] 12.2 Add Prometheus data source
 - [ ] 12.3 Import Substrate node apps/dash-legacy-2-legacy-2board
-- [ ] 12.4 Create custom Atlas Kernel apps/dash-legacy-2-legacy-2board
+- [ ] 12.4 Create custom X3 Kernel apps/dash-legacy-2-legacy-2board
 - [ ] 12.5 Create DNS server monitoring apps/dash-legacy-2-legacy-2board
 - [ ] 12.6 Configure alert notifications (Discord, Email, PagerDuty)
 - [ ] 12.7 Make apps/dash-legacy-2-legacy-2board public: `http://metrics.testnet.x3`
@@ -165,7 +165,7 @@ For each RPC node (repeat 2+ times):
 - [ ] 13.3 Verify GPU node registration: Check coordinator logs
 - [ ] 13.4 Test GPU job submission: Submit sample compute job
 - [ ] 13.5 Monitor GPU swarm metrics: Track job completion rates
-- [ ] 13.6 Integrate GPU swarm with Atlas Sphere validators
+- [ ] 13.6 Integrate GPU swarm with X3 Chain validators
 - [ ] 13.7 Document GPU swarm integration in OpenSpec
 
 ### Health Checks (OpenSpec Enhanced)
@@ -173,10 +173,10 @@ For each RPC node (repeat 2+ times):
 - [ ] 14.2 Verify block production: `chain_getBlock` returns recent blocks
 - [ ] 14.3 Verify finalization: Check GRANDPA finalizing blocks
 - [ ] 14.4 Verify peer discovery: All nodes have 5+ peers
-- [ ] 14.5 Test Atlas Kernel RPC methods (see `docs/reports/TESTNET_QUICKSTART.md`)
+- [ ] 14.5 Test X3 Kernel RPC methods (see `docs/reports/TESTNET_QUICKSTART.md`)
 - [ ] 14.6 Monitor logs for errors/warnings
 - [ ] 14.7 Test DNS resolution for all testnet domains
-- [ ] 14.8 Verify Atlas DNS server health: `curl http://localhost:8080/health`
+- [ ] 14.8 Verify X3 DNS server health: `curl http://localhost:8080/health`
 - [ ] 14.9 Test GPU swarm connectivity and job routing
 
 ---
@@ -191,7 +191,7 @@ For each RPC node (repeat 2+ times):
 - [ ] 15.5 Deploy frontend: `https://faucet.testnet.x3`
 - [ ] 15.6 Test faucet: Request tokens, verify balance increases
 - [ ] 15.7 Monitor faucet account balance (alert if <1000 tATLAS)
-- [ ] 15.8 Integrate faucet with Atlas DNS server
+- [ ] 15.8 Integrate faucet with X3 DNS server
 - [ ] 15.9 Document faucet security measures in OpenSpec
 
 ### Discord Bot (Optional - Enhanced)
@@ -245,13 +245,13 @@ For each RPC node (repeat 2+ times):
 - [ ] 20.4 Draft Medium/blog post with technical details
 - [ ] 20.5 Create quick start video tutorial (optional)
 - [ ] 20.6 Highlight OpenSpec-driven development process
-- [ ] 20.7 Showcase Atlas DNS server and GPU swarm features
+- [ ] 20.7 Showcase X3 DNS server and GPU swarm features
 
 ### Developer Resources (OpenSpec Enhanced)
 - [ ] 21.1 Publish `docs/reports/TESTNET_QUICKSTART.md` to docs site
 - [ ] 21.2 Create Postman/Insomnia collection for RPC methods
 - [ ] 21.3 Write example scripts (Python, JavaScript) for common tasks
 - [ ] 21.4 Create X3 language tutorial and examples
-- [ ] 21.5 Document Atlas DNS server API
+- [ ] 21.5 Document X3 DNS server API
 - [ ] 21.6 Provide GPU swarm integration examples
 - [ ] 21.7 Set up developer Discord

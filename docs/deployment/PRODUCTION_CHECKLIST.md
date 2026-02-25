@@ -285,10 +285,10 @@ kubectl -n gpu-swarm set env statefulset/swarm-coordinator \
 previous_version=v1.2.1
 
 kubectl -n gpu-swarm set image statefulset/swarm-coordinator \
-  coordinator=atlas-sphere/gpu-swarm-coordinator:${previous_version}
+  coordinator=x3-chain/gpu-swarm-coordinator:${previous_version}
 
 kubectl -n gpu-swarm set image daemonset/swarm-gpu-node \
-  gpu-node=atlas-sphere/gpu-swarm-node:${previous_version}
+  gpu-node=x3-chain/gpu-swarm-node:${previous_version}
 
 # Step 4: Monitor rollback
 kubectl -n gpu-swarm rollout status statefulset/swarm-coordinator

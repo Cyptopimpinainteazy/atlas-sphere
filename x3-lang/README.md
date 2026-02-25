@@ -100,7 +100,7 @@ fn main() {
 
 ```bash
 # Install from source
-git clone https://github.com/atlas-sphere/x3-lang
+git clone https://github.com/x3-chain/x3-lang
 cd x3-lang
 cargo install --path crates/x3-cli
 

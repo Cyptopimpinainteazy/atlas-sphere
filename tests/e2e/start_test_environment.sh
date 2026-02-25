@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# X3-Atlas-Sphere E2E Test Environment Startup Script
+# X3-X3-Sphere E2E Test Environment Startup Script
 # This script starts the complete test environment with monitoring and mock services
 
 set -e
@@ -46,16 +46,16 @@ fi
 
 # Set up environment variables
 export TEST_ENVIRONMENT=testnet
-export ATLAS_NODE_ENV=testnet
+export X3_NODE_ENV=testnet
 export DOCKER_BUILDKIT=1
 
 # Load deterministic configuration if in CI or explicitly enabled
 if [ "${CI:-false}" = "true" ] || [ "${E2E_DETERMINISTIC_TRIPLE_RUN:-0}" = "1" ]; then
   if [ -f "$SCRIPT_DIR/fixtures/deterministic_config.toml" ]; then
-    export ATLAS_E2E_DETERMINISTIC_SEED="atlas-e2e-deterministic-seed-001"
-    export ATLAS_E2E_GENESIS_TIMESTAMP="1707388800"
-    export ATLAS_E2E_BLOCK_TIME_MILLIS="6000"
-    log_info "Deterministic mode enabled: seed=$ATLAS_E2E_DETERMINISTIC_SEED timestamp=$ATLAS_E2E_GENESIS_TIMESTAMP"
+    export X3_E2E_DETERMINISTIC_SEED="x3-e2e-deterministic-seed-001"
+    export X3_E2E_GENESIS_TIMESTAMP="1707388800"
+    export X3_E2E_BLOCK_TIME_MILLIS="6000"
+    log_info "Deterministic mode enabled: seed=$X3_E2E_DETERMINISTIC_SEED timestamp=$X3_E2E_GENESIS_TIMESTAMP"
   fi
 fi
 
@@ -66,21 +66,21 @@ if [ "${E2E_DETERMINISTIC_TRIPLE_RUN:-0}" = "1" ]; then
     FIXTURE_FILE="$SCRIPT_DIR/fixtures/deterministic_config.toml"
     if [ -f "$FIXTURE_FILE" ]; then
         # Export deterministic settings as environment variables
-        export ATLAS_E2E_DETERMINISTIC_SEED="0x1234567890abcdef1234567890abcdef"
-        export ATLAS_E2E_GENESIS_TIMESTAMP="1707340800"
-        export ATLAS_E2E_BLOCK_TIME_MS="6000"
-        export ATLAS_E2E_SESSION_LENGTH="6"
-        export ATLAS_E2E_NUM_VALIDATORS="3"
-        export ATLAS_E2E_GAS_LIMIT="8000000"
-        export ATLAS_E2E_STRUCTURED_LOGGING="true"
-        export ATLAS_E2E_DIAGNOSTIC_MODE="true"
+        export X3_E2E_DETERMINISTIC_SEED="0x1234567890abcdef1234567890abcdef"
+        export X3_E2E_GENESIS_TIMESTAMP="1707340800"
+        export X3_E2E_BLOCK_TIME_MS="6000"
+        export X3_E2E_SESSION_LENGTH="6"
+        export X3_E2E_NUM_VALIDATORS="3"
+        export X3_E2E_GAS_LIMIT="8000000"
+        export X3_E2E_STRUCTURED_LOGGING="true"
+        export X3_E2E_DIAGNOSTIC_MODE="true"
         log_info "Deterministic config loaded from $FIXTURE_FILE"
     else
         log_warning "Deterministic config requested but fixture not found at $FIXTURE_FILE"
     fi
 fi
 
-log_info "Starting X3-Atlas-Sphere E2E Test Environment..."
+log_info "Starting X3-X3-Sphere E2E Test Environment..."
 log_info "Test Environment: $TEST_ENVIRONMENT"
 log_info "Project Root: $PROJECT_ROOT"
 
@@ -149,8 +149,8 @@ wait_for_port() {
 
 # Wait for critical services
 echo ""
-# For Atlas Node use JSON-RPC health check
-wait_for_rpc_service "Atlas Node" "http://localhost:9933/" system_health 300
+# For X3 Node use JSON-RPC health check
+wait_for_rpc_service "X3 Node" "http://localhost:9933/" system_health 300
 # For Redis and PostgreSQL, wait for port availability
 wait_for_port "Redis" "localhost" 6379 120
 wait_for_port "PostgreSQL" "localhost" 5432 120
@@ -172,10 +172,10 @@ echo "🔗 Service Access Points:"
 echo "  📊 Grafana Dashboard: http://localhost:3000 (admin/admin)"
 echo "  📈 Prometheus: http://localhost:9090"
 echo "  🚨 AlertManager: http://localhost:9093"
-echo "  🔗 Atlas Node RPC: http://localhost:9933"
+echo "  🔗 X3 Node RPC: http://localhost:9933"
 echo "  🔌 WebSocket: ws://localhost:9944"
 echo "  💾 Redis: localhost:6379"
-echo "  🗄️  PostgreSQL: localhost:5432 (atlas_testnet/testuser/testpass)"
+echo "  🗄️  PostgreSQL: localhost:5432 (x3_testnet/testuser/testpass)"
 echo ""
 echo "🚀 To run tests:"
 echo "  cd $SCRIPT_DIR"

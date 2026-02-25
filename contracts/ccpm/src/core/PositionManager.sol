@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 /**
  * @title CrossChainPositionManager (CCPM)
  * @notice Unified position tracking and management across 103 chains
- * @dev Core infrastructure for Atlas Sphere DeFi ecosystem
+ * @dev Core infrastructure for X3 Chain DeFi ecosystem
  *
  * Position Types:
  * - TOKENS: Raw token holdings

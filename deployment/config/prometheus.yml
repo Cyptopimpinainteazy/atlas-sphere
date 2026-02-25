@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'atlas-sphere'
+    cluster: 'x3-chain'
     environment: 'production'
 
 alerting:
@@ -53,7 +53,7 @@ scrape_configs:
         regex: 'localhost:900([0-9])'
         replacement: 'node-$1'
 
-  # ===== ATLAS KERNEL RPC =====
+  # ===== X3 KERNEL RPC =====
   - job_name: 'kernel-rpc'
     metrics_path: '/metrics'
     scrape_interval: 10s

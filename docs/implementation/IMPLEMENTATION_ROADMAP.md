@@ -1,9 +1,9 @@
-# Atlas Sphere - Implementation Roadmap
+# X3 Chain - Implementation Roadmap
 
 ## Phase 1: Full Consensus Implementation ✨
 
 ### 1.1 Authority Set Management
-- **File**: `pallets/atlas-kernel/src/authority.rs` (NEW)
+- **File**: `pallets/x3-kernel/src/authority.rs` (NEW)
 - **Purpose**: Manage validator set changes, session rotation
 - **Key Features**:
   - Authority set updates via extrinsics
@@ -11,7 +11,7 @@
   - Authority voting mechanism
 
 ### 1.2 Consensus Session Handler
-- **File**: `pallets/atlas-kernel/src/session.rs` (NEW)
+- **File**: `pallets/x3-kernel/src/session.rs` (NEW)
 - **Purpose**: Hook into Substrate session system
 - **Key Features**:
   - New session callbacks
@@ -72,7 +72,7 @@
 
 ### 4.2 Custom RPC Methods
 - **File**: `node/src/rpc_custom.rs` (NEW)
-- **Purpose**: Atlas Sphere specific methods
+- **Purpose**: X3 Chain specific methods
 - **Key Features**:
   - EVM account queries
   - Authority set info

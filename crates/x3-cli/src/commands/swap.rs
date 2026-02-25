@@ -1,6 +1,6 @@
 //! Cross-chain swap command
 //!
-//! Atomic swaps across 103 EVM chains via Atlas Kernel Comit transactions.
+//! Atomic swaps across 103 EVM chains via X3 Kernel Comit transactions.
 
 use clap::Args;
 use colored::Colorize;
@@ -46,7 +46,7 @@ pub struct SwapArgs {
     #[arg(long, default_value = "50")]
     pub slippage: u64,
 
-    /// RPC endpoint for Atlas Sphere
+    /// RPC endpoint for X3 Chain
     #[arg(long, default_value = "http://127.0.0.1:9944")]
     pub rpc: String,
 
@@ -89,7 +89,7 @@ pub struct ChainsArgs {
 
 /// Execute swap command
 pub async fn execute(args: SwapArgs) -> Result<()> {
-    println!("{}", "🔄 Atlas Sphere Cross-Chain Swap".cyan().bold());
+    println!("{}", "🔄 X3 Chain Cross-Chain Swap".cyan().bold());
     println!();
 
     // Parse addresses
@@ -160,7 +160,7 @@ pub async fn execute(args: SwapArgs) -> Result<()> {
     // Compare to traditional bridge
     println!("{}", "⚡ Speed Comparison:".yellow().bold());
     println!("  Traditional Bridge: {} minutes", "15-45".red());
-    println!("  Atlas Comit:        {} seconds", "6".green().bold());
+    println!("  X3 Comit:        {} seconds", "6".green().bold());
     println!("  Savings:            {}", "~99% faster!".green().bold());
     println!();
 
@@ -244,7 +244,7 @@ pub async fn execute_chains(args: ChainsArgs) -> Result<()> {
         return Ok(());
     }
 
-    println!("{}", "🌐 Atlas Sphere Chain Registry".cyan().bold());
+    println!("{}", "🌐 X3 Chain Chain Registry".cyan().bold());
     println!("{}", format!("Total: {} chains", filtered.len()).dimmed());
     println!();
 
@@ -399,7 +399,7 @@ fn get_chain_name(chain_id: u64) -> String {
         1 => "Ethereum".to_string(),
         10 => "Optimism".to_string(),
         25 => "Cronos".to_string(),
-        42 => "Atlas Sphere".to_string(),
+        42 => "X3 Chain".to_string(),
         56 => "BNB Chain".to_string(),
         137 => "Polygon".to_string(),
         250 => "Fantom".to_string(),
@@ -425,7 +425,7 @@ fn find_route(from_chain: u64, to_chain: u64) -> Result<Route> {
             estimated_gas: 150_000,
         });
     } else {
-        // Cross-chain: bridge via Atlas Kernel
+        // Cross-chain: bridge via X3 Kernel
         legs.push(RouteLeg {
             from_chain,
             to_chain,
@@ -435,7 +435,7 @@ fn find_route(from_chain: u64, to_chain: u64) -> Result<Route> {
     }
 
     let total_gas: u64 = legs.iter().map(|l| l.estimated_gas).sum();
-    let total_time_ms = 6000; // 1 Atlas block
+    let total_time_ms = 6000; // 1 X3 block
 
     Ok(Route {
         legs,
@@ -523,8 +523,8 @@ fn get_all_chains() -> Vec<ChainInfo> {
         },
         ChainInfo {
             chain_id: 42,
-            name: "Atlas Sphere".into(),
-            symbol: "ATLAS".into(),
+            name: "X3 Chain".into(),
+            symbol: "X3".into(),
             is_l2: false,
             block_time_ms: 6000,
             confirmations: 1,

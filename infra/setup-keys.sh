@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Atlas Sphere MCP - Quick API Keys Setup Script
+# X3 Chain MCP - Quick API Keys Setup Script
 # This script helps you set up the essential API keys for development
 
-echo "🔑 Atlas Sphere MCP - API Keys Setup"
+echo "🔑 X3 Chain MCP - API Keys Setup"
 echo "===================================="
 echo ""
 
@@ -45,7 +45,7 @@ echo -e "${YELLOW}Generate These Keys Locally:${NC}"
 echo "============================"
 
 echo -e "${GREEN}5. Generate Wallet Keystore${NC}"
-echo "   → This will be your main Atlas wallet"
+echo "   → This will be your main X3 wallet"
 echo '   → Run: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"'
 echo ""
 
@@ -56,7 +56,7 @@ echo ""
 
 echo -e "${GREEN}7. Generate Git SSH Key${NC}"
 echo "   → For repository access"
-echo "   → Run: ssh-keygen -t ed25519 -C 'atlas-sphere'"
+echo "   → Run: ssh-keygen -t ed25519 -C 'x3-chain'"
 echo ""
 
 echo ""

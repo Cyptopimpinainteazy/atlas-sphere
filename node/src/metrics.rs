@@ -1,5 +1,5 @@
 use std::sync::atomic::{AtomicU64, Ordering};
-/// Metrics and Monitoring for Atlas Sphere
+/// Metrics and Monitoring for X3 Chain
 ///
 /// Production-ready Prometheus metrics for observability.
 /// Uses Substrate's prometheus registry when available.
@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// Prometheus registry type alias (use substrate_prometheus_endpoint's Registry)
 pub type PrometheusRegistry = substrate_prometheus_endpoint::Registry;
 
-/// Atlas Sphere metrics collector with Prometheus integration
+/// X3 Chain metrics collector with Prometheus integration
 pub struct MetricsCollector {
     /// Prometheus registry reference
     registry: Option<Arc<PrometheusRegistry>>,

@@ -214,7 +214,7 @@ print(result)
         
         try:
             import sys
-            sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
             from performance_optimizer import GPUMemoryPool
             
             pool = GPUMemoryPool(total_size_mb=40960)
@@ -250,7 +250,7 @@ print(result)
         
         try:
             import sys
-            sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
             from performance_optimizer import NetworkOptimizer
             
             optimizer = NetworkOptimizer()
@@ -290,7 +290,7 @@ print(result)
         
         try:
             import sys
-            sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
             from jury_system import VerificationConsensus
             
             consensus = VerificationConsensus(total_jurors=3, threshold=0.5)

@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/dex",
+  "name": "@x3-chain/dex",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
+    "@x3-chain/ts-sdk": "file:../../packages/ts-sdk",
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
     "autoprefixer": "^10.4.24",

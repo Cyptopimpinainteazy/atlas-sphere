@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'pallets/atlas-jury-anchor/**'
+      - 'pallets/x3-jury-anchor/**'
       - 'swarm/jury/**'
       - 'packages/blockchain-adapter/**'
       - 'tests/**'
@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: atlas-sphere/jury-anchor
+  IMAGE_NAME: x3-chain/jury-anchor
   RUST_BACKTRACE: 1
   CARGO_TERM_COLOR: always
 
@@ -65,7 +65,7 @@ jobs:
 
       - name: 🔨 Build pallet
         run: |
-          cd pallets/atlas-jury-anchor
+          cd pallets/x3-jury-anchor
           cargo build --release
           echo "✅ Pallet built successfully"
 
@@ -163,7 +163,7 @@ jobs:
           args: >
             -l
             --enableExperimental
-            --project "Atlas Sphere - Phase 5"
+            --project "X3 Chain - Phase 5"
 
       - name: 📤 Upload OWASP report
         uses: actions/upload-artifact@v3

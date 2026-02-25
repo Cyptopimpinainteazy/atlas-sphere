@@ -1,5 +1,5 @@
 /**
- * Unified Chain Provider for Atlas Sphere Frontend Apps
+ * Unified Chain Provider for X3 Chain Frontend Apps
  * 
  * Provides React context for blockchain connection state,
  * real-time subscriptions, and SDK access across all components.
@@ -46,8 +46,8 @@ export interface ChainContextState {
   setNetwork: (network: NetworkId) => Promise<void>;
 }
 
-// Custom types for Atlas Kernel pallet
-const ATLAS_TYPES = {
+// Custom types for X3 Kernel pallet
+const X3_TYPES = {
   Comit: {
     comit_id: 'H256',
     origin: 'AccountId',
@@ -80,8 +80,8 @@ const ATLAS_TYPES = {
   },
 };
 
-// Custom RPC methods for Atlas Kernel
-const ATLAS_RPC = {
+// Custom RPC methods for X3 Kernel
+const X3_RPC = {
   atlasKernel: {
     getCanonicalBalance: {
       description: 'Get canonical balance for account and asset',
@@ -220,8 +220,8 @@ export function ChainProvider({ children, autoConnect = true }: ChainProviderPro
       // Create API instance with custom types
       apiRef.current = await ApiPromise.create({
         provider: providerRef.current,
-        types: ATLAS_TYPES,
-        rpc: ATLAS_RPC,
+        types: X3_TYPES,
+        rpc: X3_RPC,
       });
 
       await apiRef.current.isReady;

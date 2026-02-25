@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Atlas Sphere Wallet | X3 Trading Dashboard",
+  title: "X3 Chain Wallet | X3 Trading Dashboard",
   description: "Integrated crypto wallet with advanced trading platform powered by Polkadex",
 };
 

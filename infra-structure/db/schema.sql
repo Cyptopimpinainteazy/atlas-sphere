@@ -1,4 +1,4 @@
--- Atlas Sphere Infrastructure — Chain Database Schema
+-- X3 Chain Infrastructure — Chain Database Schema
 -- Supports 60,000+ blockchains with full metadata, RPC endpoints, and status tracking
 
 CREATE TABLE IF NOT EXISTS chains (
@@ -48,6 +48,20 @@ CREATE TABLE IF NOT EXISTS rpc_endpoints (
     created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Chain connectors registered via onboarding (credentials are masked + encrypted)
+CREATE TABLE IF NOT EXISTS chain_connectors (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    chain_id         TEXT NOT NULL,
+    rpc_url          TEXT NOT NULL,
+    auth_type        TEXT NOT NULL DEFAULT 'none', -- none | bearer | basic | api_key | custom
+    credential_mask  TEXT,                         -- masked credential for UI display
+    credential_enc   TEXT,                         -- encrypted credential payload (AES-256-GCM JSON)
+    notes            TEXT,
+    status           TEXT NOT NULL DEFAULT 'active',
+    created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS chain_metrics (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     chain_id        TEXT NOT NULL REFERENCES chains(chain_id) ON DELETE CASCADE,
@@ -90,6 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_rpc_healthy ON rpc_endpoints(is_healthy);
 CREATE INDEX IF NOT EXISTS idx_rpc_rotation ON rpc_endpoints(chain_id, is_healthy, weight DESC, avg_latency_ms ASC);
 CREATE INDEX IF NOT EXISTS idx_metrics_chain ON chain_metrics(chain_id);
 CREATE INDEX IF NOT EXISTS idx_gpu_stats_chain ON gpu_validation_stats(chain_id);
+CREATE INDEX IF NOT EXISTS idx_connectors_chain ON chain_connectors(chain_id);
 
 -- Full-text search on chain names
 CREATE VIRTUAL TABLE IF NOT EXISTS chains_fts USING fts5(chain_id, chain_name, ecosystem, native_token, content=chains, content_rowid=id);

@@ -3,9 +3,9 @@
 set -e
 
 KEYS_DIR="deployment/keys"
-BACKUP_NAME="atlas-testnet-keys-$(date +%Y%m%d-%H%M%S)"
+BACKUP_NAME="x3-testnet-keys-$(date +%Y%m%d-%H%M%S)"
 
-echo "🔐 Atlas Sphere Testnet - Keys Backup Utility"
+echo "🔐 X3 Chain Testnet - Keys Backup Utility"
 echo "=============================================="
 echo ""
 

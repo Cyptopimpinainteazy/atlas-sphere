@@ -14,7 +14,7 @@ export interface X3ChainToken {
  */
 export const x3chainChainConfig = {
   id: 'x3chain' as const,
-  display: 'Atlas Sphere (x3chain)',
+  display: 'X3 Chain (x3chain)',
   type: 'substrate' as const,
   icon: 'x3chain',
   paraChainId: -1, // sovereign chain, not a parachain
@@ -25,11 +25,11 @@ export const x3chainChainConfig = {
  * Tokens available on x3chain.
  */
 export const x3chainTokensConfig: Record<string, X3ChainToken> = {
-  ATLAS: {
-    name: 'ATLAS',
-    symbol: 'ATLAS',
+  X3: {
+    name: 'X3',
+    symbol: 'X3',
     decimals: 18,
-    ed: '1000000000000', // 0.001 ATLAS
+    ed: '1000000000000', // 0.001 X3
   },
   DOT: {
     name: 'DOT',
@@ -104,9 +104,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'acala',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '1000000000000000' },
+      fee: { token: 'X3', amount: '1000000000000000' },
     },
   },
   {
@@ -122,9 +122,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'moonbeam',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '2000000000000000' },
+      fee: { token: 'X3', amount: '2000000000000000' },
     },
   },
   {
@@ -140,9 +140,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'hydradx',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '1500000000000000' },
+      fee: { token: 'X3', amount: '1500000000000000' },
     },
   },
   {
@@ -158,9 +158,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'astar',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '1000000000000000' },
+      fee: { token: 'X3', amount: '1000000000000000' },
     },
   },
 
@@ -188,9 +188,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'bifrost',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '1000000000000000' },
+      fee: { token: 'X3', amount: '1000000000000000' },
     },
   },
 
@@ -198,9 +198,9 @@ export const x3chainRouteConfigs = [
   {
     from: 'x3chain',
     to: 'khala',
-    token: 'ATLAS',
+    token: 'X3',
     xcm: {
-      fee: { token: 'ATLAS', amount: '1500000000000000' },
+      fee: { token: 'X3', amount: '1500000000000000' },
     },
   },
 ];

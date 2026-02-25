@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://atlas-sphere.io/schemas/contract-abi/v1.0",
+  "$id": "https://x3-chain.io/schemas/contract-abi/v1.0",
   "title": "X3 Contract ABI Schema",
   "description": "Application Binary Interface for X3 contracts - defines callable functions, events, and storage",
   "type": "object",

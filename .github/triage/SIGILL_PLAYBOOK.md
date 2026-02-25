@@ -23,7 +23,7 @@ Quick triage steps
 5. Reproduce locally (best-effort)
    - Try running the same test command under strace locally (prefer in a fresh environment or container):
      - ulimit -c unlimited
-     - strace -ff -o strace.out -s 200 -tt -f bash -lc 'cargo test -p atlas-evm-integration --features frontier-executor -- --nocapture'
+     - strace -ff -o strace.out -s 200 -tt -f bash -lc 'cargo test -p x3-evm-integration --features frontier-executor -- --nocapture'
    - If SIGILL reproduces, try to find minimal test or isolate the call causing the illegal instruction.
 
 6. Narrow scope

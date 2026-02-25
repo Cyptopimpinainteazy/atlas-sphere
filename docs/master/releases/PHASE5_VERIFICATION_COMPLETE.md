@@ -63,8 +63,8 @@
 ### Implementation Code (5 files, 3,000+ lines)
 
 **Pallet (Rust):**
-- Location: `pallets/atlas-jury-anchor/src/lib.rs` | 500+ lines | ✅
-- Location: `pallets/atlas-jury-anchor/Cargo.toml` | 30 lines | ✅
+- Location: `pallets/x3-jury-anchor/src/lib.rs` | 500+ lines | ✅
+- Location: `pallets/x3-jury-anchor/Cargo.toml` | 30 lines | ✅
 
 **Python Service:**
 - Location: `swarm/jury/anchorer.py` | 450+ lines | ✅
@@ -227,7 +227,7 @@ Status: ✅ PRODUCTION-READY
 
 **To See the Code:**
 → Review these files:
-- `/pallets/atlas-jury-anchor/src/lib.rs` (Rust pallet)
+- `/pallets/x3-jury-anchor/src/lib.rs` (Rust pallet)
 - `/swarm/jury/anchorer.py` (Python service)
 - `/packages/blockchain-adapter/src/jury-anchoring.ts` (React)
 - `/tests/test_jury_anchoring.py` (tests)

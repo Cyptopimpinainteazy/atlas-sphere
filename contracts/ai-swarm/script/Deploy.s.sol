@@ -144,7 +144,7 @@ contract DeployAISwarmLocal is DeployAISwarm {
         vm.startBroadcast();
 
         // Deploy mock ERC20 for testing
-        MockERC20 mockToken = new MockERC20("Atlas Token", "ATLAS");
+        MockERC20 mockToken = new MockERC20("X3 Token", "X3");
         stakingToken = address(mockToken);
         rewardToken = address(mockToken);
         paymentToken = address(mockToken);

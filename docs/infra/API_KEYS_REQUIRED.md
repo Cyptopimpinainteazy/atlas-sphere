@@ -1,4 +1,4 @@
-# Required API Keys for Atlas Sphere MCP Services
+# Required API Keys for X3 Chain MCP Services
 
 ## 🎯 **IMMEDIATE - Get These First**
 
@@ -37,7 +37,7 @@
    - Fund with test ETH for development
 
 8. **Node Operator Key**
-   - Generate validator key for Atlas node
+   - Generate validator key for X3 node
    - Keep secure, used for blockchain operations
 
 ## 🔧 **OPERATIONAL KEYS**

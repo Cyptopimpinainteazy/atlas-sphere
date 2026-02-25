@@ -8,10 +8,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-WORKSPACE_ROOT="/home/lojak/Desktop/atlas-sphere"
+WORKSPACE_ROOT="/home/lojak/Desktop/x3-chain"
 KEYS_DIR="$WORKSPACE_ROOT/deployment/keys"
 
-echo "🔑 Atlas Sphere Testnet v1 - Key Generation"
+echo "🔑 X3 Chain Testnet v1 - Key Generation"
 echo "============================================"
 echo ""
 
@@ -126,19 +126,19 @@ echo ""
 echo "🔑 Step 2/2: Generating bootnode network key..."
 echo ""
 
-# Generate bootnode key using atlas-sphere-node
+# Generate bootnode key using x3-chain-node
 cd "$WORKSPACE_ROOT"
 BOOTNODE_KEY_FILE="$KEYS_DIR/bootnode-node-key"
 BOOTNODE_INFO_FILE="$KEYS_DIR/bootnode-info.txt"
 
 # Generate the network key
-./target/release/atlas-sphere-node key generate-node-key --file "$BOOTNODE_KEY_FILE"
+./target/release/x3-chain-node key generate-node-key --file "$BOOTNODE_KEY_FILE"
 
 # Read the generated key
 BOOTNODE_KEY=$(cat "$BOOTNODE_KEY_FILE")
 
 # Derive the peer ID
-PEER_ID_OUTPUT=$(./target/release/atlas-sphere-node key inspect-node-key --file "$BOOTNODE_KEY_FILE")
+PEER_ID_OUTPUT=$(./target/release/x3-chain-node key inspect-node-key --file "$BOOTNODE_KEY_FILE")
 PEER_ID=$(echo "$PEER_ID_OUTPUT" | grep -oP '\w{52}')
 
 echo "  Generated bootnode network key"
@@ -160,11 +160,11 @@ $PEER_ID
 
 ## Example (replace <BOOTNODE_IP> with actual IP)
 /ip4/10.0.1.100/tcp/30333/p2p/$PEER_ID
-/dns4/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/$PEER_ID
+/dns4/bootnode.testnet.x3-chain.io/tcp/30333/p2p/$PEER_ID
 
 ## Systemd Service Configuration
-Place the node key file at: /var/lib/atlas/node-key
-Set permissions: chmod 600 /var/lib/atlas/node-key
+Place the node key file at: /var/lib/x3/node-key
+Set permissions: chmod 600 /var/lib/x3/node-key
 
 ## Chain Spec Entry (Add to "bootNodes")
 "/ip4/<BOOTNODE_IP>/tcp/30333/p2p/$PEER_ID"
@@ -176,7 +176,7 @@ echo ""
 # Generate keys manifest
 MANIFEST_FILE="$KEYS_DIR/KEYS_MANIFEST.md"
 cat > "$MANIFEST_FILE" << EOF
-# Atlas Sphere Testnet v1 - Keys Manifest
+# X3 Chain Testnet v1 - Keys Manifest
 
 **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")  
 **Validators**: $NUM_VALIDATORS  
@@ -210,10 +210,10 @@ cat >> "$MANIFEST_FILE" << 'EOF'
    ```bash
    # GPG encrypted backup
    tar czf - deployment/keys | gpg -e -r your@email.com \
-     > atlas-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
+     > x3-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
    
    # Password-protected zip (requires zip package)
-   zip -r -e atlas-testnet-keys-$(date +%Y%m%d).zip deployment/keys/
+   zip -r -e x3-testnet-keys-$(date +%Y%m%d).zip deployment/keys/
    ```
 
 2. **Store Backups in 3 Locations**
@@ -259,8 +259,8 @@ If keys are compromised:
 
 ## 📞 Emergency Contacts
 
-- **Security Issues**: security@atlas-sphere.io
-- **Deployment Support**: devops@atlas-sphere.io
+- **Security Issues**: security@x3-chain.io
+- **Deployment Support**: devops@x3-chain.io
 - **On-Call**: [Add phone/pager]
 
 ---
@@ -286,17 +286,17 @@ echo -e "${RED}⚠️  CRITICAL - BACKUP IMMEDIATELY:${NC}"
 echo ""
 echo "  # GPG encrypted backup (recommended)"
 echo "  tar czf - deployment/keys | gpg -e -r your@email.com \\"
-echo "    > atlas-testnet-keys-\$(date +%Y%m%d).tar.gz.gpg"
+echo "    > x3-testnet-keys-\$(date +%Y%m%d).tar.gz.gpg"
 echo ""
 echo -e "${YELLOW}📋 Next steps:${NC}"
 echo ""
 echo "1. BACKUP the keys (see command above)"
 echo "2. Update chain spec with validator authorities:"
-echo "   • Edit: deployment/chain-specs/atlas-testnet-plain.json"
+echo "   • Edit: deployment/chain-specs/x3-testnet-plain.json"
 echo "   • Add validator SS58 addresses to 'initialAuthorities'"
-echo "   • Regenerate raw spec: ./target/release/atlas-sphere-node build-spec \\"
-echo "       --chain deployment/chain-specs/atlas-testnet-plain.json --raw \\"
-echo "       > deployment/chain-specs/atlas-testnet-raw.json"
+echo "   • Regenerate raw spec: ./target/release/x3-chain-node build-spec \\"
+echo "       --chain deployment/chain-specs/x3-testnet-plain.json --raw \\"
+echo "       > deployment/chain-specs/x3-testnet-raw.json"
 echo ""
 echo "3. Provision infrastructure (if not done yet):"
 echo "   • Run: ./deployment/provision-digitalocean.sh (or AWS/manual guide)"

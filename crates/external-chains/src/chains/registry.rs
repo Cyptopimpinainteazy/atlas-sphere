@@ -1149,11 +1149,11 @@ pub static ALL_CHAINS: &[ChainInfo] = &[
         block_time_ms: 3000,
         confirmations: 1,
     },
-    // Atlas Sphere (our chain!)
+    // X3 Chain (our chain!)
     ChainInfo {
         chain_id: 42,
-        name: "Atlas Sphere",
-        symbol: "ATLAS",
+        name: "X3 Chain",
+        symbol: "X3",
         rpc: "http://127.0.0.1:9944",
         explorer: "http://explorer.x3",
         is_l2: false,
@@ -1210,8 +1210,8 @@ mod tests {
         assert_eq!(eth.name, "Ethereum");
         assert_eq!(eth.symbol, "ETH");
 
-        let atlas = get_chain(42).unwrap();
-        assert_eq!(atlas.name, "Atlas Sphere");
+        let x3 = get_chain(42).unwrap();
+        assert_eq!(x3.name, "X3 Chain");
     }
 
     #[test]

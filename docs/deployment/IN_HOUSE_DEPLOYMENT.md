@@ -1,7 +1,7 @@
 # 🏠 In-House Server Deployment Guide
 
 ## Quick Overview
-Deploy Atlas Sphere testnet on your own hardware/servers with full control and zero cloud costs.
+Deploy X3 Chain testnet on your own hardware/servers with full control and zero cloud costs.
 
 ---
 
@@ -30,14 +30,14 @@ Perfect for testing everything locally on ONE machine:
 
 ```bash
 # Already have the binary built!
-cd /home/lojak/Desktop/atlas-sphere
+cd /home/lojak/Desktop/x3-chain
 
 # Run in dev mode (single validator, instant blocks)
-./target/release/atlas-sphere-node --dev --tmp
+./target/release/x3-chain-node --dev --tmp
 
 # Or with persistent data:
-./target/release/atlas-sphere-node --dev \
-  --base-path /var/lib/atlas-sphere/dev \
+./target/release/x3-chain-node --dev \
+  --base-path /var/lib/x3-chain/dev \
   --rpc-external --rpc-cors all \
   --port 30333 --rpc-port 9944
 ```
@@ -75,20 +75,20 @@ One Beefy Server:
 ### Option A: Copy to Remote Servers
 ```bash
 # From your build machine
-cd /home/lojak/Desktop/atlas-sphere
+cd /home/lojak/Desktop/x3-chain
 
 # Copy to each server
 for server in server1 server2 server3; do
-    scp target/release/atlas-sphere-node user@$server:/usr/local/bin/
-    ssh user@$server "chmod +x /usr/local/bin/atlas-sphere-node"
+    scp target/release/x3-chain-node user@$server:/usr/local/bin/
+    ssh user@$server "chmod +x /usr/local/bin/x3-chain-node"
 done
 ```
 
 ### Option B: Run All on This Machine
 ```bash
 # Just use the existing binary
-sudo cp target/release/atlas-sphere-node /usr/local/bin/
-sudo chmod +x /usr/local/bin/atlas-sphere-node
+sudo cp target/release/x3-chain-node /usr/local/bin/
+sudo chmod +x /usr/local/bin/x3-chain-node
 ```
 
 ---
@@ -104,16 +104,16 @@ You already have keys in `deployment/keys/`:
 
 ### Deploy Keys to Servers
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 
 # For each validator server:
 # Copy the ENTIRE keystore folder
-scp -r keys/validator-01-keys/keystore user@validator01:/var/lib/atlas-sphere/chains/atlas_testnet/
+scp -r keys/validator-01-keys/keystore user@validator01:/var/lib/x3-chain/chains/x3_testnet/
 
 # Or if running locally, create base directories:
-sudo mkdir -p /var/lib/atlas-sphere/chains/atlas_testnet/
-sudo cp -r keys/validator-01-keys/keystore /var/lib/atlas-sphere/chains/atlas_testnet/
-sudo chown -R $USER:$USER /var/lib/atlas-sphere
+sudo mkdir -p /var/lib/x3-chain/chains/x3_testnet/
+sudo cp -r keys/validator-01-keys/keystore /var/lib/x3-chain/chains/x3_testnet/
+sudo chown -R $USER:$USER /var/lib/x3-chain
 ```
 
 ---
@@ -122,7 +122,7 @@ sudo chown -R $USER:$USER /var/lib/atlas-sphere
 
 ### Get Bootnode Key
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 BOOTNODE_KEY=$(cat keys/bootnode-key.txt)
 echo "Bootnode Secret: $BOOTNODE_KEY"
 ```
@@ -130,10 +130,10 @@ echo "Bootnode Secret: $BOOTNODE_KEY"
 ### Start Bootnode
 ```bash
 # On bootnode server (or in tmux session)
-atlas-sphere-node \
-  --chain /path/to/atlas-testnet-raw.json \
-  --base-path /var/lib/atlas-sphere/bootnode \
-  --name "Atlas-Bootnode" \
+x3-chain-node \
+  --chain /path/to/x3-testnet-raw.json \
+  --base-path /var/lib/x3-chain/bootnode \
+  --name "X3-Bootnode" \
   --node-key $BOOTNODE_KEY \
   --port 30333 \
   --rpc-port 9944 \
@@ -149,7 +149,7 @@ atlas-sphere-node \
 # Save this entire peer ID!
 
 # Or generate it:
-atlas-sphere-node key inspect-node-key --file keys/bootnode-key.txt
+x3-chain-node key inspect-node-key --file keys/bootnode-key.txt
 ```
 
 ---
@@ -161,9 +161,9 @@ atlas-sphere-node key inspect-node-key --file keys/bootnode-key.txt
 # Replace BOOTNODE_PEER_ID with value from step 3
 # Replace BOOTNODE_IP with your bootnode's IP (or 127.0.0.1 if same machine)
 
-atlas-sphere-node \
-  --chain /home/lojak/Desktop/atlas-sphere/deployment/chain-specs/atlas-testnet-raw.json \
-  --base-path /var/lib/atlas-sphere/validator-01 \
+x3-chain-node \
+  --chain /home/lojak/Desktop/x3-chain/deployment/chain-specs/x3-testnet-raw.json \
+  --base-path /var/lib/x3-chain/validator-01 \
   --name "Validator-01" \
   --validator \
   --port 30334 \
@@ -177,9 +177,9 @@ atlas-sphere-node \
 
 ### Validator 02
 ```bash
-atlas-sphere-node \
-  --chain /home/lojak/Desktop/atlas-sphere/deployment/chain-specs/atlas-testnet-raw.json \
-  --base-path /var/lib/atlas-sphere/validator-02 \
+x3-chain-node \
+  --chain /home/lojak/Desktop/x3-chain/deployment/chain-specs/x3-testnet-raw.json \
+  --base-path /var/lib/x3-chain/validator-02 \
   --name "Validator-02" \
   --validator \
   --port 30335 \
@@ -190,9 +190,9 @@ atlas-sphere-node \
 
 ### Validator 03
 ```bash
-atlas-sphere-node \
-  --chain /home/lojak/Desktop/atlas-sphere/deployment/chain-specs/atlas-testnet-raw.json \
-  --base-path /var/lib/atlas-sphere/validator-03 \
+x3-chain-node \
+  --chain /home/lojak/Desktop/x3-chain/deployment/chain-specs/x3-testnet-raw.json \
+  --base-path /var/lib/x3-chain/validator-03 \
   --name "Validator-03" \
   --validator \
   --port 30336 \
@@ -263,18 +263,18 @@ curl -H "Content-Type: application/json" \
 
 ### Create Service File
 ```bash
-sudo tee /etc/systemd/system/atlas-validator-01.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/x3-validator-01.service > /dev/null <<EOF
 [Unit]
-Description=Atlas Sphere Validator 01
+Description=X3 Chain Validator 01
 After=network.target
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=/home/$USER
-ExecStart=/usr/local/bin/atlas-sphere-node \\
-  --chain /home/lojak/Desktop/atlas-sphere/deployment/chain-specs/atlas-testnet-raw.json \\
-  --base-path /var/lib/atlas-sphere/validator-01 \\
+ExecStart=/usr/local/bin/x3-chain-node \\
+  --chain /home/lojak/Desktop/x3-chain/deployment/chain-specs/x3-testnet-raw.json \\
+  --base-path /var/lib/x3-chain/validator-01 \\
   --name "Validator-01" \\
   --validator \\
   --port 30334 \\
@@ -290,12 +290,12 @@ EOF
 
 # Enable and start
 sudo systemctl daemon-reload
-sudo systemctl enable atlas-validator-01
-sudo systemctl start atlas-validator-01
+sudo systemctl enable x3-validator-01
+sudo systemctl start x3-validator-01
 
 # Check status
-sudo systemctl status atlas-validator-01
-sudo journalctl -u atlas-validator-01 -f
+sudo systemctl status x3-validator-01
+sudo journalctl -u x3-validator-01 -f
 ```
 
 ---
@@ -304,7 +304,7 @@ sudo journalctl -u atlas-validator-01 -f
 
 ### Super Easy Local Deploy
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 
 # This will:
 # 1. Copy binary to /usr/local/bin
@@ -324,10 +324,10 @@ Let me create that script now! ⚡
 ### Ubuntu UFW
 ```bash
 # Allow P2P
-sudo ufw allow 30333/tcp comment 'Atlas P2P'
+sudo ufw allow 30333/tcp comment 'X3 P2P'
 
 # Allow RPC (only on RPC nodes, restrict to trusted IPs)
-sudo ufw allow from YOUR_IP to any port 9944 comment 'Atlas RPC'
+sudo ufw allow from YOUR_IP to any port 9944 comment 'X3 RPC'
 
 # Enable firewall
 sudo ufw enable
@@ -349,7 +349,7 @@ sudo iptables -A INPUT -p tcp --dport 9944 -s YOUR_IP -j ACCEPT
 ### Quick Health Check
 ```bash
 # Check if nodes are running
-ps aux | grep atlas-sphere-node
+ps aux | grep x3-chain-node
 
 # Check connectivity
 curl http://localhost:9944
@@ -386,7 +386,7 @@ Your testnet is working when you see:
 ### Nodes Not Connecting
 ```bash
 # Check bootnode peer ID is correct
-atlas-sphere-node key inspect-node-key --file deployment/keys/bootnode-key.txt
+x3-chain-node key inspect-node-key --file deployment/keys/bootnode-key.txt
 
 # Check firewall
 sudo ufw status
@@ -398,10 +398,10 @@ telnet BOOTNODE_IP 30333
 ### Keys Not Loading
 ```bash
 # Verify keystore exists
-ls -la /var/lib/atlas-sphere/validator-01/chains/atlas_testnet/keystore/
+ls -la /var/lib/x3-chain/validator-01/chains/x3_testnet/keystore/
 
 # Check permissions
-sudo chown -R $USER:$USER /var/lib/atlas-sphere
+sudo chown -R $USER:$USER /var/lib/x3-chain
 ```
 
 ### Not Producing Blocks

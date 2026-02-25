@@ -136,14 +136,14 @@ impl ChainConfig {
         }
     }
 
-    /// Create config for Atlas Sphere L1
-    pub fn atlas_sphere() -> Self {
+    /// Create config for X3 Chain L1
+    pub fn x3_chain() -> Self {
         Self {
             chain_id: 0x41544C53, // "ATLS" in hex
-            name: "Atlas Sphere".to_string(),
-            rpc_endpoints: vec!["https://rpc.atlas-sphere.io".to_string()],
-            ws_endpoints: vec!["wss://ws.atlas-sphere.io".to_string()],
-            mempool_endpoint: Some("wss://mempool.atlas-sphere.io".to_string()),
+            name: "X3 Chain".to_string(),
+            rpc_endpoints: vec!["https://rpc.x3-chain.io".to_string()],
+            ws_endpoints: vec!["wss://ws.x3-chain.io".to_string()],
+            mempool_endpoint: Some("wss://mempool.x3-chain.io".to_string()),
             block_time_ms: 6000,
             confirmation_blocks: 1,
             gas_price_multiplier: 1.0,

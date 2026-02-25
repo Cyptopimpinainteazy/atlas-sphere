@@ -1,5 +1,5 @@
 /**
- * Atlas Kernel Service — submit_comit, submit_comit_v2, account/asset management
+ * X3 Kernel Service — submit_comit, submit_comit_v2, account/asset management
  */
 
 import type { ApiPromise } from '@polkadot/api';

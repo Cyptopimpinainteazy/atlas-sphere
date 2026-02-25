@@ -1,4 +1,4 @@
-# 🚀 Atlas Sphere Implementation Complete
+# 🚀 X3 Chain Implementation Complete
 
 ## Quick Navigation
 
@@ -28,13 +28,13 @@
 **Login with:**
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 ### ✅ Auto-Start Infrastructure
 - 3 systemd services (Redis, Validator, Dashboard)
 - Auto-start on system reboot
-- Secure user isolation (atlas user)
+- Secure user isolation (x3 user)
 - Fallback manual startup script
 - Complete logging infrastructure
 
@@ -51,7 +51,7 @@ Password: atlas-sphere-2026
 
 ### Step 1: Install Services
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 ```
 
 ⏱️ Takes: ~10 seconds
@@ -59,10 +59,10 @@ sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-ser
 
 ### Step 2: Configure
 ```bash
-cp /home/lojak/Desktop/atlas-sphere-master/deployment/env/.env.template \
-   /home/lojak/Desktop/atlas-sphere-master/.env
+cp /home/lojak/Desktop/x3-chain-master/deployment/env/.env.template \
+   /home/lojak/Desktop/x3-chain-master/.env
 
-nano /home/lojak/Desktop/atlas-sphere-master/.env
+nano /home/lojak/Desktop/x3-chain-master/.env
 ```
 
 ⏱️ Takes: ~5 minutes
@@ -88,7 +88,7 @@ http://localhost:5173
 ### Login
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 ### Check Services
@@ -183,7 +183,7 @@ sudo systemctl disable x3-intelligence.service
 ### Manual Operations
 ```bash
 # Start all services manually (if systemd fails)
-bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/startup.sh
+bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/startup.sh
 
 # Check listening ports
 sudo lsof -i :5173    # Dashboard
@@ -194,12 +194,12 @@ sudo lsof -i :6379    # Redis
 ### Testing
 ```bash
 # Run test suite
-bash /home/lojak/Desktop/atlas-sphere-master/scripts/run-local-tests.sh
+bash /home/lojak/Desktop/x3-chain-master/scripts/run-local-tests.sh
 
 # Login test with curl
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"atlas-sphere-2026"}'
+  -d '{"username":"admin","password":"x3-chain-2026"}'
 ```
 
 ---
@@ -215,7 +215,7 @@ curl -X POST http://localhost:8000/api/auth/login \
 | Service Installer | Install systemd unit | `deployment/scripts/install-services.sh` |
 | Startup Fallback | Manual startup script | `deployment/scripts/startup.sh` |
 | Tests | E2E test suite | `cross-chain-gpu-validator/tests/` |
-| Logs | Service logs | `/var/log/atlas/` |
+| Logs | Service logs | `/var/log/x3/` |
 
 ---
 
@@ -236,7 +236,7 @@ sudo systemctl restart ccgv-validator.service
 ### "Invalid credentials"
 ```bash
 # Check credentials in .env
-grep DEFAULT_ /home/lojak/Desktop/atlas-sphere-master/.env
+grep DEFAULT_ /home/lojak/Desktop/x3-chain-master/.env
 
 # Or check hardcoded in auth.ts
 grep -A 5 "DEFAULT_USER" apps/x3-intelligence/src/auth.ts
@@ -385,14 +385,14 @@ ENABLE_HTTPS=false                   # HTTPS toggle
 
 ```bash
 # Install services (do this first!)
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 
 # Then create configuration
-cp /home/lojak/Desktop/atlas-sphere-master/deployment/env/.env.template \
-   /home/lojak/Desktop/atlas-sphere-master/.env
+cp /home/lojak/Desktop/x3-chain-master/deployment/env/.env.template \
+   /home/lojak/Desktop/x3-chain-master/.env
 
 # Edit with your values
-nano /home/lojak/Desktop/atlas-sphere-master/.env
+nano /home/lojak/Desktop/x3-chain-master/.env
 
 # Finally, reboot to auto-start
 sudo reboot
@@ -406,13 +406,13 @@ After reboot: **http://localhost:5173** ready to use!
 
 ```
 ┌─────────────────────────────────────────┐
-│   Atlas Sphere - Quick Reference        │
+│   X3 Chain - Quick Reference        │
 ├─────────────────────────────────────────┤
 │ Install:  sudo bash deployment/...      │
 │ Config:   cp deployment/env/.env.*      │
 │ Reboot:   sudo reboot                   │
 │ Access:   http://localhost:5173         │
-│ Login:    admin / atlas-sphere-2026     │
+│ Login:    admin / x3-chain-2026     │
 │ Logs:     sudo journalctl -u x3-...  -f │
 │ Status:   sudo systemctl status x3-...  │
 └─────────────────────────────────────────┘

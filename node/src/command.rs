@@ -2,10 +2,10 @@ use crate::{
     cli::{AtomicSwapSubcommand, Cli, Commands},
     service::{self, AtlasSphereExecutorDispatch},
 };
-use atlas_sphere_runtime::opaque::Block;
+use x3_chain_runtime::opaque::Block;
 use clap::Parser;
 use log::{error, info, warn};
-use sc_cli::{CliConfiguration, Error as CliError, Result as CliResult, SubstrateCli};
+use sc_cli::{Error as CliError, Result as CliResult, SubstrateCli};
 
 use crate::logging;
 
@@ -24,7 +24,7 @@ pub fn run() -> CliResult<()> {
 
             runner.sync_run(|config| {
                 info!(
-                    "Building Atlas Sphere chain specification (raw: {})",
+                    "Building X3 Chain chain specification (raw: {})",
                     cmd.raw
                 );
                 cmd.run(config.chain_spec, config.network).map_err(|e| {
@@ -130,7 +130,7 @@ pub fn run() -> CliResult<()> {
             })?;
 
             runner.sync_run(|config| {
-                info!("Purging local database for Atlas Sphere");
+                info!("Purging local database for X3 Chain");
                 cmd.run(config.database).map_err(|e| {
                     error!("`purge-chain` command failed: {e}");
                     e
@@ -178,9 +178,9 @@ pub fn run() -> CliResult<()> {
         }
         #[cfg(feature = "try-runtime")]
         Some(Commands::TryRuntime(_cmd)) => {
-            error!("`try-runtime` is not yet supported for Atlas Sphere");
+            error!("`try-runtime` is not yet supported for X3 Chain");
             Err(CliError::Other(
-                "try-runtime subcommand is not yet supported for Atlas Sphere".into(),
+                "try-runtime subcommand is not yet supported for X3 Chain".into(),
             ))
         }
         Some(Commands::AtomicSwap(cmd)) => {
@@ -378,7 +378,7 @@ pub fn run() -> CliResult<()> {
                     println!("SVM Compute:     {}", svm_compute);
 
                     // Rough cost estimates (assuming 20 gwei gas price, $3000 ETH)
-                    let evm_cost_usd = (evm_gas as f64 * 20.0 * 1e-9 * 3000.0);
+                    let evm_cost_usd = evm_gas as f64 * 20.0 * 1e-9 * 3000.0;
                     println!(
                         "Est. EVM Cost:   ${:.4} (at 20 gwei, $3000/ETH)",
                         evm_cost_usd
@@ -396,9 +396,9 @@ pub fn run() -> CliResult<()> {
 
             runner.run_node_until_exit(|config| async move {
                 let role = config.role.clone();
-                info!("Starting Atlas Sphere node as {:?}", role);
+                info!("Starting X3 Chain node as {:?}", role);
                 service::new_full(config).map_err(|e| {
-                    error!("Atlas Sphere node terminated with an error: {e}");
+                    error!("X3 Chain node terminated with an error: {e}");
                     CliError::Service(e)
                 })
             })

@@ -10,4 +10,4 @@ Operators need a live telemetry surface in the desktop app to monitor GPU swarm 
 
 ## Impact
 - Affected specs: operator-dashboard
-- Affected code: apps/atlas-desktop (frontend + src-tauri backend)
+- Affected code: apps/x3-desktop (frontend + src-tauri backend)

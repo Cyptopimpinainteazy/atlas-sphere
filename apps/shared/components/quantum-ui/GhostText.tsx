@@ -226,7 +226,7 @@ export const GhostTextShowcase: React.FC<{ className?: string }> = ({ className 
   return (
     <div className={`ghost-text-showcase ${className}`} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <GhostText text="GHOST" ghostSpeed={4} />
-      <CyberGhost text="ATLAS" ghostSpeed={5} />
+      <CyberGhost text="X3" ghostSpeed={5} />
       <GhostText text="BOO!" ghostSpeed={3} fontSize="30vmin" />
     </div>
   );

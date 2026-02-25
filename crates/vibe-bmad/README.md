@@ -1,6 +1,6 @@
 # Vibe-BMAD Integration
 
-This wrapper enables running the BMAD Method (`bmad-method`) inside the Atlas Sphere workspace.
+This wrapper enables running the BMAD Method (`bmad-method`) inside the X3 Chain workspace.
 
 Requirements
 - Node.js >= 20 (BMAD requires Node >= 20)

@@ -2,7 +2,7 @@
 
 use crate::error::{CliError, Result};
 use crate::project::Project;
-use atlas_sdk::{AtlasClient, ComitBuilder};
+use x3_sdk::{AtlasClient, ComitBuilder};
 use clap::Args;
 use colored::Colorize;
 
@@ -62,7 +62,7 @@ pub async fn execute(args: SimulateArgs) -> Result<()> {
     } else {
         args.network
             .clone()
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     };
 
     println!("{} Simulating Comit transaction", "→".blue());
@@ -91,7 +91,7 @@ pub async fn execute(args: SimulateArgs) -> Result<()> {
     println!("  Nonce: {}", comit.nonce);
     println!("  EVM gas limit: {}", comit.evm_gas_limit);
     println!("  SVM compute limit: {}", comit.svm_compute_limit);
-    println!("  Fee: {} ATLAS", format_balance(comit.fee));
+    println!("  Fee: {} X3", format_balance(comit.fee));
     println!(
         "  Prepare root: 0x{}",
         hex::encode(&comit.prepare_root.0[..8])

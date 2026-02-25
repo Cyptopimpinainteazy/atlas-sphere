@@ -20,7 +20,7 @@
 
 ## Components Affected
 
-- [ ] Atlas Kernel (pallet)
+- [ ] X3 Kernel (pallet)
 - [ ] EVM Adapter / Integration
 - [ ] SVM Adapter / Integration
 - [ ] Runtime

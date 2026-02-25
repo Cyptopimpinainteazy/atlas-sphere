@@ -1,4 +1,4 @@
-# Ralph Execution Guide - Atlas Sphere Project
+# Ralph Execution Guide - X3 Chain Project
 
 ## Quick Start
 
@@ -53,7 +53,7 @@ Choose your approach:
 #### Approach A: Use Critical Path PRD (Recommended)
 ```bash
 # Rename critical path to be the active PRD
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 mv PRD.md PRD_sample_old.md  # backup original sample
 mv PRD_CRITICAL_PATH.md PRD.md
 ```
@@ -65,7 +65,7 @@ Then in Ralph Control Panel:
 #### Approach B: Use Complete Project PRD
 ```bash
 # Rename complete project to be the active PRD
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 mv PRD.md PRD_sample_old.md  # backup original sample
 mv PRD_COMPLETE_PROJECT.md PRD.md
 ```
@@ -360,7 +360,7 @@ Here's a typical Ralph session:
 
 ```bash
 # Day 1: Setup
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 mv PRD_CRITICAL_PATH.md PRD.md
 code .  # Open in VS Code
 
@@ -441,6 +441,6 @@ cargo test --workspace
 
 ---
 
-**You're ready!** Ralph will autonomously work through the entire Atlas Sphere project. 🚀
+**You're ready!** Ralph will autonomously work through the entire X3 Chain project. 🚀
 
 Open Ralph now and click Start to begin!

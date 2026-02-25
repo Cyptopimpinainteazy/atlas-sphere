@@ -1,8 +1,8 @@
-# 📦 Atlas Sphere - Complete File Manifest
+# 📦 X3 Chain - Complete File Manifest
 
 ## Summary of Recent Work
 
-This document catalogs all files created, modified, and documented during the recent setup of the Atlas Sphere cross-chain GPU validator with authentication and auto-start capabilities.
+This document catalogs all files created, modified, and documented during the recent setup of the X3 Chain cross-chain GPU validator with authentication and auto-start capabilities.
 
 ---
 
@@ -42,7 +42,7 @@ This document catalogs all files created, modified, and documented during the re
 - **Configuration**:
   - Type: simple
   - Restart: always (auto-restart on failure)
-  - User: atlas-sphere
+  - User: x3-chain
   - WorkingDirectory: ${INSTALL_DIR}
   - Port: 5173
   - WantedBy: multi-user.target
@@ -75,7 +75,7 @@ This document catalogs all files created, modified, and documented during the re
   - Installs npm and pip dependencies
   - Starts both X3 Dashboard and GPU Validator
   - Verifies both services started successfully
-  - Creates `/tmp/atlas-sphere-pids.txt` for PID tracking
+  - Creates `/tmp/x3-chain-pids.txt` for PID tracking
   - Colored output showing progress and status
 - **Status**: ✅ Created, executable (chmod +x)
 - **Run**: `bash scripts/start-beast.sh`
@@ -84,7 +84,7 @@ This document catalogs all files created, modified, and documented during the re
 #### ✅ `scripts/stop-beast.sh` (50+ lines)
 - **Purpose**: Graceful shutdown of both services
 - **Features**:
-  - Reads PIDs from `/tmp/atlas-sphere-pids.txt`
+  - Reads PIDs from `/tmp/x3-chain-pids.txt`
   - Cleanly terminates both services
   - Removes PID tracking file
   - Confirms shutdown
@@ -124,7 +124,7 @@ This document catalogs all files created, modified, and documented during the re
 - **Status**: ✅ Created, ready to use
 - **Security**: Change SESSION_SECRET and AUTH_SALT before production deployment
 
-#### ✅ `atlas-boot-config.sh` (50+ lines)
+#### ✅ `x3-boot-config.sh` (50+ lines)
 - **Purpose**: Shell aliases and functions for quick command access
 - **Functions Provided**:
   - `beast-start` → Run start-beast.sh
@@ -135,7 +135,7 @@ This document catalogs all files created, modified, and documented during the re
   - `beast-login` → Display login credentials
   - `beast-setup-autostart` → Install systemd services
 - **Status**: ✅ Created, source-able
-- **Usage**: Add `source atlas-boot-config.sh` to ~/.bashrc
+- **Usage**: Add `source x3-boot-config.sh` to ~/.bashrc
 
 ---
 
@@ -303,7 +303,7 @@ Before going to production:
   ls scripts/stop-beast.sh
   ls scripts/setup-autostart.sh
   ls .env.production
-  ls atlas-boot-config.sh
+  ls x3-boot-config.sh
   ```
 
 - [ ] Verify documentation files exist
@@ -316,7 +316,7 @@ Before going to production:
 
 - [ ] Test manual startup: `bash scripts/start-beast.sh`
 - [ ] Verify services start: `curl http://localhost:5173` and `curl http://localhost:8000/metrics.json`
-- [ ] Test login: Try admin/atlas-sphere-2026
+- [ ] Test login: Try admin/x3-chain-2026
 - [ ] Change default credentials in production
 - [ ] Change SESSION_SECRET and AUTH_SALT
 - [ ] Run tests: `bash cross-chain-gpu-validator/scripts/run-local-tests.sh`
@@ -360,7 +360,7 @@ echo "Running tests (optional)..."
 | stop-beast.sh | 50+ | Low | Cleanup script |
 | setup-autostart.sh | 70+ | Medium | System configuration |
 | .env.production | 80+ | Low | Configuration |
-| atlas-boot-config.sh | 50+ | Low | Shell helpers |
+| x3-boot-config.sh | 50+ | Low | Shell helpers |
 | QUICK_REFERENCE.md | 800+ | N/A | Quick guide |
 | BOOT_AND_AUTH_SETUP.md | 2700+ | N/A | Detailed guide |
 | E2E_SECURITY_TESTING.md | 3500+ | N/A | Test guide |

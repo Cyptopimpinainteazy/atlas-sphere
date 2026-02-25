@@ -112,7 +112,7 @@ export function Dashboard({ onLogout, onAdmin, onChains }: DashboardProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Infenstructior Dashboard</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">Inferstructor Dashboard</h1>
             <p className="text-gray-400">Validator: {api.getValidatorId()}</p>
           </div>
           <div className="flex items-center gap-3">

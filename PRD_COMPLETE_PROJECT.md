@@ -1,4 +1,4 @@
-# Atlas Sphere - Complete Project PRD
+# X3 Chain - Complete Project PRD
 ## Product Requirements Document for End-to-End Completion
 
 **Version:** 1.0  
@@ -10,7 +10,7 @@
 
 ## Overview
 
-This PRD provides a comprehensive, ordered list of tasks to bring Atlas Sphere from its current development state to a production-ready, enterprise-grade L1 blockchain with dual-VM execution (EVM + SVM), cross-chain GPU validation, and complete tooling ecosystem.
+This PRD provides a comprehensive, ordered list of tasks to bring X3 Chain from its current development state to a production-ready, enterprise-grade L1 blockchain with dual-VM execution (EVM + SVM), cross-chain GPU validation, and complete tooling ecosystem.
 
 The tasks are organized starting from foundation layers and moving up the stack, ensuring dependencies are resolved in order.
 
@@ -44,12 +44,12 @@ The tasks are organized starting from foundation layers and moving up the stack,
 - [ ] Document WebSocket connection parameters in README.md
 - [ ] Update README.md examples to use WebSocket where appropriate
 
-### 1.4 Atlas Kernel - Complete RPC Methods
+### 1.4 X3 Kernel - Complete RPC Methods
 
 - [ ] Implement Frontier RPC module integration (node/src/rpc.rs line 1308)
 - [ ] Wire up Frontier JSON-RPC endpoints for EVM compatibility
 - [ ] Add comprehensive RPC integration tests
-- [ ] Document all Atlas Kernel RPC methods with examples
+- [ ] Document all X3 Kernel RPC methods with examples
 - [ ] Create RPC method reference documentation
 
 ---
@@ -105,7 +105,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 ### 3.2 Python SDK
 
-- [ ] Implement collateral RPC/REST calls in py-sdk (packages/py-sdk/src/atlas_sphere_sdk/collateral.py line 21)
+- [ ] Implement collateral RPC/REST calls in py-sdk (packages/py-sdk/src/x3_chain_sdk/collateral.py line 21)
 - [ ] Add Python SDK unit tests
 - [ ] Add Python SDK integration tests
 - [ ] Create Python SDK usage documentation
@@ -122,10 +122,10 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 ## Phase 4: Frontend Applications (Weeks 6-7)
 
-### 4.1 Atlas Desktop App - Operator Dashboard
+### 4.1 X3 Desktop App - Operator Dashboard
 
-- [ ] Implement real GPU metrics using tauri-plugin-system-info (apps/atlas-desktop/src-tauri/src/main.rs line 225)
-- [ ] Wire up agent RPC for peer node stats (apps/atlas-desktop/OPERATOR_DASHBOARD_BOILERPLATE.md line 81)
+- [ ] Implement real GPU metrics using tauri-plugin-system-info (apps/x3-desktop/src-tauri/src/main.rs line 225)
+- [ ] Wire up agent RPC for peer node stats (apps/x3-desktop/OPERATOR_DASHBOARD_BOILERPLATE.md line 81)
 - [ ] Implement real-time mock_stream updates (line 82)
 - [ ] Use tauri-plugin-tcp for peer discovery (line 129)
 - [ ] Call node RPC /system/peers for real peer list (line 130)
@@ -144,7 +144,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 ### 4.2 DEX Application
 
 - [ ] Complete DEX frontend implementation (apps/dex/)
-- [ ] Integrate with Atlas Kernel canonical ledger
+- [ ] Integrate with X3 Kernel canonical ledger
 - [ ] Add liquidity pool management UI
 - [ ] Implement swap interface
 - [ ] Add order book visualization
@@ -156,7 +156,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 - [ ] Complete wallet frontend (apps/wallet/)
 - [ ] Implement key management UI
 - [ ] Add transaction signing interface
-- [ ] Integrate with Atlas Kernel RPC
+- [ ] Integrate with X3 Kernel RPC
 - [ ] Add multi-asset support
 - [ ] Test wallet with testnet
 - [ ] Create wallet user guide
@@ -171,9 +171,9 @@ The tasks are organized starting from foundation layers and moving up the stack,
 - [ ] Test explorer with live chain data
 - [ ] Deploy explorer to production
 
-### 4.5 Infenstructior Dashboard
+### 4.5 Inferstructor Dashboard
 
-- [ ] Complete GPU validator dashboard (apps/infenstructior-dashboard/)
+- [ ] Complete GPU validator dashboard (apps/inferstructor-dashboard/)
 - [ ] Add real-time GPU metrics display
 - [ ] Implement validator performance charts
 - [ ] Add job queue monitoring
@@ -196,7 +196,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 ### 5.2 Integration Tests
 
-- [ ] Complete E2E tests for Atlas Kernel RPC (tests/e2e/)
+- [ ] Complete E2E tests for X3 Kernel RPC (tests/e2e/)
 - [ ] Add cross-VM transaction tests
 - [ ] Add multi-node consensus tests
 - [ ] Add stress tests for high transaction throughput
@@ -206,7 +206,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 ### 5.3 Performance Testing
 
 - [ ] Complete TPS (Transactions Per Second) testing suite
-- [ ] Run benchmarks for Atlas Kernel operations
+- [ ] Run benchmarks for X3 Kernel operations
 - [ ] Profile X3 VM execution performance
 - [ ] Test GPU validation throughput
 - [ ] Document performance baselines
@@ -271,7 +271,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 - [ ] Create "Getting Started" guide for developers
 - [ ] Write smart contract deployment tutorial
-- [ ] Create guide for building DApps on Atlas
+- [ ] Create guide for building DApps on X3
 - [ ] Document validator node setup process
 - [ ] Create GPU operator onboarding guide
 - [ ] Write contribution guidelines
@@ -292,7 +292,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 ### 8.1 Security Hardening
 
-- [ ] Complete security audit of Atlas Kernel pallet
+- [ ] Complete security audit of X3 Kernel pallet
 - [ ] Audit dual-VM integration for reentrancy vulnerabilities
 - [ ] Review and fix all unsafe Rust code blocks
 - [ ] Implement rate limiting for RPC endpoints
@@ -388,7 +388,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 
 ### 10.3 Token Economics
 
-- [ ] Document Atlas token utility
+- [ ] Document X3 token utility
 - [ ] Define staking rewards mechanism
 - [ ] Design validator incentive structure
 - [ ] Create economic security model
@@ -572,7 +572,7 @@ The tasks are organized starting from foundation layers and moving up the stack,
 ## Project Structure Reference
 
 ```
-atlas-sphere-master/
+x3-chain-master/
 ├── crates/          # Rust core libraries
 ├── pallets/         # Substrate pallets
 ├── runtime/         # Blockchain runtime

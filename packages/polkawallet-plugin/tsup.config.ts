@@ -22,6 +22,6 @@ export default defineConfig({
     '@polkadot/util-crypto',
     '@polkadot/keyring',
     '@polkadot/extension-dapp',
-    '@atlas-sphere/ts-sdk',
+    '@x3-chain/ts-sdk',
   ],
 });

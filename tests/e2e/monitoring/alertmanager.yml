@@ -1,6 +1,6 @@
 global:
   smtp_smarthost: 'localhost:587'
-  smtp_from: 'atlas-testnet@atlas-sphere.com'
+  smtp_from: 'x3-testnet@x3-chain.com'
 
 route:
   group_by: ['alertname', 'severity']
@@ -24,8 +24,8 @@ receivers:
 
 - name: 'critical-alerts'
   email_configs:
-  - to: 'admin@atlas-sphere.com'
-    subject: '[CRITICAL] Atlas Testnet Alert'
+  - to: 'admin@x3-chain.com'
+    subject: '[CRITICAL] X3 Testnet Alert'
     body: |
       Alert: {{ range .Alerts }}{{ .Annotations.summary }}
       Description: {{ .Annotations.description }}
@@ -35,8 +35,8 @@ receivers:
 
 - name: 'warning-alerts'
   email_configs:
-  - to: 'team@atlas-sphere.com'
-    subject: '[WARNING] Atlas Testnet Alert'
+  - to: 'team@x3-chain.com'
+    subject: '[WARNING] X3 Testnet Alert'
     body: |
       Alert: {{ range .Alerts }}{{ .Annotations.summary }}
       Description: {{ .Annotations.description }}

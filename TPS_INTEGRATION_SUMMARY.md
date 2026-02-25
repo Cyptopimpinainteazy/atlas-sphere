@@ -2,14 +2,14 @@
 
 ## Overview
 
-Successfully integrated real-time TPS (Transactions Per Second) testing infrastructure into atlas-sphere, adapted from the [Solana TPS tracking project](https://github.com/amil13/solana_project.git).
+Successfully integrated real-time TPS (Transactions Per Second) testing infrastructure into x3-chain, adapted from the [Solana TPS tracking project](https://github.com/amil13/solana_project.git).
 
 This provides production-grade performance monitoring with:
 - **Rust-based data collection** - Efficient polling of blockchain metrics
 - **InfluxDB time-series storage** - High-performance metrics persistence
 - **Interactive Streamlit dashboard** - Real-time visualization
 - **Full Docker containerization** - Easy deployment and isolation
-- **Alignment with atlas-sphere testing standards** - Integrates with existing test framework
+- **Alignment with x3-chain testing standards** - Integrates with existing test framework
 
 ## Components Created
 
@@ -17,7 +17,7 @@ This provides production-grade performance monitoring with:
 **Location:** `crates/tps-tracker/`
 
 A Rust crate that:
-- Polls Atlas Sphere RPC endpoints for block/transaction data
+- Polls X3 Chain RPC endpoints for block/transaction data
 - Calculates TPS metrics from raw blockchain data
 - Writes metrics to InfluxDB with configurable buffering
 - Includes comprehensive error handling and logging
@@ -33,8 +33,8 @@ Environment variables control behavior:
 ```bash
 RPC_URL=http://127.0.0.1:9944       # Blockchain RPC endpoint
 INFLUX_URL=http://localhost:8086    # InfluxDB connection
-INFLUX_DB=atlas_sphere_tps          # Database name
-INFLUX_TOKEN=atlas-sphere-key       # Authentication
+INFLUX_DB=x3_chain_tps          # Database name
+INFLUX_TOKEN=x3-chain-key       # Authentication
 POLL_INTERVAL=1                     # Polling frequency (seconds)
 BUFFER_SIZE=100                     # Batch size before flush
 ```
@@ -63,7 +63,7 @@ Complete infrastructure as code:
 - **InfluxDB** - Time-series database (port 8086)
 - **TPS Tracker** - Data collection service
 - **Dashboard** - Web interface (port 8501)
-- Network isolation (`atlas-sphere-perf`)
+- Network isolation (`x3-chain-perf`)
 - Persistent storage for InfluxDB
 
 ### 4. Orchestration Scripts
@@ -119,7 +119,7 @@ Comprehensive guide covering:
 - Development guidelines
 - Integration examples
 
-## Integration with atlas-sphere
+## Integration with x3-chain
 
 ### Workspace Integration
 Updated root `Cargo.toml` to include new crate:
@@ -138,7 +138,7 @@ This enables:
 - Full workspace integration with existing build system
 
 ### Test Framework Alignment
-The TPS testing system aligns with atlas-sphere's testing standards:
+The TPS testing system aligns with x3-chain's testing standards:
 
 - **Invariant References** - Tests can reference invariants from `tests/invariants/registry.toml`
 - **Suggested Invariants:**
@@ -168,7 +168,7 @@ cargo test -p tps-tracker         # Run TPS tracker unit tests
 
 ### Minimum Setup (5 minutes)
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # Start all services
 ./scripts/run-tps-tests.sh up
@@ -229,7 +229,7 @@ k6 run tests/perf/k6/1k_tps_test.js --env TARGET_URL=http://127.0.0.1:9944
 ### Why Rust for TPS Tracker?
 - **Efficiency**: Minimal memory footprint, low-latency polling
 - **Reliability**: Strong type system, error handling
-- **Integration**: Aligns with atlas-sphere's Rust-based architecture
+- **Integration**: Aligns with x3-chain's Rust-based architecture
 - **Async**: Tokio for non-blocking I/O
 
 ### Why InfluxDB?
@@ -292,7 +292,7 @@ Tests cover:
 ./scripts/run-tps-tests.sh up --no-logs
 
 # In another terminal, verify data flow
-curl 'http://localhost:8086/api/v1/query?db=atlas_sphere_tps&q=SELECT * FROM transaction_stats LIMIT 10'
+curl 'http://localhost:8086/api/v1/query?db=x3_chain_tps&q=SELECT * FROM transaction_stats LIMIT 10'
 
 # Check dashboard at http://localhost:8501
 ```
@@ -357,7 +357,7 @@ See `TPS_TESTING_README.md` for detailed troubleshooting.
 - **Source Project**: https://github.com/amil13/solana_project.git
 - **InfluxDB Docs**: https://docs.influxdata.com/influxdb/v2.7/
 - **Streamlit Docs**: https://docs.streamlit.io/
-- **Atlas Sphere Tests**: `tests/README.md` and `tests/invariants/registry.toml`
+- **X3 Chain Tests**: `tests/README.md` and `tests/invariants/registry.toml`
 
 ## Integration Checklist
 

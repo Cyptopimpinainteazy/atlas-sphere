@@ -1,6 +1,6 @@
-# Getting Started with Atlas Sphere
+# Getting Started with X3 Chain
 
-This guide will get you up and running with Atlas Sphere in under 10 minutes. We'll cover local development setup, connecting your wallet, and deploying your first contract.
+This guide will get you up and running with X3 Chain in under 10 minutes. We'll cover local development setup, connecting your wallet, and deploying your first contract.
 
 ## Prerequisites
 
@@ -11,40 +11,40 @@ This guide will get you up and running with Atlas Sphere in under 10 minutes. We
 
 ## Quick Start (5 minutes)
 
-### 1. Install Atlas CLI
+### 1. Install X3 CLI
 
 ```bash
 # Install via npm
-npm install -g @atlas-sphere/cli
+npm install -g @x3-chain/cli
 
 # Or via curl
-curl -sSL https://atlas-sphere.io/install | bash
+curl -sSL https://x3-chain.io/install | bash
 
 # Verify installation
-atlas --version
+x3 --version
 ```
 
-**Why this matters**: The Atlas CLI provides unified commands for both EVM and SVM development, simplifying your workflow.
+**Why this matters**: The X3 CLI provides unified commands for both EVM and SVM development, simplifying your workflow.
 
 ### 2. Start Local Node
 
 ```bash
 # Start development node (creates fresh chain)
-atlas node start --dev
+x3 node start --dev
 
 # Or with specific configuration
-atlas node start --dev --port 9944 --rpc-port 9933
+x3 node start --dev --port 9944 --rpc-port 9933
 ```
 
 The node will:
 - Start on `ws://localhost:9944` (WebSocket RPC)
 - Expose HTTP RPC on `http://localhost:9933`
-- Create a development account with 1000 ATLAS tokens
+- Create a development account with 1000 X3 tokens
 - Enable both EVM and SVM execution
 
 **Expected output:**
 ```
-2025-12-10 14:00:00 INFO Atlas Sphere Node v1.0.0
+2025-12-10 14:00:00 INFO X3 Chain Node v1.0.0
 2025-12-10 14:00:01 INFO Dual-VM runtime initialized
 2025-12-10 14:00:02 INFO EVM adapter: Ready
 2025-12-10 14:00:02 INFO SVM adapter: Ready
@@ -56,15 +56,15 @@ The node will:
 
 #### MetaMask Setup
 ```javascript
-// Add Atlas Sphere to MetaMask
+// Add X3 Chain to MetaMask
 await window.ethereum.request({
   method: 'wallet_addEthereumChain',
   params: [{
     chainId: '0x1234', // Replace with actual chain ID
-    chainName: 'Atlas Sphere Dev',
+    chainName: 'X3 Chain Dev',
     nativeCurrency: {
-      name: 'ATLAS',
-      symbol: 'ATLAS',
+      name: 'X3',
+      symbol: 'X3',
       decimals: 12
     },
     rpcUrls: ['http://localhost:9933'],
@@ -73,13 +73,13 @@ await window.ethereum.request({
 });
 ```
 
-#### Atlas SDK Setup
+#### X3 SDK Setup
 ```bash
-npm install @atlas-sphere/sdk
+npm install @x3-chain/sdk
 ```
 
 ```javascript
-import { AtlasSphereProvider } from '@atlas-sphere/sdk';
+import { AtlasSphereProvider } from '@x3-chain/sdk';
 
 const provider = new AtlasSphereProvider({
   network: 'local',
@@ -88,22 +88,22 @@ const provider = new AtlasSphereProvider({
 });
 
 await provider.connect();
-console.log('Connected to Atlas Sphere!');
+console.log('Connected to X3 Chain!');
 ```
 
-**Why this matters**: Atlas Sphere provides both standard Ethereum Web3 compatibility and enhanced dual-VM features through the Atlas SDK.
+**Why this matters**: X3 Chain provides both standard Ethereum Web3 compatibility and enhanced dual-VM features through the X3 SDK.
 
 ## Choose Your VM
 
-Atlas Sphere supports three development approaches:
+X3 Chain supports three development approaches:
 
 ### EVM-Only Development
 **Best for**: Existing Ethereum projects, DeFi protocols, familiar tooling
 
 ```solidity
 // Deploy with standard tools
-npx hardhat compile --network atlas
-npx hardhat run scripts/deploy.js --network atlas
+npx hardhat compile --network x3
+npx hardhat run scripts/deploy.js --network x3
 ```
 
 **Use cases**: 
@@ -120,7 +120,7 @@ npx hardhat run scripts/deploy.js --network atlas
 anchor init my-svm-app
 cd my-svm-app
 
-# Configure for Atlas Sphere
+# Configure for X3 Chain
 anchor set provider cluster http://localhost:9933
 anchor set provider wallet ~/.config/solana/id.json
 
@@ -142,7 +142,7 @@ anchor deploy
 // EVM contract calling SVM program
 pragma solidity ^0.8.0;
 
-import "@atlas-sphere/contracts/CrossVM.sol";
+import "@x3-chain/contracts/CrossVM.sol";
 
 contract AtomicArb is CrossVM {
     function executeArb(uint256 amount) external {
@@ -214,10 +214,10 @@ contract HelloWorld {
 const hre = require("hardhat");
 
 async function main() {
-    console.log("Deploying HelloWorld contract to Atlas Sphere...");
+    console.log("Deploying HelloWorld contract to X3 Chain...");
     
     const HelloWorld = await hre.ethers.getContractFactory("HelloWorld");
-    const helloWorld = await HelloWorld.deploy("Hello Atlas Sphere!");
+    const helloWorld = await HelloWorld.deploy("Hello X3 Chain!");
     
     await helloWorld.deployed();
     
@@ -227,7 +227,7 @@ async function main() {
     const message = await helloWorld.getMessage();
     console.log("Initial message:", message);
     
-    const tx = await helloWorld.setMessage("Updated via Atlas Sphere!");
+    const tx = await helloWorld.setMessage("Updated via X3 Chain!");
     await tx.wait();
     
     const updatedMessage = await helloWorld.getMessage();
@@ -254,7 +254,7 @@ require("@nomiclabs/hardhat-ethers");
 module.exports = {
   solidity: "0.8.0",
   networks: {
-    atlas: {
+    x3: {
       url: "http://localhost:9933",
       chainId: 1234,
       accounts: ["0x..."] // Your private key
@@ -263,7 +263,7 @@ module.exports = {
 };
 
 # Deploy
-npx hardhat run scripts/deploy.js --network atlas
+npx hardhat run scripts/deploy.js --network x3
 ```
 
 ### SVM Program Example
@@ -340,7 +340,7 @@ anchor build
 anchor deploy
 
 # Interact via CLI
-anchor run initialize --message "Hello Atlas Sphere!"
+anchor run initialize --message "Hello X3 Chain!"
 anchor run update_message --new_message "Updated via Anchor!"
 ```
 
@@ -355,10 +355,10 @@ const { ethers } = require("hardhat");
 describe("HelloWorld", function () {
   it("Should deploy and interact with HelloWorld", async function () {
     const HelloWorld = await ethers.getContractFactory("HelloWorld");
-    const helloWorld = await HelloWorld.deploy("Hello Atlas!");
+    const helloWorld = await HelloWorld.deploy("Hello X3!");
     await helloWorld.deployed();
 
-    expect(await helloWorld.getMessage()).to.equal("Hello Atlas!");
+    expect(await helloWorld.getMessage()).to.equal("Hello X3!");
     
     await helloWorld.setMessage("Updated!");
     expect(await helloWorld.getMessage()).to.equal("Updated!");
@@ -369,7 +369,7 @@ describe("HelloWorld", function () {
 
 ```bash
 # Run tests
-npx hardhat test --network atlas
+npx hardhat test --network x3
 ```
 
 ### SVM Testing
@@ -386,7 +386,7 @@ describe("hello-world", () => {
   const program = anchor.workspace.HelloWorld as Program<HelloWorld>;
 
   it("Initialize message account", async () => {
-    const message = "Hello Atlas Sphere!";
+    const message = "Hello X3 Chain!";
     
     await program.methods
       .initialize(message)
@@ -421,8 +421,8 @@ anchor test
 - **[Gas Optimization](/docs/gas-optimization.md)** - Minimize transaction costs
 
 ### Join the Community
-- **[Discord](https://discord.gg/atlas-sphere)** - Get help and share projects
-- **[GitHub](https://github.com/atlas-sphere)** - Contribute and report issues
+- **[Discord](https://discord.gg/x3-chain)** - Get help and share projects
+- **[GitHub](https://github.com/x3-chain)** - Contribute and report issues
 - **[Twitter](https://twitter.com/atlassphere)** - Follow updates
 
 ## Troubleshooting
@@ -435,10 +435,10 @@ anchor test
 lsof -i :9944
 
 # Kill existing processes
-pkill -f atlas-sphere-node
+pkill -f x3-chain-node
 
 # Start with different ports
-atlas node start --dev --port 9945 --rpc-port 9934
+x3 node start --dev --port 9945 --rpc-port 9934
 ```
 
 **Wallet connection fails**
@@ -455,7 +455,7 @@ wscat -c ws://localhost:9944
 **Contract deployment fails**
 ```bash
 # Check gas estimation
-atlas node logs --tail 50
+x3 node logs --tail 50
 
 # Verify account has funds
 curl -X POST http://localhost:9933 \
@@ -463,7 +463,7 @@ curl -X POST http://localhost:9933 \
   -d '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xYourAddress","latest"],"id":1}'
 ```
 
-**Why this matters**: Atlas Sphere provides detailed logging and debugging tools to help you resolve issues quickly and understand what's happening under the hood.
+**Why this matters**: X3 Chain provides detailed logging and debugging tools to help you resolve issues quickly and understand what's happening under the hood.
 
 ---
 

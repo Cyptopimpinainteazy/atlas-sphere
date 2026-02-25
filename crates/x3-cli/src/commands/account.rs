@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use crate::project::Project;
-use atlas_sdk::{AtlasClient, Signer, Sr25519Signer};
+use x3_sdk::{AtlasClient, Signer, Sr25519Signer};
 use clap::{Args, Subcommand};
 use colored::Colorize;
 
@@ -109,7 +109,7 @@ async fn execute_balance(args: BalanceArgs) -> Result<()> {
     } else {
         args.network
             .clone()
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     };
 
     println!("{} Querying balance...", "→".blue());
@@ -117,7 +117,7 @@ async fn execute_balance(args: BalanceArgs) -> Result<()> {
     let client = AtlasClient::connect(&endpoint).await?;
     let balance = client.balance(&args.address, args.asset).await?;
 
-    let symbol = if args.asset == 0 { "ATLAS" } else { "tokens" };
+    let symbol = if args.asset == 0 { "X3" } else { "tokens" };
     let formatted = format_balance(balance);
 
     println!();
@@ -137,7 +137,7 @@ async fn execute_info(args: InfoArgs) -> Result<()> {
     } else {
         args.network
             .clone()
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     };
 
     println!("{} Querying account info...", "→".blue());
@@ -191,12 +191,12 @@ async fn execute_faucet(args: FaucetArgs) -> Result<()> {
     println!("{} Requesting tokens from faucet...", "→".blue());
     println!();
     println!("  Address: {}", args.address);
-    println!("  Amount: {} ATLAS", args.amount);
+    println!("  Amount: {} X3", args.amount);
     println!();
 
     // For now, just print instructions
     println!("{} Testnet faucet available at:", "ℹ".cyan());
-    println!("  https://faucet.testnet.atlas-sphere.io");
+    println!("  https://faucet.testnet.x3-chain.io");
     println!();
     println!("Enter your address there to receive testnet tokens.");
 

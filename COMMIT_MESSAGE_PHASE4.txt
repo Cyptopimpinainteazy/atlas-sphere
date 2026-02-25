@@ -2,7 +2,7 @@ feat(x3-compiler): integrate YOLO + Loop-Pack v1 optimizer into blockchain compi
 
 ## Summary
 
-Successfully integrated the YOLO + Loop-Pack v1 optimization pipeline into the Atlas Sphere
+Successfully integrated the YOLO + Loop-Pack v1 optimization pipeline into the X3 Chain
 blockchain's X3 smart contract compiler. This completes Phase 4 of the optimization roadmap.
 
 ## Architecture

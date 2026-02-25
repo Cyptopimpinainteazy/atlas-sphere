@@ -177,7 +177,7 @@ main() {
     
     # Phase 6: Core Platform Features
     log_info "=== Phase 6: Core Platform Features ==="
-    merge_branch "feature/atlas-kernel-task1" "Merge: Atomic Trade Engine" || true
+    merge_branch "feature/x3-kernel-task1" "Merge: Atomic Trade Engine" || true
     
     # Run Rust tests if applicable
     if ! $DRY_RUN; then

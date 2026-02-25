@@ -92,7 +92,7 @@ preflight_checks() {
 build_runtime() {
     log "Building Substrate runtime with jury-anchor pallet..."
 
-    cd "$PROJECT_ROOT/pallets/atlas-jury-anchor"
+    cd "$PROJECT_ROOT/pallets/x3-jury-anchor"
 
     if [ "$HARDWARE" = "gpu" ]; then
         log "  Building with GPU support..."

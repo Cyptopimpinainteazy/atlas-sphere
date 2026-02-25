@@ -1,7 +1,7 @@
-//! SVM (Solana Virtual Machine) Integration for Atlas Sphere
+//! SVM (Solana Virtual Machine) Integration for X3 Chain
 //!
 //! This crate provides integration points for executing SVM transactions
-//! as part of dual-VM operations on Atlas Sphere.
+//! as part of dual-VM operations on X3 Chain.
 //! Uses solana-rbpf for actual BPF program execution.
 
 #![cfg_attr(not(feature = "std"), no_std)]

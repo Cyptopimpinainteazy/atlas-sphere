@@ -202,7 +202,7 @@ def run_local_scanners(root_dir: str, allow_network: bool = False) -> dict:
 
 
 def main():
-    root_dir = '/home/lojak/Desktop/atlas-sphere-master'
+    root_dir = '/home/lojak/Desktop/x3-chain-master'
     
     print("Ralph: Starting MD task execution...")
 

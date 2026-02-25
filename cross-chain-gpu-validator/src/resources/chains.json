@@ -9612,7 +9612,7 @@
     "supports_gpu": true
   },
   {
-    "chain_id": "planq-atlas-testnet",
+    "chain_id": "planq-x3-testnet",
     "chain_name": "Planq Atlas Testnet",
     "rpc_url": "https://evm-rpc-atlas.planq.network",
     "chain_numeric_id": 7077,
@@ -18216,7 +18216,7 @@
     "supports_gpu": true
   },
   {
-    "chain_id": "atlas-testnet",
+    "chain_id": "x3-testnet",
     "chain_name": "Atlas",
     "rpc_url": "https://rpc.testnet.atl.network",
     "chain_numeric_id": 622463,

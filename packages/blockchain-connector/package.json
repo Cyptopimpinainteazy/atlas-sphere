@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/blockchain-connector",
+  "name": "@x3-chain/blockchain-connector",
   "version": "0.1.0",
   "description": "Enterprise-grade blockchain connector SDK — multi-chain RPC proxy, WebSocket streaming, test harness, and benchmarks",
   "type": "module",
@@ -53,7 +53,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atlas-sphere/atlas-sphere",
+    "url": "https://github.com/x3-chain/x3-chain",
     "directory": "packages/blockchain-connector"
   }
 }

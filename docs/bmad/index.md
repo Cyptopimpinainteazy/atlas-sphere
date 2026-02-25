@@ -8,7 +8,7 @@
 
 ## 📋 Overview
 
-This directory contains the consolidated BMAD documentation, which was previously duplicated across multiple locations in the project. BMAD is the Business Model-Driven Agent Development framework used in the Atlas Sphere project.
+This directory contains the consolidated BMAD documentation, which was previously duplicated across multiple locations in the project. BMAD is the Business Model-Driven Agent Development framework used in the X3 Chain project.
 
 **Previously scattered across**: `.bmad/`, `.cursor/rules/bmad/`, `.qwen/commands/bmad/`, `.windsurf/workflows/bmad/`, `.crush/commands/bmad/`, `crates/vibe-bmad/`
 

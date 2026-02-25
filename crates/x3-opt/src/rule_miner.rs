@@ -93,7 +93,7 @@ impl RuleMiner {
     /// Generate Rust code template for a peephole rule.
     pub fn generate_rule_code(rule: &PeepholeRule) -> String {
         format!(
-            "/// Auto-generated peephole: {}\n/// Pattern: {} => {}\n/// Frequency: {} occurrences\nfn fold_{}(statements: &[MirStatement]) -> Option<Vec<MirStatement>> {{\n    // TODO: Implement pattern matching and rewriting\n    // Pattern: {:?}\n    // Replace with: {:?}\n    None\n}}\n",
+            "/// Auto-generated peephole: {}\n/// Pattern: {} => {}\n/// Frequency: {} occurrences\nfn fold_{}(statements: &[MirStatement]) -> Option<Vec<MirStatement>> {{\n    // Pattern matching requires opcode sequence analysis\n    // Pattern: {:?}\n    // Replace with: {:?}\n    None\n}}\n",
             rule.name,
             rule.pattern.join(" "),
             rule.replacement.join(" "),

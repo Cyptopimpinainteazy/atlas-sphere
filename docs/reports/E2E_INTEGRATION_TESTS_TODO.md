@@ -45,7 +45,7 @@
 - [ ] 4.3 Frontend application testing
 - [ ] 4.4 CLI integration testing
 - [ ] 4.5 X3 language execution testing
-- [ ] 4.6 Atlas Sphere DNS system testing
+- [ ] 4.6 X3 Chain DNS system testing
 
 ## End-to-End User Journey Tests
 - [ ] 6.1 Complete DeFi user journey (lending, borrowing, liquidation)

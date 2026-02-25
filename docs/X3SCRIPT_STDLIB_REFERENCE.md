@@ -1499,4 +1499,4 @@ x3-swarm simulate --strategy=flash_arb --iterations=1000000
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

@@ -1,4 +1,4 @@
-# ── Atlas Sphere – Secondary Node Fleet Configuration ────────────────────────
+# ── X3 Chain – Secondary Node Fleet Configuration ────────────────────────
 # 5 secondary servers × ~3-4 GTX 1070s each ≈ 17 GPUs total
 
 [fleet]
@@ -9,7 +9,7 @@ name = "secondary-gpu-fleet"
 [[nodes]]
 name          = "sec-node-01"
 host          = "192.168.1.11"
-ssh_user      = "atlas"
+ssh_user      = "x3"
 gpu_count     = 4
 gpu_model     = "GTX 1070"
 gpu_vram_mb   = 8192
@@ -19,7 +19,7 @@ chains        = ["ethereum", "polygon", "arbitrum", "optimism", "base"]
 [[nodes]]
 name          = "sec-node-02"
 host          = "192.168.1.12"
-ssh_user      = "atlas"
+ssh_user      = "x3"
 gpu_count     = 4
 gpu_model     = "GTX 1070"
 gpu_vram_mb   = 8192
@@ -29,7 +29,7 @@ chains        = ["solana", "eclipse", "sui"]
 [[nodes]]
 name          = "sec-node-03"
 host          = "192.168.1.13"
-ssh_user      = "atlas"
+ssh_user      = "x3"
 gpu_count     = 3
 gpu_model     = "GTX 1070"
 gpu_vram_mb   = 8192
@@ -39,7 +39,7 @@ chains        = ["cosmoshub", "osmosis", "injective", "celestia"]
 [[nodes]]
 name          = "sec-node-04"
 host          = "192.168.1.14"
-ssh_user      = "atlas"
+ssh_user      = "x3"
 gpu_count     = 3
 gpu_model     = "GTX 1070"
 gpu_vram_mb   = 8192
@@ -49,7 +49,7 @@ chains        = ["polkadot", "kusama", "moonbeam", "astar"]
 [[nodes]]
 name          = "sec-node-05"
 host          = "192.168.1.15"
-ssh_user      = "atlas"
+ssh_user      = "x3"
 gpu_count     = 3
 gpu_model     = "GTX 1070"
 gpu_vram_mb   = 8192
@@ -75,7 +75,7 @@ priority_floor   = 20
 
 [metrics]
 prometheus_port  = 9100
-json_log_path    = "/var/log/atlas/secondary-metrics.jsonl"
+json_log_path    = "/var/log/x3/secondary-metrics.jsonl"
 
 [connectivity]
 core_node_url    = "ws://192.168.1.10:9944"

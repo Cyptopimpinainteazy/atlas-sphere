@@ -24,8 +24,8 @@ def _get_conn():
     if not url:
         host = os.environ.get('PGHOST', 'localhost')
         port = os.environ.get('PGPORT', '5432')
-        user = os.environ.get('PGUSER', 'atlas')
-        password = os.environ.get('PGPASSWORD', 'atlas')
+        user = os.environ.get('PGUSER', 'x3')
+        password = os.environ.get('PGPASSWORD', 'x3')
         db = os.environ.get('PGDATABASE', 'swarm')
         url = f"postgresql://{user}:{password}@{host}:{port}/{db}"
     return psycopg2.connect(url)

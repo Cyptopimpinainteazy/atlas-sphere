@@ -206,9 +206,9 @@ For first-time users:
 
 ### Branch Targeting Issues
 
-- **feature/atlas-kernel-task1** targets `master` not `main` → **Must rebase first!**
+- **feature/x3-kernel-task1** targets `master` not `main` → **Must rebase first!**
   ```bash
-  git checkout feature/atlas-kernel-task1
+  git checkout feature/x3-kernel-task1
   git rebase main
   ```
 

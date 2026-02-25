@@ -1,4 +1,4 @@
-# Atlas Sphere Public RPC (Dev / Local / Staging / Testnet)
+# X3 Chain Public RPC (Dev / Local / Staging / Testnet)
 
 This repo already supports JSON-RPC over HTTP and WebSocket (same port) via `jsonrpsee`.
 
@@ -18,12 +18,12 @@ It supports:
 ### Example: testnet RPC node (localhost-bound)
 
 ```bash
-cd /opt/atlas-sphere
-sudo mkdir -p /var/lib/atlas-sphere/rpc-testnet
+cd /opt/x3-chain
+sudo mkdir -p /var/lib/x3-chain/rpc-testnet
 
 chain=testnet \
-node_name=atlas-rpc-testnet-01 \
-base_path=/var/lib/atlas-sphere/rpc-testnet \
+node_name=x3-rpc-testnet-01 \
+base_path=/var/lib/x3-chain/rpc-testnet \
 rpc_bind=localhost \
 ./deployment/public-rpc/run-public-rpc.sh
 ```
@@ -31,7 +31,7 @@ rpc_bind=localhost \
 ## 2) systemd (recommended)
 
 A systemd unit template is provided:
-- `deployment/public-rpc/systemd/atlas-sphere-rpc@.service`
+- `deployment/public-rpc/systemd/x3-chain-rpc@.service`
 
 Example env files are provided:
 - `deployment/public-rpc/env/dev.env.example`
@@ -42,20 +42,20 @@ Example env files are provided:
 Install steps (example for testnet):
 
 ```bash
-sudo useradd --system --home /var/lib/atlas-sphere --shell /usr/sbin/nologin atlas || true
-sudo mkdir -p /etc/atlas-sphere/rpc
-sudo cp deployment/public-rpc/env/testnet.env.example /etc/atlas-sphere/rpc/testnet.env
-sudo cp deployment/public-rpc/systemd/atlas-sphere-rpc@.service /etc/systemd/system/
+sudo useradd --system --home /var/lib/x3-chain --shell /usr/sbin/nologin x3 || true
+sudo mkdir -p /etc/x3-chain/rpc
+sudo cp deployment/public-rpc/env/testnet.env.example /etc/x3-chain/rpc/testnet.env
+sudo cp deployment/public-rpc/systemd/x3-chain-rpc@.service /etc/systemd/system/
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now atlas-sphere-rpc@testnet
-sudo journalctl -u atlas-sphere-rpc@testnet -f
+sudo systemctl enable --now x3-chain-rpc@testnet
+sudo journalctl -u x3-chain-rpc@testnet -f
 ```
 
 ## 3) nginx TLS + WebSocket proxy
 
 A starter config is provided:
-- `deployment/public-rpc/nginx/atlas-sphere-rpc.conf.example`
+- `deployment/public-rpc/nginx/x3-chain-rpc.conf.example`
 
 Notes:
 - WebSocket uses the same endpoint/port; nginx must forward `Upgrade` headers.

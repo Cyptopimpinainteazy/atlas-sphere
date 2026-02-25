@@ -2,7 +2,7 @@
  * WebSocket client for real-time DEX data streaming.
  *
  * Provides live orderbook updates, trade feeds, and price tickers
- * via WebSocket connection to the Atlas DEX relay or node.
+ * via WebSocket connection to the X3 DEX relay or node.
  *
  * If no WebSocket server is available, falls back to polling via
  * the AtlasDexClient.

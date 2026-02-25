@@ -2,7 +2,7 @@
 
 > **Status**: Canonical | **Version**: 1.0.0 | **Last Updated**: 2025-12-10
 
-The AI Agent API defines how autonomous agents are declared, executed, evolved, and coordinated within the Atlas Sphere runtime. This specification covers agent anatomy, the runtime API, the evolution engine, and the multi-agent coordination model.
+The AI Agent API defines how autonomous agents are declared, executed, evolved, and coordinated within the X3 Chain runtime. This specification covers agent anatomy, the runtime API, the evolution engine, and the multi-agent coordination model.
 
 ---
 
@@ -28,7 +28,7 @@ The AI Agent API defines how autonomous agents are declared, executed, evolved, 
 
 ### 1.1 What Is an AI Agent?
 
-An AI Agent in Atlas Sphere is an autonomous program unit that can:
+An AI Agent in X3 Chain is an autonomous program unit that can:
 
 - **Observe** — Monitor chain state, prices, events
 - **Decide** — Use ML models to make decisions
@@ -1400,4 +1400,4 @@ CollapseExpr      = "collapse" "(" Expression "," Expression ")" ;
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

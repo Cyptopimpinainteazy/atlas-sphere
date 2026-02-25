@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════
-#  Atlas Sphere — Infra-Structure: Install Dependencies
+#  X3 Chain — Infra-Structure: Install Dependencies
 #  One-shot setup for all bare-metal services
 # ═══════════════════════════════════════════════════════════════════════
 set -euo pipefail
@@ -18,7 +18,7 @@ err()  { echo -e "${RED}  ✗${NC} $*"; }
 
 echo ""
 echo -e "${BOLD}${CYAN}╔═══════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${CYAN}║  Atlas Sphere — Infra-Structure: Install All     ║${NC}"
+echo -e "${BOLD}${CYAN}║  X3 Chain — Infra-Structure: Install All     ║${NC}"
 echo -e "${BOLD}${CYAN}╚═══════════════════════════════════════════════════╝${NC}"
 echo ""
 

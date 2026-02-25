@@ -1,1 +1,1 @@
-"""Atlas Sphere SDK test suite."""
+"""X3 Chain SDK test suite."""

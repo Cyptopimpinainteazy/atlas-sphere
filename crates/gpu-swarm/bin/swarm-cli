@@ -325,7 +325,7 @@ def main():
         elif args.command == "account":
             if args.subcommand == "balance":
                 balance = cli.get_account_balance(args.address)
-                print(f"Balance: {balance} ATLAS")
+                print(f"Balance: {balance} X3")
 
             elif args.subcommand == "rewards":
                 rewards = cli.get_rewards_history(args.address, args.days)

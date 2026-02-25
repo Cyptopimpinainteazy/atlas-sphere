@@ -2,7 +2,7 @@
 
 ## 🎯 Objective
 
-Wire the x3-compiler integration into the Atlas Sphere node and CLI tools so that:
+Wire the x3-compiler integration into the X3 Chain node and CLI tools so that:
 1. Users can specify optimization level when compiling contracts
 2. Node uses configured optimization level for all contract compilations
 3. RPC endpoints pass through optimization preferences

@@ -1,4 +1,4 @@
-# 🚀 QUICK REFERENCE - ATLAS SPHERE PHASES 1-7
+# 🚀 QUICK REFERENCE - X3 CHAIN PHASES 1-7
 
 ## ONE-PAGE SUMMARY
 
@@ -10,7 +10,7 @@
 
 | # | Phase | File | Size | Key Features |
 |---|-------|------|------|--------------|
-| 1 | **Consensus** | `pallets/atlas-kernel/src/authority.rs` | 220+ | Authority management, pending changes, enactment |
+| 1 | **Consensus** | `pallets/x3-kernel/src/authority.rs` | 220+ | Authority management, pending changes, enactment |
 | 2 | **EVM State** | `crates/evm-integration/src/state.rs` | 350+ | Account state, code storage, gas metering |
 | 3 | **Cross-VM** | `crates/cross-vm-bridge/src/lib.rs` | 350+ | Transfers, calls, atomic swaps, state machine |
 | 4 | **RPC** | `node/src/rpc.rs` | 250+ | 6 custom JSON-RPC methods, queries |
@@ -23,7 +23,7 @@
 ## QUICK FILE LOCATIONS
 
 ```
-Phase 1: pallets/atlas-kernel/src/authority.rs
+Phase 1: pallets/x3-kernel/src/authority.rs
 Phase 2: crates/evm-integration/src/state.rs
 Phase 3: crates/cross-vm-bridge/src/lib.rs
 Phase 4: node/src/rpc.rs
@@ -38,7 +38,7 @@ Phase 7: node/src/metrics.rs
 
 ```rust
 // Phase 1: Consensus
-use pallets::atlas_kernel::authority::{AuthorityManager, AuthorityConfig};
+use pallets::x3_kernel::authority::{AuthorityManager, AuthorityConfig};
 
 // Phase 2: EVM State
 use evm_integration::state::{EvmStateDb, EvmAccount};
@@ -181,7 +181,7 @@ TransactionMetrics        // TX stats
 cargo test --all
 
 # Run phase-specific tests
-cargo test -p atlas-kernel authority::
+cargo test -p x3-kernel authority::
 cargo test -p evm-integration state::
 cargo test -p node rpc::
 ```
@@ -192,13 +192,13 @@ cargo test -p node rpc::
 
 ```bash
 # Development
-./target/release/atlas-sphere --dev --tmp
+./target/release/x3-chain --dev --tmp
 
 # Testnet
-./target/release/atlas-sphere --chain testnet
+./target/release/x3-chain --chain testnet
 
 # Mainnet
-./target/release/atlas-sphere --chain mainnet
+./target/release/x3-chain --chain mainnet
 ```
 
 ---

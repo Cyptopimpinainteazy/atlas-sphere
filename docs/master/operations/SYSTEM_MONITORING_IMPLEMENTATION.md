@@ -1,12 +1,12 @@
 # System Resource Monitoring & IPFS Storage Integration — Implementation Complete ✅
 
 ## Overview
-Successfully implemented real-time system monitoring (CPU/Memory/Disk) and IPFS storage marketplace features for Atlas Desktop. The system now displays live metrics with a Filecoin-like storage deal system.
+Successfully implemented real-time system monitoring (CPU/Memory/Disk) and IPFS storage marketplace features for X3 Desktop. The system now displays live metrics with a Filecoin-like storage deal system.
 
 ## Backend Implementation (Rust/Tauri)
 
 ### Data Structures Added
-Located in `/apps/atlas-desktop/src-tauri/src/main.rs`:
+Located in `/apps/x3-desktop/src-tauri/src/main.rs`:
 
 **System Metrics**
 ```rust
@@ -120,7 +120,7 @@ fn launch_ipfs_storage(state: State<TelemetryState>) -> Result<IpfsStorageData, 
 ```
 
 ### Dependencies Added
-File: `/apps/atlas-desktop/src-tauri/Cargo.toml`
+File: `/apps/x3-desktop/src-tauri/Cargo.toml`
 ```toml
 sysinfo = "0.30"           # System metrics collection
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -259,7 +259,7 @@ Both builds compile without errors. Frontend has proper TypeScript type checking
 
 ### 1. Start the Tauri Application
 ```bash
-cd apps/atlas-desktop
+cd apps/x3-desktop
 npm install
 npm run build
 cargo build  # in src-tauri directory
@@ -315,15 +315,15 @@ npm run tauri dev
 
 ## Files Modified
 
-- ✅ `apps/atlas-desktop/src-tauri/Cargo.toml` - Dependencies
-- ✅ `apps/atlas-desktop/src-tauri/src/main.rs` - Core monitoring logic
-- ✅ `apps/atlas-desktop/src/components/systemMetrics/SystemMetricsPanel.tsx` - NEW
-- ✅ `apps/atlas-desktop/src/components/ipfsStorage/IpfsStoragePanel.tsx` - NEW
-- ✅ `apps/atlas-desktop/src/components/monitoring/MonitoringDashboard.tsx` - NEW
-- ✅ `apps/atlas-desktop/src/components/panels/panelRegistry.tsx` - Integration
-- ✅ `apps/atlas-desktop/src/components/desktop/BottomNavBar.tsx` - UI integration
-- ✅ `apps/atlas-desktop/src/services/applicationService.ts` - App registry
-- ✅ `apps/atlas-desktop/src/types/application.ts` - Type definitions
+- ✅ `apps/x3-desktop/src-tauri/Cargo.toml` - Dependencies
+- ✅ `apps/x3-desktop/src-tauri/src/main.rs` - Core monitoring logic
+- ✅ `apps/x3-desktop/src/components/systemMetrics/SystemMetricsPanel.tsx` - NEW
+- ✅ `apps/x3-desktop/src/components/ipfsStorage/IpfsStoragePanel.tsx` - NEW
+- ✅ `apps/x3-desktop/src/components/monitoring/MonitoringDashboard.tsx` - NEW
+- ✅ `apps/x3-desktop/src/components/panels/panelRegistry.tsx` - Integration
+- ✅ `apps/x3-desktop/src/components/desktop/BottomNavBar.tsx` - UI integration
+- ✅ `apps/x3-desktop/src/services/applicationService.ts` - App registry
+- ✅ `apps/x3-desktop/src/types/application.ts` - Type definitions
 
 ## Next Steps
 

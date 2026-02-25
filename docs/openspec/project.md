@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Atlas Sphere is a Substrate-based Layer-1 chain that targets dual execution environments (EVM + SVM) behind a single canonical ledger. The Atlas Kernel pallet coordinates atomic "Comit" transactions, authorization, and asset metadata/registry.
+X3 Chain is a Substrate-based Layer-1 chain that targets dual execution environments (EVM + SVM) behind a single canonical ledger. The X3 Kernel pallet coordinates atomic "Comit" transactions, authorization, and asset metadata/registry.
 
 Current reality:
 
@@ -14,7 +14,7 @@ Current reality:
 
 - Rust + Cargo for the node binary, runtime, pallets, adapters, and CLI tooling (targets include `wasm32-unknown-unknown`).
 - Substrate/FRAME runtime with Aura block production (~6s blocks) and GRANDPA finality.
-- Runtime pallets: Atlas Kernel, Atomic Trade Engine, Evolution Core, X3 Verifier, governance/treasury primitives, and supporting agent/account pallets.
+- Runtime pallets: X3 Kernel, Atomic Trade Engine, Evolution Core, X3 Verifier, governance/treasury primitives, and supporting agent/account pallets.
 - RPC: `jsonrpsee`-based HTTP JSON-RPC with runtime APIs for custom methods.
 - Frontend tooling built on Next.js 14 + React 18 + Tailwind CSS, powered by Zustand, @tanstack/react-query, SWR, and ethers for browser interactions.
 - Node.js (>=20) scripts for orchestration, the BMAD Method integration (`crates/vibe-bmad`), and Next.js builds.
@@ -31,21 +31,21 @@ Current reality:
 
 ### Architecture Patterns
 
-- Layered runtime: core orchestration in `pallets/atlas-kernel/`, runtime wiring in `runtime/src/lib.rs`, and node service + RPC plumbing in `node/src/`.
+- Layered runtime: core orchestration in `pallets/x3-kernel/`, runtime wiring in `runtime/src/lib.rs`, and node service + RPC plumbing in `node/src/`.
 - Dual-execution via adapter traits: runtime selects real adapters in `std` builds and mock adapters in `no_std` (WASM) builds.
 - Canonical ledger and `Comit` flow (high-level): validate payload sizes, check authorization, execute via adapters, verify `prepare_root` against inputs (intentional design), then finalize by updating canonical ledger state and emitting events.
 - Node RPC is implemented with `jsonrpsee` in `node/src/rpc.rs`, merging multiple modules into a single server.
 
 ### Testing Strategy
 
-- Run `cargo test --all`, targeted pallet suites like `cargo test -p pallet-atlas-kernel`, and `./RUN_ALL_TESTS.sh` for full integration coverage.
+- Run `cargo test --all`, targeted pallet suites like `cargo test -p pallet-x3-kernel`, and `./RUN_ALL_TESTS.sh` for full integration coverage.
 - Enforce formatting/linting with `cargo fmt --all` and `cargo clippy --all-targets --all-features -- -D warnings` as part of CI.
 - Validate OpenSpec proposals via `openspec validate <change-id> --strict` before implementation; spec scenarios must be concrete and executable.
 - Expect local tooling to have their own scripts (`npm run test`, etc.) where relevant; new UI work should ship with storybook or React testing as needed.
 
 ### RPC Surface (Current)
 
-Atlas Sphere currently exposes custom JSON-RPC methods implemented in `node/src/rpc.rs`. The set includes:
+X3 Chain currently exposes custom JSON-RPC methods implemented in `node/src/rpc.rs`. The set includes:
 
 - `system_accountNextIndex`
 - `atlasKernel_*` (canonical balance, asset metadata, authorization, authorities)
@@ -63,7 +63,7 @@ Atlas Sphere currently exposes custom JSON-RPC methods implemented in `node/src/
 
 ## Domain Context
 
-- Atlas Sphere is a heterogeneous blockchain: Substrate runtime with Aura + GRANDPA consensus, a canonical ledger (Atlas Kernel), and two VM adapters (Frontier-based EVM + SVM bridge) that aim to execute within the same block for atomic cross-domain transactions.
+- X3 Chain is a heterogeneous blockchain: Substrate runtime with Aura + GRANDPA consensus, a canonical ledger (X3 Kernel), and two VM adapters (Frontier-based EVM + SVM bridge) that aim to execute within the same block for atomic cross-domain transactions.
 - The key security focus is on account authorization (only authorized accounts can submit `Comit`s) and matching `prepare_root` values, ensuring finality across VM executions without trusted intermediaries.
 - The project bundles CLI tools, wallet/explorer frontends, a dex playground, and a BMAD-powered planning workflow, all grounded on dual-VM interoperability and deterministic state transitions.
 

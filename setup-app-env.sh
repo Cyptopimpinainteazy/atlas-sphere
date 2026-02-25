@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Setup environment variables for all Atlas Desktop apps
+# Setup environment variables for all X3 Desktop apps
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APPS=("explorer" "wallet" "dex" "x3-intelligence")
 
-echo "Setting up environment variables for Atlas Desktop apps..."
+echo "Setting up environment variables for X3 Desktop apps..."
 
 for app in "${APPS[@]}"; do
   app_dir="$REPO_ROOT/apps/$app"
@@ -25,8 +25,8 @@ NEXT_PUBLIC_WS_URL=ws://127.0.0.1:9944
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8080
 
 # Network
-NEXT_PUBLIC_CHAIN_ID=atlas-testnet
-NEXT_PUBLIC_NETWORK_NAME=Atlas Sphere
+NEXT_PUBLIC_CHAIN_ID=x3-testnet
+NEXT_PUBLIC_NETWORK_NAME=X3 Chain
 
 # Analytics
 NEXT_PUBLIC_ANALYTICS_ENABLED=true

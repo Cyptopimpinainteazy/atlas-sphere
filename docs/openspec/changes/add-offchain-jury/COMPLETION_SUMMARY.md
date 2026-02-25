@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-Completed full implementation of an auditable off-chain jury system for Atlas Sphere governance. The system enables approval of major tasks through anonymous, tamper-evident voting with cryptographic integrity verification.
+Completed full implementation of an auditable off-chain jury system for X3 Chain governance. The system enables approval of major tasks through anonymous, tamper-evident voting with cryptographic integrity verification.
 
 ### Key Achievements
 

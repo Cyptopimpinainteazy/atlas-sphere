@@ -1,6 +1,6 @@
 //! Dream Mining - Idle GPU Optimization for Background Computation
 //!
-//! Dream Mining enables Atlas Sphere to utilize idle GPU resources during
+//! Dream Mining enables X3 Chain to utilize idle GPU resources during
 //! periods of low user activity (e.g., sleep hours) for productive tasks:
 //!
 //! - **Model Training**: Train AI models for Evolution Core

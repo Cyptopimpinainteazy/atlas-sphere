@@ -1,8 +1,8 @@
-# Atlas Sphere — Multi-Chain X3 GPU Validator: Operator Guide
+# X3 Chain — Multi-Chain X3 GPU Validator: Operator Guide
 
 ## Overview
 
-The Atlas Sphere multi-chain validator uses GPU-accelerated cryptographic verification across four chain families (EVM, SVM, Cosmos, Substrate) on commodity NVIDIA hardware. This guide covers deployment, configuration, monitoring, and troubleshooting.
+The X3 Chain multi-chain validator uses GPU-accelerated cryptographic verification across four chain families (EVM, SVM, Cosmos, Substrate) on commodity NVIDIA hardware. This guide covers deployment, configuration, monitoring, and troubleshooting.
 
 ## Hardware Requirements
 
@@ -139,7 +139,7 @@ Live metrics including:
 
 ### Prometheus (port 9090)
 
-Scrape targets configured in `deployment/pilot/prometheus.yml`. Grafana available on port 3000 (default password: `atlas-pilot`).
+Scrape targets configured in `deployment/pilot/prometheus.yml`. Grafana available on port 3000 (default password: `x3-pilot`).
 
 ### JSON Metrics
 

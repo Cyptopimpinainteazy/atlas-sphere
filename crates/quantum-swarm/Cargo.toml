@@ -3,9 +3,9 @@ name = "quantum-swarm"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Quantum Swarm Executor - Hybrid quantum-classical compute intelligence for Atlas Sphere"
-authors = ["Atlas Sphere Team"]
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+description = "Quantum Swarm Executor - Hybrid quantum-classical compute intelligence for X3 Chain"
+authors = ["X3 Chain Team"]
+repository = "https://github.com/x3-chain/x3-chain"
 keywords = ["quantum", "swarm", "optimization", "blockchain", "defi"]
 categories = ["science", "algorithms", "finance"]
 

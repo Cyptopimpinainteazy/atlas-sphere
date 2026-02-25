@@ -25,7 +25,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["X3 Language Team"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/atlas-sphere/x3-lang"
+repository = "https://github.com/x3-chain/x3-lang"
 description = "X3 - A systems language for agent swarms, atomic cross-chain execution, and MEV computation"
 
 [workspace.dependencies]

@@ -496,7 +496,7 @@ Worst case (no branches): 0% change
 
 ### Build Command
 ```bash
-cd /home/lojak/Desktop/X3-atlas-sphere
+cd /home/lojak/Desktop/X3-x3-chain
 cargo test -p x3-opt --lib  # Run all tests (79 passing)
 cargo build --release        # Build complete optimizer
 ```

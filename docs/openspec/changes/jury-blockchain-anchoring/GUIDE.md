@@ -51,7 +51,7 @@ Off-Chain (Private)          On-Chain (Public)         Frontend (Read)
 ┌─────────────────┐        ┌──────────────┐          ┌──────────────┐
 │  Jury Service   │        │   Runtime    │          │  Dashboard   │
 │                 │        │              │          │              │
-│ 1. Vote Commit  │        │ atlas-jury-  │          │ Display      │
+│ 1. Vote Commit  │        │ x3-jury-  │          │ Display      │
 │ 2. Vote Reveal  │───────▶│ anchor       │◀─────────│ verified     │
 │ 3. Aggregate    │        │ pallet       │  RPC     │ decisions    │
 │ 4. Audit Log    │        │              │          │              │
@@ -77,7 +77,7 @@ Off-Chain (Private)          On-Chain (Public)         Frontend (Read)
    Hash: SHA256(...) = 0xabcd...
 
 3. Anchor to Blockchain
-   Call: atlas_jury_anchor.anchor_decision(session_id, decision_hash)
+   Call: x3_jury_anchor.anchor_decision(session_id, decision_hash)
    Signature: Jury Manager Authority
 
 4. On-Chain Storage
@@ -111,7 +111,7 @@ Off-Chain (Private)          On-Chain (Public)         Frontend (Read)
 
 ### Prerequisites
 
-- Atlas Sphere runtime compiled with `atlas-jury-anchor` pallet
+- X3 Chain runtime compiled with `x3-jury-anchor` pallet
 - Jury service running (Python)
 - PostgreSQL for audit logs
 - RPC endpoint accessible
@@ -121,12 +121,12 @@ Off-Chain (Private)          On-Chain (Public)         Frontend (Read)
 ```bash
 # Add pallet to runtime Cargo.toml
 [dependencies]
-pallet-atlas-jury-anchor = { path = "pallets/atlas-jury-anchor" }
+pallet-x3-jury-anchor = { path = "pallets/x3-jury-anchor" }
 
 # Add to construct_runtime!
 pub enum Runtime {
     // ... other pallets
-    JuryAnchor: pallet_atlas_jury_anchor,
+    JuryAnchor: pallet_x3_jury_anchor,
 }
 
 # Build runtime
@@ -179,7 +179,7 @@ class JuryManager:
 
 ```typescript
 // React component
-import { JuryAnchoring } from '@atlas/blockchain-adapter';
+import { JuryAnchoring } from '@x3/blockchain-adapter';
 
 export function MyComponent() {
     const jurAnchoring = useMemo(
@@ -212,7 +212,7 @@ export function MyComponent() {
 #### Directory Structure
 
 ```
-pallets/atlas-jury-anchor/
+pallets/x3-jury-anchor/
 ├── src/
 │   ├── lib.rs          (main logic + tests)
 │   ├── types.rs        (optional: data structures)
@@ -554,7 +554,7 @@ asyncio.run(main())
 
 import React from 'react';
 import { useQuery } from 'react-query';
-import { JuryAnchoring, JuryDecisionCard } from '@atlas/blockchain-adapter';
+import { JuryAnchoring, JuryDecisionCard } from '@x3/blockchain-adapter';
 
 export function JuryDecisionsPanel() {
     const rpcClient = useRpcClient();

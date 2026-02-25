@@ -2,7 +2,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    ATLAS-SPHERE BRANCH MERGE PROJECT                         │
+│                    X3-SPHERE BRANCH MERGE PROJECT                         │
 │                  Consolidating 28 Branches into Main                         │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -67,7 +67,7 @@ Phase 5: FRONTEND FEATURES                                      Time: 2 hours
 
 Phase 6: CORE PLATFORM                                          Time: 2 hours
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ • feature/atlas-kernel-task1 ⚡ LARGE CHANGESET                            │
+│ • feature/x3-kernel-task1 ⚡ LARGE CHANGESET                            │
 │   └─ Atomic Trade Engine pallet (Rust/Substrate)                           │
 │   ⚠️  MUST REBASE from master to main first!                               │
 └────────────────────────────────────────────────────────────────────────────┘

@@ -137,12 +137,12 @@ mod tests {
 
         let records = vec![
             MockDNSRecord {
-                domain: "atlas.example.com".to_string(),
+                domain: "x3.example.com".to_string(),
                 record_type: "A".to_string(),
                 value: "192.168.1.100".to_string(),
             },
             MockDNSRecord {
-                domain: "atlas.example.com".to_string(),
+                domain: "x3.example.com".to_string(),
                 record_type: "AAAA".to_string(),
                 value: "2001:db8::1".to_string(),
             },

@@ -1,12 +1,12 @@
-# Atlas Lending Protocol
+# X3 Lending Protocol
 
-> **Aave V3-style Cross-Chain DeFi Lending** powered by Atlas Kernel Comit transactions
+> **Aave V3-style Cross-Chain DeFi Lending** powered by X3 Kernel Comit transactions
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        ATLAS LENDING PROTOCOL                                │
+│                        X3 LENDING PROTOCOL                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
@@ -40,7 +40,7 @@
 │  └───────────┘ └────────────┘ └────────┘ └───────────┘ └───────────┘   │
 │                                                                         │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                     ATLAS KERNEL INTEGRATION                            │
+│                     X3 KERNEL INTEGRATION                            │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │              CrossChainLending.sol (Comit Bundle Interface)      │   │
 │  │  • Deposit on Chain A → Borrow on Chain B (atomic, 6 seconds)   │   │
@@ -89,7 +89,7 @@ contracts/lending/
 | **Isolation Mode**      | Risk-contained markets for new assets                     |
 | **Flash Loans**         | 0.09% fee, atomic arbitrage/liquidation/swap              |
 | **Supply/Borrow Caps**  | Per-asset limits to manage protocol risk                  |
-| **Cross-Chain**         | Atlas Kernel enables atomic multi-chain positions         |
+| **Cross-Chain**         | X3 Kernel enables atomic multi-chain positions         |
 
 ## 📐 Mathematics
 
@@ -197,16 +197,16 @@ forge script script/Deploy.s.sol:DeployLendingProtocol \
 ### Testnet Deployment
 
 ```bash
-# Deploy to Atlas Testnet
+# Deploy to X3 Testnet
 forge script script/Deploy.s.sol:DeployLendingProtocol \
-  --rpc-url https://rpc.testnet.atlas-sphere.io \
+  --rpc-url https://rpc.testnet.x3-chain.io \
   --private-key $PRIVATE_KEY \
   --broadcast \
   --verify
 
 # Configure reserves
 forge script script/Deploy.s.sol:ConfigureReserves \
-  --rpc-url https://rpc.testnet.atlas-sphere.io \
+  --rpc-url https://rpc.testnet.x3-chain.io \
   --private-key $PRIVATE_KEY \
   --broadcast
 ```
@@ -255,9 +255,9 @@ forge script script/Deploy.s.sol:ConfigureReserves \
 | flashLoan()        | ~80k  | + callback gas                      |
 | Health Factor calc | ~3k   | Pure math                           |
 
-## 🔗 Integration with Atlas Kernel
+## 🔗 Integration with X3 Kernel
 
-The lending protocol integrates with Atlas Kernel for cross-chain operations:
+The lending protocol integrates with X3 Kernel for cross-chain operations:
 
 ```solidity
 // Example: Deposit USDC on Polygon, borrow ETH on Arbitrum

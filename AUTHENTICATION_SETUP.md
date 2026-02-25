@@ -1,17 +1,17 @@
 # Authentication & Auto-Start Setup Guide
 
-Everything you need to know about the new authentication system and auto-start configuration for Atlas Sphere.
+Everything you need to know about the new authentication system and auto-start configuration for X3 Chain.
 
 ## Quick Start
 
 ### 1. **Install Systemd Services** (auto-start on boot)
 
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 ```
 
 This will:
-- Create an "atlas" system user
+- Create an "x3" system user
 - Copy 3 service files to `/etc/systemd/system/`
 - Enable and start services automatically
 
@@ -43,7 +43,7 @@ CCGV_RPC_SOLANA=https://api.mainnet-beta.solana.com
 
 **Current default login:**
 - Username: `admin`
-- Password: `atlas-sphere-2026`
+- Password: `x3-chain-2026`
 
 **To change credentials:**
 
@@ -66,7 +66,7 @@ const AUTH_SALT = process.env.AUTH_SALT || 'your-secure-random-salt';
 
 Then rebuild the dashboard:
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master/apps/x3-intelligence
+cd /home/lojak/Desktop/x3-chain-master/apps/x3-intelligence
 npm install
 npm run build
 ```
@@ -118,7 +118,7 @@ Dashboard accessible
 1. Navigate to http://localhost:5173
 2. Enter credentials:
    - Username: `admin`
-   - Password: `atlas-sphere-2026`
+   - Password: `x3-chain-2026`
 3. Click "Sign In"
 4. You'll be redirected to the dashboard
 
@@ -243,7 +243,7 @@ This will:
 ```bash
 curl -X POST http://localhost:5173/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"atlas-sphere-2026"}'
+  -d '{"username":"admin","password":"x3-chain-2026"}'
 ```
 
 Expected response:
@@ -321,7 +321,7 @@ bash deployment/scripts/startup.sh
 
 ```bash
 # Verify services are enabled
-sudo systemctl list-unit-files | grep atlas
+sudo systemctl list-unit-files | grep x3
 
 # Enable a service
 sudo systemctl enable x3-intelligence.service
@@ -341,7 +341,7 @@ Before deploying to production:
 - [ ] Update REDIS_HOST if using external Redis
 - [ ] Enable HTTPS for login page
 - [ ] Set up Redis persistence (appendonly)
-- [ ] Configure log rotation for /var/log/atlas
+- [ ] Configure log rotation for /var/log/x3
 - [ ] Test failover procedures
 - [ ] Run security audit on password storage
 - [ ] Set up monitoring for service health
@@ -410,7 +410,7 @@ Before deploying to production:
 ## File Structure
 
 ```
-atlas-sphere-master/
+x3-chain-master/
 ├── apps/x3-intelligence/src/
 │   ├── components/
 │   │   ├── LoginPage.tsx          # Login UI

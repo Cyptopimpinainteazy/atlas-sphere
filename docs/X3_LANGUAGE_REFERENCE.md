@@ -765,4 +765,4 @@ pub fn claim(swap_id: bytes32, receiver_evm: address, receiver_svm: pubkey) -> b
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

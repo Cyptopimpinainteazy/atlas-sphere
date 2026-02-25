@@ -43,7 +43,7 @@ deploy_to_inactive() {
   
   # Build new version
   echo -e "${BLUE}Building Phase 5...${NC}"
-  cargo build --release --package atlas-jury-anchor 2>/dev/null || true
+  cargo build --release --package x3-jury-anchor 2>/dev/null || true
   
   # Compose file for target environment
   local compose_file="docker-compose.${inactive}.yml"

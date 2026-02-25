@@ -290,7 +290,7 @@ These cheat sheets map TEA workflows to the **BMad Method and Enterprise tracks*
 </details>
 
 <details>
-<summary>Worked Example – “Atlas Payments” Brownfield Story</summary>
+<summary>Worked Example – “X3 Payments” Brownfield Story</summary>
 
 1. **Planning (Phase 2):** PM executes `*prd` to create PRD with FRs/NFRs; TEA runs `*trace` to baseline existing coverage.
 2. **Solutioning (Phase 3):** Architect triggers `*architecture` capturing legacy payment flows and integration architecture; `*create-epics-and-stories` generates Epic 1 (Payment Processing) based on architecture; TEA sets up `*framework` and `*ci` based on architectural decisions; gate check validates planning.

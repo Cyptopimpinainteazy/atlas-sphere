@@ -27,7 +27,7 @@ class JuryAuditLogger:
     def anchor_to_blockchain(self, vote_hash: str) -> str:
         """Anchor audit hash to on-chain"""
         # Submit to pallet-swarm::anchor_vote_hash
-        # Immutable record on Atlas Sphere
+        # Immutable record on X3 Chain
         
     def generate_audit_report(self, date_range: tuple) -> dict:
         """Generate compliance audit report"""
@@ -483,7 +483,7 @@ version: '3.9'
 
 services:
   coordinator:
-    image: atlas-sphere/swarm-coordinator:dev
+    image: x3-chain/swarm-coordinator:dev
     ports:
       - "9000:9000"
       - "9100:9100"
@@ -492,7 +492,7 @@ services:
       RUST_LOG: debug
       
   node-1:
-    image: atlas-sphere/swarm-node:dev
+    image: x3-chain/swarm-node:dev
     depends_on:
       - coordinator
     environment:

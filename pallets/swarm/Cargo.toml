@@ -2,10 +2,10 @@
 name = "pallet-swarm"
 version = "0.1.0"
 edition = "2021"
-description = "Atlas Sphere GPU Swarm - On-chain contributor registry, task lifecycle, jury verification, and reward distribution for the distributed GPU compute swarm"
-authors = ["Atlas Sphere Team"]
+description = "X3 Chain GPU Swarm - On-chain contributor registry, task lifecycle, jury verification, and reward distribution for the distributed GPU compute swarm"
+authors = ["X3 Chain Team"]
 license = "Apache-2.0"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 publish = false
 
 [package.metadata.docs.rs]

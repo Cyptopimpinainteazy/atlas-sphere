@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title IPool
- * @notice Core lending pool interface - Aave-style but Atlas-optimized
+ * @notice Core lending pool interface - Aave-style but X3-optimized
  * @dev All amounts use underlying token decimals
  */
 interface IPool {

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install Atlas Sphere system services for auto-start on boot
+# Install X3 Chain system services for auto-start on boot
 # Run: sudo bash deployment/scripts/install-services.sh
 
 set -e
@@ -8,7 +8,7 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SERVICES_DIR="$PROJECT_ROOT/deployment/systemd"
 
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║  Installing Atlas Sphere System Services                  ║"
+echo "║  Installing X3 Chain System Services                  ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -18,20 +18,20 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Create atlas system user if needed
-if ! id "atlas" &>/dev/null; then
-    echo "👤 Creating 'atlas' system user..."
-    useradd --system --home /var/lib/atlas --shell /bin/false atlas
-    mkdir -p /var/lib/atlas
-    chown atlas:atlas /var/lib/atlas
+# Create x3 system user if needed
+if ! id "x3" &>/dev/null; then
+    echo "👤 Creating 'x3' system user..."
+    useradd --system --home /var/lib/x3 --shell /bin/false x3
+    mkdir -p /var/lib/x3
+    chown x3:x3 /var/lib/x3
 else
-    echo "✓ 'atlas' user already exists"
+    echo "✓ 'x3' user already exists"
 fi
 
 # Create log directory
-mkdir -p /var/log/atlas
-chown atlas:atlas /var/log/atlas
-chmod 755 /var/log/atlas
+mkdir -p /var/log/x3
+chown x3:x3 /var/log/x3
+chmod 755 /var/log/x3
 
 # Copy service files
 echo "📝 Installing systemd service files..."

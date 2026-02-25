@@ -45,7 +45,7 @@ openspec/changes/jury-blockchain-anchoring/
 ├── COMPLETE_DELIVERY.md ................. 400 lines (executive summary)
 └── FILE_MANIFEST.md .................... 500 lines (this is us)
 
-pallets/atlas-jury-anchor/
+pallets/x3-jury-anchor/
 ├── src/lib.rs .......................... 500+ lines (Rust pallet)
 └── Cargo.toml .......................... 30 lines (dependencies)
 
@@ -161,7 +161,7 @@ These aren't needed for shipping tomorrow:
 
 ```bash
 # Verify everything compiles
-cd pallets/atlas-jury-anchor && cargo build --release
+cd pallets/x3-jury-anchor && cargo build --release
 
 # Verify Python code is valid
 python -m mypy swarm/jury/anchorer.py

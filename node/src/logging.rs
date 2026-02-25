@@ -1,11 +1,8 @@
-use ansi_term::Colour::{Blue, Green, Purple, Red, Yellow};
-use chrono::Local;
-use env_logger::{Builder, Env};
-use std::io::Write;
+use env_logger::Env;
 
 /// Initialize a colorful logger with emojis and a light startup banner.
 pub fn init() {
-    let env = Env::default().filter_or("RUST_LOG", "info");
+    let _env = Env::default().filter_or("RUST_LOG", "info");
 
     // Defer global logger initialization to the CLI/runner (some runtime
     // components initialize logging themselves). We avoid calling
@@ -19,5 +16,5 @@ pub fn init() {
     // logging and tracing subscribers in the correct order to avoid conflicts.
 
     // Simple startup banner (ANSI color) — visible even if logger is overridden
-    println!("\x1b[1;35m🚀  \x1b[0m\x1b[38;5;206mAtlas Sphere Node — syncing the mesh ⚡️\x1b[0m");
+    println!("\x1b[1;35m🚀  \x1b[0m\x1b[38;5;206mX3 Chain Node — syncing the mesh ⚡️\x1b[0m");
 }

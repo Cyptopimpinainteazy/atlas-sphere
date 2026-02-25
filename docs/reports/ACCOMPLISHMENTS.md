@@ -1,10 +1,10 @@
-# Atlas Sphere - Accomplishments & Status
+# X3 Chain - Accomplishments & Status
 
 ## 🎯 Executive Summary
 
 **We built a working atomic dual EVM+SVM blockchain.**
 
-This document tracks everything accomplished in creating Atlas Sphere - a Substrate-based L1 with native interoperability between Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) execution.
+This document tracks everything accomplished in creating X3 Chain - a Substrate-based L1 with native interoperability between Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) execution.
 
 ---
 
@@ -18,7 +18,7 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
   - GRANDPA finality
   - Transaction payment system
 
-- [x] **Atlas Kernel Pallet** (`pallets/atlas-kernel/`)
+- [x] **X3 Kernel Pallet** (`pallets/x3-kernel/`)
   - Comit transaction structure (atomic cross-VM operations)
   - Per-account nonce tracking
   - Authorization system for Comit submissions
@@ -71,7 +71,7 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
 
 ### Phase 4: VM Adapter System
 
-- [x] **Adapter Traits** (`pallets/atlas-kernel/src/adapters.rs`)
+- [x] **Adapter Traits** (`pallets/x3-kernel/src/adapters.rs`)
   - `EvmExecutorAdapter` trait
   - `SvmExecutorAdapter` trait
   - Unit type `()` implementations for backwards compatibility
@@ -150,7 +150,7 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
 
 - [x] **Security Audit Report** (`archive/reports/SECURITY_AUDIT_REPORT.md`)
   - 3 Critical, 5 High, 8 Medium, 6 Low findings identified
-  - Comprehensive code review of Atlas Kernel pallet
+  - Comprehensive code review of X3 Kernel pallet
   - VM adapter system analysis
   - Cross-VM atomicity review
 
@@ -225,9 +225,9 @@ This document tracks everything accomplished in creating Atlas Sphere - a Substr
 Test Results: 98 passed, 0 failed
 
 Crate Breakdown:
-├── pallet-atlas-kernel:     70 tests ✅
-├── atlas-evm-integration:   10 tests ✅
-├── atlas-svm-integration:    7 tests ✅
+├── pallet-x3-kernel:     70 tests ✅
+├── x3-evm-integration:   10 tests ✅
+├── x3-svm-integration:    7 tests ✅
 ├── evm-state:                7 tests ✅
 ├── common:                   3 tests ✅
 └── runtime:                  1 test  ✅
@@ -239,7 +239,7 @@ Crate Breakdown:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Atlas Sphere                           │
+│                      X3 Chain                           │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │   submit_comit()                                            │
@@ -290,7 +290,7 @@ Crate Breakdown:
 
 ### Critical Path
 
-- [x] Security audit of Atlas Kernel pallet ✅
+- [x] Security audit of X3 Kernel pallet ✅
 - [x] Security audit of VM adapters ✅
 - [ ] Complete remaining security fixes (see archive/reports/SECURITY_AUDIT_REPORT.md)
 - [ ] Stress testing under load
@@ -316,11 +316,11 @@ Crate Breakdown:
 ## 📁 Repository Structure
 
 ```
-/atlas-sphere
+/x3-chain
 ├── /runtime                    # Substrate runtime
 ├── /node                       # Node binary
 ├── /pallets
-│   └── atlas-kernel/           # Core pallet ✅
+│   └── x3-kernel/           # Core pallet ✅
 │       ├── lib.rs              # Main pallet logic
 │       ├── adapters.rs         # VM adapter traits ✅
 │       ├── authority.rs        # Authority management
@@ -349,7 +349,7 @@ Crate Breakdown:
 
 ### This is Rare Technology
 Atomic cross-VM orchestration across two fundamentally different VMs (EVM and BPF/SVM) inside a single runtime is not a trivial hack. It requires:
-- New orchestration layer (Atlas Kernel)
+- New orchestration layer (X3 Kernel)
 - Deterministic routing
 - Account unification
 - Two-phase commit that survives blockchain finality

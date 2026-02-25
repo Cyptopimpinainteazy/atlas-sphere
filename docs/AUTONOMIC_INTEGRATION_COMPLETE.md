@@ -112,7 +112,7 @@ swarm/autonomic/
 
 ### 1. Start Everything
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m swarm.api_server &
 ```
 

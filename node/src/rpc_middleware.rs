@@ -1,4 +1,4 @@
-/// RPC Rate Limiting and Security Middleware for Atlas Sphere
+/// RPC Rate Limiting and Security Middleware for X3 Chain
 ///
 /// Provides per-connection and per-method rate limiting to prevent DoS attacks
 /// and abuse of RPC endpoints.
@@ -290,8 +290,8 @@ impl Default for CorsConfig {
             allowed_origins: Some(vec![
                 "http://localhost:3000".to_string(),
                 "http://127.0.0.1:3000".to_string(),
-                "https://explorer.atlas-sphere.io".to_string(),
-                "https://dex.atlas-sphere.io".to_string(),
+                "https://explorer.x3-chain.io".to_string(),
+                "https://dex.x3-chain.io".to_string(),
             ]),
             allow_credentials: false,
             max_age: Some(3600),

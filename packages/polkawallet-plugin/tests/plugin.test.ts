@@ -1,5 +1,5 @@
 /**
- * Integration tests for @atlas-sphere/polkawallet-plugin
+ * Integration tests for @x3-chain/polkawallet-plugin
  *
  * INV-REF: tests/invariants/registry.toml — polkawallet_x3chain_integration
  *
@@ -25,7 +25,7 @@ import { X3ChainCustomTypes, X3ChainRpc } from '../src/types/runtime-types';
 
 describe('X3ChainCustomTypes', () => {
   test('defines all runtime pallet types', () => {
-    // Atlas Kernel types
+    // X3 Kernel types
     expect(X3ChainCustomTypes.ComitFailureReason).toBeDefined();
     expect(X3ChainCustomTypes.AssetMetadata).toBeDefined();
 
@@ -81,7 +81,7 @@ describe('X3ChainCustomTypes', () => {
   test('ExternalChainId includes all supported chains', () => {
     const chainId = X3ChainCustomTypes.ExternalChainId as any;
     const chains = chainId._enum;
-    expect(chains).toContain('Atlas');
+    expect(chains).toContain('X3');
     expect(chains).toContain('Ethereum');
     expect(chains).toContain('Solana');
     expect(chains).toContain('Bitcoin');
@@ -102,11 +102,11 @@ describe('X3ChainCustomTypes', () => {
 });
 
 describe('X3ChainRpc', () => {
-  test('defines atlas RPC methods', () => {
-    expect(X3ChainRpc.atlas.getCanonicalBalance).toBeDefined();
-    expect(X3ChainRpc.atlas.getNonce).toBeDefined();
-    expect(X3ChainRpc.atlas.isAuthorized).toBeDefined();
-    expect(X3ChainRpc.atlas.getAuthorities).toBeDefined();
+  test('defines x3 RPC methods', () => {
+    expect(X3ChainRpc.x3.getCanonicalBalance).toBeDefined();
+    expect(X3ChainRpc.x3.getNonce).toBeDefined();
+    expect(X3ChainRpc.x3.isAuthorized).toBeDefined();
+    expect(X3ChainRpc.x3.getAuthorities).toBeDefined();
   });
 
   test('defines x3Settlement RPC methods', () => {

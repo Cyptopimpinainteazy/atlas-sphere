@@ -1,6 +1,6 @@
 [Unit]
-Description=Atlas Sphere Off-Chain Jury Service
-Documentation=https://github.com/Cyptopimpinainteazy/atlas-sphere/tree/main/openspec/changes/add-offchain-jury
+Description=X3 Chain Off-Chain Jury Service
+Documentation=https://github.com/Cyptopimpinainteazy/x3-chain/tree/main/openspec/changes/add-offchain-jury
 After=network.target postgresql.service
 Wants=postgresql.service
 
@@ -15,14 +15,14 @@ StartLimitBurst=3
 # User and group
 User=jury
 Group=jury
-WorkingDirectory=/opt/atlas/jury
+WorkingDirectory=/opt/x3/jury
 
 # Environment configuration
-EnvironmentFile=/etc/atlas/jury/jury.env
-EnvironmentFile=-/etc/atlas/jury/jury.local.env
+EnvironmentFile=/etc/x3/jury/jury.env
+EnvironmentFile=-/etc/x3/jury/jury.local.env
 
 # Path setup
-Environment="PATH=/usr/local/bin:/usr/bin:/opt/atlas/jury/venv/bin"
+Environment="PATH=/usr/local/bin:/usr/bin:/opt/x3/jury/venv/bin"
 Environment="PYTHONUNBUFFERED=1"
 Environment="PYTHONDONTWRITEBYTECODE=1"
 
@@ -37,7 +37,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/log/jury /var/cache/jury /opt/atlas/jury
+ReadWritePaths=/var/log/jury /var/cache/jury /opt/x3/jury
 
 # CPU and memory limits (adjust based on your hardware)
 CPUQuota=80%
@@ -52,11 +52,11 @@ KillMode=mixed
 
 # Main process
 ExecStartPre=/usr/bin/mkdir -p /var/log/jury /var/cache/jury/sessions
-ExecStartPre=/usr/bin/chown -R jury:jury /var/log/jury /var/cache/jury /opt/atlas/jury
+ExecStartPre=/usr/bin/chown -R jury:jury /var/log/jury /var/cache/jury /opt/x3/jury
 
 # Service start command - using python module invocation
 # This assumes the swarm package is installed or the app is structured correctly
-ExecStart=/opt/atlas/jury/venv/bin/python \
+ExecStart=/opt/x3/jury/venv/bin/python \
     -u \
     -m swarm.api_server \
     --host 0.0.0.0 \
@@ -69,7 +69,7 @@ ExecHealthCheck=/usr/bin/curl -f http://localhost:8000/health
 
 # Pre-start and post-stop hooks
 ExecStartPost=/usr/bin/sleep 2
-ExecStopPost=/usr/bin/rm -f /opt/atlas/jury/service.pid
+ExecStopPost=/usr/bin/rm -f /opt/x3/jury/service.pid
 
 [Install]
 WantedBy=multi-user.target

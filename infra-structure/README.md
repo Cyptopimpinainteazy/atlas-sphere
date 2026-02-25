@@ -1,6 +1,6 @@
-# Atlas Sphere — `infra-structure/`
+# X3 Chain — `infra-structure/`
 
-Unified bare-metal infrastructure combining the cross-chain GPU validator, blockchain TPS benchmarking, 62,500+ chain database, and the Infenstructior Dashboard.
+Unified bare-metal infrastructure combining the cross-chain GPU validator, blockchain TPS benchmarking, 62,500+ chain database, and the Inferstructor Dashboard.
 
 ## Directory Layout
 
@@ -11,7 +11,7 @@ infra-structure/
 ├── status.sh               ← Health check all services
 ├── install.sh              ← One-shot dependency install
 │
-├── dashboard/              ← Infenstructior Dashboard (React + Vite + Tauri)
+├── dashboard/              ← Inferstructor Dashboard (React + Vite + Tauri)
 │   ├── src/
 │   │   ├── App.tsx
 │   │   ├── api.ts          ← API client (registry, bridge, RPC, admin, chain-db)
@@ -76,7 +76,7 @@ infra-structure/
 |---------|------|-------------|
 | **Chain DB API** | 7070 | REST API over 62,500 blockchains — search, filter, paginate, ecosystem stats |
 | **Blockchain TPS** | 3010 | TPS benchmarking, company demos, RPC probing |
-| **Dashboard** | 5174 | Infenstructior UI — validator management, GPU monitoring, chain explorer |
+| **Dashboard** | 5174 | Inferstructor UI — validator management, GPU monitoring, chain explorer |
 | **GPU Validator** | — | Python-based cross-chain GPU signature verification |
 
 ## Bare Metal Commands

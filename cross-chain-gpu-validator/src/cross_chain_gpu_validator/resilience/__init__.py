@@ -1,4 +1,4 @@
-"""Infenstructior Resilience Module — Fallback Protection for Cross-Chain GPU Validator.
+"""Inferstructor Resilience Module — Fallback Protection for Cross-Chain GPU Validator.
 
 Provides layered fallback protection for external validators using X3 as a
 GPU-accelerated superhighway.  Three execution lanes, health scoring,

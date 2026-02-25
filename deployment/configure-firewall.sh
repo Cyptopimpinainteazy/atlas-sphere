@@ -1,5 +1,5 @@
 #!/bin/bash
-# Configure firewall on Atlas Sphere testnet nodes
+# Configure firewall on X3 Chain testnet nodes
 
 set -e
 
@@ -20,7 +20,7 @@ sudo ufw default allow outgoing
 sudo ufw allow from "$ADMIN_IP" to any port 22 proto tcp
 
 # Common: P2P port for all nodes
-sudo ufw allow 30333/tcp comment 'Atlas P2P'
+sudo ufw allow 30333/tcp comment 'X3 P2P'
 
 # Node-type specific rules
 case "$NODE_TYPE" in
@@ -30,7 +30,7 @@ case "$NODE_TYPE" in
         ;;
     rpc)
         echo "RPC Node: Opening public RPC port"
-        sudo ufw allow 9944/tcp comment 'Atlas RPC'
+        sudo ufw allow 9944/tcp comment 'X3 RPC'
         ;;
     bootnode)
         echo "Bootnode: P2P only (already configured)"

@@ -1,5 +1,5 @@
 [Unit]
-Description=Atlas Sphere Explorer (Next.js)
+Description=X3 Chain Explorer (Next.js)
 After=network.target
 
 [Service]

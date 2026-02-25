@@ -105,7 +105,7 @@ impl RbpfSvmExecutor {
     }
 }
 
-/// Context for Atlas syscall execution
+/// Context for X3 syscall execution
 /// Tracks compute units, logs, and return data during BPF execution
 struct AtlasSyscallContext {
     /// Remaining compute units

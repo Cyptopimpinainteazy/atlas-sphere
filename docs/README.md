@@ -1,4 +1,4 @@
-# Atlas Sphere MCP Configuration
+# X3 Chain MCP Configuration
 
 ## Quick Usage & Deployment Notes
 
@@ -34,7 +34,7 @@ Follow the `launch_order` array. Wait for each service's healthcheck to succeed 
 If you don't want to deploy all services at once, start with this functional subset:
 
 ```
-secrets-mcp, fs-mcp, git-mcp, docker-mcp, exec-mcp, db-mcp, atlas-node-mcp, rpc-router-mcp, web3-evm-mcp, svm-mcp, wallet-mcp, explorer-mcp, logging-mcp, monitoring-mcp
+secrets-mcp, fs-mcp, git-mcp, docker-mcp, exec-mcp, db-mcp, x3-node-mcp, rpc-router-mcp, web3-evm-mcp, svm-mcp, wallet-mcp, explorer-mcp, logging-mcp, monitoring-mcp
 ```
 
 This provides enough functionality to:

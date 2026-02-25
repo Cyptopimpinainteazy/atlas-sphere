@@ -12,10 +12,10 @@ alerting:
           - alertmanager:9093
 
 scrape_configs:
-  # Atlas Node Metrics
-  - job_name: 'atlas-node'
+  # X3 Node Metrics
+  - job_name: 'x3-node'
     static_configs:
-      - targets: ['atlas-node:9933']
+      - targets: ['x3-node:9933']
     metrics_path: /metrics
     scrape_interval: 10s
     scrape_timeout: 5s

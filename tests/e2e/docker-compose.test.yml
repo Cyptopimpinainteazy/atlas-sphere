@@ -2,29 +2,29 @@ version: '3.8'
 
 services:
   # Blockchain Node
-  atlas-node:
-    image: atlas-sphere:latest
+  x3-node:
+    image: x3-chain:latest
     build:
       context: ../..
       dockerfile: Dockerfile.test
-    container_name: atlas-testnet-node
+    container_name: x3-testnet-node
     ports:
       - "9933:9933"   # RPC
       - "9944:9944"   # WebSocket
       - "30333:30333" # P2P
     environment:
-      - ATLAS_NODE_ENV=testnet
-      - ATLAS_RPC_EXTERNAL=true
-      - ATLAS_RPC_CORS=all
-      - ATLAS_RPC_METHODS=unsafe
-      - ATLAS_NO_TELEMETRY=true
-      - ATLAS_NO_MDNS=true
-      - ATLAS_NO_PRIVATE_IPV4=true
-      - ATLAS_LISTEN_ADDR=0.0.0.0:30333
-      - ATLAS_PUBLIC_ADDR=127.0.0.1:30333
+      - X3_NODE_ENV=testnet
+      - X3_RPC_EXTERNAL=true
+      - X3_RPC_CORS=all
+      - X3_RPC_METHODS=unsafe
+      - X3_NO_TELEMETRY=true
+      - X3_NO_MDNS=true
+      - X3_NO_PRIVATE_IPV4=true
+      - X3_LISTEN_ADDR=0.0.0.0:30333
+      - X3_PUBLIC_ADDR=127.0.0.1:30333
     volumes:
-      - testnet-data:/atlas/data
-      - ./logs:/atlas/logs
+      - testnet-data:/x3/data
+      - ./logs:/x3/logs
     command: >
       --dev
       --rpc-external
@@ -52,7 +52,7 @@ services:
   # Redis for caching and session storage
   redis:
     image: redis:7-alpine
-    container_name: atlas-testnet-redis
+    container_name: x3-testnet-redis
     ports:
       - "6379:6379"
     volumes:
@@ -68,9 +68,9 @@ services:
   # PostgreSQL for test data storage
   postgres:
     image: postgres:15-alpine
-    container_name: atlas-testnet-postgres
+    container_name: x3-testnet-postgres
     environment:
-      POSTGRES_DB: atlas_testnet
+      POSTGRES_DB: x3_testnet
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
     ports:
@@ -79,7 +79,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./sql/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser -d atlas_testnet"]
+      test: ["CMD-SHELL", "pg_isready -U testuser -d x3_testnet"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -89,7 +89,7 @@ services:
   # Mock External Services
   mock-dns-server:
     image: nginx:alpine
-    container_name: atlas-testnet-mock-dns
+    container_name: x3-testnet-mock-dns
     ports:
       - "8080:80"
     volumes:
@@ -103,11 +103,11 @@ services:
       - testnet
 
   mock-gpu-swarm:
-    image: atlas-sphere:gpu-mock
+    image: x3-chain:gpu-mock
     build:
       context: ../..
       dockerfile: Dockerfile.gpu-mock
-    container_name: atlas-testnet-gpu-swarm
+    container_name: x3-testnet-gpu-swarm
     ports:
       - "8081:8081"
     environment:
@@ -123,11 +123,11 @@ services:
       - testnet
 
   mock-external-chains:
-    image: atlas-sphere:chains-mock
+    image: x3-chain:chains-mock
     build:
       context: ../..
       dockerfile: Dockerfile.chains-mock
-    container_name: atlas-testnet-external-chains
+    container_name: x3-testnet-external-chains
     ports:
       - "8082:8082"
     environment:
@@ -145,16 +145,16 @@ services:
 
   # Test Runner Service
   e2e-test-runner:
-    image: atlas-sphere:test-runner
+    image: x3-chain:test-runner
     build:
       context: ../..
       dockerfile: Dockerfile.test-runner
-    container_name: atlas-testnet-e2e-runner
+    container_name: x3-testnet-e2e-runner
     environment:
       - TEST_ENVIRONMENT=testnet
-      - NODE_URL=http://atlas-node:9933
+      - NODE_URL=http://x3-node:9933
       - REDIS_URL=redis://redis:6379
-      - POSTGRES_URL=postgresql://testuser:testpass@postgres:5432/atlas_testnet
+      - POSTGRES_URL=postgresql://testuser:testpass@postgres:5432/x3_testnet
       - MOCK_DNS_URL=http://mock-dns-server:8080
       - MOCK_GPU_URL=http://mock-gpu-swarm:8081
       - MOCK_CHAINS_URL=http://mock-external-chains:8082
@@ -162,7 +162,7 @@ services:
       - ./test-results:/test-results
       - ./logs:/logs
     depends_on:
-      atlas-node:
+      x3-node:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -174,7 +174,7 @@ services:
   # Monitoring and Metrics
   prometheus:
     image: prom/prometheus:latest
-    container_name: atlas-testnet-prometheus
+    container_name: x3-testnet-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -192,7 +192,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: atlas-testnet-grafana
+    container_name: x3-testnet-grafana
     ports:
       - "3000:3000"
     environment:
@@ -210,7 +210,7 @@ services:
   # Alert Manager
   alertmanager:
     image: prom/alertmanager:latest
-    container_name: atlas-testnet-alertmanager
+    container_name: x3-testnet-alertmanager
     ports:
       - "9093:9093"
     volumes:

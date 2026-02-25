@@ -1,6 +1,6 @@
-//! End-to-End Integration Tests for X3-Atlas-Sphere
+//! End-to-End Integration Tests for X3-X3-Sphere
 //! 
-//! This module provides comprehensive E2E testing for the entire X3-Atlas-Sphere ecosystem,
+//! This module provides comprehensive E2E testing for the entire X3-X3-Sphere ecosystem,
 //! with focus on deterministic triple-run validation for consensus, GPU coordination, and settlement.
 //!
 //! Invariants: CHAIN-CONSENSUS-001, GPU-COORD-001, SETTLEMENT-001
@@ -151,7 +151,7 @@ mod tests {
         let dns_server = test_env.start_mock_dns_server().await?;
         
         // Test DNS resolution
-        let resolution_result = dns_server.resolve_domain("test.atlas").await?;
+        let resolution_result = dns_server.resolve_domain("test.x3").await?;
         assert!(resolution_result.success);
         
         info!("DNS server integration test completed!");

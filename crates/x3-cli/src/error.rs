@@ -32,7 +32,7 @@ pub enum CliError {
 
     #[cfg(feature = "sdk")]
     #[error("SDK error: {0}")]
-    Sdk(#[from] atlas_sdk::AtlasError),
+    Sdk(#[from] x3_sdk::AtlasError),
 
     #[error("Command failed: {0}")]
     Command(String),

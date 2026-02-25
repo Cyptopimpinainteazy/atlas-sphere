@@ -159,9 +159,9 @@ impl MockServiceManager {
         info!("Starting mock DNS server");
 
         let records = Arc::new(Mutex::new(HashMap::from([
-            ("atlas-sphere.test".to_string(), "127.0.0.1".to_string()),
-            ("api.atlas-sphere.test".to_string(), "127.0.0.1:8080".to_string()),
-            ("explorer.atlas-sphere.test".to_string(), "127.0.0.1:3000".to_string()),
+            ("x3-chain.test".to_string(), "127.0.0.1".to_string()),
+            ("api.x3-chain.test".to_string(), "127.0.0.1:8080".to_string()),
+            ("explorer.x3-chain.test".to_string(), "127.0.0.1:3000".to_string()),
         ])));
 
         // Start DNS server using warp
@@ -268,7 +268,7 @@ impl MockServiceManager {
             ("ETH".to_string(), 2000.0),
             ("BTC".to_string(), 45000.0),
             ("USDC".to_string(), 1.0),
-            ("ATLAS".to_string(), 0.5),
+            ("X3".to_string(), 0.5),
         ])));
 
         // Start price update loop

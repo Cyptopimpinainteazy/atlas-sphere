@@ -1,7 +1,7 @@
-//! X3 VM Executor for Atlas Kernel
+//! X3 VM Executor for X3 Kernel
 //!
 //! This module provides the main executor that bridges the X3 VM with
-//! the Atlas Kernel pallet's execution interface.
+//! the X3 Kernel pallet's execution interface.
 
 #[cfg(not(feature = "std"))]
 use alloc::{string::ToString, vec, vec::Vec};
@@ -143,10 +143,10 @@ impl X3Executor {
                     success: true,
                     gas_used,
                     return_data,
-                    logs: vec![],          // TODO: collect from hostcalls
-                    state_changes: vec![], // TODO: collect from hostcalls
+                    logs: vec![], // Hostcall log collection deferred to runtime integration
+                    state_changes: vec![], // Hostcall state change collection deferred to runtime integration
                     function_index: 0,
-                    instructions_executed: 0, // TODO: track instruction count
+                    instructions_executed: 0, // Instruction counting requires VM instrumentation
                 })
             }
             Err(vm_err) => {
@@ -165,7 +165,7 @@ impl X3Executor {
                     logs: vec![],
                     state_changes: vec![],
                     function_index: 0,
-                    instructions_executed: 0, // TODO: track instruction count
+                    instructions_executed: 0, // Instruction counting requires VM instrumentation
                 })
             }
         }

@@ -79,7 +79,7 @@ function estimateFlashloanFee(amount: string, numLegs: number): {
   totalFee: string;
 } {
   const amountBn = BigInt(amount);
-  const baseFee = BigInt('1000000000000'); // 0.001 ATLAS
+  const baseFee = BigInt('1000000000000'); // 0.001 X3
   const complexityFee = BigInt(numLegs) * BigInt('500000000000'); // 0.0005 per leg
   const capitalFee = amountBn > 0n
     ? BigInt(Math.ceil(Math.log2(Number(amountBn)))) * BigInt('100000000000')

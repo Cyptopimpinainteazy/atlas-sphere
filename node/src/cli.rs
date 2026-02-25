@@ -6,18 +6,18 @@ use sc_cli::{
 use sp_core::H256;
 use std::path::PathBuf;
 
-/// Command line options for the Atlas Sphere node binary.
+/// Command line options for the X3 Chain node binary.
 ///
 /// This CLI mirrors the ergonomics of other Substrate-based chains while
-/// highlighting the dual-VM Atlas Sphere architecture.
+/// highlighting the dual-VM X3 Chain architecture.
 #[derive(Debug, Parser)]
 #[command(
-    name = "Atlas Sphere Node",
-    bin_name = "atlas-sphere-node",
+    name = "X3 Chain Node",
+    bin_name = "x3-chain-node",
     author,
     version,
-    about = "Run and manage the 3i Atlas Sphere L1 blockchain node",
-    long_about = "Atlas Sphere is a dual-VM (EVM + SVM) Layer-1 built \
+    about = "Run and manage the 3i X3 Chain L1 blockchain node",
+    long_about = "X3 Chain is a dual-VM (EVM + SVM) Layer-1 built \
     for atomic cross-chain operations and native asset orchestration. \
     Use this CLI to operate validator, collator, and archival nodes, or \
     to inspect and craft chain specifications.",
@@ -35,7 +35,7 @@ pub struct Cli {
     pub run: RunCmd,
 }
 
-/// Atlas Sphere node subcommands.
+/// X3 Chain node subcommands.
 ///
 /// These commands provide access to node lifecycle management, chain
 /// specification authoring, and runtime state inspection routines.
@@ -71,6 +71,7 @@ pub enum Commands {
 /// and frontends to preview trade execution before submitting transactions.
 #[derive(Debug, Args)]
 pub struct AtomicSwapCmd {
+    /// The atomic swap subcommand to execute.
     #[command(subcommand)]
     pub command: AtomicSwapSubcommand,
 }
@@ -145,7 +146,7 @@ fn parse_h256(s: &str) -> Result<H256, String> {
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
-        "Atlas Sphere Node".into()
+        "X3 Chain Node".into()
     }
 
     fn impl_version() -> String {
@@ -153,7 +154,7 @@ impl SubstrateCli for Cli {
     }
 
     fn description() -> String {
-        "Atlas Sphere: Dual-VM (EVM + SVM) Layer-1 with atomic cross-chain primitives.".into()
+        "X3 Chain: Dual-VM (EVM + SVM) Layer-1 with atomic cross-chain primitives.".into()
     }
 
     fn author() -> String {
@@ -161,7 +162,7 @@ impl SubstrateCli for Cli {
     }
 
     fn support_url() -> String {
-        "https://atlas-sphere.io/support".into()
+        "https://x3-chain.io/support".into()
     }
 
     fn copyright_start_year() -> i32 {
@@ -169,7 +170,7 @@ impl SubstrateCli for Cli {
     }
 
     fn executable_name() -> String {
-        "atlas-sphere-node".into()
+        "x3-chain-node".into()
     }
 
     fn load_spec(&self, id: &str) -> Result<Box<dyn ChainSpec>, String> {

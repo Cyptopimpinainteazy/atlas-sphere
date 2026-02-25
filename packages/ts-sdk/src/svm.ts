@@ -1,5 +1,5 @@
 /**
- * SVM (Solana VM) utilities for Atlas Sphere SDK
+ * SVM (Solana VM) utilities for X3 Chain SDK
  *
  * Provides encoding, decoding, and conversion utilities for SVM interaction.
  */

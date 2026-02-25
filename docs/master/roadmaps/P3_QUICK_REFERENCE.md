@@ -386,7 +386,7 @@ Status: ✅ PASS
 ### Local Docker Compose
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master/deployment/monitoring
+cd /home/lojak/Desktop/x3-chain-master/deployment/monitoring
 docker-compose up -d
 
 # Verify services

@@ -1,7 +1,7 @@
-//! Quantum-Resistant Cryptography for Atlas Sphere
+//! Quantum-Resistant Cryptography for X3 Chain
 //!
 //! This crate provides post-quantum cryptographic primitives to future-proof
-//! Atlas Sphere against quantum computing attacks.
+//! X3 Chain against quantum computing attacks.
 //!
 //! # Algorithms
 //!

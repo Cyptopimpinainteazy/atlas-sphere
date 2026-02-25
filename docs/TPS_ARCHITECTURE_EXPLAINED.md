@@ -1,8 +1,8 @@
-# Atlas Sphere High TPS Architecture
+# X3 Chain High TPS Architecture
 
 ## Why We Have More TPS & How We Get There
 
-![Atlas Sphere TPS Architecture](tps-architecture.png)
+![X3 Chain TPS Architecture](tps-architecture.png)
 
 <details>
 <summary>View Mermaid Source</summary>
@@ -16,7 +16,7 @@ graph TB
     
     subgraph "⚡ Parallel Processing Engine"
         C -->|High Priority| D[Multi-threaded CPU<br/>8-16 threads]
-        C -->|GPU Eligible| E[Infenstructior<br/>GPU Acceleration]
+        C -->|GPU Eligible| E[Inferstructor<br/>GPU Acceleration]
         
         D --> D1[Ed25519 SigVerifier<br/>689k+ sig/sec]
         D --> D2[Parallel Goroutines<br/>1000+ workers]
@@ -80,7 +80,7 @@ Single Thread:  ~43k sig/sec
 - SIMD instruction optimization
 - Zero-copy pubkey/signature handling
 
-### 2. **GPU Acceleration via Infenstructior** (300× boost)
+### 2. **GPU Acceleration via Inferstructor** (300× boost)
 **Why:** GPUs excel at parallel cryptographic operations
 ```
 Native Solana:     ~65,000 TPS
@@ -225,8 +225,8 @@ pie title TPS Comparison (log scale)
     "Ethereum" : 15
     "Bitcoin" : 7
     "Solana (Native)" : 65000
-    "Atlas Sphere (CPU)" : 500000
-    "Atlas Sphere (GPU)" : 19500000
+    "X3 Chain (CPU)" : 500000
+    "X3 Chain (GPU)" : 19500000
 ```
 
 ## 📊 Performance Metrics
@@ -296,4 +296,4 @@ Watch: Real-time TPS graph
 
 **Dashboard:** http://localhost:8501  
 **Documentation:** `/tests/perf/TPS_TESTING_README.md`  
-**Integration Guide:** `/cross-chain-gpu-validator/tests/infenstructior/INTEGRATION_GUIDE.md`
+**Integration Guide:** `/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md`

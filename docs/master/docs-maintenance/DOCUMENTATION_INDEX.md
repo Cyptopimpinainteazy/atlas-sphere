@@ -1,19 +1,19 @@
-# 📚 ATLAS SPHERE IMPLEMENTATION - COMPLETE INDEX
+# 📚 X3 CHAIN IMPLEMENTATION - COMPLETE INDEX
 
 ## 🎯 PROJECT STATUS: ✅ ALL 7 PHASES COMPLETE + 🚀 TESTNET v1 LIVE
 
 **Total Implementation**: 2,320+ Lines | **Quality**: Production Ready | **Documentation**: 100%  
-**Testnet Status**: 🟢 LIVE | **Public RPC**: `http://rpc.testnet.atlas-sphere.io:9944`
+**Testnet Status**: 🟢 LIVE | **Public RPC**: `http://rpc.testnet.x3-chain.io:9944`
 
 ---
 
 ## 🚀 TESTNET v1 RESOURCES (START HERE!)
 
-### For Developers Building on Atlas Sphere
+### For Developers Building on X3 Chain
 1. **[docs/reports/TESTNET_QUICKSTART.md](./docs/reports/TESTNET_QUICKSTART.md)** (5 min read)
    - Get test tokens from faucet
    - Connect to public RPC
-   - Try Atlas Kernel RPC methods
+   - Try X3 Kernel RPC methods
    - Submit your first Comit
    - Run local sync node
 
@@ -92,8 +92,8 @@ Start here based on your role:
 ## 📁 IMPLEMENTATION FILES
 
 ### Phase 1: Full Consensus
-- **File**: `pallets/atlas-kernel/src/authority.rs` (220+ lines)
-- **Export**: `pallets/atlas-kernel/src/lib.rs`
+- **File**: `pallets/x3-kernel/src/authority.rs` (220+ lines)
+- **Export**: `pallets/x3-kernel/src/lib.rs`
 - **Features**: Authority management, pending changes, enactment
 - **Status**: ✅ Complete
 
@@ -197,7 +197,7 @@ Start here based on your role:
 **Content**: 
 - Network information (RPC endpoints, chain ID, block time)
 - Get test tokens from faucet
-- RPC method examples (Atlas Kernel + standard Substrate)
+- RPC method examples (X3 Kernel + standard Substrate)
 - Submit Comit transactions
 - Run local sync node
 - Troubleshooting common issues
@@ -384,7 +384,7 @@ Start here based on your role:
 
 ## 🔍 FINDING WHAT YOU NEED
 
-### "I want to build on Atlas Sphere testnet" ⭐ NEW
+### "I want to build on X3 Chain testnet" ⭐ NEW
 → Start with **docs/reports/TESTNET_QUICKSTART.md** (get tokens, try RPC, submit Comit)
 
 ### "I want to run a validator or RPC node" ⭐ NEW
@@ -524,7 +524,7 @@ Start here based on your role:
 
 ## ✨ CONCLUSION
 
-All seven phases of the Atlas Sphere roadmap have been successfully implemented. Comprehensive documentation is available to guide integration, deployment, and operations.
+All seven phases of the X3 Chain roadmap have been successfully implemented. Comprehensive documentation is available to guide integration, deployment, and operations.
 
 **Start with**: 
 - Stakeholders → PHASES_1_TO_7_COMPLETE.md

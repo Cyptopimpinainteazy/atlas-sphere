@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "X3 Strategy Evolution Engine - Genetic algorithms for bytecode mutation and fitness scoring"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [dependencies]
 # X3 compiler stack

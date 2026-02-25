@@ -1,0 +1,45 @@
+# .ralphrc - Ralph project configuration
+# Configured for Ollama local LLM integration
+
+# Project identification
+PROJECT_NAME="x3-chain-master"
+PROJECT_TYPE="multi"
+
+# LLM Backend Configuration
+LLM_PROVIDER="ollama"
+LLM_MODEL="glm-4.7-flash:latest"
+LLM_ENDPOINT="http://localhost:11434"
+
+# Alternative models available:
+# - qwen2.5-coder:7b (fast, good for code)
+# - deepseek-coder:6.7b (lightweight)
+# - glm-4.7-flash:latest (powerful, currently loaded)
+
+# Loop settings
+MAX_CALLS_PER_HOUR=500
+CLAUDE_TIMEOUT_MINUTES=20
+CLAUDE_OUTPUT_FORMAT="json"
+
+# Tool permissions
+# Comma-separated list of allowed tools
+ALLOWED_TOOLS="Write,Read,Edit,Bash(git *),Bash(npm *),Bash(pytest),Bash(cargo *),Bash(go *)"
+
+# Session management
+SESSION_CONTINUITY=true
+SESSION_EXPIRY_HOURS=24
+
+# Task sources (for ralph enable --sync)
+# Options: local, beads, github (comma-separated for multiple)
+TASK_SOURCES="github,local"
+GITHUB_TASK_LABEL="ralph-task"
+BEADS_FILTER="status:open"
+
+# Circuit breaker thresholds
+CB_NO_PROGRESS_THRESHOLD=3
+CB_SAME_ERROR_THRESHOLD=5
+CB_OUTPUT_DECLINE_THRESHOLD=70
+
+# Ollama-specific settings
+OLLAMA_GPU_LAYERS=35
+OLLAMA_NUM_GPU=3
+OLLAMA_SCHED_SPREAD=1

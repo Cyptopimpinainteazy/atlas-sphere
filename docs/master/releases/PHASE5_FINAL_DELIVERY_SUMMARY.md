@@ -15,7 +15,7 @@
 ## Phase 5 Core System (Session 1 - Complete)
 
 ### 1. Substrate Pallet Runtime (Rust)
-**File:** `pallets/atlas-jury-anchor/src/lib.rs` (500+ lines)  
+**File:** `pallets/x3-jury-anchor/src/lib.rs` (500+ lines)  
 **Status:** ✅ Production-ready, 8/8 tests passing
 
 **Features:**
@@ -417,7 +417,7 @@ npm test --workspace packages/blockchain-adapter
 
 ### Session 1 Files (Phase 5 Core)
 ```
-pallets/atlas-jury-anchor/src/lib.rs          (500 lines - Rust pallet)
+pallets/x3-jury-anchor/src/lib.rs          (500 lines - Rust pallet)
 swarm/jury/anchorer.py                         (450 lines - Python service)
 packages/blockchain-adapter/src/jury-anchoring.ts (600 lines - TypeScript)
 tests/test_jury_anchoring.py                   (350 lines - Test suite 13/13)

@@ -1,14 +1,14 @@
-Title: Deploy Atlas Sphere to testnet cluster
+Title: Deploy X3 Chain to testnet cluster
 
 Summary:
-- Deploy the Atlas Sphere stack to a Kubernetes test cluster with Prometheus and Grafana.
+- Deploy the X3 Chain stack to a Kubernetes test cluster with Prometheus and Grafana.
 - Run sustained load testing of 1,000 TPS for acceptance.
 
 Motivation:
 - Validate horizontal scaling, GPU usage, and system stability under realistic load.
 
 Scope & Deliverables:
-1. Helm chart for atlas-sphere (scaffolded under `charts/atlas-sphere`).
+1. Helm chart for x3-chain (scaffolded under `charts/x3-chain`).
 2. GitHub Actions workflow to build, push, deploy, and run a k6 benchmark (`.github/workflows/k8s_perf_deploy.yml`).
 3. Prometheus ServiceMonitor and Grafana dashboard scaffolds under `monitoring/grafana`.
 4. k6 workload scripts under `tests/perf/k6/`.

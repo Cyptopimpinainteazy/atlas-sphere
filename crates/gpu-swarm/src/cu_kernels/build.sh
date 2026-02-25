@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build CUDA kernels for Atlas Sphere Solana GPU acceleration
+# Build CUDA kernels for X3 Chain Solana GPU acceleration
 # Target: NVIDIA GTX 1070 (sm_61) — 3 GPUs
 #
 # Kernels:

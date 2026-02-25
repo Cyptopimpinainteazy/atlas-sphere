@@ -8,7 +8,7 @@ use frame_support::{
     traits::{ConstU32, ConstU64},
 };
 use frame_system as system;
-use pallet_atlas_kernel::{adapters::*, ExecutionReceipt};
+use pallet_x3_kernel::{adapters::*, ExecutionReceipt};
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
@@ -25,7 +25,7 @@ frame_support::construct_runtime!(
         System: frame_system,
         Balances: pallet_balances,
         Timestamp: pallet_timestamp,
-        AtlasKernel: pallet_atlas_kernel,
+        AtlasKernel: pallet_x3_kernel,
         AtomicTradeEngine: pallet_atomic_trade_engine,
     }
 );
@@ -91,7 +91,7 @@ impl pallet_timestamp::Config for Test {
 }
 
 /// Mock EVM adapter that returns 98% output (2% fee simulation)
-/// Uses the EvmExecutorAdapter trait from atlas-kernel
+/// Uses the EvmExecutorAdapter trait from x3-kernel
 pub struct TradeEngineEvmAdapter;
 
 impl EvmExecutorAdapter for TradeEngineEvmAdapter {
@@ -242,7 +242,7 @@ parameter_types! {
     pub const DefaultX3GasLimit: u64 = 500_000;
 }
 
-impl pallet_atlas_kernel::Config for Test {
+impl pallet_x3_kernel::Config for Test {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type Balance = u128;

@@ -325,7 +325,7 @@ export const MatrixRainShowcase: React.FC<{ className?: string }> = ({ className
           >
             The Matrix has you... Follow the white rabbit. 
             <br />
-            <span style={{ color: '#fff' }}>Atlas Sphere awaits.</span>
+            <span style={{ color: '#fff' }}>X3 Chain awaits.</span>
           </p>
 
           <motion.button

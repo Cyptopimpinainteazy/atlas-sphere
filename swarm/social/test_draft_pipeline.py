@@ -36,14 +36,14 @@ def test_generate_social_draft(monkeypatch, tmp_path):
     os.environ["SWARM_SOCIAL_CONFIG"] = str(config_path)
 
     def fake_ask_simple(self, question, strategy_model, answer_model, final_answer_model):
-        return "Atlas Sphere is a dual-VM chain."
+        return "X3 Chain is a dual-VM chain."
 
     def fake_generate_text(host, model, prompt, options=None, timeout=60):
         return json.dumps(
             {
                 "title": "Hello", 
                 "body": "Draft body", 
-                "tags": ["#atlas"],
+                "tags": ["#x3"],
                 "target_profiles": [],
                 "target_groups": [],
                 "cta": "Learn more",
@@ -56,7 +56,7 @@ def test_generate_social_draft(monkeypatch, tmp_path):
     monkeypatch.setattr(draft_pipeline, "generate_text", fake_generate_text)
 
     result = draft_pipeline.generate_social_draft(
-        {"network": "facebook", "action": "post", "topic": "Atlas Sphere"}
+        {"network": "facebook", "action": "post", "topic": "X3 Chain"}
     )
 
     assert result.draft_id

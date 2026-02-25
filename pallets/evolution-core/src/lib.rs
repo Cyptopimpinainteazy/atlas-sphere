@@ -1,7 +1,7 @@
 //! # Evolution Core Pallet
 //!
 //! The brain of the Adaptive Intelligence Chain (AIC). This pallet enables
-//! X3 Atlas Sphere to evolve its runtime based on network conditions,
+//! X3 X3 Chain to evolve its runtime based on network conditions,
 //! usage patterns, MEV pressure, and AI-generated optimizations.
 //!
 //! ## Overview

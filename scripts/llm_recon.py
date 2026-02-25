@@ -26,14 +26,19 @@ import base64
 import json
 import os
 import re
+import sys
 import time
 import urllib.parse
+import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Optional
 
 import httpx
 import base64
+
+# Suppress browser-opening behavior
+os.environ["BROWSER"] = "none"
 
 # ── LLM Platform Definitions ──────────────────────────────────────────
 
@@ -740,6 +745,12 @@ def main():
                         help="Skip FOFA/Shodan, only print dorks")
     parser.add_argument("--dorks-only", action="store_true",
                         help="Only print dork URLs, don't scan")
+    parser.add_argument("--search-all", action="store_true",
+                        help="Search all platforms (default behavior)")
+    parser.add_argument("--local-only", action="store_true",
+                        help="Skip external searches (FOFA/Shodan), only validate local/manual IPs")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suppress detailed output, only show results")
     args = parser.parse_args()
 
     print(BANNER)
@@ -777,22 +788,35 @@ def main():
             platform_ips[p.name].update(manual)
         print(f"\n  [*] Manual targets: {len(manual)} IPs × {len(active_platforms)} platforms")
 
-    if not args.skip_search and not args.validate_only:
-        # FOFA
-        fofa_results = fofa_search(active_platforms)
-        for pname, ips in fofa_results.items():
-            platform_ips[pname].update(ips)
-
-        # Shodan Free
-        shodan_free_results = shodan_free_search(active_platforms)
-        for pname, ips in shodan_free_results.items():
-            platform_ips[pname].update(ips)
-
-        # Shodan API
-        if args.shodan_key:
-            shodan_results = shodan_api_search(args.shodan_key, active_platforms)
-            for pname, ips in shodan_results.items():
+    # Skip external searches if --local-only or --skip-search is set
+    if not args.skip_search and not args.validate_only and not args.local_only:
+        try:
+            # FOFA
+            fofa_results = fofa_search(active_platforms)
+            for pname, ips in fofa_results.items():
                 platform_ips[pname].update(ips)
+        except Exception as e:
+            print(f"  [!] FOFA search failed: {e}")
+        
+        try:
+            # Shodan Free
+            shodan_free_results = shodan_free_search(active_platforms)
+            for pname, ips in shodan_free_results.items():
+                platform_ips[pname].update(ips)
+        except Exception as e:
+            print(f"  [!] Shodan free search failed: {e}")
+
+        try:
+            # Shodan API
+            if args.shodan_key:
+                shodan_results = shodan_api_search(args.shodan_key, active_platforms)
+                for pname, ips in shodan_results.items():
+                    platform_ips[pname].update(ips)
+        except Exception as e:
+            print(f"  [!] Shodan API search failed: {e}")
+    elif args.local_only:
+        print_section("Local-Only Mode — Skipping External Searches")
+        print("  Use --validate-only to specify IPs to check")
 
     # Validate
     total_candidates = sum(len(v) for v in platform_ips.values())

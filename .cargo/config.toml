@@ -1,4 +1,4 @@
-# Cargo configuration for Atlas Sphere
+# Cargo configuration for X3 Chain
 # This config ensures WASM builds are compatible with parity-wasm 0.45.0
 
 [target.wasm32-unknown-unknown]

@@ -14,7 +14,7 @@ groups:
         annotations:
           summary: "Swarm Coordinator is DOWN"
           description: "Coordinator has been unreachable for 2+ minutes. Tasks cannot be distributed."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/coordinator-down"
+          runbook: "https://wiki.x3-chain.io/runbooks/coordinator-down"
 
       - alert: GPUNodeDown
         expr: up{job='gpu-node'} == 0
@@ -25,7 +25,7 @@ groups:
         annotations:
           summary: "GPU Node {{ $labels.node_id }} is offline"
           description: "GPU Node has been unreachable for 5+ minutes."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-node-down"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-node-down"
 
       - alert: HighGPUNodeFailureRate
         expr: |
@@ -37,7 +37,7 @@ groups:
         annotations:
           summary: ">=10% of GPU nodes are offline"
           description: "{{ $value | humanizePercentage }} GPU nodes are down. Investigate immediately."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-cluster-degradation"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-cluster-degradation"
 
       - alert: CoordinatorQuorumLoss
         expr: count(up{job='coordinator'} == 1) < 3
@@ -48,7 +48,7 @@ groups:
         annotations:
           summary: "Coordinator quorum lost"
           description: "Fewer than 3 coordinators are healthy. Consensus may be compromised."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/quorum-loss"
+          runbook: "https://wiki.x3-chain.io/runbooks/quorum-loss"
 
   - name: gpu_swarm_performance
     interval: 60s
@@ -63,7 +63,7 @@ groups:
         annotations:
           summary: "Elevated task failure rate (>5%)"
           description: "Task failure rate is {{ $value | humanizePercentage }} - investigate task executor"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/high-task-failure"
+          runbook: "https://wiki.x3-chain.io/runbooks/high-task-failure"
 
       - alert: TaskQueueBacklog
         expr: swarm_task_queue_depth > 1000
@@ -74,7 +74,7 @@ groups:
         annotations:
           summary: "Task queue backlog is high (>1000 tasks)"
           description: "{{ $value }} tasks waiting. Add GPU capacity or investigate slow tasks."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/task-queue-backlog"
+          runbook: "https://wiki.x3-chain.io/runbooks/task-queue-backlog"
 
       - alert: SlowTaskExecution
         expr: |
@@ -86,7 +86,7 @@ groups:
         annotations:
           summary: "Task p95 execution time >5 minutes"
           description: "Tasks are taking {{ $value }}s to execute. Investigate GPU load."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/slow-tasks"
+          runbook: "https://wiki.x3-chain.io/runbooks/slow-tasks"
 
       - alert: LowTaskCompletionRate
         expr: |
@@ -111,7 +111,7 @@ groups:
         annotations:
           summary: "GPU utilization critically high (>95%)"
           description: "GPUs are nearly at capacity ({{ $value | humanize }}%)"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-saturation"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-saturation"
 
       - alert: GPUMemoryPressure
         expr: |
@@ -123,7 +123,7 @@ groups:
         annotations:
           summary: "GPU memory usage high (>90%)"
           description: "GPU {{ $labels.device_id }} is {{ $value | humanizePercentage }} full"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-memory-pressure"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-memory-pressure"
 
       - alert: GPUHighTemperature
         expr: gpu_temperature_celsius > 85
@@ -134,7 +134,7 @@ groups:
         annotations:
           summary: "GPU temperature critical (>85°C)"
           description: "GPU {{ $labels.device_id }} temperature is {{ $value }}°C"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-thermal-throttle"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-thermal-throttle"
 
       - alert: GPUHighFragmentation
         expr: gpu_memory_fragmentation_ratio > 0.7
@@ -145,7 +145,7 @@ groups:
         annotations:
           summary: "GPU memory fragmentation high (>70%)"
           description: "GPU {{ $labels.device_id }} fragmentation ratio: {{ $value | humanizePercentage }}"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-memory-fragmentation"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-memory-fragmentation"
 
       - alert: GPUDeviceError
         expr: gpu_device_errors_total > 0
@@ -156,7 +156,7 @@ groups:
         annotations:
           summary: "GPU device error detected"
           description: "GPU {{ $labels.device_id }} has {{ $value }} errors"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/gpu-device-error"
+          runbook: "https://wiki.x3-chain.io/runbooks/gpu-device-error"
 
   - name: gpu_swarm_network
     interval: 60s
@@ -170,7 +170,7 @@ groups:
         annotations:
           summary: "Few peers connected (<10)"
           description: "Node has only {{ $value }} peers. Check network connectivity."
-          runbook: "https://wiki.atlas-sphere.io/runbooks/low-peer-connectivity"
+          runbook: "https://wiki.x3-chain.io/runbooks/low-peer-connectivity"
 
       - alert: HighNetworkLatency
         expr: |
@@ -182,7 +182,7 @@ groups:
         annotations:
           summary: "High peer latency (p95 >500ms)"
           description: "Network latency is {{ $value | humanize }}ms"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/high-latency"
+          runbook: "https://wiki.x3-chain.io/runbooks/high-latency"
 
       - alert: PeerConnectionChurn
         expr: |
@@ -194,7 +194,7 @@ groups:
         annotations:
           summary: "Elevated peer disconnections (>1/sec)"
           description: "{{ $value | humanize }} peers dropping per second"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/peer-churn"
+          runbook: "https://wiki.x3-chain.io/runbooks/peer-churn"
 
       - alert: NetworkErrors
         expr: |
@@ -231,7 +231,7 @@ groups:
         annotations:
           summary: "Elevated slashing rate (>10 events/hour)"
           description: "{{ $value | humanize }} slashing events in last hour"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/high-slashing"
+          runbook: "https://wiki.x3-chain.io/runbooks/high-slashing"
 
       - alert: VerificationConsensusFailure
         expr: |
@@ -243,7 +243,7 @@ groups:
         annotations:
           summary: "Verification consensus failures >10%"
           description: "{{ $value | humanizePercentage }} of verifications failing"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/verification-failure"
+          runbook: "https://wiki.x3-chain.io/runbooks/verification-failure"
 
       - alert: RewardDistributionDelay
         expr: |
@@ -255,7 +255,7 @@ groups:
         annotations:
           summary: "Reward distribution delays detected"
           description: "No rewards distributed in >10 minutes"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/reward-delay"
+          runbook: "https://wiki.x3-chain.io/runbooks/reward-delay"
 
   - name: gpu_swarm_x3
     interval: 60s
@@ -270,7 +270,7 @@ groups:
         annotations:
           summary: "X3 compilation failure rate >5%"
           description: "{{ $value | humanizePercentage }} X3 compilations failing"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/x3-compile-failure"
+          runbook: "https://wiki.x3-chain.io/runbooks/x3-compile-failure"
 
       - alert: SlowCompilation
         expr: |
@@ -282,7 +282,7 @@ groups:
         annotations:
           summary: "X3 compilation slow (p95 >10s)"
           description: "Compilation time: {{ $value | humanize }}s"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/slow-compilation"
+          runbook: "https://wiki.x3-chain.io/runbooks/slow-compilation"
 
       - alert: HighGasUsage
         expr: |
@@ -308,7 +308,7 @@ groups:
         annotations:
           summary: "Process crashed"
           description: "{{ $labels.process }} crashed {{ $value }} times in last 5 minutes"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/process-crash"
+          runbook: "https://wiki.x3-chain.io/runbooks/process-crash"
 
       - alert: HighMemoryUsage
         expr: |
@@ -320,7 +320,7 @@ groups:
         annotations:
           summary: "Process memory usage high (>16GB)"
           description: "{{ $labels.process }} using {{ $value | humanize }}GB"
-          runbook: "https://wiki.atlas-sphere.io/runbooks/memory-leak"
+          runbook: "https://wiki.x3-chain.io/runbooks/memory-leak"
 
       - alert: DiskSpaceRunningOut
         expr: |

@@ -1,11 +1,11 @@
-# Atlas Sphere Prometheus Configuration
+# X3 Chain Prometheus Configuration
 # Scrape intervals and targets for monitoring
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    monitor: 'atlas-sphere-testnet'
+    monitor: 'x3-chain-testnet'
 
 # Alertmanager configuration (optional)
 # alerting:
@@ -25,16 +25,16 @@ scrape_configs:
         labels:
           component: 'prometheus'
 
-  # Atlas Sphere Bootnode
-  - job_name: 'atlas-bootnode'
+  # X3 Chain Bootnode
+  - job_name: 'x3-bootnode'
     static_configs:
       - targets: ['bootnode:9615']
         labels:
           node_type: 'bootnode'
           network: 'testnet'
 
-  # Atlas Sphere Validators
-  - job_name: 'atlas-validators'
+  # X3 Chain Validators
+  - job_name: 'x3-validators'
     static_configs:
       - targets:
           - 'validator-01:9615'
@@ -50,7 +50,7 @@ scrape_configs:
         replacement: '${1}'
 
   # Analytics Service
-  - job_name: 'atlas-analytics'
+  - job_name: 'x3-analytics'
     static_configs:
       - targets: ['analytics:8080']
         labels:

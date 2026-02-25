@@ -1,8 +1,8 @@
-# Atlas Sphere Architecture Document
+# X3 Chain Architecture Document
 
 ## Overview
 
-Atlas Sphere is a Substrate-based L1 blockchain that runs two VM families inside a single runtime: an EVM-compatible execution environment (via pallet-evm/Frontier) and an SVM-style BPF execution environment (via solana-rbpf). The **Atlas Kernel** orchestrates deterministic, atomic cross-VM operations and presents a unified account/fee model.
+X3 Chain is a Substrate-based L1 blockchain that runs two VM families inside a single runtime: an EVM-compatible execution environment (via pallet-evm/Frontier) and an SVM-style BPF execution environment (via solana-rbpf). The **X3 Kernel** orchestrates deterministic, atomic cross-VM operations and presents a unified account/fee model.
 
 ## Goals
 
@@ -18,15 +18,15 @@ Atlas Sphere is a Substrate-based L1 blockchain that runs two VM families inside
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Atlas Sphere                                │
+│                         X3 Chain                                │
 │  ┌─────────────────┐   ┌─────────────────────────────────────────┐  │
 │  │ Client/Wallets  │──▶│ Node RPC Layer (eth_/svm_/atlasKernel_) │  │
 │  └─────────────────┘   └─────────────────────────────────────────┘  │
 │                                    │                                │
 │                                    ▼                                │
 │                        ┌──────────────────────┐                     │
-│                        │    Atlas Kernel      │◀── Governance       │
-│                        │  (pallet_atlas_kernel)                     │
+│                        │    X3 Kernel      │◀── Governance       │
+│                        │  (pallet_x3_kernel)                     │
 │                        └──────────────────────┘                     │
 │                       ╱│╲         │         ╲│╱                     │
 │                        │          │          │                      │
@@ -53,7 +53,7 @@ Atlas Sphere is a Substrate-based L1 blockchain that runs two VM families inside
 
 | Component                  | Responsibility                                                                    |
 | -------------------------- | --------------------------------------------------------------------------------- |
-| **Atlas Kernel**           | Orchestration, atomic contexts, account locking, Comit tracking, canonical ledger |
+| **X3 Kernel**           | Orchestration, atomic contexts, account locking, Comit tracking, canonical ledger |
 | **EVM Adapter**            | Gas-to-weight translation, EVM execution API via Frontier                         |
 | **SVM Adapter**            | BPF loader, deterministic scheduling, compute unit tracking                       |
 | **VmRouter**               | Deterministic routing (Blake2-based priority + markers)                           |
@@ -177,7 +177,7 @@ pub struct ExecutionReceipt {
 ## Fee Model & Economics
 
 ### Primary Currency
-**ATLAS** - Native token for all fee payments
+**X3** - Native token for all fee payments
 
 ### Fee Structure
 ```
@@ -208,7 +208,7 @@ Total Fee = Base Fee + (EVM Gas × Gas Price) + (SVM Compute Units × Unit Price
 
 ## API Reference
 
-### Atlas Kernel RPC
+### X3 Kernel RPC
 - `atlasKernel_getCanonicalBalance(account, asset_id)` → Balance
 - `atlasKernel_getAssetMetadata(asset_id)` → AssetMetadata
 - `atlasKernel_isAuthorized(account)` → bool
@@ -226,11 +226,11 @@ Total Fee = Base Fee + (EVM Gas × Gas Price) + (SVM Compute Units × Unit Price
 ## File Structure
 
 ```
-/atlas-sphere
+/x3-chain
 ├── /runtime                    # Substrate runtime crate
 ├── /node                       # Node binary, RPC wiring
 ├── /pallets
-│   └── atlas-kernel/           # Core orchestration pallet
+│   └── x3-kernel/           # Core orchestration pallet
 │       └── src/
 │           ├── lib.rs          # Pallet definition
 │           ├── adapters.rs     # VM adapter traits

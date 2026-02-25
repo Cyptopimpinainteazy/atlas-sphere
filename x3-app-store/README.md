@@ -34,7 +34,7 @@ The X3 App Store consists of several microservices:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Cyptopimpinainteazy/atlas-sphere.git
+   git clone https://github.com/Cyptopimpinainteazy/x3-chain.git
    cd x3-app-store
    ```
 

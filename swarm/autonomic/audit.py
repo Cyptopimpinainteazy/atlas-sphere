@@ -46,7 +46,7 @@ class AuditEntry:
     severity: AuditSeverity
     actor: str              # "gpu_guard", "orchestrator", "human", etc.
     action: str             # "restart_service", "scale_workers", etc.
-    target: str             # "atlas-sphere-node", "gpu.2", etc.
+    target: str             # "x3-chain-node", "gpu.2", etc.
     reason: str             # Human-readable reason
     result: str = "pending"  # "success", "failed", "skipped"
     details: Dict[str, Any] = field(default_factory=dict)

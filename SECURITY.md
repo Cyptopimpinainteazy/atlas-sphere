@@ -12,7 +12,7 @@
 
 ### How to Report
 
-Please report security vulnerabilities by emailing: **security@atlas-sphere.io**
+Please report security vulnerabilities by emailing: **security@x3-chain.io**
 
 Include the following information:
 
@@ -33,11 +33,11 @@ Include the following information:
 
 The following are in scope:
 
-- Atlas Kernel pallet (pallet-atlas-kernel)
-- EVM Adapter (atlas-evm-integration)
-- SVM Adapter (atlas-svm-integration)
-- Runtime (atlas-sphere-runtime)
-- Node (atlas-sphere-node)
+- X3 Kernel pallet (pallet-x3-kernel)
+- EVM Adapter (x3-evm-integration)
+- SVM Adapter (x3-svm-integration)
+- Runtime (x3-chain-runtime)
+- Node (x3-chain-node)
 - RPC endpoints
 
 ### Out of Scope
@@ -76,8 +76,8 @@ We appreciate security researchers and will:
 
 ## Contact
 
-- Security issues: security@atlas-sphere.io
-- General inquiries: contact@atlas-sphere.io
+- Security issues: security@x3-chain.io
+- General inquiries: contact@x3-chain.io
 
 ## PGP Key
 

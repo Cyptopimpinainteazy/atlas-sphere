@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@atlas-sphere/shared', '@atlas-sphere/ts-sdk'],
+  transpilePackages: ['@x3-chain/shared', '@x3-chain/ts-sdk'],
 
   images: {
-    domains: ["assets.atlas-sphere.io"],
+    domains: ["assets.x3-chain.io"],
     formats: ["image/avif", "image/webp"],
   },
 

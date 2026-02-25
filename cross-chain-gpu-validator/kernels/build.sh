@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 # ---------------------------------------------------------------------------
-# Atlas Sphere — Build all 5 GPU crypto kernels
+# X3 Chain — Build all 5 GPU crypto kernels
 #
 # Targets:  GTX 1070 (sm_61) × 3  on Threadripper core node
 #           GTX 1070 (sm_61) × 17 on secondary servers
@@ -42,6 +42,12 @@ echo "[2/5] Keccak-256 ..."
 nvcc ${NVCC_FLAGS} \
   "${KERNEL_DIR}/keccak256_batch.cu" \
   -o "${OUTPUT_DIR}/libkeccak256_batch.so"
+
+# 2.5 Atomic Swap
+echo "[*] Atomic Swap (Cross-Chain Consistency) ..."
+nvcc ${NVCC_FLAGS} \
+  "${KERNEL_DIR}/atomic_swap.cu" \
+  -o "${OUTPUT_DIR}/libatomic_swap.so"
 
 # 3-5. SHA-256 / Ed25519 / Stream pipeline (from gpu-swarm crate)
 if [[ -d "${GPU_SWARM_DIR}" ]]; then

@@ -105,4 +105,4 @@ metadata:
   namespace: monitoring
 type: Opaque
 stringData:
-  admin-password: 'atlas-swarm-2025'
+  admin-password: 'x3-swarm-2025'

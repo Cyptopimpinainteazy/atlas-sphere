@@ -1,7 +1,7 @@
 # Change: Social Agent Swarm (Draft-Only v1)
 
 ## Why
-We need a Velo-style multi-agent system specialized for Atlas Sphere that generates social engagement drafts (posts, comments, DMs, profiles) grounded in approved content (Open Notebook) and routed through the swarm workflow for auditability and later automation.
+We need a Velo-style multi-agent system specialized for X3 Chain that generates social engagement drafts (posts, comments, DMs, profiles) grounded in approved content (Open Notebook) and routed through the swarm workflow for auditability and later automation.
 
 ## What Changes
 - Add a social agent swarm capability that produces drafts for outreach, influencer discovery, and community growth.

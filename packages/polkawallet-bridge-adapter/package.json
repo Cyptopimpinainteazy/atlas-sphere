@@ -1,7 +1,7 @@
 {
-  "name": "@atlas-sphere/polkawallet-bridge-adapter",
+  "name": "@x3-chain/polkawallet-bridge-adapter",
   "version": "0.1.0",
-  "description": "Polkawallet bridge adapter for Atlas Sphere x3chain — enables XCM and atomic cross-chain transfers through the Polkawallet Bridge SDK",
+  "description": "Polkawallet bridge adapter for X3 Chain x3chain — enables XCM and atomic cross-chain transfers through the Polkawallet Bridge SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
@@ -42,7 +42,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atlas-sphere/atlas-sphere",
+    "url": "https://github.com/x3-chain/x3-chain",
     "directory": "packages/polkawallet-bridge-adapter"
   }
 }

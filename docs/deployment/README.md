@@ -1,4 +1,4 @@
-# 🎯 Atlas Sphere Deployment - Complete Guide
+# 🎯 X3 Chain Deployment - Complete Guide
 
 ## 📚 Documentation Index
 
@@ -24,7 +24,7 @@
 ### 1️⃣ Dev Mode (Instant Testing)
 **Single command, immediate results:**
 ```bash
-./target/release/atlas-sphere-node --dev --tmp --rpc-external
+./target/release/x3-chain-node --dev --tmp --rpc-external
 ```
 - ✅ Perfect for development
 - ✅ Instant startup
@@ -34,7 +34,7 @@
 ### 2️⃣ Local Testnet (Production-Like)
 **Full testnet on one machine:**
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 ./deploy-local-testnet.sh
 ```
 - ✅ 3 validators + bootnode
@@ -67,7 +67,7 @@ After deploying with **deploy-local-testnet.sh**, use:
 ./manage-testnet.sh status
 
 # View logs
-./manage-testnet.sh logs atlas-validator-01
+./manage-testnet.sh logs x3-validator-01
 
 # Restart everything
 ./manage-testnet.sh restart
@@ -166,20 +166,20 @@ ulimit -n 65536
 ### Services Won't Start
 ```bash
 # Check systemd errors
-sudo systemctl status atlas-bootnode
-sudo journalctl -u atlas-bootnode -n 50
+sudo systemctl status x3-bootnode
+sudo journalctl -u x3-bootnode -n 50
 
 # Check binary
-/usr/local/bin/atlas-sphere-node --version
+/usr/local/bin/x3-chain-node --version
 
 # Check permissions
-ls -la /var/lib/atlas-sphere/
+ls -la /var/lib/x3-chain/
 ```
 
 ### Nodes Not Connecting
 ```bash
 # Verify bootnode peer ID
-atlas-sphere-node key inspect-node-key \
+x3-chain-node key inspect-node-key \
   --file deployment/keys/bootnode-key.txt
 
 # Test network connectivity
@@ -193,7 +193,7 @@ sudo iptables -L -n
 ### No Block Production
 ```bash
 # Check validator keys
-ls -la /var/lib/atlas-sphere/validator-01/chains/atlas_testnet/keystore/
+ls -la /var/lib/x3-chain/validator-01/chains/x3_testnet/keystore/
 
 # Verify session keys via RPC
 curl -s http://localhost:9945 -H "Content-Type: application/json" \
@@ -207,7 +207,7 @@ curl -s http://localhost:9944 -H "Content-Type: application/json" \
 ### High Resource Usage
 ```bash
 # Check CPU/Memory
-top -p $(pgrep -d',' atlas-sphere-node)
+top -p $(pgrep -d',' x3-chain-node)
 
 # Reduce pruning
 --pruning 1000  # Keep last 1000 blocks
@@ -228,9 +228,9 @@ top -p $(pgrep -d',' atlas-sphere-node)
 - [ ] Open ports: 30333, 9944
 
 ### Prerequisites
-- [ ] Binary built: `./target/release/atlas-sphere-node`
+- [ ] Binary built: `./target/release/x3-chain-node`
 - [ ] Keys generated: `deployment/keys/*`
-- [ ] Chain spec created: `deployment/chain-specs/atlas-testnet-raw.json`
+- [ ] Chain spec created: `deployment/chain-specs/x3-testnet-raw.json`
 - [ ] SSH access configured (for multi-server)
 - [ ] Firewall rules planned
 
@@ -281,27 +281,27 @@ top -p $(pgrep -d',' atlas-sphere-node)
 ### Logs Location
 ```bash
 # Systemd logs
-sudo journalctl -u atlas-bootnode -f
-sudo journalctl -u atlas-validator-01 -f
+sudo journalctl -u x3-bootnode -f
+sudo journalctl -u x3-validator-01 -f
 
 # Or use management script
-./manage-testnet.sh logs atlas-bootnode
+./manage-testnet.sh logs x3-bootnode
 ```
 
 ### Configuration Files
 ```
-/etc/systemd/system/atlas-bootnode.service
-/etc/systemd/system/atlas-validator-01.service
-/etc/systemd/system/atlas-validator-02.service
-/etc/systemd/system/atlas-validator-03.service
+/etc/systemd/system/x3-bootnode.service
+/etc/systemd/system/x3-validator-01.service
+/etc/systemd/system/x3-validator-02.service
+/etc/systemd/system/x3-validator-03.service
 ```
 
 ### Data Directories
 ```
-/var/lib/atlas-sphere/bootnode/
-/var/lib/atlas-sphere/validator-01/
-/var/lib/atlas-sphere/validator-02/
-/var/lib/atlas-sphere/validator-03/
+/var/lib/x3-chain/bootnode/
+/var/lib/x3-chain/validator-01/
+/var/lib/x3-chain/validator-02/
+/var/lib/x3-chain/validator-03/
 ```
 
 ---
@@ -310,7 +310,7 @@ sudo journalctl -u atlas-validator-01 -f
 
 **Choose your deployment path:**
 
-1. **Quick test?** → Run dev mode: `./target/release/atlas-sphere-node --dev --tmp`
+1. **Quick test?** → Run dev mode: `./target/release/x3-chain-node --dev --tmp`
 2. **Local testnet?** → Run: `./deploy-local-testnet.sh`
 3. **Multi-server?** → Edit and run: `./deploy-multi-server.sh`
 

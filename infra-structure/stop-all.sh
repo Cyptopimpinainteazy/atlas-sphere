@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════
-#  Atlas Sphere — Infra-Structure: Bare Metal Stop All
+#  X3 Chain — Infra-Structure: Bare Metal Stop All
 #  Cleanly stops all services started by start-all.sh
 # ═══════════════════════════════════════════════════════════════════════
 set -euo pipefail
@@ -16,7 +16,7 @@ ok()   { echo -e "${GREEN}  ✓${NC} $*"; }
 warn() { echo -e "${YELLOW}  ⚠${NC} $*"; }
 
 echo ""
-echo -e "${BOLD}Stopping Atlas Sphere Infra-Structure services...${NC}"
+echo -e "${BOLD}Stopping X3 Chain Infra-Structure services...${NC}"
 echo ""
 
 stopped=0

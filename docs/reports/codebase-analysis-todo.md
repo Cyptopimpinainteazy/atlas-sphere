@@ -1,4 +1,4 @@
-# X3-Atlas-Sphere Codebase Analysis Todo List
+# X3-X3-Sphere Codebase Analysis Todo List
 
 ## Phase 1: High-Level Architecture Analysis
 - [ ] Analyze project structure and main directories

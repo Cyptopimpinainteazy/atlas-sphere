@@ -2,7 +2,7 @@
 
 > **Status**: Canonical | **Version**: 0.9.0 (Draft) | **Last Updated**: 2025-12-10
 
-X3Script is the high-level domain-specific language for writing on-chain contracts, AI agent strategies, and cross-VM operations on Atlas Sphere. It compiles deterministically to X3 bytecode via the MIR optimizer pipeline.
+X3Script is the high-level domain-specific language for writing on-chain contracts, AI agent strategies, and cross-VM operations on X3 Chain. It compiles deterministically to X3 bytecode via the MIR optimizer pipeline.
 
 ---
 
@@ -1050,4 +1050,4 @@ type        := "u8" | "u16" | "u32" | "u64" | "u128"
 
 **Document Version:** 0.9.0 (Draft)  
 **Specification Status:** Canonical Draft  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

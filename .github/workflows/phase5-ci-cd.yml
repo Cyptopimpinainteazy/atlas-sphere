@@ -7,7 +7,7 @@ on:
       - develop
       - feature/**
     paths:
-      - 'pallets/atlas-jury-anchor/**'
+      - 'pallets/x3-jury-anchor/**'
       - 'swarm/jury/**'
       - 'packages/blockchain-adapter/**'
       - 'tests/test_jury_anchoring.py'
@@ -48,19 +48,19 @@ jobs:
 
       - name: Check formatting
         run: cargo fmt --all -- --check
-        working-directory: pallets/atlas-jury-anchor
+        working-directory: pallets/x3-jury-anchor
 
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
-        working-directory: pallets/atlas-jury-anchor
+        working-directory: pallets/x3-jury-anchor
 
       - name: Build pallet
         run: cargo build --release
-        working-directory: pallets/atlas-jury-anchor
+        working-directory: pallets/x3-jury-anchor
 
       - name: Run pallet tests
         run: cargo test --release
-        working-directory: pallets/atlas-jury-anchor
+        working-directory: pallets/x3-jury-anchor
 
   # Python service tests
   python-test:
@@ -249,7 +249,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
       name: staging
-      url: http://staging-jury.atlas.io
+      url: http://staging-jury.x3.io
     steps:
       - uses: actions/checkout@v3
 

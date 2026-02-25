@@ -14,10 +14,10 @@
 
 ```bash
 # 1️⃣ Activate environment
-source /home/lojak/Desktop/atlas-sphere-master/.venv-2/bin/activate
+source /home/lojak/Desktop/x3-chain-master/.venv-2/bin/activate
 
 # 2️⃣ Create P4 virtual environment  
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m venv .venv-p4
 source .venv-p4/bin/activate
 
@@ -153,7 +153,7 @@ TOTAL: 14 days → 100,000+ TPS ✅
 
 ```bash
 # 1. Go to tab: Terminal
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # 2. Create venv
 python3 -m venv .venv-p4
@@ -306,7 +306,7 @@ pytest tests/p4_gpu_integration_tests.py -v
 ### Your First Command (DO THIS NOW):
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master && source .venv-p4/bin/activate 2>/dev/null || python3 -m venv .venv-p4 && source .venv-p4/bin/activate && echo "✅ READY TO GO!"
+cd /home/lojak/Desktop/x3-chain-master && source .venv-p4/bin/activate 2>/dev/null || python3 -m venv .venv-p4 && source .venv-p4/bin/activate && echo "✅ READY TO GO!"
 ```
 
 ### Then Run:

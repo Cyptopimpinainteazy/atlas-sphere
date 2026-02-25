@@ -1,6 +1,6 @@
 # Public RPC (HTTP + WS)
 
-This folder contains a minimal, repeatable setup for running **public JSON-RPC** endpoints for Atlas Sphere across all supported networks:
+This folder contains a minimal, repeatable setup for running **public JSON-RPC** endpoints for X3 Chain across all supported networks:
 
 - `dev`
 - `local`
@@ -71,61 +71,61 @@ By default, `rpc_bind=public` will also refuse to start if `rpc_methods` is not 
 
 A templated unit is provided at:
 
-- `deployment/public-rpc/systemd/atlas-sphere-rpc@.service`
+- `deployment/public-rpc/systemd/x3-chain-rpc@.service`
 
 Install it:
 
 ```bash
-sudo install -D -m 0644 deployment/public-rpc/systemd/atlas-sphere-rpc@.service \
-  /etc/systemd/system/atlas-sphere-rpc@.service
+sudo install -D -m 0644 deployment/public-rpc/systemd/x3-chain-rpc@.service \
+  /etc/systemd/system/x3-chain-rpc@.service
 sudo systemctl daemon-reload
 ```
 
 Copy one of the env examples:
 
 ```bash
-sudo mkdir -p /etc/atlas-sphere/rpc
-sudo cp deployment/public-rpc/env/testnet.env.example /etc/atlas-sphere/rpc/testnet.env
-sudo cp deployment/public-rpc/env/staging.env.example /etc/atlas-sphere/rpc/staging.env
+sudo mkdir -p /etc/x3-chain/rpc
+sudo cp deployment/public-rpc/env/testnet.env.example /etc/x3-chain/rpc/testnet.env
+sudo cp deployment/public-rpc/env/staging.env.example /etc/x3-chain/rpc/staging.env
 ```
 
 Or use the clean two-instance pattern (recommended for production):
 
 ```bash
-sudo cp deployment/public-rpc/env/testnet-public.env.example /etc/atlas-sphere/rpc/testnet-public.env
-sudo cp deployment/public-rpc/env/testnet-ops.env.example /etc/atlas-sphere/rpc/testnet-ops.env
+sudo cp deployment/public-rpc/env/testnet-public.env.example /etc/x3-chain/rpc/testnet-public.env
+sudo cp deployment/public-rpc/env/testnet-ops.env.example /etc/x3-chain/rpc/testnet-ops.env
 
-sudo cp deployment/public-rpc/env/staging-public.env.example /etc/atlas-sphere/rpc/staging-public.env
-sudo cp deployment/public-rpc/env/staging-ops.env.example /etc/atlas-sphere/rpc/staging-ops.env
+sudo cp deployment/public-rpc/env/staging-public.env.example /etc/x3-chain/rpc/staging-public.env
+sudo cp deployment/public-rpc/env/staging-ops.env.example /etc/x3-chain/rpc/staging-ops.env
 
-sudo cp deployment/public-rpc/env/local-public.env.example /etc/atlas-sphere/rpc/local-public.env
-sudo cp deployment/public-rpc/env/local-ops.env.example /etc/atlas-sphere/rpc/local-ops.env
+sudo cp deployment/public-rpc/env/local-public.env.example /etc/x3-chain/rpc/local-public.env
+sudo cp deployment/public-rpc/env/local-ops.env.example /etc/x3-chain/rpc/local-ops.env
 
-sudo cp deployment/public-rpc/env/dev-public.env.example /etc/atlas-sphere/rpc/dev-public.env
-sudo cp deployment/public-rpc/env/dev-ops.env.example /etc/atlas-sphere/rpc/dev-ops.env
+sudo cp deployment/public-rpc/env/dev-public.env.example /etc/x3-chain/rpc/dev-public.env
+sudo cp deployment/public-rpc/env/dev-ops.env.example /etc/x3-chain/rpc/dev-ops.env
 ```
 
 Start instances:
 
 ```bash
-sudo systemctl enable --now atlas-sphere-rpc@testnet
-sudo systemctl enable --now atlas-sphere-rpc@staging
+sudo systemctl enable --now x3-chain-rpc@testnet
+sudo systemctl enable --now x3-chain-rpc@staging
 ```
 
 Two-instance pattern:
 
 ```bash
-sudo systemctl enable --now atlas-sphere-rpc@testnet-public
-sudo systemctl enable --now atlas-sphere-rpc@testnet-ops
+sudo systemctl enable --now x3-chain-rpc@testnet-public
+sudo systemctl enable --now x3-chain-rpc@testnet-ops
 
-sudo systemctl enable --now atlas-sphere-rpc@staging-public
-sudo systemctl enable --now atlas-sphere-rpc@staging-ops
+sudo systemctl enable --now x3-chain-rpc@staging-public
+sudo systemctl enable --now x3-chain-rpc@staging-ops
 
-sudo systemctl enable --now atlas-sphere-rpc@local-public
-sudo systemctl enable --now atlas-sphere-rpc@local-ops
+sudo systemctl enable --now x3-chain-rpc@local-public
+sudo systemctl enable --now x3-chain-rpc@local-ops
 
-sudo systemctl enable --now atlas-sphere-rpc@dev-public
-sudo systemctl enable --now atlas-sphere-rpc@dev-ops
+sudo systemctl enable --now x3-chain-rpc@dev-public
+sudo systemctl enable --now x3-chain-rpc@dev-ops
 ```
 
 ### Accessing the ops RPC cleanly (SSH tunnel)
@@ -149,12 +149,12 @@ Examples from the provided env templates:
 
 An example config is provided at:
 
-- `deployment/public-rpc/nginx/atlas-sphere-rpc.conf.example`
+- `deployment/public-rpc/nginx/x3-chain-rpc.conf.example`
 
 Hardened variants:
 
-- `deployment/public-rpc/nginx/atlas-sphere-rpc.allowlist.conf.example` (recommended for truly public endpoints)
-- `deployment/public-rpc/nginx/atlas-sphere-rpc.basic-auth.conf.example` (useful for low-traffic/operator access)
+- `deployment/public-rpc/nginx/x3-chain-rpc.allowlist.conf.example` (recommended for truly public endpoints)
+- `deployment/public-rpc/nginx/x3-chain-rpc.basic-auth.conf.example` (useful for low-traffic/operator access)
 
 Update `server_name` and the upstream port (`127.0.0.1:9944`) to match your environment.
 

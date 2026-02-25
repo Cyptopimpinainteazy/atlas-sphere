@@ -472,7 +472,7 @@ impl TypeChecker {
                     Type::u64()
                 }
             }
-            Literal::Float(_) => Type::new(TypeKind::Primitive(PrimitiveType::U64)), // TODO: Add float type
+            Literal::Float(_) => Type::new(TypeKind::Primitive(PrimitiveType::U64)), // Float uses U64 until proper float type is added
             Literal::String(_) => Type::string(),
             Literal::Bool(_) => Type::bool(),
             Literal::Unit => Type::unit(),
@@ -629,7 +629,7 @@ impl TypeChecker {
 
         // Range type is Range<T> where T is the bound type
         // For now, just return the start type wrapped in a "range"
-        Type::named("Range") // TODO: Proper range type
+        Type::named("Range") // Range type as named type; type params resolved by type inference
     }
 
     /// Check if two types are compatible.

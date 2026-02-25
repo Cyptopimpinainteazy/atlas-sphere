@@ -71,3 +71,4 @@ pub use gpu_hostcalls::{GpuConfig, GpuHostcalls};
 pub use hostcall::{Hostcall, HostcallRegistry};
 pub use verifier::{opcode_gas_cost, DecodedInstr, Verifier, VerifyOptions};
 pub use vm::{ExecutionResult, Frame, VMConfig, Value, VM};
+pub use x3_backend::bc_format::BytecodeModule;

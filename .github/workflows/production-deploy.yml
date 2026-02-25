@@ -21,7 +21,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   DOCKER_REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/atlas-sphere
+  IMAGE_PREFIX: ${{ github.repository_owner }}/x3-chain
 
 jobs:
   # ============================================================================
@@ -135,7 +135,7 @@ jobs:
           ./RUN_ALL_TESTS.sh
 
       - name: Build node binary
-        run: cargo build --release --locked -p atlas-sphere-node
+        run: cargo build --release --locked -p x3-chain-node
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -154,7 +154,7 @@ jobs:
         with:
           name: binaries
           path: |
-            target/release/atlas-sphere-node
+            target/release/x3-chain-node
             packages/ts-sdk/dist
 
   # ============================================================================
@@ -234,7 +234,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     environment:
       name: testnet
-      url: https://rpc.testnet.atlas-sphere.io
+      url: https://rpc.testnet.x3-chain.io
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -248,7 +248,7 @@ jobs:
         run: |
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
-          kubectl config use-context atlas-testnet
+          kubectl config use-context x3-testnet
 
       - name: Update Kubernetes secrets
         run: |
@@ -256,32 +256,32 @@ jobs:
             --from-literal=POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
             --from-literal=POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            --namespace atlas-sphere \
+            --namespace x3-chain \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to Kubernetes
         run: |
           # Update image tags in deployment
-          sed -i "s|atlas-sphere/node:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-node:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
-          sed -i "s|atlas-sphere/rpc-gateway:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-rpc-gateway:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
-          sed -i "s|atlas-sphere/analytics:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-analytics:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
-          sed -i "s|atlas-sphere/explorer:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|x3-chain/node:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-node:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|x3-chain/rpc-gateway:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-rpc-gateway:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|x3-chain/analytics:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-analytics:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
+          sed -i "s|x3-chain/explorer:latest|${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer:${{ github.sha }}|g" deployment/kubernetes/production-deployment.yaml
 
           # Deploy Canary release for Explorer (Helm)
           helm upgrade --install explorer-canary deployment/helm/explorer \
-            --namespace atlas-sphere --create-namespace \
+            --namespace x3-chain --create-namespace \
             --set canary.enabled=true \
             --set canary.image.tag=${{ github.sha }} \
-            --set ingress.host=canary.explorer.testnet.atlas-sphere.io \
+            --set ingress.host=canary.explorer.testnet.x3-chain.io \
             --wait --timeout 120s
 
           # Run quick canary smoke-test (port-forward canary service)
-          kubectl port-forward -n atlas-sphere svc/explorer-canary 3001:3000 &
+          kubectl port-forward -n x3-chain svc/explorer-canary 3001:3000 &
           PF_PID=$!; sleep 3
           if ! curl -fsS http://localhost:3001/; then
             echo "Canary smoke test FAILED - uninstalling canary and aborting"
             kill $PF_PID || true
-            helm uninstall explorer-canary -n atlas-sphere || true
+            helm uninstall explorer-canary -n x3-chain || true
             exit 1
           fi
           kill $PF_PID || true
@@ -291,10 +291,10 @@ jobs:
           kubectl apply -f deployment/kubernetes/production-deployment.yaml
           
           # Wait for rollout
-          kubectl rollout status deployment/bootnode -n atlas-sphere --timeout=5m
-          kubectl rollout status statefulset/validator -n atlas-sphere --timeout=5m
-          kubectl rollout status deployment/analytics -n atlas-sphere --timeout=5m
-          kubectl rollout status deployment/explorer -n atlas-sphere --timeout=3m
+          kubectl rollout status deployment/bootnode -n x3-chain --timeout=5m
+          kubectl rollout status statefulset/validator -n x3-chain --timeout=5m
+          kubectl rollout status deployment/analytics -n x3-chain --timeout=5m
+          kubectl rollout status deployment/explorer -n x3-chain --timeout=3m
 
       - name: Install Helm (CI)
         run: |
@@ -304,7 +304,7 @@ jobs:
         run: |
           # Use Helm chart in repo to deploy Explorer; override image built earlier
           helm upgrade --install explorer deployment/helm/explorer \
-            --namespace atlas-sphere --create-namespace \
+            --namespace x3-chain --create-namespace \
             --set image.repository=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_PREFIX }}-explorer \
             --set image.tag=${{ github.sha }} \
             --wait --timeout 120s
@@ -312,32 +312,32 @@ jobs:
       - name: Promote canary (remove canary release)
         run: |
           # Main release now serving the validated image; remove canary to stop routing
-          helm uninstall explorer-canary -n atlas-sphere || true
+          helm uninstall explorer-canary -n x3-chain || true
 
       - name: Verify deployment
         run: |
-          kubectl get pods -n atlas-sphere
-          kubectl get services -n atlas-sphere
-          kubectl get ingress -n atlas-sphere
+          kubectl get pods -n x3-chain
+          kubectl get services -n x3-chain
+          kubectl get ingress -n x3-chain
 
       - name: Run smoke tests (RPC, analytics, explorer) and rollback on failure
         run: |
           set -euo pipefail
 
           # Test RPC endpoints
-          curl -f https://rpc.testnet.atlas-sphere.io/rpc \
+          curl -f https://rpc.testnet.x3-chain.io/rpc \
             -H "Content-Type: application/json" \
             -d '{"id":1, "jsonrpc":"2.0", "method":"system_health"}'
 
           # Test analytics service
-          kubectl port-forward -n atlas-sphere svc/analytics 8080:8080 &
+          kubectl port-forward -n x3-chain svc/analytics 8080:8080 &
           sleep 5
           curl -f http://localhost:8080/health
 
           # Test Explorer UI and rollback on failure
-          if ! curl -fsS --max-time 10 https://{{ env.EXPLORER_HOST:-explorer.testnet.atlas-sphere.io }}/ ; then
+          if ! curl -fsS --max-time 10 https://{{ env.EXPLORER_HOST:-explorer.testnet.x3-chain.io }}/ ; then
             echo "Explorer smoke test FAILED — rolling back Helm release"
-            helm rollback explorer --namespace atlas-sphere || true
+            helm rollback explorer --namespace x3-chain || true
             exit 1
           fi
 
@@ -390,19 +390,19 @@ jobs:
       - name: Run health checks
         run: |
           chmod +x deployment/scripts/health-check.sh
-          deployment/scripts/health-check.sh https://rpc.testnet.atlas-sphere.io
+          deployment/scripts/health-check.sh https://rpc.testnet.x3-chain.io
 
       - name: Verify block production
         run: |
           # Check that blocks are being produced
-          BLOCK_1=$(curl -s https://rpc.testnet.atlas-sphere.io/rpc \
+          BLOCK_1=$(curl -s https://rpc.testnet.x3-chain.io/rpc \
             -H "Content-Type: application/json" \
             -d '{"id":1, "jsonrpc":"2.0", "method":"chain_getBlock"}' \
             | jq -r '.result.block.header.number')
           
           sleep 12  # Wait for 2 blocks (6s block time)
           
-          BLOCK_2=$(curl -s https://rpc.testnet.atlas-sphere.io/rpc \
+          BLOCK_2=$(curl -s https://rpc.testnet.x3-chain.io/rpc \
             -H "Content-Type: application/json" \
             -d '{"id":1, "jsonrpc":"2.0", "method":"chain_getBlock"}' \
             | jq -r '.result.block.header.number')
@@ -418,9 +418,9 @@ jobs:
         if: success()
         run: |
           echo "🚀 Production testnet deployment successful!"
-          echo "RPC Endpoint: https://rpc.testnet.atlas-sphere.io"
-          echo "Explorer: https://explorer.testnet.atlas-sphere.io"
-          echo "Faucet: https://faucet.testnet.atlas-sphere.io"
+          echo "RPC Endpoint: https://rpc.testnet.x3-chain.io"
+          echo "Explorer: https://explorer.testnet.x3-chain.io"
+          echo "Faucet: https://faucet.testnet.x3-chain.io"
 
       - name: Notify deployment failure
         if: failure()

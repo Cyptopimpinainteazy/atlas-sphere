@@ -1,7 +1,7 @@
-//! X3VM Bridge for Atlas Sphere Integration
+//! X3VM Bridge for X3 Chain Integration
 //!
 //! This module provides the integration layer between the X3VM bytecode executor
-//! and the Atlas Sphere dual-VM runtime. It enables X3 programs to:
+//! and the X3 Chain dual-VM runtime. It enables X3 programs to:
 //!
 //! 1. Execute on Solana via the x3vm-executor Anchor program
 //! 2. Run off-chain in the native X3VM for simulation/testing
@@ -11,7 +11,7 @@
 //!
 //! ```text
 //! ┌─────────────────────────────────────────────────────────────────────┐
-//! │                        Atlas Sphere Runtime                          │
+//! │                        X3 Chain Runtime                          │
 //! │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
 //! │  │ X3VM Native  │  │ SVM Executor │  │ EVM Executor              │  │
 //! │  │ (off-chain)  │  │ (Solana)     │  │ (Frontier)               │  │

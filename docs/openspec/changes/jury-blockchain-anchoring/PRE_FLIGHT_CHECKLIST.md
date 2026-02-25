@@ -10,7 +10,7 @@ Use this checklist 24 hours before and immediately before deployment.
 
 - [ ] **Rust Pallet Tests**
   ```bash
-  cd pallets/atlas-jury-anchor && cargo test --release
+  cd pallets/x3-jury-anchor && cargo test --release
   ```
   Expected: 8/8 tests passing
   Person: _________ Date: _________ Time: _________

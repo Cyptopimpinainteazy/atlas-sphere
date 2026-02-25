@@ -1,6 +1,6 @@
 //! X3 Sidecar Daemon
 //!
-//! Off-chain swarm execution node for Atlas Sphere. This daemon:
+//! Off-chain swarm execution node for X3 Chain. This daemon:
 //! - Connects to the swarm network
 //! - Receives X3 bytecode execution jobs
 //! - Executes jobs in a sandboxed VM

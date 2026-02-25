@@ -1,4 +1,4 @@
-# Atlas Sphere - Issue Template
+# X3 Chain - Issue Template
 
 ## Bug Report
 
@@ -42,7 +42,7 @@ A clear and concise description of what you want to happen.
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Which component(s) does this affect?**
-- [ ] Atlas Kernel (pallet)
+- [ ] X3 Kernel (pallet)
 - [ ] EVM Adapter
 - [ ] SVM Adapter
 - [ ] Runtime
@@ -60,7 +60,7 @@ Add any other context or screenshots about the feature request here.
 
 ⚠️ **DO NOT** report security vulnerabilities through public GitHub issues.
 
-Please email security@atlas-sphere.io with:
+Please email security@x3-chain.io with:
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact

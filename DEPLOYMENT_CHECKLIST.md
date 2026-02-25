@@ -1,12 +1,12 @@
 # Deployment Readiness Checklist
 
-Complete this checklist to prepare Atlas Sphere for production deployment.
+Complete this checklist to prepare X3 Chain for production deployment.
 
 ## Pre-Deployment
 
 ### Infrastructure Setup
 - [ ] Install systemd services: `sudo bash deployment/scripts/install-services.sh`
-- [ ] Verify services are enabled: `sudo systemctl list-unit-files | grep atlas`
+- [ ] Verify services are enabled: `sudo systemctl list-unit-files | grep x3`
 - [ ] Check all 3 services are active: `sudo systemctl status redis ccgv-validator x3-intelligence`
 - [ ] Verify ports are listening: 5173 (dashboard), 8000 (validator), 6379 (redis)
 - [ ] Create `.env` file from template
@@ -23,7 +23,7 @@ Complete this checklist to prepare Atlas Sphere for production deployment.
 ### Application Configuration
 - [ ] Update app title/branding in `AppBar.tsx` if needed
 - [ ] Update default email in `auth.ts`
-- [ ] Configure log paths in service files (currently `/var/log/atlas`)
+- [ ] Configure log paths in service files (currently `/var/log/x3`)
 - [ ] Set NODE_ENV=production in `x3-intelligence.service`
 - [ ] Set RUST_LOG level for `ccgv-validator.service`
 
@@ -35,7 +35,7 @@ Complete this checklist to prepare Atlas Sphere for production deployment.
 - [ ] Set up Redis replication if high-availability required
 
 ### Monitoring & Logging
-- [ ] Set up log rotation for `/var/log/atlas/*.log`
+- [ ] Set up log rotation for `/var/log/x3/*.log`
 - [ ] Configure centralized logging (CloudWatch, Datadog, etc.) if needed
 - [ ] Set up service health monitoring (systemd notify)
 - [ ] Configure alerts for service crashes
@@ -216,7 +216,7 @@ Production deployment approved by:
 
 ```bash
 # Install/update services (run once)
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 
 # View status
 sudo systemctl status x3-intelligence.service
@@ -231,13 +231,13 @@ sudo journalctl -u x3-intelligence.service -f
 sudo systemctl restart x3-intelligence.service
 
 # Emergency manual startup
-bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/startup.sh
+bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/startup.sh
 
 # Check if ports are listening
 sudo netstat -tulpn | grep LISTEN
 
 # View environment variables
-grep -v '^#' /home/lojak/Desktop/atlas-sphere-master/.env
+grep -v '^#' /home/lojak/Desktop/x3-chain-master/.env
 ```
 
 ---

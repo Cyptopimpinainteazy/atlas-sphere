@@ -48,11 +48,11 @@ services:
     container_name: jury-blockchain-prod
     environment:
       RUST_LOG: info
-      WASM_RUNTIME_OVERRIDES: /runtime/atlas-jury-anchor.wasm
+      WASM_RUNTIME_OVERRIDES: /runtime/x3-jury-anchor.wasm
       JURY_AUTHORITY: ${JURY_AUTHORITY}
     volumes:
       - blockchain_data_prod:/data
-      - ./pallets/atlas-jury-anchor:/runtime/pallet
+      - ./pallets/x3-jury-anchor:/runtime/pallet
     ports:
       - "9944:9944"  # RPC
       - "9933:9933"  # WebSocket
@@ -72,7 +72,7 @@ services:
 
   # Jury Service (REST API)
   jury-service:
-    image: atlas-jury:latest
+    image: x3-jury:latest
     container_name: jury-service-prod
     depends_on:
       postgres:
@@ -106,7 +106,7 @@ services:
 
   # Jury Anchoring Service
   jury-anchorer:
-    image: atlas-jury-anchorer:latest
+    image: x3-jury-anchorer:latest
     container_name: jury-anchorer-prod
     depends_on:
       jury-service:

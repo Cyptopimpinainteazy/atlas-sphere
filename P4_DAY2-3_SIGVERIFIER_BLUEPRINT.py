@@ -270,7 +270,7 @@ source .venv-p4/bin/activate
 cd crates/gpu-swarm/src/cu_kernels
 nvcc -arch=sm_61 -O3 -c solana_gpu_kernels.cu -o solana_gpu_kernels.o
 ar rcs libsolana_gpu_kernels.a solana_gpu_kernels.o
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # Run signature verification tests
 pytest tests/p4_gpu_integration_tests.py::TestSigantureVerification -v

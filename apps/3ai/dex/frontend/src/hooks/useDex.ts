@@ -1,5 +1,5 @@
 /**
- * useDex — React hook for the Atlas DEX SDK.
+ * useDex — React hook for the X3 DEX SDK.
  *
  * Creates an AtlasDexClient instance and exposes
  * orderbook, quote, order submission, and swap operations
@@ -7,19 +7,19 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Order, Orderbook, TradeQuote, TradingPair, ApiResult } from '@atlas-sphere/atomic-swap-sdk';
-import { AtlasDexClient } from '@atlas-sphere/atomic-swap-sdk';
+import type { Order, Orderbook, TradeQuote, TradingPair, ApiResult } from '@x3-chain/atomic-swap-sdk';
+import { AtlasDexClient } from '@x3-chain/atomic-swap-sdk';
 
-// Default DEX configuration — connects to local 3ai chain + Atlas Substrate
+// Default DEX configuration — connects to local 3ai chain + X3 Substrate
 const DEFAULT_CONFIG = {
-  substrateRpc: (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.atlas-sphere.io:9944',
-  substrateWs: (import.meta.env.VITE_RPC_WS as string) || 'wss://rpc.atlas-sphere.io:9944',
+  substrateRpc: (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.x3-chain.io:9944',
+  substrateWs: (import.meta.env.VITE_RPC_WS as string) || 'wss://rpc.x3-chain.io:9944',
   chainEndpoints: {
     ethereum: import.meta.env.VITE_ETH_RPC || 'https://eth.llamarpc.com',
     'ethereum-sepolia': 'https://rpc.sepolia.org',
     solana: import.meta.env.VITE_SOL_RPC || 'https://api.mainnet-beta.solana.com',
     bitcoin: import.meta.env.VITE_BTC_API || 'https://blockstream.info/api',
-    'atlas-substrate': (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.atlas-sphere.io:9944',
+    'x3-substrate': (import.meta.env.VITE_RPC_HTTP as string) || 'https://rpc.x3-chain.io:9944',
     polygon: 'https://polygon-rpc.com',
     arbitrum: 'https://arb1.arbitrum.io/rpc',
     optimism: 'https://mainnet.optimism.io',

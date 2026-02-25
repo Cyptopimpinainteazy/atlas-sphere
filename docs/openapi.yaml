@@ -4,8 +4,8 @@ info:
   description: "REST API for jury decision management and blockchain anchoring - Phase 5"
   version: "1.0.0"
   contact:
-    name: "Atlas Sphere Team"
-    url: "https://atlas-sphere.io"
+    name: "X3 Chain Team"
+    url: "https://x3-chain.io"
   license:
     name: "MIT"
     url: "https://opensource.org/licenses/MIT"

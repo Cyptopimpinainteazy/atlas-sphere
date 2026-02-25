@@ -1,8 +1,8 @@
 [package]
-name = "atlas-evm-integration"
+name = "x3-evm-integration"
 version = "0.1.0"
 edition = "2021"
-description = "EVM integration for Atlas Sphere dual-VM execution"
+description = "EVM integration for X3 Chain dual-VM execution"
 
 [dependencies]
 # Substrate primitives

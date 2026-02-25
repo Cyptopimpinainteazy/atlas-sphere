@@ -2,10 +2,10 @@
 name = "x3-cli"
 version = "0.1.0"
 edition = "2021"
-description = "CLI tool for Atlas Sphere blockchain development"
-authors = ["Atlas Sphere Team"]
+description = "CLI tool for X3 Chain blockchain development"
+authors = ["X3 Chain Team"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 keywords = ["blockchain", "cli", "substrate", "evm", "svm"]
 categories = ["command-line-utilities", "development-tools"]
 
@@ -16,11 +16,11 @@ path = "src/main.rs"
 [features]
 default = []
 full = ["sdk"]
-sdk = ["atlas-sdk"]
+sdk = ["x3-sdk"]
 
 [dependencies]
 # SDK (optional - only needed for deploy, simulate, tx, account commands)
-atlas-sdk = { path = "../atlas-sdk", optional = true }
+x3-sdk = { path = "../x3-sdk", optional = true }
 
 # X3 Compiler
 x3-compiler = { path = "../x3-compiler" }

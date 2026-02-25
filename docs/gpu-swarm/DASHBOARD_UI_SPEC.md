@@ -141,7 +141,7 @@ export const Dashboard: React.FC = () => {
             <MetricCard 
               title="Floor Rewards"
               value={metrics?.rewardsDistributed || 0}
-              unit="ATLAS"
+              unit="X3"
               trend={8.3}
             />
           </div>
@@ -409,7 +409,7 @@ export const TaskQueue: React.FC = () => {
                 </td>
                 <td className="py-3 px-4 text-white">{task.gpuBackend}</td>
                 <td className="py-3 px-4 text-gray-400">{formatBytes(task.estimatedGpuMemory)}</td>
-                <td className="py-3 px-4 text-green-400 font-semibold">{task.reward} ATLAS</td>
+                <td className="py-3 px-4 text-green-400 font-semibold">{task.reward} X3</td>
                 <td className="py-3 px-4">
                   <div className="w-24 h-2 bg-gray-700 rounded-full">
                     <div
@@ -753,7 +753,7 @@ export const apiClient = {
 
 ```json
 {
-  "name": "@atlas-sphere/swarm-dashboard",
+  "name": "@x3-chain/swarm-dashboard",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -883,7 +883,7 @@ spec:
     spec:
       containers:
       - name: dashboard
-        image: atlas-sphere/swarm-dashboard:v1
+        image: x3-chain/swarm-dashboard:v1
         ports:
         - containerPort: 3001
         env:

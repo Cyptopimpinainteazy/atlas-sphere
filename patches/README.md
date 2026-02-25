@@ -1,6 +1,6 @@
-# Atlas Sphere WASM Build Patches
+# X3 Chain WASM Build Patches
 
-This directory contains local patches for dependencies that prevent WASM compilation in Atlas Sphere. These patches provide minimal, targeted fixes to enable forkless runtime upgrades.
+This directory contains local patches for dependencies that prevent WASM compilation in X3 Chain. These patches provide minimal, targeted fixes to enable forkless runtime upgrades.
 
 ## Patches Overview
 
@@ -50,10 +50,10 @@ cargo clean
 cargo build --release
 
 # Direct WASM target build
-cargo build --release -p atlas-sphere-runtime --target wasm32-unknown-unknown
+cargo build --release -p x3-chain-runtime --target wasm32-unknown-unknown
 
 # Runtime upgrade test
-cargo test -p pallet-atlas-kernel runtime_upgrade
+cargo test -p pallet-x3-kernel runtime_upgrade
 ```
 
 ## Troubleshooting

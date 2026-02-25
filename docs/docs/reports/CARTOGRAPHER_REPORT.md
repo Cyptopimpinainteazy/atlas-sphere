@@ -1,4 +1,4 @@
-# 🗺️ ATLAS SPHERE - CARTOGRAPHER'S REPORT
+# 🗺️ X3 CHAIN - CARTOGRAPHER'S REPORT
 ## Deep System Architecture Map (YOLO FINISHER v3.0)
 
 **Date:** 2026-01-14
@@ -45,8 +45,8 @@ GPU Hardware → Ollama Daemon → HTTP API
 ```
 BLOCKCHAIN NODE (Substrate)
 ├── Binary Discovery:
-│   ├── target/release/atlas-sphere-node
-│   ├── target/$TRIPLE/release/atlas-sphere-node
+│   ├── target/release/x3-chain-node
+│   ├── target/$TRIPLE/release/x3-chain-node
 │   ├── find first matching under target/*/release/
 ├── Port: 9944 (WS)
 ├── RPC Options: --rpc-cors all --rpc-methods Unsafe
@@ -62,7 +62,7 @@ BLOCKCHAIN NODE (Substrate)
 
 **Data Flow:**
 ```
-$ atlas-sphere-node --dev
+$ x3-chain-node --dev
          ↓
 BLOCKCHAIN_PORT env → 9944
          ↓
@@ -425,7 +425,7 @@ Problems:
 ```
 Current:
 1. Trap EXIT/INT
-2. Kill all PIDs from .atlas-pids
+2. Kill all PIDs from .x3-pids
 3. Kill ports 9944, 8080, 3001, 3002, 3003
 
 Problems:

@@ -1,7 +1,7 @@
 //! Blockchain Integration Module
 //!
 //! Integrates the GPU swarm with on-chain governance, rewards, staking, and slashing.
-//! Syncs with pallet-swarm on the Atlas Sphere runtime.
+//! Syncs with pallet-swarm on the X3 Chain runtime.
 
 use crate::error::{SwarmError, SwarmResult};
 use serde::{Deserialize, Serialize};
@@ -181,7 +181,7 @@ impl Default for RewardConfig {
             failure_penalty: 10_000_000,
             slashing_percentage: 10,
             minimum_stake: 1_000_000_000, // 1 token minimum
-            reward_token: "ATLAS".to_string(),
+            reward_token: "X3".to_string(),
         }
     }
 }
@@ -447,6 +447,6 @@ mod tests {
     fn test_reward_config() {
         let config = RewardConfig::default();
         assert!(config.minimum_stake > 0);
-        assert_eq!(config.reward_token, "ATLAS");
+        assert_eq!(config.reward_token, "X3");
     }
 }

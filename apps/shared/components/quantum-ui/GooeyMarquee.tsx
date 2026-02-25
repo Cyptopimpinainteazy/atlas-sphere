@@ -211,7 +211,7 @@ export const GooeyMarqueeShowcase: React.FC<{ className?: string }> = ({ classNa
     >
       {/* Pure white gooey - the classic effect */}
       <GooeyMarquee
-        text="ATLAS SPHERE • QUANTUM BLOCKCHAIN • YEAR 2060 • "
+        text="X3 CHAIN • QUANTUM BLOCKCHAIN • YEAR 2060 • "
         speed={25}
         fontSize="5rem"
         color="#ffffff"

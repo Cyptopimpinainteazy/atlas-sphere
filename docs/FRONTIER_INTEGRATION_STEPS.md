@@ -1,6 +1,6 @@
 # Frontier Integration Steps
 
-This document captures a prioritized plan to complete Frontier (pallet-evm) integration and JSON-RPC wiring for Atlas Sphere.
+This document captures a prioritized plan to complete Frontier (pallet-evm) integration and JSON-RPC wiring for X3 Chain.
 
 ## Objective
 - Resolve Frontier version compatibility and pin the correct Frontier/Polkadot versions.
@@ -22,7 +22,7 @@ This document captures a prioritized plan to complete Frontier (pallet-evm) inte
 3. Adapter wiring
    - Ensure `runtime` sets `type EvmAdapter = native_vm_adapters::NativeEvmAdapter;` for native builds (already implemented).
    - Add a `NativeEvmAdapter` implementation (done) that calls `pallet_evm::Runner::call` (already present in `runtime/src/lib.rs`).
-   - Update `pallets/atlas-kernel/src/adapters.rs` `real_adapters` to be consistent with runtime adapters or mark as deprecated.
+   - Update `pallets/x3-kernel/src/adapters.rs` `real_adapters` to be consistent with runtime adapters or mark as deprecated.
 
 4. JSON-RPC wiring
    - Using `fc-rpc`/`fp-rpc` docs, create a `create_frontier_rpc` function in `node/src/rpc.rs` to register all eth_* endpoints.
@@ -42,7 +42,7 @@ This document captures a prioritized plan to complete Frontier (pallet-evm) inte
 - With `frontier` feature (if dependencies stabilized): `cargo run -p node --features frontier -- --dev`
 
 ## Notes
-- For now, `pallets/atlas-kernel` uses mock adapters in WASM builds while runtime uses `NativeEvmAdapter` in native builds. That is a valid compromise for testing and security.
+- For now, `pallets/x3-kernel` uses mock adapters in WASM builds while runtime uses `NativeEvmAdapter` in native builds. That is a valid compromise for testing and security.
 - The real `FrontierEvmExecutor` implementation requires runtime-level `pallet_evm::Config` types; thus adapter implementation should remain in `runtime/src/lib.rs`.
 
 ## Next steps

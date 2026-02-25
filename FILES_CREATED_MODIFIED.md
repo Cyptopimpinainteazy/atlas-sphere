@@ -1,6 +1,6 @@
 # Files Created & Modified in This Session
 
-This document tracks all files created during the implementation of authentication and auto-start infrastructure for Atlas Sphere.
+This document tracks all files created during the implementation of authentication and auto-start infrastructure for X3 Chain.
 
 ## Summary
 
@@ -121,7 +121,7 @@ This document tracks all files created during the implementation of authenticati
 **Purpose:** Auto-start cross-chain GPU validator on boot
 **Configuration:**
 - Type: simple
-- User: atlas
+- User: x3
 - Port: 8000
 - Depends: redis.service
 - Restart: always
@@ -133,7 +133,7 @@ This document tracks all files created during the implementation of authenticati
 **Purpose:** Auto-start dashboard with authentication on boot
 **Configuration:**
 - Type: simple
-- User: atlas
+- User: x3
 - Port: 5173
 - Depends: redis.service
 - Environment: NODE_ENV=production
@@ -148,7 +148,7 @@ This document tracks all files created during the implementation of authenticati
 **Size:** ~2.2 KB
 **Purpose:** Install and enable systemd services (requires sudo)
 **Functions:**
-- Creates "atlas" system user
+- Creates "x3" system user
 - Copies service files to /etc/systemd/system/
 - Enables all 3 services
 - Starts services immediately
@@ -342,18 +342,18 @@ These files were created in the previous session but are still active:
 
 1. **First:** Run installation script
    ```bash
-   sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+   sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
    ```
 
 2. **Second:** Create configuration
    ```bash
-   cp /home/lojak/Desktop/atlas-sphere-master/deployment/env/.env.template \
-      /home/lojak/Desktop/atlas-sphere-master/.env
+   cp /home/lojak/Desktop/x3-chain-master/deployment/env/.env.template \
+      /home/lojak/Desktop/x3-chain-master/.env
    ```
 
 3. **Third:** Configure environment variables
    ```bash
-   nano /home/lojak/Desktop/atlas-sphere-master/.env
+   nano /home/lojak/Desktop/x3-chain-master/.env
    ```
 
 4. **Fourth:** Reboot system

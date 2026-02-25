@@ -3,7 +3,7 @@
 //! Run benchmarks with:
 //! ```bash
 //! cargo build --release --features runtime-benchmarks
-//! ./target/release/atlas-sphere-node benchmark pallet \
+//! ./target/release/x3-chain-node benchmark pallet \
 //!     --chain dev \
 //!     --pallet pallet_atomic_trade_engine \
 //!     --extrinsic "*" \

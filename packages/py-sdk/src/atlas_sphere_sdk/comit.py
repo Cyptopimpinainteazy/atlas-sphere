@@ -1,5 +1,5 @@
 """
-Comit Transaction Builder for Atlas Sphere.
+Comit Transaction Builder for X3 Chain.
 
 Provides a fluent API for constructing and submitting Comit transactions
 that execute atomically across EVM and SVM.
@@ -11,7 +11,7 @@ import hashlib
 
 from substrateinterface import Keypair
 
-from atlas_sphere_sdk.types import (
+from x3_chain_sdk.types import (
     AccountId,
     Balance,
     ComitId,

@@ -377,7 +377,7 @@ def bench_secp256k1_gpu(count: int = 10_000, iterations: int = 5) -> dict | None
 
 def main() -> None:
     print("=" * 72)
-    print("  Atlas Sphere — Unified Crypto Benchmark")
+    print("  X3 Chain — Unified Crypto Benchmark")
     print("  SHA-256 | Ed25519 | PoH | Keccak-256 | secp256k1")
     print("=" * 72)
     print()

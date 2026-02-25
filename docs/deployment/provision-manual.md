@@ -1,4 +1,4 @@
-# Manual VM Provisioning for Atlas Sphere Testnet
+# Manual VM Provisioning for X3 Chain Testnet
 
 ## If using VPS provider (Hetzner, Linode, Vultr, etc.)
 
@@ -38,7 +38,7 @@
 Using your provider's web interface or CLI:
 - Create VMs with specs above
 - Use Ubuntu 22.04 LTS
-- Add your SSH public key (`~/.ssh/atlas-testnet-deploy.pub`)
+- Add your SSH public key (`~/.ssh/x3-testnet-deploy.pub`)
 
 ### 2. Record IP Addresses
 Get public and private IPs for each VM and update `deployment/inventory.yaml`
@@ -46,10 +46,10 @@ Get public and private IPs for each VM and update `deployment/inventory.yaml`
 ### 3. Test SSH Access
 ```bash
 # Test each VM
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@VALIDATOR_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@RPC_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@BOOTNODE_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@MONITORING_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@VALIDATOR_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@RPC_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@BOOTNODE_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@MONITORING_IP
 ```
 
 ### 4. Basic Server Hardening

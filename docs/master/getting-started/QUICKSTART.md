@@ -12,7 +12,7 @@ Get up and running in 5 minutes.
 ## Step 1: Install
 
 ```bash
-cd /path/to/atlas-sphere-master
+cd /path/to/x3-chain-master
 
 # Python dependencies
 pip install -r md_supervisor/requirements.txt

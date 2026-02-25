@@ -20,6 +20,10 @@ const PORT = process.env.PORT || 3010;
 app.use(require('cors')());
 app.use(bodyParser.json());
 
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, service: 'blockchain-tps', port: PORT });
+});
+
 // Serve basic UI
 app.use('/', express.static(path.join(__dirname, 'public')));
 

@@ -1,13 +1,13 @@
 #!/bin/bash
-# Setup auto-start services for Atlas Sphere
+# Setup auto-start services for X3 Chain
 
 set -e
 
-PROJECT_ROOT="/home/lojak/Desktop/atlas-sphere-master"
+PROJECT_ROOT="/home/lojak/Desktop/x3-chain-master"
 SERVICES_DIR="$PROJECT_ROOT/services"
 
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║  Atlas Sphere - Auto-Start Service Setup                   ║"
+echo "║  X3 Chain - Auto-Start Service Setup                   ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 

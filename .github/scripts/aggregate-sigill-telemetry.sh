@@ -8,7 +8,7 @@ DAYS=7
 MIN_RUNS=1
 OUT_DIR="artifacts"
 SUMMARY_JSON="${OUT_DIR}/sigils-fallback-summary.json"
-REPO="${GITHUB_REPOSITORY:-Cyptopimpinainteazy/atlas-sphere}"
+REPO="${GITHUB_REPOSITORY:-Cyptopimpinainteazy/x3-chain}"
 
 while [[ "$#" -gt 0 ]]; do
   case "$1" in

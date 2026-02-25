@@ -6,7 +6,7 @@ function App() {
   const [blockchainStatus, setBlockchainStatus] = useState('Checking...')
 
 useEffect(() => {
-    // Check Atlas Sphere blockchain connection
+    // Check X3 Chain blockchain connection
     const checkBlockchain = async () => {
       try {
         const wsUrl = 'ws://localhost:9944'
@@ -14,13 +14,13 @@ useEffect(() => {
         
         ws.onopen = () => {
           setConnected(true)
-          setBlockchainStatus('Connected to Atlas Sphere')
+          setBlockchainStatus('Connected to X3 Chain')
           ws.close()
         }
         
         ws.onerror = () => {
           setConnected(false)
-          setBlockchainStatus('Atlas Sphere node offline')
+          setBlockchainStatus('X3 Chain node offline')
         }
       } catch (error) {
         setBlockchainStatus('Connection error')
@@ -36,7 +36,7 @@ useEffect(() => {
     <div className="App">
       <header className="App-header">
         <h1>🔷 Polkadex Integration</h1>
-        <h2>Atlas Sphere DEX</h2>
+        <h2>X3 Chain DEX</h2>
         
         <div className="status-box">
           <div className={`status ${connected ? 'connected' : 'disconnected'}`}>
@@ -62,7 +62,7 @@ useEffect(() => {
         </div>
 
         <p className="info-text">
-          Polkadex DEX running on Atlas Sphere blockchain
+          Polkadex DEX running on X3 Chain blockchain
         </p>
       </header>
     </div>

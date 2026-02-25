@@ -3,11 +3,11 @@ const nextConfig = {
   reactStrictMode: true,
   // Ensure local monorepo packages are transpiled so their imports
   // (e.g., clsx, framer-motion) are resolved correctly by Next.js.
-  transpilePackages: ['@atlas-sphere/shared', '@atlas-sphere/ts-sdk'],
+  transpilePackages: ['@x3-chain/shared', '@x3-chain/ts-sdk'],
 
   // Image optimization
   images: {
-    domains: ["assets.atlas-sphere.io"],
+    domains: ["assets.x3-chain.io"],
     formats: ["image/avif", "image/webp"],
   },
 

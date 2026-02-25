@@ -42,7 +42,7 @@
 ### 1. Clone and Setup
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m venv venv
 source venv/bin/activate
 pip install -r swarm/requirements.txt
@@ -403,7 +403,7 @@ kubectl -n gpu-swarm get all -o yaml > backup-$(date +%s).yaml
 
 # 2. Deploy with blue-green strategy
 kubectl set image deployment/swarm-coordinator \
-  coordinator=atlas-sphere/gpu-swarm-coordinator:v1.2.3
+  coordinator=x3-chain/gpu-swarm-coordinator:v1.2.3
 
 # 3. Monitor rollout
 kubectl -n gpu-swarm rollout status deployment/swarm-coordinator

@@ -1,7 +1,7 @@
-//! External Chain Adapters for Atlas Sphere
+//! External Chain Adapters for X3 Chain
 //!
-//! This crate provides adapters for connecting Atlas Sphere to external EVM-compatible chains.
-//! Each adapter translates foreign chain messaging formats into X3 messages the Atlas Kernel understands.
+//! This crate provides adapters for connecting X3 Chain to external EVM-compatible chains.
+//! Each adapter translates foreign chain messaging formats into X3 messages the X3 Kernel understands.
 //!
 //! # Supported Chains
 //! 103 EVM chains via Universal Registry! Including:
@@ -45,7 +45,7 @@ pub mod chain_ids {
     pub const POLYGON: u64 = 137;
     pub const AVALANCHE: u64 = 43114;
     pub const BNB: u64 = 56;
-    pub const ATLAS_SPHERE: u64 = 42; // Our chain
+    pub const X3_SPHERE: u64 = 42; // Our chain
 }
 
 /// Chain type enumeration
@@ -68,7 +68,7 @@ impl ChainType {
             ChainType::Polygon => chain_ids::POLYGON,
             ChainType::Avalanche => chain_ids::AVALANCHE,
             ChainType::Bnb => chain_ids::BNB,
-            ChainType::AtlasSphere => chain_ids::ATLAS_SPHERE,
+            ChainType::AtlasSphere => chain_ids::X3_SPHERE,
         }
     }
 
@@ -80,7 +80,7 @@ impl ChainType {
             ChainType::Polygon => "Polygon PoS",
             ChainType::Avalanche => "Avalanche C-Chain",
             ChainType::Bnb => "BNB Smart Chain",
-            ChainType::AtlasSphere => "Atlas Sphere",
+            ChainType::AtlasSphere => "X3 Chain",
         }
     }
 
@@ -92,7 +92,7 @@ impl ChainType {
             ChainType::Polygon => "MATIC",
             ChainType::Avalanche => "AVAX",
             ChainType::Bnb => "BNB",
-            ChainType::AtlasSphere => "ATLAS",
+            ChainType::AtlasSphere => "X3",
         }
     }
 

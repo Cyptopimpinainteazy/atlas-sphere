@@ -1,14 +1,14 @@
-# Atlas Desktop - Complete Setup & Data Wiring Guide
+# X3 Desktop - Complete Setup & Data Wiring Guide
 
 ## Overview
 
-The Atlas Desktop is a Tauri-based desktop application that serves as a command center for the Atlas Sphere blockchain ecosystem. It provides a Mac-like dock interface with access to key blockchain applications.
+The X3 Desktop is a Tauri-based desktop application that serves as a command center for the X3 Chain blockchain ecosystem. It provides a Mac-like dock interface with access to key blockchain applications.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Atlas Desktop (Tauri)                    │
+│                     X3 Desktop (Tauri)                    │
 │                    (React + Three.js + Zustand)              │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
@@ -32,7 +32,7 @@ The Atlas Desktop is a Tauri-based desktop application that serves as a command 
 └─────────────────────────────────────────────────────────────┘
            ↓
      ┌─────────────────────────┐
-     │  Atlas Sphere Node      │
+     │  X3 Chain Node      │
      │  RPC: localhost:9944    │
      │  WS: localhost:9944     │
      └─────────────────────────┘
@@ -47,7 +47,7 @@ The Atlas Desktop is a Tauri-based desktop application that serves as a command 
 
 ### Step 1: Setup Environment Variables
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 ./setup-app-env.sh
 ```
 
@@ -63,7 +63,7 @@ Navigate to `http://localhost:5173` in your browser.
 
 ### 1. **Block Explorer** (Port 3001)
 - **Purpose**: Browse blocks, transactions, and accounts
-- **Real Data Source**: Atlas Sphere RPC node (localhost:9944)
+- **Real Data Source**: X3 Chain RPC node (localhost:9944)
 - **Key Features**:
   - Live block stream
   - Transaction details
@@ -74,7 +74,7 @@ Navigate to `http://localhost:5173` in your browser.
 ```bash
 # .env.local in apps/explorer/
 NEXT_PUBLIC_RPC_URL=http://127.0.0.1:9944
-NEXT_PUBLIC_CHAIN_ID=atlas-testnet
+NEXT_PUBLIC_CHAIN_ID=x3-testnet
 ```
 
 ### 2. **Wallet** (Port 3002)
@@ -291,7 +291,7 @@ Then check browser console for detailed logs.
 ### Analytics Integration
 To enable real-time analytics:
 ```bash
-# In apps/atlas-desktop/.env.local
+# In apps/x3-desktop/.env.local
 REACT_APP_ANALYTICS_API=http://127.0.0.1:3004/api
 ```
 

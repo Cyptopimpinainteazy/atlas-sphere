@@ -1,5 +1,5 @@
 /**
- * Shared Chain Configuration for Atlas Sphere Frontend Apps
+ * Shared Chain Configuration for X3 Chain Frontend Apps
  * 
  * Single source of truth for all chain-related configuration
  */
@@ -16,7 +16,7 @@ export const IS_DEV = process.env.NODE_ENV === 'development';
 // =============================================================================
 
 /**
- * RPC Endpoints for Atlas Sphere networks
+ * RPC Endpoints for X3 Chain networks
  */
 export const RPC_ENDPOINTS = {
   // Local development
@@ -28,16 +28,16 @@ export const RPC_ENDPOINTS = {
   
   // Testnet
   testnet: {
-    ws: 'wss://rpc.testnet.atlas-sphere.io:9944',
-    http: 'https://rpc.testnet.atlas-sphere.io:9944',
-    name: 'Atlas Sphere Testnet',
+    ws: 'wss://rpc.testnet.x3-chain.io:9944',
+    http: 'https://rpc.testnet.x3-chain.io:9944',
+    name: 'X3 Chain Testnet',
   },
   
   // Mainnet (future)
   mainnet: {
-    ws: 'wss://rpc.atlas-sphere.io',
-    http: 'https://rpc.atlas-sphere.io',
-    name: 'Atlas Sphere Mainnet',
+    ws: 'wss://rpc.x3-chain.io',
+    http: 'https://rpc.x3-chain.io',
+    name: 'X3 Chain Mainnet',
   },
 } as const;
 
@@ -51,7 +51,7 @@ export type NetworkEnv = NetworkId; // Alias for compatibility
 /**
  * Get active network from environment, localStorage or default
  */
-export const LOCAL_STORAGE_ACTIVE_NETWORK_KEY = 'atlas_active_network';
+export const LOCAL_STORAGE_ACTIVE_NETWORK_KEY = 'x3_active_network';
 
 export function getActiveNetwork(): NetworkId {
   // 1) explicit runtime override (browser localStorage)
@@ -139,9 +139,9 @@ export const CHAIN_CONFIG = {
   
   // Native token
   nativeToken: {
-    symbol: 'ATLAS',
+    symbol: 'X3',
     decimals: 18,
-    name: 'Atlas Sphere',
+    name: 'X3 Chain',
   },
   
   // SS58 address prefix
@@ -173,7 +173,7 @@ export const CHAIN_CONFIG = {
 
 export const ASSET_IDS = {
   NATIVE: 0,
-  ATLAS: 0, // Alias for native token
+  X3: 0, // Alias for native token
   USDC: 1,
   USDT: 2,
   WETH: 3,
@@ -201,8 +201,8 @@ export interface TokenInfo {
 export const TOKEN_REGISTRY: Record<number, TokenInfo> = {
   [ASSET_IDS.NATIVE]: {
     id: ASSET_IDS.NATIVE,
-    symbol: 'ATLAS',
-    name: 'Atlas Sphere',
+    symbol: 'X3',
+    name: 'X3 Chain',
     decimals: 18,
     vm: 'native',
     address: '0x0000000000000000000000000000000000000000',
@@ -265,8 +265,8 @@ export function getTokenBySymbol(symbol: string): TokenInfo | undefined {
 
 export const EXPLORER_URLS = {
   local: 'http://localhost:3000/explorer',
-  testnet: 'https://explorer.testnet.atlas-sphere.io',
-  mainnet: 'https://explorer.atlas-sphere.io',
+  testnet: 'https://explorer.testnet.x3-chain.io',
+  mainnet: 'https://explorer.x3-chain.io',
 } as const;
 
 export function getExplorerUrl(): string {
@@ -291,8 +291,8 @@ export function getAccountExplorerUrl(address: string): string {
 
 export const FAUCET_CONFIG = {
   testnet: {
-    url: 'https://faucet.testnet.atlas-sphere.io',
-    amount: '1000000000000000000000', // 1000 ATLAS
+    url: 'https://faucet.testnet.x3-chain.io',
+    amount: '1000000000000000000000', // 1000 X3
     cooldown: 86400000, // 24 hours
   },
 } as const;

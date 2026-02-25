@@ -86,7 +86,7 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
             from cryptography.hazmat.backends import default_backend
 
             private_key = ec.generate_private_key(ec.SECP256K1(), default_backend())
-            data = b"atlas-sphere-test-vector"
+            data = b"x3-chain-test-vector"
             signature = private_key.sign(data, ec.ECDSA(hashes.SHA256()))
             public_key = private_key.public_key()
 
@@ -101,7 +101,7 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
             import nacl.signing
 
             signing_key = nacl.signing.SigningKey.generate()
-            message = b"atlas-sphere-ed25519-test"
+            message = b"x3-chain-ed25519-test"
             signed = signing_key.sign(message)
             verify_key = signing_key.verify_key
 
@@ -114,7 +114,7 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
         """SHA-256 of known input is deterministic."""
         import hashlib
 
-        data = b"atlas-sphere-sha256-test"
+        data = b"x3-chain-sha256-test"
         h1 = hashlib.sha256(data).hexdigest()
         h2 = hashlib.sha256(data).hexdigest()
         self.assertEqual(h1, h2)
@@ -128,7 +128,7 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
         try:
             from Crypto.Hash import keccak
 
-            data = b"atlas-sphere-keccak-test"
+            data = b"x3-chain-keccak-test"
             h1 = keccak.new(digest_bits=256, data=data).hexdigest()
             h2 = keccak.new(digest_bits=256, data=data).hexdigest()
             self.assertEqual(h1, h2)
@@ -137,8 +137,8 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
             try:
                 import sha3
 
-                h1 = sha3.keccak_256(b"atlas-sphere-keccak-test").hexdigest()
-                h2 = sha3.keccak_256(b"atlas-sphere-keccak-test").hexdigest()
+                h1 = sha3.keccak_256(b"x3-chain-keccak-test").hexdigest()
+                h2 = sha3.keccak_256(b"x3-chain-keccak-test").hexdigest()
                 self.assertEqual(h1, h2)
             except ImportError:
                 self.skipTest("No keccak library available")

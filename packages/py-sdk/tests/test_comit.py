@@ -2,8 +2,8 @@
 
 import pytest
 from unittest.mock import Mock, patch
-from atlas_sphere_sdk.comit import ComitBuilder, ComitTransaction
-from atlas_sphere_sdk.types import InvalidPayloadError
+from x3_chain_sdk.comit import ComitBuilder, ComitTransaction
+from x3_chain_sdk.types import InvalidPayloadError
 
 
 class TestComitBuilder:

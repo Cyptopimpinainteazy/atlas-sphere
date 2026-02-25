@@ -3,9 +3,9 @@ name = "contention-predictor"
 version = "0.1.0"
 edition = "2021"
 description = "Predictive parallel execution engine — ML-based contention forecasting for GPU-accelerated transaction sharding"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [features]
 default = ["cuda"]

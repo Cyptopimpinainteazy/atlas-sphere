@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# X3-Atlas-Sphere E2E Test Environment Shutdown Script
+# X3-X3-Sphere E2E Test Environment Shutdown Script
 # This script stops and cleans up the complete test environment
 
 set -e
@@ -59,7 +59,7 @@ if [ "$1" = "--clean" ] || [ "$1" = "-c" ]; then
     docker image prune -f 2>/dev/null || true
     
     # Remove project-specific volumes
-    docker volume ls -q | grep "e2e\|testnet\|atlas" | xargs -r docker volume rm 2>/dev/null || true
+    docker volume ls -q | grep "e2e\|testnet\|x3" | xargs -r docker volume rm 2>/dev/null || true
 fi
 
 # Clean up temporary files
@@ -70,14 +70,14 @@ rm -rf "$SCRIPT_DIR/monitoring/data"/* 2>/dev/null || true
 
 # Clean up any remaining processes
 log_info "Cleaning up remaining processes..."
-pkill -f "atlas-node" 2>/dev/null || true
+pkill -f "x3-node" 2>/dev/null || true
 pkill -f "prometheus" 2>/dev/null || true
 pkill -f "grafana" 2>/dev/null || true
 pkill -f "alertmanager" 2>/dev/null || true
 
 # Show final status
 log_info "Final container status:"
-docker ps -a --filter "name=atlas" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No Atlas containers found"
+docker ps -a --filter "name=x3" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "No X3 containers found"
 
 log_success "🧹 E2E Test Environment shutdown complete!"
 echo ""
@@ -89,8 +89,8 @@ echo "  ./stop_test_environment.sh --clean"
 echo ""
 
 # Verify cleanup
-REMAINING_CONTAINERS=$(docker ps -a --filter "name=atlas" -q | wc -l)
+REMAINING_CONTAINERS=$(docker ps -a --filter "name=x3" -q | wc -l)
 if [ "$REMAINING_CONTAINERS" -eq 0 ]; then
-    log_success "All Atlas test containers cleaned up successfully"
+    log_success "All X3 test containers cleaned up successfully"
 else
-    log_warning "$REMAINING_CONTAINERS Atlas containers still exist. Manual cleanup may
+    log_warning "$REMAINING_CONTAINERS X3 containers still exist. Manual cleanup may

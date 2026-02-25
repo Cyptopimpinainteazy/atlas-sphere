@@ -1,11 +1,11 @@
-//! # Atlas Sphere GPU Swarm Pallet
+//! # X3 Chain GPU Swarm Pallet
 //!
 //! On-chain contributor registry, task lifecycle, commit-reveal jury verification,
 //! and reward distribution for the distributed GPU compute swarm.
 //!
 //! ## Overview
 //!
-//! This pallet provides on-chain primitives for the Atlas Sphere GPU swarm:
+//! This pallet provides on-chain primitives for the X3 Chain GPU swarm:
 //!
 //! - **Contributor Registry**: GPU node operators register with a stake, advertise
 //!   capabilities, and maintain liveness via heartbeats.

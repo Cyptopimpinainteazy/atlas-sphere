@@ -1,5 +1,5 @@
 #!/bin/bash
-# Quick startup script for Atlas Sphere services
+# Quick startup script for X3 Chain services
 # Usage: bash deployment/scripts/startup.sh
 
 set -e
@@ -14,7 +14,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  Atlas Sphere - System Startup                             ║${NC}"
+echo -e "${BLUE}║  X3 Chain - System Startup                             ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -96,7 +96,7 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 echo -e "📊 ${BLUE}Dashboard:${NC}  http://localhost:5173"
 echo -e "📈 ${BLUE}Metrics:${NC}    http://localhost:8000/metrics.json"
-echo -e "🔓 ${BLUE}Login:${NC}      admin / atlas-sphere-2026 (CHANGE THIS!)"
+echo -e "🔓 ${BLUE}Login:${NC}      admin / x3-chain-2026 (CHANGE THIS!)"
 echo ""
 echo -e "📋 ${YELLOW}Logs:${NC}"
 echo -e "  Validator: tail -f /tmp/ccgv-validator.log"

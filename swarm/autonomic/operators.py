@@ -183,8 +183,8 @@ class ServiceOperator(BaseOperator):
 
     # Whitelist of services we're allowed to touch
     ALLOWED_SERVICES = frozenset([
-        "atlas-sphere-node",
-        "atlas-sphere-health",
+        "x3-chain-node",
+        "x3-chain-health",
         "ollama_server",
         "ollama",
     ])
@@ -271,7 +271,7 @@ class ProcessOperator(BaseOperator):
     ALLOWED_PATTERNS = frozenset([
         "python",
         "node",
-        "atlas",
+        "x3",
         "swarm",
         "ollama",
     ])

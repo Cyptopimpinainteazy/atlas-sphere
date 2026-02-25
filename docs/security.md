@@ -1,10 +1,10 @@
-# Atlas Sphere Security Model
+# X3 Chain Security Model
 
-This document outlines the comprehensive security architecture of Atlas Sphere's dual-VM blockchain platform, covering threat models, mitigation strategies, and best practices for developers.
+This document outlines the comprehensive security architecture of X3 Chain's dual-VM blockchain platform, covering threat models, mitigation strategies, and best practices for developers.
 
 ## Security Overview
 
-Atlas Sphere implements a multi-layered security model that combines proven security patterns from both EVM and SVM ecosystems while adding new protections for cross-VM operations.
+X3 Chain implements a multi-layered security model that combines proven security patterns from both EVM and SVM ecosystems while adding new protections for cross-VM operations.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -39,7 +39,7 @@ Atlas Sphere implements a multi-layered security model that combines proven secu
 
 ### Adversary Capabilities
 
-Atlas Sphere's threat model considers sophisticated adversaries with the following capabilities:
+X3 Chain's threat model considers sophisticated adversaries with the following capabilities:
 
 | Capability | Description | Mitigation |
 |------------|-------------|------------|
@@ -58,9 +58,9 @@ Atlas Sphere's threat model considers sophisticated adversaries with the followi
 
 **Scenario**:
 ```
-1. EVM contract updates user balance: 1000 -> 500 ATLAS
+1. EVM contract updates user balance: 1000 -> 500 X3
 2. SVM program fails during execution
-3. SVM state shows 1000 ATLAS (should be 500)
+3. SVM state shows 1000 X3 (should be 500)
 ```
 
 **Mitigation**:
@@ -108,10 +108,10 @@ Atlas Sphere's threat model considers sophisticated adversaries with the followi
 
 ### EVM Security Guarantees
 
-Atlas Sphere maintains full EVM compatibility and security:
+X3 Chain maintains full EVM compatibility and security:
 
 **Opcode Semantics**: All Ethereum opcodes behave identically to mainnet Ethereum
-**Gas Model**: Standard Ethereum gas accounting with Atlas Sphere optimizations
+**Gas Model**: Standard Ethereum gas accounting with X3 Chain optimizations
 **Memory Model**: Same memory and storage semantics as Ethereum
 **Call Stack**: Standard EVM call stack with depth limits
 
@@ -125,7 +125,7 @@ Atlas Sphere maintains full EVM compatibility and security:
 
 ### SVM Security Guarantees
 
-Atlas Sphere maintains full SVM compatibility and security:
+X3 Chain maintains full SVM compatibility and security:
 
 **BPF Execution**: Solana BPF bytecode execution with rBPF
 **Account Model**: Solana's account-based security model
@@ -187,7 +187,7 @@ contract CrossVmSecurity {
 
 ### Aura Consensus Security
 
-Atlas Sphere uses Aura for block authoring with the following security properties:
+X3 Chain uses Aura for block authoring with the following security properties:
 
 **Validator Selection**: 
 - Fixed set of validators during development
@@ -470,13 +470,13 @@ cargo audit
 
 For security-related issues:
 
-**Email**: security@atlas-sphere.io
-**PGP Key**: Available at security.atlas-sphere.io/pgp
-**Bug Bounty**: [bounty.atlas-sphere.io](https://bounty.atlas-sphere.io)
+**Email**: security@x3-chain.io
+**PGP Key**: Available at security.x3-chain.io/pgp
+**Bug Bounty**: [bounty.x3-chain.io](https://bounty.x3-chain.io)
 **Response Time**: 24 hours for critical issues
 
 **Why this matters**: Multiple contact methods ensure security researchers can reach the team through preferred channels.
 
 ---
 
-*This security model is continuously evolving. For the latest information, see our [Security Updates](https://security.atlas-sphere.io) page.*
+*This security model is continuously evolving. For the latest information, see our [Security Updates](https://security.x3-chain.io) page.*

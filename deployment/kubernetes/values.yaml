@@ -10,7 +10,7 @@ coordinator:
   enabled: true
   replicas: 3
   image:
-    repository: atlas-sphere/gpu-swarm-coordinator
+    repository: x3-chain/gpu-swarm-coordinator
     tag: latest
   
   resources:
@@ -36,7 +36,7 @@ coordinator:
 gpuNode:
   enabled: true
   image:
-    repository: atlas-sphere/gpu-swarm-node
+    repository: x3-chain/gpu-swarm-node
     tag: latest
   
   resources:

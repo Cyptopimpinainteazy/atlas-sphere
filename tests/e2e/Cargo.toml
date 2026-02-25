@@ -2,9 +2,9 @@
 name = "e2e_tests"
 version = "0.1.0"
 edition = "2021"
-description = "End-to-end integration tests for X3-Atlas-Sphere"
+description = "End-to-end integration tests for X3-X3-Sphere"
 license = "MIT"
-repository = "https://github.com/Cyptopimpinainteazy/atlas-sphere"
+repository = "https://github.com/Cyptopimpinainteazy/x3-chain"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
@@ -51,7 +51,7 @@ external-chains = { path = "../../crates/external-chains" }
 gpu-swarm = { path = "../../crates/gpu-swarm" }
 x3-evolution = { path = "../../crates/x3-evolution" }
 x3-sidecar = { path = "../../crates/x3-sidecar" }
-atlas-dns-server = { path = "../../crates/atlas-dns-server" }
+x3-dns-server = { path = "../../crates/x3-dns-server" }
 cross-chain-position-manager = { path = "../../crates/cross-chain-position-manager" }
 x3-integration = { path = "../../crates/x3-integration" }
 

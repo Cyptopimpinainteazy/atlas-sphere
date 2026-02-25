@@ -298,7 +298,7 @@ impl FundingCampaignJob {
         Self::new(FundingCampaignConfig {
             campaign_type: CampaignType::SocialCampaign,
             campaign_id: campaign_id.to_string(),
-            project_name: "Atlas Sphere".to_string(),
+            project_name: "X3 Chain".to_string(),
             project_description: "Dual-VM blockchain".to_string(),
             value_props: vec![],
             targets: vec![],
@@ -685,7 +685,7 @@ mod tests {
     fn test_vc_outreach_creation() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-001",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect()],
         );
@@ -699,7 +699,7 @@ mod tests {
     fn test_prophet_timing() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-002",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect()],
         )
@@ -714,7 +714,7 @@ mod tests {
     fn test_content_generation() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-003",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect()],
         );
@@ -724,7 +724,7 @@ mod tests {
 
         assert!(!content.subject.is_empty());
         assert!(content.body.contains("Alice"));
-        assert!(content.body.contains("Atlas Sphere"));
+        assert!(content.body.contains("X3 Chain"));
         assert!(content.personalization_elements.len() > 0);
     }
 
@@ -741,7 +741,7 @@ mod tests {
     fn test_webhook_payload() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-004",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect()],
         );
@@ -760,7 +760,7 @@ mod tests {
     fn test_campaign_execution() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-005",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect(), test_prospect()],
         );
@@ -777,7 +777,7 @@ mod tests {
     fn test_job_trait_implementation() {
         let job = FundingCampaignJob::vc_outreach(
             "camp-006",
-            "Atlas Sphere",
+            "X3 Chain",
             "Dual-VM blockchain",
             vec![test_prospect()],
         );

@@ -238,7 +238,7 @@ docker-compose up -d postgres
 
 # 2. If database won't start
 docker-compose down
-docker volume rm atlas_postgres_data
+docker volume rm x3_postgres_data
 docker-compose up -d
 
 # 3. Restore from backup

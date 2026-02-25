@@ -1,4 +1,4 @@
-# 🛠️ Developer Tools & Environment Setup for Atlas Sphere
+# 🛠️ Developer Tools & Environment Setup for X3 Chain
 
 ## Command-Line Tools to Install
 
@@ -14,7 +14,7 @@ cargo install cargo-watch
 ```bash
 cargo install cargo-expand
 ```
-**Usage:** `cargo expand -p pallet-atlas-kernel`
+**Usage:** `cargo expand -p pallet-x3-kernel`
 - Shows what macros expand to (crucial for FRAME macro debugging)
 - Saves hours of "where did this trait come from?" debugging
 
@@ -22,7 +22,7 @@ cargo install cargo-expand
 ```bash
 cargo install cargo-tarpaulin
 ```
-**Usage:** `cargo tarpaulin --out Html -p pallet-atlas-kernel`
+**Usage:** `cargo tarpaulin --out Html -p pallet-x3-kernel`
 - Generates coverage reports to verify your 190+ tests actually cover code
 - Helps identify untested edge cases
 
@@ -79,7 +79,7 @@ watch:
 
 # Run node in dev mode
 run-node:
-    ./target/release/atlas-sphere-node --dev --tmp
+    ./target/release/x3-chain-node --dev --tmp
 
 # Expand macros for debugging
 expand pkg:
@@ -87,7 +87,7 @@ expand pkg:
 
 # Test coverage
 coverage:
-    cargo tarpaulin --out Html -p pallet-atlas-kernel
+    cargo tarpaulin --out Html -p pallet-x3-kernel
 
 # Security audit
 audit:
@@ -119,10 +119,10 @@ build:
 	cargo build --release
 
 run-node:
-	./target/release/atlas-sphere-node --dev --tmp
+	./target/release/x3-chain-node --dev --tmp
 
 coverage:
-	cargo tarpaulin --out Html -p pallet-atlas-kernel
+	cargo tarpaulin --out Html -p pallet-x3-kernel
 
 audit:
 	cargo deny check
@@ -331,7 +331,7 @@ Add to `.vscode/settings.json`:
 #!/bin/bash
 set -e
 
-echo "🚀 Installing Atlas Sphere developer tools..."
+echo "🚀 Installing X3 Chain developer tools..."
 
 # Cargo tools
 cargo install cargo-watch cargo-expand cargo-tarpaulin cargo-deny just

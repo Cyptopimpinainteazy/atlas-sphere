@@ -1,6 +1,6 @@
 //! # SVM Pallet
 //!
-//! A Substrate pallet providing Solana Virtual Machine (SVM) functionality for Atlas Sphere.
+//! A Substrate pallet providing Solana Virtual Machine (SVM) functionality for X3 Chain.
 //!
 //! ## Overview
 //!

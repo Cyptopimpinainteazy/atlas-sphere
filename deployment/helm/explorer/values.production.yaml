@@ -19,4 +19,4 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
 
 ingress:
-  host: explorer.atlas-sphere.io
+  host: explorer.x3-chain.io

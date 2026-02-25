@@ -1,4 +1,4 @@
-# Atlas Sphere Owner Runbook
+# X3 Chain Owner Runbook
 
 ## Quick Reference
 
@@ -55,7 +55,7 @@
 ENABLE_EXTERNAL=1 ./run-dev-node.sh
 
 # Manual start
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --dev \
     --rpc-cors all \
     --rpc-external
@@ -78,7 +78,7 @@ curl -s http://127.0.0.1:9933 \
 
 ### Purging Chain Data
 ```bash
-./target/release/atlas-sphere-node purge-chain --dev -y
+./target/release/x3-chain-node purge-chain --dev -y
 ```
 
 ---
@@ -123,10 +123,10 @@ If upgrade fails:
 ### Log Monitoring
 ```bash
 # Watch for errors
-journalctl -u atlas-sphere -f | grep -E "(ERROR|WARN|panic)"
+journalctl -u x3-chain -f | grep -E "(ERROR|WARN|panic)"
 
 # Watch for atomic operations
-journalctl -u atlas-sphere -f | grep -E "Comit"
+journalctl -u x3-chain -f | grep -E "Comit"
 ```
 
 ### Health Endpoints
@@ -215,7 +215,7 @@ Governable parameters:
 | Role             | Contact                  |
 | ---------------- | ------------------------ |
 | On-Call Engineer | TBD                      |
-| Security Team    | security@atlas-sphere.io |
+| Security Team    | security@x3-chain.io |
 | Core Dev Lead    | TBD                      |
 
 ---

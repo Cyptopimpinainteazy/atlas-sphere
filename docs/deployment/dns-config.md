@@ -1,4 +1,4 @@
-# DNS Configuration for Atlas Sphere Testnet
+# DNS Configuration for X3 Chain Testnet
 
 ## Required DNS Records
 
@@ -6,11 +6,11 @@ After provisioning VMs, create these DNS records in your DNS provider:
 
 ### A Records
 ```
-rpc.testnet.atlas-sphere.io      → RPC_LOAD_BALANCER_IP
-rpc2.testnet.atlas-sphere.io     → BACKUP_RPC_IP
-bootnode.testnet.atlas-sphere.io → BOOTNODE_IP
-faucet.testnet.atlas-sphere.io   → FAUCET_SERVER_IP
-metrics.testnet.atlas-sphere.io  → GRAFANA_IP
+rpc.testnet.x3-chain.io      → RPC_LOAD_BALANCER_IP
+rpc2.testnet.x3-chain.io     → BACKUP_RPC_IP
+bootnode.testnet.x3-chain.io → BOOTNODE_IP
+faucet.testnet.x3-chain.io   → FAUCET_SERVER_IP
+metrics.testnet.x3-chain.io  → GRAFANA_IP
 ```
 
 ## Provider-Specific Guides
@@ -29,7 +29,7 @@ metrics.testnet.atlas-sphere.io  → GRAFANA_IP
 ### AWS Route53
 ```bash
 # Create hosted zone (if not exists)
-aws route53 create-hosted-zone --name testnet.atlas-sphere.io --caller-reference $(date +%s)
+aws route53 create-hosted-zone --name testnet.x3-chain.io --caller-reference $(date +%s)
 
 # Add A records
 aws route53 change-resource-record-sets \
@@ -44,7 +44,7 @@ aws route53 change-resource-record-sets \
     {
       "Action": "CREATE",
       "ResourceRecordSet": {
-        "Name": "rpc.testnet.atlas-sphere.io",
+        "Name": "rpc.testnet.x3-chain.io",
         "Type": "A",
         "TTL": 300,
         "ResourceRecords": [{"Value": "x.x.x.x"}]
@@ -64,8 +64,8 @@ aws route53 change-resource-record-sets \
 ## Verify DNS
 ```bash
 # Check DNS resolution
-dig rpc.testnet.atlas-sphere.io
-dig bootnode.testnet.atlas-sphere.io
+dig rpc.testnet.x3-chain.io
+dig bootnode.testnet.x3-chain.io
 
 # Should return the IPs you configured
 ```

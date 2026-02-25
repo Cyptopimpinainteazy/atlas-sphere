@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime
 
 class RalphRealExecutor:
-    def __init__(self, project_dir="/home/lojak/Desktop/atlas-sphere-master"):
+    def __init__(self, project_dir="/home/lojak/Desktop/x3-chain-master"):
         self.project_dir = project_dir
         self.prd_file = os.path.join(project_dir, "PRD.md")
         self.log_file = os.path.join(project_dir, "ralph-logs", "ralph-real.log")

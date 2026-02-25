@@ -258,7 +258,7 @@ impl SwapRouter {
                 to_token: dest_bridge_token,
                 action: RouteAction::Bridge,
                 estimated_gas: U256::from(50_000), // Comit is cheap!
-                estimated_time_ms: 6000,           // 1 Atlas block
+                estimated_time_ms: 6000,           // 1 X3 block
             };
             total_gas = total_gas + bridge_leg.estimated_gas;
             total_time_ms += bridge_leg.estimated_time_ms;
@@ -468,9 +468,13 @@ impl SwapRouter {
         // swapExactTokensForTokens(uint256,uint256,address[],address,uint256)
         let mut calldata = vec![0x38, 0xed, 0x17, 0x39]; // selector
 
-        // Simplified encoding
-        calldata.extend_from_slice(&[0u8; 32]); // amountIn placeholder
-        calldata.extend_from_slice(&[0u8; 32]); // amountOutMin placeholder
+        // amountIn
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
+        
+        // amountOutMin (0 for now - slippage handled at execution)
+        calldata.extend_from_slice(&[0u8; 32]);
 
         // Get router address for chain
         let router = self.get_dex_router(leg.from_chain);
@@ -491,17 +495,17 @@ impl SwapRouter {
         recipient: H160,
         amount: U256,
     ) -> ComitPayload {
-        // This is the magic - bridge via Atlas Kernel canonical ledger
+        // This is the magic - bridge via X3 Kernel canonical ledger
         // The Comit transaction handles the atomic bridge
 
         // Encode: lockAndBridge(address recipient, uint256 amount, uint64 destChain)
-        let mut calldata = vec![0xBB, 0xBB, 0xBB, 0xBB]; // Atlas bridge selector
+        let mut calldata = vec![0xBB, 0xBB, 0xBB, 0xBB]; // X3 bridge selector
         calldata.extend_from_slice(recipient.as_bytes());
         calldata.extend_from_slice(&[0u8; 32]); // amount
         calldata.extend_from_slice(&leg.to_chain.to_be_bytes());
 
-        // Atlas Kernel bridge contract (on source chain mirror)
-        let bridge = self.get_atlas_bridge(leg.from_chain);
+        // X3 Kernel bridge contract (on source chain mirror)
+        let bridge = self.get_x3_bridge(leg.from_chain);
 
         ComitPayload {
             chain_id: leg.from_chain,
@@ -556,8 +560,8 @@ impl SwapRouter {
         }
     }
 
-    fn get_atlas_bridge(&self, chain_id: u64) -> H160 {
-        // Atlas Kernel mirror bridge contracts - deterministic addresses
+    fn get_x3_bridge(&self, chain_id: u64) -> H160 {
+        // X3 Kernel mirror bridge contracts - deterministic addresses
         let mut bytes = [0u8; 20];
         bytes[0..4].copy_from_slice(&[0xA7, 0x1A, 0x50, 0x00]);
         bytes[16..20].copy_from_slice(&(chain_id as u32).to_be_bytes());

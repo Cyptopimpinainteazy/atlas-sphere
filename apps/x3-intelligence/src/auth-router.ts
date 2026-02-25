@@ -9,7 +9,7 @@ initializeAuth();
 
 // Session middleware
 router.use(session({
-  secret: process.env.SESSION_SECRET || 'atlas-sphere-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'x3-chain-secret-key-change-in-production',
   resave: false,
   saveUninitialized: true,
   cookie: {

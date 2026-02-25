@@ -146,7 +146,7 @@ block0:
 
 ### Test Everything
 ```bash
-cd /home/lojak/Desktop/X3-atlas-sphere
+cd /home/lojak/Desktop/X3-x3-chain
 cargo test -p x3-opt --lib
 ```
 

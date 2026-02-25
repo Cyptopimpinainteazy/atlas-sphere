@@ -1,6 +1,6 @@
 #![cfg(feature = "frontier-executor")]
 
-use atlas_evm_integration::{EvmConfig, FrontierEvmExecutor};
+use x3_evm_integration::{EvmConfig, FrontierEvmExecutor};
 
 #[test]
 fn integration_state_root_and_logs() {

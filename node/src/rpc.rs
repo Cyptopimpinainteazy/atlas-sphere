@@ -1,18 +1,16 @@
-/// JSON-RPC Endpoints for Atlas Sphere
+/// JSON-RPC Endpoints for X3 Chain
 ///
-/// Provides RPC methods for querying Atlas Kernel state via runtime APIs
+/// Provides RPC methods for querying X3 Kernel state via runtime APIs
 /// Includes system RPC methods for account nonce queries
 /// Supports WebSocket subscriptions for real-time block and event updates
-use atlas_sphere_runtime::{
-    opaque::Block, AccountId, AssetId, Balance, BlockNumber, ChainId, Nonce, NATIVE_GAS_PRICE,
+use x3_chain_runtime::{
+    opaque::Block, AccountId, AssetId, Balance, BlockNumber, ChainId, NATIVE_GAS_PRICE,
 };
-use frame_system_rpc_runtime_api::AccountNonceApi;
 use jsonrpsee::{
-    core::{async_trait, RpcResult},
+    core::RpcResult,
     proc_macros::rpc,
-    PendingSubscriptionSink,
 };
-use pallet_atlas_kernel::AtlasKernelRuntimeApi;
+use pallet_x3_kernel::AtlasKernelRuntimeApi;
 use pallet_atomic_trade_engine::{
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
     AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
@@ -25,25 +23,27 @@ use pallet_x3_domain_registry::runtime_api::{
     X3DnsRecordResponse, X3DomainRegistryApi as X3DomainRegistryRuntimeApi, X3DomainResponse,
 };
 use pallet_x3_verifier::runtime_api::{
-    ExecutorResponse, JobId, JobResponse, ReceiptResponse, VerifierStatusResponse,
+    ExecutorResponse, JobResponse, ReceiptResponse, VerifierStatusResponse,
     X3VerifierApi as X3VerifierRuntimeApi,
 };
-use sc_client_api::BlockBackend;
+use sc_client_api::{BlockBackend, BlockchainEvents};
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_core::H256;
-use sp_runtime::traits::{Block as BlockT, Header as HeaderT, SaturatedConversion};
+use sp_runtime::traits::{Block as BlockT, SaturatedConversion};
 use std::sync::Arc;
 
-/// System RPC API for account nonce queries
-#[rpc(client, server)]
-pub trait SystemApi<BlockHash> {
-    /// Returns the next valid index (aka nonce) for given account
-    #[method(name = "system_accountNextIndex")]
-    fn account_next_index(&self, account: AccountId, at: Option<BlockHash>) -> RpcResult<Nonce>;
+fn runtime_api_error<E: std::fmt::Debug>(e: E) -> jsonrpsee::core::Error {
+    jsonrpsee::core::Error::Call(jsonrpsee::types::error::CallError::Custom(
+        jsonrpsee::types::ErrorObjectOwned::owned(
+            1,
+            format!("Runtime API error: {:?}", e),
+            None::<()>,
+        ),
+    ))
 }
 
-/// Atlas Kernel RPC API
+/// X3 Kernel RPC API
 #[rpc(client, server)]
 pub trait AtlasKernelApi<BlockHash> {
     /// Get canonical balance for an account and asset
@@ -98,17 +98,25 @@ pub trait X3DomainsApi<BlockHash> {
     fn list_domains(&self, at: Option<BlockHash>) -> RpcResult<Vec<String>>;
 }
 
+/// DNS record returned via RPC.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct X3DnsRecordRpc {
+    /// DNS record type (e.g. 1 = A, 28 = AAAA).
     pub rr_type: u16,
+    /// Time-to-live in seconds.
     pub ttl: u32,
+    /// Record data (address, CNAME, etc.).
     pub data: String,
 }
 
+/// Full domain response returned via RPC.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct X3DomainRpcResponse {
+    /// Registered domain name.
     pub domain: String,
+    /// Account that owns the domain.
     pub owner: AccountId,
+    /// DNS records attached to this domain.
     pub records: Vec<X3DnsRecordRpc>,
 }
 
@@ -132,123 +140,7 @@ pub trait EthCompatApi {
     fn block_number(&self) -> RpcResult<String>;
 }
 
-/// Health check RPC API for monitoring and load balancers
-#[rpc(client, server)]
-pub trait HealthApi {
-    /// Returns node health status including sync state and peer count
-    #[method(name = "system_health")]
-    fn health(&self) -> RpcResult<HealthStatus>;
-
-    /// Returns node version and build info
-    #[method(name = "system_version")]
-    fn version(&self) -> RpcResult<NodeVersion>;
-
-    /// Simple liveness check - returns true if node is responsive
-    #[method(name = "system_ping")]
-    fn ping(&self) -> RpcResult<bool>;
-}
-
-/// Health status response for monitoring
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HealthStatus {
-    /// Whether the node is syncing
-    pub is_syncing: bool,
-    /// Number of connected peers
-    pub peers: u32,
-    /// Whether the node should be accepting transactions
-    pub should_have_peers: bool,
-    /// Current best block number
-    pub best_block: u64,
-    /// Finalized block number
-    pub finalized_block: u64,
-    /// Blocks behind (0 if synced)
-    pub blocks_behind: u64,
-}
-
-/// Node version information
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeVersion {
-    /// Node implementation name
-    pub name: String,
-    /// Node version
-    pub version: String,
-    /// Chain specification name
-    pub chain: String,
-    /// Runtime spec version
-    pub spec_version: u32,
-}
-
-/// WebSocket Subscription API for real-time updates
-#[rpc(client, server)]
-pub trait ChainSubscriptionApi {
-    /// Subscribe to new block headers
-    #[subscription(name = "chain_subscribeNewHeads" => "chain_newHead", unsubscribe = "chain_unsubscribeNewHeads", item = BlockHeader)]
-    async fn subscribe_new_heads(&self);
-
-    /// Subscribe to finalized block headers
-    #[subscription(name = "chain_subscribeFinalizedHeads" => "chain_finalizedHead", unsubscribe = "chain_unsubscribeFinalizedHeads", item = BlockHeader)]
-    async fn subscribe_finalized_heads(&self);
-}
-
-/// Block header info for subscriptions
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BlockHeader {
-    /// Block number
-    pub number: u64,
-    /// Block hash
-    pub hash: H256,
-    /// Parent block hash
-    pub parent_hash: H256,
-    /// State root
-    pub state_root: H256,
-    /// Extrinsics root
-    pub extrinsics_root: H256,
-}
-
-/// System RPC server implementation
-pub struct SystemRpc<C, B> {
-    client: Arc<C>,
-    _marker: std::marker::PhantomData<B>,
-}
-
-impl<C, B> SystemRpc<C, B> {
-    /// Create new System RPC instance
-    pub fn new(client: Arc<C>) -> Self {
-        Self {
-            client,
-            _marker: Default::default(),
-        }
-    }
-}
-
-impl<C, Block> SystemApiServer<<Block as BlockT>::Hash> for SystemRpc<C, Block>
-where
-    Block: BlockT,
-    C: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
-    C::Api: AccountNonceApi<Block, AccountId, Nonce>,
-{
-    fn account_next_index(
-        &self,
-        account: AccountId,
-        at: Option<<Block as BlockT>::Hash>,
-    ) -> RpcResult<Nonce> {
-        let api = self.client.runtime_api();
-        let at = at.unwrap_or_else(|| self.client.info().best_hash);
-
-        api.account_nonce(at, account).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
-    }
-}
-
-/// Atlas Kernel RPC server implementation
+/// X3 Kernel RPC server implementation
 pub struct AtlasKernelRpc<C, B> {
     client: Arc<C>,
     _marker: std::marker::PhantomData<B>,
@@ -284,14 +176,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_canonical_balance(at, account, asset_id)
-            .map_err(|e| {
-                jsonrpsee::types::ErrorObjectOwned::owned(
-                    1,
-                    format!("Runtime API error: {:?}", e),
-                    None::<()>,
-                )
-            })
+        api.get_canonical_balance(at, account, asset_id).map_err(runtime_api_error)
     }
 
     fn get_asset_metadata(
@@ -302,13 +187,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_asset_metadata(at, asset_id).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_asset_metadata(at, asset_id).map_err(runtime_api_error)
     }
 
     fn is_authorized(
@@ -319,13 +198,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.is_authorized(at, account).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_authorized(at, account).map_err(runtime_api_error)
     }
 
     fn get_authorized_accounts(
@@ -335,26 +208,14 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_authorized_accounts(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_authorized_accounts(at).map_err(runtime_api_error)
     }
 
     fn get_authorities(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Vec<AccountId>> {
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_authorities(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_authorities(at).map_err(runtime_api_error)
     }
 }
 
@@ -365,6 +226,7 @@ pub struct X3DomainsRpc<C, B> {
 }
 
 impl<C, B> X3DomainsRpc<C, B> {
+    /// Create a new X3 Domains RPC instance.
     pub fn new(client: Arc<C>) -> Self {
         Self {
             client,
@@ -393,13 +255,7 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         let records: Vec<X3DnsRecordResponse> =
-            api.get_records(at, domain.into_bytes()).map_err(|e| {
-                jsonrpsee::types::ErrorObjectOwned::owned(
-                    1,
-                    format!("Runtime API error: {:?}", e),
-                    None::<()>,
-                )
-            })?;
+            api.get_records(at, domain.into_bytes()).map_err(runtime_api_error)?;
 
         Ok(records.into_iter().map(map_x3_record_response).collect())
     }
@@ -413,13 +269,7 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         let domain_resp: Option<X3DomainResponse<AccountId>> =
-            api.get_domain(at, domain.into_bytes()).map_err(|e| {
-                jsonrpsee::types::ErrorObjectOwned::owned(
-                    1,
-                    format!("Runtime API error: {:?}", e),
-                    None::<()>,
-                )
-            })?;
+            api.get_domain(at, domain.into_bytes()).map_err(runtime_api_error)?;
 
         Ok(domain_resp.map(|d| X3DomainRpcResponse {
             domain: String::from_utf8_lossy(&d.domain).to_string(),
@@ -432,13 +282,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        let domains = api.list_domains(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })?;
+        let domains = api.list_domains(at).map_err(runtime_api_error)?;
 
         Ok(domains
             .into_iter()
@@ -512,66 +356,6 @@ where
         let info = self.client.info();
         let n: u64 = info.best_number.saturated_into();
         Ok(format!("0x{:x}", n))
-    }
-}
-
-// ============================================================================
-// Health Check RPC
-// ============================================================================
-
-/// Health check RPC server implementation
-pub struct HealthRpc<C, B> {
-    client: Arc<C>,
-    chain_name: String,
-    _marker: std::marker::PhantomData<B>,
-}
-
-impl<C, B> HealthRpc<C, B> {
-    /// Create a new Health RPC instance
-    pub fn new(client: Arc<C>, chain_name: String) -> Self {
-        Self {
-            client,
-            chain_name,
-            _marker: Default::default(),
-        }
-    }
-}
-
-impl<C, Block> HealthApiServer for HealthRpc<C, Block>
-where
-    Block: BlockT,
-    C: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
-{
-    fn health(&self) -> RpcResult<HealthStatus> {
-        let info = self.client.info();
-        let best: u64 = info.best_number.saturated_into();
-        let finalized: u64 = info.finalized_number.saturated_into();
-
-        // Consider synced if within 10 blocks of finalized
-        let blocks_behind = best.saturating_sub(finalized);
-        let is_syncing = blocks_behind > 10;
-
-        Ok(HealthStatus {
-            is_syncing,
-            peers: 0, // Would need network service to get actual peer count
-            should_have_peers: true,
-            best_block: best,
-            finalized_block: finalized,
-            blocks_behind,
-        })
-    }
-
-    fn version(&self) -> RpcResult<NodeVersion> {
-        Ok(NodeVersion {
-            name: "Atlas Sphere Node".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            chain: self.chain_name.clone(),
-            spec_version: 1, // Matches runtime VERSION
-        })
-    }
-
-    fn ping(&self) -> RpcResult<bool> {
-        Ok(true)
     }
 }
 
@@ -664,13 +448,7 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         api.simulate_trade(at, token_in, token_out, amount_in, slippage_bps)
-            .map_err(|e| {
-                jsonrpsee::types::ErrorObjectOwned::owned(
-                    1,
-                    format!("Runtime API error: {:?}", e),
-                    None::<()>,
-                )
-            })
+            .map_err(runtime_api_error)
     }
 
     fn estimate_cost(
@@ -683,13 +461,7 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         api.estimate_execution_cost(at, legs, vm_types)
-            .map_err(|e| {
-                jsonrpsee::types::ErrorObjectOwned::owned(
-                    1,
-                    format!("Runtime API error: {:?}", e),
-                    None::<()>,
-                )
-            })
+            .map_err(runtime_api_error)
     }
 
     fn get_price_data(
@@ -701,13 +473,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_price_data(at, token_a, token_b).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_price_data(at, token_a, token_b).map_err(runtime_api_error)
     }
 
     fn get_batch_status(
@@ -718,13 +484,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_batch_status(at, batch_hash).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_batch_status(at, batch_hash).map_err(runtime_api_error)
     }
 
     fn is_trade_authorized(
@@ -739,13 +499,7 @@ where
         use parity_scale_codec::Encode;
         let account_bytes = account.encode();
 
-        api.is_authorized(at, account_bytes).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_authorized(at, account_bytes).map_err(runtime_api_error)
     }
 }
 
@@ -817,13 +571,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_params(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_params(at).map_err(runtime_api_error)
     }
 
     fn get_status(
@@ -833,13 +581,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_status(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_status(at).map_err(runtime_api_error)
     }
 
     fn get_metrics(
@@ -850,13 +592,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_recent_metrics(at, depth).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_recent_metrics(at, depth).map_err(runtime_api_error)
     }
 
     fn get_pending_proposals(
@@ -866,26 +602,14 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_pending_proposals(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_pending_proposals(at).map_err(runtime_api_error)
     }
 
     fn is_enabled(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<bool> {
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.is_evolution_enabled(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_evolution_enabled(at).map_err(runtime_api_error)
     }
 
     fn is_ai_agent(
@@ -896,13 +620,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.is_ai_agent(at, account).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_ai_agent(at, account).map_err(runtime_api_error)
     }
 }
 
@@ -990,13 +708,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_status(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_status(at).map_err(runtime_api_error)
     }
 
     fn get_executor(
@@ -1007,13 +719,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_executor(at, account).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_executor(at, account).map_err(runtime_api_error)
     }
 
     fn get_active_executors(
@@ -1023,13 +729,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_active_executors(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_active_executors(at).map_err(runtime_api_error)
     }
 
     fn get_job(
@@ -1040,13 +740,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_job(at, job_id).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_job(at, job_id).map_err(runtime_api_error)
     }
 
     fn get_pending_jobs(
@@ -1056,13 +750,7 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_pending_jobs(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_pending_jobs(at).map_err(runtime_api_error)
     }
 
     fn get_receipt(
@@ -1073,26 +761,14 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.get_receipt(at, job_id).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.get_receipt(at, job_id).map_err(runtime_api_error)
     }
 
     fn is_enabled(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<bool> {
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.is_verification_enabled(at).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_verification_enabled(at).map_err(runtime_api_error)
     }
 
     fn is_executor(
@@ -1103,146 +779,13 @@ where
         let api = self.client.runtime_api();
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
-        api.is_executor(at, account).map_err(|e| {
-            jsonrpsee::types::ErrorObjectOwned::owned(
-                1,
-                format!("Runtime API error: {:?}", e),
-                None::<()>,
-            )
-        })
+        api.is_executor(at, account).map_err(runtime_api_error)
     }
 }
 
-// ============================================================================
-// Chain Subscription Implementation
-// ============================================================================
-
-use jsonrpsee::SubscriptionMessage;
-use sc_client_api::BlockchainEvents;
-use tokio_stream::StreamExt;
-
-/// Chain subscription RPC server implementation
-pub struct ChainSubscriptionRpc<C, B> {
+/// Create full RPC extensions with X3 Kernel and system methods
+pub fn create_full<C>(
     client: Arc<C>,
-    _marker: std::marker::PhantomData<B>,
-}
-
-impl<C, B> ChainSubscriptionRpc<C, B> {
-    /// Create new chain subscription RPC instance
-    pub fn new(client: Arc<C>) -> Self {
-        Self {
-            client,
-            _marker: Default::default(),
-        }
-    }
-}
-
-#[async_trait]
-impl<C, Block> ChainSubscriptionApiServer for ChainSubscriptionRpc<C, Block>
-where
-    Block: BlockT,
-    C: Send
-        + Sync
-        + 'static
-        + ProvideRuntimeApi<Block>
-        + HeaderBackend<Block>
-        + BlockBackend<Block>
-        + BlockchainEvents<Block>,
-{
-    async fn subscribe_new_heads(&self, pending: PendingSubscriptionSink) {
-        let client = self.client.clone();
-
-        // Accept the subscription
-        let sink = match pending.accept().await {
-            Ok(sink) => sink,
-            Err(e) => {
-                log::warn!("Failed to accept subscription: {:?}", e);
-                return;
-            }
-        };
-
-        // Subscribe to import notifications
-        let mut notifications = client.import_notification_stream();
-
-        // Stream block headers to subscriber
-        tokio::spawn(async move {
-            while let Some(notification) = notifications.next().await {
-                // Access header fields through the Header trait
-                let header_ref = &notification.header;
-                let number: u64 = (*header_ref.number()).saturated_into();
-
-                let header = BlockHeader {
-                    number,
-                    hash: H256::from_slice(notification.hash.as_ref()),
-                    parent_hash: H256::from_slice(header_ref.parent_hash().as_ref()),
-                    state_root: H256::from_slice(header_ref.state_root().as_ref()),
-                    extrinsics_root: H256::from_slice(header_ref.extrinsics_root().as_ref()),
-                };
-
-                let msg = SubscriptionMessage::from_json(&header).unwrap_or_else(|_| {
-                    SubscriptionMessage::from_json(
-                        &serde_json::json!({"error": "serialization failed"}),
-                    )
-                    .unwrap()
-                });
-                if sink.send(msg).await.is_err() {
-                    // Subscriber disconnected
-                    break;
-                }
-            }
-        });
-    }
-
-    async fn subscribe_finalized_heads(&self, pending: PendingSubscriptionSink) {
-        let client = self.client.clone();
-
-        // Accept the subscription
-        let sink = match pending.accept().await {
-            Ok(sink) => sink,
-            Err(e) => {
-                log::warn!("Failed to accept finalized subscription: {:?}", e);
-                return;
-            }
-        };
-
-        // Subscribe to finality notifications
-        let mut notifications = client.finality_notification_stream();
-
-        // Stream finalized block headers to subscriber
-        tokio::spawn(async move {
-            while let Some(notification) = notifications.next().await {
-                // Access header fields through the Header trait
-                let header_ref = &notification.header;
-                let number: u64 = (*header_ref.number()).saturated_into();
-
-                let header = BlockHeader {
-                    number,
-                    hash: H256::from_slice(notification.hash.as_ref()),
-                    parent_hash: H256::from_slice(header_ref.parent_hash().as_ref()),
-                    state_root: H256::from_slice(header_ref.state_root().as_ref()),
-                    extrinsics_root: H256::from_slice(header_ref.extrinsics_root().as_ref()),
-                };
-
-                let msg = SubscriptionMessage::from_json(&header).unwrap_or_else(|_| {
-                    SubscriptionMessage::from_json(
-                        &serde_json::json!({"error": "serialization failed"}),
-                    )
-                    .unwrap()
-                });
-                if sink.send(msg).await.is_err() {
-                    // Subscriber disconnected
-                    break;
-                }
-            }
-        });
-    }
-}
-
-/// Create full RPC extensions with Atlas Kernel and system methods
-pub fn create_full<C, P>(
-    client: Arc<C>,
-    _pool: Arc<P>,
-    chain_name: String,
 ) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     C: Send
@@ -1253,24 +796,18 @@ where
         + BlockBackend<Block>
         + BlockchainEvents<Block>,
     C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
-    C::Api: AccountNonceApi<Block, AccountId, Nonce>,
     C::Api: X3DomainRegistryRuntimeApi<Block, AccountId>,
     C::Api: AtomicTradeEngineRuntimeApi<Block>,
     C::Api: EvolutionCoreRuntimeApi<Block, AccountId, BlockNumber>,
     C::Api: X3VerifierRuntimeApi<Block, AccountId, Balance, BlockNumber>,
-    P: Send + Sync + 'static,
 {
     use jsonrpsee::RpcModule;
 
     let mut module = RpcModule::new(());
 
-    // Add system RPC (account nonce)
-    let system = SystemRpc::<C, Block>::new(client.clone());
-    module.merge(SystemApiServer::into_rpc(system))?;
-
-    // Add Atlas Kernel custom RPC
-    let atlas_kernel = AtlasKernelRpc::<C, Block>::new(client.clone());
-    module.merge(AtlasKernelApiServer::into_rpc(atlas_kernel))?;
+    // Add X3 Kernel custom RPC
+    let x3_kernel = AtlasKernelRpc::<C, Block>::new(client.clone());
+    module.merge(AtlasKernelApiServer::into_rpc(x3_kernel))?;
 
     // Add X3 Domains custom RPC
     let x3_domains = X3DomainsRpc::<C, Block>::new(client.clone());
@@ -1279,10 +816,6 @@ where
     // Add minimal Ethereum-compatible RPC (chainId, gasPrice, blockNumber)
     let eth_compat = EthCompatRpc::<C, Block>::new(client.clone());
     module.merge(EthCompatApiServer::into_rpc(eth_compat))?;
-
-    // Add Health check RPC for monitoring and load balancers
-    let health = HealthRpc::<C, Block>::new(client.clone(), chain_name);
-    module.merge(HealthApiServer::into_rpc(health))?;
 
     // Add Atomic Trade Engine RPC for AI agents
     let atomic_trade = AtomicTradeEngineRpc::<C, Block>::new(client.clone());
@@ -1296,19 +829,14 @@ where
     let x3_verifier = X3VerifierRpc::<C, Block>::new(client.clone());
     module.merge(X3VerifierApiServer::into_rpc(x3_verifier))?;
 
-    // Add WebSocket subscription handlers for new/finalized blocks
-    let chain_sub = ChainSubscriptionRpc::<C, Block>::new(client);
-    module.merge(ChainSubscriptionApiServer::into_rpc(chain_sub))?;
-
     // If the `frontier` feature is enabled, try to add Frontier JSON-RPC modules
     // (full `eth_*`, `net_*`, `web3_*` endpoints). This is compiled conditionally
     // so that builds without Frontier dependencies continue to work.
     #[cfg(feature = "frontier")]
     {
-        // TODO: Implement frontier RPC module when needed
-        // if let Ok(fmod) = crate::rpc_frontier::create_frontier_stub(client.clone(), _pool) {
-        //     module.merge(fmod)?;
-        // }
+        if let Ok(fmod) = crate::rpc_frontier::create_frontier_stub(client.clone()) {
+            module.merge(fmod)?;
+        }
     }
 
     Ok(module)

@@ -393,7 +393,7 @@ openspec-validation ──┐
 The infrastructure is fully integrated:
 
 ```
-atlas-sphere-master/
+x3-chain-master/
 ├── openspec/changes/add-offchain-jury/
 │   ├── ✅ docker-compose.yml
 │   ├── ✅ Dockerfile

@@ -101,7 +101,7 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Run atlas-evm-integration tests with tracing (capture diagnostics)
+      - name: Run x3-evm-integration tests with tracing (capture diagnostics)
         env:
           CARGO_TERM_VERBOSE: 1
           CARGO_NET_OFFLINE: 1
@@ -115,7 +115,7 @@ jobs:
           echo "Starting diagnostic run: strace + cargo test"
 
           STRACE_PREFIX=strace.out
-          strace -ff -o ${STRACE_PREFIX} -s 200 -tt -f bash -lc 'cargo test -p atlas-evm-integration --features frontier-executor -- --nocapture' || TEST_EXIT=$?
+          strace -ff -o ${STRACE_PREFIX} -s 200 -tt -f bash -lc 'cargo test -p x3-evm-integration --features frontier-executor -- --nocapture' || TEST_EXIT=$?
           TEST_EXIT=${TEST_EXIT:-0}
 
           if ls ${STRACE_PREFIX}* 1>/dev/null 2>&1; then

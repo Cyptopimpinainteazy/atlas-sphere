@@ -1,12 +1,12 @@
 #!/bin/bash
-# Quick start script for Atlas Sphere - "The Beast"
+# Quick start script for X3 Chain - "The Beast"
 
 set -e
 
-PROJECT_ROOT="/home/lojak/Desktop/atlas-sphere-master"
+PROJECT_ROOT="/home/lojak/Desktop/x3-chain-master"
 
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║  🦾 Atlas Sphere - Starting 'The Beast'                    ║"
+echo "║  🦾 X3 Chain - Starting 'The Beast'                    ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -47,7 +47,7 @@ echo "   Logs: tail -f /tmp/ccgv-validator.log"
 echo ""
 
 # Save PIDs for later cleanup
-cat > /tmp/atlas-sphere-pids.txt << EOF
+cat > /tmp/x3-chain-pids.txt << EOF
 X3_INTELLIGENCE_PID=$X3_PID
 CCGV_VALIDATOR_PID=$CCGV_PID
 EOF
@@ -62,9 +62,9 @@ echo "  ⚙️  GPU Validator:       http://localhost:8000/metrics.json"
 echo ""
 echo "Login:"
 echo "  Username: admin"
-echo "  Password: atlas-sphere-2026"
+echo "  Password: x3-chain-2026"
 echo ""
-echo "PIDs saved to: /tmp/atlas-sphere-pids.txt"
+echo "PIDs saved to: /tmp/x3-chain-pids.txt"
 echo ""
 echo "To stop all services:"
 echo "  bash $PROJECT_ROOT/scripts/stop-beast.sh"

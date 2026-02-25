@@ -1,11 +1,11 @@
 [package]
-name = "atlas-external-chains"
+name = "x3-external-chains"
 version = "0.1.0"
 edition = "2021"
-authors = ["Atlas Sphere Team"]
-description = "External EVM chain adapters for Atlas Sphere cross-chain operations"
+authors = ["X3 Chain Team"]
+description = "External EVM chain adapters for X3 Chain cross-chain operations"
 license = "MIT"
-repository = "https://github.com/Cyptopimpinainteazy/atlas-sphere"
+repository = "https://github.com/Cyptopimpinainteazy/x3-chain"
 
 [dependencies]
 # Core Substrate dependencies (using workspace versions)
@@ -17,8 +17,8 @@ sp-runtime = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 
 # Internal crates
-atlas-evm-integration = { path = "../evm-integration", default-features = false }
-atlas-cross-vm-bridge = { path = "../cross-vm-bridge", default-features = false }
+x3-evm-integration = { path = "../evm-integration", default-features = false }
+x3-cross-vm-bridge = { path = "../cross-vm-bridge", default-features = false }
 
 # Async runtime
 async-trait = "0.1"
@@ -42,8 +42,8 @@ std = [
     "sp-std/std",
     "sp-runtime/std",
     "sp-io/std",
-    "atlas-evm-integration/std",
-    "atlas-cross-vm-bridge/std",
+    "x3-evm-integration/std",
+    "x3-cross-vm-bridge/std",
     "serde/std",
     "log/std",
 ]

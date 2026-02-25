@@ -1,8 +1,8 @@
-# Atlas Sphere — GPU Kernel Developer Guide
+# X3 Chain — GPU Kernel Developer Guide
 
 ## Overview
 
-This document covers the architecture, optimization techniques, and development workflow for the CUDA GPU kernels used in the Atlas Sphere multi-chain validator.
+This document covers the architecture, optimization techniques, and development workflow for the CUDA GPU kernels used in the X3 Chain multi-chain validator.
 
 ## Kernel Inventory
 

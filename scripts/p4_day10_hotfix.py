@@ -301,7 +301,7 @@ def main():
         print("=" * 80)
         
         # Save results
-        output_dir = Path("/home/lojak/Desktop/atlas-sphere-master/testnet-config")
+        output_dir = Path("/home/lojak/Desktop/x3-chain-master/testnet-config")
         output_dir.mkdir(exist_ok=True)
         
         results_file = output_dir / "day10-hotfix-results.json"

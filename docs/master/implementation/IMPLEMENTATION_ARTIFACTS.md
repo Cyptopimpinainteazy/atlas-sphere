@@ -428,7 +428,7 @@ Run these commands to verify all implementations:
 
 ```bash
 # 1. Verify Rust compilation
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 cargo build --release --workspace 2>&1 | grep -i error
 
 # 2. Run all tests

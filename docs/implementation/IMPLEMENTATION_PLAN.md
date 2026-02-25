@@ -1,4 +1,4 @@
-# Atlas Sphere - Completion Implementation Plan
+# X3 Chain - Completion Implementation Plan
 
 ## Status: December 2024 - Final Push to Production
 
@@ -13,7 +13,7 @@ Complete the remaining components to transition from Developer Preview to Produc
 ## Phase 1: Dual VM Integration (PRIORITY: CRITICAL)
 
 ### 1.1 Wire EVM Adapter to Canonical Ledger ✅ IN PROGRESS
-**Files**: `crates/evm-integration/src/lib.rs`, `pallets/atlas-kernel/src/lib.rs`
+**Files**: `crates/evm-integration/src/lib.rs`, `pallets/x3-kernel/src/lib.rs`
 
 **Tasks**:
 - [x] EVM executor trait defined
@@ -25,7 +25,7 @@ Complete the remaining components to transition from Developer Preview to Produc
 
 **Integration Point**:
 ```rust
-// In pallets/atlas-kernel/src/lib.rs
+// In pallets/x3-kernel/src/lib.rs
 impl<T: Config> DualVmDispatcher for Pallet<T> {
     fn execute_evm_tx(&self, tx: Vec<u8>) -> Result<ExecutionReceipt, DispatchError> {
         // 1. Call EVM executor
@@ -37,7 +37,7 @@ impl<T: Config> DualVmDispatcher for Pallet<T> {
 ```
 
 ### 1.2 Wire SVM Adapter to Canonical Ledger ✅ IN PROGRESS
-**Files**: `crates/svm-integration/src/lib.rs`, `pallets/atlas-kernel/src/lib.rs`
+**Files**: `crates/svm-integration/src/lib.rs`, `pallets/x3-kernel/src/lib.rs`
 
 **Tasks**:
 - [x] SVM executor trait defined
@@ -65,7 +65,7 @@ impl<T: Config> DualVmDispatcher for Pallet<T> {
 **Files**: `node/src/rpc.rs`
 
 **Current Status**:
-- [x] Atlas Kernel RPC methods exposed (5 methods)
+- [x] X3 Kernel RPC methods exposed (5 methods)
 - [x] HTTP JSON-RPC server on 127.0.0.1:9944
 - [ ] Add WebSocket support
 - [ ] Add Frontier EVM RPC methods (future)
@@ -106,16 +106,16 @@ impl<T: Config> DualVmDispatcher for Pallet<T> {
 
 **Tasks**:
 - [x] Basic chain spec commands
-- [ ] Add `atlas-sphere-node comit` subcommand
-- [ ] Add `atlas-sphere-node keys` subcommand enhancements
-- [ ] Add `atlas-sphere-node inspect` for canonical ledger queries
+- [ ] Add `x3-chain-node comit` subcommand
+- [ ] Add `x3-chain-node keys` subcommand enhancements
+- [ ] Add `x3-chain-node inspect` for canonical ledger queries
 
 **New Commands to Implement**:
 ```bash
-atlas-sphere-node comit create --evm-payload <hex> --svm-payload <hex> --fee <amount>
-atlas-sphere-node comit submit --comit-file <path> --suri <key>
-atlas-sphere-node ledger query --account <addr> --asset <id>
-atlas-sphere-node keys derive --path <derivation>
+x3-chain-node comit create --evm-payload <hex> --svm-payload <hex> --fee <amount>
+x3-chain-node comit submit --comit-file <path> --suri <key>
+x3-chain-node ledger query --account <addr> --asset <id>
+x3-chain-node keys derive --path <derivation>
 ```
 
 ### 3.2 TypeScript SDK 🔄 IN PROGRESS
@@ -132,7 +132,7 @@ atlas-sphere-node keys derive --path <derivation>
 - [ ] Build and publish to npm
 
 ### 3.3 Python SDK 🔄 IN PROGRESS
-**Files**: `packages/py-sdk/src/atlas_sphere_sdk/`
+**Files**: `packages/py-sdk/src/x3_chain_sdk/`
 
 **Tasks**:
 - [ ] Create `client.py` - Main AtlasSphereClient class

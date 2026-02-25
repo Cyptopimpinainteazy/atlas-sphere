@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title AtlasTreasury
- * @notice Unified treasury and fee management for Atlas Sphere ecosystem
+ * @notice Unified treasury and fee management for X3 Chain ecosystem
  * @dev Captures, splits, and distributes fees from all protocol modules
  *
  * Fee Sources:
@@ -148,7 +148,7 @@ contract AtlasTreasury is
     // Price oracle
     address public priceOracle;
 
-    // Native token (ATLAS)
+    // Native token (X3)
     address public atlasToken;
 
     // Buyback contract
@@ -672,7 +672,7 @@ contract AtlasTreasury is
 
     function _executeBuyback(address token, uint256 amount) internal {
         if (buybackContract == address(0) || token == atlasToken) {
-            // Can't buyback with ATLAS or no buyback contract
+            // Can't buyback with X3 or no buyback contract
             // Send to DAO treasury instead
             address daoWallet = _findRecipientWallet(RecipientType.DAO_TREASURY);
             if (daoWallet != address(0)) {

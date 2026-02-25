@@ -2,7 +2,7 @@
 """rpc_crawler_daemon.py — Persistent RPC discovery daemon.
 
 Continuously discovers, validates, and seeds public RPC endpoints into
-the Atlas Sphere chain database. Survives restarts by saving crawl state
+the X3 Chain chain database. Survives restarts by saving crawl state
 to a JSON checkpoint file.
 
 Sources:

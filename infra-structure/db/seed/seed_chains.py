@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere — Chain Database Seed Generator
+X3 Chain — Chain Database Seed Generator
 Generates 60,000+ blockchain entries for the infrastructure database.
 
 Sources chains from:
@@ -105,7 +105,7 @@ def generate_evm_chains(start_id: int, count: int) -> list[dict]:
         "Zen", "Axon", "Pixel", "Byte", "Hash", "Block", "Chain",
         "DeFi", "Game", "Art", "Pay", "Trade", "Fund", "Pool",
         "Sky", "Cloud", "Storm", "Wave", "Fire", "Ice", "Wind",
-        "Atlas", "Titan", "Zeus", "Mars", "Venus", "Saturn", "Orion",
+        "X3", "Titan", "Zeus", "Mars", "Venus", "Saturn", "Orion",
     ]
     suffixes = [
         "Chain", "Network", "L2", "Rollup", "Shard", "Stack",
@@ -139,7 +139,7 @@ def generate_evm_chains(start_id: int, count: int) -> list[dict]:
             "is_testnet": is_testnet,
             "supports_gpu": True,
             "status": random.choice(["active", "active", "active", "active", "inactive", "unknown"]),
-            "rpc_url": f"https://rpc-{numeric_id}.atlas-sphere.io",
+            "rpc_url": f"https://rpc-{numeric_id}.x3-chain.io",
         })
     return chains
 
@@ -149,7 +149,7 @@ def generate_cosmos_chains(start_id: int, count: int) -> list[dict]:
     chains = []
     names = [
         "Celestial", "Orbital", "Nebula", "Quasar", "Pulsar", "Photon",
-        "Neutron", "Proton", "Helios", "Selene", "Atlas", "Pandora",
+        "Neutron", "Proton", "Helios", "Selene", "X3", "Pandora",
         "Titan", "Europa", "Ganymede", "Callisto", "Io", "Enceladus",
         "Terra", "Luna", "Sol", "Vega", "Sirius", "Polaris",
         "Andromeda", "Perseus", "Orion", "Cassiopeia", "Aquila", "Cygnus",
@@ -387,7 +387,7 @@ def insert_chains(conn: sqlite3.Connection, chains: list[dict]) -> int:
 def seed_database(db_path: str, target_count: int = 60000):
     """Generate and seed the chain database."""
     print(f"\n{'='*60}")
-    print(f"  Atlas Sphere — Chain Database Seeder")
+    print(f"  X3 Chain — Chain Database Seeder")
     print(f"  Target: {target_count:,}+ chains")
     print(f"  DB: {db_path}")
     print(f"{'='*60}\n")
@@ -484,7 +484,7 @@ def seed_database(db_path: str, target_count: int = 60000):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Seed the Atlas Sphere chain database")
+    parser = argparse.ArgumentParser(description="Seed the X3 Chain chain database")
     parser.add_argument("--db", default=str(DEFAULT_DB), help="Path to SQLite database file")
     parser.add_argument("--count", type=int, default=60000, help="Target number of chains")
     args = parser.parse_args()

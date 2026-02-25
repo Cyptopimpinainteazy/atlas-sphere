@@ -1,4 +1,4 @@
-# 🎉 Atlas Sphere Complete Implementation Summary
+# 🎉 X3 Chain Complete Implementation Summary
 
 ## Overview
 
@@ -26,7 +26,7 @@ You now have a **fully functional, production-ready system** with:
 
 **Run tests locally:**
 ```bash
-bash /home/lojak/Desktop/atlas-sphere-master/scripts/run-local-tests.sh
+bash /home/lojak/Desktop/x3-chain-master/scripts/run-local-tests.sh
 ```
 
 ---
@@ -54,7 +54,7 @@ bash /home/lojak/Desktop/atlas-sphere-master/scripts/run-local-tests.sh
 **Default credentials:**
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 ---
@@ -72,17 +72,17 @@ Password: atlas-sphere-2026
 2. **ccgv-validator.service** (Port 8000)
    - Cross-chain GPU validator
    - Type: simple
-   - User: atlas
+   - User: x3
    - Depends on: redis.service
 
 3. **x3-intelligence.service** (Port 5173)
    - Dashboard with authentication
    - Type: simple
-   - User: atlas
+   - User: x3
    - Depends on: redis.service
 
 **Installation Script:** `deployment/scripts/install-services.sh`
-- Creates "atlas" system user
+- Creates "x3" system user
 - Copies service files to /etc/systemd/system/
 - Enables auto-start
 - Starts services immediately
@@ -100,7 +100,7 @@ Password: atlas-sphere-2026
 **Included Variables:**
 ```
 # Application
-APP_NAME=Atlas Sphere
+APP_NAME=X3 Chain
 ENVIRONMENT=production
 NODE_ENV=production
 
@@ -109,7 +109,7 @@ AUTH_SALT=your-secret-salt
 JWT_SECRET=your-jwt-secret
 JWT_EXPIRY=86400
 DEFAULT_USER=admin
-DEFAULT_PASSWORD=atlas-sphere-2026
+DEFAULT_PASSWORD=x3-chain-2026
 
 # Database & Cache
 REDIS_HOST=localhost
@@ -147,7 +147,7 @@ ENABLE_SWAP_REGISTRY=true
 ## File Structure Created
 
 ```
-atlas-sphere-master/
+x3-chain-master/
 ├── QUICK_START.md                          # ← START HERE (1 page)
 ├── AUTHENTICATION_SETUP.md                 # ← Full guide (10 pages)
 ├── DEPLOYMENT_CHECKLIST.md                 # ← Pre-prod checklist
@@ -191,11 +191,11 @@ atlas-sphere-master/
 
 ### Step 1: Install Services (one-time)
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 ```
 
 **What happens:**
-- Creates "atlas" system user
+- Creates "x3" system user
 - Copies 3 service files to `/etc/systemd/system/`
 - Enables auto-start for all services
 - Starts services immediately
@@ -203,16 +203,16 @@ sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-ser
 
 ### Step 2: Configure Environment
 ```bash
-cp /home/lojak/Desktop/atlas-sphere-master/deployment/env/.env.template \
-   /home/lojak/Desktop/atlas-sphere-master/.env
+cp /home/lojak/Desktop/x3-chain-master/deployment/env/.env.template \
+   /home/lojak/Desktop/x3-chain-master/.env
 
-nano /home/lojak/Desktop/atlas-sphere-master/.env  # Edit with your values
+nano /home/lojak/Desktop/x3-chain-master/.env  # Edit with your values
 ```
 
 **Critical to set:**
 - AUTH_SALT (password hashing salt)
 - JWT_SECRET (token signing)
-- Default credentials (or use provided admin/atlas-sphere-2026)
+- Default credentials (or use provided admin/x3-chain-2026)
 
 ### Step 3: Reboot (services auto-start)
 ```bash
@@ -285,7 +285,7 @@ curl -L http://localhost:5173/login
 
 # Or use default credentials in browser
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 ### 3. Test Dashboard
@@ -302,7 +302,7 @@ Password: atlas-sphere-2026
 # Get login token
 TOKEN=$(curl -X POST http://localhost:5173/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"atlas-sphere-2026"}' \
+  -d '{"username":"admin","password":"x3-chain-2026"}' \
   | jq -r '.token')
 
 # Use token for authenticated calls
@@ -348,7 +348,7 @@ sudo systemctl enable x3-intelligence.service
 ### Fallback Manual Startup
 ```bash
 # If systemd services fail
-bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/startup.sh
+bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/startup.sh
 
 # Services will start in nohup, output to /tmp/
 ```
@@ -396,7 +396,7 @@ sudo systemctl restart ccgv-validator.service
 ### "Invalid credentials"
 ```bash
 # Check default credentials in .env
-grep DEFAULT_ /home/lojak/Desktop/atlas-sphere-master/.env
+grep DEFAULT_ /home/lojak/Desktop/x3-chain-master/.env
 
 # Or check auth.ts for hardcoded defaults
 grep -A 5 "DEFAULT_USER" apps/x3-intelligence/src/auth.ts
@@ -514,14 +514,14 @@ sudo journalctl -u x3-intelligence.service -f
 
 🚀 **Install services:**
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 ```
 
 ---
 
 ## Summary
 
-You now have a **complete, production-ready Atlas Sphere system** with:
+You now have a **complete, production-ready X3 Chain system** with:
 
 ✅ **Security:** JWT auth, password hashing, protected routes
 ✅ **Features:** Login/logout, session management, user menu
@@ -533,7 +533,7 @@ You now have a **complete, production-ready Atlas Sphere system** with:
 **Everything is ready to deploy. Just run the install script and reboot!**
 
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 sudo reboot
 ```
 

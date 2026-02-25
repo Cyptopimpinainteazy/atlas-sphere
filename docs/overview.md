@@ -1,6 +1,6 @@
-# Atlas Sphere Overview
+# X3 Chain Overview
 
-Atlas Sphere is the world's first blockchain to natively support dual virtual machine execution - both Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) - in a single atomic transaction.
+X3 Chain is the world's first blockchain to natively support dual virtual machine execution - both Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) - in a single atomic transaction.
 
 ## What is Dual-VM?
 
@@ -115,7 +115,7 @@ Build with your preferred tools:
 ## Technical Architecture
 
 ### Atomic Execution Model
-Atlas Sphere ensures that transactions are atomic across both VMs:
+X3 Chain ensures that transactions are atomic across both VMs:
 
 ```
 Transaction Flow:
@@ -146,15 +146,15 @@ Transaction Flow:
 
 ## Getting Started
 
-Ready to build on Atlas Sphere? Here are your next steps:
+Ready to build on X3 Chain? Here are your next steps:
 
 1. **[Run a Local Node](/docs/getting-started.md)** - Set up development environment
 2. **[Choose Your VM](/docs/getting-started.md#choose-your-vm)** - EVM, SVM, or cross-VM
 3. **[Deploy Your First Contract](/docs/tutorials/evm-hello.md)** - Start with Solidity or Anchor
 4. **[Build Cross-VM Features](/docs/tutorials/cross-vm-atomic.md)** - Leverage both VMs
 
-**Why this matters**: Atlas Sphere's dual-VM architecture gives you the flexibility to build applications that were impossible before - atomic cross-chain DeFi, unified gaming economies, and truly interoperable protocols.
+**Why this matters**: X3 Chain's dual-VM architecture gives you the flexibility to build applications that were impossible before - atomic cross-chain DeFi, unified gaming economies, and truly interoperable protocols.
 
 ---
 
-*This overview covers the fundamentals of Atlas Sphere's dual-VM architecture. For detailed implementation guides, see our [Getting Started](/docs/getting-started.md) documentation.*
+*This overview covers the fundamentals of X3 Chain's dual-VM architecture. For detailed implementation guides, see our [Getting Started](/docs/getting-started.md) documentation.*

@@ -56,21 +56,21 @@ echo "=================================================="
 
 # GPU 0: Primary Lane (Port 9001)
 echo "🟢 Starting PRIMARY Lane (GPU 0, Port 9001)..."
-python3 tests/infenstructior/gpu_lane_service.py primary 0 9001 > logs/gpu_lane_primary.log 2>&1 &
+python3 tests/inferstructor/gpu_lane_service.py primary 0 9001 > logs/gpu_lane_primary.log 2>&1 &
 PRIMARY_PID=$!
 echo "   PID: $PRIMARY_PID"
 sleep 2
 
 # GPU 1: Shadow Lane (Port 9002)
 echo "🟡 Starting SHADOW Lane (GPU 1, Port 9002)..."
-python3 tests/infenstructior/gpu_lane_service.py shadow 1 9002 > logs/gpu_lane_shadow.log 2>&1 &
+python3 tests/inferstructor/gpu_lane_service.py shadow 1 9002 > logs/gpu_lane_shadow.log 2>&1 &
 SHADOW_PID=$!
 echo "   PID: $SHADOW_PID"
 sleep 2
 
 # GPU 2: Tertiary Lane (Port 9003)
 echo "🔵 Starting TERTIARY Lane (GPU 2, Port 9003)..."
-python3 tests/infenstructior/gpu_lane_service.py tertiary 2 9003 > logs/gpu_lane_tertiary.log 2>&1 &
+python3 tests/inferstructor/gpu_lane_service.py tertiary 2 9003 > logs/gpu_lane_tertiary.log 2>&1 &
 TERTIARY_PID=$!
 echo "   PID: $TERTIARY_PID"
 sleep 2

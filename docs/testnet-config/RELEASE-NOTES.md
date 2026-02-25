@@ -91,9 +91,9 @@ cd solana-gpu-validator-v1.0
 
 ## Support
 
-- GitHub Issues: https://github.com/atlas-sphere/p4-gpu-accelerators
+- GitHub Issues: https://github.com/x3-chain/p4-gpu-accelerators
 - Discord: #p4-gpu-accelerators channel
-- Email: validators@atlas-sphere.io
+- Email: validators@x3-chain.io
 
 ## Version History
 
@@ -105,7 +105,7 @@ cd solana-gpu-validator-v1.0
 
 ## Credits
 
-Built by the Atlas Sphere GPU Acceleration Team
+Built by the X3 Chain GPU Acceleration Team
 - Architecture: GPU Kernel Team
 - Testing: Validation & QA
 - Deployment: Operations Team

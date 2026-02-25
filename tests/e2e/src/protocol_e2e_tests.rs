@@ -1,6 +1,6 @@
 //! Protocol-Specific E2E Tests
 //! 
-//! Comprehensive end-to-end tests for all X3-Atlas-Sphere protocols
+//! Comprehensive end-to-end tests for all X3-X3-Sphere protocols
 
 use super::*;
 use tokio::time::{sleep, Duration};

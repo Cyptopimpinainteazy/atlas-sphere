@@ -8,9 +8,9 @@ from unittest.mock import Mock, MagicMock
 def mock_substrate():
     """Create a mock SubstrateInterface."""
     substrate = MagicMock()
-    substrate.chain = "Atlas Sphere Testnet"
+    substrate.chain = "X3 Chain Testnet"
     substrate.ss58_format = 42
-    substrate.token_symbol = "ATLAS"
+    substrate.token_symbol = "X3"
     substrate.token_decimals = 18
     substrate.get_block_hash.return_value = "0x" + "ab" * 32
     substrate.get_block_header.return_value = {
@@ -39,16 +39,16 @@ def mock_keypair():
 @pytest.fixture
 def mock_client(mock_substrate):
     """Create a mock AtlasClient."""
-    from atlas_sphere_sdk import AtlasClient
-    from atlas_sphere_sdk.types import ChainInfo, AccountInfo, BlockHeader
+    from x3_chain_sdk import AtlasClient
+    from x3_chain_sdk.types import ChainInfo, AccountInfo, BlockHeader
     
     client = Mock(spec=AtlasClient)
     client._substrate = mock_substrate
     
     client.get_chain_info.return_value = ChainInfo(
-        chain_name="Atlas Sphere Testnet",
+        chain_name="X3 Chain Testnet",
         chain_id=42,
-        token_symbol="ATLAS",
+        token_symbol="X3",
         token_decimals=18,
         ss58_format=42,
         genesis_hash="0x" + "00" * 32,

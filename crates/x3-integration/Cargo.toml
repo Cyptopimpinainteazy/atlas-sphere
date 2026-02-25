@@ -1,8 +1,8 @@
 [package]
-name = "atlas-x3-integration"
+name = "x3-x3-integration"
 version = "0.1.0"
 edition = "2021"
-description = "Atlas Sphere integration for X3 virtual machine and compiler"
+description = "X3 Chain integration for X3 virtual machine and compiler"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
@@ -14,8 +14,8 @@ x3-common = { path = "../x3-common" }
 x3-verifier = { path = "../x3-verifier" }
 
 # Cross-VM executor traits (real backends are provided by the caller)
-atlas-evm-integration = { path = "../evm-integration", default-features = false }
-atlas-svm-integration = { path = "../svm-integration", default-features = false }
+x3-evm-integration = { path = "../evm-integration", default-features = false }
+x3-svm-integration = { path = "../svm-integration", default-features = false }
 
 # Substrate primitives
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -53,8 +53,8 @@ std = [
     "serde",
     "thiserror",
     "log/std",
-    "atlas-evm-integration/std",
-    "atlas-svm-integration/std",
+    "x3-evm-integration/std",
+    "x3-svm-integration/std",
 ]
 # Enable contract compilation from source
 compile = []

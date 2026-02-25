@@ -16,9 +16,9 @@ while true; do
     echo ""
     
     # Check PRD progress
-    if [ -f "/home/lojak/Desktop/atlas-sphere-master/PRD.md" ]; then
-        completed=$(grep -c "^\- \[x\]" "/home/lojak/Desktop/atlas-sphere-master/PRD.md" 2>/dev/null || echo "0")
-        total=$(grep -c "^\- \[ \]" "/home/lojak/Desktop/atlas-sphere-master/PRD.md" 2>/dev/null || echo "0")
+    if [ -f "/home/lojak/Desktop/x3-chain-master/PRD.md" ]; then
+        completed=$(grep -c "^\- \[x\]" "/home/lojak/Desktop/x3-chain-master/PRD.md" 2>/dev/null || echo "0")
+        total=$(grep -c "^\- \[ \]" "/home/lojak/Desktop/x3-chain-master/PRD.md" 2>/dev/null || echo "0")
         total=$((completed + total))
         
         if [ "$total" -gt 0 ]; then
@@ -40,8 +40,8 @@ while true; do
     
     # Show recent Ralph activity
     echo "📝 RECENT ACTIVITY:"
-    if [ -f "/home/lojak/Desktop/atlas-sphere-master/ralph-logs/autonomous-ralph.log" ]; then
-        tail -8 "/home/lojak/Desktop/atlas-sphere-master/ralph-logs/autonomous-ralph.log" | sed 's/^/  /'
+    if [ -f "/home/lojak/Desktop/x3-chain-master/ralph-logs/autonomous-ralph.log" ]; then
+        tail -8 "/home/lojak/Desktop/x3-chain-master/ralph-logs/autonomous-ralph.log" | sed 's/^/  /'
     else
         echo "  (no log yet)"
     fi

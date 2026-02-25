@@ -8,14 +8,14 @@ export default function Home() {
       {/* Navigation Header */}
       <nav className="border-b border-slate-700 bg-slate-800/50 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-white">Atlas Sphere Wallet</h1>
+          <h1 className="text-2xl font-bold text-white">X3 Chain Wallet</h1>
         </div>
       </nav>
 
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-20">
-          <h2 className="text-5xl font-bold text-white mb-4">Welcome to Atlas Sphere</h2>
+          <h2 className="text-5xl font-bold text-white mb-4">Welcome to X3 Chain</h2>
           <p className="text-xl text-slate-300 mb-8">
             Trading & DeFi Platform Unite
           </p>

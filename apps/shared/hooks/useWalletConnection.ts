@@ -237,7 +237,7 @@ export function getChainName(chainId: number | null): string {
     42161: 'Arbitrum One',
     10: 'Optimism',
     8453: 'Base',
-    // X3 Atlas Sphere chain IDs
+    // X3 X3 Chain chain IDs
     1337: 'X3 Local Dev',
     3333: 'X3 Testnet',
     3000: 'X3 Mainnet',

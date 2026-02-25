@@ -98,7 +98,7 @@ Thumbs.db
 data/
 *.pid
 *.pids
-.atlas-pids
+.x3-pids
 .gpu_*.pid
 .lane_orch.pid
 logs/
@@ -109,6 +109,15 @@ docs/logs/
 .ollama/
 *.enc
 *.gpg
-atlas-testnet-keys*.tar.gz*
+x3-testnet-keys*.tar.gz*
 patches/environmental/
 .aider*
+# CodeBuddy
+.codebuddy/*
+!.codebuddy/skills/
+!.codebuddy/rules/
+!.codebuddy/prompts/
+!.codebuddy/config.json
+
+*storybook.log
+storybook-static

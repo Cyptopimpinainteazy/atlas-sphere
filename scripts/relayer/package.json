@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/proof-relayer",
+  "name": "@x3-chain/proof-relayer",
   "version": "1.0.0",
   "description": "Off-chain proof relayer for atomic swaps across Bitcoin, Ethereum, Solana, and X3VM",
   "main": "dist/index.js",
@@ -55,6 +55,6 @@
     "x3vm",
     "cross-chain"
   ],
-  "author": "Atlas Sphere Contributors",
+  "author": "X3 Chain Contributors",
   "license": "Apache-2.0"
 }

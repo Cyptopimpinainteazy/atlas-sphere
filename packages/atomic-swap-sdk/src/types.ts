@@ -1,5 +1,5 @@
 /**
- * @atlas-sphere/atomic-swap-sdk — Core Types
+ * @x3-chain/atomic-swap-sdk — Core Types
  *
  * Mirrors the Rust pallet types for cross-language compatibility.
  * Covers HTLCs, orders, swaps, trade routes, and chain identifiers.
@@ -22,7 +22,7 @@ export type ChainId =
   | "solana-devnet"
   | "bitcoin"
   | "bitcoin-testnet"
-  | "atlas-substrate"
+  | "x3-substrate"
   | string;
 
 export type AmmProtocol =
@@ -30,7 +30,7 @@ export type AmmProtocol =
   | "uniswap-v3"
   | "raydium"
   | "orca-whirlpool"
-  | "atlas-amm"
+  | "x3-amm"
   | "constant-product"
   | "stable-swap";
 
@@ -341,7 +341,7 @@ export interface SwapInitParams {
 // ─── DEX Configuration ──────────────────────────────────────────
 
 export interface DexConfig {
-  /** Substrate RPC endpoint for atlas-kernel */
+  /** Substrate RPC endpoint for x3-kernel */
   substrateRpc: string;
   /** Substrate WebSocket endpoint */
   substrateWs: string;

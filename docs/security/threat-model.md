@@ -1,4 +1,4 @@
-# Atlas Sphere TypeScript SDK - Threat Model
+# X3 Chain TypeScript SDK - Threat Model
 
 **Version**: 1.0  
 **Date**: December 4, 2025  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive threat analysis of the Atlas Sphere TypeScript SDK using the STRIDE methodology. The SDK facilitates interaction with the Atlas Sphere blockchain, handling cryptographic operations, transaction signing, and dual-VM (EVM + SVM) payload construction.
+This document provides a comprehensive threat analysis of the X3 Chain TypeScript SDK using the STRIDE methodology. The SDK facilitates interaction with the X3 Chain blockchain, handling cryptographic operations, transaction signing, and dual-VM (EVM + SVM) payload construction.
 
 **Overall Risk Rating**: MODERATE
 - Critical Issues: 0
@@ -36,8 +36,8 @@ This document provides a comprehensive threat analysis of the Atlas Sphere TypeS
 ## System Overview
 
 ### SDK Purpose
-The `@atlas-sphere/ts-sdk` provides:
-- Connection management to Atlas Sphere nodes (WebSocket/HTTP)
+The `@x3-chain/ts-sdk` provides:
+- Connection management to X3 Chain nodes (WebSocket/HTTP)
 - Atomic cross-VM transaction construction (Comits)
 - EVM and SVM payload encoding/decoding
 - Cryptographic signing and verification
@@ -71,7 +71,7 @@ The `@atlas-sphere/ts-sdk` provides:
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  @atlas-sphere/ts-sdk                            │
+│                  @x3-chain/ts-sdk                            │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
 │  │   Client     │  │ ComitBuilder │  │ QueryClient  │          │
 │  │  Connection  │  │ Transaction  │  │   Caching    │          │
@@ -84,13 +84,13 @@ The `@atlas-sphere/ts-sdk` provides:
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Atlas Sphere Node RPC                          │
+│                   X3 Chain Node RPC                          │
 │              (WebSocket/HTTP at port 9944)                       │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Atlas Kernel Pallet                          │
+│                     X3 Kernel Pallet                          │
 │                  (EVM ↔ SVM Orchestration)                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -296,7 +296,7 @@ The `@atlas-sphere/ts-sdk` provides:
 - **Attack Vector**: Logic error in SDK, malformed transaction
 - **Impact**: Unauthorized actions executed (depends on on-chain auth)
 - **Mitigations**:
-  - ✅ Authorization enforced on-chain (Atlas Kernel)
+  - ✅ Authorization enforced on-chain (X3 Kernel)
   - ⚠️ SDK validates required signatures before submission
   - ⚠️ Clear error messages for authorization failures
   - ⚠️ No client-side authorization logic (defense in depth)
@@ -683,7 +683,7 @@ The `@atlas-sphere/ts-sdk` provides:
 
 ## Conclusion
 
-The Atlas Sphere TypeScript SDK demonstrates solid foundational security with cryptographic signing and on-chain authorization. However, several areas require immediate attention:
+The X3 Chain TypeScript SDK demonstrates solid foundational security with cryptographic signing and on-chain authorization. However, several areas require immediate attention:
 
 1. **Private key handling** needs hardening to prevent memory/log exposure
 2. **Dependency security** must be actively monitored and updated

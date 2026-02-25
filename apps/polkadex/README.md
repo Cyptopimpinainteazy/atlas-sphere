@@ -1,6 +1,6 @@
-# Polkadex DEX - Atlas Sphere Integration
+# Polkadex DEX - X3 Chain Integration
 
-Decentralized exchange powered by Polkadex technology integrated with Atlas Sphere blockchain.
+Decentralized exchange powered by Polkadex technology integrated with X3 Chain blockchain.
 
 ## Features
 
@@ -19,9 +19,9 @@ npm run dev
 
 Access at: http://localhost:3007
 
-## Integration with Atlas Sphere
+## Integration with X3 Chain
 
-This DEX connects to the Atlas Sphere blockchain node at `ws://localhost:9944` and provides a decentralized trading interface.
+This DEX connects to the X3 Chain blockchain node at `ws://localhost:9944` and provides a decentralized trading interface.
 
 ## Port
 

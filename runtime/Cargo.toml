@@ -1,12 +1,12 @@
 [package]
-name = "atlas-sphere-runtime"
+name = "x3-chain-runtime"
 version = "0.1.0"
 edition = "2021"
 publish = false
-authors = ["Traycer.AI <dev@atlas-sphere.io>"]
-description = "Atlas Sphere L1 Substrate runtime with dual-VM scaffolding."
+authors = ["Traycer.AI <dev@x3-chain.io>"]
+description = "X3 Chain L1 Substrate runtime with dual-VM scaffolding."
 license = "Apache-2.0"
-# Ensures Atlas Sphere runtime Cargo manifest aligns with required Substrate runtime dependencies and feature flags.
+# Ensures X3 Chain runtime Cargo manifest aligns with required Substrate runtime dependencies and feature flags.
 # Maintains std/runtime-benchmarks enablement and WASM build configuration for dual-VM execution tooling.
 build = "build.rs"
 
@@ -14,7 +14,7 @@ build = "build.rs"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [lib]
-name = "atlas_sphere_runtime"
+name = "x3_chain_runtime"
 path = "src/lib.rs"
 crate-type = ["rlib", "cdylib"]
 
@@ -42,7 +42,7 @@ pallet-evm-precompile-modexp = { workspace = true, default-features = false }
 pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 fp-evm = { workspace = true, default-features = false }
 
-pallet-atlas-kernel = { path = "../pallets/atlas-kernel", default-features = false }
+pallet-x3-kernel = { path = "../pallets/x3-kernel", default-features = false }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
 pallet-governance = { path = "../pallets/governance", default-features = false }
 pallet-treasury = { path = "../pallets/treasury", default-features = false }
@@ -55,8 +55,8 @@ pallet-x3-settlement-engine = { path = "../pallets/x3-settlement-engine", defaul
 pallet-swarm = { path = "../pallets/swarm", default-features = false }
 pallet-depin-marketplace = { path = "../pallets/depin-marketplace", default-features = false }
 pallet-private-execution = { path = "../pallets/private-execution", default-features = false }
-atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
-atlas-svm-integration = { path = "../crates/svm-integration", default-features = false }
+x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
+x3-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
 sp-block-builder = { workspace = true, default-features = false }
@@ -77,8 +77,8 @@ frame-system-rpc-runtime-api = { workspace = true, default-features = false }
 
 log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
-# Local Atlas Sphere EVM integration utilities (Frontier temporarily removed)
-# atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
+# Local X3 Chain EVM integration utilities (Frontier temporarily removed)
+# x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -108,7 +108,7 @@ std = [
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
 	"fp-evm/std",
-	"pallet-atlas-kernel/std",
+	"pallet-x3-kernel/std",
 	"pallet-atomic-trade-engine/std",
 	"pallet-governance/std",
 	"pallet-treasury/std",
@@ -121,8 +121,8 @@ std = [
 	"pallet-swarm/std",
 	"pallet-depin-marketplace/std",
 	"pallet-private-execution/std",
-	"atlas-evm-integration/std",
-	"atlas-svm-integration/std",
+	"x3-evm-integration/std",
+	"x3-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
@@ -139,7 +139,7 @@ std = [
 	"sp-io/std",
 	"log/std",
 	"serde/std",
-	# "atlas-evm-integration/std",
+	# "x3-evm-integration/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -147,7 +147,7 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
-	"pallet-atlas-kernel/runtime-benchmarks",
+	"pallet-x3-kernel/runtime-benchmarks",
 	"pallet-atomic-trade-engine/runtime-benchmarks",
 	"pallet-evolution-core/runtime-benchmarks",
 	"pallet-x3-verifier/runtime-benchmarks",

@@ -1,7 +1,7 @@
-/// Polkawallet Plugin for Atlas Sphere x3chain
+/// Polkawallet Plugin for X3 Chain x3chain
 ///
 /// This Dart package provides the Polkawallet mobile app integration
-/// for Atlas Sphere, including:
+/// for X3 Chain, including:
 /// - x3vm smart contract interaction
 /// - Atomic cross-VM trades (EVM/SVM/X3)
 /// - Cross-chain settlement (HTLC-based)
@@ -29,14 +29,14 @@ import 'service/x3vm_service.dart';
 class PluginAtlas extends PolkawalletPlugin {
   PluginAtlas()
       : basic = PluginBasicData(
-          name: 'atlas-sphere',
+          name: 'x3-chain',
           ss58: 42,
           primaryColor: 0xFF6366F1,
           gradientColor: 0xFFA78BFA,
           backgroundImage: null,
-          icon: 'packages/polkawallet_plugin_atlas/assets/atlas_logo.svg',
+          icon: 'packages/polkawallet_plugin_atlas/assets/x3_logo.svg',
           iconDisabled:
-              'packages/polkawallet_plugin_atlas/assets/atlas_logo_gray.svg',
+              'packages/polkawallet_plugin_atlas/assets/x3_logo_gray.svg',
           jsCodeVersion: 10000,
           isTestNet: false,
           isXCMSupport: true,
@@ -59,27 +59,27 @@ class PluginAtlas extends PolkawalletPlugin {
   @override
   List<NetworkParams> get nodeList => [
         NetworkParams()
-          ..name = 'Atlas Sphere (Local)'
+          ..name = 'X3 Chain (Local)'
           ..endpoint = 'ws://127.0.0.1:9944'
           ..ss58 = 42,
         NetworkParams()
-          ..name = 'Atlas Sphere Testnet'
-          ..endpoint = 'wss://testnet.atlas-sphere.io'
+          ..name = 'X3 Chain Testnet'
+          ..endpoint = 'wss://testnet.x3-chain.io'
           ..ss58 = 42,
         NetworkParams()
-          ..name = 'Atlas Sphere Mainnet'
-          ..endpoint = 'wss://rpc.atlas-sphere.io'
+          ..name = 'X3 Chain Mainnet'
+          ..endpoint = 'wss://rpc.x3-chain.io'
           ..ss58 = 42,
       ];
 
   @override
   Map<String, Widget Function(BuildContext)> get tokenIcons => {
-        'ATLAS': (_) => const Icon(Icons.circle, color: Color(0xFF6366F1)),
+        'X3': (_) => const Icon(Icons.circle, color: Color(0xFF6366F1)),
       };
 
   @override
   List<String> get defaultTokens =>
-      ['ATLAS', 'xATLAS', 'USDC', 'USDT', 'ETH', 'SOL', 'BTC'];
+      ['X3', 'xATLAS', 'USDC', 'USDT', 'ETH', 'SOL', 'BTC'];
 
   @override
   Future<void> onWillStart(Keyring keyring) async {

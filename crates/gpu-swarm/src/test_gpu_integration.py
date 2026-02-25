@@ -53,7 +53,7 @@ def test_sha256_batch_correctness():
         b'\xff' * 32,
         b'\x01' + b'\x00' * 31,
         bytes(range(32)),
-        hashlib.sha256(b"atlas-sphere").digest(),
+        hashlib.sha256(b"x3-chain").digest(),
         hashlib.sha256(b"solana-poh-test").digest(),
     ]
 

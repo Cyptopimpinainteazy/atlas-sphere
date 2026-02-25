@@ -56,11 +56,11 @@ pub mod hostcall_ids {
 #[cfg(feature = "std")]
 #[derive(Clone)]
 pub struct CrossVmContext {
-    pub evm: Option<Arc<dyn atlas_evm_integration::EvmExecutor + Send + Sync>>,
-    pub svm: Option<Arc<dyn atlas_svm_integration::SvmExecutor + Send + Sync>>,
+    pub evm: Option<Arc<dyn x3_evm_integration::EvmExecutor + Send + Sync>>,
+    pub svm: Option<Arc<dyn x3_svm_integration::SvmExecutor + Send + Sync>>,
 
-    pub evm_config: atlas_evm_integration::EvmConfig,
-    pub svm_config: atlas_svm_integration::SvmConfig,
+    pub evm_config: x3_evm_integration::EvmConfig,
+    pub svm_config: x3_svm_integration::SvmConfig,
 
     pub evm_caller: sp_core::H160,
     pub svm_payer: [u8; 32],
@@ -72,8 +72,8 @@ impl Default for CrossVmContext {
         Self {
             evm: None,
             svm: None,
-            evm_config: atlas_evm_integration::EvmConfig::default(),
-            svm_config: atlas_svm_integration::SvmConfig::default(),
+            evm_config: x3_evm_integration::EvmConfig::default(),
+            svm_config: x3_svm_integration::SvmConfig::default(),
             evm_caller: sp_core::H160::zero(),
             svm_payer: [0u8; 32],
         }
@@ -415,8 +415,8 @@ mod cross_vm_tests {
         let mut registry = x3_vm::HostcallRegistry::new();
 
         let ctx = CrossVmContext {
-            evm: Some(Arc::new(atlas_evm_integration::MockEvmExecutor)),
-            svm: Some(Arc::new(atlas_svm_integration::MockSvmExecutor)),
+            evm: Some(Arc::new(x3_evm_integration::MockEvmExecutor)),
+            svm: Some(Arc::new(x3_svm_integration::MockSvmExecutor)),
             ..CrossVmContext::default()
         };
 

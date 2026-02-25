@@ -5,7 +5,7 @@
 //! - UniswapV3 (EVM) - Concentrated liquidity AMM
 //! - Raydium (SVM) - Solana AMM
 //! - Orca Whirlpool (SVM) - Concentrated liquidity on Solana
-//! - Atlas AMM - Native cross-VM AMM
+//! - X3 AMM - Native cross-VM AMM
 
 use crate::types::{AmmProtocol, VmType};
 use codec::{Decode, Encode};
@@ -434,10 +434,10 @@ impl AmmAdapter for OrcaWhirlpoolAdapter {
 }
 
 // ============================================================================
-// Atlas Native AMM Adapter
+// X3 Native AMM Adapter
 // ============================================================================
 
-/// Atlas Sphere native cross-VM AMM adapter
+/// X3 Chain native cross-VM AMM adapter
 pub struct AtlasAmmAdapter;
 
 impl AmmAdapter for AtlasAmmAdapter {

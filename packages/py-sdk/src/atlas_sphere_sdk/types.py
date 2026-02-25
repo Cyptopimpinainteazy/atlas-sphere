@@ -1,5 +1,5 @@
 """
-Type definitions for Atlas Sphere SDK.
+Type definitions for X3 Chain SDK.
 """
 
 from dataclasses import dataclass, field
@@ -121,7 +121,7 @@ class ChainInfo:
 
 
 class AtlasError(Exception):
-    """Base exception for Atlas Sphere SDK errors."""
+    """Base exception for X3 Chain SDK errors."""
     pass
 
 

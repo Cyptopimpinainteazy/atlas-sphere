@@ -1,22 +1,22 @@
 [package]
-name = "atlas-sphere-node"
+name = "x3-chain-node"
 version = "0.1.0"
 edition = "2021"
 publish = false
-authors = ["Atlas Sphere Core Engineering <engineering@atlas-sphere.io>"]
+authors = ["X3 Chain Core Engineering <engineering@x3-chain.io>"]
 license = "Apache-2.0"
-description = "Atlas Sphere L1 Substrate node binary with dual-VM readiness."
-repository = "https://github.com/atlas-sphere/core"
-default-run = "atlas-sphere-node"
+description = "X3 Chain L1 Substrate node binary with dual-VM readiness."
+repository = "https://github.com/x3-chain/core"
+default-run = "x3-chain-node"
 
 [[bin]]
-name = "atlas-sphere-node"
+name = "x3-chain-node"
 path = "src/main.rs"
 
 [dependencies]
-atlas-sphere-runtime = { path = "../runtime", features = ["std", "frontier"] }
-atlas-evm-integration = { path = "../crates/evm-integration", default-features = false }
-pallet-atlas-kernel = { path = "../pallets/atlas-kernel", features = ["std"] }
+x3-chain-runtime = { path = "../runtime", features = ["std", "frontier"] }
+x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
+pallet-x3-kernel = { path = "../pallets/x3-kernel", features = ["std"] }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", features = ["std"] }
 pallet-evolution-core = { path = "../pallets/evolution-core", features = ["std"] }
 pallet-x3-verifier = { path = "../pallets/x3-verifier", features = ["std"] }
@@ -39,7 +39,7 @@ serde_json = "1.0"
 ethereum = { version = "0.14", default-features = false }
 ethereum-types = { version = "0.14", default-features = false }
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
-jsonrpsee = { version = "0.20", features = ["macros", "server", "client"] }
+jsonrpsee = { version = "0.16.3", features = ["macros", "server", "client"] }
 tokio = { version = "1.37", default-features = false }
 tokio-stream = "0.1"
 
@@ -90,14 +90,14 @@ cli = []
 # Enabling `frontier` will opt-in to Frontier crates and runtime adapters.
 frontier = []
 
-native = ["atlas-sphere-runtime/native"]
+native = ["x3-chain-runtime/native"]
 
 runtime-benchmarks = [
-    "atlas-sphere-runtime/runtime-benchmarks",
+    "x3-chain-runtime/runtime-benchmarks",
 ]
 
 try-runtime = [
-    "atlas-sphere-runtime/try-runtime",
+    "x3-chain-runtime/try-runtime",
 ]
 
 # Optional Frontier (EVM) JSON-RPC wiring

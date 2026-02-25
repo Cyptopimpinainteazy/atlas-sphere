@@ -1,7 +1,7 @@
-# End-to-End Integration Test Plan for X3-Atlas-Sphere
+# End-to-End Integration Test Plan for X3-X3-Sphere
 
 ## Project Overview
-This document outlines the comprehensive end-to-end integration testing strategy for the entire X3-atlas-sphere ecosystem.
+This document outlines the comprehensive end-to-end integration testing strategy for the entire X3-x3-chain ecosystem.
 
 ## Architecture Analysis Required
 - [ ] 1.1 Analyze main components and their interactions

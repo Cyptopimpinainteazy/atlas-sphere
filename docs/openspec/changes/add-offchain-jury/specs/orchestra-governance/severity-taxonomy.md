@@ -16,7 +16,7 @@ Tasks are classified as **MAJOR** if they involve any of:
 - Changes to jury composition rules or rotation logic
 
 #### Financial/Treasury Domain
-- Any transaction > threshold T (configurable, default: 100k ATLAS)
+- Any transaction > threshold T (configurable, default: 100k X3)
 - Agent rewards/slashing/staking modifications
 - Treasury rebalancing or allocation changes
 - Economic parameter adjustments (inflation, discount rates, etc.)
@@ -80,7 +80,7 @@ Task Submission
 
 ### Classified as MAJOR
 - "Update inflation rate from 2% to 2.5%"
-- "Approve 50k ATLAS transfer to new validator"
+- "Approve 50k X3 transfer to new validator"
 - "Rotate jury for epoch 5"
 - "Update agent Role 7 permissions to include token approval"
 - "Migrate user schema to v2 (incompatible with v1)"
@@ -97,7 +97,7 @@ Task Submission
 | Subsystem | MAJOR Threshold | Notes |
 |-----------|-----------------|-------|
 | Governance | Any rule change | Law proposals always routed to jury |
-| Economics | > 100k ATLAS | Treasury safety threshold |
+| Economics | > 100k X3 | Treasury safety threshold |
 | Security | Any boundary change | Zero-trust principle |
 | Agents | Any role change | Principle of least surprise |
 | Operations | N/A (all MINOR) | Status & monitoring only |

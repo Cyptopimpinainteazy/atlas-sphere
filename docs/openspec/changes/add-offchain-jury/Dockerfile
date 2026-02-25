@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Atlas Sphere Jury Service
+# Multi-stage Dockerfile for X3 Chain Jury Service
 # Supports both CPU and GPU (CUDA) builds
 #
 # Build arguments:
@@ -114,12 +114,12 @@ CMD ["python", "-m", "swarm.api_server"]
 # ============================================================
 # Labels
 # ============================================================
-LABEL description="Atlas Sphere Off-Chain Jury Service" \
-      maintainer="atlas-sphere-dev" \
+LABEL description="X3 Chain Off-Chain Jury Service" \
+      maintainer="x3-chain-dev" \
       version="1.0.0" \
-      org.opencontainers.image.title="atlas-jury-service" \
+      org.opencontainers.image.title="x3-jury-service" \
       org.opencontainers.image.description="Off-chain jury system for major task governance approval" \
-      org.opencontainers.image.source="https://github.com/Cyptopimpinainteazy/atlas-sphere"
+      org.opencontainers.image.source="https://github.com/Cyptopimpinainteazy/x3-chain"
 
 # Expose ports
 EXPOSE 8000 8001

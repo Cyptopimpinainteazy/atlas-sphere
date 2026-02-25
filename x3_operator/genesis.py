@@ -230,7 +230,7 @@ class GenesisCeremony:
             "id": self.genesis.chain_id,
             "chainType": "Live",
             "bootNodes": [],
-            "telemetryEndpoints": [["/dns/telemetry.atlas-sphere.io/tcp/443/wss", 0]],
+            "telemetryEndpoints": [["/dns/telemetry.x3-chain.io/tcp/443/wss", 0]],
             "protocolId": self.genesis.chain_id,
             "properties": {
                 "ss58Format": 42,

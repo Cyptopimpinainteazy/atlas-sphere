@@ -55,7 +55,7 @@ Everything requested has been created and is ready to use immediately.
 
 ### Step 1: Run Audit
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 bash scripts/x3_audit.sh
 tail -50 .x3_audit_log.txt
 ```
@@ -82,7 +82,7 @@ python3 scripts/x3_generate_issues.py
 ## 📂 DIRECTORY STRUCTURE
 
 ```
-/home/lojak/Desktop/atlas-sphere-master/
+/home/lojak/Desktop/x3-chain-master/
 ├── archive/reports/X3_COMPLETION.md                          [MASTER CHECKLIST]
 ├── archive/reports/X3_GOVERNANCE_STACK_SUMMARY.md           [STACK OVERVIEW]
 ├── docs/reports/X3_DEPLOYMENT_INDEX.md                    [THIS FILE]

@@ -120,9 +120,9 @@ If you encounter the "Continue" button repeatedly during task execution, increas
 
 ## File Locations
 
-- **Extension Source**: `/home/lojak/Desktop/atlas-sphere-master/ralph-repo/`
-- **Extension Package**: `/home/lojak/Desktop/atlas-sphere-master/ralph-repo/ralph-0.5.1.vsix`
-- **Sample PRD**: `/home/lojak/Desktop/atlas-sphere-master/PRD.md`
+- **Extension Source**: `/home/lojak/Desktop/x3-chain-master/ralph-repo/`
+- **Extension Package**: `/home/lojak/Desktop/x3-chain-master/ralph-repo/ralph-0.5.1.vsix`
+- **Sample PRD**: `/home/lojak/Desktop/x3-chain-master/PRD.md`
 
 ## Quick Commands
 

@@ -1,4 +1,4 @@
-# Atlas Sphere Documentation Index
+# X3 Chain Documentation Index
 
 > **Status**: Canonical | **Version**: 1.0.0 | **Last Updated**: 2025-12-10
 
@@ -6,7 +6,7 @@
 
 ## Complete Documentation Set
 
-This index provides unified access to all canonical documentation for the Atlas Sphere blockchain platform, the X3 language, and the X3Script DSL.
+This index provides unified access to all canonical documentation for the X3 Chain blockchain platform, the X3 language, and the X3Script DSL.
 
 ---
 
@@ -21,6 +21,7 @@ This index provides unified access to all canonical documentation for the Atlas 
 | [AI Agent API Specification](#ai-agent-api-specification)     | Autonomous agent framework    | Agent devs     |
 | [Standard Library Reference](#standard-library-reference)     | 12-module stdlib              | All developers |
 | [Quantum Execution Whitepaper](#quantum-execution-whitepaper) | Speculative execution model   | Advanced users |
+| [Developer Templates](#8-developer-templates)                 | Starter templates matrix      | All developers |
 
 ---
 
@@ -178,10 +179,27 @@ This index provides unified access to all canonical documentation for the Atlas 
 
 ---
 
+## 8. Developer Templates
+
+**File:** [`docs/templates/X3_DEVELOPER_TEMPLATES.md`](./templates/X3_DEVELOPER_TEMPLATES.md)
+
+**Purpose:** Curated upstream template sources and adoption order for X3 Chain.
+
+**Local Starter Matrix:** [`templates/x3-chain/README.md`](../templates/x3-chain/README.md)
+
+**Key Topics:**
+- Polkadot SDK templates for L1/L2
+- PAPI TypeScript integration examples
+- Python substrate interface examples
+- iOS substrate SDK example
+- Recommended adoption sequence
+
+---
+
 ## Documentation by Use Case
 
 ### Getting Started
-1. **New to Atlas Sphere?** → Start with [X3 Language Reference](#x3-language-reference)
+1. **New to X3 Chain?** → Start with [X3 Language Reference](#x3-language-reference)
 2. **Writing your first contract?** → [X3Script DSL Specification](#x3script-dsl-specification)
 3. **Using the stdlib?** → [Standard Library Reference](#standard-library-reference)
 
@@ -211,7 +229,7 @@ This index provides unified access to all canonical documentation for the Atlas 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        ATLAS SPHERE STACK                           │
+│                        X3 CHAIN STACK                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
@@ -238,7 +256,7 @@ This index provides unified access to all canonical documentation for the Atlas 
 │                              ▼                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                   SUBSTRATE RUNTIME                          │   │
-│  │  Atlas Kernel Pallet • Consensus (Aura+GRANDPA)             │   │
+│  │  X3 Kernel Pallet • Consensus (Aura+GRANDPA)             │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -257,7 +275,7 @@ This index provides unified access to all canonical documentation for the Atlas 
 ## Related Resources
 
 ### In-Repository
-- [`/pallets/atlas-kernel/`](../pallets/atlas-kernel/) — Core pallet implementation
+- [`/pallets/x3-kernel/`](../pallets/x3-kernel/) — Core pallet implementation
 - [`/runtime/src/lib.rs`](../runtime/src/lib.rs) — Runtime composition
 - [`/crates/evm-integration/`](../crates/evm-integration/) — EVM adapter
 - [`/crates/svm-integration/`](../crates/svm-integration/) — SVM adapter
@@ -274,10 +292,10 @@ This index provides unified access to all canonical documentation for the Atlas 
 
 Documentation improvements welcome! See the main project's contributing guidelines.
 
-For questions: [Atlas Sphere Discord/Forums]
+For questions: [X3 Chain Discord/Forums]
 
 ---
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

@@ -40,7 +40,7 @@ The jury governance system (Phase 1-4) currently operates off-chain with immutab
 | Component | Approach | Rationale |
 |-----------|----------|-----------|
 | **Data Model** | Jury session → SHA256(votes + metadata) | Privacy-preserving; immutable |
-| **Runtime Pallet** | atlas-jury-anchor pallet | Integrated with consensus |
+| **Runtime Pallet** | x3-jury-anchor pallet | Integrated with consensus |
 | **Signature** | Jury manager signs anchor | Authority-based; prevents forgery |
 | **Storage** | JuryDecisions map (session_id → hash) | O(1) lookup; efficient queries |
 | **Events** | JuryDecisionAnchored event | Chain-observable; indexable |
@@ -75,7 +75,7 @@ The jury governance system (Phase 1-4) currently operates off-chain with immutab
 4. Estimate completion: 2 hours
 
 ### Phase 2: Core Implementation
-1. Create atlas-jury-anchor pallet (Rust)
+1. Create x3-jury-anchor pallet (Rust)
 2. Integrate with jury service (Python)
 3. Add RPC handlers
 4. Implement tests (16+ cases)

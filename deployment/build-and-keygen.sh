@@ -1,10 +1,10 @@
 #!/bin/bash
-# Atlas Sphere Testnet v1 - Build and Key Generation
+# X3 Chain Testnet v1 - Build and Key Generation
 # Day -1: Build binary, generate chain spec, create keys
 
 set -e
 
-echo "🔨 Atlas Sphere Testnet v1 - Build & Key Generation"
+echo "🔨 X3 Chain Testnet v1 - Build & Key Generation"
 echo "===================================================="
 echo ""
 
@@ -35,19 +35,19 @@ BUILD_TIME=$((END_TIME - START_TIME))
 BUILD_MINUTES=$((BUILD_TIME / 60))
 BUILD_SECONDS=$((BUILD_TIME % 60))
 
-if [ -f "$BUILD_DIR/atlas-sphere-node" ]; then
+if [ -f "$BUILD_DIR/x3-chain-node" ]; then
     echo -e "${GREEN}✅ Build successful in ${BUILD_MINUTES}m ${BUILD_SECONDS}s${NC}"
-    echo "   Binary: $BUILD_DIR/atlas-sphere-node"
-    echo "   Size: $(du -h $BUILD_DIR/atlas-sphere-node | cut -f1)"
+    echo "   Binary: $BUILD_DIR/x3-chain-node"
+    echo "   Size: $(du -h $BUILD_DIR/x3-chain-node | cut -f1)"
 else
-    echo "❌ Build failed! Binary not found at $BUILD_DIR/atlas-sphere-node"
+    echo "❌ Build failed! Binary not found at $BUILD_DIR/x3-chain-node"
     exit 1
 fi
 
 # Test binary
 echo ""
 echo "🧪 Testing binary..."
-$BUILD_DIR/atlas-sphere-node --version
+$BUILD_DIR/x3-chain-node --version
 echo -e "${GREEN}✅ Binary works!${NC}"
 
 # Step 2: Generate chain specifications
@@ -56,27 +56,27 @@ echo "📋 Step 2/4: Generating chain specifications..."
 
 # Development chain spec (for reference)
 echo "  Generating dev chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain dev \
-    > "$CHAIN_SPEC_DIR/atlas-dev-plain.json"
-echo -e "${GREEN}✅ Created: atlas-dev-plain.json${NC}"
+$BUILD_DIR/x3-chain-node build-spec --disable-default-bootnode --chain dev \
+    > "$CHAIN_SPEC_DIR/x3-dev-plain.json"
+echo -e "${GREEN}✅ Created: x3-dev-plain.json${NC}"
 
 # Local testnet chain spec (base for customization)
 echo "  Generating local testnet chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain local \
-    > "$CHAIN_SPEC_DIR/atlas-testnet-plain.json"
-echo -e "${GREEN}✅ Created: atlas-testnet-plain.json${NC}"
+$BUILD_DIR/x3-chain-node build-spec --disable-default-bootnode --chain local \
+    > "$CHAIN_SPEC_DIR/x3-testnet-plain.json"
+echo -e "${GREEN}✅ Created: x3-testnet-plain.json${NC}"
 
 # Staging chain spec (more production-like)
 echo "  Generating staging chain spec..."
-$BUILD_DIR/atlas-sphere-node build-spec --disable-default-bootnode --chain staging \
-    > "$CHAIN_SPEC_DIR/atlas-staging-plain.json"
-echo -e "${GREEN}✅ Created: atlas-staging-plain.json${NC}"
+$BUILD_DIR/x3-chain-node build-spec --disable-default-bootnode --chain staging \
+    > "$CHAIN_SPEC_DIR/x3-staging-plain.json"
+echo -e "${GREEN}✅ Created: x3-staging-plain.json${NC}"
 
 echo ""
-echo -e "${YELLOW}⚠️  IMPORTANT: Edit atlas-testnet-plain.json before converting to raw format${NC}"
+echo -e "${YELLOW}⚠️  IMPORTANT: Edit x3-testnet-plain.json before converting to raw format${NC}"
 echo "   Things to customize:"
-echo "   • name: \"Atlas Sphere Testnet\""
-echo "   • id: \"atlas-testnet\""
+echo "   • name: \"X3 Chain Testnet\""
+echo "   • id: \"x3-testnet\""
 echo "   • chainType: \"Live\""
 echo "   • bootNodes: Add bootnode multiaddr after Day 1"
 echo "   • Add validator initial authorities (after generating keys below)"
@@ -86,11 +86,11 @@ read -p "Press Enter after editing the chain spec, or Ctrl+C to exit and edit la
 # Convert to raw format (after user edits)
 echo ""
 echo "  Converting to raw format..."
-$BUILD_DIR/atlas-sphere-node build-spec \
-    --chain "$CHAIN_SPEC_DIR/atlas-testnet-plain.json" \
+$BUILD_DIR/x3-chain-node build-spec \
+    --chain "$CHAIN_SPEC_DIR/x3-testnet-plain.json" \
     --raw \
-    > "$CHAIN_SPEC_DIR/atlas-testnet-raw.json"
-echo -e "${GREEN}✅ Created: atlas-testnet-raw.json (use this for deployment)${NC}"
+    > "$CHAIN_SPEC_DIR/x3-testnet-raw.json"
+echo -e "${GREEN}✅ Created: x3-testnet-raw.json (use this for deployment)${NC}"
 
 # Step 3: Generate validator keys
 echo ""
@@ -187,12 +187,12 @@ echo ""
 echo "🔑 Step 4/4: Generating bootnode network key..."
 
 # Generate a random node key
-BOOTNODE_KEY=$($BUILD_DIR/atlas-sphere-node key generate-node-key 2>&1)
+BOOTNODE_KEY=$($BUILD_DIR/x3-chain-node key generate-node-key 2>&1)
 echo "$BOOTNODE_KEY" > "$KEYS_DIR/bootnode-key.txt"
 echo -e "${GREEN}✅ Bootnode key: $BOOTNODE_KEY${NC}"
 
 # Derive peer ID from node key
-PEER_ID=$($BUILD_DIR/atlas-sphere-node key inspect-node-key --file <(echo -n "$BOOTNODE_KEY") 2>&1)
+PEER_ID=$($BUILD_DIR/x3-chain-node key inspect-node-key --file <(echo -n "$BOOTNODE_KEY") 2>&1)
 echo -e "${GREEN}✅ Bootnode peer ID: $PEER_ID${NC}"
 
 # Create bootnode multiaddr template
@@ -211,21 +211,21 @@ Multiaddr (update x.x.x.x with actual IP):
 $BOOTNODE_MULTIADDR
 
 DNS-based Multiaddr (after DNS setup):
-/dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/$PEER_ID
+/dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/$PEER_ID
 
 Deployment:
 -----------
 1. Copy node key to bootnode server:
-   echo "$BOOTNODE_KEY" | ssh atlas@BOOTNODE_IP 'cat > /var/lib/atlas/node-key'
+   echo "$BOOTNODE_KEY" | ssh x3@BOOTNODE_IP 'cat > /var/lib/x3/node-key'
 
 2. Update chain spec bootNodes with the multiaddr above
 
 3. Start bootnode with:
-   atlas-sphere-node \\
-     --base-path /var/lib/atlas/data \\
-     --chain /etc/atlas/atlas-testnet-raw.json \\
-     --name "Atlas Bootnode" \\
-     --node-key-file /var/lib/atlas/node-key \\
+   x3-chain-node \\
+     --base-path /var/lib/x3/data \\
+     --chain /etc/x3/x3-testnet-raw.json \\
+     --name "X3 Bootnode" \\
+     --node-key-file /var/lib/x3/node-key \\
      --port 30333
 EOF
 
@@ -246,7 +246,7 @@ echo ""
 
 # Create deployment manifest
 cat > "$KEYS_DIR/KEYS_MANIFEST.md" << 'EOF'
-# Atlas Sphere Testnet - Keys Manifest
+# X3 Chain Testnet - Keys Manifest
 
 ## ⚠️ SECURITY WARNING
 
@@ -301,7 +301,7 @@ After validators are running, insert keys via RPC:
 
 ```bash
 # Example for validator 1
-ssh atlas@validator-01 << 'ENDSSH'
+ssh x3@validator-01 << 'ENDSSH'
 # Insert Aura key
 curl http://localhost:9944 -H "Content-Type: application/json" \
   -d '{"id":1,"jsonrpc":"2.0","method":"author_insertKey","params":["aura","SEED","PUBKEY"]}'
@@ -320,8 +320,8 @@ See individual `validator-0X-summary.txt` files for exact commands.
 
 ```bash
 # Create encrypted backup
-tar czf - deployment/keys | gpg --encrypt --recipient admin@atlas-sphere.io \
-  > atlas-testnet-keys-backup-$(date +%Y%m%d).tar.gz.gpg
+tar czf - deployment/keys | gpg --encrypt --recipient admin@x3-chain.io \
+  > x3-testnet-keys-backup-$(date +%Y%m%d).tar.gz.gpg
 
 # Store in multiple secure locations:
 # 1. Encrypted cloud storage (Dropbox, Google Drive)
@@ -365,12 +365,12 @@ echo "✅ Day -1 Build & Key Generation Complete!"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 echo "📦 Binary:"
-echo "  • $BUILD_DIR/atlas-sphere-node"
-echo "  • Version: $($BUILD_DIR/atlas-sphere-node --version)"
+echo "  • $BUILD_DIR/x3-chain-node"
+echo "  • Version: $($BUILD_DIR/x3-chain-node --version)"
 echo ""
 echo "📋 Chain Specs:"
-echo "  • $CHAIN_SPEC_DIR/atlas-testnet-raw.json (for deployment)"
-echo "  • $CHAIN_SPEC_DIR/atlas-testnet-plain.json (human-readable)"
+echo "  • $CHAIN_SPEC_DIR/x3-testnet-raw.json (for deployment)"
+echo "  • $CHAIN_SPEC_DIR/x3-testnet-plain.json (human-readable)"
 echo ""
 echo "🔑 Keys Generated ($NUM_VALIDATORS validators):"
 for i in $(seq 1 $NUM_VALIDATORS); do
@@ -388,14 +388,14 @@ echo ""
 echo "🚀 Next steps:"
 echo ""
 echo "1. Backup keys:"
-echo "   tar czf - deployment/keys | gpg -e -r admin@atlas-sphere.io \\"
-echo "     > atlas-testnet-keys-\$(date +%Y%m%d).tar.gz.gpg"
+echo "   tar czf - deployment/keys | gpg -e -r admin@x3-chain.io \\"
+echo "     > x3-testnet-keys-\$(date +%Y%m%d).tar.gz.gpg"
 echo ""
 echo "2. Copy binary to deployment server:"
-echo "   scp $BUILD_DIR/atlas-sphere-node admin@deploy-server:/opt/atlas/"
+echo "   scp $BUILD_DIR/x3-chain-node admin@deploy-server:/opt/x3/"
 echo ""
 echo "3. Copy chain spec to deployment server:"
-echo "   scp $CHAIN_SPEC_DIR/atlas-testnet-raw.json admin@deploy-server:/opt/atlas/"
+echo "   scp $CHAIN_SPEC_DIR/x3-testnet-raw.json admin@deploy-server:/opt/x3/"
 echo ""
 echo "4. Distribute keys to validators (encrypted!):"
 echo "   • See $KEYS_DIR/KEYS_MANIFEST.md for secure methods"

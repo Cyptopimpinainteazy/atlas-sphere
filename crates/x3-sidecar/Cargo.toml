@@ -2,10 +2,10 @@
 name = "x3-sidecar"
 version = "0.1.0"
 edition = "2021"
-description = "X3 Sidecar Daemon - Off-chain swarm execution node for Atlas Sphere"
-authors = ["Atlas Sphere Team"]
+description = "X3 Sidecar Daemon - Off-chain swarm execution node for X3 Chain"
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 default-run = "x3-sidecar"
 
 [[bin]]

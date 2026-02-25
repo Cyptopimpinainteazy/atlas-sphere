@@ -56,7 +56,7 @@ async function sendConfirmationEmail(payload) {
   if (!smtpHost || !smtpUser || !smtpPass || !payload.email) return false;
 
   const transporter = nodemailer.createTransport({ host: smtpHost, port: Number(smtpPort), secure: Number(smtpPort) === 465, auth: { user: smtpUser, pass: smtpPass } });
-  const html = `<p>Hi ${payload.name || payload.company || 'there'},</p><p>Thanks for joining the X3 presale. We've received your request and will contact you shortly to schedule a demo. If you requested a demo, we'll run a quick benchmark and email you the results.</p><p>Best,<br/>Atlas Sphere Sales</p>`;
+  const html = `<p>Hi ${payload.name || payload.company || 'there'},</p><p>Thanks for joining the X3 presale. We've received your request and will contact you shortly to schedule a demo. If you requested a demo, we'll run a quick benchmark and email you the results.</p><p>Best,<br/>X3 Chain Sales</p>`;
   try {
     await transporter.sendMail({ from: process.env.SALES_FROM || smtpUser, to: payload.email, subject: `Thanks for joining X3 Presale`, html });
     return true;

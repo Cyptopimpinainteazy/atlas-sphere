@@ -1,6 +1,6 @@
-# Atlas Sphere Testnet v1 - Quick Start Guide
+# X3 Chain Testnet v1 - Quick Start Guide
 
-**⚡ Get started with Atlas Sphere Testnet in 5 minutes!**
+**⚡ Get started with X3 Chain Testnet in 5 minutes!**
 
 ---
 
@@ -8,11 +8,11 @@
 
 | **Parameter**          | **Value**                                  |
 |------------------------|--------------------------------------------|
-| **Network Name**       | Atlas Sphere Testnet v1                    |
-| **Chain ID**           | `atlas-testnet`                            |
-| **RPC Endpoint**       | `http://rpc.testnet.atlas-sphere.io:9944`  |
+| **Network Name**       | X3 Chain Testnet v1                    |
+| **Chain ID**           | `x3-testnet`                            |
+| **RPC Endpoint**       | `http://rpc.testnet.x3-chain.io:9944`  |
 | **WebSocket**          | Coming Soon                                |
-| **Faucet**             | `https://faucet.testnet.atlas-sphere.io`   |
+| **Faucet**             | `https://faucet.testnet.x3-chain.io`   |
 | **Block Time**         | ~6 seconds                                 |
 | **Consensus**          | Aura + GRANDPA                             |
 
@@ -21,7 +21,7 @@
 ## 💰 Get Test Tokens
 
 ### Option 1: Web Faucet (Recommended)
-1. Visit: `https://faucet.testnet.atlas-sphere.io`
+1. Visit: `https://faucet.testnet.x3-chain.io`
 2. Enter your account address
 3. Complete captcha
 4. Receive **100 tATLAS** instantly
@@ -30,7 +30,7 @@
 ```
 !faucet <your-address>
 ```
-Join Discord: https://discord.gg/atlas-sphere
+Join Discord: https://discord.gg/x3-chain
 
 **Limits:** 100 tATLAS per request, 1 request per 24 hours per address
 
@@ -40,7 +40,7 @@ Join Discord: https://discord.gg/atlas-sphere
 
 ### Health Check
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -65,7 +65,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### Get Chain Info
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -77,11 +77,11 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ---
 
-## 🧪 Try Atlas Kernel RPC Methods
+## 🧪 Try X3 Kernel RPC Methods
 
 ### 1. Get Canonical Balance
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -102,7 +102,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### 2. List Authorized Accounts
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -114,7 +114,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### 3. Check Authorization Status
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -129,7 +129,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### 4. Get Current Validators
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -141,7 +141,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### 5. Get Asset Metadata
 ```bash
-curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
+curl -X POST http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
@@ -178,7 +178,7 @@ curl -X POST http://rpc.testnet.atlas-sphere.io:9944 \
 polkadot-js-api tx.atlasKernel.submitComit \
   --seed "//Alice" \
   --params '[{"nonce":1,"evm_calls":[],"svm_instructions":[],"fee":10000}]' \
-  --ws ws://rpc.testnet.atlas-sphere.io:9944
+  --ws ws://rpc.testnet.x3-chain.io:9944
 ```
 
 **Note:** WebSocket support coming soon; use local node for now.
@@ -190,31 +190,31 @@ polkadot-js-api tx.atlasKernel.submitComit \
 ### Option 1: Binary Release
 ```bash
 # Download latest release
-wget https://github.com/atlas-sphere/atlas-sphere-node/releases/latest/download/atlas-sphere-node-linux-amd64
+wget https://github.com/x3-chain/x3-chain-node/releases/latest/download/x3-chain-node-linux-amd64
 
 # Make executable
-chmod +x atlas-sphere-node-linux-amd64
+chmod +x x3-chain-node-linux-amd64
 
 # Run testnet sync
-./atlas-sphere-node-linux-amd64 \
+./x3-chain-node-linux-amd64 \
   --chain testnet \
-  --bootnodes /dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp \
+  --bootnodes /dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp \
   --rpc-port 9944
 ```
 
 ### Option 2: Build from Source
 ```bash
 # Clone repository
-git clone https://github.com/atlas-sphere/atlas-sphere-node.git
-cd atlas-sphere-node
+git clone https://github.com/x3-chain/x3-chain-node.git
+cd x3-chain-node
 
 # Build release
 cargo build --release
 
 # Run testnet sync
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
   --chain testnet \
-  --bootnodes /dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
+  --bootnodes /dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
 ```
 
 ---
@@ -229,7 +229,7 @@ cargo build --release
 - `chain_getBlockHash` - Get block hash by number
 - `state_getStorage` - Query storage directly
 
-### Atlas Kernel RPC
+### X3 Kernel RPC
 - `atlasKernel_getCanonicalBalance` - Query canonical ledger balance
 - `atlasKernel_getAssetMetadata` - Get asset symbol and decimals
 - `atlasKernel_isAuthorized` - Check authorization status
@@ -254,7 +254,7 @@ cargo build --release
 ### "Connection refused" Error
 - Check RPC endpoint URL (must include port `:9944`)
 - Verify network connectivity
-- Try fallback RPC: `http://rpc2.testnet.atlas-sphere.io:9944`
+- Try fallback RPC: `http://rpc2.testnet.x3-chain.io:9944`
 
 ### "Insufficient balance" Error
 - Request tokens from faucet
@@ -268,18 +268,18 @@ cargo build --release
 
 ### RPC Returns "Method not found"
 - Verify method name spelling (case-sensitive)
-- Check if method is Atlas Kernel-specific (`atlasKernel_` prefix)
+- Check if method is X3 Kernel-specific (`atlasKernel_` prefix)
 - Ensure using JSON-RPC 2.0 format
 
 ---
 
 ## 🤝 Join the Community
 
-- **Discord**: https://discord.gg/atlas-sphere
-- **Telegram**: https://t.me/atlas_sphere
-- **GitHub**: https://github.com/atlas-sphere/atlas-sphere-node
-- **Twitter**: https://twitter.com/atlas_sphere
-- **Forum**: https://forum.atlas-sphere.io
+- **Discord**: https://discord.gg/x3-chain
+- **Telegram**: https://t.me/x3_chain
+- **GitHub**: https://github.com/x3-chain/x3-chain-node
+- **Twitter**: https://twitter.com/x3_chain
+- **Forum**: https://forum.x3-chain.io
 
 ---
 
@@ -295,11 +295,11 @@ cargo build --release
 ## 🚀 Next Steps
 
 1. ✅ Get test tokens from faucet
-2. ✅ Try Atlas Kernel RPC methods
+2. ✅ Try X3 Kernel RPC methods
 3. ✅ Submit your first Comit
 4. ✅ Run a local sync node
 5. ✅ Join Discord and share feedback
 6. ✅ Star the GitHub repo
-7. ✅ Build an app on Atlas Sphere!
+7. ✅ Build an app on X3 Chain!
 
 **Happy Building! 🎉**

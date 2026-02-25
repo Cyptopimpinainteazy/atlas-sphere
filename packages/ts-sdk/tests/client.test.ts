@@ -12,10 +12,10 @@ jest.mock('@polkadot/api', () => ({
       disconnect: jest.fn().mockResolvedValue(undefined),
       rpc: {
         system: {
-          chain: jest.fn().mockResolvedValue({ toString: () => 'Atlas Sphere' }),
+          chain: jest.fn().mockResolvedValue({ toString: () => 'X3 Chain' }),
           version: jest.fn().mockResolvedValue({ toString: () => '1.0.0' }),
           properties: jest.fn().mockResolvedValue({
-            tokenSymbol: { unwrapOr: () => ['ATLAS'] },
+            tokenSymbol: { unwrapOr: () => ['X3'] },
             tokenDecimals: { unwrapOr: () => [18] },
             ss58Format: { unwrapOr: () => 42 },
           }),
@@ -88,9 +88,9 @@ describe('AtlasSphereClient', () => {
       await client.connect();
       const info = await client.getChainInfo();
 
-      expect(info.name).toBe('Atlas Sphere');
+      expect(info.name).toBe('X3 Chain');
       expect(info.version).toBe('1.0.0');
-      expect(info.properties.tokenSymbol).toBe('ATLAS');
+      expect(info.properties.tokenSymbol).toBe('X3');
       expect(info.properties.tokenDecimals).toBe(18);
     });
   });

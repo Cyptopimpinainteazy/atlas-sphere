@@ -1,5 +1,5 @@
 /**
- * AtlasSphereClient - Main client for interacting with Atlas Sphere blockchain
+ * AtlasSphereClient - Main client for interacting with X3 Chain blockchain
  *
  * Provides connection management, transaction submission, and query capabilities.
  */
@@ -98,7 +98,7 @@ export interface ChainInfo {
 // =============================================================================
 
 /**
- * Main client for Atlas Sphere blockchain interaction
+ * Main client for X3 Chain blockchain interaction
  *
  * @example
  * ```typescript
@@ -161,7 +161,7 @@ export class AtlasSphereClient {
   }
 
   /**
-   * Connect to the Atlas Sphere node
+   * Connect to the X3 Chain node
    */
   async connect(): Promise<void> {
     if (this.isConnected) {
@@ -250,7 +250,7 @@ export class AtlasSphereClient {
       name: chain.toString(),
       version: version.toString(),
       properties: {
-        tokenSymbol: (properties.tokenSymbol as any).unwrapOr(['ATLAS'])[0].toString(),
+        tokenSymbol: (properties.tokenSymbol as any).unwrapOr(['X3'])[0].toString(),
         tokenDecimals: Number((properties.tokenDecimals as any).unwrapOr([18])[0]),
         ss58Format: Number((properties.ss58Format as any).unwrapOr(42)),
       },
@@ -526,7 +526,7 @@ export class AtlasSphereClient {
         events.forEach((record: any) => {
           const { event } = record;
 
-          // Check for atlas kernel events
+          // Check for x3 kernel events
           if (event.section !== 'atlasKernel') return;
 
           // Parse and emit appropriate event type

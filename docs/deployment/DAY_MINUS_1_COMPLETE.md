@@ -9,7 +9,7 @@
 ## ✅ Completed Tasks
 
 ### 1. Release Binary Built
-- **Location**: `target/release/atlas-sphere-node`
+- **Location**: `target/release/x3-chain-node`
 - **Size**: 52 MB
 - **Build Time**: 1 minute
 - **Status**: ✅ Ready for deployment
@@ -52,16 +52,16 @@ deployment/keys/
 - GRANDPA (Ed25519): `5HcAwUc7rYEaPYPYDN2LBW6bN8qZWu88uWqRD79YACqz1mxe`
 
 ### 3. Chain Specifications Created
-- **Plain spec**: `deployment/chain-specs/atlas-testnet-plain.json`
-- **Raw spec**: `deployment/chain-specs/atlas-testnet-raw.json` ✅ **USE THIS FOR DEPLOYMENT**
-- **Dev spec**: `deployment/chain-specs/atlas-dev-plain.json`
-- **Staging spec**: `deployment/chain-specs/atlas-staging-plain.json`
+- **Plain spec**: `deployment/chain-specs/x3-testnet-plain.json`
+- **Raw spec**: `deployment/chain-specs/x3-testnet-raw.json` ✅ **USE THIS FOR DEPLOYMENT**
+- **Dev spec**: `deployment/chain-specs/x3-dev-plain.json`
+- **Staging spec**: `deployment/chain-specs/x3-staging-plain.json`
 
 #### Chain Spec Details:
-- **Name**: Atlas Sphere Testnet v1
-- **Chain ID**: atlas_testnet_v1
+- **Name**: X3 Chain Testnet v1
+- **Chain ID**: x3_testnet_v1
 - **Chain Type**: Live
-- **Token**: ATLAS
+- **Token**: X3
 - **Decimals**: 12
 - **SS58 Format**: 42 (Substrate default)
 - **Validators**: 3 initial authorities
@@ -82,10 +82,10 @@ deployment/keys/
 ```bash
 # GPG encrypted backup (recommended)
 tar czf - deployment/keys | gpg -e -r your@email.com \
-  > atlas-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
+  > x3-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
 
 # Password-protected zip (alternative)
-zip -r -e atlas-testnet-keys-$(date +%Y%m%d).zip deployment/keys/
+zip -r -e x3-testnet-keys-$(date +%Y%m%d).zip deployment/keys/
 ```
 
 **Store in 3 locations:**
@@ -122,15 +122,15 @@ If you haven't provisioned VMs yet, do this first:
 3. **Configure DNS records:**
    - Follow: `deployment/dns-config.md`
    - Point domains to your servers:
-     - `rpc.testnet.atlas-sphere.io` → RPC load balancer
-     - `bootnode.testnet.atlas-sphere.io` → Bootnode IP
-     - `faucet.testnet.atlas-sphere.io` → Faucet server
-     - `metrics.testnet.atlas-sphere.io` → Grafana server
+     - `rpc.testnet.x3-chain.io` → RPC load balancer
+     - `bootnode.testnet.x3-chain.io` → Bootnode IP
+     - `faucet.testnet.x3-chain.io` → Faucet server
+     - `metrics.testnet.x3-chain.io` → Grafana server
 
 4. **Setup firewalls:**
    ```bash
    # For each node (validator, bootnode, rpc)
-   ssh atlas@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator
+   ssh x3@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator
    ```
 
 5. **Then proceed to Option 2 (Deploy nodes)**
@@ -141,13 +141,13 @@ If you already have VMs provisioned and configured:
 
 1. **Update bootnode IP in chain spec:**
    ```bash
-   # Edit deployment/chain-specs/atlas-testnet-plain.json
+   # Edit deployment/chain-specs/x3-testnet-plain.json
    # Replace 127.0.0.1 with actual bootnode IP in "bootNodes" array
    
    # Regenerate raw spec
-   ./target/release/atlas-sphere-node build-spec \
-     --chain deployment/chain-specs/atlas-testnet-plain.json --raw \
-     > deployment/chain-specs/atlas-testnet-raw.json
+   ./target/release/x3-chain-node build-spec \
+     --chain deployment/chain-specs/x3-testnet-plain.json --raw \
+     > deployment/chain-specs/x3-testnet-raw.json
    ```
 
 2. **Run deployment script:**
@@ -163,10 +163,10 @@ If you already have VMs provisioned and configured:
 4. **Verify network health:**
    ```bash
    # Check validator logs
-   ssh atlas@VALIDATOR_IP 'journalctl -u atlas-validator -f'
+   ssh x3@VALIDATOR_IP 'journalctl -u x3-validator -f'
    
    # Check peer connections
-   ssh atlas@VALIDATOR_IP 'curl -s http://localhost:9944 \
+   ssh x3@VALIDATOR_IP 'curl -s http://localhost:9944 \
      -H "Content-Type: application/json" \
      -d "{\"jsonrpc\":\"2.0\",\"method\":\"system_peers\",\"params\":[],\"id\":1}"'
    ```
@@ -218,17 +218,17 @@ If you already have VMs provisioned and configured:
 
 ### Binary Location
 ```bash
-/home/lojak/Desktop/atlas-sphere/target/release/atlas-sphere-node
+/home/lojak/Desktop/x3-chain/target/release/x3-chain-node
 ```
 
 ### Chain Spec (Deploy This)
 ```bash
-/home/lojak/Desktop/atlas-sphere/deployment/chain-specs/atlas-testnet-raw.json
+/home/lojak/Desktop/x3-chain/deployment/chain-specs/x3-testnet-raw.json
 ```
 
 ### Keys Directory (SECURE THIS)
 ```bash
-/home/lojak/Desktop/atlas-sphere/deployment/keys/
+/home/lojak/Desktop/x3-chain/deployment/keys/
 ```
 
 ### Deployment Scripts
@@ -259,12 +259,12 @@ Replace `<BOOTNODE_IP>` with actual bootnode IP address.
 ### Binary Won't Start
 ```bash
 # Check if binary is executable
-chmod +x target/release/atlas-sphere-node
+chmod +x target/release/x3-chain-node
 
 # Test binary
-./target/release/atlas-sphere-node --version
+./target/release/x3-chain-node --version
 
-# Expected output: Atlas Sphere Node 0.1.0
+# Expected output: X3 Chain Node 0.1.0
 ```
 
 ### Keys Not Loading
@@ -279,8 +279,8 @@ cat deployment/keys/validator-01-summary.txt
 ### Chain Spec Issues
 ```bash
 # Validate chain spec
-./target/release/atlas-sphere-node build-spec \
-  --chain deployment/chain-specs/atlas-testnet-raw.json \
+./target/release/x3-chain-node build-spec \
+  --chain deployment/chain-specs/x3-testnet-raw.json \
   2>&1 | head -20
 
 # Should not show errors
@@ -327,4 +327,4 @@ You now have:
 **Security**: Keys generated and secured (BACKUP IMMEDIATELY)  
 **Deployment**: Ready when infrastructure is provisioned
 
-**🚀 Let's launch Atlas Sphere Testnet v1!**
+**🚀 Let's launch X3 Chain Testnet v1!**

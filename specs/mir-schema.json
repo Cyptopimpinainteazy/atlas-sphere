@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://atlas-sphere.io/schemas/mir/v1.0",
+  "$id": "https://x3-chain.io/schemas/mir/v1.0",
   "title": "X3 MIR (Mid-level Intermediate Representation) Schema",
   "description": "Schema for AI-generated MIR that can be verified and lowered to X3 bytecode",
   "type": "object",

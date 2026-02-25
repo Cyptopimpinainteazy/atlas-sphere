@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 # ---------------------------------------------------------------------------
-# Atlas Sphere — Build all 5 GPU crypto kernels
+# X3 Chain — Build all 5 GPU crypto kernels
 #
 # Targets:  GTX 1070 (sm_61) × 3  on Threadripper core node
 #           GTX 1070 (sm_61) × 17 on secondary servers

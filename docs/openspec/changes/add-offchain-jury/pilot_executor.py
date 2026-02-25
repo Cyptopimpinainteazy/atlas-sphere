@@ -1,6 +1,6 @@
 #!/env/bin/python3
 """
-Pilot Test Executor for Atlas Sphere Jury Service
+Pilot Test Executor for X3 Chain Jury Service
 
 This script orchestrates the pilot test scenarios defined in PILOT_PLAN.md:
 - Session 1: Infrastructure Upgrade (5-member PASS scenario)

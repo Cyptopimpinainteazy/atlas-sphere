@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Atlas Sphere — Ollama HTTP Wrapper Service.
+"""X3 Chain — Ollama HTTP Wrapper Service.
 
 Provides a lightweight HTTP proxy in front of the native Ollama service with:
   - /health          → readiness + GPU summary

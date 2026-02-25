@@ -358,14 +358,31 @@ pub mod utils {
         hasher.finalize().into()
     }
 
-    /// Verify a node's signature (placeholder - real impl would use ed25519)
+    /// Verify a node's Ed25519 signature
     pub fn verify_signature(
-        _public_key: &[u8; 32],
-        _message: &[u8],
-        _signature: &[u8; 64],
+        public_key: &[u8; 32],
+        message: &[u8],
+        signature: &[u8; 64],
     ) -> bool {
-        // TODO: Implement ed25519 verification
-        true
+        use ed25519_dalek::{Verifier, VerifyingKey, Signature as Ed25519Signature};
+        
+        let verifying_key = match VerifyingKey::from_bytes(public_key) {
+            Ok(key) => key,
+            Err(e) => {
+                tracing::warn!("Invalid ed25519 public key: {}", e);
+                return false;
+            }
+        };
+        
+        let sig = Ed25519Signature::from_bytes(signature);
+        
+        match verifying_key.verify(message, &sig) {
+            Ok(()) => true,
+            Err(e) => {
+                tracing::debug!("Ed25519 signature verification failed: {}", e);
+                false
+            }
+        }
     }
 }
 

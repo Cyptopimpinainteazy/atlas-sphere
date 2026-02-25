@@ -1,4 +1,4 @@
-# Workflow Fixes for atlas-sphere Repository
+# Workflow Fixes for x3-chain Repository
 
 ## Summary
 This document describes the workflow failures identified in PRs #3, #7, and #8, and provides the necessary fixes.

@@ -1,5 +1,5 @@
 /**
- * Error types for Atlas Sphere SDK
+ * Error types for X3 Chain SDK
  *
  * Provides typed error handling for all SDK operations.
  */
@@ -7,7 +7,7 @@
 import type { ComitFailureReason, Hash, Balance, Nonce } from './types';
 
 /**
- * Base class for all Atlas Sphere SDK errors
+ * Base class for all X3 Chain SDK errors
  */
 export class AtlasSphereError extends Error {
   constructor(message: string) {
@@ -25,7 +25,7 @@ export class ConnectionError extends AtlasSphereError {
   public readonly cause?: Error;
 
   constructor(endpoint: string, cause?: Error) {
-    super(`Failed to connect to Atlas Sphere node at ${endpoint}: ${cause?.message || 'Unknown error'}`);
+    super(`Failed to connect to X3 Chain node at ${endpoint}: ${cause?.message || 'Unknown error'}`);
     this.name = 'ConnectionError';
     this.endpoint = endpoint;
     this.cause = cause;

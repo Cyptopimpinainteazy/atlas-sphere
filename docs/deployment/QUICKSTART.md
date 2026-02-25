@@ -1,4 +1,4 @@
-# 🚀 Atlas Sphere: In-House Deployment - Quick Start
+# 🚀 X3 Chain: In-House Deployment - Quick Start
 
 ## You Have 3 Options:
 
@@ -6,8 +6,8 @@
 **Perfect for testing everything on your current machine RIGHT NOW:**
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere
-./target/release/atlas-sphere-node --dev --tmp --rpc-external --rpc-cors all
+cd /home/lojak/Desktop/x3-chain
+./target/release/x3-chain-node --dev --tmp --rpc-external --rpc-cors all
 ```
 
 **That's it!** Connect at: `ws://localhost:9944`
@@ -18,7 +18,7 @@ cd /home/lojak/Desktop/atlas-sphere
 **Full 3-validator testnet on ONE machine with systemd services:**
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 ./deploy-local-testnet.sh
 ```
 
@@ -31,8 +31,8 @@ cd /home/lojak/Desktop/atlas-sphere/deployment
 
 **Check status:**
 ```bash
-sudo systemctl status atlas-bootnode
-sudo journalctl -u atlas-validator-01 -f
+sudo systemctl status x3-bootnode
+sudo journalctl -u x3-validator-01 -f
 ```
 
 ---
@@ -52,7 +52,7 @@ declare -A SERVERS=(
 
 2. **Run deployment:**
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 ./deploy-multi-server.sh
 ```
 
@@ -106,14 +106,14 @@ See **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** for:
 
 **Binary won't start?**
 ```bash
-ldd /usr/local/bin/atlas-sphere-node  # Check dependencies
-./target/release/atlas-sphere-node --version  # Test binary
+ldd /usr/local/bin/x3-chain-node  # Check dependencies
+./target/release/x3-chain-node --version  # Test binary
 ```
 
 **Nodes not connecting?**
 ```bash
 # Check bootnode peer ID
-atlas-sphere-node key inspect-node-key --file deployment/keys/bootnode-key.txt
+x3-chain-node key inspect-node-key --file deployment/keys/bootnode-key.txt
 
 # Test connectivity
 telnet BOOTNODE_IP 30333
@@ -122,10 +122,10 @@ telnet BOOTNODE_IP 30333
 **Not producing blocks?**
 ```bash
 # Check if keys are loaded
-ls -la /var/lib/atlas-sphere/validator-01/chains/atlas_testnet/keystore/
+ls -la /var/lib/x3-chain/validator-01/chains/x3_testnet/keystore/
 
 # Check logs
-sudo journalctl -u atlas-validator-01 -n 100
+sudo journalctl -u x3-validator-01 -n 100
 ```
 
 ---

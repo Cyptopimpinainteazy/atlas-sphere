@@ -2,10 +2,10 @@
 name = "gpu-swarm"
 version = "0.1.0"
 edition = "2021"
-description = "Distributed GPU compute swarm for X3 Atlas Sphere"
-authors = ["Atlas Sphere Team"]
+description = "Distributed GPU compute swarm for X3 X3 Chain"
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [[bin]]
 name = "swarm-node"

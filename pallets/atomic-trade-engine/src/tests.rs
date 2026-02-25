@@ -321,7 +321,7 @@ fn execute_single_x3_leg_works() {
 fn execute_triple_vm_batch_via_kernel_comit_v2_works() {
     new_test_ext().execute_with(|| {
         let who = account(1);
-        pallet_atlas_kernel::AuthorizedAccounts::<Test>::insert(who, ());
+        pallet_x3_kernel::AuthorizedAccounts::<Test>::insert(who, ());
 
         let evm_amount = 1_000_000_000_000_000_000u128;
         let svm_amount = 1_000_000_000u128;
@@ -352,7 +352,7 @@ fn execute_triple_vm_batch_via_kernel_comit_v2_works() {
         ));
 
         // Prove the kernel path executed: kernel nonce increments.
-        assert_eq!(pallet_atlas_kernel::Nonces::<Test>::get(who), 1);
+        assert_eq!(pallet_x3_kernel::Nonces::<Test>::get(who), 1);
 
         let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
         assert_eq!(batch.status, BatchStatus::Completed);
@@ -363,7 +363,7 @@ fn execute_triple_vm_batch_via_kernel_comit_v2_works() {
 fn kernel_comit_failure_is_rolled_back_but_batch_is_marked_failed() {
     new_test_ext().execute_with(|| {
         let who = account(1);
-        pallet_atlas_kernel::AuthorizedAccounts::<Test>::insert(who, ());
+        pallet_x3_kernel::AuthorizedAccounts::<Test>::insert(who, ());
 
         // Force kernel fee withdrawal to fail AFTER nonce mutation inside submit_comit_v2.
         // This should be rolled back by AtomicTradeEngine's nested transaction wrapper.
@@ -395,7 +395,7 @@ fn kernel_comit_failure_is_rolled_back_but_batch_is_marked_failed() {
         ));
 
         // Critical property: kernel nonce did NOT increment because kernel changes were rolled back.
-        assert_eq!(pallet_atlas_kernel::Nonces::<Test>::get(who), 0);
+        assert_eq!(pallet_x3_kernel::Nonces::<Test>::get(who), 0);
 
         let batch = AtomicTradeEngine::trade_batches(batch_id).unwrap();
         assert_eq!(batch.status, BatchStatus::Failed);

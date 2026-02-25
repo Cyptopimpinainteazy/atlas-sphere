@@ -1,8 +1,7 @@
-/// Validator Setup and Key Rotation for Atlas Sphere
+/// Validator Setup and Key Rotation for X3 Chain
 ///
 /// Handles validator registration, session key derivation, and key rotation scheduling.
 use sp_core::{ed25519, sr25519};
-use std::sync::Arc;
 
 /// Validator configuration
 #[derive(Clone, Debug)]

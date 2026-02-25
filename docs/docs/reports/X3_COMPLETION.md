@@ -62,7 +62,7 @@
 | Weight annotations complete | ⬜ | @PerformanceEngineer | `/pallets/*/weights.rs` |
 | No unchecked arithmetic | ⬜ | @SecurityReviewer | code review |
 | Storage migrations versioned | ⬜ | @MigrationEngineer | `/runtime/src/migrations.rs` |
-| Atlas Kernel tests 70/70 passing | ⬜ | @QAEngineer | `/pallets/atlas-kernel/src/tests.rs` |
+| X3 Kernel tests 70/70 passing | ⬜ | @QAEngineer | `/pallets/x3-kernel/src/tests.rs` |
 | No runtime panics in production paths | ⬜ | @SecurityReviewer | panic detection scan |
 | Deterministic execution guaranteed | ⬜ | @RuntimeEngineer | `/pallets/*/determinism_tests.rs` |
 | Economic logic invariant-checked | ⬜ | @EconomicsReviewer | `/pallets/*/invariants_tests.rs` |

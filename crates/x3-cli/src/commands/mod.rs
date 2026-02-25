@@ -22,12 +22,12 @@ pub mod trace;
 #[cfg(feature = "sdk")]
 pub mod tx;
 
-/// x3 - Atlas Sphere CLI
+/// x3 - X3 Chain CLI
 #[derive(Parser)]
 #[command(name = "x3")]
-#[command(author = "Atlas Sphere Team")]
+#[command(author = "X3 Chain Team")]
 #[command(version)]
-#[command(about = "CLI for Atlas Sphere blockchain development", long_about = None)]
+#[command(about = "CLI for X3 Chain blockchain development", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -36,7 +36,7 @@ pub struct Cli {
 /// Available commands
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Initialize a new Atlas Sphere project
+    /// Initialize a new X3 Chain project
     Init(init::InitArgs),
 
     /// Build contracts and programs (requires project)

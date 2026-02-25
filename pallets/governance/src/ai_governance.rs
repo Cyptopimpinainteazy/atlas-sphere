@@ -295,4 +295,4 @@ impl<T: Config> AIProposalValidator<T> for DefaultAIProposalValidator<T> {
         Ok(())
     }
 }</content>
-<parameter name="filePath">/home/lojak/Desktop/X3-atlas-sphere/pallets/governance/src/ai_governance.rs
+<parameter name="filePath">/home/lojak/Desktop/X3-x3-chain/pallets/governance/src/ai_governance.rs

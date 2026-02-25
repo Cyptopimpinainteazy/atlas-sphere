@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════
-#  Atlas Sphere — Infra-Structure: Status Check
+#  X3 Chain — Infra-Structure: Status Check
 #  Shows the status of all bare-metal services
 # ═══════════════════════════════════════════════════════════════════════
 set -euo pipefail
@@ -12,7 +12,7 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 
 echo ""
-echo -e "${BOLD}${CYAN}Atlas Sphere — Infra-Structure Status${NC}"
+echo -e "${BOLD}${CYAN}X3 Chain — Infra-Structure Status${NC}"
 echo -e "${CYAN}──────────────────────────────────────${NC}"
 echo ""
 

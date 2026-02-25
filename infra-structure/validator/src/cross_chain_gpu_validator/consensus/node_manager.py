@@ -1,7 +1,7 @@
 """Validator Node Manager — deploy, monitor and manage full-node/validator processes.
 
 Manages full validator nodes across chains (EVM geth/reth, SVM solana-validator,
-Cosmos gaiad, Substrate polkadot/atlas-node).  Each node is tracked as a
+Cosmos gaiad, Substrate polkadot/x3-node).  Each node is tracked as a
 ``ValidatorNode`` with health, sync state, and lifecycle management.
 
 Architecture
@@ -59,7 +59,7 @@ class ChainClientType(Enum):
 
     # Substrate
     POLKADOT = "polkadot"
-    ATLAS_NODE = "atlas-node"
+    X3_NODE = "x3-node"
 
     # WASM runtimes
     WASMTIME = "wasmtime"
@@ -430,7 +430,7 @@ class NodeManager:
         elif node.client_type in (ChainClientType.GAIAD, ChainClientType.OSMOSIS):
             self._query_cosmos_status(node, rpc_url)
 
-        elif node.client_type in (ChainClientType.POLKADOT, ChainClientType.ATLAS_NODE):
+        elif node.client_type in (ChainClientType.POLKADOT, ChainClientType.X3_NODE):
             self._query_substrate_status(node, rpc_url)
 
         # Update overall status
@@ -579,7 +579,7 @@ class NodeManager:
             if node.rpc_port != 26657:
                 cmd.extend(["--rpc.laddr", f"tcp://0.0.0.0:{node.rpc_port}"])
 
-        elif node.client_type in (ChainClientType.POLKADOT, ChainClientType.ATLAS_NODE):
+        elif node.client_type in (ChainClientType.POLKADOT, ChainClientType.X3_NODE):
             cmd.extend([
                 "--base-path", node.data_dir,
                 "--port", str(node.p2p_port),

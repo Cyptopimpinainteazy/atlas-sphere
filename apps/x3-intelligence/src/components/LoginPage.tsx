@@ -47,7 +47,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Atlas Sphere</h1>
+          <h1>X3 Chain</h1>
           <p>Cross-Chain GPU Validator Dashboard</p>
         </div>
 
@@ -91,7 +91,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <br />
             Username: <code>admin</code>
             <br />
-            Password: <code>atlas-sphere-2026</code>
+            Password: <code>x3-chain-2026</code>
             <br />
             <em style={{ color: '#ff6b6b' }}>⚠️ Change these in production!</em>
           </p>
@@ -99,9 +99,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
         <div className="login-footer">
           <p>
-            Running Atlas Sphere v1.0
+            Running X3 Chain v1.0
             <br />
-            <a href="https://github.com/cyptopimpinainteazy/atlas-sphere" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/cyptopimpinainteazy/x3-chain" target="_blank" rel="noopener noreferrer">
               GitHub Repository
             </a>
           </p>

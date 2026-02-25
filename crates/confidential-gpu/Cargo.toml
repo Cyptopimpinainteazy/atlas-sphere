@@ -3,9 +3,9 @@ name = "confidential-gpu"
 version = "0.1.0"
 edition = "2021"
 description = "Confidential GPU execution runtime — NVIDIA CC / AMD SEV-SNP enclave management, attestation, threshold decryption, and encrypted state diff generation"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [features]
 default = ["cuda"]

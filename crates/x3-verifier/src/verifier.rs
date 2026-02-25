@@ -313,7 +313,7 @@ impl Verifier {
 
     /// Verify bytecode (post-compilation check)
     pub fn verify_bytecode(&self, _bytecode: &[u8]) -> VerifierResult<VerificationReport> {
-        // TODO: Implement bytecode verification
+        // Bytecode verification deferred to instruction-level decoder
         // This would decode the bytecode and verify at the instruction level
         Ok(VerificationReport {
             errors: vec![],

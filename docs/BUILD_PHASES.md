@@ -1,4 +1,4 @@
-# 🛠 Atlas Sphere — Step-by-Step Build Order
+# 🛠 X3 Chain — Step-by-Step Build Order
 
 ## Phase 0: Foundations
 
@@ -8,7 +8,7 @@
 - Verify cargo build works for a minimal node template.
 - Decide on repo structure: kernel/, evm/, svm/, cli/, sdk/, explorer/, wallet/, dex/, cannibalizer/.
 
-## Phase 1: Atlas Kernel
+## Phase 1: X3 Kernel
 
 **Goal:** Core L1 logic + dual-VM orchestration.
 
@@ -71,11 +71,11 @@ Build "Sphere Explorer":
 **Goal:** Auto-mirror EVM + SVM ecosystems.
 
 - Read-only ingestion of existing EVM/SVM contracts.
-- State proofs: validate source chain state on Atlas Sphere.
-- Deploy "mirrored" contract instances on Atlas Sphere (native assets, no wrapping).
+- State proofs: validate source chain state on X3 Chain.
+- Deploy "mirrored" contract instances on X3 Chain (native assets, no wrapping).
 - Optional: automate liquidity migration for major DEXes.
 
-**Output:** Atlas Sphere has instant utility; external projects appear natively in your chain.
+**Output:** X3 Chain has instant utility; external projects appear natively in your chain.
 
 ## Phase 7: Testnet & QA
 
@@ -90,12 +90,12 @@ Build "Sphere Explorer":
 
 ## Phase 8: Beta & SDK
 
-**Goal:** Make Atlas Sphere accessible to devs.
+**Goal:** Make X3 Chain accessible to devs.
 
 - Rust SDK (runtime & pallet interaction).
 - TypeScript SDK (frontend, wallets, explorer hooks).
 - Python SDK (bots, arbitrage, AI strategy integration).
-- Documentation: docs.atlas-sphere.io.
+- Documentation: docs.x3-chain.io.
 
 **Output:** Dev ecosystem live, first dApps running on dual VM testnet.
 
@@ -106,21 +106,21 @@ Build "Sphere Explorer":
 - Full explorer + wallet + SphereSwap live.
 - Cannibalizer actively ingesting external assets/apps.
 
-**Output:** Fully operational Atlas Sphere L1.
+**Output:** Fully operational X3 Chain L1.
 
 ---
 
 # Repository Structure
 
 ```
-atlas-sphere/
+x3-chain/
 │
 ├── Cargo.toml                  # Root workspace manifest
 ├── README.md
 ├── LICENSE
 ├── .gitignore
 │
-├── kernel/                     # Phase 1: Atlas Kernel
+├── kernel/                     # Phase 1: X3 Kernel
 │   ├── Cargo.toml
 │   ├── src/
 │   │   ├── lib.rs
@@ -162,7 +162,7 @@ atlas-sphere/
 │   │   └── src/index.ts
 │   └── python/                 # Python SDK for bots, AI, strategy
 │       ├── pyproject.toml
-│       └── atlas_sphere/
+│       └── x3_chain/
 │           └── __init__.py
 │
 ├── explorer/                   # Phase 4: Sphere Explorer

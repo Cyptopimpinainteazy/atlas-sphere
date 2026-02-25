@@ -1,8 +1,8 @@
 /**
- * Atlas Sphere x3chain Runtime Type Definitions
+ * X3 Chain x3chain Runtime Type Definitions
  *
  * Complete type registry for Polkawallet integration — mirrors all runtime
- * pallets: atlas-kernel, x3-settlement-engine, x3-domain-registry,
+ * pallets: x3-kernel, x3-settlement-engine, x3-domain-registry,
  * x3-verifier, atomic-trade-engine, governance, treasury, svm-runtime.
  */
 
@@ -13,7 +13,7 @@ import type { RegistryTypes } from '@polkadot/types/types';
 // =============================================================================
 
 export const X3ChainCustomTypes: RegistryTypes = {
-  // --- atlas-kernel ---
+  // --- x3-kernel ---
   ComitFailureReason: {
     _enum: [
       'EvmExecutionFailed',
@@ -52,7 +52,7 @@ export const X3ChainCustomTypes: RegistryTypes = {
   },
   ExternalChainId: {
     _enum: [
-      'Atlas',
+      'X3',
       'Ethereum',
       'Solana',
       'Bitcoin',
@@ -359,10 +359,10 @@ export const X3ChainCustomTypes: RegistryTypes = {
 };
 
 /**
- * Runtime RPC methods for atlas-sphere-specific calls
+ * Runtime RPC methods for x3-chain-specific calls
  */
 export const X3ChainRpc = {
-  atlas: {
+  x3: {
     getCanonicalBalance: {
       description: 'Get canonical balance for an account and asset',
       params: [

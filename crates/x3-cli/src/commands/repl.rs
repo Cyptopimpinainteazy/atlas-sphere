@@ -155,7 +155,7 @@ fn print_banner() {
 Type {} for help, {} to quit.
 "#,
         "╔═══════════════════════════════════════════╗".bright_blue(),
-        "║     X3 REPL - Atlas Sphere Interactive    ║".bright_blue(),
+        "║     X3 REPL - X3 Chain Interactive    ║".bright_blue(),
         "╚═══════════════════════════════════════════╝".bright_blue(),
         ":help".yellow(),
         ":quit".yellow()

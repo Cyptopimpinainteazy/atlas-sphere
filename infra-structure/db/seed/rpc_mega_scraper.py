@@ -16,7 +16,7 @@ Features:
   - Async HTTP validation (test eth_chainId / getHealth / etc)
   - Rate limiting (max 3 req/s per domain to avoid bans)
   - Auto-discovery: follows known URL patterns to find more
-  - Seeds directly into atlas-sphere chain DB
+  - Seeds directly into x3-chain chain DB
   - Continuous crawl mode: re-discovers and re-validates periodically
 
 Usage:

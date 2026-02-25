@@ -7,7 +7,7 @@ bash scripts/start-beast.sh
 ```
 
 Visit: **http://localhost:5173**  
-Login: **admin** / **atlas-sphere-2026**
+Login: **admin** / **x3-chain-2026**
 
 ---
 
@@ -29,7 +29,7 @@ Login: **admin** / **atlas-sphere-2026**
 
 ```
 Username:  admin
-Password:  atlas-sphere-2026
+Password:  x3-chain-2026
 ```
 
 ⚠️ **Change in production!**
@@ -209,7 +209,7 @@ bash scripts/start-beast.sh
 # http://localhost:5173
 
 # Step 3: Login
-# admin / atlas-sphere-2026
+# admin / x3-chain-2026
 
 # Step 4 (optional): Run tests
 bash cross-chain-gpu-validator/scripts/run-local-tests.sh

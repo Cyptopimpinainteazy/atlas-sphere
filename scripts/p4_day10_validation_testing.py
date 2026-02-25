@@ -18,7 +18,7 @@ import time
 
 # Import from existing GPU acceleration implementations
 import sys
-sys.path.insert(0, '/home/lojak/Desktop/atlas-sphere-master/scripts')
+sys.path.insert(0, '/home/lojak/Desktop/x3-chain-master/scripts')
 
 
 class CorrectnessValidator:
@@ -442,7 +442,7 @@ def main():
     print()
     
     # Save results
-    output_dir = Path("/home/lojak/Desktop/atlas-sphere-master/testnet-config")
+    output_dir = Path("/home/lojak/Desktop/x3-chain-master/testnet-config")
     output_dir.mkdir(exist_ok=True)
     
     results_file = output_dir / "day10-validation-results.json"

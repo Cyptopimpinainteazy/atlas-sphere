@@ -34,7 +34,7 @@ class AsyncEventBus:
 
     Usage::
 
-        bus = AsyncEventBus(log_dir="/var/log/atlas-sphere/events")
+        bus = AsyncEventBus(log_dir="/var/log/x3-chain/events")
         bus.subscribe(EventType.AGENT_DEATH, my_handler)
         await bus.publish(some_event)
         await bus.shutdown()

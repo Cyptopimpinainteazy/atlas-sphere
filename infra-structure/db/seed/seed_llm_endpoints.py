@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere — LLM Endpoints Seeder
+X3 Chain — LLM Endpoints Seeder
 Seeds discovered LLM endpoints into the infrastructure database from ollama_recon_results.json.
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent
 DB_DIR = SCRIPT_DIR.parent
 DEFAULT_DB = DB_DIR / "chains.db"
-RESULTS_JSON = Path("/home/lojak/Desktop/atlas-sphere-master/llm_recon_results.json")
+RESULTS_JSON = Path("/home/lojak/Desktop/x3-chain-master/llm_recon_results.json")
 
 def seed_llm_endpoints(db_path: str = str(DEFAULT_DB)):
     conn = sqlite3.connect(db_path)

@@ -13,7 +13,7 @@ import type { Signer } from '@polkadot/types/types';
 export interface X3ChainConfig {
   /** WebSocket endpoint (e.g. ws://localhost:9944) */
   endpoint: string;
-  /** Network name (atlas-mainnet, atlas-testnet, atlas-local) */
+  /** Network name (x3-mainnet, x3-testnet, x3-local) */
   network?: X3Network;
   /** Auto-reconnect on disconnect */
   autoConnect?: boolean;
@@ -23,7 +23,7 @@ export interface X3ChainConfig {
   timeout?: number;
 }
 
-export type X3Network = 'atlas-mainnet' | 'atlas-testnet' | 'atlas-local';
+export type X3Network = 'x3-mainnet' | 'x3-testnet' | 'x3-local';
 
 export interface ConnectionState {
   connected: boolean;
@@ -103,7 +103,7 @@ export interface AssetSpec {
 }
 
 export type ExternalChainId =
-  | 'Atlas'
+  | 'X3'
   | 'Ethereum'
   | 'Solana'
   | 'Bitcoin'

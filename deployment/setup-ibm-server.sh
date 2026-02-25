@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Atlas Sphere - IBM System x3550 M5 Setup Script
+# X3 Chain - IBM System x3550 M5 Setup Script
 #
 # Server Specs:
 # - 2x Xeon E5-2620 v4 (16 cores / 32 threads)
@@ -60,7 +60,7 @@ echo "$UNMOUNTED"
 echo ""
 
 # Ask which disk to use
-read -p "Enter device name for Atlas Sphere storage (e.g., sdb): " DISK_NAME
+read -p "Enter device name for X3 Chain storage (e.g., sdb): " DISK_NAME
 DISK="/dev/${DISK_NAME}"
 
 if [ ! -b "$DISK" ]; then
@@ -95,27 +95,27 @@ echo -e "${YELLOW}Formatting ${PARTITION} as ext4...${NC}"
 sudo mkfs.ext4 -F "$PARTITION"
 
 # Create mount point
-echo -e "${YELLOW}Creating mount point /var/lib/atlas-sphere...${NC}"
-sudo mkdir -p /var/lib/atlas-sphere
+echo -e "${YELLOW}Creating mount point /var/lib/x3-chain...${NC}"
+sudo mkdir -p /var/lib/x3-chain
 
 # Mount
 echo -e "${YELLOW}Mounting ${PARTITION}...${NC}"
-sudo mount "$PARTITION" /var/lib/atlas-sphere
+sudo mount "$PARTITION" /var/lib/x3-chain
 
 # Get UUID for fstab
 UUID=$(sudo blkid -s UUID -o value "$PARTITION")
 
 # Add to fstab
 echo -e "${YELLOW}Adding to /etc/fstab for auto-mount...${NC}"
-echo "UUID=$UUID /var/lib/atlas-sphere ext4 defaults,noatime 0 2" | sudo tee -a /etc/fstab
+echo "UUID=$UUID /var/lib/x3-chain ext4 defaults,noatime 0 2" | sudo tee -a /etc/fstab
 
 # Set permissions
-sudo chown -R $USER:$USER /var/lib/atlas-sphere
+sudo chown -R $USER:$USER /var/lib/x3-chain
 
 echo ""
 echo -e "${GREEN}✓ Storage setup complete!${NC}"
 echo ""
-df -h /var/lib/atlas-sphere
+df -h /var/lib/x3-chain
 echo ""
 
 # Install dependencies
@@ -131,11 +131,11 @@ echo ""
 echo "Server specs verified:"
 echo "  CPU: $CPU_COUNT cores"
 echo "  RAM: ${RAM_GB}GB"
-echo "  Storage: Mounted at /var/lib/atlas-sphere"
+echo "  Storage: Mounted at /var/lib/x3-chain"
 echo ""
 echo "Next steps:"
-echo "  1. Copy atlas-sphere-node binary to this server"
+echo "  1. Copy x3-chain-node binary to this server"
 echo "  2. Copy deployment files"
 echo "  3. Run: ./deploy-local-testnet.sh"
 echo ""
-echo -e "${GREEN}Ready to deploy Atlas Sphere! 🚀${NC}"
+echo -e "${GREEN}Ready to deploy X3 Chain! 🚀${NC}"

@@ -6,33 +6,33 @@
 
 ```bash
 # Create namespace
-kubectl create namespace atlas-sphere
+kubectl create namespace x3-chain
 
 # Deploy swarm
 kubectl apply -f deployment/kubernetes/swarm-deployment.yaml
 
 # Check status
-kubectl get pods -n atlas-sphere
-kubectl get svc -n atlas-sphere
+kubectl get pods -n x3-chain
+kubectl get svc -n x3-chain
 ```
 
 ### Using Helm
 
 ```bash
 # Add Helm repository (if configured)
-# helm repo add atlas-sphere https://charts.atlas-sphere.io
+# helm repo add x3-chain https://charts.x3-chain.io
 
 # Install swarm
 helm install gpu-swarm deployment/helm/gpu-swarm/ \
-  -n atlas-sphere \
+  -n x3-chain \
   --create-namespace
 
 # Check status
-helm status gpu-swarm -n atlas-sphere
+helm status gpu-swarm -n x3-chain
 
 # Upgrade
 helm upgrade gpu-swarm deployment/helm/gpu-swarm/ \
-  -n atlas-sphere
+  -n x3-chain
 ```
 
 ## Components
@@ -144,17 +144,17 @@ HPA is configured to scale coordinator based on:
 - Task queue size > 1000
 
 ```bash
-kubectl get hpa -n atlas-sphere
+kubectl get hpa -n x3-chain
 ```
 
 ### Manual Scaling
 
 ```bash
 # Scale coordinator
-kubectl scale statefulset swarm-coordinator -n atlas-sphere --replicas=5
+kubectl scale statefulset swarm-coordinator -n x3-chain --replicas=5
 
 # Check node daemonset status
-kubectl get daemonset swarm-node -n atlas-sphere
+kubectl get daemonset swarm-node -n x3-chain
 ```
 
 ## GPU Support
@@ -221,7 +221,7 @@ spec:
     - from:
       - namespaceSelector:
           matchLabels:
-            name: atlas-sphere
+            name: x3-chain
 ```
 
 ### Sandbox Execution
@@ -233,32 +233,32 @@ Task execution runs in seccomp/AppArmor sandbox within containers.
 ### Check Coordinator Status
 
 ```bash
-kubectl logs -f swarm-coordinator-0 -n atlas-sphere
-kubectl describe pod swarm-coordinator-0 -n atlas-sphere
+kubectl logs -f swarm-coordinator-0 -n x3-chain
+kubectl describe pod swarm-coordinator-0 -n x3-chain
 ```
 
 ### Check Node Status
 
 ```bash
-kubectl logs -f swarm-node-xxxxx -n atlas-sphere --tail=100
-kubectl top pod swarm-node-xxxxx -n atlas-sphere
+kubectl logs -f swarm-node-xxxxx -n x3-chain --tail=100
+kubectl top pod swarm-node-xxxxx -n x3-chain
 ```
 
 ### Peer Connection Issues
 
 ```bash
 # Check connected peers
-kubectl exec swarm-coordinator-0 -n atlas-sphere -- curl localhost:3000/peers
+kubectl exec swarm-coordinator-0 -n x3-chain -- curl localhost:3000/peers
 
 # Check network
-kubectl exec swarm-coordinator-0 -n atlas-sphere -- ip addr
+kubectl exec swarm-coordinator-0 -n x3-chain -- ip addr
 ```
 
 ### GPU Detection Issues
 
 ```bash
 # Check GPU availability
-kubectl exec swarm-node-xxxxx -n atlas-sphere -- nvidia-smi
+kubectl exec swarm-node-xxxxx -n x3-chain -- nvidia-smi
 
 # Check GPU plugin status
 kubectl get nodes -o json | grep nvidia
@@ -272,17 +272,17 @@ Persistent volumes store coordinator state. Regular backups recommended:
 
 ```bash
 # Backup
-kubectl exec swarm-coordinator-0 -n atlas-sphere -- tar czf /backup.tar.gz /var/lib/swarm
+kubectl exec swarm-coordinator-0 -n x3-chain -- tar czf /backup.tar.gz /var/lib/swarm
 
 # Restore
-kubectl cp swarm-coordinator-0:/backup.tar.gz ./backup.tar.gz -n atlas-sphere
+kubectl cp swarm-coordinator-0:/backup.tar.gz ./backup.tar.gz -n x3-chain
 ```
 
 ### ConfigMaps
 
 ```bash
 # Backup configmaps
-kubectl get configmap -n atlas-sphere -o yaml > configmaps-backup.yaml
+kubectl get configmap -n x3-chain -o yaml > configmaps-backup.yaml
 
 # Restore
 kubectl apply -f configmaps-backup.yaml
@@ -319,19 +319,19 @@ max_peers: 50     # Small clusters
 ```bash
 # Rolling update
 kubectl set image statefulset/swarm-coordinator \
-  swarm-coordinator=atlas-sphere/swarm-coordinator:v0.2.0 \
-  -n atlas-sphere
+  swarm-coordinator=x3-chain/swarm-coordinator:v0.2.0 \
+  -n x3-chain
 
 # DaemonSet auto-updates nodes
 kubectl set image daemonset/swarm-node \
-  node=atlas-sphere/swarm-node:v0.2.0 \
-  -n atlas-sphere
+  node=x3-chain/swarm-node:v0.2.0 \
+  -n x3-chain
 ```
 
 ## Support & Monitoring
 
-- Check logs: `kubectl logs -f <pod> -n atlas-sphere`
-- Check events: `kubectl get events -n atlas-sphere --sort-by='.lastTimestamp'`
+- Check logs: `kubectl logs -f <pod> -n x3-chain`
+- Check events: `kubectl get events -n x3-chain --sort-by='.lastTimestamp'`
 - Check metrics: Access Prometheus UI
 - Check dashboards: Access Grafana
 

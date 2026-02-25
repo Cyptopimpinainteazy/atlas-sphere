@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deployment of the Atlas Sphere Off-Chain Jury Service across development, staging, and production environments.
+This guide covers deployment of the X3 Chain Off-Chain Jury Service across development, staging, and production environments.
 
 **Table of Contents:**
 - [Quick Start](#quick-start)
@@ -146,7 +146,7 @@ The `sql-init/01-init-schema.sql` script automatically runs on first container s
 
 ```bash
 # Verify schema was created
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "\dt"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "\dt"
 
 # Expected tables:
 # - audit_logs
@@ -165,10 +165,10 @@ curl -X POST http://localhost:8000/api/jury/session \
   -d '{...}'
 
 # PostgreSQL
-docker exec -it atlas-jury-db psql -U jury_admin -d jury_audit
+docker exec -it x3-jury-db psql -U jury_admin -d jury_audit
 
 # Redis
-docker exec -it atlas-jury-cache redis-cli
+docker exec -it x3-jury-cache redis-cli
 
 # Prometheus (if enabled)
 docker-compose --profile observability up -d jury-metrics
@@ -183,17 +183,17 @@ docker-compose --profile observability up -d jury-metrics
 
 #### 1. Create Service User
 ```bash
-sudo useradd -m -s /bin/bash -d /opt/atlas/jury jury
-sudo mkdir -p /opt/atlas/jury
+sudo useradd -m -s /bin/bash -d /opt/x3/jury jury
+sudo mkdir -p /opt/x3/jury
 sudo mkdir -p /var/log/jury /var/cache/jury/sessions
-sudo chown -R jury:jury /opt/atlas/jury /var/log/jury /var/cache/jury
+sudo chown -R jury:jury /opt/x3/jury /var/log/jury /var/cache/jury
 ```
 
 #### 2. Install Application
 ```bash
 # Copy application files
-sudo cp -r swarm /opt/atlas/jury/
-cd /opt/atlas/jury
+sudo cp -r swarm /opt/x3/jury/
+cd /opt/x3/jury
 
 # Create and activate venv
 sudo -u jury python3 -m venv venv
@@ -204,15 +204,15 @@ sudo -u jury venv/bin/pip install aiohttp aiohttp-cors aiofiles psycopg2-binary 
 #### 3. Configure Environment
 ```bash
 # Create config directory
-sudo mkdir -p /etc/atlas/jury
+sudo mkdir -p /etc/x3/jury
 
 # Copy and edit configuration
-sudo cp jury.env.example /etc/atlas/jury/jury.env
-sudo nano /etc/atlas/jury/jury.env  # Edit passwords and URLs
+sudo cp jury.env.example /etc/x3/jury/jury.env
+sudo nano /etc/x3/jury/jury.env  # Edit passwords and URLs
 
 # Create local overrides (not in git)
-sudo touch /etc/atlas/jury/jury.local.env
-sudo chmod 600 /etc/atlas/jury/jury.local.env
+sudo touch /etc/x3/jury/jury.local.env
+sudo chmod 600 /etc/x3/jury/jury.local.env
 ```
 
 #### 4. Install Systemd Service
@@ -263,7 +263,7 @@ sudo systemctl show jury -p ExecStart
 sudo systemctl status jury --full --no-truncate
 ```
 
-### Environment File Format (`/etc/atlas/jury/jury.env`)
+### Environment File Format (`/etc/x3/jury/jury.env`)
 
 ```bash
 # Database
@@ -344,7 +344,7 @@ sudo ufw allow 5432/tcp  # PostgreSQL (internal only)
 sudo ufw allow 6379/tcp  # Redis (internal only)
 
 # Backups configured
-crontab -e  # Add: 0 2 * * * /opt/atlas/backup-jury.sh
+crontab -e  # Add: 0 2 * * * /opt/x3/backup-jury.sh
 
 # Monitoring configured
 # - Prometheus scrape targets
@@ -401,14 +401,14 @@ redis-cli ping
 
 ```bash
 # Deploy application
-cd /opt/atlas/jury
-git clone https://github.com/Cyptopimpinainteazy/atlas-sphere.git .
+cd /opt/x3/jury
+git clone https://github.com/Cyptopimpinainteazy/x3-chain.git .
 
 # Install to required location
-sudo cp -r swarm /opt/atlas/jury/
+sudo cp -r swarm /opt/x3/jury/
 
 # Create venv and install dependencies
-cd /opt/atlas/jury
+cd /opt/x3/jury
 python3 -m venv venv
 venv/bin/pip install -r swarm/requirements.txt
 
@@ -418,8 +418,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable jury
 
 # Configure environment
-sudo cp jury.env.example /etc/atlas/jury/jury.env
-sudo nano /etc/atlas/jury/jury.env  # Edit for production
+sudo cp jury.env.example /etc/x3/jury/jury.env
+sudo nano /etc/x3/jury/jury.env  # Edit for production
 
 # Start service
 sudo systemctl start jury
@@ -441,7 +441,7 @@ upstream jury_backend {
 
 server {
     listen 443 ssl http2;
-    server_name jury.atlas-sphere.io;
+    server_name jury.x3-chain.io;
 
     ssl_certificate /etc/ssl/certs/jury-service.crt;
     ssl_certificate_key /etc/ssl/private/jury-service.key;
@@ -570,13 +570,13 @@ groups:
 sudo journalctl -u jury -n 50
 
 # Verify environment file
-sudo cat /etc/atlas/jury/jury.env | grep -E "DATABASE|REDIS"
+sudo cat /etc/x3/jury/jury.env | grep -E "DATABASE|REDIS"
 
 # Test database connection
 PGPASSWORD=... psql -h localhost -U jury_admin -d jury_audit -c "SELECT 1"
 
 # Check file permissions
-ls -la /opt/atlas/jury /var/log/jury
+ls -la /opt/x3/jury /var/log/jury
 ```
 
 #### 2. High database latency
@@ -633,8 +633,8 @@ proxy_connect_timeout 10s;
 openssl rand -base64 32
 
 # Store in secure location
-sudo chmod 600 /etc/atlas/jury/jury.env
-sudo chmod 600 /etc/atlas/jury/jury.local.env
+sudo chmod 600 /etc/x3/jury/jury.env
+sudo chmod 600 /etc/x3/jury/jury.local.env
 
 # Rotate credentials
 # 1. Generate new password
@@ -666,7 +666,7 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 # Use Let's Encrypt for production
 sudo apt-get install certbot python3-certbot-nginx
-sudo certbot certonly --nginx -d jury.atlas-sphere.io
+sudo certbot certonly --nginx -d jury.x3-chain.io
 ```
 
 ### Audit & Compliance

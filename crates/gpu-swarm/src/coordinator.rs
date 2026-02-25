@@ -9,6 +9,7 @@ use crate::task::{Task, TaskId, TaskStatus};
 use crate::verification::{ExecutionVerifier, VerificationConfig, VerificationSummary, Verdict};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::{mpsc, RwLock, broadcast};
 
 /// Events emitted by the coordinator
@@ -136,11 +137,29 @@ pub struct SwarmCoordinator {
     /// Coordinator's identity
     coordinator_id: NodeId,
     
+    /// Coordinator's Ed25519 signing key
+    signing_key: ed25519_dalek::SigningKey,
+    
     /// Metrics
     metrics: Arc<RwLock<CoordinatorMetrics>>,
     
     /// Running flag
     running: Arc<RwLock<bool>>,
+    
+    /// Current epoch counter
+    current_epoch: Arc<AtomicU64>,
+    
+    /// Task result store: task_id -> TaskResult
+    result_store: Arc<RwLock<HashMap<TaskId, TaskResult>>>,
+    
+    /// Completed task counter for hourly metrics tracking
+    completed_counter: Arc<AtomicU64>,
+    
+    /// Cumulative task latency (ms) for average calculation
+    cumulative_latency_ms: Arc<AtomicU64>,
+    
+    /// Rewards distributed counter
+    rewards_counter: Arc<AtomicU64>,
 }
 
 impl SwarmCoordinator {
@@ -152,6 +171,16 @@ impl SwarmCoordinator {
         let (message_tx, message_rx) = mpsc::channel(1000);
         let (event_tx, event_rx) = broadcast::channel(100);
         
+        // Generate a deterministic signing key from the coordinator ID
+        let seed: [u8; 32] = {
+            use sha2::{Sha256, Digest};
+            let mut hasher = Sha256::new();
+            hasher.update(coordinator_id.as_bytes());
+            hasher.update(b"coordinator_signing_key");
+            hasher.finalize().into()
+        };
+        let signing_key = ed25519_dalek::SigningKey::from_bytes(&seed);
+        
         let coordinator = Self {
             config: config.clone(),
             nodes: Arc::new(RwLock::new(NodeRegistry::new())),
@@ -161,11 +190,34 @@ impl SwarmCoordinator {
             message_rx,
             message_tx: message_tx.clone(),
             coordinator_id,
+            signing_key,
             metrics: Arc::new(RwLock::new(CoordinatorMetrics::default())),
             running: Arc::new(RwLock::new(false)),
+            current_epoch: Arc::new(AtomicU64::new(0)),
+            result_store: Arc::new(RwLock::new(HashMap::new())),
+            completed_counter: Arc::new(AtomicU64::new(0)),
+            cumulative_latency_ms: Arc::new(AtomicU64::new(0)),
+            rewards_counter: Arc::new(AtomicU64::new(0)),
         };
         
         (coordinator, message_tx, event_rx)
+    }
+    
+    /// Sign a message with the coordinator's Ed25519 key
+    fn sign_message(&self, message: &[u8]) -> Signature {
+        use ed25519_dalek::Signer;
+        let sig = self.signing_key.sign(message);
+        Signature(sig.to_bytes())
+    }
+    
+    /// Get the current epoch
+    fn epoch(&self) -> u64 {
+        self.current_epoch.load(Ordering::Relaxed)
+    }
+    
+    /// Advance to the next epoch
+    fn advance_epoch(&self) -> u64 {
+        self.current_epoch.fetch_add(1, Ordering::SeqCst) + 1
     }
     
     /// Start the coordinator
@@ -180,6 +232,7 @@ impl SwarmCoordinator {
         self.spawn_task_scheduler();
         self.spawn_timeout_checker();
         self.spawn_metrics_updater();
+        self.spawn_epoch_advancer();
         
         // Main message processing loop
         self.run_message_loop().await
@@ -228,6 +281,8 @@ impl SwarmCoordinator {
     async fn handle_join_request(&self, req: JoinRequest) -> SwarmResult<()> {
         // Verify minimum stake
         if req.stake < self.config.min_stake {
+            // Sign rejection message with coordinator key
+            let reject_msg = format!("join_rejected:{}", req.node_id);
             let response = JoinResponse {
                 accepted: false,
                 reason: Some(format!(
@@ -235,8 +290,8 @@ impl SwarmCoordinator {
                     self.config.min_stake, req.stake
                 )),
                 bootstrap_peers: Vec::new(),
-                current_epoch: 0,
-                signature: Signature::default(), // TODO: Sign
+                current_epoch: self.epoch(),
+                signature: self.sign_message(reject_msg.as_bytes()),
             };
             self.send_response(req.node_id, SwarmMessage::JoinResponse(response)).await?;
             return Ok(());
@@ -272,13 +327,14 @@ impl SwarmCoordinator {
                 .collect()
         };
         
-        // Send response
+        // Sign acceptance message with coordinator key
+        let accept_msg = format!("join_accepted:{}:epoch:{}", req.node_id, self.epoch());
         let response = JoinResponse {
             accepted: true,
             reason: None,
             bootstrap_peers,
-            current_epoch: 0, // TODO: Track epoch
-            signature: Signature::default(), // TODO: Sign
+            current_epoch: self.epoch(),
+            signature: self.sign_message(accept_msg.as_bytes()),
         };
         self.send_response(req.node_id, SwarmMessage::JoinResponse(response)).await?;
         
@@ -316,9 +372,11 @@ impl SwarmCoordinator {
             node.gpu.available_vram = hb.available_vram;
         }
         
-        // Send ack with any pending tasks
-        let scheduler = self.scheduler.read().await;
-        let pending_tasks = Vec::new(); // TODO: Get pending tasks for this node
+        // Get pending tasks for this node from the scheduler
+        let pending_tasks = {
+            let scheduler = self.scheduler.read().await;
+            scheduler.pending_for_node(&hb.node_id).unwrap_or_default()
+        };
         
         let ack = HeartbeatAck {
             timestamp: hb.timestamp,
@@ -326,7 +384,6 @@ impl SwarmCoordinator {
         };
         
         drop(nodes);
-        drop(scheduler);
         
         self.send_response(hb.node_id, SwarmMessage::HeartbeatAck(ack)).await
     }
@@ -360,17 +417,45 @@ impl SwarmCoordinator {
     /// Handle task result
     async fn handle_task_result(&self, result: TaskResult) -> SwarmResult<()> {
         let task_id = result.task_id;
+        let started_at = result.started_at.unwrap_or(0);
         
         if result.success {
-            // Start verification
+            // Start verification with selected verifiers
             let verifiers = self.select_verifiers(&result.executor, 2).await?;
             
-            // TODO: Get original task from scheduler
-            // For now, we'll skip verification for the prototype
+            // Get original task from scheduler for verification
+            let original_task = {
+                let scheduler = self.scheduler.read().await;
+                scheduler.get_task(task_id).cloned()
+            };
+            
+            if let Some(task) = original_task {
+                if !verifiers.is_empty() {
+                    // Start verification process
+                    let mut verifier = self.verifier.write().await;
+                    if let Err(e) = verifier.start_verification(task, result.clone(), verifiers.clone()) {
+                        tracing::warn!("Could not start verification for task {:?}: {:?}", task_id, e);
+                    }
+                }
+            }
+            
+            // Store the result
+            {
+                let mut store = self.result_store.write().await;
+                store.insert(task_id, result.clone());
+            }
             
             {
                 let mut scheduler = self.scheduler.write().await;
                 scheduler.mark_completed(task_id, result.result_hash, result.compute_units)?;
+            }
+            
+            // Track metrics
+            self.completed_counter.fetch_add(1, Ordering::Relaxed);
+            if started_at > 0 {
+                let now_ms = chrono::Utc::now().timestamp_millis() as u64;
+                let latency = now_ms.saturating_sub(started_at as u64);
+                self.cumulative_latency_ms.fetch_add(latency, Ordering::Relaxed);
             }
             
             self.emit_event(CoordinatorEvent::TaskCompleted {
@@ -427,13 +512,17 @@ impl SwarmCoordinator {
             
             self.emit_event(CoordinatorEvent::TaskAssigned { task_id, node_id });
             
-            // Send assignment to node
+            // Select verifiers for this task assignment
+            let verifiers = self.select_verifiers(&node_id, 2).await.unwrap_or_default();
+            
+            // Sign the task assignment
+            let assign_msg = format!("assign:{}:{}:{}", task_id, node_id, self.epoch());
             let assignment = TaskAssignment {
                 task_id,
                 primary_executor: node_id,
-                verifiers: Vec::new(), // TODO: Select verifiers
+                verifiers,
                 assigned_at: chrono::Utc::now().timestamp(),
-                signature: Signature::default(),
+                signature: self.sign_message(assign_msg.as_bytes()),
             };
             
             self.send_response(node_id, SwarmMessage::TaskAssignment(assignment)).await?;
@@ -458,9 +547,6 @@ impl SwarmCoordinator {
     
     /// Slash a node for invalid result
     async fn slash_for_invalid_result(&self, summary: &VerificationSummary) -> SwarmResult<()> {
-        // Find the executor from invalid voters... this is simplified
-        // In practice, we'd track which node produced the invalid result
-        
         for node_id in &summary.invalid_voters {
             let mut nodes = self.nodes.write().await;
             if let Some(node) = nodes.get_mut(node_id) {
@@ -483,7 +569,6 @@ impl SwarmCoordinator {
         let envelope = MessageEnvelope::new(self.coordinator_id, message);
         
         // In practice, this would send via the network layer
-        // For now, we just log it
         tracing::debug!("Sending message: {:?}", envelope);
         
         Ok(())
@@ -566,6 +651,20 @@ impl SwarmCoordinator {
         });
     }
     
+    /// Spawn epoch advancer - advances epoch every 60 seconds
+    fn spawn_epoch_advancer(&self) {
+        let epoch = Arc::clone(&self.current_epoch);
+        let running = Arc::clone(&self.running);
+        
+        tokio::spawn(async move {
+            while *running.read().await {
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                let new_epoch = epoch.fetch_add(1, Ordering::SeqCst) + 1;
+                tracing::info!("Epoch advanced to {}", new_epoch);
+            }
+        });
+    }
+    
     /// Spawn metrics updater task
     fn spawn_metrics_updater(&self) {
         let nodes = Arc::clone(&self.nodes);
@@ -573,6 +672,9 @@ impl SwarmCoordinator {
         let metrics = Arc::clone(&self.metrics);
         let running = Arc::clone(&self.running);
         let event_tx = self.event_tx.clone();
+        let completed_counter = Arc::clone(&self.completed_counter);
+        let cumulative_latency = Arc::clone(&self.cumulative_latency_ms);
+        let rewards_counter = Arc::clone(&self.rewards_counter);
         
         tokio::spawn(async move {
             while *running.read().await {
@@ -586,15 +688,25 @@ impl SwarmCoordinator {
                 let total_capacity = nodes_guard.total_compute_capacity();
                 let status_counts = nodes_guard.count_by_status();
                 
+                // Calculate real metrics from atomic counters
+                let completed_hour = completed_counter.load(Ordering::Relaxed);
+                let total_latency = cumulative_latency.load(Ordering::Relaxed);
+                let avg_latency = if completed_hour > 0 {
+                    total_latency / completed_hour
+                } else {
+                    0
+                };
+                let rewards_hour = rewards_counter.load(Ordering::Relaxed);
+                
                 let new_metrics = CoordinatorMetrics {
                     total_nodes: status_counts.values().sum(),
                     online_nodes: online_count,
                     queued_tasks: stats.pending_count,
                     executing_tasks: stats.executing_count,
-                    completed_tasks_hour: 0, // TODO: Track
+                    completed_tasks_hour: completed_hour,
                     total_compute_capacity: total_capacity,
-                    avg_task_latency_ms: 0, // TODO: Track
-                    rewards_distributed_hour: 0, // TODO: Track
+                    avg_task_latency_ms: avg_latency,
+                    rewards_distributed_hour: rewards_hour,
                 };
                 
                 {
@@ -629,12 +741,10 @@ impl SwarmCoordinator {
         scheduler.get_status(*task_id)
     }
     
-    /// Get the result of a completed task.
-    /// Note: The scheduler does not currently store full results.
-    /// This is a stub that returns None until result storage is implemented.
-    pub async fn get_task_result(&self, _task_id: &TaskId) -> Option<TaskResult> {
-        // TODO: Implement result storage in the scheduler or a separate store
-        None
+    /// Get the result of a completed task from the result store.
+    pub async fn get_task_result(&self, task_id: &TaskId) -> Option<TaskResult> {
+        let store = self.result_store.read().await;
+        store.get(task_id).cloned()
     }
     
     /// Cancel a task

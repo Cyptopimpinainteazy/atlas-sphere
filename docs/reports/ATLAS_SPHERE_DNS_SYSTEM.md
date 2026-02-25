@@ -1,13 +1,13 @@
-# Atlas Sphere Custom DNS System (.x3 TLD)
-**DNS Infrastructure for Atlas Sphere Ecosystem**
+# X3 Chain Custom DNS System (.x3 TLD)
+**DNS Infrastructure for X3 Chain Ecosystem**
 **Created: December 10, 2025**
 
 ## 🎯 VISION
 
-Create a custom DNS server for the `.x3` TLD to provide clean, branded domains for all Atlas Sphere services:
+Create a custom DNS server for the `.x3` TLD to provide clean, branded domains for all X3 Chain services:
 
 ### Planned Domains:
-- `xchange.x3` - Atlas Sphere DEX/Exchange
+- `xchange.x3` - X3 Chain DEX/Exchange
 - `blockexplorer.x3` - Block Explorer
 - `wallet.x3` - Web Wallet
 - `api.x3` - API Gateway
@@ -32,7 +32,7 @@ Create a custom DNS server for the `.x3` TLD to provide clean, branded domains f
 - **Database**: PostgreSQL for domain registration
 - **Features**: Domain registration, DNS record management
 - **API**: RESTful API for domain operations
-- **Integration**: Atlas Sphere blockchain integration
+- **Integration**: X3 Chain blockchain integration
 
 #### 3. **Dynamic DNS Updates**
 - **Real-time**: Automatic DNS updates from blockchain
@@ -54,7 +54,7 @@ Create a custom DNS server for the `.x3` TLD to provide clean, branded domains f
 - [ ] 2.4 Domain renewal system
 
 ### Phase 3: Service Integration
-- [ ] 3.1 Atlas Sphere service registration
+- [ ] 3.1 X3 Chain service registration
 - [ ] 3.2 Dynamic DNS updates
 - [ ] 3.3 Load balancing configuration
 - [ ] 3.4 Monitoring and health checks
@@ -135,7 +135,7 @@ pub struct DnsUpdateTx {
 
 ### Root Zone (.x3)
 ```
-$x3.                    3600    IN      SOA     ns1.atlas-sphere.io. admin.atlas-sphere.io. (
+$x3.                    3600    IN      SOA     ns1.x3-chain.io. admin.x3-chain.io. (
                               2025121001  ; Serial
                               3600        ; Refresh
                               1800        ; Retry
@@ -143,15 +143,15 @@ $x3.                    3600    IN      SOA     ns1.atlas-sphere.io. admin.atlas
                               3600 )      ; Minimum TTL
 
 ; Name Servers
-$x3.                    3600    IN      NS      ns1.atlas-sphere.io.
-$x3.                    3600    IN      NS      ns2.atlas-sphere.io.
+$x3.                    3600    IN      NS      ns1.x3-chain.io.
+$x3.                    3600    IN      NS      ns2.x3-chain.io.
 
 ; Core Services
 blockexplorer.x3.         300     IN      A       10.0.1.100
-api.x3.                  300     IN      CNAME   services.atlas-sphere.io.
+api.x3.                  300     IN      CNAME   services.x3-chain.io.
 rpc.x3.                   300     IN      A       10.0.1.200
 
-; Atlas Services
+; X3 Services
 xchange.x3.              300     IN      A       10.0.2.100
 wallet.x3.                300     IN      A       10.0.2.200
 apps/dash-legacy-2-legacy-2board.x3.             300     IN      A       10.0.2.300
@@ -172,7 +172,7 @@ governance.x3.            300     IN      A       10.0.3.300
 - **Chain of Trust**: Root zone trust anchor
 
 ### Domain Ownership Verification
-- **Blockchain Verification**: Domain ownership verified on Atlas Sphere blockchain
+- **Blockchain Verification**: Domain ownership verified on X3 Chain blockchain
 - **Cryptographic Proofs**: Digital signatures for domain changes
 - **Multi-sig Support**: Multi-signature domain ownership
 - **Expiration Management**: Automatic expiration handling
@@ -211,7 +211,7 @@ interface DomainRegistrationPortal {
 4. **Monitoring**: DNS query monitoring and alerting
 
 ### Integration Points
-1. **Atlas Sphere Blockchain**: Domain ownership verification
+1. **X3 Chain Blockchain**: Domain ownership verification
 2. **Service Discovery**: Automatic service registration
 3. **Load Balancer**: DNS-based load balancing
 4. **CDN Integration**: Global content distribution
@@ -299,4 +299,4 @@ A custom DNS system for the `.x3` TLD would provide:
 - **Enterprise Features**: Advanced DNS management
 - **Blockchain Integration**: Verifiable domain ownership
 
-This would significantly enhance the Atlas Sphere ecosystem's accessibility and user experience while providing powerful infrastructure for service discovery and management.
+This would significantly enhance the X3 Chain ecosystem's accessibility and user experience while providing powerful infrastructure for service discovery and management.

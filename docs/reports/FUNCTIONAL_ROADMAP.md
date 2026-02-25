@@ -1,8 +1,8 @@
-# Atlas Sphere – Complete Functional Blockchain Roadmap
+# X3 Chain – Complete Functional Blockchain Roadmap
 
 ## Overview
 
-This roadmap describes the step-by-step path to transform Atlas Sphere from a **proof-of-concept prototype** (dual-VM kernel + stubs) into a **fully functional Layer-1 blockchain** capable of:
+This roadmap describes the step-by-step path to transform X3 Chain from a **proof-of-concept prototype** (dual-VM kernel + stubs) into a **fully functional Layer-1 blockchain** capable of:
 
 - ✅ Deterministic dual-VM (EVM + SVM) transaction execution
 - ✅ Atomic cross-domain operations with canonical ledger finality
@@ -26,15 +26,15 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 ## Phase 1: Core Runtime Hardening & Validation
 
-**Goal:** Ensure the Atlas Kernel pallet and runtime are production-grade, fully tested, and deterministic for Wasm.
+**Goal:** Ensure the X3 Kernel pallet and runtime are production-grade, fully tested, and deterministic for Wasm.
 
-### 1.1 Complete Atlas Kernel Pallet Logic
+### 1.1 Complete X3 Kernel Pallet Logic
 
 **Status:** MVP implemented; mock VM dispatchers in place.
 
 **Tasks:**
 
-- [ ] **Finalize Comit data model** (`pallets/atlas-kernel/src/lib.rs`):
+- [ ] **Finalize Comit data model** (`pallets/x3-kernel/src/lib.rs`):
   - Lock down `Comit`, `ExecutionReceipt`, `SphereState` structures (add versioning for backward compatibility).
   - Implement deterministic SCALE encoding for all types to ensure consistent hashing.
   - Add serde support for JSON RPC interfaces.
@@ -75,8 +75,8 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Review and lock down runtime constants** (`runtime/src/lib.rs`):
   - `MaxPayloadLength`: 32 KiB — verify against realistic EVM/SVM payload sizes. Consider increasing if needed.
-  - `ExistentialDeposit`: 100 µATLAS — review for mainnet economics.
-  - `TransactionByteFee`: 10 µATLAS/byte — validate fee structure matches gas-to-ATLAS conversion.
+  - `ExistentialDeposit`: 100 µX3 — review for mainnet economics.
+  - `TransactionByteFee`: 10 µX3/byte — validate fee structure matches gas-to-X3 conversion.
   - `MaxAssetsPerAccount`: 32 — reasonable for dev; document mainnet scaling expectations.
 
 - [ ] **Add configurable consensus parameters**:
@@ -132,7 +132,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 **Tasks:**
 
-- [ ] **Unit tests** (`pallets/atlas-kernel/src/tests.rs` + `mock.rs`):
+- [ ] **Unit tests** (`pallets/x3-kernel/src/tests.rs` + `mock.rs`):
   - Expand to 200+ tests covering:
     - Valid and invalid Comit submissions (all error paths).
     - Asset registration and ledger constraints.
@@ -143,7 +143,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Integration tests** (new file: `tests/kernel_integration.rs`):
   - Test kernel pallet interactions with balances, transaction payment, and system pallets.
   - Verify fee deduction flows.
-  - Test account registration and atlas ID mapping.
+  - Test account registration and x3 ID mapping.
 
 - [ ] **Fuzzing** (optional; can be Phase 2):
   - Fuzz Comit parsing and prepare_root computation.
@@ -204,12 +204,12 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - `system_*`: Chain info, peer count, sync status.
   - `author_submitExtrinsic`: Transaction submission.
 
-- [ ] **Atlas-specific RPC methods** (new file: `node/src/rpc.rs`):
+- [ ] **X3-specific RPC methods** (new file: `node/src/rpc.rs`):
   - `atlasKernel_getCanonicalBalance`: Query account asset balance.
   - `atlasKernel_getAssetMetadata`: Fetch asset symbol, decimals.
   - `atlasKernel_getComitStatus`: Query Comit submission status (pending, finalized, failed).
   - `atlasKernel_getAccountNonce`: Retrieve next expected nonce.
-  - `system_getAccountInfo`: Combined account metadata (nonce, balance, atlas ID).
+  - `system_getAccountInfo`: Combined account metadata (nonce, balance, x3 ID).
 
 - [ ] **Subscriptions** (event monitoring):
   - `atlasKernel_subscribeComits`: Real-time Comit submission/finalization events.
@@ -294,8 +294,8 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Configure `pallet_evm::Config`:
     - `ChainId = 1337` (or testnet ID).
     - `AccountProvider`: Custom account provider mapping H160 to substrate AccountId.
-    - `FeeCalculator`: Denominate gas fees in ATLAS (conversion: 1 ATLAS = N gwei).
-    - `WeightToFee`: Calculate weight cost in ATLAS.
+    - `FeeCalculator`: Denominate gas fees in X3 (conversion: 1 X3 = N gwei).
+    - `WeightToFee`: Calculate weight cost in X3.
     - `GasWeightMapping`: Translate gas to substrate weight units.
     - `Runner`: Default runner or custom for canonical ledger hooks.
 
@@ -336,7 +336,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Gas metering**:
   - Configure `GasWeightMapping` to translate gas to substrate weight.
-  - Implement `FeeCalculator` to compute ATLAS fee from gas.
+  - Implement `FeeCalculator` to compute X3 fee from gas.
   - Add overhead cost for cross-VM calls (if applicable).
 
 - [ ] **EVM Executor tests**:
@@ -388,7 +388,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - Frontier JSON-RPC server is listening on port 8545.
 - MetaMask can connect and display balance.
 - Simple ERC-20 contract can be deployed via Hardhat/Truffle.
-- Transaction fees are charged in ATLAS.
+- Transaction fees are charged in X3.
 
 ---
 
@@ -531,7 +531,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 **Tasks:**
 
-- [ ] **Replace mock implementations** (`pallets/atlas-kernel/src/lib.rs`):
+- [ ] **Replace mock implementations** (`pallets/x3-kernel/src/lib.rs`):
   - Implement `DualVmDispatcher::execute_evm_tx` to call into EVM pallet.
   - Implement `DualVmDispatcher::execute_svm_tx` to dispatch to SVM sidecar.
   - Implement `execute_dual_tx` to orchestrate both sequentially.
@@ -566,7 +566,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 - [ ] **Implement swap contracts**:
   - EVM: `SwapInitiator.sol` (user deposits Token A; waits for SVM finalization).
   - SVM: `SwapCompleter` program (receives Token A; sends Token B).
-  - Coordinator logic in Atlas Kernel to enforce both sides execute or both fail.
+  - Coordinator logic in X3 Kernel to enforce both sides execute or both fail.
 
 - [ ] **Integration test**:
   - Create two test accounts (one EVM, one SVM).
@@ -633,7 +633,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 **Tasks:**
 
-- [ ] **Core SDK functionality** (`packages/py-sdk/atlas_sphere/`):
+- [ ] **Core SDK functionality** (`packages/py-sdk/x3_chain/`):
   - `__init__.py`: Main exports.
   - `client.py`: Node RPC client.
   - `signer.py`: Key management.
@@ -705,14 +705,14 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Useful for testing and scripting.
 
 - [ ] **Key management CLI**:
-  - `atlas-key generate`: Create new keypair.
-  - `atlas-key import --seed <phrase>`: Import from seed.
-  - `atlas-key export --key <path>`: Export public key.
+  - `x3-key generate`: Create new keypair.
+  - `x3-key import --seed <phrase>`: Import from seed.
+  - `x3-key export --key <path>`: Export public key.
 
 - [ ] **Integration testing CLI**:
-  - `atlas-test deploy-contract --solidity <file>`: Deploy EVM contract.
-  - `atlas-test submit-program --rust <file>`: Deploy SVM program.
-  - `atlas-test check-balance --account <id>`: Verify balance.
+  - `x3-test deploy-contract --solidity <file>`: Deploy EVM contract.
+  - `x3-test submit-program --rust <file>`: Deploy SVM program.
+  - `x3-test check-balance --account <id>`: Verify balance.
 
 **Acceptance Criteria:**
 - CLI tools are usable and documented.
@@ -831,15 +831,15 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Generate `specs/testnet.json` with testnet authorities.
   - Distribute to validator operators.
 
-- [ ] **Faucet for test ATLAS**:
+- [ ] **Faucet for test X3**:
   - Deploy faucet service (`tools/faucet/`).
-  - Allow users to claim test ATLAS for testing.
+  - Allow users to claim test X3 for testing.
   - Rate limiting to prevent spam.
 
 **Acceptance Criteria:**
 - 5+ validators are operational.
 - Testnet reaches finality regularly.
-- Faucet distributes test ATLAS.
+- Faucet distributes test X3.
 - Monitoring apps/dash-legacy-2-legacy-2boards show real-time metrics.
 
 ---
@@ -864,7 +864,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
   - Example dApps and repos.
 
 - [ ] **Grant program** (optional):
-  - Allocate testnet ATLAS for developers building on Atlas Sphere.
+  - Allocate testnet X3 for developers building on X3 Chain.
   - Showcase community projects.
 
 **Acceptance Criteria:**
@@ -890,7 +890,7 @@ This roadmap describes the step-by-step path to transform Atlas Sphere from a **
 
 - [ ] **Bug bounty program**:
   - Launch public bug bounty on HackerOne or similar.
-  - Allocate bounty pool (e.g., 50k ATLAS).
+  - Allocate bounty pool (e.g., 50k X3).
   - Publish program rules and scope.
 
 **Acceptance Criteria:**

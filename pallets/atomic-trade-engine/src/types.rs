@@ -21,7 +21,7 @@ pub enum VmType {
     Evm,
     /// Solana Virtual Machine
     Svm,
-    /// Atlas X3 Virtual Machine
+    /// X3 X3 Virtual Machine
     X3,
     /// Cross-VM operation (requires both)
     CrossVm,
@@ -51,7 +51,7 @@ pub enum AmmProtocol {
     Raydium,
     /// Orca Whirlpool (SVM)
     OrcaWhirlpool,
-    /// Custom Atlas Sphere AMM
+    /// Custom X3 Chain AMM
     AtlasAmm,
     /// Generic constant product AMM
     ConstantProduct,

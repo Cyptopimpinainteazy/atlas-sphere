@@ -1,4 +1,4 @@
-//! Type definitions for X3 integration with Atlas Kernel
+//! Type definitions for X3 integration with X3 Kernel
 
 #[cfg(not(feature = "std"))]
 use alloc::{string::String, vec::Vec};

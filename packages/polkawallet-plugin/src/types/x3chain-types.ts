@@ -1,8 +1,8 @@
 /**
- * Atlas Sphere x3chain — Custom type definitions for Polkawallet JS API
+ * X3 Chain x3chain — Custom type definitions for Polkawallet JS API
  *
- * These types map 1:1 to the Atlas Sphere runtime pallets:
- *   - atlas-kernel (comit v2)
+ * These types map 1:1 to the X3 Chain runtime pallets:
+ *   - x3-kernel (comit v2)
  *   - atomic-trade-engine
  *   - x3-verifier
  *   - x3-settlement-engine
@@ -17,7 +17,7 @@
  */
 
 export const x3chainTypes = {
-  /* ─── Atlas Kernel ─── */
+  /* ─── X3 Kernel ─── */
   ComitId: 'H256',
   PrepareRoot: 'H256',
   CanonicalBalance: 'u128',
@@ -213,7 +213,7 @@ export const x3chainTypes = {
 };
 
 /**
- * Custom RPC methods exposed by Atlas Sphere node.
+ * Custom RPC methods exposed by X3 Chain node.
  */
 export const x3chainRpc = {
   atlasKernel: {
@@ -347,11 +347,11 @@ export const x3chainRpc = {
 };
 
 /**
- * Atlas Sphere chain constants.
+ * X3 Chain chain constants.
  */
 export const X3_CHAIN_ID = 650000;
 export const X3_SS58_PREFIX = 42;
-export const X3_TOKEN_SYMBOL = 'ATLAS';
+export const X3_TOKEN_SYMBOL = 'X3';
 export const X3_TOKEN_DECIMALS = 18;
 export const X3_BLOCK_TIME_MS = 6000;
 

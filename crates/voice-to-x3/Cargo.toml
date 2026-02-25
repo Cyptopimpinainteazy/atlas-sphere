@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Voice-to-X3 - Natural language to X3 smart contract code generation"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [features]
 default = ["std"]

@@ -1,5 +1,5 @@
 /**
- * Live integration tests for @atlas-sphere/ts-sdk that exercise a running Atlas node.
+ * Live integration tests for @x3-chain/ts-sdk that exercise a running X3 node.
  *
  * These tests are skipped by default. To run against a local/dev node:
  *
@@ -11,9 +11,9 @@
 import { AtlasSphereClient } from '../src';
 
 const RUN_LIVE = process.env.RUN_LIVE_INTEGRATION_TESTS === '1';
-const WS_ENDPOINT = process.env.ATLAS_WS_ENDPOINT ?? 'ws://127.0.0.1:9944';
+const WS_ENDPOINT = process.env.X3_WS_ENDPOINT ?? 'ws://127.0.0.1:9944';
 
-(RUN_LIVE ? describe : describe.skip)('Atlas TS SDK — live node integration', () => {
+(RUN_LIVE ? describe : describe.skip)('X3 TS SDK — live node integration', () => {
   jest.setTimeout(30_000);
   let client: AtlasSphereClient | null = null;
 
@@ -66,7 +66,7 @@ const WS_ENDPOINT = process.env.ATLAS_WS_ENDPOINT ?? 'ws://127.0.0.1:9944';
     const { ApiPromise, WsProvider } = await import('@polkadot/api');
     const { Keyring } = await import('@polkadot/keyring');
 
-    const endpoint = process.env.ATLAS_WS_ENDPOINT ?? 'wss://testnet.atlassphere.io';
+    const endpoint = process.env.X3_WS_ENDPOINT ?? 'wss://testnet.atlassphere.io';
     const api = await ApiPromise.create({ provider: new WsProvider(endpoint) });
 
     const keyring = new Keyring({ type: 'sr25519' });

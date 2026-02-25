@@ -249,32 +249,32 @@ impl ApotheosisBuilder {
                 gas_cost: 200000,
                 estimated_time: 1200,
             });
-        } else if to == ChainId::ATLAS {
-            // Any chain to Atlas - use Atlas Bridge
+        } else if to == ChainId::X3 {
+            // Any chain to X3 - use X3 Bridge
             hops.push(RouteHop {
                 hop_type: HopType::Bridge,
                 from_chain: from,
                 to_chain: to,
-                protocol: "atlas-bridge".to_string(),
+                protocol: "x3-bridge".to_string(),
                 gas_cost: 100000,
                 estimated_time: 60, // 1 minute
             });
         } else {
-            // Multi-hop through Atlas
+            // Multi-hop through X3
             hops.push(RouteHop {
                 hop_type: HopType::Bridge,
                 from_chain: from,
-                to_chain: ChainId::ATLAS,
-                protocol: "atlas-bridge".to_string(),
+                to_chain: ChainId::X3,
+                protocol: "x3-bridge".to_string(),
                 gas_cost: 100000,
                 estimated_time: 60,
             });
             hops.push(RouteHop {
                 hop_type: HopType::Bridge,
-                from_chain: ChainId::ATLAS,
+                from_chain: ChainId::X3,
                 to_chain: to,
-                protocol: "atlas-bridge".to_string(),
-                gas_cost: 50000, // Atlas gas
+                protocol: "x3-bridge".to_string(),
+                gas_cost: 50000, // X3 gas
                 estimated_time: 60,
             });
         }
@@ -342,9 +342,9 @@ impl ApotheosisBuilder {
             }
         }
 
-        // Default to atlas-bridge for Atlas routes, or layerzero for others
-        if from == ChainId::ATLAS || to == ChainId::ATLAS {
-            "atlas-bridge".to_string()
+        // Default to x3-bridge for X3 routes, or layerzero for others
+        if from == ChainId::X3 || to == ChainId::X3 {
+            "x3-bridge".to_string()
         } else {
             "layerzero".to_string()
         }
@@ -370,7 +370,7 @@ impl ApotheosisBuilder {
         }
 
         // Distance risk (more hops = more risk)
-        if from != to && from != ChainId::ATLAS && to != ChainId::ATLAS {
+        if from != to && from != ChainId::X3 && to != ChainId::X3 {
             risk += 10;
         }
 
@@ -400,7 +400,7 @@ mod tests {
 
         // No sources
         let result = ApotheosisBuilder::new()
-            .to(ChainId::ATLAS, "5Atlas...")
+            .to(ChainId::X3, "5Atlas...")
             .build();
         assert!(matches!(result, Err(ApotheosisError::NoSourceChains)));
     }
@@ -409,7 +409,7 @@ mod tests {
     fn test_successful_build() {
         let result = ApotheosisBuilder::new()
             .sweep_chain(ChainId::ETHEREUM, "0x1234")
-            .to(ChainId::ATLAS, "5Atlas...")
+            .to(ChainId::X3, "5Atlas...")
             .build();
 
         assert!(result.is_ok());

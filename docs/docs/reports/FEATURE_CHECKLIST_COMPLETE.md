@@ -1,4 +1,4 @@
-# Atlas Sphere Complete Feature Checklist
+# X3 Chain Complete Feature Checklist
 
 > **Last Updated**: December 12, 2025  
 > **Overall Completion**: ~90%  
@@ -20,15 +20,15 @@
 | **Consensus (Aura + GRANDPA)** | ✅ Complete | `node/src/service.rs` |
 | 6-second block time | ✅ | Chain spec |
 | BFT finality | ✅ | GRANDPA integration |
-| **Native Asset Layer** | ✅ Complete | `pallets/atlas-kernel/` |
-| ATLAS token with proper denomination | ✅ | Asset registry |
-| **Account Abstraction** | ✅ Complete | Atlas Kernel pallet |
+| **Native Asset Layer** | ✅ Complete | `pallets/x3-kernel/` |
+| X3 token with proper denomination | ✅ | Asset registry |
+| **Account Abstraction** | ✅ Complete | X3 Kernel pallet |
 | Unified account model across VMs | ✅ | Cross-VM state sync |
 | **Chain ID** | ✅ Complete | 650,000 (mainnet) |
 | **VM Adapters** | ✅ Complete | `crates/{evm,svm}-integration/` |
 | Real EVM (Frontier) | ✅ | Frontier integration |
 | SVM (rBPF) | ✅ | solana-rbpf |
-| **Atlas Kernel Pallet** | ✅ Complete | `pallets/atlas-kernel/src/lib.rs` |
+| **X3 Kernel Pallet** | ✅ Complete | `pallets/x3-kernel/src/lib.rs` |
 | Comit Submission | ✅ | Atomic transaction processing |
 | Canonical Ledger | ✅ | Cross-VM state synchronization |
 | Authorization System | ✅ | Account permission management |
@@ -67,7 +67,7 @@
 | Flash Loan Support | ✅ | Instant borrowing with repayment |
 | Liqfrontend/uidation System | ✅ | Automated liqfrontend/uidations |
 | **Launchpad Ecosystem** | ✅ Complete | `contracts/launchpad/` |
-| Atlas Launchpad | ✅ | Token launch platform |
+| X3 Launchpad | ✅ | Token launch platform |
 | NFT Launchpad | ✅ | NFT minting and distribution |
 | Blockspace Auction | ✅ | Validator slot auctions |
 | Fair Launch Mechanisms | ✅ | Anti-bot launch protection |
@@ -151,7 +151,7 @@
 | **X3 CLI** | ✅ Complete | `crates/x3-cli/` |
 | REPL | ✅ | Interactive shell |
 | Swap Commands | ✅ | Cross-chain functionality |
-| **Atlas SDK** | ✅ Complete | `packages/sdk/` |
+| **X3 SDK** | ✅ Complete | `packages/sdk/` |
 | Complete API client | ✅ | TypeScript/JavaScript |
 | RPC Integration | ✅ | JSON-RPC endpoints |
 | WebSocket Support | ✅ | Real-time subscriptions |
@@ -174,7 +174,7 @@
 | GPU Swarm Visualization | ✅ | Interactive swarm maps |
 | **Prometheus Metrics Dashboard** | ✅ NEW | `apps/explorer/src/app/prometheus/` |
 | Live Node Metrics | ✅ | Block height, peers, TX pool |
-| Atlas Kernel Stats | ✅ | Comit, EVM, SVM executions |
+| X3 Kernel Stats | ✅ | Comit, EVM, SVM executions |
 | System Resources | ✅ | CPU, memory, disk, bandwidth |
 | **Wallet Application** | ✅ Complete | `apps/wallet/` |
 | Multi-Chain Wallet | ✅ | 103+ chains support |
@@ -197,7 +197,7 @@
 | Mempool scanning | ✅ | Intent prediction |
 | Multi-chain support | ✅ | EVM, SVM, Cosmos |
 | 8 modules | ✅ | predictor, watcher, chains, cache, config, executor, metrics, types |
-| **MEV Shield Overlord** | ✅ Complete | `crates/atlas-swap-router/src/mev_protection.rs` |
+| **MEV Shield Overlord** | ✅ Complete | `crates/x3-swap-router/src/mev_protection.rs` |
 | Multi-layer protection | ✅ | Already existed |
 | Private mempool | ✅ | Flashbots/MEV-share compatible |
 | **Meme Overlord Pallet** | ✅ Complete | `pallets/meme-overlord/` |
@@ -223,7 +223,7 @@
 | **Apotheosis Transaction** | ✅ Complete | `crates/apotheosis-tx/` |
 | Ultimate cross-chain migration | ✅ | Atomic consolidation 103+ chains |
 | Dijkstra routing | ✅ | Smart path optimization |
-| Bridge support | ✅ | Atlas Bridge, Wormhole, Across, Stargate, LayerZero |
+| Bridge support | ✅ | X3 Bridge, Wormhole, Across, Stargate, LayerZero |
 | 5 modules | ✅ | types, bfrontend/uilder, executor, routes, lib |
 
 ### 🔮 Planned / Future Features
@@ -253,7 +253,7 @@
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **Atlas DNS Server** | ✅ Complete | `crates/atlas-dns-server/` |
+| **X3 DNS Server** | ✅ Complete | `crates/x3-dns-server/` |
 | Domain Resolution | ✅ | .x3 TLD support |
 | Zone Management | ✅ | DNS administration |
 | Blockchain Integration | ✅ | On-chain domain registry |
@@ -274,7 +274,7 @@
 | Block production | ✅ | `substrate_block_height` |
 | Consensus health | ✅ | `substrate_finality_grandpa_round` |
 | Network stats | ✅ | `substrate_sub_libp2p_peers_count` |
-| Custom Atlas Kernel | ✅ | `atlas_kernel_*` metrics |
+| Custom X3 Kernel | ✅ | `x3_kernel_*` metrics |
 
 ---
 
@@ -298,13 +298,13 @@
 
 ### Prometheus Endpoints
 - **Local Dev**: `http://127.0.0.1:9615/metrics`
-- **Testnet**: `http://rpc.testnet.atlas-sphere.io:9615/metrics`
+- **Testnet**: `http://rpc.testnet.x3-chain.io:9615/metrics`
 - **Explorer Dashboard**: `/prometheus` route in explorer app
 
 ### RPC Endpoints
 - **HTTP RPC**: `http://127.0.0.1:9944`
 - **WebSocket**: `ws://127.0.0.1:9944`
-- **Testnet**: `http://rpc.testnet.atlas-sphere.io:9944`
+- **Testnet**: `http://rpc.testnet.x3-chain.io:9944`
 
 ### Bfrontend/uild Commands
 ```bash

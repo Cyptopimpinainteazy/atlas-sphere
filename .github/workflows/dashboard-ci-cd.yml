@@ -129,7 +129,7 @@ jobs:
       - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: 'atlas-swarm-dashboard'
+          project: 'x3-swarm-dashboard'
           path: 'apps/swarm-dashboard'
           format: 'JSON'
           args: >
@@ -213,7 +213,7 @@ jobs:
             # Clear SSH key
             rm ~/.ssh/deploy_key
             
-            echo "✅ Deployed to staging: https://staging-dashboard.atlas-sphere.com"
+            echo "✅ Deployed to staging: https://staging-dashboard.x3-chain.com"
           fi
         continue-on-error: true
 
@@ -243,14 +243,14 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
             
             docker build -f apps/swarm-dashboard/Dockerfile \
-              -t atlas-sphere-dashboard:${{ github.sha }} \
-              -t atlas-sphere-dashboard:latest \
+              -t x3-chain-dashboard:${{ github.sha }} \
+              -t x3-chain-dashboard:latest \
               apps/swarm-dashboard/
             
-            docker tag atlas-sphere-dashboard:latest \
-              $DOCKER_USERNAME/atlas-sphere-dashboard:latest
+            docker tag x3-chain-dashboard:latest \
+              $DOCKER_USERNAME/x3-chain-dashboard:latest
             
-            docker push $DOCKER_USERNAME/atlas-sphere-dashboard:latest
+            docker push $DOCKER_USERNAME/x3-chain-dashboard:latest
           fi
         continue-on-error: true
 
@@ -273,7 +273,7 @@ jobs:
             # Clear SSH key
             rm ~/.ssh/deploy_key
             
-            echo "✅ Deployed to production: https://dashboard.atlas-sphere.com"
+            echo "✅ Deployed to production: https://dashboard.x3-chain.com"
           fi
         continue-on-error: true
 

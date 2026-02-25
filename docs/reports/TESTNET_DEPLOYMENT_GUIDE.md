@@ -1,15 +1,15 @@
-# Atlas Sphere Testnet v1 - Deployment Guide
+# X3 Chain Testnet v1 - Deployment Guide
 
 **Status**: Ready for Deployment  
 **Version**: 0.1.0-testnet  
-**Network**: Atlas Sphere Testnet v1  
+**Network**: X3 Chain Testnet v1  
 **Launch Date**: November 2025
 
 ---
 
 ## Overview
 
-Atlas Sphere Testnet v1 is a **developer preview network** designed for:
+X3 Chain Testnet v1 is a **developer preview network** designed for:
 - Testing Comit submission and canonical ledger functionality
 - Developer experimentation with dual-VM architecture
 - Infrastructure validation and performance testing
@@ -28,7 +28,7 @@ Atlas Sphere Testnet v1 is a **developer preview network** designed for:
 ### Chain Configuration
 | Parameter | Value |
 |-----------|-------|
-| **Chain ID** | `atlas-testnet` |
+| **Chain ID** | `x3-testnet` |
 | **Currency Symbol** | `tATLAS` |
 | **Decimals** | 12 |
 | **Block Time** | 6 seconds |
@@ -46,32 +46,32 @@ Atlas Sphere Testnet v1 is a **developer preview network** designed for:
 
 ### 1. Build Release Binary
 ```bash
-cd /home/lojak/Desktop/atlas-sphere
+cd /home/lojak/Desktop/x3-chain
 cargo build --release
 ```
 
 **Verify binary**:
 ```bash
-./target/release/atlas-sphere-node --version
+./target/release/x3-chain-node --version
 ```
 
 ### 2. Generate Chain Specification
 
 **Create testnet chain spec**:
 ```bash
-./target/release/atlas-sphere-node build-spec \
+./target/release/x3-chain-node build-spec \
   --chain local \
   --disable-default-bootnode \
-  > atlas-testnet.json
+  > x3-testnet.json
 ```
 
 **Convert to raw format**:
 ```bash
-./target/release/atlas-sphere-node build-spec \
-  --chain atlas-testnet.json \
+./target/release/x3-chain-node build-spec \
+  --chain x3-testnet.json \
   --raw \
   --disable-default-bootnode \
-  > atlas-testnet-raw.json
+  > x3-testnet-raw.json
 ```
 
 ### 3. Generate Authority Keys
@@ -80,13 +80,13 @@ For each validator node, generate keys:
 
 ```bash
 # Generate Aura key (sr25519)
-./target/release/atlas-sphere-node key generate \
+./target/release/x3-chain-node key generate \
   --scheme sr25519 \
   --output-type json \
   > validator-1-aura.json
 
 # Generate Grandpa key (ed25519)
-./target/release/atlas-sphere-node key generate \
+./target/release/x3-chain-node key generate \
   --scheme ed25519 \
   --output-type json \
   > validator-1-grandpa.json
@@ -96,7 +96,7 @@ Repeat for each validator (validator-2, validator-3, etc.)
 
 ### 4. Configure Genesis Validators
 
-Edit `atlas-testnet.json` and add validator public keys:
+Edit `x3-testnet.json` and add validator public keys:
 
 ```json
 {
@@ -153,27 +153,27 @@ Edit `atlas-testnet.json` and add validator public keys:
 **1. Install binary**:
 ```bash
 # Copy binary to validator server
-scp target/release/atlas-sphere-node user@validator:/usr/local/bin/
+scp target/release/x3-chain-node user@validator:/usr/local/bin/
 ```
 
 **2. Create systemd service**:
 ```bash
-sudo nano /etc/systemd/system/atlas-validator.service
+sudo nano /etc/systemd/system/x3-validator.service
 ```
 
 ```ini
 [Unit]
-Description=Atlas Sphere Validator Node
+Description=X3 Chain Validator Node
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/home/atlas
-ExecStart=/usr/local/bin/atlas-sphere-node \
+User=x3
+WorkingDirectory=/home/x3
+ExecStart=/usr/local/bin/x3-chain-node \
   --validator \
-  --chain /home/atlas/atlas-testnet-raw.json \
-  --base-path /home/atlas/data \
+  --chain /home/x3/x3-testnet-raw.json \
+  --base-path /home/x3/data \
   --name "Validator-01" \
   --rpc-port 9944 \
   --rpc-cors all \
@@ -188,17 +188,17 @@ WantedBy=multi-user.target
 **3. Insert keys**:
 ```bash
 # Insert Aura key
-atlas-sphere-node key insert \
-  --base-path /home/atlas/data \
-  --chain atlas-testnet-raw.json \
+x3-chain-node key insert \
+  --base-path /home/x3/data \
+  --chain x3-testnet-raw.json \
   --scheme sr25519 \
   --suri "YOUR_SECRET_PHRASE" \
   --key-type aura
 
 # Insert Grandpa key
-atlas-sphere-node key insert \
-  --base-path /home/atlas/data \
-  --chain atlas-testnet-raw.json \
+x3-chain-node key insert \
+  --base-path /home/x3/data \
+  --chain x3-testnet-raw.json \
   --scheme ed25519 \
   --suri "YOUR_SECRET_PHRASE" \
   --key-type gran
@@ -206,35 +206,35 @@ atlas-sphere-node key insert \
 
 **4. Start validator**:
 ```bash
-sudo systemctl enable atlas-validator
-sudo systemctl start atlas-validator
-sudo systemctl status atlas-validator
+sudo systemctl enable x3-validator
+sudo systemctl start x3-validator
+sudo systemctl status x3-validator
 ```
 
 **5. Check logs**:
 ```bash
-sudo journalctl -u atlas-validator -f
+sudo journalctl -u x3-validator -f
 ```
 
 ### RPC Node Setup
 
 **1. Create systemd service**:
 ```bash
-sudo nano /etc/systemd/system/atlas-rpc.service
+sudo nano /etc/systemd/system/x3-rpc.service
 ```
 
 ```ini
 [Unit]
-Description=Atlas Sphere RPC Node
+Description=X3 Chain RPC Node
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/home/atlas
-ExecStart=/usr/local/bin/atlas-sphere-node \
-  --chain /home/atlas/atlas-testnet-raw.json \
-  --base-path /home/atlas/data \
+User=x3
+WorkingDirectory=/home/x3
+ExecStart=/usr/local/bin/x3-chain-node \
+  --chain /home/x3/x3-testnet-raw.json \
+  --base-path /home/x3/data \
   --name "RPC-Node-01" \
   --rpc-port 9944 \
   --rpc-external \
@@ -250,44 +250,44 @@ WantedBy=multi-user.target
 
 **2. Start RPC node**:
 ```bash
-sudo systemctl enable atlas-rpc
-sudo systemctl start atlas-rpc
-sudo systemctl status atlas-rpc
+sudo systemctl enable x3-rpc
+sudo systemctl start x3-rpc
+sudo systemctl status x3-rpc
 ```
 
 ### Bootnode Setup
 
 **1. Generate node key**:
 ```bash
-atlas-sphere-node key generate-node-key \
-  --file /home/atlas/node-key
+x3-chain-node key generate-node-key \
+  --file /home/x3/node-key
 ```
 
 **2. Get node peer ID**:
 ```bash
-atlas-sphere-node key inspect-node-key \
-  --file /home/atlas/node-key
+x3-chain-node key inspect-node-key \
+  --file /home/x3/node-key
 ```
 
 **3. Create systemd service**:
 ```bash
-sudo nano /etc/systemd/system/atlas-bootnode.service
+sudo nano /etc/systemd/system/x3-bootnode.service
 ```
 
 ```ini
 [Unit]
-Description=Atlas Sphere Bootnode
+Description=X3 Chain Bootnode
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/home/atlas
-ExecStart=/usr/local/bin/atlas-sphere-node \
-  --chain /home/atlas/atlas-testnet-raw.json \
-  --base-path /home/atlas/data \
+User=x3
+WorkingDirectory=/home/x3
+ExecStart=/usr/local/bin/x3-chain-node \
+  --chain /home/x3/x3-testnet-raw.json \
+  --base-path /home/x3/data \
   --name "Bootnode-01" \
-  --node-key-file /home/atlas/node-key \
+  --node-key-file /home/x3/node-key \
   --listen-addr /ip4/0.0.0.0/tcp/30333 \
   --log info
 Restart=always
@@ -299,8 +299,8 @@ WantedBy=multi-user.target
 
 **4. Start bootnode**:
 ```bash
-sudo systemctl enable atlas-bootnode
-sudo systemctl start atlas-bootnode
+sudo systemctl enable x3-bootnode
+sudo systemctl start x3-bootnode
 ```
 
 ---
@@ -314,14 +314,14 @@ sudo systemctl start atlas-bootnode
 ```yaml
 # prometheus.yml
 scrape_configs:
-  - job_name: 'atlas-validators'
+  - job_name: 'x3-validators'
     static_configs:
       - targets:
           - 'validator-1:9615'
           - 'validator-2:9615'
           - 'validator-3:9615'
 
-  - job_name: 'atlas-rpc'
+  - job_name: 'x3-rpc'
     static_configs:
       - targets:
           - 'rpc-1:9615'
@@ -357,8 +357,8 @@ curl http://localhost:9944 -H "Content-Type: application/json" \
 Once deployed, publish these endpoints for developers:
 
 ```
-HTTP RPC:  http://rpc.testnet.atlas-sphere.io:9944
-WebSocket: ws://ws.testnet.atlas-sphere.io:9944 (coming soon)
+HTTP RPC:  http://rpc.testnet.x3-chain.io:9944
+WebSocket: ws://ws.testnet.x3-chain.io:9944 (coming soon)
 ```
 
 ### Faucet Service
@@ -367,7 +367,7 @@ Deploy a faucet for distributing testnet tokens:
 
 ```bash
 # Faucet API endpoint
-POST https://faucet.testnet.atlas-sphere.io/claim
+POST https://faucet.testnet.x3-chain.io/claim
 {
   "address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
 }
@@ -386,14 +386,14 @@ POST https://faucet.testnet.atlas-sphere.io/claim
 
 **1. Get testnet tokens**:
 ```bash
-curl -X POST https://faucet.testnet.atlas-sphere.io/claim \
+curl -X POST https://faucet.testnet.x3-chain.io/claim \
   -H "Content-Type: application/json" \
   -d '{"address": "YOUR_ADDRESS"}'
 ```
 
 **2. Query canonical balance**:
 ```bash
-curl http://rpc.testnet.atlas-sphere.io:9944 \
+curl http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id":1,
@@ -405,7 +405,7 @@ curl http://rpc.testnet.atlas-sphere.io:9944 \
 
 **3. Check authorized accounts**:
 ```bash
-curl http://rpc.testnet.atlas-sphere.io:9944 \
+curl http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id":1,
@@ -420,7 +420,7 @@ curl http://rpc.testnet.atlas-sphere.io:9944 \
 ```bash
 # Using polkadot.js CLI (once available)
 polkadot-js-api \
-  --ws ws://ws.testnet.atlas-sphere.io:9944 \
+  --ws ws://ws.testnet.x3-chain.io:9944 \
   tx.atlasKernel.submitComit \
   0x0102030405060708090a0b0c0d0e0f00112233445566778899aabbccddeeff00 \
   0x \
@@ -467,13 +467,13 @@ polkadot-js-api \
 
 **Check logs**:
 ```bash
-sudo journalctl -u atlas-validator -n 100
+sudo journalctl -u x3-validator -n 100
 ```
 
 **Common issues**:
 - Chain spec mismatch (ensure all nodes use same raw spec)
 - Port conflicts (check 9944, 30333 not in use)
-- Insufficient permissions (run as atlas user, not root)
+- Insufficient permissions (run as x3 user, not root)
 - Database corruption (purge chain with `--purge-chain`)
 
 ### Node Not Syncing
@@ -510,19 +510,19 @@ netstat -tlnp | grep 9944
 
 **Backup chain data**:
 ```bash
-tar -czf atlas-backup-$(date +%Y%m%d).tar.gz \
-  /home/atlas/data/chains/atlas-testnet/db/
+tar -czf x3-backup-$(date +%Y%m%d).tar.gz \
+  /home/x3/data/chains/x3-testnet/db/
 ```
 
 ### Database Purge
 
 **Purge and resync** (if corrupted):
 ```bash
-sudo systemctl stop atlas-validator
-atlas-sphere-node purge-chain \
-  --chain atlas-testnet-raw.json \
-  --base-path /home/atlas/data
-sudo systemctl start atlas-validator
+sudo systemctl stop x3-validator
+x3-chain-node purge-chain \
+  --chain x3-testnet-raw.json \
+  --base-path /home/x3/data
+sudo systemctl start x3-validator
 ```
 
 ### Updating Node Software
@@ -535,17 +535,17 @@ cargo build --release
 
 **2. Stop node**:
 ```bash
-sudo systemctl stop atlas-validator
+sudo systemctl stop x3-validator
 ```
 
 **3. Update binary**:
 ```bash
-sudo cp target/release/atlas-sphere-node /usr/local/bin/
+sudo cp target/release/x3-chain-node /usr/local/bin/
 ```
 
 **4. Restart node**:
 ```bash
-sudo systemctl start atlas-validator
+sudo systemctl start x3-validator
 ```
 
 ---
@@ -553,14 +553,14 @@ sudo systemctl start atlas-validator
 ## Support & Communication
 
 ### Developer Resources
-- **Documentation**: https://docs.atlas-sphere.io
-- **GitHub**: https://github.com/atlas-sphere/atlas-sphere
-- **Discord**: https://discord.gg/atlas-sphere
-- **Telegram**: https://t.me/atlas_sphere
+- **Documentation**: https://docs.x3-chain.io
+- **GitHub**: https://github.com/x3-chain/x3-chain
+- **Discord**: https://discord.gg/x3-chain
+- **Telegram**: https://t.me/x3_chain
 
 ### Report Issues
-- **Bug Reports**: https://github.com/atlas-sphere/atlas-sphere/issues
-- **Security Issues**: security@atlas-sphere.io (private)
+- **Bug Reports**: https://github.com/x3-chain/x3-chain/issues
+- **Security Issues**: security@x3-chain.io (private)
 - **General Questions**: Discord #support channel
 
 ---
@@ -611,7 +611,7 @@ sudo systemctl start atlas-validator
 
 ## Conclusion
 
-Atlas Sphere Testnet v1 is ready for deployment with:
+X3 Chain Testnet v1 is ready for deployment with:
 - ✅ Stable consensus and networking
 - ✅ Working RPC server
 - ✅ Functional Comit submission
@@ -627,5 +627,5 @@ Atlas Sphere Testnet v1 is ready for deployment with:
 ---
 
 **Last Updated**: November 2025  
-**Maintainer**: Atlas Sphere Core Team  
+**Maintainer**: X3 Chain Core Team  
 **License**: Apache 2.0

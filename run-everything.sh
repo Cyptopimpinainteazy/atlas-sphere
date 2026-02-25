@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# Atlas Sphere - Run Everything
+# X3 Chain - Run Everything
 # ============================================================
 # Starts ALL services: Ollama/GPU, Blockchain, Swarm, X3OS,
 # Explorer, Wallet, DEX, Solana DEX
@@ -43,7 +43,7 @@ SWARM_API_PORT=8080
 PROMETHEUS_PORT=9090
 HTLC_COORDINATOR_PORT=8787  # HTLC Atomic Swap Coordinator
 
-# Infenstructior & TPS Services
+# Inferstructor & TPS Services
 VALIDATOR_REGISTRY_PORT=7001
 TPS_BRIDGE_PORT=9999
 METRICS_DASHBOARD_PORT=8080
@@ -51,7 +51,7 @@ LLM_ROUTER_PORT=3000
 LLM_METRICS_PORT=9091
 TPS_TRACKER_INFLUX_PORT=8086
 TPS_STREAMLIT_PORT=8501
-INFENSTRUCTIOR_DASHBOARD_PORT=5174
+INFERSTRUCTOR_DASHBOARD_PORT="${INFERSTRUCTOR_DASHBOARD_PORT:-${INFENSTRUCTIOR_DASHBOARD_PORT:-5174}}"
 
 # Frontend Ports
 X3OS_PORT=3001          # Explorer with X3OS at /x3os
@@ -59,7 +59,7 @@ WALLET_PORT=3002
 DEX_PORT=3003
 SOLANA_DEX_PORT=3006    # apps/next-solana-main (moved from 3000)
 QUANTUM_DASHBOARD_PORT=3100  # Quantum Advisor Dashboard
-ATLAS_DESKTOP_PORT=5173     # Atlas Desktop (Tauri) Vite dev server
+X3_DESKTOP_PORT=5173     # X3 Desktop (Tauri) Vite dev server
 VALIDATORS_PORT=3004        # Validators dashboard
 X3_INTELLIGENCE_PORT=3005   # X3 Intelligence
 POLKADEX_PORT=3007          # Polkadex DEX
@@ -71,7 +71,7 @@ BLOCKCHAIN_ADAPTER_PORT=8082    # Blockchain Adapter (TypeScript)
 # Cloudflare Tunnel & Placeholder
 PLACEHOLDER_PORT=7000           # Subdomain placeholder server
 CLOUDFLARE_TUNNEL_ID="6c118620-18cf-4795-80a8-6d44d37aecaa"
-CLOUDFLARE_TUNNEL_NAME="atlas-sphere"
+CLOUDFLARE_TUNNEL_NAME="x3-chain"
 CLOUDFLARE_DOMAIN="x3star.net"
 
 # URLs
@@ -87,7 +87,7 @@ STARTUP_TIMEOUT=30
 HEALTH_CHECK_INTERVAL=2
 
 # PIDs file for cleanup
-PIDS_FILE="$PROJECT_ROOT/.atlas-pids"
+PIDS_FILE="$PROJECT_ROOT/.x3-pids"
 
 # ============================================================
 # Helper Functions
@@ -358,17 +358,17 @@ start_blockchain() {
 
     # Find node binary (support cargo placing artifacts in target/<triple>/release)
     local node_binary=""
-    if [ -f "$PROJECT_ROOT/target/release/atlas-sphere-node" ]; then
-        node_binary="$PROJECT_ROOT/target/release/atlas-sphere-node"
-    elif [ -f "$PROJECT_ROOT/target/x86_64-unknown-linux-gnu/release/atlas-sphere-node" ]; then
-        node_binary="$PROJECT_ROOT/target/x86_64-unknown-linux-gnu/release/atlas-sphere-node"
+    if [ -f "$PROJECT_ROOT/target/release/x3-chain-node" ]; then
+        node_binary="$PROJECT_ROOT/target/release/x3-chain-node"
+    elif [ -f "$PROJECT_ROOT/target/x86_64-unknown-linux-gnu/release/x3-chain-node" ]; then
+        node_binary="$PROJECT_ROOT/target/x86_64-unknown-linux-gnu/release/x3-chain-node"
     elif [ -f "$PROJECT_ROOT/target/release/node" ]; then
         node_binary="$PROJECT_ROOT/target/release/node"
-    elif [ -f "$PROJECT_ROOT/node/target/release/atlas-sphere-node" ]; then
-        node_binary="$PROJECT_ROOT/node/target/release/atlas-sphere-node"
+    elif [ -f "$PROJECT_ROOT/node/target/release/x3-chain-node" ]; then
+        node_binary="$PROJECT_ROOT/node/target/release/x3-chain-node"
     else
         # Last-resort discovery: pick the first matching executable under target/**/release
-        node_binary=$(find "$PROJECT_ROOT/target" -path '*/release/atlas-sphere-node' -type f -executable 2>/dev/null | head -n 1)
+        node_binary=$(find "$PROJECT_ROOT/target" -path '*/release/x3-chain-node' -type f -executable 2>/dev/null | head -n 1)
     fi
 
     if [ -z "$node_binary" ] || [ ! -f "$node_binary" ]; then
@@ -515,23 +515,23 @@ start_nextjs_app() {
     fi
 }
 
-start_atlas_desktop() {
-    log_header "Starting Atlas Desktop (Tauri)"
+start_x3_desktop() {
+    log_header "Starting X3 Desktop (Tauri)"
 
-    local app_dir="$PROJECT_ROOT/apps/atlas-desktop"
+    local app_dir="$PROJECT_ROOT/apps/x3-desktop"
 
     if [ ! -d "$app_dir" ] || [ ! -f "$app_dir/package.json" ]; then
-        log_warn "Atlas Desktop not found at $app_dir"
+        log_warn "X3 Desktop not found at $app_dir"
         return 1
     fi
 
     # Check for pre-built Tauri binary first
     local tauri_bin=""
     local tauri_candidates=(
-        "$app_dir/src-tauri/target/release/atlas-desktop"
-        "$app_dir/src-tauri/target/release/atlas_desktop_backend"
-        "$app_dir/src-tauri/target/*/release/atlas-desktop"
-        "$app_dir/src-tauri/target/*/release/atlas_desktop_backend"
+        "$app_dir/src-tauri/target/release/x3-desktop"
+        "$app_dir/src-tauri/target/release/x3_desktop_backend"
+        "$app_dir/src-tauri/target/*/release/x3-desktop"
+        "$app_dir/src-tauri/target/*/release/x3_desktop_backend"
     )
 
     for c in "${tauri_candidates[@]}"; do
@@ -547,13 +547,13 @@ start_atlas_desktop() {
 
     # Install deps if needed
     if [ ! -d "node_modules" ]; then
-        log_info "Installing dependencies for Atlas Desktop..."
+        log_info "Installing dependencies for X3 Desktop..."
         npm install --silent 2>/dev/null || true
     fi
 
     # Set local-dev environment so Vite connects to the running node
     export VITE_DOMAIN="localhost"
-    export VITE_APP_URL="http://localhost:$ATLAS_DESKTOP_PORT"
+    export VITE_APP_URL="http://localhost:$X3_DESKTOP_PORT"
     export VITE_RPC_HTTP="http://127.0.0.1:$BLOCKCHAIN_PORT"
     export VITE_RPC_WS="ws://127.0.0.1:$BLOCKCHAIN_PORT"
     export VITE_RPC_HTTP_LOCAL="http://127.0.0.1:$BLOCKCHAIN_PORT"
@@ -562,13 +562,13 @@ start_atlas_desktop() {
     export VITE_EXPLORER_URL="http://127.0.0.1:$X3OS_PORT"
 
     if [ -n "$tauri_bin" ]; then
-        log_info "Launching Atlas Desktop from pre-built binary: $tauri_bin"
-        "$tauri_bin" > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+        log_info "Launching X3 Desktop from pre-built binary: $tauri_bin"
+        "$tauri_bin" > "$PROJECT_ROOT/logs/x3-desktop.log" 2>&1 &
         local pid=$!
-        save_pid "atlas-desktop" $pid
+        save_pid "x3-desktop" $pid
         sleep 2
         if kill -0 "$pid" 2>/dev/null; then
-            log_success "Atlas Desktop started (PID: $pid)"
+            log_success "X3 Desktop started (PID: $pid)"
             cd "$PROJECT_ROOT"
             return 0
         fi
@@ -576,35 +576,35 @@ start_atlas_desktop() {
 
     # Fallback: run in Tauri dev mode (starts Vite + Tauri together)
     if [ -f "$app_dir/src-tauri/tauri.conf.json" ]; then
-        log_info "Starting Atlas Desktop in Tauri dev mode..."
-        npm run tauri:dev > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+        log_info "Starting X3 Desktop in Tauri dev mode..."
+        npm run tauri:dev > "$PROJECT_ROOT/logs/x3-desktop.log" 2>&1 &
         local pid=$!
-        save_pid "atlas-desktop" $pid
+        save_pid "x3-desktop" $pid
 
         cd "$PROJECT_ROOT"
 
-        if wait_for_port $ATLAS_DESKTOP_PORT "Atlas Desktop" 90; then
-            log_success "Atlas Desktop Tauri started (PID: $pid)"
+        if wait_for_port $X3_DESKTOP_PORT "X3 Desktop" 90; then
+            log_success "X3 Desktop Tauri started (PID: $pid)"
             return 0
         else
-            log_warn "Atlas Desktop may still be compiling (Tauri + Vite)..."
+            log_warn "X3 Desktop may still be compiling (Tauri + Vite)..."
             return 0
         fi
     fi
 
     # Final fallback: Vite dev only (no Tauri shell)
-    log_info "Starting Atlas Desktop (Vite only) on port $ATLAS_DESKTOP_PORT..."
-    npm run dev > "$PROJECT_ROOT/logs/atlas-desktop.log" 2>&1 &
+    log_info "Starting X3 Desktop (Vite only) on port $X3_DESKTOP_PORT..."
+    npm run dev > "$PROJECT_ROOT/logs/x3-desktop.log" 2>&1 &
     local pid=$!
-    save_pid "atlas-desktop" $pid
+    save_pid "x3-desktop" $pid
 
     cd "$PROJECT_ROOT"
 
-    if wait_for_port $ATLAS_DESKTOP_PORT "Atlas Desktop" 60; then
-        log_success "Atlas Desktop Vite started (PID: $pid)"
+    if wait_for_port $X3_DESKTOP_PORT "X3 Desktop" 60; then
+        log_success "X3 Desktop Vite started (PID: $pid)"
         return 0
     else
-        log_warn "Atlas Desktop may still be compiling..."
+        log_warn "X3 Desktop may still be compiling..."
         return 0
     fi
 }
@@ -906,7 +906,7 @@ start_validator_registry() {
         return 0
     fi
 
-    local registry_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    local registry_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/inferstructor"
     if [ ! -d "$registry_dir" ] || [ ! -f "$registry_dir/validator_registry.py" ]; then
         log_warn "Validator Registry not found"
         return 1
@@ -944,7 +944,7 @@ start_tps_bridge() {
         return 0
     fi
 
-    local bridge_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    local bridge_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/inferstructor"
     if [ ! -d "$bridge_dir" ] || [ ! -f "$bridge_dir/tps_bridge.py" ]; then
         log_warn "TPS Bridge not found"
         return 1
@@ -971,7 +971,7 @@ start_tps_bridge() {
 start_lane_orchestrator() {
     log_header "Starting Lane Orchestrator"
 
-    local orchestrator_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/infenstructior"
+    local orchestrator_dir="$PROJECT_ROOT/cross-chain-gpu-validator/tests/inferstructor"
     if [ ! -d "$orchestrator_dir" ] || [ ! -f "$orchestrator_dir/lane_orchestrator.py" ]; then
         log_warn "Lane Orchestrator not found"
         return 1
@@ -996,39 +996,39 @@ start_lane_orchestrator() {
     fi
 }
 
-start_infenstructior_dashboard() {
-    log_header "Starting Infenstructior Dashboard"
+start_inferstructor_dashboard() {
+    log_header "Starting Inferstructor Dashboard"
 
-    if port_in_use $INFENSTRUCTIOR_DASHBOARD_PORT; then
-        log_success "Infenstructior Dashboard already running on port $INFENSTRUCTIOR_DASHBOARD_PORT"
+    if port_in_use $INFERSTRUCTOR_DASHBOARD_PORT; then
+        log_success "Inferstructor Dashboard already running on port $INFERSTRUCTOR_DASHBOARD_PORT"
         return 0
     fi
 
-    local dashboard_dir="$PROJECT_ROOT/apps/infenstructior-dashboard"
+    local dashboard_dir="$PROJECT_ROOT/apps/inferstructor-dashboard"
     if [ ! -d "$dashboard_dir" ]; then
-        log_warn "Infenstructior Dashboard not found at $dashboard_dir"
+        log_warn "Inferstructor Dashboard not found at $dashboard_dir"
         return 1
     fi
 
     cd "$dashboard_dir"
 
     if [ ! -d "node_modules" ]; then
-        log_info "Installing Infenstructior Dashboard dependencies..."
+        log_info "Installing Inferstructor Dashboard dependencies..."
         npm install --silent 2>/dev/null || true
     fi
 
-    log_info "Starting Infenstructior Dashboard on port $INFENSTRUCTIOR_DASHBOARD_PORT..."
-    PORT=$INFENSTRUCTIOR_DASHBOARD_PORT npm run dev > "$PROJECT_ROOT/logs/infenstructior-dashboard.log" 2>&1 &
+    log_info "Starting Inferstructor Dashboard on port $INFERSTRUCTOR_DASHBOARD_PORT..."
+    PORT=$INFERSTRUCTOR_DASHBOARD_PORT npm run dev > "$PROJECT_ROOT/logs/inferstructor-dashboard.log" 2>&1 &
     local pid=$!
-    save_pid "infenstructior-dashboard" $pid
+    save_pid "inferstructor-dashboard" $pid
 
     cd "$PROJECT_ROOT"
 
-    if wait_for_port $INFENSTRUCTIOR_DASHBOARD_PORT "Infenstructior Dashboard" 60; then
-        log_success "Infenstructior Dashboard started (PID: $pid)"
+    if wait_for_port $INFERSTRUCTOR_DASHBOARD_PORT "Inferstructor Dashboard" 60; then
+        log_success "Inferstructor Dashboard started (PID: $pid)"
         return 0
     else
-        log_warn "Infenstructior Dashboard may still be compiling..."
+        log_warn "Inferstructor Dashboard may still be compiling..."
         return 0
     fi
 }
@@ -1243,11 +1243,11 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} TPS Bridge          NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
-    # Infenstructior Dashboard
-    if port_in_use $INFENSTRUCTIOR_DASHBOARD_PORT; then
-        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Infenstructior      http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT                ${CYAN}║${NC}"
+    # Inferstructor Dashboard
+    if port_in_use $INFERSTRUCTOR_DASHBOARD_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Inferstructor      http://localhost:$INFERSTRUCTOR_DASHBOARD_PORT                ${CYAN}║${NC}"
     else
-        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Infenstructior      NOT RUNNING                        ${CYAN}║${NC}"
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Inferstructor      NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
     # Solana DEX (apps/next-solana-main with X3 Exchange)
@@ -1285,11 +1285,11 @@ show_status() {
         echo -e "${CYAN}║${NC}  ${RED}✗${NC} Quantum Dashboard   NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
-    # Atlas Desktop
-    if port_in_use $ATLAS_DESKTOP_PORT; then
-        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} Atlas Desktop       http://localhost:$ATLAS_DESKTOP_PORT                ${CYAN}║${NC}"
+    # X3 Desktop
+    if port_in_use $X3_DESKTOP_PORT; then
+        echo -e "${CYAN}║${NC}  ${GREEN}✓${NC} X3 Desktop       http://localhost:$X3_DESKTOP_PORT                ${CYAN}║${NC}"
     else
-        echo -e "${CYAN}║${NC}  ${RED}✗${NC} Atlas Desktop       NOT RUNNING                        ${CYAN}║${NC}"
+        echo -e "${CYAN}║${NC}  ${RED}✗${NC} X3 Desktop       NOT RUNNING                        ${CYAN}║${NC}"
     fi
 
     # Placeholder Server
@@ -1330,22 +1330,22 @@ show_status() {
 main() {
     echo ""
     echo -e "${MAGENTA}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${MAGENTA}║       🚀 ATLAS SPHERE - RUN EVERYTHING 🚀                    ║${NC}"
+    echo -e "${MAGENTA}║       🚀 X3 CHAIN - RUN EVERYTHING 🚀                    ║${NC}"
     echo -e "${MAGENTA}╠══════════════════════════════════════════════════════════════╣${NC}"
     echo -e "${MAGENTA}║  ${CYAN}GPU/AI:${NC}       ${OLLAMA_URL} (Ollama)                ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Blockchain:${NC}   ws://localhost:$BLOCKCHAIN_PORT                          ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Swarm API:${NC}    http://localhost:$SWARM_API_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}LLM Router:${NC}   http://localhost:$LLM_ROUTER_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Validator:${NC}    http://localhost:$VALIDATOR_REGISTRY_PORT (Registry)       ║${NC}"
-    echo -e "${MAGENTA}║  ${CYAN}TPS Bridge:${NC}   http://localhost:$TPS_BRIDGE_PORT (Infenstructior)        ║${NC}"
-    echo -e "${MAGENTA}║  ${CYAN}Infenstructior:${NC} http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT (Dashboard) ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}TPS Bridge:${NC}   http://localhost:$TPS_BRIDGE_PORT (Inferstructor)        ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}Inferstructor:${NC} http://localhost:$INFERSTRUCTOR_DASHBOARD_PORT (Dashboard) ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}HTLC Coord:${NC}   http://localhost:$HTLC_COORDINATOR_PORT (Atomic Swaps)     ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Solana DEX:${NC}   http://localhost:$SOLANA_DEX_PORT (X3 Exchange)             ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}X3OS:${NC}         http://localhost:$X3OS_PORT/x3os                      ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Explorer:${NC}     http://localhost:$X3OS_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Wallet:${NC}       http://localhost:$WALLET_PORT                           ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}DEX:${NC}          http://localhost:$DEX_PORT                           ║${NC}"
-    echo -e "${MAGENTA}║  ${CYAN}Atlas Desktop:${NC}http://localhost:$ATLAS_DESKTOP_PORT (Tauri)              ║${NC}"
+    echo -e "${MAGENTA}║  ${CYAN}X3 Desktop:${NC}http://localhost:$X3_DESKTOP_PORT (Tauri)              ║${NC}"
     echo -e "${MAGENTA}║  ${CYAN}Quantum:${NC}      http://localhost:$QUANTUM_DASHBOARD_PORT                          ║${NC}"
     echo -e "${MAGENTA}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -1361,7 +1361,7 @@ main() {
 
     # Cleanup existing processes on our ports
     log_header "Cleaning Up Existing Processes"
-    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT $PLACEHOLDER_PORT; do
+    for port in $X3OS_PORT $WALLET_PORT $DEX_PORT $SWARM_API_PORT $SOLANA_DEX_PORT $QUANTUM_DASHBOARD_PORT $X3_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFERSTRUCTOR_DASHBOARD_PORT $PLACEHOLDER_PORT; do
         kill_port $port
     done
 
@@ -1429,13 +1429,13 @@ main() {
     # ============================================================
     log_header "Starting Frontend Applications"
     
-    # Infenstructior Dashboard
-    start_infenstructior_dashboard || log_warn "Infenstructior Dashboard not started"
+    # Inferstructor Dashboard
+    start_inferstructor_dashboard || log_warn "Inferstructor Dashboard not started"
     sleep 2
 
-    # Solana DEX (apps/next-solana-main) - Main trading platform with X3 Exchange
-    start_nextjs_app "solana-dex" "$PROJECT_ROOT/apps/next-solana-main" $SOLANA_DEX_PORT
-    sleep 2
+    # Solana DEX (apps/next-solana-main) - Main trading platform with X3 Exchange (TEMPORARILY DISABLED)
+    # start_nextjs_app "solana-dex" "$PROJECT_ROOT/apps/next-solana-main" $SOLANA_DEX_PORT
+    # sleep 2
 
     # Explorer with X3OS
     start_nextjs_app "explorer" "$PROJECT_ROOT/apps/explorer" $X3OS_PORT
@@ -1452,7 +1452,7 @@ main() {
     # ============================================================
     # Layer 4: Desktop (Tauri)
     # ============================================================
-    start_atlas_desktop || log_warn "Atlas Desktop not started"
+    start_x3_desktop || log_warn "X3 Desktop not started"
     start_x3os_tauri || log_warn "X3OS Tauri desktop not started"
 
     # Quantum Dashboard (Tauri)
@@ -1477,7 +1477,7 @@ main() {
     echo ""
     echo -e "${GREEN}🎉 All services are starting! Access points:${NC}"
     echo ""
-    echo -e "  🖥️  ${CYAN}Atlas Desktop:${NC}       http://localhost:$ATLAS_DESKTOP_PORT (Tauri)"
+    echo -e "  🖥️  ${CYAN}X3 Desktop:${NC}       http://localhost:$X3_DESKTOP_PORT (Tauri)"
     echo -e "  🖥️  ${CYAN}X3OS Desktop:${NC}        http://localhost:$X3OS_PORT/x3os"
     echo -e "  📊 ${CYAN}Explorer Dashboard:${NC}  http://localhost:$X3OS_PORT"
     echo -e "  💱 ${CYAN}Solana DEX (X3):${NC}     http://localhost:$SOLANA_DEX_PORT"
@@ -1490,14 +1490,14 @@ main() {
     echo -e "  🤖 ${CYAN}LLM Router:${NC}          http://localhost:$LLM_ROUTER_PORT"
     echo -e "  🔒 ${CYAN}Validator Registry:${NC}  http://localhost:$VALIDATOR_REGISTRY_PORT"
     echo -e "  🌉 ${CYAN}TPS Bridge:${NC}          http://localhost:$TPS_BRIDGE_PORT"
-    echo -e "  📊 ${CYAN}Infenstructior:${NC}      http://localhost:$INFENSTRUCTIOR_DASHBOARD_PORT"
+    echo -e "  📊 ${CYAN}Inferstructor:${NC}      http://localhost:$INFERSTRUCTOR_DASHBOARD_PORT"
     echo -e "  🤖 ${CYAN}Ollama AI:${NC}           ${OLLAMA_URL}"
     echo -e "  ⛓️  ${CYAN}Blockchain:${NC}          ws://localhost:$BLOCKCHAIN_PORT"
     echo -e "  🌐 ${CYAN}Cloudflare Tunnel:${NC}   https://$CLOUDFLARE_DOMAIN"
     echo -e "  📡 ${CYAN}Placeholder:${NC}         http://localhost:$PLACEHOLDER_PORT (subdomains)"
     echo ""
     echo -e "${YELLOW}Quick Links:${NC}"
-    echo -e "  • Atlas Desktop:       http://localhost:$ATLAS_DESKTOP_PORT (Tauri app)"
+    echo -e "  • X3 Desktop:       http://localhost:$X3_DESKTOP_PORT (Tauri app)"
     echo -e "  • X3OS:                http://localhost:$X3OS_PORT/x3os"
     echo -e "  • Swarm Dashboard:     http://localhost:$X3OS_PORT/x3/swarm"
     echo -e "  • GPU Contributors:    http://localhost:$X3OS_PORT/x3/swarm/gpu"
@@ -1534,9 +1534,9 @@ case "${1:-}" in
         main
         ;;
     --stop)
-        log_info "Stopping all Atlas Sphere services..."
+        log_info "Stopping all X3 Chain services..."
         cleanup_pids
-        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT $ATLAS_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFENSTRUCTIOR_DASHBOARD_PORT $HTLC_COORDINATOR_PORT; do
+        for port in $OLLAMA_PORT $BLOCKCHAIN_PORT $SWARM_API_PORT $X3OS_PORT $WALLET_PORT $DEX_PORT $SOLANA_DEX_PORT $X3_DESKTOP_PORT $LLM_ROUTER_PORT $VALIDATOR_REGISTRY_PORT $TPS_BRIDGE_PORT $INFERSTRUCTOR_DASHBOARD_PORT $HTLC_COORDINATOR_PORT; do
             kill_port $port
         done
         # Stop Ollama systemd if running
@@ -1554,7 +1554,7 @@ case "${1:-}" in
         ;;
     --help|-h)
         echo ""
-        echo -e "${CYAN}Atlas Sphere - Run Everything${NC}"
+        echo -e "${CYAN}X3 Chain - Run Everything${NC}"
         echo ""
         echo "Usage: $0 [OPTION]"
         echo ""
@@ -1574,14 +1574,14 @@ case "${1:-}" in
         echo "  • LLM Router                 - Port $LLM_ROUTER_PORT"
         echo "  • Validator Registry         - Port $VALIDATOR_REGISTRY_PORT"
         echo "  • TPS Bridge                 - Port $TPS_BRIDGE_PORT"
-        echo "  • Infenstructior Dashboard   - Port $INFENSTRUCTIOR_DASHBOARD_PORT"
+        echo "  • Inferstructor Dashboard   - Port $INFERSTRUCTOR_DASHBOARD_PORT"
         echo "  • HTLC Coordinator           - Port $HTLC_COORDINATOR_PORT"
         echo "  • Solana DEX                 - Port $SOLANA_DEX_PORT"
         echo "  • Explorer + X3OS            - Port $X3OS_PORT"
         echo "  • Wallet                     - Port $WALLET_PORT"
         echo "  • DEX                        - Port $DEX_PORT"
         echo "  • Quantum Dashboard          - Port $QUANTUM_DASHBOARD_PORT"
-        echo "  • Atlas Desktop              - Port $ATLAS_DESKTOP_PORT"
+        echo "  • X3 Desktop              - Port $X3_DESKTOP_PORT"
         echo ""
         ;;
     *)

@@ -9,7 +9,7 @@
 
 ## Project Overview
 
-This OpenSpec change implements a comprehensive jury governance system for Atlas Sphere, enabling distributed decision-making through commit-reveal voting with cryptographic verification and tamper-proof audit logging.
+This OpenSpec change implements a comprehensive jury governance system for X3 Chain, enabling distributed decision-making through commit-reveal voting with cryptographic verification and tamper-proof audit logging.
 
 ### Key Achievements
 
@@ -34,7 +34,7 @@ This OpenSpec change implements a comprehensive jury governance system for Atlas
 
 **Files Delivered:**
 1. **proposal.md** (450 lines)
-   - Problem statement: Need decentralized governance for Atlas Sphere
+   - Problem statement: Need decentralized governance for X3 Chain
    - Solution: Jury-based voting with cryptographic commitments
    - Use cases: Infrastructure votes, security policies, budget allocation
 

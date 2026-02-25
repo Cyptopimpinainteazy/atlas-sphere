@@ -14,7 +14,7 @@ labels: [bug, diagnostics]
 - Job run URL (link to workflow run/artifacts): 
 
 **Reproduction steps**
-1. Exact command(s) executed (include env vars): e.g. `CARGO_NET_OFFLINE=1 RUST_BACKTRACE=1 cargo test -p atlas-evm-integration --features frontier-executor -- --nocapture`
+1. Exact command(s) executed (include env vars): e.g. `CARGO_NET_OFFLINE=1 RUST_BACKTRACE=1 cargo test -p x3-evm-integration --features frontier-executor -- --nocapture`
 2. Any special setup (fixtures, network access, auth tokens):
 
 **Observed behavior**

@@ -1,5 +1,5 @@
 /**
- * Utility functions for Atlas Sphere SDK
+ * Utility functions for X3 Chain SDK
  *
  * Provides encoding, hashing, and conversion utilities.
  */
@@ -186,6 +186,46 @@ export function decodeU64(bytes: Uint8Array): bigint {
 // Address Utilities
 // =============================================================================
 
+// Base58 alphabet (Bitcoin-style)
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+/**
+ * Decode Base58-encoded string to bytes
+ */
+function base58Decode(input: string): Uint8Array {
+  // Base58 decoding algorithm
+  let result: number[] = [0];
+  
+  for (let i = 0; i < input.length; i++) {
+    const charIndex = BASE58_ALPHABET.indexOf(input[i]);
+    if (charIndex === -1) {
+      throw new ValidationError('base58', 'Invalid Base58 character', input[i]);
+    }
+    
+    let carry = charIndex;
+    for (let j = 0; j < result.length; j++) {
+      carry += result[j] * 58;
+      result[j] = carry % 256;
+      carry = Math.floor(carry / 256);
+    }
+    
+    while (carry > 0) {
+      result.push(carry % 256);
+      carry = Math.floor(carry / 256);
+    }
+  }
+  
+  // Add leading zeros
+  for (let i = 0; i < input.length && input[i] === '1'; i++) {
+    result.push(0);
+  }
+  
+  return new Uint8Array(result.reverse());
+}
+
+// SS58 alphabet (modified base58)
+const SS58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
 /**
  * Decode SS58-encoded account ID to bytes
  */
@@ -203,8 +243,33 @@ export function decodeAccountId(accountId: AccountId): Uint8Array {
     return bytes;
   }
 
-  // TODO: Implement full SS58 decoding
-  throw new ValidationError('accountId', 'SS58 decoding not yet implemented');
+  // SS58 decoding implementation
+  try {
+    // SS58 format: <prefix><payload><checksum>
+    // Prefix is 1 byte for short addresses, 2 bytes for longer
+    const prefix = SS58_ALPHABET.indexOf(accountId[0]);
+    let addressData: string;
+    
+    if (prefix < 1) {
+      // Invalid prefix
+      throw new ValidationError('accountId', 'Invalid SS58 prefix', prefix);
+    } else if (prefix <= 46) {
+      // 1 byte prefix
+      addressData = accountId.slice(1);
+    } else if (prefix <= 16383) {
+      // 2 byte prefix (not supported in basic implementation)
+      throw new ValidationError('accountId', '2-byte SS58 prefix not supported', prefix);
+    } else {
+      throw new ValidationError('accountId', 'Invalid SS58 prefix', prefix);
+    }
+    
+    // Base58 decode
+    const bytes = base58Decode(addressData);
+    return bytes;
+  } catch (error) {
+    if (error instanceof ValidationError) throw error;
+    throw new ValidationError('accountId', 'SS58 decoding failed', accountId);
+  }
 }
 
 /**
@@ -262,14 +327,26 @@ export function isValidEvmAddress(address: string): boolean {
  * Validate a Solana pubkey format (32 bytes)
  */
 export function isValidSolanaPubkey(pubkey: string): boolean {
-  // Base58 decode would be needed for full validation
-  // For now, check if it's valid hex of correct length
+  // Check if it's valid hex of correct length first
   if (isHex(pubkey)) {
     const bytes = hexToU8a(pubkey);
     return bytes.length === 32;
   }
-  // TODO: Base58 validation
-  return pubkey.length >= 32 && pubkey.length <= 44;
+  
+  // Base58 validation - Solana uses base58 encoding
+  if (pubkey.length < 32 || pubkey.length > 44) {
+    return false;
+  }
+  
+  // Verify all characters are valid Base58
+  const BASE58_CHARS = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  for (const char of pubkey) {
+    if (!BASE58_CHARS.includes(char)) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 // =============================================================================

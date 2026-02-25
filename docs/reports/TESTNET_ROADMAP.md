@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet Roadmap
+# X3 Chain Testnet Roadmap
 
 **From Testnet v1 to Mainnet - Visual Development Timeline**
 
@@ -6,7 +6,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                        ATLAS SPHERE TESTNET ROADMAP                          │
+│                        X3 CHAIN TESTNET ROADMAP                          │
 │                                                                              │
 │  Current Status: ✅ READY FOR TESTNET v1 DEPLOYMENT                          │
 │                                                                              │
@@ -28,9 +28,9 @@
 - Build community and gather feedback
 
 ### Features Available
-✅ Atlas Kernel (Comit submission, canonical ledger)  
+✅ X3 Kernel (Comit submission, canonical ledger)  
 ✅ Aura + GRANDPA consensus (6-second blocks)  
-✅ HTTP JSON-RPC server (5 Atlas Kernel methods + standard Substrate)  
+✅ HTTP JSON-RPC server (5 X3 Kernel methods + standard Substrate)  
 ✅ Peer discovery and networking  
 ✅ Prometheus metrics and monitoring  
 ⚠️ Mock VM executors (EVM/SVM use placeholder receipts)  
@@ -84,14 +84,14 @@ Week 4: [████████████████████] Collect f
 🚧 TypeScript SDK (polkadot.js integration)  
 🚧 Python SDK (py-substrate-interface)  
 🚧 CLI enhancements:
-   - `atlas-cli comit create` - Interactive Comit builder
-   - `atlas-cli comit submit` - Submit signed Comit
-   - `atlas-cli ledger query` - Query canonical ledger
-   - `atlas-cli account authorize` - Manage authorization
+   - `x3-cli comit create` - Interactive Comit builder
+   - `x3-cli comit submit` - Submit signed Comit
+   - `x3-cli ledger query` - Query canonical ledger
+   - `x3-cli account authorize` - Manage authorization
 
 ### Infrastructure Updates
-- WebSocket RPC endpoints: `wss://ws.testnet.atlas-sphere.io`
-- Documentation site: `https://docs.atlas-sphere.io`
+- WebSocket RPC endpoints: `wss://ws.testnet.x3-chain.io`
+- Documentation site: `https://docs.x3-chain.io`
 - Example app gallery
 - Interactive playground (web-based)
 
@@ -103,11 +103,11 @@ Week 4: [████████████████████] Collect f
 
 ### Deliverables
 - [ ] WebSocket RPC implementation
-- [ ] TypeScript SDK package (`@atlas-sphere/sdk`)
-- [ ] Python SDK package (`atlas-sphere-sdk`)
+- [ ] TypeScript SDK package (`@x3-chain/sdk`)
+- [ ] Python SDK package (`x3-chain-sdk`)
 - [ ] CLI tool binary with Comit commands
 - [ ] API documentation site
-- [ ] Tutorial: "Build Your First Atlas App"
+- [ ] Tutorial: "Build Your First X3 App"
 
 ### Timeline
 ```
@@ -150,7 +150,7 @@ Week 8: [████████████████████] Documenta
    - Gas metering and fee accounting
 
 ### Infrastructure Updates
-- EVM-compatible RPC: `http://evm.testnet.atlas-sphere.io:8545`
+- EVM-compatible RPC: `http://evm.testnet.x3-chain.io:8545`
 - MetaMask integration (chain ID, block explorer)
 - Solana RPC compatibility layer
 - Increased node specs (8GB RAM → 16GB for VM execution)
@@ -276,7 +276,7 @@ Week 23-24: [████████████████████] Mainn
 
 ### Mainnet Features
 🌟 All testnet features plus:
-- Real economic value (ATLAS token)
+- Real economic value (X3 token)
 - Multi-region validator network (100+ validators globally)
 - Professional-grade SLAs (99.9% uptime)
 - Full DeFi ecosystem support
@@ -301,7 +301,7 @@ Week 23-24: [████████████████████] Mainn
    - Community support and onboarding
 
 4. **Exchange Listings** (Month 2+):
-   - List ATLAS on DEXs (Uniswap, PancakeSwap)
+   - List X3 on DEXs (Uniswap, PancakeSwap)
    - Apply for CEX listings (Binance, Coinbase, Kraken)
 
 ---
@@ -429,7 +429,7 @@ Week 23-24: [████████████████████] Mainn
 ## Open Questions / Decisions Needed
 
 ### Technical Decisions
-- [ ] **EVM Chain ID**: What chain ID should Atlas Sphere use? (Avoid conflicts)
+- [ ] **EVM Chain ID**: What chain ID should X3 Chain use? (Avoid conflicts)
 - [ ] **Token Decimals**: 18 (like ETH) or 12 (like DOT)?
 - [ ] **Block Time**: Keep 6 seconds or reduce to 3-4 seconds?
 - [ ] **WebSocket Library**: Use `jsonrpsee` WebSocket or custom implementation?
@@ -475,7 +475,7 @@ Week 23-24: [████████████████████] Mainn
 
 ## Conclusion
 
-Atlas Sphere is positioned for a successful testnet launch with a clear roadmap to mainnet. The phased approach allows for:
+X3 Chain is positioned for a successful testnet launch with a clear roadmap to mainnet. The phased approach allows for:
 
 1. **Immediate community engagement** (Testnet v1)
 2. **Developer experience refinement** (Phase 2)

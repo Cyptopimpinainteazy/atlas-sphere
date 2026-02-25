@@ -1,4 +1,4 @@
-# 🚀 Atlas Sphere - Project Summary
+# 🚀 X3 Chain - Project Summary
 
 ## Your Complete Setup is Ready
 
@@ -22,7 +22,7 @@ Then visit: **http://localhost:5173**
 Login with:
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 ---
@@ -118,7 +118,7 @@ GET    /api/dashboard       # Protected endpoint
 - **Purpose**: Auto-start X3 Intelligence Dashboard on boot
 - **Port**: 5173
 - **Restart policy**: Automatic on failure
-- **User**: atlas-sphere
+- **User**: x3-chain
 - **Status**: Ready to install
 
 #### ccgv-validator.service
@@ -183,10 +183,10 @@ NODE_ENV=production
 
 ⚠️ **IMPORTANT**: Change SESSION_SECRET and AUTH_SALT before production!
 
-#### atlas-boot-config.sh (50 lines)
+#### x3-boot-config.sh (50 lines)
 Shell functions for quick commands:
 ```bash
-source atlas-boot-config.sh
+source x3-boot-config.sh
 beast-start           # Start services
 beast-stop            # Stop services
 beast-status          # Check if running
@@ -221,7 +221,7 @@ beast-logs-gpu        # View GPU Validator logs
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  Atlas Sphere "The Beast"                    │
+│                  X3 Chain "The Beast"                    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -254,7 +254,7 @@ beast-logs-gpu        # View GPU Validator logs
 
 ✓ Both services auto-start via systemd on boot
 ✓ Can be manually started with start-beast.sh
-✓ Protected by login system (admin/atlas-sphere-2026)
+✓ Protected by login system (admin/x3-chain-2026)
 ✓ Tested with 68 E2E security tests
 ```
 
@@ -425,11 +425,11 @@ lsof -i :8000              # Who's using port 8000?
 ## 📂 Key File Locations
 
 ```
-atlas-sphere/
+x3-chain/
 ├── BOOT_AND_AUTH_SETUP.md                    ← Read this first!
 ├── E2E_SECURITY_TESTING.md                   ← For test details
 ├── .env.production                           ← Environment config
-├── atlas-boot-config.sh                      ← Shell aliases
+├── x3-boot-config.sh                      ← Shell aliases
 │
 ├── scripts/
 │   ├── start-beast.sh                        ← Manual startup
@@ -463,7 +463,7 @@ atlas-sphere/
 - ✅ Systemd services for auto-start
 - ✅ Manual startup scripts (start-beast.sh)
 - ✅ Environment configuration (.env.production)
-- ✅ Shell command aliases (atlas-boot-config.sh)
+- ✅ Shell command aliases (x3-boot-config.sh)
 - ✅ Complete documentation (this file + 2 detailed guides)
 - ✅ Git merge completed (feature/chain-registry-import → main)
 
@@ -480,7 +480,7 @@ Visit: **http://localhost:5173**
 
 Login:
 ```
-admin / atlas-sphere-2026
+admin / x3-chain-2026
 ```
 
 **Run security tests**:

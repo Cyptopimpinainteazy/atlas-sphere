@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Static verifier for X3 contracts - gas bounds, forbidden ops, determinism checking"
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [dependencies]
 x3-mir = { path = "../x3-mir" }

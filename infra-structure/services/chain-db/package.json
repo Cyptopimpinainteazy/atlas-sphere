@@ -1,8 +1,8 @@
 {
-  "name": "atlas-chain-db",
+  "name": "x3-chain-db",
   "version": "1.0.0",
   "private": true,
-  "description": "Atlas Sphere Chain Database API — 60k+ blockchain registry with search, metrics, and GPU validation stats",
+  "description": "X3 Chain Chain Database API — 60k+ blockchain registry with search, metrics, and GPU validation stats",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -1,13 +1,13 @@
 openapi: "3.1.0"
 info:
-  title: Atlas Sphere — Blockchain Connector Service API
+  title: X3 Chain — Blockchain Connector Service API
   version: "0.1.0"
   description: |
     Enterprise-grade REST + WebSocket API for connecting to 40+ blockchains,
     running test benchmarks (latency, throughput, reorg, GPU, pool), managing
     billing plans, and streaming real-time chain events.
   contact:
-    name: Atlas Sphere Team
+    name: X3 Chain Team
   license:
     name: Apache-2.0
 

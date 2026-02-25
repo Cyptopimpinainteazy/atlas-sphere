@@ -1,4 +1,4 @@
-# Atlas Sphere Frontend Showcase - Implementation Tasks
+# X3 Chain Frontend Showcase - Implementation Tasks
 
 ## Core Implementation Tasks
 

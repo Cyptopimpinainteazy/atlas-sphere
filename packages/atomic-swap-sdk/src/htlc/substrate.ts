@@ -1,5 +1,5 @@
 /**
- * Substrate HTLC Adapter — Manages HTLCs via the atomic-trade-engine pallet on Atlas Sphere.
+ * Substrate HTLC Adapter — Manages HTLCs via the atomic-trade-engine pallet on X3 Chain.
  *
  * Uses Substrate RPC to interact with the pallet extrinsics:
  * - atomicTradeEngine.createTradeBatch
@@ -7,7 +7,7 @@
  * - atomicTradeEngine.cancelTradeBatch
  *
  * For direct HTLC-like behavior, we use single-leg trade batches
- * with the atlas-amm protocol.
+ * with the x3-amm protocol.
  */
 
 import type { HTLC, HTLCCreateParams, HTLCClaimParams, HTLCRefundParams, ChainId } from "../types";

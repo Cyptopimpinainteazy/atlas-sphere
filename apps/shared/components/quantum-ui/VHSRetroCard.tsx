@@ -142,7 +142,7 @@ export const VHSRetroCard: React.FC<VHSRetroCardProps> = ({
               className="text-xs font-bold uppercase tracking-[0.3em] text-white/60"
               style={{ fontFamily: "'Courier New', monospace" }}
             >
-              ATLAS SPHERE
+              X3 CHAIN
             </span>
             <span className="text-[10px] text-white/40 mt-1">EST. 2060</span>
           </div>

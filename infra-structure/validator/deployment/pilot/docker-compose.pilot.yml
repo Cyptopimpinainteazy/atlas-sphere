@@ -1,6 +1,6 @@
 version: "3.9"
 
-# ── Atlas Sphere – Pilot Docker Compose ──────────────────────────────────────
+# ── X3 Chain – Pilot Docker Compose ──────────────────────────────────────
 # Multi-chain X3 GPU validator with dashboard, metrics, and swarm compute
 
 services:
@@ -35,7 +35,7 @@ services:
     volumes:
       - ./threadripper.toml:/app/config/threadripper.toml:ro
       - ../../cross-chain-gpu-validator/kernels/build:/app/kernels:ro
-      - pilot-logs:/var/log/atlas
+      - pilot-logs:/var/log/x3
     depends_on:
       redis:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=atlas-pilot
+      - GF_SECURITY_ADMIN_PASSWORD=x3-pilot
     volumes:
       - grafana-data:/var/lib/grafana
     depends_on:

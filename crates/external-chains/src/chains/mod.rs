@@ -40,7 +40,7 @@ pub fn create_adapter(chain: ChainType, config: ChainConfig) -> Box<dyn ChainAda
         ChainType::Avalanche => Box::new(AvalancheAdapter::new(config)),
         ChainType::Bnb => Box::new(BnbAdapter::new(config)),
         ChainType::AtlasSphere => {
-            // For Atlas Sphere, we use a pass-through adapter
+            // For X3 Chain, we use a pass-through adapter
             // since it's the local chain
             Box::new(base::BaseAdapter::new(config))
         }

@@ -57,7 +57,7 @@ services:
     restart: always
 
   jury-service:
-    image: atlas-jury:latest
+    image: x3-jury:latest
     container_name: jury-service-staging
     depends_on:
       postgres:
@@ -88,7 +88,7 @@ services:
     restart: always
 
   jury-anchorer:
-    image: atlas-jury-anchorer:latest
+    image: x3-jury-anchorer:latest
     container_name: jury-anchorer-staging
     depends_on:
       jury-service:

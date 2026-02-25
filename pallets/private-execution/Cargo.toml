@@ -1,12 +1,12 @@
 [package]
 name = "pallet-private-execution"
 version = "0.1.0"
-authors = ["Atlas Sphere Core Team <core@atlas-sphere.io>"]
+authors = ["X3 Chain Core Team <core@x3-chain.io>"]
 description = "Private execution environments pallet — encrypted mempools, confidential GPU enclaves, threshold decryption, and MEV-protected transaction processing."
 edition = "2021"
 license = "Apache-2.0"
-homepage = "https://atlas-sphere.io"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+homepage = "https://x3-chain.io"
+repository = "https://github.com/x3-chain/x3-chain"
 publish = false
 
 [package.metadata.docs.rs]

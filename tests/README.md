@@ -1,6 +1,6 @@
 # X3 Test Suite Overview ✅
 
-This folder contains the testing harness and registry for the X3 / Atlas Sphere project.
+This folder contains the testing harness and registry for the X3 / X3 Chain project.
 
 Quick start:
 

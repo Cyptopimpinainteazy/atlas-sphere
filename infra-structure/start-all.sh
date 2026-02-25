@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════
-#  Atlas Sphere — Infra-Structure: Bare Metal Start All
+#  X3 Chain — Infra-Structure: Bare Metal Start All
 #  Starts every service directly on the host (no Docker)
 #
 #  Services:
 #    1. Chain DB API        (port 7070)  — 62,500+ blockchain registry
 #    2. Blockchain TPS      (port 3010)  — TPS benchmarking & demo runner
 #    3. GPU Validator        (Python)     — Cross-chain GPU validation
-#    4. Dashboard (Vite)     (port 5174)  — Infenstructior UI
+#    4. Dashboard (Vite)     (port 5174)  — Inferstructor UI
 #
 #  Usage:
 #    ./start-all.sh           — start everything
@@ -72,7 +72,7 @@ done
 # ── Banner ────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${CYAN}╔═══════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${CYAN}║     Atlas Sphere — Infra-Structure (Bare Metal)  ║${NC}"
+echo -e "${BOLD}${CYAN}║     X3 Chain — Infra-Structure (Bare Metal)  ║${NC}"
 echo -e "${BOLD}${CYAN}╚═══════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -140,7 +140,7 @@ cd "$SCRIPT_DIR"
 
 # ── 4. Dashboard (Vite dev server, port 5174) ─────────────────────────
 if [ "$NO_UI" = false ]; then
-  log "Starting Infenstructior Dashboard on port 5174..."
+  log "Starting Inferstructor Dashboard on port 5174..."
   if check_port 5174 "Dashboard"; then
     cd "$SCRIPT_DIR/dashboard"
     if [ ! -d node_modules ]; then

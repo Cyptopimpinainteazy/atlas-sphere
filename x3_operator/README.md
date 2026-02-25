@@ -265,4 +265,4 @@ scripts/devnet/mainnet_countdown.sh      # 23-check pre-launch audit
 
 ## License
 
-Part of the Atlas Sphere project.
+Part of the X3 Chain project.

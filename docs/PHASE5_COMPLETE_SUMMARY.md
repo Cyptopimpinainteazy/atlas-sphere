@@ -27,7 +27,7 @@ Over **8 hours of continuous development**, delivered a complete distributed jur
 
 | File | Type | LOC | Status |
 |------|------|-----|--------|
-| `pallets/atlas-jury-anchor/src/lib.rs` | Rust Pallet | 500 | ✅ Complete, 8/8 tests passing |
+| `pallets/x3-jury-anchor/src/lib.rs` | Rust Pallet | 500 | ✅ Complete, 8/8 tests passing |
 | `swarm/jury/anchorer.py` | Python Service | 450 | ✅ Async-ready, production code |
 | `packages/blockchain-adapter/src/jury-anchoring.ts` | TypeScript | 600 | ✅ React hooks, type-safe |
 | `tests/test_jury_anchoring.py` | Test Suite | 350 | ✅ 13/13 tests passing |
@@ -233,7 +233,7 @@ Blockers:                  0 ✅
 **Step 1: Run Quick Validation**
 ```bash
 # Verify all code compiles
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 cargo build --release
 pytest tests/test_jury_anchoring.py -v
 echo "✅ Basic tests passed"
@@ -313,7 +313,7 @@ From docs/PHASE5_PRE_FLIGHT_CHECKLIST.md - "24 Hours Before" section:
 
 **Execute Main Deployment:**
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # THE MAIN COMMAND
 ./scripts/deploy-phase5.sh production cpu 2>&1 | tee deploy-$(date +%Y%m%d-%H%M%S).log
@@ -390,7 +390,7 @@ echo "✅ Production system verified"
 **Quick Health Check:**
 ```bash
 # Session 1 files
-ls -la pallets/atlas-jury-anchor/src/lib.rs
+ls -la pallets/x3-jury-anchor/src/lib.rs
 ls -la swarm/jury/anchorer.py
 ls -la packages/blockchain-adapter/src/jury-anchoring.ts
 ls -la tests/test_jury_anchoring.py

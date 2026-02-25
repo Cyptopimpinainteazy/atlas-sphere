@@ -1,7 +1,7 @@
 {
-  "name": "@atlas-sphere/x3-wallet",
+  "name": "@x3-chain/x3-wallet",
   "version": "0.1.0",
-  "description": "Polkawallet JS API plugin for Atlas Sphere x3chain — wraps @polkadot/api for x3vm, atomic trades, x3 lang, flashloans, governance, and all Atlas Sphere pallets",
+  "description": "Polkawallet JS API plugin for X3 Chain x3chain — wraps @polkadot/api for x3vm, atomic trades, x3 lang, flashloans, governance, and all X3 Chain pallets",
   "main": "dist/main.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -38,7 +38,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atlas-sphere/atlas-sphere",
+    "url": "https://github.com/x3-chain/x3-chain",
     "directory": "packages/polkawallet-plugin"
   }
 }

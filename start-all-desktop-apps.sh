@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Atlas Desktop - Start All Applications
-# This script launches all required apps for the Atlas Desktop environment
+# X3 Desktop - Start All Applications
+# This script launches all required apps for the X3 Desktop environment
 
 set -e
 
@@ -56,14 +56,14 @@ start_app() {
 }
 
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
-echo -e "${BLUE}Atlas Desktop - Starting All Apps${NC}"
+echo -e "${BLUE}X3 Desktop - Starting All Apps${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 echo ""
 
 # Start Tauri dev server if not already running
 if ! port_in_use 5173; then
   echo -e "${BLUE}Starting Tauri dev server...${NC}"
-  cd "$APPS_DIR/atlas-desktop"
+  cd "$APPS_DIR/x3-desktop"
   npm run tauri:dev > /tmp/tauri-dev.log 2>&1 &
   echo -e "${GREEN}✓ Tauri dev server started${NC}"
   sleep 3
@@ -83,7 +83,7 @@ start_app "x3-intelligence" 3007 "x3-intelligence" || true
 
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
-echo -e "${GREEN}✓ Atlas Desktop Setup Complete!${NC}"
+echo -e "${GREEN}✓ X3 Desktop Setup Complete!${NC}"
 echo -e "${BLUE}═══════════════════════════════════════${NC}"
 echo ""
 echo -e "${BLUE}Access the dashboard at:${NC}"

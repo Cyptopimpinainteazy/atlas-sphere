@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Atlas Sphere — Chain Database API Server
+ * X3 Chain — Chain Database API Server
  *
  * High-performance REST API serving 60,000+ blockchain chain data from SQLite.
- * Powers the infenstructior dashboard chain explorer.
+ * Powers the inferstructor dashboard chain explorer.
  *
  * Endpoints:
  *   GET  /api/chains                  — Paginated chain listing with filters
@@ -152,7 +152,7 @@ app.get('/health', (_req, res) => {
   const count = db.prepare('SELECT COUNT(*) as cnt FROM chains').get();
   res.json({
     status: 'healthy',
-    service: 'atlas-chain-db',
+    service: 'x3-chain-db',
     chains_loaded: count.cnt,
     db_path: DB_PATH,
   });
@@ -283,7 +283,7 @@ app.use((err, _req, res, _next) => {
 // ── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
-  console.log(`\n🔗 Atlas Chain DB API running on http://localhost:${PORT}`);
+  console.log(`\n🔗 X3 Chain DB API running on http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health`);
   console.log(`   Chains: http://localhost:${PORT}/api/chains`);
   console.log(`   Search: http://localhost:${PORT}/api/chains/search?q=ethereum`);

@@ -26,8 +26,8 @@
 
 | File | Path | Purpose | Status | Lines |
 |------|------|---------|--------|-------|
-| **lib.rs** | `/pallets/atlas-jury-anchor/src/lib.rs` | Runtime pallet (Config, Storage, Events, Calls, Tests) | ✅ Complete | 500+ |
-| **Cargo.toml** | `/pallets/atlas-jury-anchor/Cargo.toml` | Pallet dependencies | ✅ Complete | 30 |
+| **lib.rs** | `/pallets/x3-jury-anchor/src/lib.rs` | Runtime pallet (Config, Storage, Events, Calls, Tests) | ✅ Complete | 500+ |
+| **Cargo.toml** | `/pallets/x3-jury-anchor/Cargo.toml` | Pallet dependencies | ✅ Complete | 30 |
 
 **Pallet Features:**
 - ✅ JuryDecisionRecord struct with metadata
@@ -175,7 +175,7 @@ Layers:
    - JuryAnchoringService: High-level API
    
 2. ON-CHAIN RUNTIME (Rust)
-   Location: pallets/atlas-jury-anchor/
+   Location: pallets/x3-jury-anchor/
    Components:
    - Pallet storage: JuryDecisions map
    - Extrinsics: anchor_decision, set_jury_authority
@@ -202,7 +202,7 @@ Layers:
 
 ### Rust Pallet
 ```
-✅ pallets/atlas-jury-anchor/
+✅ pallets/x3-jury-anchor/
    ├── src/lib.rs (500+ lines, 8 tests passing)
    ├── Cargo.toml (dependencies configured)
    └── README.md (instructions)

@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/wallet",
+  "name": "@x3-chain/wallet",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
+    "@x3-chain/ts-sdk": "file:../../packages/ts-sdk",
     "@heroicons/react": "^2.0.18",
     "@polkadot/api": "^10.11.0",
     "@polkadot/extension-inject": "^0.47.0",

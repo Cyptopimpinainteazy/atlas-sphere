@@ -244,7 +244,7 @@ Performance: 1.85M TPS live
 Target: 100k TPS (18.5x exceeded)
 Speedup: 6,885x from P3 baseline
 
-Full documentation: https://github.com/atlas-sphere/p4-gpu-accelerators
+Full documentation: https://github.com/x3-chain/p4-gpu-accelerators
 Run your own: 3x GPUs + Solana = unlimited scale 🔥
 
 #Solana #GPU #WebScale""",
@@ -391,7 +391,7 @@ def main():
     print()
     
     # Save results
-    output_dir = Path("/home/lojak/Desktop/atlas-sphere-master/testnet-config")
+    output_dir = Path("/home/lojak/Desktop/x3-chain-master/testnet-config")
     output_dir.mkdir(exist_ok=True)
     
     final_report = {

@@ -1,7 +1,7 @@
-"""Tests for Atlas Sphere SDK types."""
+"""Tests for X3 Chain SDK types."""
 
 import pytest
-from atlas_sphere_sdk.types import (
+from x3_chain_sdk.types import (
     AccountId,
     AssetId,
     ComitId,
@@ -118,16 +118,16 @@ class TestChainInfo:
     def test_chain_info(self):
         """Test ChainInfo creation."""
         info = ChainInfo(
-            chain_name="Atlas Sphere Testnet",
+            chain_name="X3 Chain Testnet",
             chain_id=42,
-            token_symbol="ATLAS",
+            token_symbol="X3",
             token_decimals=18,
             ss58_format=42,
             genesis_hash="0x123abc...",
             best_number=1000,
             finalized_number=990,
         )
-        assert info.chain_name == "Atlas Sphere Testnet"
+        assert info.chain_name == "X3 Chain Testnet"
         assert info.chain_id == 42
         assert info.token_decimals == 18
 
@@ -168,7 +168,7 @@ class TestBlockHeader:
 class TestErrors:
     """Tests for error types."""
     
-    def test_atlas_error(self):
+    def test_x3_error(self):
         """Test AtlasError."""
         error = AtlasError("Something went wrong")
         assert str(error) == "Something went wrong"

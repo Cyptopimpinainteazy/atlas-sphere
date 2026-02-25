@@ -1,4 +1,4 @@
-# Atlas Sphere - Critical Path PRD
+# X3 Chain - Critical Path PRD
 ## Minimum Viable Production (MVP) Requirements
 
 **Version:** 1.0  
@@ -10,7 +10,7 @@
 
 ## Overview
 
-This PRD focuses on the **critical path** to get Atlas Sphere's core functionality working end-to-end. These tasks must be completed before the comprehensive PRD can be fully executed.
+This PRD focuses on the **critical path** to get X3 Chain's core functionality working end-to-end. These tasks must be completed before the comprehensive PRD can be fully executed.
 
 **Success Criteria:** A working blockchain with WebSocket RPC, dual-VM execution (real, not mocks), and basic frontend for testing.
 
@@ -93,7 +93,7 @@ This PRD focuses on the **critical path** to get Atlas Sphere's core functionali
 - [x] Create basic wallet interface in `apps/wallet`
 - [x] Implement account creation and key management
 - [x] Add transaction signing UI
-- [x] Connect to Atlas node via WebSocket
+- [x] Connect to X3 node via WebSocket
 - [x] Test sending transactions on testnet
 - [x] Commit: "feat: add minimal functional wallet UI"
 
@@ -231,7 +231,7 @@ cargo test --test state_root_replay
 ./run-production-node.sh
 
 # Check node logs
-journalctl -u atlas-sphere-node -f
+journalctl -u x3-chain-node -f
 ```
 
 ---

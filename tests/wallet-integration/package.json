@@ -1,5 +1,5 @@
 {
-  "name": "atlas-sphere-wallet-integration-tests",
+  "name": "x3-chain-wallet-integration-tests",
   "version": "1.0.0",
   "description": "Integration tests for MetaMask and Phantom wallet connectivity",
   "private": true,
@@ -16,7 +16,7 @@
     "install:browsers": "playwright install chromium"
   },
   "dependencies": {
-    "@atlas-sphere/ts-sdk": "file:../../packages/ts-sdk",
+    "@x3-chain/ts-sdk": "file:../../packages/ts-sdk",
     "@metamask/providers": "^16.0.0",
     "@solana/frontend/web3.js": "^1.90.0",
     "ethers": "^6.10.0"

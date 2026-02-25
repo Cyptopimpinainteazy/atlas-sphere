@@ -1,15 +1,15 @@
 /**
- * @module @atlas-sphere/ts-sdk
+ * @module @x3-chain/ts-sdk
  *
- * TypeScript SDK for Atlas Sphere - Dual-VM (EVM + SVM) Layer-1 Blockchain
+ * TypeScript SDK for X3 Chain - Dual-VM (EVM + SVM) Layer-1 Blockchain
  *
- * This SDK provides a comprehensive interface for interacting with Atlas Sphere nodes,
+ * This SDK provides a comprehensive interface for interacting with X3 Chain nodes,
  * submitting Comit transactions, querying the canonical ledger, and working with
  * both EVM and SVM payloads.
  *
  * @example
  * ```typescript
- * import { AtlasSphereClient, ComitBuilder } from '@atlas-sphere/ts-sdk';
+ * import { AtlasSphereClient, ComitBuilder } from '@x3-chain/ts-sdk';
  *
  * const client = new AtlasSphereClient({ endpoint: 'ws://localhost:9944' });
  * await client.connect();

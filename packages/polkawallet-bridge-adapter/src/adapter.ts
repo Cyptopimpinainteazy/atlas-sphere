@@ -1,9 +1,9 @@
 /**
- * Atlas Sphere x3chain — Polkawallet Bridge Adapter Implementation
+ * X3 Chain x3chain — Polkawallet Bridge Adapter Implementation
  *
  * Implements BaseCrossChainAdapter from @polkawallet/bridge for integration
  * into the Polkawallet mobile wallet. Supports:
- *   - Standard XCM transfers (DOT, KSM, ATLAS, stablecoins)
+ *   - Standard XCM transfers (DOT, KSM, X3, stablecoins)
  *   - Cross-VM transfers (EVM ↔ Substrate ↔ SVM)
  *   - Atomic swaps via x3chain's atomic-trade-engine pallet
  *   - .x3 domain resolution for recipient addresses
@@ -36,11 +36,11 @@ interface TransferParams {
 }
 
 /**
- * X3ChainAdapter — the Polkawallet bridge adapter for Atlas Sphere.
+ * X3ChainAdapter — the Polkawallet bridge adapter for X3 Chain.
  *
  * Drop-in compatible with the Polkawallet bridge SDK:
  *
- *   import { X3ChainAdapter } from '@atlas-sphere/polkawallet-bridge-adapter';
+ *   import { X3ChainAdapter } from '@x3-chain/polkawallet-bridge-adapter';
  *   const adapter = new X3ChainAdapter();
  *   await adapter.init(apiPromise);
  *   bridge = new Bridge({ adapters: [...existing, adapter] });
@@ -117,7 +117,7 @@ export class X3ChainAdapter {
 
     return this.api.derive.balances.all(address, (result: any) => {
       callback({
-        ATLAS: {
+        X3: {
           free: result.freeBalance.toString(),
           locked: result.lockedBalance.toString(),
           reserved: result.reservedBalance.toString(),
@@ -231,7 +231,7 @@ export class X3ChainAdapter {
 
   private _tokenToAssetId(token: string): number {
     const mapping: Record<string, number> = {
-      ATLAS: 0,
+      X3: 0,
       DOT: 1,
       KSM: 2,
       USDT: 3,

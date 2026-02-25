@@ -1,7 +1,7 @@
 """
 Jury Blockchain Anchorer
 
-Anchors jury decisions to the blockchain via the atlas-jury-anchor pallet.
+Anchors jury decisions to the blockchain via the x3-jury-anchor pallet.
 """
 
 import asyncio
@@ -120,7 +120,7 @@ class JuryAnchorer:
         logger.info(f"Anchoring decision {session_id} with hash {decision_hash}")
         
         # Build extrinsic call
-        # Format: atlas_jury_anchor.anchor_decision(session_id, decision_hash)
+        # Format: x3_jury_anchor.anchor_decision(session_id, decision_hash)
         
         extrinsic = {
             "pallet": "atlasJuryAnchor",

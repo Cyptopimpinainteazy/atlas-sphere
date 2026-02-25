@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 /**
  * @title BlockspaceAuction
  * @notice Dutch auction for blockspace and transaction priority
- * @dev Validators stake ATLAS to participate in blockspace auctions
+ * @dev Validators stake X3 to participate in blockspace auctions
  *
  * Auction Types:
  * - PRIORITY: Next block inclusion priority

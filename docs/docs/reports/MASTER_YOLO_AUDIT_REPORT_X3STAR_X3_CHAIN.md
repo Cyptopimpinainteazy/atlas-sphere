@@ -2,7 +2,7 @@
 
 Status: **BLOCK MAINNET**
 
-Scope: Atlas Sphere (Substrate runtime/node), X3VM integration, governance “Autonomous Security Constitution” wiring, CI/CD enforcement posture.
+Scope: X3 Chain (Substrate runtime/node), X3VM integration, governance “Autonomous Security Constitution” wiring, CI/CD enforcement posture.
 
 This report is evidence-driven: findings cite concrete repository controls and their current enforcement behavior.
 
@@ -21,7 +21,7 @@ Until the project fails closed on security gates and proves real (non-mock) cros
 ## Threat Model (Condensed)
 
 ### Assets to protect
-- Canonical ledger integrity (ATLAS-side balances / state transitions)
+- Canonical ledger integrity (X3-side balances / state transitions)
 - Cross-VM execution correctness (EVM/SVM/X3VM receipts and effects)
 - Governance safety controls (kill switch / emergency controls; upgrade gating)
 - CI trust boundary (what is considered “passing” for release)
@@ -67,7 +67,7 @@ For a Substrate runtime with dev-only features, `--all-features` is not a “str
 
 **Concrete risk example**
 The kernel explicitly documents a dev-only authorization bypass:
-- `pallets/atlas-kernel/src/lib.rs` `auth_check()` has `#[cfg(feature = "dev-bypass")]` returning `Ok(())` for all callers.
+- `pallets/x3-kernel/src/lib.rs` `auth_check()` has `#[cfg(feature = "dev-bypass")]` returning `Ok(())` for all callers.
 
 If CI validates behavior under `--all-features`, it can accidentally validate a bypassed security model.
 
@@ -192,7 +192,7 @@ This is acceptable in a hermetic CI environment but becomes a critical issue if 
 **Severity:** INFO (positive control)
 
 **Evidence**
-- `pallets/atlas-kernel/src/lib.rs` `auth_check()`:
+- `pallets/x3-kernel/src/lib.rs` `auth_check()`:
   - Without `dev-bypass`: reqfrontend/uires membership in `AuthorizedAccounts`, empty allowlist means “no one authorized”.
 
 **Why this matters**

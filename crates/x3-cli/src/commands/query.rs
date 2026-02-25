@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use crate::project::Project;
-use atlas_sdk::AtlasClient;
+use x3_sdk::AtlasClient;
 use clap::{Args, Subcommand};
 use colored::Colorize;
 
@@ -136,7 +136,7 @@ async fn execute_balance(args: BalanceArgs) -> Result<()> {
     println!();
     println!(
         "  Balance: {} {}",
-        atlas_sdk::utils::format_balance(balance, 12),
+        x3_sdk::utils::format_balance(balance, 12),
         if args.asset_id == 0 { "X3" } else { "tokens" }
     );
 
@@ -145,7 +145,7 @@ async fn execute_balance(args: BalanceArgs) -> Result<()> {
         println!("  Nonce: {}", info.nonce);
         println!(
             "  Native Balance: {}",
-            atlas_sdk::utils::format_balance(info.native_balance, 12)
+            x3_sdk::utils::format_balance(info.native_balance, 12)
         );
         println!("  Authorized: {}", info.is_authorized);
     }
@@ -213,10 +213,10 @@ fn get_endpoint(network: Option<&str>) -> String {
     } else {
         network
             .map(|n| match n {
-                "testnet" => atlas_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
-                "mainnet" => atlas_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
-                _ => atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
+                "testnet" => x3_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
+                "mainnet" => x3_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
+                _ => x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
             })
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     }
 }

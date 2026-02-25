@@ -168,7 +168,7 @@ class TestPerformanceOptimizer:
         
         # Import optimizer module
         import sys
-        sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
         from performance_optimizer import GPUMemoryPool
         
         # Create pool and allocate
@@ -195,7 +195,7 @@ class TestPerformanceOptimizer:
         logger.info("Testing task batch optimizer...")
         
         import sys
-        sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
         from performance_optimizer import TaskBatchOptimizer
         
         optimizer = TaskBatchOptimizer(batch_size=32, timeout_ms=1000)
@@ -227,7 +227,7 @@ class TestJurySystem:
         logger.info("Testing encrypted audit logging...")
         
         import sys
-        sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
         from jury_system import EncryptedAuditLogger, AuditLogEntry
         
         logger_instance = EncryptedAuditLogger(master_key="test-key-12345")
@@ -255,7 +255,7 @@ class TestJurySystem:
         logger.info("Testing jury consensus...")
         
         import sys
-        sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
         from jury_system import VerificationConsensus
         
         consensus = VerificationConsensus(total_jurors=3, threshold=0.5)
@@ -278,7 +278,7 @@ class TestSocialAgents:
         logger.info("Testing social action queueing...")
         
         import sys
-        sys.path.insert(0, "/home/lojak/Desktop/atlas-sphere-master/crates/gpu-swarm/src")
+        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
         from social_agents import SocialAgentsManager, SocialAction
         
         manager = SocialAgentsManager()

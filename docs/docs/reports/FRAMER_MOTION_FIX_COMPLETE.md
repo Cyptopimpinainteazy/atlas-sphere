@@ -4,14 +4,14 @@
 Successfully resolved the "Module not found: Can't resolve 'framer-motion'" bfrontend/uild error that was preventing the Next.js application from compiling.
 
 ## Root Cause
-The `AnimatedSphere` component in `apps/shared/components/quantum-frontend/frontend/ui/AnimatedSphere.tsx` was importing `framer-motion`, but the `@atlas-sphere/shared` package didn't have `framer-motion` listed in its dependencies. The dependency was present in the `explorer` app but not in the shared package that actually contained the component using it.
+The `AnimatedSphere` component in `apps/shared/components/quantum-frontend/frontend/ui/AnimatedSphere.tsx` was importing `framer-motion`, but the `@x3-chain/shared` package didn't have `framer-motion` listed in its dependencies. The dependency was present in the `explorer` app but not in the shared package that actually contained the component using it.
 
 ## Solution Applied
 Added `framer-motion` to the shared package dependencies:
 
 ```json
 {
-  "name": "@atlas-sphere/shared",
+  "name": "@x3-chain/shared",
   "version": "0.1.0",
   "private": true,
   "main": "index.ts",
@@ -41,7 +41,7 @@ Added `framer-motion` to the shared package dependencies:
 - ✅ Next.js bfrontend/uild starts successfully with "Creating an optimized production bfrontend/uild"
 
 ## Files Modified
-- `/home/lojak/Desktop/X3-atlas-sphere/apps/shared/package.json` - Added framer-motion dependency
+- `/home/lojak/Desktop/X3-x3-chain/apps/shared/package.json` - Added framer-motion dependency
 
 ## Bfrontend/uild Status
 The original bfrontend/uild error has been completely resolved. The current bfrontend/uild shows different unrelated syntax errors in other files, confirming that the framer-motion import issue is no longer present.

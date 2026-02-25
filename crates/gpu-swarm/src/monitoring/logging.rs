@@ -65,7 +65,9 @@ pub fn log_structured(level: &str, service: &str, message: &str, context: serde_
         level: level.to_string(),
         service: service.to_string(),
         message: message.to_string(),
-        trace_id: None, // TODO: extract trace_id when OpenTelemetry is integrated
+        trace_id: tracing::Span::current()
+            .id()
+            .map(|id| format!("{:x}", id.into_u64())),
         span_id: None,
         context,
     };

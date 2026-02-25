@@ -1,4 +1,4 @@
-# Invariant Registry for X3 / Atlas Sphere
+# Invariant Registry for X3 / X3 Chain
 # Format:
 # id = "LAYER-COMPONENT-NNN"
 # description = "Human readable description"
@@ -61,14 +61,14 @@ id = "FRONTEND-TELEMETRY-001"
 description = "Telemetry stream updates propagate to the UI hook state"
 severity = "MEDIUM"
 layer = "FRONTEND"
-tested_by = ["apps/atlas-desktop/tests/unit/telemetryStream.test.tsx::useTelemetryStream"]
+tested_by = ["apps/x3-desktop/tests/unit/telemetryStream.test.tsx::useTelemetryStream"]
 
 [[invariant]]
 id = "FRONTEND-TELEMETRY-002"
 description = "Live telemetry panel renders loading and error states safely"
 severity = "MEDIUM"
 layer = "FRONTEND"
-tested_by = ["apps/atlas-desktop/tests/unit/liveTelemetryPanel.test.tsx::LiveTelemetryPanel"]
+tested_by = ["apps/x3-desktop/tests/unit/liveTelemetryPanel.test.tsx::LiveTelemetryPanel"]
 
 [[invariant]]
 id = "INFRA-CCGV-001"
@@ -108,7 +108,7 @@ property = "init(plugin) => kernel, settlement, trades, domains, verifier, gover
 
 [[invariant]]
 id = "API-POLKAWALLET-002"
-description = "Bridge adapter discovers valid routes between Atlas and all supported external chains"
+description = "Bridge adapter discovers valid routes between X3 and all supported external chains"
 severity = "HIGH"
 layer = "API"
 tested_by = ["packages/polkawallet-bridge-adapter/tests/bridge.test.ts::route discovery"]
@@ -124,7 +124,7 @@ property = "client.method(args) produces correct extrinsic targeting runtime pal
 
 [[invariant]]
 id = "API-TS-SDK-001"
-description = "TypeScript SDK can connect to a live Atlas node and perform basic RPC queries (chain info, block number, balance, nonce)"
+description = "TypeScript SDK can connect to a live X3 node and perform basic RPC queries (chain info, block number, balance, nonce)"
 severity = "HIGH"
 layer = "API"
 tested_by = ["packages/ts-sdk/tests/live.integration.test.ts::connects to live node and queries basic RPCs"]

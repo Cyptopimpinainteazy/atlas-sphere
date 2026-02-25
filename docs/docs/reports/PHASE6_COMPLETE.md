@@ -206,7 +206,7 @@ MIR Module (from x3-compiler)
     ├─ Cost estimation
     └─ Output: Best sequence
     ↓
-Bytecode (to Atlas Sphere VM)
+Bytecode (to X3 Chain VM)
 ```
 
 ### **Test Coverage**

@@ -1,8 +1,8 @@
-# Atlas Sphere – Functional Blockchain Plan (Qfrontend/uick Summary)
+# X3 Chain – Functional Blockchain Plan (Qfrontend/uick Summary)
 
 ## 📋 Overview
 
-A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to fully functional, production-ready Layer-1 blockchain with dual-VM (EVM + SVM) execution, atomic cross-domain operations, and comprehensive developer tooling.
+A complete **9-phase plan** to transform X3 Chain from MVP prototype to fully functional, production-ready Layer-1 blockchain with dual-VM (EVM + SVM) execution, atomic cross-domain operations, and comprehensive developer tooling.
 
 **Total Estimated Duration:** 4–6 months
 
@@ -12,7 +12,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 
 | Phase | Name | Focus | Duration | Key Deliverable |
 |-------|------|-------|----------|-----------------|
-| **1** | Core Runtime Hardening | Kernel pallet, tests, constants | 2–3 wks | Production-grade Atlas Kernel + 200+ tests |
+| **1** | Core Runtime Hardening | Kernel pallet, tests, constants | 2–3 wks | Production-grade X3 Kernel + 200+ tests |
 | **2** | Node Service & Networking | Node CLI, RPC, chain specs, peer discovery | 1–2 wks | Multi-node testnet with RPC endpoints |
 | **3** | EVM Integration (Frontier) | pallet-evm wiring, canonical ledger hooks, JSON-RPC, contracts | 2–3 wks | MetaMask-compatible EVM runtime; Hardhat support |
 | **4** | SVM Integration | SVM sidecar, pallet-svm, receipt verification, programs | 2–3 wks | Deterministic SVM execution with canonical ledger sync |
@@ -27,7 +27,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 ## 📊 Detailed Breakdown
 
 ### **Phase 1: Core Runtime Hardening** (2–3 weeks)
-**Goal:** Production-grade, fully tested Atlas Kernel.
+**Goal:** Production-grade, fully tested X3 Kernel.
 
 - [ ] Complete Comit data model and deterministic SCALE encoding
 - [ ] Enhance nonce replay protection with race condition tests
@@ -48,7 +48,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] Finalize Node CLI with dev/local/staging/mainnet chain specs
 - [ ] Create chain specification files (dev.json, local.json, staging.json, mainnet.json)
 - [ ] Implement key generation tooling (scripts/generate-keys.sh)
-- [ ] Enhance RPC with Atlas-specific methods:
+- [ ] Enhance RPC with X3-specific methods:
   - `atlasKernel_getCanonicalBalance`
   - `atlasKernel_getComitStatus`
   - `atlasKernel_subscribeComits`
@@ -68,14 +68,14 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] Create canonical ledger adapter pallet:
   - Hook into `OnChargeTransaction`
   - Route all balance reads/writes through canonical ledger
-- [ ] Implement gas-to-ATLAS fee conversion
+- [ ] Implement gas-to-X3 fee conversion
 - [ ] Deploy Frontier JSON-RPC server (port 8545)
 - [ ] Implement Ethereum RPC methods (eth_call, eth_sendRawTransaction, etc.)
 - [ ] Test MetaMask integration
 - [ ] Create example contracts (Greeter, ERC-20, simple DEX)
 - [ ] Bfrontend/uild Hardhat configuration and deploy scripts
 
-**Exit Criteria:** MetaMask connects to localhost:8545; simple ERC-20 deploys and executes; fees charged in ATLAS.
+**Exit Criteria:** MetaMask connects to localhost:8545; simple ERC-20 deploys and executes; fees charged in X3.
 
 ---
 
@@ -141,7 +141,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Account viewer (balances, history)
   - Comit viewer (status, fees, payloads)
   - Real-time event feed
-- [ ] **CLI utilities** (`tools/comit-cli/`, `atlas-key`):
+- [ ] **CLI utilities** (`tools/comit-cli/`, `x3-key`):
   - Comit creation, signing, submission
   - Key generation and management
   - Integration test helpers
@@ -186,7 +186,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
   - Slack alerts
 - [ ] **Testnet faucet**:
   - Deploy faucet service
-  - Rate-limited test ATLAS distribution
+  - Rate-limited test X3 distribution
 - [ ] **Complete documentation**:
   - Getting started gfrontend/uide
   - EVM and SVM deployment tutorials
@@ -199,7 +199,7 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 - [ ] **Example dApps**:
   - Deploy 2–3 early community projects on testnet
 
-**Exit Criteria:** Testnet live and stable; 5+ validators operational; faucet distributes ATLAS; community engaging.
+**Exit Criteria:** Testnet live and stable; 5+ validators operational; faucet distributes X3; community engaging.
 
 ---
 
@@ -252,9 +252,9 @@ A complete **9-phase plan** to transform Atlas Sphere from MVP prototype to full
 ## 📁 Key Files & Directories
 
 ```
-atlas-sphere/
-├── pallets/atlas-kernel/src/lib.rs          # Core Comit logic
-├── pallets/atlas-kernel/src/tests.rs        # Test sfrontend/uite (expand to 200+)
+x3-chain/
+├── pallets/x3-kernel/src/lib.rs          # Core Comit logic
+├── pallets/x3-kernel/src/tests.rs        # Test sfrontend/uite (expand to 200+)
 ├── runtime/src/lib.rs                       # Runtime configuration
 ├── node/src/                                 # Node binary
 ├── pallets/frontier-integration/            # EVM pallet setup (Phase 3)

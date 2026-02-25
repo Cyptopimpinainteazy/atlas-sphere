@@ -7,7 +7,7 @@
 ## 📋 How to Track Your Work
 
 ### Step 1: Check the Master Milestone
-See `/home/lojak/Desktop/atlas-sphere-master/docs/reports/X3_MILESTONE_TRACKING.md`
+See `/home/lojak/Desktop/x3-chain-master/docs/reports/X3_MILESTONE_TRACKING.md`
 
 This shows:
 - All 9 epics

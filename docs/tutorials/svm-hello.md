@@ -1,15 +1,15 @@
 # SVM Hello World Tutorial
 
-This tutorial will guide you through deploying your first Solana program (SVM) on Atlas Sphere using Anchor. We'll create a simple counter program that demonstrates SVM compatibility.
+This tutorial will guide you through deploying your first Solana program (SVM) on X3 Chain using Anchor. We'll create a simple counter program that demonstrates SVM compatibility.
 
 ## Prerequisites
 
 - Rust 1.70+ installed
 - Solana CLI tools installed (`solana-keygen`, `solana`)
-- Atlas Sphere local node running (see [Getting Started](/docs/getting-started.md))
+- X3 Chain local node running (see [Getting Started](/docs/getting-started.md))
 - Basic understanding of Rust and Solana development
 
-**Why this matters**: This tutorial demonstrates that you can deploy existing Solana programs on Atlas Sphere with minimal modifications, leveraging the full SVM compatibility.
+**Why this matters**: This tutorial demonstrates that you can deploy existing Solana programs on X3 Chain with minimal modifications, leveraging the full SVM compatibility.
 
 ## Step 1: Install Anchor and Set Up Environment
 
@@ -28,15 +28,15 @@ anchor --version
 solana --version
 ```
 
-**Why this matters**: Anchor provides a familiar Rust-based development framework for Solana programs, making it easy to port existing Solana dApps to Atlas Sphere.
+**Why this matters**: Anchor provides a familiar Rust-based development framework for Solana programs, making it easy to port existing Solana dApps to X3 Chain.
 
-## Step 2: Configure Solana for Atlas Sphere
+## Step 2: Configure Solana for X3 Chain
 
 ```bash
 # Generate a new keypair for development
 solana-keygen new --outfile ~/.config/solana/id.json
 
-# Configure Solana to use Atlas Sphere
+# Configure Solana to use X3 Chain
 solana config set --url http://localhost:9934
 
 # Verify configuration
@@ -51,14 +51,14 @@ WebSocket URL: ws://localhost:9944
 Keypair Path: /home/user/.config/solana/id.json
 ```
 
-**Why this matters**: Atlas Sphere provides a Solana-compatible RPC endpoint on port 9934, allowing existing Solana tooling to work seamlessly.
+**Why this matters**: X3 Chain provides a Solana-compatible RPC endpoint on port 9934, allowing existing Solana tooling to work seamlessly.
 
 ## Step 3: Create Your Anchor Project
 
 ```bash
 # Initialize new Anchor project
-anchor init atlas-svm-hello
-cd atlas-svm-hello
+anchor init x3-svm-hello
+cd x3-svm-hello
 
 # Install dependencies
 npm install
@@ -74,10 +74,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-atlas_svm_hello = "YourProgramIDHere"
+x3_svm_hello = "YourProgramIDHere"
 
 [programs.mainnet]
-atlas_svm_hello = "YourProgramIDHere"
+x3_svm_hello = "YourProgramIDHere"
 
 [registry]
 url = "https://api.apr.dev"
@@ -90,7 +90,7 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 ```
 
-Update `programs/atlas-svm-hello/src/lib.rs`:
+Update `programs/x3-svm-hello/src/lib.rs`:
 
 ```rust
 use anchor_lang::prelude::*;
@@ -98,7 +98,7 @@ use anchor_lang::prelude::*;
 declare_id!("YourProgramIDHere");
 
 #[program]
-pub mod atlas_svm_hello {
+pub mod x3_svm_hello {
     use super::*;
 
     /// Initialize a new counter account
@@ -323,16 +323,16 @@ pub struct AuthorityTransferred {
 }
 ```
 
-**Why this matters**: This Anchor program follows standard Solana patterns and will work on both Solana and Atlas Sphere with identical behavior.
+**Why this matters**: This Anchor program follows standard Solana patterns and will work on both Solana and X3 Chain with identical behavior.
 
 ## Step 4: Create Client-Side Interaction
 
-Update `programs/atlas-svm-hello/src/client.ts`:
+Update `programs/x3-svm-hello/src/client.ts`:
 
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { AtlasSvmHello } from "../target/types/atlas_svm_hello";
+import { AtlasSvmHello } from "../target/types/x3_svm_hello";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 
 export async function initializeCounter(
@@ -459,13 +459,13 @@ Create `scripts/deploy.ts`:
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { AtlasSvmHello } from "../target/types/atlas_svm_hello";
-import { initializeCounter, incrementCounter, decrementCounter, getCounterValue, resetCounter } from "../programs/atlas-svm-hello/src/client";
+import { AtlasSvmHello } from "../target/types/x3_svm_hello";
+import { initializeCounter, incrementCounter, decrementCounter, getCounterValue, resetCounter } from "../programs/x3-svm-hello/src/client";
 
 async function main() {
-  console.log("🚀 Starting Atlas Sphere SVM Counter Demo...");
+  console.log("🚀 Starting X3 Chain SVM Counter Demo...");
   
-  // Configure Anchor for Atlas Sphere
+  // Configure Anchor for X3 Chain
   anchor.setProvider(anchor.AnchorProvider.env());
   
   const program = anchor.workspace.AtlasSvmHello as Program<AtlasSvmHello>;
@@ -530,16 +530,16 @@ main()
 
 ## Step 6: Create Tests
 
-Update `tests/atlas-svm-hello.ts`:
+Update `tests/x3-svm-hello.ts`:
 
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { AtlasSvmHello } from "../target/types/atlas_svm_hello";
+import { AtlasSvmHello } from "../target/types/x3_svm_hello";
 import { expect } from "chai";
 import { PublicKey } from "@solana/web3.js";
 
-describe("atlas-svm-hello", () => {
+describe("x3-svm-hello", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.AtlasSvmHello as Program<AtlasSvmHello>;

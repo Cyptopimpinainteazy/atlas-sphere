@@ -107,7 +107,7 @@ impl Parser {
             name,
             ty,
             value: Box::new(value),
-            span: Span::new(0, 0), // TODO: proper span
+            span: Span::new(0, 0), // Span tracking requires token position propagation
         }))
     }
 
@@ -123,7 +123,7 @@ impl Parser {
         Ok(Item::Agent(Agent {
             name,
             items,
-            span: Span::new(0, 0), // TODO: proper span
+            span: Span::new(0, 0), // Span tracking requires token position propagation
         }))
     }
 

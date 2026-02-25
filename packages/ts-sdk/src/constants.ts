@@ -1,5 +1,5 @@
 /**
- * Constants for Atlas Sphere SDK
+ * Constants for X3 Chain SDK
  *
  * Defines network parameters, limits, and default values.
  */
@@ -14,10 +14,10 @@ export const DEFAULT_WS_ENDPOINT = 'ws://127.0.0.1:9944';
 /** Default HTTP RPC endpoint for local development */
 export const DEFAULT_HTTP_ENDPOINT = 'http://127.0.0.1:9933';
 
-/** Atlas Sphere mainnet WebSocket endpoint (when launched) */
+/** X3 Chain mainnet WebSocket endpoint (when launched) */
 export const MAINNET_WS_ENDPOINT = 'wss://rpc.atlassphere.io';
 
-/** Atlas Sphere testnet WebSocket endpoint */
+/** X3 Chain testnet WebSocket endpoint */
 export const TESTNET_WS_ENDPOINT = 'wss://testnet.atlassphere.io';
 
 // =============================================================================
@@ -49,7 +49,7 @@ export const DEFAULT_SVM_COMPUTE_UNITS = 200_000n;
 /** Maximum compute units for SVM execution */
 export const MAX_SVM_COMPUTE_UNITS = 1_400_000n;
 
-/** Gas price in smallest unit (1 micro-ATLAS per gas unit) */
+/** Gas price in smallest unit (1 micro-X3 per gas unit) */
 export const GAS_PRICE = 1_000_000_000_000n; // 10^12
 
 /** SVM compute unit price in smallest unit */
@@ -60,7 +60,7 @@ export const COMPUTE_UNIT_PRICE = 1_000_000_000_000n; // 10^12
 // =============================================================================
 
 /** Base fee for Comit submission */
-export const BASE_COMIT_FEE = 1_000_000_000_000n; // 1 milli-ATLAS
+export const BASE_COMIT_FEE = 1_000_000_000_000n; // 1 milli-X3
 
 /** Gas divisor for fee calculation (EVM gas / 1000) */
 export const GAS_FEE_DIVISOR = 1000n;
@@ -88,22 +88,22 @@ export const FINALIZATION_BLOCKS = 3;
 // Asset Constants
 // =============================================================================
 
-/** Native asset ID (ATLAS token) */
+/** Native asset ID (X3 token) */
 export const NATIVE_ASSET_ID = 0;
 
 /** Native asset symbol */
-export const NATIVE_ASSET_SYMBOL = 'ATLAS';
+export const NATIVE_ASSET_SYMBOL = 'X3';
 
 /** Native asset decimals */
 export const NATIVE_ASSET_DECIMALS = 18;
 
-/** One ATLAS in smallest unit (10^18) */
+/** One X3 in smallest unit (10^18) */
 export const ONE_ATLAS = 1_000_000_000_000_000_000n;
 
-/** One milli-ATLAS in smallest unit (10^15) */
+/** One milli-X3 in smallest unit (10^15) */
 export const ONE_MILLI_ATLAS = 1_000_000_000_000_000n;
 
-/** One micro-ATLAS in smallest unit (10^12) */
+/** One micro-X3 in smallest unit (10^12) */
 export const ONE_MICRO_ATLAS = 1_000_000_000_000n;
 
 // =============================================================================
@@ -134,7 +134,7 @@ export const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000
 // =============================================================================
 
 export const RPC_METHODS = {
-  // Atlas Kernel methods
+  // X3 Kernel methods
   getCanonicalBalance: 'atlasKernel_getCanonicalBalance',
   getAssetMetadata: 'atlasKernel_getAssetMetadata',
   isAuthorized: 'atlasKernel_isAuthorized',

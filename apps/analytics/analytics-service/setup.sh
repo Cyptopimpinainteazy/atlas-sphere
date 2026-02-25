@@ -11,7 +11,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Atlas Sphere Analytics Service Setup${NC}"
+echo -e "${GREEN}X3 Chain Analytics Service Setup${NC}"
 echo -e "${GREEN}========================================${NC}"
 
 # Default configuration
@@ -27,7 +27,7 @@ if ! pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" > /dev/null 2>&1; then
     echo -e "${RED}PostgreSQL is not running or not accessible at $DB_HOST:$DB_PORT${NC}"
     echo -e "Please start PostgreSQL or update connection settings."
     echo -e "\nTo start PostgreSQL with Docker:"
-    echo -e "  docker run -d --name atlas-postgres -p 5432:5432 -e POSTGRES_PASSWORD=password postgres:15"
+    echo -e "  docker run -d --name x3-postgres -p 5432:5432 -e POSTGRES_PASSWORD=password postgres:15"
     exit 1
 fi
 echo -e "${GREEN}PostgreSQL is running.${NC}"

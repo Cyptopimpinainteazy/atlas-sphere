@@ -221,7 +221,7 @@ impl TestContractManager {
             ("USDC", "1000000000000000000000000"), // 1M USDC
             ("ETH", "100000000000000000000000"),  // 100 ETH
             ("BTC", "10000000000000000000000"),   // 10 BTC
-            ("ATLAS", "1000000000000000000000000"), // 1M ATLAS
+            ("X3", "1000000000000000000000000"), // 1M X3
         ];
 
         for (name, initial_supply) in token_addresses {

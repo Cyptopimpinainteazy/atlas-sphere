@@ -1,4 +1,4 @@
-"""Multi-GPU batch scheduler for atlas-sphere validator.
+"""Multi-GPU batch scheduler for x3-chain validator.
 
 Dynamically assigns chains to GPUs based on TPS demand, VRAM usage,
 and kernel profiles.  Supports preemptible swarm tasks on idle cycles.

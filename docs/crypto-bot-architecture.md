@@ -93,7 +93,7 @@ Key goals:
   - Notification hub for alerts.
   - Cross-device sync.
   - Referral engine.
-- **Tech**: React components (extend apps/atlas-desktop/src/components/panels/infrastructure/AirdropsPanel.tsx).
+- **Tech**: React components (extend apps/x3-desktop/src/components/panels/infrastructure/AirdropsPanel.tsx).
 - **Integrations**: Direct connection to Polkawallet for wallet ops, existing CRM for user management.
 
 ## Data Flow

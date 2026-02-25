@@ -1,14 +1,14 @@
-# Atlas Sphere Architecture
+# X3 Chain Architecture
 
-This document provides a deep dive into Atlas Sphere's technical architecture, explaining how the dual-VM system works, node roles, and VM routing mechanisms.
+This document provides a deep dive into X3 Chain's technical architecture, explaining how the dual-VM system works, node roles, and VM routing mechanisms.
 
 ## System Overview
 
-Atlas Sphere implements a layered architecture that enables atomic execution across EVM and SVM while maintaining security and performance.
+X3 Chain implements a layered architecture that enables atomic execution across EVM and SVM while maintaining security and performance.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    ATLAS SPHERE ARCHITECTURE                    │
+│                    X3 CHAIN ARCHITECTURE                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌───────────────┐    ┌───────────────┐    ┌───────────────┐  │
@@ -42,7 +42,7 @@ Atlas Sphere implements a layered architecture that enables atomic execution acr
 
 ## Node Roles
 
-Atlas Sphere nodes can serve different roles depending on their configuration and network participation:
+X3 Chain nodes can serve different roles depending on their configuration and network participation:
 
 ### Validator Nodes
 **Purpose**: Block production and consensus participation
@@ -135,7 +135,7 @@ svm_enabled = true
 - Cross-VM call interface
 - Block and transaction indexing
 
-**Why this matters**: RPC nodes enable external applications to interact with Atlas Sphere using familiar APIs from both Ethereum and Solana ecosystems.
+**Why this matters**: RPC nodes enable external applications to interact with X3 Chain using familiar APIs from both Ethereum and Solana ecosystems.
 
 ### Archive Nodes
 **Purpose**: Full blockchain history and state archival
@@ -177,7 +177,7 @@ svm_enabled = true
 
 ## VM Routing
 
-Atlas Sphere automatically routes transactions to the appropriate VM based on payload characteristics:
+X3 Chain automatically routes transactions to the appropriate VM based on payload characteristics:
 
 ### EVM Transaction Flow
 ```
@@ -360,7 +360,7 @@ When cross-VM operations occur, the canonical ledger ensures consistency:
 │                    │                   │
 │  Step 3: Canonical Ledger Update        │
 │  ┌─────────────────▼───────────────┐   │
-│  │ Asset ATLAS:                    │   │
+│  │ Asset X3:                    │   │
 │  │   EVM:  1,000,000 -> 999,900    │   │
 │  │   SVM:    500,000 -> 499,950    │   │
 │  │   Total: 1,500,000 (preserved)  │   │

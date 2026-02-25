@@ -108,7 +108,7 @@ class AuditLogger:
     - Audit trail generation for forensics
     """
     
-    def __init__(self, storage_dir: str = "/var/log/atlas-sphere/jury"):
+    def __init__(self, storage_dir: str = "/var/log/x3-chain/jury"):
         """Initialize audit logger.
         
         Args:

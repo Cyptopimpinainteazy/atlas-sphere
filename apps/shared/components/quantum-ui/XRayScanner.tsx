@@ -206,7 +206,7 @@ export const XRayScanner: React.FC<XRayScannerProps> = ({
         opacity: 0.7,
         zIndex: 10,
       }}>
-        ATLAS X-RAY v2.0
+        X3 X-RAY v2.0
       </div>
     </div>
   );
@@ -340,7 +340,7 @@ const CircuitOuter: React.FC = () => (
       fontFamily: 'Orbitron, monospace',
       fontWeight: 'bold',
     }}>
-      ATLAS CPU
+      X3 CPU
     </div>
   </div>
 );

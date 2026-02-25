@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use crate::project::Project;
-use atlas_sdk::AtlasClient;
+use x3_sdk::AtlasClient;
 use clap::Args;
 use colored::Colorize;
 
@@ -76,10 +76,10 @@ fn get_endpoint(network: Option<&str>) -> String {
     } else {
         network
             .map(|n| match n {
-                "testnet" => atlas_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
-                "mainnet" => atlas_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
-                _ => atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
+                "testnet" => x3_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
+                "mainnet" => x3_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
+                _ => x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
             })
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     }
 }

@@ -1,4 +1,4 @@
-//! GPU Swarm - Distributed GPU Compute Network for X3 Atlas Sphere
+//! GPU Swarm - Distributed GPU Compute Network for X3 X3 Chain
 //!
 //! This crate provides the core infrastructure for the X3 GPU Swarm, enabling:
 //! - Distributed GPU compute across volunteer nodes

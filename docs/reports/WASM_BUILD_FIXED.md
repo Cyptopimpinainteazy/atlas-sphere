@@ -37,11 +37,11 @@ ahash = "=0.8.11"     # Downgraded from 0.8.12
 $ SKIP_WASM_BUILD=1 cargo build --release
    Finished `release` profile [optimized] target(s) in 35.03s
 
-$ ls -lh target/release/atlas-sphere-node
--rwxrwxr-x 2 lojak lojak 52M Nov  9 04:05 target/release/atlas-sphere-node
+$ ls -lh target/release/x3-chain-node
+-rwxrwxr-x 2 lojak lojak 52M Nov  9 04:05 target/release/x3-chain-node
 
-$ ./target/release/atlas-sphere-node --version
-Atlas Sphere Node 0.1.0
+$ ./target/release/x3-chain-node --version
+X3 Chain Node 0.1.0
 ```
 
 ### What Works ✅
@@ -156,7 +156,7 @@ The SKIP_WASM_BUILD workaround provides a fully functional blockchain node with 
 
 **Command to execute:**
 ```bash
-cd /home/lojak/Desktop/atlas-sphere/deployment
+cd /home/lojak/Desktop/x3-chain/deployment
 ./provision-digitalocean.sh  # or your chosen provider
 ```
 

@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import Mock
-from atlas_sphere_sdk.svm import SvmClient, SvmInstruction, SvmAccount
+from x3_chain_sdk.svm import SvmClient, SvmInstruction, SvmAccount
 
 
 class TestSvmClient:

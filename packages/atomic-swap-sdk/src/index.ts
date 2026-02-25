@@ -1,11 +1,11 @@
 /**
- * @atlas-sphere/atomic-swap-sdk
+ * @x3-chain/atomic-swap-sdk
  *
  * Polkadex-inspired cross-chain DEX with atomic swap settlement.
  * Supports EVM, Solana, Bitcoin, and Substrate chains.
  *
  * Usage:
- *   import { AtlasDexClient, DexWebSocket } from '@atlas-sphere/atomic-swap-sdk';
+ *   import { AtlasDexClient, DexWebSocket } from '@x3-chain/atomic-swap-sdk';
  *
  *   const dex = new AtlasDexClient({
  *     chainEndpoints: { ethereum: 'https://...', solana: 'https://...', bitcoin: 'https://...' },

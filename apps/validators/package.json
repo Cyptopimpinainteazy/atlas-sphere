@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/validators",
+  "name": "@x3-chain/validators",
   "version": "1.0.0",
   "type": "module",
   "description": "Validator network monitoring and analytics dashboard",

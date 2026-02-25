@@ -1,4 +1,4 @@
-// Collateral module — TypeScript SDK stubs for Bonding APIs
+// Collateral module — TypeScript SDK for Bonding APIs
 
 export type BondId = string;
 export type BondState = 'Locked' | 'Withdrawable' | 'Slashed';
@@ -14,26 +14,82 @@ export interface WithdrawRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
 }
 
+interface RpcRequest {
+  jsonrpc: '2.0';
+  method: string;
+  params: Record<string, unknown>;
+  id: number;
+}
+
 export class CollateralManagerClient {
-  constructor(private endpoint: string) {}
+  private id = 0;
+
+  constructor(private endpoint: string) {
+    this.endpoint = endpoint.replace(/\/$/, '');
+  }
+
+  private async rpcCall<T>(method: string, params: Record<string, unknown>): Promise<T> {
+    const request: RpcRequest = {
+      jsonrpc: '2.0',
+      method,
+      params,
+      id: ++this.id,
+    };
+
+    try {
+      const response = await fetch(`${this.endpoint}/rpc`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.result as T;
+    } catch {
+      // Fallback for demo/testing - remove in production
+      throw new Error('RPC call failed - ensure X3 Chain node is running');
+    }
+  }
 
   async depositBond(account: string, asset: string, amount: bigint): Promise<DepositReceipt> {
-    // TODO: implement RPC/REST call
-    return { bondId: 'bond-' + Date.now() };
+    const result = await this.rpcCall<{ bondId: string; txHash?: string }>(
+      'collateral_depositBond',
+      { account, asset, amount: amount.toString() }
+    );
+    return {
+      bondId: result.bondId,
+      txHash: result.txHash,
+    };
   }
 
   async requestWithdrawBond(account: string, bondId: BondId): Promise<WithdrawRequest> {
-    // TODO: implement RPC/REST call
-    return { requestId: 'req-' + Date.now(), bondId, status: 'Pending' };
+    const result = await this.rpcCall<{ requestId: string; status: string }>(
+      'collateral_requestWithdrawBond',
+      { account, bondId }
+    );
+    return {
+      requestId: result.requestId,
+      bondId,
+      status: result.status as 'Pending' | 'Approved' | 'Rejected',
+    };
   }
 
   async finalizeWithdraw(requestId: string): Promise<{ txHash: string }> {
-    // TODO: implement RPC/REST call
-    return { txHash: '0x' + Date.now().toString(16) };
+    return this.rpcCall<{ txHash: string }>(
+      'collateral_finalizeWithdraw',
+      { requestId }
+    );
   }
 
   async getBondState(bondId: BondId): Promise<BondState> {
-    // TODO: RPC/REST
-    return 'Locked';
+    const result = await this.rpcCall<{ state: string }>(
+      'collateral_getBondState',
+      { bondId }
+    );
+    return result.state as BondState;
   }
 }

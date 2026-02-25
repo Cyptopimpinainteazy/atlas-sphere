@@ -110,7 +110,38 @@ bmad-validate: bmad-validate-steps bmad-validate-workflows
 
 bmad-clean: bmad-clean-steps bmad-clean-workflows
 	@echo ""
-	@echo "✓ Phase 1 & Phase 2 cleanup complete"
+# ============================================================================
+# PHASE 3: YOLO FINISHER v5.0 (NUCLEAR FINALIZATION)
+# ============================================================================
+
+.PHONY: finish finish-stack finish-score finish-chaos finish-audit finish-clean
+
+finish:
+	@echo "☢️ YOLO FINISHER v5.0 — Starting Nuclear Finalization Pass..."
+	@scripts/finisher_daemon.py --watch-dir ./drop --work-dir ./workspace
+
+finish-stack:
+	@echo "☢️ YOLO FINISHER — Running Full Stack Sequence..."
+	@echo "Agents: CARTOGRAPHER ARCHAEOLOGIST BREAKER AUDITOR INTENT_ANALYST INTEGRATOR VERIFIER FIXER ECONOMIST CHAOS_ENGINE COMPLETION_JUDGE"
+	@# Individual agent execution would go here if bound to CLI
+
+finish-score:
+	@echo "⚖️ YOLO FINISHER — Computing Readiness Score..."
+	@# Trigger completion judge
+
+finish-chaos:
+	@echo "🌪️ YOLO FINISHER — Injecting Chaos & Fuzzing..."
+	@# Trigger chaos engine
+
+finish-audit:
+	@echo "🕵️ YOLO FINISHER — Running Security & Economic Audit..."
+	@# Trigger auditor + economist
+
+finish-clean:
+	@echo "🧹 Cleaning Finisher workspace..."
+	@rm -rf ./workspace
+	@rm -rf ./drop
+	@echo "✓ Finisher workspace cleaned"
 
 # ============================================================================
 # PREREQUISITES CHECK

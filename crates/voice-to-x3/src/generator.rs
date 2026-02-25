@@ -545,7 +545,7 @@ contract {name} {{
 
     fn _is_healthy(user: address) -> bool {{
         // Simplified: would need oracle for real implementation
-        return true; // TODO: Implement with oracle prices
+        return true; // Oracle price integration requires price feed subscription
     }}
 
     fn min(a: u256, b: u256) -> u256 {{

@@ -11,7 +11,7 @@ interface AppBarProps {
  * AppBar Component
  * Displays app title, user info, and logout option
  */
-export const AppBar: React.FC<AppBarProps> = ({ title = 'Atlas Sphere' }) => {
+export const AppBar: React.FC<AppBarProps> = ({ title = 'X3 Chain' }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);

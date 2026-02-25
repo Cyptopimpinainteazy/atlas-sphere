@@ -2,7 +2,7 @@
 
 **Status**: Production-Ready Autonomic Control Plane  
 **Last Updated**: 2026-02-11  
-**System**: Atlas Sphere X3 Cross-Chain GPU Validation Network
+**System**: X3 Chain X3 Cross-Chain GPU Validation Network
 
 ---
 
@@ -42,7 +42,7 @@ X3 now has a **complete autonomic control plane** that provides self-healing, se
 sudo apt-mark hold nvidia-driver-535
 
 # Create Docker production image
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 # TODO: Create Dockerfile.autonomic
 ```
 
@@ -137,8 +137,8 @@ cd /home/lojak/Desktop/atlas-sphere-master
 - [ ] **TODO**: Key rotation policy
 
 ### Operator Whitelists
-- [x] Service whitelist: `atlas-sphere-node`, `ollama`, `atlas-sphere-health`
-- [x] Process pattern whitelist: `python`, `node`, `atlas`, `swarm`, `ollama`
+- [x] Service whitelist: `x3-chain-node`, `ollama`, `x3-chain-health`
+- [x] Process pattern whitelist: `python`, `node`, `x3`, `swarm`, `ollama`
 - [x] GPU index validation (0-2)
 - [x] Swarm API endpoint validation
 
@@ -243,7 +243,7 @@ cd /home/lojak/Desktop/atlas-sphere-master
 ### View Dashboard
 ```bash
 # Start swarm API server
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m swarm.api_server
 
 # Open dashboard in browser
@@ -333,6 +333,6 @@ curl -X POST http://127.0.0.1:8080/api/autonomic/override/playbook \
 ---
 
 ## Contact
-For enterprise deployment support: **GitHub Issues** or internal Atlas team channels
+For enterprise deployment support: **GitHub Issues** or internal X3 team channels
 
 **Status**: ✅ Ready for controlled production rollout with monitoring

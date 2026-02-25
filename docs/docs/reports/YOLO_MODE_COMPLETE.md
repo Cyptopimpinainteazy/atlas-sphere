@@ -263,5 +263,5 @@ All crates:    ✅ BUILD CLEAN, TESTS 79/79 ✅
 ---
 
 *Generated: 2025-12-09*
-*Bfrontend/uild: x3-atlas-sphere v1.0*
+*Bfrontend/uild: x3-x3-chain v1.0*
 *Optimizer: 13-pass pipeline with Pass A (conditional folding), Phase 2 (PRE), Phase 3 (RegAlloc), Phase 4 (Opcode)*

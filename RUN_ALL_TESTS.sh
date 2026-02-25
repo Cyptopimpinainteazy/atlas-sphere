@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "╔════════════════════════════════════════════════════════════════╗"
-echo "║          ATLAS SPHERE - COMPLETE TEST SUITE RUN               ║"
+echo "║          X3 CHAIN - COMPLETE TEST SUITE RUN               ║"
 echo "║                    November 7, 2025                           ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
@@ -31,10 +31,10 @@ run_test() {
 }
 
 # Run all tests
-run_test "atlas-sphere-runtime" "cargo test -p atlas-sphere-runtime --release 2>&1"
-run_test "pallet-atlas-kernel" "cargo test -p pallet-atlas-kernel --release 2>&1"
-run_test "atlas-evm-integration" "cargo test -p atlas-evm-integration --release 2>&1"
-run_test "atlas-svm-integration" "cargo test -p atlas-svm-integration --release 2>&1"
+run_test "x3-chain-runtime" "cargo test -p x3-chain-runtime --release 2>&1"
+run_test "pallet-x3-kernel" "cargo test -p pallet-x3-kernel --release 2>&1"
+run_test "x3-evm-integration" "cargo test -p x3-evm-integration --release 2>&1"
+run_test "x3-svm-integration" "cargo test -p x3-svm-integration --release 2>&1"
 run_test "x3-parser" "cargo test -p x3-parser 2>&1"
 run_test "x3-semantics" "cargo test -p x3-semantics 2>&1"
 run_test "x3-typeck" "cargo test -p x3-typeck 2>&1"

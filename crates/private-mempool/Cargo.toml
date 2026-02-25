@@ -3,9 +3,9 @@ name = "private-mempool"
 version = "0.1.0"
 edition = "2021"
 description = "Encrypted mempool for private transaction processing — threshold encryption, fee-ordered queuing, and enclave integration"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [dependencies]
 # Async runtime
@@ -23,6 +23,8 @@ x25519-dalek = { version = "2.0", features = ["static_secrets"] }
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 sha2 = "0.10"
 rand = "0.8"
+hkdf = "0.12"
+blake3 = "1.5"
 
 # Metrics & logging
 tracing = "0.1"

@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - Deployment Checklist
+# X3 Chain Testnet v1 - Deployment Checklist
 
 **Use this checklist to track testnet deployment progress.**
 
@@ -8,17 +8,17 @@
 
 ### Build & Testing
 - [ ] Build release binary: `cargo build --release`
-- [ ] Verify binary runs: `./target/release/atlas-sphere-node --version`
+- [ ] Verify binary runs: `./target/release/x3-chain-node --version`
 - [ ] Run all unit tests: `cargo test --all`
 - [ ] Run integration tests: `./RUN_ALL_TESTS.sh`
 - [ ] Test local node startup (dev mode): `./run-dev-node.sh`
 - [ ] Verify RPC methods work locally (see `docs/reports/TESTNET_QUICKSTART.md`)
 
 ### Chain Specification
-- [ ] Generate dev chain spec: `atlas-sphere-node build-spec --disable-default-bootnode --chain dev > atlas-testnet-plain.json`
+- [ ] Generate dev chain spec: `x3-chain-node build-spec --disable-default-bootnode --chain dev > x3-testnet-plain.json`
 - [ ] Edit chain spec (name, id, bootnodes, validators)
-- [ ] Convert to raw format: `atlas-sphere-node build-spec --chain atlas-testnet-plain.json --raw > atlas-testnet-raw.json`
-- [ ] Validate JSON syntax: `jq . atlas-testnet-raw.json`
+- [ ] Convert to raw format: `x3-chain-node build-spec --chain x3-testnet-plain.json --raw > x3-testnet-raw.json`
+- [ ] Validate JSON syntax: `jq . x3-testnet-raw.json`
 - [ ] Commit chain spec to repository
 
 ### Infrastructure Preparation
@@ -27,11 +27,11 @@
 - [ ] Provision 1 bootnode VM (2GB RAM, 1 vCPU, 20GB SSD)
 - [ ] Provision monitoring server (Prometheus + Grafana)
 - [ ] Set up DNS records:
-  - [ ] `rpc.testnet.atlas-sphere.io` → RPC load balancer
-  - [ ] `rpc2.testnet.atlas-sphere.io` → Backup RPC node
-  - [ ] `bootnode.testnet.atlas-sphere.io` → Bootnode IP
-  - [ ] `faucet.testnet.atlas-sphere.io` → Faucet service
-  - [ ] `metrics.testnet.atlas-sphere.io` → Grafana apps/dash-legacy-2-legacy-2board
+  - [ ] `rpc.testnet.x3-chain.io` → RPC load balancer
+  - [ ] `rpc2.testnet.x3-chain.io` → Backup RPC node
+  - [ ] `bootnode.testnet.x3-chain.io` → Bootnode IP
+  - [ ] `faucet.testnet.x3-chain.io` → Faucet service
+  - [ ] `metrics.testnet.x3-chain.io` → Grafana apps/dash-legacy-2-legacy-2board
 - [ ] Configure firewall rules:
   - [ ] Allow 30333 (P2P) from all
   - [ ] Allow 9944 (RPC) from load balancer only
@@ -45,7 +45,7 @@
   - [ ] Validator 3: (repeat)
   - [ ] Validator 4: (optional)
   - [ ] Validator 5: (optional)
-- [ ] Generate bootnode key: `atlas-sphere-node key generate-node-key --file /var/lib/atlas/bootnode-key`
+- [ ] Generate bootnode key: `x3-chain-node key generate-node-key --file /var/lib/x3/bootnode-key`
 - [ ] Record all keys in secure vault (1Password, HashiCorp Vault)
 - [ ] Generate sudo key for chain spec
 - [ ] Share public keys with team (Aura SR25519 pubkeys, GRANDPA ED25519 pubkeys)
@@ -55,21 +55,21 @@
 ## 🚀 Deployment Phase
 
 ### Deploy Bootnode (First!)
-- [ ] Copy binary to bootnode server: `/usr/local/bin/atlas-sphere-node`
-- [ ] Copy node key: `/var/lib/atlas/bootnode-key`
-- [ ] Create systemd service: `/etc/systemd/system/atlas-bootnode.service`
-- [ ] Start bootnode: `systemctl start atlas-bootnode`
-- [ ] Verify bootnode running: `systemctl status atlas-bootnode`
+- [ ] Copy binary to bootnode server: `/usr/local/bin/x3-chain-node`
+- [ ] Copy node key: `/var/lib/x3/bootnode-key`
+- [ ] Create systemd service: `/etc/systemd/system/x3-bootnode.service`
+- [ ] Start bootnode: `systemctl start x3-bootnode`
+- [ ] Verify bootnode running: `systemctl status x3-bootnode`
 - [ ] Get bootnode peer ID from logs
 - [ ] Confirm bootnode listening on port 30333: `netstat -tulnp | grep 30333`
 
 ### Deploy Validator Nodes (After Bootnode)
 For each validator (repeat 3-5 times):
 - [ ] Copy binary to validator server
-- [ ] Copy chain spec: `/home/atlas/atlas-testnet-raw.json`
-- [ ] Create data directory: `/home/atlas/data`
+- [ ] Copy chain spec: `/home/x3/x3-testnet-raw.json`
+- [ ] Create data directory: `/home/x3/data`
 - [ ] Create systemd service with `--validator` flag
-- [ ] Start validator: `systemctl start atlas-validator`
+- [ ] Start validator: `systemctl start x3-validator`
 - [ ] Insert Aura key: 
   ```bash
   curl http://localhost:9944 -H "Content-Type: application/json" \
@@ -82,7 +82,7 @@ For each validator (repeat 3-5 times):
   ```
 - [ ] Verify keys inserted: Check logs for "Loaded authority keys"
 - [ ] Verify node syncing: `curl -X POST http://localhost:9944 -d '{"id":1,"jsonrpc":"2.0","method":"system_health","params":[]}'`
-- [ ] Monitor logs: `journalctl -u atlas-validator -f`
+- [ ] Monitor logs: `journalctl -u x3-validator -f`
 
 **Validator Details:**
 - [ ] Validator 1: IP `______`, Aura Pubkey `______`, GRANDPA Pubkey `______`
@@ -94,24 +94,24 @@ For each validator (repeat 3-5 times):
 ### Deploy RPC Nodes (After Validators Running)
 For each RPC node (repeat 2+ times):
 - [ ] Copy binary to RPC server
-- [ ] Copy chain spec: `/home/atlas/atlas-testnet-raw.json`
-- [ ] Create data directory: `/home/atlas/data`
+- [ ] Copy chain spec: `/home/x3/x3-testnet-raw.json`
+- [ ] Create data directory: `/home/x3/data`
 - [ ] Create systemd service with `--rpc-external --rpc-methods Safe`
-- [ ] Start RPC node: `systemctl start atlas-rpc`
+- [ ] Start RPC node: `systemctl start x3-rpc`
 - [ ] Verify node syncing: `curl http://localhost:9944 -X POST -d '{"id":1,"jsonrpc":"2.0","method":"system_health","params":[]}'`
 - [ ] Verify RPC accessible externally (from outside network)
-- [ ] Monitor logs: `journalctl -u atlas-rpc -f`
+- [ ] Monitor logs: `journalctl -u x3-rpc -f`
 
 **RPC Node Details:**
-- [ ] RPC 1: IP `______`, Public URL `http://rpc.testnet.atlas-sphere.io:9944`
-- [ ] RPC 2: IP `______`, Public URL `http://rpc2.testnet.atlas-sphere.io:9944`
+- [ ] RPC 1: IP `______`, Public URL `http://rpc.testnet.x3-chain.io:9944`
+- [ ] RPC 2: IP `______`, Public URL `http://rpc2.testnet.x3-chain.io:9944`
 
 ### Configure Load Balancer
 - [ ] Set up Nginx/HAProxy for RPC load balancing
 - [ ] Configure health checks (system_health endpoint)
 - [ ] Set rate limiting: 1000 req/min per IP
 - [ ] Enable CORS for web apps
-- [ ] Test load balancer: `curl http://rpc.testnet.atlas-sphere.io:9944`
+- [ ] Test load balancer: `curl http://rpc.testnet.x3-chain.io:9944`
 - [ ] Verify failover works (stop one RPC node, test again)
 
 ---
@@ -133,16 +133,16 @@ For each RPC node (repeat 2+ times):
 - [ ] Install Grafana on monitoring server
 - [ ] Add Prometheus data source
 - [ ] Import Substrate node apps/dash-legacy-2-legacy-2board
-- [ ] Create custom Atlas Kernel apps/dash-legacy-2-legacy-2board
+- [ ] Create custom X3 Kernel apps/dash-legacy-2-legacy-2board
 - [ ] Configure alert notifications (Discord, Email, PagerDuty)
-- [ ] Make apps/dash-legacy-2-legacy-2board public: `http://metrics.testnet.atlas-sphere.io`
+- [ ] Make apps/dash-legacy-2-legacy-2board public: `http://metrics.testnet.x3-chain.io`
 
 ### Health Checks
 - [ ] Verify all nodes syncing: `system_health` on each node
 - [ ] Verify block production: `chain_getBlock` returns recent blocks
 - [ ] Verify finalization: Check GRANDPA finalizing blocks
 - [ ] Verify peer discovery: All nodes have 5+ peers
-- [ ] Test Atlas Kernel RPC methods (see `docs/reports/TESTNET_QUICKSTART.md`)
+- [ ] Test X3 Kernel RPC methods (see `docs/reports/TESTNET_QUICKSTART.md`)
 - [ ] Monitor logs for errors/warnings
 
 ---
@@ -154,7 +154,7 @@ For each RPC node (repeat 2+ times):
 - [ ] Configure faucet account with 10,000+ tATLAS
 - [ ] Set rate limits: 100 tATLAS per request, 1 req/24h per address
 - [ ] Add captcha (hCaptcha/reCAPTCHA)
-- [ ] Deploy frontend: `https://faucet.testnet.atlas-sphere.io`
+- [ ] Deploy frontend: `https://faucet.testnet.x3-chain.io`
 - [ ] Test faucet: Request tokens, verify balance increases
 - [ ] Monitor faucet account balance (alert if <1000 tATLAS)
 
@@ -266,8 +266,8 @@ Track these metrics daily:
 ## 🚨 Incident Response
 
 ### If Network Halts (No New Blocks)
-1. [ ] Check all validators online: `systemctl status atlas-validator`
-2. [ ] Check validator logs for errors: `journalctl -u atlas-validator -n 100`
+1. [ ] Check all validators online: `systemctl status x3-validator`
+2. [ ] Check validator logs for errors: `journalctl -u x3-validator -n 100`
 3. [ ] Verify GRANDPA finality not stalled
 4. [ ] If 1+ validators down, restart them immediately
 5. [ ] If all validators up but no blocks, check for consensus bug → contact core team
@@ -275,10 +275,10 @@ Track these metrics daily:
 
 ### If RPC Node Down
 1. [ ] Verify load balancer redirecting to backup RPC
-2. [ ] Check down node: `systemctl status atlas-rpc`
-3. [ ] Restart if needed: `systemctl restart atlas-rpc`
+2. [ ] Check down node: `systemctl status x3-rpc`
+3. [ ] Restart if needed: `systemctl restart x3-rpc`
 4. [ ] Check disk space: `df -h`
-5. [ ] Check logs: `journalctl -u atlas-rpc -n 100`
+5. [ ] Check logs: `journalctl -u x3-rpc -n 100`
 6. [ ] If persistent issue, provision emergency RPC node
 
 ### If Faucet Exploited
@@ -330,4 +330,4 @@ Track these metrics daily:
 
 ---
 
-**🎉 Congratulations on launching Atlas Sphere Testnet v1! 🎉**
+**🎉 Congratulations on launching X3 Chain Testnet v1! 🎉**

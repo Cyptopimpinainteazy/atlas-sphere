@@ -411,7 +411,7 @@ def main():
             print(f"\n  Summary: {len(confirmed)} endpoints, {total_models} total models exposed")
             
             # Export to JSON
-            outfile = "/home/lojak/Desktop/atlas-sphere-master/ollama_recon_results.json"
+            outfile = "/home/lojak/Desktop/x3-chain-master/ollama_recon_results.json"
             export = [
                 {
                     "ip": ep.ip,

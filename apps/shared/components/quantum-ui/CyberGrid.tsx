@@ -302,7 +302,7 @@ export const CyberGridShowcase: React.FC<{ className?: string }> = ({ className 
           padding: '2rem',
           textAlign: 'center',
         }}>
-          <SynthwaveText text="ATLAS" />
+          <SynthwaveText text="X3" />
           
           <motion.p
             style={{

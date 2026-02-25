@@ -6,7 +6,7 @@
 
 Hi team,
 
-Atlas Phase 5 (Jury Blockchain Anchoring) is shipping tomorrow at **2:00 PM EST**.
+X3 Phase 5 (Jury Blockchain Anchoring) is shipping tomorrow at **2:00 PM EST**.
 
 **What changes:**
 - All jury decisions are now immutably anchored to the blockchain
@@ -16,7 +16,7 @@ Atlas Phase 5 (Jury Blockchain Anchoring) is shipping tomorrow at **2:00 PM EST*
 
 **What you need to know:**
 - 🟢 System will be online throughout (rolling deployment)
-- 📊 Monitoring available at http://dashboard.atlas.io/jury-phase5
+- 📊 Monitoring available at http://dashboard.x3.io/jury-phase5
 - ⚠️ If you see verification failures, that's normal for ~5 min during deployment
 - 🆘 Report issues to #incidents channel
 
@@ -42,9 +42,9 @@ Engineering Team
 
 ## 📧 Email: Stakeholders & Customers
 
-### Subject: Atlas Update: Jury Decision Verification Now On-Chain (Feb 9)
+### Subject: X3 Update: Jury Decision Verification Now On-Chain (Feb 9)
 
-Dear Atlas Community,
+Dear X3 Community,
 
 We're excited to announce **Phase 5** of our jury governance evolution:
 
@@ -76,7 +76,7 @@ During tomorrow's deployment (2-6 PM EST):
 For developers integrating with jury decisions:
 
 ```javascript
-import { useJuryDecisionStatus } from '@atlas/blockchain-adapter';
+import { useJuryDecisionStatus } from '@x3/blockchain-adapter';
 
 function Dashboard() {
   const { status } = useJuryDecisionStatus(sessionId);
@@ -96,13 +96,13 @@ See full documentation: [GUIDE.md](./openspec/changes/jury-blockchain-anchoring/
 ### Need Help?
 
 - Technical docs: [GUIDE.md](./openspec/changes/jury-blockchain-anchoring/GUIDE.md)
-- Status page: [dashboard.atlas.io](https://dashboard.atlas.io)
-- Support: support@atlas.io
+- Status page: [dashboard.x3.io](https://dashboard.x3.io)
+- Support: support@x3.io
 
 We're excited about this milestone and grateful for your continued trust.
 
 Best regards,  
-Atlas Engineering Team
+X3 Engineering Team
 
 ---
 
@@ -222,7 +222,7 @@ Questions? Ask in thread.
 ## 📱 Slack Bot Message Template
 
 ```
-🤖 Atlas Phase 5 Update
+🤖 X3 Phase 5 Update
 
 Current Status: ✅ Operational
 Anchor Latency: 3.4s
@@ -259,7 +259,7 @@ After 5 hours of careful deployment, I'm thrilled to announce:
 
 **Customer Success:** Update customers that jury decisions are now permanently recorded on-chain.
 
-**Operations:** Runbooks in `OPERATIONS_RUNBOOK.md`. Monitoring at `dashboard.atlas.io`.
+**Operations:** Runbooks in `OPERATIONS_RUNBOOK.md`. Monitoring at `dashboard.x3.io`.
 
 **Performance:** Anchor latency 3.2s, success rate 99.8%, zero critical issues.
 

@@ -1,6 +1,6 @@
 //! # Quantum Swarm Executor
 //!
-//! Autonomous hybrid quantum-classical compute intelligence for Atlas Sphere.
+//! Autonomous hybrid quantum-classical compute intelligence for X3 Chain.
 //!
 //! ## Overview
 //!

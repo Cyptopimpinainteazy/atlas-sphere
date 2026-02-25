@@ -1,5 +1,5 @@
 # ============================================================================
-# Atlas Sphere RPC Gateway - Production Dockerfile
+# X3 Chain RPC Gateway - Production Dockerfile
 # ============================================================================
 # Purpose: Nginx reverse proxy with rate limiting, caching, SSL/TLS
 # Target: Public RPC endpoint gateway
@@ -8,8 +8,8 @@
 FROM nginx:1.25-alpine
 
 # Metadata
-LABEL maintainer="Atlas Sphere DevOps <devops@atlas-sphere.io>" \
-      description="Atlas Sphere RPC Gateway with rate limiting and security" \
+LABEL maintainer="X3 Chain DevOps <devops@x3-chain.io>" \
+      description="X3 Chain RPC Gateway with rate limiting and security" \
       version="1.0.0"
 
 # Install required tools
@@ -38,7 +38,7 @@ COPY deployment/docker/config/security-headers.conf /etc/nginx/conf.d/security-h
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/selfsigned.key \
     -out /etc/nginx/ssl/selfsigned.crt \
-    -subj "/C=US/ST=State/L=City/O=Atlas Sphere/CN=rpc.atlas-sphere.io"
+    -subj "/C=US/ST=State/L=City/O=X3 Chain/CN=rpc.x3-chain.io"
 
 # Health check
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \

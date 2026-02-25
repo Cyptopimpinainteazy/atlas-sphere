@@ -4,7 +4,7 @@ services:
   # PostgreSQL for jury audit logging persistence
   jury-db:
     image: postgres:15-alpine
-    container_name: atlas-jury-db
+    container_name: x3-jury-db
     environment:
       POSTGRES_USER: jury_admin
       POSTGRES_PASSWORD: ${JURY_DB_PASSWORD:-jury_secure_password_change_me}
@@ -27,7 +27,7 @@ services:
   # Redis for caching and session management (optional, for scaling)
   jury-cache:
     image: redis:7-alpine
-    container_name: atlas-jury-cache
+    container_name: x3-jury-cache
     command: redis-server --requirepass ${JURY_REDIS_PASSWORD:-redis_secure_password_change_me}
     volumes:
       - jury-cache-data:/data
@@ -50,7 +50,7 @@ services:
       args:
         PYTHON_VERSION: "3.11"
         WITH_GPU: ${WITH_GPU:-false}
-    container_name: atlas-jury-service
+    container_name: x3-jury-service
     environment:
       # Python environment
       PYTHONUNBUFFERED: "1"
@@ -125,7 +125,7 @@ services:
   # Optional: Prometheus for metrics collection
   jury-metrics:
     image: prom/prometheus:latest
-    container_name: atlas-jury-metrics
+    container_name: x3-jury-metrics
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - jury-prometheus-data:/prometheus

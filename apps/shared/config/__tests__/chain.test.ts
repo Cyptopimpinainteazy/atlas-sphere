@@ -15,7 +15,7 @@ describe('chain config - explorer URLs', () => {
   it('returns testnet explorer URL when NEXT_PUBLIC_NETWORK=testnet', () => {
     process.env.NEXT_PUBLIC_NETWORK = 'testnet';
     const url = getExplorerUrl();
-    expect(url).toBe('https://explorer.testnet.atlas-sphere.io');
+    expect(url).toBe('https://explorer.testnet.x3-chain.io');
   });
 
   it('returns local explorer URL when NEXT_PUBLIC_NETWORK=local', () => {

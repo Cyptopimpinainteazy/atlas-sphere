@@ -1,11 +1,11 @@
-/// Atlas Sphere TPS Tracker
+/// X3 Chain TPS Tracker
 /// 
-/// This module polls the Atlas Sphere node for transaction data,
+/// This module polls the X3 Chain node for transaction data,
 /// calculates transactions per second (TPS) from the data received,
 /// and inserts the calculated TPS along with other metrics into InfluxDB.
 ///
 /// Adapted from: Solana Project by Amil Shrivastava
-/// For: Atlas Sphere Blockchain Platform
+/// For: X3 Chain Blockchain Platform
 
 use chrono::{DateTime, Utc};
 use reqwest::Client;
@@ -15,7 +15,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info};
 
-/// Response from Atlas Sphere RPC API for block information
+/// Response from X3 Chain RPC API for block information
 #[derive(Debug, Deserialize, Serialize)]
 struct BlockInfoResponse {
     jsonrpc: String,
@@ -100,8 +100,8 @@ impl Default for TpsTrackerConfig {
         Self {
             rpc_url: "http://127.0.0.1:9944".to_string(),
             influx_url: "http://influxdb:8086".to_string(),
-            influx_db: "atlas_sphere_tps".to_string(),
-            influx_token: "atlas-sphere-key".to_string(),
+            influx_db: "x3_chain_tps".to_string(),
+            influx_token: "x3-chain-key".to_string(),
             poll_interval_secs: 1,
             buffer_size: 100,
         }

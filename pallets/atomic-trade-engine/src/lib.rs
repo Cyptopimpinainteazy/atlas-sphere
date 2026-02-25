@@ -3,7 +3,7 @@
 //! ## Overview
 //!
 //! The Atomic Trade Engine enables atomic arbitrage and multi-hop trades across EVM and SVM
-//! state machines inside Atlas Sphere. It provides:
+//! state machines inside X3 Chain. It provides:
 //!
 //! - **Cross-VM Call Batching**: Execute multiple VM operations atomically
 //! - **Failure Atomicity**: All-or-nothing execution with automatic rollback
@@ -36,7 +36,7 @@
 //!                              │
 //!                              ▼
 //! ┌────────────────────────────────────────────────────────────────────┐
-//! │                       Atlas Kernel                                 │
+//! │                       X3 Kernel                                 │
 //! │  ├── EVM Adapter                                                  │
 //! │  └── SVM Adapter                                                  │
 //! └────────────────────────────────────────────────────────────────────┘
@@ -71,7 +71,7 @@ use frame_support::{
     traits::{Currency, UnixTime},
 };
 use frame_system::pallet_prelude::*;
-use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
+use pallet_x3_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
@@ -111,7 +111,7 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config:
-        frame_system::Config + pallet_timestamp::Config + pallet_atlas_kernel::Config
+        frame_system::Config + pallet_timestamp::Config + pallet_x3_kernel::Config
     {
         /// The overarching event type.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -122,13 +122,13 @@ pub mod pallet {
         /// The currency type for fee handling.
         type Currency: Currency<<Self as frame_system::Config>::AccountId>;
 
-        /// EVM execution adapter (from atlas-kernel or custom).
+        /// EVM execution adapter (from x3-kernel or custom).
         type EvmAdapter: EvmExecutorAdapter;
 
-        /// SVM execution adapter (from atlas-kernel or custom).
+        /// SVM execution adapter (from x3-kernel or custom).
         type SvmAdapter: SvmExecutorAdapter;
 
-        /// X3 execution adapter (from atlas-kernel or custom).
+        /// X3 execution adapter (from x3-kernel or custom).
         type X3Adapter: X3ExecutorAdapter;
 
         /// Maximum number of trade legs per batch.
@@ -329,7 +329,7 @@ pub mod pallet {
             twap_price: u128,
         },
 
-        /// A trade batch was executed via Atlas Kernel v2 comit.
+        /// A trade batch was executed via X3 Kernel v2 comit.
         TradeBatchExecutedViaKernelComitV2 { batch_id: H256, comit_id: H256 },
     }
 
@@ -886,30 +886,30 @@ pub mod pallet {
             }
 
             // Kernel nonce and fee upper bound (using kernel-default limits so fee is always >= required_fee).
-            let kernel_nonce = pallet_atlas_kernel::Nonces::<T>::get(&who);
+            let kernel_nonce = pallet_x3_kernel::Nonces::<T>::get(&who);
 
             let evm_units = if evm_payload.is_empty() {
                 0
             } else {
-                <T as pallet_atlas_kernel::Config>::DefaultEvmGasLimit::get()
+                <T as pallet_x3_kernel::Config>::DefaultEvmGasLimit::get()
             };
             let svm_units = if svm_payload.is_empty() {
                 0
             } else {
-                <T as pallet_atlas_kernel::Config>::DefaultSvmComputeLimit::get()
+                <T as pallet_x3_kernel::Config>::DefaultSvmComputeLimit::get()
             };
             let x3_units = if x3_payload.is_empty() {
                 0
             } else {
-                <T as pallet_atlas_kernel::Config>::DefaultX3GasLimit::get()
+                <T as pallet_x3_kernel::Config>::DefaultX3GasLimit::get()
             };
 
-            let base_fee = <T as pallet_atlas_kernel::Config>::Balance::default();
-            let fee = pallet_atlas_kernel::Pallet::<T>::calculate_execution_fee_v2(
+            let base_fee = <T as pallet_x3_kernel::Config>::Balance::default();
+            let fee = pallet_x3_kernel::Pallet::<T>::calculate_execution_fee_v2(
                 evm_units, svm_units, x3_units, base_fee,
             )?;
 
-            let prepare_root = pallet_atlas_kernel::Pallet::<T>::compute_prepare_root_v2(
+            let prepare_root = pallet_x3_kernel::Pallet::<T>::compute_prepare_root_v2(
                 comit_id,
                 &evm_payload,
                 &svm_payload,
@@ -923,7 +923,7 @@ pub mod pallet {
             // failed batch status (returns `Ok(())`), we must isolate kernel writes in a nested
             // storage transaction and roll them back if the kernel call fails.
             let kernel_result = with_transaction(|| {
-                let res = pallet_atlas_kernel::Pallet::<T>::submit_comit_v2(
+                let res = pallet_x3_kernel::Pallet::<T>::submit_comit_v2(
                     frame_system::RawOrigin::Signed(who.clone()).into(),
                     comit_id,
                     evm_payload,

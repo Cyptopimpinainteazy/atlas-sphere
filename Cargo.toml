@@ -1,7 +1,7 @@
 [workspace]
-exclude = ["quantum-kernel-voyager/src-tauri", "apps/atlas-desktop/src-tauri", "apps/infenstructior-dashboard/src-tauri"]
+exclude = ["quantum-kernel-voyager/src-tauri", "apps/x3-desktop/src-tauri", "apps/infenstructior-dashboard/src-tauri"]
 members = [
-    "pallets/atlas-kernel",
+    "pallets/x3-kernel",
     "pallets/atomic-trade-engine",
     "pallets/governance",
     "pallets/treasury",
@@ -19,13 +19,14 @@ members = [
     "crates/svm-counter",
     "crates/cross-vm-bridge",
     "crates/external-chains",
-    "crates/atlas-sdk",
+    "crates/x3-sdk",
     "crates/x3-cli",
-    "crates/atlas-indexer",
-    "crates/atlas-gateway",
-    "crates/atlas-lsp",
+    "crates/x3-indexer",
+    "crates/x3-gateway",
+    "crates/x3-lsp",
     "crates/x3-integration",
     "crates/gpu-swarm",
+    "crates/x3-gpu-validator-swarm",
     "crates/x3-sidecar",
     "crates/x3-evolution",
     "crates/quantum-swarm",
@@ -52,7 +53,7 @@ members = [
     "crates/x3-bench",
     "crates/x3-compiler",
     "crates/x3-verifier",
-    "crates/atlas-dns-server",
+    "crates/x3-dns-server",
     "crates/invariant-macros",
     "crates/x3-proof",
     "crates/x3-slash",
@@ -66,7 +67,8 @@ members = [
     "crates/contention-predictor",
     "crates/private-mempool",
     "crates/confidential-gpu",
-    "apps/atlas-desktop/app-store/fuego-GTR-wallet/src-tauri",
+    "crates/x3-bot",
+    "crates/atomic-swap-orchestrator",
 ]
 default-members = ["node"]
 resolver = "2"
@@ -94,6 +96,11 @@ parity-scale-codec = { version = "3.6.5", default-features = false, features = [
 codec = { package = "parity-scale-codec", version = "3.6.5", default-features = false, features = ["derive"] }
 scale-info = { version = "2.11.1", default-features = false, features = ["derive"] }
 curve25519-dalek = "3.2.1"
+hex = { version = "0.4.3", default-features = false }
+uuid = { version = "1.8.0", features = ["v4"], default-features = false }
+tracing = { version = "0.1.37", default-features = false }
+anyhow = { version = "1.0", default-features = false }
+tokio = { version = "1.0", features = ["full"], default-features = false }
 
 # Common FRAME & Substrate workspace deps (referenced with `workspace = true` in members)
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -158,7 +165,7 @@ once_cell = "1.19.0"
 serde_json = "1.0.111"
 thiserror = "1.0.51"
 
-# Atlas Sphere new pallets & crates (DEPIN-GPU-001, EXEC-PREDICT-002, PRIV-ENCLAVE-003)
+# X3 Chain new pallets & crates (DEPIN-GPU-001, EXEC-PREDICT-002, PRIV-ENCLAVE-003)
 pallet-depin-marketplace = { path = "pallets/depin-marketplace", default-features = false }
 pallet-private-execution = { path = "pallets/private-execution", default-features = false }
 contention-predictor = { path = "crates/contention-predictor" }

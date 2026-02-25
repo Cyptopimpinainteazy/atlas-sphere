@@ -1,5 +1,5 @@
 #!/bin/bash
-# Quick deployment script for Atlas Sphere Jury Service
+# Quick deployment script for X3 Chain Jury Service
 # Usage: ./deploy.sh [dev|staging|prod] [cpu|gpu]
 
 set -euo pipefail
@@ -152,7 +152,7 @@ log_info "2. View logs:"
 log_info "   docker-compose logs -f jury-service"
 log_info ""
 log_info "3. Access the database:"
-log_info "   docker exec -it atlas-jury-db psql -U jury_admin -d jury_audit"
+log_info "   docker exec -it x3-jury-db psql -U jury_admin -d jury_audit"
 log_info ""
 
 if [[ "$ENVIRONMENT" == "dev" ]]; then

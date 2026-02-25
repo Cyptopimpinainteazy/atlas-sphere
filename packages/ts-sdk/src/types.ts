@@ -1,7 +1,7 @@
 /**
- * Core type definitions for Atlas Sphere SDK
+ * Core type definitions for X3 Chain SDK
  *
- * These types mirror the runtime types defined in the Atlas Kernel pallet,
+ * These types mirror the runtime types defined in the X3 Kernel pallet,
  * providing type-safe interaction with the blockchain.
  */
 
@@ -37,7 +37,7 @@ export type Nonce = bigint;
 // =============================================================================
 
 /**
- * A Comit is the atomic unit of cross-VM execution in Atlas Sphere.
+ * A Comit is the atomic unit of cross-VM execution in X3 Chain.
  * It bundles EVM and SVM payloads for simultaneous execution.
  */
 export interface Comit {
@@ -163,7 +163,7 @@ export interface ComitResult {
 // =============================================================================
 
 /**
- * Unified state representation for the Atlas Sphere
+ * Unified state representation for the X3 Chain
  */
 export interface SphereState {
   /** Merkle root of the combined state */
@@ -180,7 +180,7 @@ export interface SphereState {
  * Asset metadata stored in the canonical ledger
  */
 export interface AssetMetadata {
-  /** Asset symbol (e.g., "ATLAS", "ETH", "SOL") */
+  /** Asset symbol (e.g., "X3", "ETH", "SOL") */
   symbol: string;
 
   /** Decimal places for display */
@@ -280,14 +280,14 @@ export interface Authority {
 // =============================================================================
 
 /**
- * Response from atlas_kernel_getCanonicalBalance RPC
+ * Response from x3_kernel_getCanonicalBalance RPC
  */
 export interface GetCanonicalBalanceResponse {
   balance: Balance;
 }
 
 /**
- * Response from atlas_kernel_getAssetMetadata RPC
+ * Response from x3_kernel_getAssetMetadata RPC
  */
 export interface GetAssetMetadataResponse {
   symbol: string;
@@ -295,21 +295,21 @@ export interface GetAssetMetadataResponse {
 }
 
 /**
- * Response from atlas_kernel_isAuthorized RPC
+ * Response from x3_kernel_isAuthorized RPC
  */
 export interface IsAuthorizedResponse {
   authorized: boolean;
 }
 
 /**
- * Response from atlas_kernel_getAuthorizedAccounts RPC
+ * Response from x3_kernel_getAuthorizedAccounts RPC
  */
 export interface GetAuthorizedAccountsResponse {
   accounts: AccountId[];
 }
 
 /**
- * Response from atlas_kernel_getAuthorities RPC
+ * Response from x3_kernel_getAuthorities RPC
  */
 export interface GetAuthoritiesResponse {
   authorities: AccountId[];

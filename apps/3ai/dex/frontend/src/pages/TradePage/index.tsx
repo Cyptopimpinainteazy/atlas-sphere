@@ -223,7 +223,7 @@ const OrderFormPanel = ({ onOrderPlaced }: { onOrderPlaced?: () => void }) => {
 
       if (result.success) {
         toast({
-          title: 'Order placed via Atlas DEX',
+          title: 'Order placed via X3 DEX',
           description: `${isBuy ? 'Buy' : 'Sell'} ${amount} ${currentPair.base} @ ${orderType === 'MARKET' ? 'market' : price} — Chain: ${sourceChain}`,
           status: 'success',
           duration: 5000,
@@ -333,7 +333,7 @@ const OrderFormPanel = ({ onOrderPlaced }: { onOrderPlaced?: () => void }) => {
 
           {!dexReady && (
             <Text color="blue.300" fontSize="xs" textAlign="center">
-              Atlas DEX SDK initializing...
+              X3 DEX SDK initializing...
             </Text>
           )}
 
@@ -427,7 +427,7 @@ const MarketStatsBar = () => {
       <Divider orientation="vertical" h="40px" />
       <HStack spacing={1} flexShrink={0}>
         <Text fontSize="xs" color="gray.500">Chains:</Text>
-        {['ETH', 'SOL', 'BTC', 'ATLAS'].map((c) => (
+        {['ETH', 'SOL', 'BTC', 'X3'].map((c) => (
           <Tag key={c} size="sm" colorScheme="blue" variant="subtle" fontSize="2xs">{c}</Tag>
         ))}
       </HStack>

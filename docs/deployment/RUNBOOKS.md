@@ -705,7 +705,7 @@ kubectl top pods -l app=swarm-gpu-node
 # For X3 compiler bugs
 # Downgrade compiler version or upgrade (depending on fix)
 kubectl -n gpu-swarm set image statefulset/swarm-coordinator \
-  coordinator=atlas-sphere/gpu-swarm-coordinator:v1.2.3
+  coordinator=x3-chain/gpu-swarm-coordinator:v1.2.3
 
 # For resource issues
 # Increase compiler resource limits
@@ -786,7 +786,7 @@ kubectl -n gpu-swarm get roles
 # Scenario 3: Failed to pull image
 # Solution: Check image registry
 kubectl -n gpu-swarm set image statefulset/swarm-coordinator \
-  coordinator=atlas-sphere/gpu-swarm-coordinator:v1.2.3
+  coordinator=x3-chain/gpu-swarm-coordinator:v1.2.3
 
 # Scenario 4: Dependency service down
 # Check if upstream services are healthy

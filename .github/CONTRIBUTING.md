@@ -1,4 +1,4 @@
-# Contributing to atlas-sphere
+# Contributing to x3-chain
 
 Thanks for contributing! This repository runs CI checks for continuous integration and accessibility.
 

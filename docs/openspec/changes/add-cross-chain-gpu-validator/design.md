@@ -1,5 +1,5 @@
 ## Context
-Atlas Sphere already models dual-VM execution, but P5 requires a concrete validator stack that can validate Solana and Ethereum testnets with GPU acceleration and atomic guarantees. This stack runs off-chain as a validator service and does not alter runtime consensus logic.
+X3 Chain already models dual-VM execution, but P5 requires a concrete validator stack that can validate Solana and Ethereum testnets with GPU acceleration and atomic guarantees. This stack runs off-chain as a validator service and does not alter runtime consensus logic.
 
 ## Goals / Non-Goals
 - Goals:

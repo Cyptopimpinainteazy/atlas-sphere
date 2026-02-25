@@ -19,7 +19,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: atlas_test
+          POSTGRES_DB: x3_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -39,7 +39,7 @@ jobs:
           override: true
 
       - name: Set DATABASE_URL
-        run: echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/atlas_test" >> $GITHUB_ENV
+        run: echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/x3_test" >> $GITHUB_ENV
 
       - name: Run Alembic migrations (if present)
         env:
@@ -131,7 +131,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set DATABASE_URL
-        run: echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/atlas_test" >> $GITHUB_ENV
+        run: echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/x3_test" >> $GITHUB_ENV
 
       - name: Install Alembic and deps (non-blocking)
         continue-on-error: true

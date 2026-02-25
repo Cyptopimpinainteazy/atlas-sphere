@@ -83,7 +83,7 @@ These branches contain critical fixes and should be merged first:
 
 ### Phase 6: Core Platform Features (Priority: High)
 
-16. **feature/atlas-kernel-task1** (PR #1) - `3e84ef4` / `f7e6744`
+16. **feature/x3-kernel-task1** (PR #1) - `3e84ef4` / `f7e6744`
     - Atomic Trade Engine pallet implementation
     - AMM adapter interfaces
     - Trade graph pathfinding
@@ -144,7 +144,7 @@ git merge --no-ff feature/sigill-aggregator-helper -m "Merge: Signal aggregator"
 git merge --no-ff chore/tsx-cleanup-2 -m "Merge: TypeScript cleanup"
 
 # Phase 6: Core Platform
-git merge --no-ff feature/atlas-kernel-task1 -m "Merge: Atomic Trade Engine"
+git merge --no-ff feature/x3-kernel-task1 -m "Merge: Atomic Trade Engine"
 
 # Phase 7: Production
 git merge --no-ff staging/production-hardening -m "Merge: Production hardening"
@@ -175,7 +175,7 @@ for branch in \
   feat/frontend/ui/cli-and-banner \
   feat/async-reputation-pg-repo \
   chore/tsx-cleanup-2 \
-  feature/atlas-kernel-task1 \
+  feature/x3-kernel-task1 \
   staging/production-hardening
 do
   echo "Merging $branch..."

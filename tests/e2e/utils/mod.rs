@@ -1,7 +1,7 @@
 //! E2E Test Utilities and Infrastructure
 //! 
 //! This module provides common utilities, test fixtures, and infrastructure
-//! for end-to-end integration tests across the X3-Atlas-Sphere ecosystem.
+//! for end-to-end integration tests across the X3-X3-Sphere ecosystem.
 
 pub mod test_environment;
 pub mod test_accounts;
@@ -73,7 +73,7 @@ pub struct TestConfig {
 impl Default for TestConfig {
     fn default() -> Self {
         Self {
-            network_name: "atlas-sphere-testnet".to_string(),
+            network_name: "x3-chain-testnet".to_string(),
             rpc_url: "http://localhost:9933".to_string(),
             websocket_url: "ws://localhost:9944".to_string(),
             chain_id: 9999,

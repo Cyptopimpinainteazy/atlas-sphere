@@ -1,8 +1,8 @@
-# Atlas Sphere Deployment Guide
+# X3 Chain Deployment Guide
 
 ## Overview
 
-This guide covers deployment procedures for Atlas Sphere nodes, from local development to production validators.
+This guide covers deployment procedures for X3 Chain nodes, from local development to production validators.
 
 ---
 
@@ -24,21 +24,21 @@ source ~/.cargo/env
 rustup target add wasm32-unknown-unknown
 
 # Pin to project toolchain
-cd atlas-sphere
+cd x3-chain
 rustup override set nightly-2024-12-01
 ```
 
 ### Build from Source
 ```bash
 # Clone repository
-git clone https://github.com/atlas-sphere/atlas-sphere.git
-cd atlas-sphere
+git clone https://github.com/x3-chain/x3-chain.git
+cd x3-chain
 
 # Build release binary
 SKIP_WASM_BUILD=1 cargo build --release
 
 # Verify build
-./target/release/atlas-sphere-node --version
+./target/release/x3-chain-node --version
 ```
 
 ---
@@ -51,7 +51,7 @@ SKIP_WASM_BUILD=1 cargo build --release
 ./run-dev-node.sh
 
 # Or manually
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --dev \
     --tmp \
     --rpc-cors all
@@ -78,16 +78,16 @@ SKIP_WASM_BUILD=1 cargo build --release
 ### 4. Docker Deployment
 ```bash
 # Build image
-docker build -t atlas-sphere:latest .
+docker build -t x3-chain:latest .
 
 # Run container
 docker run -d \
-    --name atlas-node \
+    --name x3-node \
     -p 9933:9933 \
     -p 9944:9944 \
     -p 30333:30333 \
-    -v atlas-data:/data \
-    atlas-sphere:latest \
+    -v x3-data:/data \
+    x3-chain:latest \
     --base-path /data \
     --chain local
 ```
@@ -112,17 +112,17 @@ This ordering reduces blast radius while validating controls and observability e
 ### Generate Keys
 ```bash
 # Generate session keys
-./target/release/atlas-sphere-node key generate --scheme Sr25519
+./target/release/x3-chain-node key generate --scheme Sr25519
 
 # Insert keys into keystore
-./target/release/atlas-sphere-node key insert \
+./target/release/x3-chain-node key insert \
     --base-path /data \
     --chain local \
     --scheme Sr25519 \
     --suri "<mnemonic>" \
     --key-type aura
 
-./target/release/atlas-sphere-node key insert \
+./target/release/x3-chain-node key insert \
     --base-path /data \
     --chain local \
     --scheme Ed25519 \
@@ -132,7 +132,7 @@ This ordering reduces blast radius while validating controls and observability e
 
 ### Validator Node Configuration
 ```bash
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --base-path /data/validator \
     --chain mainnet \
     --name "MyValidator" \
@@ -141,7 +141,7 @@ This ordering reduces blast radius while validating controls and observability e
     --rpc-port 9933 \
     --ws-port 9944 \
     --rpc-cors all \
-    --telemetry-url "wss://telemetry.atlas-sphere.io/submit 0"
+    --telemetry-url "wss://telemetry.x3-chain.io/submit 0"
 ```
 
 ### Register as Validator
@@ -165,8 +165,8 @@ This ordering reduces blast radius while validating controls and observability e
 
 ### Genesis Configuration
 Key genesis parameters:
-- `atlas_kernel.authorized_accounts` - Initial authorized accounts
-- `atlas_kernel.registered_assets` - Initial asset registry
+- `x3_kernel.authorized_accounts` - Initial authorized accounts
+- `x3_kernel.registered_assets` - Initial asset registry
 - `balances.balances` - Initial token distribution
 - `aura.authorities` - Initial block producers
 - `grandpa.authorities` - Initial finality voters
@@ -174,7 +174,7 @@ Key genesis parameters:
 ### Bootnodes
 ```bash
 # Add bootnodes for network discovery
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --bootnodes /ip4/10.0.0.1/tcp/30333/p2p/12D3KooW... \
     --bootnodes /ip4/10.0.0.2/tcp/30333/p2p/12D3KooW...
 ```
@@ -186,14 +186,14 @@ Key genesis parameters:
 ### Prometheus Metrics
 ```bash
 # Enable metrics endpoint
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --prometheus-port 9615 \
     --prometheus-external
 ```
 
 ### Grafana Dashboard
 1. Import Substrate dashboard template
-2. Add Atlas Sphere custom panels:
+2. Add X3 Chain custom panels:
    - Comit submission rate
    - Atomic failure rate
    - Canonical ledger updates
@@ -202,12 +202,12 @@ Key genesis parameters:
 ### Log Aggregation
 ```bash
 # Configure journald
-sudo systemctl enable atlas-sphere
-sudo journalctl -u atlas-sphere -f
+sudo systemctl enable x3-chain
+sudo journalctl -u x3-chain -f
 
 # Or use file logging
-./target/release/atlas-sphere-node \
-    --log-dir /var/log/atlas-sphere
+./target/release/x3-chain-node \
+    --log-dir /var/log/x3-chain
 ```
 
 ---
@@ -217,19 +217,19 @@ sudo journalctl -u atlas-sphere -f
 ### State Backup
 ```bash
 # Stop node first
-sudo systemctl stop atlas-sphere
+sudo systemctl stop x3-chain
 
 # Backup chain data
 tar -czvf backup-$(date +%Y%m%d).tar.gz /data/chains/
 
 # Restart node
-sudo systemctl start atlas-sphere
+sudo systemctl start x3-chain
 ```
 
 ### Key Backup
 ```bash
 # Export keystore
-cp -r /data/chains/atlas-sphere/keystore ./keystore-backup/
+cp -r /data/chains/x3-chain/keystore ./keystore-backup/
 
 # Encrypt backup
 gpg --symmetric --cipher-algo AES256 keystore-backup.tar.gz
@@ -237,7 +237,7 @@ gpg --symmetric --cipher-algo AES256 keystore-backup.tar.gz
 
 ### Recovery Procedure
 1. Stop affected node
-2. Clear corrupted data: `rm -rf /data/chains/atlas-sphere/db`
+2. Clear corrupted data: `rm -rf /data/chains/x3-chain/db`
 3. Restore from backup or sync from network
 4. Restore keystore if needed
 5. Start node and verify sync
@@ -257,15 +257,15 @@ sudo ufw enable
 
 ### Systemd Service
 ```ini
-# /etc/systemd/system/atlas-sphere.service
+# /etc/systemd/system/x3-chain.service
 [Unit]
-Description=Atlas Sphere Node
+Description=X3 Chain Node
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-ExecStart=/opt/atlas-sphere/atlas-sphere-node \
+User=x3
+ExecStart=/opt/x3-chain/x3-chain-node \
     --base-path /data \
     --chain mainnet \
     --validator
@@ -279,8 +279,8 @@ WantedBy=multi-user.target
 ### Non-Root User
 ```bash
 # Create dedicated user
-sudo useradd -m -s /bin/bash atlas
-sudo chown -R atlas:atlas /data /opt/atlas-sphere
+sudo useradd -m -s /bin/bash x3
+sudo chown -R x3:x3 /data /opt/x3-chain
 ```
 
 ---
@@ -320,18 +320,18 @@ cargo clean
 SKIP_WASM_BUILD=1 cargo build --release
 
 # Build runtime WASM
-cargo +nightly build -p atlas-sphere-runtime --release
+cargo +nightly build -p x3-chain-runtime --release
 
 # Package artifacts
 mkdir -p release
-cp target/release/atlas-sphere-node release/
-cp target/release/wbuild/atlas-sphere-runtime/*.wasm release/
+cp target/release/x3-chain-node release/
+cp target/release/wbuild/x3-chain-runtime/*.wasm release/
 ```
 
 ### Signing Releases
 ```bash
 # Sign binary
-gpg --armor --detach-sign release/atlas-sphere-node
+gpg --armor --detach-sign release/x3-chain-node
 
 # Generate checksums
 sha256sum release/* > release/SHA256SUMS

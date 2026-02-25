@@ -2,7 +2,7 @@
 
 ## 📊 Status: ✅ INTEGRATED (Phase 4 Complete)
 
-The Atlas Sphere blockchain now includes the YOLO + Loop-Pack v1 optimization pipeline integrated into the X3 smart contract compiler.
+The X3 Chain blockchain now includes the YOLO + Loop-Pack v1 optimization pipeline integrated into the X3 smart contract compiler.
 
 ## 🏗️ Architecture
 
@@ -84,7 +84,7 @@ x3-compiler ←─ Orchestrates pipeline
 x3-cli         Uses x3-compiler for compilation
     ↑
     │
-atlas-sdk      Blockchain interaction
+x3-sdk      Blockchain interaction
 ```
 
 ## 🛠️ New Crate: `x3-compiler`

@@ -1,4 +1,4 @@
-# ── Atlas Sphere – Threadripper Core Node Configuration ──────────────────────
+# ── X3 Chain – Threadripper Core Node Configuration ──────────────────────
 # Primary pilot validator: Threadripper + 3 × GTX 1070 (8 GB each)
 
 [node]
@@ -61,9 +61,9 @@ priority_floor       = 10              # Min priority to accept from swarm
 
 [metrics]
 prometheus_port      = 9100
-json_log_path        = "/var/log/atlas/pilot-metrics.jsonl"
+json_log_path        = "/var/log/x3/pilot-metrics.jsonl"
 dashboard_port       = 8080
 
 [tls]
-cert_path = "/etc/atlas/tls/cert.pem"
-key_path  = "/etc/atlas/tls/key.pem"
+cert_path = "/etc/x3/tls/cert.pem"
+key_path  = "/etc/x3/tls/key.pem"

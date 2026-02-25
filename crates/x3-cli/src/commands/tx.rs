@@ -2,7 +2,7 @@
 
 use crate::error::{CliError, Result};
 use crate::project::Project;
-use atlas_sdk::{AtlasClient, ComitBuilder};
+use x3_sdk::{AtlasClient, ComitBuilder};
 use clap::{Args, Subcommand};
 use colored::Colorize;
 use std::path::PathBuf;
@@ -135,7 +135,7 @@ async fn execute_send(args: SendArgs) -> Result<()> {
     })?;
 
     let seed = load_seed(&keyfile)?;
-    let signer = atlas_sdk::Sr25519Signer::from_seed(&seed);
+    let signer = x3_sdk::Sr25519Signer::from_seed(&seed);
 
     let client = AtlasClient::connect(&endpoint).await?;
     let client = client.with_signer(signer);
@@ -190,7 +190,7 @@ async fn execute_evm(args: EvmTxArgs) -> Result<()> {
         .ok_or_else(|| CliError::Config("No keyfile specified".into()))?;
 
     let seed = load_seed(&keyfile)?;
-    let signer = atlas_sdk::Sr25519Signer::from_seed(&seed);
+    let signer = x3_sdk::Sr25519Signer::from_seed(&seed);
 
     let client = AtlasClient::connect(&endpoint).await?;
     let client = client.with_signer(signer);
@@ -239,7 +239,7 @@ async fn execute_svm(args: SvmTxArgs) -> Result<()> {
         .ok_or_else(|| CliError::Config("No keyfile specified".into()))?;
 
     let seed = load_seed(&keyfile)?;
-    let signer = atlas_sdk::Sr25519Signer::from_seed(&seed);
+    let signer = x3_sdk::Sr25519Signer::from_seed(&seed);
 
     let client = AtlasClient::connect(&endpoint).await?;
     let client = client.with_signer(signer);
@@ -248,20 +248,20 @@ async fn execute_svm(args: SvmTxArgs) -> Result<()> {
         .map_err(|e| CliError::Config(format!("Invalid hex data: {}", e)))?;
 
     // Build instruction
-    let program_id = atlas_sdk::svm::Pubkey::from_base58(&args.program)
+    let program_id = x3_sdk::svm::Pubkey::from_base58(&args.program)
         .map_err(|e| CliError::Config(format!("Invalid program ID: {:?}", e)))?;
 
     let mut accounts = Vec::new();
     if let Some(accts) = args.accounts {
         for acct_str in accts.split(',') {
             let parts: Vec<&str> = acct_str.split(':').collect();
-            let pubkey = atlas_sdk::svm::Pubkey::from_base58(parts[0])
+            let pubkey = x3_sdk::svm::Pubkey::from_base58(parts[0])
                 .map_err(|e| CliError::Config(format!("Invalid account: {:?}", e)))?;
 
             let is_writable = parts.get(1).map(|&f| f == "w").unwrap_or(false);
             let is_signer = parts.get(1).map(|&f| f == "s").unwrap_or(false);
 
-            accounts.push(atlas_sdk::svm::AccountMeta {
+            accounts.push(x3_sdk::svm::AccountMeta {
                 pubkey,
                 is_signer,
                 is_writable,
@@ -269,7 +269,7 @@ async fn execute_svm(args: SvmTxArgs) -> Result<()> {
         }
     }
 
-    let instruction = atlas_sdk::svm::Instruction {
+    let instruction = x3_sdk::svm::Instruction {
         program_id,
         accounts,
         data: data.clone(),
@@ -314,7 +314,7 @@ async fn execute_comit(args: ComitTxArgs) -> Result<()> {
         .ok_or_else(|| CliError::Config("No keyfile specified".into()))?;
 
     let seed = load_seed(&keyfile)?;
-    let signer = atlas_sdk::Sr25519Signer::from_seed(&seed);
+    let signer = x3_sdk::Sr25519Signer::from_seed(&seed);
 
     let client = AtlasClient::connect(&endpoint).await?;
     let client = client.with_signer(signer);
@@ -393,11 +393,11 @@ fn get_endpoint(network: Option<&str>) -> String {
     } else {
         network
             .map(|n| match n {
-                "testnet" => atlas_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
-                "mainnet" => atlas_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
-                _ => atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
+                "testnet" => x3_sdk::TESTNET_HTTP_ENDPOINT.to_string(),
+                "mainnet" => x3_sdk::MAINNET_HTTP_ENDPOINT.to_string(),
+                _ => x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string(),
             })
-            .unwrap_or_else(|| atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
+            .unwrap_or_else(|| x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string())
     }
 }
 

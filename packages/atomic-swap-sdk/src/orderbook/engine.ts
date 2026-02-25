@@ -352,7 +352,7 @@ export class OrderbookEngine extends EventEmitter<MatchEvents> {
         takerOrderId: taker.id,
         settlement: {
           method: "atomic-swap",
-          chainId: taker.settlementChain || "atlas-substrate",
+          chainId: taker.settlementChain || "x3-substrate",
           status: "pending",
         },
         timestamp: Date.now(),

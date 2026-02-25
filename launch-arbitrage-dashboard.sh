@@ -1,7 +1,7 @@
 #!/bin/bash
 # Launch the ARBITRAGE Intelligence Dashboard (X3 Intelligence)
 
-APP_DIR="/home/lojak/Desktop/atlas-sphere-master/apps/x3-intelligence"
+APP_DIR="/home/lojak/Desktop/x3-chain-master/apps/x3-intelligence"
 LOG_FILE="/tmp/x3-intelligence.log"
 PORT=3005
 

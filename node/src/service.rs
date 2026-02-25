@@ -1,11 +1,11 @@
-/// Atlas Sphere node service module
+/// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
 /// - Aura (Authority Round) block authoring consensus
 /// - GRANDPA finality gadget
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
-use atlas_sphere_runtime::{opaque::Block, RuntimeApi};
+use x3_chain_runtime::{opaque::Block, RuntimeApi};
 use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
@@ -26,22 +26,22 @@ const AURA: KeyTypeId = KeyTypeId(*b"aura");
 /// Key type for GRANDPA finality
 const GRANDPA: KeyTypeId = KeyTypeId(*b"gran");
 
-/// Atlas Sphere native executor implementation
+/// X3 Chain native executor implementation
 pub struct AtlasSphereExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for AtlasSphereExecutorDispatch {
     type ExtendHostFunctions = sp_io::SubstrateHostFunctions;
 
     fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-        atlas_sphere_runtime::api::dispatch(method, data)
+        x3_chain_runtime::api::dispatch(method, data)
     }
 
     fn native_version() -> sc_executor::NativeVersion {
-        atlas_sphere_runtime::native_version()
+        x3_chain_runtime::native_version()
     }
 }
 
-/// Executor for Atlas Sphere
+/// Executor for X3 Chain
 ///
 /// In normal builds we use `NativeElseWasmExecutor` so the node can
 /// execute both natively and via the embedded WASM runtime. For
@@ -62,11 +62,12 @@ pub type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 ///
 /// For development mode (`--dev`), this inserts Alice's Aura (sr25519) and
 /// GRANDPA (ed25519) keys into the keystore so the node can author blocks.
-fn insert_dev_keys(keystore: &KeystoreContainer) -> Result<(), ServiceError> {
+fn insert_dev_keys_with_seed(
+    keystore: &KeystoreContainer,
+    seed: &str,
+) -> Result<(), ServiceError> {
     use sp_core::crypto::SecretStringError;
 
-    // Alice's seed phrase for development
-    let seed = "//Alice";
     let keystore = keystore.keystore();
 
     // Insert Aura key (sr25519) for block authoring
@@ -78,7 +79,7 @@ fn insert_dev_keys(keystore: &KeystoreContainer) -> Result<(), ServiceError> {
         .insert(AURA, seed, &aura_pair.public().0)
         .map_err(|e| ServiceError::Other(format!("Failed to insert Aura key: {:?}", e)))?;
 
-    log::info!("🔑 Inserted Alice's Aura key for block authoring");
+    log::info!("🔑 Inserted Aura key for block authoring");
 
     // Insert GRANDPA key (ed25519) for finality
     let grandpa_pair =
@@ -89,12 +90,30 @@ fn insert_dev_keys(keystore: &KeystoreContainer) -> Result<(), ServiceError> {
         .insert(GRANDPA, seed, &grandpa_pair.public().0)
         .map_err(|e| ServiceError::Other(format!("Failed to insert GRANDPA key: {:?}", e)))?;
 
-    log::info!("🔑 Inserted Alice's GRANDPA key for finality");
+    log::info!("🔑 Inserted GRANDPA key for finality");
 
     Ok(())
 }
 
-/// Create partial components for Atlas Sphere node
+fn maybe_insert_dev_keys(
+    config: &Configuration,
+    keystore: &KeystoreContainer,
+) -> Result<(), ServiceError> {
+    // If X3_DEV_SEED is set, insert that key regardless of chain type (testnet convenience).
+    if let Ok(seed) = std::env::var("X3_DEV_SEED") {
+        log::info!("🔑 Inserting dev keys from X3_DEV_SEED");
+        return insert_dev_keys_with_seed(keystore, &seed);
+    }
+
+    // For development chains, insert Alice's keys for block authoring
+    if config.chain_spec.chain_type() == ChainType::Development {
+        return insert_dev_keys_with_seed(keystore, "//Alice");
+    }
+
+    Ok(())
+}
+
+/// Create partial components for X3 Chain node
 ///
 /// Returns the common components needed by various subcommands (benchmarking, export, etc.)
 pub fn new_partial(
@@ -137,10 +156,8 @@ pub fn new_partial(
             executor,
         )?;
 
-    // For development chains, insert Alice's keys for block authoring
-    if config.chain_spec.chain_type() == ChainType::Development {
-        insert_dev_keys(&keystore_container)?;
-    }
+    // For dev chains or when X3_DEV_SEED is set, insert keys for block authoring.
+    maybe_insert_dev_keys(config, &keystore_container)?;
 
     let client = Arc::new(client);
 
@@ -209,17 +226,17 @@ pub fn new_partial(
     })
 }
 
-/// Start a new Atlas Sphere full node with complete consensus and networking
+/// Start a new X3 Chain full node with complete consensus and networking
 pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let sc_service::PartialComponents {
         client,
         backend,
-        task_manager,
+        mut task_manager,
         keystore_container,
         select_chain,
         import_queue,
         transaction_pool,
-        other: (grandpa_block_import, grandpa_link, telemetry),
+        other: (grandpa_block_import, grandpa_link, mut telemetry),
     } = new_partial(&config)?;
 
     let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
@@ -240,7 +257,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     ));
 
     // Build networking service
-    let (network, _system_rpc_tx, _tx_handler_controller, network_starter, sync_service) =
+    let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
             net_config,
@@ -252,85 +269,38 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             warp_sync_params: Some(sc_service::WarpSyncParams::WithProvider(warp_sync)),
         })?;
 
-    // Build RPC extensions module
-    let chain_name = config.chain_spec.name().to_string();
-    let rpc_module = crate::rpc::create_full(client.clone(), transaction_pool.clone(), chain_name)
-        .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))?;
-
-    // Start RPC server using jsonrpsee with HTTP and WebSocket support
-    // Security: Default to localhost binding only
-    let rpc_addr = config
-        .rpc_addr
-        .unwrap_or_else(|| "127.0.0.1:9944".parse().expect("valid default address"));
-
-    let max_connections = config.rpc_max_connections;
-
-    // Initialize rate limiter with production config
-    let rate_limiter = std::sync::Arc::new(crate::rpc_middleware::RateLimiter::new(
-        crate::rpc_middleware::RateLimitConfig::default(),
-    ));
-
-    // Spawn RPC server as an essential task (supports both HTTP and WS)
-    let rpc_server_handle = task_manager.spawn_essential_handle();
-    let rate_limiter_clone = rate_limiter.clone();
-    rpc_server_handle.spawn("rpc-server", None, async move {
-        use jsonrpsee::server::ServerBuilder;
-        use std::time::Duration;
-
-        // Security settings for production
-        // - Reasonable message size limits to prevent memory exhaustion
-        // - Ping/pong for WebSocket keep-alive
-        // - Connection limits
-        let server = ServerBuilder::default()
-            .max_connections(max_connections)
-            // Enable ping/pong for WebSocket keep-alive
-            .ping_interval(Duration::from_secs(30))
-            // Set reasonable message size limits (prevent DoS)
-            .max_request_body_size(10 * 1024 * 1024) // 10 MB max request
-            .max_response_body_size(50 * 1024 * 1024) // 50 MB max response (for large queries)
-            // Limit subscription buffer to prevent memory issues
-            .max_subscriptions_per_connection(10)
-            .build(rpc_addr)
-            .await
-            .map_err(|e| {
-                log::error!("Failed to start RPC server: {:?}", e);
-                e
-            })
-            .expect("RPC server should start");
-
-        let _handle = server.start(rpc_module);
-
-        log::info!("🌐 RPC server listening on http://{}", rpc_addr);
-        log::info!("🔌 WebSocket available at ws://{}", rpc_addr);
-        log::info!(
-            "🛡️ Rate limiting enabled: {} req/s burst, {} max subscriptions",
-            50,
-            10
-        );
-
-        // Periodically cleanup stale rate limiter connections
-        let cleanup_interval = Duration::from_secs(300); // 5 minutes
-        let max_age = Duration::from_secs(3600); // 1 hour
-        loop {
-            tokio::time::sleep(cleanup_interval).await;
-            rate_limiter_clone.cleanup_stale_connections(max_age);
-            let metrics = rate_limiter_clone.metrics();
-            log::debug!(
-                "Rate limiter stats: {} requests, {} rejected, {} active connections",
-                metrics.total_requests,
-                metrics.total_rejected,
-                metrics.active_connections
-            );
-        }
-    });
-
     let role = config.role.clone();
     let force_authoring = config.force_authoring;
     let backoff_authoring_blocks: Option<()> = None;
     let name = config.network.node_name.clone();
+    let chain_name = config.chain_spec.name().to_string();
     let enable_grandpa = !config.disable_grandpa;
     let prometheus_registry = config.prometheus_registry().cloned();
     let role_for_grandpa = role.clone();
+
+    // Spawn core Substrate tasks (RPC, network, telemetry, txpool, offchain, etc.)
+    let rpc_builder = {
+        let client = client.clone();
+        Box::new(move |_deny_unsafe, _subscription_executor| {
+            crate::rpc::create_full(client.clone())
+                .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
+        })
+    };
+
+    sc_service::spawn_tasks(sc_service::SpawnTasksParams {
+        config,
+        client: client.clone(),
+        backend: backend.clone(),
+        task_manager: &mut task_manager,
+        keystore: keystore_container.keystore(),
+        transaction_pool: transaction_pool.clone(),
+        rpc_builder,
+        network: network.clone(),
+        system_rpc_tx,
+        tx_handler_controller,
+        sync_service: sync_service.clone(),
+        telemetry: telemetry.as_mut(),
+    })?;
 
     // Start Aura block authoring if this is an authority node
     if role.is_authority() {
@@ -367,7 +337,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                 keystore: keystore_container.keystore(),
                 sync_oracle: sync_service.clone(),
                 justification_sync_link: sync_service.clone(),
-                block_proposal_slot_portion: SlotProportion::new(2f32 / 3f32),
+                block_proposal_slot_portion: SlotProportion::new(0.9f32),
                 max_block_proposal_slot_portion: None,
                 telemetry: telemetry.as_ref().map(|x| x.handle()),
                 compatibility_mode: Default::default(),
@@ -382,9 +352,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     // Start GRANDPA finality gadget
     if enable_grandpa {
         let grandpa_config = sc_consensus_grandpa::Config {
-            gossip_duration: std::time::Duration::from_millis(333),
-            justification_period: 512,
-            name: Some(name),
+            gossip_duration: std::time::Duration::from_millis(100),
+            justification_period: 64,
+            name: Some(name.clone()),
             observer_enabled: false,
             keystore: Some(keystore_container.keystore()),
             local_role: role_for_grandpa,
@@ -450,9 +420,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             });
     }
 
-    log::info!("✨ Atlas Sphere node started successfully");
-    log::info!("🔗 Network: {}", config.chain_spec.name());
-    log::info!("👤 Node name: {}", config.network.node_name);
+    log::info!("✨ X3 Chain node started successfully");
+    log::info!("🔗 Network: {}", chain_name);
+    log::info!("👤 Node name: {}", name);
     log::info!("📋 Role: {:?}", role);
 
     Ok(task_manager)

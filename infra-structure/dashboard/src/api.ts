@@ -210,7 +210,7 @@ export interface AccountingSummary {
   blacklist_count: number;
 }
 
-class InfenstructiorAPI {
+class InferstructorAPI {
   private jwtToken: string | null = null;
   private apiKey: string | null = null;
   private adminToken: string | null = null;
@@ -510,4 +510,4 @@ class InfenstructiorAPI {
   }
 }
 
-export const api = new InfenstructiorAPI();
+export const api = new InferstructorAPI();

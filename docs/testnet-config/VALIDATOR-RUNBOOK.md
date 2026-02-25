@@ -108,5 +108,5 @@
     }
   ],
   "quick_start": "Start validator: ./start-validator.sh (2 min startup, 5 min catchup)",
-  "support_contact": "GitHub Issues: atlas-sphere/p4-gpu-accelerators"
+  "support_contact": "GitHub Issues: x3-chain/p4-gpu-accelerators"
 }

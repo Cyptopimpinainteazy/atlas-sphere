@@ -330,7 +330,7 @@ Create `changes/archive/2026-02-08-add-offchain-jury/RUNBOOK.md`:
 
 ### Monitor Active Sessions
 \`\`\`bash
-curl http://api.atlas-sphere.io/api/jury/metrics
+curl http://api.x3-chain.io/api/jury/metrics
 \`\`\`
 
 ### Query Audit Trail
@@ -458,7 +458,7 @@ cat > changes/archive/2026-02-08-add-offchain-jury/README.md << 'EOF'
 **Change ID**: add-offchain-jury  
 
 This directory contains the complete specification, implementation, and deployment
-configuration for the Atlas Sphere Off-Chain Jury Service.
+configuration for the X3 Chain Off-Chain Jury Service.
 
 ## Key Files
 

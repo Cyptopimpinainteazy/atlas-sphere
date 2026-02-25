@@ -6,7 +6,7 @@ graph TB
     
     subgraph "⚡ Parallel Processing Engine"
         C -->|High Priority| D[Multi-threaded CPU<br/>8-16 threads]
-        C -->|GPU Eligible| E[Infenstructior<br/>GPU Acceleration]
+        C -->|GPU Eligible| E[Inferstructor<br/>GPU Acceleration]
         
         D --> D1[Ed25519 SigVerifier<br/>689k+ sig/sec]
         D --> D2[Parallel Goroutines<br/>1000+ workers]

@@ -4,7 +4,7 @@
 
 ## Executive Summary
 
-X3 Atlas Sphere introduces the Adaptive Intelligence Chain (AIC) - a revolutionary Layer-1 blockchain that modifies its own runtime based on network conditions, usage patterns, MEV pressure, VM demand, and AI-generated optimizations. This document specifies the complete architecture.
+X3 X3 Chain introduces the Adaptive Intelligence Chain (AIC) - a revolutionary Layer-1 blockchain that modifies its own runtime based on network conditions, usage patterns, MEV pressure, VM demand, and AI-generated optimizations. This document specifies the complete architecture.
 
 ---
 
@@ -426,7 +426,7 @@ fn adaptive_trade() {
 
 ---
 
-## 6. Integration with Atlas Sphere
+## 6. Integration with X3 Chain
 
 ### 6.1 Pallet Configuration
 
@@ -451,7 +451,7 @@ construct_runtime!(
     pub enum Runtime {
         System: frame_system,
         // ... existing pallets ...
-        AtlasKernel: pallet_atlas_kernel,
+        AtlasKernel: pallet_x3_kernel,
         X3Verifier: pallet_x3_verifier,
         EvolutionCore: pallet_evolution,
         SwarmCoordinator: pallet_swarm,
@@ -501,4 +501,4 @@ construct_runtime!(
 
 ---
 
-**X3 Atlas Sphere: Where AI meets Blockchain. The chain that evolves.**
+**X3 X3 Chain: Where AI meets Blockchain. The chain that evolves.**

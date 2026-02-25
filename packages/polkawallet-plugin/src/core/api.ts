@@ -2,7 +2,7 @@
  * X3Chain API Connection Manager
  *
  * Handles WebSocket lifecycle, type registration, and API initialization
- * for the Atlas Sphere x3chain runtime.
+ * for the X3 Chain x3chain runtime.
  */
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
@@ -11,9 +11,9 @@ import { X3ChainCustomTypes, X3ChainRpc } from '../types/runtime-types';
 import type { X3ChainConfig, ConnectionState, X3Network } from '../types/interfaces';
 
 const DEFAULT_ENDPOINTS: Record<X3Network, string> = {
-  'atlas-mainnet': 'wss://rpc.atlas-sphere.io',
-  'atlas-testnet': 'wss://testnet.atlas-sphere.io',
-  'atlas-local': 'ws://127.0.0.1:9944',
+  'x3-mainnet': 'wss://rpc.x3-chain.io',
+  'x3-testnet': 'wss://testnet.x3-chain.io',
+  'x3-local': 'ws://127.0.0.1:9944',
 };
 
 export interface ApiEvents {
@@ -62,7 +62,7 @@ export class X3ChainApi extends EventEmitter<ApiEvents> {
   async connect(): Promise<ApiPromise> {
     const endpoint =
       this._config.endpoint ||
-      DEFAULT_ENDPOINTS[this._config.network || 'atlas-local'];
+      DEFAULT_ENDPOINTS[this._config.network || 'x3-local'];
 
     this._provider = new WsProvider(endpoint, this._config.autoConnect ? 1000 : false);
 
@@ -138,7 +138,7 @@ export class X3ChainApi extends EventEmitter<ApiEvents> {
 
     try {
       const { web3Accounts, web3Enable } = await import('@polkadot/extension-dapp');
-      await web3Enable('Atlas Sphere x3chain');
+      await web3Enable('X3 Chain x3chain');
       const accounts = await web3Accounts();
       return accounts.map((a) => a.address);
     } catch {

@@ -18,7 +18,7 @@ const crypto = require('crypto');
 // Default credentials (change in production)
 const DEFAULT_USER = {
   username: 'admin',
-  password: 'atlas-sphere-2026'
+  password: 'x3-chain-2026'
 };
 
 let users: Map<string, User> = new Map();
@@ -27,7 +27,7 @@ let sessions: Map<string, Session> = new Map();
 function hashPassword(password: string): string {
   return crypto
     .createHash('sha256')
-    .update(password + process.env.AUTH_SALT || 'atlas-default-salt')
+    .update(password + process.env.AUTH_SALT || 'x3-default-salt')
     .digest('hex');
 }
 

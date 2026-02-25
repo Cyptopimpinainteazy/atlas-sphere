@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ── Atlas Sphere – Pilot Deployment Script ───────────────────────────────────
+# ── X3 Chain – Pilot Deployment Script ───────────────────────────────────
 # Deploy multi-chain X3 GPU validator to Threadripper core + secondary fleet
 set -euo pipefail
 
@@ -61,7 +61,7 @@ ok "Rust workspace built"
 # ── Deploy core node (local Threadripper) ────────────────────────────────────
 banner "Deploying core node (local)"
 
-DEPLOY_TARGET="/opt/atlas/pilot"
+DEPLOY_TARGET="/opt/x3/pilot"
 sudo mkdir -p "$DEPLOY_TARGET/kernels" "$DEPLOY_TARGET/config" "$DEPLOY_TARGET/logs"
 
 # Copy kernel libraries
@@ -81,8 +81,8 @@ fi
 # Set LD_LIBRARY_PATH in environment file
 cat <<EOF | sudo tee "$DEPLOY_TARGET/env.sh" >/dev/null
 export LD_LIBRARY_PATH="$DEPLOY_TARGET/kernels:\${LD_LIBRARY_PATH:-}"
-export ATLAS_CONFIG="$DEPLOY_TARGET/config/threadripper.toml"
-export ATLAS_LOG_DIR="$DEPLOY_TARGET/logs"
+export X3_CONFIG="$DEPLOY_TARGET/config/threadripper.toml"
+export X3_LOG_DIR="$DEPLOY_TARGET/logs"
 export CUDA_VISIBLE_DEVICES=0,1,2
 EOF
 ok "Environment file created"
@@ -108,9 +108,9 @@ if [[ -f "$SECONDARY_CONF" ]]; then
     HOSTS=$(grep '^host' "$SECONDARY_CONF" | sed 's/.*= *"\(.*\)"/\1/')
     for HOST in $HOSTS; do
         echo -n "  Deploying to $HOST... "
-        if ssh -o ConnectTimeout=5 "atlas@$HOST" "mkdir -p /opt/atlas/pilot/kernels /opt/atlas/pilot/config" 2>/dev/null; then
-            scp -q "$BUILD_DIR"/*.so "atlas@$HOST:/opt/atlas/pilot/kernels/"
-            scp -q "$SECONDARY_CONF" "atlas@$HOST:/opt/atlas/pilot/config/"
+        if ssh -o ConnectTimeout=5 "x3@$HOST" "mkdir -p /opt/x3/pilot/kernels /opt/x3/pilot/config" 2>/dev/null; then
+            scp -q "$BUILD_DIR"/*.so "x3@$HOST:/opt/x3/pilot/kernels/"
+            scp -q "$SECONDARY_CONF" "x3@$HOST:/opt/x3/pilot/config/"
             ok "$HOST"
         else
             warn "Cannot reach $HOST — skipping"

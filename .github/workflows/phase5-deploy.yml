@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'pallets/atlas-jury-anchor/**'
+      - 'pallets/x3-jury-anchor/**'
       - 'swarm/jury/anchorer.py'
       - 'packages/blockchain-adapter/src/jury-anchoring.ts'
       - 'tests/test_jury_anchoring.py'
@@ -44,7 +44,7 @@ jobs:
       - name: Test Rust Pallet
         if: matrix.component == 'rust'
         run: |
-          cd pallets/atlas-jury-anchor
+          cd pallets/x3-jury-anchor
           cargo test --lib 2>&1 | tee test-results.log
           if grep -q "test result: FAILED\|error\[" test-results.log; then
             echo "❌ Rust tests failed"
@@ -97,7 +97,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: 'pallets/atlas-jury-anchor'
+          scan-ref: 'pallets/x3-jury-anchor'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
@@ -125,12 +125,12 @@ jobs:
       - name: Build and push Rust pallet image
         uses: docker/build-push-action@v4
         with:
-          context: pallets/atlas-jury-anchor
-          file: pallets/atlas-jury-anchor/Dockerfile
+          context: pallets/x3-jury-anchor
+          file: pallets/x3-jury-anchor/Dockerfile
           push: false
           tags: |
-            atlas-jury-anchor:latest
-            atlas-jury-anchor:${{ github.sha }}
+            x3-jury-anchor:latest
+            x3-jury-anchor:${{ github.sha }}
 
       - name: Build and push Python anchorer image
         uses: docker/build-push-action@v4
@@ -139,8 +139,8 @@ jobs:
           file: swarm/jury/Dockerfile
           push: false
           tags: |
-            atlas-jury-anchorer:latest
-            atlas-jury-anchorer:${{ github.sha }}
+            x3-jury-anchorer:latest
+            x3-jury-anchorer:${{ github.sha }}
 
   deploy-staging:
     name: Deploy to Staging
@@ -240,7 +240,7 @@ jobs:
       - name: Backup database before deployment
         run: |
           aws rds create-db-snapshot \
-            --db-instance-identifier atlas-jury-prod \
+            --db-instance-identifier x3-jury-prod \
             --db-snapshot-identifier "pre-phase5-$(date +%s)"
 
       - name: Deploy to production
@@ -292,7 +292,7 @@ jobs:
       - name: Trigger monitoring
         if: success()
         run: |
-          curl -X POST http://monitoring.atlas.io/api/status \
+          curl -X POST http://monitoring.x3.io/api/status \
             -H "Content-Type: application/json" \
             -d '{"status":"phase5_deployed","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}'
 

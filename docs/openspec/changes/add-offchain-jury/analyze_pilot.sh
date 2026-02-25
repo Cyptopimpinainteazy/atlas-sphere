@@ -77,7 +77,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 EOF
 
 # Session counts
-SESSIONS=$(docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+SESSIONS=$(docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT COUNT(*) FROM jury_sessions;" 2>/dev/null || echo "ERROR")
 
 cat >> "$REPORT_FILE" << EOF
@@ -86,7 +86,7 @@ cat >> "$REPORT_FILE" << EOF
 EOF
 
 # Audit log counts
-AUDIT_LOGS=$(docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+AUDIT_LOGS=$(docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT COUNT(*) FROM audit_logs;" 2>/dev/null || echo "ERROR")
 
 cat >> "$REPORT_FILE" << EOF
@@ -94,7 +94,7 @@ cat >> "$REPORT_FILE" << EOF
 EOF
 
 # Vote counts
-VOTES=$(docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+VOTES=$(docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT COUNT(*) FROM jury_votes;" 2>/dev/null || echo "ERROR")
 
 cat >> "$REPORT_FILE" << EOF
@@ -109,7 +109,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 ### Session State Distribution
 EOF
 
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT state, COUNT(*) FROM jury_sessions GROUP BY state;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query session states" >> "$REPORT_FILE"
 
@@ -162,7 +162,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 EOF
 
 # Distribution of event types
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT event_type, COUNT(*) FROM audit_logs GROUP BY event_type ORDER BY COUNT(*) DESC;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query event types" >> "$REPORT_FILE"
 
@@ -173,7 +173,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 EOF
 
 # Check if any audit logs have been verified
-VERIFIED=$(docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+VERIFIED=$(docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT COUNT(*) FROM audit_log_seals WHERE on_chain_tx_hash IS NOT NULL;" 2>/dev/null || echo "0")
 
 cat >> "$REPORT_FILE" << EOF
@@ -188,7 +188,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 ### Recent Audit Events (Last 20)
 EOF
 
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT session_id, event_type, actor, timestamp FROM audit_logs ORDER BY timestamp DESC LIMIT 20;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query audit logs" >> "$REPORT_FILE"
 
@@ -202,7 +202,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 ### Vote Distribution
 EOF
 
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT vote, COUNT(*) FROM jury_votes WHERE reveal_verified = true GROUP BY vote;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query votes" >> "$REPORT_FILE"
 
@@ -212,7 +212,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 ### Session Outcomes
 EOF
 
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT result_final, COUNT(*) FROM jury_sessions WHERE state = 'COMPLETED' GROUP BY result_final;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query outcomes" >> "$REPORT_FILE"
 
@@ -226,7 +226,7 @@ cat >> "$REPORT_FILE" << 'EOF'
 ### Jury Composition
 EOF
 
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -t -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -t -c \
     "SELECT jury_size, COUNT(*) FROM jury_sessions GROUP BY jury_size;" 2>/dev/null >> "$REPORT_FILE" || \
     echo "ERROR: Could not query jury sizes" >> "$REPORT_FILE"
 

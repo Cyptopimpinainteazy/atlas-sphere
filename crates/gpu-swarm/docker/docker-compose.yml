@@ -4,7 +4,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.nvidia
-    image: atlas/gpu-swarm-node:latest
+    image: x3/gpu-swarm-node:latest
     runtime: nvidia
     deploy:
       resources:

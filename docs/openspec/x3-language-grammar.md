@@ -2,7 +2,7 @@
 
 ## Overview
 
-X3 is stitched around a deterministic, Pratt-style expression parser with a block-oriented statement layer designed for agents, atomic windows, and financial primitives. This document captures the shape of the grammar that every parser implementation on Atlas Sphere must obey. Refer to these sections when generating ASTs, writing compiler passes, or onboarding AI agents that mutate the language.
+X3 is stitched around a deterministic, Pratt-style expression parser with a block-oriented statement layer designed for agents, atomic windows, and financial primitives. This document captures the shape of the grammar that every parser implementation on X3 Chain must obey. Refer to these sections when generating ASTs, writing compiler passes, or onboarding AI agents that mutate the language.
 
 ## Statement Grammar (EBNF)
 

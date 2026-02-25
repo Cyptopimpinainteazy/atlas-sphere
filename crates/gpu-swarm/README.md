@@ -1,6 +1,6 @@
 # GPU Swarm
 
-Distributed GPU compute network for the X3 Atlas Sphere blockchain.
+Distributed GPU compute network for the X3 X3 Chain blockchain.
 
 ## Overview
 

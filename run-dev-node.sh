@@ -1,24 +1,24 @@
-#!/usr/bin/env bash
-# Atlas Sphere Development Node Launcher
-# This script launches a local Atlas Sphere blockchain node in development mode
+:#!/usr/bin/env bash
+# X3 Chain Development Node Launcher
+# This script launches a local X3 Chain blockchain node in development mode
 
 set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
-echo "🌌 Atlas Sphere Development Node Launcher"
+echo "🌌 X3 Chain Development Node Launcher"
 echo "==========================================="
 echo ""
 
 # Check if the binary is built
-if [ ! -f "target/release/atlas-sphere-node" ]; then
+if [ ! -f "target/release/x3-chain-node" ]; then
     echo "⚠️  Binary not found. Building with: cargo build --release"
     cargo build --release
 fi
 
 # Default configuration
-BASE_PATH="${BASE_PATH:-/tmp/atlas-dev}"
+BASE_PATH="${BASE_PATH:-/tmp/x3-dev}"
 RPC_PORT="${RPC_PORT:-9944}"
 WS_PORT="${WS_PORT:-9945}"
 P2P_PORT="${P2P_PORT:-30333}"
@@ -30,7 +30,7 @@ PROMETHEUS_PORT="${PROMETHEUS_PORT:-9615}"
 RPC_EXTERNAL=""
 CORS_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
 
-if [ "$ATLAS_DEV_MODE" = "external" ]; then
+if [ "$X3_DEV_MODE" = "external" ]; then
     echo "⚠️  WARNING: External RPC access enabled (development only!)"
     RPC_EXTERNAL="--rpc-external --unsafe-rpc-external"
     CORS_ORIGINS="*"
@@ -53,6 +53,7 @@ echo ""
 # Check if desktop app should be started
 # Default to false in CI/limited environments; allow override with env var
 START_DESKTOP="${START_DESKTOP:-false}"
+X3_PERF_MODE="${X3_PERF_MODE:-false}"
 
 # Verify `npm` is available before attempting to start desktop app
 if [ "$START_DESKTOP" = "true" ] && ! command -v npm >/dev/null 2>&1; then
@@ -60,19 +61,34 @@ if [ "$START_DESKTOP" = "true" ] && ! command -v npm >/dev/null 2>&1; then
     START_DESKTOP=false
 fi
 
+RPC_METHODS="Safe"
+RPC_MAX_CONNECTIONS="100"
+RPC_MAX_REQUEST_SIZE="10"
+RPC_MAX_RESPONSE_SIZE="50"
+RPC_MAX_SUBSCRIPTIONS_PER_CONNECTION="10"
+
+if [ "$X3_PERF_MODE" = "true" ]; then
+    echo "⚡ Performance mode enabled for stress testing"
+    RPC_METHODS="Unsafe"
+    RPC_MAX_CONNECTIONS="2000"
+    RPC_MAX_REQUEST_SIZE="50"
+    RPC_MAX_RESPONSE_SIZE="100"
+    RPC_MAX_SUBSCRIPTIONS_PER_CONNECTION="20000"
+fi
+
 # Start the node with secure defaults in the background
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
     --dev \
     --base-path "$BASE_PATH" \
     --rpc-port "$RPC_PORT" \
     --port "$P2P_PORT" \
     --prometheus-port "$PROMETHEUS_PORT" \
     --rpc-cors "$CORS_ORIGINS" \
-    --rpc-methods Safe \
-    --rpc-max-connections 100 \
-    --rpc-max-request-size 10 \
-    --rpc-max-response-size 50 \
-    --rpc-max-subscriptions-per-connection 10 \
+    --rpc-methods "$RPC_METHODS" \
+    --rpc-max-connections "$RPC_MAX_CONNECTIONS" \
+    --rpc-max-request-size "$RPC_MAX_REQUEST_SIZE" \
+    --rpc-max-response-size "$RPC_MAX_RESPONSE_SIZE" \
+    --rpc-max-subscriptions-per-connection "$RPC_MAX_SUBSCRIPTIONS_PER_CONNECTION" \
     --detailed-log-output \
     --log sync=debug,consensus=debug,grandpa=debug,runtime=info \
     $RPC_EXTERNAL \
@@ -112,7 +128,7 @@ done
 if [ "$START_DESKTOP" = "true" ]; then
     echo ""
     echo "🚀 Starting Tauri desktop app..."
-    cd apps/atlas-desktop
+    cd apps/x3-desktop
     npm run tauri dev &
     DESKTOP_PID=$!
     echo "✅ Desktop app started (PID: $DESKTOP_PID)"
@@ -138,4 +154,3 @@ else
     # Wait for blockchain only
     wait $BLOCKCHAIN_PID
 fi
-

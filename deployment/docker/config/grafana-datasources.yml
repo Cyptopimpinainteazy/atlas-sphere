@@ -1,4 +1,4 @@
-# Atlas Sphere Grafana Datasources Configuration
+# X3 Chain Grafana Datasources Configuration
 apiVersion: 1
 
 datasources:
@@ -18,7 +18,7 @@ datasources:
   - name: PostgreSQL
     type: postgres
     url: postgres:5432
-    database: atlas_analytics
+    database: x3_analytics
     user: ${POSTGRES_USER}
     secureJsonData:
       password: ${POSTGRES_PASSWORD}

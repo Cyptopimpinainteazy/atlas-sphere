@@ -1,20 +1,20 @@
-# Atlas Sphere FAQ
+# X3 Chain FAQ
 
-Frequently asked questions about Atlas Sphere's dual-VM blockchain platform.
+Frequently asked questions about X3 Chain's dual-VM blockchain platform.
 
 ## General Questions
 
-### What is Atlas Sphere?
+### What is X3 Chain?
 
-Atlas Sphere is the world's first Layer-1 blockchain that natively supports both Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) execution in atomic transactions. This enables developers to build applications that leverage the best of both ecosystems without bridging complexity.
+X3 Chain is the world's first Layer-1 blockchain that natively supports both Ethereum Virtual Machine (EVM) and Solana Virtual Machine (SVM) execution in atomic transactions. This enables developers to build applications that leverage the best of both ecosystems without bridging complexity.
 
 **Why this matters**: Developers can now build truly interoperable applications that were impossible before, combining Ethereum's mature DeFi ecosystem with Solana's high throughput and parallel execution.
 
-### How is Atlas Sphere different from other blockchains?
+### How is X3 Chain different from other blockchains?
 
 **Traditional blockchains**: Choose either EVM (Ethereum, Polygon, BSC) OR SVM (Solana, but not both)
 **Multi-chain solutions**: Require bridges (complex, risky, expensive)
-**Atlas Sphere**: Native dual-VM execution with atomic guarantees
+**X3 Chain**: Native dual-VM execution with atomic guarantees
 
 Key differences:
 - **Atomic cross-VM transactions**: Both VMs execute in the same transaction or both revert
@@ -22,9 +22,9 @@ Key differences:
 - **Developer choice**: Use Solidity, Rust, or both in the same application
 - **Performance**: Leverage SVM's parallel execution for high-throughput parts
 
-### What blockchains does Atlas Sphere support?
+### What blockchains does X3 Chain support?
 
-Atlas Sphere **is** the blockchain - you don't need other chains. However, it provides compatibility with:
+X3 Chain **is** the blockchain - you don't need other chains. However, it provides compatibility with:
 
 **EVM Ecosystem:**
 - Ethereum tooling (Hardhat, Foundry, Remix)
@@ -44,7 +44,7 @@ Atlas Sphere **is** the blockchain - you don't need other chains. However, it pr
 
 ### How does cross-VM execution work?
 
-Atlas Sphere implements atomic execution through the Canonical Ledger:
+X3 Chain implements atomic execution through the Canonical Ledger:
 
 ```
 1. Transaction contains both EVM and SVM payloads
@@ -71,14 +71,14 @@ Atlas Sphere implements atomic execution through the Canonical Ledger:
 
 **Ethereum contracts**: ✅ Deploy with zero modifications
 **Solana programs**: ✅ Deploy with minimal changes (if any)
-**Cross-VM calls**: ✅ Add Atlas Sphere-specific interfaces
+**Cross-VM calls**: ✅ Add X3 Chain-specific interfaces
 
 Example migration:
 ```solidity
 // Existing Ethereum contract - works unchanged
 contract MyContract {
     function myFunction() public {
-        // Works on Atlas Sphere exactly like Ethereum
+        // Works on X3 Chain exactly like Ethereum
     }
 }
 
@@ -98,7 +98,7 @@ contract MyEnhancedContract is CrossVmCaller {
 
 ### What about security?
 
-Atlas Sphere maintains security guarantees from both ecosystems:
+X3 Chain maintains security guarantees from both ecosystems:
 
 **EVM Security:**
 - Battle-tested opcode semantics
@@ -140,7 +140,7 @@ Atlas Sphere maintains security guarantees from both ecosystems:
 
 **EVM Contract:**
 ```bash
-npx hardhat run scripts/deploy.js --network atlas
+npx hardhat run scripts/deploy.js --network x3
 ```
 
 **SVM Program:**
@@ -162,23 +162,23 @@ anchor deploy --provider.cluster localnet
 - Solana CLI, Explorer
 - Rust debugging tools
 
-**Atlas Sphere Tools:**
+**X3 Chain Tools:**
 - Cross-VM SDK
 - Unified RPC endpoints
 - Atomic transaction builder
 
-**Why this matters**: You can use existing tools and just add Atlas Sphere network configuration.
+**Why this matters**: You can use existing tools and just add X3 Chain network configuration.
 
 ### Can I test locally?
 
-Yes! Atlas Sphere provides a local development environment:
+Yes! X3 Chain provides a local development environment:
 
 ```bash
 # Start local node
-atlas node start --dev
+x3 node start --dev
 
 # Deploy contracts to local network
-npx hardhat run scripts/deploy.js --network atlas
+npx hardhat run scripts/deploy.js --network x3
 
 # Test cross-VM functionality
 # Both EVM and SVM contracts work locally
@@ -190,7 +190,7 @@ npx hardhat run scripts/deploy.js --network atlas
 
 ### What's the native token?
 
-**ATLAS** is the native token of Atlas Sphere:
+**X3** is the native token of X3 Chain:
 - Used for transaction fees
 - Staking for validators
 - Governance participation
@@ -200,7 +200,7 @@ npx hardhat run scripts/deploy.js --network atlas
 
 ### How much does it cost to use?
 
-Atlas Sphere provides competitive pricing:
+X3 Chain provides competitive pricing:
 
 **EVM Operations:** ~80% cheaper than Ethereum
 **SVM Operations:** Similar to Solana fees
@@ -218,15 +218,15 @@ Example costs:
 **Development:**
 ```bash
 # Local node automatically funds dev accounts
-atlas node start --dev
+x3 node start --dev
 
-# Use dev account with 1000 ATLAS
+# Use dev account with 1000 X3
 ```
 
 **Testnet:**
 ```bash
 # Get testnet tokens from faucet
-curl -X POST http://faucet.testnet.atlas-sphere.io \
+curl -X POST http://faucet.testnet.x3-chain.io \
   -d '{"address":"0xYourAddress"}'
 ```
 
@@ -253,9 +253,9 @@ curl -X POST http://faucet.testnet.atlas-sphere.io \
 ### How do I get involved?
 
 **For Developers:**
-- Join [Discord](https://discord.gg/atlas-sphere)
+- Join [Discord](https://discord.gg/x3-chain)
 - Build on local node
-- Apply for [developer grants](https://grants.atlas-sphere.io)
+- Apply for [developer grants](https://grants.x3-chain.io)
 - Share your projects
 
 **For Projects:**
@@ -286,7 +286,7 @@ curl -X POST http://localhost:9933 \
 3. **Verify gas estimation:**
 ```bash
 # Check node logs
-atlas node logs --tail 50
+x3 node logs --tail 50
 ```
 
 **Why this matters**: Common deployment issues are typically network connectivity or funding related.
@@ -323,9 +323,9 @@ solana program show PROGRAM_ID --url http://localhost:9934
 
 ## Still Have Questions?
 
-- **Documentation**: [docs.atlas-sphere.io](https://docs.atlas-sphere.io)
-- **Discord**: [discord.gg/atlas-sphere](https://discord.gg/atlas-sphere)
-- **GitHub**: [github.com/atlas-sphere](https://github.com/atlas-sphere)
-- **Email**: [support@atlas-sphere.io](mailto:support@atlas-sphere.io)
+- **Documentation**: [docs.x3-chain.io](https://docs.x3-chain.io)
+- **Discord**: [discord.gg/x3-chain](https://discord.gg/x3-chain)
+- **GitHub**: [github.com/x3-chain](https://github.com/x3-chain)
+- **Email**: [support@x3-chain.io](mailto:support@x3-chain.io)
 
 **Why this matters**: Multiple support channels ensure you can get help in the way that works best for you.

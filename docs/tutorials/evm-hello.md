@@ -1,28 +1,28 @@
 # EVM Hello World Tutorial
 
-This tutorial will guide you through deploying your first Solidity contract on Atlas Sphere using the EVM. We'll create a simple counter contract and interact with it.
+This tutorial will guide you through deploying your first Solidity contract on X3 Chain using the EVM. We'll create a simple counter contract and interact with it.
 
 ## Prerequisites
 
 - Node.js 18+ installed
-- Atlas Sphere local node running (see [Getting Started](/docs/getting-started.md))
+- X3 Chain local node running (see [Getting Started](/docs/getting-started.md))
 - Basic understanding of Solidity and Ethereum development
 
-**Why this matters**: This tutorial demonstrates that you can deploy existing Ethereum contracts on Atlas Sphere with zero modifications, leveraging the full EVM compatibility.
+**Why this matters**: This tutorial demonstrates that you can deploy existing Ethereum contracts on X3 Chain with zero modifications, leveraging the full EVM compatibility.
 
 ## Step 1: Set Up Your Project
 
 ```bash
 # Create a new directory for your project
-mkdir atlas-evm-hello
-cd atlas-evm-hello
+mkdir x3-evm-hello
+cd x3-evm-hello
 
 # Initialize npm project
 npm init -y
 
 # Install dependencies
 npm install --save-dev hardhat @nomiclabs/hardhat-ethers ethers
-npm install --save @atlas-sphere/sdk
+npm install --save @x3-chain/sdk
 
 # Initialize Hardhat
 npx hardhat
@@ -30,7 +30,7 @@ npx hardhat
 
 Choose "Create a basic sample project" and select TypeScript when prompted.
 
-## Step 2: Configure Hardhat for Atlas Sphere
+## Step 2: Configure Hardhat for X3 Chain
 
 Update `hardhat.config.ts`:
 
@@ -49,7 +49,7 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
-    atlas: {
+    x3: {
       url: "http://localhost:9933",
       chainId: 1234,
       accounts: [
@@ -62,7 +62,7 @@ const config: HardhatUserConfig = {
 export default config;
 ```
 
-**Why this matters**: Atlas Sphere's EVM is compatible with standard Ethereum tooling. The configuration is identical to any Ethereum network configuration.
+**Why this matters**: X3 Chain's EVM is compatible with standard Ethereum tooling. The configuration is identical to any Ethereum network configuration.
 
 ## Step 3: Create Your First Contract
 
@@ -75,7 +75,7 @@ pragma solidity ^0.8.19;
 /**
  * @title Counter
  * @dev A simple counter contract demonstrating EVM compatibility
- * @notice This contract works identically on Ethereum, Polygon, BSC, and Atlas Sphere
+ * @notice This contract works identically on Ethereum, Polygon, BSC, and X3 Chain
  */
 contract Counter {
     uint256 private count;
@@ -143,7 +143,7 @@ contract Counter {
 }
 ```
 
-**Why this matters**: This contract uses standard Solidity patterns that work across all EVM-compatible blockchains. Atlas Sphere maintains full compatibility with Ethereum standards.
+**Why this matters**: This contract uses standard Solidity patterns that work across all EVM-compatible blockchains. X3 Chain maintains full compatibility with Ethereum standards.
 
 ## Step 4: Create Deployment Script
 
@@ -154,7 +154,7 @@ import { ethers } from "hardhat";
 import { Counter } from "../typechain-types";
 
 async function main() {
-  console.log("🚀 Deploying Counter contract to Atlas Sphere...");
+  console.log("🚀 Deploying Counter contract to X3 Chain...");
   
   // Get the contract factory
   const Counter = await ethers.getContractFactory("Counter");
@@ -293,16 +293,16 @@ interactWithCounter()
 # Compile the contract
 npx hardhat compile
 
-# Deploy to Atlas Sphere
-npx hardhat run scripts/deploy.ts --network atlas
+# Deploy to X3 Chain
+npx hardhat run scripts/deploy.ts --network x3
 
 # Interact with the deployed contract
-npx hardhat run scripts/interact.ts --network atlas
+npx hardhat run scripts/interact.ts --network x3
 ```
 
 **Expected output:**
 ```
-🚀 Deploying Counter contract to Atlas Sphere...
+🚀 Deploying Counter contract to X3 Chain...
 📡 Sending deployment transaction...
 ✅ Counter contract deployed to: 0x1234567890abcdef1234567890abcdef12345678
 📊 Owner address: 0x742d35Cc6BF4e8B5e2C1C7d1A3E9c4F8d5A2B1C3
@@ -427,14 +427,14 @@ describe("Counter Contract", function () {
 
 Run tests:
 ```bash
-npx hardhat test --network atlas
+npx hardhat test --network x3
 ```
 
-## Step 8: Verify Contract on Atlas Sphere
+## Step 8: Verify Contract on X3 Chain
 
 ```bash
-# Verify contract (if Atlas Sphere has a block explorer with verification)
-npx hardhat verify --network atlas CONTRACT_ADDRESS
+# Verify contract (if X3 Chain has a block explorer with verification)
+npx hardhat verify --network x3 CONTRACT_ADDRESS
 ```
 
 **Why this matters**: Contract verification allows others to inspect your contract code and interact with it safely through the block explorer interface.
@@ -490,8 +490,8 @@ curl -X POST http://localhost:9933 \
 # Check block explorer for confirmed transactions
 ```
 
-**Why this matters**: Understanding these common issues will help you debug deployment problems and ensure your contracts work reliably on Atlas Sphere.
+**Why this matters**: Understanding these common issues will help you debug deployment problems and ensure your contracts work reliably on X3 Chain.
 
 ---
 
-*This tutorial demonstrates Atlas Sphere's full EVM compatibility. For advanced features like cross-VM calls, see our [Cross-VM Atomic Operations](/docs/tutorials/cross-vm-atomic.md) guide.*
+*This tutorial demonstrates X3 Chain's full EVM compatibility. For advanced features like cross-VM calls, see our [Cross-VM Atomic Operations](/docs/tutorials/cross-vm-atomic.md) guide.*

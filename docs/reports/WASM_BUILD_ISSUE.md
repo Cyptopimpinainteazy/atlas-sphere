@@ -14,7 +14,7 @@ Additionally, `getrandom` v0.3.4 was being pulled by `ahash` v0.8.12 and `tempfi
 ## Solution Implemented ✅
 
 ### 1. Fixed getrandom 0.3.4 Issue
-**In `/home/lojak/Desktop/atlas-sphere/Cargo.toml`:**
+**In `/home/lojak/Desktop/x3-chain/Cargo.toml`:**
 ```toml
 # Force older versions that use getrandom 0.2 instead of 0.3
 tempfile = "=3.8.1"  # Last version using getrandom 0.2
@@ -28,7 +28,7 @@ cargo update -p tempfile:3.23.0 --precise 3.8.1
 ```
 
 ### 2. Implemented SKIP_WASM_BUILD Workaround
-**Modified `/home/lojak/Desktop/atlas-sphere/runtime/build.rs`:**
+**Modified `/home/lojak/Desktop/x3-chain/runtime/build.rs`:**
 ```rust
 fn main() {
     use std::env;
@@ -49,12 +49,12 @@ fn main() {
         .export_heap_base()
         .import_memory()
         .enable_feature("disable-runtime-api")
-        .set_file_name("atlas_sphere_runtime.wasm")
+        .set_file_name("x3_chain_runtime.wasm")
         .build();
 }
 ```
 
-**Added feature flag in `/home/lojak/Desktop/atlas-sphere/runtime/Cargo.toml`:**
+**Added feature flag in `/home/lojak/Desktop/x3-chain/runtime/Cargo.toml`:**
 ```toml
 disable-runtime-api = []
 ```
@@ -68,7 +68,7 @@ SKIP_WASM_BUILD=1 cargo build --release
 
 ### Binary Details
 - **Size**: 52MB
-- **Location**: `target/release/atlas-sphere-node`
+- **Location**: `target/release/x3-chain-node`
 - **Type**: ELF 64-bit LSB pie executable
 - **Build Time**: ~35 seconds (incremental)
 
@@ -124,7 +124,7 @@ When stable:
 SKIP_WASM_BUILD=1 cargo build --release
 
 # Run dev node (single validator, local testnet)
-./target/release/atlas-sphere-node --dev --tmp
+./target/release/x3-chain-node --dev --tmp
 ```
 
 ### Multi-Node Local Test (Genesis Chain)
@@ -133,15 +133,15 @@ SKIP_WASM_BUILD=1 cargo build --release
 SKIP_WASM_BUILD=1 cargo build --release
 
 # Validator 1
-./target/release/atlas-sphere-node \
-  --chain deployment/chain-specs/atlas-testnet-raw.json \
+./target/release/x3-chain-node \
+  --chain deployment/chain-specs/x3-testnet-raw.json \
   --validator --name validator-01 \
   --base-path /tmp/validator-01 \
   --port 30333 --rpc-port 9944
 
 # Validator 2 (separate terminal)
-./target/release/atlas-sphere-node \
-  --chain deployment/chain-specs/atlas-testnet-raw.json \
+./target/release/x3-chain-node \
+  --chain deployment/chain-specs/x3-testnet-raw.json \
   --validator --name validator-02 \
   --base-path /tmp/validator-02 \
   --port 30334 --rpc-port 9945 \

@@ -1,15 +1,15 @@
 #!/bin/bash
-# Atlas Sphere Testnet v1 - Infrastructure Setup Script
+# X3 Chain Testnet v1 - Infrastructure Setup Script
 # Day -2: Provision infrastructure (VMs, DNS)
 
 set -e
 
-echo "🚀 Atlas Sphere Testnet v1 - Infrastructure Setup"
+echo "🚀 X3 Chain Testnet v1 - Infrastructure Setup"
 echo "=================================================="
 echo ""
 
 # Configuration
-PROJECT_NAME="atlas-testnet"
+PROJECT_NAME="x3-testnet"
 REGION="${REGION:-us-west-2}"  # Change to your preferred region
 VM_PROVIDER="${VM_PROVIDER:-local}"  # Options: local, digitalocean, aws, gcp
 
@@ -20,7 +20,7 @@ BOOTNODE_SIZE="2GB RAM, 1 vCPU, 20GB SSD"
 MONITOR_SIZE="4GB RAM, 2 vCPU, 50GB SSD"
 
 # DNS Configuration (update with your domain)
-DOMAIN="${DOMAIN:-testnet.atlas-sphere.io}"
+DOMAIN="${DOMAIN:-testnet.x3-chain.io}"
 DNS_PROVIDER="${DNS_PROVIDER:-cloudflare}"  # Options: cloudflare, route53, manual
 
 echo "Configuration:"
@@ -41,9 +41,9 @@ echo "✅ SSH client available"
 # Step 2: Generate SSH key for deployment (if not exists)
 echo ""
 echo "🔑 Step 2/5: Setting up SSH keys..."
-SSH_KEY="$HOME/.ssh/atlas-testnet-deploy"
+SSH_KEY="$HOME/.ssh/x3-testnet-deploy"
 if [ ! -f "$SSH_KEY" ]; then
-    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "atlas-testnet-deploy"
+    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "x3-testnet-deploy"
     echo "✅ Generated new SSH key: $SSH_KEY"
 else
     echo "✅ SSH key already exists: $SSH_KEY"
@@ -56,50 +56,50 @@ INVENTORY_FILE="deployment/inventory.yaml"
 mkdir -p deployment
 
 cat > "$INVENTORY_FILE" << 'EOF'
-# Atlas Sphere Testnet v1 - Infrastructure Inventory
+# X3 Chain Testnet v1 - Infrastructure Inventory
 # Update with actual IPs/hostnames after provisioning VMs
 
 validators:
   - name: validator-01
     ip: 10.0.1.10  # UPDATE THIS
     public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: atlas
+    ssh_user: x3
     specs: 4GB RAM, 2 vCPU, 50GB SSD
   - name: validator-02
     ip: 10.0.1.11  # UPDATE THIS
     public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: atlas
+    ssh_user: x3
     specs: 4GB RAM, 2 vCPU, 50GB SSD
   - name: validator-03
     ip: 10.0.1.12  # UPDATE THIS
     public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: atlas
+    ssh_user: x3
     specs: 4GB RAM, 2 vCPU, 50GB SSD
 
 rpc_nodes:
   - name: rpc-01
     ip: 10.0.2.10  # UPDATE THIS
     public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: atlas
+    ssh_user: x3
     specs: 8GB RAM, 4 vCPU, 100GB SSD
   - name: rpc-02
     ip: 10.0.2.11  # UPDATE THIS
     public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: atlas
+    ssh_user: x3
     specs: 8GB RAM, 4 vCPU, 100GB SSD
 
 bootnode:
   name: bootnode-01
   ip: 10.0.3.10  # UPDATE THIS
   public_ip: x.x.x.x  # UPDATE THIS
-  ssh_user: atlas
+  ssh_user: x3
   specs: 2GB RAM, 1 vCPU, 20GB SSD
 
 monitoring:
   name: monitoring-01
   ip: 10.0.4.10  # UPDATE THIS
   public_ip: x.x.x.x  # UPDATE THIS
-  ssh_user: atlas
+  ssh_user: x3
   specs: 4GB RAM, 2 vCPU, 50GB SSD
   services:
     - prometheus (port 9090)
@@ -151,7 +151,7 @@ echo "📚 Step 4/5: Creating provider-specific guides..."
 # DigitalOcean guide
 cat > "deployment/provision-digitalocean.sh" << 'EOF'
 #!/bin/bash
-# DigitalOcean VM Provisioning for Atlas Sphere Testnet
+# DigitalOcean VM Provisioning for X3 Chain Testnet
 
 # Prerequisites: Install doctl (DigitalOcean CLI)
 # https://docs.digitalocean.com/reference/doctl/how-to/install/
@@ -162,14 +162,14 @@ set -e
 REGION="nyc3"  # Change to your preferred region
 SSH_KEY_ID="your-ssh-key-id"  # Get from: doctl compute ssh-key list
 IMAGE="ubuntu-22-04-x64"
-TAG="atlas-testnet"
+TAG="x3-testnet"
 
 echo "🌊 Provisioning VMs on DigitalOcean..."
 
 # Create validators
 for i in {1..3}; do
     echo "Creating validator-0$i..."
-    doctl compute droplet create "atlas-validator-0$i" \
+    doctl compute droplet create "x3-validator-0$i" \
         --region "$REGION" \
         --size "s-2vcpu-4gb" \
         --image "$IMAGE" \
@@ -181,7 +181,7 @@ done
 # Create RPC nodes
 for i in {1..2}; do
     echo "Creating rpc-0$i..."
-    doctl compute droplet create "atlas-rpc-0$i" \
+    doctl compute droplet create "x3-rpc-0$i" \
         --region "$REGION" \
         --size "s-4vcpu-8gb" \
         --image "$IMAGE" \
@@ -192,7 +192,7 @@ done
 
 # Create bootnode
 echo "Creating bootnode..."
-doctl compute droplet create "atlas-bootnode-01" \
+doctl compute droplet create "x3-bootnode-01" \
     --region "$REGION" \
     --size "s-1vcpu-2gb" \
     --image "$IMAGE" \
@@ -202,7 +202,7 @@ doctl compute droplet create "atlas-bootnode-01" \
 
 # Create monitoring server
 echo "Creating monitoring server..."
-doctl compute droplet create "atlas-monitoring-01" \
+doctl compute droplet create "x3-monitoring-01" \
     --region "$REGION" \
     --size "s-2vcpu-4gb" \
     --image "$IMAGE" \
@@ -222,7 +222,7 @@ echo "✅ Created: deployment/provision-digitalocean.sh"
 
 # AWS guide
 cat > "deployment/provision-aws.md" << 'EOF'
-# AWS EC2 VM Provisioning for Atlas Sphere Testnet
+# AWS EC2 VM Provisioning for X3 Chain Testnet
 
 ## Prerequisites
 - AWS CLI installed: `aws --version`
@@ -240,19 +240,19 @@ cat > "deployment/provision-aws.md" << 'EOF'
 ```bash
 # Create security group
 aws ec2 create-security-group \
-    --group-name atlas-testnet \
-    --description "Atlas Sphere Testnet security group"
+    --group-name x3-testnet \
+    --description "X3 Chain Testnet security group"
 
 # Allow P2P (port 30333)
 aws ec2 authorize-security-group-ingress \
-    --group-name atlas-testnet \
+    --group-name x3-testnet \
     --protocol tcp \
     --port 30333 \
     --cidr 0.0.0.0/0
 
 # Allow SSH (port 22) - restrict to your IP!
 aws ec2 authorize-security-group-ingress \
-    --group-name atlas-testnet \
+    --group-name x3-testnet \
     --protocol tcp \
     --port 22 \
     --cidr YOUR_IP/32
@@ -265,33 +265,33 @@ aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.medium \
     --key-name your-key-pair \
-    --security-groups atlas-testnet \
+    --security-groups x3-testnet \
     --count 3 \
-    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=atlas-validator},{Key=Project,Value=atlas-testnet}]'
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=x3-validator},{Key=Project,Value=x3-testnet}]'
 
 # Launch RPC nodes (repeat 2 times)
 aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.large \
     --key-name your-key-pair \
-    --security-groups atlas-testnet \
+    --security-groups x3-testnet \
     --count 2 \
-    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=atlas-rpc},{Key=Project,Value=atlas-testnet}]'
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=x3-rpc},{Key=Project,Value=x3-testnet}]'
 
 # Launch bootnode
 aws ec2 run-instances \
     --image-id ami-0c55b159cbfafe1f0 \
     --instance-type t3.small \
     --key-name your-key-pair \
-    --security-groups atlas-testnet \
+    --security-groups x3-testnet \
     --count 1 \
-    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=atlas-bootnode},{Key=Project,Value=atlas-testnet}]'
+    --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=x3-bootnode},{Key=Project,Value=x3-testnet}]'
 ```
 
 ### 3. Get IP Addresses
 ```bash
 aws ec2 describe-instances \
-    --filters "Name=tag:Project,Values=atlas-testnet" \
+    --filters "Name=tag:Project,Values=x3-testnet" \
     --query 'Reservations[*].Instances[*].[Tags[?Key==`Name`].Value|[0],PublicIpAddress,PrivateIpAddress]' \
     --output table
 ```
@@ -302,7 +302,7 @@ echo "✅ Created: deployment/provision-aws.md"
 
 # Local/Manual guide
 cat > "deployment/provision-manual.md" << 'EOF'
-# Manual VM Provisioning for Atlas Sphere Testnet
+# Manual VM Provisioning for X3 Chain Testnet
 
 ## If using VPS provider (Hetzner, Linode, Vultr, etc.)
 
@@ -342,7 +342,7 @@ cat > "deployment/provision-manual.md" << 'EOF'
 Using your provider's web interface or CLI:
 - Create VMs with specs above
 - Use Ubuntu 22.04 LTS
-- Add your SSH public key (`~/.ssh/atlas-testnet-deploy.pub`)
+- Add your SSH public key (`~/.ssh/x3-testnet-deploy.pub`)
 
 ### 2. Record IP Addresses
 Get public and private IPs for each VM and update `deployment/inventory.yaml`
@@ -350,10 +350,10 @@ Get public and private IPs for each VM and update `deployment/inventory.yaml`
 ### 3. Test SSH Access
 ```bash
 # Test each VM
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@VALIDATOR_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@RPC_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@BOOTNODE_IP
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@MONITORING_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@VALIDATOR_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@RPC_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@BOOTNODE_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@MONITORING_IP
 ```
 
 ### 4. Basic Server Hardening
@@ -408,7 +408,7 @@ echo ""
 echo "🌐 Step 5/5: Creating DNS configuration..."
 
 cat > "deployment/dns-config.md" << 'EOF'
-# DNS Configuration for Atlas Sphere Testnet
+# DNS Configuration for X3 Chain Testnet
 
 ## Required DNS Records
 
@@ -416,11 +416,11 @@ After provisioning VMs, create these DNS records in your DNS provider:
 
 ### A Records
 ```
-rpc.testnet.atlas-sphere.io      → RPC_LOAD_BALANCER_IP
-rpc2.testnet.atlas-sphere.io     → BACKUP_RPC_IP
-bootnode.testnet.atlas-sphere.io → BOOTNODE_IP
-faucet.testnet.atlas-sphere.io   → FAUCET_SERVER_IP
-metrics.testnet.atlas-sphere.io  → GRAFANA_IP
+rpc.testnet.x3-chain.io      → RPC_LOAD_BALANCER_IP
+rpc2.testnet.x3-chain.io     → BACKUP_RPC_IP
+bootnode.testnet.x3-chain.io → BOOTNODE_IP
+faucet.testnet.x3-chain.io   → FAUCET_SERVER_IP
+metrics.testnet.x3-chain.io  → GRAFANA_IP
 ```
 
 ## Provider-Specific Guides
@@ -439,7 +439,7 @@ metrics.testnet.atlas-sphere.io  → GRAFANA_IP
 ### AWS Route53
 ```bash
 # Create hosted zone (if not exists)
-aws route53 create-hosted-zone --name testnet.atlas-sphere.io --caller-reference $(date +%s)
+aws route53 create-hosted-zone --name testnet.x3-chain.io --caller-reference $(date +%s)
 
 # Add A records
 aws route53 change-resource-record-sets \
@@ -454,7 +454,7 @@ aws route53 change-resource-record-sets \
     {
       "Action": "CREATE",
       "ResourceRecordSet": {
-        "Name": "rpc.testnet.atlas-sphere.io",
+        "Name": "rpc.testnet.x3-chain.io",
         "Type": "A",
         "TTL": 300,
         "ResourceRecords": [{"Value": "x.x.x.x"}]
@@ -474,8 +474,8 @@ aws route53 change-resource-record-sets \
 ## Verify DNS
 ```bash
 # Check DNS resolution
-dig rpc.testnet.atlas-sphere.io
-dig bootnode.testnet.atlas-sphere.io
+dig rpc.testnet.x3-chain.io
+dig bootnode.testnet.x3-chain.io
 
 # Should return the IPs you configured
 ```
@@ -485,7 +485,7 @@ echo "✅ Created: deployment/dns-config.md"
 # Create firewall configuration script
 cat > "deployment/configure-firewall.sh" << 'EOF'
 #!/bin/bash
-# Configure firewall on Atlas Sphere testnet nodes
+# Configure firewall on X3 Chain testnet nodes
 
 set -e
 
@@ -506,7 +506,7 @@ sudo ufw default allow outgoing
 sudo ufw allow from "$ADMIN_IP" to any port 22 proto tcp
 
 # Common: P2P port for all nodes
-sudo ufw allow 30333/tcp comment 'Atlas P2P'
+sudo ufw allow 30333/tcp comment 'X3 P2P'
 
 # Node-type specific rules
 case "$NODE_TYPE" in
@@ -516,7 +516,7 @@ case "$NODE_TYPE" in
         ;;
     rpc)
         echo "RPC Node: Opening public RPC port"
-        sudo ufw allow 9944/tcp comment 'Atlas RPC'
+        sudo ufw allow 9944/tcp comment 'X3 RPC'
         ;;
     bootnode)
         echo "Bootnode: P2P only (already configured)"
@@ -569,7 +569,7 @@ echo ""
 echo "3. Configure DNS records using deployment/dns-config.md"
 echo ""
 echo "4. Run firewall setup on each node:"
-echo "   ssh atlas@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator"
+echo "   ssh x3@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator"
 echo ""
 echo "5. Proceed to Day -1: Build binary and generate keys"
 echo ""

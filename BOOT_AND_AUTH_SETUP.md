@@ -1,4 +1,4 @@
-# 🦾 Atlas Sphere - Boot & Authentication Setup
+# 🦾 X3 Chain - Boot & Authentication Setup
 
 ## Quick Start - Start "The Beast"
 
@@ -15,7 +15,7 @@ That's it! Both services will start with:
 
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 **⚠️ IMPORTANT: Change these in production!** (Edit `.env.production`)
@@ -24,7 +24,7 @@ Password: atlas-sphere-2026
 
 Add to your shell (`~/.bashrc` or `~/.zshrc`):
 ```bash
-source /path/to/atlas-sphere/atlas-boot-config.sh
+source /path/to/x3-chain/x3-boot-config.sh
 ```
 
 Then use:
@@ -87,7 +87,7 @@ python -m cross_chain_gpu_validator.cli serve --host 0.0.0.0 --port 8000
 ## 4. File Structure
 
 ```
-atlas-sphere/
+x3-chain/
 ├── scripts/
 │   ├── start-beast.sh              # Manual startup script
 │   ├── stop-beast.sh               # Manual stop script
@@ -98,7 +98,7 @@ atlas-sphere/
 │   └── ccgv-validator.service      # Systemd config
 │
 ├── .env.production                 # Environment configuration
-├── atlas-boot-config.sh            # Shell aliases & functions
+├── x3-boot-config.sh            # Shell aliases & functions
 │
 ├── apps/x3-intelligence/
 │   └── src/
@@ -130,7 +130,7 @@ GET    /api/dashboard       # Protected endpoint (requires auth)
 ```bash
 curl -X POST http://localhost:5173/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"atlas-sphere-2026"}'
+  -d '{"username":"admin","password":"x3-chain-2026"}'
 ```
 
 Response:
@@ -241,7 +241,7 @@ sudo journalctl -u x3-intelligence -u ccgv-validator -f
 
 After first boot:
 1. ✅ Access dashboard: http://localhost:5173
-2. ✅ Login with admin/atlas-sphere-2026
+2. ✅ Login with admin/x3-chain-2026
 3. ✅ Change password (in production)
 4. ✅ Enable auto-start: `sudo bash scripts/setup-autostart.sh`
 5. ✅ Test RPC endpoints

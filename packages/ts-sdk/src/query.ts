@@ -1,5 +1,5 @@
 /**
- * QueryClient - Specialized client for querying Atlas Sphere state
+ * QueryClient - Specialized client for querying X3 Chain state
  *
  * Provides efficient read-only access to blockchain state with caching.
  */
@@ -63,7 +63,7 @@ interface CacheEntry<T> {
 // =============================================================================
 
 /**
- * Specialized client for querying Atlas Sphere state
+ * Specialized client for querying X3 Chain state
  *
  * @example
  * ```typescript

@@ -274,11 +274,11 @@ Periodic health verification:
 curl -s http://localhost:8000/health | jq .
 
 # Query database
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit \
   -c "SELECT COUNT(*) FROM jury_sessions;"
 
 # Query audit logs
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit \
   -c "SELECT COUNT(*) FROM audit_logs;"
 ```
 
@@ -297,7 +297,7 @@ docker-compose ps
 
 **2. Verify Schema**
 ```bash
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "\dt"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "\dt"
 # Expected: 4 tables (audit_logs, jury_sessions, jury_votes, audit_log_seals)
 ```
 
@@ -396,7 +396,7 @@ curl http://localhost:9090/api/v1/query_range \
   &start=... &end=... &step=60s | jq .
 
 # Export database audit logs
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit \
   -c "SELECT * FROM audit_logs ORDER BY timestamp;" \
   >> audit-logs-export.csv
 ```

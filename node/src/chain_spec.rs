@@ -1,13 +1,10 @@
-use atlas_sphere_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GrandpaConfig, RuntimeGenesisConfig, Signature,
-    SystemConfig, WASM_BINARY,
+use x3_chain_runtime::{
+    x3_kernel_default_assets, AccountId, AtlasKernelConfig, AuraConfig, BalancesConfig,
+    GrandpaConfig, RuntimeGenesisConfig, Signature, SystemConfig, WASM_BINARY,
 };
 use parity_scale_codec::Encode;
-use sc_chain_spec::Properties;
-use sc_network::config::MultiaddrWithPeerId;
 use sc_service::GenericChainSpec;
 use sc_service::{ChainSpec as ServiceChainSpec, ChainType};
-use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{sr25519, Pair, Public};
@@ -17,9 +14,9 @@ use std::{collections::BTreeSet, path::PathBuf};
 /// Chain specification specialized to this runtime's genesis configuration.
 pub type ChainSpec = GenericChainSpec<RuntimeGenesisConfig>;
 
-const DEFAULT_PROTOCOL_ID: &str = "atlas";
-const ATLAS: u128 = 1_000_000_000_000;
-const ENDOWMENT: u128 = 1_000_000 * ATLAS;
+const DEFAULT_PROTOCOL_ID: &str = "x3";
+const X3: u128 = 1_000_000_000_000;
+const ENDOWMENT: u128 = 1_000_000 * X3;
 
 type AccountPublic = <Signature as Verify>::Signer;
 
@@ -53,11 +50,11 @@ pub fn development_config() -> Result<ChainSpec, String> {
     ];
 
     Ok(ChainSpec::from_genesis(
-        "Atlas Sphere Development",
-        "atlas_sphere_dev",
+        "X3 Chain Development",
+        "x3_chain_dev",
         ChainType::Development,
         move || {
-            atlas_sphere_genesis(
+            x3_chain_genesis(
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
@@ -91,11 +88,11 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ];
 
     Ok(ChainSpec::from_genesis(
-        "Atlas Sphere Local Testnet",
-        "atlas_sphere_local",
+        "X3 Chain Local Testnet",
+        "x3_chain_local",
         ChainType::Local,
         move || {
-            atlas_sphere_genesis(
+            x3_chain_genesis(
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
@@ -116,7 +113,7 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     // Keep the strict check here so that any missing or invalid blob fails
     // fast during chain spec construction.
     let wasm_binary =
-        WASM_BINARY.ok_or_else(|| "Atlas Sphere WASM binary not available".to_string())?;
+        WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available".to_string())?;
     let initial_authorities = vec![
         authority_keys_from_seed("AtlasAlpha"),
         authority_keys_from_seed("AtlasBeta"),
@@ -129,11 +126,11 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     ];
 
     Ok(ChainSpec::from_genesis(
-        "Atlas Sphere Staging",
-        "atlas_sphere_staging",
+        "X3 Chain Staging",
+        "x3_chain_staging",
         ChainType::Live,
         move || {
-            atlas_sphere_genesis(
+            x3_chain_genesis(
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
@@ -148,7 +145,7 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     ))
 }
 
-fn atlas_sphere_genesis(
+fn x3_chain_genesis(
     wasm_binary: &[u8],
     initial_authorities: Vec<(AuraId, GrandpaId)>,
     endowed_accounts: Vec<AccountId>,
@@ -193,6 +190,9 @@ fn atlas_sphere_genesis(
             authorities: grandpa_authorities,
             _config: Default::default(),
         },
+        x3_kernel: AtlasKernelConfig {
+            assets: x3_kernel_default_assets(),
+        },
         transaction_payment: Default::default(),
         council: Default::default(),
         evm: Default::default(),
@@ -202,18 +202,10 @@ fn atlas_sphere_genesis(
         x3_verifier: Default::default(),
         depin_marketplace: Default::default(),
         private_execution: Default::default(),
-        #[cfg(feature = "dev")]
-        sudo: Default::default(),
     }
 }
 
-fn default_properties() -> Properties {
-    let mut properties = Properties::new();
-    properties.insert("tokenSymbol".into(), "ATLAS".into());
-    properties.insert("tokenDecimals".into(), 12.into());
-    properties.insert("ss58Format".into(), 42.into());
-    properties
-}
+
 
 fn authority_keys_from_seed(seed: &str) -> (AuraId, GrandpaId) {
     (

@@ -146,7 +146,7 @@ ollama run codellama:7b "Explain blockchain arbitrage"
 
 ---
 
-## 🔧 **Integration with Atlas Sphere:**
+## 🔧 **Integration with X3 Chain:**
 
 ### **For Blockchain Development:**
 ```bash

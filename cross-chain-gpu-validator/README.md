@@ -28,6 +28,28 @@ ccgv --help
 - `deployment/` deployment scripts and configs
 - `docs/` architecture and operational docs
 
+## All-Chains TPS Benchmarks
+
+Generate max TPS benchmarks for all configured chains and feed them to the dashboard:
+
+```bash
+cd cross-chain-gpu-validator
+./.venv/bin/python scripts/benchmark_all_chains_tps.py \
+  --output benchmarks/all_chains_tps.json \
+  --levels 25000,100000 \
+  --our-chain-id solana
+```
+
+The dashboard reads `benchmarks/all_chains_tps.json` from:
+
+- `GET /chain-benchmarks.json` (served by `ccgv dashboard`)
+
+This powers:
+
+- `Our Chain Max TPS`
+- `Global Max TPS`
+- `Chain TPS Rankings` (top benchmarked chains)
+
 ## Crypto Notes
 
 - secp256k1 GPU path uses an MIT-licensed ECC helper in `third_party/`.

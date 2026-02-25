@@ -10,7 +10,7 @@ import "../src/core/PoolConfigurator.sol";
 
 /**
  * @title DeployLendingProtocol
- * @notice Deployment script for Atlas Sphere Lending Protocol
+ * @notice Deployment script for X3 Chain Lending Protocol
  *
  * Deployment order:
  * 1. OracleRouter (price feeds)
@@ -132,11 +132,11 @@ contract ConfigureReserves is Script {
                     underlying: usdc,
                     treasury: treasuryAddr,
                     incentivesController: address(0),
-                    aTokenName: "Atlas USDC",
+                    aTokenName: "X3 USDC",
                     aTokenSymbol: "aUSDC",
-                    variableDebtTokenName: "Atlas Variable Debt USDC",
+                    variableDebtTokenName: "X3 Variable Debt USDC",
                     variableDebtTokenSymbol: "vdUSDC",
-                    stableDebtTokenName: "Atlas Stable Debt USDC",
+                    stableDebtTokenName: "X3 Stable Debt USDC",
                     stableDebtTokenSymbol: "sdUSDC",
                     ltv: 8000, // 80%
                     liquidationThreshold: 8500, // 85%
@@ -158,11 +158,11 @@ contract ConfigureReserves is Script {
                     underlying: weth,
                     treasury: treasuryAddr,
                     incentivesController: address(0),
-                    aTokenName: "Atlas WETH",
+                    aTokenName: "X3 WETH",
                     aTokenSymbol: "aWETH",
-                    variableDebtTokenName: "Atlas Variable Debt WETH",
+                    variableDebtTokenName: "X3 Variable Debt WETH",
                     variableDebtTokenSymbol: "vdWETH",
-                    stableDebtTokenName: "Atlas Stable Debt WETH",
+                    stableDebtTokenName: "X3 Stable Debt WETH",
                     stableDebtTokenSymbol: "sdWETH",
                     ltv: 8000,
                     liquidationThreshold: 8250,
@@ -184,11 +184,11 @@ contract ConfigureReserves is Script {
                     underlying: wbtc,
                     treasury: treasuryAddr,
                     incentivesController: address(0),
-                    aTokenName: "Atlas WBTC",
+                    aTokenName: "X3 WBTC",
                     aTokenSymbol: "aWBTC",
-                    variableDebtTokenName: "Atlas Variable Debt WBTC",
+                    variableDebtTokenName: "X3 Variable Debt WBTC",
                     variableDebtTokenSymbol: "vdWBTC",
-                    stableDebtTokenName: "Atlas Stable Debt WBTC",
+                    stableDebtTokenName: "X3 Stable Debt WBTC",
                     stableDebtTokenSymbol: "sdWBTC",
                     ltv: 7000,
                     liquidationThreshold: 7500,

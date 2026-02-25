@@ -1,5 +1,5 @@
 """
-Atlas Sphere CLI - Command-line interface for the SDK.
+X3 Chain CLI - Command-line interface for the SDK.
 """
 
 import typer
@@ -7,12 +7,12 @@ from rich.console import Console
 from rich.table import Table
 from typing import Optional
 
-from atlas_sphere_sdk import AtlasClient
-from atlas_sphere_sdk.types import AtlasError
+from x3_chain_sdk import AtlasClient
+from x3_chain_sdk.types import AtlasError
 
 app = typer.Typer(
-    name="atlas-sphere",
-    help="Atlas Sphere blockchain CLI",
+    name="x3-chain",
+    help="X3 Chain blockchain CLI",
     add_completion=False,
 )
 console = Console()

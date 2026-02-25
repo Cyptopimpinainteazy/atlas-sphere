@@ -1,24 +1,24 @@
 #!/bin/bash
-# Atlas Sphere Testnet v1 - Node Deployment
+# X3 Chain Testnet v1 - Node Deployment
 # Day 1: Deploy bootnode + validators
 
 set -e
 
-echo "🚀 Atlas Sphere Testnet v1 - Node Deployment (Day 1)"
+echo "🚀 X3 Chain Testnet v1 - Node Deployment (Day 1)"
 echo "===================================================="
 echo ""
 
 # Configuration
 DEPLOYMENT_DIR="$(pwd)/deployment"
-BINARY="$DEPLOYMENT_DIR/atlas-sphere-node"
-CHAIN_SPEC="$DEPLOYMENT_DIR/chain-specs/atlas-testnet-raw.json"
+BINARY="$DEPLOYMENT_DIR/x3-chain-node"
+CHAIN_SPEC="$DEPLOYMENT_DIR/chain-specs/x3-testnet-raw.json"
 KEYS_DIR="$DEPLOYMENT_DIR/keys"
 INVENTORY="$DEPLOYMENT_DIR/inventory.yaml"
 
 # Check prerequisites
 if [ ! -f "$BINARY" ]; then
     echo "❌ Binary not found: $BINARY"
-    echo "   Copy from target/release/atlas-sphere-node"
+    echo "   Copy from target/release/x3-chain-node"
     exit 1
 fi
 
@@ -37,8 +37,8 @@ echo "════════════════════════�
 echo ""
 
 read -p "Bootnode IP address: " BOOTNODE_IP
-read -p "Bootnode SSH user [atlas]: " BOOTNODE_USER
-BOOTNODE_USER=${BOOTNODE_USER:-atlas}
+read -p "Bootnode SSH user [x3]: " BOOTNODE_USER
+BOOTNODE_USER=${BOOTNODE_USER:-x3}
 
 echo ""
 echo "Deploying to bootnode ($BOOTNODE_USER@$BOOTNODE_IP)..."
@@ -49,27 +49,27 @@ cat > "$DEPLOYMENT_DIR/setup-bootnode.sh" << 'BOOTNODE_SCRIPT'
 set -e
 
 # Create user and directories
-sudo useradd -m -s /bin/bash atlas || true
-sudo mkdir -p /var/lib/atlas/{data,node-key}
-sudo chown -R atlas:atlas /var/lib/atlas
-sudo mkdir -p /etc/atlas
-sudo chown atlas:atlas /etc/atlas
+sudo useradd -m -s /bin/bash x3 || true
+sudo mkdir -p /var/lib/x3/{data,node-key}
+sudo chown -R x3:x3 /var/lib/x3
+sudo mkdir -p /etc/x3
+sudo chown x3:x3 /etc/x3
 
 # Install systemd service
-sudo tee /etc/systemd/system/atlas-bootnode.service > /dev/null << 'EOF'
+sudo tee /etc/systemd/system/x3-bootnode.service > /dev/null << 'EOF'
 [Unit]
-Description=Atlas Sphere Bootnode
+Description=X3 Chain Bootnode
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/var/lib/atlas
-ExecStart=/usr/local/bin/atlas-sphere-node \
-    --base-path /var/lib/atlas/data \
-    --chain /etc/atlas/atlas-testnet-raw.json \
-    --name "Atlas Bootnode" \
-    --node-key-file /var/lib/atlas/node-key \
+User=x3
+WorkingDirectory=/var/lib/x3
+ExecStart=/usr/local/bin/x3-chain-node \
+    --base-path /var/lib/x3/data \
+    --chain /etc/x3/x3-testnet-raw.json \
+    --name "X3 Bootnode" \
+    --node-key-file /var/lib/x3/node-key \
     --port 30333 \
     --prometheus-external \
     --prometheus-port 9615
@@ -87,41 +87,41 @@ BOOTNODE_SCRIPT
 # Deploy files
 echo "📦 Copying files to bootnode..."
 ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'bash -s' < "$DEPLOYMENT_DIR/setup-bootnode.sh"
-scp "$BINARY" "$BOOTNODE_USER@$BOOTNODE_IP:/tmp/atlas-sphere-node"
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo mv /tmp/atlas-sphere-node /usr/local/bin/ && sudo chmod +x /usr/local/bin/atlas-sphere-node'
-scp "$CHAIN_SPEC" "$BOOTNODE_USER@$BOOTNODE_IP:/tmp/atlas-testnet-raw.json"
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo mv /tmp/atlas-testnet-raw.json /etc/atlas/'
+scp "$BINARY" "$BOOTNODE_USER@$BOOTNODE_IP:/tmp/x3-chain-node"
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo mv /tmp/x3-chain-node /usr/local/bin/ && sudo chmod +x /usr/local/bin/x3-chain-node'
+scp "$CHAIN_SPEC" "$BOOTNODE_USER@$BOOTNODE_IP:/tmp/x3-testnet-raw.json"
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo mv /tmp/x3-testnet-raw.json /etc/x3/'
 
 # Copy bootnode key
 BOOTNODE_KEY=$(cat "$KEYS_DIR/bootnode-key.txt")
-echo "$BOOTNODE_KEY" | ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'cat > /tmp/node-key && sudo mv /tmp/node-key /var/lib/atlas/node-key && sudo chown atlas:atlas /var/lib/atlas/node-key'
+echo "$BOOTNODE_KEY" | ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'cat > /tmp/node-key && sudo mv /tmp/node-key /var/lib/x3/node-key && sudo chown x3:x3 /var/lib/x3/node-key'
 
 # Start bootnode
 echo "🚀 Starting bootnode..."
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo systemctl daemon-reload && sudo systemctl enable atlas-bootnode && sudo systemctl start atlas-bootnode'
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo systemctl daemon-reload && sudo systemctl enable x3-bootnode && sudo systemctl start x3-bootnode'
 
 sleep 5
 
 # Check status
 echo ""
 echo "📊 Bootnode status:"
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo systemctl status atlas-bootnode --no-pager -l'
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo systemctl status x3-bootnode --no-pager -l'
 
 echo ""
 echo "📝 Bootnode logs (last 20 lines):"
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u atlas-bootnode -n 20 --no-pager'
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u x3-bootnode -n 20 --no-pager'
 
 # Get peer ID
 echo ""
 echo "🔍 Extracting peer ID from logs..."
-PEER_ID=$(ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u atlas-bootnode | grep "Local node identity"' | grep -oP '12D3[A-Za-z0-9]+' | head -1)
+PEER_ID=$(ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u x3-bootnode | grep "Local node identity"' | grep -oP '12D3[A-Za-z0-9]+' | head -1)
 
 if [ -n "$PEER_ID" ]; then
     echo "✅ Bootnode Peer ID: $PEER_ID"
     echo ""
     echo "📋 Bootnode Multiaddr:"
     echo "  /ip4/$BOOTNODE_IP/tcp/30333/p2p/$PEER_ID"
-    echo "  /dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/$PEER_ID"
+    echo "  /dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/$PEER_ID"
     echo ""
     echo "⚠️  Update chain spec with this bootnode multiaddr!"
     echo "$PEER_ID" > "$DEPLOYMENT_DIR/bootnode-peer-id.txt"
@@ -146,8 +146,8 @@ for i in $(seq 1 $NUM_VALIDATORS); do
     echo "───────────────────────────────────────────────────"
     
     read -p "Validator $i IP address: " VALIDATOR_IP
-    read -p "Validator $i SSH user [atlas]: " VALIDATOR_USER
-    VALIDATOR_USER=${VALIDATOR_USER:-atlas}
+    read -p "Validator $i SSH user [x3]: " VALIDATOR_USER
+    VALIDATOR_USER=${VALIDATOR_USER:-x3}
     
     echo ""
     echo "Deploying to validator-0$i ($VALIDATOR_USER@$VALIDATOR_IP)..."
@@ -158,25 +158,25 @@ for i in $(seq 1 $NUM_VALIDATORS); do
 set -e
 
 # Create user and directories
-sudo useradd -m -s /bin/bash atlas || true
-sudo mkdir -p /var/lib/atlas/data
-sudo chown -R atlas:atlas /var/lib/atlas
-sudo mkdir -p /etc/atlas
-sudo chown atlas:atlas /etc/atlas
+sudo useradd -m -s /bin/bash x3 || true
+sudo mkdir -p /var/lib/x3/data
+sudo chown -R x3:x3 /var/lib/x3
+sudo mkdir -p /etc/x3
+sudo chown x3:x3 /etc/x3
 
 # Install systemd service
-sudo tee /etc/systemd/system/atlas-validator.service > /dev/null << 'EOF'
+sudo tee /etc/systemd/system/x3-validator.service > /dev/null << 'EOF'
 [Unit]
-Description=Atlas Sphere Validator
+Description=X3 Chain Validator
 After=network.target
 
 [Service]
 Type=simple
-User=atlas
-WorkingDirectory=/var/lib/atlas
-ExecStart=/usr/local/bin/atlas-sphere-node \
-    --base-path /var/lib/atlas/data \
-    --chain /etc/atlas/atlas-testnet-raw.json \
+User=x3
+WorkingDirectory=/var/lib/x3
+ExecStart=/usr/local/bin/x3-chain-node \
+    --base-path /var/lib/x3/data \
+    --chain /etc/x3/x3-testnet-raw.json \
     --validator \
     --name "VALIDATOR_NAME" \
     --port 30333 \
@@ -197,31 +197,31 @@ echo "✅ Validator systemd service created"
 VALIDATOR_SCRIPT
     
     # Update service with validator name and bootnode
-    VALIDATOR_NAME="Atlas-Validator-$(printf %02d $i)"
+    VALIDATOR_NAME="X3-Validator-$(printf %02d $i)"
     BOOTNODE_MULTIADDR="/ip4/$BOOTNODE_IP/tcp/30333/p2p/$PEER_ID"
     
     # Deploy files
     echo "📦 Copying files to validator-0$i..."
     ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'bash -s' < "$DEPLOYMENT_DIR/setup-validator.sh"
-    scp "$BINARY" "$VALIDATOR_USER@$VALIDATOR_IP:/tmp/atlas-sphere-node"
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo mv /tmp/atlas-sphere-node /usr/local/bin/ && sudo chmod +x /usr/local/bin/atlas-sphere-node'
-    scp "$CHAIN_SPEC" "$VALIDATOR_USER@$VALIDATOR_IP:/tmp/atlas-testnet-raw.json"
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo mv /tmp/atlas-testnet-raw.json /etc/atlas/'
+    scp "$BINARY" "$VALIDATOR_USER@$VALIDATOR_IP:/tmp/x3-chain-node"
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo mv /tmp/x3-chain-node /usr/local/bin/ && sudo chmod +x /usr/local/bin/x3-chain-node'
+    scp "$CHAIN_SPEC" "$VALIDATOR_USER@$VALIDATOR_IP:/tmp/x3-testnet-raw.json"
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo mv /tmp/x3-testnet-raw.json /etc/x3/'
     
     # Update systemd service with actual values
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" "sudo sed -i 's/VALIDATOR_NAME/$VALIDATOR_NAME/g' /etc/systemd/system/atlas-validator.service"
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" "sudo sed -i 's|BOOTNODE_MULTIADDR|$BOOTNODE_MULTIADDR|g' /etc/systemd/system/atlas-validator.service"
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" "sudo sed -i 's/VALIDATOR_NAME/$VALIDATOR_NAME/g' /etc/systemd/system/x3-validator.service"
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" "sudo sed -i 's|BOOTNODE_MULTIADDR|$BOOTNODE_MULTIADDR|g' /etc/systemd/system/x3-validator.service"
     
     # Start validator
     echo "🚀 Starting validator-0$i..."
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo systemctl daemon-reload && sudo systemctl enable atlas-validator && sudo systemctl start atlas-validator'
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo systemctl daemon-reload && sudo systemctl enable x3-validator && sudo systemctl start x3-validator'
     
     sleep 3
     
     # Check status
     echo ""
     echo "📊 Validator-0$i status:"
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo systemctl status atlas-validator --no-pager -l | head -20'
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo systemctl status x3-validator --no-pager -l | head -20'
     
     echo ""
     echo "⏳ Waiting 10 seconds before inserting keys..."
@@ -251,7 +251,7 @@ VALIDATOR_SCRIPT
     echo ""
     echo "🔍 Checking if keys loaded (from logs)..."
     sleep 3
-    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo journalctl -u atlas-validator -n 50 --no-pager | grep -i "key"' || true
+    ssh "$VALIDATOR_USER@$VALIDATOR_IP" 'sudo journalctl -u x3-validator -n 50 --no-pager | grep -i "key"' || true
     
     echo ""
     echo "✅ Validator-0$i deployment complete!"
@@ -270,12 +270,12 @@ sleep 30
 
 echo ""
 echo "🔍 Checking bootnode peer count..."
-ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u atlas-bootnode -n 20 --no-pager | grep -i "peer"' || echo "No peer info in logs yet"
+ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo journalctl -u x3-bootnode -n 20 --no-pager | grep -i "peer"' || echo "No peer info in logs yet"
 
 echo ""
 echo "🔍 Checking validator-01 for block production..."
 VALIDATOR_1_IP=$(echo "$VALIDATOR_IP" | head -1)  # Use first validator IP entered
-ssh "$VALIDATOR_USER@$VALIDATOR_1_IP" 'sudo journalctl -u atlas-validator -n 30 --no-pager | grep -E "(Imported|Finalized)"' || echo "No blocks produced yet"
+ssh "$VALIDATOR_USER@$VALIDATOR_1_IP" 'sudo journalctl -u x3-validator -n 30 --no-pager | grep -E "(Imported|Finalized)"' || echo "No blocks produced yet"
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
@@ -289,7 +289,7 @@ echo ""
 echo "🔍 Next steps:"
 echo ""
 echo "1. Monitor logs for block production:"
-echo "   ssh $VALIDATOR_USER@VALIDATOR_IP 'sudo journalctl -u atlas-validator -f'"
+echo "   ssh $VALIDATOR_USER@VALIDATOR_IP 'sudo journalctl -u x3-validator -f'"
 echo ""
 echo "2. Check network health:"
 echo "   curl http://VALIDATOR_IP:9944 -H 'Content-Type: application/json' \\"

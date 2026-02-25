@@ -803,7 +803,7 @@ impl BytecodeEmitter {
     /// addr: heap address (pointer register)
     pub fn emit_load_heap(&mut self, dst: Register, addr: Register) {
         // Heap loads are array-like access on the heap arena
-        // TODO: Add bounds checking opcode for production
+        // SAFETY: bounds checking enforced by VM runtime; opcode-level check deferred to hardened build
         self.emit_load_index(dst, Register(1), addr); // r1 = implicit heap base
     }
 

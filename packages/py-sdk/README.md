@@ -1,11 +1,11 @@
-# Atlas Sphere Python SDK
+# X3 Chain Python SDK
 
-A comprehensive Python SDK for interacting with the Atlas Sphere blockchain, featuring dual-VM execution (EVM + SVM) through the Atlas Kernel.
+A comprehensive Python SDK for interacting with the X3 Chain blockchain, featuring dual-VM execution (EVM + SVM) through the X3 Kernel.
 
 ## Installation
 
 ```bash
-pip install atlas-sphere-sdk
+pip install x3-chain-sdk
 ```
 
 Or install from source:
@@ -20,7 +20,7 @@ pip install -e ".[dev]"
 ### Connect to Node
 
 ```python
-from atlas_sphere_sdk import AtlasClient
+from x3_chain_sdk import AtlasClient
 
 # Using context manager (recommended)
 with AtlasClient("ws://localhost:9944") as client:
@@ -37,7 +37,7 @@ client.disconnect()
 ### Query Account Balance
 
 ```python
-from atlas_sphere_sdk import AtlasClient
+from x3_chain_sdk import AtlasClient
 
 with AtlasClient("ws://localhost:9944") as client:
     account = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
@@ -56,7 +56,7 @@ with AtlasClient("ws://localhost:9944") as client:
 ### Build and Submit Comit Transaction
 
 ```python
-from atlas_sphere_sdk import AtlasClient, ComitBuilder
+from x3_chain_sdk import AtlasClient, ComitBuilder
 from substrateinterface import Keypair
 
 # Create keypair
@@ -83,7 +83,7 @@ with AtlasClient("ws://localhost:9944") as client:
     )
     
     # Submit
-    from atlas_sphere_sdk.comit import submit_comit
+    from x3_chain_sdk.comit import submit_comit
     result = submit_comit(client, comit, keypair)
     
     print(f"Comit ID: {result.comit_id}")
@@ -94,8 +94,8 @@ with AtlasClient("ws://localhost:9944") as client:
 ### EVM-Specific Operations
 
 ```python
-from atlas_sphere_sdk import AtlasClient
-from atlas_sphere_sdk.evm import EvmClient
+from x3_chain_sdk import AtlasClient
+from x3_chain_sdk.evm import EvmClient
 
 with AtlasClient("ws://localhost:9944") as client:
     evm = EvmClient(client)
@@ -119,8 +119,8 @@ with AtlasClient("ws://localhost:9944") as client:
 ### SVM-Specific Operations
 
 ```python
-from atlas_sphere_sdk import AtlasClient
-from atlas_sphere_sdk.svm import SvmClient
+from x3_chain_sdk import AtlasClient
+from x3_chain_sdk.svm import SvmClient
 
 with AtlasClient("ws://localhost:9944") as client:
     svm = SvmClient(client)
@@ -139,7 +139,7 @@ with AtlasClient("ws://localhost:9944") as client:
 ### Subscribe to New Blocks
 
 ```python
-from atlas_sphere_sdk import AtlasClient
+from x3_chain_sdk import AtlasClient
 
 with AtlasClient("ws://localhost:9944") as client:
     def on_new_block(header):
@@ -155,22 +155,22 @@ with AtlasClient("ws://localhost:9944") as client:
 
 ```bash
 # Show chain info
-atlas-sphere info
+x3-chain info
 
 # Check account balance
-atlas-sphere balance 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+x3-chain balance 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 
 # Show block info
-atlas-sphere block 12345
+x3-chain block 12345
 
 # List authorities
-atlas-sphere authorities
+x3-chain authorities
 
 # Watch for new blocks
-atlas-sphere watch
+x3-chain watch
 
 # Watch finalized blocks
-atlas-sphere watch --finalized
+x3-chain watch --finalized
 ```
 
 ## API Reference

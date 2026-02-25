@@ -1,4 +1,4 @@
-//! Analytics Service for Atlas Sphere
+//! Analytics Service for X3 Chain
 //!
 //! Production-ready analytics backend with:
 //! - Event tracking (comit, wallet, error events)
@@ -79,7 +79,7 @@ async fn main() -> std::io::Result<()> {
     // Load configuration
     let config = ServiceConfig::default();
 
-    info!("Starting Atlas Sphere Analytics Service");
+    info!("Starting X3 Chain Analytics Service");
     info!(
         "Database: {}",
         config.database_url.split('@').last().unwrap_or("***")

@@ -2,9 +2,9 @@ name: e2e-collateral
 
 on:
   push:
-    branches: [ feat/arbitrage-bonding, ralph/atlas-sphere ]
+    branches: [ feat/arbitrage-bonding, ralph/x3-chain ]
   pull_request:
-    branches: [ main, ralph/atlas-sphere ]
+    branches: [ main, ralph/x3-chain ]
 
 jobs:
   e2e:

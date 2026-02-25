@@ -145,7 +145,7 @@ scripts/verify_jury_decision.sh
 
 ### Core Phase 5 System (Rust/Python/TypeScript)
 ```
-pallets/atlas-jury-anchor/src/lib.rs
+pallets/x3-jury-anchor/src/lib.rs
 ├─ Format: Rust (FRAME pallet)
 ├─ Lines: 500+
 ├─ Features: JuryDecisions storage, Events (3), Errors (5), Extrinsics (2)
@@ -221,7 +221,7 @@ PHASE5_QUICK_SHIPPING_GUIDE.md
 ## 🗂️ DIRECTORY STRUCTURE
 
 ```
-/home/lojak/Desktop/atlas-sphere-master/
+/home/lojak/Desktop/x3-chain-master/
 │
 ├── .github/workflows/
 │   └── phase5-ci-cd.yml                    ✅ (NEW - Session 2)
@@ -247,7 +247,7 @@ PHASE5_QUICK_SHIPPING_GUIDE.md
 │   ├── TEAM_COMMUNICATIONS.md               ✅ (NEW - Session 2)
 │   └── PRE_FLIGHT_CHECKLIST.md             ✅ (NEW - Session 2)
 │
-├── pallets/atlas-jury-anchor/src/
+├── pallets/x3-jury-anchor/src/
 │   └── lib.rs                               ✅ (Session 1)
 │
 ├── packages/blockchain-adapter/src/
@@ -310,7 +310,7 @@ test -x ./scripts/deploy-phase5.sh && echo "✓ Deploy script is executable"
 test -x ./scripts/verify_jury_decision.sh && echo "✓ Verify script is executable"
 
 # Core system compiles
-cd pallets/atlas-jury-anchor && cargo build --release 2>/dev/null && echo "✓ Pallet compiles" && cd ../../
+cd pallets/x3-jury-anchor && cargo build --release 2>/dev/null && echo "✓ Pallet compiles" && cd ../../
 
 # Tests pass
 pytest tests/test_jury_anchoring.py -q && echo "✓ All tests pass (13/13)"

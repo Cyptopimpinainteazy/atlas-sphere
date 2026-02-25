@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Phase 4.3 formalizes the jury governance system as a production-ready feature of Atlas Sphere. The change is archived, documented, and ready for operational deployment.
+Phase 4.3 formalizes the jury governance system as a production-ready feature of X3 Chain. The change is archived, documented, and ready for operational deployment.
 
 ---
 
@@ -206,19 +206,19 @@ curl http://localhost:8000/health
 curl http://localhost:9090/metrics
 
 # Database connection check
-docker exec atlas-jury-db psql -U jury_admin -c "SELECT version();"
+docker exec x3-jury-db psql -U jury_admin -c "SELECT version();"
 ```
 
 #### 2.3 Accessing the Database
 ```bash
 # Connect interactively
-docker exec -it atlas-jury-db psql -U jury_admin -d jury_audit
+docker exec -it x3-jury-db psql -U jury_admin -d jury_audit
 
 # Run query from file
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -f query.sql
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -f query.sql
 
 # Dump database (backup)
-docker exec atlas-jury-db pg_dump -U jury_admin jury_audit > backup.sql
+docker exec x3-jury-db pg_dump -U jury_admin jury_audit > backup.sql
 ```
 
 ---
@@ -296,13 +296,13 @@ curl http://localhost:8000/api/jury/session/<session_id>/status
 #### 4.1 Database Maintenance
 ```bash
 # Analyze tables for optimizations
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "ANALYZE;"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "ANALYZE;"
 
 # Vacuum to reclaim space
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "VACUUM ANALYZE;"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "VACUUM ANALYZE;"
 
 # Check index usage
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "
   SELECT schemaname, tablename, indexname, idx_scan
   FROM pg_stat_user_indexes
   ORDER BY idx_scan DESC;"
@@ -311,10 +311,10 @@ docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
 #### 4.2 Backup & Recovery
 ```bash
 # Create backup
-docker exec atlas-jury-db pg_dump -U jury_admin jury_audit > backup-$(date +%Y%m%d_%H%M%S).sql
+docker exec x3-jury-db pg_dump -U jury_admin jury_audit > backup-$(date +%Y%m%d_%H%M%S).sql
 
 # Test restore (on separate database)
-docker exec atlas-jury-db psql -U jury_admin -d jury_restore -f backup.sql
+docker exec x3-jury-db psql -U jury_admin -d jury_restore -f backup.sql
 
 # Point-in-time recovery (if PIT logging enabled)
 # See backup.sh script in archive/jury-governance-v1.0/ops/
@@ -346,7 +346,7 @@ docker-compose down
 docker-compose logs jury-service | tail -50
 
 # Check database connectivity
-docker exec atlas-jury-db psql -U jury_admin -c "SELECT 1"
+docker exec x3-jury-db psql -U jury_admin -c "SELECT 1"
 
 # Check port availability
 netstat -tulpn | grep 8000
@@ -367,11 +367,11 @@ docker-compose restart jury-db
 #### Issue: Vote Commitment Verification Failed
 ```bash
 # Query the database for the session
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "
   SELECT id, status, created_at FROM jury_sessions ORDER BY created_at DESC LIMIT 5;"
 
 # Check audit trail
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "
   SELECT event_type, event_data, created_at FROM audit_logs 
   WHERE session_id = '<session_id>' ORDER BY created_at;"
 ```
@@ -382,12 +382,12 @@ docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
 df -h
 
 # Archive old audit logs (manual)
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "
   INSERT INTO audit_log_archive 
   SELECT * FROM audit_logs WHERE created_at < NOW() - INTERVAL '90 days';"
 
 # Cleanup old entries
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "
   DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '90 days';"
 ```
 
@@ -537,7 +537,7 @@ mkdir -p archive/jury-governance-v1.0/{spec,impl,deploy,infra,ci-cd,docs,ops}
 cat > archive/jury-governance-v1.0/README.md << 'EOF'
 # Jury Governance System v1.0
 
-Production-ready jury voting system for Atlas Sphere governance.
+Production-ready jury voting system for X3 Chain governance.
 
 ## Quick Links
 - **Operations:** See RUNBOOK.md

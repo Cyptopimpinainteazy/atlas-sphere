@@ -1,4 +1,4 @@
-"""Unit tests for the Infenstructior resilience module.
+"""Unit tests for the Inferstructor resilience module.
 
 Tests cover:
   - Circuit breaker state transitions

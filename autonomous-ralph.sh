@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_DIR="/home/lojak/Desktop/atlas-sphere-master"
+PROJECT_DIR="/home/lojak/Desktop/x3-chain-master"
 LOG_DIR="${PROJECT_DIR}/ralph-logs"
 RALPH_LOG="${LOG_DIR}/autonomous-ralph.log"
 PID_FILE="${LOG_DIR}/ralph.pid"
@@ -66,9 +66,9 @@ start_ralph() {
         cd /home/lojak/ralph-ollama
         
         # Start each agent in background
-        RALPH_MODE=local ./start.sh atlas-sphere >> "$RALPH_LOG" 2>&1 &
-        RALPH_MODE=local ./start.sh atlas-defi >> "$RALPH_LOG" 2>&1 &
-        RALPH_MODE=local ./start.sh atlas-infra >> "$RALPH_LOG" 2>&1 &
+        RALPH_MODE=local ./start.sh x3-chain >> "$RALPH_LOG" 2>&1 &
+        RALPH_MODE=local ./start.sh x3-defi >> "$RALPH_LOG" 2>&1 &
+        RALPH_MODE=local ./start.sh x3-infra >> "$RALPH_LOG" 2>&1 &
         
         log_msg "Local Ralph agents started"
     fi

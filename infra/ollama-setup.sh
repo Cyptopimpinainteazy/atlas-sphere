@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Atlas Sphere - Ollama & OpenRouter Setup
+# X3 Chain - Ollama & OpenRouter Setup
 # This script sets up free local and remote models for DeepAgent
 
 echo "🚀 Setting up free AI models for DeepAgent..."

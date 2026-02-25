@@ -1,5 +1,5 @@
 /**
- * X3 Chain Integration for Atlas Sphere TS SDK
+ * X3 Chain Integration for X3 Chain TS SDK
  *
  * Extends the core SDK with x3-specific functionality:
  * - X3 Settlement Engine client

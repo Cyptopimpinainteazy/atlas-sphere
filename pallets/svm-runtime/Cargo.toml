@@ -2,10 +2,10 @@
 name = "pallet-svm"
 version = "0.1.0"
 edition = "2021"
-authors = ["Atlas Sphere Core Engineering <engineering@atlas-sphere.io>"]
+authors = ["X3 Chain Core Engineering <engineering@x3-chain.io>"]
 license = "Apache-2.0"
-description = "Solana Virtual Machine (SVM) pallet for Atlas Sphere - provides program deployment, account storage, and BPF execution"
-repository = "https://github.com/atlas-sphere/core"
+description = "Solana Virtual Machine (SVM) pallet for X3 Chain - provides program deployment, account storage, and BPF execution"
+repository = "https://github.com/x3-chain/core"
 
 [dependencies]
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive", "max-encoded-len"] }
@@ -21,7 +21,7 @@ sp-runtime = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 
 # SVM integration for BPF execution
-atlas-svm-integration = { path = "../../crates/svm-integration", default-features = false }
+x3-svm-integration = { path = "../../crates/svm-integration", default-features = false }
 
 [dev-dependencies]
 sp-core = { workspace = true, features = ["std"] }
@@ -41,7 +41,7 @@ std = [
     "sp-std/std",
     "sp-runtime/std",
     "sp-io/std",
-    "atlas-svm-integration/std",
+    "x3-svm-integration/std",
 ]
 runtime-benchmarks = [
     "frame-support/runtime-benchmarks",

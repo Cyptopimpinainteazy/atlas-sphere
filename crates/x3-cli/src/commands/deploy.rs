@@ -2,7 +2,7 @@
 
 use crate::error::{CliError, Result};
 use crate::project::Project;
-use atlas_sdk::{AtlasClient, ComitBuilder};
+use x3_sdk::{AtlasClient, ComitBuilder};
 use clap::Args;
 use colored::Colorize;
 
@@ -101,7 +101,7 @@ pub async fn execute(args: DeployArgs) -> Result<()> {
     let mut seed = [0u8; 32];
     seed.copy_from_slice(&seed_bytes);
 
-    let signer = atlas_sdk::Sr25519Signer::from_seed(&seed);
+    let signer = x3_sdk::Sr25519Signer::from_seed(&seed);
     let client = client.with_signer(signer);
 
     // Build deployment Comit

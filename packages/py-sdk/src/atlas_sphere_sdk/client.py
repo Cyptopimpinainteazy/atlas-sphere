@@ -1,5 +1,5 @@
 """
-Atlas Sphere Client - Main entry point for SDK interactions.
+X3 Chain Client - Main entry point for SDK interactions.
 """
 
 import asyncio
@@ -10,7 +10,7 @@ import hashlib
 from substrateinterface import SubstrateInterface, Keypair
 from websocket import create_connection, WebSocketApp
 
-from atlas_sphere_sdk.types import (
+from x3_chain_sdk.types import (
     AccountId,
     AssetId,
     Balance,
@@ -28,7 +28,7 @@ from atlas_sphere_sdk.types import (
 
 class AtlasClient:
     """
-    Main client for interacting with Atlas Sphere blockchain.
+    Main client for interacting with X3 Chain blockchain.
     
     Provides methods for querying chain state, submitting Comit transactions,
     and subscribing to real-time events via WebSocket.
@@ -46,10 +46,10 @@ class AtlasClient:
         keypair: Optional[Keypair] = None,
     ):
         """
-        Initialize Atlas client.
+        Initialize X3 client.
         
         Args:
-            url: WebSocket URL of the Atlas Sphere node
+            url: WebSocket URL of the X3 Chain node
             keypair: Optional keypair for signing transactions
         """
         self._url = url
@@ -61,7 +61,7 @@ class AtlasClient:
     
     def connect(self) -> "AtlasClient":
         """
-        Connect to the Atlas Sphere node.
+        Connect to the X3 Chain node.
         
         Returns:
             Self for method chaining
@@ -119,7 +119,7 @@ class AtlasClient:
         
         # Get runtime constants
         properties = substrate.properties or {}
-        token_symbol = properties.get("tokenSymbol", ["ATLAS"])[0]
+        token_symbol = properties.get("tokenSymbol", ["X3"])[0]
         token_decimals = properties.get("tokenDecimals", [12])[0]
         ss58_format = properties.get("ss58Format", 42)
         

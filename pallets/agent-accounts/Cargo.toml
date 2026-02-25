@@ -5,7 +5,7 @@ description = "X3Chain AI Agent Accounts - On-chain identities and permissions f
 authors = ["X3Chain Team"]
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/x3chain/atlas-sphere"
+repository = "https://github.com/x3chain/x3-chain"
 publish = false
 
 [package.metadata.docs.rs]

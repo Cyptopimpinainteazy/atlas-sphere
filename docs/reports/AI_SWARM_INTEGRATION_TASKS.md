@@ -29,7 +29,7 @@
 ## Technical Context
 - **API Provider**: OpenRouter
 - **Models**: Free tier models
-- **Target System**: Atlas Sphere AI Swarm
+- **Target System**: X3 Chain AI Swarm
 - **Current State**: Ready to begin integration
 
 ## Next Steps

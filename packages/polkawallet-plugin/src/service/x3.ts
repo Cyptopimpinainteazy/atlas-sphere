@@ -9,7 +9,7 @@ import { ApiPromise } from '@polkadot/api';
 import { Keyring } from '@polkadot/keyring';
 import { mnemonicGenerate, mnemonicToMiniSecret } from '@polkadot/util-crypto';
 import { u8aToHex } from '@polkadot/util';
-import type { UniversalWallet } from '@/stores/walletStore'; // From atlas-desktop
+import type { UniversalWallet } from '@/stores/walletStore'; // From x3-desktop
 
 // All Substrate chains use m/44'/354'/0'/0/0 base path + network-specific tweaks
 

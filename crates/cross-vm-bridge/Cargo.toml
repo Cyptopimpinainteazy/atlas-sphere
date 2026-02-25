@@ -1,8 +1,8 @@
 [package]
-name = "atlas-cross-vm-bridge"
+name = "x3-cross-vm-bridge"
 version = "0.1.0"
-authors = ["Atlas Sphere Core Team <core@atlas-sphere.io>"]
-description = "Atlas Sphere cross-VM bridge providing atomic dual-VM operation orchestration"
+authors = ["X3 Chain Core Team <core@x3-chain.io>"]
+description = "X3 Chain cross-VM bridge providing atomic dual-VM operation orchestration"
 edition = "2021"
 license = "Apache-2.0"
 publish = false

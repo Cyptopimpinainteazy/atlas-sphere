@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# 🚀 Atlas Sphere - Single-Server Testnet Deployment
+# 🚀 X3 Chain - Single-Server Testnet Deployment
 # 
 # This script deploys a full 3-validator testnet on ONE machine using systemd services
 #
@@ -14,15 +14,15 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}Atlas Sphere Local Testnet Setup${NC}"
+echo -e "${BLUE}X3 Chain Local Testnet Setup${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 
 # Get project root
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY_DIR="$PROJECT_ROOT/deployment"
-BINARY="$PROJECT_ROOT/target/release/atlas-sphere-node"
-CHAIN_SPEC="$DEPLOY_DIR/chain-specs/atlas-testnet-raw.json"
+BINARY="$PROJECT_ROOT/target/release/x3-chain-node"
+CHAIN_SPEC="$DEPLOY_DIR/chain-specs/x3-testnet-raw.json"
 KEYS_DIR="$DEPLOY_DIR/keys"
 
 # Verify prerequisites
@@ -51,15 +51,15 @@ echo ""
 
 # Copy binary to system path
 echo -e "${YELLOW}Installing binary...${NC}"
-sudo cp "$BINARY" /usr/local/bin/atlas-sphere-node
-sudo chmod +x /usr/local/bin/atlas-sphere-node
-echo -e "${GREEN}✓ Binary installed to /usr/local/bin/atlas-sphere-node${NC}"
+sudo cp "$BINARY" /usr/local/bin/x3-chain-node
+sudo chmod +x /usr/local/bin/x3-chain-node
+echo -e "${GREEN}✓ Binary installed to /usr/local/bin/x3-chain-node${NC}"
 echo ""
 
 # Create data directories
 echo -e "${YELLOW}Creating data directories...${NC}"
-sudo mkdir -p /var/lib/atlas-sphere/{bootnode,validator-01,validator-02,validator-03,rpc}
-sudo chown -R $USER:$USER /var/lib/atlas-sphere
+sudo mkdir -p /var/lib/x3-chain/{bootnode,validator-01,validator-02,validator-03,rpc}
+sudo chown -R $USER:$USER /var/lib/x3-chain
 echo -e "${GREEN}✓ Data directories created${NC}"
 echo ""
 
@@ -68,7 +68,7 @@ echo -e "${YELLOW}Deploying validator keys...${NC}"
 
 for i in 01 02 03; do
     KEYSTORE_SRC="$KEYS_DIR/validator-$i-keys/keystore"
-    KEYSTORE_DST="/var/lib/atlas-sphere/validator-$i/chains/atlas_testnet/keystore"
+    KEYSTORE_DST="/var/lib/x3-chain/validator-$i/chains/x3_testnet/keystore"
     
     if [ -d "$KEYSTORE_SRC" ]; then
         mkdir -p "$(dirname "$KEYSTORE_DST")"
@@ -97,19 +97,19 @@ echo ""
 echo -e "${YELLOW}Creating systemd services...${NC}"
 
 # Bootnode service
-sudo tee /etc/systemd/system/atlas-bootnode.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/x3-bootnode.service > /dev/null <<EOF
 [Unit]
-Description=Atlas Sphere Bootnode
+Description=X3 Chain Bootnode
 After=network.target
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$HOME
-ExecStart=/usr/local/bin/atlas-sphere-node \\
+ExecStart=/usr/local/bin/x3-chain-node \\
   --chain $CHAIN_SPEC \\
-  --base-path /var/lib/atlas-sphere/bootnode \\
-  --name "Atlas-Bootnode" \\
+  --base-path /var/lib/x3-chain/bootnode \\
+  --name "X3-Bootnode" \\
   --node-key $BOOTNODE_KEY \\
   --port 30333 \\
   --rpc-port 9944 \\
@@ -126,18 +126,18 @@ WantedBy=multi-user.target
 EOF
 
 # Validator 01 service
-sudo tee /etc/systemd/system/atlas-validator-01.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/x3-validator-01.service > /dev/null <<EOF
 [Unit]
-Description=Atlas Sphere Validator 01
-After=network.target atlas-bootnode.service
+Description=X3 Chain Validator 01
+After=network.target x3-bootnode.service
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$HOME
-ExecStart=/usr/local/bin/atlas-sphere-node \\
+ExecStart=/usr/local/bin/x3-chain-node \\
   --chain $CHAIN_SPEC \\
-  --base-path /var/lib/atlas-sphere/validator-01 \\
+  --base-path /var/lib/x3-chain/validator-01 \\
   --name "Validator-01" \\
   --validator \\
   --port 30334 \\
@@ -154,18 +154,18 @@ WantedBy=multi-user.target
 EOF
 
 # Validator 02 service
-sudo tee /etc/systemd/system/atlas-validator-02.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/x3-validator-02.service > /dev/null <<EOF
 [Unit]
-Description=Atlas Sphere Validator 02
-After=network.target atlas-bootnode.service
+Description=X3 Chain Validator 02
+After=network.target x3-bootnode.service
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$HOME
-ExecStart=/usr/local/bin/atlas-sphere-node \\
+ExecStart=/usr/local/bin/x3-chain-node \\
   --chain $CHAIN_SPEC \\
-  --base-path /var/lib/atlas-sphere/validator-02 \\
+  --base-path /var/lib/x3-chain/validator-02 \\
   --name "Validator-02" \\
   --validator \\
   --port 30335 \\
@@ -182,18 +182,18 @@ WantedBy=multi-user.target
 EOF
 
 # Validator 03 service
-sudo tee /etc/systemd/system/atlas-validator-03.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/x3-validator-03.service > /dev/null <<EOF
 [Unit]
-Description=Atlas Sphere Validator 03
-After=network.target atlas-bootnode.service
+Description=X3 Chain Validator 03
+After=network.target x3-bootnode.service
 
 [Service]
 Type=simple
 User=$USER
 WorkingDirectory=$HOME
-ExecStart=/usr/local/bin/atlas-sphere-node \\
+ExecStart=/usr/local/bin/x3-chain-node \\
   --chain $CHAIN_SPEC \\
-  --base-path /var/lib/atlas-sphere/validator-03 \\
+  --base-path /var/lib/x3-chain/validator-03 \\
   --name "Validator-03" \\
   --validator \\
   --port 30336 \\
@@ -220,22 +220,22 @@ echo ""
 
 # Enable services
 echo -e "${YELLOW}Enabling services...${NC}"
-sudo systemctl enable atlas-bootnode atlas-validator-01 atlas-validator-02 atlas-validator-03
+sudo systemctl enable x3-bootnode x3-validator-01 x3-validator-02 x3-validator-03
 echo -e "${GREEN}✓ Services enabled${NC}"
 echo ""
 
 # Start services
 echo -e "${YELLOW}Starting services...${NC}"
 echo "Starting bootnode first, waiting 5 seconds..."
-sudo systemctl start atlas-bootnode
+sudo systemctl start x3-bootnode
 sleep 5
 
 echo "Starting validators..."
-sudo systemctl start atlas-validator-01
+sudo systemctl start x3-validator-01
 sleep 2
-sudo systemctl start atlas-validator-02
+sudo systemctl start x3-validator-02
 sleep 2
-sudo systemctl start atlas-validator-03
+sudo systemctl start x3-validator-03
 sleep 3
 
 echo -e "${GREEN}✓ All services started${NC}"
@@ -247,7 +247,7 @@ echo -e "${BLUE}Service Status${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 
-for service in atlas-bootnode atlas-validator-01 atlas-validator-02 atlas-validator-03; do
+for service in x3-bootnode x3-validator-01 x3-validator-02 x3-validator-03; do
     if sudo systemctl is-active --quiet $service; then
         echo -e "${GREEN}✓ $service is running${NC}"
     else
@@ -310,10 +310,10 @@ echo "  • Validator 02: http://localhost:9946"
 echo "  • Validator 03: http://localhost:9947"
 echo ""
 echo "🔍 Useful Commands:"
-echo "  • Check logs:        sudo journalctl -u atlas-bootnode -f"
-echo "  • Check status:      sudo systemctl status atlas-validator-01"
-echo "  • Stop all:          sudo systemctl stop atlas-{bootnode,validator-*}"
-echo "  • Restart:           sudo systemctl restart atlas-bootnode"
+echo "  • Check logs:        sudo journalctl -u x3-bootnode -f"
+echo "  • Check status:      sudo systemctl status x3-validator-01"
+echo "  • Stop all:          sudo systemctl stop x3-{bootnode,validator-*}"
+echo "  • Restart:           sudo systemctl restart x3-bootnode"
 echo ""
 echo "🌐 Connect via Polkadot.js:"
 echo "  1. Go to https://polkadot.js.org/apps/"

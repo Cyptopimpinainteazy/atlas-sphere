@@ -1,8 +1,8 @@
 {
   "name": "ERC20Token",
   "version": "1.0.0",
-  "description": "Standard fungible token implementation for Atlas Sphere",
-  "author": "Atlas Sphere Team",
+  "description": "Standard fungible token implementation for X3 Chain",
+  "author": "X3 Chain Team",
   "license": "MIT",
   "compiler": {
     "name": "x3c",

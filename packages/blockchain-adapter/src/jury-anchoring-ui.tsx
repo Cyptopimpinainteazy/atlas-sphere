@@ -1,6 +1,6 @@
 /**
  * Jury Decision UI Components — React hooks and display components
- * for jury decision monitoring in Atlas Desktop.
+ * for jury decision monitoring in X3 Desktop.
  */
 
 import React, { useEffect, useRef, useState } from "react";

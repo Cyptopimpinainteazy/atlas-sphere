@@ -59,8 +59,8 @@ docker-compose ps
 
 # Expected output (all services should be "Up"):
 # NAME              | STATUS           | PORTS
-# atlas-jury-db    | Up 2 min        | 5432/tcp
-# atlas-jury-cache | Up 2 min        | 6379/tcp
+# x3-jury-db    | Up 2 min        | 5432/tcp
+# x3-jury-cache | Up 2 min        | 6379/tcp
 # jury-service     | Up 1 min        | 8000-8001/tcp
 
 # Verify API health
@@ -92,13 +92,13 @@ curl http://localhost:9090/api/v1/query?query=jury_session_total
 
 ```bash
 # Verify schema is initialized
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "\dt"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "\dt"
 
 # Expected tables:
 expected_tables="audit_logs|jury_sessions|jury_votes|audit_log_seals"
 
 # Check row counts (should be empty initially)
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT 'sessions=' || COUNT(*) FROM jury_sessions; \
    SELECT 'audit_logs=' || COUNT(*) FROM audit_logs;"
 ```
@@ -158,7 +158,7 @@ python3 pilot_executor.py \
 
 ```bash
 # Query the database directly to verify
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit << EOF
+docker exec x3-jury-db psql -U jury_admin -d jury_audit << EOF
 -- Check session was created
 SELECT COUNT(*) as sessions FROM jury_sessions;
 
@@ -262,18 +262,18 @@ docker-compose logs jury-db | grep "ERROR\|WARN" > pilot-results/db-logs.txt
 
 ```bash
 # Export database statistics
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT * FROM session_analytics;" \
   > pilot-results/session-analytics.csv
 
 # Export full audit trail
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT session_id, event_type, actor, timestamp, description FROM audit_logs \
    ORDER BY timestamp;" \
   > pilot-results/audit-trail-full.csv
 
 # Export vote records
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT session_id, member_id, vote, reveal_verified, \
           commitment_timestamp, reveal_timestamp \
    FROM jury_votes \
@@ -296,7 +296,7 @@ docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
 
 ```bash
 # Check SHA256 hashes for tamper detection
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit << EOF
+docker exec x3-jury-db psql -U jury_admin -d jury_audit << EOF
 -- Verify integrity of audit log seals
 SELECT 
   session_id,
@@ -367,7 +367,7 @@ After running pilot scenarios, verify:
 curl http://localhost:8000/health
 
 # Check database connectivity
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c "SELECT 1"
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c "SELECT 1"
 
 # View service logs
 docker-compose logs jury-service --tail 50
@@ -377,7 +377,7 @@ docker-compose logs jury-service --tail 50
 
 ```bash
 # Check if commitment hash is stored
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT member_id, commitment_hash FROM jury_votes WHERE reveal_verified = false;"
 
 # Manually verify a commitment
@@ -394,12 +394,12 @@ PYTHON
 
 ```bash
 # Check database load
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT query, mean_time FROM pg_stat_statements \
    ORDER BY mean_time DESC LIMIT 5;"
 
 # Check connection pool
-docker exec atlas-jury-db psql -U jury_admin -d jury_audit -c \
+docker exec x3-jury-db psql -U jury_admin -d jury_audit -c \
   "SELECT count(*) FROM pg_stat_activity;"
 ```
 

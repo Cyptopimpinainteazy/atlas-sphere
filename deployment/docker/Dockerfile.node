@@ -1,8 +1,8 @@
 # ============================================================================
-# Atlas Sphere Node - Production Multi-Stage Dockerfile
+# X3 Chain Node - Production Multi-Stage Dockerfile
 # ============================================================================
 # Purpose: Production-ready Substrate node with security hardening
-# Target: atlas-sphere-node binary
+# Target: x3-chain-node binary
 # ============================================================================
 
 # ============================================================================
@@ -31,7 +31,7 @@ COPY . .
 
 # Build release binary with optimizations
 RUN cargo build --release --locked \
-    && strip target/release/atlas-sphere-node
+    && strip target/release/x3-chain-node
 
 # ============================================================================
 # Stage 2: Runtime - Minimal production image
@@ -39,12 +39,12 @@ RUN cargo build --release --locked \
 FROM ubuntu:22.04
 
 # Metadata labels
-LABEL maintainer="Atlas Sphere DevOps <devops@atlas-sphere.io>" \
-      description="Atlas Sphere Substrate Node - Production Image" \
+LABEL maintainer="X3 Chain DevOps <devops@x3-chain.io>" \
+      description="X3 Chain Substrate Node - Production Image" \
       version="1.0.0" \
-      io.atlas-sphere.image.vendor="Atlas Sphere" \
-      io.atlas-sphere.image.source="https://github.com/Cyptopimpinainteazy/atlas-sphere" \
-      io.atlas-sphere.image.documentation="https://docs.atlas-sphere.io"
+      io.x3-chain.image.vendor="X3 Chain" \
+      io.x3-chain.image.source="https://github.com/Cyptopimpinainteazy/x3-chain" \
+      io.x3-chain.image.documentation="https://docs.x3-chain.io"
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y \
@@ -55,25 +55,25 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Create non-root user for security
-RUN groupadd -r atlas && \
-    useradd -r -g atlas -m -d /atlas-sphere -s /bin/bash atlas
+RUN groupadd -r x3 && \
+    useradd -r -g x3 -m -d /x3-chain -s /bin/bash x3
 
 # Copy binary from builder
-COPY --from=builder /build/target/release/atlas-sphere-node /usr/local/bin/
+COPY --from=builder /build/target/release/x3-chain-node /usr/local/bin/
 
 # Set ownership
-RUN chown atlas:atlas /usr/local/bin/atlas-sphere-node && \
-    chmod 755 /usr/local/bin/atlas-sphere-node
+RUN chown x3:x3 /usr/local/bin/x3-chain-node && \
+    chmod 755 /usr/local/bin/x3-chain-node
 
 # Create data directory
-RUN mkdir -p /data && chown atlas:atlas /data
+RUN mkdir -p /data && chown x3:x3 /data
 
 # Verify binary
-RUN /usr/local/bin/atlas-sphere-node --version
+RUN /usr/local/bin/x3-chain-node --version
 
 # Switch to non-root user
-USER atlas
-WORKDIR /atlas-sphere
+USER x3
+WORKDIR /x3-chain
 
 # Expose ports
 # 30333: P2P networking
@@ -90,7 +90,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:9933/health || exit 1
 
 # Default command (can be overridden)
-ENTRYPOINT ["/usr/local/bin/atlas-sphere-node"]
+ENTRYPOINT ["/usr/local/bin/x3-chain-node"]
 CMD ["--chain", "/data/chain-spec.json", \
      "--base-path", "/data", \
      "--rpc-external", \

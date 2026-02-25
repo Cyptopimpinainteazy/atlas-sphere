@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Target**: Production & Development Environments  
-**System**: Atlas Sphere X3 Cross-Chain GPU Validation Network
+**System**: X3 Chain X3 Cross-Chain GPU Validation Network
 
 ---
 
@@ -26,7 +26,7 @@
 
 ```bash
 # 1. Navigate to project root
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # 2. Verify Python dependencies
 pip install -r swarm/requirements.txt
@@ -123,7 +123,7 @@ sudo apt-get install -y \
 
 ### Python Dependencies
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 pip install -r swarm/requirements.txt
 
 # Key dependencies:
@@ -136,7 +136,7 @@ Some operators require sudo:
 ```bash
 # Allow service restarts (optional)
 sudo visudo
-# Add: yourusername ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart atlas-sphere-*
+# Add: yourusername ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart x3-chain-*
 # Add: yourusername ALL=(ALL) NOPASSWD: /usr/bin/nvidia-smi
 ```
 
@@ -147,7 +147,7 @@ sudo visudo
 ### Standard Installation
 ```bash
 # 1. Clone or navigate to project
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # 2. Install dependencies
 pip install -r swarm/requirements.txt
@@ -162,7 +162,7 @@ python3 -c "from swarm.autonomic import AutonomicControlPlane; print('✅ OK')"
 ### Docker Installation (TODO)
 ```bash
 # Build autonomic control plane image
-docker build -t atlas-x3-autonomic -f docker/Dockerfile.autonomic .
+docker build -t x3-x3-autonomic -f docker/Dockerfile.autonomic .
 
 # Run container
 docker run -d \
@@ -172,7 +172,7 @@ docker run -d \
   -v /var/log:/var/log:ro \
   -v /proc:/host/proc:ro \
   -v ./logs:/app/logs \
-  atlas-x3-autonomic
+  x3-x3-autonomic
 ```
 
 ---
@@ -249,7 +249,7 @@ export SWARM_API_URL=http://127.0.0.1:8080
 The autonomic control plane starts automatically when you start the swarm API server:
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m swarm.api_server
 ```
 
@@ -266,13 +266,13 @@ Logs will show:
 
 ### Method 2: Standalone Mode
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 python3 -m swarm.autonomic
 ```
 
 ### Method 3: Via run-everything.sh
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 ./run-everything.sh
 ```
 
@@ -451,7 +451,7 @@ gzip audit.jsonl.*
 
 # Or configure log rotation
 sudo tee /etc/logrotate.d/x3-autonomic <<EOF
-/home/lojak/Desktop/atlas-sphere-master/logs/autonomic/*.jsonl {
+/home/lojak/Desktop/x3-chain-master/logs/autonomic/*.jsonl {
     daily
     rotate 30
     compress
@@ -485,12 +485,12 @@ After=network.target
 [Service]
 Type=simple
 User=lojak
-WorkingDirectory=/home/lojak/Desktop/atlas-sphere-master
+WorkingDirectory=/home/lojak/Desktop/x3-chain-master
 ExecStart=/usr/bin/python3 -m swarm.api_server
 Restart=always
 RestartSec=10
-StandardOutput=append:/home/lojak/Desktop/atlas-sphere-master/logs/swarm.log
-StandardError=append:/home/lojak/Desktop/atlas-sphere-master/logs/swarm.log
+StandardOutput=append:/home/lojak/Desktop/x3-chain-master/logs/swarm.log
+StandardError=append:/home/lojak/Desktop/x3-chain-master/logs/swarm.log
 
 [Install]
 WantedBy=multi-user.target
@@ -517,7 +517,7 @@ sudo ufw allow from 192.168.1.0/24 to any port 8080
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name autonomic.atlas-sphere.local;
+    server_name autonomic.x3-chain.local;
 
     ssl_certificate /etc/ssl/certs/autonomic.crt;
     ssl_certificate_key /etc/ssl/private/autonomic.key;
@@ -533,8 +533,8 @@ server {
 ### 5. Secrets Management
 ```bash
 # Use environment-based secrets
-export ATLAS_API_KEY=$(cat /etc/atlas/api.key)
-export POSTGRES_URL=$(cat /etc/atlas/db.url)
+export X3_API_KEY=$(cat /etc/x3/api.key)
+export POSTGRES_URL=$(cat /etc/x3/db.url)
 
 # Launch with secrets
 python3 -m swarm.api_server

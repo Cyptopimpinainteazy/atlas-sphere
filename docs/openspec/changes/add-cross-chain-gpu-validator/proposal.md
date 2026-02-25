@@ -1,7 +1,7 @@
 # Change: Add cross-chain GPU validator stack
 
 ## Why
-Atlas Sphere needs a production-ready cross-chain validator stack that can validate Solana and Ethereum testnets with GPU acceleration and atomic guarantees, enabling real-world performance and correctness validation for P5.
+X3 Chain needs a production-ready cross-chain validator stack that can validate Solana and Ethereum testnets with GPU acceleration and atomic guarantees, enabling real-world performance and correctness validation for P5.
 
 ## What Changes
 - Add a cross-chain GPU validator service with EVM GPU kernels (secp256k1, keccak256) and an SVM validation pipeline.

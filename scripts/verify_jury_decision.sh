@@ -123,6 +123,6 @@ if [ -n "$BLOCK_NUMBER" ]; then
 fi
 echo ""
 echo "Next Steps:"
-echo "  - View decision on blockchain: https://explorer.atlas.io/block/$BLOCK_NUMBER"
+echo "  - View decision on blockchain: https://explorer.x3.io/block/$BLOCK_NUMBER"
 echo "  - Share verification proof with stakeholders"
 echo "  - Archive decision record"

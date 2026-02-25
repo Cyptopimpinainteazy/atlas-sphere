@@ -2,7 +2,7 @@
 
 ## Overview
 
-The off-chain jury system provides a mechanism for governing major tasks and proposals in Atlas Sphere. It implements a commit-reveal voting protocol ensuring vote anonymity while maintaining audit trails for forensic analysis.
+The off-chain jury system provides a mechanism for governing major tasks and proposals in X3 Chain. It implements a commit-reveal voting protocol ensuring vote anonymity while maintaining audit trails for forensic analysis.
 
 ## Architecture
 
@@ -348,7 +348,7 @@ Tasks are classified before jury routing:
 
 ### MAJOR (→ Jury Review)
 - Governance rule changes
-- Treasury transactions > 100k ATLAS
+- Treasury transactions > 100k X3
 - Agent role modifications
 - Security boundary changes
 - Schema migrations

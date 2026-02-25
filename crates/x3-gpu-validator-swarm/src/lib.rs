@@ -1,0 +1,94 @@
+//! X3 GPU Validator Swarm
+//!
+//! A deterministic GPU validator swarm with CPU verification, replay mode,
+//! and quarantine/fallback mechanisms for production deployments.
+//!
+//! # Architecture
+//!
+//! ```text
+//! ┌─────────────────────────────────────────────────────────────────────────┐
+//! │                    X3 GPU Validator Swarm                                │
+//! │  ┌─────────────────────────────────────────────────────────────────────┐ │
+//! │  │                     Swarm Orchestrator                               │ │
+//! │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │ │
+//! │  │  │ Task Queue  │  │ Scheduler   │  │ Verification Engine         │  │ │
+//! │  │  └──────┬──────┘  └──────┬──────┘  └───────────┬───────────────┘  │ │
+//! │  └─────────┼────────────────┼─────────────────────┼──────────────────┘ │
+//! │            │                │                     │                     │
+//! │      ┌─────▼─────┬──────────▼──────────┬──────────▼─────┐             │
+//! │      │           │                     │                │             │
+//! │  ┌───▼───┐   ┌───▼───┐            ┌────▼────┐      ┌────▼────┐        │
+//! │  │Validator│  │Validator│   ...    │Validator│      │Validator│        │
+//! │  │GPU:A   │  │GPU:B   │            │GPU:X    │      │GPU:Y    │        │
+//! │  └───┬───┘   └───┬───┘            └────┬────┘      └────┬────┘        │
+//! │      │           │                     │                │             │
+//! │      └───────────┴─────────────────────┴────────────────┘             │
+//! │                         │                                             │
+//! │              ┌───────────▼───────────┐                                  │
+//! │              │  CPU Verification    │                                  │
+//! │              │  + Replay Mode       │                                  │
+//! │              └─────────────────────┘                                  │
+//! └─────────────────────────────────────────────────────────────────────────┘
+//! ```
+//!
+//! # Features
+//!
+//! - **Deterministic GPU Execution**: Bit-for-bit deterministic outputs
+//! - **CPU Verification**: Every GPU result verified by CPU
+//! - **Replay Mode**: Re-run computation for divergence detection
+//! - **Quarantine System**: Isolate misbehaving validators
+//! - **Fallback Mechanism**: Automatic CPU fallback on divergence
+//! - **Swarm Orchestration**: Coordinate multiple validators
+//! - **One-Command Onboarding**: Install, run, join, and benchmark with single commands
+//! - **JSON Benchmarks**: Machine-readable performance reports
+//! - **Full Telemetry**: Prometheus metrics and health monitoring
+
+pub mod config;
+pub mod crypto;
+pub mod cpu_validator;
+pub mod deterministic;
+pub mod error;
+pub mod health;
+pub mod metrics;
+pub mod network;
+pub mod orchestrator;
+pub mod payment;
+pub mod protocol;
+pub mod quarantine;
+pub mod telemetry;
+pub mod validator;
+
+pub use config::{SwarmConfig, ValidatorConfig};
+pub use cpu_validator::{CpuValidator, EasyCpuValidator, CpuTaskResult, CpuValidatorMetrics, validate_cpu, validate_cpu_batch, validate_cpu_with};
+pub use crypto::{HashAlgorithm, HashOutput, SignatureOutput, VerificationResult, keccak256, keccak256_batch, sha256, blake2b, compute_hash, HashAlgorithm as CryptoHashAlgorithm};
+pub use deterministic::{DeterministicEngine, ExecutionMode, VerificationLevel};
+pub use error::{SwarmError, SwarmResult};
+pub use metrics::{HealthCheck, HealthStatus, ValidatorHealth, MetricsCollector, SwarmMetrics};
+pub use network::{Network, NetworkConfig, NetworkEvent, NetworkManager, NetworkPeer, NetworkMessage};
+pub use orchestrator::{OrchestratorEvent, SwarmOrchestrator};
+pub use payment::{PaymentSystem, ProviderAccount, ProviderStatus, WorkRecord, WorkType};
+pub use protocol::{SwarmMessage, TaskAssignment, TaskResult, ValidatorMessage, ValidatorProof};
+pub use quarantine::{DivergenceRecord, QuarantineManager, QuarantineReason};
+pub use telemetry::{TelemetryConfig, TelemetrySink};
+pub use validator::{Validator, ValidatorEvent, ValidatorState};
+
+/// Current version of the X3 GPU Validator Swarm protocol
+pub const PROTOCOL_VERSION: u32 = 3;
+
+/// Maximum task payload size (16 MB)
+pub const MAX_TASK_SIZE: usize = 16 * 1024 * 1024;
+
+/// Default task timeout (5 minutes)
+pub const DEFAULT_TASK_TIMEOUT_SECS: u64 = 300;
+
+/// Minimum stake required to participate as a validator (in X3 tokens)
+pub const MIN_VALIDATOR_STAKE: u64 = 1000;
+
+/// Maximum number of validators in the swarm
+pub const MAX_VALIDATORS: usize = 256;
+
+/// Quarantine duration for divergence (30 minutes)
+pub const QUARANTINE_DURATION_SECS: u64 = 1800;
+
+/// Maximum replay attempts before permanent quarantine
+pub const MAX_REPLAY_ATTEMPTS: u32 = 3;

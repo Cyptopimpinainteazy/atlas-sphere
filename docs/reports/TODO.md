@@ -6,7 +6,7 @@
 - **Remaining Steps**:
   1. Free up disk space on system
   2. Run `cargo build --release` for full workspace validation
-  3. Test direct WASM target build: `cargo build --release -p atlas-sphere-runtime --target wasm32-unknown-unknown`
+  3. Test direct WASM target build: `cargo build --release -p x3-chain-runtime --target wasm32-unknown-unknown`
   4. Verify embedded WASM binary in runtime
   5. Test runtime upgrade transactions
   6. Update deployment scripts to remove SKIP_WASM_BUILD references
@@ -39,4 +39,4 @@
   - Time-locks prevent rushed decisions
   - Graduated emergency controls allow measured responses
   - State rollback capabilities for failed mutations</content>
-<parameter name="filePath">/home/lojak/Desktop/X3-atlas-sphere/docs/reports/TODO.md
+<parameter name="filePath">/home/lojak/Desktop/X3-x3-chain/docs/reports/TODO.md

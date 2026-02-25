@@ -36,7 +36,7 @@ export async function getNetworkProperties(api: ApiPromise) {
   return {
     ...props.toJSON(),
     tokenDecimals: [18],
-    tokenSymbol: ['ATLAS'],
+    tokenSymbol: ['X3'],
     ss58Format: X3_SS58_PREFIX,
     chainId: 650000,
   };

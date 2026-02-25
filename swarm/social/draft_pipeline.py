@@ -122,11 +122,11 @@ def generate_social_draft(payload: Dict[str, Any]) -> DraftResult:
     answer_model = open_notebook_cfg.get("answer_model") or defaults.get("default_chat_model") or ""
     final_answer_model = open_notebook_cfg.get("final_answer_model") or defaults.get("default_chat_model") or ""
 
-    topic = payload.get("topic") or "Atlas Sphere"
+    topic = payload.get("topic") or "X3 Chain"
     intent = payload.get("intent") or "growth"
 
     question = (
-        "Using the Open Notebook knowledge base, provide key facts about Atlas Sphere (X3) "
+        "Using the Open Notebook knowledge base, provide key facts about X3 Chain (X3) "
         f"relevant to {topic}. Include approved communities or influencer angles if known. "
         f"Intent: {intent}."
     )
@@ -155,7 +155,7 @@ def generate_social_draft(payload: Dict[str, Any]) -> DraftResult:
     ollama_model = ollama_cfg.get("model", "llama3")
 
     prompt = (
-        "You are a social outreach agent for Atlas Sphere (X3). Generate a draft ONLY. "
+        "You are a social outreach agent for X3 Chain (X3). Generate a draft ONLY. "
         "Do NOT claim to have posted anything. Provide output as strict JSON with keys: "
         "title, body, tags, target_profiles, target_groups, cta, disclaimer, sources. "
         f"Network: {payload.get('network')}. Action: {payload.get('action', 'post')}. "

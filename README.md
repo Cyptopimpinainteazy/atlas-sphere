@@ -1,8 +1,8 @@
-# Atlas Sphere L1
+# X3 Chain L1
 
-[![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![SVM Counter Integration](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/svm-counter-integration.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/svm-counter-integration.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+[![Build Status](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/ci.yml) [![SVM Counter Integration](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/svm-counter-integration.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/svm-counter-integration.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
-Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liquidity without trusted intermediaries.
+X3 Chain is a next-generation Layer-1 blockchain purpose-built to host dual virtual machines (EVM + SVM), enabling native interoperability between Ethereum-style smart contracts and Solana-style Sealevel programs. The network is optimized for cross-domain composability, featuring a native asset layer, predictable execution semantics, and atomic cross-chain operations to bridge ecosystem liquidity without trusted intermediaries.
 
 ## Table of Contents
 
@@ -21,32 +21,33 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual 
 13. [Testing & Quality Gates](#testing--quality-gates)
 14. [Contribution Guidelines](#contribution-guidelines)
 15. [Roadmap Snapshot](#roadmap-snapshot)
-16. [Resources & Further Reading](#resources--further-reading)
-17. [License](#license)
+16. [Developer Templates](#developer-templates)
+17. [Resources & Further Reading](#resources--further-reading)
+18. [License](#license)
 
 ---
 
 ## Vision & Core Features
 
-- **Dual-VM Execution (EVM + SVM):** Run Solidity/Vyper contracts and Sealevel programs side-by-side with deterministic consensus ordering. Atlas Sphere exposes a unified account abstraction to simplify cross-VM asset flows.
-- **Native Asset Layer:** The Atlas native asset powers staking, fee markets, and rewards. Additional assets can be registered via asset pallets and used across both VMs without wrapping.
+- **Dual-VM Execution (EVM + SVM):** Run Solidity/Vyper contracts and Sealevel programs side-by-side with deterministic consensus ordering. X3 Chain exposes a unified account abstraction to simplify cross-VM asset flows.
+- **Native Asset Layer:** The X3 native asset powers staking, fee markets, and rewards. Additional assets can be registered via asset pallets and used across both VMs without wrapping.
 - **Atomic Cross-Chain Operations:** Built-in message-lane primitives let developers submit atomic transactions that span multiple domains, eliminating the need for fragile multi-step bridging.
-- **High-Performance Substrate Foundation:** Built on Substrate for modularity, runtime upgrades, and rich tooling while maintaining a custom runtime tuned for Atlas’ heterogeneous VM workloads.
+- **High-Performance Substrate Foundation:** Built on Substrate for modularity, runtime upgrades, and rich tooling while maintaining a custom runtime tuned for X3’ heterogeneous VM workloads.
 
 ## Current Status
 
-🎉 **Atlas Sphere Testnet v1 is NOW LIVE!**
+🎉 **X3 Chain Testnet v1 is NOW LIVE!**
 
 - ✅ **Testnet Deployment:** Public testnet with 3+ validators, RPC endpoints, and faucet service operational
-- ✅ **Atlas Kernel MVP:** Comit submission, nonce management, asset registry, and canonical ledger primitives implemented and wired into runtime
-- ✅ **Runtime Integration:** Aura + GRANDPA consensus, transaction payment, and Atlas Kernel fully integrated for end-to-end Comit processing
+- ✅ **X3 Kernel MVP:** Comit submission, nonce management, asset registry, and canonical ledger primitives implemented and wired into runtime
+- ✅ **Runtime Integration:** Aura + GRANDPA consensus, transaction payment, and X3 Kernel fully integrated for end-to-end Comit processing
 - ✅ **Node Service & RPC:** Node starts with Aura + GRANDPA consensus, networking (peer discovery and sync), and HTTP JSON-RPC server on `127.0.0.1:9944`
-- ✅ **Atlas Kernel RPC:** Five Atlas Kernel RPC methods exposed via `node/src/rpc.rs::create_full()` for querying canonical ledger, asset metadata, authorization status, and authorities
+- ✅ **X3 Kernel RPC:** Five X3 Kernel RPC methods exposed via `node/src/rpc.rs::create_full()` for querying canonical ledger, asset metadata, authorization status, and authorities
 - ⚠️ **Dual-VM Adapters (EVM/SVM):** Using mock executors for testnet; real Frontier/SVM execution integration in development
 - 🚧 **Governance:** Sudo remains enabled for development; governance pallet integration **NOT YET IMPLEMENTED**
 
-**Testnet RPC**: `http://rpc.testnet.atlas-sphere.io:9944`  
-**Faucet**: `https://faucet.testnet.atlas-sphere.io`  
+**Testnet RPC**: `http://rpc.testnet.x3-chain.io:9944`  
+**Faucet**: `https://faucet.testnet.x3-chain.io`  
 **See**: `docs/reports/TESTNET_ANNOUNCEMENT.md` for details
 
 ---
@@ -57,7 +58,7 @@ Atlas Sphere is a next-generation Layer-1 blockchain purpose-built to host dual 
 | ----------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Runtime**             | Dev-ready         | FRAME-based runtime integrating Aura + GRANDPA consensus, balances, transaction payment, sudo (for dev), and scaffolding for VM orchestration. |
 | **Dual VM Layer**       | In Development    | Frontier-based EVM adapter and SVM bridge are being wired into the canonical ledger with forthcoming execution and RPC exposure.               |
-| **Cross-Domain Kernel** | Implemented (MVP) | Atlas Kernel pallet anchors Comit submission, asset registry, and canonical ledger updates powering dual-VM coordination.                      |
+| **Cross-Domain Kernel** | Implemented (MVP) | X3 Kernel pallet anchors Comit submission, asset registry, and canonical ledger updates powering dual-VM coordination.                      |
 | **Node Service**        | In Progress       | Provides RPC, telemetry, and networking services with hooks for future Frontier JSON-RPC and SVM execution interfaces.                         |
 | **Tooling**             | In Progress       | CLI utilities cover chain specs and key handling; Comit crafting helpers and SDK improvements are scheduled next.                              |
 ### Developer Tools: BMAD Method
@@ -102,15 +103,15 @@ BMAD requires Node.js >= 20. See `crates/vibe-bmad/README.md` for more details.
 ### Repository Setup
 
 ```bash
-git clone https://github.com/your-org/atlas-sphere.git
-cd atlas-sphere
+git clone https://github.com/your-org/x3-chain.git
+cd x3-chain
 ```
 
 ---
 
 ## Build Instructions
 
-Compile the Atlas Sphere node and runtime artifacts:
+Compile the X3 Chain node and runtime artifacts:
 
 ```bash
 cargo build --release
@@ -118,8 +119,8 @@ cargo build --release
 
 Key artifacts:
 
-- `target/release/atlas-sphere-node` – Native node binary.
-- `runtime/wasm/atlas_sphere_runtime.compact.wasm` – Runtime WASM (generated via build script).
+- `target/release/x3-chain-node` – Native node binary.
+- `runtime/wasm/x3_chain_runtime.compact.wasm` – Runtime WASM (generated via build script).
 
 For iterative development builds:
 
@@ -138,12 +139,12 @@ cargo build
 2. **Launch a development node**
 
    ```bash
-   ./target/release/atlas-sphere-node --dev --tmp
+   ./target/release/x3-chain-node --dev --tmp
    ```
 
    The node will start with Aura + GRANDPA consensus and expose an HTTP JSON-RPC server on `127.0.0.1:9944`.
 
-3. **Query Atlas Kernel via HTTP JSON-RPC**
+3. **Query X3 Kernel via HTTP JSON-RPC**
 
    Check authorized accounts:
    ```bash
@@ -199,7 +200,7 @@ cargo build
 **Launch a development node:**
 
 ```bash
-./target/release/atlas-sphere-node --dev
+./target/release/x3-chain-node --dev
 ```
 
 Useful flags:
@@ -215,7 +216,7 @@ The node starts with:
 - **Aura consensus** for block authoring (6-second slot duration)
 - **GRANDPA finality** for Byzantine fault-tolerant finalization
 - **Networking** with libp2p peer discovery and block sync
-- **HTTP JSON-RPC server** exposing Atlas Kernel methods
+- **HTTP JSON-RPC server** exposing X3 Kernel methods
 
 Stop the node with `Ctrl+C`. Logs are streamed to stdout by default.
 
@@ -225,28 +226,28 @@ Stop the node with `Ctrl+C`. Logs are streamed to stdout by default.
 
 ## Consensus
 
-Atlas Sphere currently leverages the Aura block authoring engine paired with GRANDPA finality, delivering a 6-second target block time and deterministic development workflows. The core team is actively evaluating a future migration path toward a Tendermint-style BFT consensus set to enhance liveness under adversarial network conditions while preserving runtime upgrade flexibility.
+X3 Chain currently leverages the Aura block authoring engine paired with GRANDPA finality, delivering a 6-second target block time and deterministic development workflows. The core team is actively evaluating a future migration path toward a Tendermint-style BFT consensus set to enhance liveness under adversarial network conditions while preserving runtime upgrade flexibility.
 
 ---
 
 ## Network Configuration
 
-Atlas Sphere ships with multiple chain specifications:
+X3 Chain ships with multiple chain specifications:
 
 | Spec                     | Command                                               | Description                                                            |
 | ------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| Development              | `atlas-sphere-node --dev`                             | Single-node authority, instant block production.                       |
-| Local Testnet            | `atlas-sphere-node --chain local -d /tmp/atlas-local` | Multi-node authority with deterministic keys (use `--alice`, `--bob`). |
-| Staging/Mainnet (future) | `atlas-sphere-node --chain atlas`                     | Use generated chain spec files committed by core team.                 |
+| Development              | `x3-chain-node --dev`                             | Single-node authority, instant block production.                       |
+| Local Testnet            | `x3-chain-node --chain local -d /tmp/x3-local` | Multi-node authority with deterministic keys (use `--alice`, `--bob`). |
+| Staging/Mainnet (future) | `x3-chain-node --chain x3`                     | Use generated chain spec files committed by core team.                 |
 
 Generate custom chain specs:
 
 ```bash
 # Export plain chain spec
-./target/release/atlas-sphere-node build-spec --disable-default-bootnode > atlas.json
+./target/release/x3-chain-node build-spec --disable-default-bootnode > x3.json
 
 # Export raw chain spec (ready for launch)
-./target/release/atlas-sphere-node build-spec --chain atlas.json --raw --disable-default-bootnode > atlas-raw.json
+./target/release/x3-chain-node build-spec --chain x3.json --raw --disable-default-bootnode > x3-raw.json
 ```
 
 Distribute the raw chain spec to validators to ensure consensus on initial state.
@@ -269,10 +270,10 @@ subkey inspect "<SECRET_PHRASE>" --scheme ed25519  # Grandpa authority
 Inject keys into the keystore:
 
 ```bash
-./target/release/atlas-sphere-node \
-  --chain atlas \
+./target/release/x3-chain-node \
+  --chain x3 \
   --name "Validator-01" \
-  --base-path /var/lib/atlas \
+  --base-path /var/lib/x3 \
   key insert \
   --scheme sr25519 \
   --suri "<SECRET_PHRASE>" \
@@ -290,24 +291,24 @@ For production, store secret phrases securely (e.g., HSM, Hashicorp Vault). Neve
 Start the node (RPC server enabled by default on `127.0.0.1:9944`):
 
 ```bash
-./target/release/atlas-sphere-node --dev
+./target/release/x3-chain-node --dev
 ```
 
-Query authorized accounts via Atlas Kernel RPC:
+Query authorized accounts via X3 Kernel RPC:
 
 ```bash
 curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
      -d '{"id":1,"jsonrpc":"2.0","method":"atlasKernel_getAuthorizedAccounts","params":[null]}'
 ```
 
-**Available Atlas Kernel RPC Methods:**
+**Available X3 Kernel RPC Methods:**
 - `atlasKernel_getCanonicalBalance(account, asset_id, at?)` – Query canonical ledger balance
 - `atlasKernel_getAssetMetadata(asset_id, at?)` – Get asset symbol and decimals
 - `atlasKernel_isAuthorized(account, at?)` – Check account authorization status
 - `atlasKernel_getAuthorizedAccounts(at?)` – List all authorized accounts
 - `atlasKernel_getAuthorities(at?)` – Get current authority set
 
-**Note:** Only Atlas Kernel RPC methods are currently exposed by `node/src/rpc.rs::create_full()`. Standard Substrate RPC methods (e.g., `system_*`, `chain_*`) are not yet wired.
+**Note:** Only X3 Kernel RPC methods are currently exposed by `node/src/rpc.rs::create_full()`. Standard Substrate RPC methods (e.g., `system_*`, `chain_*`) are not yet wired.
 
 ### 2. Deploy Solidity Contracts
 
@@ -318,19 +319,19 @@ curl http://127.0.0.1:9944 -H "Content-Type: application/json" \
 ### 3. Execute SVM Programs (Roadmap)
 
 - Build SVM program with Solana toolchain.
-- Submit via Atlas Sphere SVM adaptor pallet (forthcoming).
+- Submit via X3 Chain SVM adaptor pallet (forthcoming).
 - Monitor execution via RPC subscription.
 
 ### 4. Atomic Cross-Chain Operation (Simulated)
 
-1. Start the Atlas Sphere node alongside your target counterparty chain (e.g., a local Substrate relay or Ethereum devnet) ensuring both expose RPC endpoints.
-2. Use the Atlas CLI (roadmap) to draft a cross-domain manifest and submit it via the `atlas_sphere_cross_chain_submit` RPC; during active development you can mock this with `author_submitExtrinsic` carrying the kernel pallet call.
+1. Start the X3 Chain node alongside your target counterparty chain (e.g., a local Substrate relay or Ethereum devnet) ensuring both expose RPC endpoints.
+2. Use the X3 CLI (roadmap) to draft a cross-domain manifest and submit it via the `x3_chain_cross_chain_submit` RPC; during active development you can mock this with `author_submitExtrinsic` carrying the kernel pallet call.
 3. Observe the composite transaction status via `system.events` and confirm both VM executions are finalized in the same block.
-4. Inspect `atlasKernel.lanes` RPC (coming soon) or node logs tagged `atlas-kernel` to verify lane commitments and relay messages.
+4. Inspect `atlasKernel.lanes` RPC (coming soon) or node logs tagged `x3-kernel` to verify lane commitments and relay messages.
 
 ### Account Authorization
 
-The Atlas Kernel implements an account authorization system that controls which accounts can submit Comits. Authorized accounts are managed through privileged extrinsics and checked during submission.
+The X3 Kernel implements an account authorization system that controls which accounts can submit Comits. Authorized accounts are managed through privileged extrinsics and checked during submission.
 
 #### Authorization Management
 
@@ -444,11 +445,45 @@ cargo clippy --all-targets --all-features -- -D warnings
 Runtime checks:
 
 ```bash
-cargo test -p atlas-sphere-runtime
-cargo build -p atlas-sphere-runtime --release --features runtime-benchmarks
+cargo test -p x3-chain-runtime
+cargo build -p x3-chain-runtime --release --features runtime-benchmarks
 ```
 
 Continuous Integration (GitHub Actions) enforces these gates, alongside WASM runtime builds for determinism.
+
+---
+
+## ☢️ YOLO FINISHER v5.0 — Nuclear Finalization
+
+The repository enforces the **YOLO FINISHER v5.0** protocol for finalization.
+No code is considered "shipped" until it passes the 100/100 readiness gate.
+
+### Core Rules
+
+1. **FAIL IF UNCERTAIN**: In the face of ambiguity, choose the safest interpretation and implement it. Never defer.
+2. **INTENT RECOVERY**: Unused code defaults to *intended* and must be wired. Delete only if proven dead.
+3. **SYMMETRY**: Every architectural element needs its counterpart (Write/Read, Emit/Consume).
+4. **CONFIG LAW**: Every configuration flag must actively alter behavior and be validated on startup.
+5. **COLD START**: The system must bootstrap and succeed on a fresh machine with zero state.
+
+### Finalization Stack
+
+Run the nuclear finisher stack in sequence:
+`CARTOGRAPHER` → `ARCHAEOLOGIST` → `BREAKER` → `AUDITOR` → `INTENT ANALYST` → `INTEGRATOR` → `VERIFIER` → `FIXER` → `ECONOMIST` → `CHAOS ENGINE` → `COMPLETION JUDGE`
+
+### Usage
+
+```bash
+# Start the autonomous finalization daemon
+npm run finisher:nuclear
+
+# Run specific gates
+make finish-score   # Check readiness score
+make finish-audit   # Security & Economics audit
+make finish-chaos   # Chaos & Fuzzer injection
+```
+
+See `.github/prompts/finisher-*.prompt.md` for detailed agent roles.
 
 ---
 
@@ -458,8 +493,8 @@ Continuous Integration (GitHub Actions) enforces these gates, alongside WASM run
 2. **Coding Standards:** Follow Rust best practices, ensure `cargo fmt` and `cargo clippy` pass.
 3. **Commits:** Use descriptive messages; reference GitHub issues or PRs when applicable.
 4. **Testing:** Add unit/integration tests covering new functionality.
-5. **PR Review:** Request review from Atlas Sphere maintainers; expect automated checks before merge.
-6. **Security:** Report vulnerabilities privately to the core team (security@atlas-sphere.io) before public disclosure.
+5. **PR Review:** Request review from X3 Chain maintainers; expect automated checks before merge.
+6. **Security:** Report vulnerabilities privately to the core team (security@x3-chain.io) before public disclosure.
 
 Please read `CONTRIBUTING.md` (forthcoming) for detailed policies, CLA requirements, and governance.
 
@@ -467,8 +502,8 @@ Please read `CONTRIBUTING.md` (forthcoming) for detailed policies, CLA requireme
 
 ## Roadmap Snapshot
 
-- ✅ Atlas Kernel pallet MVP landed with Comit submission, asset registry, and canonical ledger primitives now available on-chain.
-- ✅ Runtime integrates Aura + GRANDPA consensus, transaction payment, and Atlas Kernel wiring for end-to-end Comit handling.
+- ✅ X3 Kernel pallet MVP landed with Comit submission, asset registry, and canonical ledger primitives now available on-chain.
+- ✅ Runtime integrates Aura + GRANDPA consensus, transaction payment, and X3 Kernel wiring for end-to-end Comit handling.
 - 🚧 Dual VM adapters (Frontier EVM + SVM bridge) under active development with a developer preview targeted for the next milestone.
 - 🔜 Next up: Tendermint-style consensus evaluation, governance pallet activation to retire sudo, and comprehensive runtime benchmarking.
 
@@ -476,11 +511,19 @@ Progress is tracked publicly via our GitHub Projects board.
 
 ---
 
+## Developer Templates
+
+- Curated template matrix: [docs/templates/X3_DEVELOPER_TEMPLATES.md](docs/templates/X3_DEVELOPER_TEMPLATES.md)
+- Local starter folders: [templates/x3-chain/README.md](templates/x3-chain/README.md)
+- Quick matrix bootstrap helper: `./scripts/bootstrap-x3-template-matrix.sh`
+
+---
+
 ## Resources & Further Reading
 
 - Local master docs index: [docs/master/INDEX.md](docs/master/INDEX.md)
-- Atlas Sphere Documentation (coming soon): [https://docs.atlas-sphere.io](https://docs.atlas-sphere.io)
-- Atlas Sphere Cross-Chain Primer: [https://labs.atlas-sphere.io/cross-chain-primer](https://labs.atlas-sphere.io/cross-chain-primer)
+- X3 Chain Documentation (coming soon): [https://docs.x3-chain.io](https://docs.x3-chain.io)
+- X3 Chain Cross-Chain Primer: [https://labs.x3-chain.io/cross-chain-primer](https://labs.x3-chain.io/cross-chain-primer)
 - Substrate Developer Hub: [https://docs.substrate.io](https://docs.substrate.io)
 - FRAME Runtime Overview: [https://docs.substrate.io/build/runtime/](https://docs.substrate.io/build/runtime/)
 - Substrate Node Template: [https://github.com/substrate-developer-hub/substrate-node-template](https://github.com/substrate-developer-hub/substrate-node-template)
@@ -492,4 +535,4 @@ Progress is tracked publicly via our GitHub Projects board.
 
 ## License
 
-Atlas Sphere is released under the Apache License 2.0. See `LICENSE` for details.
+X3 Chain is released under the Apache License 2.0. See `LICENSE` for details.

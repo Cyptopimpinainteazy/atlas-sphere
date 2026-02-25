@@ -16,15 +16,15 @@ This document summarizes the implementation of critical security and correctness
    - Added `Self.auth_check(&who, operation_context)` call early in submission flow
    - Encodes operation context (`submit_comit` + caller + comit_id) for authorization checks
    - Returns `BadOrigin` error if authorization fails
-   - File: `pallets/atlas-kernel/src/lib.rs`
+   - File: `pallets/x3-kernel/src/lib.rs`
 
 2. **Zero Prepare Root Rejection**
    - Updated `verify_dual_vm()` to reject `prepare_root == H256::zero()` by default
    - Updated `verify_dual_vm_with_receipts()` to reject zero prepare_root unless feature enabled
    - Wrapped zero-root bypass in compile-time feature: `#[cfg(not(feature = "dev-bypass"))]`
-   - Feature added to `pallets/atlas-kernel/Cargo.toml`: `dev-bypass = []`
+   - Feature added to `pallets/x3-kernel/Cargo.toml`: `dev-bypass = []`
    - Added tests: `prepare_root_zero_rejected_by_default` (production) and conditional acceptance (dev)
-   - Files: `pallets/atlas-kernel/src/lib.rs`, `Cargo.toml`, `tests.rs`
+   - Files: `pallets/x3-kernel/src/lib.rs`, `Cargo.toml`, `tests.rs`
 
 **Risk Mitigation:**
 - Prevents trivial authorization bypass via zero prepare_root
@@ -40,7 +40,7 @@ This document summarizes the implementation of critical security and correctness
 **Changes Made:**
 
 1. **EVM Config Default Chain ID**
-   - Changed from `chain_id: 0` to `chain_id: 42` (Atlas Sphere default)
+   - Changed from `chain_id: 0` to `chain_id: 42` (X3 Chain default)
    - Tests updated to match (already correct: `assert_eq!(config.chain_id, 42)`)
    - File: `crates/evm-integration/src/lib.rs`
 
@@ -67,20 +67,20 @@ This document summarizes the implementation of critical security and correctness
    - `ComitExecutionStarted { comit_id, timestamp }`
    - `ComitExecutionCompleted { comit_id, success, gas_used }`
    - Event order now: `ComitSubmitted` → `ComitExecutionStarted` → `ComitExecutionCompleted` → `ComitFinalized`
-   - File: `pallets/atlas-kernel/src/lib.rs`, lines ~341-363
+   - File: `pallets/x3-kernel/src/lib.rs`, lines ~341-363
 
 2. **Event Emission in `submit_comit()`**
    - `ComitSubmitted` emitted immediately after validation/nonce check
    - `ComitExecutionStarted` emitted before execution
    - `ComitExecutionCompleted` emitted after execution with success flag and gas used
    - `ComitFinalized` emitted at end of successful flow
-   - File: `pallets/atlas-kernel/src/lib.rs`, lines ~447-468
+   - File: `pallets/x3-kernel/src/lib.rs`, lines ~447-468
 
 3. **Test Updates**
    - Updated `submit_comit_successful_flow()` to expect 4 events instead of 1
    - Updated `sequential_nonce_increments_per_account()` to expect 40 events (10 × 4)
    - Tests now validate event ordering and metadata
-   - File: `pallets/atlas-kernel/src/tests.rs`
+   - File: `pallets/x3-kernel/src/tests.rs`
 
 **Observability Improvements:**
 - Clear tracing of Comit lifecycle from submission through completion
@@ -99,7 +99,7 @@ This document summarizes the implementation of critical security and correctness
    - Added TODO comment for proper `pallet_timestamp::Pallet::<T>::now()` integration
    - Currently uses block-number-derived timestamp as fallback (12s per block)
    - Ready for trait bound addition when T::Config supports timestamp integration
-   - File: `pallets/atlas-kernel/src/lib.rs`, lines ~894-902
+   - File: `pallets/x3-kernel/src/lib.rs`, lines ~894-902
 
 2. **Current Approach (Fallback)**
    - `current_timestamp = block_number * 12_000` (milliseconds)
@@ -122,20 +122,20 @@ This document summarizes the implementation of critical security and correctness
    - Added bounds check: `decimals <= 30`
    - New error variant: `InvalidDecimals`
    - Prevents unrealistic precision values
-   - File: `pallets/atlas-kernel/src/lib.rs`, line ~515
+   - File: `pallets/x3-kernel/src/lib.rs`, line ~515
 
 2. **Symbol Charset Validation**
    - Restricted to: uppercase ASCII (A-Z), digits (0-9), apps/dash-legacy-2-legacy-2 (-), underscore (_)
    - Rejects: lowercase, special chars, spaces
    - New error variant: `InvalidSymbolCharset`
-   - File: `pallets/atlas-kernel/src/lib.rs`, lines ~518-527
+   - File: `pallets/x3-kernel/src/lib.rs`, lines ~518-527
 
 3. **Comprehensive Tests Added**
    - `register_asset_rejects_invalid_decimals()` - tests >30 rejection
    - `register_asset_accepts_valid_decimals()` - tests 0, 1, 18, 30 acceptance
    - `register_asset_rejects_invalid_symbol_charset()` - tests lowercase, special chars, spaces
    - `register_asset_accepts_valid_symbols()` - tests uppercase, digits, underscore, apps/dash-legacy-2-legacy-2
-   - File: `pallets/atlas-kernel/src/tests.rs`, added ~90 lines
+   - File: `pallets/x3-kernel/src/tests.rs`, added ~90 lines
 
 **Data Quality Improvements:**
 - Prevents malformed asset metadata
@@ -187,7 +187,7 @@ This document summarizes the implementation of critical security and correctness
 1. **Config Trait Extensions**
    - Added `type EvmAdapter: Default` to Config
    - Added `type SvmAdapter: Default` to Config
-   - File: `pallets/atlas-kernel/src/lib.rs`, lines ~242-246
+   - File: `pallets/x3-kernel/src/lib.rs`, lines ~242-246
 
 2. **Runtime Wiring**
    - Updated `runtime/src/lib.rs` to wire adapters
@@ -225,7 +225,7 @@ This document summarizes the implementation of critical security and correctness
 - **Status:** NOT STARTED (requires governance pallet integration)
 
 ### Comment 4: RuntimeApi & RPC Implementation
-- Define `atlas_kernel_rpc::AtlasKernelRuntimeApi`
+- Define `x3_kernel_rpc::AtlasKernelRuntimeApi`
 - Implement full RPC server in `node/src/rpc.rs`
 - Build proper `new_full()` in `node/src/service.rs`
 - **Status:** NOT STARTED (blocked on node service architecture)

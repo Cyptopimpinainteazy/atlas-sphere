@@ -1,5 +1,5 @@
 #!/bin/bash
-# Startup smoke tests for Atlas Sphere
+# Startup smoke tests for X3 Chain
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

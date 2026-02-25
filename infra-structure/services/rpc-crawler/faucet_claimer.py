@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere — Faucet Auto-Claimer & Wallet Manager
+X3 Chain — Faucet Auto-Claimer & Wallet Manager
 
 Automatically claims testnet tokens from API-based faucets,
 generates wallets per chain, and tracks claim cooldowns.

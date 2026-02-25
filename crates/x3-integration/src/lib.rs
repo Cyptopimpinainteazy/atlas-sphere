@@ -1,6 +1,6 @@
-//! Atlas Sphere X3 VM Integration
+//! X3 Chain X3 VM Integration
 //!
-//! This crate provides the bridge between the Atlas Kernel pallet and the X3
+//! This crate provides the bridge between the X3 Kernel pallet and the X3
 //! virtual machine. It enables execution of X3 bytecode alongside EVM and SVM
 //! in atomic cross-VM transactions.
 //!
@@ -8,7 +8,7 @@
 //!
 //! ```text
 //! ┌─────────────────────────────────────────────────────────────────────┐
-//! │                        Atlas Kernel Pallet                          │
+//! │                        X3 Kernel Pallet                          │
 //! │                                                                     │
 //! │  ┌───────────────┐ ┌───────────────┐ ┌───────────────────────────┐ │
 //! │  │ EVM Adapter   │ │ SVM Adapter   │ │ X3 Adapter (this crate)   │ │
@@ -34,7 +34,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use atlas_x3_integration::{X3Executor, X3ExecutorConfig};
+//! use x3_x3_integration::{X3Executor, X3ExecutorConfig};
 //!
 //! // Execute X3 bytecode
 //! let config = X3ExecutorConfig::default();

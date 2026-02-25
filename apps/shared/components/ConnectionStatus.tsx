@@ -1,7 +1,7 @@
 /**
  * ConnectionStatus Component
  * 
- * Displays real-time connection status to the Atlas Sphere blockchain.
+ * Displays real-time connection status to the X3 Chain blockchain.
  * Shows chain info, block number, and connection state.
  */
 

@@ -9,7 +9,7 @@ pub struct ChainId(pub u64);
 
 impl ChainId {
     // Well-known chain IDs
-    pub const ATLAS: Self = Self(0);
+    pub const X3: Self = Self(0);
     pub const ETHEREUM: Self = Self(1);
     pub const BSC: Self = Self(56);
     pub const POLYGON: Self = Self(137);

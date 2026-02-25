@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: atlas-analytics-db
+    container_name: x3-analytics-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: atlas-analytics-service
+    container_name: x3-analytics-service
     environment:
       HOST: 0.0.0.0
       PORT: 8080

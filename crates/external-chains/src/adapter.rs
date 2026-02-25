@@ -179,7 +179,7 @@ pub enum TransferStatus {
 /// Universal chain adapter trait
 /// 
 /// This trait defines the interface that all external chain adapters must implement.
-/// The Atlas Kernel uses this interface to communicate with external chains.
+/// The X3 Kernel uses this interface to communicate with external chains.
 #[async_trait::async_trait]
 pub trait ChainAdapter: Send + Sync {
     /// Get the chain type this adapter handles
@@ -359,7 +359,7 @@ mod tests {
     fn test_chain_message_hash() {
         let msg = ChainMessage::new(
             8453, // Base
-            42,   // Atlas Sphere
+            42,   // X3 Chain
             H160::zero(),
             H160::zero(),
             vec![1, 2, 3],

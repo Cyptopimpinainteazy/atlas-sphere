@@ -1,4 +1,4 @@
-// Frontier EVM Executor for Atlas Sphere
+// Frontier EVM Executor for X3 Chain
 // Provides real EVM execution using Frontier's pallet-evm
 
 use crate::{
@@ -32,7 +32,7 @@ impl<T: EvmPalletConfig> Default for FrontierEvmExecutor<T> {
     }
 }
 
-/// Convert Frontier log to Atlas EVM log
+/// Convert Frontier log to X3 EVM log
 fn convert_log(log: Log) -> EvmLog {
     EvmLog {
         address: log.address,

@@ -3,7 +3,7 @@
 
 [identity]
 keypair_path = "/etc/gpu-swarm/node.key"
-display_name = "atlas-x31-3gpu"
+display_name = "x3-x31-3gpu"
 region = "local"
 
 [network]

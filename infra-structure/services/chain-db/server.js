@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Atlas Sphere — Chain Database API Server
+ * X3 Chain — Chain Database API Server
  *
  * High-performance REST API serving 60,000+ blockchain chain data from SQLite.
- * Powers the infenstructior dashboard chain explorer.
+ * Powers the inferstructor dashboard chain explorer.
  *
  * Endpoints:
  *   GET  /api/chains                  — Paginated chain listing with filters
@@ -20,6 +20,7 @@ const express = require('express');
 const cors = require('cors');
 const Database = require('better-sqlite3');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.CHAIN_DB_PORT || 7070;
@@ -45,9 +46,66 @@ try {
   const count = db.prepare('SELECT COUNT(*) as cnt FROM chains').get();
   console.log(`✓ Chain DB connected: ${count.cnt.toLocaleString()} chains loaded from ${DB_PATH}`);
   console.log(`✓ Write connection ready for airdrops/faucets/wallets`);
+
+  // Ensure connector table exists (safe for existing DBs)
+  dbW.exec(`
+    CREATE TABLE IF NOT EXISTS chain_connectors (
+      id               INTEGER PRIMARY KEY AUTOINCREMENT,
+      chain_id         TEXT NOT NULL,
+      rpc_url          TEXT NOT NULL,
+      auth_type        TEXT NOT NULL DEFAULT 'none',
+      credential_mask  TEXT,
+      credential_enc   TEXT,
+      notes            TEXT,
+      status           TEXT NOT NULL DEFAULT 'active',
+      created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_connectors_chain ON chain_connectors(chain_id);
+  `);
 } catch (err) {
   console.error(`✗ Failed to open chain database at ${DB_PATH}:`, err.message);
   process.exit(1);
+}
+
+// ── Credential encryption helpers ────────────────────────────────────────────
+
+const CRED_KEY_RAW = process.env.CHAIN_DB_CRED_KEY || '';
+
+function loadCredKey() {
+  if (!CRED_KEY_RAW) return null;
+  if (/^[0-9a-fA-F]{64}$/.test(CRED_KEY_RAW)) return Buffer.from(CRED_KEY_RAW, 'hex');
+  try {
+    const buf = Buffer.from(CRED_KEY_RAW, 'base64');
+    if (buf.length === 32) return buf;
+  } catch (e) {
+    // ignore
+  }
+  if (Buffer.byteLength(CRED_KEY_RAW) === 32) return Buffer.from(CRED_KEY_RAW, 'utf8');
+  throw new Error('CHAIN_DB_CRED_KEY must be 32 bytes (hex or base64)');
+}
+
+const CRED_KEY = loadCredKey();
+
+function maskCredential(value) {
+  if (!value) return null;
+  if (value.length <= 8) return '****';
+  return `${value.slice(0, 4)}...${value.slice(-2)}`;
+}
+
+function encryptCredential(value) {
+  if (!value) return null;
+  if (!CRED_KEY) throw new Error('CHAIN_DB_CRED_KEY not set; refusing to store credentials');
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', CRED_KEY, iv);
+  const enc = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return JSON.stringify({
+    v: 1,
+    iv: iv.toString('base64'),
+    tag: tag.toString('base64'),
+    data: enc.toString('base64'),
+  });
 }
 
 // ── Prepared statements (perf optimization) ──────────────────────────────────
@@ -105,6 +163,13 @@ const stmts = {
   getMetrics: db.prepare(`
     SELECT * FROM chain_metrics WHERE chain_id = ? ORDER BY measured_at DESC LIMIT 1
   `),
+  getConnectorsByChain: db.prepare(`
+    SELECT cc.*, c.chain_name, c.ecosystem, c.chain_type
+    FROM chain_connectors cc
+    LEFT JOIN chains c ON c.chain_id = cc.chain_id
+    WHERE cc.chain_id = ?
+    ORDER BY cc.created_at DESC
+  `),
 
   ecosystemStats: db.prepare(`
     SELECT ecosystem,
@@ -150,6 +215,27 @@ const stmts = {
     ORDER BY created_at DESC
     LIMIT ?
   `),
+
+  listConnectors: db.prepare(`
+    SELECT cc.*, c.chain_name, c.ecosystem, c.chain_type
+    FROM chain_connectors cc
+    LEFT JOIN chains c ON c.chain_id = cc.chain_id
+    ORDER BY cc.created_at DESC
+  `),
+
+  insertConnector: dbW.prepare(`
+    INSERT INTO chain_connectors (chain_id, rpc_url, auth_type, credential_mask, credential_enc, notes, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `),
+
+  countPrimaryRpc: db.prepare(`
+    SELECT COUNT(*) as cnt FROM rpc_endpoints WHERE chain_id = ? AND is_primary = 1
+  `),
+
+  insertRpcEndpoint: dbW.prepare(`
+    INSERT INTO rpc_endpoints (chain_id, url, protocol, provider, tier, is_primary, is_healthy)
+    VALUES (?, ?, ?, ?, ?, ?, 1)
+  `),
 };
 
 // ── Routes ───────────────────────────────────────────────────────────────────
@@ -159,7 +245,7 @@ app.get('/health', (_req, res) => {
   const count = db.prepare('SELECT COUNT(*) as cnt FROM chains').get();
   res.json({
     status: 'healthy',
-    service: 'atlas-chain-db',
+    service: 'x3-chain-db',
     chains_loaded: count.cnt,
     db_path: DB_PATH,
   });
@@ -261,8 +347,9 @@ app.get('/api/chains/:chainId', (req, res) => {
   const rpc_endpoints = stmts.getRpcEndpoints.all(req.params.chainId);
   const gpu_stats = stmts.getGpuStats.get(req.params.chainId);
   const latest_metrics = stmts.getMetrics.get(req.params.chainId);
+  const connectors = stmts.getConnectorsByChain.all(req.params.chainId);
 
-  res.json({ ...chain, rpc_endpoints, gpu_stats, latest_metrics });
+  res.json({ ...chain, rpc_endpoints, gpu_stats, latest_metrics, connectors });
 });
 
 // GET /api/rpc/stats — RPC pool stats with gas savings calculation
@@ -323,6 +410,90 @@ app.get('/api/rpc/stats', (_req, res) => {
 app.get('/api/rpc/:chainId', (req, res) => {
   const endpoints = stmts.getRpcEndpoints.all(req.params.chainId);
   res.json({ chain_id: req.params.chainId, endpoints, count: endpoints.length });
+});
+
+// GET /api/connectors — Onboarded chain connectors (masked)
+app.get('/api/connectors', (_req, res) => {
+  const items = stmts.listConnectors.all();
+  const sanitized = items.map((row) => ({
+    id: row.id,
+    chain_id: row.chain_id,
+    chain_name: row.chain_name || null,
+    ecosystem: row.ecosystem || null,
+    chain_type: row.chain_type || null,
+    rpc_url: row.rpc_url,
+    auth_type: row.auth_type,
+    credential_mask: row.credential_mask,
+    notes: row.notes || null,
+    status: row.status,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
+  res.json({ items: sanitized });
+});
+
+// POST /api/connectors — Register a new connector (stores masked + encrypted credential)
+app.post('/api/connectors', (req, res) => {
+  const adminKey = process.env.CHAIN_DB_ADMIN_KEY || '';
+  const reqKey = req.headers['x-admin-key'];
+  if (adminKey && reqKey !== adminKey) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
+  const {
+    chain_id,
+    rpc_url,
+    auth_type = 'none',
+    credential = '',
+    notes = '',
+    status = 'active',
+  } = req.body || {};
+
+  if (!chain_id || !rpc_url) {
+    return res.status(400).json({ error: 'chain_id and rpc_url are required' });
+  }
+
+  try {
+    const masked = maskCredential(String(credential || ''));
+    const enc = credential ? encryptCredential(String(credential)) : null;
+
+    const result = stmts.insertConnector.run(
+      String(chain_id),
+      String(rpc_url),
+      String(auth_type || 'none'),
+      masked,
+      enc,
+      String(notes || ''),
+      String(status || 'active')
+    );
+
+    const protocol = String(rpc_url).startsWith('wss') ? 'wss' : (String(rpc_url).startsWith('ws') ? 'ws' : 'https');
+    const primaryCount = stmts.countPrimaryRpc.get(String(chain_id)).cnt || 0;
+    const isPrimary = primaryCount === 0 ? 1 : 0;
+    stmts.insertRpcEndpoint.run(
+      String(chain_id),
+      String(rpc_url),
+      protocol,
+      'custom',
+      credential ? 'authenticated' : 'public',
+      isPrimary
+    );
+
+    return res.json({
+      ok: true,
+      connector: {
+        id: result.lastInsertRowid,
+        chain_id: String(chain_id),
+        rpc_url: String(rpc_url),
+        auth_type: String(auth_type || 'none'),
+        credential_mask: masked,
+        notes: String(notes || ''),
+        status: String(status || 'active'),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'failed to store connector', message: err.message });
+  }
 });
 
 // GET /api/gpu-stats/:chainId
@@ -799,7 +970,7 @@ app.use((err, _req, res, _next) => {
 // ── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
-  console.log(`\n🔗 Atlas Chain DB API running on http://localhost:${PORT}`);
+  console.log(`\n🔗 X3 Chain DB API running on http://localhost:${PORT}`);
   console.log(`   Health:    http://localhost:${PORT}/health`);
   console.log(`   Chains:    http://localhost:${PORT}/api/chains`);
   console.log(`   Search:    http://localhost:${PORT}/api/chains/search?q=ethereum`);

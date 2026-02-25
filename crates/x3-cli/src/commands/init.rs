@@ -26,7 +26,7 @@ pub async fn execute(args: InitArgs) -> Result<()> {
     let name = args.name.unwrap_or_else(|| {
         path.file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .unwrap_or_else(|| "atlas-project".to_string())
+            .unwrap_or_else(|| "x3-project".to_string())
     });
 
     let project_type = match args.project_type.as_str() {
@@ -35,7 +35,7 @@ pub async fn execute(args: InitArgs) -> Result<()> {
         "dual" | _ => ProjectType::Dual,
     };
 
-    println!("{} Initializing Atlas Sphere project...", "→".blue());
+    println!("{} Initializing X3 Chain project...", "→".blue());
 
     let project = Project::init(path, &name, project_type)?;
 

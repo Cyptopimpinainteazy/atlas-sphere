@@ -1,15 +1,15 @@
-# Atlas Sphere Security Audit Report
+# X3 Chain Security Audit Report
 
 **Audit Date:** Session 2 (Updated: December 10, 2025)  
 **Auditor:** GitHub Copilot (Claude Opus 4.5 Preview)  
-**Scope:** Atlas Kernel Pallet, VM Adapters, EVM/SVM Integration Crates  
+**Scope:** X3 Kernel Pallet, VM Adapters, EVM/SVM Integration Crates  
 **Codebase:** 70 tests passing, dual EVM+SVM execution operational
 
 ---
 
 ## Executive Summary
 
-This security audit reviews the Atlas Sphere blockchain codebase focusing on the Atlas Kernel pallet and its dual-VM execution architecture. The audit identified **3 Critical**, **5 High**, **8 Medium**, and **6 Low** severity findings. **All findings have been addressed** through code fixes, documentation, or design decision rationale.
+This security audit reviews the X3 Chain blockchain codebase focusing on the X3 Kernel pallet and its dual-VM execution architecture. The audit identified **3 Critical**, **5 High**, **8 Medium**, and **6 Low** severity findings. **All findings have been addressed** through code fixes, documentation, or design decision rationale.
 
 ### Risk Summary
 
@@ -28,7 +28,7 @@ This security audit reviews the Atlas Sphere blockchain codebase focusing on the
 
 ### C-1: DualVmDispatcher::auth_check Bypass in Trait Implementation ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L1221-L1235](pallets/atlas-kernel/src/lib.rs#L1221-L1235)
+**Location:** [pallets/x3-kernel/src/lib.rs#L1221-L1235](pallets/x3-kernel/src/lib.rs#L1221-L1235)
 
 **Description:** The `auth_check` method in the `DualVmDispatcher` trait implementation for `Pallet<T>` always returns `Ok(())`, effectively bypassing authorization checks when called via the trait interface.
 
@@ -61,7 +61,7 @@ fn auth_check(&self, caller: &Self::AccountId, operation: &[u8]) -> Result<(), D
 
 ### C-2: Fee Calculation Truncation Allows Zero-Cost Transactions ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L1001-L1010](pallets/atlas-kernel/src/lib.rs#L1001-L1010)
+**Location:** [pallets/x3-kernel/src/lib.rs#L1001-L1010](pallets/x3-kernel/src/lib.rs#L1001-L1010)
 
 **Description:** The fee calculation uses integer division that truncates small values:
 
@@ -92,7 +92,7 @@ let total_fee = base_fee.checked_add(&evm_units).and_then(|t| t.checked_add(&svm
 
 ### C-3: Race Condition in Nonce Check vs Increment ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L491-L506](pallets/atlas-kernel/src/lib.rs#L491-L506) and [pallets/atlas-kernel/src/lib.rs#L605-L607](pallets/atlas-kernel/src/lib.rs#L605-L607)
+**Location:** [pallets/x3-kernel/src/lib.rs#L491-L506](pallets/x3-kernel/src/lib.rs#L491-L506) and [pallets/x3-kernel/src/lib.rs#L605-L607](pallets/x3-kernel/src/lib.rs#L605-L607)
 
 **Description:** The nonce is checked early in `submit_comit` but only incremented after successful execution. In a multi-threaded or batched execution environment, two transactions with the same nonce could both pass validation before either increments.
 
@@ -127,7 +127,7 @@ Nonces::<T>::try_mutate(&who, |stored_nonce| {
 
 ### H-1: prepare_root Verification Uses Inputs Not Outputs ✅ DOCUMENTED AS DESIGN DECISION
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L1269-L1320](pallets/atlas-kernel/src/lib.rs#L1269-L1320)
+**Location:** [pallets/x3-kernel/src/lib.rs#L1269-L1320](pallets/x3-kernel/src/lib.rs#L1269-L1320)
 
 **Description:** The `verify_dual_vm_with_receipts` function ignores the actual execution receipts and only verifies against inputs:
 
@@ -153,7 +153,7 @@ fn verify_dual_vm_with_receipts(
 
 ### H-2: Missing Authorization Test Coverage ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/tests.rs](pallets/atlas-kernel/src/tests.rs)
+**Location:** [pallets/x3-kernel/src/tests.rs](pallets/x3-kernel/src/tests.rs)
 
 **Description:** While the pallet implements authorization via `AuthorizedAccounts`, there are no tests explicitly verifying:
 - Unauthorized account rejection
@@ -188,7 +188,7 @@ fn submit_comit_rejects_unauthorized_account() {
 
 ### H-3: Unbounded State Changes in Canonical Ledger Update ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L880-L930](pallets/atlas-kernel/src/lib.rs#L880-L930)
+**Location:** [pallets/x3-kernel/src/lib.rs#L880-L930](pallets/x3-kernel/src/lib.rs#L880-L930)
 
 **Description:** `apply_canonical_ledger_update` iterates over all state changes without bounds:
 
@@ -212,7 +212,7 @@ ensure!(all_changes.len() <= MAX_STATE_CHANGES as usize, Error::<T>::TooManyStat
 
 ### H-4: Error Reuse for Different Failure Modes ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L1126-L1145](pallets/atlas-kernel/src/lib.rs#L1126-L1145)
+**Location:** [pallets/x3-kernel/src/lib.rs#L1126-L1145](pallets/x3-kernel/src/lib.rs#L1126-L1145)
 
 **Description:** `reason_to_error` maps multiple distinct failure reasons to the same error:
 
@@ -233,12 +233,12 @@ SvmExecutionFailed,
 
 ### H-5: Real EVM Adapter Uses Mock Executor ✅ DOCUMENTED AS NON-PRODUCTION
 
-**Location:** [pallets/atlas-kernel/src/adapters.rs#L298-L310](pallets/atlas-kernel/src/adapters.rs#L298-L310)
+**Location:** [pallets/x3-kernel/src/adapters.rs#L298-L310](pallets/x3-kernel/src/adapters.rs#L298-L310)
 
 **Description:** The `FrontierEvmAdapter` currently uses `MockEvmExecutor`:
 
 ```rust
-let executor = atlas_evm_integration::MockEvmExecutor; // Use mock for now until pallet-evm is wired
+let executor = x3_evm_integration::MockEvmExecutor; // Use mock for now until pallet-evm is wired
 ```
 
 **Impact:** In `std` bfrontend/uilds, the "real" adapter still executes with mocked behavior, not actual EVM execution.
@@ -257,7 +257,7 @@ let executor = atlas_evm_integration::MockEvmExecutor; // Use mock for now until
 
 ### M-1: Missing Input Sanitization for Asset Symbol ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L679-L689](pallets/atlas-kernel/src/lib.rs#L679-L689)
+**Location:** [pallets/x3-kernel/src/lib.rs#L679-L689](pallets/x3-kernel/src/lib.rs#L679-L689)
 
 **Description:** While symbol characters are validated, there's no validation against:
 - Empty symbols
@@ -284,7 +284,7 @@ ensure!(!symbol.starts_with(&[b'-']) && !symbol.starts_with(&[b'_']), Error::<T>
 
 ### M-2: Unsafe Decode Operations in State Change Processing ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L903-L922](pallets/atlas-kernel/src/lib.rs#L903-L922)
+**Location:** [pallets/x3-kernel/src/lib.rs#L903-L922](pallets/x3-kernel/src/lib.rs#L903-L922)
 
 **Description:** Multiple decode operations use `.ok()` which silently ignores failures:
 
@@ -304,7 +304,7 @@ if let Some(acc) = account {
 
 ### M-3: Hardcoded Gas/Compute Limits ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L515-L516](pallets/atlas-kernel/src/lib.rs#L515-L516)
+**Location:** [pallets/x3-kernel/src/lib.rs#L515-L516](pallets/x3-kernel/src/lib.rs#L515-L516)
 
 **Description:** Gas limits are hardcoded constants:
 
@@ -323,7 +323,7 @@ const DEFAULT_SVM_COMPUTE_LIMIT: u64 = 200_000;
 
 ### M-4: Missing Comit ID Uniqueness Check ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L461](pallets/atlas-kernel/src/lib.rs#L461)
+**Location:** [pallets/x3-kernel/src/lib.rs#L461](pallets/x3-kernel/src/lib.rs#L461)
 
 **Description:** `submit_comit` does not verify that `comit_id` is unique. The same comit_id can be reused with different nonces.
 
@@ -337,7 +337,7 @@ const DEFAULT_SVM_COMPUTE_LIMIT: u64 = 200_000;
 
 ### M-5: Authority Set Can Be Emptied via remove_authority ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L787-L810](pallets/atlas-kernel/src/lib.rs#L787-L810)
+**Location:** [pallets/x3-kernel/src/lib.rs#L787-L810](pallets/x3-kernel/src/lib.rs#L787-L810)
 
 **Description:** While there's a check against `MinAuthorities`, the check is `>` not `>=`:
 
@@ -359,7 +359,7 @@ ensure!(authorities.len() >= T::MinAuthorities::get() as usize + 1, ...);
 
 ### M-6: Timestamp Could Be Stale ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L624-L625](pallets/atlas-kernel/src/lib.rs#L624-L625)
+**Location:** [pallets/x3-kernel/src/lib.rs#L624-L625](pallets/x3-kernel/src/lib.rs#L624-L625)
 
 **Description:** Timestamp is retrieved after execution, not at the start:
 
@@ -410,7 +410,7 @@ In long-running block production, this could differ from execution start time.
 
 ### L-1: Missing Event for Fee Deduction ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L577-L584](pallets/atlas-kernel/src/lib.rs#L577-L584)
+**Location:** [pallets/x3-kernel/src/lib.rs#L577-L584](pallets/x3-kernel/src/lib.rs#L577-L584)
 
 No event is emitted when fees are deducted, making fee tracking harder for indexers.
 
@@ -418,7 +418,7 @@ No event is emitted when fees are deducted, making fee tracking harder for index
 
 ### L-2: Weight Estimates Are Placeholder Values ✅ ADDRESSED
 
-**Location:** [pallets/atlas-kernel/src/weights.rs](pallets/atlas-kernel/src/weights.rs)
+**Location:** [pallets/x3-kernel/src/weights.rs](pallets/x3-kernel/src/weights.rs)
 
 **Description:** Weight implementations need benchmarking for production.
 
@@ -433,7 +433,7 @@ No event is emitted when fees are deducted, making fee tracking harder for index
 
 ### L-3: Test Helper `compute_prepare_root` Duplicates Pallet Logic ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/tests.rs#L31-L43](pallets/atlas-kernel/src/tests.rs#L31-L43)
+**Location:** [pallets/x3-kernel/src/tests.rs#L31-L43](pallets/x3-kernel/src/tests.rs#L31-L43)
 
 The test helper duplicates the prepare_root computation. If pallet logic changes, tests might not catch regressions.
 
@@ -445,7 +445,7 @@ The test helper duplicates the prepare_root computation. If pallet logic changes
 
 ### L-4: Unused `verify_dual_vm` Function ✅ FIXED
 
-**Location:** [pallets/atlas-kernel/src/lib.rs#L1039-L1066](pallets/atlas-kernel/src/lib.rs#L1039-L1066)
+**Location:** [pallets/x3-kernel/src/lib.rs#L1039-L1066](pallets/x3-kernel/src/lib.rs#L1039-L1066)
 
 Function `verify_dual_vm` is defined but never called (superseded by `verify_dual_vm_with_receipts`).
 
@@ -547,7 +547,7 @@ All L-1 through L-6 findings addressed.
 
 ## Conclusion
 
-Atlas Sphere demonstrates a well-architected dual-VM blockchain with solid Substrate patterns. **All identified security issues have been addressed.** The codebase shows good security awareness with proper use of checked arithmetic and bounded collections.
+X3 Chain demonstrates a well-architected dual-VM blockchain with solid Substrate patterns. **All identified security issues have been addressed.** The codebase shows good security awareness with proper use of checked arithmetic and bounded collections.
 
 **Status:** Ready for testnet deployment. External audit recommended before mainnet.
 

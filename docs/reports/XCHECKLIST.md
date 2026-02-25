@@ -1,4 +1,4 @@
-# 🎯 ATLAS SPHERE MASTER XCHECKLIST
+# 🎯 X3 CHAIN MASTER XCHECKLIST
 
 > **Comprehensive Implementation Tracker**  
 > **Last Updated**: December 10, 2025  
@@ -29,7 +29,7 @@
 | **Blockchain Core**               | Dual EVM + SVM chain exposing both execution environments             | ✅ Substrate node compiles, Aura + GRANDPA consensus | 80% |
 | **RPC Endpoints**                 | HTTP/WS endpoints for EVM ops; SVM same endpoint, different namespace | ✅ HTTP working, ⚠️ WS pending                        | 70% |
 | **Wallet Connectors**             | UI for wallet connection (MetaMask + SVM signing adapters)            | ✅ Explorer/Wallet apps exist                        | 60% |
-| **Universal Account System**      | Unified wallets holding tokens usable across both VMs                 | ✅ Canonical ledger in Atlas Kernel                  | 75% |
+| **Universal Account System**      | Unified wallets holding tokens usable across both VMs                 | ✅ Canonical ledger in X3 Kernel                  | 75% |
 | **Cross-VM Atomic Flow / Router** | Coordinator contract/runtime logic for atomic cross-VM movement       | ⚠️ cross-vm-bridge crate exists, partially complete  | 65% |
 
 ### VM Executors
@@ -59,7 +59,7 @@
 
 | Item                   | Features/Details                 | Status                                | %   |
 | ---------------------- | -------------------------------- | ------------------------------------- | --- |
-| **Testnet Deployment** | Live testnet with RPC and faucet | ✅ Live at rpc.testnet.atlas-sphere.io | 95% |
+| **Testnet Deployment** | Live testnet with RPC and faucet | ✅ Live at rpc.testnet.x3-chain.io | 95% |
 | **Node Service Layer** | Service wiring with consensus    | ✅ Complete                            | 90% |
 
 ---
@@ -175,7 +175,7 @@
 | Item                     | Features/Details                                          | Status                   | %   |
 | ------------------------ | --------------------------------------------------------- | ------------------------ | --- |
 | **Developer Tutorials**  | EVM quickstart, SVM quickstart, cross-VM atomic           | ⚠️ Partial in docs        | 35% |
-| **SDK Examples**         | EVM (JS/Ethers), SVM (Rust/Anchor), CLI (Bash)            | ⚠️ atlas-sdk crate exists | 45% |
+| **SDK Examples**         | EVM (JS/Ethers), SVM (Rust/Anchor), CLI (Bash)            | ⚠️ x3-sdk crate exists | 45% |
 | **Docs Repo Structure**  | overview.md, architecture.md, rpc.md, faq.md, security.md | ✅ 16 docs in /docs       | 85% |
 | **Validation Checklist** | QA steps, unit test plan for SDKs                         | ⚠️ Partial                | 40% |
 
@@ -185,8 +185,8 @@
 | ---------------------------------- | ---------------------------------------------------- | ----------------------- | --- |
 | **Benchmark Runner (x3-bench)**    | Old vs new compiler, instruction/gas/bytecode deltas | ✅ x3-bench crate exists | 75% |
 | **Gas Profiling Flamegraphs**      | Per-pass opcode/gas telemetry                        | ✅ telemetry.rs outputs  | 70% |
-| **LSP (Language Server Protocol)** | IDE integration                                      | ✅ atlas-lsp crate       | 75% |
-| **VS Code Extension**              | apps/vscode-atlas-sphere                             | ✅ Extension exists      | 60% |
+| **LSP (Language Server Protocol)** | IDE integration                                      | ✅ x3-lsp crate       | 75% |
+| **VS Code Extension**              | apps/vscode-x3-chain                             | ✅ Extension exists      | 60% |
 
 ### Infrastructure & Deployment
 
@@ -305,10 +305,10 @@
 | x3-bench        | Benchmarking        | 75%          |
 | x3-common       | Shared types        | 95%          |
 | x3-integration  | Integration tests   | 70%          |
-| atlas-lsp       | Language server     | 75%          |
-| atlas-sdk       | SDK                 | 50%          |
-| atlas-gateway   | Gateway             | 40%          |
-| atlas-indexer   | Indexer             | 35%          |
+| x3-lsp       | Language server     | 75%          |
+| x3-sdk       | SDK                 | 50%          |
+| x3-gateway   | Gateway             | 40%          |
+| x3-indexer   | Indexer             | 35%          |
 | cross-vm-bridge | VM bridge           | 65%          |
 | evm-integration | Frontier adapter    | 55%          |
 | svm-integration | rBPF adapter        | 50%          |
@@ -319,7 +319,7 @@
 
 | Pallet               | Purpose                        | Completeness |
 | -------------------- | ------------------------------ | ------------ |
-| atlas-kernel         | Core Comit logic, auth, ledger | 85%          |
+| x3-kernel         | Core Comit logic, auth, ledger | 85%          |
 | agent-accounts       | Agent account management       | 40%          |
 | agent-memory         | Agent state persistence        | 35%          |
 | atomic-trade-engine  | Atomic cross-VM trades         | 60%          |
@@ -336,7 +336,7 @@
 
 ```
 ┌────────────────────────────────────┐
-│     ATLAS SPHERE PROGRESS          │
+│     X3 CHAIN PROGRESS          │
 ├────────────────────────────────────┤
 │ Overall:        ██████░░░░  64%    │
 │ Blockchain:     ████████░░  79%    │

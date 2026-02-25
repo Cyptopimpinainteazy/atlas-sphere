@@ -1,4 +1,4 @@
-# Atlas Sphere TPS Optimization Strategy
+# X3 Chain TPS Optimization Strategy
 ## Path to 50,000+ TPS
 
 ### Current Status: 5,000-8,000 TPS

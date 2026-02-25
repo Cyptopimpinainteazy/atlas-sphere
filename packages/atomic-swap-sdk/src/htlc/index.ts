@@ -29,7 +29,7 @@ const EVM_CHAINS = new Set([
 
 const SOLANA_CHAINS = new Set(["solana", "solana-devnet", "solana-testnet"]);
 const BITCOIN_CHAINS = new Set(["bitcoin", "bitcoin-testnet", "bitcoin-signet"]);
-const SUBSTRATE_CHAINS = new Set(["atlas-substrate", "polkadot", "kusama"]);
+const SUBSTRATE_CHAINS = new Set(["x3-substrate", "polkadot", "kusama"]);
 
 export interface HTLCAdapterConfig {
   chainId: ChainId;

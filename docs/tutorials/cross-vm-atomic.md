@@ -1,15 +1,15 @@
 # Cross-VM Atomic Operations Tutorial
 
-This tutorial demonstrates Atlas Sphere's unique cross-VM capabilities by building an atomic arbitrage contract that executes operations on both EVM and SVM in a single transaction.
+This tutorial demonstrates X3 Chain's unique cross-VM capabilities by building an atomic arbitrage contract that executes operations on both EVM and SVM in a single transaction.
 
 ## Prerequisites
 
-- Atlas Sphere local node running
+- X3 Chain local node running
 - Completed [EVM Hello World](/docs/tutorials/evm-hello.md) tutorial
 - Completed [SVM Hello World](/docs/tutorials/svm-hello.md) tutorial
 - Understanding of both EVM and SVM development patterns
 
-**Why this matters**: Cross-VM atomic operations are the core innovation of Atlas Sphere, enabling use cases impossible on traditional blockchains like trustless arbitrage, unified liquidity, and cross-chain DeFi strategies.
+**Why this matters**: Cross-VM atomic operations are the core innovation of X3 Chain, enabling use cases impossible on traditional blockchains like trustless arbitrage, unified liquidity, and cross-chain DeFi strategies.
 
 ## Overview
 
@@ -54,8 +54,8 @@ We'll build a simple arbitrage system that:
 
 ```bash
 # Create project directory
-mkdir atlas-cross-vm-arb
-cd atlas-cross-vm-arb
+mkdir x3-cross-vm-arb
+cd x3-cross-vm-arb
 
 # Create subdirectories
 mkdir evm-contract svm-program shared
@@ -63,7 +63,7 @@ mkdir evm-contract svm-program shared
 # Initialize Node.js project
 npm init -y
 npm install --save-dev hardhat @nomiclabs/hardhat-ethers ethers
-npm install --save @atlas-sphere/sdk
+npm install --save @x3-chain/sdk
 
 # Initialize Rust project for SVM
 cargo init --lib svm-program
@@ -152,7 +152,7 @@ Create `shared/constants.ts`:
  */
 
 export const CROSS_VM_CONSTANTS = {
-  // Cross-VM call precompile address (Atlas Sphere specific)
+  // Cross-VM call precompile address (X3 Chain specific)
   CROSS_VM_PRECOMPILE: "0x0000000000000000000000000000000000000800",
   
   // Gas limits
@@ -171,7 +171,7 @@ export const CROSS_VM_CONSTANTS = {
 } as const;
 
 export const ARBITRAGE_CONFIG = {
-  MIN_PROFIT_THRESHOLD: 1000n, // 0.001 ATLAS
+  MIN_PROFIT_THRESHOLD: 1000n, // 0.001 X3
   SLIPPAGE_TOLERANCE: 50n, // 0.5%
   EXECUTION_TIMEOUT: 300, // 5 minutes
 } as const;
@@ -185,11 +185,11 @@ Create `evm-contract/contracts/AtomicArbitrage.sol`:
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@atlas-sphere/contracts/cross-vm/CrossVmCaller.sol";
+import "@x3-chain/contracts/cross-vm/CrossVmCaller.sol";
 
 /**
  * @title AtomicArbitrage
- * @dev Demonstrates cross-VM atomic operations on Atlas Sphere
+ * @dev Demonstrates cross-VM atomic operations on X3 Chain
  * @notice Executes trades on both EVM and SVM with atomic settlement
  */
 contract AtomicArbitrage is CrossVmCaller {
@@ -377,12 +377,12 @@ pragma solidity ^0.8.19;
 
 /**
  * @title CrossVmCaller
- * @dev Base contract for cross-VM operations on Atlas Sphere
+ * @dev Base contract for cross-VM operations on X3 Chain
  * @notice Provides standardized interface for calling SVM programs
  */
 abstract contract CrossVmCaller {
     
-    // Cross-VM precompile address on Atlas Sphere
+    // Cross-VM precompile address on X3 Chain
     address constant CROSS_VM_PRECOMPILE = 0x0000000000000000000000000000000000000800;
     
     /**

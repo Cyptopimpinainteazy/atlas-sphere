@@ -2,7 +2,7 @@
 
 > **Status**: Canonical | **Version**: 1.0.0 | **Last Updated**: 2025-12-10
 
-The official definition of the X3 source language, bytecode model, semantics, and compilation rules for the Atlas Sphere blockchain.
+The official definition of the X3 source language, bytecode model, semantics, and compilation rules for the X3 Chain blockchain.
 
 ---
 
@@ -24,7 +24,7 @@ The official definition of the X3 source language, bytecode model, semantics, an
 
 ## 1. Language Philosophy
 
-X3 is the native programming language for the Atlas Sphere blockchain. It is designed with the following core principles:
+X3 is the native programming language for the X3 Chain blockchain. It is designed with the following core principles:
 
 ### 1.1 Design Goals
 
@@ -1062,4 +1062,4 @@ fn map_set<K, V>(m: &mut Map<K, V>, key: K, value: V);
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

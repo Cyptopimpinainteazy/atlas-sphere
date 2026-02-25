@@ -1,6 +1,6 @@
 [package]
 name = "getrandom"
-version = "0.2.16"
+version = "0.2.17"
 authors = ["The Rand Project Developers"]
 edition = "2021"
 license = "MIT OR Apache-2.0"

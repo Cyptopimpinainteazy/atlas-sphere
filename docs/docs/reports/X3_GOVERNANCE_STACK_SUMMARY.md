@@ -271,7 +271,7 @@ Runtime Layer (Always On):
 
 ### WEEKLY AUDIT
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 bash scripts/x3_audit.sh
 python3 scripts/x3_generate_issues.py
 bash scripts/x3_coverage_gate.sh

@@ -183,7 +183,7 @@ X3 Source Code
     ├─ Cost estimation
     └─ Output: Optimal instruction sequence
     ↓
-Bytecode (to Atlas Sphere VM)
+Bytecode (to X3 Chain VM)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 EXPECTED PERFORMANCE GAINS (Stacked)

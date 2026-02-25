@@ -30,7 +30,7 @@
 
 ### 🛠️ **OPTION 2: Runtime Pallet Implementation** (Blockchain Adapter)
 
-**Created:** `pallets/atlas-jury-anchor/`
+**Created:** `pallets/x3-jury-anchor/`
 
 | Component | Status | Tests |
 |-----------|--------|-------|
@@ -225,7 +225,7 @@ async def test_complete_jury_flow():
 │         │ RPC Call: anchor_decision(session_id, hash)         │
 │         ↓                                                       │
 │  Blockchain Runtime Pallet (Rust - OPTION 1)                  │
-│  ├─ atlas-jury-anchor pallet                                 │
+│  ├─ x3-jury-anchor pallet                                 │
 │  ├─ JuryDecisions storage                                    │
 │  ├─ Event: JuryDecisionAnchored                              │
 │  └─ RPC: jury_decisionStatus                                 │
@@ -253,7 +253,7 @@ PHASE 1: SPECIFICATION
 
 PHASE 2: IMPLEMENTATION  
 ├─ Runtime Pallet (Rust)
-│  ├─ pallets/atlas-jury-anchor/lib.rs  ✅ 400 lines, 8 tests
+│  ├─ pallets/x3-jury-anchor/lib.rs  ✅ 400 lines, 8 tests
 │  └─ Cargo.toml ..................... ✅ Dependencies
 │
 ├─ Python Integration (OPTION 3)
@@ -302,7 +302,7 @@ Status: Ready to deploy
 ### 3. **TypeScript Components** (Production-Ready)
 ```bash
 # Install: npm install --workspace packages/blockchain-adapter
-# Import: import { JuryAnchoring } from '@atlas/blockchain-adapter'
+# Import: import { JuryAnchoring } from '@x3/blockchain-adapter'
 # Use: <JuryDecisionCard sessionId={id} />
 Status: Ready to integrate
 ```

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# fix-gpu-drivers.sh — Fix NVIDIA GPU driver stack for atlas-sphere swarm
+# fix-gpu-drivers.sh — Fix NVIDIA GPU driver stack for x3-chain swarm
 #
 # Machine: 3x GTX 1070, Ubuntu 22.04, kernel 5.15.0-168
 # Current: Driver 535.288.01 (working but half-configured), CUDA 12.2

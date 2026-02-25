@@ -34,14 +34,14 @@ class NetworkPhase(str, Enum):
 class ChainConfig:
     """Chain connection parameters."""
     rpc_url: str = "ws://127.0.0.1:9944"
-    chain_id: str = "atlas-sphere-devnet"
+    chain_id: str = "x3-chain-devnet"
     network_phase: NetworkPhase = NetworkPhase.DEVNET
 
 
 @dataclass
 class BondingConfig:
     """Bonding requirements per role."""
-    min_bond_validator: int = 10_000  # ATLAS tokens
+    min_bond_validator: int = 10_000  # X3 tokens
     min_bond_gpu: int = 1_000
     min_bond_storage: int = 2_000
     min_bond_relayer: int = 5_000

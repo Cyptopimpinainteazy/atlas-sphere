@@ -2,12 +2,16 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -16,13 +20,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
+
 // Run llm_recon.py and stream output to the UI
 func runLLMRecon(proxy string, update func(string)) error {
-	args := []string{"../scripts/llm_recon.py", "--search-all", "--timeout", "4", "--threads", "10"}
+	args := []string{"scripts/llm_recon.py", "--search-all", "--timeout", "4", "--threads", "10"}
 	cmd := exec.Command("python3", args...)
+	cmd.Dir = exeDir()
 	if proxy != "" {
 		cmd.Env = append(os.Environ(), "HTTP_PROXY="+proxy, "HTTPS_PROXY="+proxy)
 	}
@@ -66,25 +72,57 @@ func parseEndpoints(filename string) ([]Endpoint, error) {
 	if err != nil {
 		return nil, err
 	}
-	var endpoints []Endpoint
-	dec := json.NewDecoder(strings.NewReader(string(data)))
-	for {
-		var ep Endpoint
-		if err := dec.Decode(&ep); err != nil {
-			break
+	data = bytes.TrimSpace(data)
+	if len(data) == 0 {
+		return nil, fmt.Errorf("empty file")
+	}
+
+	// Try JSON array first (llm_recon.py export or legacy arrays)
+	if data[0] == '[' {
+		var arr []map[string]any
+		if err := json.Unmarshal(data, &arr); err != nil {
+			return nil, err
 		}
-		if ep.URL != "" {
+		var endpoints []Endpoint
+		for _, m := range arr {
+			if ep, ok := normalizeFromMap(m); ok {
+				endpoints = append(endpoints, ep)
+			}
+		}
+		if len(endpoints) == 0 {
+			return nil, fmt.Errorf("no endpoints found in file")
+		}
+		return endpoints, nil
+	}
+
+	// JSON lines or single object
+	var endpoints []Endpoint
+	dec := json.NewDecoder(bytes.NewReader(data))
+	for {
+		var m map[string]any
+		if err := dec.Decode(&m); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		if ep, ok := normalizeFromMap(m); ok {
 			endpoints = append(endpoints, ep)
 		}
 	}
+	if len(endpoints) == 0 {
+		return nil, fmt.Errorf("no endpoints found in file")
+	}
 	return endpoints, nil
 }
-
 
 // Use proxy if provided, else direct
 func checkLive(url string, client *http.Client) bool {
 	if client == nil {
 		client = &http.Client{Timeout: 5 * time.Second}
+	}
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		url = "http://" + url
 	}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -109,6 +147,69 @@ func loadProxies(filename string) []string {
 	return proxies
 }
 
+func normalizeFromMap(m map[string]any) (Endpoint, bool) {
+	var ep Endpoint
+
+	if v, ok := m["Platform"].(string); ok {
+		ep.Platform = v
+	} else if v, ok := m["platform"].(string); ok {
+		ep.Platform = v
+	}
+
+	if v, ok := m["Host"].(string); ok {
+		ep.Host = v
+	} else if v, ok := m["host"].(string); ok {
+		ep.Host = v
+	}
+
+	if v, ok := m["URL"].(string); ok {
+		ep.URL = v
+	} else if v, ok := m["url"].(string); ok {
+		ep.URL = v
+	}
+
+	if ep.URL == "" {
+		ip, _ := m["ip"].(string)
+		port := intFromAny(m["port"])
+		if ip != "" && port > 0 {
+			ep.URL = fmt.Sprintf("http://%s:%d", ip, port)
+			ep.Host = fmt.Sprintf("%s:%d", ip, port)
+		}
+	}
+
+	if ep.Host == "" && ep.URL != "" {
+		if u, err := url.Parse(ep.URL); err == nil {
+			ep.Host = u.Host
+		}
+	}
+
+	return ep, ep.URL != ""
+}
+
+func intFromAny(v any) int {
+	switch t := v.(type) {
+	case float64:
+		return int(t)
+	case int:
+		return t
+	case int64:
+		return int(t)
+	case json.Number:
+		i, _ := t.Int64()
+		return int(i)
+	default:
+		return 0
+	}
+}
+
+func exeDir() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(exe)
+}
+
 func main() {
 	a := app.New()
 	a.Settings().SetTheme(theme.DarkTheme())
@@ -117,14 +218,14 @@ func main() {
 
 	fileEntry := widget.NewEntry()
 	fileEntry.SetPlaceHolder("Path to llm_recon_results.json")
-	fileEntry.SetText("../llm_recon_results.json")
+	fileEntry.SetText(filepath.Join(exeDir(), "llm_recon_results.json"))
 
 	statusLabel := widget.NewLabel("")
 	proxyStatus := widget.NewLabel("")
 	listWidget := widget.NewMultiLineEntry()
 	listWidget.SetMinRowsVisible(25)
 
-	orderOptions := []string{"Platform","Host","Live","URL"}
+	orderOptions := []string{"Platform", "Host", "Live", "URL"}
 	orderSelect := widget.NewSelect(orderOptions, func(string) {})
 	orderSelect.SetSelected("Platform")
 
@@ -139,7 +240,7 @@ func main() {
 		proxyMode = on
 		if on {
 			statusLabel.SetText("Loading proxies...")
-			proxyList = loadProxies("proxylist.txt")
+			proxyList = loadProxies(filepath.Join(exeDir(), "proxylist.txt"))
 			proxyManager = NewProxyManager(proxyList)
 			proxyStatus.SetText(fmt.Sprintf("Loaded %d proxies", len(proxyList)))
 			statusLabel.SetText("Proxy mode enabled")
@@ -221,15 +322,21 @@ func main() {
 		}
 		proxyMu.Unlock()
 		go func() {
+			var textBuffer strings.Builder
 			err := runLLMRecon(proxy, func(line string) {
-				fyne.CurrentApp().SendNotification(&fyne.Notification{Title: "LLM Recon", Content: line})
-				listWidget.SetText(listWidget.Text + line + "\n")
+				textBuffer.WriteString(line + "\n")
+				// Use fyne.Do to safely update UI from goroutine
+				fyne.Do(func() {
+					listWidget.SetText(textBuffer.String())
+				})
 			})
-			if err != nil {
-				statusLabel.SetText("LLM search error: " + err.Error())
-			} else {
-				statusLabel.SetText("LLM search complete.")
-			}
+			fyne.Do(func() {
+				if err != nil {
+					statusLabel.SetText("LLM search error: " + err.Error())
+				} else {
+					statusLabel.SetText("LLM search complete.")
+				}
+			})
 		}()
 	})
 

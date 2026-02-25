@@ -437,9 +437,9 @@ docker-compose up -d
 **On-Call Schedule:** See Slack #jury-oncall  
 **Escalation:** Page @jury-lead if no response in 15min  
 **Post-Mortems:** Every incident generates postmortem in #jury-incidents  
-**Status Page:** https://status.atlas.io/jury-phase5  
+**Status Page:** https://status.x3.io/jury-phase5  
 
 ---
 
 **Last Updated:** 2026-02-08  
-**Maintained by:** Atlas Operations Team
+**Maintained by:** X3 Operations Team

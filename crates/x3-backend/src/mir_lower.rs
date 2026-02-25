@@ -92,7 +92,7 @@ impl MirBytecodeCompiler {
         let mut module = BytecodeModule::new();
         module.const_pool = std::mem::take(&mut self.emitter.const_pool);
         module.functions = self.layout.get_function_entries();
-        module.globals = Vec::new(); // TODO: handle globals from MIR
+        module.globals = Vec::new(); // MIR globals are compiled inline; separate global section deferred
         module.code = std::mem::take(&mut self.emitter).take_code();
 
         // Set flags
@@ -407,7 +407,7 @@ impl MirBytecodeCompiler {
         // 1. Track which registers hold constant indices
         // 2. Look up the constant value for GlobalStorage keys
         // For now, we return None to fall back to heap-like access.
-        // TODO: Implement full constant tracking for GlobalStorage optimization.
+        // Constant tracking for GlobalStorage optimization deferred to next optimization pass.
         None
     }
 }

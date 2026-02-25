@@ -12,7 +12,7 @@
 
 - [x] **Rust Pallet Compiles**
   ```bash
-  cd pallets/atlas-jury-anchor
+  cd pallets/x3-jury-anchor
   cargo build --release 2>&1 | grep -E "error|warning" || echo "✓ No errors"
   ```
   
@@ -80,18 +80,18 @@
 # File: docker-compose.yml
 services:
   blockchain-node:
-    image: atlas-substrate:latest
+    image: x3-substrate:latest
     environment:
       - JURY_AUTHORITY=${JURY_AUTHORITY}
-      - WASM_RUNTIME=atlas-jury-anchor
+      - WASM_RUNTIME=x3-jury-anchor
     volumes:
-      - pallets/atlas-jury-anchor:/runtime/pallet
+      - pallets/x3-jury-anchor:/runtime/pallet
     ports:
       - "9944:9944"  # RPC
       - "9933:9933"  # WS
 
   jury-anchorer:
-    image: atlas-jury:latest
+    image: x3-jury:latest
     depends_on:
       - blockchain-node
       - jury-service
@@ -120,9 +120,9 @@ POLLING_INTERVAL_SECONDS=2
 MAX_FINALIZATION_ATTEMPTS=30
 
 # .env.production
-RPC_URL=https://mainnet.atlas.io:9944
-JURY_SERVICE_URL=https://api.atlas.io/jury
-DB_HOST=db-prod.atlas.io
+RPC_URL=https://mainnet.x3.io:9944
+JURY_SERVICE_URL=https://api.x3.io/jury
+DB_HOST=db-prod.x3.io
 DB_PORT=5432
 JURY_AUTHORITY=<production-key>
 LOG_LEVEL=WARN
@@ -142,8 +142,8 @@ echo "1. Backing up jury database..."
 pg_dump -h $DB_HOST jury_db > backups/jury_db_pre_phase5.sql
 
 # Step 2: Update runtime WASM
-echo "2. Building new runtime with atlas-jury-anchor pallet..."
-cd pallets/atlas-jury-anchor
+echo "2. Building new runtime with x3-jury-anchor pallet..."
+cd pallets/x3-jury-anchor
 cargo build --release --features wasm
 
 # Step 3: Deploy WASM to chain
@@ -215,7 +215,7 @@ echo "=== All Checks Passed ==="
 
 **6:00 AM:** Notify team & stakeholders
 ```
-Subject: Atlas Jury Phase 5 Deployment - Today
+Subject: X3 Jury Phase 5 Deployment - Today
 
 Timeline:
 - 9:00 AM: Begin staging deployment
@@ -489,7 +489,7 @@ curl http://localhost:9944 \
 ```
 🚀 **Phase 5 Jury Blockchain Anchoring - LIVE**
 
-Atlas now anchors all jury decisions to the blockchain!
+X3 now anchors all jury decisions to the blockchain!
 
 ✅ What's new:
 - Immutable decision records on-chain
@@ -500,7 +500,7 @@ Atlas now anchors all jury decisions to the blockchain!
 🔗 Resources:
 - Guide: openspec/changes/jury-blockchain-anchoring/GUIDE.md
 - API: API Reference section in GUIDE.md
-- Status: https://dashboard.atlas.io/jury-phase5
+- Status: https://dashboard.x3.io/jury-phase5
 
 📊 Metrics:
 - Anchor latency: <5 seconds
@@ -526,7 +526,7 @@ Starting today (2026-02-09), all jury decisions are automatically anchored to th
 4. Regulatory Compliance - Proof of fair decision-making process
 
 Technical Details:
-- Runtime pallet: atlas-jury-anchor (Substrate)
+- Runtime pallet: x3-jury-anchor (Substrate)
 - Off-chain service: jury-anchorer (Python)
 - Frontend: JuryAnchoring adapter (TypeScript React)
 - API: 3 new RPC methods
@@ -539,7 +539,7 @@ Performance:
 For more details, see: GUIDE.md in the Phase 5 OpenSpec change
 
 Thank you,
-Atlas Engineering Team
+X3 Engineering Team
 ```
 
 ---

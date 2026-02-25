@@ -48,6 +48,8 @@ pub mod gpu_hostcall_ids {
     pub const GPU_BENCHMARK: u8 = 0xD5;
     pub const GPU_KECCAK256_BATCH: u8 = 0xD6;
     pub const GPU_SECP256K1_VERIFY: u8 = 0xD7;
+    pub const GPU_ATOMIC_VERIFY: u8 = 0xD8;
+    pub const GPU_ATOMIC_COMMIT: u8 = 0xD9;
 }
 
 // FFI function signatures matching our CUDA extern "C" exports
@@ -64,6 +66,8 @@ type PipelineCleanupFn = unsafe extern "C" fn();
 type Keccak256BatchFn = unsafe extern "C" fn(*const u8, i32, *mut u8) -> i32;
 type Secp256k1VerifyFn = unsafe extern "C" fn(*const u8, *const u8, *const u8, i32, *mut u8) -> i32;
 type Secp256k1VerifyMultiGpuFn = unsafe extern "C" fn(*const u8, *const u8, *const u8, i32, *mut u8) -> i32;
+type AtomicVerifyFn = unsafe extern "C" fn(*const u8, *const u8, i32, *mut u8) -> i32;
+type AtomicCommitFn = unsafe extern "C" fn(*const u8, *const u8, i32) -> i32;
 
 /// Handle to a loaded CUDA shared library with resolved symbols.
 struct CudaLib {
@@ -110,6 +114,13 @@ struct Secp256k1Lib {
     _cuda_lib: CudaLib,
 }
 
+/// Loaded Atomic Swap library functions
+struct AtomicLib {
+    verify: AtomicVerifyFn,
+    commit: AtomicCommitFn,
+    _cuda_lib: CudaLib,
+}
+
 // Safety: The CUDA libraries are thread-safe for our use pattern
 // (each call gets its own device memory allocation)
 unsafe impl Send for Sha256Lib {}
@@ -122,6 +133,8 @@ unsafe impl Send for Keccak256Lib {}
 unsafe impl Sync for Keccak256Lib {}
 unsafe impl Send for Secp256k1Lib {}
 unsafe impl Sync for Secp256k1Lib {}
+unsafe impl Send for AtomicLib {}
+unsafe impl Sync for AtomicLib {}
 
 /// Search paths for CUDA shared libraries
 fn lib_search_paths() -> Vec<PathBuf> {
@@ -145,8 +158,8 @@ fn lib_search_paths() -> Vec<PathBuf> {
     }
 
     // 3. Standard library paths
-    paths.push(PathBuf::from("/usr/local/lib/atlas-sphere"));
-    paths.push(PathBuf::from("/usr/lib/atlas-sphere"));
+    paths.push(PathBuf::from("/usr/local/lib/x3-chain"));
+    paths.push(PathBuf::from("/usr/lib/x3-chain"));
 
     // 4. Cross-chain GPU validator kernel builds
     if let Ok(cwd) = std::env::current_dir() {
@@ -271,6 +284,7 @@ pub struct GpuHostcalls {
     pipeline: Option<Arc<StreamPipelineLib>>,
     keccak256: Option<Arc<Keccak256Lib>>,
     secp256k1: Option<Arc<Secp256k1Lib>>,
+    atomic: Option<Arc<AtomicLib>>,
 }
 
 /// Load the Keccak-256 CUDA library
@@ -304,6 +318,27 @@ fn load_secp256k1_lib() -> Result<Secp256k1Lib, String> {
         let verify_fn: Secp256k1VerifyFn = *verify;
         let multi_fn: Secp256k1VerifyMultiGpuFn = *multi;
         Ok(Secp256k1Lib { verify: verify_fn, verify_multi_gpu: multi_fn, _cuda_lib: CudaLib { _lib: lib } })
+    }
+}
+
+/// Load the Atomic Swap CUDA library
+fn load_atomic_lib() -> Result<AtomicLib, String> {
+    let path = find_lib("libatomic_swap.so")
+        .ok_or_else(|| "libatomic_swap.so not found in search paths".to_string())?;
+    unsafe {
+        let lib = libloading::Library::new(&path)
+            .map_err(|e| format!("Failed to load {}: {}", path.display(), e))?;
+        let verify: libloading::Symbol<AtomicVerifyFn> = lib
+            .get(b"atomic_verify_host")
+            .map_err(|e| format!("Symbol atomic_verify_host: {}", e))?;
+        let commit: libloading::Symbol<AtomicCommitFn> = lib
+            .get(b"atomic_commit_host")
+            .map_err(|e| format!("Symbol atomic_commit_host: {}", e))?;
+        Ok(AtomicLib {
+            verify: *verify,
+            commit: *commit,
+            _cuda_lib: CudaLib { _lib: lib },
+        })
     }
 }
 
@@ -368,13 +403,23 @@ impl GpuHostcalls {
                     None
                 }
             },
+            atomic: match load_atomic_lib() {
+                Ok(lib) => {
+                    log::info!("[X3-GPU] Loaded libatomic_swap.so");
+                    Some(Arc::new(lib))
+                }
+                Err(e) => {
+                    log::warn!("[X3-GPU] Atomic Swap GPU unavailable: {}", e);
+                    None
+                }
+            },
         }
     }
 
     /// Check if any GPU library is loaded
     pub fn is_available(&self) -> bool {
         self.sha256.is_some() || self.ed25519.is_some() || self.pipeline.is_some()
-            || self.keccak256.is_some() || self.secp256k1.is_some()
+            || self.keccak256.is_some() || self.secp256k1.is_some() || self.atomic.is_some()
     }
 
     /// Register all GPU hostcalls into a hostcall registry.
@@ -387,6 +432,7 @@ impl GpuHostcalls {
         let pipeline = self.pipeline.clone();
         let keccak256 = self.keccak256.clone();
         let secp256k1 = self.secp256k1.clone();
+        let atomic = self.atomic.clone();
 
         {
             let lib = sha256.clone();
@@ -428,6 +474,16 @@ impl GpuHostcalls {
             let lib = secp256k1.clone();
             registry.register(gpu_hostcall_ids::GPU_SECP256K1_VERIFY, "gpu_secp256k1_verify", 2,
                 move |args| Self::handle_secp256k1_verify(&lib, args));
+        }
+        {
+            let lib = atomic.clone();
+            registry.register(gpu_hostcall_ids::GPU_ATOMIC_VERIFY, "gpu_atomic_verify", 2,
+                move |args| Self::handle_atomic_verify(&lib, args));
+        }
+        {
+            let lib = atomic.clone();
+            registry.register(gpu_hostcall_ids::GPU_ATOMIC_COMMIT, "gpu_atomic_commit", 2,
+                move |args| Self::handle_atomic_commit(&lib, args));
         }
     }
 
@@ -526,6 +582,28 @@ impl GpuHostcalls {
                 "gpu_secp256k1_verify",
                 2,
                 move |args| Self::handle_secp256k1_verify(&lib, args),
+            );
+        }
+
+        // 0xD8: gpu_atomic_verify
+        {
+            let lib = self.atomic.clone();
+            vm.register_hostcall(
+                gpu_hostcall_ids::GPU_ATOMIC_VERIFY,
+                "gpu_atomic_verify",
+                2,
+                move |args| Self::handle_atomic_verify(&lib, args),
+            );
+        }
+
+        // 0xD9: gpu_atomic_commit
+        {
+            let lib = self.atomic.clone();
+            vm.register_hostcall(
+                gpu_hostcall_ids::GPU_ATOMIC_COMMIT,
+                "gpu_atomic_commit",
+                2,
+                move |args| Self::handle_atomic_commit(&lib, args),
             );
         }
     }
@@ -881,6 +959,73 @@ impl GpuHostcalls {
             ))));
         }
         Ok(Some(Value::Bytes(output)))
+    }
+
+    // ── Atomic Swap handlers ───────────────────────────────────────────
+
+    fn handle_atomic_verify(
+        lib: &Option<Arc<AtomicLib>>,
+        args: &[Value],
+    ) -> VMResult<Option<Value>> {
+        let lib = lib.as_ref().ok_or_else(|| {
+            VMError::without_ip(VMErrorKind::HostcallError(
+                "GPU Atomic Swap library not loaded".into(),
+            ))
+        })?;
+
+        let svm_data = match &args[0] {
+            Value::Bytes(b) => b,
+            _ => return Err(VMError::without_ip(VMErrorKind::TypeMismatch("Bytes".into(), format!("{:?}", args[0])))),
+        };
+        let evm_data = match &args[1] {
+            Value::Bytes(b) => b,
+            _ => return Err(VMError::without_ip(VMErrorKind::TypeMismatch("Bytes".into(), format!("{:?}", args[1])))),
+        };
+
+        let mut status = vec![0u8; 1];
+        let ret = unsafe {
+            (lib.verify)(svm_data.as_ptr(), evm_data.as_ptr(), 1, status.as_mut_ptr())
+        };
+
+        if ret != 0 {
+            return Err(VMError::without_ip(VMErrorKind::HostcallError(format!(
+                "gpu_atomic_verify: CUDA error code {}", ret
+            ))));
+        }
+
+        Ok(Some(Value::Bool(status[0] == 1)))
+    }
+
+    fn handle_atomic_commit(
+        lib: &Option<Arc<AtomicLib>>,
+        args: &[Value],
+    ) -> VMResult<Option<Value>> {
+        let lib = lib.as_ref().ok_or_else(|| {
+            VMError::without_ip(VMErrorKind::HostcallError(
+                "GPU Atomic Swap library not loaded".into(),
+            ))
+        })?;
+
+        let svm_data = match &args[0] {
+            Value::Bytes(b) => b,
+            _ => return Err(VMError::without_ip(VMErrorKind::TypeMismatch("Bytes".into(), format!("{:?}", args[0])))),
+        };
+        let evm_data = match &args[1] {
+            Value::Bytes(b) => b,
+            _ => return Err(VMError::without_ip(VMErrorKind::TypeMismatch("Bytes".into(), format!("{:?}", args[1])))),
+        };
+
+        let ret = unsafe {
+            (lib.commit)(svm_data.as_ptr(), evm_data.as_ptr(), 1)
+        };
+
+        if ret != 0 {
+            return Err(VMError::without_ip(VMErrorKind::HostcallError(format!(
+                "gpu_atomic_commit: CUDA error code {}", ret
+            ))));
+        }
+
+        Ok(Some(Value::Bool(true)))
     }
 
 }

@@ -20,8 +20,8 @@ const SITES = {
   trading:          { title: "X3 Trading",         icon: "📈", color: "#10b981", tagline: "Advanced DeFi Trading Terminal" },
   adult:            { title: "X3 Adult",           icon: "🔞", color: "#f43f5e", tagline: "Age-Verified Content Platform" },
   crypto:           { title: "X3 Crypto",          icon: "₿",  color: "#f59e0b", tagline: "Multi-Chain Crypto Hub" },
-  blockchain:       { title: "X3 Blockchain",      icon: "⛓️", color: "#3b82f6", tagline: "Atlas Sphere Chain Dashboard" },
-  testnet:          { title: "X3 Testnet",         icon: "🧪", color: "#a855f7", tagline: "Atlas Testnet Faucet & Explorer" },
+  blockchain:       { title: "X3 Blockchain",      icon: "⛓️", color: "#3b82f6", tagline: "X3 Chain Chain Dashboard" },
+  testnet:          { title: "X3 Testnet",         icon: "🧪", color: "#a855f7", tagline: "X3 Testnet Faucet & Explorer" },
   ide:              { title: "X3 IDE",             icon: "⌨️", color: "#22d3ee", tagline: "Browser-Based Smart Contract IDE" },
   marketplace:      { title: "X3 Marketplace",     icon: "🏪", color: "#f97316", tagline: "Decentralized Digital Marketplace" },
   pool:             { title: "X3 Pool",            icon: "🏊", color: "#14b8a6", tagline: "Liquidity & Staking Pools" },
@@ -43,7 +43,7 @@ const SITES = {
   xxxchange:        { title: "XXXchange",          icon: "💎", color: "#9f1239", tagline: "Adult Content Marketplace" },
   pics:             { title: "X3 Pics",            icon: "📸", color: "#db2777", tagline: "Decentralized Image Gallery" },
   vibecode:         { title: "X3 Vibecode",        icon: "🎵", color: "#06b6d4", tagline: "Collaborative Code & IDE" },
-  explorer:         { title: "X3 Explorer",        icon: "🔭", color: "#0284c7", tagline: "Atlas Chain Explorer" },
+  explorer:         { title: "X3 Explorer",        icon: "🔭", color: "#0284c7", tagline: "X3 Chain Explorer" },
 };
 
 // ── HTML template ───────────────────────────────────────────────────────────
@@ -91,11 +91,11 @@ function renderPage(sub) {
     <h1>${s.title}</h1>
     <p class="tagline">${s.tagline}</p>
     <div class="card">
-      <p>This service is being deployed on the <strong>Atlas Sphere</strong> network. Stay tuned for launch.</p>
+      <p>This service is being deployed on the <strong>X3 Chain</strong> network. Stay tuned for launch.</p>
       <div class="dots"><span></span><span></span><span></span></div>
     </div>
     <p class="footer">
-      <a href="https://x3star.net">x3star.net</a> &middot; ${sub}.x3star.net &middot; Powered by Atlas Sphere
+      <a href="https://x3star.net">x3star.net</a> &middot; ${sub}.x3star.net &middot; Powered by X3 Chain
     </p>
   </div>
 </body>

@@ -26847,8 +26847,8 @@ export const GENERATED_CHAIN_REGISTRY: ChainDescriptor[] = [
     "gpuAccelerated": false
   },
   {
-    "id": "planq-atlas-testnet",
-    "name": "Planq Atlas Testnet",
+    "id": "planq-x3-testnet",
+    "name": "Planq X3 Testnet",
     "family": "evm",
     "network": "testnet",
     "nativeCurrency": {
@@ -26858,7 +26858,7 @@ export const GENERATED_CHAIN_REGISTRY: ChainDescriptor[] = [
     },
     "chainId": 7077,
     "defaultRpcUrls": [
-      "https://evm-rpc-atlas.planq.network"
+      "https://evm-rpc-x3.planq.network"
     ],
     "defaultWsUrls": [],
     "available": true,
@@ -47831,8 +47831,8 @@ export const GENERATED_CHAIN_REGISTRY: ChainDescriptor[] = [
     "gpuAccelerated": false
   },
   {
-    "id": "gitagi-atlas-testnet",
-    "name": "GitAGI Atlas Testnet",
+    "id": "gitagi-x3-testnet",
+    "name": "GitAGI X3 Testnet",
     "family": "evm",
     "network": "testnet",
     "nativeCurrency": {
@@ -50619,8 +50619,8 @@ export const GENERATED_CHAIN_REGISTRY: ChainDescriptor[] = [
     "gpuAccelerated": false
   },
   {
-    "id": "atlas",
-    "name": "Atlas",
+    "id": "x3",
+    "name": "X3",
     "family": "evm",
     "network": "mainnet",
     "nativeCurrency": {

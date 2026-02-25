@@ -2,10 +2,10 @@
 name = "orchestra"
 version = "0.1.0"
 edition = "2021"
-description = "Multi-layered orchestral agent system for Atlas Sphere — on-chain execution, off-chain jury, rotation, and scrap yard alignment"
-authors = ["Atlas Sphere Team"]
+description = "Multi-layered orchestral agent system for X3 Chain — on-chain execution, off-chain jury, rotation, and scrap yard alignment"
+authors = ["X3 Chain Team"]
 license = "MIT"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [[bin]]
 name = "orchestra-node"

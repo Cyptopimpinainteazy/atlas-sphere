@@ -1,4 +1,4 @@
-//! Universal Cross-Chain Position Manager for Atlas Sphere
+//! Universal Cross-Chain Position Manager for X3 Chain
 //!
 //! This crate provides comprehensive cross-chain position management capabilities:
 //! - Track positions across 103+ EVM chains
@@ -70,7 +70,7 @@ pub use tracking::{PositionTracker, BalanceTracker, StrategyTracker};
 pub use types::*;
 
 // Re-export common types from external dependencies
-pub use atlas_external_chains::{
+pub use x3_external_chains::{
     ChainType, ChainAdapter, AtomicSwapBundle, SwapRoute, QuoteResult,
 };
 pub use sp_core::{H160, H256, U256};

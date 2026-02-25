@@ -1,7 +1,7 @@
 name: polkawallet_plugin_atlas
-description: Polkawallet plugin for Atlas Sphere x3chain - x3vm, atomic trades, cross-chain settlement, .x3 domains
+description: Polkawallet plugin for X3 Chain x3chain - x3vm, atomic trades, cross-chain settlement, .x3 domains
 version: 0.1.0
-homepage: https://github.com/atlas-sphere/polkawallet-plugin-atlas
+homepage: https://github.com/x3-chain/polkawallet-plugin-x3
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

@@ -89,7 +89,7 @@ spec:
       
       containers:
       - name: coordinator
-        image: atlas-sphere/gpu-swarm-coordinator:latest
+        image: x3-chain/gpu-swarm-coordinator:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
@@ -207,7 +207,7 @@ spec:
       
       containers:
       - name: gpu-node
-        image: atlas-sphere/gpu-swarm-node:latest
+        image: x3-chain/gpu-swarm-node:latest
         imagePullPolicy: Always
         securityContext:
           privileged: true

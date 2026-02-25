@@ -2,14 +2,14 @@
 pragma solidity ^0.8.20;
 
 /// @title SimpleStorage
-/// @notice Minimal solidity contract used to smoke-test Atlas Sphere's Frontier EVM integration.
-/// @dev The contract interacts with the Atlas Kernel canonical ledger through a designated precompile.
-///      Native ATLAS tokens (the chain's base asset) are forwarded to the ledger so that balances stay
+/// @notice Minimal solidity contract used to smoke-test X3 Chain's Frontier EVM integration.
+/// @dev The contract interacts with the X3 Kernel canonical ledger through a designated precompile.
+///      Native X3 tokens (the chain's base asset) are forwarded to the ledger so that balances stay
 ///      in sync between the EVM and the native runtime.
 contract SimpleStorage {
-    /// @dev Interface that reflects the Atlas Kernel canonical ledger precompile surface.
+    /// @dev Interface that reflects the X3 Kernel canonical ledger precompile surface.
     ///      The precompile is expected to be an address in the EVM universe that delegates calls to
-    ///      the Atlas Kernel pallet in the native runtime. Implementations may return a boolean success
+    ///      the X3 Kernel pallet in the native runtime. Implementations may return a boolean success
     ///      flag for state-modifying calls and expose view functions for reads.
     interface IAtlasLedger {
         function creditAtlasBalance(address account, uint256 amount) external returns (bool);
@@ -23,9 +23,9 @@ contract SimpleStorage {
     /// @dev Emitted when the contract successfully syncs a deposit with the canonical ledger.
     event AtlasDeposit(address indexed sender, uint256 amount, uint256 timestamp);
 
-    /// @notice Address of the Atlas Ledger precompile used to synchronize native balances.
+    /// @notice Address of the X3 Ledger precompile used to synchronize native balances.
     /// @dev This address should point to a precompile or a contract shim that bridges EVM calls to
-    ///      the Atlas Kernel pallet. It must be configured in the chain's runtime.
+    ///      the X3 Kernel pallet. It must be configured in the chain's runtime.
     address public immutable atlasLedger;
 
     /// @notice Contract owner – receives elevated permissions for certain administrative actions.
@@ -40,10 +40,10 @@ contract SimpleStorage {
     /// @notice Timestamp for the most recent value update.
     uint256 public lastUpdatedAt;
 
-    /// @param atlasLedgerAddress The address of the precompile/shim that forwards calls into Atlas Kernel.
+    /// @param atlasLedgerAddress The address of the precompile/shim that forwards calls into X3 Kernel.
     /// @param initialValue Initial stored value for smoke-testing.
     constructor(address atlasLedgerAddress, uint256 initialValue) {
-        require(atlasLedgerAddress != address(0), "SimpleStorage: atlas ledger is zero address");
+        require(atlasLedgerAddress != address(0), "SimpleStorage: x3 ledger is zero address");
 
         atlasLedger = atlasLedgerAddress;
         owner = msg.sender;
@@ -89,13 +89,13 @@ contract SimpleStorage {
     }
 
     /// @notice Retrieves the canonical ledger balance tracked for an account.
-    /// @dev Delegates to the Atlas ledger precompile. This demonstrates how read-only interactions
+    /// @dev Delegates to the X3 ledger precompile. This demonstrates how read-only interactions
     ///      remain consistent across the dual-VM execution environment.
     function getCanonicalBalance(address account) external view returns (uint256) {
         return IAtlasLedger(atlasLedger).canonicalBalanceOf(account);
     }
 
-    /// @notice Accepts native ATLAS tokens and notifies the Atlas ledger to keep balances in sync.
+    /// @notice Accepts native X3 tokens and notifies the X3 ledger to keep balances in sync.
     /// @dev The canonical ledger is updated via a precompile call, ensuring that the native runtime
     ///      sees the same balance changes that occurred inside the EVM. If the ledger rejects the
     ///      credit, the entire transaction reverts to maintain consistency.
@@ -105,7 +105,7 @@ contract SimpleStorage {
     }
 
     /// @notice Fallback to accept plain transfers to this contract and automatically sync with ledger.
-    /// @dev This allows native ATLAS transfers to this contract address to be recognized by the
+    /// @dev This allows native X3 transfers to this contract address to be recognized by the
     ///      canonical ledger without requiring an explicit depositAndSync call from users.
     receive() external payable {
         require(msg.value > 0, "SimpleStorage: zero deposit");

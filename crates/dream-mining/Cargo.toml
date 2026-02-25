@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Dream Mining - Idle GPU optimization for background computation during sleep"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [features]
 default = ["std"]

@@ -40,8 +40,8 @@
 - **Dependency Version**: framer-motion ^12.0.0 (compatible with Next.js 14.2.33)
 - **Target Package**: apps/shared/package.json
 - **Key Files Modified**: 
-  - /home/lojak/Desktop/X3-atlas-sphere/apps/shared/package.json
-  - /home/lojak/Desktop/X3-atlas-sphere/apps/explorer/src/app/quantum/page.tsx
+  - /home/lojak/Desktop/X3-x3-chain/apps/shared/package.json
+  - /home/lojak/Desktop/X3-x3-chain/apps/explorer/src/app/quantum/page.tsx
 
 ## Next Steps
 1. Complete dependency installation

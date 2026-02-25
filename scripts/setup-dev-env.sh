@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Atlas Sphere Developer Environment Setup"
+echo "🚀 X3 Chain Developer Environment Setup"
 echo "==========================================="
 echo ""
 
@@ -79,7 +79,7 @@ if [ ! -f Makefile ]; then
 .PHONY: test check fmt clippy watch build run-node coverage audit clean help
 
 help:
-	@echo "Atlas Sphere - Available Commands"
+	@echo "X3 Chain - Available Commands"
 	@echo "=================================="
 	@echo "make test          - Run all tests"
 	@echo "make check         - Format + Clippy + Test (pre-commit check)"
@@ -113,10 +113,10 @@ build:
 	cargo build --release
 
 run-node:
-	./target/release/atlas-sphere-node --dev --tmp --log runtime=info
+	./target/release/x3-chain-node --dev --tmp --log runtime=info
 
 coverage:
-	cargo tarpaulin --out Html -p pallet-atlas-kernel
+	cargo tarpaulin --out Html -p pallet-x3-kernel
 	@echo "📊 Coverage report generated in tarpaulin-report.html"
 
 audit:

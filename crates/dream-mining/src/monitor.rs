@@ -130,16 +130,29 @@ impl SystemMonitor {
                     stats.idle_time_secs = idle_time;
                     stats.user_active = idle_time < idle_threshold;
                     
-                    // Note: GPU monitoring requires platform-specific implementations
-                    // For now, we'll use placeholder values
-                    // In production, use nvml (NVIDIA) or similar APIs
-                    stats.gpu_usage = None;
-                    stats.gpu_temperature = None;
-                    stats.gpu_memory_usage = None;
+                    // GPU monitoring via sysinfo - basic GPU detection
+                    // For full GPU metrics, use nvml crate in production
+                    #[cfg(feature = "gpu-stats")]
+                    {
+                        // Try to read GPU stats from system
+                        // This is a simplified version - full implementation would use nvml
+                        if let Some(gpu) = sys.gpus().first() {
+                            stats.gpu_temperature = Some(gpu.temperature());
+                            stats.gpu_usage = Some(gpu.cpu_usage());
+                            // GPU memory requires platform-specific APIs
+                            stats.gpu_memory_usage = None;
+                        }
+                    }
                     
-                    // Battery info (placeholder)
-                    stats.on_battery = false;
-                    stats.battery_level = Some(100.0);
+                    // Battery info from sysinfo
+                    let batteries = sysinfo::System::new_all().batteries();
+                    if let Some(battery) = batteries.first() {
+                        stats.on_battery = battery.is_charging();
+                        stats.battery_level = Some(battery.charge_percent() as f32);
+                    } else {
+                        stats.on_battery = false;
+                        stats.battery_level = Some(100.0);
+                    }
                 }
 
                 tokio::time::sleep(tokio::time::Duration::from_secs(interval)).await;

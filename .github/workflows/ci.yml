@@ -52,7 +52,7 @@ jobs:
           ./RUN_ALL_TESTS.sh
 
       - name: Build runtime WASM (no_std compatibility)
-        run: cargo build -p atlas-sphere-runtime --release --target wasm32-unknown-unknown --no-default-features
+        run: cargo build -p x3-chain-runtime --release --target wasm32-unknown-unknown --no-default-features
 
   feature-coverage:
     runs-on: ubuntu-latest

@@ -5,7 +5,7 @@
 **Date**: November 7, 2025  
 **Compiler Issue**: Nightly Rust 1.93.0 compiler crashes (SIGSEGV/SIGILL) prevented execution  
 **Verification Method**: Static code analysis of test implementations  
-**Test Files Analyzed**: `pallets/atlas-kernel/src/tests.rs` (1140 lines), `pallets/atlas-kernel/src/types.rs` tests
+**Test Files Analyzed**: `pallets/x3-kernel/src/tests.rs` (1140 lines), `pallets/x3-kernel/src/types.rs` tests
 
 ---
 

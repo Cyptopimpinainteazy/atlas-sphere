@@ -1,7 +1,7 @@
 /**
- * Atlas Kernel service — Comit submission, balance queries, asset management
+ * X3 Kernel service — Comit submission, balance queries, asset management
  *
- * Maps to pallet: atlas-kernel
+ * Maps to pallet: x3-kernel
  * Extrinsics: submit_comit, submit_comit_v2, register_asset, update_canonical_balance,
  *             authorize_account, add_authority
  */

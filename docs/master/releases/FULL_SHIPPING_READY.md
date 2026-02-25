@@ -55,7 +55,7 @@ openspec/changes/jury-blockchain-anchoring/
 ├── FILE_MANIFEST.md ..................... ✅ 500 lines
 └── QUICK_REFERENCE.md ................... ✅ 300 lines
 
-pallets/atlas-jury-anchor/
+pallets/x3-jury-anchor/
 ├── src/lib.rs ........................... ✅ 500+ lines (8 tests)
 └── Cargo.toml ........................... ✅ 30 lines
 
@@ -362,7 +362,7 @@ SHIP STATUS:         🟢 READY TO DEPLOY
 **Availability:**
 - Slack: #operations (24/7)
 - Phone: Escalation line
-- Email: ops-team@atlas.io
+- Email: ops-team@x3.io
 
 ---
 

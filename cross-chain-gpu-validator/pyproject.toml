@@ -5,7 +5,7 @@ description = "Cross-chain GPU validator stack for Solana and Ethereum testnets.
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Atlas Sphere" }]
+authors = [{ name = "X3 Chain" }]
 
 dependencies = [
   "redis>=5.0.0",

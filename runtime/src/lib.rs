@@ -21,7 +21,7 @@ use frame_support::PalletId;
 use frame_system::limits;
 use pallet_agent_accounts;
 use pallet_agent_memory;
-use pallet_atlas_kernel;
+use pallet_x3_kernel;
 use pallet_atomic_trade_engine;
 use pallet_aura;
 use pallet_balances;
@@ -90,7 +90,7 @@ pub type AtlasId = H256;
 pub type Address = MultiAddress<AccountId, ()>;
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
-pub const MILLISECS_PER_BLOCK: u64 = 6_000;
+pub const MILLISECS_PER_BLOCK: u64 = 400; // Reduced from 1000ms to 400ms for ~2.5x TPS improvement
 
 pub struct RuntimeVersion;
 impl frame_support::traits::Get<sp_version::RuntimeVersion> for RuntimeVersion {
@@ -103,15 +103,15 @@ pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 pub const NANO_ATLAS: Balance = 1;
 pub const MICRO_ATLAS: Balance = 1_000 * NANO_ATLAS;
 pub const MILLI_ATLAS: Balance = 1_000 * MICRO_ATLAS;
-pub const ATLAS: Balance = 1_000 * MILLI_ATLAS;
+pub const X3: Balance = 1_000 * MILLI_ATLAS;
 pub const NATIVE_GAS_PRICE: u64 = 1_000_000_000;
 
 #[sp_version::runtime_version]
 pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
-    spec_name: create_runtime_str!("atlas-sphere"),
-    impl_name: create_runtime_str!("atlas-sphere"),
+    spec_name: create_runtime_str!("x3-chain"),
+    impl_name: create_runtime_str!("x3-chain"),
     authoring_version: 1,
-    spec_version: 1,
+    spec_version: 2,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -126,24 +126,24 @@ parameter_types! {
     pub const TransactionByteFee: Balance = 10 * MICRO_ATLAS;
     pub const MaxAssetsPerAccount: u32 = 32;
     pub const MaxAssetSymbolLength: u32 = 16;
-    pub const MaxPayloadLength: u32 = 32 * 1024;
-    pub const MaxEvmPayloadLength: u32 = 16 * 1024;  // 16 KB for EVM payloads
-    pub const MaxSvmPayloadLength: u32 = 16 * 1024;  // 16 KB for SVM payloads
-    pub const MaxX3PayloadLength: u32 = 16 * 1024;  // 16 KB for X3 payloads
-    pub const MaxCombinedPayloadLength: u32 = 32 * 1024;  // 32 KB combined limit
-    pub const MaxCombinedPayloadLengthV2: u32 = 48 * 1024;  // 48 KB combined (EVM+SVM+X3)
+    pub const MaxPayloadLength: u32 = 128 * 1024;
+    pub const MaxEvmPayloadLength: u32 = 64 * 1024;  // 64 KB for EVM payloads
+    pub const MaxSvmPayloadLength: u32 = 64 * 1024;  // 64 KB for SVM payloads
+    pub const MaxX3PayloadLength: u32 = 64 * 1024;  // 64 KB for X3 payloads
+    pub const MaxCombinedPayloadLength: u32 = 128 * 1024;  // 128 KB combined limit
+    pub const MaxCombinedPayloadLengthV2: u32 = 192 * 1024;  // 192 KB combined (EVM+SVM+X3)
     pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
     pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
-    pub const DefaultEvmGasLimit: u64 = 10_000_000;  // 10M gas for EVM
+    pub const DefaultEvmGasLimit: u64 = 30_000_000;  // 30M gas for EVM
     pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
-    pub const DefaultX3GasLimit: u64 = 5_000_000;  // 5M gas for X3
+    pub const DefaultX3GasLimit: u64 = 15_000_000;  // 15M gas for X3
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
-        Weight::from_parts(12 * WEIGHT_REF_TIME_PER_SECOND, 5 * 1024 * 1024),
-        Perbill::from_percent(75),
+        Weight::from_parts(60 * WEIGHT_REF_TIME_PER_SECOND, 20 * 1024 * 1024), // 60s weight, 20MB proof
+        Perbill::from_percent(90),
     );
     pub BlockLength: limits::BlockLength = limits::BlockLength::max_with_normal_ratio(
-        5 * 1024 * 1024,
-        Perbill::from_percent(75),
+        20 * 1024 * 1024, // 20MB block size (up from 5MB)
+        Perbill::from_percent(90),
     );
 }
 
@@ -156,7 +156,7 @@ parameter_types! {
 pub struct BlockGasLimit;
 impl Get<U256> for BlockGasLimit {
     fn get() -> U256 {
-        U256::from(30_000_000u64)
+        U256::from(100_000_000u64) // Increased from 30M to 100M for higher throughput
     }
 }
 
@@ -181,7 +181,7 @@ parameter_types! {
 }
 
 parameter_types! {
-    pub const CouncilMotionDuration: BlockNumber = 3 * 24 * 60 * 60 / (MILLISECS_PER_BLOCK as BlockNumber / 1000);
+    pub const CouncilMotionDuration: BlockNumber = (3 * 24 * 60 * 60 * 1000) / MILLISECS_PER_BLOCK as BlockNumber; // 3 days in ms / block time
     pub const CouncilMaxProposals: u32 = 100;
     pub const CouncilMaxMembers: u32 = 100;
     pub MaxProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
@@ -199,7 +199,7 @@ construct_runtime!(
         Scheduler: pallet_scheduler,
         Preimage: pallet_preimage,
         EVM: pallet_evm,
-        AtlasKernel: pallet_atlas_kernel,
+        AtlasKernel: pallet_x3_kernel,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Sudo: pallet_sudo,
@@ -229,7 +229,7 @@ construct_runtime!(
         Scheduler: pallet_scheduler,
         Preimage: pallet_preimage,
         EVM: pallet_evm,
-        AtlasKernel: pallet_atlas_kernel,
+        AtlasKernel: pallet_x3_kernel,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Governance: pallet_governance,
@@ -251,8 +251,8 @@ pub type UncheckedExtrinsic =
     generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 // Runtime storage migrations tuple. Add migration structs for pallets that need upgrades.
-// Note: Only atlas-kernel has migrations currently implemented
-pub type Migrations = (pallet_atlas_kernel::migrations::Migration<Runtime>,);
+// Note: Only x3-kernel has migrations currently implemented
+pub type Migrations = (pallet_x3_kernel::migrations::Migration<Runtime>,);
 
 // Use the migrations tuple in the executive so migrations run on runtime upgrades
 pub type Executive = frame_executive::Executive<
@@ -338,7 +338,7 @@ impl pallet_aura::Config for Runtime {
     type AuthorityId = sp_consensus_aura::sr25519::AuthorityId;
     type MaxAuthorities = MaxAuthorities;
     type DisabledValidators = ();
-    type AllowMultipleBlocksPerSlot = ConstBool<false>;
+    type AllowMultipleBlocksPerSlot = ConstBool<true>; // Enable multiple blocks per slot for higher TPS
 }
 
 impl pallet_grandpa::Config for Runtime {
@@ -431,7 +431,7 @@ impl pallet_evm::Config for Runtime {
     type WeightInfo = pallet_evm::weights::SubstrateWeight<Self>;
 }
 
-impl pallet_atlas_kernel::Config for Runtime {
+impl pallet_x3_kernel::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Balance = Balance;
     type AssetId = AssetId;
@@ -448,7 +448,7 @@ impl pallet_atlas_kernel::Config for Runtime {
     type DefaultEvmGasLimit = DefaultEvmGasLimit;
     type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
     type DefaultX3GasLimit = DefaultX3GasLimit;
-    type WeightInfo = pallet_atlas_kernel::weights::SubstrateWeight<Runtime>;
+    type WeightInfo = pallet_x3_kernel::weights::SubstrateWeight<Runtime>;
     type Currency = Balances;
     // VM Adapters:
     // Default to mocks for BOTH native and WASM execution to keep consensus-critical
@@ -461,14 +461,14 @@ impl pallet_atlas_kernel::Config for Runtime {
     #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
     type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
     #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
-    type X3Adapter = pallet_atlas_kernel::adapters::real_adapters::X3VmAdapter;
+    type X3Adapter = pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
 
     #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
+    type EvmAdapter = pallet_x3_kernel::MockEvmAdapter;
     #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
+    type SvmAdapter = pallet_x3_kernel::MockSvmAdapter;
     #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
-    type X3Adapter = pallet_atlas_kernel::MockX3Adapter;
+    type X3Adapter = pallet_x3_kernel::MockX3Adapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
 
@@ -493,13 +493,13 @@ impl pallet_atomic_trade_engine::Config for Runtime {
     #[cfg(feature = "std")]
     type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
     #[cfg(feature = "std")]
-    type X3Adapter = pallet_atlas_kernel::adapters::real_adapters::X3VmAdapter;
+    type X3Adapter = pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
     #[cfg(not(feature = "std"))]
-    type EvmAdapter = pallet_atlas_kernel::MockEvmAdapter;
+    type EvmAdapter = pallet_x3_kernel::MockEvmAdapter;
     #[cfg(not(feature = "std"))]
-    type SvmAdapter = pallet_atlas_kernel::MockSvmAdapter;
+    type SvmAdapter = pallet_x3_kernel::MockSvmAdapter;
     #[cfg(not(feature = "std"))]
-    type X3Adapter = pallet_atlas_kernel::MockX3Adapter;
+    type X3Adapter = pallet_x3_kernel::MockX3Adapter;
     type MaxTradeLegs = MaxTradeLegs;
     type MaxCheckpoints = MaxCheckpoints;
     type MaxPendingBatchesPerAccount = MaxPendingBatchesPerAccount;
@@ -512,11 +512,11 @@ impl pallet_atomic_trade_engine::Config for Runtime {
 #[cfg(feature = "std")]
 mod native_vm_adapters {
     use super::*;
-    use atlas_svm_integration::{
+    use x3_svm_integration::{
         RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
     };
     use fp_evm::{CallInfo, ExitReason};
-    use pallet_atlas_kernel::{
+    use pallet_x3_kernel::{
         EvmExecutorAdapter, ExecutionLog, ExecutionReceipt, StateChange, SvmExecutorAdapter,
     };
     use pallet_evm::Runner;
@@ -601,7 +601,7 @@ mod native_vm_adapters {
                 Err(_) => {
                     // As a safe fallback in tests or non-fully-initialized environments,
                     // delegate to the Kernel's mock adapter for deterministic behavior.
-                    pallet_atlas_kernel::MockEvmAdapter::execute(payload, gas_limit)
+                    pallet_x3_kernel::MockEvmAdapter::execute(payload, gas_limit)
                 }
             }
         }
@@ -786,8 +786,8 @@ impl pallet_scheduler::Config for Runtime {
 // ===== Preimage Pallet Configuration =====
 parameter_types! {
     pub const PreimageMaxSize: u32 = 4096 * 1024;
-    pub const PreimageBaseDeposit: Balance = ATLAS;
-    pub const PreimageByteDeposit: Balance = ATLAS / 100;
+    pub const PreimageBaseDeposit: Balance = X3;
+    pub const PreimageByteDeposit: Balance = X3 / 100;
 }
 
 impl pallet_preimage::Config for Runtime {
@@ -801,7 +801,7 @@ impl pallet_preimage::Config for Runtime {
 
 // ===== Governance Pallet Configuration =====
 parameter_types! {
-    pub const ProposalDeposit: Balance = 100 * ATLAS;
+    pub const ProposalDeposit: Balance = 100 * X3;
     pub const VotingPeriod: BlockNumber = 7 * 24 * 60 * 10; // ~7 days at 6s blocks
     pub const EnactmentPeriod: BlockNumber = 24 * 60 * 10; // ~1 day at 6s blocks
     pub const GovernanceQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(10);
@@ -854,13 +854,13 @@ parameter_types! {
     pub const TreasuryPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/trsry");
     pub const ProposalBond: sp_runtime::Percent = sp_runtime::Percent::from_percent(5);
     pub const MaxSigners: u32 = 7;
-    pub const SmallSpendThreshold: Balance = 1_000 * ATLAS;
-    pub const MediumSpendThreshold: Balance = 10_000 * ATLAS;
-    pub const LargeSpendThreshold: Balance = 100_000 * ATLAS;
+    pub const SmallSpendThreshold: Balance = 1_000 * X3;
+    pub const MediumSpendThreshold: Balance = 10_000 * X3;
+    pub const LargeSpendThreshold: Balance = 100_000 * X3;
     pub const MaxRecurringPayments: u32 = 100;
     pub const MaxYieldStrategies: u32 = 10;
     pub const MaxTreasuryProposals: u32 = 100;
-    pub const ProposalBondMinimum: Balance = 100 * ATLAS;
+    pub const ProposalBondMinimum: Balance = 100 * X3;
 }
 
 impl pallet_treasury::Config for Runtime {
@@ -887,7 +887,7 @@ impl pallet_treasury::Config for Runtime {
 
 // ===== Agent Accounts Pallet Configuration =====
 parameter_types! {
-    pub const RegistrationDeposit: Balance = 10 * ATLAS;
+    pub const RegistrationDeposit: Balance = 10 * X3;
     pub const MaxAgentsPerController: u32 = 100;
     pub const DefaultGasPerBlock: u128 = 1_000_000;
     pub const DefaultComputePerBlock: u128 = 1_000_000;
@@ -915,7 +915,7 @@ impl pallet_agent_accounts::Config for Runtime {
 parameter_types! {
     pub const MaxEntriesPerChunk: u32 = 100;
     pub const MaxChunksPerAgent: u32 = 1_000;
-    pub const StorageByteCost: Balance = ATLAS / 1000; // 0.001 ATLAS per byte
+    pub const StorageByteCost: Balance = X3 / 1000; // 0.001 X3 per byte
     pub const DefaultTtl: BlockNumber = 365 * 24 * 600; // ~1 year at 6s blocks
 }
 
@@ -955,7 +955,7 @@ impl pallet_evolution_core::Config for Runtime {
 
 // ===== X3 Verifier Pallet Configuration =====
 parameter_types! {
-    pub const MinExecutorStake: Balance = 1000 * ATLAS;
+    pub const MinExecutorStake: Balance = 1000 * X3;
     pub const MaxOutputSize: u32 = 64 * 1024; // 64 KB
     pub const MaxKeySize: u32 = 256;
     pub const MaxValueSize: u32 = 4096;
@@ -963,7 +963,7 @@ parameter_types! {
     pub const MaxProofDepth: u32 = 32;
     pub const ExecutorRewardShare: u32 = 70; // 70%
     pub const ProtocolFeeShare: u32 = 15; // 15%
-    pub const SlashAmount: Balance = 100 * ATLAS;
+    pub const SlashAmount: Balance = 100 * X3;
     pub const JobTimeout: BlockNumber = 100; // ~10 minutes at 6s blocks
 }
 
@@ -1028,7 +1028,7 @@ impl pallet_x3_settlement_engine::Config for Runtime {
 // ===== Swarm Pallet Configuration =====
 
 parameter_types! {
-    pub const MinContributorStake: Balance = 1000 * ATLAS;
+    pub const MinContributorStake: Balance = 1000 * X3;
     pub const SwarmHeartbeatInterval: BlockNumber = 100;    // ~10 min at 6s blocks
     pub const SwarmUnstakeCooldown: BlockNumber = 14400;    // ~1 day at 6s blocks
     pub const SwarmDefaultTaskTimeout: BlockNumber = 600;   // ~1 hour at 6s blocks
@@ -1036,7 +1036,7 @@ parameter_types! {
     pub const SwarmRevealPhaseDuration: BlockNumber = 50;   // ~5 min at 6s blocks
     pub const SwarmContributorRewardPct: u8 = 85;           // 85% to contributor
     pub const SwarmProtocolFeePct: u8 = 15;                 // 15% protocol fee
-    pub const SwarmSlashAmount: Balance = 100 * ATLAS;
+    pub const SwarmSlashAmount: Balance = 100 * X3;
     pub const MaxTasksPerContributor: u32 = 6;              // Matches swarm-config.toml
     pub const MaxJuryVoters: u32 = 50;
 }
@@ -1066,7 +1066,7 @@ parameter_types! {
     pub const ValidatorShareBps: u16 = 5500;    // 55% to provider
     pub const BurnShareBps: u16 = 2500;          // 25% burn
     pub const StakerShareBps: u16 = 2000;        // 20% to stakers
-    pub const MinProviderStake: Balance = 1_000 * ATLAS;
+    pub const MinProviderStake: Balance = 1_000 * X3;
     pub const MaxJobsPerProvider: u32 = 16;
     pub const MaxJobDuration: BlockNumber = 14400;   // ~1 day at 6s blocks
     pub const MaxPendingOrders: u32 = 256;
@@ -1141,19 +1141,7 @@ impl GetSessionNumber for SessionHandler {
 // sp_session::Config not available in polkadot-v1.0.0
 // impl sp_session::Config for Runtime {}
 
-// sp_session::SessionKeys trait has incompatible signatures in polkadot-v1.0.0
-/*
-impl sp_session::SessionKeys<Block> for Runtime {
-    fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
-        SessionKeys::generate(seed)
-    }
-
-    fn decode_session_keys(encoded: Vec<u8>) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
-        SessionKeys::decode_into_raw_public_keys(&encoded)
-    }
-}
-*/
-
+// sp_session::SessionKeys trait implementation for session key generation/decoding
 impl_runtime_apis! {
     impl sp_api::Core<Block> for Runtime {
         fn version() -> sp_version::RuntimeVersion {
@@ -1169,6 +1157,18 @@ impl_runtime_apis! {
         }
     }
 
+    impl sp_session::SessionKeys<Block> for Runtime {
+        fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+            SessionKeys::generate(seed)
+        }
+
+        fn decode_session_keys(
+            encoded: Vec<u8>,
+        ) -> Option<Vec<(Vec<u8>, sp_core::crypto::KeyTypeId)>> {
+            SessionKeys::decode_into_raw_public_keys(&encoded)
+        }
+    }
+
     impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(
             source: sp_runtime::transaction_validity::TransactionSource,
@@ -1179,26 +1179,26 @@ impl_runtime_apis! {
         }
     }
 
-    impl pallet_atlas_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId> for Runtime {
+    impl pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId> for Runtime {
         fn get_canonical_balance(account: AccountId, asset_id: AssetId) -> Balance {
-            pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account, &asset_id)
+            pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account, &asset_id)
         }
 
         fn get_asset_metadata(asset_id: AssetId) -> Option<(Vec<u8>, u8)> {
-            pallet_atlas_kernel::AssetRegistry::<Runtime>::get(&asset_id)
+            pallet_x3_kernel::AssetRegistry::<Runtime>::get(&asset_id)
                 .map(|metadata| (metadata.symbol.into_inner(), metadata.decimals))
         }
 
         fn is_authorized(account: AccountId) -> bool {
-            pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account)
+            pallet_x3_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account)
         }
 
         fn get_authorized_accounts() -> Vec<AccountId> {
-            pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::iter_keys().collect()
+            pallet_x3_kernel::AuthorizedAccounts::<Runtime>::iter_keys().collect()
         }
 
         fn get_authorities() -> Vec<AccountId> {
-            pallet_atlas_kernel::Authorities::<Runtime>::get().into_inner()
+            pallet_x3_kernel::Authorities::<Runtime>::get().into_inner()
         }
 
         fn map_evm_address(address: Vec<u8>) -> Option<AccountId> {
@@ -1224,7 +1224,7 @@ impl_runtime_apis! {
             slice.copy_from_slice(&evm_address[..20]);
             let evm_addr = H160::from(slice);
             let account_id: AccountId = <pallet_evm::HashedAddressMapping<BlakeTwo256> as pallet_evm::AddressMapping<AccountId>>::into_account_id(evm_addr);
-            Some(pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(&account_id, &asset_id))
+            Some(pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &asset_id))
         }
 
         fn get_evm_code(_evm_address: Vec<u8>) -> Vec<u8> {
@@ -1338,11 +1338,11 @@ impl_runtime_apis! {
         }
 
         fn is_authorized(account: Vec<u8>) -> bool {
-            // Delegate authorization to Atlas Kernel's authorized accounts
+            // Delegate authorization to X3 Kernel's authorized accounts
             use codec::Decode;
             if let Ok(account_id) = AccountId::decode(&mut &account[..]) {
-                // Check if account is authorized in the main Atlas Kernel pallet
-                pallet_atlas_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account_id)
+                // Check if account is authorized in the main X3 Kernel pallet
+                pallet_x3_kernel::AuthorizedAccounts::<Runtime>::contains_key(&account_id)
             } else {
                 false
             }
@@ -1639,19 +1639,20 @@ impl_runtime_apis! {
 }
 
 #[cfg(feature = "std")]
-pub fn atlas_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
+pub fn x3_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
     vec![
-        (0, b"ATLAS".to_vec(), 12),
+        (0, b"X3".to_vec(), 12),
         (1, b"ETH".to_vec(), 18),
         (2, b"SOL".to_vec(), 9),
         (3, b"USDC".to_vec(), 6),
+        (1000, b"X3".to_vec(), 18),
     ]
 }
 
 #[cfg(all(test, feature = "std"))]
 mod vm_adapter_tests {
     use super::*;
-    use pallet_atlas_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
+    use pallet_x3_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 
     #[test]
     fn test_native_evm_adapter_real_execution() {
@@ -1686,7 +1687,7 @@ mod vm_adapter_tests {
     #[test]
     fn test_x3_adapter_real_execution() {
         // Test that X3VmAdapter uses real X3 VM
-        use pallet_atlas_kernel::adapters::real_adapters::X3VmAdapter;
+        use pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
 
         // Simple X3 bytecode: X3BC magic + minimal module
         let x3_bytecode = vec![0x58, 0x33, 0x42, 0x43];

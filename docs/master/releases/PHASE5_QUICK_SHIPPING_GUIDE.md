@@ -236,7 +236,7 @@ docker-compose -f docker-compose.production.yml config > /dev/null
 docker-compose -f docker-compose.staging.yml config > /dev/null
 
 # Verify Rust builds
-cargo build --release --package atlas-jury-anchor
+cargo build --release --package x3-jury-anchor
 
 # Verify tests pass
 pytest tests/test_jury_anchoring.py -v
@@ -260,7 +260,7 @@ cat monitoring/alerts.yml | head -20
 ## 📚 COMPLETE FILE REFERENCE
 
 ### Core Phase 5 System
-- `pallets/atlas-jury-anchor/src/lib.rs` - Rust pallet (500 LOC)
+- `pallets/x3-jury-anchor/src/lib.rs` - Rust pallet (500 LOC)
 - `swarm/jury/anchorer.py` - Python service (450 LOC)
 - `packages/blockchain-adapter/src/jury-anchoring.ts` - TypeScript (600 LOC)
 - `tests/test_jury_anchoring.py` - Test suite (13/13 PASS) (350 LOC)

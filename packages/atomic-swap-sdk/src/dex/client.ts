@@ -1,5 +1,5 @@
 /**
- * Atlas DEX Client — main entry point for the Polkadex-style DEX.
+ * X3 DEX Client — main entry point for the Polkadex-style DEX.
  *
  * Combines the orderbook matching engine with the atomic swap orchestrator
  * to provide a complete cross-chain decentralized exchange.
@@ -225,7 +225,7 @@ export class AtlasDexClient extends EventEmitter<DexClientEvents> {
           poolId: `${fromAsset}/${toAsset}`,
           tokenIn: fromAsset,
           tokenOut: toAsset,
-          protocol: "atlas-amm",
+          protocol: "x3-amm",
           vmType: "x3",
           expectedAmountOut: outputAmount.toString(),
         },
@@ -339,8 +339,8 @@ export class AtlasDexClient extends EventEmitter<DexClientEvents> {
       { base: "MATIC", quote: "USDT", minOrderSize: "1", tickSize: "0.0001", lotSize: "1" },
       { base: "ARB", quote: "USDT", minOrderSize: "1", tickSize: "0.0001", lotSize: "1" },
       { base: "OP", quote: "USDT", minOrderSize: "1", tickSize: "0.0001", lotSize: "1" },
-      { base: "ATLAS", quote: "USDT", minOrderSize: "1", tickSize: "0.0001", lotSize: "1" },
-      { base: "ATLAS", quote: "ETH", minOrderSize: "1", tickSize: "0.00001", lotSize: "1" },
+      { base: "X3", quote: "USDT", minOrderSize: "1", tickSize: "0.0001", lotSize: "1" },
+      { base: "X3", quote: "ETH", minOrderSize: "1", tickSize: "0.00001", lotSize: "1" },
     ];
 
     for (const pair of defaultPairs) {

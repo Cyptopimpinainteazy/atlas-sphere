@@ -1,7 +1,7 @@
 {
   "name": "vibe-bmad",
   "version": "0.1.0",
-  "description": "Integration wrapper for BMAD Method (bmad-method) to use within the Atlas Sphere workspace",
+  "description": "Integration wrapper for BMAD Method (bmad-method) to use within the X3 Chain workspace",
   "scripts": {
     "install-bmad": "npx bmad-method@alpha install",
     "install-bmad-stable": "npx bmad-method install",

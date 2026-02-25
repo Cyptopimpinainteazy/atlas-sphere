@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-**Description**: [![Build Status](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/atlas-sphere/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
+**Description**: [![Build Status](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/ci.yml/badge.svg)](https://github.com/Cyptopimpinainteazy/x3-chain/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
 **Tech Stack**:
 - **Framework**: React

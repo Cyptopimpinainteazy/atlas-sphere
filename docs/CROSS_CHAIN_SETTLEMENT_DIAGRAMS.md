@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              ATLAS SPHERE PLATFORM                                       │
+│                              X3 CHAIN PLATFORM                                       │
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────────────┐    │
@@ -370,4 +370,4 @@ interface BtcAdapter extends ChainAdapter {
 
 ---
 
-*Architecture Document | Atlas Sphere Cross-Chain Settlement | December 2025*
+*Architecture Document | X3 Chain Cross-Chain Settlement | December 2025*

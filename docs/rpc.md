@@ -1,6 +1,6 @@
-# Atlas Sphere RPC API Reference
+# X3 Chain RPC API Reference
 
-Atlas Sphere provides comprehensive RPC interfaces for both EVM and SVM operations. This guide covers the JSON-RPC endpoints, WebSocket subscriptions, and cross-VM functionality.
+X3 Chain provides comprehensive RPC interfaces for both EVM and SVM operations. This guide covers the JSON-RPC endpoints, WebSocket subscriptions, and cross-VM functionality.
 
 ## Quick Reference
 
@@ -11,11 +11,11 @@ Atlas Sphere provides comprehensive RPC interfaces for both EVM and SVM operatio
 | **WebSocket** | 9944 | WS | Real-time subscriptions |
 | **Cross-VM** | 9933 | HTTP/JSON-RPC | Unified dual-VM API |
 
-**Why this matters**: Atlas Sphere maintains compatibility with existing Ethereum and Solana tooling while providing enhanced cross-VM capabilities.
+**Why this matters**: X3 Chain maintains compatibility with existing Ethereum and Solana tooling while providing enhanced cross-VM capabilities.
 
 ## EVM RPC API
 
-The EVM RPC interface follows the Ethereum JSON-RPC specification with Atlas Sphere extensions.
+The EVM RPC interface follows the Ethereum JSON-RPC specification with X3 Chain extensions.
 
 ### Connection Examples
 
@@ -73,7 +73,7 @@ Get account balance for a specific address.
 ```json
 {
   "jsonrpc": "2.0",
-  "result": "0x2386f26fc10000", // 1000000000000000 wei = 1 ATLAS
+  "result": "0x2386f26fc10000", // 1000000000000000 wei = 1 X3
   "id": 1
 }
 ```
@@ -137,19 +137,19 @@ Send a transaction to the network.
 }
 ```
 
-### Atlas Sphere Extensions
+### X3 Chain Extensions
 
-#### `atlas_getCanonicalBalance`
+#### `x3_getCanonicalBalance`
 Get unified balance across EVM and SVM.
 
 **Request:**
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "atlas_getCanonicalBalance",
+  "method": "x3_getCanonicalBalance",
   "params": [
     "0x742d35Cc6BF4e8B5e2C1C7d1A3E9c4F8d5A2B1C3",
-    "0x0", // Asset ID for ATLAS
+    "0x0", // Asset ID for X3
     "latest"
   ],
   "id": 1
@@ -171,14 +171,14 @@ Get unified balance across EVM and SVM.
 }
 ```
 
-#### `atlas_submitCrossVmTransaction`
+#### `x3_submitCrossVmTransaction`
 Submit atomic cross-VM transaction.
 
 **Request:**
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "atlas_submitCrossVmTransaction",
+  "method": "x3_submitCrossVmTransaction",
   "params": [
     {
       "evm_payload": {
@@ -234,7 +234,7 @@ Submit atomic cross-VM transaction.
 
 ## SVM RPC API
 
-The SVM RPC interface provides Solana-compatible functionality with Atlas Sphere enhancements.
+The SVM RPC interface provides Solana-compatible functionality with X3 Chain enhancements.
 
 ### Connection Examples
 
@@ -371,9 +371,9 @@ Send a transaction.
 }
 ```
 
-### Atlas Sphere SVM Extensions
+### X3 Chain SVM Extensions
 
-#### `atlas_getCanonicalAccount`
+#### `x3_getCanonicalAccount`
 Get unified account information across EVM and SVM.
 
 **Request:**
@@ -381,7 +381,7 @@ Get unified account information across EVM and SVM.
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "method": "atlas_getCanonicalAccount",
+  "method": "x3_getCanonicalAccount",
   "params": [
     "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
   ]
@@ -396,7 +396,7 @@ Get unified account information across EVM and SVM.
     "evm_address": "0x742d35Cc6BF4e8B5e2C1C7d1A3E9c4F8d5A2B1C3",
     "svm_pubkey": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
     "balances": {
-      "atlas": {
+      "x3": {
         "evm": "1000000000000",
         "svm": "500000000000",
         "total": "1500000000000"
@@ -499,13 +499,13 @@ wscat -c ws://localhost:9944/evm
 }
 ```
 
-#### Atlas Sphere Cross-VM Events
+#### X3 Chain Cross-VM Events
 
 **Request:**
 ```json
 {
   "id": 3,
-  "method": "atlas_subscribeCrossVmEvents",
+  "method": "x3_subscribeCrossVmEvents",
   "params": [
     {
       "address": "0x742d35Cc6BF4e8B5e2C1C7d1A3E9c4F8d5A2B1C3",
@@ -519,7 +519,7 @@ wscat -c ws://localhost:9944/evm
 ```json
 {
   "jsonrpc": "2.0",
-  "method": "atlas_crossVmEvent",
+  "method": "x3_crossVmEvent",
   "params": {
     "subscription": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
     "result": {
@@ -552,6 +552,6 @@ wscat -c ws://localhost:9944/evm
 ```json
 {
   "id": 4,
-  "method": "atlas_svm_subscribeAccount",
+  "method": "x3_svm_subscribeAccount",
   "params": [
     "7xKXtg2CW87d97TXJSDpbD5

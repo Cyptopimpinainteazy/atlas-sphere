@@ -2,7 +2,7 @@
 
 **Date**: 2025  
 **Scope**: Full inventory of X3 language GPU capabilities across 10 areas  
-**Workspace**: `atlas-sphere-master`
+**Workspace**: `x3-chain-master`
 
 ---
 

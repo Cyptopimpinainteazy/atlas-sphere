@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 /**
  * @title AtlasLaunchpad
- * @notice Token presales, NFT drops, and auction platform for Atlas Sphere
+ * @notice Token presales, NFT drops, and auction platform for X3 Chain
  * @dev Supports multiple sale types with whitelist, vesting, and cross-chain settlement
  *
  * Sale Types:

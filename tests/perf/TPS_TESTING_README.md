@@ -1,13 +1,13 @@
-# Atlas Sphere TPS Testing Infrastructure
+# X3 Chain TPS Testing Infrastructure
 
-Real-time **Transactions Per Second (TPS)** tracking and visualization for the Atlas Sphere blockchain platform.
+Real-time **Transactions Per Second (TPS)** tracking and visualization for the X3 Chain blockchain platform.
 
-This implementation adapts the [Solana TPS tracking project](https://github.com/amil13/solana_project.git) for Atlas Sphere, providing:
+This implementation adapts the [Solana TPS tracking project](https://github.com/amil13/solana_project.git) for X3 Chain, providing:
 
 - **Rust Backend** - Efficiently polls blockchain for transaction metrics
 - **InfluxDB** - High-performance time-series data storage
 - **Streamlit Dashboard** - Interactive real-time visualization
-- **Integration** - Aligns with atlas-sphere test invariants
+- **Integration** - Aligns with x3-chain test invariants
 
 ## Quick Start
 
@@ -16,12 +16,12 @@ This implementation adapts the [Solana TPS tracking project](https://github.com/
 - Docker & Docker Compose
 - Rust toolchain (for building TPS tracker)
 - Python 3.10+
-- Atlas Sphere node running on `127.0.0.1:9944` (or set `RPC_URL`)
+- X3 Chain node running on `127.0.0.1:9944` (or set `RPC_URL`)
 
 ### Run TPS Testing
 
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # Start the complete TPS testing infrastructure
 python3 tests/perf/run_tps_testing.py
@@ -52,7 +52,7 @@ docker-compose -f tests/perf/docker-compose.tps.yml down
 #### 1. TPS Tracker (Rust Crate)
 **Location:** `crates/tps-tracker/`
 
-Polls the Atlas Sphere RPC endpoint and collects:
+Polls the X3 Chain RPC endpoint and collects:
 - Block height
 - Transaction count per block
 - Calculated TPS
@@ -65,10 +65,10 @@ Polls the Atlas Sphere RPC endpoint and collects:
 
 **Configuration (env vars):**
 ```bash
-RPC_URL=http://127.0.0.1:9944          # Atlas Sphere RPC endpoint
+RPC_URL=http://127.0.0.1:9944          # X3 Chain RPC endpoint
 INFLUX_URL=http://localhost:8086       # InfluxDB connection
-INFLUX_DB=atlas_sphere_tps             # Database name
-INFLUX_TOKEN=atlas-sphere-key          # Auth token
+INFLUX_DB=x3_chain_tps             # Database name
+INFLUX_TOKEN=x3-chain-key          # Auth token
 POLL_INTERVAL=1                        # Poll interval in seconds
 BUFFER_SIZE=100                        # Batch write size to InfluxDB
 ```
@@ -76,9 +76,9 @@ BUFFER_SIZE=100                        # Batch write size to InfluxDB
 #### 2. InfluxDB
 Time-series database for storing TPS metrics.
 
-**Container:** `atlas-sphere-influxdb`
+**Container:** `x3-chain-influxdb`
 **Port:** 8086
-**Database:** `atlas_sphere_tps`
+**Database:** `x3_chain_tps`
 **Retention:** 30 days
 
 Data stored includes:
@@ -89,7 +89,7 @@ Data stored includes:
 
 Interactive web interface for visualizing TPS metrics.
 
-**Container:** `atlas-sphere-tps-dashboard`
+**Container:** `x3-chain-tps-dashboard`
 **Port:** 8501
 **URL:** http://localhost:8501
 
@@ -114,7 +114,7 @@ Services:
 - `tps-tracker` - TPS collection service
 - `dashboard` - Streamlit web interface
 
-Network: `atlas-sphere-perf` (isolated)
+Network: `x3-chain-perf` (isolated)
 Storage: `influxdb-storage` (persistent volume)
 
 ## Testing
@@ -140,12 +140,12 @@ Run the dashboard and monitor metrics:
 python3 tests/perf/run_tps_testing.py --no-logs
 
 # In another terminal, verify metrics are flowing
-curl http://localhost:8086/query?db=atlas_sphere_tps&q="SELECT * FROM transaction_stats LIMIT 10"
+curl http://localhost:8086/query?db=x3_chain_tps&q="SELECT * FROM transaction_stats LIMIT 10"
 ```
 
 ### Test Invariants
 
-TPS testing integrates with atlas-sphere invariants (see `tests/invariants/registry.toml`):
+TPS testing integrates with x3-chain invariants (see `tests/invariants/registry.toml`):
 
 - **TPS-001**: Blockchain maintains consistent block production
 - **TPS-002**: Transaction metrics are accurately recorded
@@ -248,12 +248,12 @@ curl -X POST http://127.0.0.1:9944 \
 
 2. Check TPS tracker logs:
 ```bash
-docker logs atlas-sphere-tps-tracker
+docker logs x3-chain-tps-tracker
 ```
 
 3. Verify InfluxDB is running:
 ```bash
-docker logs atlas-sphere-influxdb
+docker logs x3-chain-influxdb
 ```
 
 ### InfluxDB connection refused
@@ -309,11 +309,11 @@ struct TransactionStats {
 ```bash
 # TPS Tracker
 cd crates/tps-tracker
-docker build -t atlas-sphere-tps-tracker:latest .
+docker build -t x3-chain-tps-tracker:latest .
 
 # Dashboard
 cd tests/perf/tps-dashboard
-docker build -t atlas-sphere-tps-dashboard:latest .
+docker build -t x3-chain-tps-dashboard:latest .
 ```
 
 ## References
@@ -321,8 +321,8 @@ docker build -t atlas-sphere-tps-dashboard:latest .
 - **Original Project:** [Solana TPS Dashboard](https://github.com/amil13/solana_project.git) by Amil Shrivastava
 - **InfluxDB Documentation:** https://docs.influxdata.com/
 - **Streamlit Documentation:** https://docs.streamlit.io/
-- **Atlas Sphere Tests:** See `tests/README.md` and `tests/invariants/registry.toml`
+- **X3 Chain Tests:** See `tests/README.md` and `tests/invariants/registry.toml`
 
 ## License
 
-This TPS tracking implementation follows the Atlas Sphere project license terms.
+This TPS tracking implementation follows the X3 Chain project license terms.

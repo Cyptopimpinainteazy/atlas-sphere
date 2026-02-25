@@ -2,9 +2,9 @@
 name = "quantum-crypto"
 version = "0.1.0"
 edition = "2021"
-description = "Quantum-Resistant Cryptography for Atlas Sphere - Post-quantum security primitives"
+description = "Quantum-Resistant Cryptography for X3 Chain - Post-quantum security primitives"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [features]
 default = ["std"]

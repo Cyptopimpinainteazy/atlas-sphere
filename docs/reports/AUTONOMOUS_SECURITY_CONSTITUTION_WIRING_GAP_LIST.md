@@ -57,7 +57,7 @@ This document maps “constitution-grade” expectations (fail-closed security g
 - It is mechanically difficult or impossible to ship a release with bypass features.
 
 **Observed**
-- `pallets/atlas-kernel/src/lib.rs` includes `#[cfg(feature = "dev-bypass")]` authorization bypass.
+- `pallets/x3-kernel/src/lib.rs` includes `#[cfg(feature = "dev-bypass")]` authorization bypass.
 
 **Gap**
 - CI `--all-features` increases accidental exposure risk.

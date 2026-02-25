@@ -11,4 +11,9 @@ fi
 # Run the shell-based test tamper detector
 scripts/pre-commit-test-tamper.sh || exit 1
 
+# ☢️ YOLO FINISHER v5.0 — Hard Gate Checks
+if [ -x ".clinerules/hooks/finisher-pre-commit.sh" ]; then
+  .clinerules/hooks/finisher-pre-commit.sh || exit 1
+fi
+
 exit 0

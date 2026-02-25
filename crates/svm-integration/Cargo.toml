@@ -1,8 +1,8 @@
 [package]
-name = "atlas-svm-integration"
+name = "x3-svm-integration"
 version = "0.1.0"
 edition = "2021"
-description = "SVM (Solana) integration for Atlas Sphere dual-VM execution"
+description = "SVM (Solana) integration for X3 Chain dual-VM execution"
 publish = false
 
 [dependencies]

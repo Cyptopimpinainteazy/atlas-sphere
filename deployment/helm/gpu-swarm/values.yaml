@@ -5,7 +5,7 @@ coordinator:
   enabled: true
   replicas: 3
   image:
-    repository: atlas-sphere/swarm-coordinator
+    repository: x3-chain/swarm-coordinator
     tag: latest
     pullPolicy: Always
   resources:
@@ -23,7 +23,7 @@ coordinator:
 node:
   enabled: true
   image:
-    repository: atlas-sphere/swarm-node
+    repository: x3-chain/swarm-node
     tag: latest
     pullPolicy: Always
   resources:
@@ -50,9 +50,9 @@ monitoring:
     adminPassword: changeme
 
 blockchain:
-  rpcEndpoint: ws://atlas-kernel:9944
+  rpcEndpoint: ws://x3-kernel:9944
   minStake: 1000
-  rewardToken: ATLAS
+  rewardToken: X3
 
 network:
   maxPeers: 500

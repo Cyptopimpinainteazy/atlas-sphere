@@ -1,10 +1,9 @@
 /// Network Bootstrapping and P2P Configuration
 ///
 /// Handles peer discovery, bootstrap node configuration, and network protocol setup.
-use sc_network::{multiaddr::Multiaddr, NetworkService};
-use std::sync::Arc;
+use sc_network::multiaddr::Multiaddr;
 
-/// Bootstrap configuration for Atlas Sphere network
+/// Bootstrap configuration for X3 Chain network
 #[derive(Clone, Debug)]
 pub struct BootstrapConfig {
     /// Bootstrap node addresses
@@ -45,9 +44,9 @@ impl BootstrapConfig {
         Self {
             bootstrap_nodes: vec![
                 // Mainnet bootstrap nodes would go here
-                "/dns4/bootstrap1.atlas-sphere.io/tcp/30333".parse().ok(),
-                "/dns4/bootstrap2.atlas-sphere.io/tcp/30333".parse().ok(),
-                "/dns4/bootstrap3.atlas-sphere.io/tcp/30333".parse().ok(),
+                "/dns4/bootstrap1.x3-chain.io/tcp/30333".parse().ok(),
+                "/dns4/bootstrap2.x3-chain.io/tcp/30333".parse().ok(),
+                "/dns4/bootstrap3.x3-chain.io/tcp/30333".parse().ok(),
             ]
             .into_iter()
             .filter_map(|x| x)
@@ -63,7 +62,7 @@ impl BootstrapConfig {
     /// Create testnet bootstrap configuration
     pub fn testnet() -> Self {
         Self {
-            bootstrap_nodes: vec!["/dns4/testnet-bootstrap.atlas-sphere.io/tcp/30333"
+            bootstrap_nodes: vec!["/dns4/testnet-bootstrap.x3-chain.io/tcp/30333"
                 .parse()
                 .ok()]
             .into_iter()
@@ -97,10 +96,10 @@ pub struct ProtocolInfo {
 }
 
 impl ProtocolInfo {
-    /// Create new protocol info for Atlas Sphere
+    /// Create new protocol info for X3 Chain
     pub fn new(genesis_hash: [u8; 32]) -> Self {
         Self {
-            name: "atlas-sphere".to_string(),
+            name: "x3-chain".to_string(),
             version: 1,
             genesis_hash,
             fork_id: None,

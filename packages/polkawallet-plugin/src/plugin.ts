@@ -2,7 +2,7 @@
  * AtlasX3Plugin — main Polkawallet plugin class
  *
  * This is the single entry point that Polkawallet-io/js_api consumers
- * and the Polkawallet mobile app use to access all Atlas Sphere x3chain
+ * and the Polkawallet mobile app use to access all X3 Chain x3chain
  * functionality: Comits, atomic trades, cross-chain settlement, .x3 domains,
  * x3vm smart contracts, governance, treasury, and SVM.
  */
@@ -94,7 +94,7 @@ export class AtlasX3Plugin {
   // Service Accessors
   // ===========================================================================
 
-  /** Atlas Kernel — Comit submission, balances, account management */
+  /** X3 Kernel — Comit submission, balances, account management */
   get kernel(): KernelService {
     this._ensureReady();
     return this._kernel!;
@@ -201,19 +201,19 @@ export class AtlasX3Plugin {
  * Create a plugin connected to a local dev node
  */
 export function createLocalPlugin(): AtlasX3Plugin {
-  return new AtlasX3Plugin({ endpoint: 'ws://127.0.0.1:9944', network: 'atlas-local' });
+  return new AtlasX3Plugin({ endpoint: 'ws://127.0.0.1:9944', network: 'x3-local' });
 }
 
 /**
- * Create a plugin connected to the Atlas testnet
+ * Create a plugin connected to the X3 testnet
  */
 export function createTestnetPlugin(): AtlasX3Plugin {
-  return new AtlasX3Plugin({ endpoint: 'wss://testnet.atlas-sphere.io', network: 'atlas-testnet' });
+  return new AtlasX3Plugin({ endpoint: 'wss://testnet.x3-chain.io', network: 'x3-testnet' });
 }
 
 /**
- * Create a plugin connected to the Atlas mainnet
+ * Create a plugin connected to the X3 mainnet
  */
 export function createMainnetPlugin(): AtlasX3Plugin {
-  return new AtlasX3Plugin({ endpoint: 'wss://rpc.atlas-sphere.io', network: 'atlas-mainnet' });
+  return new AtlasX3Plugin({ endpoint: 'wss://rpc.x3-chain.io', network: 'x3-mainnet' });
 }

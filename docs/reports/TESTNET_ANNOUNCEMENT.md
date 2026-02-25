@@ -1,6 +1,6 @@
-# 🚀 Atlas Sphere Testnet v1 - Now Live!
+# 🚀 X3 Chain Testnet v1 - Now Live!
 
-**Network**: Atlas Sphere Testnet v1  
+**Network**: X3 Chain Testnet v1  
 **Status**: ✅ Live  
 **Launch Date**: November 2025
 
@@ -8,7 +8,7 @@
 
 ## 🎉 Testnet is Live!
 
-We're excited to announce the launch of **Atlas Sphere Testnet v1** - a developer preview network for the world's first dual-VM (EVM + SVM) Layer-1 blockchain!
+We're excited to announce the launch of **X3 Chain Testnet v1** - a developer preview network for the world's first dual-VM (EVM + SVM) Layer-1 blockchain!
 
 ### What's Available Now
 
@@ -34,17 +34,17 @@ We're excited to announce the launch of **Atlas Sphere Testnet v1** - a develope
 
 ### RPC Endpoints
 ```
-HTTP RPC: http://rpc.testnet.atlas-sphere.io:9944
+HTTP RPC: http://rpc.testnet.x3-chain.io:9944
 ```
 
 **Coming Soon**:
 ```
-WebSocket: ws://ws.testnet.atlas-sphere.io:9944
+WebSocket: ws://ws.testnet.x3-chain.io:9944
 ```
 
 ### Available RPC Methods
 
-**Atlas Kernel Methods**:
+**X3 Kernel Methods**:
 - `atlasKernel_getCanonicalBalance(account, asset_id, at?)` - Query balances
 - `atlasKernel_getAssetMetadata(asset_id, at?)` - Get asset info
 - `atlasKernel_isAuthorized(account, at?)` - Check authorization
@@ -58,7 +58,7 @@ WebSocket: ws://ws.testnet.atlas-sphere.io:9944
 Use our faucet to get free testnet tokens (tATLAS):
 
 ```bash
-curl -X POST https://faucet.testnet.atlas-sphere.io/claim \
+curl -X POST https://faucet.testnet.x3-chain.io/claim \
   -H "Content-Type: application/json" \
   -d '{"address": "YOUR_ADDRESS"}'
 ```
@@ -75,7 +75,7 @@ curl -X POST https://faucet.testnet.atlas-sphere.io/claim \
 ### 1. Query Your Balance
 
 ```bash
-curl http://rpc.testnet.atlas-sphere.io:9944 \
+curl http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id":1,
@@ -88,7 +88,7 @@ curl http://rpc.testnet.atlas-sphere.io:9944 \
 ### 2. Check Authorized Accounts
 
 ```bash
-curl http://rpc.testnet.atlas-sphere.io:9944 \
+curl http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id":1,
@@ -101,7 +101,7 @@ curl http://rpc.testnet.atlas-sphere.io:9944 \
 ### 3. Get Current Validators
 
 ```bash
-curl http://rpc.testnet.atlas-sphere.io:9944 \
+curl http://rpc.testnet.x3-chain.io:9944 \
   -H "Content-Type: application/json" \
   -d '{
     "id":1,
@@ -117,18 +117,18 @@ curl http://rpc.testnet.atlas-sphere.io:9944 \
 
 ### Get Help & Stay Updated
 
-- **Discord**: https://discord.gg/atlas-sphere - Ask questions, get support
-- **Telegram**: https://t.me/atlas_sphere - Community chat
-- **GitHub**: https://github.com/atlas-sphere/atlas-sphere - Code, issues, PRs
-- **Twitter**: https://twitter.com/atlas_sphere - Announcements
-- **Documentation**: https://docs.atlas-sphere.io - Full docs
+- **Discord**: https://discord.gg/x3-chain - Ask questions, get support
+- **Telegram**: https://t.me/x3_chain - Community chat
+- **GitHub**: https://github.com/x3-chain/x3-chain - Code, issues, PRs
+- **Twitter**: https://twitter.com/x3_chain - Announcements
+- **Documentation**: https://docs.x3-chain.io - Full docs
 
 ### Report Issues
 
 Found a bug? Help us improve!
 
-- **Bug Reports**: https://github.com/atlas-sphere/atlas-sphere/issues
-- **Security Issues**: security@atlas-sphere.io (private disclosure)
+- **Bug Reports**: https://github.com/x3-chain/x3-chain/issues
+- **Security Issues**: security@x3-chain.io (private disclosure)
 - **Feature Requests**: GitHub Discussions
 
 ---
@@ -146,14 +146,14 @@ Found a bug? Help us improve!
 **Quick Setup**:
 ```bash
 # Clone repository
-git clone https://github.com/atlas-sphere/atlas-sphere.git
-cd atlas-sphere
+git clone https://github.com/x3-chain/x3-chain.git
+cd x3-chain
 
 # Build node
 cargo build --release
 
 # Run node
-./target/release/atlas-sphere-node --dev --tmp
+./target/release/x3-chain-node --dev --tmp
 ```
 
 **Full deployment guide**: See `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
@@ -161,9 +161,9 @@ cargo build --release
 ### Connect to Testnet
 
 ```bash
-./target/release/atlas-sphere-node \
-  --chain atlas-testnet-raw.json \
-  --base-path /tmp/atlas-data \
+./target/release/x3-chain-node \
+  --chain x3-testnet-raw.json \
+  --base-path /tmp/x3-data \
   --name "MyNode" \
   --bootnodes /ip4/BOOTNODE_IP/tcp/30333/p2p/PEER_ID
 ```
@@ -228,7 +228,7 @@ cargo build --release
 
 ### Testnet Disclaimer
 
-**Atlas Sphere Testnet v1 is a DEVELOPER PREVIEW**:
+**X3 Chain Testnet v1 is a DEVELOPER PREVIEW**:
 
 - ❌ Testnet tokens (tATLAS) have **NO economic value**
 - ❌ Network may be **reset at any time**
@@ -279,7 +279,7 @@ We'll be launching bounty programs for:
 - **COMPLETION_STATUS**: Current status and progress
 
 ### Tutorials (Coming Soon)
-- Building your first dApp on Atlas Sphere
+- Building your first dApp on X3 Chain
 - Cross-VM transactions explained
 - Running a validator node
 - Using the TypeScript SDK
@@ -288,7 +288,7 @@ We'll be launching bounty programs for:
 
 ## 🙏 Thank You!
 
-Thank you for being an early adopter of Atlas Sphere! Your feedback and contributions help us build the future of dual-VM blockchain infrastructure.
+Thank you for being an early adopter of X3 Chain! Your feedback and contributions help us build the future of dual-VM blockchain infrastructure.
 
 **Let's build something amazing together!** 🚀
 
@@ -296,14 +296,14 @@ Thank you for being an early adopter of Atlas Sphere! Your feedback and contribu
 
 ## 📞 Contact
 
-- **Website**: https://atlas-sphere.io
-- **Email**: hello@atlas-sphere.io
-- **Security**: security@atlas-sphere.io
-- **Press**: press@atlas-sphere.io
+- **Website**: https://x3-chain.io
+- **Email**: hello@x3-chain.io
+- **Security**: security@x3-chain.io
+- **Press**: press@x3-chain.io
 
 ---
 
-**Atlas Sphere Team**  
+**X3 Chain Team**  
 *Building the future of cross-chain interoperability*
 
 ---

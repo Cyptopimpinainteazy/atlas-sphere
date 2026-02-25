@@ -1,7 +1,7 @@
 # Blockchain Networks Integration Checklist
 
 ## Overview
-Comprehensive checklist for integrating EVM-compatible blockchain networks into the X3-atlas-sphere ecosystem.
+Comprehensive checklist for integrating EVM-compatible blockchain networks into the X3-x3-chain ecosystem.
 
 **Last Updated**: 2025-12-10  
 **Implementation Location**: `crates/external-chains/`  
@@ -18,7 +18,7 @@ All chains are now accessible via the **Universal Chain Registry**:
 
 ```rust
 // Get adapter for ANY chain by ID:
-use atlas_external_chains::chains::{adapter_for, get_chain, chain_count};
+use x3_external_chains::chains::{adapter_for, get_chain, chain_count};
 
 let base_adapter = adapter_for(8453).unwrap();        // Base
 let arb_adapter = adapter_for(42161).unwrap();        // Arbitrum

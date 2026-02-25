@@ -24,7 +24,7 @@ Quick deploy (manual)
 
 Health checks & monitoring
 - Systemd: `journalctl -u explorer -f`
-- Nginx reverse proxy health endpoint: `https://explorer.testnet.atlas-sphere.io/health`
+- Nginx reverse proxy health endpoint: `https://explorer.testnet.x3-chain.io/health`
 
 Scaling (bare‑metal)
 - For multiple nodes use a load balancer or keepalived + nginx in front of multiple explorer instances.
@@ -37,4 +37,4 @@ CI integration (recommended)
 Notes
 - Bare‑metal avoids container overhead but requires more ops effort (patching, runtime isolation, autoscaling manual). Use the Helm chart for Kubernetes when automated scaling / canary flows are required.
 
-Contact: devops@atlas-sphere.io
+Contact: devops@x3-chain.io

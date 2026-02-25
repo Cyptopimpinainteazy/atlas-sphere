@@ -1,13 +1,13 @@
-# 🚀 Atlas Sphere Quick Start Card
+# 🚀 X3 Chain Quick Start Card
 
 ## Install Auto-Start Services
 
 ```bash
-sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-services.sh
+sudo bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/install-services.sh
 ```
 
 **What this does:**
-- ✅ Creates "atlas" system user
+- ✅ Creates "x3" system user
 - ✅ Installs 3 systemd services
 - ✅ Enables auto-start on boot
 - ✅ Starts services immediately
@@ -25,7 +25,7 @@ sudo bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/install-ser
 
 ```
 Username: admin
-Password: atlas-sphere-2026
+Password: x3-chain-2026
 ```
 
 **⚠️ CHANGE FOR PRODUCTION!**
@@ -55,7 +55,7 @@ After boot, the dashboard will:
 
 Create `.env` file from template:
 ```bash
-cp deployment/env/.env.template /home/lojak/Desktop/atlas-sphere-master/.env
+cp deployment/env/.env.template /home/lojak/Desktop/x3-chain-master/.env
 ```
 
 **Key variables to set:**
@@ -82,7 +82,7 @@ sudo journalctl -u x3-intelligence.service -f
 sudo systemctl restart x3-intelligence.service
 
 # Start all services manually (if systemd fails)
-bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/startup.sh
+bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/startup.sh
 ```
 
 ---
@@ -115,7 +115,7 @@ sudo lsof -i :6379    # Redis
 
 **Manual startup fallback:**
 ```bash
-bash /home/lojak/Desktop/atlas-sphere-master/deployment/scripts/startup.sh
+bash /home/lojak/Desktop/x3-chain-master/deployment/scripts/startup.sh
 ```
 
 ---
@@ -141,7 +141,7 @@ Redis (localhost:6379)
 | Login UI | `apps/x3-intelligence/src/components/LoginPage.tsx` |
 | Config | `.env` (create from template) |
 | Services | `/etc/systemd/system/*.service` |
-| Logs | `/var/log/atlas/` |
+| Logs | `/var/log/x3/` |
 | Startup | `deployment/scripts/install-services.sh` |
 
 ---

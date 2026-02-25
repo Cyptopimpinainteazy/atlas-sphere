@@ -8,7 +8,7 @@ Date: 2026-02-08
 
 End-to-end (E2E) tests for blockchains and distributed systems are inherently non-deterministic due to timing variations, async task ordering, random seeding, and hardware differences. This non-determinism causes flaky CI, makes test failures hard to reproduce, and prevents reliable artifact comparison across runs.
 
-Atlas Sphere requires stateful E2E testing of:
+X3 Chain requires stateful E2E testing of:
 - CHAIN-CONSENSUS-001: state-root replay across blocks
 - GPU swarm coordination and task scheduling
 - Cross-chain message ordering and finality
@@ -20,7 +20,7 @@ Without deterministic test execution, CI cannot reliably detect real regressions
 
 Implement **deterministic triple-run verification** for E2E tests:
 
-1. **Deterministic Seeding** — All randomness pinned to a fixed seed at test startup (via `ATLAS_E2E_DETERMINISTIC_SEED`), ensuring identical pseudo-random sequences across runs.
+1. **Deterministic Seeding** — All randomness pinned to a fixed seed at test startup (via `X3_E2E_DETERMINISTIC_SEED`), ensuring identical pseudo-random sequences across runs.
 
 2. **Locked Genesis Parameters** — Immutable test genesis config (block time, timestamp, validator set, gas limits) stored in `tests/e2e/fixtures/deterministic_config.toml` and loaded via `E2E_DETERMINISTIC_TRIPLE_RUN` flag.
 
@@ -34,7 +34,7 @@ Implement **deterministic triple-run verification** for E2E tests:
 
 ### Deterministic Config Fixture
 **File:** `tests/e2e/fixtures/deterministic_config.toml`
-- `seed`: "atlas-e2e-deterministic-seed-001" (fixed)
+- `seed`: "x3-e2e-deterministic-seed-001" (fixed)
 - `genesis_timestamp`: 1707388800 (2025-02-08 UTC, locked)
 - `block_time_millis`: 6000 (6-second blocks)
 - `initial_validators`: [predefined list with fixed keys]

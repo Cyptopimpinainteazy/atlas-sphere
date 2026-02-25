@@ -2,9 +2,9 @@
 name = "apotheosis-tx"
 version = "0.1.0"
 edition = "2021"
-description = "Apotheosis Transaction - Ultimate cross-chain asset migration for Atlas Sphere"
+description = "Apotheosis Transaction - Ultimate cross-chain asset migration for X3 Chain"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [features]
 default = ["std"]

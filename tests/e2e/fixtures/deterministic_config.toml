@@ -38,7 +38,7 @@ validator_seed_prefix = "validator"
 
 [storage]
 # Base path for test node state
-base_path = "/tmp/atlas-e2e-deterministic"
+base_path = "/tmp/x3-e2e-deterministic"
 
 # Wipe state on startup to ensure clean slate
 wipe_on_startup = true

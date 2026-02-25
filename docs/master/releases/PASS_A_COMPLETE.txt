@@ -256,7 +256,7 @@
 ┌─ QUICK START ──────────────────────────────────────────────────────────────┐
 │                                                                             │
 │  Build:                                                                    │
-│    $ cd /home/lojak/Desktop/X3-atlas-sphere                               │
+│    $ cd /home/lojak/Desktop/X3-x3-chain                               │
 │    $ cargo build --release                                                │
 │                                                                             │
 │  Test:                                                                     │

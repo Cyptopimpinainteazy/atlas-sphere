@@ -112,7 +112,10 @@ def _run_dashboard() -> None:
     configure_logging(settings.log_level)
     metrics = MetricsStore()
     static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "dashboard"))
-    run_dashboard(settings.dashboard_host, settings.dashboard_port, metrics, static_dir)
+    benchmark_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "benchmarks", "all_chains_tps.json")
+    )
+    run_dashboard(settings.dashboard_host, settings.dashboard_port, metrics, static_dir, benchmark_path=benchmark_path)
 
 
 def _run_benchmark(output: str) -> None:

@@ -2,9 +2,9 @@
 name = "pallet-x3-settlement-engine"
 version = "0.1.0"
 edition = "2021"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 description = "X3 Settlement Engine - Protocol-level atomic settlement for BTC, EVM, and SVM"
-repository = "https://github.com/Cyptopimpinainteazy/atlas-sphere"
+repository = "https://github.com/Cyptopimpinainteazy/x3-chain"
 license = "MIT"
 
 [package.metadata.docs.rs]
@@ -24,7 +24,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false, rev = "948fbd2" }
 
 # Internal dependencies
-pallet-atlas-kernel = { path = "../atlas-kernel", default-features = false }
+pallet-x3-kernel = { path = "../x3-kernel", default-features = false }
 pallet-atomic-trade-engine = { path = "../atomic-trade-engine", default-features = false }
 
 [dev-dependencies]
@@ -43,7 +43,7 @@ std = [
     "sp-std/std",
     "sp-runtime/std",
     "sp-io/std",
-    "pallet-atlas-kernel/std",
+    "pallet-x3-kernel/std",
     "pallet-atomic-trade-engine/std",
 ]
 runtime-benchmarks = [

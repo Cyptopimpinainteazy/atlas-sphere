@@ -1,5 +1,5 @@
 /**
- * @atlas-sphere/blockchain-connector — Public API
+ * @x3-chain/blockchain-connector — Public API
  *
  * Enterprise-grade multi-chain connector SDK.
  */
@@ -76,7 +76,7 @@ const defaultManager = new ConnectorManager();
  *
  * @example
  * ```ts
- * import { connect } from "@atlas-sphere/blockchain-connector";
+ * import { connect } from "@x3-chain/blockchain-connector";
  *
  * const conn = await connect({ chain: "ethereum", network: "mainnet", type: "rpc" });
  * const block = await defaultManager.getLatestBlock(conn.id);

@@ -1,5 +1,5 @@
 /**
- * SVM Runtime Service — Solana VM layer on Atlas Sphere
+ * SVM Runtime Service — Solana VM layer on X3 Chain
  * Account creation, program deployment, transfers
  */
 

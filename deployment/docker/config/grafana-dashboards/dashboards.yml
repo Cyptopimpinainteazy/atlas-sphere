@@ -2,10 +2,10 @@
 apiVersion: 1
 
 providers:
-  - name: 'Atlas Sphere Dashboards'
+  - name: 'X3 Chain Dashboards'
     orgId: 1
-    folder: 'Atlas Sphere'
-    folderUid: 'atlas-sphere'
+    folder: 'X3 Chain'
+    folderUid: 'x3-chain'
     type: file
     disableDeletion: false
     editable: true

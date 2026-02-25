@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Atlas Sphere Testnet Management Script
+# X3 Chain Testnet Management Script
 #
 
 GREEN='\033[0;32m'
@@ -9,10 +9,10 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-SERVICES=("atlas-bootnode" "atlas-validator-01" "atlas-validator-02" "atlas-validator-03")
+SERVICES=("x3-bootnode" "x3-validator-01" "x3-validator-02" "x3-validator-03")
 
 show_status() {
-    echo -e "${BLUE}=== Atlas Sphere Testnet Status ===${NC}"
+    echo -e "${BLUE}=== X3 Chain Testnet Status ===${NC}"
     echo ""
     for service in "${SERVICES[@]}"; do
         if sudo systemctl is-active --quiet "$service"; then
@@ -46,12 +46,12 @@ start_all() {
     echo ""
     
     echo "Starting bootnode..."
-    sudo systemctl start atlas-bootnode
+    sudo systemctl start x3-bootnode
     sleep 3
     
     for i in 01 02 03; do
         echo "Starting validator-$i..."
-        sudo systemctl start atlas-validator-$i
+        sudo systemctl start x3-validator-$i
         sleep 2
     done
     
@@ -76,7 +76,7 @@ restart_all() {
 }
 
 show_logs() {
-    service="${1:-atlas-bootnode}"
+    service="${1:-x3-bootnode}"
     echo -e "${YELLOW}Showing logs for $service...${NC}"
     echo ""
     sudo journalctl -u "$service" -f
@@ -88,10 +88,10 @@ check_health() {
     
     # Check processes
     echo "Checking processes..."
-    if pgrep -f atlas-sphere-node > /dev/null; then
-        echo -e "${GREEN}✓ Atlas nodes are running${NC}"
+    if pgrep -f x3-chain-node > /dev/null; then
+        echo -e "${GREEN}✓ X3 nodes are running${NC}"
     else
-        echo -e "${RED}✗ No Atlas nodes found${NC}"
+        echo -e "${RED}✗ No X3 nodes found${NC}"
         return 1
     fi
     
@@ -141,14 +141,14 @@ purge_data() {
     stop_all
     
     echo -e "${YELLOW}Deleting data directories...${NC}"
-    sudo rm -rf /var/lib/atlas-sphere/{bootnode,validator-01,validator-02,validator-03}/chains
+    sudo rm -rf /var/lib/x3-chain/{bootnode,validator-01,validator-02,validator-03}/chains
     
     echo -e "${GREEN}Data purged!${NC}"
     echo "Run 'start' to begin fresh."
 }
 
 show_help() {
-    echo "Atlas Sphere Testnet Management"
+    echo "X3 Chain Testnet Management"
     echo ""
     echo "Usage: $0 [command]"
     echo ""
@@ -164,7 +164,7 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  $0 status"
-    echo "  $0 logs atlas-validator-01"
+    echo "  $0 logs x3-validator-01"
     echo "  $0 restart"
     echo ""
 }

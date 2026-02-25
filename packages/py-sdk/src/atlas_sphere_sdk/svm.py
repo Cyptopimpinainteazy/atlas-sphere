@@ -5,7 +5,7 @@ SVM (Solana VM) client for Solana-compatible interactions.
 from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
-from atlas_sphere_sdk.types import ExecutionReceipt
+from x3_chain_sdk.types import ExecutionReceipt
 
 
 @dataclass

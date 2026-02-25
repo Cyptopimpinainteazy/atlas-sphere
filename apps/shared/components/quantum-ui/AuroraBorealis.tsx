@@ -284,7 +284,7 @@ export const AuroraShowcase: React.FC<{ className?: string }> = ({ className = '
             lineHeight: 1.6,
             textShadow: '0 0 20px rgba(0,255,234,0.5)',
           }}>
-            Experience the cosmic beauty of Atlas Sphere&apos;s quantum consensus - 
+            Experience the cosmic beauty of X3 Chain&apos;s quantum consensus - 
             where blockchain meets the northern lights
           </p>
           

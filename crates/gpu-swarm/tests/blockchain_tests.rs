@@ -134,7 +134,7 @@ mod blockchain_tests {
         assert!(config.verification_bonus > 0);
         assert!(config.failure_penalty > 0);
         assert!(config.minimum_stake > 0);
-        assert_eq!(config.reward_token, "ATLAS");
+        assert_eq!(config.reward_token, "X3");
         assert!(config.slashing_percentage <= 100);
     }
 

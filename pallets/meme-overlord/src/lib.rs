@@ -1,6 +1,6 @@
 //! # Meme Overlord Pallet
 //!
-//! Auto-generates celebratory memes for profitable trades on Atlas Sphere.
+//! Auto-generates celebratory memes for profitable trades on X3 Chain.
 //!
 //! ## Overview
 //!
@@ -428,7 +428,7 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Generate meme for a trade (called by atlas-kernel after profitable trade)
+        /// Generate meme for a trade (called by x3-kernel after profitable trade)
         #[pallet::call_index(1)]
         #[pallet::weight(T::WeightInfo::generate_meme())]
         pub fn generate_meme(

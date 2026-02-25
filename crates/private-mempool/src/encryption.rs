@@ -100,59 +100,56 @@ pub fn decrypt_transaction(
 }
 
 // ──────────────────────────────────────────────────────────────
-// Cryptographic primitives (simplified / placeholder)
+// Cryptographic primitives (real implementation)
 // ──────────────────────────────────────────────────────────────
 
+use x25519_dalek::{PublicKey, StaticSecret};
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Nonce,
+};
+use hkdf::Hkdf;
+use sha2::Sha256;
+use rand::RngCore;
+use rand::rngs::OsRng;
+
 fn generate_ephemeral_key() -> [u8; 32] {
-    // In production: use x25519_dalek::StaticSecret::random()
     let mut key = [0u8; 32];
-    // Use simple PRNG for now
-    for (i, byte) in key.iter_mut().enumerate() {
-        *byte = (i as u8).wrapping_mul(7).wrapping_add(42);
-    }
+    OsRng.fill_bytes(&mut key);
     key
 }
 
 fn derive_public_key(sk: &[u8; 32]) -> [u8; 32] {
-    // In production: x25519_dalek::PublicKey::from(sk)
-    let mut pk = *sk;
-    pk[0] ^= 0xFF;
-    pk
+    let secret = StaticSecret::from(*sk);
+    let public = PublicKey::from(&secret);
+    *public.as_bytes()
 }
 
 fn ecdh(sk: &[u8; 32], pk: &[u8; 32]) -> [u8; 32] {
-    // In production: x25519_dalek diffie-hellman
-    let mut shared = [0u8; 32];
-    for i in 0..32 {
-        shared[i] = sk[i] ^ pk[i];
-    }
-    shared
+    let secret = StaticSecret::from(*sk);
+    let public = PublicKey::from(*pk);
+    let shared = secret.diffie_hellman(&public);
+    *shared.as_bytes()
 }
 
 fn hkdf_derive(ikm: &[u8; 32]) -> [u8; 32] {
-    // In production: HKDF-SHA256
-    blake3_hash(ikm)
+    let hk = Hkdf::<Sha256>::new(Some(ikm), &[]);
+    let mut okm = [0u8; 32];
+    hk.expand(b"encryption", &mut okm).expect("HKDF expand failed");
+    okm
 }
 
 fn generate_nonce() -> [u8; 12] {
-    // In production: random nonce from CSPRNG
-    let t = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
-    let bytes = t.to_le_bytes();
     let mut nonce = [0u8; 12];
-    nonce[..12.min(bytes.len())].copy_from_slice(&bytes[..12.min(bytes.len())]);
+    OsRng.fill_bytes(&mut nonce);
     nonce
 }
 
 fn aes_gcm_encrypt(plaintext: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Vec<u8> {
-    // Placeholder: XOR "encryption" (NOT secure — replace with aes-gcm crate)
-    plaintext
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| b ^ key[i % 32] ^ nonce[i % 12])
-        .collect()
+    let cipher = Aes256Gcm::new_from_slice(key).expect("Invalid key length");
+    let nonce = Nonce::from_slice(nonce);
+    let ciphertext = cipher.encrypt(nonce, plaintext).expect("Encryption failed");
+    ciphertext
 }
 
 fn aes_gcm_decrypt(
@@ -160,20 +157,17 @@ fn aes_gcm_decrypt(
     key: &[u8; 32],
     nonce: &[u8; 12],
 ) -> Result<Vec<u8>, String> {
-    // Placeholder: same XOR
-    Ok(ciphertext
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| b ^ key[i % 32] ^ nonce[i % 12])
-        .collect())
+    let cipher = Aes256Gcm::new_from_slice(key).map_err(|e| e.to_string())?;
+    let nonce = Nonce::from_slice(nonce);
+    cipher.decrypt(nonce, ciphertext).map_err(|e| e.to_string())
 }
 
 fn blake3_hash(data: &[u8]) -> [u8; 32] {
-    // Simplified hash (in production use blake3 crate)
+    use blake3::Hasher;
+    let mut hasher = Hasher::new();
+    hasher.update(data);
     let mut hash = [0u8; 32];
-    for (i, &byte) in data.iter().enumerate() {
-        hash[i % 32] ^= byte.wrapping_mul((i + 1) as u8);
-    }
+    hasher.finalize_xof().fill(&mut hash);
     hash
 }
 
@@ -191,15 +185,14 @@ mod tests {
         let tx = encrypt_for_committee(plaintext, &committee_pk, &sender_pk, &fee_commitment, 1)
             .unwrap();
 
-        // Simulate share reconstruction (in this placeholder, just use ECDH directly)
+        // Simulate share reconstruction using ECDH directly
         let ephemeral_sk = generate_ephemeral_key();
         let shared_secret = ecdh(&ephemeral_sk, &committee_pk);
 
         let decrypted = decrypt_transaction(&tx, &shared_secret).unwrap();
 
-        // Note: with placeholder crypto, roundtrip may not match exactly.
-        // In production with real AES-GCM, it will.
-        assert_eq!(decrypted.len(), plaintext.len());
+        // Verify roundtrip works with real AES-GCM
+        assert_eq!(&decrypted, plaintext);
     }
 
     /// # Invariant: PRIV-EXEC-003

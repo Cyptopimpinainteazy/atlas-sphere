@@ -1,5 +1,5 @@
 /**
- * EVM utilities for Atlas Sphere SDK
+ * EVM utilities for X3 Chain SDK
  *
  * Provides encoding, decoding, and conversion utilities for EVM interaction.
  */

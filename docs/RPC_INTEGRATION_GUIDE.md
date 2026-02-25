@@ -9,7 +9,7 @@ RPC wiring is architecturally complete and ready to integrate once Frontier depe
 
 ### Already Implemented ✅
 
-The Atlas Kernel pallet provides these runtime APIs via `AtlasKernelRuntimeApi`:
+The X3 Kernel pallet provides these runtime APIs via `AtlasKernelRuntimeApi`:
 
 - `get_canonical_balance(account, asset_id)` - Query canonical ledger balances
 - `get_asset_metadata(asset_id)` - Query asset symbol and decimals
@@ -24,7 +24,7 @@ when Frontier integration is complete. These are design documents, not current i
 
 ## Overview
 
-This guide documents how to wire the Atlas Sphere canonical ledger to Frontier's EVM RPC endpoints, enabling MetaMask and Hardhat compatibility.
+This guide documents how to wire the X3 Chain canonical ledger to Frontier's EVM RPC endpoints, enabling MetaMask and Hardhat compatibility.
 
 ## Canonical Ledger Status
 
@@ -44,7 +44,7 @@ fc-rpc (Frontier RPC)
     ↓
 eth_call handler
     ↓
-atlas-kernel query layer (to implement)
+x3-kernel query layer (to implement)
     ↓
 CanonicalLedger StorageMap
     ↓
@@ -77,7 +77,7 @@ EVM Account Balance / Storage
 
 ### 1. Create RPC Runtime API
 
-**File: `pallets/atlas-kernel/src/runtime_api.rs`** (new)
+**File: `pallets/x3-kernel/src/runtime_api.rs`** (new)
 
 ```rust
 sp_api::decl_runtime_apis! {
@@ -106,13 +106,13 @@ sp_api::decl_runtime_apis! {
 
 ```rust
 impl sp_api::impl_runtime_apis! {
-    impl pallet_atlas_kernel::runtime_api::AtlasKernelApi<Block> for Runtime {
+    impl pallet_x3_kernel::runtime_api::AtlasKernelApi<Block> for Runtime {
         fn get_evm_balance(account: Vec<u8>, asset_id: u32) -> Option<u128> {
             // Convert EVM address (20 bytes) to AccountId
             let account_id = AccountId32::new([0u8; 32]);
             
             // Query canonical ledger
-            pallet_atlas_kernel::CanonicalLedger::<Runtime>::get(
+            pallet_x3_kernel::CanonicalLedger::<Runtime>::get(
                 &account_id,
                 &AssetId::from(asset_id),
             )
@@ -224,7 +224,7 @@ pub fn create_full<C>(
 ) -> Result<TaskManager> {
     // ... existing code ...
     
-    // Register Atlas Kernel RPC handler
+    // Register X3 Kernel RPC handler
     let eth_api = EthApi::new(Arc::clone(&client));
     let io = rpc_builder(Arc::clone(&client));
     io.extend_with(EthApiServer::to_delegate(eth_api));
@@ -248,9 +248,9 @@ impl EthApiT for EthApi {
         address: H160,
         number: Option<BlockNumber>,
     ) -> RpcFuture<U256> {
-        // Delegate to atlas-kernel RPC API
-        let atlas_addr = address.to_fixed_bytes().to_vec();
-        self.atlas_client.get_evm_balance(atlas_addr, 0)
+        // Delegate to x3-kernel RPC API
+        let x3_addr = address.to_fixed_bytes().to_vec();
+        self.x3_client.get_evm_balance(x3_addr, 0)
             .map(|balance| U256::from(balance))
             .into()
     }
@@ -259,7 +259,7 @@ impl EthApiT for EthApi {
 
 ## Integration Checklist
 
-- [ ] Create `pallets/atlas-kernel/src/runtime_api.rs`
+- [ ] Create `pallets/x3-kernel/src/runtime_api.rs`
 - [ ] Add `AtlasKernelApi` trait to runtime
 - [ ] Implement runtime_api in `runtime/src/lib.rs`
 - [ ] Create `node/src/rpc.rs` with EthApi implementation

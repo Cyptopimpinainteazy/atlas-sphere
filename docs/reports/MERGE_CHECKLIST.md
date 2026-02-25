@@ -113,15 +113,15 @@ Use this checklist when executing the branch merge.
 
 ## Phase 6: Core Platform ⚡
 
-- [ ] **IMPORTANT**: Rebase `feature/atlas-kernel-task1` to main
+- [ ] **IMPORTANT**: Rebase `feature/x3-kernel-task1` to main
   ```bash
-  git checkout feature/atlas-kernel-task1
+  git checkout feature/x3-kernel-task1
   git rebase main
   # Resolve any conflicts
   git checkout integration/all-features  # or main
   ```
   
-- [ ] Merge `feature/atlas-kernel-task1`
+- [ ] Merge `feature/x3-kernel-task1`
   - **Large changeset** - Atomic Trade Engine pallet
   - Contains Rust/Substrate code
   

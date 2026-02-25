@@ -34,16 +34,16 @@ pub enum HashDomain {
 impl HashDomain {
     fn as_bytes(&self) -> &[u8] {
         match self {
-            HashDomain::Generic => b"ATLAS_HASH_GENERIC",
-            HashDomain::KeyDerivation => b"ATLAS_HASH_KDF",
-            HashDomain::MessageAuth => b"ATLAS_HASH_MAC",
-            HashDomain::Commitment => b"ATLAS_HASH_COMMIT",
-            HashDomain::MerkleTree => b"ATLAS_HASH_MERKLE",
-            HashDomain::RandomOracle => b"ATLAS_HASH_RO",
-            HashDomain::AddressDerivation => b"ATLAS_HASH_ADDR",
-            HashDomain::Transaction => b"ATLAS_HASH_TX",
-            HashDomain::Block => b"ATLAS_HASH_BLOCK",
-            HashDomain::StateCommitment => b"ATLAS_HASH_STATE",
+            HashDomain::Generic => b"X3_HASH_GENERIC",
+            HashDomain::KeyDerivation => b"X3_HASH_KDF",
+            HashDomain::MessageAuth => b"X3_HASH_MAC",
+            HashDomain::Commitment => b"X3_HASH_COMMIT",
+            HashDomain::MerkleTree => b"X3_HASH_MERKLE",
+            HashDomain::RandomOracle => b"X3_HASH_RO",
+            HashDomain::AddressDerivation => b"X3_HASH_ADDR",
+            HashDomain::Transaction => b"X3_HASH_TX",
+            HashDomain::Block => b"X3_HASH_BLOCK",
+            HashDomain::StateCommitment => b"X3_HASH_STATE",
         }
     }
 }
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_hash_256() {
-        let data = b"Hello, Atlas Sphere!";
+        let data = b"Hello, X3 Chain!";
         let hash = hash_256(data);
         assert_eq!(hash.0.len(), 32);
 
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_key_derivation() {
-        let context = "atlas-sphere/key-derivation/v1";
+        let context = "x3-chain/key-derivation/v1";
         let key_material = b"Master secret key material";
 
         let key1 = derive_key_256(context, key_material);

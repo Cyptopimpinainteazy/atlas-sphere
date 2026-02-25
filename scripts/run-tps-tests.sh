@@ -1,5 +1,5 @@
 #!/bin/bash
-# Atlas Sphere TPS Testing Orchestration Script
+# X3 Chain TPS Testing Orchestration Script
 # 
 # Usage:
 #   ./scripts/run-tps-tests.sh [up|down|logs|status]
@@ -165,7 +165,7 @@ open_dashboard() {
 
 up() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  Atlas Sphere TPS Testing Infrastructure${NC}"
+    echo -e "${BLUE}  X3 Chain TPS Testing Infrastructure${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}\n"
     
     # Check prerequisites
@@ -233,7 +233,7 @@ case "${1:-up}" in
         show_status
         ;;
     help|--help|-h)
-        echo "Atlas Sphere TPS Testing Script"
+        echo "X3 Chain TPS Testing Script"
         echo ""
         echo "Usage: $0 [command]"
         echo ""
@@ -245,7 +245,7 @@ case "${1:-up}" in
         echo "  help    Show this help message"
         echo ""
         echo "Environment variables:"
-        echo "  RPC_URL  Atlas Sphere RPC endpoint (default: http://127.0.0.1:9944)"
+        echo "  RPC_URL  X3 Chain RPC endpoint (default: http://127.0.0.1:9944)"
         ;;
     *)
         log_error "Unknown command: $1"

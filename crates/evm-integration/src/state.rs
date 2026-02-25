@@ -1,4 +1,4 @@
-/// EVM State Integration for Atlas Sphere
+/// EVM State Integration for X3 Chain
 ///
 /// Manages Ethereum Virtual Machine state, account storage, and gas metering.
 use sp_runtime::traits::Zero;

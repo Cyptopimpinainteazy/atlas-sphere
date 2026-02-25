@@ -16,7 +16,7 @@ Ralph has been successfully installed, compiled, packaged, and deployed to VS Co
 
 ### File Locations
 ```
-/home/lojak/Desktop/atlas-sphere-master/
+/home/lojak/Desktop/x3-chain-master/
 ├── ralph-repo/                          # Source code repository
 │   ├── src/                            # TypeScript source files
 │   ├── out/                            # Compiled JavaScript
@@ -79,7 +79,7 @@ Ralph Control Panel shows:
 
 2. **View the Sample PRD**:
    ```bash
-   code /home/lojak/Desktop/atlas-sphere-master/PRD.md
+   code /home/lojak/Desktop/x3-chain-master/PRD.md
    ```
 
 3. **Start Ralph**:
@@ -299,7 +299,7 @@ Ctrl+Shift+P → "Developer: Reload Window"
 **Problem**: Changes to source code don't work
 **Solutions**:
 ```bash
-cd /home/lojak/Desktop/atlas-sphere-master/ralph-repo
+cd /home/lojak/Desktop/x3-chain-master/ralph-repo
 npm run compile
 vsce package
 code --install-extension ralph-0.5.1.vsix
@@ -339,7 +339,7 @@ Ralph is fully configured and ready to autonomously develop your projects. Here'
 
 ```bash
 # View sample PRD
-code /home/lojak/Desktop/atlas-sphere-master/PRD.md
+code /home/lojak/Desktop/x3-chain-master/PRD.md
 
 # Run quick start guide
 ./ralph-quickstart.sh

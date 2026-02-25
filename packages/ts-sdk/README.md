@@ -1,6 +1,6 @@
-# @atlas-sphere/ts-sdk
+# @x3-chain/ts-sdk
 
-TypeScript SDK for Atlas Sphere - the dual-VM (EVM + SVM) Layer-1 blockchain enabling native interoperability between Ethereum and Solana execution environments.
+TypeScript SDK for X3 Chain - the dual-VM (EVM + SVM) Layer-1 blockchain enabling native interoperability between Ethereum and Solana execution environments.
 
 ## Features
 
@@ -14,11 +14,11 @@ TypeScript SDK for Atlas Sphere - the dual-VM (EVM + SVM) Layer-1 blockchain ena
 ## Installation
 
 ```bash
-npm install @atlas-sphere/ts-sdk
+npm install @x3-chain/ts-sdk
 # or
-yarn add @atlas-sphere/ts-sdk
+yarn add @x3-chain/ts-sdk
 # or
-pnpm add @atlas-sphere/ts-sdk
+pnpm add @x3-chain/ts-sdk
 ```
 
 ## Quick Start
@@ -29,9 +29,9 @@ import {
   ComitBuilder,
   encodeTransfer,
   encodeSystemTransfer,
-} from '@atlas-sphere/ts-sdk';
+} from '@x3-chain/ts-sdk';
 
-// Connect to Atlas Sphere node
+// Connect to X3 Chain node
 const client = new AtlasSphereClient({
   endpoint: 'ws://localhost:9944',
 });
@@ -70,7 +70,7 @@ await client.disconnect();
 
 ### Comits
 
-A **Comit** is the atomic unit of cross-VM execution in Atlas Sphere. It bundles EVM and SVM payloads for simultaneous execution with deterministic ordering.
+A **Comit** is the atomic unit of cross-VM execution in X3 Chain. It bundles EVM and SVM payloads for simultaneous execution with deterministic ordering.
 
 ```typescript
 interface Comit {
@@ -118,7 +118,7 @@ const dualComit = new ComitBuilder()
   .build();
 
 // Shorthand factories
-import { evmComit, svmComit, dualComit } from '@atlas-sphere/ts-sdk';
+import { evmComit, svmComit, dualComit } from '@x3-chain/ts-sdk';
 
 const evm = evmComit({ to: '0x...', data: '0x...' }).withFee('auto').build();
 const svm = svmComit({ programId: '0x...', data: '0x...' }).withFee('auto').build();
@@ -128,7 +128,7 @@ const dual = dualComit(evmPayload, svmPayload).withFee('auto').build();
 ### Querying State
 
 ```typescript
-import { QueryClient, createQueryClient } from '@atlas-sphere/ts-sdk';
+import { QueryClient, createQueryClient } from '@x3-chain/ts-sdk';
 
 const query = createQueryClient(client.polkadotApi);
 
@@ -206,7 +206,7 @@ import {
   // Error decoding
   decodeErrorMessage,
   getPanicMessage,
-} from '@atlas-sphere/ts-sdk';
+} from '@x3-chain/ts-sdk';
 
 // Encode ERC20 transfer
 const transferData = encodeTransfer(recipient, amount);
@@ -247,7 +247,7 @@ import {
   
   // Anchor support
   anchorDiscriminator,
-} from '@atlas-sphere/ts-sdk';
+} from '@x3-chain/ts-sdk';
 
 // Encode system transfer
 const transferIx = encodeSystemTransfer(1000000000n);
@@ -275,7 +275,7 @@ import {
   EvmExecutionError,
   PayloadSizeError,
   TimeoutError,
-} from '@atlas-sphere/ts-sdk';
+} from '@x3-chain/ts-sdk';
 
 try {
   const result = await client.submitComit(comit, account);
@@ -317,7 +317,7 @@ import {
   DEFAULT_SVM_COMPUTE_UNITS, // 200,000
   
   // Fees
-  BASE_COMIT_FEE,         // 1 milli-ATLAS
+  BASE_COMIT_FEE,         // 1 milli-X3
   
   // Assets
   NATIVE_ASSET_ID,        // 0
@@ -325,14 +325,14 @@ import {
   
   // Timing
   BLOCK_TIME_MS,          // 6000 (6 seconds)
-} from '@atlas-sphere/ts-sdk';
+} from '@x3-chain/ts-sdk';
 ```
 
 ## API Reference
 
 ### AtlasSphereClient
 
-Main client for Atlas Sphere blockchain interaction.
+Main client for X3 Chain blockchain interaction.
 
 | Method                                    | Description                         |
 | ----------------------------------------- | ----------------------------------- |

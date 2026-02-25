@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - Deployment Package Ready! 🚀
+# X3 Chain Testnet v1 - Deployment Package Ready! 🚀
 
 **Status**: Day -2 Complete, Day -1 In Progress (Build Running)  
 **Date**: November 8, 2025  
@@ -18,7 +18,7 @@
 - ✅ `deployment/provision-manual.md` - Manual/VPS provider guide
 - ✅ `deployment/dns-config.md` - DNS configuration guide
 - ✅ `deployment/configure-firewall.sh` - Firewall setup script
-- ✅ `~/.ssh/atlas-testnet-deploy` - SSH key generated
+- ✅ `~/.ssh/x3-testnet-deploy` - SSH key generated
 
 **What You Need to Do Next:**
 1. Choose your infrastructure provider:
@@ -32,7 +32,7 @@
 
 4. Run firewall setup on each node:
    ```bash
-   ssh atlas@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator
+   ssh x3@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator
    ```
 
 ---
@@ -47,8 +47,8 @@
 - ✅ `deployment/build-and-keygen.sh` - Build and key generation script
 
 **What Will Be Generated (after build completes):**
-- `target/release/atlas-sphere-node` - Release binary (~200MB)
-- `deployment/chain-specs/atlas-testnet-raw.json` - Chain specification
+- `target/release/x3-chain-node` - Release binary (~200MB)
+- `deployment/chain-specs/x3-testnet-raw.json` - Chain specification
 - `deployment/keys/validator-0X-summary.txt` - Validator keys (3-5 sets)
 - `deployment/keys/bootnode-info.txt` - Bootnode configuration
 - `deployment/keys/sudo-key.txt` - Development sudo key
@@ -58,8 +58,8 @@
 2. Run `./deployment/build-and-keygen.sh` to generate keys
 3. **CRITICAL**: Backup keys immediately (encrypted!)
    ```bash
-   tar czf - deployment/keys | gpg -e -r admin@atlas-sphere.io \
-     > atlas-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
+   tar czf - deployment/keys | gpg -e -r admin@x3-chain.io \
+     > x3-testnet-keys-$(date +%Y%m%d).tar.gz.gpg
    ```
 
 ---
@@ -118,7 +118,7 @@ vim deployment/inventory.yaml
 
 # BACKUP KEYS!
 tar czf - deployment/keys | gpg -e -r your@email.com \
-  > atlas-keys-backup.tar.gz.gpg
+  > x3-keys-backup.tar.gz.gpg
 
 # Day 1: Deploy nodes
 ./deployment/deploy-nodes-day1.sh
@@ -135,10 +135,10 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
    - 1 monitoring (4GB RAM, 2 vCPU)
 
 2. **Configure DNS**
-   - Point rpc.testnet.atlas-sphere.io → RPC load balancer
-   - Point bootnode.testnet.atlas-sphere.io → Bootnode IP
-   - Point faucet.testnet.atlas-sphere.io → Faucet server
-   - Point metrics.testnet.atlas-sphere.io → Grafana server
+   - Point rpc.testnet.x3-chain.io → RPC load balancer
+   - Point bootnode.testnet.x3-chain.io → Bootnode IP
+   - Point faucet.testnet.x3-chain.io → Faucet server
+   - Point metrics.testnet.x3-chain.io → Grafana server
 
 3. **Build Binary**
    ```bash
@@ -158,19 +158,19 @@ tar czf - deployment/keys | gpg -e -r your@email.com \
 
 5. **Generate Chain Spec**
    ```bash
-   ./target/release/atlas-sphere-node build-spec \
-     --chain local > atlas-testnet-plain.json
+   ./target/release/x3-chain-node build-spec \
+     --chain local > x3-testnet-plain.json
    
    # Edit: name, id, bootnodes, initial authorities
    
-   ./target/release/atlas-sphere-node build-spec \
-     --chain atlas-testnet-plain.json --raw \
-     > atlas-testnet-raw.json
+   ./target/release/x3-chain-node build-spec \
+     --chain x3-testnet-plain.json --raw \
+     > x3-testnet-raw.json
    ```
 
 6. **Deploy Nodes** (manually SSH to each)
-   - Copy binary: `/usr/local/bin/atlas-sphere-node`
-   - Copy chain spec: `/etc/atlas/atlas-testnet-raw.json`
+   - Copy binary: `/usr/local/bin/x3-chain-node`
+   - Copy chain spec: `/etc/x3/x3-testnet-raw.json`
    - Create systemd service
    - Start services
    - Insert keys via RPC
@@ -231,10 +231,10 @@ deployment/
 ├── deploy-nodes-day1.sh             ✅ Created
 ├── build.log                        ⏳ In progress
 ├── chain-specs/
-│   ├── atlas-dev-plain.json         ⏳ Will be generated
-│   ├── atlas-testnet-plain.json     ⏳ Will be generated
-│   ├── atlas-testnet-raw.json       ⏳ Will be generated (deploy this)
-│   └── atlas-staging-plain.json     ⏳ Will be generated
+│   ├── x3-dev-plain.json         ⏳ Will be generated
+│   ├── x3-testnet-plain.json     ⏳ Will be generated
+│   ├── x3-testnet-raw.json       ⏳ Will be generated (deploy this)
+│   └── x3-staging-plain.json     ⏳ Will be generated
 ├── keys/
 │   ├── .gitignore                   ⏳ Will be generated
 │   ├── KEYS_MANIFEST.md             ⏳ Will be generated
@@ -243,7 +243,7 @@ deployment/
 │   ├── validator-03-summary.txt     ⏳ Will be generated
 │   ├── bootnode-info.txt            ⏳ Will be generated
 │   └── sudo-key.txt                 ⏳ Will be generated
-└── atlas-sphere-node                ⏳ Will be copied from target/release/
+└── x3-chain-node                ⏳ Will be copied from target/release/
 ```
 
 ---
@@ -297,19 +297,19 @@ cargo build --release
 ### Can't SSH to VMs
 ```bash
 # Check SSH key
-ssh -i ~/.ssh/atlas-testnet-deploy atlas@VM_IP
+ssh -i ~/.ssh/x3-testnet-deploy x3@VM_IP
 
 # Add key to agent if needed
-ssh-add ~/.ssh/atlas-testnet-deploy
+ssh-add ~/.ssh/x3-testnet-deploy
 ```
 
 ### Firewall Blocks Deployment
 ```bash
 # Temporarily disable for setup (re-enable after!)
-ssh atlas@VM_IP 'sudo ufw disable'
+ssh x3@VM_IP 'sudo ufw disable'
 
 # Deploy, then re-enable
-ssh atlas@VM_IP 'sudo ufw enable'
+ssh x3@VM_IP 'sudo ufw enable'
 ```
 
 ---
@@ -324,7 +324,7 @@ ssh atlas@VM_IP 'sudo ufw enable'
 **After Launch:**
 - **Developer Support**: Discord #testnet-support
 - **Bug Reports**: GitHub issues
-- **Security Issues**: security@atlas-sphere.io (private)
+- **Security Issues**: security@x3-chain.io (private)
 
 ---
 
@@ -342,4 +342,4 @@ All infrastructure scripts are created and ready. Build is currently running.
 **Build Progress**: Check `deployment/build.log`  
 **Last Updated**: November 8, 2025
 
-**Let's launch Atlas Sphere Testnet v1! 🚀**
+**Let's launch X3 Chain Testnet v1! 🚀**

@@ -1,11 +1,11 @@
 [package]
 name = "pallet-atomic-trade-engine"
 version = "0.1.0"
-description = "Cross-VM Atomic Trading Engine for Atlas Sphere - enables atomic arbitrage and multi-hop trades across EVM and SVM"
-authors = ["Atlas Sphere Team"]
+description = "Cross-VM Atomic Trading Engine for X3 Chain - enables atomic arbitrage and multi-hop trades across EVM and SVM"
+authors = ["X3 Chain Team"]
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/atlas-sphere/atlas-sphere"
+repository = "https://github.com/x3-chain/x3-chain"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -35,11 +35,11 @@ frame-benchmarking = { workspace = true, default-features = false, optional = tr
 pallet-timestamp = { workspace = true, default-features = false }
 
 # Local dependencies
-pallet-atlas-kernel = { path = "../atlas-kernel", default-features = false }
+pallet-x3-kernel = { path = "../x3-kernel", default-features = false }
 
 # Optional: VM integration crates (std-only for now)
-atlas-evm-integration = { path = "../../crates/evm-integration", default-features = false, optional = true }
-atlas-svm-integration = { path = "../../crates/svm-integration", default-features = false, optional = true }
+x3-evm-integration = { path = "../../crates/evm-integration", default-features = false, optional = true }
+x3-svm-integration = { path = "../../crates/svm-integration", default-features = false, optional = true }
 
 [dev-dependencies]
 sp-core = { workspace = true }
@@ -61,9 +61,9 @@ std = [
     "frame-system/std",
     "frame-benchmarking?/std",
     "pallet-timestamp/std",
-    "pallet-atlas-kernel/std",
-    "atlas-evm-integration?/std",
-    "atlas-svm-integration?/std",
+    "pallet-x3-kernel/std",
+    "x3-evm-integration?/std",
+    "x3-svm-integration?/std",
     "log/std",
     "serde",
     "serde/std",
@@ -72,10 +72,10 @@ runtime-benchmarks = [
     "frame-benchmarking/runtime-benchmarks",
     "frame-support/runtime-benchmarks",
     "frame-system/runtime-benchmarks",
-    "pallet-atlas-kernel/runtime-benchmarks",
+    "pallet-x3-kernel/runtime-benchmarks",
 ]
 try-runtime = [
     "frame-support/try-runtime",
     "frame-system/try-runtime",
-    "pallet-atlas-kernel/try-runtime",
+    "pallet-x3-kernel/try-runtime",
 ]

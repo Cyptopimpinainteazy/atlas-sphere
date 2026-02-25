@@ -1,5 +1,5 @@
 /**
- * Atlas Sphere x3chain — Polkawallet JS API entry point
+ * X3 Chain x3chain — Polkawallet JS API entry point
  *
  * This is the @polkadot/api wrapper that gets bundled and loaded inside
  * the Polkawallet Flutter app's hidden WebView. It exposes:

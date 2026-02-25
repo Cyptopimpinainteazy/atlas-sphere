@@ -406,7 +406,7 @@ impl WebhookBridge {
 
         WebhookPayload {
             trigger: "social_content".to_string(),
-            project: "Atlas Sphere".to_string(),
+            project: "X3 Chain".to_string(),
             campaign_id: campaign_id.to_string(),
             campaign_type: "SocialCampaign".to_string(),
             lane: "lane3-social-detonator".to_string(),
@@ -436,7 +436,7 @@ impl WebhookBridge {
     ) -> WebhookPayload {
         WebhookPayload {
             trigger: "funding_outreach".to_string(),
-            project: "Atlas Sphere".to_string(),
+            project: "X3 Chain".to_string(),
             campaign_id: campaign_id.to_string(),
             campaign_type: "VcOutreach".to_string(),
             lane: "lane4-funding-magnet".to_string(),
@@ -499,7 +499,7 @@ mod tests {
 
         let payload = WebhookPayload {
             trigger: "test".to_string(),
-            project: "Atlas Sphere".to_string(),
+            project: "X3 Chain".to_string(),
             campaign_id: "test-001".to_string(),
             campaign_type: "Test".to_string(),
             lane: "lane3-social-detonator".to_string(),
@@ -522,7 +522,7 @@ mod tests {
 
         let payload = WebhookPayload {
             trigger: "test".to_string(),
-            project: "Atlas Sphere".to_string(),
+            project: "X3 Chain".to_string(),
             campaign_id: "test-002".to_string(),
             campaign_type: "Test".to_string(),
             lane: "lane4-funding-magnet".to_string(),
@@ -567,7 +567,7 @@ mod tests {
             "prospect-001",
             "Alice Ventures",
             Some("alice@ventures.example"),
-            "Demo request - Atlas Sphere",
+            "Demo request - X3 Chain",
             "Hi Alice, ...",
             "v1",
         );
@@ -583,7 +583,7 @@ mod tests {
 
         let payload = WebhookPayload {
             trigger: "test".to_string(),
-            project: "Atlas Sphere".to_string(),
+            project: "X3 Chain".to_string(),
             campaign_id: "test-003".to_string(),
             campaign_type: "Test".to_string(),
             lane: "lane3-social-detonator".to_string(),

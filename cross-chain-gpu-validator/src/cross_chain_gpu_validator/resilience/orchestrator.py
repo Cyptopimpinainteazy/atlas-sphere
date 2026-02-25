@@ -1,5 +1,5 @@
 """Resilient Orchestrator — wraps MultiChainOrchestrator with full
-Infenstructior resilience: lane routing, circuit breakers, toll booth,
+Inferstructor resilience: lane routing, circuit breakers, toll booth,
 signer lock, health-driven degradation, and metrics propagation.
 
 This is the drop-in replacement for ``MultiChainOrchestrator`` that wires
@@ -33,7 +33,7 @@ logger = logging.getLogger("x3.resilient")
 
 
 class ResilientOrchestrator:
-    """Production-grade orchestrator with full Infenstructior resilience.
+    """Production-grade orchestrator with full Inferstructor resilience.
 
     Wraps the existing ``MultiChainOrchestrator`` and adds:
     - 3-lane execution tiers with deterministic failover
@@ -127,7 +127,7 @@ class ResilientOrchestrator:
 
     def start(self) -> None:
         """Start all resilience subsystems."""
-        logger.info("Starting Infenstructior resilience layer")
+        logger.info("Starting Inferstructor resilience layer")
         self._health.start()
         self._signer.try_acquire()
         logger.info(
@@ -138,7 +138,7 @@ class ResilientOrchestrator:
 
     def stop(self) -> None:
         """Gracefully stop all resilience subsystems."""
-        logger.info("Stopping Infenstructior resilience layer")
+        logger.info("Stopping Inferstructor resilience layer")
         self._health.stop()
         self._signer.release()
 

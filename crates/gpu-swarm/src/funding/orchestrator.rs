@@ -229,7 +229,7 @@ impl CampaignOrchestrator {
         let config = FundingCampaignConfig {
             campaign_type: CampaignType::VcOutreach,
             campaign_id: campaign_id.clone(),
-            project_name: "Atlas Sphere".to_string(),
+            project_name: "X3 Chain".to_string(),
             project_description: "Dual-VM blockchain (EVM + SVM)".to_string(),
             value_props: vec![
                 "EVM compatibility for existing contracts".to_string(),
@@ -279,7 +279,7 @@ impl CampaignOrchestrator {
         let config = FundingCampaignConfig {
             campaign_type: CampaignType::SocialCampaign,
             campaign_id: campaign_id.clone(),
-            project_name: "Atlas Sphere".to_string(),
+            project_name: "X3 Chain".to_string(),
             project_description: "Dual-VM blockchain".to_string(),
             value_props: vec![],
             targets: vec![],
@@ -577,7 +577,7 @@ mod tests {
         let config = FundingCampaignConfig {
             campaign_type: CampaignType::SocialCampaign,
             campaign_id: "social-001".to_string(),
-            project_name: "Atlas Sphere".to_string(),
+            project_name: "X3 Chain".to_string(),
             project_description: "Dual-VM blockchain".to_string(),
             value_props: vec![],
             targets: vec![],

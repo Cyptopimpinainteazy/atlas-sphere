@@ -168,10 +168,10 @@ export const PAIRS = [
     status: 'TRADING',
   },
   {
-    id: 'ATLAS-USDT',
-    base: 'ATLAS',
+    id: 'X3-USDT',
+    base: 'X3',
     quote: 'USDT',
-    baseToken: 'native-atlas',
+    baseToken: 'native-x3',
     quoteToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
     minOrderSize: '1',
     minOrderValue: '10',
@@ -260,5 +260,5 @@ export const CHAINS = [
   { id: 'avalanche', name: 'Avalanche', symbol: 'AVAX', color: '#E84142', explorerUrl: 'https://snowtrace.io' },
   { id: 'solana', name: 'Solana', symbol: 'SOL', color: '#14F195', explorerUrl: 'https://solscan.io' },
   { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', color: '#F7931A', explorerUrl: 'https://blockstream.info' },
-  { id: 'atlas-substrate', name: 'Atlas', symbol: 'ATLAS', color: '#4A90D9', explorerUrl: 'http://localhost:9944' },
+  { id: 'x3-substrate', name: 'X3', symbol: 'X3', color: '#4A90D9', explorerUrl: 'http://localhost:9944' },
 ];

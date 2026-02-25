@@ -262,9 +262,9 @@ crates/x3-jit/
 
 ```
                          ┌─────────────────────────────────────────────────────────────┐
-                         │                    ATLAS-SPHERE CHAIN                       │
+                         │                    X3-SPHERE CHAIN                       │
                          │  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
-                         │  │ Atlas Kernel │ │   X3 Pallet  │ │ Compute Marketplace  │ │
+                         │  │ X3 Kernel │ │   X3 Pallet  │ │ Compute Marketplace  │ │
                          │  │  (Comit Tx)  │ │ (On-chain VM)│ │  (Job Escrow/Pay)    │ │
                          │  └──────────────┘ └──────────────┘ └──────────────────────┘ │
                          └─────────────────────────────────────────────────────────────┘
@@ -326,13 +326,13 @@ crates/x3-jit/
 
 | Job Type               | GPU Intensity | Base Reward | Difficulty Multiplier |
 | ---------------------- | ------------- | ----------- | --------------------- |
-| X3 Strategy Simulation | High          | 10 ATLAS    | 1.0x - 5.0x           |
-| MEV Path Discovery     | Very High     | 25 ATLAS    | 1.5x - 10.0x          |
-| ZK Proof Generation    | Extreme       | 50 ATLAS    | 2.0x - 20.0x          |
-| Model Training         | High          | 15 ATLAS    | 1.0x - 8.0x           |
-| Chain Indexing         | Medium        | 5 ATLAS     | 0.5x - 2.0x           |
-| Mempool Analysis       | Medium        | 8 ATLAS     | 1.0x - 3.0x           |
-| Attack Simulation      | Very High     | 30 ATLAS    | 2.0x - 15.0x          |
+| X3 Strategy Simulation | High          | 10 X3    | 1.0x - 5.0x           |
+| MEV Path Discovery     | Very High     | 25 X3    | 1.5x - 10.0x          |
+| ZK Proof Generation    | Extreme       | 50 X3    | 2.0x - 20.0x          |
+| Model Training         | High          | 15 X3    | 1.0x - 8.0x           |
+| Chain Indexing         | Medium        | 5 X3     | 0.5x - 2.0x           |
+| Mempool Analysis       | Medium        | 8 X3     | 1.0x - 3.0x           |
+| Attack Simulation      | Very High     | 30 X3    | 2.0x - 15.0x          |
 
 ---
 
@@ -379,14 +379,14 @@ crates/x3-jit/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      ATLAS SPHERE ECONOMY                            │
+│                      X3 CHAIN ECONOMY                            │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌──────────────────────┐      ┌──────────────────────┐            │
 │  │   COMPUTE SELLERS    │      │   COMPUTE BUYERS     │            │
 │  │   (GPU Node Ops)     │      │   (Developers)       │            │
 │  │                      │      │                      │            │
-│  │ • Earn ATLAS tokens  │◀────▶│ • Pay ATLAS for jobs │            │
+│  │ • Earn X3 tokens  │◀────▶│ • Pay X3 for jobs │            │
 │  │ • Stake for priority │      │ • Submit X3 code     │            │
 │  │ • Uptime bonuses     │      │ • Buy trained models │            │
 │  └──────────────────────┘      └──────────────────────┘            │

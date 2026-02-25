@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# Atlas Sphere public RPC runner.
+# X3 Chain public RPC runner.
 #
 # Recommended: bind node RPC to localhost and expose it publicly via a
 # reverse proxy (nginx/caddy) with TLS + rate limiting.
 #
 # Environment variables:
-# - node_name:          Human-readable node name (default: atlas-rpc)
-# - base_path:          Data dir (default: /var/lib/atlas-sphere/rpc)
+# - node_name:          Human-readable node name (default: x3-rpc)
+# - base_path:          Data dir (default: /var/lib/x3-chain/rpc)
 # - chain:              dev|local|staging|testnet|<path>|<builtin id> (default: testnet)
 # - chain_spec_dir:     Directory with deployment specs (default: deployment/chain-specs)
 # - rpc_port:           RPC port (default: 9944)
@@ -24,10 +24,10 @@ set -euo pipefail
 # - require_confirm_public_rpc:          true|false (default: false)
 # - confirm_public_rpc:                  Set to "yes" when require_confirm_public_rpc=true
 # - require_safe_rpc_methods_on_public:  true|false (default: true)
-# - node_bin:           Path to atlas-sphere-node binary
+# - node_bin:           Path to x3-chain-node binary
 
-node_name="${node_name:-atlas-rpc}"
-base_path="${base_path:-/var/lib/atlas-sphere/rpc}"
+node_name="${node_name:-x3-rpc}"
+base_path="${base_path:-/var/lib/x3-chain/rpc}"
 chain="${chain:-testnet}"
 chain_spec_dir="${chain_spec_dir:-deployment/chain-specs}"
 
@@ -49,7 +49,7 @@ confirm_public_rpc="${confirm_public_rpc:-}"
 
 require_safe_rpc_methods_on_public="${require_safe_rpc_methods_on_public:-true}"
 
-node_bin="${node_bin:-./target/release/atlas-sphere-node}"
+node_bin="${node_bin:-./target/release/x3-chain-node}"
 
 if [ ! -x "${node_bin}" ]; then
   echo "❌ node_bin not found or not executable: ${node_bin}"
@@ -66,17 +66,17 @@ case "${chain}" in
     chain_arg=(--chain local)
     ;;
   staging)
-    if [ -f "${chain_spec_dir}/atlas-staging-plain.json" ]; then
-      chain_arg=(--chain "${chain_spec_dir}/atlas-staging-plain.json")
+    if [ -f "${chain_spec_dir}/x3-staging-plain.json" ]; then
+      chain_arg=(--chain "${chain_spec_dir}/x3-staging-plain.json")
     else
       chain_arg=(--chain staging)
     fi
     ;;
   testnet)
-    if [ -f "${chain_spec_dir}/atlas-testnet-raw.json" ]; then
-      chain_arg=(--chain "${chain_spec_dir}/atlas-testnet-raw.json")
-    elif [ -f "${chain_spec_dir}/atlas-testnet-plain.json" ]; then
-      chain_arg=(--chain "${chain_spec_dir}/atlas-testnet-plain.json")
+    if [ -f "${chain_spec_dir}/x3-testnet-raw.json" ]; then
+      chain_arg=(--chain "${chain_spec_dir}/x3-testnet-raw.json")
+    elif [ -f "${chain_spec_dir}/x3-testnet-plain.json" ]; then
+      chain_arg=(--chain "${chain_spec_dir}/x3-testnet-plain.json")
     else
       echo "❌ No testnet chainspec found in ${chain_spec_dir}."
       exit 1
@@ -125,7 +125,7 @@ if [ -n "${rpc_cors}" ]; then
   rpc_cors_args=(--rpc-cors "${rpc_cors}")
 fi
 
-echo "🌐 Atlas Sphere RPC Node"
+echo "🌐 X3 Chain RPC Node"
 echo "  node_name=${node_name}"
 echo "  base_path=${base_path}"
 echo "  chain=${chain}"

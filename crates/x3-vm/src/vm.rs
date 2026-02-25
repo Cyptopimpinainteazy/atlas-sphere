@@ -247,6 +247,11 @@ impl VM {
         self.hostcalls.register(id, name, arg_count, handler);
     }
 
+    /// Invoke a hostcall directly from the host.
+    pub fn invoke_hostcall(&self, id: u8, args: &[Value]) -> VMResult<Option<Value>> {
+        self.hostcalls.invoke(id, args)
+    }
+
     /// Get the loaded module.
     pub fn module(&self) -> &BytecodeModule {
         &self.module

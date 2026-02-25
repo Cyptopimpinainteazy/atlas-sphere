@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere TPS Testing Orchestration Script
+X3 Chain TPS Testing Orchestration Script
 
 This script manages the complete TPS testing infrastructure:
 - Builds and runs InfluxDB for metrics storage
@@ -149,7 +149,7 @@ class TPSTestOrchestrator:
         """Run the complete TPS testing pipeline"""
         
         print("\n" + "="*60)
-        print("  Atlas Sphere TPS Testing Infrastructure")
+        print("  X3 Chain TPS Testing Infrastructure")
         print("="*60 + "\n")
         
         # Verify RPC connection
@@ -204,7 +204,7 @@ def main():
     """Main entry point"""
     
     parser = argparse.ArgumentParser(
-        description="Atlas Sphere TPS Testing Infrastructure"
+        description="X3 Chain TPS Testing Infrastructure"
     )
     parser.add_argument(
         "--no-build",

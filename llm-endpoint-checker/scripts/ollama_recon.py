@@ -1,0 +1,1 @@
+/home/lojak/Desktop/atlas-sphere-master/scripts/ollama_recon.py

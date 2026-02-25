@@ -1,23 +1,23 @@
 """
-Atlas Sphere Python SDK
+X3 Chain Python SDK
 
-A comprehensive SDK for interacting with the Atlas Sphere blockchain,
-featuring dual-VM execution (EVM + SVM) through the Atlas Kernel.
+A comprehensive SDK for interacting with the X3 Chain blockchain,
+featuring dual-VM execution (EVM + SVM) through the X3 Kernel.
 """
 
-from atlas_sphere_sdk.client import AtlasClient
-from atlas_sphere_sdk.comit import ComitBuilder, ComitTransaction
-from atlas_sphere_sdk.query import QueryClient
-from atlas_sphere_sdk.evm import EvmClient
-from atlas_sphere_sdk.svm import SvmClient
-from atlas_sphere_sdk.types import (
+from x3_chain_sdk.client import AtlasClient
+from x3_chain_sdk.comit import ComitBuilder, ComitTransaction
+from x3_chain_sdk.query import QueryClient
+from x3_chain_sdk.evm import EvmClient
+from x3_chain_sdk.svm import SvmClient
+from x3_chain_sdk.types import (
     AccountId,
     AssetId,
     Balance,
     ComitId,
     ExecutionReceipt,
 )
-from atlas_sphere_sdk.collateral import CollateralManagerClient, DepositReceipt, WithdrawRequest
+from x3_chain_sdk.collateral import CollateralManagerClient, DepositReceipt, WithdrawRequest
 
 __all__ = [
     "AtlasClient",

@@ -89,9 +89,9 @@ impl Default for NetworkConfig {
             ],
             bootstrap_nodes: vec![
                 // Default testnet bootstrap nodes
-                "/dns4/swarm1.testnet.atlas-sphere.io/tcp/30333/p2p/12D3KooWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".to_string(),
+                "/dns4/swarm1.testnet.x3-chain.io/tcp/30333/p2p/12D3KooWxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".to_string(),
             ],
-            coordinator_endpoint: Some("https://coordinator.atlas-sphere.io".to_string()),
+            coordinator_endpoint: Some("https://coordinator.x3-chain.io".to_string()),
             max_peers: 50,
             enable_mdns: true,
             enable_dht: true,

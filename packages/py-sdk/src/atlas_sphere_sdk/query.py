@@ -1,10 +1,10 @@
 """
-Query client for read-only operations on Atlas Sphere.
+Query client for read-only operations on X3 Chain.
 """
 
 from typing import Any, Dict, List, Optional
 
-from atlas_sphere_sdk.types import (
+from x3_chain_sdk.types import (
     AccountId,
     AssetId,
     Balance,
@@ -15,7 +15,7 @@ from atlas_sphere_sdk.types import (
 
 class QueryClient:
     """
-    Read-only query client for Atlas Sphere.
+    Read-only query client for X3 Chain.
     
     Provides efficient methods for querying chain state without
     requiring a keypair for signing.

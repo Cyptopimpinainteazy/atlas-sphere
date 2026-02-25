@@ -1,4 +1,4 @@
-use atlas_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
+use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
 
 // Integration tests for the cross-VM bridge exercising the public API
 // - queue_operation + execute_pending (happy path)

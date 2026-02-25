@@ -1,4 +1,4 @@
-// ── Atlas Sphere – Multi-Chain GPU Validator Dashboard ───────────────────────
+// ── X3 Chain – Multi-Chain GPU Validator Dashboard ───────────────────────
 
 function fmt(n, decimals = 0) {
   if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";

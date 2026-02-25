@@ -16962,11 +16962,11 @@
     ]
   },
   {
-    "chain": "planq-atlas-testnet",
-    "name": "Planq Atlas Testnet",
+    "chain": "planq-x3-testnet",
+    "name": "Planq X3 Testnet",
     "endpoints": [
       {
-        "endpoint": "https://evm-rpc-atlas.planq.network",
+        "endpoint": "https://evm-rpc-x3.planq.network",
         "healthy": false,
         "lastChecked": 1770715924583,
         "lastError": "This operation was aborted"
@@ -29306,8 +29306,8 @@
     ]
   },
   {
-    "chain": "gitagi-atlas-testnet",
-    "name": "GitAGI Atlas Testnet",
+    "chain": "gitagi-x3-testnet",
+    "name": "GitAGI X3 Testnet",
     "endpoints": [
       {
         "endpoint": "https://rpc.gitagi.org",
@@ -31033,8 +31033,8 @@
     ]
   },
   {
-    "chain": "atlas",
-    "name": "Atlas",
+    "chain": "x3",
+    "name": "X3",
     "endpoints": [
       {
         "endpoint": "https://rpc.testnet.atl.network",

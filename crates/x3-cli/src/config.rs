@@ -39,7 +39,7 @@ pub struct ProjectConfig {
 impl Default for ProjectConfig {
     fn default() -> Self {
         Self {
-            name: "my-atlas-project".to_string(),
+            name: "my-x3-project".to_string(),
             version: "0.1.0".to_string(),
             project_type: ProjectType::Dual,
             network: NetworkConfig::default(),
@@ -153,7 +153,7 @@ fn default_network() -> String {
 
 #[cfg(feature = "sdk")]
 fn default_local_endpoint() -> String {
-    atlas_sdk::DEFAULT_HTTP_ENDPOINT.to_string()
+    x3_sdk::DEFAULT_HTTP_ENDPOINT.to_string()
 }
 
 #[cfg(not(feature = "sdk"))]
@@ -163,22 +163,22 @@ fn default_local_endpoint() -> String {
 
 #[cfg(feature = "sdk")]
 fn default_testnet_endpoint() -> String {
-    atlas_sdk::TESTNET_HTTP_ENDPOINT.to_string()
+    x3_sdk::TESTNET_HTTP_ENDPOINT.to_string()
 }
 
 #[cfg(not(feature = "sdk"))]
 fn default_testnet_endpoint() -> String {
-    "http://rpc.testnet.atlas-sphere.io:9944".to_string()
+    "http://rpc.testnet.x3-chain.io:9944".to_string()
 }
 
 #[cfg(feature = "sdk")]
 fn default_mainnet_endpoint() -> String {
-    atlas_sdk::MAINNET_HTTP_ENDPOINT.to_string()
+    x3_sdk::MAINNET_HTTP_ENDPOINT.to_string()
 }
 
 #[cfg(not(feature = "sdk"))]
 fn default_mainnet_endpoint() -> String {
-    "http://rpc.atlas-sphere.io:9944".to_string()
+    "http://rpc.x3-chain.io:9944".to_string()
 }
 
 /// Build configuration.

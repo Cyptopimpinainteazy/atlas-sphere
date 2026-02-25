@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Atlas Sphere E2E CI Test State-Root Replay Wrapper
+# X3 Chain E2E CI Test State-Root Replay Wrapper
 # Standardized test execution w/ structured logging, exit codes, and artifact collection
 #
 # Exit Codes:

@@ -1,4 +1,4 @@
-// Quantum UI Components - Shared across all Atlas Sphere apps
+// Quantum UI Components - Shared across all X3 Chain apps
 // Year 2060 Cyberpunk Design System
 
 // Core visual effects

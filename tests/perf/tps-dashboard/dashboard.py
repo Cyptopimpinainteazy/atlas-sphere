@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere TPS Dashboard
+X3 Chain TPS Dashboard
 Real-time visualization of blockchain transactions per second (TPS)
 
 Adapted from Solana Project by Amil Shrivastava
-For: Atlas Sphere Blockchain Platform
+For: X3 Chain Blockchain Platform
 """
 
 import streamlit as st
@@ -19,7 +19,7 @@ import time
 
 # Page configuration
 st.set_page_config(
-    page_title="Atlas Sphere TPS Dashboard",
+    page_title="X3 Chain TPS Dashboard",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -49,12 +49,12 @@ st.markdown("""
 
 
 class TPSDashboard:
-    """Atlas Sphere TPS Dashboard"""
+    """X3 Chain TPS Dashboard"""
     
     def __init__(self):
         self.influx_url = os.getenv("INFLUX_URL", "http://localhost:8086")
-        self.influx_token = os.getenv("INFLUX_TOKEN", "atlas-sphere-key")
-        self.influx_db = os.getenv("INFLUX_DB", "atlas_sphere_tps")
+        self.influx_token = os.getenv("INFLUX_TOKEN", "x3-chain-key")
+        self.influx_db = os.getenv("INFLUX_DB", "x3_chain_tps")
         self.client = None
         self.connect()
     
@@ -64,7 +64,7 @@ class TPSDashboard:
             self.client = InfluxDBClient(
                 url=self.influx_url,
                 token=self.influx_token,
-                org="atlas-sphere"
+                org="x3-chain"
             )
             self.client.buckets_api()  # Test connection
             st.session_state.db_connected = True
@@ -114,7 +114,7 @@ class TPSDashboard:
         """Render dashboard header"""
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.title("⚡ Atlas Sphere TPS Dashboard")
+            st.title("⚡ X3 Chain TPS Dashboard")
             st.markdown("Real-time blockchain performance monitoring")
         with col2:
             if st.checkbox("Auto-refresh", value=True):

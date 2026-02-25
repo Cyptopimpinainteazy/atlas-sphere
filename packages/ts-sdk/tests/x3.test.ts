@@ -1,5 +1,5 @@
 /**
- * Integration tests for @atlas-sphere/ts-sdk X3 modules
+ * Integration tests for @x3-chain/ts-sdk X3 modules
  *
  * INV-REF: tests/invariants/registry.toml — ts_sdk_x3_integration
  *

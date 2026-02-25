@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Atlas Sphere Swarm API Server
+X3 Chain Swarm API Server
 Unified REST API + WebSocket server for swarm coordination
 
 This server provides:
@@ -548,7 +548,7 @@ class SwarmAPIServer:
 
         network = (body.get("network") or "").strip().lower()
         action = (body.get("action") or "post").strip().lower()
-        topic = (body.get("topic") or "Atlas Sphere").strip()
+        topic = (body.get("topic") or "X3 Chain").strip()
 
         if not network or network not in networks:
             return web.json_response({'error': 'network_not_allowed'}, status=400)
@@ -2118,7 +2118,7 @@ class SwarmAPIServer:
                 from swarm.quantum.evolution_optimizer import QUANTUM_AVAILABLE
                 if QUANTUM_AVAILABLE:
                     import sys
-                    sys.path.insert(0, '/media/lojak/sda1/atlas-sphere-master/packages/x3-quantum-advisor/src')
+                    sys.path.insert(0, '/media/lojak/sda1/x3-chain-master/packages/x3-quantum-advisor/src')
                     from x3_quantum_advisor.qiskit_integration import PortfolioQAOA
 
                     # Run REAL QAOA with more layers for harder problems

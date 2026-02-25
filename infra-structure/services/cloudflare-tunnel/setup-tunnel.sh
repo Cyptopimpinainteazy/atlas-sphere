@@ -17,7 +17,7 @@
 set -euo pipefail
 
 DOMAIN="x3star.net"
-TUNNEL_NAME="atlas-sphere"
+TUNNEL_NAME="x3-chain"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_TEMPLATE="${SCRIPT_DIR}/config.yml"
 CONFIG_DEST="${HOME}/.cloudflared/config.yml"
@@ -155,8 +155,8 @@ validate() {
   info "  Config:       ${CONFIG_DEST}"
   info ""
   info "  Routes:"
-  info "    https://${DOMAIN}            → localhost:5173  (Atlas Desktop)"
-  info "    https://www.${DOMAIN}        → localhost:5173  (Atlas Desktop)"
+  info "    https://${DOMAIN}            → localhost:5173  (X3 Desktop)"
+  info "    https://www.${DOMAIN}        → localhost:5173  (X3 Desktop)"
   info "    https://rpc.${DOMAIN}        → localhost:9933  (Node HTTP RPC)"
   info "    https://ws.${DOMAIN}         → localhost:9944  (Node WebSocket)"
   info "    https://explorer.${DOMAIN}   → localhost:4000  (Explorer)"

@@ -10,7 +10,7 @@ tunnel: 6c118620-18cf-4795-80a8-6d44d37aecaa
 credentials-file: /home/lojak/.cloudflared/6c118620-18cf-4795-80a8-6d44d37aecaa.json
 
 ingress:
-  # ── Root — Atlas Desktop (Vite) ────────────────────────────────────────
+  # ── Root — X3 Desktop (Vite) ────────────────────────────────────────
   - hostname: x3star.net
     service: http://localhost:5173
     originRequest: { noTLSVerify: true }

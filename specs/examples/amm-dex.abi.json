@@ -2,7 +2,7 @@
   "name": "ConstantProductAMM",
   "version": "1.0.0",
   "description": "Constant product automated market maker (x*y=k) with cross-VM atomic swaps",
-  "author": "Atlas Sphere Team",
+  "author": "X3 Chain Team",
   "license": "MIT",
   "compiler": {
     "name": "x3c",

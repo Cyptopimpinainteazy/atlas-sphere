@@ -7,9 +7,9 @@
 
 ## 1. Introduction
 
-The **Comit** (Cross-VM Operation Transaction) is the fundamental transaction primitive for the Atlas Sphere protocol. Each Comit expresses an atomic intent spanning the Ethereum Virtual Machine (EVM) and the Solana Virtual Machine (SVM). This document formally specifies the Comit structure, serialization formats, signing and verification rules, and the two-phase commit protocol that guarantees atomic dual-VM execution.
+The **Comit** (Cross-VM Operation Transaction) is the fundamental transaction primitive for the X3 Chain protocol. Each Comit expresses an atomic intent spanning the Ethereum Virtual Machine (EVM) and the Solana Virtual Machine (SVM). This document formally specifies the Comit structure, serialization formats, signing and verification rules, and the two-phase commit protocol that guarantees atomic dual-VM execution.
 
-Comits are submitted to the Atlas Kernel pallet within the Atlas Sphere runtime. They drive state changes in the canonical ledger, coordinate external execution environments, and provide a uniform interface for cross-VM applications.
+Comits are submitted to the X3 Kernel pallet within the X3 Chain runtime. They drive state changes in the canonical ledger, coordinate external execution environments, and provide a uniform interface for cross-VM applications.
 
 ---
 
@@ -17,8 +17,8 @@ Comits are submitted to the Atlas Kernel pallet within the Atlas Sphere runtime.
 
 | Term | Definition |
 |------|------------|
-| **Atlas Kernel** | The runtime pallet responsible for Comit verification, canonical ledger maintenance, and dual-VM coordination. |
-| **Canonical Ledger** | Ledger tracking balances for all registered assets across Atlas accounts. |
+| **X3 Kernel** | The runtime pallet responsible for Comit verification, canonical ledger maintenance, and dual-VM coordination. |
+| **Canonical Ledger** | Ledger tracking balances for all registered assets across X3 accounts. |
 | **Comit Origin** | Substrate account that signs and submits the Comit. |
 | **Prepare Root** | Deterministic commitment to the Comit contents used in the prepare phase of the two-phase commit protocol. |
 | **Dual-VM** | Combined execution of EVM and SVM payloads that must succeed or fail atomically. |
@@ -52,12 +52,12 @@ pub struct Comit<AccountId, Balance> {
 | `evm_payload` | `Vec<u8>` | ABI-encoded EVM execution payload. | Length ≤ `MaxPayloadLength`; MAY be empty if only SVM execution is needed. |
 | `svm_payload` | `Vec<u8>` | Borsh-encoded SVM payload. | Length ≤ `MaxPayloadLength`; MAY be empty if only EVM execution is needed. |
 | `nonce` | `u64` | Sequential Comit nonce scoped to the origin account. | MUST equal on-chain `Nonces[origin]`. |
-| `fee` | `Balance` | Fee to be debited from canonical ledger. | Denominated in ATLAS unless configured otherwise. |
+| `fee` | `Balance` | Fee to be debited from canonical ledger. | Denominated in X3 unless configured otherwise. |
 | `prepare_root` | `H256` | Commitment to Comit data for the prepare phase. | MUST follow §8.2 computation. |
 
 ### 3.2 Payload Schemas (Reference)
 
-While runtime stores payloads as opaque byte vectors, off-chain tooling SHOULD use the structured representations defined in `pallets/atlas-kernel/src/types.rs`:
+While runtime stores payloads as opaque byte vectors, off-chain tooling SHOULD use the structured representations defined in `pallets/x3-kernel/src/types.rs`:
 
 ```rust
 pub struct EvmPayload {
@@ -167,7 +167,7 @@ Wallets MUST display the decoded payloads before signing. They SHOULD warn users
 
 ## 6. Verification Requirements
 
-Upon receiving `submit_comit`, the Atlas Kernel MUST perform the following checks:
+Upon receiving `submit_comit`, the X3 Kernel MUST perform the following checks:
 
 1. **Signature Validation**
    - Verify extrinsic signature to authenticate `origin`.
@@ -188,7 +188,7 @@ Runtime implementations MAY extend verification (e.g., static analysis of payloa
 
 ## 7. Two-Phase Commit Protocol
 
-Atlas Sphere adopts a two-phase commit (2PC) adapted for dual-VM execution.
+X3 Chain adopts a two-phase commit (2PC) adapted for dual-VM execution.
 
 ### 7.1 Phase 1 – Prepare
 
@@ -269,7 +269,7 @@ Notes:
 
 ### 10.1 Cross-VM Arbitrage
 
-**Scenario:** Swap ATLAS → ETH on EVM DEX, swap ETH → ATLAS on SVM liquidity pool.
+**Scenario:** Swap X3 → ETH on EVM DEX, swap ETH → X3 on SVM liquidity pool.
 
 ```jsonc
 {
@@ -296,9 +296,9 @@ Notes:
 - Prepare root calculated per §8.2.
 - Executors ensure both swaps succeed before finalizing ledger adjustments.
 
-### 10.2 Canonical Asset Swap (ATLAS ↔ USDC)
+### 10.2 Canonical Asset Swap (X3 ↔ USDC)
 
-- EVM payload calls Atlas DEX router.
+- EVM payload calls X3 DEX router.
 - SVM payload empty (pure EVM execution).
 
 ```json
@@ -342,7 +342,7 @@ Runtime accepts zero prepare root. Wallet SHOULD caution user that dual-VM guara
 
 ## 11. Error Handling
 
-Atlas Kernel emits `ComitFailed` with `ComitFailureReason`. Wallets SHOULD map reasons to user-friendly messages:
+X3 Kernel emits `ComitFailed` with `ComitFailureReason`. Wallets SHOULD map reasons to user-friendly messages:
 
 | Reason | User Message |
 |--------|--------------|
@@ -381,8 +381,8 @@ Atlas Kernel emits `ComitFailed` with `ComitFailureReason`. Wallets SHOULD map r
 
 ## 14. References
 
-- Atlas Kernel pallet implementation (`pallets/atlas-kernel/src/lib.rs`)
-- Payload types (`pallets/atlas-kernel/src/types.rs`)
+- X3 Kernel pallet implementation (`pallets/x3-kernel/src/lib.rs`)
+- Payload types (`pallets/x3-kernel/src/types.rs`)
 - Runtime integration (`runtime/src/lib.rs`)
 - SCALE codec specification
 - CBOR RFC 7049

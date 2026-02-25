@@ -95,7 +95,7 @@ impl RouteOptimizer {
     /// Initialize with default bridges and settings
     fn initialize_defaults(&mut self) {
         // Default chain latencies (seconds)
-        self.chain_latencies.insert(ChainId::ATLAS, 6);
+        self.chain_latencies.insert(ChainId::X3, 6);
         self.chain_latencies.insert(ChainId::ETHEREUM, 12);
         self.chain_latencies.insert(ChainId::BSC, 3);
         self.chain_latencies.insert(ChainId::POLYGON, 2);
@@ -106,7 +106,7 @@ impl RouteOptimizer {
         self.chain_latencies.insert(ChainId::SOLANA, 0); // 400ms
 
         // Gas multipliers (relative to ETH mainnet = 1.0)
-        self.gas_multipliers.insert(ChainId::ATLAS, 0.001);
+        self.gas_multipliers.insert(ChainId::X3, 0.001);
         self.gas_multipliers.insert(ChainId::ETHEREUM, 1.0);
         self.gas_multipliers.insert(ChainId::BSC, 0.05);
         self.gas_multipliers.insert(ChainId::POLYGON, 0.01);
@@ -122,8 +122,8 @@ impl RouteOptimizer {
 
     /// Add default bridge configurations
     fn add_default_bridges(&mut self) {
-        // Atlas Bridge (to/from all chains)
-        let atlas_chains = vec![
+        // X3 Bridge (to/from all chains)
+        let x3_chains = vec![
             ChainId::ETHEREUM,
             ChainId::BSC,
             ChainId::POLYGON,
@@ -134,11 +134,11 @@ impl RouteOptimizer {
             ChainId::SOLANA,
         ];
 
-        for chain in &atlas_chains {
+        for chain in &x3_chains {
             self.bridges.push(BridgeInfo {
-                name: "atlas-bridge".to_string(),
+                name: "x3-bridge".to_string(),
                 from: *chain,
-                to: ChainId::ATLAS,
+                to: ChainId::X3,
                 base_fee: 0.1,
                 fee_percent: 0.01,
                 avg_time: 60,
@@ -147,8 +147,8 @@ impl RouteOptimizer {
                 supported_assets: vec![AssetTypeClass::All],
             });
             self.bridges.push(BridgeInfo {
-                name: "atlas-bridge".to_string(),
-                from: ChainId::ATLAS,
+                name: "x3-bridge".to_string(),
+                from: ChainId::X3,
                 to: *chain,
                 base_fee: 0.1,
                 fee_percent: 0.01,
@@ -418,7 +418,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eth_to_atlas_route() {
+    fn test_eth_to_x3_route() {
         let optimizer = RouteOptimizer::new();
         let asset = MigrationAsset {
             source_chain: ChainId::ETHEREUM,
@@ -429,10 +429,10 @@ mod tests {
             priority: 10,
         };
 
-        let route = optimizer.find_optimal_route(ChainId::ETHEREUM, ChainId::ATLAS, &asset);
+        let route = optimizer.find_optimal_route(ChainId::ETHEREUM, ChainId::X3, &asset);
         assert!(route.is_ok());
         let hops = route.unwrap();
         assert!(!hops.is_empty());
-        assert_eq!(hops[0].protocol, "atlas-bridge");
+        assert_eq!(hops[0].protocol, "x3-bridge");
     }
 }

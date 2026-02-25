@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ═══════════════════════════════════════════════════════════════════════════════
-  Atlas Sphere — Full Blockchain Test Suite
+  X3 Chain — Full Blockchain Test Suite
   Tests all configured blockchains across EVM, SVM, Cosmos, Substrate, and
   other L1 families for: registry, config, GPU kernels, crypto primitives,
   cross-chain profiles, and validator readiness.
@@ -343,7 +343,7 @@ class TestCryptoPrimitiveSHA256(unittest.TestCase):
     """INV-CHAIN-003: SHA-256 (SVM, Cosmos, Substrate families)."""
 
     def test_deterministic(self):
-        data = b"atlas-sphere-sha256-all-chains"
+        data = b"x3-chain-sha256-all-chains"
         h1 = hashlib.sha256(data).digest()
         h2 = hashlib.sha256(data).digest()
         self.assertEqual(h1, h2)
@@ -379,7 +379,7 @@ class TestCryptoPrimitiveKeccak256(unittest.TestCase):
         return hashlib.sha3_256(data).digest()
 
     def test_deterministic(self):
-        data = b"atlas-sphere-keccak-evm"
+        data = b"x3-chain-keccak-evm"
         h1 = self._keccak(data)
         h2 = self._keccak(data)
         self.assertEqual(h1, h2)
@@ -400,7 +400,7 @@ class TestCryptoPrimitiveSecp256k1(unittest.TestCase):
             from cryptography.hazmat.primitives import hashes
 
             key = ec.generate_private_key(ec.SECP256K1())
-            data = b"atlas-sphere-secp256k1-test"
+            data = b"x3-chain-secp256k1-test"
             sig = key.sign(data, ec.ECDSA(hashes.SHA256()))
             # Verify — should not raise
             key.public_key().verify(sig, data, ec.ECDSA(hashes.SHA256()))
@@ -415,7 +415,7 @@ class TestCryptoPrimitiveSecp256k1(unittest.TestCase):
 
             key1 = ec.generate_private_key(ec.SECP256K1())
             key2 = ec.generate_private_key(ec.SECP256K1())
-            data = b"atlas-sphere-wrong-key"
+            data = b"x3-chain-wrong-key"
             sig = key1.sign(data, ec.ECDSA(hashes.SHA256()))
             with self.assertRaises(InvalidSignature):
                 key2.public_key().verify(sig, data, ec.ECDSA(hashes.SHA256()))
@@ -430,7 +430,7 @@ class TestCryptoPrimitiveEd25519(unittest.TestCase):
         try:
             import nacl.signing
             sk = nacl.signing.SigningKey.generate()
-            msg = b"atlas-sphere-ed25519-test"
+            msg = b"x3-chain-ed25519-test"
             signed = sk.sign(msg)
             sk.verify_key.verify(signed)  # should not raise
         except ImportError:
@@ -787,7 +787,7 @@ class TestRustOpcodeConsistency(unittest.TestCase):
 
 def run_interactive():
     """Run all tests with a pretty summary."""
-    banner("Atlas Sphere — Full Blockchain Test Suite")
+    banner("X3 Chain — Full Blockchain Test Suite")
     configs = load_default_chain_configs()
 
     # Print chain summary

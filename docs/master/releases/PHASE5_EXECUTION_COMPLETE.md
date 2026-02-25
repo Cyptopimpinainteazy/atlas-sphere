@@ -80,7 +80,7 @@
 
 ## 💻 Code Quality Metrics
 
-### Rust Pallet (`pallets/atlas-jury-anchor/`)
+### Rust Pallet (`pallets/x3-jury-anchor/`)
 ```
 ✅ 500+ lines of production code
    ├─ Syntax: No errors
@@ -297,7 +297,7 @@ openspec/changes/jury-blockchain-anchoring/
 
 **Runtime Pallet (Rust):**
 ```
-pallets/atlas-jury-anchor/
+pallets/x3-jury-anchor/
 ├── src/lib.rs (500+ lines)
 └── Cargo.toml (30 lines)
 ```

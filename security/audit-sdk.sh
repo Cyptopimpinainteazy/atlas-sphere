@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atlas Sphere TypeScript SDK Security Audit Script
+# X3 Chain TypeScript SDK Security Audit Script
 # Performs comprehensive dependency scanning, vulnerability detection, and security analysis
 
 set -euo pipefail
@@ -17,7 +17,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== Atlas Sphere SDK Security Audit ===${NC}"
+echo -e "${BLUE}=== X3 Chain SDK Security Audit ===${NC}"
 echo "Timestamp: ${TIMESTAMP}"
 echo "SDK Location: ${SDK_DIR}"
 echo ""
@@ -193,7 +193,7 @@ log_result INFO "Package private flag: ${IS_PRIVATE}"
 echo -e "\n${BLUE}=== Generating Summary Report ===${NC}"
 
 cat > "${REPORT_DIR}/audit-summary-${TIMESTAMP}.md" <<EOF
-# Atlas Sphere TypeScript SDK Security Audit Report
+# X3 Chain TypeScript SDK Security Audit Report
 
 **Date**: $(date)
 **SDK Version**: $(jq -r '.version' package.json)

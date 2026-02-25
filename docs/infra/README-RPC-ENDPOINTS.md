@@ -1,4 +1,4 @@
-# Atlas Sphere Mainnet RPC Endpoints
+# X3 Chain Mainnet RPC Endpoints
 
 This document describes the configured mainnet RPC endpoints for cross-chain operations.
 

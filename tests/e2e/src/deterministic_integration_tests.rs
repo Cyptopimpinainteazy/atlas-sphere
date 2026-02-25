@@ -1,4 +1,4 @@
-/// Deterministic Integration Tests for Atlas Sphere
+/// Deterministic Integration Tests for X3 Chain
 ///
 /// This module provides comprehensive integration tests that leverage the
 /// deterministic E2E infrastructure (fixed seed, locked genesis, triple-run
@@ -109,7 +109,7 @@ async fn test_gpu_coordination_deterministic_task_scheduling() -> Result<(), Box
     info!("Starting GPU-COORD-001 test: deterministic task scheduling");
 
     // This test validates that the GPU swarm refactor maintains deterministic
-    // task ordering when initialized with a fixed seed (ATLAS_E2E_DETERMINISTIC_SEED).
+    // task ordering when initialized with a fixed seed (X3_E2E_DETERMINISTIC_SEED).
     //
     // In a real environment with GPU backends, this would:
     // 1. Enumerate CUDA/Metal/OpenCL/Vulkan devices with sorted output
@@ -122,10 +122,10 @@ async fn test_gpu_coordination_deterministic_task_scheduling() -> Result<(), Box
     let endpoint = "http://127.0.0.1:9933/";
 
     // Verify node is running with deterministic seed
-    let env_seed = std::env::var("ATLAS_E2E_DETERMINISTIC_SEED").ok();
+    let env_seed = std::env::var("X3_E2E_DETERMINISTIC_SEED").ok();
     assert!(
         env_seed.is_some(),
-        "ATLAS_E2E_DETERMINISTIC_SEED must be set for GPU-COORD-001 test"
+        "X3_E2E_DETERMINISTIC_SEED must be set for GPU-COORD-001 test"
     );
 
     let seed = env_seed.unwrap();
@@ -168,10 +168,10 @@ async fn test_settlement_deterministic_collateral_transitions() -> Result<(), Bo
     let endpoint = "http://127.0.0.1:9933/";
 
     // Verify deterministic genesis timestamp (collateral events are timestamped)
-    let genesis_ts = std::env::var("ATLAS_E2E_GENESIS_TIMESTAMP").ok();
+    let genesis_ts = std::env::var("X3_E2E_GENESIS_TIMESTAMP").ok();
     assert!(
         genesis_ts.is_some(),
-        "ATLAS_E2E_GENESIS_TIMESTAMP must be set for SETTLEMENT-001 test"
+        "X3_E2E_GENESIS_TIMESTAMP must be set for SETTLEMENT-001 test"
     );
 
     let ts = genesis_ts.unwrap();
@@ -213,9 +213,9 @@ async fn test_triplerun_determinism_compatibility() -> Result<(), Box<dyn std::e
     info!("META: Verifying triple-run determinism infrastructure");
 
     // Check all required env vars are set for deterministic mode
-    let seed = std::env::var("ATLAS_E2E_DETERMINISTIC_SEED").ok();
-    let ts = std::env::var("ATLAS_E2E_GENESIS_TIMESTAMP").ok();
-    let block_time = std::env::var("ATLAS_E2E_BLOCK_TIME_MILLIS").ok();
+    let seed = std::env::var("X3_E2E_DETERMINISTIC_SEED").ok();
+    let ts = std::env::var("X3_E2E_GENESIS_TIMESTAMP").ok();
+    let block_time = std::env::var("X3_E2E_BLOCK_TIME_MILLIS").ok();
     let run_id = std::env::var("RUN_ID").ok();
 
     info!(
@@ -248,7 +248,7 @@ mod integration_helpers {
 
     /// Helper to compute a deterministic test ID based on run parameters
     pub fn compute_test_run_id() -> String {
-        let seed = std::env::var("ATLAS_E2E_DETERMINISTIC_SEED").unwrap_or_default();
+        let seed = std::env::var("X3_E2E_DETERMINISTIC_SEED").unwrap_or_default();
         let run_num = std::env::var("RUN_NUM").unwrap_or_else(|_| "0".to_string());
         format!("{}_{}", seed, run_num)
     }

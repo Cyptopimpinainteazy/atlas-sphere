@@ -10,14 +10,14 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Atlas Sphere Governance                   │
+│                    X3 Chain Governance                   │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
 │  Off-Chain Layer                  On-Chain Layer             │
 │  ┌──────────────────────┐        ┌──────────────────────┐  │
 │  │  Jury Service (Py)   │        │  Runtime (Rust)      │  │
 │  │  ┌────────────────┐  │        │  ┌────────────────┐  │  │
-│  │  │ Vote Commit    │  │        │  │ atlas-jury-    │  │  │
+│  │  │ Vote Commit    │  │        │  │ x3-jury-    │  │  │
 │  │  │ Vote Reveal    │  │        │  │ anchor pallet  │  │  │
 │  │  │ Aggregation    │  │        │  │ ┌────────────┐ │  │  │
 │  │  │ Audit Logging  │  │        │  │ │ Storage:   │ │  │  │
@@ -127,7 +127,7 @@ impl JuryAnchor {
 ### 3. On-Chain Storage
 
 ```rust
-// Storage Layout (atlas-jury-anchor pallet)
+// Storage Layout (x3-jury-anchor pallet)
 StorageMap JuryDecisions {
     key: Vec<u8>,  // session_id
     value: JuryDecisionRecord {
@@ -200,12 +200,12 @@ if (result.status === "anchored") {
 
 ---
 
-## Runtime Pallet: atlas-jury-anchor
+## Runtime Pallet: x3-jury-anchor
 
 ### Module Structure
 
 ```
-pallets/atlas-jury-anchor/
+pallets/x3-jury-anchor/
 ├── src/
 │   ├── lib.rs (main pallet logic)
 │   ├── types.rs (data structures)
@@ -392,7 +392,7 @@ class JuryAnchorer:
         
         # Build extrinsic
         extrinsic = {
-            "method": "atlas_jury_anchor",
+            "method": "x3_jury_anchor",
             "call": "anchor_decision",
             "params": {
                 "session_id": session_id.encode(),
@@ -537,7 +537,7 @@ export class JuryAnchoring {
 // apps/swarm-dashboard/src/components/JuryDecisionCard.tsx
 
 import { useQuery } from 'react-query';
-import { JuryAnchoring } from '@atlas/blockchain-adapter';
+import { JuryAnchoring } from '@x3/blockchain-adapter';
 
 export function JuryDecisionCard({
     sessionId,

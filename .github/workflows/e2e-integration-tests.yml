@@ -108,7 +108,7 @@ jobs:
     - name: Start test environment
       run: |
         # Start a background process for the blockchain node
-        timeout 300s cargo run --package node --release --bin atlas-node -- \
+        timeout 300s cargo run --package node --release --bin x3-node -- \
           --dev \
           --rpc-external \
           --rpc-cors all \
@@ -195,7 +195,7 @@ jobs:
         fi
         
         # Clean up any remaining processes
-        pkill -f "atlas-node" || true
+        pkill -f "x3-node" || true
         echo "🧹 Test environment cleaned up"
     
     - name: Test Summary
@@ -243,7 +243,7 @@ jobs:
     
     - name: Start blockchain node for performance tests
       run: |
-        timeout 600s cargo run --package node --release --bin atlas-node -- \
+        timeout 600s cargo run --package node --release --bin x3-node -- \
           --dev \
           --rpc-external \
           --rpc-cors all \

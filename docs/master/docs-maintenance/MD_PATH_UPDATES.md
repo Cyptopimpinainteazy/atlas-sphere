@@ -15,7 +15,7 @@
 - `docs/reports/IMPLEMENTATION_VERIFICATION.md`
 - `docs/reports/PHASE4_DOCUMENTATION_INDEX.md`
 - `docs/reports/PHASE6_DOCUMENTATION_INDEX.md`
-- `docs/reports/ATLAS_SPHERE_STATUS.md`
+- `docs/reports/X3_SPHERE_STATUS.md`
 - `docs/reports/TESTNET_ROADMAP.md`
 - `docs/reports/TESTNET_ANNOUNCEMENT.md`
 - `docs/reports/TESTNET_QUICKSTART.md`

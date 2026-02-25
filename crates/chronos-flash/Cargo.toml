@@ -2,9 +2,9 @@
 name = "chronos-flash"
 version = "0.1.0"
 edition = "2021"
-description = "ChronosFlash - Negative-latency pre-execution oracle for Atlas Sphere"
+description = "ChronosFlash - Negative-latency pre-execution oracle for X3 Chain"
 license = "MIT"
-authors = ["Atlas Sphere Team"]
+authors = ["X3 Chain Team"]
 
 [features]
 default = ["std"]

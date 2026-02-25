@@ -10,7 +10,7 @@ echo "-- Add wasm target --"
 rustup target add wasm32-unknown-unknown || true
 
 echo "-- Cargo check (selected crates with std) --"
-cargo check -p pallet-atlas-kernel -p evm-integration -p runtime --features std
+cargo check -p pallet-x3-kernel -p evm-integration -p runtime --features std
 
 echo "-- Build runtime WASM (no_std compatibility) --"
 cd runtime
@@ -19,7 +19,7 @@ cd -
 
 echo "-- Run unit tests for key crates (std) --"
 cargo test -p runtime --features std --no-fail-fast
-cargo test -p pallet-atlas-kernel --features std --no-fail-fast
+cargo test -p pallet-x3-kernel --features std --no-fail-fast
 cargo test -p evm-integration --features std --no-fail-fast
 
 if [ "${ALLOW_VM_TEST_FAILURES:-0}" = "1" ]; then

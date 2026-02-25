@@ -1,4 +1,4 @@
-# Atlas Sphere - Integration & Compilation Guide
+# X3 Chain - Integration & Compilation Guide
 
 ## 🎯 IMPLEMENTATION COMPLETE
 
@@ -11,9 +11,9 @@ This document outlines how to integrate the new modules into your Substrate runt
 ## 📦 MODULE INVENTORY
 
 ### Phase 1: Authority Management (Consensus)
-- **Module**: `pallets::atlas_kernel::authority`
-- **File**: `pallets/atlas-kernel/src/authority.rs`
-- **Exported in**: `pallets/atlas-kernel/src/lib.rs`
+- **Module**: `pallets::x3_kernel::authority`
+- **File**: `pallets/x3-kernel/src/authority.rs`
+- **Exported in**: `pallets/x3-kernel/src/lib.rs`
 - **Public Items**: 
   - `struct AuthorityConfig<T>`
   - `struct Authority<T>` 
@@ -92,7 +92,7 @@ This document outlines how to integrate the new modules into your Substrate runt
 
 ```rust
 // Import the authority module
-use atlas_kernel_authority::AuthorityManager;
+use x3_kernel_authority::AuthorityManager;
 
 // Add to runtime construct_runtime! macro:
 construct_runtime! {
@@ -103,12 +103,12 @@ construct_runtime! {
     {
         System: frame_system,
         // ... other pallets
-        Authority: atlas_kernel::authority,  // Phase 1
+        Authority: x3_kernel::authority,  // Phase 1
     }
 }
 
 // Configure the Authority pallet
-impl atlas_kernel::authority::Config for Runtime {
+impl x3_kernel::authority::Config for Runtime {
     type Event = Event;
     type AuthorityOrigin = frame_system::EnsureRoot<AccountId>;
 }
@@ -231,7 +231,7 @@ Verify all modules are properly exported:
 
 ```bash
 # Check pallet exports
-grep -n "pub mod authority" pallets/atlas-kernel/src/lib.rs
+grep -n "pub mod authority" pallets/x3-kernel/src/lib.rs
 # Expected output: pub mod authority;
 
 # Check EVM exports
@@ -247,7 +247,7 @@ grep -n "pub mod\|pub use" node/src/lib.rs | head -15
 
 ```bash
 # Compile individual crates
-cargo build -p atlas-kernel 2>&1 | head -20
+cargo build -p x3-kernel 2>&1 | head -20
 cargo build -p evm-integration 2>&1 | head -20
 cargo build -p node 2>&1 | head -20
 
@@ -330,7 +330,7 @@ Each module includes tests:
 cargo test --all
 
 # Run specific module tests
-cargo test -p atlas-kernel authority::
+cargo test -p x3-kernel authority::
 cargo test -p evm-integration state::
 cargo test -p node rpc::
 ```
@@ -356,7 +356,7 @@ curl -X POST http://localhost:9944 \
 ```bash
 # Build and run local node
 cargo build --release
-./target/release/atlas-sphere --dev --tmp
+./target/release/x3-chain --dev --tmp
 
 # Verify all modules load
 # Check node logs for "Module initialized" messages
@@ -369,7 +369,7 @@ cargo build --release
 cargo build --release --features testnet
 
 # Run on testnet
-./target/release/atlas-sphere --chain testnet
+./target/release/x3-chain --chain testnet
 
 # Verify RPC endpoints
 curl http://localhost:9944 -d '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}'
@@ -383,7 +383,7 @@ cargo build --release --features mainnet
 
 # Verify security audit (if required)
 # Deploy to mainnet
-./target/release/atlas-sphere --chain mainnet
+./target/release/x3-chain --chain mainnet
 ```
 
 ---
@@ -393,7 +393,7 @@ cargo build --release --features mainnet
 ### Check All Files Present
 
 ```bash
-ls -la pallets/atlas-kernel/src/authority.rs
+ls -la pallets/x3-kernel/src/authority.rs
 ls -la crates/evm-integration/src/state.rs
 ls -la crates/cross-vm-bridge/src/lib.rs
 ls -la node/src/rpc.rs
@@ -406,7 +406,7 @@ ls -la node/src/metrics.rs
 
 ```bash
 # Check each lib.rs for exports
-grep "pub mod" pallets/atlas-kernel/src/lib.rs | head -5
+grep "pub mod" pallets/x3-kernel/src/lib.rs | head -5
 grep "pub mod" crates/evm-integration/src/lib.rs | head -5
 grep "pub mod" node/src/lib.rs | head -10
 ```
@@ -414,7 +414,7 @@ grep "pub mod" node/src/lib.rs | head -10
 ### Count Implementation Lines
 
 ```bash
-wc -l pallets/atlas-kernel/src/authority.rs
+wc -l pallets/x3-kernel/src/authority.rs
 wc -l crates/evm-integration/src/state.rs
 wc -l crates/cross-vm-bridge/src/lib.rs
 wc -l node/src/rpc.rs
@@ -447,7 +447,7 @@ wc -l node/src/metrics.rs
 
 ```rust
 // Pattern 1: Using authority manager
-use pallets::atlas_kernel::authority::AuthorityManager;
+use pallets::x3_kernel::authority::AuthorityManager;
 let manager = AuthorityManager::new();
 manager.add_authority(new_authority)?;
 

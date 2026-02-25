@@ -1,4 +1,4 @@
-# ⚡ Atlas Desktop - Quick Reference
+# ⚡ X3 Desktop - Quick Reference
 
 ## Status: ✅ All Apps Wired for Real Data
 
@@ -16,7 +16,7 @@
 ### One-Command Startup
 
 ```bash
-# In atlas-sphere-master directory:
+# In x3-chain-master directory:
 ./start-all-desktop-apps.sh
 ```
 
@@ -27,7 +27,7 @@ Then: Open `http://localhost:5173` in your browser
 All apps are configured to connect to:
 - **RPC Node**: `http://127.0.0.1:9944`
 - **WebSocket**: `ws://127.0.0.1:9944`
-- **Network**: `atlas-testnet`
+- **Network**: `x3-testnet`
 
 (Configured in `.env.local` files)
 
@@ -112,12 +112,12 @@ kill <PID>
 
 ### Files Created
 
-- `ATLAS_DESKTOP_COMPLETE_GUIDE.md` - Full documentation
+- `X3_DESKTOP_COMPLETE_GUIDE.md` - Full documentation
 - `DESKTOP_APPS_STARTUP.md` - Detailed setup guide  
 - `start-all-desktop-apps.sh` - Automation script
 - `setup-app-env.sh` - Configuration script
 - `.env.apps.template` - Environment template
-- `ATLAS_DESKTOP_QUICK_REFERENCE.md` - This file
+- `X3_DESKTOP_QUICK_REFERENCE.md` - This file
 
 ---
 

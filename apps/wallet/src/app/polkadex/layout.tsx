@@ -41,8 +41,8 @@ export default function XDEXLayout({ children }: { children: React.ReactNode }) 
 
           {/* Network selector (persists to localStorage) */}
           <select
-            defaultValue={typeof window !== 'undefined' ? (window.localStorage.getItem('atlas_active_network') || (process.env.NODE_ENV === 'development' ? 'local' : 'testnet')) : 'testnet'}
-            onChange={(e) => { if (typeof window !== 'undefined') { window.localStorage.setItem('atlas_active_network', e.target.value); window.location.reload(); } }}
+            defaultValue={typeof window !== 'undefined' ? (window.localStorage.getItem('x3_active_network') || (process.env.NODE_ENV === 'development' ? 'local' : 'testnet')) : 'testnet'}
+            onChange={(e) => { if (typeof window !== 'undefined') { window.localStorage.setItem('x3_active_network', e.target.value); window.location.reload(); } }}
             className="ml-auto px-2 py-1 text-sm bg-x3-dark-gray text-gray-200 rounded"
             title="Select network"
           >

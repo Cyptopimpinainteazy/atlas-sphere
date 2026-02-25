@@ -94,7 +94,7 @@ export class NearAdapter extends BaseChainAdapter {
       const res = await fetch(this.endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: "atlas", method, params }),
+        body: JSON.stringify({ jsonrpc: "2.0", id: "x3", method, params }),
       });
       const json = await res.json();
       this.trackRequest(start);

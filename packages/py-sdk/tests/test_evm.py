@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import Mock
-from atlas_sphere_sdk.evm import EvmClient, EvmTransaction
+from x3_chain_sdk.evm import EvmClient, EvmTransaction
 
 
 class TestEvmClient:

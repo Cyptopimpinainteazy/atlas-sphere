@@ -57,7 +57,7 @@ Welcome! This document serves as the central reference point for all GPU Swarm M
 ## File Structure Overview
 
 ```
-atlas-sphere/
+x3-chain/
 ├── IMPLEMENTATION_ARTIFACTS.md ← You are here
 ├── crates/gpu-swarm/
 │   ├── Cargo.toml (modified: added libp2p)
@@ -126,7 +126,7 @@ atlas-sphere/
 
 ```bash
 # 1. Navigate to project
-cd /home/lojak/Desktop/atlas-sphere-master
+cd /home/lojak/Desktop/x3-chain-master
 
 # 2. Build release binary
 cargo build --release --workspace

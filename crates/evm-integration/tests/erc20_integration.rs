@@ -1,6 +1,6 @@
 #![cfg(feature = "frontier-executor")]
 
-use atlas_evm_integration::{EvmConfig, EvmExecutor, FrontierEvmExecutor};
+use x3_evm_integration::{EvmConfig, EvmExecutor, FrontierEvmExecutor};
 use sp_core::{H160, U256};
 
 /// Integration test: deploy a minimal storage contract (constructor stores 0x42)

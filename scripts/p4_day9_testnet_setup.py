@@ -445,7 +445,7 @@ def main():
     print()
     
     # Save configurations as JSON for actual deployment
-    output_dir = Path("/home/lojak/Desktop/atlas-sphere-master/testnet-config")
+    output_dir = Path("/home/lojak/Desktop/x3-chain-master/testnet-config")
     output_dir.mkdir(exist_ok=True)
     
     # Save each configuration

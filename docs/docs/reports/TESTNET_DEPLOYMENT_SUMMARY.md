@@ -1,4 +1,4 @@
-# Atlas Sphere Testnet v1 - Deployment Summary
+# X3 Chain Testnet v1 - Deployment Summary
 
 **Status**: 🎉 **READY FOR IMMEDIATE DEPLOYMENT**  
 **Deployment Strategy**: Option A - Deploy Testnet Now (Recommended)  
@@ -8,11 +8,11 @@
 
 ## 📋 Executive Summary
 
-Atlas Sphere is ready to launch **Testnet v1** with current functionality:
+X3 Chain is ready to launch **Testnet v1** with current functionality:
 
-- ✅ **Atlas Kernel**: Comit submission, canonical ledger, asset registry operational
+- ✅ **X3 Kernel**: Comit submission, canonical ledger, asset registry operational
 - ✅ **Consensus**: Aura + GRANDPA with 6-second block time
-- ✅ **RPC Server**: HTTP JSON-RPC with 5 Atlas Kernel methods + standard Substrate methods
+- ✅ **RPC Server**: HTTP JSON-RPC with 5 X3 Kernel methods + standard Substrate methods
 - ✅ **Networking**: Peer discovery (mDNS + Kademlia DHT), sync working
 - ⚠️ **VM Execution**: Using mock executors (real EVM/SVM integration in development)
 - ⚠️ **WebSocket**: HTTP-only for v1 (WebSocket support coming in v2)
@@ -49,9 +49,9 @@ Atlas Sphere is ready to launch **Testnet v1** with current functionality:
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Runtime (`runtime/src/lib.rs`) | ✅ Functional | All 5 Atlas Kernel RPC methods implemented |
+| Runtime (`runtime/src/lib.rs`) | ✅ Functional | All 5 X3 Kernel RPC methods implemented |
 | Node Service (`node/src/`) | ✅ Functional | HTTP RPC, consensus, networking operational |
-| Atlas Kernel (`pallets/atlas-kernel/`) | ✅ Functional | Using mock VM executors for v1 |
+| X3 Kernel (`pallets/x3-kernel/`) | ✅ Functional | Using mock VM executors for v1 |
 | Bfrontend/uild System | ✅ Passing | `cargo bfrontend/uild --release` succeeds |
 | Unit Tests | ✅ Passing | `cargo test --all` succeeds |
 
@@ -89,11 +89,11 @@ Atlas Sphere is ready to launch **Testnet v1** with current functionality:
 
 | Service | URL | Purpose |
 |---------|-----|---------|
-| **Primary RPC** | `http://rpc.testnet.atlas-sphere.io:9944` | Main developer endpoint |
-| **Backup RPC** | `http://rpc2.testnet.atlas-sphere.io:9944` | Redundancy/failover |
-| **Bootnode** | `/dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/<peer-id>` | Peer discovery |
-| **Faucet** | `https://faucet.testnet.atlas-sphere.io` | Token distribution |
-| **Metrics** | `http://metrics.testnet.atlas-sphere.io` | Public Grafana apps/apps/dash-legacy-2-legacy-2board |
+| **Primary RPC** | `http://rpc.testnet.x3-chain.io:9944` | Main developer endpoint |
+| **Backup RPC** | `http://rpc2.testnet.x3-chain.io:9944` | Redundancy/failover |
+| **Bootnode** | `/dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/<peer-id>` | Peer discovery |
+| **Faucet** | `https://faucet.testnet.x3-chain.io` | Token distribution |
+| **Metrics** | `http://metrics.testnet.x3-chain.io` | Public Grafana apps/apps/dash-legacy-2-legacy-2board |
 
 ---
 
@@ -222,8 +222,8 @@ Track these metrics daily to measure launch success:
 
 ### If Network Halts (No New Blocks)
 1. **Immediate (0-5 minutes):**
-   - Check all validators: `systemctl status atlas-validator`
-   - Check validator logs: `journalctl -u atlas-validator -n 100`
+   - Check all validators: `systemctl status x3-validator`
+   - Check validator logs: `journalctl -u x3-validator -n 100`
    - Post status update to Discord: "Investigating network halt"
 
 2. **Diagnosis (5-15 minutes):**
@@ -232,7 +232,7 @@ Track these metrics daily to measure launch success:
    - Check for consensus errors in logs
 
 3. **Resolution (15-30 minutes):**
-   - If validators down, restart: `systemctl restart atlas-validator`
+   - If validators down, restart: `systemctl restart x3-validator`
    - If persistent, escalate to core dev team
    - Post resolution update to Discord
 
@@ -241,10 +241,10 @@ Track these metrics daily to measure launch success:
 ### If RPC Node Fails
 1. **Immediate (0-2 minutes):**
    - Verify load balancer redirecting to backup
-   - Check down node: `systemctl status atlas-rpc`
+   - Check down node: `systemctl status x3-rpc`
 
 2. **Resolution (2-10 minutes):**
-   - Restart node: `systemctl restart atlas-rpc`
+   - Restart node: `systemctl restart x3-rpc`
    - Check disk space: `df -h` (purge if >70% full)
    - If persistent, provision emergency RPC node
 
@@ -282,7 +282,7 @@ Track these metrics daily to measure launch success:
 
 **Day of Launch (Twitter Thread):**
 ```
-🎉 Atlas Sphere Testnet v1 is NOW LIVE!
+🎉 X3 Chain Testnet v1 is NOW LIVE!
 
 Bfrontend/uild cross-domain apps with:
 ✅ Unified canonical ledger
@@ -297,10 +297,10 @@ Get started: [link to TESTNET_QUICKSTART.md]
 
 **Discord Announcement:**
 ```
-@everyone Atlas Sphere Testnet v1 is officially live! 🚀
+@everyone X3 Chain Testnet v1 is officially live! 🚀
 
-📡 RPC: http://rpc.testnet.atlas-sphere.io:9944
-💰 Faucet: https://faucet.testnet.atlas-sphere.io
+📡 RPC: http://rpc.testnet.x3-chain.io:9944
+💰 Faucet: https://faucet.testnet.x3-chain.io
 📖 Docs: [link to TESTNET_QUICKSTART.md]
 
 Join #testnet-support if you need help!
@@ -308,9 +308,9 @@ Join #testnet-support if you need help!
 
 **Reddit (r/substrate, r/rust):**
 ```
-[Show HN] Atlas Sphere Testnet v1: Cross-Domain Blockchain with Unified Canonical Ledger
+[Show HN] X3 Chain Testnet v1: Cross-Domain Blockchain with Unified Canonical Ledger
 
-We've launched a public testnet for Atlas Sphere, a blockchain runtime enabling cross-domain transactions with a unified canonical ledger.
+We've launched a public testnet for X3 Chain, a blockchain runtime enabling cross-domain transactions with a unified canonical ledger.
 
 [Technical details, links, invitation to contribute]
 ```
@@ -370,7 +370,7 @@ Post every Monday in Discord #testnet-announcements:
 
 ## 🎉 Conclusion
 
-Atlas Sphere is **ready for Testnet v1 deployment**. All documentation, code, and deployment procedures are complete. The deployment strategy enables immediate community engagement while continfrontend/uing feature development in parallel.
+X3 Chain is **ready for Testnet v1 deployment**. All documentation, code, and deployment procedures are complete. The deployment strategy enables immediate community engagement while continfrontend/uing feature development in parallel.
 
 **Next Action:** Execute deployment using `TESTNET_DEPLOYMENT_CHECKLIST.md` as the step-by-step gfrontend/uide.
 

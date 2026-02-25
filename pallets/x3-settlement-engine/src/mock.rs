@@ -12,7 +12,7 @@ frame_support::construct_runtime!(
     pub enum Test {
         System: frame_system,
         Balances: pallet_balances,
-        AtlasKernel: pallet_atlas_kernel,
+        AtlasKernel: pallet_x3_kernel,
         Timestamp: pallet_timestamp,
         X3SettlementEngine: pallet_x3_settlement_engine,
     }
@@ -72,7 +72,7 @@ parameter_types! {
     pub const SomeDeposit: u128 = 1000;
 }
 
-impl pallet_atlas_kernel::Config for Test {
+impl pallet_x3_kernel::Config for Test {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
     type Balance = u128;

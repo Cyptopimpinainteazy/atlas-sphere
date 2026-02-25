@@ -58,7 +58,7 @@ impl TestEnvironment {
     async fn start_blockchain_node(&self) -> TestResult<()> {
         info!("Starting blockchain node");
         
-        let mut child = Command::new("./target/release/atlas-sphere")
+        let mut child = Command::new("./target/release/x3-chain")
             .args(&[
                 "--dev",
                 "--rpc-port", "9933",
@@ -324,7 +324,7 @@ impl TestEnvironment {
     pub async fn start_dns_server(&self) -> TestResult<()> {
         info!("Starting DNS server");
         
-        let server = Command::new("./target/release/atlas-dns-server")
+        let server = Command::new("./target/release/x3-dns-server")
             .args(&["--config", "./config/dns-test.toml"])
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

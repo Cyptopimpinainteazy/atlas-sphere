@@ -1,5 +1,5 @@
 # ============================================================================
-# Atlas Sphere - Kubernetes Production Deployment
+# X3 Chain - Kubernetes Production Deployment
 # ============================================================================
 # Components: Validator nodes, RPC gateway, monitoring
 # ============================================================================
@@ -9,9 +9,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: atlas-sphere
+  name: x3-chain
   labels:
-    name: atlas-sphere
+    name: x3-chain
     environment: production
 
 ---
@@ -20,11 +20,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chain-spec
-  namespace: atlas-sphere
+  namespace: x3-chain
 data:
   testnet-raw.json: |
     # Chain spec will be generated and inserted here
-    # Generated via: atlas-sphere-node build-spec --chain=testnet --raw
+    # Generated via: x3-chain-node build-spec --chain=testnet --raw
 
 ---
 # Secret - Validator keys (sealed secret in production)
@@ -32,7 +32,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: validator-keys
-  namespace: atlas-sphere
+  namespace: x3-chain
 type: Opaque
 data:
   # Base64 encoded validator keys
@@ -44,12 +44,12 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres-credentials
-  namespace: atlas-sphere
+  namespace: x3-chain
 type: Opaque
 stringData:
-  POSTGRES_USER: atlas
+  POSTGRES_USER: x3
   POSTGRES_PASSWORD: CHANGE_ME_IN_PRODUCTION
-  DATABASE_URL: postgresql://atlas:CHANGE_ME_IN_PRODUCTION@postgres:5432/atlas_analytics
+  DATABASE_URL: postgresql://x3:CHANGE_ME_IN_PRODUCTION@postgres:5432/x3_analytics
 
 ---
 # PersistentVolumeClaim - Bootnode data
@@ -57,7 +57,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: bootnode-data
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   accessModes:
     - ReadWriteOnce
@@ -72,7 +72,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: validator-01-data
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   accessModes:
     - ReadWriteOnce
@@ -87,7 +87,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: validator-02-data
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   accessModes:
     - ReadWriteOnce
@@ -102,7 +102,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: validator-03-data
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   accessModes:
     - ReadWriteOnce
@@ -117,7 +117,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-data
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   accessModes:
     - ReadWriteOnce
@@ -132,7 +132,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bootnode
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: bootnode
     component: blockchain
@@ -153,7 +153,7 @@ spec:
         runAsNonRoot: true
       containers:
       - name: bootnode
-        image: atlas-sphere/node:latest
+        image: x3-chain/node:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 30333
@@ -175,7 +175,7 @@ spec:
         - --chain=/data/chain-spec.json
         - --base-path=/data
         - --node-key-file=/data/node-key
-        - --name=Atlas-Bootnode-K8s
+        - --name=X3-Bootnode-K8s
         - --rpc-external
         - --rpc-cors=all
         - --rpc-methods=safe
@@ -227,7 +227,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: bootnode
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: bootnode
 spec:
@@ -250,7 +250,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: validator
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: validator
     component: blockchain
@@ -272,7 +272,7 @@ spec:
         runAsNonRoot: true
       containers:
       - name: validator
-        image: atlas-sphere/node:latest
+        image: x3-chain/node:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 30333
@@ -292,8 +292,8 @@ spec:
         - --chain=/data/chain-spec.json
         - --base-path=/data
         - --validator
-        - --name=Atlas-Validator-$(POD_NAME)
-        - --bootnodes=/dns/bootnode.atlas-sphere.svc.cluster.local/tcp/30333/p2p/BOOTNODE_PEER_ID
+        - --name=X3-Validator-$(POD_NAME)
+        - --bootnodes=/dns/bootnode.x3-chain.svc.cluster.local/tcp/30333/p2p/BOOTNODE_PEER_ID
         - --rpc-external
         - --rpc-cors=all
         - --rpc-methods=safe
@@ -344,7 +344,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: validator
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: validator
 spec:
@@ -365,7 +365,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: postgres
 spec:
@@ -385,7 +385,7 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          value: atlas_analytics
+          value: x3_analytics
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
@@ -411,7 +411,7 @@ spec:
             command:
             - pg_isready
             - -U
-            - atlas
+            - x3
           initialDelaySeconds: 30
           periodSeconds: 10
       volumes:
@@ -425,7 +425,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   ports:
   - port: 5432
@@ -439,7 +439,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: analytics
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: analytics
 spec:
@@ -454,7 +454,7 @@ spec:
     spec:
       containers:
       - name: analytics
-        image: atlas-sphere/analytics:latest
+        image: x3-chain/analytics:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -488,7 +488,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: analytics
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   type: ClusterIP
   ports:
@@ -503,7 +503,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: explorer
-  namespace: atlas-sphere
+  namespace: x3-chain
   labels:
     app: explorer
     component: frontend
@@ -520,7 +520,7 @@ spec:
     spec:
       containers:
       - name: explorer
-        image: atlas-sphere/explorer:latest
+        image: x3-chain/explorer:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -531,7 +531,7 @@ spec:
         - name: NEXT_PUBLIC_NETWORK
           value: "testnet"
         - name: NEXT_PUBLIC_SUBSTRATE_WS_ENDPOINT
-          value: "wss://rpc.testnet.atlas-sphere.io:9944"
+          value: "wss://rpc.testnet.x3-chain.io:9944"
         resources:
           requests:
             cpu: "250m"
@@ -558,7 +558,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: explorer
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   type: ClusterIP
   ports:
@@ -575,7 +575,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: rpc-gateway
-  namespace: atlas-sphere
+  namespace: x3-chain
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -587,10 +587,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - rpc.testnet.atlas-sphere.io
+    - rpc.testnet.x3-chain.io
     secretName: rpc-tls-cert
   rules:
-  - host: rpc.testnet.atlas-sphere.io
+  - host: rpc.testnet.x3-chain.io
     http:
       paths:
       - path: /rpc
@@ -614,7 +614,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: analytics-hpa
-  namespace: atlas-sphere
+  namespace: x3-chain
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

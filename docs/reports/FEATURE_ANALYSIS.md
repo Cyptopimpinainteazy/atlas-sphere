@@ -159,7 +159,7 @@ This document provides a detailed analysis of each feature branch to understand 
 
 ### 🚀 Core Platform Features
 
-#### feature/atlas-kernel-task1 (PR #1)
+#### feature/x3-kernel-task1 (PR #1)
 **SHA**: `f7e6744` (branch) / `3e84ef4` (associated)  
 **Status**: Open, not draft  
 **Target**: master (not main!)  
@@ -167,7 +167,7 @@ This document provides a detailed analysis of each feature branch to understand 
 
 **Changes**:
 - **NEW PALLET**: `pallets/atomic-trade-engine/src/`
-- AMM adapter interfaces (UniswapV2/V3, Raydium, Orca Whirlpool, Atlas native)
+- AMM adapter interfaces (UniswapV2/V3, Raydium, Orca Whirlpool, X3 native)
 - Trade graph pathfinding with BFS and arbitrage detection
 - Cross-VM route optimization (EVM ↔ SVM)
 - Comprehensive test suite (~25 tests)
@@ -354,7 +354,7 @@ cargo build --release
 10. ✅ **feat/frontend/ui/cli-and-banner** - UI improvements
 11. ✅ **chore/tsx-cleanup-2** - TypeScript cleanup
 12. ✅ **feature/sigill-aggregator-helper** - Signal handling
-13. ✅ **feature/atlas-kernel-task1** - Atomic Trade Engine (REBASE to main first!)
+13. ✅ **feature/x3-kernel-task1** - Atomic Trade Engine (REBASE to main first!)
 14. ✅ **staging/production-hardening** - Production readiness
 15. ⚠️ **copilot/sub-pr-1** - Docs only (low priority)
 
@@ -367,7 +367,7 @@ cargo build --release
 ## Special Notes
 
 ### Branch Targeting Issues
-- **feature/atlas-kernel-task1** targets `master` not `main` → Needs rebase
+- **feature/x3-kernel-task1** targets `master` not `main` → Needs rebase
 - **copilot/sub-pr-1** targets a copilot branch, not main → Deprioritize
 - Several PRs target `feature/apps/swarm-apps/dash-legacy-2-legacy-2board-legacy-2-legacy-2-e2e` → Merge that first as base
 
@@ -386,7 +386,7 @@ main
      └─ feat/* branches
 
 master (different base!)
- └─ feature/atlas-kernel-task1 (needs rebase to main)
+ └─ feature/x3-kernel-task1 (needs rebase to main)
 ```
 
 ## Estimated Time to Complete

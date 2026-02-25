@@ -1,6 +1,6 @@
-# Atlas Sphere Roadmap
+# X3 Chain Roadmap
 
-The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlining our vision for creating the world's first atomic cross-chain infrastructure.
+The development roadmap for X3 Chain's dual-VM blockchain platform, outlining our vision for creating the world's first atomic cross-chain infrastructure.
 
 ## Vision Statement
 
@@ -8,7 +8,7 @@ The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlinin
 
 **Goal**: By 2026, become the leading platform for cross-domain applications that leverage the best of both Ethereum and Solana ecosystems.
 
-**Why this matters**: Cross-chain interoperability is the future of blockchain technology, and Atlas Sphere is pioneering native solutions rather than bridge-based approaches.
+**Why this matters**: Cross-chain interoperability is the future of blockchain technology, and X3 Chain is pioneering native solutions rather than bridge-based approaches.
 
 ## Development Phases
 
@@ -96,7 +96,7 @@ The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlinin
 - [ ] Advanced MEV protection
 - [ ] Quantum-resistant cryptography
 
-**Why this matters**: Advanced features position Atlas Sphere as the leading platform for next-generation blockchain applications.
+**Why this matters**: Advanced features position X3 Chain as the leading platform for next-generation blockchain applications.
 
 ### Phase 5: Global Adoption (Q2 2026 - Q4 2026) 📅 PLANNED
 
@@ -118,7 +118,7 @@ The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlinin
 - [ ] Regulatory guidance
 - [ ] Interoperability protocols
 
-**Why this matters**: Global adoption establishes Atlas Sphere as the standard for cross-chain interoperability.
+**Why this matters**: Global adoption establishes X3 Chain as the standard for cross-chain interoperability.
 
 ## Technical Milestones
 
@@ -154,7 +154,7 @@ The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlinin
 - Finality: 12 seconds (2 blocks)
 - Cross-VM calls: <100ms
 
-**Why this matters**: Performance metrics demonstrate the advantages of Atlas Sphere's architecture over traditional approaches.
+**Why this matters**: Performance metrics demonstrate the advantages of X3 Chain's architecture over traditional approaches.
 
 ### Adoption Metrics
 
@@ -332,14 +332,14 @@ The development roadmap for Atlas Sphere's dual-VM blockchain platform, outlinin
 ### Stay Informed
 
 **Official Channels**:
-- Website: [atlas-sphere.io](https://atlas-sphere.io)
-- GitHub: [github.com/atlas-sphere](https://github.com/atlas-sphere)
+- Website: [x3-chain.io](https://x3-chain.io)
+- GitHub: [github.com/x3-chain](https://github.com/x3-chain)
 - Twitter: [@atlassphere](https://twitter.com/atlassphere)
-- Discord: [discord.gg/atlas-sphere](https://discord.gg/atlas-sphere)
+- Discord: [discord.gg/x3-chain](https://discord.gg/x3-chain)
 
 **Technical Updates**:
-- Development blog: [blog.atlas-sphere.io](https://blog.atlas-sphere.io)
-- Technical documentation: [docs.atlas-sphere.io](https://docs.atlas-sphere.io)
+- Development blog: [blog.x3-chain.io](https://blog.x3-chain.io)
+- Technical documentation: [docs.x3-chain.io](https://docs.x3-chain.io)
 - GitHub releases and milestones
 
 **Why this matters**: Multiple communication channels ensure everyone stays informed.

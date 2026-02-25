@@ -1,6 +1,6 @@
-# Atlas Sphere Blockchain Startup Guide
+# X3 Chain Blockchain Startup Guide
 
-> Quick reference for running the Atlas Sphere dual-VM (EVM + SVM + X3VM) blockchain node.
+> Quick reference for running the X3 Chain dual-VM (EVM + SVM + X3VM) blockchain node.
 
 ## Prerequisites
 
@@ -23,14 +23,14 @@ sudo apt install -y build-essential clang libclang-dev protobuf-compiler
 cargo build --release
 
 # Binary location
-./target/release/atlas-sphere-node --version
+./target/release/x3-chain-node --version
 ```
 
 ### 2. Run Development Node
 
 ```bash
 # Fastest way - temporary storage, auto-purges on restart
-./target/release/atlas-sphere-node --dev --tmp
+./target/release/x3-chain-node --dev --tmp
 
 # Or use the convenience script
 ./run-dev-node.sh
@@ -51,7 +51,7 @@ cargo build --release
 ### Development Mode (Single Validator)
 
 ```bash
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
   --dev \
   --tmp \
   --rpc-cors all \
@@ -66,7 +66,7 @@ cargo build --release
 
 **Node 1 (Alice):**
 ```bash
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
   --chain local \
   --alice \
   --port 30333 \
@@ -76,7 +76,7 @@ cargo build --release
 
 **Node 2 (Bob):**
 ```bash
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
   --chain local \
   --bob \
   --port 30334 \
@@ -87,16 +87,16 @@ cargo build --release
 ### Production Mode
 
 ```bash
-./target/release/atlas-sphere-node \
+./target/release/x3-chain-node \
   --chain staging \
   --name "my-validator" \
   --validator \
-  --base-path /var/lib/atlas-sphere \
+  --base-path /var/lib/x3-chain \
   --port 30333 \
   --rpc-port 9944 \
   --rpc-cors all \
   --prometheus-external \
-  --telemetry-url "wss://telemetry.atlas-sphere.io/submit 0"
+  --telemetry-url "wss://telemetry.x3-chain.io/submit 0"
 ```
 
 ---
@@ -115,15 +115,15 @@ curl -H "Content-Type: application/json" \
 ### Insert Keys Manually
 
 ```bash
-./target/release/atlas-sphere-node key insert \
-  --base-path /var/lib/atlas-sphere \
+./target/release/x3-chain-node key insert \
+  --base-path /var/lib/x3-chain \
   --chain staging \
   --scheme sr25519 \
   --suri "your secret seed phrase" \
   --key-type aura
 
-./target/release/atlas-sphere-node key insert \
-  --base-path /var/lib/atlas-sphere \
+./target/release/x3-chain-node key insert \
+  --base-path /var/lib/x3-chain \
   --chain staging \
   --scheme ed25519 \
   --suri "your secret seed phrase" \
@@ -146,7 +146,7 @@ curl -H "Content-Type: application/json" \
   http://localhost:9944
 ```
 
-### Atlas Kernel RPCs
+### X3 Kernel RPCs
 
 ```bash
 # Check authorization status
@@ -180,14 +180,14 @@ curl -H "Content-Type: application/json" \
 
 ```bash
 # Purge development chain
-./target/release/atlas-sphere-node purge-chain --dev -y
+./target/release/x3-chain-node purge-chain --dev -y
 
 # Purge specific chain
-./target/release/atlas-sphere-node purge-chain --chain local -y
+./target/release/x3-chain-node purge-chain --chain local -y
 
 # Purge with custom base path
-./target/release/atlas-sphere-node purge-chain \
-  --base-path /var/lib/atlas-sphere \
+./target/release/x3-chain-node purge-chain \
+  --base-path /var/lib/x3-chain \
   --chain staging -y
 ```
 
@@ -201,7 +201,7 @@ Using polkadot.js or SDK:
 
 ```typescript
 // TypeScript SDK example
-import { AtlasSphereClient } from '@atlas-sphere/sdk';
+import { AtlasSphereClient } from '@x3-chain/sdk';
 
 const client = new AtlasSphereClient('ws://localhost:9944');
 
@@ -238,17 +238,17 @@ curl http://localhost:9615/metrics
 # - substrate_block_height
 # - substrate_ready_transactions_number
 # - substrate_peers_count
-# - atlas_kernel_comits_total
+# - x3_kernel_comits_total
 ```
 
 ### Logs
 
 ```bash
 # Verbose logging
-RUST_LOG=info,atlas=debug ./target/release/atlas-sphere-node --dev --tmp
+RUST_LOG=info,x3=debug ./target/release/x3-chain-node --dev --tmp
 
 # Specific modules
-RUST_LOG=pallet_atlas_kernel=trace ./target/release/atlas-sphere-node --dev --tmp
+RUST_LOG=pallet_x3_kernel=trace ./target/release/x3-chain-node --dev --tmp
 ```
 
 ---
@@ -269,10 +269,10 @@ RUST_LOG=pallet_atlas_kernel=trace ./target/release/atlas-sphere-node --dev --tm
 
 ```bash
 # Run with backtrace
-RUST_BACKTRACE=1 ./target/release/atlas-sphere-node --dev --tmp
+RUST_BACKTRACE=1 ./target/release/x3-chain-node --dev --tmp
 
 # Run with all logs
-RUST_LOG=debug ./target/release/atlas-sphere-node --dev --tmp 2>&1 | tee node.log
+RUST_LOG=debug ./target/release/x3-chain-node --dev --tmp 2>&1 | tee node.log
 ```
 
 ---
@@ -282,15 +282,15 @@ RUST_LOG=debug ./target/release/atlas-sphere-node --dev --tmp 2>&1 | tee node.lo
 ### Public Testnet
 
 ```bash
-# Connect to Atlas Sphere testnet
-./target/release/atlas-sphere-node \
+# Connect to X3 Chain testnet
+./target/release/x3-chain-node \
   --chain testnet \
   --name "my-node" \
-  --bootnodes /dns/bootnode.testnet.atlas-sphere.io/tcp/30333/p2p/...
+  --bootnodes /dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/...
 ```
 
-**Testnet RPC:** `http://rpc.testnet.atlas-sphere.io:9944`  
-**Faucet:** `https://faucet.testnet.atlas-sphere.io`
+**Testnet RPC:** `http://rpc.testnet.x3-chain.io:9944`  
+**Faucet:** `https://faucet.testnet.x3-chain.io`
 
 ---
 
@@ -298,11 +298,11 @@ RUST_LOG=debug ./target/release/atlas-sphere-node --dev --tmp 2>&1 | tee node.lo
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Atlas Sphere Node                        │
+│                    X3 Chain Node                        │
 ├─────────────────────────────────────────────────────────────┤
 │  Consensus: Aura (6s blocks) + GRANDPA (finality)          │
 ├─────────────────────────────────────────────────────────────┤
-│  Atlas Kernel Pallet                                        │
+│  X3 Kernel Pallet                                        │
 │  ├── Comit Transactions (atomic cross-VM)                  │
 │  ├── Canonical Ledger (asset tracking)                     │
 │  └── Authorization (account permissions)                   │
@@ -310,7 +310,7 @@ RUST_LOG=debug ./target/release/atlas-sphere-node --dev --tmp 2>&1 | tee node.lo
 │  VM Adapters                                                │
 │  ├── EVM (Frontier pallet-evm, Shanghai)                   │
 │  ├── SVM (solana-rbpf BPF executor)                        │
-│  └── X3VM (native Atlas VM)                                │
+│  └── X3VM (native X3 VM)                                │
 ├─────────────────────────────────────────────────────────────┤
 │  External Chains (103+ EVM chains)                         │
 │  └── Atomic swaps via bridge contracts                     │
@@ -328,4 +328,4 @@ RUST_LOG=debug ./target/release/atlas-sphere-node --dev --tmp 2>&1 | tee node.lo
 
 ---
 
-*Generated: December 2025 | Atlas Sphere v0.1.0*
+*Generated: December 2025 | X3 Chain v0.1.0*

@@ -1,5 +1,5 @@
 # ============================================================================
-# Atlas Sphere Analytics Service - Production Dockerfile
+# X3 Chain Analytics Service - Production Dockerfile
 # ============================================================================
 # Purpose: Analytics service with PostgreSQL connection
 # Target: Rust analytics backend
@@ -28,8 +28,8 @@ RUN cargo build --release --locked && \
 # ============================================================================
 FROM ubuntu:22.04
 
-LABEL maintainer="Atlas Sphere DevOps <devops@atlas-sphere.io>" \
-      description="Atlas Sphere Analytics Service" \
+LABEL maintainer="X3 Chain DevOps <devops@x3-chain.io>" \
+      description="X3 Chain Analytics Service" \
       version="1.0.0"
 
 # Install runtime dependencies

@@ -1,5 +1,5 @@
 {
-  "name": "@atlas-sphere/atomic-swap-sdk",
+  "name": "@x3-chain/atomic-swap-sdk",
   "version": "0.1.0",
   "description": "Multi-chain atomic swap SDK with HTLC support for EVM, Solana, Bitcoin, and Substrate — Polkadex-inspired DEX engine",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
     "eventemitter3": "^5.0.1"
   },
   "peerDependencies": {
-    "@atlas-sphere/blockchain-connector": "*",
+    "@x3-chain/blockchain-connector": "*",
     "ethers": "^6.0.0"
   },
   "devDependencies": {
@@ -43,7 +43,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atlas-sphere/atlas-sphere",
+    "url": "https://github.com/x3-chain/x3-chain",
     "directory": "packages/atomic-swap-sdk"
   }
 }

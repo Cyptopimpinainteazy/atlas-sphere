@@ -2,7 +2,7 @@
   "name": "MultiSigVault",
   "version": "1.0.0",
   "description": "Multi-signature vault with time-locked withdrawals and cross-VM asset support",
-  "author": "Atlas Sphere Team",
+  "author": "X3 Chain Team",
   "license": "MIT",
   "compiler": {
     "name": "x3c",

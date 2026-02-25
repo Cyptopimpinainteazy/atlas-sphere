@@ -1017,4 +1017,4 @@ Cross-VM state is entangled — collapse of one affects all.
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

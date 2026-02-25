@@ -59,7 +59,7 @@ def get_rpc_payload(ecosystem: str, chain_type: str):
     elif ecosystem == "cosmos":
         # Tendermint RPC uses different format
         return None  # Will use REST /status
-    elif ecosystem == "atlas":
+    elif ecosystem == "x3":
         return {
             "jsonrpc": "2.0", "id": 1,
             "method": "system_version", "params": []
@@ -264,7 +264,7 @@ async def run_benchmark(chains: list, burst: int = 10):
 def estimate_theoretical_tps(chain_id: str, ecosystem: str) -> float:
     """Estimate theoretical max TPS for known chains."""
     known = {
-        "atlas-sphere": 26755, "atlas": 26755,
+        "x3-chain": 26755, "x3": 26755,
         "sol": 65000, "sol-mainnet": 65000, "solana": 65000,
         "sui": 120000, "sui-mainnet": 120000,
         "aptos": 160000, "apt": 160000,
@@ -300,14 +300,14 @@ def estimate_theoretical_tps(chain_id: str, ecosystem: str) -> float:
         if key in cid:
             return float(val)
     # Default by ecosystem
-    defaults = {"evm": 100, "svm": 5000, "cosmos": 5000, "substrate": 1000, "move": 10000, "atlas": 26755}
+    defaults = {"evm": 100, "svm": 5000, "cosmos": 5000, "substrate": 1000, "move": 10000, "x3": 26755}
     return float(defaults.get(ecosystem, 100))
 
 
 def estimate_finality(chain_id: str, ecosystem: str) -> float:
     """Estimate finality time in seconds."""
     known = {
-        "atlas": 6, "atlas-sphere": 6,
+        "x3": 6, "x3-chain": 6,
         "sol": 0.4, "aptos": 0.9, "sui": 0.5, "sei": 0.4,
         "eth": 900, "bsc": 3, "polygon": 2, "avax": 2,
         "arb-one": 0.3, "op": 2, "base": 2, "near": 1.3,
@@ -319,7 +319,7 @@ def estimate_finality(chain_id: str, ecosystem: str) -> float:
     for key, val in known.items():
         if key in cid:
             return val
-    defaults = {"evm": 12, "svm": 0.5, "cosmos": 6, "substrate": 6, "move": 1, "atlas": 6}
+    defaults = {"evm": 12, "svm": 0.5, "cosmos": 6, "substrate": 6, "move": 1, "x3": 6}
     return defaults.get(ecosystem, 12)
 
 
@@ -398,7 +398,7 @@ async def main():
     CONCURRENCY = args.concurrency
     
     while True:
-        print(f"\n⚡ Atlas Sphere TPS Benchmark — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"\n⚡ X3 Chain TPS Benchmark — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"   DB: {DB_PATH}")
         print(f"   API: {API_URL}")
         

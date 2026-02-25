@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide explains how to use the chain connector framework with the new RPC modules (`rpc.rs` and `env_config.rs`) to manage external chain connections for the Atlas Sphere settlement engine.
+This guide explains how to use the chain connector framework with the new RPC modules (`rpc.rs` and `env_config.rs`) to manage external chain connections for the X3 Chain settlement engine.
 
 ## Quick Start (Arbitrum Mainnet)
 

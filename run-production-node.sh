@@ -1,25 +1,25 @@
 #!/bin/bash
-# Atlas Sphere Production Node Launcher
-# This script launches an Atlas Sphere node with production security settings
+# X3 Chain Production Node Launcher
+# This script launches an X3 Chain node with production security settings
 
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
-echo "🌌 Atlas Sphere Production Node"
+echo "🌌 X3 Chain Production Node"
 echo "================================"
 
 # Verify we're running as a service user (not root)
 if [ "$(id -u)" = "0" ]; then
     echo "❌ ERROR: Do not run this script as root!"
-    echo "   Create a dedicated 'atlas' user and run as that user."
+    echo "   Create a dedicated 'x3' user and run as that user."
     exit 1
 fi
 
 # Required configuration
 NODE_NAME="${NODE_NAME:?NODE_NAME environment variable required}"
-BASE_PATH="${BASE_PATH:-/var/lib/atlas-sphere}"
+BASE_PATH="${BASE_PATH:-/var/lib/x3-chain}"
 CHAIN="${CHAIN:-local}"  # dev, local, staging, testnet, or a custom chainspec path
 
 # Where to load chain specs from (repo default).
@@ -32,10 +32,10 @@ PROMETHEUS_PORT="${PROMETHEUS_PORT:-9615}"
 
 # Security: RPC should ONLY bind to localhost in production
 # Use a reverse proxy (nginx/caddy) for external access with proper auth
-RPC_CORS="${RPC_CORS:-https://explorer.atlas-sphere.io,https://dex.atlas-sphere.io}"
+RPC_CORS="${RPC_CORS:-https://explorer.x3-chain.io,https://dex.x3-chain.io}"
 
 # Verify binary exists
-if [ ! -f "./target/release/atlas-sphere-node" ]; then
+if [ ! -f "./target/release/x3-chain-node" ]; then
     echo "❌ Binary not found. Build with: cargo build --release"
     exit 1
 fi
@@ -68,21 +68,21 @@ case "${CHAIN}" in
         ;;
     staging)
         # Prefer the curated deployment chainspec if present.
-        if [ -f "${CHAIN_SPEC_DIR}/atlas-staging-plain.json" ]; then
-            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-staging-plain.json"
+        if [ -f "${CHAIN_SPEC_DIR}/x3-staging-plain.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/x3-staging-plain.json"
         else
             CHAIN_ARG="--chain staging"
         fi
         ;;
     testnet)
         # Prefer raw (fully specified) spec if present.
-        if [ -f "${CHAIN_SPEC_DIR}/atlas-testnet-raw.json" ]; then
-            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-testnet-raw.json"
-        elif [ -f "${CHAIN_SPEC_DIR}/atlas-testnet-plain.json" ]; then
-            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/atlas-testnet-plain.json"
+        if [ -f "${CHAIN_SPEC_DIR}/x3-testnet-raw.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/x3-testnet-raw.json"
+        elif [ -f "${CHAIN_SPEC_DIR}/x3-testnet-plain.json" ]; then
+            CHAIN_ARG="--chain ${CHAIN_SPEC_DIR}/x3-testnet-plain.json"
         else
             echo "❌ No testnet chainspec found in ${CHAIN_SPEC_DIR}."
-            echo "   Expected atlas-testnet-raw.json or atlas-testnet-plain.json."
+            echo "   Expected x3-testnet-raw.json or x3-testnet-plain.json."
             exit 1
         fi
         ;;
@@ -120,7 +120,7 @@ if [ "$VALIDATOR" = "true" ]; then
 fi
 
 # Start with production security hardening
-exec ./target/release/atlas-sphere-node \
+exec ./target/release/x3-chain-node \
     $CHAIN_ARG \
     --name "$NODE_NAME" \
     --base-path "$BASE_PATH" \

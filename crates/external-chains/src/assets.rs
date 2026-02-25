@@ -40,7 +40,7 @@ impl AssetMetadata {
             ChainType::Polygon => ("Polygon", "POL"),
             ChainType::Avalanche => ("Avalanche", "AVAX"),
             ChainType::Bnb => ("BNB", "BNB"),
-            ChainType::AtlasSphere => ("Atlas", "ATLAS"),
+            ChainType::AtlasSphere => ("X3", "X3"),
         };
 
         Self {

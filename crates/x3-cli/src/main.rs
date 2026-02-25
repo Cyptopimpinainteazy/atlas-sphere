@@ -1,7 +1,7 @@
-//! x3 CLI - Command-line interface for Atlas Sphere development.
+//! x3 CLI - Command-line interface for X3 Chain development.
 //!
 //! This tool provides commands for building, deploying, testing,
-//! and interacting with Atlas Sphere blockchain.
+//! and interacting with X3 Chain blockchain.
 
 use clap::Parser;
 use colored::Colorize;

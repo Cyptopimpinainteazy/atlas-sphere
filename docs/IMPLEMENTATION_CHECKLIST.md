@@ -121,7 +121,7 @@ x3 compile file.x3 -O0/1/2/3       ✅ DONE
 | Chain Spec         | ✅ DONE    | `node/src/chain_spec.rs`           | Dev/Local/Staging  |
 | Deploy Pipeline    | ⚡ PARTIAL | `crates/x3-cli/commands/deploy.rs` | Needs full wiring  |
 | Interpreter Runner | ✅ DONE    | `crates/x3-vm/`                    | Working            |
-| Substrate Pallet   | ✅ DONE    | `pallets/atlas-kernel/`            | Full pallet        |
+| Substrate Pallet   | ✅ DONE    | `pallets/x3-kernel/`            | Full pallet        |
 | Dual VM (EVM/SVM)  | ⚡ PARTIAL | `crates/{evm,svm}-integration/`    | Mock adapters only |
 
 **Node Score: 6/8 (75%)**

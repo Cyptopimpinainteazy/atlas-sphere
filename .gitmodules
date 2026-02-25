@@ -24,11 +24,11 @@
 
 [submodule "third_party/Diffsplat"]
 	path = third_party/Diffsplat
-	url = https://github.com/Cyptopimpinainteazy/atlas-sphere
+	url = https://github.com/Cyptopimpinainteazy/x3-chain
 
 [submodule "third_party/Hunyuan3D-2.1"]
 	path = third_party/Hunyuan3D-2.1
-	url = https://github.com/Cyptopimpinainteazy/atlas-sphere
+	url = https://github.com/Cyptopimpinainteazy/x3-chain
 
 [submodule "third_party/open-notebook"]
 	path = third_party/open-notebook
@@ -36,7 +36,7 @@
 
 [submodule "third_party/threejs-avatar-demo"]
 	path = third_party/threejs-avatar-demo
-	url = https://github.com/Cyptopimpinainteazy/atlas-sphere
+	url = https://github.com/Cyptopimpinainteazy/x3-chain
 
 [submodule "tools/openspec"]
 	path = tools/openspec

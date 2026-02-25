@@ -21,7 +21,7 @@ contract GPUMarketplaceTest is Test {
 
     function setUp() public {
         // Deploy mock token
-        token = new MockERC20("Atlas Token", "ATLAS");
+        token = new MockERC20("X3 Token", "X3");
 
         // Deploy marketplace
         GPUMarketplace impl = new GPUMarketplace();

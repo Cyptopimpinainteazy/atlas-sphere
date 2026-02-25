@@ -67,9 +67,9 @@ npm run build
 
 The build output will be in the `dist/` directory.
 
-### Integration with Atlas Desktop
+### Integration with X3 Desktop
 
-The Validators app is registered in the desktop launcher at `apps/atlas-desktop/src/services/applicationService.ts` and can be launched from the desktop UI.
+The Validators app is registered in the desktop launcher at `apps/x3-desktop/src/services/applicationService.ts` and can be launched from the desktop UI.
 
 ## Configuration
 
@@ -89,4 +89,4 @@ The Validators app is registered in the desktop launcher at `apps/atlas-desktop/
 
 ## License
 
-Part of the Atlas Sphere project.
+Part of the X3 Chain project.

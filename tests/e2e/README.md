@@ -2,7 +2,7 @@
 
 ## Overview
 
-The atlas-sphere E2E test suite provides deterministic, reproducible integration tests for blockchain consensus, GPU swarm coordination, cross-chain settlement, and collateral transitions.
+The x3-chain E2E test suite provides deterministic, reproducible integration tests for blockchain consensus, GPU swarm coordination, cross-chain settlement, and collateral transitions.
 
 **Key Feature:** Triple-run determinism verification ensures test flakiness is detected as real bugs, not environmental noise.
 
@@ -85,7 +85,7 @@ When enabled, `start_test_environment.sh` loads `tests/e2e/fixtures/deterministi
 
 ```toml
 [determinism]
-seed = "atlas-e2e-deterministic-seed-001"
+seed = "x3-e2e-deterministic-seed-001"
 genesis_timestamp = 1707388800  # Feb 8 2025 00:00:00 UTC (fixed)
 block_time_millis = 6000
 initial_validators = ["5GrwvaEF5zXb26Fz9rcQkQKgVCqvEHVYTMbVqzXHR9WsFPbK"]
@@ -112,9 +112,9 @@ This ensures:
 | `E2E_DETERMINISTIC_TRIPLE_RUN` | unset (off) | Enable deterministic config loading |
 | `DOCKER_COMPOSE_PROJECT` | `e2e-local` | Docker Compose project namespace (prevents conflicts) |
 | `DOCKER_COMPOSE_FILE` | `docker-compose.test.yml` | Test environment definition |
-| `ATLAS_E2E_DETERMINISTIC_SEED` | auto-populated | RNG seed (exported from fixture) |
-| `ATLAS_E2E_GENESIS_TIMESTAMP` | auto-populated | Block timestamp (exported from fixture) |
-| `ATLAS_E2E_BLOCK_TIME_MILLIS` | auto-populated | Block interval in ms (exported from fixture) |
+| `X3_E2E_DETERMINISTIC_SEED` | auto-populated | RNG seed (exported from fixture) |
+| `X3_E2E_GENESIS_TIMESTAMP` | auto-populated | Block timestamp (exported from fixture) |
+| `X3_E2E_BLOCK_TIME_MILLIS` | auto-populated | Block interval in ms (exported from fixture) |
 | `RUN_ID` | uuid | UUID for log correlation |
 | `LOG_LEVEL` | `info` | Log verbosity (info, debug, trace) |
 
@@ -268,7 +268,7 @@ git checkout -b ci/e2e-triple-run-validation
 git push origin ci/e2e-triple-run-validation
 ```
 
-Then visit: https://github.com/Cyptopimpinainteazy/atlas-sphere/actions
+Then visit: https://github.com/Cyptopimpinainteazy/x3-chain/actions
 
 Monitor the workflow:
 - **e2e-state-root (run 1):** Builds and tests (⏱️ ~30 min)
@@ -301,10 +301,10 @@ Monitor the workflow:
 **Fix:**
 ```bash
 # Check if node is running
-docker ps | grep atlas-sphere-node
+docker ps | grep x3-chain-node
 
 # View logs
-docker compose logs atlas-sphere-node | tail -100
+docker compose logs x3-chain-node | tail -100
 
 # Try manual RPC call
 curl -s http://127.0.0.1:9933/ \
@@ -323,7 +323,7 @@ curl -s http://127.0.0.1:9933/ \
 
 **Likely causes:**
 - Timing-dependent code path (test must be more deterministic)
-- Random seed not being applied (check `ATLAS_E2E_DETERMINISTIC_SEED` is exported)
+- Random seed not being applied (check `X3_E2E_DETERMINISTIC_SEED` is exported)
 - Async task ordering (use fixed seed in test setup)
 - Hardware differences (GPU backend, CPU throttling during CI)
 

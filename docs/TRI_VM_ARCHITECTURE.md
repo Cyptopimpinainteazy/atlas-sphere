@@ -2,7 +2,7 @@
 
 > **Status**: Canonical | **Version**: 1.0.0 | **Last Updated**: 2025-12-10
 
-This document defines how Atlas Sphere merges EVM + SVM + X3 into one unified execution organism.
+This document defines how X3 Chain merges EVM + SVM + X3 into one unified execution organism.
 
 ---
 
@@ -23,11 +23,11 @@ This document defines how Atlas Sphere merges EVM + SVM + X3 into one unified ex
 
 ### 1.1 The Tri-VM Vision
 
-Atlas Sphere is the first blockchain to natively execute three virtual machines in a single, atomic transaction context:
+X3 Chain is the first blockchain to natively execute three virtual machines in a single, atomic transaction context:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      ATLAS SPHERE RUNTIME                           │
+│                      X3 CHAIN RUNTIME                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐             │
@@ -189,7 +189,7 @@ The X3 layer is the native, optimized execution environment.
 
 ### 3.1 Transaction Flow
 
-A single Atlas Sphere transaction can span all three VMs:
+A single X3 Chain transaction can span all three VMs:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -227,8 +227,8 @@ A single Atlas Sphere transaction can span all three VMs:
 │  ┌──────────────────────────────────────────────┐                   │
 │  │ // Execute swaps in parallel zones           │                   │
 │  │ Zone 1: swap(pool_a, USDC, ETH)             │                   │
-│  │ Zone 2: swap(pool_b, ETH, ATLAS)            │                   │
-│  │ Zone 3: swap(pool_c, ATLAS, USDC)           │                   │
+│  │ Zone 2: swap(pool_b, ETH, X3)            │                   │
+│  │ Zone 3: swap(pool_c, X3, USDC)           │                   │
 │  └──────────────────────────────────────────────┘                   │
 │                         │                                            │
 │                         ▼                                            │
@@ -533,7 +533,7 @@ fn call_solana_program() -> bytes {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    ATLAS SPHERE STATE                                │
+│                    X3 CHAIN STATE                                │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  Root Hash                                                           │
@@ -592,20 +592,20 @@ Assets can flow between VMs through the Canonical Ledger:
 │                    CANONICAL LEDGER                                  │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  Asset ID: 0x0001 (Native ATLAS)                                    │
+│  Asset ID: 0x0001 (Native X3)                                    │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ EVM Balance:  1,000,000 ATLAS                               │    │
-│  │ SVM Balance:    500,000 ATLAS                               │    │
-│  │ X3 Balance:     250,000 ATLAS                               │    │
+│  │ EVM Balance:  1,000,000 X3                               │    │
+│  │ SVM Balance:    500,000 X3                               │    │
+│  │ X3 Balance:     250,000 X3                               │    │
 │  │ ─────────────────────────────────────                       │    │
-│  │ Total Supply: 1,750,000 ATLAS ✓                             │    │
+│  │ Total Supply: 1,750,000 X3 ✓                             │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                                                                      │
 │  Transfer: EVM → X3                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ 1. Lock 100 ATLAS in EVM bridge contract                    │    │
+│  │ 1. Lock 100 X3 in EVM bridge contract                    │    │
 │  │ 2. Update Canonical Ledger                                   │    │
-│  │ 3. Credit 100 ATLAS to X3 global storage                    │    │
+│  │ 3. Credit 100 X3 to X3 global storage                    │    │
 │  │ 4. Emit CrossVmTransfer event                               │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                                                                      │
@@ -776,4 +776,4 @@ impl ReentrancyGuard {
 
 **Document Version:** 1.0.0  
 **Specification Status:** Canonical  
-**Maintainer:** Atlas Sphere Core Engineering
+**Maintainer:** X3 Chain Core Engineering

@@ -4,7 +4,7 @@
 
 ### ✅ **Existing Infrastructure**
 - **Wallet App**: Complete with wallet store, providers, and UI components
-- **SDK Integration**: Atlas Sphere TypeScript SDK integration layer
+- **SDK Integration**: X3 Chain TypeScript SDK integration layer
 - **Multi-VM Support**: EVM, SVM, and Substrate network connections
 - **Comit Support**: Core blockchain transaction functionality
 - **DEX App**: Trading interface with hooks and components
@@ -21,7 +21,7 @@
 ## Integration Objectives
 
 ### 🎯 **Primary Goals**
-1. **Connect to Live Blockchain**: Replace demo mode with real Atlas Sphere node
+1. **Connect to Live Blockchain**: Replace demo mode with real X3 Chain node
 2. **End-to-End Comit Flow**: Complete transaction lifecycle from wallet to blockchain
 3. **Enhanced Wallet GUI**: Professional, intuitive wallet interface
 4. **Real-time Data**: Live balance updates and transaction monitoring
@@ -30,7 +30,7 @@
 ### 🚀 **Implementation Steps**
 
 #### Phase 1: Blockchain Connection
-- [ ] Verify Atlas Sphere node is running
+- [ ] Verify X3 Chain node is running
 - [ ] Update SDK configuration to use real endpoints
 - [ ] Remove demo mode fallbacks
 - [ ] Test connection and basic operations
@@ -64,7 +64,7 @@
 
 ### **Blockchain Layer**
 ```
-Atlas Sphere Node (Substrate + EVM + SVM)
+X3 Chain Node (Substrate + EVM + SVM)
 ├── RPC Endpoints (HTTP/WS)
 ├── WebSocket Subscriptions
 └── Comit Transaction Processing
@@ -72,7 +72,7 @@ Atlas Sphere Node (Substrate + EVM + SVM)
 
 ### **SDK Integration**
 ```
-TypeScript SDK (@atlas-sphere/ts-sdk)
+TypeScript SDK (@x3-chain/ts-sdk)
 ├── AtlasSphereClient
 ├── ComitBuilder
 ├── QueryClient

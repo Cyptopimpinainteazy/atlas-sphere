@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# E2E Test Execution Script for X3-Atlas-Sphere
+# E2E Test Execution Script for X3-X3-Sphere
 # This script runs the end-to-end integration tests
 
-echo "🚀 Starting E2E Integration Tests for X3-Atlas-Sphere"
+echo "🚀 Starting E2E Integration Tests for X3-X3-Sphere"
 echo "=================================================="
 
 # Set the working directory
-cd /home/lojak/Desktop/X3-atlas-sphere
+cd /home/lojak/Desktop/X3-x3-chain
 
 # Function to run a test with timeout
 run_test_with_timeout() {
