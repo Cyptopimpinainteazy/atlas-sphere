@@ -47,6 +47,40 @@ npm run tauri dev
 npm run tauri build
 ```
 
+### URL Panels: Required Local Dev Servers
+
+Start these in separate terminals when using URL-type desktop apps:
+
+```bash
+# Ollama Code Reviewer (http://localhost:5175)
+cd ../../ollama-code-reviewer && npm run dev
+
+# 3aiXchange DEX (http://localhost:5176)
+cd ../3ai/dex/frontend && npm run dev
+
+# X3 App Store (http://localhost:3001)
+cd ../../x3-app-store/frontend && npm run dev
+
+# Blockchain TPS Tester (http://localhost:3020)
+cd ../../infra-structure/services/blockchain-tps && PORT=3020 npm start
+
+# Foundry/Hardhat GUI (http://localhost:8787)
+cd ../../tools/foundry-hardhat-gui && python3 server.py --port 8787
+
+# GPU Validator Dashboard (http://localhost:8080)
+cd ../../cross-chain-gpu-validator && python -m cross_chain_gpu_validator.cli dashboard --port 8080
+
+# Autonomic Control Plane (http://localhost:8080/dashboard.html)
+cd ../../swarm && python -m swarm.autonomic
+
+# GPU Swarm Node Admin (http://localhost:9101)
+cd ../../crates/gpu-swarm && cargo run
+```
+
+Notes:
+- `autonomic-control-plane` and `gpu-validator-dashboard` both use port `8080`; run one at a time or change one port.
+- If an iframe app is unreachable, the desktop now shows app-specific startup hints with command + working directory.
+
 ### Network selector & environment variables
 
 - Use the **Network** dropdown in the Top‑right `TopNavBar` to switch between `Local`, `Testnet` and `Mainnet` at runtime — the selection persists to `localStorage` and the Substrate client will reconnect automatically.

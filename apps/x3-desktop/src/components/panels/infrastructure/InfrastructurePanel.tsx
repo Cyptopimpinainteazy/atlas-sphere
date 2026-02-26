@@ -69,6 +69,8 @@ async function fetchJSON<T>(url: string): Promise<T | null> {
   } catch { return null; }
 }
 
+type InfrastructureView = 'overview' | 'chain-explorer' | 'admin-dashboard' | 'login' | 'register';
+
 /* ── Component ─────────────────────────────────────── */
 const InfrastructurePanel: React.FC = () => {
   const [bridge, setBridge] = useState<BridgeStats | null>(null);
@@ -79,6 +81,12 @@ const InfrastructurePanel: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [tpsHistory, setTpsHistory] = useState<number[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'partial' | 'offline'>('offline');
+  const [activeView, setActiveView] = useState<InfrastructureView>('overview');
+  const [loginApiKey, setLoginApiKey] = useState('');
+  const [loginApiSecret, setLoginApiSecret] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registerTier, setRegisterTier] = useState<'basic' | 'pro' | 'enterprise'>('pro');
+  const [registrationDone, setRegistrationDone] = useState(false);
   const openWindow = useDesktopStore((s) => s.openWindow);
 
   const loadStats = useCallback(async () => {
@@ -145,6 +153,103 @@ const InfrastructurePanel: React.FC = () => {
 
   const statusColors = { connected: '#10b981', partial: '#f59e0b', offline: '#ef4444' };
   const statusLabel = { connected: 'All Systems', partial: 'Partial', offline: 'Offline' };
+  const viewTabs: Array<{ id: InfrastructureView; label: string }> = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'chain-explorer', label: 'Chain Explorer' },
+    { id: 'admin-dashboard', label: 'Admin Dashboard' },
+    { id: 'login', label: 'Login' },
+    { id: 'register', label: 'Register' },
+  ];
+
+  const renderIntegratedView = () => {
+    if (activeView === 'chain-explorer') {
+      return (
+        <div style={{ padding: 14, display: 'grid', gap: 10 }}>
+          <div style={c.card}>
+            <div style={c.cardTitle as React.CSSProperties}>🌐 Chain Explorer (Consolidated)</div>
+            <div style={{ ...c.sub, marginBottom: 10 }}>
+              Consolidated from standalone Chain Explorer into Infrastructure Monitor.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
+              <div style={c.card}><div style={c.sub}>Chains Covered</div><div style={{ ...c.bigNum, color: '#3b82f6' }}>{rpcPool?.chains_covered ?? 0}</div></div>
+              <div style={c.card}><div style={c.sub}>RPC Endpoints</div><div style={{ ...c.bigNum, color: '#22c55e' }}>{rpcPool?.total_endpoints ?? 0}</div></div>
+              <div style={c.card}><div style={c.sub}>Healthy</div><div style={{ ...c.bigNum, color: '#10b981' }}>{rpcPool?.healthy_endpoints ?? 0}</div></div>
+              <div style={c.card}><div style={c.sub}>Avg Latency</div><div style={{ ...c.bigNum, color: '#f59e0b' }}>{rpcPool?.avg_latency_ms ?? 0}ms</div></div>
+            </div>
+            <button
+              onClick={() => openWindow('rpc-stats', 'RPC Pool Stats', '#f59e0b')}
+              style={{ background: '#1e3a5f', border: 'none', borderRadius: 6, padding: '6px 10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}
+            >
+              Open Full Chain Explorer →
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === 'admin-dashboard') {
+      return (
+        <div style={{ padding: 14, display: 'grid', gap: 10 }}>
+          <div style={c.card}>
+            <div style={c.cardTitle as React.CSSProperties}>🛡️ Admin Dashboard (Consolidated)</div>
+            <div style={c.sub}>Consolidated from standalone Admin Dashboard into Infrastructure Monitor.</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+            <div style={c.card}><div style={c.sub}>Bridge</div><div style={{ ...c.bigNum, color: bridge ? '#10b981' : '#ef4444' }}>{bridge ? 'Online' : 'Offline'}</div></div>
+            <div style={c.card}><div style={c.sub}>GPU Lanes</div><div style={{ ...c.bigNum, color: '#a78bfa' }}>{gpuLanes.length}</div></div>
+            <div style={c.card}><div style={c.sub}>RPC Proxy</div><div style={{ ...c.bigNum, color: chain ? '#3b82f6' : '#ef4444' }}>{chain ? 'Healthy' : 'Offline'}</div></div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={loadStats} style={{ background: '#1f2937', border: '1px solid #374151', borderRadius: 6, padding: '6px 10px', color: '#e5e7eb', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}>Refresh Metrics</button>
+            <button onClick={() => openWindow('rpc-stats', 'RPC Pool Stats', '#f59e0b')} style={{ background: '#1e3a5f', border: 'none', borderRadius: 6, padding: '6px 10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}>Open RPC Stats</button>
+            <button onClick={() => openWindow('airdrops', 'Airdrops & Faucets', '#ec4899')} style={{ background: '#4a1942', border: 'none', borderRadius: 6, padding: '6px 10px', color: '#ec4899', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600 }}>Open Airdrops</button>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === 'login') {
+      return (
+        <div style={{ padding: 14, maxWidth: 460 }}>
+          <div style={c.card}>
+            <div style={c.cardTitle as React.CSSProperties}>🔐 Login (Consolidated)</div>
+            <div style={{ ...c.sub, marginBottom: 10 }}>Local auth view consolidated from standalone dashboard.</div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <input value={loginApiKey} onChange={(e) => setLoginApiKey(e.target.value)} placeholder="API key" style={{ background: '#0f172a', border: '1px solid #374151', borderRadius: 6, padding: '8px 10px', color: '#e5e7eb' }} />
+              <input value={loginApiSecret} onChange={(e) => setLoginApiSecret(e.target.value)} type="password" placeholder="API secret" style={{ background: '#0f172a', border: '1px solid #374151', borderRadius: 6, padding: '8px 10px', color: '#e5e7eb' }} />
+              <button style={{ background: '#2563eb', border: 'none', borderRadius: 6, padding: '8px 10px', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Log In</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === 'register') {
+      return (
+        <div style={{ padding: 14, maxWidth: 560 }}>
+          <div style={c.card}>
+            <div style={c.cardTitle as React.CSSProperties}>📝 Register (Consolidated)</div>
+            <div style={{ ...c.sub, marginBottom: 10 }}>Local registration flow consolidated from standalone dashboard.</div>
+            {!registrationDone ? (
+              <div style={{ display: 'grid', gap: 8 }}>
+                <input value={registeredEmail} onChange={(e) => setRegisteredEmail(e.target.value)} type="email" placeholder="validator@example.com" style={{ background: '#0f172a', border: '1px solid #374151', borderRadius: 6, padding: '8px 10px', color: '#e5e7eb' }} />
+                <select value={registerTier} onChange={(e) => setRegisterTier(e.target.value as 'basic' | 'pro' | 'enterprise')} style={{ background: '#0f172a', border: '1px solid #374151', borderRadius: 6, padding: '8px 10px', color: '#e5e7eb' }}>
+                  <option value="basic">Basic</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+                <button onClick={() => setRegistrationDone(true)} style={{ background: '#16a34a', border: 'none', borderRadius: 6, padding: '8px 10px', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>Create Validator Credentials</button>
+              </div>
+            ) : (
+              <div style={{ ...c.sub, color: '#10b981' }}>Registration complete. Credentials generated for {registeredEmail || 'validator'} ({registerTier}).</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div style={c.root}>
@@ -152,6 +257,26 @@ const InfrastructurePanel: React.FC = () => {
       <div style={c.header}>
         <span style={{ fontSize: '1.1rem' }}>🏗️</span>
         <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Infrastructure Monitor</span>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 10 }}>
+          {viewTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveView(tab.id)}
+              style={{
+                background: activeView === tab.id ? '#1f3b5f' : 'transparent',
+                border: activeView === tab.id ? '1px solid #3b82f6' : '1px solid #2a2f3e',
+                borderRadius: 6,
+                padding: '3px 8px',
+                color: activeView === tab.id ? '#93c5fd' : '#9ca3af',
+                cursor: 'pointer',
+                fontSize: '0.68rem',
+                fontWeight: 600,
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
         <div style={{ flex: 1 }} />
         <span style={{ ...c.statusDot(connectionStatus === 'connected') as any, background: statusColors[connectionStatus] }} />
         <span style={{ fontSize: '0.72rem', color: statusColors[connectionStatus] }}>{statusLabel[connectionStatus]}</span>
@@ -164,7 +289,9 @@ const InfrastructurePanel: React.FC = () => {
         </button>
       </div>
 
-      {loading ? (
+      {activeView !== 'overview' ? (
+        renderIntegratedView()
+      ) : loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#666' }}>
           Loading infrastructure data…
         </div>

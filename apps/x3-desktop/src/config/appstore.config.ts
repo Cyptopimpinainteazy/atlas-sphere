@@ -45,6 +45,80 @@ export interface AppStoreApp {
   size: string;
 }
 
+export type DesktopLauncherCategory =
+  | "blockchain"
+  | "defi"
+  | "analysis"
+  | "service"
+  | "development"
+  | "utility";
+
+export interface DesktopLauncherGroup {
+  id: DesktopLauncherCategory;
+  label: string;
+  primaryAppId: string;
+  appIds: string[];
+}
+
+/**
+ * Canonical desktop launcher groups.
+ *
+ * Main desktop view shows one app per group (`primaryAppId`), while category
+ * and "All Apps" views can expose the full `appIds` list.
+ */
+export const DESKTOP_LAUNCHER_GROUPS: DesktopLauncherGroup[] = [
+  {
+    id: "blockchain",
+    label: "Blockchain",
+    primaryAppId: "block-explorer",
+    appIds: ["block-explorer", "wallet", "validators", "governance", "htlc-manager"],
+  },
+  {
+    id: "defi",
+    label: "DeFi",
+    primaryAppId: "dex",
+    appIds: ["dex", "3aixchange-dex", "bridge", "atomic-swap", "stake", "earn", "launchpad"],
+  },
+  {
+    id: "analysis",
+    label: "Analysis",
+    primaryAppId: "x3-floor-dashboard",
+    appIds: ["x3-floor-dashboard", "defi-metrics", "portfolio", "prometheus-metrics"],
+  },
+  {
+    id: "service",
+    label: "Service",
+    primaryAppId: "gpu-swarm-dashboard",
+    appIds: [
+      "gpu-swarm-dashboard",
+      "infrastructure",
+      "autonomic-control-plane",
+      "gpu-validator-dashboard",
+      "swarm-health",
+    ],
+  },
+  {
+    id: "development",
+    label: "Development",
+    primaryAppId: "dev-tools",
+    appIds: ["dev-tools", "foundry-hardhat-gui", "blockchain-tps-tester", "ollama-code-reviewer"],
+  },
+  {
+    id: "utility",
+    label: "Utility",
+    primaryAppId: "x3-app-store",
+    appIds: ["x3-app-store", "x3-crm", "community", "x3star", "documentation"],
+  },
+];
+
+export const DESKTOP_CANONICAL_APP_IDS = DESKTOP_LAUNCHER_GROUPS.map((group) => group.primaryAppId);
+
+export function getDesktopLauncherGroup(
+  category: DesktopLauncherCategory
+): DesktopLauncherGroup | undefined {
+  return DESKTOP_LAUNCHER_GROUPS.find((group) => group.id === category);
+}
+
 export const APP_STORE_APPS: AppStoreApp[] = [
   {
     id: "x3-app-store",

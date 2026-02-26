@@ -21,6 +21,16 @@ export interface LaunchResult {
 export class AppLauncherService {
   private runningApps: Map<string, { pid: number; command: any }> = new Map();
 
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
   /**
    * Launch an app with treasury integration enabled
    */
@@ -100,13 +110,16 @@ export class AppLauncherService {
               console.log('[AppLauncher] Ensured script is executable');
             } catch (chmodErr) {
               // non-fatal — we'll still try to run via bash
-              console.warn('[AppLauncher] chmod failed (ignored):', chmodErr?.message || chmodErr);
+              console.warn('[AppLauncher] chmod failed (ignored):', this.getErrorMessage(chmodErr));
             }
           }
 
           // If a per-app virtualenv exists, prefer using its python binary for python invocations
           let programToUse = attempt.program;
-          if ((programToUse === 'python' || programToUse === 'python3') && await exists(`${appPath}/.venv/bin/python`)) {
+          if (
+            (programToUse === 'python' || programToUse === 'python3') &&
+            await this.tauriFsExists(`${appPath}/.venv/bin/python`)
+          ) {
             programToUse = `${appPath}/.venv/bin/python`;
             console.log('[AppLauncher] Using app .venv python:', programToUse);
           }
@@ -133,14 +146,20 @@ export class AppLauncherService {
           return { success: true, message: `${app.name} launched successfully`, pid: child.pid };
         } catch (err) {
           lastError = err;
-          console.warn(`[AppLauncher] Attempt failed: ${attempt.program} ${attempt.args.join(' ')} -> ${err?.message || err}`);
+          console.warn(
+            `[AppLauncher] Attempt failed: ${attempt.program} ${attempt.args.join(' ')} -> ${this.getErrorMessage(err)}`
+          );
           // try next candidate
         }
       }
 
       // If none of the attempts succeeded
       console.error(`[AppLauncher] ❌ All launch attempts failed for ${app.name}`);
-      return { success: false, message: `Failed to launch ${app.name}`, error: lastError?.message || String(lastError) };
+      return {
+        success: false,
+        message: `Failed to launch ${app.name}`,
+        error: this.getErrorMessage(lastError),
+      };
     } catch (error: any) {
       console.error(`[AppLauncher] ❌ Failed to launch ${app.name}:`, error);
 

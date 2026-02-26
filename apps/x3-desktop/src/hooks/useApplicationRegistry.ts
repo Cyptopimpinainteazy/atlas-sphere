@@ -52,10 +52,14 @@ export function useApplicationRegistry(): void {
 
         const base = apps.length > 0 ? apps : DEFAULT_APPLICATIONS;
 
-        // Merge by id (store-preinstalled apps take precedence) and keep stable order
+        // Merge by id (desktop default registry takes precedence) and keep stable order
         const mergedById = new Map<string, Application>();
-        preinstalledFromStore.forEach(a => mergedById.set(a.id, a));
-        base.forEach(a => { if (!mergedById.has(a.id)) mergedById.set(a.id, a); });
+        base.forEach(a => mergedById.set(a.id, a));
+        preinstalledFromStore.forEach(a => {
+          if (!mergedById.has(a.id)) {
+            mergedById.set(a.id, a);
+          }
+        });
 
         setApplications(Array.from(mergedById.values()));
       }

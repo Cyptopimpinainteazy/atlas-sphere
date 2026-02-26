@@ -73,47 +73,7 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "placeholder", category: "blockchain", color: "#ff6b35" },
     launchCommand: { type: "internal", target: "blockchain-connector" },
   },
-  /* ── Existing Applications ───────────────────────────────── */
-  {
-    id: "explorer",
-    name: "Block Explorer",
-    description: "Browse blocks, transactions, and accounts on-chain",
-    category: "blockchain",
-    icon: { type: "placeholder", category: "blockchain", color: "#ff6b35" },
-    launchCommand: { type: "url", target: "http://localhost:3001" },
-  },
-  {
-    id: "wallet",
-    name: "Wallet",
-    description: "Manage keys, sign transactions, and transfer funds",
-    category: "blockchain",
-    icon: { type: "file", path: "/assets/icons/wallet.svg", color: "#00d2ff" },
-    launchCommand: { type: "url", target: "http://localhost:3002" },
-  },
-  {
-    id: "dex",
-    name: "DEX",
-    description: "Decentralised exchange for token swaps and liquidity",
-    category: "defi",
-    icon: { type: "file", path: "/assets/icons/exchange.svg", color: "#ff6b35" },
-    launchCommand: { type: "url", target: "http://localhost:3003" },
-  },
-  {
-    id: "analytics",
-    name: "Analytics",
-    description: "Chain analytics, metrics, and performance dashboards",
-    category: "analysis",
-    icon: { type: "file", path: "/assets/icons/metrics.svg", color: "#00bcd4" },
-    launchCommand: { type: "url", target: "http://localhost:3004" },
-  },
-  {
-    id: "swarm-dashboard",
-    name: "Swarm Dashboard",
-    description: "Monitor AI agent swarm status and task assignments",
-    category: "service",
-    icon: { type: "file", path: "/assets/icons/agent.svg", color: "#11a0dc" },
-    launchCommand: { type: "url", target: "http://localhost:3005" },
-  },
+  /* ── Existing URL/Tauri Applications ─────────────────────── */
   {
     id: "admin-command-center",
     name: "Command Center",
@@ -129,14 +89,6 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     category: "defi",
     icon: { type: "placeholder", category: "defi", color: "#ff8c42" },
     launchCommand: { type: "tauri", target: "launch_funding_automator" },
-  },
-  {
-    id: "x3-intelligence",
-    name: "X3 Intelligence",
-    description: "Real-time arbitrage control, cross-chain metrics, validator dashboard",
-    category: "defi",
-    icon: { type: "file", path: "/assets/icons/x3-intelligence.svg", color: "#00d4ff" },
-    launchCommand: { type: "url", target: "http://localhost:5173" },
   },
   {
     id: "dev-dashboard",
@@ -219,15 +171,6 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "placeholder", category: "utility", color: "#4fc3f7" },
     launchCommand: { type: "internal", target: "documentation" },
   },
-  {
-    id: "validators",
-    name: "Validators",
-    description: "Monitor validator network status, performance, and connectivity",
-    category: "blockchain",
-    icon: { type: "file", path: "/assets/icons/validators.svg", color: "#00d2ff" },
-    launchCommand: { type: "url", target: "http://localhost:3013" },
-  },
-
   /* ── Explorer Sub-Apps ───────────────────────────────────── */
   {
     id: "ai-swarm",
@@ -513,6 +456,14 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     icon: { type: "placeholder", category: "defi", color: "#ff6d00" },
     launchCommand: { type: "internal", target: "wallet" },
   },
+  {
+    id: "validators",
+    name: "Validators",
+    description: "Real-time 3D validator globe with node status, health, and network links",
+    category: "blockchain",
+    icon: { type: "placeholder", category: "blockchain", color: "#00d2ff" },
+    launchCommand: { type: "internal", target: "validators" },
+  },
 
   /* ── X3 Intelligence (ported from apps/x3-intelligence) ── */
   {
@@ -563,6 +514,72 @@ export const DEFAULT_APPLICATIONS: Application[] = [
     category: "service",
     icon: { type: "placeholder", category: "service", color: "#3b82f6" },
     launchCommand: { type: "internal", target: "infrastructure" },
+  },
+
+  /* ── External URL Apps ──────────────────────────────────── */
+  {
+    id: "ollama-code-reviewer",
+    name: "Ollama Code Reviewer",
+    description: "Local AI code-review UI powered by Ollama",
+    category: "development",
+    icon: { type: "placeholder", category: "development", color: "#10b981" },
+    launchCommand: { type: "url", target: "http://localhost:5175" },
+  },
+  {
+    id: "3aixchange-dex",
+    name: "3aiXchange DEX",
+    description: "3aiXchange Chakra UI DEX with Abby AI assistant",
+    category: "defi",
+    icon: { type: "placeholder", category: "defi", color: "#6366f1" },
+    launchCommand: { type: "url", target: "http://localhost:5176" },
+  },
+  {
+    id: "x3-app-store",
+    name: "X3 App Store",
+    description: "App marketplace frontend",
+    category: "utility",
+    icon: { type: "placeholder", category: "utility", color: "#f59e0b" },
+    launchCommand: { type: "url", target: "http://localhost:3001" },
+  },
+  {
+    id: "gpu-validator-dashboard",
+    name: "GPU Validator Dashboard",
+    description: "Cross-chain GPU validator benchmark and metrics dashboard",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#22d3ee" },
+    launchCommand: { type: "url", target: "http://localhost:8080" },
+  },
+  {
+    id: "autonomic-control-plane",
+    name: "Autonomic Control Plane",
+    description: "Autonomic operator dashboard and control surface",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#f97316" },
+    launchCommand: { type: "url", target: "http://localhost:8080/dashboard.html" },
+  },
+  {
+    id: "blockchain-tps-tester",
+    name: "Blockchain TPS Tester",
+    description: "EVM TPS benchmark runner and reporting console",
+    category: "development",
+    icon: { type: "placeholder", category: "development", color: "#38bdf8" },
+    launchCommand: { type: "url", target: "http://localhost:3020" },
+  },
+  {
+    id: "foundry-hardhat-gui",
+    name: "Foundry/Hardhat GUI",
+    description: "Local Foundry + Hardhat orchestration dashboard",
+    category: "development",
+    icon: { type: "placeholder", category: "development", color: "#fb7185" },
+    launchCommand: { type: "url", target: "http://localhost:8787" },
+  },
+  {
+    id: "gpu-swarm-node-admin",
+    name: "GPU Swarm Node Admin",
+    description: "Rust-native GPU swarm node admin console",
+    category: "service",
+    icon: { type: "placeholder", category: "service", color: "#a78bfa" },
+    launchCommand: { type: "url", target: "http://localhost:9101" },
   },
 
   /* ── RPC Pool Stats (deep-dive from Infrastructure Monitor) ── */

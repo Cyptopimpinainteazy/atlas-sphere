@@ -86,6 +86,9 @@ const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructur
 const RpcStatsPanel = lazy(() => import("@/components/panels/infrastructure/RpcStatsPanel"));
 const AirdropsPanel = lazy(() => import("@/components/panels/infrastructure/AirdropsPanel"));
 
+/* ── Validators Globe (ported from apps/validators) ──── */
+const ValidatorsPanel = lazy(() => import("@/components/panels/validators/ValidatorsPanel"));
+
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
 
@@ -181,6 +184,9 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "dex-swap":               DexPanel,
   "dex-pools":              DexPoolsPanel,
   "dex-orderbook":          DexOrderbookPanel,
+
+  /* ── Validators (ported from apps/validators) ── */
+  "validators":             ValidatorsPanel,
 
   /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ── */
   "swarm-dashboard":        SwarmDashboardPanel,   // override old alias

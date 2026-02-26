@@ -28,9 +28,9 @@ const BottomNavBar: React.FC<{
 
   // Define navigation items in two columns
   const leftColumnItems: NavItem[] = [
-    { appId: "x3-intelligence", label: "X3 Intelligence", emoji: "🤖" },
-    { appId: "analytics", label: "Analytics", emoji: "📊" },
-    { appId: "explorer", label: "Explorer", emoji: "🔍" },
+    { appId: "x3-floor-dashboard", label: "X3 Intelligence", emoji: "🤖" },
+    { appId: "defi-metrics", label: "Analytics", emoji: "📊" },
+    { appId: "block-explorer", label: "Explorer", emoji: "🔍" },
   ];
 
   const rightColumnItems: NavItem[] = [
@@ -115,7 +115,7 @@ const BottomNavBar: React.FC<{
                 <span className="text-xl">{item.emoji}</span>
               </button>
             );
-          })}Assistant Concertmaster
+          })}
         </div>
 
         {/* Divider */}
