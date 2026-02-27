@@ -33,6 +33,29 @@ pub struct Cli {
     /// Run command parameters shared with most subcommands.
     #[command(flatten)]
     pub run: RunCmd,
+
+    /// Node-level feature gates for staged production rollout.
+    #[command(flatten)]
+    pub features: NodeFeatureFlags,
+}
+
+#[derive(Debug, Clone, Args, Default)]
+pub struct NodeFeatureFlags {
+    /// Enable the parallel proposer pipeline (currently staged and off by default).
+    #[arg(long, default_value_t = false)]
+    pub enable_parallel_proposer: bool,
+
+    /// Enable Flash Finality tasks (shadow mode wiring should be used first).
+    #[arg(long, default_value_t = false)]
+    pub enable_flash_finality: bool,
+
+    /// Enable PoH digest validation path.
+    #[arg(long, default_value_t = false)]
+    pub enable_poh: bool,
+
+    /// Require GPU path for validation critical flows. Defaults to false for safe CPU fallback.
+    #[arg(long, default_value_t = false)]
+    pub gpu_required: bool,
 }
 
 /// X3 Chain node subcommands.
@@ -57,10 +80,14 @@ pub enum Commands {
     Revert(RevertCmd),
     /// Run built-in benchmarking harnesses.
     #[cfg(feature = "runtime-benchmarks")]
+    #[command(subcommand)]
     Benchmark(frame_benchmarking_cli::BenchmarkCmd),
     /// Execute try-runtime checks against on-chain state.
     #[cfg(feature = "try-runtime")]
-    TryRuntime(sc_cli::TryRuntimeCmd),
+    TryRuntime(try_runtime_cli::TryRuntimeCmd),
+    /// Execute try-runtime checks against on-chain state.
+    #[cfg(not(feature = "try-runtime"))]
+    TryRuntime,
     /// Atomic swap simulation and execution commands.
     AtomicSwap(AtomicSwapCmd),
 }

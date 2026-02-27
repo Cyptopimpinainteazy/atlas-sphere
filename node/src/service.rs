@@ -1,11 +1,3 @@
-/// X3 Chain node service module
-///
-/// Provides node initialization, partial components, and full service setup with:
-/// - Aura (Authority Round) block authoring consensus
-/// - GRANDPA finality gadget
-/// - libp2p networking with peer discovery
-/// - Proper block import queue with consensus verification
-use x3_chain_runtime::{opaque::Block, RuntimeApi};
 use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
@@ -20,11 +12,34 @@ use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_core::{crypto::KeyTypeId, Pair};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
+use std::time::Duration;
+/// X3 Chain node service module
+///
+/// Provides node initialization, partial components, and full service setup with:
+/// - Aura (Authority Round) block authoring consensus
+/// - GRANDPA finality gadget
+/// - libp2p networking with peer discovery
+/// - Proper block import queue with consensus verification
+use x3_chain_runtime::{opaque::Block, RuntimeApi};
 
 /// Key type for Aura block authoring
 const AURA: KeyTypeId = KeyTypeId(*b"aura");
 /// Key type for GRANDPA finality
 const GRANDPA: KeyTypeId = KeyTypeId(*b"gran");
+
+const TX_POOL_READY_COUNT: usize = 100_000;
+const TX_POOL_FUTURE_COUNT: usize = 50_000;
+const TX_POOL_TOTAL_BYTES: usize = 20 * 1024 * 1024;
+const TX_POOL_BAN_TIME_SECS: u64 = 30;
+
+/// Rollout feature flags for consensus and execution paths.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct NodeFeatureFlags {
+    pub enable_parallel_proposer: bool,
+    pub enable_flash_finality: bool,
+    pub enable_poh: bool,
+    pub gpu_required: bool,
+}
 
 /// X3 Chain native executor implementation
 pub struct AtlasSphereExecutorDispatch;
@@ -62,10 +77,7 @@ pub type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 ///
 /// For development mode (`--dev`), this inserts Alice's Aura (sr25519) and
 /// GRANDPA (ed25519) keys into the keystore so the node can author blocks.
-fn insert_dev_keys_with_seed(
-    keystore: &KeystoreContainer,
-    seed: &str,
-) -> Result<(), ServiceError> {
+fn insert_dev_keys_with_seed(keystore: &KeystoreContainer, seed: &str) -> Result<(), ServiceError> {
     use sp_core::crypto::SecretStringError;
 
     let keystore = keystore.keystore();
@@ -111,6 +123,22 @@ fn maybe_insert_dev_keys(
     }
 
     Ok(())
+}
+
+fn tuned_transaction_pool_options(
+    mut options: sc_transaction_pool::Options,
+) -> sc_transaction_pool::Options {
+    options.ready.count = options.ready.count.max(TX_POOL_READY_COUNT);
+    options.future.count = options.future.count.max(TX_POOL_FUTURE_COUNT);
+    options.ready.total_bytes = options.ready.total_bytes.max(TX_POOL_TOTAL_BYTES);
+    options.future.total_bytes = options.future.total_bytes.max(TX_POOL_TOTAL_BYTES);
+    options.ban_time = Duration::from_secs(TX_POOL_BAN_TIME_SECS);
+    options
+}
+
+/// Apply the tuned limits to a runtime configuration before the pool is built.
+pub fn tune_transaction_pool_config(config: &mut Configuration) {
+    config.transaction_pool = tuned_transaction_pool_options(config.transaction_pool.clone());
 }
 
 /// Create partial components for X3 Chain node
@@ -171,7 +199,7 @@ pub fn new_partial(
     // Select chain implementation (longest chain rule)
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
-    // Create transaction pool
+    // Create transaction pool with tuned limits to reduce rejection under heavy load
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
         config.transaction_pool.clone(),
         config.role.is_authority().into(),
@@ -227,7 +255,11 @@ pub fn new_partial(
 }
 
 /// Start a new X3 Chain full node with complete consensus and networking
-pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
+pub fn new_full(
+    mut config: Configuration,
+    feature_flags: NodeFeatureFlags,
+) -> Result<TaskManager, ServiceError> {
+    tune_transaction_pool_config(&mut config);
     let sc_service::PartialComponents {
         client,
         backend,
@@ -278,12 +310,40 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     let prometheus_registry = config.prometheus_registry().cloned();
     let role_for_grandpa = role.clone();
 
+    if feature_flags.enable_parallel_proposer {
+        log::warn!(
+            "⚠️ --enable-parallel-proposer is set, but node wiring still uses basic authorship. \
+            Keep this in shadow mode until deterministic scheduler integration is complete."
+        );
+    }
+    if feature_flags.enable_flash_finality {
+        log::warn!(
+            "⚠️ --enable-flash-finality is set, but GRANDPA remains the active finality engine in this build."
+        );
+    }
+    if feature_flags.enable_poh {
+        log::warn!(
+            "⚠️ --enable-poh is set, but PoH digest verification is not yet enforced in block import."
+        );
+    }
+    if feature_flags.gpu_required {
+        log::warn!(
+            "⚠️ --gpu-required=true is set; ensure CPU fallback is not relied on by your deployment policy."
+        );
+    }
+
     // Spawn core Substrate tasks (RPC, network, telemetry, txpool, offchain, etc.)
     let rpc_builder = {
         let client = client.clone();
-        Box::new(move |_deny_unsafe, _subscription_executor| {
-            crate::rpc::create_full(client.clone())
-                .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
+        let transaction_pool = transaction_pool.clone();
+        Box::new(move |deny_unsafe, subscription_executor| {
+            crate::rpc::create_full(
+                client.clone(),
+                transaction_pool.clone(),
+                deny_unsafe,
+                subscription_executor,
+            )
+            .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
         })
     };
 

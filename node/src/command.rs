@@ -1,11 +1,14 @@
 use crate::{
     cli::{AtomicSwapSubcommand, Cli, Commands},
-    service::{self, AtlasSphereExecutorDispatch},
+    service,
 };
-use x3_chain_runtime::opaque::Block;
 use clap::Parser;
+#[cfg(feature = "runtime-benchmarks")]
+use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 use log::{error, info, warn};
 use sc_cli::{Error as CliError, Result as CliResult, SubstrateCli};
+#[cfg(feature = "runtime-benchmarks")]
+use x3_chain_runtime::opaque::Block;
 
 use crate::logging;
 
@@ -23,10 +26,7 @@ pub fn run() -> CliResult<()> {
             })?;
 
             runner.sync_run(|config| {
-                info!(
-                    "Building X3 Chain chain specification (raw: {})",
-                    cmd.raw
-                );
+                info!("Building X3 Chain chain specification (raw: {})", cmd.raw);
                 cmd.run(config.chain_spec, config.network).map_err(|e| {
                     error!("`build-spec` command failed: {e}");
                     e
@@ -169,20 +169,62 @@ pub fn run() -> CliResult<()> {
 
             runner.sync_run(|config| {
                 info!("Executing runtime benchmarks");
-                cmd.run::<Block, AtlasSphereExecutorDispatch>(config)
-                    .map_err(|e| {
-                        error!("`benchmark` command failed: {e}");
-                        e
-                    })
+                match cmd {
+                    BenchmarkCmd::Pallet(cmd) => {
+                        if !cfg!(feature = "runtime-benchmarks") {
+                            return Err(
+                                "Runtime benchmarking wasn't enabled when building the node. \
+                                You can enable it with `--features runtime-benchmarks`."
+                                    .into(),
+                            );
+                        }
+                        cmd.run::<Block, sp_io::SubstrateHostFunctions>(config)
+                    }
+                    BenchmarkCmd::Block(cmd) => {
+                        let partial = service::new_partial(&config).map_err(|e| {
+                            error!("Unable to build partial components for `benchmark block`: {e}");
+                            CliError::Service(e)
+                        })?;
+                        let sc_service::PartialComponents { client, .. } = partial;
+                        cmd.run(client)
+                    }
+                    BenchmarkCmd::Storage(cmd) => {
+                        let partial = service::new_partial(&config).map_err(|e| {
+                            error!(
+                                "Unable to build partial components for `benchmark storage`: {e}"
+                            );
+                            CliError::Service(e)
+                        })?;
+                        let sc_service::PartialComponents {
+                            client, backend, ..
+                        } = partial;
+                        let db = backend.expose_db();
+                        let storage = backend.expose_storage();
+                        cmd.run(config, client, db, storage)
+                    }
+                    BenchmarkCmd::Machine(cmd) => {
+                        cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone())
+                    }
+                    BenchmarkCmd::Overhead(_) | BenchmarkCmd::Extrinsic(_) => Err(
+                        "Overhead/Extrinsic benchmarking is not wired for x3-chain-node yet."
+                            .into(),
+                    ),
+                }
+                .map_err(|e| {
+                    error!("`benchmark` command failed: {e}");
+                    e
+                })
             })
         }
         #[cfg(feature = "try-runtime")]
-        Some(Commands::TryRuntime(_cmd)) => {
+        Some(Commands::TryRuntime(_)) => {
             error!("`try-runtime` is not yet supported for X3 Chain");
-            Err(CliError::Other(
-                "try-runtime subcommand is not yet supported for X3 Chain".into(),
-            ))
+            Err("try-runtime subcommand is not yet supported for X3 Chain".into())
         }
+        #[cfg(not(feature = "try-runtime"))]
+        Some(Commands::TryRuntime) => Err("TryRuntime wasn't enabled when building the node. \
+            You can enable it with `--features try-runtime`."
+            .into()),
         Some(Commands::AtomicSwap(cmd)) => {
             match &cmd.command {
                 AtomicSwapSubcommand::Simulate {
@@ -393,11 +435,17 @@ pub fn run() -> CliResult<()> {
                 error!("Failed to initialize runner for node execution: {e}");
                 e
             })?;
+            let feature_flags = service::NodeFeatureFlags {
+                enable_parallel_proposer: cli.features.enable_parallel_proposer,
+                enable_flash_finality: cli.features.enable_flash_finality,
+                enable_poh: cli.features.enable_poh,
+                gpu_required: cli.features.gpu_required,
+            };
 
             runner.run_node_until_exit(|config| async move {
                 let role = config.role.clone();
                 info!("Starting X3 Chain node as {:?}", role);
-                service::new_full(config).map_err(|e| {
+                service::new_full(config, feature_flags).map_err(|e| {
                     error!("X3 Chain node terminated with an error: {e}");
                     CliError::Service(e)
                 })
