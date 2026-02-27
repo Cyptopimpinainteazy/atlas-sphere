@@ -1,11 +1,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "256"]
+#![allow(dead_code)]
+#![allow(clippy::manual_contains)]
+#![allow(clippy::needless_borrows_for_generic_args)]
+#![allow(clippy::single_component_path_imports)]
 
 // Required for impl_runtime_apis! macro in no_std
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
 use codec::{Decode, Encode};
+use frame_support::PalletId;
 pub use frame_support::{
     construct_runtime, parameter_types,
     traits::{ConstBool, ConstU16, ConstU32, ConstU64, ConstU8, Everything, Get},
@@ -17,11 +22,9 @@ pub use frame_support::{
     },
 };
 use frame_support::{traits::Currency, weights::Weight};
-use frame_support::PalletId;
 use frame_system::limits;
 use pallet_agent_accounts;
 use pallet_agent_memory;
-use pallet_x3_kernel;
 use pallet_atomic_trade_engine;
 use pallet_aura;
 use pallet_balances;
@@ -33,12 +36,13 @@ use pallet_preimage;
 use pallet_scheduler;
 #[cfg(feature = "dev")]
 use pallet_sudo;
+use pallet_swarm;
 use pallet_timestamp;
 use pallet_transaction_payment::CurrencyAdapter;
 use pallet_treasury;
+use pallet_x3_kernel;
 use pallet_x3_settlement_engine;
 use pallet_x3_verifier;
-use pallet_swarm;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, H256, U256};
@@ -90,7 +94,7 @@ pub type AtlasId = H256;
 pub type Address = MultiAddress<AccountId, ()>;
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
-pub const MILLISECS_PER_BLOCK: u64 = 400; // Reduced from 1000ms to 400ms for ~2.5x TPS improvement
+pub const MILLISECS_PER_BLOCK: u64 = 200; // 200ms target for higher throughput and lower latency
 
 pub struct RuntimeVersion;
 impl frame_support::traits::Get<sp_version::RuntimeVersion> for RuntimeVersion {
@@ -111,7 +115,7 @@ pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
     spec_name: create_runtime_str!("x3-chain"),
     impl_name: create_runtime_str!("x3-chain"),
     authoring_version: 1,
-    spec_version: 2,
+    spec_version: 4,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
@@ -134,15 +138,16 @@ parameter_types! {
     pub const MaxCombinedPayloadLengthV2: u32 = 192 * 1024;  // 192 KB combined (EVM+SVM+X3)
     pub const MaxAuthorities: u32 = 100;  // Maximum 100 authorities
     pub const MinAuthorities: u32 = 1;  // Minimum 1 authority required
-    pub const DefaultEvmGasLimit: u64 = 30_000_000;  // 30M gas for EVM
+    pub const DefaultEvmGasLimit: u64 = 12_000_000;  // tuned for 200ms slots on commodity validators
     pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
-    pub const DefaultX3GasLimit: u64 = 15_000_000;  // 15M gas for X3
+    pub const DefaultX3GasLimit: u64 = 6_000_000;  // tuned for 200ms slots on commodity validators
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
-        Weight::from_parts(60 * WEIGHT_REF_TIME_PER_SECOND, 20 * 1024 * 1024), // 60s weight, 20MB proof
+        // Keep max execution budget below slot time (200ms) to avoid author/import divergence.
+        Weight::from_parts((WEIGHT_REF_TIME_PER_SECOND / 1000) * 150, 5 * 1024 * 1024),
         Perbill::from_percent(90),
     );
     pub BlockLength: limits::BlockLength = limits::BlockLength::max_with_normal_ratio(
-        20 * 1024 * 1024, // 20MB block size (up from 5MB)
+        5 * 1024 * 1024, // 5MB hard cap to reduce import pressure
         Perbill::from_percent(90),
     );
 }
@@ -156,7 +161,7 @@ parameter_types! {
 pub struct BlockGasLimit;
 impl Get<U256> for BlockGasLimit {
     fn get() -> U256 {
-        U256::from(100_000_000u64) // Increased from 30M to 100M for higher throughput
+        U256::from(15_000_000u64)
     }
 }
 
@@ -450,24 +455,20 @@ impl pallet_x3_kernel::Config for Runtime {
     type DefaultX3GasLimit = DefaultX3GasLimit;
     type WeightInfo = pallet_x3_kernel::weights::SubstrateWeight<Runtime>;
     type Currency = Balances;
-    // VM Adapters:
-    // Default to mocks for BOTH native and WASM execution to keep consensus-critical
-    // behavior deterministic and identical across execution backends.
-    //
-    // Real/native adapters can be enabled explicitly for non-production developer
-    // workflows via the `native-real-vm-adapters` feature.
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
+    // VM adapters:
+    // - Native runtime (std): always use real adapters.
+    // - WASM runtime (no_std): keep mock adapters until real no_std adapters are available.
+    #[cfg(feature = "std")]
     type EvmAdapter = native_vm_adapters::NativeEvmAdapter;
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
+    #[cfg(feature = "std")]
     type SvmAdapter = native_vm_adapters::NativeSvmAdapter;
-    #[cfg(all(feature = "std", feature = "native-real-vm-adapters"))]
+    #[cfg(feature = "std")]
     type X3Adapter = pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
-
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
+    #[cfg(not(feature = "std"))]
     type EvmAdapter = pallet_x3_kernel::MockEvmAdapter;
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
+    #[cfg(not(feature = "std"))]
     type SvmAdapter = pallet_x3_kernel::MockSvmAdapter;
-    #[cfg(not(all(feature = "std", feature = "native-real-vm-adapters")))]
+    #[cfg(not(feature = "std"))]
     type X3Adapter = pallet_x3_kernel::MockX3Adapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
@@ -512,22 +513,25 @@ impl pallet_atomic_trade_engine::Config for Runtime {
 #[cfg(feature = "std")]
 mod native_vm_adapters {
     use super::*;
-    use x3_svm_integration::{
-        RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
-    };
+    use codec::Encode;
     use fp_evm::{CallInfo, ExitReason};
+    use pallet_evm::Runner;
     use pallet_x3_kernel::{
         EvmExecutorAdapter, ExecutionLog, ExecutionReceipt, StateChange, SvmExecutorAdapter,
     };
-    use pallet_evm::Runner;
     use sp_core::H160;
     use sp_runtime::{
         traits::{SaturatedConversion, UniqueSaturatedInto},
         DispatchError,
     };
+    use x3_svm_integration::{
+        RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
+    };
 
     pub struct NativeEvmAdapter;
     pub struct NativeSvmAdapter;
+
+    const CANONICAL_NATIVE_ASSET_ID: AssetId = 0;
 
     impl EvmExecutorAdapter for NativeEvmAdapter {
         fn execute(payload: &[u8], gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
@@ -561,6 +565,7 @@ mod native_vm_adapters {
 
             if let Ok(info) = create_res {
                 let success = matches!(info.exit_reason, ExitReason::Succeed(_));
+                let state_changes = collect_evm_balance_changes(source, None, &info.logs);
                 return Ok(ExecutionReceipt {
                     success,
                     gas_used: info.used_gas.standard.unique_saturated_into(),
@@ -574,7 +579,7 @@ mod native_vm_adapters {
                             data: log.data,
                         })
                         .collect(),
-                    state_changes: Vec::new(),
+                    state_changes,
                 });
             }
 
@@ -597,7 +602,7 @@ mod native_vm_adapters {
             );
 
             match call_res {
-                Ok(info) => Ok(map_call_info_to_receipt(info)),
+                Ok(info) => Ok(map_call_info_to_receipt(info, source, Some(target))),
                 Err(_) => {
                     // As a safe fallback in tests or non-fully-initialized environments,
                     // delegate to the Kernel's mock adapter for deterministic behavior.
@@ -644,8 +649,13 @@ mod native_vm_adapters {
         }
     }
 
-    fn map_call_info_to_receipt(info: CallInfo) -> ExecutionReceipt {
+    fn map_call_info_to_receipt(
+        info: CallInfo,
+        source: H160,
+        target: Option<H160>,
+    ) -> ExecutionReceipt {
         let success = matches!(info.exit_reason, ExitReason::Succeed(_));
+        let state_changes = collect_evm_balance_changes(source, target, &info.logs);
         ExecutionReceipt {
             success,
             gas_used: info.used_gas.standard.unique_saturated_into(),
@@ -659,7 +669,7 @@ mod native_vm_adapters {
                     data: log.data,
                 })
                 .collect(),
-            state_changes: Vec::new(), // State tracked by pallet-evm
+            state_changes,
         }
     }
 
@@ -727,12 +737,77 @@ mod native_vm_adapters {
                 .account_updates
                 .into_iter()
                 .map(|update| StateChange {
+                    // SVM pubkeys are 32 bytes and can be decoded by the kernel as AccountId32.
                     address: update.pubkey.to_vec(),
-                    key: H256::from_low_u64_be(update.lamports),
-                    value: truncate_to_h256(&update.data),
+                    key: canonical_asset_key(CANONICAL_NATIVE_ASSET_ID),
+                    value: canonical_balance_value(update.lamports as Balance),
                 })
                 .collect(),
         }
+    }
+
+    fn collect_evm_balance_changes(
+        source: H160,
+        target: Option<H160>,
+        logs: &[fp_evm::Log],
+    ) -> Vec<StateChange> {
+        let mut touched = Vec::<H160>::new();
+        let mut push_unique = |address: H160| {
+            if !touched.iter().any(|existing| *existing == address) {
+                touched.push(address);
+            }
+        };
+
+        push_unique(source);
+        if let Some(address) = target {
+            push_unique(address);
+        }
+        for log in logs {
+            push_unique(log.address);
+        }
+
+        touched
+            .into_iter()
+            .map(|evm_address| {
+                let account_id: AccountId = <pallet_evm::HashedAddressMapping<
+                    sp_runtime::traits::BlakeTwo256,
+                > as pallet_evm::AddressMapping<AccountId>>::into_account_id(
+                    evm_address
+                );
+                let balance: Balance =
+                    pallet_balances::Pallet::<super::Runtime>::free_balance(&account_id);
+                StateChange {
+                    // Canonical ledger decoding expects SCALE-encoded account IDs.
+                    address: encode_account_address(&account_id),
+                    key: canonical_asset_key(CANONICAL_NATIVE_ASSET_ID),
+                    value: canonical_balance_value(balance),
+                }
+            })
+            .collect()
+    }
+
+    fn encode_account_address(account_id: &AccountId) -> Vec<u8> {
+        let encoded = account_id.encode();
+        if encoded.len() == 32 {
+            return encoded;
+        }
+
+        let mut padded = [0u8; 32];
+        let copy_len = core::cmp::min(32, encoded.len());
+        padded[..copy_len].copy_from_slice(&encoded[..copy_len]);
+        padded.to_vec()
+    }
+
+    fn canonical_asset_key(asset_id: AssetId) -> H256 {
+        let mut out = [0u8; 32];
+        out[..core::mem::size_of::<AssetId>()].copy_from_slice(&asset_id.to_le_bytes());
+        H256::from(out)
+    }
+
+    fn canonical_balance_value(balance: Balance) -> H256 {
+        let mut out = [0u8; 32];
+        out[..core::mem::size_of::<Balance>()].copy_from_slice(&balance.to_le_bytes());
+        H256::from(out)
     }
 
     fn truncate_to_h256(data: &[u8]) -> H256 {
@@ -1413,6 +1488,57 @@ impl_runtime_apis! {
         }
     }
 
+    impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
+        fn query_info(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_info(uxt, len)
+        }
+
+        fn query_fee_details(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_fee_details(uxt, len)
+        }
+
+        fn query_weight_to_fee(weight: Weight) -> Balance {
+            TransactionPayment::weight_to_fee(weight)
+        }
+
+        fn query_length_to_fee(length: u32) -> Balance {
+            TransactionPayment::length_to_fee(length)
+        }
+    }
+
+    impl
+        pallet_transaction_payment_rpc_runtime_api::TransactionPaymentCallApi<Block, Balance, RuntimeCall>
+        for Runtime
+    {
+        fn query_call_info(
+            call: RuntimeCall,
+            len: u32,
+        ) -> pallet_transaction_payment::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_call_info(call, len)
+        }
+
+        fn query_call_fee_details(
+            call: RuntimeCall,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_call_fee_details(call, len)
+        }
+
+        fn query_weight_to_fee(weight: Weight) -> Balance {
+            TransactionPayment::weight_to_fee(weight)
+        }
+
+        fn query_length_to_fee(length: u32) -> Balance {
+            TransactionPayment::length_to_fee(length)
+        }
+    }
+
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
             OpaqueMetadata::new(Runtime::metadata().into())
@@ -1649,6 +1775,15 @@ pub fn x3_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
     ]
 }
 
+#[cfg(feature = "std")]
+pub fn runtime_uses_mock_vm_adapters() -> bool {
+    let evm = core::any::type_name::<<Runtime as pallet_x3_kernel::Config>::EvmAdapter>();
+    let svm = core::any::type_name::<<Runtime as pallet_x3_kernel::Config>::SvmAdapter>();
+    let x3 = core::any::type_name::<<Runtime as pallet_x3_kernel::Config>::X3Adapter>();
+
+    evm.contains("MockEvmAdapter") || svm.contains("MockSvmAdapter") || x3.contains("MockX3Adapter")
+}
+
 #[cfg(all(test, feature = "std"))]
 mod vm_adapter_tests {
     use super::*;
@@ -1659,7 +1794,8 @@ mod vm_adapter_tests {
         // Test that NativeEvmAdapter uses real Frontier
         let simple_evm_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xf3]; // PUSH1 0 PUSH1 0 RETURN
         sp_io::TestExternalities::default().execute_with(|| {
-            let result = native_vm_adapters::NativeEvmAdapter::execute(&simple_evm_bytecode, 100_000);
+            let result =
+                native_vm_adapters::NativeEvmAdapter::execute(&simple_evm_bytecode, 100_000);
             // Debug: print result to stderr to capture runner error details during test
             eprintln!("NativeEvmAdapter.execute result = {:?}", result);
             assert!(result.is_ok());
@@ -1677,7 +1813,8 @@ mod vm_adapter_tests {
             0x95, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exit
         ];
         sp_io::TestExternalities::default().execute_with(|| {
-            let result = native_vm_adapters::NativeSvmAdapter::execute(&simple_bpf_program, 100_000);
+            let result =
+                native_vm_adapters::NativeSvmAdapter::execute(&simple_bpf_program, 100_000);
             assert!(result.is_ok());
             let receipt = result.unwrap();
             assert!(receipt.success);
