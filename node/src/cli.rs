@@ -56,6 +56,10 @@ pub struct NodeFeatureFlags {
     /// Require GPU path for validation critical flows. Defaults to false for safe CPU fallback.
     #[arg(long, default_value_t = false)]
     pub gpu_required: bool,
+
+    /// Enable GPU signature verification in shadow validation tasks.
+    #[arg(long, default_value_t = false)]
+    pub enable_gpu_validation: bool,
 }
 
 /// X3 Chain node subcommands.

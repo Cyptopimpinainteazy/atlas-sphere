@@ -440,6 +440,7 @@ pub fn run() -> CliResult<()> {
                 enable_flash_finality: cli.features.enable_flash_finality,
                 enable_poh: cli.features.enable_poh,
                 gpu_required: cli.features.gpu_required,
+                enable_gpu_validation: cli.features.enable_gpu_validation,
             };
 
             runner.run_node_until_exit(|config| async move {

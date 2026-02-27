@@ -13,6 +13,7 @@ use sp_core::{crypto::KeyTypeId, Pair};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::oneshot;
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -39,6 +40,7 @@ pub struct NodeFeatureFlags {
     pub enable_flash_finality: bool,
     pub enable_poh: bool,
     pub gpu_required: bool,
+    pub enable_gpu_validation: bool,
 }
 
 /// X3 Chain native executor implementation
@@ -72,6 +74,49 @@ pub type FullBackend = sc_service::TFullBackend<Block>;
 
 /// Type alias for select chain implementation
 pub type SelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+
+fn spawn_gpu_validation_shadow(
+    spawn_handle: sc_service::SpawnTaskHandle,
+    gpu_required: bool,
+) {
+    spawn_handle.spawn("gpu-validation-shadow", None, async move {
+        let config = gpu_sig_verifier::VerifierConfig::default();
+        let verifier = gpu_sig_verifier::GPUSignatureVerifier::new(config);
+        let mut interval = tokio::time::interval(Duration::from_secs(10));
+
+        loop {
+            interval.tick().await;
+
+            let sample_signature = "shadow-signature";
+            let sample_payload = b"shadow-payload";
+            let gpu_result = verifier.verify_signature(sample_signature, sample_payload).await;
+
+            match gpu_result {
+                Ok(result) => {
+                    if !result.verified && gpu_required {
+                        log::warn!(
+                            "GPU validation required but sample verification failed: {:?}",
+                            result.error_message
+                        );
+                    } else {
+                        log::debug!(
+                            "GPU validation shadow check ok: verified={}, time_ms={}",
+                            result.verified,
+                            result.verification_time_ms
+                        );
+                    }
+                }
+                Err(err) => {
+                    if gpu_required {
+                        log::warn!("GPU validation required but verifier errored: {}", err);
+                    } else {
+                        log::debug!("GPU validation shadow errored: {}", err);
+                    }
+                }
+            }
+        }
+    });
+}
 
 /// Insert development keys into the keystore for block authoring.
 ///
@@ -330,6 +375,10 @@ pub fn new_full(
         log::warn!(
             "⚠️ --gpu-required=true is set; ensure CPU fallback is not relied on by your deployment policy."
         );
+    }
+    if feature_flags.enable_gpu_validation {
+        log::info!("GPU validation shadow mode enabled.");
+        spawn_gpu_validation_shadow(task_manager.spawn_handle(), feature_flags.gpu_required);
     }
 
     // Spawn core Substrate tasks (RPC, network, telemetry, txpool, offchain, etc.)
