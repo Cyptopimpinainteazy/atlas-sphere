@@ -142,12 +142,8 @@ parameter_types! {
     pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
     pub const DefaultX3GasLimit: u64 = 6_000_000;  // tuned for 200ms slots on commodity validators
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
-<<<<<<< HEAD
         // Keep max execution budget below slot time (200ms) to avoid author/import divergence.
         Weight::from_parts((WEIGHT_REF_TIME_PER_SECOND / 1000) * 150, 5 * 1024 * 1024),
-=======
-        Weight::from_parts(30 * WEIGHT_REF_TIME_PER_SECOND, 20 * 1024 * 1024), // 30s weight (aligned with 200ms blocks)
->>>>>>> fac1538ff (big push)
         Perbill::from_percent(90),
     );
     pub BlockLength: limits::BlockLength = limits::BlockLength::max_with_normal_ratio(

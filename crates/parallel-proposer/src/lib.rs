@@ -1,36 +1,18 @@
-<<<<<<< HEAD
 //! Deterministic parallel proposer primitives.
 //!
 //! This crate is intentionally runtime-agnostic: it models deterministic scheduling,
 //! shard execution, and serial fallback behavior used by a production proposer.
 //! ML contention prediction is treated as a hint only.
-=======
-//! Parallel Proposer Module
-//!
-//! Implements parallel block proposal with GPU-accelerated signature verification
-//! and contention prediction for optimal transaction ordering.
->>>>>>> fac1538ff (big push)
 
 use anyhow::{anyhow, Result};
 use blake3::Hasher;
 use serde::{Deserialize, Serialize};
-<<<<<<< HEAD
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 
 /// Transaction metadata consumed by the proposer.
-=======
-use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use tokio::sync::mpsc;
-use tokio::time::Instant;
-use tracing::{debug, info, warn};
-
-/// Transaction metadata for parallel processing
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionMeta {
     pub tx_hash: String,
@@ -45,7 +27,6 @@ pub struct TransactionMeta {
     pub timestamp: u64,
 }
 
-<<<<<<< HEAD
 /// Deterministic access declaration (parallel-eligible path).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DeclaredAccess {
@@ -54,9 +35,6 @@ pub struct DeclaredAccess {
 }
 
 /// Parallel proposal configuration.
-=======
-/// Parallel proposal configuration
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProposalConfig {
     pub max_parallelism: usize,
@@ -64,10 +42,7 @@ pub struct ProposalConfig {
     pub gpu_batch_size: usize,
     pub timeout_seconds: u64,
     pub signature_batch_size: usize,
-<<<<<<< HEAD
     pub min_predictor_confidence: f32,
-=======
->>>>>>> fac1538ff (big push)
 }
 
 impl Default for ProposalConfig {
@@ -78,19 +53,12 @@ impl Default for ProposalConfig {
             gpu_batch_size: 256,
             timeout_seconds: 30,
             signature_batch_size: 64,
-<<<<<<< HEAD
             min_predictor_confidence: 0.8,
-=======
->>>>>>> fac1538ff (big push)
         }
     }
 }
 
-<<<<<<< HEAD
 /// Contention prediction for observability.
-=======
-/// Contention prediction result
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContentionPrediction {
     pub tx_hash: String,
@@ -99,11 +67,7 @@ pub struct ContentionPrediction {
     pub priority: u8,
 }
 
-<<<<<<< HEAD
 /// Parallel proposal output.
-=======
-/// Parallel proposal result
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProposalResult {
     pub block_hash: String,
@@ -112,18 +76,12 @@ pub struct ProposalResult {
     pub contention_predictions: Vec<ContentionPrediction>,
     pub verification_stats: VerificationStats,
     pub processing_time_ms: u64,
-<<<<<<< HEAD
     pub parallel_shards: Vec<Vec<String>>,
     pub serial_fallback_txs: Vec<String>,
     pub used_serial_fallback: bool,
 }
 
 /// Signature verification statistics.
-=======
-}
-
-/// GPU verification statistics
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationStats {
     pub total_verified: usize,
@@ -133,7 +91,6 @@ pub struct VerificationStats {
     pub gpu_utilization_percent: f64,
 }
 
-<<<<<<< HEAD
 /// Parallel proposer core.
 pub struct ParallelProposer {
     config: ProposalConfig,
@@ -317,125 +274,10 @@ impl ParallelProposer {
             contention_predictions: state.contention_stats.clone(),
             gpu_stats: state.gpu_stats.clone(),
             proposal_id: state.proposal_id,
-=======
-/// Parallel proposer core
-pub struct ParallelProposer {
-    config: ProposalConfig,
-    gpu_client: Arc<Mutex<GPUClient>>,
-    contention_predictor: Arc<Mutex<ContentionPredictor>>,
-    tx_pool: Arc<Mutex<TransactionPool>>,
-    proposal_id: u64,
-}
-
-impl ParallelProposer {
-    /// Create a new parallel proposer
-    pub fn new(config: ProposalConfig) -> Self {
-        Self {
-            config,
-            gpu_client: Arc::new(Mutex::new(GPUClient::new())),
-            contention_predictor: Arc::new(Mutex::new(ContentionPredictor::new())),
-            tx_pool: Arc::new(Mutex::new(TransactionPool::new())),
-            proposal_id: 0,
-        }
-    }
-
-    /// Submit transaction to pool
-    pub async fn submit_transaction(&self, tx: TransactionMeta) -> Result<()> {
-        let mut pool = self.tx_pool.lock().await;
-        pool.add_transaction(tx).await?;
-        Ok(())
-    }
-
-    /// Create parallel proposal
-    pub async fn create_proposal(&mut self) -> Result<ProposalResult> {
-        let start_time = Instant::now();
-        self.proposal_id += 1;
-
-        let mut pool = self.tx_pool.lock().await;
-        let mut predictor = self.contention_predictor.lock().await;
-        let mut gpu = self.gpu_client.lock().await;
-
-        // Get transactions from pool
-        let txs = pool.get_transactions(self.config.max_parallelism).await?;
-        if txs.is_empty() {
-            return Err(anyhow!("No transactions available for proposal"));
-        }
-
-        // Predict contention
-        let predictions = predictor.predict_contention(&txs).await?;
-
-        // Sort by contention score and priority
-        let mut sorted_txs: Vec<_> = txs.into_iter().enumerate().collect();
-        sorted_txs.sort_by(|a, b| {
-            let a_score = predictions
-                .get(&a.1.tx_hash)
-                .map(|p| p.contention_score)
-                .unwrap(0.0);
-            let b_score = predictions
-                .get(&b.1.tx_hash)
-                .map(|p| p.contention_score)
-                .unwrap(0.0);
-            b_score.partial_cmp(&a_score).unwrap()
-        });
-
-        // Extract sorted transactions and execution order
-        let (indices, sorted_txs): (Vec<_>, Vec<_>) = sorted_txs.into_iter().unzip();
-        let execution_order: Vec<usize> = indices.into_iter().map(|(i, _)| i).collect();
-
-        // Batch signature verification using GPU
-        let verification_results = gpu
-            .verify_signatures(&sorted_txs, self.config.signature_batch_size)
-            .await?;
-
-        // Filter valid transactions
-        let valid_txs: Vec<_> = sorted_txs
-            .into_iter()
-            .zip(verification_results)
-            .filter(|(_, result)| result.is_ok())
-            .map(|(tx, _)| tx)
-            .collect();
-
-        // Create block hash
-        let block_hash = self.create_block_hash(&valid_txs);
-
-        let processing_time = start_time.elapsed().as_millis() as u64;
-
-        Ok(ProposalResult {
-            block_hash,
-            transactions: valid_txs,
-            execution_order,
-            contention_predictions: predictions.values().cloned().collect(),
-            verification_stats: gpu.get_verification_stats(),
-            processing_time_ms: processing_time,
-        })
-    }
-
-    /// Create block hash from transactions
-    fn create_block_hash(&self, txs: &[TransactionMeta]) -> String {
-        let mut hasher = Hasher::new();
-        for tx in txs {
-            hasher.update(tx.tx_hash.as_bytes());
-        }
-        format!("{}", hasher.finalize().to_hex())
-    }
-
-    /// Get proposal statistics
-    pub async fn get_stats(&self) -> ProposalStats {
-        let pool = self.tx_pool.lock().await;
-        let predictor = self.contention_predictor.lock().await;
-        let gpu = self.gpu_client.lock().await;
-
-        ProposalStats {
-            pending_txs: pool.len(),
-            contention_predictions: predictor.get_stats(),
-            gpu_stats: gpu.get_stats(),
-            proposal_id: self.proposal_id,
->>>>>>> fac1538ff (big push)
         }
     }
 }
 
-<<<<<<< HEAD
 fn create_block_hash(txs: &[TransactionMeta]) -> String {
     let mut hasher = Hasher::new();
     for tx in txs {
@@ -444,9 +286,6 @@ fn create_block_hash(txs: &[TransactionMeta]) -> String {
     hasher.finalize().to_hex().to_string()
 }
 
-=======
-/// Proposal statistics
->>>>>>> fac1538ff (big push)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProposalStats {
     pub pending_txs: usize,
@@ -455,12 +294,7 @@ pub struct ProposalStats {
     pub proposal_id: u64,
 }
 
-<<<<<<< HEAD
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-=======
-/// Contention prediction statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
->>>>>>> fac1538ff (big push)
 pub struct ContentionStats {
     pub total_predictions: usize,
     pub high_contention: usize,
@@ -469,12 +303,7 @@ pub struct ContentionStats {
     pub accuracy: f64,
 }
 
-<<<<<<< HEAD
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-=======
-/// GPU statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
->>>>>>> fac1538ff (big push)
 pub struct GPUStats {
     pub utilization_percent: f64,
     pub memory_usage_mb: u64,
@@ -482,7 +311,6 @@ pub struct GPUStats {
     pub power_draw_w: f64,
 }
 
-<<<<<<< HEAD
 struct SignatureVerifier;
 
 impl SignatureVerifier {
@@ -767,197 +595,10 @@ fn detect_overlay_conflict(diff_sets: &[OverlayDiff]) -> bool {
 
 pub mod integration;
 
-=======
-/// Transaction pool
-struct TransactionPool {
-    transactions: HashMap<String, TransactionMeta>,
-    pending_hashes: Vec<String>,
-}
-
-impl TransactionPool {
-    fn new() -> Self {
-        Self {
-            transactions: HashMap::new(),
-            pending_hashes: Vec::new(),
-        }
-    }
-
-    async fn add_transaction(&mut self, tx: TransactionMeta) -> Result<()> {
-        if self.transactions.contains_key(&tx.tx_hash) {
-            return Err(anyhow!("Transaction already in pool"));
-        }
-
-        self.transactions.insert(tx.tx_hash.clone(), tx);
-        self.pending_hashes.push(tx.tx_hash.clone());
-        Ok(())
-    }
-
-    async fn get_transactions(&mut self, max_count: usize) -> Result<Vec<TransactionMeta>> {
-        let count = std::cmp::min(max_count, self.pending_hashes.len());
-        let selected_hashes = self.pending_hashes.drain(..count);
-        let txs: Vec<_> = selected_hashes
-            .filter_map(|hash| self.transactions.remove(&hash))
-            .collect();
-        Ok(txs)
-    }
-
-    fn len(&self) -> usize {
-        self.pending_hashes.len()
-    }
-}
-
-/// Contention predictor
-struct ContentionPredictor {
-    model: Option<ContentionModel>,
-}
-
-impl ContentionPredictor {
-    fn new() -> Self {
-        Self { model: None }
-    }
-
-    async fn predict_contention(
-        &mut self,
-        txs: &[TransactionMeta],
-    ) -> Result<HashMap<String, ContentionPrediction>> {
-        if self.model.is_none() {
-            self.model = Some(ContentionModel::load_default().await?);
-        }
-
-        let model = self.model.as_mut().unwrap();
-        let mut predictions = HashMap::new();
-
-        for tx in txs {
-            let prediction = model.predict(tx).await?;
-            predictions.insert(tx.tx_hash.clone(), prediction);
-        }
-
-        Ok(predictions)
-    }
-
-    fn get_stats(&self) -> ContentionStats {
-        // TODO: Implement actual stats tracking
-        ContentionStats {
-            total_predictions: 0,
-            high_contention: 0,
-            medium_contention: 0,
-            low_contention: 0,
-            accuracy: 0.0,
-        }
-    }
-}
-
-/// Contention prediction model
-struct ContentionModel {
-    // Model parameters would be stored here
-}
-
-impl ContentionModel {
-    async fn load_default() -> Result<Self> {
-        // Load or initialize default model
-        Ok(Self {})
-    }
-
-    async fn predict(&self, tx: &TransactionMeta) -> Result<ContentionPrediction> {
-        // Simple heuristic-based prediction
-        let contention_score = if tx.value > 1_000_000_000 {
-            0.9
-        } else if tx.gas_price > 100_000_000 {
-            0.7
-        } else {
-            0.3
-        };
-
-        let priority = if contention_score > 0.8 {
-            1
-        } else if contention_score > 0.5 {
-            2
-        } else {
-            3
-        };
-
-        Ok(ContentionPrediction {
-            tx_hash: tx.tx_hash.clone(),
-            contention_score,
-            conflicting_txs: Vec::new(),
-            priority,
-        })
-    }
-}
-
-/// GPU client for signature verification
-struct GPUClient {
-    // GPU context and resources would be managed here
-}
-
-impl GPUClient {
-    fn new() -> Self {
-        Self {}
-    }
-
-    async fn verify_signatures(
-        &mut self,
-        txs: &[TransactionMeta],
-        batch_size: usize,
-    ) -> Result<Vec<Result<(), String>>> {
-        // Simulate GPU verification with batch processing
-        let mut results = Vec::with_capacity(txs.len());
-
-        for chunk in txs.chunks(batch_size) {
-            let batch_results = self.verify_batch(chunk).await?;
-            results.extend(batch_results);
-        }
-
-        Ok(results)
-    }
-
-    async fn verify_batch(&mut self, txs: &[TransactionMeta]) -> Result<Vec<Result<(), String>>> {
-        // Simulate verification with random success/failure
-        let mut results = Vec::with_capacity(txs.len());
-
-        for tx in txs {
-            if Self::simulate_verification(tx) {
-                results.push(Ok(()));
-            } else {
-                results.push(Err("Invalid signature".to_string()));
-            }
-        }
-
-        Ok(results)
-    }
-
-    fn simulate_verification(tx: &TransactionMeta) -> bool {
-        // Simple validation - in real implementation this would use GPU acceleration
-        !tx.signature.is_empty() && tx.signature.len() > 64
-    }
-
-    fn get_verification_stats(&self) -> VerificationStats {
-        // Return simulated stats
-        VerificationStats {
-            total_verified: 100,
-            successful_verifications: 95,
-            failed_verifications: 5,
-            average_verification_time_ms: 2.5,
-            gpu_utilization_percent: 75.0,
-        }
-    }
-
-    fn get_stats(&self) -> GPUStats {
-        GPUStats {
-            utilization_percent: 75.0,
-            memory_usage_mb: 2048,
-            temperature_c: 65.0,
-            power_draw_w: 150.0,
-        }
-    }
-}
-
->>>>>>> fac1538ff (big push)
 #[cfg(test)]
 mod tests {
     use super::*;
 
-<<<<<<< HEAD
     fn mk_tx(id: &str, signature: &str) -> TransactionMeta {
         TransactionMeta {
             tx_hash: id.to_string(),
@@ -1052,72 +693,5 @@ mod tests {
         let proposal = proposer.create_proposal().await.unwrap();
         assert!(proposal.serial_fallback_txs.len() <= 1);
         assert_eq!(proposal.transactions.len(), 2);
-=======
-    #[tokio::test]
-    async fn test_parallel_proposer_basic_flow() {
-        let config = ProposalConfig::default();
-        let mut proposer = ParallelProposer::new(config);
-
-        // Create test transactions
-        let tx1 = TransactionMeta {
-            tx_hash: "tx1".to_string(),
-            sender: "0x1234".to_string(),
-            receiver: "0x5678".to_string(),
-            value: 1_000_000_000,
-            gas_limit: 21_000,
-            gas_price: 20_000_000,
-            nonce: 1,
-            signature: "valid_sig1".to_string(),
-            contract_address: None,
-            timestamp: 1234567890,
-        };
-
-        let tx2 = TransactionMeta {
-            tx_hash: "tx2".to_string(),
-            sender: "0x2345".to_string(),
-            receiver: "0x6789".to_string(),
-            value: 500_000_000,
-            gas_limit: 21_000,
-            gas_price: 30_000_000,
-            nonce: 1,
-            signature: "valid_sig2".to_string(),
-            contract_address: None,
-            timestamp: 1234567891,
-        };
-
-        // Submit transactions
-        proposer.submit_transaction(tx1.clone()).await.unwrap();
-        proposer.submit_transaction(tx2.clone()).await.unwrap();
-
-        // Create proposal
-        let proposal = proposer.create_proposal().await.unwrap();
-
-        assert!(!proposal.block_hash.is_empty());
-        assert_eq!(proposal.transactions.len(), 2);
-        assert!(!proposal.execution_order.is_empty());
-    }
-
-    #[tokio::test]
-    async fn test_contention_prediction() {
-        let mut predictor = ContentionPredictor::new();
-        let tx = TransactionMeta {
-            tx_hash: "test_tx".to_string(),
-            sender: "0x1234".to_string(),
-            receiver: "0x5678".to_string(),
-            value: 2_000_000_000,
-            gas_limit: 21_000,
-            gas_price: 50_000_000,
-            nonce: 1,
-            signature: "valid_sig".to_string(),
-            contract_address: None,
-            timestamp: 1234567890,
-        };
-
-        let predictions = predictor.predict_contention(&[tx.clone()]).await.unwrap();
-        let prediction = predictions.get(&tx.tx_hash).unwrap();
-
-        assert!(prediction.contention_score > 0.5);
-        assert!(prediction.priority <= 3);
->>>>>>> fac1538ff (big push)
     }
 }

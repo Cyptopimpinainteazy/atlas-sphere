@@ -27,13 +27,17 @@ const AURA: KeyTypeId = KeyTypeId(*b"aura");
 /// Key type for GRANDPA finality
 const GRANDPA: KeyTypeId = KeyTypeId(*b"gran");
 
+/// Txpool sizing aligned to X3 throughput targets.
+/// Default Substrate pool (8 192/512) is 12x too small for 100k TPS goals.
+/// Tuned per audit recommendation: 100k ready / 50k future, 256 MiB / 64 MiB.
 const TX_POOL_READY_COUNT: usize = 100_000;
 const TX_POOL_FUTURE_COUNT: usize = 50_000;
-const TX_POOL_TOTAL_BYTES: usize = 20 * 1024 * 1024;
-const TX_POOL_BAN_TIME_SECS: u64 = 30;
+const TX_POOL_READY_BYTES: usize = 256 * 1024 * 1024; // 256 MiB
+const TX_POOL_FUTURE_BYTES: usize = 64 * 1024 * 1024; // 64 MiB
+const TX_POOL_BAN_TIME_SECS: u64 = 60; // 60s ban (vs default 1800s) — faster retry under burst
 
-<<<<<<< HEAD
 /// Rollout feature flags for consensus and execution paths.
+/// All flags default to off; enable per-validator via CLI or env on canary set first.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NodeFeatureFlags {
     pub enable_parallel_proposer: bool,
@@ -41,9 +45,6 @@ pub struct NodeFeatureFlags {
     pub enable_poh: bool,
     pub gpu_required: bool,
 }
-
-=======
->>>>>>> fac1538ff (big push)
 /// X3 Chain native executor implementation
 pub struct AtlasSphereExecutorDispatch;
 
@@ -131,10 +132,13 @@ fn maybe_insert_dev_keys(
 fn tuned_transaction_pool_options(
     mut options: sc_transaction_pool::Options,
 ) -> sc_transaction_pool::Options {
+    // Count caps: 100k ready / 50k future (audit recommendation for 100k TPS target)
     options.ready.count = options.ready.count.max(TX_POOL_READY_COUNT);
     options.future.count = options.future.count.max(TX_POOL_FUTURE_COUNT);
-    options.ready.total_bytes = options.ready.total_bytes.max(TX_POOL_TOTAL_BYTES);
-    options.future.total_bytes = options.future.total_bytes.max(TX_POOL_TOTAL_BYTES);
+    // Byte caps: 256 MiB ready / 64 MiB future — aligned with large burst tx sets
+    options.ready.total_bytes = options.ready.total_bytes.max(TX_POOL_READY_BYTES);
+    options.future.total_bytes = options.future.total_bytes.max(TX_POOL_FUTURE_BYTES);
+    // Ban time: 60s instead of default 1800s — faster retry for legitimate bursts
     options.ban_time = Duration::from_secs(TX_POOL_BAN_TIME_SECS);
     options
 }
@@ -258,14 +262,10 @@ pub fn new_partial(
 }
 
 /// Start a new X3 Chain full node with complete consensus and networking
-<<<<<<< HEAD
 pub fn new_full(
     mut config: Configuration,
     feature_flags: NodeFeatureFlags,
 ) -> Result<TaskManager, ServiceError> {
-=======
-pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> {
->>>>>>> fac1538ff (big push)
     tune_transaction_pool_config(&mut config);
     let sc_service::PartialComponents {
         client,
