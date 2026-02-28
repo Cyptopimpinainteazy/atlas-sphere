@@ -4,10 +4,10 @@
 import React, { useState, useMemo } from "react";
 import { useWalletStore } from "@/stores/walletStore";
 import { 
-  Shield, Key, Lock, Fingerprint, Cpu, HardDrive, 
-  History, CheckCircle2, 
-  Clock, ShieldCheck, Sparkles, Eye, AlertTriangle, ShieldAlert, Gauge
-} from "lucide-react";
+  Shield, Key, Lock, Fingerprint, Cpu,
+  ShieldCheck, Clock, CheckCircle2, History,
+  Eye, AlertTriangle, ShieldAlert, Gauge, HardDrive, Sparkles
+} from 'lucide-react';
 
 interface KeyEntry {
   id: string;
