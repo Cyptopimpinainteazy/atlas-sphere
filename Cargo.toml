@@ -71,6 +71,10 @@ members = [
     "crates/x3-bot",
     "crates/atomic-swap-orchestrator",
     "crates/x3-turbine",
+    # Phase 3-5: Flash Finality, PoH, Atomic Kernel (audit implementation)
+    "crates/flash-finality",
+    "crates/poh-generator",
+    "pallets/x3-atomic-kernel",
 ]
 default-members = ["node"]
 resolver = "2"

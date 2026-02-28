@@ -1,0 +1,13 @@
+[package]
+name = "x3-poh-generator"
+version = "0.1.0"
+edition = "2021"
+description = "Proof of History digest generator — verifiable time ordering for X3 blocks"
+license = "Apache-2.0"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+hex = "0.4"
+tracing = "0.1"
+anyhow = "1"
