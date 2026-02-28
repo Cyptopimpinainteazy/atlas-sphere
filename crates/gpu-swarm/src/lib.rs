@@ -89,6 +89,8 @@ pub mod funding;
 pub mod gpu_backends;
 pub mod jobs;
 pub mod monitoring;
+/// Phase 7: Multi-device dispatch with attestation, weighted routing, k-redundancy.
+pub mod multi_dispatch;
 pub mod network;
 pub mod node;
 pub mod protocol;
