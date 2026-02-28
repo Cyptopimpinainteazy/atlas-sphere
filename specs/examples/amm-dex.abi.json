@@ -1,0 +1,270 @@
+{
+  "name": "ConstantProductAMM",
+  "version": "1.0.0",
+  "description": "Constant product automated market maker (x*y=k) with cross-VM atomic swaps",
+  "author": "X3 Chain Team",
+  "license": "MIT",
+  "compiler": {
+    "name": "x3c",
+    "version": "0.1.0"
+  },
+  "types": {
+    "PoolId": {
+      "kind": "alias",
+      "underlying": "bytes32"
+    },
+    "SwapDirection": {
+      "kind": "enum",
+      "variants": ["TokenAToB", "TokenBToA"]
+    },
+    "Pool": {
+      "kind": "struct",
+      "fields": [
+        {
+          "name": "token_a",
+          "type": "address",
+          "description": "First token address"
+        },
+        {
+          "name": "token_b",
+          "type": "address",
+          "description": "Second token address"
+        },
+        {
+          "name": "reserve_a",
+          "type": "u256",
+          "description": "Reserve of token A"
+        },
+        {
+          "name": "reserve_b",
+          "type": "u256",
+          "description": "Reserve of token B"
+        },
+        {
+          "name": "lp_supply",
+          "type": "u256",
+          "description": "Total LP token supply"
+        },
+        {
+          "name": "fee_bps",
+          "type": "u16",
+          "description": "Fee in basis points (30 = 0.3%)"
+        }
+      ]
+    }
+  },
+  "storage": {
+    "pools": {
+      "type": "Map<PoolId, Pool>",
+      "slot": 0,
+      "description": "Pool ID => Pool data"
+    },
+    "lp_balances": {
+      "type": "Map<PoolId, Map<address, u256>>",
+      "slot": 1,
+      "description": "LP token balances per pool"
+    },
+    "owner": {
+      "type": "address",
+      "slot": 2,
+      "description": "Contract owner for fee updates"
+    }
+  },
+  "functions": [
+    {
+      "name": "create_pool",
+      "inputs": [
+        { "name": "token_a", "type": "address" },
+        { "name": "token_b", "type": "address" },
+        { "name": "amount_a", "type": "u256" },
+        { "name": "amount_b", "type": "u256" },
+        { "name": "fee_bps", "type": "u16" }
+      ],
+      "outputs": [{ "name": "pool_id", "type": "PoolId" }],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Create a new liquidity pool",
+      "gas_estimate": 150000
+    },
+    {
+      "name": "add_liquidity",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId" },
+        { "name": "amount_a_desired", "type": "u256" },
+        { "name": "amount_b_desired", "type": "u256" },
+        { "name": "amount_a_min", "type": "u256" },
+        { "name": "amount_b_min", "type": "u256" }
+      ],
+      "outputs": [
+        { "name": "amount_a", "type": "u256" },
+        { "name": "amount_b", "type": "u256" },
+        { "name": "lp_tokens", "type": "u256" }
+      ],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Add liquidity to pool, receive LP tokens",
+      "gas_estimate": 100000
+    },
+    {
+      "name": "remove_liquidity",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId" },
+        { "name": "lp_amount", "type": "u256" },
+        { "name": "amount_a_min", "type": "u256" },
+        { "name": "amount_b_min", "type": "u256" }
+      ],
+      "outputs": [
+        { "name": "amount_a", "type": "u256" },
+        { "name": "amount_b", "type": "u256" }
+      ],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Burn LP tokens to receive underlying",
+      "gas_estimate": 80000
+    },
+    {
+      "name": "swap",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId" },
+        { "name": "amount_in", "type": "u256" },
+        { "name": "min_amount_out", "type": "u256" },
+        { "name": "direction", "type": "SwapDirection" }
+      ],
+      "outputs": [{ "name": "amount_out", "type": "u256" }],
+      "visibility": "public",
+      "mutability": "mutable",
+      "description": "Swap tokens using constant product formula",
+      "gas_estimate": 70000,
+      "examples": [
+        {
+          "description": "Swap 100 token A for token B",
+          "inputs": {
+            "pool_id": "0x...",
+            "amount_in": "100000000000000000000",
+            "min_amount_out": "95000000000000000000",
+            "direction": "TokenAToB"
+          },
+          "outputs": { "amount_out": "98500000000000000000" }
+        }
+      ]
+    },
+    {
+      "name": "swap_atomic",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId" },
+        { "name": "amount_in", "type": "u256" },
+        { "name": "min_amount_out", "type": "u256" },
+        { "name": "direction", "type": "SwapDirection" },
+        {
+          "name": "recipient_vm",
+          "type": "u8",
+          "description": "0=native, 1=EVM, 2=SVM"
+        },
+        { "name": "recipient", "type": "bytes32" }
+      ],
+      "outputs": [{ "name": "amount_out", "type": "u256" }],
+      "visibility": "public",
+      "mutability": "mutable",
+      "atomic": true,
+      "description": "Atomic cross-VM swap - executes in Comit transaction",
+      "gas_estimate": 200000
+    },
+    {
+      "name": "get_quote",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId" },
+        { "name": "amount_in", "type": "u256" },
+        { "name": "direction", "type": "SwapDirection" }
+      ],
+      "outputs": [
+        { "name": "amount_out", "type": "u256" },
+        { "name": "price_impact_bps", "type": "u16" }
+      ],
+      "visibility": "public",
+      "mutability": "view",
+      "description": "Get swap quote without executing",
+      "gas_estimate": 5000
+    },
+    {
+      "name": "get_pool",
+      "inputs": [{ "name": "pool_id", "type": "PoolId" }],
+      "outputs": [{ "name": "pool", "type": "Pool" }],
+      "visibility": "public",
+      "mutability": "view",
+      "description": "Get pool data"
+    },
+    {
+      "name": "get_reserves",
+      "inputs": [{ "name": "pool_id", "type": "PoolId" }],
+      "outputs": [
+        { "name": "reserve_a", "type": "u256" },
+        { "name": "reserve_b", "type": "u256" }
+      ],
+      "visibility": "public",
+      "mutability": "view"
+    }
+  ],
+  "events": [
+    {
+      "name": "PoolCreated",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId", "indexed": true },
+        { "name": "token_a", "type": "address", "indexed": true },
+        { "name": "token_b", "type": "address", "indexed": true },
+        { "name": "fee_bps", "type": "u16", "indexed": false }
+      ]
+    },
+    {
+      "name": "Swap",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId", "indexed": true },
+        { "name": "sender", "type": "address", "indexed": true },
+        { "name": "amount_in", "type": "u256", "indexed": false },
+        { "name": "amount_out", "type": "u256", "indexed": false },
+        { "name": "direction", "type": "u8", "indexed": false }
+      ]
+    },
+    {
+      "name": "LiquidityAdded",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId", "indexed": true },
+        { "name": "provider", "type": "address", "indexed": true },
+        { "name": "amount_a", "type": "u256", "indexed": false },
+        { "name": "amount_b", "type": "u256", "indexed": false },
+        { "name": "lp_tokens", "type": "u256", "indexed": false }
+      ]
+    },
+    {
+      "name": "LiquidityRemoved",
+      "inputs": [
+        { "name": "pool_id", "type": "PoolId", "indexed": true },
+        { "name": "provider", "type": "address", "indexed": true },
+        { "name": "amount_a", "type": "u256", "indexed": false },
+        { "name": "amount_b", "type": "u256", "indexed": false },
+        { "name": "lp_tokens_burned", "type": "u256", "indexed": false }
+      ]
+    }
+  ],
+  "errors": [
+    { "name": "PoolExists", "inputs": [], "selector": "0x00000010" },
+    { "name": "PoolNotFound", "inputs": [], "selector": "0x00000011" },
+    { "name": "InsufficientLiquidity", "inputs": [], "selector": "0x00000012" },
+    {
+      "name": "SlippageExceeded",
+      "inputs": [
+        { "name": "expected", "type": "u256" },
+        { "name": "actual", "type": "u256" }
+      ],
+      "selector": "0x00000013"
+    },
+    { "name": "ZeroAmount", "inputs": [], "selector": "0x00000014" },
+    { "name": "InvalidTokenPair", "inputs": [], "selector": "0x00000015" }
+  ],
+  "safety": {
+    "audited": false,
+    "max_gas": 500000,
+    "deterministic": true,
+    "atomic_capable": true,
+    "cross_vm": ["evm", "svm"]
+  }
+}

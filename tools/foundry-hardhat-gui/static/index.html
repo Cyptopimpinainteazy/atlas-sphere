@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forge + Hardhat Control Deck</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere"></div>
+    <div class="grid-overlay"></div>
+
+    <main class="app-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Local Dev Command Center</p>
+          <h1>Forge + Hardhat + Ganache Deck</h1>
+          <p class="subtitle">
+            Discover projects, run Foundry/Hardhat commands, and manage a Ganache profile from one interface.
+          </p>
+        </div>
+        <div class="env-status" id="envStatus"></div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Quick Install Check</h2>
+          <span class="muted">Exact commands for missing tools</span>
+        </div>
+        <div id="installGrid" class="install-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Ganache Workspace</h2>
+          <div class="button-row">
+            <button id="refreshGanacheButton" class="button ghost">Refresh</button>
+            <button id="saveGanacheProfileButton" class="button ghost">Save Profile</button>
+            <button id="startGanacheButton" class="button">Start Profile</button>
+            <button id="stopGanacheButton" class="button danger">Stop Profile</button>
+          </div>
+        </div>
+
+        <div class="ganache-status-box">
+          <p id="ganacheStatusText" class="status-line"></p>
+          <p id="ganacheCapabilityText" class="muted"></p>
+          <p id="ganacheCommandPreview" class="mono small"></p>
+        </div>
+
+        <form id="ganacheForm" class="ganache-form" autocomplete="off">
+          <div class="field-grid two">
+            <label class="field">
+              <span>WORKSPACE NAME</span>
+              <input id="workspaceName" type="text" />
+            </label>
+            <label class="field">
+              <span>RPC HOST</span>
+              <input id="rpcHost" type="text" />
+            </label>
+            <label class="field">
+              <span>RPC PORT</span>
+              <input id="rpcPort" type="number" min="1" max="65535" />
+            </label>
+            <label class="field">
+              <span>CHAIN ID</span>
+              <input id="chainId" type="number" min="1" />
+            </label>
+          </div>
+
+          <h3>ACCOUNTS & KEYS</h3>
+          <div class="field-grid two">
+            <label class="field">
+              <span>ACCOUNT DEFAULT BALANCE (ETH)</span>
+              <input id="defaultBalance" type="text" />
+            </label>
+            <label class="field">
+              <span>TOTAL ACCOUNTS TO GENERATE</span>
+              <input id="totalAccounts" type="number" min="1" max="1000" />
+            </label>
+          </div>
+          <div class="field-grid two">
+            <label class="field checkbox">
+              <input id="autoGenerateMnemonic" type="checkbox" />
+              <span>AUTOGENERATE HD MNEMONIC</span>
+            </label>
+            <label class="field checkbox">
+              <input id="lockAccounts" type="checkbox" />
+              <span>LOCK ACCOUNTS</span>
+            </label>
+          </div>
+          <label class="field">
+            <span>MNEMONIC</span>
+            <textarea id="mnemonic" rows="2"></textarea>
+            <small class="field-note" id="mnemonicWarning"></small>
+          </label>
+
+          <h3>GAS + HARDFORK</h3>
+          <div class="field-grid three">
+            <label class="field">
+              <span>GAS LIMIT</span>
+              <input id="gasLimit" type="text" placeholder="Leave blank for default" />
+            </label>
+            <label class="field">
+              <span>GAS PRICE (WEI)</span>
+              <input id="gasPrice" type="text" placeholder="Leave blank for default" />
+            </label>
+            <label class="field">
+              <span>HARDFORK</span>
+              <select id="hardfork"></select>
+            </label>
+          </div>
+
+          <h3>LOGGING</h3>
+          <div class="field-grid two">
+            <label class="field checkbox">
+              <input id="outputLogsToFile" type="checkbox" />
+              <span>OUTPUT LOGS TO FILE</span>
+            </label>
+            <label class="field checkbox">
+              <input id="verboseLogs" type="checkbox" />
+              <span>VERBOSE LOGS</span>
+            </label>
+          </div>
+          <label class="field">
+            <span>LOG FILE DIRECTORY</span>
+            <input id="logFileDirectory" type="text" placeholder="Path to directory for timestamped logs" />
+          </label>
+
+          <h3>ANALYTICS</h3>
+          <label class="field checkbox">
+            <input id="googleAnalytics" type="checkbox" />
+            <span>GOOGLE ANALYTICS</span>
+          </label>
+          <p id="analyticsNote" class="field-note"></p>
+
+          <h3>TRUFFLE PROJECTS</h3>
+          <div class="button-row">
+            <input id="truffleProjectInput" class="input-inline" type="text" placeholder="Path to truffle-config.js or truffle.js" />
+            <button id="addTruffleProjectButton" type="button" class="button">Add Project</button>
+            <button id="removeTruffleProjectButton" type="button" class="button ghost">Remove Selected</button>
+          </div>
+          <ul id="truffleProjectList" class="truffle-list"></ul>
+        </form>
+      </section>
+
+      <section class="panel panel-projects">
+        <div class="panel-head">
+          <h2>Projects</h2>
+          <button id="refreshProjectsButton" class="button ghost">Rescan</button>
+        </div>
+        <div id="projectGrid" class="project-grid"></div>
+      </section>
+
+      <section class="panel panel-tasks">
+        <div class="panel-head">
+          <h2>Tasks</h2>
+          <span class="muted">Live status + logs</span>
+        </div>
+        <div id="taskList" class="task-list"></div>
+      </section>
+    </main>
+
+    <dialog id="logDialog" class="log-dialog">
+      <header class="dialog-head">
+        <h3 id="logTitle">Task Logs</h3>
+        <button id="closeLogButton" class="button ghost">Close</button>
+      </header>
+      <pre id="logContent" class="log-content"></pre>
+    </dialog>
+
+    <template id="projectCardTemplate">
+      <article class="project-card">
+        <div class="project-head">
+          <span class="tool-pill"></span>
+          <h3 class="project-name"></h3>
+        </div>
+        <p class="project-path"></p>
+        <div class="actions"></div>
+      </article>
+    </template>
+
+    <template id="taskItemTemplate">
+      <article class="task-item">
+        <div class="task-head">
+          <div>
+            <p class="task-title"></p>
+            <p class="task-cwd"></p>
+          </div>
+          <span class="status-pill"></span>
+        </div>
+        <p class="task-command"></p>
+        <div class="task-actions"></div>
+      </article>
+    </template>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+/home/lojak/Desktop/x3-chain-master/./target-local/debug/deps/adler2-812557bf3732267a.d: /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/lib.rs /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/algo.rs
+
+/home/lojak/Desktop/x3-chain-master/./target-local/debug/deps/libadler2-812557bf3732267a.rlib: /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/lib.rs /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/algo.rs
+
+/home/lojak/Desktop/x3-chain-master/./target-local/debug/deps/libadler2-812557bf3732267a.rmeta: /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/lib.rs /home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/algo.rs
+
+/home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/lib.rs:
+/home/lojak/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/adler2-2.0.1/src/algo.rs:

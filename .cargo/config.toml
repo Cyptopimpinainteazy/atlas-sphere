@@ -1,0 +1,21 @@
+# Cargo configuration for X3 Chain
+# This config ensures WASM builds are compatible with parity-wasm 0.45.0
+
+[target.wasm32-unknown-unknown]
+# Disable reference types which parity-wasm can't parse
+# MVP feature set ensures broad compatibility with WASM parsers
+# -sign-ext is also disabled as it's not universally supported
+# -bulk-memory is disabled as older wasmtime versions may not support it
+rustflags = [
+    "-C", "target-cpu=mvp",
+    "-C", "target-feature=-sign-ext,-reference-types,-bulk-memory",
+]
+
+[env]
+# Set WASM build flags for substrate-wasm-builder
+# This is picked up by the wasm builder when spawning cargo
+WASM_BUILD_RUSTFLAGS = "-C target-cpu=mvp -C target-feature=-sign-ext,-reference-types,-bulk-memory"
+
+[net]
+# Git fetch with CLI for better performance
+git-fetch-with-cli = true

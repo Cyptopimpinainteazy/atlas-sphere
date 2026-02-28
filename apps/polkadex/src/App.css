@@ -1,0 +1,104 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+}
+
+.App-header {
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #00f5ff 0%, #0080ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: #a0a0a0;
+  margin-bottom: 2rem;
+}
+
+.status-box {
+  margin: 2rem auto;
+  padding: 1rem;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status {
+  font-size: 1.2rem;
+  padding: 0.5rem;
+}
+
+.status.connected {
+  color: #00ff88;
+}
+
+.status.disconnected {
+  color: #ff4444;
+}
+
+.info-section {
+  margin: 2rem auto;
+  max-width: 500px;
+  text-align: left;
+}
+
+.info-section h3 {
+  color: #00f5ff;
+  margin-bottom: 1rem;
+}
+
+.info-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-section li {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  background: rgba(0, 245, 255, 0.1);
+  border-radius: 5px;
+  border-left: 3px solid #00f5ff;
+}
+
+.connect-section {
+  margin: 2rem 0;
+}
+
+.connect-btn {
+  background: linear-gradient(90deg, #00f5ff 0%, #0080ff 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.connect-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+.connect-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #555;
+}
+
+.info-text {
+  margin-top: 2rem;
+  color: #888;
+  font-size: 0.9rem;
+}

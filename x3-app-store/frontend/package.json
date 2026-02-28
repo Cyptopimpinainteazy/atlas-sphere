@@ -1,0 +1,31 @@
+{
+  "name": "x3-app-store-frontend",
+  "version": "1.0.0",
+  "description": "X3 App Store Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=3001 --host=localhost --open=/index.html",
+    "dev": "live-server --port=3001 --host=localhost --open=/index.html",
+    "build": "npm run build:prod",
+    "build:prod": "echo 'Build complete'",
+    "test": "echo 'No tests configured'",
+    "health": "echo 'Frontend is healthy'"
+  },
+  "keywords": [
+    "x3",
+    "app-store",
+    "crypto",
+    "blockchain",
+    "defi"
+  ],
+  "author": "X3 Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "live-server": "^1.2.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+# X3 repo-local constraints: correctness first
+model_reasoning_effort = "high"
+web_search = "disabled"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"

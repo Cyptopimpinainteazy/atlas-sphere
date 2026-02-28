@@ -1,0 +1,274 @@
+# Invariant Registry for X3 / X3 Chain
+# Format:
+# id = "LAYER-COMPONENT-NNN"
+# description = "Human readable description"
+# severity = "CRITICAL|HIGH|MEDIUM|LOW"
+# layer = "LANG|VM|PALLET|CONSENSUS|SWARM|AI|API|FRONTEND|INFRA|GOVERNANCE"
+# tested_by = ["tests/path.rs::test_name", ...]
+# property = "Optional formal predicate"
+
+[[invariant]]
+id = "CHAIN-CONSENSUS-001"
+description = "State root after replaying all blocks from genesis must be identical to current state root"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["tests/e2e/chain-lifecycle::full_replay_state_root", "tests/e2e/state_root_replay::chain_replay_matches_state_root"]
+property = "replay(genesis, blocks) -> state_root == node_state_root"
+
+[[invariant]]
+id = "LANG-COMPILE-001"
+description = "Identical source code produces identical bytecode hash across platforms"
+severity = "CRITICAL"
+layer = "LANG"
+tested_by = ["tests/unit/x3-lang/compiler/test_deterministic_compilation::compile_idempotent"]
+property = "forall s: hash(compile(s)) is constant across runs"
+
+[[invariant]]
+id = "PALLET-TRADE-001"
+description = "AMM constant product invariant k = x * y is maintained within rounding tolerance after every swap"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/atomic-trade-engine/src/tests.rs::events_are_emitted_correctly", "tests/integration/settlement-flow::amm_invariant_checks"]
+property = "forall swap: |x' * y' - x * y| <= epsilon"
+
+[[invariant]]
+id = "VM-EXEC-001"
+description = "Same bytecode with same inputs produces identical outputs and state changes on any compliant node"
+severity = "CRITICAL"
+layer = "VM"
+tested_by = ["tests/unit/x3-lang/vm/test_vm_determinism.rs::vm_replay_bit_exact"]
+property = "execute(bytecode, input, entropy) deterministic => identical trace"
+
+# Add the minimal set required for Phase 1 (more to be added later)
+[[invariant]]
+id = "CHAIN-STATE-001"
+description = "Total supply of native token is conserved across all state transitions"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["pallets/treasury/src/tests.rs::treasury_balance_conservation"]
+property = "sum(balances) == initial_supply + minted - burned"
+
+[[invariant]]
+id = "PALLET-SETTLE-001"
+description = "Settlement escrow locks funds atomically before cross-chain execution"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/x3-settlement-engine/src/tests.rs::escrow_lifecycle"]
+property = "lock -> escrowed && reserved == amount"
+
+[[invariant]]
+id = "FRONTEND-TELEMETRY-001"
+description = "Telemetry stream updates propagate to the UI hook state"
+severity = "MEDIUM"
+layer = "FRONTEND"
+tested_by = ["apps/x3-desktop/tests/unit/telemetryStream.test.tsx::useTelemetryStream"]
+
+[[invariant]]
+id = "FRONTEND-TELEMETRY-002"
+description = "Live telemetry panel renders loading and error states safely"
+severity = "MEDIUM"
+layer = "FRONTEND"
+tested_by = ["apps/x3-desktop/tests/unit/liveTelemetryPanel.test.tsx::LiveTelemetryPanel"]
+
+[[invariant]]
+id = "INFRA-CCGV-001"
+description = "GPU batch hashing matches CPU reference"
+severity = "HIGH"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_gpu_parity.py::test_keccak_batch_matches_cpu_reference"]
+
+[[invariant]]
+id = "INFRA-CCGV-002"
+description = "Atomic swaps commit only when both chains validate"
+severity = "CRITICAL"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_atomic_invariant.py::test_atomic_commit_requires_both_sides", "tests/cross_chain_gpu_validator/test_atomic_invariant.py::test_atomic_rollback_on_failure"]
+
+[[invariant]]
+id = "INFRA-CCGV-003"
+description = "Benchmark reports include combined TPS metrics"
+severity = "MEDIUM"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_benchmark_report.py::test_benchmark_report"]
+
+[[invariant]]
+id = "INFRA-CCGV-004"
+description = "Metrics snapshots expose required fields"
+severity = "LOW"
+layer = "INFRA"
+tested_by = ["tests/cross_chain_gpu_validator/test_metrics.py::test_metrics_snapshot_fields"]
+
+[[invariant]]
+id = "API-POLKAWALLET-001"
+description = "Polkawallet plugin registers all x3chain runtime types and exposes all 9 service classes"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/polkawallet-plugin/tests/plugin.test.ts::X3ChainCustomTypes", "packages/polkawallet-plugin/tests/plugin.test.ts::Package exports"]
+property = "init(plugin) => kernel, settlement, trades, domains, verifier, governance, treasury, svm, x3vm all accessible"
+
+[[invariant]]
+id = "API-POLKAWALLET-002"
+description = "Bridge adapter discovers valid routes between X3 and all supported external chains"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/polkawallet-bridge-adapter/tests/bridge.test.ts::route discovery"]
+property = "forall (src, dst) in supported_pairs: getRoutes(src, dst).length > 0"
+
+[[invariant]]
+id = "API-POLKAWALLET-003"
+description = "TS SDK x3 clients correctly construct extrinsics for settlement, trades, domains, and verifier pallets"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/ts-sdk/tests/x3.test.ts::X3SettlementClient", "packages/ts-sdk/tests/x3.test.ts::X3AtomicTradeClient", "packages/ts-sdk/tests/x3.test.ts::X3DomainClient", "packages/ts-sdk/tests/x3.test.ts::X3VerifierClient"]
+property = "client.method(args) produces correct extrinsic targeting runtime pallet"
+
+[[invariant]]
+id = "API-TS-SDK-001"
+description = "TypeScript SDK can connect to a live X3 node and perform basic RPC queries (chain info, block number, balance, nonce)"
+severity = "HIGH"
+layer = "API"
+tested_by = ["packages/ts-sdk/tests/live.integration.test.ts::connects to live node and queries basic RPCs"]
+property = "connect(endpoint) && getChainInfo() && getBlockNumber() && getBalance() succeed when node reachable"
+
+# ──────────────────────────────────────────────────────────────────
+# DEPIN-GPU-001: DePIN GPU Marketplace
+# Proposal: openspec/changes/DEPIN-GPU-001/proposal.md
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "DEPIN-MARKET-001"
+description = "Block-building work always preempts marketplace jobs within 2ms"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["tests/depin/test_preemption.rs::preemption_within_deadline"]
+property = "preempt_latency <= 2ms"
+
+[[invariant]]
+id = "DEPIN-MARKET-002"
+description = "Revenue split exactly matches configured BPS (validator + burn + staker = 10000)"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/depin-marketplace/src/tests.rs::revenue_split_conservation"]
+property = "validator_share + burn_share + staker_share == total_revenue"
+
+[[invariant]]
+id = "DEPIN-MARKET-003"
+description = "Customer escrow is locked before job assignment and released only on completion or timeout"
+severity = "CRITICAL"
+layer = "PALLET"
+tested_by = ["pallets/depin-marketplace/src/tests.rs::escrow_lifecycle"]
+property = "lock(escrow) -> assigned -> (complete|timeout) -> release(escrow)"
+
+[[invariant]]
+id = "DEPIN-MARKET-004"
+description = "Sandboxed GPU workloads cannot access host memory outside allocated VRAM region"
+severity = "CRITICAL"
+layer = "INFRA"
+tested_by = ["tests/depin/test_sandbox.rs::memory_isolation"]
+property = "forall rental_job: accessible_memory ⊆ allocated_vram_region"
+
+[[invariant]]
+id = "DEPIN-MARKET-005"
+description = "Provider stake is slashed on verified job failure"
+severity = "HIGH"
+layer = "PALLET"
+tested_by = ["pallets/depin-marketplace/src/tests.rs::slash_on_failure"]
+property = "job_failed && verified => provider.stake -= slash_amount"
+
+# ──────────────────────────────────────────────────────────────────
+# EXEC-PREDICT-002: Predictive Parallel Execution with On-Device ML
+# Proposal: openspec/changes/EXEC-PREDICT-002/proposal.md
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "EXEC-PREDICT-001"
+description = "Prediction inference latency is ≤0.5ms for batches up to 10K transactions"
+severity = "HIGH"
+layer = "CONSENSUS"
+tested_by = ["crates/contention-predictor/benches/inference_latency.rs::latency_under_budget"]
+property = "predict(batch_10k).latency <= 500μs"
+
+[[invariant]]
+id = "EXEC-PREDICT-002"
+description = "Fallback to serial execution when prediction confidence is below threshold"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["crates/contention-predictor/tests/fallback.rs::low_confidence_serial"]
+property = "confidence < threshold => serial_execution"
+
+[[invariant]]
+id = "EXEC-PREDICT-003"
+description = "Shard groups are disjoint — no transaction appears in multiple shards"
+severity = "CRITICAL"
+layer = "VM"
+tested_by = ["crates/contention-predictor/tests/shard_planner.rs::shards_disjoint"]
+property = "forall i,j where i≠j: shard[i] ∩ shard[j] = ∅"
+
+[[invariant]]
+id = "EXEC-PREDICT-004"
+description = "Predicted execution produces identical state root to serial execution"
+severity = "CRITICAL"
+layer = "VM"
+tested_by = ["tests/integration/predictive_exec.rs::parallel_matches_serial"]
+property = "state_root(parallel_sharded) == state_root(serial)"
+
+[[invariant]]
+id = "EXEC-PREDICT-005"
+description = "Model weights are loaded only from governance-approved hash"
+severity = "HIGH"
+layer = "CONSENSUS"
+tested_by = ["crates/contention-predictor/tests/model_integrity.rs::reject_unapproved_weights"]
+property = "load_model(weights) => hash(weights) in approved_set"
+
+# ──────────────────────────────────────────────────────────────────
+# PRIV-ENCLAVE-003: Embedded Private Execution Environments
+# Proposal: openspec/changes/PRIV-ENCLAVE-003/proposal.md
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "PRIV-EXEC-001"
+description = "Private TX content is never exposed in plaintext outside the enclave"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["tests/private_execution/test_confidentiality.rs::no_plaintext_leak"]
+property = "forall private_tx: plaintext only inside attested enclave memory"
+
+[[invariant]]
+id = "PRIV-EXEC-002"
+description = "Encrypted state diff when applied produces identical state to public execution of same TX"
+severity = "CRITICAL"
+layer = "VM"
+tested_by = ["tests/private_execution/test_correctness.rs::private_matches_public"]
+property = "apply(decrypt(encrypted_diff)) == apply(public_execute(tx))"
+
+[[invariant]]
+id = "PRIV-EXEC-003"
+description = "No single validator can decrypt a private TX alone (threshold t-of-n required)"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["crates/confidential-gpu/tests/threshold.rs::single_share_insufficient"]
+property = "decrypt(ciphertext, [share]) fails when |[share]| < t"
+
+[[invariant]]
+id = "PRIV-EXEC-004"
+description = "Enclave attestation is verified before validator joins confidential set"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = ["pallets/private-execution/src/tests.rs::reject_unattested"]
+property = "register_confidential(validator) requires valid_attestation(validator)"
+
+[[invariant]]
+id = "PRIV-EXEC-005"
+description = "Private execution premium fee is correctly collected and split"
+severity = "HIGH"
+layer = "PALLET"
+tested_by = ["pallets/private-execution/src/tests.rs::fee_premium_accounting"]
+property = "fee_collected == base_fee * (1 + premium_bps / 10000)"
+
+[[invariant]]
+id = "PRIV-EXEC-006"
+description = "Regional finality latency increase from private execution is ≤1ms"
+severity = "HIGH"
+layer = "CONSENSUS"
+tested_by = ["tests/private_execution/benches/latency.rs::finality_overhead"]
+property = "finality_latency(private) - finality_latency(public) <= 1ms"

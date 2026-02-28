@@ -1,0 +1,11 @@
+id: "22"
+title: "P4 Day 2: Documentation & Handoff"
+description: "Record Day 2 results and update status."
+assignee: "RECORDER"
+status: "pending"
+priority: "low"
+dependencies: ["21"]
+metadata:
+  blueprint_task: 3
+  phase: 4
+  day: 2

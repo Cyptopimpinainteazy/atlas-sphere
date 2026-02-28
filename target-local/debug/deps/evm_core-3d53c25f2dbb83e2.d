@@ -1,0 +1,17 @@
+/home/lojak/Desktop/x3-chain-master/./target-local/debug/deps/evm_core-3d53c25f2dbb83e2.d: /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/lib.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/error.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/mod.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/macros.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/arithmetic.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/bitwise.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/misc.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/external.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/memory.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/opcode.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/stack.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/utils.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/valids.rs
+
+/home/lojak/Desktop/x3-chain-master/./target-local/debug/deps/libevm_core-3d53c25f2dbb83e2.rmeta: /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/lib.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/error.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/mod.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/macros.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/arithmetic.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/bitwise.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/misc.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/external.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/memory.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/opcode.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/stack.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/utils.rs /home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/valids.rs
+
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/lib.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/error.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/mod.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/macros.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/arithmetic.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/bitwise.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/eval/misc.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/external.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/memory.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/opcode.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/stack.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/utils.rs:
+/home/lojak/.cargo/git/checkouts/evm-10c220a9cbf79aad/b7b82c7/core/src/valids.rs:

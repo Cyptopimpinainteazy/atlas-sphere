@@ -1,0 +1,324 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://x3-chain.io/schemas/mir/v1.0",
+  "title": "X3 MIR (Mid-level Intermediate Representation) Schema",
+  "description": "Schema for AI-generated MIR that can be verified and lowered to X3 bytecode",
+  "type": "object",
+  "required": ["mir_version", "contract", "functions"],
+  "properties": {
+    "mir_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "MIR schema version"
+    },
+    "contract": {
+      "type": "string",
+      "pattern": "^[A-Z][a-zA-Z0-9_]*$",
+      "description": "Contract name (PascalCase)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable contract description"
+    },
+    "ai_metadata": {
+      "type": "object",
+      "description": "Metadata about AI generation",
+      "properties": {
+        "model": { "type": "string" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "prompt_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "generation_id": { "type": "string" }
+      },
+      "required": ["seed", "prompt_hash"]
+    },
+    "types": {
+      "type": "object",
+      "description": "Custom type definitions",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "kind": { "enum": ["struct", "enum", "alias", "array"] },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "$ref": "#/$defs/type_ref" }
+              },
+              "required": ["name", "type"]
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "element_type": { "$ref": "#/$defs/type_ref" },
+          "length": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["kind"]
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Contract storage layout",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": { "$ref": "#/$defs/type_ref" },
+          "slot": { "type": "integer", "minimum": 0 },
+          "mutable": { "type": "boolean", "default": true },
+          "visibility": { "enum": ["public", "private"], "default": "private" }
+        },
+        "required": ["type", "slot"]
+      }
+    },
+    "functions": {
+      "type": "array",
+      "description": "Contract functions",
+      "items": { "$ref": "#/$defs/function" }
+    },
+    "events": {
+      "type": "array",
+      "description": "Contract events",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "$ref": "#/$defs/type_ref" },
+                "indexed": { "type": "boolean", "default": false }
+              },
+              "required": ["name", "type"]
+            }
+          }
+        },
+        "required": ["name", "fields"]
+      }
+    },
+    "forbidden_ops_check": {
+      "type": "object",
+      "description": "Results of forbidden ops verification",
+      "properties": {
+        "passed": { "type": "boolean" },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "op": { "type": "string" },
+              "function": { "type": "string" },
+              "line": { "type": "integer" },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["passed"]
+    },
+    "safety_report": {
+      "type": "object",
+      "description": "Safety analysis results",
+      "properties": {
+        "deterministic": { "type": "boolean" },
+        "bounded_gas": { "type": "boolean" },
+        "no_reentrancy": { "type": "boolean" },
+        "atomic_safe": { "type": "boolean" },
+        "total_gas_estimate": { "type": "integer", "minimum": 0 },
+        "max_stack_depth": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "string" }
+      },
+      "required": ["deterministic", "bounded_gas", "atomic_safe"]
+    }
+  },
+  "$defs": {
+    "type_ref": {
+      "oneOf": [
+        {
+          "enum": [
+            "u8",
+            "u16",
+            "u32",
+            "u64",
+            "u128",
+            "u256",
+            "i8",
+            "i16",
+            "i32",
+            "i64",
+            "i128",
+            "bool",
+            "address",
+            "bytes32",
+            "string"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^\\[.*\\]$",
+          "description": "Array type like [u64; 10]"
+        },
+        {
+          "type": "string",
+          "pattern": "^[A-Z][a-zA-Z0-9_]*$",
+          "description": "Custom type reference"
+        }
+      ]
+    },
+    "function": {
+      "type": "object",
+      "required": ["name", "params", "returns", "ops"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Function name (snake_case)"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "$ref": "#/$defs/type_ref" }
+            },
+            "required": ["name", "type"]
+          }
+        },
+        "returns": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/type_ref" }
+        },
+        "visibility": {
+          "enum": ["public", "private", "internal"],
+          "default": "public"
+        },
+        "mutability": {
+          "enum": ["pure", "view", "mutable"],
+          "default": "mutable"
+        },
+        "atomic": {
+          "type": "boolean",
+          "default": false,
+          "description": "Must execute atomically (cross-VM)"
+        },
+        "gas_estimate": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Estimated gas cost"
+        },
+        "gas_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Hard gas limit (verification fails if exceeded)"
+        },
+        "ops": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mir_op" }
+        }
+      }
+    },
+    "mir_op": {
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "enum": [
+            "const",
+            "load",
+            "store",
+            "mov",
+            "add",
+            "sub",
+            "mul",
+            "div",
+            "mod",
+            "neg",
+            "and",
+            "or",
+            "xor",
+            "not",
+            "shl",
+            "shr",
+            "eq",
+            "neq",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "jump",
+            "jump_if",
+            "jump_unless",
+            "call",
+            "call_internal",
+            "return",
+            "atomic_begin",
+            "atomic_end",
+            "state_load",
+            "state_store",
+            "emit_event",
+            "revert",
+            "assert",
+            "hash_keccak256",
+            "hash_sha256",
+            "hash_blake2",
+            "evm_call",
+            "svm_call",
+            "nop",
+            "comment"
+          ]
+        },
+        "dest": {
+          "type": "string",
+          "description": "Destination register/variable"
+        },
+        "src": { "type": "string", "description": "Source register/variable" },
+        "src2": { "type": "string", "description": "Second source operand" },
+        "value": { "description": "Immediate value" },
+        "type": { "$ref": "#/$defs/type_ref" },
+        "label": { "type": "string", "description": "Jump target label" },
+        "cond": {
+          "type": "string",
+          "description": "Condition register for conditional jumps"
+        },
+        "func": { "type": "string", "description": "Function name for calls" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Call arguments"
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Storage slot"
+        },
+        "event": { "type": "string", "description": "Event name" },
+        "message": { "type": "string", "description": "Revert/assert message" },
+        "gas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Gas cost for this op"
+        },
+        "unsafe": { "type": "boolean", "default": false },
+        "justification": {
+          "type": "string",
+          "description": "Required if unsafe:true"
+        },
+        "comment": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "unsafe": { "const": true } } },
+          "then": { "required": ["justification"] }
+        }
+      ]
+    }
+  }
+}
