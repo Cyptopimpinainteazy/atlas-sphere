@@ -115,7 +115,10 @@ pub const VERSION: sp_version::RuntimeVersion = sp_version::RuntimeVersion {
     spec_name: create_runtime_str!("x3-chain"),
     impl_name: create_runtime_str!("x3-chain"),
     authoring_version: 1,
-    spec_version: 4,
+    // v5: 200ms slot duration migration. Nodes MUST check spec_version to select
+    // the correct slot duration for pre/post-upgrade blocks to prevent Aura
+    // slot monotonicity failures. See node/src/service.rs slot_duration_for_spec().
+    spec_version: 5,
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,

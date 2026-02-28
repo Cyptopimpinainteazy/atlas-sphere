@@ -148,6 +148,24 @@ pub fn tune_transaction_pool_config(config: &mut Configuration) {
     config.transaction_pool = tuned_transaction_pool_options(config.transaction_pool.clone());
 }
 
+/// Return the correct Aura slot duration for a given runtime spec_version.
+///
+/// CRITICAL: Aura enforces slot monotonicity. If the slot duration changes mid-chain,
+/// nodes that don't gate on spec_version will compute wrong slots for historical blocks
+/// and either stall or fork. This function is the safety valve.
+///
+/// - spec_version < 5: legacy 400ms slots (genesis chain used 400ms)
+/// - spec_version >= 5: 200ms slots (v5 migration target)
+///
+/// Call this when building/verifying any block with a spec_version you can read.
+pub fn slot_duration_for_spec(spec_version: u32) -> Duration {
+    if spec_version >= 5 {
+        Duration::from_millis(200)
+    } else {
+        Duration::from_millis(400)
+    }
+}
+
 /// Create partial components for X3 Chain node
 ///
 /// Returns the common components needed by various subcommands (benchmarking, export, etc.)
