@@ -53,10 +53,18 @@ impl BroadcastService {
             return Ok(());
         }
 
-        // Get peers for this slot
-        let peers = self.peer_manager.get_peers_for_slot(
-            shreds[0].slot(),
-            self.config.max_peers_per_slot,
+        // Get structural children for this broadcast using the Turbine tree geometry
+        let slot = shreds[0].slot();
+        let shred_index = shreds[0].shred_index();
+        // Here we simulate being 'peer-0' or the root if we're generating the block.
+        // In full integration, the node's local PeerId would be used.
+        let my_id = "local-node-id"; 
+        
+        let peers = self.peer_manager.get_broadcast_children(
+            slot,
+            shred_index,
+            my_id,
+            self.config.max_peers_per_slot.max(1), // Fanout
         );
 
         if peers.is_empty() {

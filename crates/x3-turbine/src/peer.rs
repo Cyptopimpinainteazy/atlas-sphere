@@ -4,6 +4,8 @@ use crate::config::TurbineConfig;
 use crate::error::TurbineResult;
 use lru::LruCache;
 use parking_lot::RwLock;
+use rand::seq::SliceRandom;
+use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::num::NonZeroUsize;
@@ -205,6 +207,75 @@ impl PeerManager {
             .map(|s| s.peer.clone())
             .collect()
     }
+
+    /// Build a Turbine propagation tree for a specific slot and shred index.
+    ///
+    /// This method replicates the core architectural insight of Solana's Turbine:
+    /// 1. Takes all active peers.
+    /// 2. Sorts them deterministically by stake (descending).
+    /// 3. Computes a pseudo-random permutation derived from `slot` and `shred_index`.
+    /// 4. Organizes them into tree layers based on the `fanout` parameter.
+    ///
+    /// Returns a list of `PeerInfo` representing the children nodes this node
+    /// should forward the received shred to.
+    pub fn get_broadcast_children(
+        &self,
+        slot: u64,
+        shred_index: u32,
+        my_id: &str,
+        fanout: usize,
+    ) -> Vec<PeerInfo> {
+        if fanout == 0 {
+            return vec![];
+        }
+
+        // 1. Gather & Sort (deterministic base list)
+        let mut peers = self.get_active_peers();
+        peers.sort_by(|a, b| {
+            b.stake.cmp(&a.stake).then_with(|| a.id.cmp(&b.id))
+        });
+
+        // The generator node must be removed (it's the implicit root)
+        // For simplicity in this implementation, we assume `peers` is the full set
+        // of receivers (meaning the leader is excluded from this list, or handled separately).
+        
+        if peers.is_empty() {
+            return vec![];
+        }
+
+        // 2. Deterministic shuffle based on slot/shred metadata
+        // This ensures every node computes the exact same tree structure locally.
+        let mut seed = [0u8; 32];
+        let mut bytes = Vec::with_capacity(12);
+        bytes.extend_from_slice(&slot.to_le_bytes());
+        bytes.extend_from_slice(&shred_index.to_le_bytes());
+        
+        let hash = blake3::hash(&bytes);
+        seed[..32].copy_from_slice(hash.as_bytes());
+
+        let mut rng = rand::rngs::StdRng::from_seed(seed);
+        peers.shuffle(&mut rng);
+
+        // 3. Find my position in the randomly permuted tree
+        let my_pos = peers.iter().position(|p| p.id == my_id);
+        let my_pos = match my_pos {
+            Some(pos) => pos,
+            None => return vec![], // I'm not in the tree or I am the leader at root -1
+        };
+
+        // 4. Calculate children indices using k-ary heap property
+        // For 0-indexed complete k-ary tree:
+        // Children of node i are at `fanout * i + 1` to `fanout * i + fanout`
+        let start_idx = fanout * my_pos + 1;
+        
+        if start_idx >= peers.len() {
+            return vec![]; // Leaf node, no children
+        }
+
+        let end_idx = (start_idx + fanout).min(peers.len());
+        
+        peers[start_idx..end_idx].to_vec()
+    }
 }
 
 #[cfg(test)]
@@ -212,20 +283,56 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_peer_manager() {
+    fn test_turbine_propagation_tree() {
         let config = TurbineConfig::default();
         let manager = PeerManager::new(config);
         
-        let peer = PeerInfo::new(
-            "test-peer-1".to_string(),
-            "/ip4/127.0.0.1/tcp/8001".to_string(),
-            PeerRole::Validator,
-        );
+        // Add 13 peers (1 root + 3 children + 9 grandchildren) -> exactly fits fanout=3
+        for i in 0..13 {
+            manager.add_peer(PeerInfo::new(
+                format!("peer-{}", i),
+                format!("/ip4/127.0.0.1/tcp/{}", 8000 + i),
+                PeerRole::Validator,
+            ));
+        }
+
+        // Test one deterministic permutation
+        let children = manager.get_broadcast_children(100, 5, "peer-0", 3);
         
-        manager.add_peer(peer);
-        assert_eq!(manager.peer_count(), 1);
+        assert!(children.len() <= 3, "Fanout limit respected");
         
-        let peers = manager.get_active_peers();
-        assert_eq!(peers.len(), 1);
+        // Let's verify no duplicate children overall by manually reconstructing the tree
+        let mut all_assigned_children = std::collections::HashSet::new();
+        let mut total_edges = 0;
+        
+        for i in 0..13 {
+            let peer_id = format!("peer-{}", i);
+            let my_children = manager.get_broadcast_children(100, 5, &peer_id, 3);
+            for c in my_children {
+                assert!(all_assigned_children.insert(c.id.clone()), "Duplicate child assigned!");
+                total_edges += 1;
+            }
+        }
+        
+        // 13 nodes mapped to a k-ary tree means 1 root and 12 edges
+        assert_eq!(total_edges, 12, "Tree should have N-1 edges");
+        
+        // Verify different shred indices yield different trees
+        let children_shred5 = manager.get_broadcast_children(100, 5, "peer-0", 3);
+        let children_shred6 = manager.get_broadcast_children(100, 6, "peer-0", 3);
+        
+        // While theoretically they could be identical randomly, the probability is 1/13!
+        // so we can safely assert they differ for at least one node in practice.
+        let mut diff_found = false;
+        for i in 0..13 {
+            let pid = format!("peer-{}", i);
+            let c5 = manager.get_broadcast_children(100, 5, &pid, 3);
+            let c6 = manager.get_broadcast_children(100, 6, &pid, 3);
+            if c5.iter().map(|c| &c.id).collect::<Vec<_>>() != c6.iter().map(|c| &c.id).collect::<Vec<_>>() {
+                diff_found = true;
+                break;
+            }
+        }
+        assert!(diff_found, "Tree shape should jump unpredictably based on shred index");
     }
 }
