@@ -71,7 +71,7 @@ members = [
     "crates/x3-bot",
     "crates/atomic-swap-orchestrator",
     "crates/x3-turbine",
-    # Phase 3-5: Flash Finality, PoH, Atomic Kernel (audit implementation)
+    # Phase 3-6: Audit implementation — Flash Finality, PoH, Atomic Kernel, Parallel Proposer
     "crates/flash-finality",
     "crates/poh-generator",
     "pallets/x3-atomic-kernel",
