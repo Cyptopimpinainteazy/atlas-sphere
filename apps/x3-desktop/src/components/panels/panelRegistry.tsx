@@ -174,6 +174,29 @@ const CreatorMonetizationPremiumPanel = lazy(() => import("@/components/panels/s
 const InteractiveCodePlaygroundPanel = lazy(() => import("@/components/panels/documentation/InteractiveCodePlaygroundPanel"));
 const SdkCodeGeneratorPanel = lazy(() => import("@/components/panels/documentation/SdkCodeGeneratorPanel"));
 
+/* ── Sprint 12: Privacy, Analytics, Marketplace, Governance, Infrastructure ──── */
+// Security - Privacy Vault
+const PrivacyVaultPanel = lazy(() => import("@/components/panels/security/PrivacyVaultPanel"));
+
+// Analytics - Advanced Portfolio & OnChain
+const AdvancedPortfolioAnalyticsPanel = lazy(() => import("@/components/panels/analytics/AdvancedPortfolioAnalyticsPanel"));
+const OnChainAnalyticsPanel = lazy(() => import("@/components/panels/analytics/OnChainAnalyticsPanel"));
+
+// Marketplace - NFT, Token
+const NftMarketplacePanel = lazy(() => import("@/components/panels/marketplace/NftMarketplacePanel"));
+const TokenMarketplacePanel = lazy(() => import("@/components/panels/marketplace/TokenMarketplacePanel"));
+
+// Governance - Proposals & Treasury
+const GovernanceProposalsPanel = lazy(() => import("@/components/panels/governance/GovernanceProposalsPanel"));
+const TreasuryManagementPanel = lazy(() => import("@/components/panels/governance/TreasuryManagementPanel"));
+
+// Infrastructure - Integration & Quantum
+const IntegrationMarketplacePanel = lazy(() => import("@/components/panels/infrastructure/IntegrationMarketplacePanel"));
+const QuantumSecurityPanel = lazy(() => import("@/components/panels/infrastructure/QuantumSecurityPanel"));
+
+// Media - Streaming
+const MediaStreamingPanel = lazy(() => import("@/components/panels/media/MediaStreamingPanel"));
+
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
@@ -625,6 +648,98 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "python-sdk":               SdkCodeGeneratorPanel,
   "go-sdk":                   SdkCodeGeneratorPanel,
   "sdk-codegen":              SdkCodeGeneratorPanel,
+
+  /* ── Sprint 12: Privacy, Analytics, Marketplace, Governance, Infrastructure ── */
+  
+  // Security - Privacy Vault
+  "privacy-vault":            PrivacyVaultPanel,
+  "encrypted-keys":           PrivacyVaultPanel,
+  "key-management":           PrivacyVaultPanel,
+  "stealth-addresses":        PrivacyVaultPanel,
+  "private-key-vault":        PrivacyVaultPanel,
+  "key-encryption":           PrivacyVaultPanel,
+  "biometric-unlock":         PrivacyVaultPanel,
+
+  // Analytics - Advanced Portfolio
+  "advanced-portfolio-analytics": AdvancedPortfolioAnalyticsPanel,
+  "portfolio-analytics":       AdvancedPortfolioAnalyticsPanel,
+  "sharpe-ratio":             AdvancedPortfolioAnalyticsPanel,
+  "volatility-analysis":      AdvancedPortfolioAnalyticsPanel,
+  "correlation-matrix":       AdvancedPortfolioAnalyticsPanel,
+  "asset-correlation":        AdvancedPortfolioAnalyticsPanel,
+  "risk-metrics":             AdvancedPortfolioAnalyticsPanel,
+
+  // Analytics - OnChain Analytics
+  "onchain-analytics":        OnChainAnalyticsPanel,
+  "token-flows":              OnChainAnalyticsPanel,
+  "transaction-analysis":     OnChainAnalyticsPanel,
+  "tvl-metrics":              OnChainAnalyticsPanel,
+  "trading-volume":           OnChainAnalyticsPanel,
+  "smart-contract-calls":     OnChainAnalyticsPanel,
+  "holder-distribution":      OnChainAnalyticsPanel,
+
+  // Marketplace - NFT
+  "nft-marketplace":          NftMarketplacePanel,
+  "nft-collections":          NftMarketplacePanel,
+  "nft-trading":              NftMarketplacePanel,
+  "rarity-ranking":           NftMarketplacePanel,
+  "floor-price":              NftMarketplacePanel,
+  "nft-offers":               NftMarketplacePanel,
+  "nft-sales":                NftMarketplacePanel,
+
+  // Marketplace - Token
+  "token-marketplace":        TokenMarketplacePanel,
+  "token-listings":           TokenMarketplacePanel,
+  "token-charts":             TokenMarketplacePanel,
+  "token-launches":           TokenMarketplacePanel,
+  "launchpad":                TokenMarketplacePanel,
+  "token-discovery":          TokenMarketplacePanel,
+  "trading-pairs":            TokenMarketplacePanel,
+
+  // Governance - Proposals
+  "governance-proposals":     GovernanceProposalsPanel,
+  "dao-proposals":            GovernanceProposalsPanel,
+  "voting-interface":         GovernanceProposalsPanel,
+  "proposal-details":         GovernanceProposalsPanel,
+  "quorum-tracker":           GovernanceProposalsPanel,
+  "voting-power":             GovernanceProposalsPanel,
+  "proposal-timeline":        GovernanceProposalsPanel,
+
+  // Governance - Treasury
+  "treasury-management":      TreasuryManagementPanel,
+  "treasury-allocation":      TreasuryManagementPanel,
+  "multisig-wallets":         TreasuryManagementPanel,
+  "spending-history":         TreasuryManagementPanel,
+  "budget-tracking":          TreasuryManagementPanel,
+  "fund-allocation":          TreasuryManagementPanel,
+  "approval-workflows":       TreasuryManagementPanel,
+
+  // Infrastructure - Integration Marketplace
+  "integration-marketplace":  IntegrationMarketplacePanel,
+  "plugin-discovery":         IntegrationMarketplacePanel,
+  "dex-integrations":         IntegrationMarketplacePanel,
+  "oracle-integrations":      IntegrationMarketplacePanel,
+  "lending-integrations":     IntegrationMarketplacePanel,
+  "plugin-stats":             IntegrationMarketplacePanel,
+  "developer-ecosystem":      IntegrationMarketplacePanel,
+
+  // Infrastructure - Quantum Security
+  "quantum-security":         QuantumSecurityPanel,
+  "post-quantum-crypto":      QuantumSecurityPanel,
+  "lattice-algorithms":       QuantumSecurityPanel,
+  "key-migration":            QuantumSecurityPanel,
+  "quantum-readiness":        QuantumSecurityPanel,
+  "security-audits":          QuantumSecurityPanel,
+  "migration-timeline":       QuantumSecurityPanel,
+
+  // Media - Streaming
+  "media-streaming":          MediaStreamingPanel,
+  "music-streaming":          MediaStreamingPanel,
+  "creator-earnings":         MediaStreamingPanel,
+  "micropayments":            MediaStreamingPanel,
+  "stream-analytics":         MediaStreamingPanel,
+  "creator-profile":          MediaStreamingPanel,
+  "content-monetization":     MediaStreamingPanel,
 };
 
 /**
