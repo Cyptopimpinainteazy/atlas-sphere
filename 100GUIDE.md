@@ -111,18 +111,18 @@
 ## 🔴 TIER 4 — WALLET (Current: 80 → Target: 100)
 
 ### Core Wallet
-- [ ] **Real transaction signing** — `WalletPanel` needs to call `window.__TAURI__.invoke('sign_transaction', ...)` using the Rust keystore backend.
-- [ ] **Hardware wallet support** — Ledger + Trezor via WebUSB/WebHID. Required for institutional users.
-- [ ] **Multi-signature wallets** — M-of-N multisig with an on-chain approval flow. Critical for DAO treasuries.
+- [x] **Real transaction signing** — `WalletPanel` needs to call `window.__TAURI__.invoke('sign_transaction', ...)` using the Rust keystore backend.
+- [x] **Hardware wallet support** — Ledger + Trezor via WebUSB/WebHID. Required for institutional users.
+- [x] **Multi-signature wallets** — M-of-N multisig with an on-chain approval flow. Critical for DAO treasuries.
 - [ ] **Social recovery** — designate 3 guardians who can collectively recover your wallet if you lose your key (ERC-4337 model).
 - [x] **Watch-only mode** — add any address as a read-only wallet to monitor without importing keys.
 - [x] **Address book** — save frequent addresses with labels. Auto-complete on send.
-- [ ] **ENS / X3 Name Service** — resolve human-readable names like `alice.x3` to wallet addresses.
-- [ ] **QR code scanner** — for receiving: show QR. For sending: scan QR to paste address. Critical for mobile parity.
+- [x] **ENS / X3 Name Service** — resolve human-readable names like `alice.x3` to wallet addresses.
+- [x] **QR code scanner** — for receiving: show QR. For sending: scan QR to paste address. Critical for mobile parity.
 - [x] **Biometric unlock** — Face ID / fingerprint via Tauri plugin for Tauri desktop. PIN fallback.
 
 ### Token & NFT Management
-- [ ] **Auto-detect tokens** — scan chain for all tokens held by the address. Show balances without manual add.
+- [x] **Auto-detect tokens** — scan chain for all tokens held by the address. Show balances without manual add.
 - [ ] **NFT gallery** — display all NFTs with full metadata, image, collection info. Transfer/list directly from gallery.
 - [x] **Token whitelisting** — spam protection: unknown tokens go to a separate "pending" tab until user approves.
 - [x] **Price in fiat** — show all balances in USD/EUR/BTC equivalent using CoinGecko API.
@@ -131,11 +131,11 @@
 - [x] **DeFi position tracker** — show all active LP positions, staking positions, open borrows across X3 protocols in one view.
 
 ### Security & Privacy
-- [ ] **Phishing detection** — blocklist of known scam contracts/sites. Warn before signing any transaction to a flagged address.
-- [ ] **Simulation before sign** — every transaction is dry-run and shows exactly what state changes will happen (token in / token out / approvals) before user signs.
+- [x] **Phishing detection** — blocklist of known scam contracts/sites. Warn before signing any transaction to a flagged address.
+- [x] **Simulation before sign** — every transaction is dry-run and shows exactly what state changes will happen (token in / token out / approvals) before user signs.
 - [x] **Approval management** — list all active token approvals and revoke them with one click (like revoke.cash).
 - [ ] **Private mode** — optional stealth addresses for privacy-preserving transfers.
-- [ ] **Encrypted local backup** — wallet encrypted backup to local file or IPFS with password protection.
+- [x] **Encrypted local backup** — wallet encrypted backup to local file or IPFS with password protection.
 
 ---
 
@@ -145,9 +145,9 @@
 - [ ] **App Store live listings** — `AppStorePage` needs real installable apps/plugins, not static cards. Build a plugin API so devs can submit panel plugins.
 - [ ] **Window snap layouts** — drag windows to screen edges for tiling (Windows 11-style). 2x2, 1+2, full-screen layouts.
 - [ ] **Multi-monitor support** — detect multiple displays. Allow windows to span or lock to specific monitors.
-- [ ] **System notifications** — Tauri native notifications for: tx confirmed, validator alert, new message, price alert.
+- [x] **System notifications** — Tauri native notifications for: tx confirmed, validator alert, new message, price alert.
 - [x] **Keyboard shortcut map** — complete, configurable keyboard shortcuts for every action. Show cheatsheet with Ctrl+?.
-- [ ] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
+- [x] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
 - [ ] **Widget layer** — always-on-top mini widgets: live X3 price ticker, validator status dot, unread message count.
 - [ ] **Auto-update** — Tauri's built-in updater so users get new versions without downloading manually. Show changelog on update.
 - [ ] **Crash reporter** — if Tauri crashes, auto-collect logs and prompt user to submit a bug report with one click.

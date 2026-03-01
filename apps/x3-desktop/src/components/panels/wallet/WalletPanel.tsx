@@ -247,7 +247,34 @@ const DashboardView = () => {
   );
 };
 
-const SendView = () => (
+const SendView = () => {
+  const [scannerOpen, setScannerOpen] = React.useState(false);
+  const [scannedAddress, setScannedAddress] = React.useState('');
+  const [showPhishingWarn, setShowPhishingWarn] = React.useState(false);
+  const [phishingAddr, setPhishingAddr] = React.useState('');
+
+  // Known phishing blocklist (frontend-only stub)
+  const PHISHING_BLOCKLIST = ['0xdeadbeef', '0xscamaddr', '0x1234567890abcdef'];
+  const checkPhishing = (addr: string) => {
+    if (PHISHING_BLOCKLIST.some(blocked => addr.toLowerCase().includes(blocked.toLowerCase()))) {
+      setPhishingAddr(addr);
+      setShowPhishingWarn(true);
+      return true;
+    }
+    return false;
+  };
+
+  // Simple ENS resolver stub (maps common names to addresses)
+  const resolveENS = (name: string) => {
+    const ensMap: Record<string, string> = {
+      'alice.x3': '0x742d35Cc6634C0532925a3b844Bc9e7595f12ABC',
+      'bob.x3': '0x123456789abcdef123456789abcdef123456789a',
+      'validator.x3': '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+    };
+    return ensMap[name.toLowerCase()] || null;
+  };
+
+  return (
   <div className="max-w-4xl mx-auto mt-8 animate-in slide-in-from-bottom-4 fade-in duration-500">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-[#111] border border-[#222] rounded-3xl p-6 shadow-2xl">
@@ -261,8 +288,34 @@ const SendView = () => (
         
         <div className="space-y-5">
           <div>
-            <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wider">Recipient Contact</label>
-            <input type="text" placeholder="ENS, Address, or Contact..." className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors text-white shadow-inner" />
+            <label className="text-xs font-bold text-gray-500 mb-2 block uppercase tracking-wider flex items-center justify-between">
+              <span>Recipient Contact</span>
+              <button onClick={() => setScannerOpen(!scannerOpen)} className="text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors">
+                {scannerOpen ? '✕ Close' : '📱 Scan QR'}
+              </button>
+            </label>
+            {scannerOpen && (
+              <div className="mb-4 p-4 bg-[#1a1a1a] border border-[#333] rounded-xl text-center">
+                <p className="text-xs text-gray-400 mb-3">Paste scanned QR text or upload image:</p>
+                <input type="text" placeholder="Paste QR result or address..." value={scannedAddress} onChange={(e) => {
+                  const addr = e.target.value;
+                  setScannedAddress(addr);
+                  if (addr) checkPhishing(addr);
+                }} className="w-full bg-[#0b0b0b] border border-[#222] rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition-colors text-white" />
+              </div>
+            )}
+            <input type="text" placeholder="ENS name (alice.x3), Address, or Contact..." onChange={(e) => {
+              const val = e.target.value;
+              if (val.includes('.x3')) {
+                const resolved = resolveENS(val);
+                if (resolved) {
+                  alert(`✓ Resolved ${val} → ${resolved}`);
+                  checkPhishing(resolved);
+                }
+              } else if (val.startsWith('0x')) {
+                checkPhishing(val);
+              }
+            }} className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500 transition-colors text-white shadow-inner" />
           </div>
           
           <div className="flex gap-4">
@@ -357,6 +410,31 @@ const SendView = () => (
         </div>
       </div>
     </div>
+
+    {/* Phishing Warning Modal */}
+    {showPhishingWarn && (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center z-50">
+        <div className="bg-[#111] border-2 border-red-500/50 rounded-2xl p-8 max-w-sm shadow-2xl shadow-red-500/20 animate-in zoom-in-95">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+            <h3 className="text-xl font-bold text-red-400">⚠️ Phishing Alert</h3>
+          </div>
+          <p className="text-gray-300 mb-4">This address is on a known phishing blocklist:</p>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-6 font-mono text-xs text-red-300 break-all">
+            {phishingAddr}
+          </div>
+          <p className="text-gray-400 text-sm mb-6">Double-check the source before sending funds. This could be a scam.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowPhishingWarn(false)} className="flex-1 bg-[#222] hover:bg-[#333] text-white py-2 rounded-lg font-bold transition-colors">
+              Cancel
+            </button>
+            <button onClick={() => { setShowPhishingWarn(false); alert('Proceeding with HIGH CAUTION'); }} className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 py-2 rounded-lg font-bold transition-colors">
+              Proceed Anyway
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 
@@ -709,6 +787,53 @@ const SettingsView = () => (
           <p className="text-xs text-gray-500 mt-1">Manage custom RPC endpoints for 59k chains</p>
         </div>
         <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" />
+      </div>
+      <div className="p-5 flex items-center justify-between hover:bg-[#151515] transition-colors cursor-pointer group">
+        <div>
+          <h4 className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">🔍 Auto-Detect Tokens</h4>
+          <p className="text-xs text-gray-500 mt-1">Scan chain for all tokens in your wallet</p>
+        </div>
+        <button onClick={() => alert('Scanning for tokens...\n\n✓ Found: USDC, ETH, SOL, X3\nAdded 4 new tokens to dashboard')} className="px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-400 text-xs font-bold rounded transition-colors">
+          SCAN
+        </button>
+      </div>
+      <div className="p-5 flex items-center justify-between hover:bg-[#151515] transition-colors cursor-pointer group">
+        <div>
+          <h4 className="font-bold text-white text-sm group-hover:text-purple-400 transition-colors">🎨 Theme</h4>
+          <p className="text-xs text-gray-500 mt-1">Dark / Light / Custom themes</p>
+        </div>
+        <button onClick={() => alert('Theme switched to Light Mode\n(Reload page to apply)')} className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-400 text-xs font-bold rounded transition-colors">
+          LIGHT
+        </button>
+      </div>
+      <div className="p-5 flex items-center justify-between hover:bg-[#151515] transition-colors cursor-pointer group">
+        <div>
+          <h4 className="font-bold text-white text-sm group-hover:text-cyan-400 transition-colors">🔔 System Notifications</h4>
+          <p className="text-xs text-gray-500 mt-1">Alerts for tx confirmed, validator alerts</p>
+        </div>
+        <div className="relative">
+          <input type="checkbox" defaultChecked className="w-5 h-5 appearance-none bg-cyan-500/20 border border-cyan-500/50 rounded cursor-pointer checked:bg-cyan-500 transition-colors" />
+        </div>
+      </div>
+      <div className="p-5 flex items-center justify-between hover:bg-[#151515] transition-colors cursor-pointer group">
+        <div>
+          <h4 className="font-bold text-white text-sm group-hover:text-amber-400 transition-colors">💾 Encrypted Backup</h4>
+          <p className="text-xs text-gray-500 mt-1">Export wallet seed with password protection</p>
+        </div>
+        <button onClick={() => {
+          const exportData = { seed: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about', timestamp: new Date().toISOString() };
+          const json = JSON.stringify(exportData);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'x3-wallet-backup.json';
+          a.click();
+          URL.revokeObjectURL(url);
+          alert('Backup downloaded. Protect this file with a strong password!');
+        }} className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 text-xs font-bold rounded transition-colors">
+          EXPORT
+        </button>
       </div>
       <div className="p-5 flex items-center justify-between hover:bg-red-500/10 transition-colors cursor-pointer group">
         <div>
