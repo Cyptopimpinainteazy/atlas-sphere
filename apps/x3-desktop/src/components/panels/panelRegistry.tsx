@@ -145,6 +145,18 @@ const SocialRecoveryPanel = lazy(() => import("@/components/panels/global/Social
 const GovernancePanel = lazy(() => import("@/components/panels/global/GovernancePanel"));
 const AnalyticsAuditPanel = lazy(() => import("@/components/panels/global/AnalyticsAuditPanel"));
 
+/* ── Sprint 10: Content Moderation, Agent Marketplace, Advanced DEX, Infrastructure Automation, Enterprise Security, Cross-Chain Bridge, Compliance Report, Token Vesting, API Gateway, Disaster Recovery ──── */
+const ContentModerationPanel = lazy(() => import("@/components/panels/social/ContentModerationPanel"));
+const AgentMarketplacePanel = lazy(() => import("@/components/panels/trading/AgentMarketplacePanel"));
+const AdvancedDexPanel = lazy(() => import("@/components/panels/dex/AdvancedDexPanel"));
+const InfrastructureAutomationPanel = lazy(() => import("@/components/panels/infrastructure/InfrastructureAutomationPanel"));
+const EnterpriseSecurityPanel = lazy(() => import("@/components/panels/admin/EnterpriseSecurityPanel"));
+const CrossChainBridgePanel = lazy(() => import("@/components/panels/infrastructure/CrossChainBridgePanel"));
+const ComplianceReportPanel = lazy(() => import("@/components/panels/admin/ComplianceReportPanel"));
+const TokenVestingPanel = lazy(() => import("@/components/panels/trading/TokenVestingPanel"));
+const APIGatewayPanel = lazy(() => import("@/components/panels/infrastructure/APIGatewayPanel"));
+const DisasterRecoveryPanel = lazy(() => import("@/components/panels/infrastructure/DisasterRecoveryPanel"));
+
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
@@ -414,6 +426,98 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "security-score":         AnalyticsAuditPanel,
   "vulnerability-timeline": AnalyticsAuditPanel,
   "audit-report":           AnalyticsAuditPanel,
+
+  /* ── Sprint 10: Content Moderation, Agent Marketplace, Advanced DEX, Infrastructure Automation, Enterprise Security, Cross-Chain Bridge, Compliance Report, Token Vesting, API Gateway, Disaster Recovery ── */
+  
+  // Social - Content Moderation
+  "content-moderation":     ContentModerationPanel,
+  "moderation":             ContentModerationPanel,
+  "community-moderation":   ContentModerationPanel,
+  "content-flags":          ContentModerationPanel,
+  "content-voting":         ContentModerationPanel,
+  "audit-logs":             ContentModerationPanel,
+  "moderation-dashboard":   ContentModerationPanel,
+
+  // Trading - Agent Marketplace
+  "agent-marketplace":      AgentMarketplacePanel,
+  "bot-marketplace":        AgentMarketplacePanel,
+  "strategy-marketplace":   AgentMarketplacePanel,
+  "trading-bots":           AgentMarketplacePanel,
+  "copy-trading":           AgentMarketplacePanel,
+  "bot-subscription":       AgentMarketplacePanel,
+  "ai-agents":              AgentMarketplacePanel,
+
+  // DEX - Advanced Routing
+  "advanced-dex":           AdvancedDexPanel,
+  "dex-routing":            AdvancedDexPanel,
+  "amm-routing":            AdvancedDexPanel,
+  "intelligent-routing":    AdvancedDexPanel,
+  "mev-protection":         AdvancedDexPanel,
+  "route-optimization":     AdvancedDexPanel,
+  "slippage-control":       AdvancedDexPanel,
+
+  // Infrastructure - Automation
+  "infrastructure-automation": InfrastructureAutomationPanel,
+  "validator-automation":   InfrastructureAutomationPanel,
+  "node-deployment":        InfrastructureAutomationPanel,
+  "automation-tasks":       InfrastructureAutomationPanel,
+  "validator-nodes":        InfrastructureAutomationPanel,
+  "geo-nodes":              InfrastructureAutomationPanel,
+  "deployment-manager":     InfrastructureAutomationPanel,
+
+  // Admin - Enterprise Security
+  "enterprise-security":    EnterpriseSecurityPanel,
+  "access-control":         EnterpriseSecurityPanel,
+  "rbac":                   EnterpriseSecurityPanel,
+  "hsm-keys":               EnterpriseSecurityPanel,
+  "key-management":         EnterpriseSecurityPanel,
+  "audit-trail":            EnterpriseSecurityPanel,
+  "access-logs":            EnterpriseSecurityPanel,
+
+  // Infrastructure - Cross-Chain Bridge
+  "cross-chain-bridge":     CrossChainBridgePanel,
+  "bridge":                 CrossChainBridgePanel,
+  "atomic-swap":            CrossChainBridgePanel,
+  "bridge-liquidity":       CrossChainBridgePanel,
+  "bridge-transfers":       CrossChainBridgePanel,
+  "bridging":               CrossChainBridgePanel,
+  "liquidity-pools-bridge": CrossChainBridgePanel,
+
+  // Admin - Compliance Report
+  "compliance-report":      ComplianceReportPanel,
+  "compliance-dashboard":   ComplianceReportPanel,
+  "soc2-compliance":        ComplianceReportPanel,
+  "gdpr-compliance":        ComplianceReportPanel,
+  "iso-compliance":         ComplianceReportPanel,
+  "regulatory-dashboard":   ComplianceReportPanel,
+  "audit-compliance":       ComplianceReportPanel,
+
+  // Trading - Token Vesting
+  "token-vesting":          TokenVestingPanel,
+  "vesting-schedule":       TokenVestingPanel,
+  "unlock-schedule":        TokenVestingPanel,
+  "vesting-timeline":       TokenVestingPanel,
+  "cliff-release":          TokenVestingPanel,
+  "token-release":          TokenVestingPanel,
+  "vesting-dashboard":      TokenVestingPanel,
+
+  // Infrastructure - API Gateway
+  "api-gateway":            APIGatewayPanel,
+  "rate-limiting":          APIGatewayPanel,
+  "quota-management":       APIGatewayPanel,
+  "api-keys":               APIGatewayPanel,
+  "api-quota":              APIGatewayPanel,
+  "rate-limits":            APIGatewayPanel,
+  "api-analytics":          APIGatewayPanel,
+
+  // Infrastructure - Disaster Recovery
+  "disaster-recovery":      DisasterRecoveryPanel,
+  "backup-recovery":        DisasterRecoveryPanel,
+  "backup-snapshots":       DisasterRecoveryPanel,
+  "restore-points":         DisasterRecoveryPanel,
+  "recovery-testing":       DisasterRecoveryPanel,
+  "backup-management":      DisasterRecoveryPanel,
+  "rto-rpo":                DisasterRecoveryPanel,
 };
 
 /**

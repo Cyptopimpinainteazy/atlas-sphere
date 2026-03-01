@@ -350,6 +350,20 @@
 
 ---
 
+### Sprint 10: Enterprise & Infrastructure
+- [x] **Content moderation layer** — community-governed content flags with staker voting on removal decisions. Multi-status tracking (pending/approved/removed).
+- [x] **AI agent marketplace** — subscription-based trading bot marketplace with copy-trading, ROI rankings, and strategy NFT minting.
+- [x] **Advanced DEX routing** — intelligent multi-hop AMM routing with MEV protection via commit-reveal scheme and configurable slippage tolerance.
+- [x] **Infrastructure automation** — geo-distributed validator deployment orchestration with automation task scheduling (backup, updates, performance reporting).
+- [x] **Enterprise security** — RBAC access control with HSM-backed key management, audit logs, and permission tracking for admin operations.
+- [x] **Cross-chain bridge** — trustless atomic transfers across EVM/Solana/X3 chains with liquidity pools and bridge validator coordination.
+- [x] **Compliance reporting** — SOC 2, GDPR, and ISO 27001 framework tracking with audit trail export and regulatory requirement dashboards.
+- [x] **Token vesting** — configurable cliff + linear/monthly/quarterly vesting with unlock timeline visualization and release milestone tracking.
+- [x] **API gateway** — rate limiting, quota tracking per-key, API key management with permissions and usage analytics.
+- [x] **Disaster recovery** — backup snapshots with integrity verification, restore testing (RTO/RPO), and disaster scenario playbooks.
+
+---
+
 ## SUMMARY SCORECARD
 
 | Feature Area | Current | Target | Key Unlock |
