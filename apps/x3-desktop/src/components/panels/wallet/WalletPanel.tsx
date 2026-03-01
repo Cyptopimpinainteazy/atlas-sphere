@@ -57,6 +57,33 @@ const WalletSetupView = ({ onGenerate }: { onGenerate: () => void }) => {
 const DashboardView = () => {
   const { tokens = [] } = useWalletStore();
   const [viewMode, setViewMode] = React.useState<'list' | 'galaxy'>('galaxy');
+  // Watch-only addresses persisted to localStorage
+  const [watchAddresses, setWatchAddresses] = React.useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('x3_watch_addresses') || '[]'); } catch { return []; }
+  });
+  const [newWatchAddr, setNewWatchAddr] = React.useState('');
+  const addWatchAddress = (addr: string) => {
+    if (!addr) return;
+    const next = Array.from(new Set([addr, ...watchAddresses]));
+    setWatchAddresses(next);
+    localStorage.setItem('x3_watch_addresses', JSON.stringify(next));
+    setNewWatchAddr('');
+  };
+  const removeWatchAddress = (addr: string) => {
+    const next = watchAddresses.filter((a) => a !== addr);
+    setWatchAddresses(next);
+    localStorage.setItem('x3_watch_addresses', JSON.stringify(next));
+  };
+
+  // Simple approvals store (frontend-only quick tool)
+  const [approvals, setApprovals] = React.useState<Array<{id:string,spender:string,token:string,allowance:string}>>(() => {
+    try { return JSON.parse(localStorage.getItem('x3_approvals') || '[]'); } catch { return []; }
+  });
+  const revokeApproval = (id: string) => {
+    const next = approvals.filter((a) => a.id !== id);
+    setApprovals(next);
+    localStorage.setItem('x3_approvals', JSON.stringify(next));
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -306,7 +333,25 @@ const SendView = () => (
              <Shield className="w-5 h-5" /> Contract scanned visually. No honeypots detected. Safe to execute.
            </div>
            
-           <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold rounded-xl py-4 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(99,102,241,0.4)] text-lg">
+           <button
+             onClick={async () => {
+               try {
+                 const payload = { action: 'send', to: '0x...', amount: '0' };
+                 try {
+                   // Attempt Tauri invoke (desktop)
+                   // @ts-ignore
+                   await invoke('sign_transaction', { payload });
+                   alert('Sign request sent to keystore (Tauri).');
+                 } catch (err) {
+                   console.warn('Tauri invoke failed', err);
+                   alert('Tauri not available: simulated sign completed.');
+                 }
+               } catch (err: any) {
+                 alert('Sign failed: ' + (err?.message || String(err)));
+               }
+             }}
+             className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold rounded-xl py-4 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(99,102,241,0.4)] text-lg"
+           >
              <Rocket className="w-5 h-5" /> Sign & Execute
            </button>
         </div>
@@ -387,10 +432,75 @@ const SwapView = () => (
 
 const HistoryView = () => {
   const { transactions } = useWalletStore();
-  
+  const [dateFrom, setDateFrom] = React.useState<string>('');
+  const [dateTo, setDateTo] = React.useState<string>('');
+  const [includePending, setIncludePending] = React.useState<boolean>(false);
+
+  const filteredTransactions = React.useMemo(() => {
+    if (!transactions || transactions.length === 0) return [] as any[];
+    return transactions.filter((t: any) => {
+      try {
+        const txDate = new Date(t.time);
+        if (dateFrom) {
+          const from = new Date(dateFrom + 'T00:00:00');
+          if (txDate < from) return false;
+        }
+        if (dateTo) {
+          const to = new Date(dateTo + 'T23:59:59');
+          if (txDate > to) return false;
+        }
+        if (!includePending && (t.status === 'pending' || t.status === 'unconfirmed')) return false;
+        return true;
+      } catch (err) {
+        return true;
+      }
+    });
+  }, [transactions, dateFrom, dateTo, includePending]);
+
+  const exportCSV = () => {
+    if (!filteredTransactions || filteredTransactions.length === 0) return;
+
+    const baseHeaders = ['id','type','time','amount','symbol','status'];
+    const includeDetails = includePending; // if including pending, add raw details column
+    const headers = includeDetails ? [...baseHeaders, 'details'] : baseHeaders;
+
+    const rows = filteredTransactions.map((t: any) => {
+      const base = [t.id, t.type, t.time, t.amount, t.symbol, t.status];
+      if (includeDetails) {
+        base.push(JSON.stringify(t));
+      }
+      return base;
+    });
+
+    const csv = [headers.join(','), ...rows.map(r => r.map(String).map(s => '"' + s.replace(/"/g, '""') + '"').join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const range = (dateFrom || dateTo) ? `-${dateFrom || ''}_${dateTo || ''}` : '';
+    a.href = url; a.download = `transactions${range}${includePending ? '-with-pending' : ''}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="animate-in fade-in duration-500 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><History className="text-gray-400 w-6 h-6"/> Transaction History</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold flex items-center gap-2"><History className="text-gray-400 w-6 h-6"/> Transaction History</h2>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-400">From</label>
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-[#0b0b0b] border border-[#222] px-2 py-2 rounded text-gray-300" />
+          <label className="text-xs text-gray-400">To</label>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-[#0b0b0b] border border-[#222] px-2 py-2 rounded text-gray-300" />
+          <label className="flex items-center gap-2 text-xs text-gray-400">
+            <input type="checkbox" checked={includePending} onChange={(e) => setIncludePending(e.target.checked)} />
+            Include pending
+          </label>
+          <button onClick={exportCSV} disabled={filteredTransactions.length === 0} className={`text-sm border px-3 py-2 rounded ${filteredTransactions.length === 0 ? 'bg-[#0b0b0b] border-[#333] text-gray-700 cursor-not-allowed' : 'bg-[#0b0b0b] border-[#222] text-gray-300 hover:bg-[#131313]'}`}>Export CSV</button>
+        </div>
+      </div>
+      <div className="mb-3 text-xs text-gray-400 flex items-center justify-end gap-3">
+        <span>{filteredTransactions.length} transactions selected</span>
+        {filteredTransactions.length === 0 && <span className="italic">Adjust date range or enable "Include pending"</span>}
+      </div>
       <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden shadow-xl">
         {transactions.map((tx, idx) => (
           <div key={tx.id} className={`flex items-center justify-between p-4 hover:bg-[#151515] transition-colors cursor-pointer ${idx !== transactions.length - 1 ? 'border-b border-[#222]' : ''}`}>
@@ -399,7 +509,7 @@ const HistoryView = () => {
                  {txIcon(tx.type)}
                </div>
                <div>
-                  <h4 className="font-bold text-white capitalize">{tx.type}</h4>
+                  <h4 className="font-bold text-white capitalize">{getTransactionLabel(tx)}</h4>
                   <p className="text-xs text-gray-500">{tx.time}</p>
                </div>
              </div>
@@ -1060,6 +1170,26 @@ const txIcon = (type: string) => {
   if (type === 'swap') return <ArrowLeftRight className="w-4 h-4 text-blue-400" />;
   if (type === 'comit') return <Zap className="w-4 h-4 text-orange-400" />;
   return <Coins className="w-4 h-4 text-purple-400" />;
+};
+
+// Auto-generate human-readable transaction labels
+const getTransactionLabel = (tx: any): string => {
+  const baseLabel = {
+    send: 'Sent',
+    receive: 'Received',
+    swap: 'Swapped',
+    comit: 'Executed Comit',
+    stake: 'Staking reward',
+    mint: 'Minted',
+    burn: 'Burned',
+  }[tx.type] || 'Transaction';
+  
+  // Add status/detail suffix
+  if (tx.status === 'pending') return baseLabel + ' (pending)';
+  if (tx.status === 'failed') return baseLabel + ' (failed)';
+  if (tx.type === 'swap' && tx.symbol) return `Swapped for ${tx.symbol}`;
+  if (tx.type === 'receive') return `Received ${tx.symbol || 'tokens'}`;
+  return baseLabel;
 };
 
 // ── Universal Wallet State ──────────────────────────────────────────────────

@@ -1,0 +1,394 @@
+├─ x3-chain-master
+│  ├─ DEPLOYMENT_GUIDE.md
+│  │  ├─ line 7: [ ] Node.js 18+ installed
+│  │  ├─ line 8: [ ] Ollama installed (optional but recommended)
+│  │  ├─ line 9: [ ] OpenRouter API key obtained (optional)
+│  │  ├─ line 10: [ ] Docker installed (for containerized deployment)
+│  │  ├─ line 11: [ ] Kubernetes cluster available (for K8s deployment)
+│  │  ├─ line 12: [ ] Configuration files created
+│  │  ├─ line 13: [ ] Dependencies installed
+│  │  ├─ line 14: [ ] Tests passing
+│  │  └─ line 15: [ ] Performance benchmarks accepted
+│  ├─ IMPLEMENTATION_SUMMARY.md
+│  │  ├─ line 436: [ ] Change default admin password
+│  │  ├─ line 437: [ ] Generate new AUTH_SALT (openssl rand -base64 32)
+│  │  ├─ line 438: [ ] Generate new JWT_SECRET (openssl rand -base64 32)
+│  │  ├─ line 439: [ ] Update CCGV_RPC_* with production APIs
+│  │  ├─ line 440: [ ] Enable HTTPS in nginx reverse proxy
+│  │  ├─ line 443: [ ] Create .env file with production values
+│  │  ├─ line 444: [ ] Update NODE_ENV=production
+│  │  ├─ line 445: [ ] Set ENVIRONMENT=production
+│  │  ├─ line 446: [ ] Configure log rotation
+│  │  ├─ line 449: [ ] Test login with new credentials
+│  │  ├─ line 450: [ ] Test service auto-start (reboot system)
+│  │  ├─ line 451: [ ] Test metrics display
+│  │  ├─ line 452: [ ] Test session persistence
+│  │  ├─ line 453: [ ] Verify HTTPS/TLS working
+│  │  ├─ line 456: [ ] Set up log aggregation
+│  │  ├─ line 457: [ ] Configure service health checks
+│  │  ├─ line 458: [ ] Set up alerts for service down
+│  │  ├─ line 459: [ ] Monitor memory/disk usage
+│  │  └─ line 460: [ ] Track authentication failures
+│  ├─ LLM_INTEGRATION_CHECKLIST.md
+│  │  ├─ line 262: [ ] Run `./setup-llm.sh`
+│  │  ├─ line 263: [ ] Start Ollama: `ollama serve`
+│  │  ├─ line 264: [ ] Start router: `npm start`
+│  │  ├─ line 265: [ ] Test: `curl http://localhost:3000/health`
+│  │  ├─ line 268: [ ] Read [QUICK_START_LLM.md](QUICK_START_LLM.md)
+│  │  ├─ line 269: [ ] Run [examples.js](llm-service/examples.js)
+│  │  ├─ line 270: [ ] Try JavaScript client
+│  │  ├─ line 271: [ ] Try Python client
+│  │  ├─ line 274: [ ] Read [substreams-skills-llm-integration.md](substreams-skills-llm-integration.md)
+│  │  ├─ line 275: [ ] Review [llm-config.json](llm-config.json) configuration options
+│  │  ├─ line 276: [ ] Set up OpenRouter (optional)
+│  │  ├─ line 277: [ ] Configure failover chain
+│  │  ├─ line 280: [ ] Deploy to Docker/Kubernetes ([DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md))
+│  │  ├─ line 281: [ ] Monitor performance ([llm-service/README.md#monitoring](llm-service/README.md#monitoring))
+│  │  ├─ line 282: [ ] Optimize costs and latency
+│  │  └─ line 283: [ ] Integrate into production applications
+│  ├─ LLM_INTEGRATION_OVERVIEW.md
+│  │  ├─ line 309: [ ] Node.js 18+ installed
+│  │  ├─ line 310: [ ] Ollama installed and running
+│  │  ├─ line 311: [ ] Dependencies installed with `npm install`
+│  │  ├─ line 312: [ ] LLM Router started with `npm start`
+│  │  ├─ line 313: [ ] Health check passing
+│  │  ├─ line 316: [ ] `.env` file created with API keys
+│  │  ├─ line 317: [ ] `docker-compose.llm.yml` configured
+│  │  ├─ line 318: [ ] Services started with `docker-compose up`
+│  │  ├─ line 319: [ ] Health checks passing
+│  │  ├─ line 322: [ ] Kubernetes cluster available
+│  │  ├─ line 323: [ ] OpenRouter secret created
+│  │  ├─ line 324: [ ] Manifests applied with `kubectl apply`
+│  │  ├─ line 325: [ ] Pods ready and healthy
+│  │  └─ line 326: [ ] Service accessible
+│  ├─ PRD_pentest.md
+│  │  ├─ line 7: [ ] Add dependency scanning to CI (npm audit / snyk) and fix high/critical findings
+│  │  ├─ line 8: [ ] Add a scheduled DAST job (OWASP ZAP) and store reports under `security/`
+│  │  ├─ line 9: [ ] Add secret-scanning pre-commit hooks and run `git-secrets` or `detect-secrets`
+│  │  ├─ line 10: [ ] Audit code for common SAST issues (input validation, crypto misuse)
+│  │  └─ line 11: [ ] Triage any discovered vulnerabilities and create remediation PRs
+│  ├─ PRD_sample_calculator.md
+│  │  ├─ line 7: [ ] Create a simple Python calculator module with basic operations (add, subtract, multiply, divide)
+│  │  ├─ line 8: [ ] Add comprehensive unit tests for the calculator module
+│  │  ├─ line 9: [ ] Create a README with usage examples and documentation
+│  │  ├─ line 10: [ ] Add error handling for edge cases (division by zero, invalid inputs)
+│  │  └─ line 11: [ ] Create a command-line interface for the calculator
+│  ├─ RALPH_COMPLETE_REFERENCE.md
+│  │  ├─ line 104: [ ] Create a simple Python calculator module with basic operations
+│  │  ├─ line 105: [ ] Add comprehensive unit tests for the calculator module
+│  │  ├─ line 106: [ ] Create a README with usage examples and documentation
+│  │  ├─ line 107: [ ] Add error handling for edge cases
+│  │  ├─ line 108: [ ] Create a command-line interface for the calculator
+│  │  ├─ line 181: [ ] Task 1: First step
+│  │  ├─ line 182: [ ] Task 2: Second step
+│  │  ├─ line 183: [ ] Task 3: Third step
+│  │  ├─ line 198: [ ] Set up project structure with package.json and dependencies
+│  │  ├─ line 199: [ ] Create data models and TypeScript interfaces
+│  │  ├─ line 200: [ ] Implement core business logic with error handling
+│  │  ├─ line 201: [ ] Add comprehensive unit tests with 80%+ coverage
+│  │  ├─ line 202: [ ] Create API documentation with examples
+│  │  ├─ line 203: [ ] Set up CI/CD pipeline with automated tests
+│  │  ├─ line 232: [ ] Extract common utilities into separate modules
+│  │  ├─ line 233: [ ] Add TypeScript types to all functions
+│  │  ├─ line 234: [ ] Improve error handling across the codebase
+│  │  ├─ line 235: [ ] Add JSDoc comments to all public APIs
+│  │  ├─ line 236: [ ] Update tests to match new structure
+│  │  ├─ line 245: [ ] Initialize project with package.json and tsconfig.json
+│  │  ├─ line 246: [ ] Set up ESLint and Prettier configurations
+│  │  ├─ line 247: [ ] Create folder structure (src/, tests/, docs/)
+│  │  ├─ line 248: [ ] Add GitHub Actions for CI/CD
+│  │  ├─ line 249: [ ] Create README with getting started guide
+│  │  └─ line 250: [ ] Set up pre-commit hooks
+│  ├─ RALPH_EXECUTION_GUIDE.md
+│  │  ├─ line 187: [ ] WebSocket RPC working
+│  │  ├─ line 188: [ ] EVM contracts deployable
+│  │  ├─ line 189: [ ] SVM programs deployable
+│  │  ├─ line 190: [ ] Cross-VM transactions working
+│  │  ├─ line 191: [ ] Wallet UI functional
+│  │  ├─ line 192: [ ] Explorer showing blocks
+│  │  ├─ line 219: [ ] Task description with clear action
+│  │  ├─ line 227: [ ] Task 1
+│  │  ├─ line 228: [ ] Task 2
+│  │  ├─ line 229: [ ] Task 3
+│  │  ├─ line 304: [ ] Commit any pending changes: `git commit -am "checkpoint before Ralph"`
+│  │  ├─ line 305: [ ] Ensure all dependencies installed: `cargo build`, `npm install`
+│  │  ├─ line 306: [ ] Run tests to verify baseline: `cargo test --workspace`
+│  │  ├─ line 307: [ ] Back up important files
+│  │  ├─ line 308: [ ] Read through PRD to understand scope
+│  │  ├─ line 312: [ ] Monitor Ralph regularly (don't just leave it)
+│  │  ├─ line 313: [ ] Check compilation after major changes
+│  │  ├─ line 314: [ ] Run tests periodically to catch issues early
+│  │  ├─ line 315: [ ] Review Ralph's commits: `git log -p`
+│  │  ├─ line 316: [ ] Pause if you see concerning changes
+│  │  ├─ line 320: [ ] Review all changes: `git diff`
+│  │  ├─ line 321: [ ] Run full test suite: `./tests/run-all.sh`
+│  │  ├─ line 322: [ ] Check documentation was updated
+│  │  ├─ line 323: [ ] Test features manually
+│  │  └─ line 324: [ ] Commit if needed: `git commit -am "completed task batch"`
+│  ├─ RALPH_SETUP_COMPLETE.md
+│  │  ├─ line 56: [ ] Task 1: Description
+│  │  ├─ line 57: [ ] Task 2: Description
+│  │  └─ line 58: [ ] Task 3: Description
+│  ├─ README_SETUP.md
+│  │  ├─ line 285: [ ] Change default admin password
+│  │  ├─ line 286: [ ] Generate new AUTH_SALT
+│  │  ├─ line 287: [ ] Generate new JWT_SECRET
+│  │  ├─ line 288: [ ] Update RPC endpoints with production keys
+│  │  ├─ line 289: [ ] Enable HTTPS in reverse proxy
+│  │  ├─ line 290: [ ] Configure Redis persistence
+│  │  ├─ line 291: [ ] Set up log rotation
+│  │  ├─ line 292: [ ] Configure monitoring/alerts
+│  │  ├─ line 293: [ ] Test auto-start (reboot)
+│  │  └─ line 294: [ ] Document credentials securely
+│  ├─ SETUP_SUMMARY.md
+│  │  ├─ line 292: [ ] **Change default credentials**
+│  │  ├─ line 298: [ ] **Update environment secrets**
+│  │  ├─ line 305: [ ] **Use HTTPS**
+│  │  ├─ line 311: [ ] **Run full test suite**
+│  │  ├─ line 317: [ ] **Enable auto-start services**
+│  │  ├─ line 324: [ ] **Setup monitoring & logging**
+│  │  └─ line 331: [ ] **Test auto-recovery**
+│  ├─ TPS_INTEGRATION_SUMMARY.md
+│  │  ├─ line 364: [x] Created Rust TPS tracker crate
+│  │  ├─ line 365: [x] Integrated with workspace Cargo.toml
+│  │  ├─ line 366: [x] Created InfluxDB Docker service
+│  │  ├─ line 367: [x] Built Streamlit dashboard
+│  │  ├─ line 368: [x] Created docker-compose orchestration
+│  │  ├─ line 369: [x] Built Python orchestrator script
+│  │  ├─ line 370: [x] Created bash wrapper script
+│  │  ├─ line 371: [x] Added comprehensive documentation
+│  │  ├─ line 372: [x] Unit tests included
+│  │  ├─ line 373: [x] Error handling and logging
+│  │  ├─ line 374: [x] Environment variable configuration
+│  │  └─ line 375: [x] Health checks and status commands
+│  ├─ lib.rs
+│  │  └─ line 281: TODO : Implement contention checking
+│  ├─ README.md
+│  │  ├─ line 126: [ ] 1.1 [Specific task]
+│  │  └─ line 127: [ ] 1.2 [Specific task]
+│  ├─ api.rs
+│  │  └─ line 45: TODO : track actual uptime
+│  ├─ INFERSTRUCTOR_300X_TEST_PLAN.md
+│  │  ├─ line 659: [ ] All 5 test phases completed successfully
+│  │  ├─ line 660: [ ] ≥19.5M TPS sustained for 10+ minutes
+│  │  ├─ line 661: [ ] 100% hash correctness across all lanes
+│  │  ├─ line 662: [ ] <3ms failover recovery time demonstrated
+│  │  ├─ line 663: [ ] Real-world testnet integration validated
+│  │  ├─ line 664: [ ] Metrics exported and reproducible
+│  │  ├─ line 665: [ ] External validator fallback tested
+│  │  ├─ line 666: [ ] No state divergence in any scenario
+│  │  ├─ line 667: [ ] PDF report generated
+│  │  └─ line 668: [ ] Code + configs committed to repo
+│  ├─ INTEGRATION_GUIDE.md
+│  │  ├─ line 580: [x] Multi-lane GPU acceleration (Primary/Shadow/Tertiary)
+│  │  ├─ line 581: [x] <3ms deterministic failover
+│  │  ├─ line 582: [x] JWT authentication & API keys
+│  │  ├─ line 583: [x] SLA tier enforcement
+│  │  ├─ line 584: [x] Real-time monitoring dashboard
+│  │  ├─ line 585: [ ] Multi-region deployment (US, EU, APAC)
+│  │  ├─ line 586: [ ] Custom lane slicing for Enterprise
+│  │  ├─ line 587: [ ] 24/7 NOC support
+│  │  ├─ line 588: [ ] Smart contract integration
+│  │  └─ line 589: [ ] Cross-chain atomic swaps via acceleration
+│  ├─ ONBOARDING_COMPLETE.md
+│  │  ├─ line 345: [ ] Test registration flow
+│  │  ├─ line 346: [ ] Verify API key authentication works
+│  │  ├─ line 347: [ ] Run 10-minute load test
+│  │  ├─ line 348: [ ] Implement native fallback in your code
+│  │  ├─ line 349: [ ] Set up monitoring alerts
+│  │  ├─ line 350: [ ] Document credentials securely
+│  │  ├─ line 351: [ ] Test failover (kill Primary lane, verify Shadow takes over)
+│  │  ├─ line 352: [ ] Verify result hash validation
+│  │  ├─ line 353: [ ] Load test at your expected TPS
+│  │  ├─ line 354: [ ] Contact support for production endpoint
+│  │  ├─ line 358: [ ] Use HTTPS endpoint: `https://inferstructor.x3.network`
+│  │  ├─ line 359: [ ] Store credentials in secrets manager (not .env files)
+│  │  ├─ line 360: [ ] Set up log aggregation
+│  │  ├─ line 361: [ ] Configure rate limit alerts
+│  │  ├─ line 362: [ ] Enable request tracing
+│  │  ├─ line 363: [ ] Set up cost monitoring
+│  │  ├─ line 364: [ ] Document runbooks for ops team
+│  │  └─ line 365: [ ] Test disaster recovery plan
+│  ├─ PRODUCTION_DEPLOYMENT_GUIDE.md
+│  │  ├─ line 446: [ ] GPU nodes provisioned with NVIDIA drivers
+│  │  ├─ line 447: [ ] CUDA 12.x installed on all nodes
+│  │  ├─ line 448: [ ] All lane configs updated with real IPs
+│  │  ├─ line 449: [ ] GPU lane services running on each node
+│  │  ├─ line 450: [ ] Toll booth service running
+│  │  ├─ line 451: [ ] Lane orchestrator monitoring all lanes
+│  │  ├─ line 452: [ ] End-to-end test completed
+│  │  ├─ line 453: [ ] Monitoring dashboard accessible
+│  │  └─ line 454: [ ] Failover tested (kill primary, verify shadow takes over)
+│  ├─ QUICKREF.md
+│  │  ├─ line 162: [ ] All 3 lanes deployed
+│  │  ├─ line 163: [ ] GPU kernels precompiled
+│  │  ├─ line 164: [ ] Toll booth configured
+│  │  ├─ line 165: [ ] SLA tiers defined
+│  │  ├─ line 166: [ ] Monitoring enabled
+│  │  ├─ line 167: [ ] Backup lanes tested
+│  │  ├─ line 168: [ ] Split-brain prevention verified
+│  │  ├─ line 169: [ ] External fallback tested
+│  │  ├─ line 170: [ ] 300× speed proven
+│  │  └─ line 171: [ ] Proof document exported
+│  ├─ security.md
+│  │  ├─ line 387: [ ] All external function calls have access controls
+│  │  ├─ line 388: [ ] Reentrancy guards implemented where needed
+│  │  ├─ line 389: [ ] Integer overflow/underflow checks in place
+│  │  ├─ line 390: [ ] Cross-VM calls properly validated
+│  │  ├─ line 391: [ ] State consistency maintained across VMs
+│  │  ├─ line 394: [ ] Unit tests cover all code paths
+│  │  ├─ line 395: [ ] Integration tests verify cross-VM behavior
+│  │  ├─ line 396: [ ] Property tests validate invariants
+│  │  ├─ line 397: [ ] Fuzz testing for edge cases
+│  │  ├─ line 398: [ ] Gas consumption tests
+│  │  ├─ line 401: [ ] Slither analysis (EVM contracts)
+│  │  ├─ line 402: [ ] Seahorse analysis (SVM programs)
+│  │  ├─ line 403: [ ] Custom cross-VM analysis rules
+│  │  └─ line 404: [ ] Formal verification where applicable
+│  ├─ enums.py
+│  │  └─ line 45: BUG LE = "Bugle"
+│  ├─ Alignment.h
+│  │  └─ line 59: FIXME : Remove this, make all assign operators constexpr and introduce user
+│  ├─ ArchiveWriter.cpp
+│  │  └─ line 365: TODO : Actually report errors helpfully.
+│  ├─ COFF.h
+│  │  ├─ line 613: FIXME : This should be DllCharacteristics to match the COFF spec.
+│  │  └─ line 620: FIXME : This should be NumberOfRvaAndSizes to match the COFF spec.
+│  ├─ Mangler.cpp
+│  │  └─ line 240: FIXME : During LTO, we're invoked prior to the EC lowering pass,
+│  ├─ archive_writer.rs
+│  │  └─ line 942: FIXME allow lowering the threshold for tests
+│  ├─ mangler.rs
+│  │  └─ line 23: TODO : In LLVM, this uses the Microsoft Demangler to demangle the name to
+│  ├─ object_reader.rs
+│  │  ├─ line 16: FIXME Use a better equivalent of LLVM's SymbolRef::SF_FormatSpecific
+│  │  └─ line 33: FIXME match what LLVM does
+│  ├─ common.rs
+│  │  └─ line 59: FIXME : LLVM 19 adds support for "coff" as a format argument, so in the
+│  ├─ global_rng.rs
+│  │  └─ line 211: TODO (notgull): Failures should be logged somewhere.
+│  ├─ wasm.rs
+│  │  └─ line 102: TODO : this is not correct if the thread is blocked in
+│  ├─ mod.rs
+│  │  └─ line 472: TODO : there should be strong guarantee that it does not return anything on
+│  ├─ send_buffer.rs
+│  │  └─ line 22: TODO : Recover storage from these by compacting (#700)
+│  ├─ spaces.rs
+│  │  └─ line 157: TODO : Handle packet number overflow gracefully
+│  ├─ packet.rs
+│  │  └─ line 603: TODO : Support long CIDs for compatibility with future QUIC versions
+│  ├─ array_range_set.rs
+│  │  └─ line 72: TODO : This can potentially be made more efficient, since the we know
+│  ├─ token.rs
+│  │  └─ line 373: TODO : Server ID??
+│  ├─ thunk.rs
+│  │  └─ line 88: TODO : Don't generate a signature, but find an existing one.
+│  ├─ ralph.py
+│  │  └─ line 33: TODO :
+│  ├─ install_x3_enforcement.sh
+│  │  ├─ line 240: [ ] Determinism: identical inputs → identical state root
+│  │  ├─ line 241: [ ] Validity: invalid txs/blocks never accepted
+│  │  ├─ line 242: [ ] No unintended mint/burn
+│  │  ├─ line 245: [ ] Valid tx eventually eligible for inclusion
+│  │  ├─ line 246: [ ] No deadlocks in proposer/validator flow
+│  │  ├─ line 249: [ ] Fee accounting correct
+│  │  └─ line 250: [ ] Gas metering correct
+│  ├─ install_x3_enforcement_solo.sh
+│  │  ├─ line 105: [ ] Determinism: identical inputs → identical state root
+│  │  ├─ line 106: [ ] Validity: invalid tx/block never accepted
+│  │  ├─ line 107: [ ] No unintended mint/burn
+│  │  ├─ line 110: [ ] Valid tx eventually eligible for inclusion
+│  │  ├─ line 111: [ ] No deadlocks in proposer/validator flow
+│  │  ├─ line 114: [ ] Fee accounting correct
+│  │  └─ line 115: [ ] Gas metering correct
+│  ├─ p4_rapid_execution.sh
+│  │  ├─ line 434: [ ] Review P4_IMPLEMENTATION_GUIDE.md
+│  │  ├─ line 435: [ ] Verify Python 3.10+ available
+│  │  ├─ line 436: [ ] Verify CUDA 11.8+ available (if using GPU)
+│  │  ├─ line 437: [ ] Review solana_accelerators.py structure
+│  │  ├─ line 442: [ ] Create virtual environment: `python3 -m venv .venv-p4`
+│  │  ├─ line 443: [ ] Activate venv: `source .venv-p4/bin/activate`
+│  │  ├─ line 444: [ ] Install dependencies:
+│  │  ├─ line 448: [ ] Verify CUDA toolkit: `nvcc --version`
+│  │  ├─ line 449: [ ] Verify GPU: `nvidia-smi`
+│  │  ├─ line 452: [ ] Create branch: `git checkout -b feat/p4-gpu-accelerator`
+│  │  ├─ line 453: [ ] Confirm files exist:
+│  │  ├─ line 461: [ ] Review `SolanaSignatureVerifier` class structure
+│  │  ├─ line 462: [ ] Understand batch processing approach
+│  │  ├─ line 463: [ ] Study CUDA kernel mapping (128 threads/block)
+│  │  ├─ line 464: [ ] Document potential bottlenecks
+│  │  ├─ line 467: [ ] Scaffold ed25519_verify_batch_kernel function
+│  │  ├─ line 468: [ ] Set up host wrapper function
+│  │  ├─ line 469: [ ] Define thread/block layout
+│  │  ├─ line 470: [ ] Test empty kernel compilation
+│  │  ├─ line 473: [ ] Run single signature test
+│  │  ├─ line 474: [ ] Run batch 128 test
+│  │  ├─ line 475: [ ] Capture baseline CPU time
+│  │  ├─ line 476: [ ] Document test harness
+│  │  ├─ line 481: [ ] Execute: `pytest tests/p4_gpu_integration_tests.py::TestSignatureVerification -v`
+│  │  ├─ line 482: [ ] Capture results to: `tests/p4_benchmarks/day1_results.log`
+│  │  ├─ line 483: [ ] Document any failures
+│  │  ├─ line 486: [ ] Run: `python3 scripts/p4_utils/baseline_measurement.py`
+│  │  ├─ line 487: [ ] Save output: `tests/p4_benchmarks/baseline.txt`
+│  │  ├─ line 488: [ ] Compare with targets
+│  │  ├─ line 493: [ ] Tests passed: ____ / 30
+│  │  ├─ line 494: [ ] CPU baseline measured: ✓
+│  │  ├─ line 495: [ ] CUDA environment verified: ✓
+│  │  ├─ line 496: [ ] Day 2 ready: ✓
+│  │  ├─ line 497: [ ] Blockers: _______
+│  │  ├─ line 500: [ ] Update PROGRESS.md with Day 1 completion
+│  │  ├─ line 501: [ ] Commit code: `git commit -m "P4 Day 1: SigVerifier scaffolding"`
+│  │  ├─ line 502: [ ] Push branch: `git push origin feat/p4-gpu-accelerator`
+│  │  ├─ line 629: [ ] All 3 accelerators implemented
+│  │  ├─ line 630: [ ] 30+ tests passing (100%)
+│  │  ├─ line 631: [ ] Security audit complete
+│  │  ├─ line 632: [ ] Performance targets met
+│  │  ├─ line 635: [ ] Implementation guide complete
+│  │  ├─ line 636: [ ] Runbooks created
+│  │  ├─ line 637: [ ] API documentation final
+│  │  ├─ line 638: [ ] Security policy documented
+│  │  ├─ line 641: [ ] Testnet validation complete
+│  │  ├─ line 642: [ ] Staging environment tested
+│  │  ├─ line 643: [ ] Rollback plan documented
+│  │  ├─ line 644: [ ] Production checklist signed off
+│  │  ├─ line 647: [ ] Git tag: v0.1.0-p4
+│  │  ├─ line 648: [ ] Release notes: Include 250x speedup highlight
+│  │  ├─ line 649: [ ] Announcement: Team notification
+│  │  └─ line 650: [ ] Go-live: Production deployment
+│  ├─ shot_blaster_config.yaml
+│  │  └─ line 10: TODO 
+│  ├─ substreams-skills-llm-integration.md
+│  │  ├─ line 702: [ ] Ollama installed and running (`ollama serve`)
+│  │  ├─ line 703: [ ] Model pulled (`ollama pull mistral`)
+│  │  ├─ line 704: [ ] OpenRouter API key obtained
+│  │  ├─ line 705: [ ] `llm-config.json` created with configuration
+│  │  ├─ line 706: [ ] LLM router service running (`node llm-service/router.js`)
+│  │  ├─ line 707: [ ] Health check passes (`curl http://localhost:3000/health`)
+│  │  ├─ line 708: [ ] Query endpoint responds (`curl -X POST http://localhost:3000/query`)
+│  │  ├─ line 709: [ ] Skills accessible via client library
+│  │  ├─ line 710: [ ] Failover chain configured
+│  │  └─ line 711: [ ] Tests passing with both providers
+│  ├─ README_OLD.md
+│  │  ├─ line 352: [ ] 1.1 Add OTP secret column to users table
+│  │  ├─ line 353: [ ] 1.2 Create OTP verification logs table
+│  │  ├─ line 356: [ ] 2.1 Add OTP generation endpoint
+│  │  ├─ line 357: [ ] 2.2 Modify login flow to require OTP
+│  │  ├─ line 358: [ ] 2.3 Add OTP verification endpoint
+│  │  ├─ line 361: [ ] 3.1 Create OTP input component
+│  │  └─ line 362: [ ] 3.2 Update login flow UI
+│  ├─ tasks.md
+│  │  ├─ line 3: [ ] 1.1 <!-- Task description -->
+│  │  ├─ line 4: [ ] 1.2 <!-- Task description -->
+│  │  ├─ line 8: [ ] 2.1 <!-- Task description -->
+│  │  └─ line 9: [ ] 2.2 <!-- Task description -->
+│  ├─ design.md
+│  │  └─ line 126: [ ] proposal
+│  ├─ proposal.md
+│  │  └─ line 12: BUG : total === 0 ≠ completed
+│  └─ schema.yaml
+│     ├─ line 133: [ ] 1.1 Create new module structure
+│     ├─ line 134: [ ] 1.2 Add dependencies to package.json
+│     ├─ line 138: [ ] 2.1 Implement data export function
+│     └─ line 139: [ ] 2.2 Add CSV formatting utilities
+└─ x3-chain
+   └─ line NaN:  

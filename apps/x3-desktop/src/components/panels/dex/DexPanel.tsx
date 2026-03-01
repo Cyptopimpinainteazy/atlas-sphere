@@ -370,6 +370,26 @@ const DexPanel: React.FC = () => {
     return acc + pool.reserveA;
   }, 0n);
   const poolCount = matchingPools.length;
+  // Fallback price impact calculation using constant-product formula
+  const computeFallbackPriceImpact = (): number | null => {
+    try {
+      if (!payAmount || parseFloat(payAmount) <= 0) return null;
+      if (poolCount === 0) return null;
+      const amountIn = BigInt(x3Chain.toChainUnits(parseFloat(payAmount), payToken.decimals));
+      const reserveIn = BigInt(totalReservePay);
+      const reserveOut = BigInt(totalReserveReceive);
+      if (reserveIn <= 0n || reserveOut <= 0n) return null;
+      // ideal (no price impact) output using current price ratio
+      const idealOut = (amountIn * reserveOut) / reserveIn;
+      // constant-product output (no fees)
+      const actualOut = (amountIn * reserveOut) / (reserveIn + amountIn);
+      if (idealOut <= 0n) return null;
+      const impactBps = Number(((idealOut - actualOut) * 10000n) / idealOut);
+      return impactBps / 100; // percent
+    } catch {
+      return null;
+    }
+  };
 
   const formatReserve = (amount: bigint, decimals: number) => {
     if (amount <= 0n) return '0';
@@ -487,11 +507,15 @@ const DexPanel: React.FC = () => {
           <div className="flex justify-between text-gray-400">
             <span>Price Impact</span>
             <span className={clsx(
-              priceImpact !== null
-                ? priceImpact < 1 ? 'text-green-400' : priceImpact < 3 ? 'text-yellow-400' : 'text-red-400'
+              priceImpact !== null || computeFallbackPriceImpact() !== null
+                ? (priceImpact ?? computeFallbackPriceImpact() ?? 0) < 1 ? 'text-green-400' : (priceImpact ?? computeFallbackPriceImpact() ?? 0) < 3 ? 'text-yellow-400' : 'text-red-400'
                 : 'text-gray-500',
             )}>
-              {priceImpact !== null ? `${priceImpact.toFixed(2)}%` : '<0.01%'}
+              {priceImpact !== null
+                ? `${priceImpact.toFixed(2)}%`
+                : computeFallbackPriceImpact() !== null
+                  ? `${computeFallbackPriceImpact()!.toFixed(2)}%`
+                  : '<0.01%'}
             </span>
           </div>
           <div className="flex justify-between text-gray-400">

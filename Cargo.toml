@@ -271,6 +271,9 @@ uuid = { path = "patches/uuid" }
 memfd = { path = "patches/memfd" }
 # Fix ahash to use getrandom 0.2 instead of 0.3 (0.3 doesn't support wasm32-unknown-unknown)
 ahash = { path = "patches/ahash" }
+# Stub icu_properties to avoid rustc ICE on string literal unescaping
+# The real icu_properties triggers a compiler panic in rustc 1.93+ when compiling with full workspace features
+icu_properties = { path = "patches/icu_properties_stub" }
 # Experimental: attempt to unify `curve25519-dalek` across workspace to satisfy Solana and Substrate consumers
 # REVERTED: workspace unification proved incompatible with pinned Substrate deps — keeping isolated SVM integration test instead
 # (was: curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" })
