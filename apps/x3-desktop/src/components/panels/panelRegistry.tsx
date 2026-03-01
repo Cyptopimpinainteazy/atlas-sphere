@@ -91,6 +91,10 @@ const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDa
 const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructure/InfrastructurePanel"));
 const RpcStatsPanel = lazy(() => import("@/components/panels/infrastructure/RpcStatsPanel"));
 const AirdropsPanel = lazy(() => import("@/components/panels/infrastructure/AirdropsPanel"));
+const WhaleTrackerPanel = lazy(() => import("@/components/panels/infrastructure/WhaleTrackerPanel"));
+
+/* ── Desktop Updates & Settings ──── */
+const DesktopUpdatesPanel = lazy(() => import("@/components/panels/desktop/DesktopUpdatesPanel"));
 
 /* ── Validators Globe (ported from apps/validators) ──── */
 const ValidatorsPanel = lazy(() => import("@/components/panels/validators/ValidatorsPanel"));
@@ -216,6 +220,13 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "rpc-pool":               RpcStatsPanel,
   "airdrops":               AirdropsPanel,
   "airdrops-faucets":       AirdropsPanel,
+  "whale-tracker":          WhaleTrackerPanel,
+  "whale-alerts":           WhaleTrackerPanel,
+
+  /* ── Desktop Updates & Settings ── */
+  "desktop-updates":        DesktopUpdatesPanel,
+  "updates":                DesktopUpdatesPanel,
+  "changelog":              DesktopUpdatesPanel,
 
   /* ── Health Dashboard (ported from apps/health-dashboard) ── */
   "health-dashboard":       HealthDashboardPanel,

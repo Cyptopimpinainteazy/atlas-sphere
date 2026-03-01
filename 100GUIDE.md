@@ -149,7 +149,7 @@
 - [x] **Keyboard shortcut map** — complete, configurable keyboard shortcuts for every action. Show cheatsheet with Ctrl+?.
 - [x] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
 - [ ] **Widget layer** — always-on-top mini widgets: live X3 price ticker, validator status dot, unread message count.
-- [ ] **Auto-update** — Tauri's built-in updater so users get new versions without downloading manually. Show changelog on update.
+- [x] **Auto-update** — Tauri's built-in updater so users get new versions without downloading manually. Show changelog on update.
 - [ ] **Crash reporter** — if Tauri crashes, auto-collect logs and prompt user to submit a bug report with one click.
 - [x] **Onboarding flow** — first-launch wizard: create wallet → connect validator → configure panels → set theme. No cold start confusion.
 
@@ -269,7 +269,7 @@
 - [ ] **Analytics tab** — daily TPS, active addresses, new contracts deployed, fee revenue charts going back to genesis.
 - [ ] **Token tracker** — discover all tokens on the chain, sorted by market cap, holders, volume.
 - [ ] **NFT explorer** — browse all NFT collections. See rarity ranks, recent sales, floor prices.
-- [ ] **Whale tracker** — alert when a wallet > $100K moves funds. Searchable whale watchlist.
+- [x] **Whale tracker** — alert when a wallet > $100K moves funds. Searchable whale watchlist.
 
 ---
 
