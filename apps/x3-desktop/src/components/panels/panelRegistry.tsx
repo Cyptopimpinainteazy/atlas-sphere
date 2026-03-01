@@ -133,6 +133,18 @@ const PortfolioRiskPanel = lazy(() => import("@/components/panels/analytics/Port
 /* ── Documentation & API ──── */
 const ApiReferencePanel = lazy(() => import("@/components/panels/documentation/ApiReferencePanel"));
 
+/* ── Sprint 9: App Store, Multi-Monitor, KYC, Whitelist, Anti-Sniper, Token Audit, Liquidity Lock, Social Recovery, Governance, Analytics Audit ──── */
+const AppStorePanel = lazy(() => import("@/components/panels/desktop/AppStorePanel"));
+const MultiMonitorPanel = lazy(() => import("@/components/panels/desktop/MultiMonitorPanel"));
+const KycGatingPanel = lazy(() => import("@/components/panels/defi/KycGatingPanel"));
+const WhitelistPresalePanel = lazy(() => import("@/components/panels/defi/WhitelistPresalePanel"));
+const AntisniperPanel = lazy(() => import("@/components/panels/defi/AntisniperPanel"));
+const TokenAuditPanel = lazy(() => import("@/components/panels/defi/TokenAuditPanel"));
+const LiquidityLockPanel = lazy(() => import("@/components/panels/defi/LiquidityLockPanel"));
+const SocialRecoveryPanel = lazy(() => import("@/components/panels/global/SocialRecoveryPanel"));
+const GovernancePanel = lazy(() => import("@/components/panels/global/GovernancePanel"));
+const AnalyticsAuditPanel = lazy(() => import("@/components/panels/global/AnalyticsAuditPanel"));
+
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
@@ -332,6 +344,76 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "crash-reporter":         CrashReporterPanel,
   "bug-reporter":           CrashReporterPanel,
   "error-report":           CrashReporterPanel,
+
+  /* ── Sprint 9: App Store, Multi-Monitor, KYC, Whitelist Presales, Anti-Sniper, Token Audit, Liquidity Lock, Social Recovery, Governance, Analytics Audit ── */
+  // Desktop
+  "app-store":              AppStorePanel,
+  "plugin-marketplace":     AppStorePanel,
+  "extensions-store":       AppStorePanel,
+  "desktop-apps":           AppStorePanel,
+  "multi-monitor":          MultiMonitorPanel,
+  "multi-display":          MultiMonitorPanel,
+  "display-settings":       MultiMonitorPanel,
+  "screen-arrangement":     MultiMonitorPanel,
+
+  // DeFi - KYC & Compliance
+  "kyc-gating":             KycGatingPanel,
+  "kyc-verification":       KycGatingPanel,
+  "aml-compliance":         KycGatingPanel,
+  "identity-verification":  KycGatingPanel,
+  "tier-limits":            KycGatingPanel,
+
+  // DeFi - Whitelist Presales
+  "whitelist-presale":      WhitelistPresalePanel,
+  "presale-whitelist":      WhitelistPresalePanel,
+  "whitelist-tiers":        WhitelistPresalePanel,
+  "presale-rounds":         WhitelistPresalePanel,
+  "presale-claims":         WhitelistPresalePanel,
+  "token-allocation":       WhitelistPresalePanel,
+
+  // DeFi - Anti-Sniper
+  "anti-sniper":            AntisniperPanel,
+  "antidump":               AntisniperPanel,
+  "bot-protection":         AntisniperPanel,
+  "sniper-defense":         AntisniperPanel,
+  "launch-protection":      AntisniperPanel,
+
+  // DeFi - Token Audit
+  "token-audit":            TokenAuditPanel,
+  "audit-badge":            TokenAuditPanel,
+  "smart-contract-audit":   TokenAuditPanel,
+  "security-audit":         TokenAuditPanel,
+  "certik-audit":           TokenAuditPanel,
+
+  // DeFi - Liquidity Lock
+  "liquidity-lock":         LiquidityLockPanel,
+  "lp-lock":                LiquidityLockPanel,
+  "lock-lp":                LiquidityLockPanel,
+  "lock-schedule":          LiquidityLockPanel,
+  "unlock-schedule":        LiquidityLockPanel,
+
+  // Global - Social Recovery
+  "social-recovery":        SocialRecoveryPanel,
+  "guardian-recovery":      SocialRecoveryPanel,
+  "wallet-recovery":        SocialRecoveryPanel,
+  "key-recovery":           SocialRecoveryPanel,
+  "guardians":              SocialRecoveryPanel,
+
+  // Global - Governance
+  "governance":             GovernancePanel,
+  "dao-governance":         GovernancePanel,
+  "proposals":              GovernancePanel,
+  "voting":                 GovernancePanel,
+  "dao-voting":             GovernancePanel,
+  "quorum":                 GovernancePanel,
+
+  // Global - Analytics Audit
+  "analytics-audit":        AnalyticsAuditPanel,
+  "audit-analytics":        AnalyticsAuditPanel,
+  "audit-history":          AnalyticsAuditPanel,
+  "security-score":         AnalyticsAuditPanel,
+  "vulnerability-timeline": AnalyticsAuditPanel,
+  "audit-report":           AnalyticsAuditPanel,
 };
 
 /**

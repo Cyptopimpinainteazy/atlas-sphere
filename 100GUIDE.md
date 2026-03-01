@@ -100,11 +100,11 @@
 ### Token Launchpad
 - [x] **Bonding curve launches** — new tokens start on a bonding curve, graduate to the full AMM at a market cap threshold (like pump.fun).
 - [x] **Vesting schedules** — team/investor tokens locked with on-chain vesting contracts. Cliff + linear release.
-- [ ] **KYC/AML gating** — optional KYC for regulated token sales. Integrate Sumsub or Persona identity API.
-- [ ] **Whitelist presales** — NFT-gated or wallet-gated presale rounds before public launch.
-- [ ] **Anti-snipe protection** — block bots from buying more than 1% of supply in the first 3 blocks after launch.
-- [ ] **Token audit badge** — automatic CertiK/Hacken style static analysis run on every deployed token contract. Badge displayed on launchpad.
-- [ ] **Liquidity lock** — require launchers to lock LP tokens for minimum 6 months. Show lock status prominently on token page.
+- [x] **KYC/AML gating** — optional KYC for regulated token sales. Integrate Sumsub or Persona identity API.
+- [x] **Whitelist presales** — NFT-gated or wallet-gated presale rounds before public launch.
+- [x] **Anti-snipe protection** — block bots from buying more than 1% of supply in the first 3 blocks after launch.
+- [x] **Token audit badge** — automatic CertiK/Hacken style static analysis run on every deployed token contract. Badge displayed on launchpad.
+- [x] **Liquidity lock** — require launchers to lock LP tokens for minimum 6 months. Show lock status prominently on token page.
 
 ---
 
@@ -114,7 +114,7 @@
 - [x] **Real transaction signing** — `WalletPanel` needs to call `window.__TAURI__.invoke('sign_transaction', ...)` using the Rust keystore backend.
 - [x] **Hardware wallet support** — Ledger + Trezor via WebUSB/WebHID. Required for institutional users.
 - [x] **Multi-signature wallets** — M-of-N multisig with an on-chain approval flow. Critical for DAO treasuries.
-- [ ] **Social recovery** — designate 3 guardians who can collectively recover your wallet if you lose your key (ERC-4337 model).
+- [x] **Social recovery** — designate 3 guardians who can collectively recover your wallet if you lose your key (ERC-4337 model).
 - [x] **Watch-only mode** — add any address as a read-only wallet to monitor without importing keys.
 - [x] **Address book** — save frequent addresses with labels. Auto-complete on send.
 - [x] **ENS / X3 Name Service** — resolve human-readable names like `alice.x3` to wallet addresses.
@@ -142,9 +142,9 @@
 ## 🔴 TIER 5 — TAURI DESKTOP (Current: 90 → Target: 100)
 
 ### Desktop OS Experience
-- [ ] **App Store live listings** — `AppStorePage` needs real installable apps/plugins, not static cards. Build a plugin API so devs can submit panel plugins.
+- [x] **App Store live listings** — `AppStorePage` needs real installable apps/plugins, not static cards. Build a plugin API so devs can submit panel plugins.
 - [x] **Window snap layouts** — drag windows to screen edges for tiling (Windows 11-style). 2x2, 1+2, full-screen layouts.
-- [ ] **Multi-monitor support** — detect multiple displays. Allow windows to span or lock to specific monitors.
+- [x] **Multi-monitor support** — detect multiple displays. Allow windows to span or lock to specific monitors.
 - [x] **System notifications** — Tauri native notifications for: tx confirmed, validator alert, new message, price alert.
 - [x] **Keyboard shortcut map** — complete, configurable keyboard shortcuts for every action. Show cheatsheet with Ctrl+?.
 - [x] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
@@ -315,6 +315,10 @@
 - [ ] **SOC 2 Type II** — get the Tauri desktop app SOC 2 certified. Required for enterprise CRM sales.
 - [ ] **Terms of Service & Privacy Policy** — `TermsPanel` and `PrivacyPanel` exist. Have a lawyer review and finalize them.
 - [ ] **Jurisdiction filtering** — block access from sanctioned countries at the frontend level. Log for compliance evidence.
+
+### Governance & Audit
+- [x] **DAO governance interface** — proposal submission, voting power display, voting on proposals with time locks and quorum tracking.
+- [x] **Audit analytics dashboard** — security score tracking, audit history, vulnerability timeline, remediation tracking across all audits.
 
 ---
 
