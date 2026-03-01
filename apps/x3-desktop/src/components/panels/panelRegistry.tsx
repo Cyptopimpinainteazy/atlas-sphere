@@ -63,6 +63,7 @@ const ExplorerDetailPanel   = lazy(() => import("@/components/panels/explorer/Ex
 
 /* ── Wallet (ported from apps/wallet) ──── */
 const WalletPanel = lazy(() => import("@/components/panels/wallet/WalletPanel"));
+const NftGalleryPanel = lazy(() => import("@/components/panels/wallet/NftGalleryPanel"));
 
 /* ── X3 Intelligence (ported from apps/x3-intelligence) ──── */
 const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
@@ -77,6 +78,7 @@ const X3WhyPanel            = lazy(() => import("@/components/panels/x3intel/X3W
 const DexPanel           = lazy(() => import("@/components/panels/dex/DexPanel"));
 const DexPoolsPanel      = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
 const DexOrderbookPanel  = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
+const ConcentratedLiquidityPanel = lazy(() => import("@/components/panels/dex/ConcentratedLiquidityPanel"));
 
 /* ── DeFi (Vote-Escrow & Liquidity Mining) ──── */
 const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
@@ -95,9 +97,11 @@ const WhaleTrackerPanel = lazy(() => import("@/components/panels/infrastructure/
 
 /* ── Desktop Updates & Settings ──── */
 const DesktopUpdatesPanel = lazy(() => import("@/components/panels/desktop/DesktopUpdatesPanel"));
+const WidgetLayerPanel = lazy(() => import("@/components/panels/desktop/WidgetLayerPanel"));
 
 /* ── Validators Globe (ported from apps/validators) ──── */
 const ValidatorsPanel = lazy(() => import("@/components/panels/validators/ValidatorsPanel"));
+const ValidatorSetupWizardPanel = lazy(() => import("@/components/panels/validators/ValidatorSetupWizardPanel"));
 
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
@@ -235,6 +239,17 @@ const PANEL_MAP: Record<string, ComponentType> = {
   /* ── Admin Dashboard ── */
   "admin-dashboard":        AdminPanel,
   "admin-panel":            AdminPanel,
+
+  /* ── Sprint 6: Validator Setup, NFT Gallery, Concentrated Liquidity, Widgets ── */
+  "validator-setup":        ValidatorSetupWizardPanel,
+  "setup-wizard":           ValidatorSetupWizardPanel,
+  "nft-gallery":            NftGalleryPanel,
+  "nft-explorer":           NftGalleryPanel,
+  "concentrated-liquidity": ConcentratedLiquidityPanel,
+  "v3":                     ConcentratedLiquidityPanel,
+  "widget-layer":           WidgetLayerPanel,
+  "widgets":                WidgetLayerPanel,
+  "floating-widgets":       WidgetLayerPanel,
 };
 
 /**

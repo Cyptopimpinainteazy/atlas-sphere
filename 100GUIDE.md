@@ -123,7 +123,7 @@
 
 ### Token & NFT Management
 - [x] **Auto-detect tokens** — scan chain for all tokens held by the address. Show balances without manual add.
-- [ ] **NFT gallery** — display all NFTs with full metadata, image, collection info. Transfer/list directly from gallery.
+- [x] **NFT gallery** — display all NFTs with full metadata, image, collection info. Transfer/list directly from gallery.
 - [x] **Token whitelisting** — spam protection: unknown tokens go to a separate "pending" tab until user approves.
 - [x] **Price in fiat** — show all balances in USD/EUR/BTC equivalent using CoinGecko API.
 - [x] **Transaction history with labels** — auto-label transactions: "Swapped X3 → USDC on DEX", "Staking reward", "Bridge deposit".
@@ -148,7 +148,7 @@
 - [x] **System notifications** — Tauri native notifications for: tx confirmed, validator alert, new message, price alert.
 - [x] **Keyboard shortcut map** — complete, configurable keyboard shortcuts for every action. Show cheatsheet with Ctrl+?.
 - [x] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
-- [ ] **Widget layer** — always-on-top mini widgets: live X3 price ticker, validator status dot, unread message count.
+- [x] **Widget layer** — always-on-top mini widgets: live X3 price ticker, validator status dot, unread message count.
 - [x] **Auto-update** — Tauri's built-in updater so users get new versions without downloading manually. Show changelog on update.
 - [ ] **Crash reporter** — if Tauri crashes, auto-collect logs and prompt user to submit a bug report with one click.
 - [x] **Onboarding flow** — first-launch wizard: create wallet → connect validator → configure panels → set theme. No cold start confusion.
@@ -247,7 +247,7 @@
 
 ### Validator Operations
 - [x] **ValidatorsPanel → real node data** — connect to live RPC endpoints and show real validator uptime, block production, slash history.
-- [ ] **One-click validator setup** — `x3_operator` Python tool exists. Make it a GUI wizard in the Tauri app. Click → install → stake → live.
+- [x] **One-click validator setup** — `x3_operator` Python tool exists. Make it a GUI wizard in the Tauri app. Click → install → stake → live.
 - [ ] **Validator performance leaderboard** — ranked by: uptime, blocks produced, GPU benchmark score, MEV share returned.
 - [ ] **Automated validator alert system** — email/push notification when your validator misses a block, gets slashed, or needs an update.
 - [ ] **Geographic distribution map** — `WorldMonitorPanel` shows validator positions on a globe. Make it real-time with actual IP geolocation.
