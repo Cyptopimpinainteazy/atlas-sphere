@@ -653,6 +653,104 @@ fn remove_amm_adapter_works() {
 }
 
 // ============================================================================
+// Liquidity Pool Tests
+// ============================================================================
+
+#[test]
+fn register_liquidity_pool_works() {
+    new_test_ext().execute_with(|| {
+        let token_a = H256::from_low_u64_be(1);
+        let token_b = H256::from_low_u64_be(2);
+
+        assert_ok!(AtomicTradeEngine::register_liquidity_pool(
+            RuntimeOrigin::root(),
+            AmmProtocol::UniswapV2,
+            VmType::Evm,
+            token_a,
+            token_b,
+            1_000_000_000_000,
+            2_000_000_000_000,
+            30,
+            vec![0x11; 20],
+        ));
+
+        let pools: Vec<_> = LiquidityPools::<Test>::iter().collect();
+        assert_eq!(pools.len(), 1);
+        let (_pool_id, pool) = pools[0].clone();
+        assert_eq!(pool.token_a, token_a);
+        assert_eq!(pool.token_b, token_b);
+        assert_eq!(pool.reserve_a, 1_000_000_000_000);
+        assert_eq!(pool.reserve_b, 2_000_000_000_000);
+        assert_eq!(pool.fee_bps, 30);
+        assert_eq!(pool.protocol, AmmProtocol::UniswapV2);
+    });
+}
+
+#[test]
+fn update_liquidity_pool_works() {
+    new_test_ext().execute_with(|| {
+        let token_a = H256::from_low_u64_be(3);
+        let token_b = H256::from_low_u64_be(4);
+
+        assert_ok!(AtomicTradeEngine::register_liquidity_pool(
+            RuntimeOrigin::root(),
+            AmmProtocol::Raydium,
+            VmType::Svm,
+            token_a,
+            token_b,
+            5_000_000_000_000,
+            6_000_000_000_000,
+            25,
+            vec![0x22; 32],
+        ));
+
+        let pool_id = LiquidityPools::<Test>::iter().next().unwrap().0;
+
+        assert_ok!(AtomicTradeEngine::update_liquidity_pool(
+            RuntimeOrigin::root(),
+            pool_id,
+            7_000_000_000_000,
+            8_000_000_000_000,
+        ));
+
+        let pool = AtomicTradeEngine::liquidity_pools(pool_id).unwrap();
+        assert_eq!(pool.reserve_a, 7_000_000_000_000);
+        assert_eq!(pool.reserve_b, 8_000_000_000_000);
+    });
+}
+
+#[test]
+fn sync_pool_price_writes_oracle_observation() {
+    new_test_ext().execute_with(|| {
+        let token_a = H256::from_low_u64_be(9);
+        let token_b = H256::from_low_u64_be(10);
+
+        assert_ok!(AtomicTradeEngine::register_liquidity_pool(
+            RuntimeOrigin::root(),
+            AmmProtocol::AtlasAmm,
+            VmType::X3,
+            token_a,
+            token_b,
+            1_000_000_000_000,
+            4_000_000_000_000,
+            20,
+            vec![0x33; 16],
+        ));
+
+        let pool_id = LiquidityPools::<Test>::iter().next().unwrap().0;
+
+        assert_ok!(AtomicTradeEngine::sync_pool_price(
+            RuntimeOrigin::root(),
+            pool_id,
+        ));
+
+        let observations = AtomicTradeEngine::price_observations((token_a, token_b));
+        assert!(!observations.is_empty());
+        assert!(AtomicTradeEngine::twap_data((token_a, token_b)).is_some());
+    });
+}
+
+// ============================================================================
 // Checkpoint Tests
 // ============================================================================
 

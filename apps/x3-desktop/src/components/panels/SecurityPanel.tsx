@@ -5,8 +5,7 @@ import React, { useState, useMemo } from "react";
 import { useWalletStore } from "@/stores/walletStore";
 import { 
   Shield, Key, Lock, Fingerprint, Cpu,
-  ShieldCheck, Clock, CheckCircle2, History,
-  Eye, AlertTriangle, ShieldAlert, Gauge, HardDrive, Sparkles
+  ShieldCheck, Clock, CheckCircle2, History
 } from 'lucide-react';
 
 interface KeyEntry {

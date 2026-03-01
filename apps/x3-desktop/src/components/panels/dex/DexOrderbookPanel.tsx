@@ -8,7 +8,9 @@
  * - Recent fills / trade history
  * - Pair selector
  */
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createChart, type CandlestickData, type IChartApi, type UTCTimestamp } from 'lightweight-charts';
+import x3Chain, { TOKEN_IDS, type PriceObservationPoint } from '@/services/x3ChainService';
 
 /* ── Types ─────────────────────────────────────────── */
 interface OrderLevel {
@@ -44,6 +46,44 @@ const PAIRS: Pair[] = [
   { symbol: 'X3/ETH',  base: 'X3', quote: 'ETH',  lastPrice: 0.000385, change24h: 6.14, high24h: 0.000398, low24h: 0.000361, vol24h: '890K' },
   { symbol: 'SOL/ETH',    base: 'SOL',   quote: 'ETH',  lastPrice: 0.05495, change24h: 4.88, high24h: 0.05610, low24h: 0.05220, vol24h: '310K' },
 ];
+
+const CANDLE_BUCKET_SECONDS = 60;
+
+function buildCandles(observations: PriceObservationPoint[], fallbackPrice: number): CandlestickData[] {
+  if (!observations.length) {
+    const now = Math.floor(Date.now() / 1000) as UTCTimestamp;
+    return [{
+      time: now,
+      open: fallbackPrice,
+      high: fallbackPrice,
+      low: fallbackPrice,
+      close: fallbackPrice,
+    }];
+  }
+
+  const buckets = new Map<number, CandlestickData>();
+
+  observations.forEach(obs => {
+    const bucket = Math.floor(obs.timestamp / CANDLE_BUCKET_SECONDS);
+    const candleTime = (bucket * CANDLE_BUCKET_SECONDS) as UTCTimestamp;
+    const existing = buckets.get(bucket);
+    if (!existing) {
+      buckets.set(bucket, {
+        time: candleTime,
+        open: obs.price,
+        high: obs.price,
+        low: obs.price,
+        close: obs.price,
+      });
+    } else {
+      existing.high = Math.max(existing.high, obs.price);
+      existing.low = Math.min(existing.low, obs.price);
+      existing.close = obs.price;
+    }
+  });
+
+  return Array.from(buckets.values()).sort((a, b) => (a.time as number) - (b.time as number));
+}
 
 function generateOrderbook(mid: number): { asks: OrderLevel[]; bids: OrderLevel[] } {
   const asks: OrderLevel[] = [];
@@ -85,8 +125,27 @@ const DexOrderbookPanel: React.FC = () => {
   const [orderSize, setOrderSize] = useState('');
   const [showPairList, setShowPairList] = useState(false);
   const [tab, setTab] = useState<'book' | 'fills'>('book');
+  const [chartCandles, setChartCandles] = useState<CandlestickData[]>([]);
+  const [chartLoading, setChartLoading] = useState(true);
+  const [chartError, setChartError] = useState<string | null>(null);
+  const [trading, setTrading] = useState(false);
+  const [tradeStatus, setTradeStatus] = useState<string | null>(null);
+  const [fills, setFills] = useState<Fill[]>(MOCK_FILLS);
 
   const orderbook = useMemo(() => generateOrderbook(selectedPair.lastPrice), [selectedPair]);
+
+  useEffect(() => {
+    const unsub = x3Chain.subscribeTrades((trade) => {
+      setFills(prev => [{
+        id: Math.random(),
+        price: trade.price,
+        size: trade.size,
+        side: trade.side,
+        time: trade.time,
+      } as Fill, ...prev].slice(0, 50));
+    });
+    return () => unsub();
+  }, []);
 
   const maxTotal = Math.max(
     orderbook.asks[0]?.total ?? 0,
@@ -107,11 +166,98 @@ const DexOrderbookPanel: React.FC = () => {
     setShowPairList(false);
   };
 
+  const handlePlaceOrder = async () => {
+    if (!orderSize || parseFloat(orderSize) <= 0) return;
+    setTrading(true);
+    setTradeStatus('Preparing trade...');
+    
+    try {
+      const isBuy = orderSide === 'buy';
+      const tokenInKey = isBuy ? selectedPair.quote : selectedPair.base;
+      const tokenOutKey = isBuy ? selectedPair.base : selectedPair.quote;
+      
+      const tokenIn = TOKEN_IDS[tokenInKey];
+      const tokenOut = TOKEN_IDS[tokenOutKey];
+      
+      if (!tokenIn || !tokenOut) throw new Error('Invalid pair identifiers');
+      
+      const decIn = x3Chain.getAssetDecimals(tokenIn);
+      const decOut = x3Chain.getAssetDecimals(tokenOut);
+      
+      const amountInBig = x3Chain.toChainUnits(orderSize, decIn);
+      const priceVal = orderType === 'limit' ? parseFloat(limitPrice) : selectedPair.lastPrice;
+      
+      const expectedOut = isBuy 
+        ? parseFloat(orderSize) / priceVal
+        : parseFloat(orderSize) * priceVal;
+      
+      const minAmountOutBig = x3Chain.toChainUnits(expectedOut * 0.98, decOut); // 2% tolerance
+
+      await x3Chain.submitSwap(
+        '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', // Alice
+        [{
+          vmType: 2, // X3
+          tokenIn,
+          tokenOut,
+          amountIn: BigInt(amountInBig),
+          minAmountOut: BigInt(minAmountOutBig),
+          deadline: Math.floor(Date.now() / 1000) + 3600,
+        }],
+        200, // 2%
+        (status) => setTradeStatus(`${status}...`),
+        (event) => {
+          if (event.type === 'batch_created') setTradeStatus(`Batch: ${event.batchId.slice(0, 8)}`);
+        }
+      );
+      setTradeStatus('Trade successful!');
+    } catch (err: any) {
+      setTradeStatus(`Failed: ${err.message?.slice(0, 20)}`);
+    } finally {
+      setTimeout(() => {
+        setTrading(false);
+        setTradeStatus(null);
+      }, 4000);
+    }
+  };
+
   const formatPrice = (n: number) => {
     if (n >= 1) return n.toFixed(4);
     if (n >= 0.001) return n.toFixed(6);
     return n.toFixed(8);
   };
+
+  useEffect(() => {
+    let active = true;
+    const fetchCandles = async () => {
+      setChartLoading(true);
+      setChartError(null);
+      try {
+        const tokenIn = TOKEN_IDS[selectedPair.base] ?? TOKEN_IDS.X3;
+        const tokenOut = TOKEN_IDS[selectedPair.quote] ?? TOKEN_IDS.USDC;
+        const observations = await x3Chain.getPriceObservations(tokenIn, tokenOut, 240);
+        if (!active) return;
+        const candles = buildCandles(observations, selectedPair.lastPrice);
+        setChartCandles(candles);
+      } catch (err: any) {
+        if (!active) return;
+        setChartError(err?.message ?? 'Unable to load TWAP data');
+        setChartCandles(buildCandles([], selectedPair.lastPrice));
+      } finally {
+        if (!active) return;
+        setChartLoading(false);
+      }
+    };
+
+    fetchCandles();
+    const interval = setInterval(() => {
+      fetchCandles();
+    }, 30_000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [selectedPair.base, selectedPair.lastPrice, selectedPair.quote]);
 
   /* ── Styles (inline for panel context) ── */
   const s = {
@@ -119,6 +265,9 @@ const DexOrderbookPanel: React.FC = () => {
     header: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid #1a1f2e', flexShrink: 0 },
     body: { display: 'flex', flex: 1, overflow: 'hidden' },
     bookCol: { flex: 1, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' },
+    chartSection: { borderBottom: '1px solid #1a1f2e', padding: '10px 12px', flexShrink: 0 },
+    chartHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6, fontSize: '0.72rem', color: '#777' },
+    bookContent: { flex: 1, display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' },
     orderCol: { width: 240, borderLeft: '1px solid #1a1f2e', display: 'flex', flexDirection: 'column' as const, overflow: 'auto', padding: '8px 10px' },
     row: { display: 'flex', alignItems: 'center', padding: '1px 10px', position: 'relative' as const, cursor: 'pointer' },
     spreadBar: { textAlign: 'center' as const, padding: '4px 0', fontSize: '0.7rem', color: '#888', borderTop: '1px solid #1a1f2e', borderBottom: '1px solid #1a1f2e', flexShrink: 0 },
@@ -183,63 +332,77 @@ const DexOrderbookPanel: React.FC = () => {
       <div style={s.body}>
         {/* Left: Book or Fills */}
         <div style={s.bookCol}>
-          {tab === 'book' ? (
-            <>
-              {/* Column headers */}
-              <div style={{ display: 'flex', padding: '4px 10px', fontSize: '0.65rem', color: '#555', textTransform: 'uppercase', letterSpacing: 1, flexShrink: 0 }}>
-                <span style={{ flex: 1 }}>Price ({selectedPair.quote})</span>
-                <span style={{ flex: 1, textAlign: 'right' }}>Size ({selectedPair.base})</span>
-                <span style={{ flex: 1, textAlign: 'right' }}>Total</span>
-              </div>
-
-              {/* Asks (sells) */}
-              <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                {orderbook.asks.map((lvl, i) => (
-                  <div key={`a${i}`} style={s.row}
-                    onClick={() => { setLimitPrice(lvl.price.toString()); setOrderSide('buy'); }}>
-                    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: 'rgba(239,83,80,0.08)', width: `${(lvl.total / maxTotal) * 100}%` }} />
-                    <span style={{ flex: 1, color: '#ef5350', zIndex: 1 }}>{formatPrice(lvl.price)}</span>
-                    <span style={{ flex: 1, textAlign: 'right', zIndex: 1 }}>{lvl.size.toLocaleString()}</span>
-                    <span style={{ flex: 1, textAlign: 'right', color: '#777', zIndex: 1 }}>{lvl.total.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Spread */}
-              <div style={s.spreadBar as React.CSSProperties}>
-                Spread: {formatPrice(spread)} ({((spread / selectedPair.lastPrice) * 100).toFixed(3)}%)
-              </div>
-
-              {/* Bids (buys) */}
-              <div style={{ flex: 1, overflow: 'auto' }}>
-                {orderbook.bids.map((lvl, i) => (
-                  <div key={`b${i}`} style={s.row}
-                    onClick={() => { setLimitPrice(lvl.price.toString()); setOrderSide('sell'); }}>
-                    <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: 'rgba(76,175,80,0.08)', width: `${(lvl.total / maxTotal) * 100}%` }} />
-                    <span style={{ flex: 1, color: '#4caf50', zIndex: 1 }}>{formatPrice(lvl.price)}</span>
-                    <span style={{ flex: 1, textAlign: 'right', zIndex: 1 }}>{lvl.size.toLocaleString()}</span>
-                    <span style={{ flex: 1, textAlign: 'right', color: '#777', zIndex: 1 }}>{lvl.total.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            /* Fills / Trade History */
-            <div style={{ overflow: 'auto', flex: 1 }}>
-              <div style={{ display: 'flex', padding: '4px 10px', fontSize: '0.65rem', color: '#555', textTransform: 'uppercase', letterSpacing: 1 }}>
-                <span style={{ flex: 1 }}>Price</span>
-                <span style={{ flex: 1, textAlign: 'right' }}>Size</span>
-                <span style={{ flex: 1, textAlign: 'right' }}>Time</span>
-              </div>
-              {MOCK_FILLS.map(f => (
-                <div key={f.id} style={{ display: 'flex', padding: '2px 10px' }}>
-                  <span style={{ flex: 1, color: f.side === 'buy' ? '#4caf50' : '#ef5350' }}>{formatPrice(f.price)}</span>
-                  <span style={{ flex: 1, textAlign: 'right' }}>{f.size.toLocaleString()}</span>
-                  <span style={{ flex: 1, textAlign: 'right', color: '#777' }}>{f.time}</span>
-                </div>
-              ))}
+          <div style={s.chartSection}>
+            <div style={s.chartHeader}>
+              <span style={{ fontWeight: 700, color: '#e0e0e0' }}>TWAP Candlesticks</span>
+              <span>{selectedPair.base}/{selectedPair.quote}</span>
             </div>
-          )}
+            <TwapChart data={chartCandles} loading={chartLoading} error={chartError} pairLabel={selectedPair.symbol} />
+            <div style={{ marginTop: 6, fontSize: '0.7rem', color: '#777' }}>
+              Last price: {formatPrice(selectedPair.lastPrice)} {selectedPair.quote}
+            </div>
+          </div>
+
+          <div style={s.bookContent}>
+            {tab === 'book' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                {/* Column headers */}
+                <div style={{ display: 'flex', padding: '4px 10px', fontSize: '0.65rem', color: '#555', textTransform: 'uppercase', letterSpacing: 1, flexShrink: 0 }}>
+                  <span style={{ flex: 1 }}>Price ({selectedPair.quote})</span>
+                  <span style={{ flex: 1, textAlign: 'right' }}>Size ({selectedPair.base})</span>
+                  <span style={{ flex: 1, textAlign: 'right' }}>Total</span>
+                </div>
+
+                {/* Asks (sells) */}
+                <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  {orderbook.asks.map((lvl, i) => (
+                    <div key={`a${i}`} style={s.row}
+                      onClick={() => { setLimitPrice(lvl.price.toString()); setOrderSide('buy'); }}>
+                      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: 'rgba(239,83,80,0.08)', width: `${(lvl.total / maxTotal) * 100}%` }} />
+                      <span style={{ flex: 1, color: '#ef5350', zIndex: 1 }}>{formatPrice(lvl.price)}</span>
+                      <span style={{ flex: 1, textAlign: 'right', zIndex: 1 }}>{lvl.size.toLocaleString()}</span>
+                      <span style={{ flex: 1, textAlign: 'right', color: '#777', zIndex: 1 }}>{lvl.total.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Spread */}
+                <div style={s.spreadBar as React.CSSProperties}>
+                  Spread: {formatPrice(spread)} ({((spread / selectedPair.lastPrice) * 100).toFixed(3)}%)
+                </div>
+
+                {/* Bids (buys) */}
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  {orderbook.bids.map((lvl, i) => (
+                    <div key={`b${i}`} style={s.row}
+                      onClick={() => { setLimitPrice(lvl.price.toString()); setOrderSide('sell'); }}>
+                      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, background: 'rgba(76,175,80,0.08)', width: `${(lvl.total / maxTotal) * 100}%` }} />
+                      <span style={{ flex: 1, color: '#4caf50', zIndex: 1 }}>{formatPrice(lvl.price)}</span>
+                      <span style={{ flex: 1, textAlign: 'right', zIndex: 1 }}>{lvl.size.toLocaleString()}</span>
+                      <span style={{ flex: 1, textAlign: 'right', color: '#777', zIndex: 1 }}>{lvl.total.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ overflow: 'auto', flex: 1 }}>
+                  <div style={{ display: 'flex', padding: '4px 10px', fontSize: '0.65rem', color: '#555', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    <span style={{ flex: 1 }}>Price</span>
+                    <span style={{ flex: 1, textAlign: 'right' }}>Size</span>
+                    <span style={{ flex: 1, textAlign: 'right' }}>Time</span>
+                  </div>
+                  {fills.map(f => (
+                    <div key={f.id} style={{ display: 'flex', padding: '2px 10px' }}>
+                      <span style={{ flex: 1, color: f.side === 'buy' ? '#4caf50' : '#ef5350' }}>{formatPrice(f.price)}</span>
+                      <span style={{ flex: 1, textAlign: 'right' }}>{f.size.toLocaleString()}</span>
+                      <span style={{ flex: 1, textAlign: 'right', color: '#777' }}>{f.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right: Order Entry */}
@@ -308,13 +471,22 @@ const DexOrderbookPanel: React.FC = () => {
 
           {/* Submit */}
           <button
+            disabled={trading}
             style={{
-              width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
-              background: orderSide === 'buy' ? '#4caf50' : '#ef5350', color: '#fff',
+              width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: trading ? 'default' : 'pointer',
+              background: trading ? '#1e2436' : (orderSide === 'buy' ? '#4caf50' : '#ef5350'), color: trading ? '#777' : '#fff', opacity: trading ? 0.7 : 1,
+              transition: 'all 0.2s ease',
             }}
-            onClick={() => alert(`${orderType.toUpperCase()} ${orderSide.toUpperCase()}: ${orderSize} ${selectedPair.base} @ ${orderType === 'limit' ? limitPrice : 'MKT'}`)}
+            onClick={handlePlaceOrder}
           >
-            {orderSide === 'buy' ? 'Buy' : 'Sell'} {selectedPair.base}
+            {trading ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <span className="animate-spin text-xs">🌀</span>
+                {tradeStatus ?? 'Processing...'}
+              </div>
+            ) : (
+              `${orderSide === 'buy' ? 'Buy' : 'Sell'} ${selectedPair.base}`
+            )}
           </button>
 
           {/* Open orders placeholder */}
@@ -324,6 +496,115 @@ const DexOrderbookPanel: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+interface TwapChartProps {
+  data: CandlestickData[];
+  loading: boolean;
+  error: string | null;
+  pairLabel: string;
+}
+
+const TwapChart: React.FC<TwapChartProps> = ({ data, loading, error, pairLabel }) => {
+  const containersRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candlestickSeriesRef = useRef<ReturnType<IChartApi['addCandlestickSeries']> | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  useEffect(() => {
+    if (!containersRef.current) return;
+    const chart = createChart(containersRef.current, {
+      layout: {
+        background: { color: '#0d1117' },
+        textColor: '#e0e0e0',
+        fontFamily: 'monospace',
+      },
+      grid: {
+        vertLines: { color: '#151b29' },
+        horzLines: { color: '#151b29' },
+      },
+      crosshair: {
+        horzLine: { visible: true, color: '#222b3b' },
+        vertLine: { visible: true, color: '#222b3b' },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+        borderColor: '#1a1f2e',
+        rightOffset: 3,
+      },
+      height: 200,
+      width: containersRef.current.clientWidth,
+    });
+
+    chartRef.current = chart;
+
+    const series = chart.addCandlestickSeries({
+      upColor: '#4caf50',
+      downColor: '#ef5350',
+      borderVisible: false,
+      wickColor: '#888',
+    });
+    candlestickSeriesRef.current = series;
+    if (data.length) {
+      series.setData(data);
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(entries => {
+        entries.forEach(entry => {
+          chart.applyOptions({ width: entry.contentRect.width });
+        });
+      });
+      observer.observe(containersRef.current);
+      resizeObserverRef.current = observer;
+    }
+
+    return () => {
+      resizeObserverRef.current?.disconnect();
+      chart.remove();
+      chartRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!candlestickSeriesRef.current) return;
+    if (data.length) {
+      candlestickSeriesRef.current.setData(data);
+    }
+  }, [data]);
+
+  const overlayMessage = error ?? (loading ? 'Loading price history…' : null);
+
+  return (
+    <div style={{ position: 'relative', minHeight: 200 }}>
+      <div
+        ref={containersRef}
+        aria-label={`TWAP candlestick chart for ${pairLabel}`}
+        role="img"
+        style={{ height: 200 }}
+      />
+      {overlayMessage && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: error ? 'rgba(239,83,80,0.3)' : 'rgba(10,14,23,0.45)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.75rem',
+            textAlign: 'center',
+            padding: '0 8px',
+            pointerEvents: 'none',
+          }}
+        >
+          {overlayMessage}
+        </div>
+      )}
     </div>
   );
 };

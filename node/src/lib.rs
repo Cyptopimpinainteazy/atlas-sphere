@@ -58,6 +58,7 @@ pub mod chain_spec;
 /// Service factory implementations, including node initialization, consensus
 /// wiring, and RPC setup for the X3 Chain blockchain.
 pub mod service;
+pub mod flash_finality;
 
 // Local helper for colorful CLI logging
 mod logging;

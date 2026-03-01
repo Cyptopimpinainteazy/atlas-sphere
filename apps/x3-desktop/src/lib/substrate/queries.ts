@@ -264,6 +264,29 @@ export async function getAccountInfo(address: string): Promise<AccountInfo | nul
 
 /* ── Helpers ──────────────────────────────────────────────── */
 
+export interface RealRpcStats {
+  total_requests: number;
+  total_rejected: number;
+  active_connections: number;
+}
+
+export async function fetchRpcStats(): Promise<RealRpcStats | null> {
+  try {
+    const api = await getApi();
+    const data = await (api.rpc as any).x3Node.getRateLimitMetrics();
+    return {
+      total_requests: Number(data.total_requests.toString()),
+      total_rejected: Number(data.total_rejected.toString()),
+      active_connections: Number(data.active_connections.toString()),
+    };
+  } catch (e) {
+    console.warn('Error fetching RPC stats (may not be supported on this node):', e);
+    return null;
+  }
+}
+
+/* ── Helpers ──────────────────────────────────────────────── */
+
 function extractTimestamp(signedBlock: SignedBlock): number {
   for (const ext of signedBlock.block.extrinsics) {
     if (ext.method.section === 'timestamp' && ext.method.method === 'set') {

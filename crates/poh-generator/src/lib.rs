@@ -34,10 +34,15 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::{debug, warn};
 
+use parity_scale_codec::{Encode, Decode};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /// Substrate consensus engine ID for the PoH digest item.
 pub const POH_ENGINE_ID: [u8; 4] = *b"poh0";
+
+/// Inherent identifier for PoH.
+pub const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = *b"poh____0";
 
 // ─── Core Types ───────────────────────────────────────────────────────────────
 
@@ -45,7 +50,7 @@ pub const POH_ENGINE_ID: [u8; 4] = *b"poh0";
 ///
 /// Encoded as SCALE (or JSON in tests) and placed in the block header's
 /// `DigestItem::Consensus(POH_ENGINE_ID, payload)`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Encode, Decode)]
 pub struct PoHDigest {
     /// Monotonically increasing tick counter (one per block).
     pub tick: u64,
@@ -57,15 +62,40 @@ pub struct PoHDigest {
 
 impl PoHDigest {
     /// Encode to bytes for embedding in a `DigestItem`.
-    pub fn encode(&self) -> Vec<u8> {
-        // Simple deterministic encoding: tick(8) || poh_hash(32) || tx_mix_root(32)
-        let mut buf = Vec::with_capacity(72);
-        buf.extend_from_slice(&self.tick.to_le_bytes());
-        buf.extend_from_slice(&self.poh_hash);
-        buf.extend_from_slice(&self.tx_mix_root);
-        buf
+    pub fn encode_payload(&self) -> Vec<u8> {
+        self.encode()
+    }
+}
+
+/// Inherent data for PoH.
+#[derive(Encode, Decode, sp_inherents::RuntimeString)]
+pub struct PoHInherentData {
+    pub digest: PoHDigest,
+}
+
+#[cfg(feature = "std")]
+pub struct PoHInherentDataProvider {
+    pub digest: PoHDigest,
+}
+
+#[cfg(feature = "std")]
+#[async_trait::async_trait]
+impl sp_inherents::InherentDataProvider for PoHInherentDataProvider {
+    async fn provide_inherent_data(
+        &self,
+        inherent_data: &mut sp_inherents::InherentData,
+    ) -> Result<(), sp_inherents::Error> {
+        inherent_data.put_data(INHERENT_IDENTIFIER, &self.digest)
     }
 
+    async fn try_handle_error(
+        &self,
+        _identifier: &sp_inherents::InherentIdentifier,
+        _error: &[u8],
+    ) -> Option<Result<(), sp_inherents::Error>> {
+        None
+    }
+}
     /// Decode from the bytes stored in a `DigestItem`.
     pub fn decode(bytes: &[u8]) -> Option<Self> {
         if bytes.len() != 72 {

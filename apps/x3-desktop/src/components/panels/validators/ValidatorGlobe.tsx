@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import x3Chain from '@/services/x3ChainService';
+import clsx from 'clsx';
 
 interface ValidatorNode {
   id: string;
@@ -14,6 +16,7 @@ interface ValidatorNode {
   blocks: number;
   uptime: number;
   connected: boolean;
+  isReal?: boolean;
 }
 
 interface ConnectionLine {
@@ -48,33 +51,16 @@ const CITIES: Array<{ city: string; country: string; lat: number; lng: number }>
 
 const GLOBE_RADIUS = 1.5;
 
-const statusToCssColor = (status: ValidatorNode['status']): string => {
-  switch (status) {
-    case 'online':
-      return '#00ff9d';
-    case 'syncing':
-      return '#facc15';
-    case 'offline':
-      return '#ef4444';
-    default:
-      return '#9ca3af';
-  }
-};
-
 const statusToHex = (status: ValidatorNode['status']): number => {
   switch (status) {
-    case 'online':
-      return 0x00ff9d;
-    case 'syncing':
-      return 0xfacc15;
-    case 'offline':
-      return 0xef4444;
-    default:
-      return 0x9ca3af;
+    case 'online': return 0x00ff9d;
+    case 'syncing': return 0xfacc15;
+    case 'offline': return 0xef4444;
+    default: return 0x9ca3af;
   }
 };
 
-const createInitialNodes = (): ValidatorNode[] =>
+const createMockNodes = (): ValidatorNode[] =>
   CITIES.map((city, index) => ({
     id: `VAL-${city.city.slice(0, 3).toUpperCase()}-${String(index).padStart(3, '0')}`,
     lat: city.lat + (Math.random() - 0.5) * 4,
@@ -88,34 +74,28 @@ const createInitialNodes = (): ValidatorNode[] =>
     connected: true,
   }));
 
-const createConnections = (initialNodes: ValidatorNode[]): ConnectionLine[] => {
+const createConnections = (nodes: ValidatorNode[]): ConnectionLine[] => {
   const result: ConnectionLine[] = [];
-
-  initialNodes.forEach((node, index) => {
-    const connectionCount = Math.floor(Math.random() * 3) + 1;
-
+  nodes.forEach((node, index) => {
+    const connectionCount = Math.floor(Math.random() * 2) + 1;
     for (let i = 0; i < connectionCount; i += 1) {
-      const targetIndex = Math.floor(Math.random() * initialNodes.length);
-      if (targetIndex === index) {
-        continue;
+      const targetIndex = Math.floor(Math.random() * nodes.length);
+      if (targetIndex !== index) {
+        result.push({
+          id: `conn-${index}-${targetIndex}-${i}`,
+          from: node,
+          to: nodes[targetIndex],
+          strength: Math.random(),
+        });
       }
-
-      result.push({
-        id: `conn-${index}-${targetIndex}-${i}`,
-        from: node,
-        to: initialNodes[targetIndex],
-        strength: Math.random(),
-      });
     }
   });
-
   return result;
 };
 
 const latLngToVector3 = (lat: number, lng: number, radius: number): THREE.Vector3 => {
   const phi = ((90 - lat) * Math.PI) / 180;
   const theta = ((lng + 180) * Math.PI) / 180;
-
   return new THREE.Vector3(
     -radius * Math.sin(phi) * Math.cos(theta),
     radius * Math.cos(phi),
@@ -123,84 +103,58 @@ const latLngToVector3 = (lat: number, lng: number, radius: number): THREE.Vector
   );
 };
 
-const disposeGroup = (group: THREE.Group): void => {
-  while (group.children.length > 0) {
-    const child = group.children[0];
-    group.remove(child);
-
-    child.traverse((object: THREE.Object3D) => {
-      const mesh = object as THREE.Mesh;
-      if (mesh.geometry) {
-        mesh.geometry.dispose();
-      }
-
-      const material = mesh.material as THREE.Material | THREE.Material[] | undefined;
-      if (Array.isArray(material)) {
-        material.forEach((entry) => entry.dispose());
-      } else {
-        material?.dispose();
-      }
-    });
-  }
-};
-
 export default function ValidatorGlobe() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const controlsRef = useRef<OrbitControls | null>(null);
-  const frameRef = useRef<number | null>(null);
   const nodeGroupRef = useRef<THREE.Group | null>(null);
   const connectionGroupRef = useRef<THREE.Group | null>(null);
-  const raycasterRef = useRef(new THREE.Raycaster());
-  const pointerRef = useRef(new THREE.Vector2());
 
-  const [nodes, setNodes] = useState<ValidatorNode[]>([]);
-  const [connections, setConnections] = useState<ConnectionLine[]>([]);
+  const [nodes, setNodes] = useState<ValidatorNode[]>(createMockNodes());
+  const connections = useMemo(() => createConnections(nodes), [nodes]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [realAuthorities, setRealAuthorities] = useState<string[]>([]);
 
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId]
   );
 
-  useEffect(() => {
-    const initialNodes = createInitialNodes();
-    setNodes(initialNodes);
-    setConnections(createConnections(initialNodes));
+  const loadAuthorities = useCallback(async () => {
+    try {
+      const stats = await x3Chain.getNetworkStats();
+      if (stats.authorities && stats.authorities.length > 0) {
+        setRealAuthorities(stats.authorities);
+      }
+    } catch (err) {
+      console.warn('[ValidatorGlobe] Failed to fetch live authorities:', err);
+    }
   }, []);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setNodes((previousNodes) =>
-        previousNodes.map((node) => {
-          const shouldFlipStatus = Math.random() > 0.985;
-          const nextStatus = shouldFlipStatus
-            ? node.status === 'online'
-              ? 'syncing'
-              : 'online'
-            : node.status;
+    loadAuthorities();
+    const iv = setInterval(loadAuthorities, 30000);
+    return () => clearInterval(iv);
+  }, [loadAuthorities]);
 
-          return {
-            ...node,
-            blocks: node.blocks + Math.floor(Math.random() * 10),
-            score: Math.min(100, Math.max(60, node.score + (Math.random() - 0.5) * 4)),
-            status: nextStatus,
-          };
-        })
-      );
-    }, 2000);
+  useEffect(() => {
+    if (realAuthorities.length === 0) return;
+    setNodes(prev => {
+      const updated = [...prev];
+      realAuthorities.forEach((addr, i) => {
+        if (i < updated.length) {
+          updated[i] = { ...updated[i], id: addr, status: 'online', isReal: true, score: 99 };
+        }
+      });
+      return updated;
+    });
+  }, [realAuthorities]);
 
-    return () => window.clearInterval(interval);
-  }, []);
-
+  // Initial Scene Setup
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) {
-      return;
-    }
+    if (!container) return;
 
     const scene = new THREE.Scene();
     sceneRef.current = scene;
@@ -212,7 +166,6 @@ export default function ValidatorGlobe() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
 
@@ -227,31 +180,6 @@ export default function ValidatorGlobe() {
     );
     scene.add(globeWireframe);
 
-    const atmosphere = new THREE.Mesh(
-      new THREE.SphereGeometry(GLOBE_RADIUS * 1.05, 36, 36),
-      new THREE.MeshBasicMaterial({ color: 0x0ea5e9, wireframe: true, transparent: true, opacity: 0.08 })
-    );
-    scene.add(atmosphere);
-
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsPositionData = new Float32Array(600 * 3);
-    for (let i = 0; i < starsPositionData.length; i += 3) {
-      const radius = 8 + Math.random() * 8;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-
-      starsPositionData[i] = radius * Math.sin(phi) * Math.cos(theta);
-      starsPositionData[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      starsPositionData[i + 2] = radius * Math.cos(phi);
-    }
-
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositionData, 3));
-    const stars = new THREE.Points(
-      starsGeometry,
-      new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, transparent: true, opacity: 0.45 })
-    );
-    scene.add(stars);
-
     const nodeGroup = new THREE.Group();
     nodeGroupRef.current = nodeGroup;
     scene.add(nodeGroup);
@@ -262,295 +190,116 @@ export default function ValidatorGlobe() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.enablePan = false;
-    controls.enableZoom = false;
+    controls.dampingFactor = 0.05;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.55;
-    controls.rotateSpeed = 0.7;
-    controls.minPolarAngle = Math.PI * 0.2;
-    controls.maxPolarAngle = Math.PI * 0.8;
-    controlsRef.current = controls;
-
-    const onControlStart = () => setIsDragging(true);
-    const onControlEnd = () => setIsDragging(false);
-    controls.addEventListener('start', onControlStart);
-    controls.addEventListener('end', onControlEnd);
-
-    const handleResize = () => {
-      const nextWidth = container.clientWidth;
-      const nextHeight = container.clientHeight;
-
-      camera.aspect = nextWidth / nextHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(nextWidth, nextHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    };
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const bounds = renderer.domElement.getBoundingClientRect();
-      pointerRef.current.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-      pointerRef.current.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-
-      raycasterRef.current.setFromCamera(pointerRef.current, camera);
-      const intersections = raycasterRef.current.intersectObjects(nodeGroup.children, true);
-
-      if (intersections.length === 0) {
-        setSelectedNodeId(null);
-        return;
-      }
-
-      const hit = intersections[0].object;
-      const nodeId = hit.userData.nodeId as string | undefined;
-      if (nodeId) {
-        setSelectedNodeId(nodeId);
-      }
-    };
+    controls.autoRotateSpeed = 0.5;
 
     const animate = () => {
-      const now = performance.now() * 0.001;
-
-      nodeGroup.children.forEach((object: THREE.Object3D, index: number) => {
-        if (!(object instanceof THREE.Mesh)) {
-          return;
-        }
-
-        const baseScale = object.userData.baseScale as number | undefined;
-        if (!baseScale) {
-          return;
-        }
-
-        const pulse = 1 + Math.sin(now * 2.8 + index) * 0.12;
-        object.scale.setScalar(baseScale * pulse);
-      });
-
-      connectionGroup.children.forEach((object: THREE.Object3D, index: number) => {
-        if (!(object instanceof THREE.Line)) {
-          return;
-        }
-
-        const material = object.material as THREE.LineBasicMaterial;
-        material.opacity = 0.09 + ((Math.sin(now * 2 + index) + 1) / 2) * 0.2;
-      });
-
       controls.update();
       renderer.render(scene, camera);
-      frameRef.current = window.requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
     };
-
-    window.addEventListener('resize', handleResize);
-    renderer.domElement.addEventListener('pointerdown', handlePointerDown);
     animate();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('pointerdown', handlePointerDown);
-      controls.removeEventListener('start', onControlStart);
-      controls.removeEventListener('end', onControlEnd);
-      controls.dispose();
-
-      if (frameRef.current) {
-        window.cancelAnimationFrame(frameRef.current);
-      }
-
-      if (nodeGroupRef.current) {
-        disposeGroup(nodeGroupRef.current);
-      }
-
-      if (connectionGroupRef.current) {
-        disposeGroup(connectionGroupRef.current);
-      }
-
-      scene.traverse((object: THREE.Object3D) => {
-        const mesh = object as THREE.Mesh;
-        if (mesh.geometry) {
-          mesh.geometry.dispose();
-        }
-
-        const material = mesh.material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(material)) {
-          material.forEach((entry) => entry.dispose());
-        } else {
-          material?.dispose();
-        }
-      });
-
       renderer.dispose();
-      renderer.forceContextLoss();
       container.removeChild(renderer.domElement);
-
-      sceneRef.current = null;
-      cameraRef.current = null;
-      rendererRef.current = null;
-      controlsRef.current = null;
-      nodeGroupRef.current = null;
-      connectionGroupRef.current = null;
     };
   }, []);
 
+  // Update Visuals when nodes change
   useEffect(() => {
-    const nodeGroup = nodeGroupRef.current;
-    const connectionGroup = connectionGroupRef.current;
+    if (!nodeGroupRef.current || !connectionGroupRef.current) return;
+    
+    // Clear old children
+    while(nodeGroupRef.current.children.length > 0) nodeGroupRef.current.remove(nodeGroupRef.current.children[0]);
+    while(connectionGroupRef.current.children.length > 0) connectionGroupRef.current.remove(connectionGroupRef.current.children[0]);
 
-    if (!nodeGroup || !connectionGroup) {
-      return;
-    }
-
-    disposeGroup(nodeGroup);
-    disposeGroup(connectionGroup);
-
-    nodes.forEach((node) => {
-      const color = statusToHex(node.status);
-      const surfacePoint = latLngToVector3(node.lat, node.lng, GLOBE_RADIUS + 0.04);
-
-      const glow = new THREE.Mesh(
-        new THREE.SphereGeometry(0.055, 14, 14),
-        new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22 })
-      );
-      glow.position.copy(surfacePoint);
-      glow.userData.nodeId = node.id;
-      glow.userData.baseScale = 1.15;
-      nodeGroup.add(glow);
-
+    nodes.forEach(node => {
+      const pos = latLngToVector3(node.lat, node.lng, GLOBE_RADIUS);
       const dot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.024, 18, 18),
-        new THREE.MeshStandardMaterial({
-          color,
-          emissive: color,
-          emissiveIntensity: 0.45,
-          roughness: 0.2,
-          metalness: 0.35,
-        })
+        new THREE.SphereGeometry(node.isReal ? 0.03 : 0.015, 8, 8),
+        new THREE.MeshBasicMaterial({ color: statusToHex(node.status) })
       );
-      dot.position.copy(surfacePoint);
-      dot.userData.nodeId = node.id;
-      dot.userData.baseScale = 1;
-      nodeGroup.add(dot);
+      dot.position.copy(pos);
+      nodeGroupRef.current?.add(dot);
     });
 
-    connections.forEach((connection) => {
-      const fromPoint = latLngToVector3(connection.from.lat, connection.from.lng, GLOBE_RADIUS + 0.01);
-      const toPoint = latLngToVector3(connection.to.lat, connection.to.lng, GLOBE_RADIUS + 0.01);
-      const midPoint = fromPoint
-        .clone()
-        .add(toPoint)
-        .multiplyScalar(0.5)
-        .normalize()
-        .multiplyScalar(GLOBE_RADIUS + 0.35 + connection.strength * 0.22);
-
-      const curve = new THREE.QuadraticBezierCurve3(fromPoint, midPoint, toPoint);
-      const points = curve.getPoints(22);
-
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    connections.forEach(conn => {
+      const v1 = latLngToVector3(conn.from.lat, conn.from.lng, GLOBE_RADIUS);
+      const v2 = latLngToVector3(conn.to.lat, conn.to.lng, GLOBE_RADIUS);
+      
+      const curve = new THREE.QuadraticBezierCurve3(
+        v1,
+        v1.clone().lerp(v2, 0.5).multiplyScalar(1.2), // Pull point outwards
+        v2
+      );
+      
+      const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
       const line = new THREE.Line(
         geometry,
-        new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.16 })
+        new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.2 * conn.strength })
       );
-      connectionGroup.add(line);
+      connectionGroupRef.current?.add(line);
     });
-  }, [connections, nodes]);
+  }, [nodes, connections]);
 
   return (
-    <div
-      className={`relative w-full h-full min-h-[560px] bg-gradient-to-br from-slate-900 via-slate-950 to-black rounded-3xl overflow-hidden ${
-        isDragging ? 'cursor-grabbing' : 'cursor-grab'
-      }`}
-    >
-      <div ref={containerRef} className="absolute inset-0" />
-
+    <div className="relative w-full h-[600px] bg-[#0a0a0f] rounded-2xl overflow-hidden shadow-2xl">
+      <div ref={containerRef} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
+      
+      {/* Node Info Overlay */}
       <AnimatePresence>
         {selectedNode && (
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            className="absolute top-4 right-4 w-80 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-6 shadow-2xl shadow-cyan-500/20"
+            exit={{ opacity: 0, x: 20 }}
+            className="absolute top-6 right-6 w-72 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5"
           >
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-white"
-              onClick={() => setSelectedNodeId(null)}
-            >
-              x
-            </button>
-
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: statusToCssColor(selectedNode.status) }} />
-              <h3 className="font-bold text-white">{selectedNode.id}</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold truncate pr-4">{selectedNode.id.slice(0, 16)}...</h3>
+              <div className={clsx(
+                "w-2 h-2 rounded-full shadow-[0_0_8px]",
+                selectedNode.status === 'online' ? "bg-green-400 shadow-green-400/50" : "bg-red-400 shadow-red-400/50"
+              )} />
             </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Location</span>
-                <span className="text-white font-mono">
-                  {selectedNode.city}, {selectedNode.country}
-                </span>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between text-gray-400">
+                <span>Location</span>
+                <span className="text-white">{selectedNode.city}, {selectedNode.country}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Status</span>
-                <span
-                  className={`font-mono uppercase ${
-                    selectedNode.status === 'online'
-                      ? 'text-green-400'
-                      : selectedNode.status === 'syncing'
-                        ? 'text-yellow-400'
-                        : 'text-red-400'
-                  }`}
-                >
-                  {selectedNode.status}
-                </span>
+              <div className="flex justify-between text-gray-400">
+                <span>Uptime</span>
+                <span className="text-white">{selectedNode.uptime.toFixed(2)}%</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Score</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-green-500"
-                      style={{ width: `${selectedNode.score}%` }}
-                    />
-                  </div>
-                  <span className="text-cyan-400 font-mono">{Math.round(selectedNode.score)}</span>
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Blocks Validated</span>
+              <div className="flex justify-between text-gray-400">
+                <span>Blocks</span>
                 <span className="text-white font-mono">{selectedNode.blocks.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Uptime</span>
-                <span className="text-green-400 font-mono">{selectedNode.uptime.toFixed(2)}%</span>
+              <div className="flex justify-between text-gray-400">
+                <span>Reputation</span>
+                <span className="text-green-400 font-bold">{selectedNode.score}%</span>
               </div>
             </div>
+
+            <button
+              onClick={() => setSelectedNodeId(null)}
+              className="mt-6 w-full py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors"
+            >
+              Close Details
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-gray-400 text-sm">LIVE NETWORK</span>
-        </div>
-        <div className="text-3xl font-bold text-cyan-400">
-          {nodes.filter((node) => node.status === 'online').length}
-        </div>
-        <div className="text-xs text-gray-500 uppercase tracking-widest">Validators Online</div>
-      </div>
-
-      <div className="absolute bottom-4 left-4 flex gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-400" />
-          <span className="text-gray-400 text-sm">Online</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-yellow-400" />
-          <span className="text-gray-400 text-sm">Syncing</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-400" />
-          <span className="text-gray-400 text-sm">Offline</span>
+      <div className="absolute bottom-6 left-6 pointer-events-none">
+        <div className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-1">Global Network</div>
+        <div className="text-2xl font-bold bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+          {realAuthorities.length || nodes.length} Node Operators
         </div>
       </div>
-
-      <div className="absolute bottom-4 right-4 text-gray-500 text-sm">Drag to rotate • Click node for details</div>
     </div>
   );
 }

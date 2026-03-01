@@ -1,0 +1,249 @@
+# pack-refs with: peeled fully-peeled sorted 
+9a03ba18539f0e1f42f595b431e61ef790e375a0 refs/remotes/origin/TabishB/abandon-status-command-change
+5e995bc096aff55f61c12072e13141c4beea3baa refs/remotes/origin/TabishB/check-archive-order
+1f16e79ef0c3cc8d19d58119fa482189ee468f60 refs/remotes/origin/TabishB/config-cli-review
+8382ee8660a777b1ad87abe821c3e264431d313f refs/remotes/origin/TabishB/debug-issue-195
+300d02052970f6d0b343208b396cc54681377ff8 refs/remotes/origin/TabishB/fix-init-recreate-agents
+2fa07b9216596cfb003ada1033a536f8b40ae9d6 refs/remotes/origin/TabishB/fix-issue-463
+92c6f1f72982a6e0aaac2b5563f3c6c42220f043 refs/remotes/origin/TabishB/fix-win-e2e-additional
+2a8e97c7a5bcade23b610eed909ace5d78d22952 refs/remotes/origin/TabishB/fix-win-e2e-completion
+6f3e3516f7c13242f80007d655182e223ba4f68c refs/remotes/origin/TabishB/fix-win-xdg-test
+03ea32369a692d0e3bfc7abf27a7f11e1cfeb73e refs/remotes/origin/TabishB/issue367-debug
+313afbb4c7abedd7f0c7e3f092716d1e8b61e80f refs/remotes/origin/TabishB/issue367-rootcause
+61a2704870170d3070338431b9be6c197bbd3fc3 refs/remotes/origin/TabishB/nagoya
+6eb0be84eb0a4d0e8ac60d2bbe69f7459950ab32 refs/remotes/origin/TabishB/phoenix
+4b8f013cdf128515e11c7fcf81c65d67e3faf432 refs/remotes/origin/TabishB/sacramento
+95c6d29ac468ba38301829df36ac4554cd6b4e30 refs/remotes/origin/TabishB/validate-spec-deltas
+6bac61a2335a21ba2d0dd88e35b57099d16e0554 refs/remotes/origin/TabishB/web-dashboard-WITH-openspec
+fcfea289e6b14e9c89a4f171805ce2ea7408f7eb refs/remotes/origin/TabishB/west-monroe
+31b267ae2d713770f5d74aa1b885179e3b8c481f refs/remotes/origin/TabishB/windows-glob-test-fix
+780acb0ec02ca2e8b15b267ffb6228da27e2a38b refs/remotes/origin/TabishB/xdg-config-dir
+6fdf4253aed82f746e685aa33d65e78feb656d9d refs/remotes/origin/add-agent-skills-experimental-workflow
+dac0e0d4515f9fcf6d71a1e21e7d0071c2917f2b refs/remotes/origin/add-arguments-to-apply-command
+acdce5b2ba765846ef46219fb411ad5443305f6f refs/remotes/origin/add-artifact-workflow-cli
+e170df9f413e021917816d4352a7a93a29cfd39d refs/remotes/origin/add-change-commands
+5f448b0436fae9931cb89ab08fed3ec546c76ab1 refs/remotes/origin/add-change-manager
+d664e740d3a8e3e97b09f034f1667418d5622dba refs/remotes/origin/add-codeowners
+ac659f799387f2a8492937bae055604434e910a2 refs/remotes/origin/add-coderabbit
+326cb0febcd0f344afe487eb820b30b59da82836 refs/remotes/origin/add-complexity-guidelines
+7726d3668e99d56149524a54d5a915f748928579 refs/remotes/origin/add-factory-slash-commands
+91941243a330c06c45abfb672ad7d27830375b6a refs/remotes/origin/add-github-copilot-cli-support
+a913546ee325ebbccdab319b44667c228ef85d2b refs/remotes/origin/add-init-command
+f479e150750f048bdd9e41fea2814bbd57ead3c2 refs/remotes/origin/add-project-init-change
+b288f2fc8860f47de0da8c7a6c38cb5ee96cc59f refs/remotes/origin/add-requirement-markers
+8faf5043633cb0b2bab3c803d53d29c008956110 refs/remotes/origin/add-rfc-folder
+d8cba03840e4d64f0235e2dc2c0ee1a8e1ac1f93 refs/remotes/origin/add-skip-specs-archive-option
+f1fabc5f186660ae20946a24c6bfc54a131c2ac0 refs/remotes/origin/add-spec-commands
+ecf9a9ab78e9b5b47d790292c0ddea3c488ab1de refs/remotes/origin/add-specs-apply-command
+7ae14d5858d522029437c9e50e18defc1b141ea4 refs/remotes/origin/add-status-command
+e40abe1f208fd9f6f9e7365e36ec94766a885067 refs/remotes/origin/add-update-command
+edf6873afa66f927acd98db9c1350361e0fc4771 refs/remotes/origin/add-update-command-impl
+103838f371cd8e926c479eb2de62a71ca795ccc1 refs/remotes/origin/add-zod-validation
+8a559e0d00506b27c9709d05aa3637db47afb44d refs/remotes/origin/adopt-delta-based-changes
+cb5ac65d03a3cc03356a4c50f15473c6f4117a3f refs/remotes/origin/adopt-future-state-storage
+56a4d88649ee09528d466d6cdaf2456be5c65198 refs/remotes/origin/always-install-agentsmd
+d8a164cfc2d39547b3c6e305522a656eb4551db8 refs/remotes/origin/antigravity-proposal
+0084be39a7180bf39631ad34edd22d99aa20056e refs/remotes/origin/archive-4-completed-changes
+7ced2a87916e7dd95d378d22f2356fb1321086fe refs/remotes/origin/archive-changes
+17e4cf0dc64dcd019f8bcf478729177f796afef2 refs/remotes/origin/archive-completed-changes-v1
+8b428f1fdcaa0285e14727b2849dc34afa8e228c refs/remotes/origin/artifact-poc
+f36e86fc96210a34dea62a47bcc8fc4902387447 refs/remotes/origin/better-deltas
+09344a943edebf8165bbed3497489afe4cefd90e refs/remotes/origin/changeset-ai-assistant-support-and-validation-fixes
+40a83d56722fb48551d6f981576d02e4fd941594 refs/remotes/origin/changeset-ai-assistants-and-fixes
+4851cad0f8eea6a84a3e8889cfd3e57445a52e5a refs/remotes/origin/changeset-ai-assistants-and-improvements
+e82eef9969951af9431284c9e4bba0f8f5523f63 refs/remotes/origin/changeset-amazon-q-integration
+39d5080d5599eeb1afb880a48d473530d9dee70a refs/remotes/origin/changeset-config-completions
+3267006c7c095e16c78e572acd1dad81797848d2 refs/remotes/origin/changeset-config-dynamic-import
+84387ac50c48b57bb0c96b3e9a94811ebfbce961 refs/remotes/origin/changeset-factory-functions-and-init-options
+549cb0bc2eef5bf662f7c33375a7bc8c246810d5 refs/remotes/origin/changeset-fix-no-interactive
+099099c12ee8e8bba793783facecced2e0ad47ae refs/remotes/origin/changeset-new-ai-tool-integrations
+015661609ac5098fa34aaf3a17d96c1b62897529 refs/remotes/origin/changeset-new-features-and-improvements
+fa1aba652b323db747325b05f2221d456fb1eba1 refs/remotes/origin/changeset-opsx-experimental-workflow
+75fc9df7ce47d636b1072e448e0b774efe76f729 refs/remotes/origin/changeset-update
+b1a778458619a9fe940471124fdcceb9d471e2c3 refs/remotes/origin/changeset/windows-fix-release
+b0d46e1bcc04084e32eda8d1b3c5905c4d361d6f refs/remotes/origin/chore/archive-and-cleanup-changes
+8c3575deaba3583880100613800afd0dd9ef6633 refs/remotes/origin/chore/changeset-windsurf
+1db19ac3d881c9fcaeb31e481e22c02412725ce0 refs/remotes/origin/chore/fix-change-validations
+759670445e4aab08bb1e8900172e3a3fea1e169f refs/remotes/origin/chore/release-automation-phase-1-dry-run
+a0b367f4867cb1fa33ffd017a6f6db890bc9b278 refs/remotes/origin/chore/release-automation-phase-2-enable
+17771b80c4f4e7cb172513f98cc3785716635764 refs/remotes/origin/chore/release-changeset
+1f670f71d4141ecfb2d0d2f7dafc1619625b5489 refs/remotes/origin/cleanup/remove-add-requirement-markers
+793ef1df37eb2159dfd4e523d3a536c074c43100 refs/remotes/origin/codex/add-codex-slash-command-support
+68fc0499550b238f68d2819977ca96eec8c04711 refs/remotes/origin/codex/add-custom-slash-command-support-for-openspec
+5b2049aedf59f996d7fdab04e35d3421ea9b706b refs/remotes/origin/codex/add-sorting-for-active-changes-by-completion
+7b0f4947540812616f643b42a2235ce4d41c5806 refs/remotes/origin/codex/add-support-for-multiple-coding-agents
+925fef5e2b1c20f047b7167fef8ec73d3cd954de refs/remotes/origin/codex/check-if-y-flag-is-documented-in-agents.md
+d42de5d86e498e650e25fa109788364f93b5999d refs/remotes/origin/codex/create-change-proposal-for-factory-droid-cli
+a86f401be0585b12fb3addd835248232aca4ddf9 refs/remotes/origin/codex/create-changeset-pr-for-release
+d9d3709fadda15909c222dcc757a0465336b8aaf refs/remotes/origin/codex/design-interactive-proposal-qa-process
+78ef442098696ea0d9cd8281ec930523f30324b5 refs/remotes/origin/codex/fix-discord-badge-in-readme
+1a1d1bf0756b5379db36b163f10424f524a69832 refs/remotes/origin/codex/fix-e2e-tests-on-windows
+50e66600186e036e4322926e2dcbc55687725ecd refs/remotes/origin/codex/implement-update-agent-file-name-change
+9d7b44b72224409172dc48609b0487c666720190 refs/remotes/origin/codex/rename-agent-instruction-file-to-agents.md
+0a0b35433fa6ff82659210646cdfa3be1988d259 refs/remotes/origin/codex/research-custom-slash-commands-for-gemini-cli
+36a975153f6d6ab28e7d4b4255b4d43615f68d6e refs/remotes/origin/codex/research-slash-command-support-for-windsurf
+e0be11dd858ddb9c82eff941c5af7f798137004b refs/remotes/origin/codex/streamline-openspec-release-process
+66ad5658f9e593b419891bb07bb9d8afc41e94bb refs/remotes/origin/codex/update-readme-for-custom-slash-commands
+f2ecada962a0bce94fc715355bc8d57484bbbe6b refs/remotes/origin/codex/update-readme-for-openspec-init-note
+28596acc57f985c594e6b80e88e8553724c8b8b3 refs/remotes/origin/codex/verify-cross-platform-compatibility-for-slash-commands
+0021526efd2cff9ccc2711d4f5a68808f4e41f22 refs/remotes/origin/compare-tools
+f5228b10af9ff403f06877f68813ec114f35d9c8 refs/remotes/origin/docs/add-crush-to-readme
+98c026043703892cb530fc9d55adfed580597946 refs/remotes/origin/docs/add-discord-badge
+e5cd35ae2956888bcef8fbfd88ef4f2985e89bee refs/remotes/origin/docs/add-versioning-archiving-guide
+b33f4358126e763ec2ec4bc009640ca2cd6661a9 refs/remotes/origin/docs/align-agent-instructions
+41874627f6eddc05603f15a1b225d6917939e077 refs/remotes/origin/docs/archive-slash-command-yes-flag
+675941ac83127b505bc9a84d7aa3d286157af09d refs/remotes/origin/docs/experimental-workflow-guide
+31c78a5e3845be80b2d11225b73af46e5ea4d79c refs/remotes/origin/docs/multi-language-output
+835c15a2f6d405f8da1037dd263787ff80a087ea refs/remotes/origin/docs/readme-init-updates
+c2b80276b873f2d49cd1b1aecf0cddc3d96fa2e9 refs/remotes/origin/docs/readme-opsx-visibility
+4cd0720e9b14814c29c5fb66ac8ca4114e2b0fc0 refs/remotes/origin/e2e-tests-setup
+161aa41cb3f6b2fbcd4a7e8d5e102c010059f856 refs/remotes/origin/feat/add-agents-md-config
+d3237cac7bd00f1234e05465c5e12c7213521352 refs/remotes/origin/feat/add-archive-command
+6cbb803e489ec070cb7e472ab9b5ea7957b182ab refs/remotes/origin/feat/add-diff-command
+63f247ee45ca059d29454afffc3ac18ae330caaa refs/remotes/origin/feat/add-experimental-slash-command-setup
+81508463c3f203c9b9796f546fecbbffde1650a7 refs/remotes/origin/feat/add-instruction-loader
+1e17cfdd0be9f1ae2056e090b3554b3880b7f5a3 refs/remotes/origin/feat/add-interactive-show-command
+8bcf2c69059e33c7f4d45a584281c09a5335004d refs/remotes/origin/feat/add-list-command
+8c1b580f03d6f9ae43d9050b55f8bc37bc5c675d refs/remotes/origin/feat/add-slash-command-support
+6458b6ed3992a1c42a243c0710558682b4317416 refs/remotes/origin/feat/adopt-verb-noun-cli-structure
+aeaa1d50cc0896d3b679a143d62c03c76f0ce323 refs/remotes/origin/feat/apply-structured-spec-format
+2cec5f75037367ceab2ca4daadd7fbc0b2f2fe69 refs/remotes/origin/feat/archive-smart-sync-check
+53e137aca606cbb984100707d7085425830415d8 refs/remotes/origin/feat/artifact-workflow-instructions
+a6c1a9016533245dff4f5d29e2d3bc41b32ace19 refs/remotes/origin/feat/bulk-validation-and-interactive-selection
+9d425865c173049feeeb1f26b2caaad598bd185e refs/remotes/origin/feat/complexity-guidelines
+0755994eaa43b8ff8c882da2c23e72cd7ac0901b refs/remotes/origin/feat/implement-archive-command
+e395eb4eeb775b410d19c624b56f162adcfbb3b5 refs/remotes/origin/feat/implement-list-command
+95d855d6412e0c5de6890a2b32e5259657a5ca79 refs/remotes/origin/feat/improve-validation-error-messages
+45d4b6b207c3963b0bcffd60af0afde574e7d37a refs/remotes/origin/feat/list-command-enhancements
+32f3acf82929fda5795ca9471cfd7947686b0e08 refs/remotes/origin/feat/oidc-trusted-publishing
+b72014e569a865a0f506202d271cc8072ba5a3bd refs/remotes/origin/feat/opsx-archive-command
+5ee9e5630509ab88574c95974203495e45600d72 refs/remotes/origin/feat/opsx-explore
+15f8fe1d6165bb8b2f332ce33bf1206d35f78cb2 refs/remotes/origin/feat/opsx-ff-command
+904c0531d8ed8fd34c78c4f3f10cf3fcdcdbb9e1 refs/remotes/origin/feat/restructure-schema-directories
+f192a97aeb095e4038ff24e86be5cce50e4a3634 refs/remotes/origin/feat/skip-spec-update-archive-proposal
+2ad0b1d306b47cd4d46d5edf6bf78751573e1045 refs/remotes/origin/feat/structured-spec-format
+8ac50289f0e89816a70e7cfd5605b21863032623 refs/remotes/origin/feat/validate-command-interactive-selection
+8910a1f2a0e31502db05a84767f15e1c481c6423 refs/remotes/origin/feature/add-posthog-analytics
+433b884468910631fc6d7f168ca78a7980991d7c refs/remotes/origin/fix-agents-md-template
+39b9b8d692cbc648bd88436c225b6d24f3899fdb refs/remotes/origin/fix-archive-command-arguments
+b322829091e9183d1c6eec91277f1ecb2747bc2b refs/remotes/origin/fix-archive-spec-updates
+86f4ed5a56b64b3b2d7208a9f0b07d39f4bedded refs/remotes/origin/fix-changeset-package-name
+d259fe6407d7aa5c88bcde5c6a3c93399b9626bb refs/remotes/origin/fix-codex-windows
+0cd8775de24e3ffcb100852c8385a82aa85452dd refs/remotes/origin/fix-codex-windows-update
+cc25ca288dbb83923bac1b215fc448cdd9fca3d1 refs/remotes/origin/fix-crlf-issues
+65ffe1ce64595da7dd8d3eb89dfddc661bdf5d87 refs/remotes/origin/fix-docs
+52d620e40e629d55cccae45a9308d34f997342fc refs/remotes/origin/fix-invalid-spec-files
+57216a78240e16b4885eeae5d9ecc8cc802c071b refs/remotes/origin/fix-tests
+8c6edf94a486086f2f2ed371b6ac95fda721417b refs/remotes/origin/fix-untitled-change-fallback
+b6cad1631c682da47eb05010d712da77106703c6 refs/remotes/origin/fix-update-respects-tool-selection
+76f4f4c9dce5cfd75772da778897a730203566aa refs/remotes/origin/fix-validation
+4772d71b4eb3a9d3fb2b37351252c6667a8fed38 refs/remotes/origin/fix-windsurf-workrules
+f1cb544016bea274c7553e6b68d4ae131fcca28d refs/remotes/origin/fix/opencode-agent-field
+6b3f64e3a0a35da4704abb2c161680d7722bbfb1 refs/remotes/origin/fix/pre-commit-hook-hanging
+070b8c23bdea7cfe0fe0bff041aa8e7eb01d249b refs/remotes/origin/fix/qwen-toml-commands
+2f576b056066b08d2e177fc428ab863f64d1562d refs/remotes/origin/fix/shell-completions-spec-updates
+8ea48c5eaa19d0b6c5f4ffbbb51c2bb5f0ea0303 refs/remotes/origin/fix/telemetry-command-tracking
+d90eccf9593e3a7036cb396dd013006825612c22 refs/remotes/origin/fix/update-respects-tool-selection
+c5c3b332642d30b570625e7b81f41dae8d375ca7 refs/remotes/origin/fix/validation-metadata-skip-issue-159
+0ec323157cb989ab706772f33a8be2a56d5ddfde refs/remotes/origin/fix/version-guard-0.8.1
+1933ff83629bcf2d6ccdaecaa795ba6e8c7eb69f refs/remotes/origin/fix/windows-telemetry-tests
+4afafcb2a3968b5eecab3b00cc339e1cbdfa6856 refs/remotes/origin/gemini-cli-update-docs
+3bedf6b23e66677a119e73befbf1ef29b7cd2f3c refs/remotes/origin/json-zod-implementation-plan
+f80c70d92660a4f9c7ac01d2bdf8a68e6bfad547 refs/remotes/origin/kilocode-release-version
+56d49bd80e3f9d8c1f43115f88e5a33131b6d3a4 refs/remotes/origin/kilocode-support-change
+11b934d47248b3a2b2244b70c39d9e207b4890ba refs/remotes/origin/kilocode-workflows-support
+c574e7992dc9d3ac019f8c2e882406f696271eb6 refs/remotes/origin/main
+828e5ba316bdd715dc8c9a4154227170e4a06698 refs/remotes/origin/make-commands-consistent
+ffa7c17e17efa1d23bffd41b249bcf88b7c0acbf refs/remotes/origin/minimal-root-instructions
+9a611ef00a79cac9e1f47ea90342105f3f6d4fa2 refs/remotes/origin/openspec/add-artifact-graph-core
+77cef014cff8526422e8de9e6278de5223d3a05a refs/remotes/origin/plan-e2e-tests
+9f27f60a87805bbcdf69a5f74e10db19c0518131 refs/remotes/origin/pnpm-lock-update
+c0e96688b86117dc6f0a43e36e63f764698ed473 refs/remotes/origin/pr-113
+7157a37a397f7ee61f6861628f87d3e0e9b62d19 refs/remotes/origin/pr-285
+573afa0c65e96eb0be5a075f6dd7a89ea2e28632 refs/remotes/origin/prepare-publish
+fdf05145322a7d9cccb8f5a9e6f38e3e0db3c3a5 refs/remotes/origin/project-setup
+83c88be4e5afd2f3a86aaea35a556da4101d4545 refs/remotes/origin/proposal/skills-only-migration
+93c846421afb0a9fa56d6aaf4a14ca0c710382a0 refs/remotes/origin/proposal/slice-3-instruction-loader
+414d2bf3dcf178bbcba71e4bcea03299fa9806d5 refs/remotes/origin/readme-alphabetize-ai-tools
+5d0752b94d3ecfb7435086d165aabf2d36520cde refs/remotes/origin/release-changeset
+8fd65b4947dd48b2d96b8edc7b0361fa3153c0d5 refs/remotes/origin/release-new-version
+0319ac3bb0d55e29b8bb057153c7ffd679f68af1 refs/remotes/origin/release/v0.4.0
+82ba1f504e65f99cf8aed1dca449a125f86ef37e refs/remotes/origin/remove-diff-command
+8ac33b9b94a7d0fffefe500ca10fc861df60ca0b refs/remotes/origin/revert-spec-manual-edit
+4934800368f0d73465b668ecc33caa4b2b27be4c refs/remotes/origin/scaffold-proposal-review
+b297c41e3e0d01b42481a0d1d34fe0bf33a60371 refs/remotes/origin/simplify-setup-config
+58691523f0f411870a4a1b66b553ff4a426181f6 refs/remotes/origin/suggested-improvements
+bb1d7927c0833254294834a4332d665b8a1bebb9 refs/remotes/origin/update-apply-instructions
+f0b1e00c659ceb55b5dd922d76198920863d2554 refs/remotes/origin/update-archive-command
+9dd19c40cfe92651499a4f8ee4637be291043e37 refs/remotes/origin/update-codex-slash-commands
+4ab65d75dd727425a418d52533095e1d378e4452 refs/remotes/origin/update-delta-conventions
+c08a17011616bbb2ffd0fc9647ed576aa2d16ce7 refs/remotes/origin/update-discord-invite-link
+fdcf9621dbfcd8209e032c43cb47ccc533ea9f7c refs/remotes/origin/update-docs
+0c70681b387ce3383b8719fbeb0055780f298091 refs/remotes/origin/update-latest-version
+a55a5c9eb4f4c0fff9d4c9824d2a4963c4ef0729 refs/remotes/origin/update-onboarding
+1a3bfae784928bb029a9be6485686118c0affb6a refs/remotes/origin/update-openspec-agent-instructions
+5fa0fa68a74778c75758449b54d6afd9f9c1643e refs/remotes/origin/update-readme
+818a5922ceba6103801f4f7b66f5e03f67f10a2f refs/remotes/origin/update-slash-commands
+6b8845b10a4c94d37524dff4fe928f00deed5eb9 refs/remotes/origin/update-spec-change-format
+36eb0bbbf59dac9997aa84adcd215b5ca45f02ec refs/remotes/origin/updating-agent-instructions
+ccaa5ad0b040b75c464f9e9423523bdce72d6427 refs/remotes/origin/view-command-proposal
+54031b90f668c5012b1e4e7394086aeedc407072 refs/remotes/origin/youthful-wescoff
+02fe5b35477632640f11214813180fd5bcd136ec refs/tags/v0.1.0
+ffc936008cea2f753426a754b4cd8591b78a9730 refs/tags/v0.10.0
+^f56189a8f721f6f738c1115fb747af74ea712077
+42d9bb603fc065a50d41f204035438a1425f0203 refs/tags/v0.11.0
+^108bcd66d89fc9a8929e023df273b8ba4b3f4beb
+3491b7db14539728915296e73389cdc80a3769a4 refs/tags/v0.12.0
+^b30882b57928ae086b4577cee9aed3ab09bbf1e5
+20f96452a68e25c220efbeadfe71a22592523a2e refs/tags/v0.13.0
+^5855fa2353ef75e613dae7bc4ccd71c6cdb428f1
+9dffc17b415a83b062bc440057e6fa36b667f2e0 refs/tags/v0.14.0
+^d32e50fe36ffa58c45781dc3d5815b692f4df90b
+4bfa7d0ce4157da3e9fc0040f9a37145dcef5b34 refs/tags/v0.15.0
+^17d7e59343559cc6bf8693b0bd953f78008a46e6
+b629570c78374314824d7df5c855396980ac460a refs/tags/v0.16.0
+^3f5a66d3e4e0cd0df2eac6c8173dd9f855c7a60b
+a98a7ae71840f28b52f050b836e66adeca4d2220 refs/tags/v0.17.0
+^6de04f3b2b3656102940817e909ad3963417a797
+c643c6efcb15335be5225549a2aca8fdaf6aab0e refs/tags/v0.17.1
+^fb264bcbcd154d92207e58e1127a14f8a19ebb0f
+c9a78eb2958709bc92ef6d1f44923ddb2ce4ea65 refs/tags/v0.17.2
+^c08a53cb2125128bd151ce9c19f0f3e53c20d97c
+159b2f5b3ead60f30bb7daf8712aa8c4003ed598 refs/tags/v0.18.0
+^533cb0fa87e104ca71ef62d3898c91bc659f2311
+418520936de986bc7f4024436a987b96ab2636d9 refs/tags/v0.19.0
+^2fbda520deb0a565bba85c07227a9b96e6de1baa
+21a0e74b743272e8d227ea3879b9288d0a5ffff3 refs/tags/v0.2.0
+c7bf457217ae8eaf8b7fdea66668aad98a46df26 refs/tags/v0.20.0
+^ed2e832066f98f428c4262b64e6652bb5c75d521
+7e0d3ba3e32cf3a93119576ca58a25ef96860bce refs/tags/v0.21.0
+^473093f885555dc686fc94f46b85812ab4814ca5
+7d2d493b90bfca5c63aa18cd01ab836502173023 refs/tags/v0.22.0
+^7d1237f00d0f9385184e9fc1c5ab77dc5190381d
+d51266b0f71ce993ca35078068b325c046dd446b refs/tags/v0.23.0
+^3b16b13613fd5bcc31e6b0c86edcef7d41b3763e
+157936cf682c5fb2ceef08f784ea2b79d4eabb2f refs/tags/v0.3.0
+367aa12892fecfb4105e1db2af71b4cd9ecc8cbb refs/tags/v0.4.0
+a908dc5a059291ef2bef8971d8dc79eb86607cf5 refs/tags/v0.5.0
+adc63069a9c06474d422db622d32c7a9090fca26 refs/tags/v0.6.0
+5e0d21d1ed1dceadc4103b2603cbb9911a833272 refs/tags/v0.7.0
+bb51594674cb3d8dc2b971466f9376451ca42314 refs/tags/v0.8.0
+^6539ceb54a6890ab59a8e4d4fa34b7a48012e54a
+d1a260e06c13ccaaa2f8ca9771e159fa1ed38cc6 refs/tags/v0.8.1
+^25289b510d59a83a45a107b796cad84d99fa3bd3
+731803487d5e5c3fbdf3059077d33c4a3abb01fe refs/tags/v0.9.0
+^af513191eb56d34af3b4f1120b80d945e61a7e46
+11fdd277422c7ec34d857b895683633b3afb3f56 refs/tags/v0.9.1
+^c7ca76cb4f857a5483457d246c37e6c5b1a48d9a
+f49398fac305fba2731e3a5b2c12489f950d0a06 refs/tags/v0.9.2
+^c482f1b47a94eb9a85708e0b21de7f2775c0ac50
+e778627d228ce4f39808692f544650cd7325e509 refs/tags/v1.0.0
+^0e6f42c81c84e751c82dcb867fc9bab5b55b1484
+c6ba3b03f901e662c5a44c4c59dfd1cab6a972f0 refs/tags/v1.0.1
+^d1551262351fabefe3cb5880bed6f69b3a1df593
+68df882f45c33dce83d6e8f778885000ef46db65 refs/tags/v1.0.2
+^f6b415cb9b03f2a632238c5b3347b325af4b815b
+1218c9f660ec60c4103100b3c7237da9c41d1ffc refs/tags/v1.1.0
+^37686944a9de4070ad53c177abd59235fa2a0901
+a67ab1294eef8cf1f5ce7339fca7fc21bdd73280 refs/tags/v1.1.1
+^36fbc898da6716e1690d40e6e273e69e8868642e

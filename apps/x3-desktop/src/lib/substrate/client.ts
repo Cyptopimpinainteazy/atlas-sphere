@@ -65,6 +65,7 @@ const X3_TYPES = {
     },
   },
   AssetMetadata: { symbol: 'Vec<u8>', decimals: 'u8' },
+  RateLimitMetrics: { total_requests: 'u64', total_rejected: 'u64', active_connections: 'u32' },
 };
 
 const X3_RPC = {
@@ -103,6 +104,13 @@ const X3_RPC = {
       description: 'Get current authority set',
       params: [{ name: 'at', type: 'BlockHash', isOptional: true }],
       type: 'Vec<AccountId>',
+    },
+  },
+  x3Node: {
+    getRateLimitMetrics: {
+      description: 'Get RPC rate limit metrics for the node',
+      params: [],
+      type: 'RateLimitMetrics',
     },
   },
 };

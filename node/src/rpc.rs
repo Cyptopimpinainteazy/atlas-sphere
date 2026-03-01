@@ -2,6 +2,7 @@ use crate::rpc_middleware::{RateLimitConfig, RateLimitMetrics, RateLimiter};
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use pallet_atomic_trade_engine::{
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
+    types::TradeRoute,
     AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
 };
 use pallet_evolution_core::runtime_api::{
@@ -99,6 +100,14 @@ pub trait AtlasKernelApi<BlockHash> {
     /// Get current authority set
     #[method(name = "atlasKernel_getAuthorities")]
     fn get_authorities(&self, at: Option<BlockHash>) -> RpcResult<Vec<AccountId>>;
+}
+
+/// Flash Finality RPC API
+#[rpc(client, server)]
+pub trait FlashFinalityApi<BlockHash> {
+    /// Get Flash Finality certificate for a given block hash
+    #[method(name = "x3_finalityProof")]
+    fn get_finality_proof(&self, block_hash: BlockHash) -> RpcResult<Option<flash_finality::FinalityCertificate>>;
 }
 
 /// X3 Domains RPC API
@@ -256,6 +265,39 @@ where
         let at = at.unwrap_or_else(|| self.client.info().best_hash);
 
         api.get_authorities(at).map_err(runtime_api_error)
+    }
+}
+
+/// Flash Finality RPC server implementation
+pub struct FlashFinalityRpc<B> {
+    gadget: Arc<flash_finality::FlashFinalityGadget>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<B> FlashFinalityRpc<B> {
+    pub fn new(gadget: Arc<flash_finality::FlashFinalityGadget>) -> Self {
+        Self {
+            gadget,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<Block> FlashFinalityApiServer<<Block as BlockT>::Hash> for FlashFinalityRpc<Block>
+where
+    Block: BlockT,
+{
+    fn get_finality_proof(&self, block_hash: <Block as BlockT>::Hash) -> RpcResult<Option<flash_finality::FinalityCertificate>> {
+        enforce_rpc_rate_limit("x3_finalityProof")?;
+        
+        // Convert H256 to [u8; 32]
+        let hash: [u8;32] = block_hash.as_ref().try_into().unwrap_or([0u8; 32]);
+        
+        // Query gadget for certificate
+        // We use block_on here because RPC methods are not async in this version of jsonrpsee
+        // Or we can make it async if supported.
+        let cert = futures::executor::block_on(self.gadget.get_certificate(hash));
+        Ok(cert)
     }
 }
 
@@ -477,6 +519,16 @@ pub trait AtomicTradeEngineApi<BlockHash> {
     /// Check if account is authorized for atomic trades
     #[method(name = "atomicTrade_isAuthorized")]
     fn is_trade_authorized(&self, account: AccountId, at: Option<BlockHash>) -> RpcResult<bool>;
+
+    /// Resolve the best execution path across registered AMM adapters
+    #[method(name = "x3_findBestPath")]
+    fn find_best_path(
+        &self,
+        token_in: H256,
+        token_out: H256,
+        amount_in: u128,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Option<TradeRoute>>;
 }
 
 /// Atomic Trade Engine RPC server implementation
@@ -578,6 +630,21 @@ where
         let account_bytes = account.encode();
 
         api.is_authorized(at, account_bytes)
+            .map_err(runtime_api_error)
+    }
+
+    fn find_best_path(
+        &self,
+        token_in: H256,
+        token_out: H256,
+        amount_in: u128,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Option<TradeRoute>> {
+        enforce_rpc_rate_limit("x3_findBestPath")?;
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.find_route(at, token_in, token_out, amount_in)
             .map_err(runtime_api_error)
     }
 }
@@ -882,6 +949,7 @@ pub fn create_full<C, P>(
     pool: Arc<P>,
     deny_unsafe: DenyUnsafe,
     _subscription_executor: SubscriptionTaskExecutor,
+    flash_finality_gadget: Option<Arc<flash_finality::FlashFinalityGadget>>,
 ) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
     C: Send
@@ -945,6 +1013,10 @@ where
         if let Ok(fmod) = crate::rpc_frontier::create_frontier_stub(client.clone()) {
             module.merge(fmod)?;
         }
+    }
+
+    if let Some(gadget) = flash_finality_gadget {
+        module.merge(FlashFinalityRpc::new(gadget).into_rpc())?;
     }
 
     Ok(module)

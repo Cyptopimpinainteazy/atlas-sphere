@@ -46,6 +46,7 @@ impl Default for RateLimitConfig {
         method_limits.insert("atomicTrade_getPriceData".to_string(), 300); // 300/min
         method_limits.insert("atomicTrade_getBatchStatus".to_string(), 300); // 300/min
         method_limits.insert("atomicTrade_isAuthorized".to_string(), 600); // 600/min
+        method_limits.insert("x3_findBestPath".to_string(), 60); // 60/min
         method_limits.insert("evolutionCore_getParams".to_string(), 180); // 180/min
         method_limits.insert("evolutionCore_getStatus".to_string(), 180); // 180/min
         method_limits.insert("evolutionCore_getMetrics".to_string(), 120); // 120/min

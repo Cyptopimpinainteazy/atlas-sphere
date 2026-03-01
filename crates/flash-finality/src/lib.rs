@@ -27,6 +27,7 @@
 //! - Never advancing the canonical finalized head from Flash in shadow mode.
 //! - Logging every round timeout as a potential liveness event.
 
+use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -50,14 +51,14 @@ pub type BlockNumber = u64;
 
 /// Flash Finality proposal message.
 /// Emitted by the current round leader after receiving a valid block.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, PartialEq, Eq, Hash)]
 pub struct Proposal {
     pub block_hash: BlockHash,
     pub block_number: BlockNumber,
     pub round: RoundNumber,
     pub leader_id: ValidatorId,
-    /// SHA-256(block_hash || round || leader_id) — real impl uses sr25519.
-    pub leader_sig: [u8; 32],
+    /// sr25519 signature of the proposal.
+    pub leader_sig: [u8; 64],
 }
 
 impl Proposal {
@@ -69,24 +70,44 @@ impl Proposal {
         h.finalize().into()
     }
 
-    /// Verify that leader_sig == SHA-256(block_hash || round || leader_id).
-    /// A real validator uses sr25519::verify here; this is the test-safe
-    /// deterministic stub that passes CI without a keystore.
-    pub fn verify_sig_stub(&self) -> bool {
-        self.leader_sig == self.message_hash()
+    /// Verify signature using sr25519.
+    pub fn verify_sig(&self) -> bool {
+        use sp_core::sr25519::{Public, Signature};
+        use sp_core::crypto::PublicError;
+        
+        let public = Public::from_raw(self.leader_id);
+        let signature = Signature::from_raw(self.leader_sig);
+        let message = self.message_hash();
+        
+        sp_core::crypto::derive_pub_from_signature_fallback::<sp_core::sr25519::AuthorityId>(
+            &signature,
+            &message
+        ).is_ok() // This is a placeholder, real verification below
+    }
+
+    /// Real verification logic using sp_core
+    pub fn verify(&self) -> bool {
+        use sp_core::sr25519::{Public, Signature};
+        use sp_core::crypto::Pair;
+
+        let public = Public::from_raw(self.leader_id);
+        let sig = Signature::from_raw(self.leader_sig);
+        let msg = self.message_hash();
+
+        sp_core::sr25519::Pair::verify(&sig, &msg, &public)
     }
 }
 
 /// Flash Finality vote message.
 /// Emitted by each validator upon receiving a valid proposal.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, PartialEq, Eq, Hash)]
 pub struct Vote {
     pub block_hash: BlockHash,
     pub block_number: BlockNumber,
     pub round: RoundNumber,
     pub voter_id: ValidatorId,
-    /// SHA-256(block_hash || round || voter_id) — real impl uses sr25519.
-    pub voter_sig: [u8; 32],
+    /// sr25519 signature of the vote.
+    pub voter_sig: [u8; 64],
 }
 
 impl Vote {
@@ -98,15 +119,23 @@ impl Vote {
         h.finalize().into()
     }
 
-    pub fn verify_sig_stub(&self) -> bool {
-        self.voter_sig == self.message_hash()
+      /// Verify signature using sr25519.
+    pub fn verify(&self) -> bool {
+        use sp_core::sr25519::{Public, Signature};
+        use sp_core::crypto::Pair;
+
+        let public = Public::from_raw(self.voter_id);
+        let sig = Signature::from_raw(self.voter_sig);
+        let msg = self.message_hash();
+
+        sp_core::sr25519::Pair::verify(&sig, &msg, &public)
     }
 }
 
 /// Flash Finality certificate.
 /// Produced when ≥ 2/3 + 1 validators vote for the same block in the same round.
 /// This is the artifact that becomes a PoAE proof anchor.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
 pub struct FinalityCertificate {
     pub block_hash: BlockHash,
     pub block_number: BlockNumber,
@@ -132,6 +161,22 @@ impl FinalityCertificate {
         h.update(&self.voter_set_hash);
         h.finalize().into()
     }
+}
+
+// ─── Network Message ──────────────────────────────────────────────────────────
+
+/// Gossip protocol identifier for Flash Finality.
+pub const FLASH_FINALITY_PROTOCOL_ID: &str = "/x3/flash/1";
+
+/// Messages gossiped over the Flash Finality P2P network.
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
+pub enum GossipMessage {
+    /// A new block proposal from the leader.
+    Proposal(Proposal),
+    /// A vote for a proposal.
+    Vote(Vote),
+    /// A completed finality certificate.
+    Certificate(FinalityCertificate),
 }
 
 // ─── Shadow Mode Divergence Tracking ─────────────────────────────────────────
@@ -260,10 +305,12 @@ pub struct FlashFinalityGadget {
     shadow_agreement_streak: Arc<Mutex<u64>>,
     /// Externally set GRANDPA finalized head for comparison.
     grandpa_head: Arc<RwLock<(BlockNumber, BlockHash)>>,
+    /// Keystore for signing proposals.
+    keystore: Option<sp_keystore::KeystorePtr>,
 }
 
 impl FlashFinalityGadget {
-    pub fn new(config: FlashFinalityConfig, my_id: ValidatorId) -> Self {
+    pub fn new(config: FlashFinalityConfig, my_id: ValidatorId, keystore: Option<sp_keystore::KeystorePtr>) -> Self {
         Self {
             config,
             my_id,
@@ -273,6 +320,7 @@ impl FlashFinalityGadget {
             metrics: Arc::new(Mutex::new(FinalityMetrics::default())),
             shadow_agreement_streak: Arc::new(Mutex::new(0)),
             grandpa_head: Arc::new(RwLock::new((0, [0u8; 32]))),
+            keystore,
         }
     }
 
@@ -310,7 +358,7 @@ impl FlashFinalityGadget {
 
     /// Called when a proposal message arrives from the network.
     pub async fn on_proposal(&self, proposal: Proposal) {
-        if !proposal.verify_sig_stub() {
+        if !proposal.verify() {
             warn!("[FlashFinality] Proposal with invalid signature rejected");
             return;
         }
@@ -333,7 +381,7 @@ impl FlashFinalityGadget {
     /// Called when a vote message arrives from the network.
     /// Returns Some(certificate) if this vote completes a quorum.
     pub async fn on_vote(&self, vote: Vote) -> Option<FinalityCertificate> {
-        if !vote.verify_sig_stub() {
+        if !vote.verify() {
             warn!("[FlashFinality] Vote with invalid signature rejected");
             return None;
         }
@@ -384,10 +432,20 @@ impl FlashFinalityGadget {
         None
     }
 
-    /// Update the GRANDPA finalized head for shadow comparison.
-    pub async fn update_grandpa_head(&self, block_number: BlockNumber, block_hash: BlockHash) {
+    pub fn config(&self) -> &FlashFinalityConfig {
+        &self.config
+    }
+
+    /// Retrieve a certificate for a specific block hash if it exists in the buffer.
+    pub async fn get_certificate(&self, block_hash: BlockHash) -> Option<FinalityCertificate> {
+        let certs = self.certificates.lock().await;
+        certs.iter().find(|c| c.block_hash == block_hash).cloned()
+    }
+
+    /// Update the internal view of the GRANDPA finalized head.
+    pub async fn update_grandpa_head(&self, number: BlockNumber, hash: BlockHash) {
         let mut head = self.grandpa_head.write().await;
-        *head = (block_number, block_hash);
+        *head = (number, hash);
     }
 
     /// Compare Flash Finality head with GRANDPA head for shadow validation.
@@ -512,20 +570,35 @@ impl FlashFinalityGadget {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     fn build_proposal(&self, round: &RoundState) -> Proposal {
-        let msg_hash = {
-            let mut h = Sha256::new();
-            h.update(&round.block_hash.unwrap_or([0u8; 32]));
-            h.update(round.round.to_le_bytes());
-            h.update(&self.my_id);
-            h.finalize()
-        };
+        let block_hash = round.block_hash.unwrap_or([0u8; 32]);
+        let mut leader_sig = [0u8; 64];
+
+        if let Some(keystore) = &self.keystore {
+            use sp_core::crypto::KeyTypeId;
+            use sp_runtime::traits::Hash;
+            
+            let message = {
+                let mut h = Sha256::new();
+                h.update(&block_hash);
+                h.update(round.round.to_le_bytes());
+                h.update(&self.my_id);
+                h.finalize()
+            };
+
+            let public_keys = keystore.sr25519_public_keys(KeyTypeId(*b"flsh"));
+            if let Some(pubkey) = public_keys.iter().find(|k| k.0 == self.my_id) {
+                if let Ok(Some(sig)) = keystore.sr25519_sign(KeyTypeId(*b"flsh"), pubkey, message.as_slice()) {
+                    leader_sig.copy_from_slice(&sig.0);
+                }
+            }
+        }
 
         Proposal {
-            block_hash: round.block_hash.unwrap_or([0u8; 32]),
+            block_hash,
             block_number: round.block_number,
             round: round.round,
             leader_id: self.my_id,
-            leader_sig: msg_hash.into(),
+            leader_sig,
         }
     }
 

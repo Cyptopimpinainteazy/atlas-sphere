@@ -22,6 +22,8 @@ import {
   type ExtrinsicInfo,
   type AccountInfo,
   type ValidatorInfo,
+  fetchRpcStats,
+  type RealRpcStats,
 } from '@/lib/substrate';
 import type { Header } from '@polkadot/types/interfaces';
 
@@ -136,4 +138,12 @@ export function useShortAddress(address: string | null, chars = 6): string {
   if (!address) return '';
   if (address.length <= chars * 2 + 3) return address;
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+}
+
+export function useRpcStats(config?: SWRConfiguration) {
+  return useSWR<RealRpcStats | null, Error>('rpc-stats', () => fetchRpcStats(), {
+    ...defaultConfig,
+    refreshInterval: 5000,
+    ...config,
+  });
 }

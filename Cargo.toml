@@ -138,6 +138,7 @@ sp-blockchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-inherents = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-keystore = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-offchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-version = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -158,6 +159,7 @@ sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = 
 sc-executor = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sc-keystore = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sc-network = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sc-network-gossip = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sc-rpc = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -236,8 +238,7 @@ codegen-units = 1
 
 # Patches for Substrate dependencies - using consistent git rev
 [patch.crates-io]
-# NOTE: local environmental patch directory is missing; fallback to crates.io version.
-# environmental = { path = "patches/environmental" }
+environmental = { path = "patches/environmental" }
 # Force a single `curve25519-dalek` version (3.2.1) workspace-wide to
 # resolve conflicts between `solana-program` (requires ^3.2.1) and
 # Substrate's `sp-io`/`ed25519-dalek` dependency chain.

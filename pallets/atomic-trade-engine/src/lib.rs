@@ -73,7 +73,7 @@ use frame_support::{
 use frame_system::pallet_prelude::*;
 use pallet_x3_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 use scale_info::TypeInfo;
-use sp_core::H256;
+use sp_core::{H256, U256};
 use sp_io::hashing::blake2_256;
 use sp_runtime::{DispatchError, RuntimeDebug, SaturatedConversion};
 use sp_std::prelude::*;
@@ -198,6 +198,12 @@ pub mod pallet {
     pub type AmmAdapters<T: Config> =
         StorageMap<_, Blake2_128Concat, types::AmmProtocol, AmmAdapterConfig, OptionQuery>;
 
+    /// Registered liquidity pools used by the route solver and oracle.
+    #[pallet::storage]
+    #[pallet::getter(fn liquidity_pools)]
+    pub type LiquidityPools<T: Config> =
+        StorageMap<_, Blake2_128Concat, H256, types::LiquidityPool, OptionQuery>;
+
     /// Trade execution nonces per account.
     #[pallet::storage]
     #[pallet::getter(fn trade_nonces)]
@@ -310,6 +316,27 @@ pub mod pallet {
         },
         /// An AMM adapter was removed.
         AmmAdapterRemoved { protocol: types::AmmProtocol },
+        /// A liquidity pool was registered or updated.
+        LiquidityPoolRegistered {
+            pool_id: H256,
+            token_a: H256,
+            token_b: H256,
+            protocol: types::AmmProtocol,
+            vm_type: types::VmType,
+        },
+        /// Liquidity reserves were refreshed for a registered pool.
+        LiquidityPoolUpdated {
+            pool_id: H256,
+            reserve_a: u128,
+            reserve_b: u128,
+        },
+        /// A pool-derived oracle observation was synced.
+        PoolPriceSynced {
+            pool_id: H256,
+            token_a: H256,
+            token_b: H256,
+            price: u128,
+        },
         /// Arbitrage opportunity detected.
         ArbitrageOpportunityDetected {
             path: Vec<AssetPair>,
@@ -359,6 +386,8 @@ pub mod pallet {
         AmmNotRegistered,
         /// AMM adapter already registered.
         AmmAlreadyRegistered,
+        /// Liquidity pool not registered.
+        PoolNotFound,
         /// Invalid AMM protocol.
         InvalidAmmProtocol,
         /// Trade nonce mismatch.
@@ -395,6 +424,8 @@ pub mod pallet {
         TooManyPriceObservations,
         /// Invalid price data.
         InvalidPriceData,
+        /// Invalid liquidity pool configuration.
+        InvalidPoolConfiguration,
         /// Price oracle not initialized for pair.
         PriceOracleNotInitialized,
 
@@ -707,6 +738,97 @@ pub mod pallet {
             Ok(())
         }
 
+        /// Register or upsert an on-chain liquidity pool for pathfinding and oracle sync.
+        #[pallet::call_index(9)]
+        #[pallet::weight(Weight::from_parts(60_000_000, 0))]
+        pub fn register_liquidity_pool(
+            origin: OriginFor<T>,
+            protocol: types::AmmProtocol,
+            vm_type: types::VmType,
+            token_a: H256,
+            token_b: H256,
+            reserve_a: u128,
+            reserve_b: u128,
+            fee_bps: u32,
+            address: Vec<u8>,
+        ) -> DispatchResult {
+            T::AmmRegistrarOrigin::ensure_origin(origin)?;
+
+            ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
+            ensure!(reserve_a > 0 && reserve_b > 0, Error::<T>::InvalidPoolConfiguration);
+            ensure!(fee_bps < 10_000, Error::<T>::InvalidPoolConfiguration);
+
+            let bounded_address =
+                BoundedVec::<u8, ConstU32<MAX_ADDRESS_LEN>>::try_from(address)
+                    .map_err(|_| Error::<T>::InvalidPoolConfiguration)?;
+
+            let pool = types::LiquidityPool {
+                pool_id: Self::generate_pool_id(protocol, vm_type, token_a, token_b, &bounded_address),
+                protocol,
+                vm_type,
+                token_a,
+                token_b,
+                reserve_a,
+                reserve_b,
+                fee_bps,
+                address: bounded_address.to_vec(),
+            };
+
+            let pool_id = pool.pool_id;
+            LiquidityPools::<T>::insert(pool_id, pool);
+
+            Self::deposit_event(Event::LiquidityPoolRegistered {
+                pool_id,
+                token_a,
+                token_b,
+                protocol,
+                vm_type,
+            });
+
+            Ok(())
+        }
+
+        /// Update reserves for an already registered pool.
+        #[pallet::call_index(10)]
+        #[pallet::weight(Weight::from_parts(40_000_000, 0))]
+        pub fn update_liquidity_pool(
+            origin: OriginFor<T>,
+            pool_id: H256,
+            reserve_a: u128,
+            reserve_b: u128,
+        ) -> DispatchResult {
+            T::AmmRegistrarOrigin::ensure_origin(origin)?;
+
+            ensure!(reserve_a > 0 && reserve_b > 0, Error::<T>::InvalidPoolConfiguration);
+
+            LiquidityPools::<T>::try_mutate(pool_id, |maybe_pool| -> DispatchResult {
+                let pool = maybe_pool.as_mut().ok_or(Error::<T>::PoolNotFound)?;
+                pool.reserve_a = reserve_a;
+                pool.reserve_b = reserve_b;
+                Ok(())
+            })?;
+
+            Self::deposit_event(Event::LiquidityPoolUpdated {
+                pool_id,
+                reserve_a,
+                reserve_b,
+            });
+
+            Ok(())
+        }
+
+        /// Sync a pool's spot price into the TWAP oracle immediately.
+        #[pallet::call_index(11)]
+        #[pallet::weight(Weight::from_parts(50_000_000, 0))]
+        pub fn sync_pool_price(origin: OriginFor<T>, pool_id: H256) -> DispatchResult {
+            T::AmmRegistrarOrigin::ensure_origin(origin)?;
+
+            let block_number: u64 = frame_system::Pallet::<T>::block_number().saturated_into();
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+
+            Self::sync_single_pool_price(pool_id, block_number, timestamp)
+        }
+
         /// Create a checkpoint during trade execution (for recovery).
         ///
         /// This allows partial trade execution with recovery points.
@@ -782,23 +904,7 @@ pub mod pallet {
                 source,
             };
 
-            // Store observation
-            PriceObservations::<T>::try_mutate(
-                (token_a, token_b),
-                |observations| -> DispatchResult {
-                    // Remove oldest if at capacity
-                    if observations.len() >= 256 {
-                        observations.remove(0);
-                    }
-                    observations
-                        .try_push(observation.clone())
-                        .map_err(|_| Error::<T>::TooManyPriceObservations)?;
-                    Ok(())
-                },
-            )?;
-
-            // Update TWAP
-            Self::update_twap(token_a, token_b, price, timestamp)?;
+            Self::store_price_observation(observation.clone())?;
 
             Self::deposit_event(Event::PriceObservationRecorded {
                 token_a,
@@ -992,6 +1098,42 @@ pub mod pallet {
 
             Ok(())
         }
+
+        /// Submit and execute a trade batch automatically in one step.
+        ///
+        /// Ideal for simple swaps from the frontend where the batch ID is not needed
+        /// beforehand and we just want atomic execution.
+        #[pallet::call_index(8)]
+        #[pallet::weight(
+            <T as Config>::WeightInfo::create_trade_batch(legs.len() as u32)
+            .saturating_add(<T as Config>::WeightInfo::execute_trade_batch())
+        )]
+        pub fn submit_atomic_batch(
+            origin: OriginFor<T>,
+            legs: Vec<TradeLegInput>,
+            deadline: BlockNumberFor<T>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin.clone())?;
+            let nonce = TradeNonces::<T>::get(&who);
+            let slippage_tolerance_bps = 500u32; // Default to 5% slippage
+
+            // First create the batch
+            Self::create_trade_batch(
+                origin.clone(),
+                legs.clone(),
+                slippage_tolerance_bps,
+                deadline,
+                nonce,
+            )?;
+
+            // Then compute the generated batch ID
+            let batch_id = Self::generate_batch_id(&who, nonce, &legs);
+
+            // Finally execute it
+            Self::execute_trade_batch(origin, batch_id)?;
+
+            Ok(())
+        }
     }
 
     // ============================================================================
@@ -1000,6 +1142,21 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_initialize(block_number: BlockNumberFor<T>) -> Weight {
+            let block_num: u64 = block_number.saturated_into();
+            if !block_num.is_multiple_of(10) {
+                return Weight::zero();
+            }
+
+            let timestamp = <pallet_timestamp::Pallet<T> as UnixTime>::now().as_secs();
+
+            if let Err(e) = Self::sync_all_pool_prices(block_num, timestamp) {
+                log::warn!("Pool oracle sync failed on initialize: {:?}", e);
+            }
+
+            Weight::from_parts(75_000_000, 0)
+        }
+
         /// Offchain worker for price aggregation.
         fn offchain_worker(block_number: BlockNumberFor<T>) {
             // Run price aggregation every 10 blocks
@@ -1022,6 +1179,16 @@ pub mod pallet {
                 data.extend_from_slice(&leg.encode());
             }
             H256::from(blake2_256(&data))
+        }
+
+        fn generate_pool_id(
+            protocol: types::AmmProtocol,
+            vm_type: types::VmType,
+            token_a: H256,
+            token_b: H256,
+            address: &BoundedVec<u8, ConstU32<MAX_ADDRESS_LEN>>,
+        ) -> H256 {
+            H256::from(blake2_256(&(protocol, vm_type, token_a, token_b, address).encode()))
         }
 
         /// Create a state checkpoint for rollback support.
@@ -1491,6 +1658,101 @@ pub mod pallet {
                 .map(|obs| obs.price)
         }
 
+        fn store_price_observation(observation: types::PricePoint) -> Result<(), DispatchError> {
+            PriceObservations::<T>::try_mutate(
+                (observation.token_a, observation.token_b),
+                |observations| -> DispatchResult {
+                    if observations.len() >= 256 {
+                        observations.remove(0);
+                    }
+
+                    observations
+                        .try_push(observation.clone())
+                        .map_err(|_| Error::<T>::TooManyPriceObservations)?;
+                    Ok(())
+                },
+            )?;
+
+            Self::update_twap(
+                observation.token_a,
+                observation.token_b,
+                observation.price,
+                observation.timestamp,
+            )?;
+
+            Ok(())
+        }
+
+        fn compute_scaled_price(base_reserve: u128, quote_reserve: u128) -> Option<u128> {
+            if base_reserve == 0 || quote_reserve == 0 {
+                return None;
+            }
+
+            let scaled = U256::from(quote_reserve)
+                .checked_mul(U256::from(1_000_000_000_000_000_000u128))?
+                .checked_div(U256::from(base_reserve))?;
+
+            if scaled > U256::from(u128::MAX) {
+                return None;
+            }
+
+            Some(scaled.as_u128())
+        }
+
+        fn sync_single_pool_price(
+            pool_id: H256,
+            block_number: u64,
+            timestamp: u64,
+        ) -> Result<(), DispatchError> {
+            let pool = LiquidityPools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
+
+            let forward_price =
+                Self::compute_scaled_price(pool.reserve_a, pool.reserve_b).ok_or(Error::<T>::InvalidPriceData)?;
+            let reverse_price =
+                Self::compute_scaled_price(pool.reserve_b, pool.reserve_a).ok_or(Error::<T>::InvalidPriceData)?;
+
+            let forward = types::PricePoint {
+                token_a: pool.token_a,
+                token_b: pool.token_b,
+                price: forward_price,
+                timestamp,
+                block_number,
+                source: pool.protocol,
+            };
+
+            let reverse = types::PricePoint {
+                token_a: pool.token_b,
+                token_b: pool.token_a,
+                price: reverse_price,
+                timestamp,
+                block_number,
+                source: pool.protocol,
+            };
+
+            Self::store_price_observation(forward)?;
+            Self::store_price_observation(reverse)?;
+
+            Self::deposit_event(Event::PoolPriceSynced {
+                pool_id,
+                token_a: pool.token_a,
+                token_b: pool.token_b,
+                price: forward_price,
+            });
+
+            Ok(())
+        }
+
+        fn sync_all_pool_prices(block_number: u64, timestamp: u64) -> Result<u32, DispatchError> {
+            let mut synced = 0u32;
+
+            for (pool_id, _) in LiquidityPools::<T>::iter() {
+                Self::sync_single_pool_price(pool_id, block_number, timestamp)?;
+                synced = synced.saturating_add(1);
+            }
+
+            Ok(synced)
+        }
+
         /// Fetch external prices via offchain HTTP (stub for offchain worker).
         #[cfg(feature = "std")]
         fn fetch_external_prices() -> Result<(), &'static str> {
@@ -1539,21 +1801,70 @@ pub mod pallet {
 
         /// Get optimal execution path between two tokens.
         pub fn find_execution_path(
-            _token_in: H256,
-            _token_out: H256,
-            _amount_in: u128,
-        ) -> Option<(Vec<types::RouteStep>, u128)> {
-            // Build trade graph from registered AMM adapters
-            let _graph = graph::TradeGraph::new();
+            token_in: H256,
+            token_out: H256,
+            amount_in: u128,
+        ) -> Option<types::TradeRoute> {
+            let mut graph = graph::TradeGraph::new();
+            let mut pool_count: u64 = 0;
 
-            // In production, populate graph from on-chain pool data
-            // For now, return None to indicate path finding is not available
-            // until pools are registered
+            for (_, pool) in LiquidityPools::<T>::iter() {
+                graph.add_pool(pool);
+                pool_count = pool_count.saturating_add(1);
+            }
 
-            // This would call:
-            // graph::TradeGraphResolver::find_optimal_route(&graph, token_in, token_out, amount_in)
+            if pool_count == 0 {
+                // Fall back to synthetic pools derived from adapters until the pool
+                // registry is seeded on-chain.
+                let synthetic_reserve = amount_in
+                    .saturating_mul(1_000)
+                    .max(1_000_000_000_000u128);
+                let mut adapter_count: u64 = 0;
 
-            None
+                for (protocol, config) in AmmAdapters::<T>::iter() {
+                    if !config.enabled {
+                        continue;
+                    }
+
+                    let pool_seed =
+                        (protocol, token_in, token_out, config.vm_type, config.address.clone())
+                            .encode();
+                    let pool_id = H256::from(blake2_256(&pool_seed));
+
+                    graph.add_pool(types::LiquidityPool {
+                        pool_id,
+                        protocol,
+                        vm_type: config.vm_type,
+                        token_a: token_in,
+                        token_b: token_out,
+                        reserve_a: synthetic_reserve,
+                        reserve_b: synthetic_reserve,
+                        fee_bps: config.fee_bps,
+                        address: config.address.to_vec(),
+                    });
+
+                    adapter_count = adapter_count.saturating_add(1);
+                }
+
+                if adapter_count == 0 {
+                let pool_seed = (token_in, token_out, amount_in, b"fallback").encode();
+
+                    graph.add_pool(types::LiquidityPool {
+                        pool_id: H256::from(blake2_256(&pool_seed)),
+                        protocol: types::AmmProtocol::ConstantProduct,
+                        vm_type: types::VmType::CrossVm,
+                        token_a: token_in,
+                        token_b: token_out,
+                        reserve_a: synthetic_reserve,
+                        reserve_b: synthetic_reserve,
+                        fee_bps: 30,
+                        address: b"synthetic-router".to_vec(),
+                    });
+                }
+            }
+
+            graph::TradeGraphResolver::find_optimal_route(&graph, token_in, token_out, amount_in)
+                .ok()
         }
 
         /// Validate a trade bundle before dispatch.

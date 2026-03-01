@@ -1318,16 +1318,58 @@ impl_runtime_apis! {
 
     impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {
         fn simulate_trade(
-            _token_in: sp_core::H256,
-            _token_out: sp_core::H256,
+            token_in: sp_core::H256,
+            token_out: sp_core::H256,
             amount_in: u128,
             slippage_bps: u32,
         ) -> pallet_atomic_trade_engine::runtime_api::SimulationResult {
             use pallet_atomic_trade_engine::runtime_api::SimulationResult;
 
-            // Simplified simulation - returns mock data
-            // Full implementation would build TradeLegInput and call simulate_trade_path
-            let estimated_output = amount_in.saturating_mul(10000 - slippage_bps as u128) / 10000;
+            if let Some(route) =
+                pallet_atomic_trade_engine::Pallet::<Runtime>::find_execution_path(
+                    token_in,
+                    token_out,
+                    amount_in,
+                )
+            {
+                let mut evm_gas: u64 = 0;
+                let mut svm_compute: u64 = 0;
+
+                for step in route.steps.iter() {
+                    match step.vm_type {
+                        pallet_atomic_trade_engine::types::VmType::Evm => {
+                            evm_gas = evm_gas.saturating_add(150_000);
+                        }
+                        pallet_atomic_trade_engine::types::VmType::Svm => {
+                            svm_compute = svm_compute.saturating_add(200_000);
+                        }
+                        pallet_atomic_trade_engine::types::VmType::CrossVm => {
+                            evm_gas = evm_gas.saturating_add(200_000);
+                            svm_compute = svm_compute.saturating_add(250_000);
+                        }
+                        pallet_atomic_trade_engine::types::VmType::X3 => {
+                            evm_gas = evm_gas.saturating_add(120_000);
+                        }
+                    }
+                }
+
+                return SimulationResult {
+                    success: true,
+                    estimated_output: route
+                        .expected_amount_out
+                        .saturating_mul(10000 - slippage_bps as u128)
+                        / 10000,
+                    price_impact_bps: route.price_impact_bps,
+                    evm_gas,
+                    svm_compute,
+                    route: route.steps,
+                    error: None,
+                };
+            }
+
+            // Fallback simulation when no pools are available.
+            let estimated_output =
+                amount_in.saturating_mul(10000 - slippage_bps as u128) / 10000;
 
             SimulationResult {
                 success: true,
@@ -1406,13 +1448,15 @@ impl_runtime_apis! {
         }
 
         fn find_route(
-            _token_in: sp_core::H256,
-            _token_out: sp_core::H256,
-            _amount_in: u128,
+            token_in: sp_core::H256,
+            token_out: sp_core::H256,
+            amount_in: u128,
         ) -> Option<pallet_atomic_trade_engine::types::TradeRoute> {
-            // Route finding requires populated AMM pools
-            // Return None until pools are registered
-            None
+            pallet_atomic_trade_engine::Pallet::<Runtime>::find_execution_path(
+                token_in,
+                token_out,
+                amount_in,
+            )
         }
 
         fn is_authorized(account: Vec<u8>) -> bool {

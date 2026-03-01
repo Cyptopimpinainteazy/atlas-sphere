@@ -230,6 +230,7 @@ pub struct RouteStep {
 
 /// Complete trade route with expected outputs.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct TradeRoute {
     /// Ordered steps in the route
     pub steps: Vec<RouteStep>,

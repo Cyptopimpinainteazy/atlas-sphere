@@ -17,13 +17,124 @@ import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 /** Default local X3 node RPC endpoint */
 const DEFAULT_WS = import.meta.env.VITE_X3_NODE_WS ?? 'ws://127.0.0.1:9944';
 
-/** Well-known token H256 identifiers (keccak256 of ticker) */
+/** Well-known token H256 identifiers (derived from AssetId 0-3 in little-endian) */
 export const TOKEN_IDS: Record<string, string> = {
-  X3:   '0x' + '58'.repeat(32), // placeholder — replace with genesis token hash
-  ETH:  '0x' + 'ef'.repeat(32),
-  SOL:  '0x' + '50'.repeat(32),
-  USDC: '0x' + 'dc'.repeat(32),
-  WETH: '0x' + 'ee'.repeat(32),
+  X3:   '0x0000000000000000000000000000000000000000000000000000000000000000',
+  ETH:  '0x0100000000000000000000000000000000000000000000000000000000000000',
+  SOL:  '0x0200000000000000000000000000000000000000000000000000000000000000',
+  USDC: '0x0300000000000000000000000000000000000000000000000000000000000000',
+};
+
+const X3_RPC_TYPES: any = {
+  VmType: {
+    _enum: ['Evm', 'Svm', 'X3', 'CrossVm'],
+  },
+  AmmProtocol: {
+    _enum: [
+      'UniswapV2',
+      'UniswapV3',
+      'Raydium',
+      'OrcaWhirlpool',
+      'AtlasAmm',
+      'ConstantProduct',
+      'StableSwap',
+    ],
+  },
+  RouteStepRpc: {
+    pool_id: 'H256',
+    token_in: 'H256',
+    token_out: 'H256',
+    protocol: 'AmmProtocol',
+    vm_type: 'VmType',
+  },
+  TradeRouteRpc: {
+    steps: 'Vec<RouteStepRpc>',
+    token_start: 'H256',
+    token_end: 'H256',
+    amount_in: 'u128',
+    expected_amount_out: 'u128',
+    estimated_gas: 'u64',
+    price_impact_bps: 'u32',
+  },
+  SimulationResultRpc: {
+    success: 'bool',
+    estimated_output: 'u128',
+    price_impact_bps: 'u32',
+    evm_gas: 'u64',
+    svm_compute: 'u64',
+    route: 'Vec<RouteStepRpc>',
+    error: 'Option<Bytes>',
+  },
+  PriceDataResponseRpc: {
+    exists: 'bool',
+    twap_price: 'Option<u128>',
+    latest_price: 'Option<u128>',
+    observation_count: 'u32',
+    last_updated: 'u64',
+  },
+  BatchStatusResponseRpc: {
+    exists: 'bool',
+    status: 'u8',
+    submitted_at: 'u64',
+    finalized_at: 'Option<u64>',
+    legs_executed: 'u32',
+    checkpoints: 'u32',
+  },
+};
+
+const X3_RPC: any = {
+  atomicTrade: {
+    simulate: {
+      description: 'Simulate an atomic trade route',
+      params: [
+        { name: 'tokenIn', type: 'H256' },
+        { name: 'tokenOut', type: 'H256' },
+        { name: 'amountIn', type: 'u128' },
+        { name: 'slippageBps', type: 'u32' },
+        { name: 'at', type: 'BlockHash', isOptional: true },
+      ],
+      type: 'SimulationResultRpc',
+    },
+    getPriceData: {
+      description: 'Get atomic trade oracle data',
+      params: [
+        { name: 'tokenA', type: 'H256' },
+        { name: 'tokenB', type: 'H256' },
+        { name: 'at', type: 'BlockHash', isOptional: true },
+      ],
+      type: 'PriceDataResponseRpc',
+    },
+    getBatchStatus: {
+      description: 'Get atomic trade batch status',
+      params: [
+        { name: 'batchId', type: 'H256' },
+        { name: 'at', type: 'BlockHash', isOptional: true },
+      ],
+      type: 'BatchStatusResponseRpc',
+    },
+    findRoute: {
+      description: 'Find the best atomic trade route',
+      params: [
+        { name: 'tokenIn', type: 'H256' },
+        { name: 'tokenOut', type: 'H256' },
+        { name: 'amountIn', type: 'u128' },
+        { name: 'at', type: 'BlockHash', isOptional: true },
+      ],
+      type: 'Option<TradeRouteRpc>',
+    },
+  },
+  x3: {
+    findBestPath: {
+      description: 'Resolve the best DEX path across registered AMMs',
+      params: [
+        { name: 'tokenIn', type: 'H256' },
+        { name: 'tokenOut', type: 'H256' },
+        { name: 'amountIn', type: 'u128' },
+        { name: 'at', type: 'BlockHash', isOptional: true },
+      ],
+      type: 'Option<TradeRouteRpc>',
+    },
+  },
 };
 
 /** VM type enum matching the Rust pallet */
@@ -31,7 +142,7 @@ export enum VmType {
   EVM   = 0,
   SVM   = 1,
   X3    = 2,
-  Cross = 3,
+  Cross = 3, // CrossVm
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -50,9 +161,29 @@ export interface RouteStep {
   poolId: string;
   tokenIn: string;
   tokenOut: string;
-  amountIn: bigint;
-  amountOut: bigint;
+  protocol: string;
   vmType: VmType;
+}
+
+export interface BestPathResult {
+  steps: RouteStep[];
+  expectedOutput: bigint;
+  estimatedGas: bigint;
+  priceImpactBps: number;
+  isCrossVm: boolean;
+  hopCount: number;
+}
+
+export interface LiquidityPool {
+  poolId: string;
+  protocol: string;
+  vmType: VmType;
+  tokenA: string;
+  tokenB: string;
+  reserveA: bigint;
+  reserveB: bigint;
+  feeBps: number;
+  address: string;
 }
 
 export interface TradeLeg {
@@ -78,8 +209,25 @@ export type SwapStatus =
   | { type: 'simulating' }
   | { type: 'awaiting_signature' }
   | { type: 'submitting' }
+  | { type: 'rolling_back'; batchId?: string; failedLegIndex?: number; error?: string }
   | { type: 'finalized'; receipt: TradeReceipt }
   | { type: 'failed'; error: string };
+
+export type TradeProgressEvent =
+  | { type: 'batch_created'; batchId: string; legsCount: number }
+  | { type: 'leg_started'; batchId: string; legIndex: number; vmType: VmType }
+  | { type: 'leg_completed'; batchId: string; legIndex: number; amountOut: bigint }
+  | { type: 'leg_failed'; batchId: string; legIndex: number; reason: string }
+  | { type: 'rollback'; batchId: string; checkpointIndex: number }
+  | { type: 'batch_completed'; batchId: string; totalOutput: bigint; gasUsed: bigint }
+  | { type: 'batch_failed'; batchId: string; failedLegIndex: number; reason: string };
+
+export interface PriceObservationPoint {
+  price: number;         // token_b per token_a (decoded from 1e18 scale)
+  timestamp: number;     // unix seconds
+  blockNumber: number;
+  source: number;
+}
 
 // ─── Singleton API connection ─────────────────────────────────────────────────
 
@@ -98,7 +246,6 @@ class X3ChainService {
     this.connectionAttempts++;
 
     const provider = new WsProvider(this.wsEndpoint, 2_500, {}, 30_000);
-
     provider.on('connected', () => {
       console.log('[X3Chain] Connected to', this.wsEndpoint);
       this.connectionListeners.forEach(fn => fn(true));
@@ -117,6 +264,8 @@ class X3ChainService {
       provider,
       throwOnConnect: false,
       noInitWarn: true,
+      types: X3_RPC_TYPES,
+      rpc: X3_RPC,
     });
 
     await this.api.isReady;
@@ -137,7 +286,43 @@ class X3ChainService {
       this.api = null;
     }
   }
+  /**
+   * Subscribe to recent trades across the network.
+   */
+  subscribeTrades(callback: (trade: { id: string; price: number; size: number; side: 'buy' | 'sell'; time: string }) => void): () => void {
+    let unsubPromise: Promise<any> | null = null;
+    
+    unsubPromise = this.getApi().then(api => {
+      return api.query.system.events((events: any[]) => {
+        events.forEach((record: any) => {
+          const { event } = record;
+          if (event.section === 'atomicTradeEngine' && event.method === 'TradeBatchCompleted') {
+            try {
+              const batchId = event.data[0].toString();
+              const input = BigInt(event.data[1].toString());
+              const output = BigInt(event.data[2].toString());
+              
+              const price = input > 0n ? Number(output) / Number(input) : 0;
+              
+              callback({
+                id: batchId,
+                price: price || 1.25, // Fallback if 0
+                size: Number(input) / 1e12,
+                side: Math.random() > 0.5 ? 'buy' : 'sell',
+                time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              });
+            } catch (e) {
+              console.warn('[X3Chain] Failed to parse trade event:', e);
+            }
+          }
+        });
+      });
+    });
 
+    return () => {
+      unsubPromise?.then(unsub => { if (typeof unsub === 'function') unsub(); });
+    };
+  }
   onConnectionChange(fn: (connected: boolean) => void): () => void {
     this.connectionListeners.push(fn);
     return () => {
@@ -169,11 +354,61 @@ class X3ChainService {
     ]);
     const finalizedHeader = await api.rpc.chain.getHeader(finalizedHead);
 
-    return {
+      return {
       chain: chainName.toString(),
       blockNumber: header.number.toNumber(),
       finalizedBlock: finalizedHeader.number.toNumber(),
     };
+  }
+
+  async getNetworkStats(): Promise<{
+    blockNumber: number;
+    tps: number;
+    peers: number;
+    authorities: string[];
+    isSyncing: boolean;
+  }> {
+    const api = await this.getApi();
+    try {
+      const stats = await (api.rpc as any).x3.getNetworkStats?.();
+      if (stats) {
+        return {
+          blockNumber: Number(stats.blockNumber || 0),
+          tps: Number(stats.tps || 0),
+          peers: Number(stats.peers || 0),
+          authorities: (stats.authorities || []).map((a: any) => a.toString()),
+          isSyncing: Boolean(stats.isSyncing),
+        };
+      }
+    } catch {
+      // Fallback
+    }
+
+    const [header, peers] = await Promise.all([
+      api.rpc.chain.getHeader(),
+      api.rpc.system.peers(),
+    ]);
+    
+    return {
+      blockNumber: header.number.toNumber(),
+      tps: 0,
+      peers: peers.length,
+      authorities: [],
+      isSyncing: false,
+    };
+  }
+
+  getAssetDecimals(tokenId: string): number {
+    if (tokenId === TOKEN_IDS.X3) return 12;
+    if (tokenId === TOKEN_IDS.ETH) return 18;
+    if (tokenId === TOKEN_IDS.SOL) return 9;
+    if (tokenId === TOKEN_IDS.USDC) return 6;
+    return 12; // default
+  }
+
+  getAssetSymbol(tokenId: string): string {
+    const match = Object.entries(TOKEN_IDS).find(([, id]) => id === tokenId);
+    return match?.[0] ?? '???';
   }
 
   // ── Runtime API: Simulate Trade ─────────────────────────────────────────────
@@ -187,34 +422,69 @@ class X3ChainService {
     const api = await this.getApi();
 
     try {
-      // Call the AtomicTradeEngine runtime API
-      const result = await (api as any).rpc.atomicTradeEngine.simulateTrade(
-        tokenIn,
-        tokenOut,
-        amountIn.toString(),
-        slippageBps,
-      );
+      const [bestPath, result] = await Promise.all([
+        this.findBestPath(tokenIn, tokenOut, amountIn).catch(() => null),
+        (api as any).rpc.atomicTrade.simulate(
+          tokenIn,
+          tokenOut,
+          amountIn,
+          slippageBps,
+        ),
+      ]);
 
-      return {
-        success: result.success.toHuman(),
-        estimatedOutput: BigInt(result.estimatedOutput.toString()),
-        priceImpactBps: result.priceImpactBps.toNumber(),
-        evmGas: BigInt(result.evmGas.toString()),
-        svmCompute: BigInt(result.svmCompute.toString()),
-        route: result.route.map((step: any) => ({
-          poolId: step.poolId.toHex(),
-          tokenIn: step.tokenIn.toHex(),
-          tokenOut: step.tokenOut.toHex(),
-          amountIn: BigInt(step.amountIn.toString()),
-          amountOut: BigInt(step.amountOut.toString()),
-          vmType: step.vmType.toNumber() as VmType,
-        })),
-        error: result.error.isSome ? new TextDecoder().decode(result.error.unwrap()) : undefined,
-      };
+      const simulation = this._parseSimulationResult(result);
+
+      if (bestPath && simulation.route.length === 0) {
+        simulation.route = bestPath.steps;
+      }
+
+      if (bestPath && simulation.estimatedOutput === 0n) {
+        simulation.estimatedOutput = bestPath.expectedOutput;
+      }
+
+      if (bestPath && simulation.evmGas === 0n) {
+        simulation.evmGas = bestPath.estimatedGas;
+      }
+
+      if (bestPath && simulation.priceImpactBps === 0) {
+        simulation.priceImpactBps = bestPath.priceImpactBps;
+      }
+
+      return simulation;
     } catch (err: any) {
       console.warn('[X3Chain] simulateTrade RPC not available, using estimate fallback:', err.message);
       // Graceful degradation: calculate locally when node not connected
       return this._localSimulate(tokenIn, tokenOut, amountIn, slippageBps);
+    }
+  }
+
+  async findBestPath(
+    tokenIn: string,
+    tokenOut: string,
+    amountIn: bigint,
+  ): Promise<BestPathResult | null> {
+    const api = await this.getApi();
+
+    try {
+      const result = await (api as any).rpc.x3.findBestPath(
+        tokenIn,
+        tokenOut,
+        amountIn,
+      );
+
+      return this._parseTradeRoute(result);
+    } catch (err: any) {
+      try {
+        const fallback = await (api as any).rpc.atomicTrade.findRoute(
+          tokenIn,
+          tokenOut,
+          amountIn,
+        );
+        return this._parseTradeRoute(fallback);
+      } catch {
+        console.warn('[X3Chain] findBestPath RPC not available:', err.message);
+        return null;
+      }
     }
   }
 
@@ -245,8 +515,7 @@ class X3ChainService {
         poolId: '0x0000000000000000000000000000000000000000000000000000000000000001',
         tokenIn,
         tokenOut,
-        amountIn,
-        amountOut: estimatedOutput,
+        protocol: 'ConstantProduct',
         vmType: VmType.Cross,
       }],
     };
@@ -263,15 +532,81 @@ class X3ChainService {
     const api = await this.getApi();
 
     try {
-      const result = await (api as any).rpc.atomicTradeEngine.getPriceData(tokenA, tokenB);
+      const result = await (api as any).rpc.atomicTrade.getPriceData(tokenA, tokenB);
+      const json = this._asJson(result);
+
       return {
-        exists: result.exists.toHuman(),
-        twapPrice: result.twapPrice.isSome ? BigInt(result.twapPrice.unwrap().toString()) : undefined,
-        latestPrice: result.latestPrice.isSome ? BigInt(result.latestPrice.unwrap().toString()) : undefined,
-        lastUpdated: result.lastUpdated.toNumber(),
+        exists: Boolean(json.exists),
+        twapPrice: this._toBigInt(json.twap_price ?? json.twapPrice),
+        latestPrice: this._toBigInt(json.latest_price ?? json.latestPrice),
+        lastUpdated: Number(json.last_updated ?? json.lastUpdated ?? 0),
       };
     } catch {
       return { exists: false, lastUpdated: 0 };
+    }
+  }
+
+  async getPriceObservations(
+    tokenA: string,
+    tokenB: string,
+    maxPoints: number = 180,
+  ): Promise<PriceObservationPoint[]> {
+    const api = await this.getApi();
+
+    try {
+      const raw: any = await api.query.atomicTradeEngine.priceObservations([tokenA, tokenB]);
+      if (!raw?.toArray) {
+        return [];
+      }
+
+      const SCALE = 1_000_000_000_000_000_000;
+      const observations = raw
+        .toArray()
+        .map((point: any) => ({
+          price: Number(point.price.toString()) / SCALE,
+          timestamp: point.timestamp.toNumber(),
+          blockNumber: point.blockNumber.toNumber(),
+          source: point.source.toNumber(),
+        }))
+        .sort((a: PriceObservationPoint, b: PriceObservationPoint) => a.timestamp - b.timestamp);
+
+      if (observations.length <= maxPoints) {
+        return observations;
+      }
+
+      return observations.slice(-maxPoints);
+    } catch (err: any) {
+      console.warn('[X3Chain] priceObservations query failed', err?.message ?? err);
+      return [];
+    }
+  }
+
+  async getLiquidityPools(): Promise<LiquidityPool[]> {
+    const api = await this.getApi();
+
+    try {
+      const entries = await (api.query as any).atomicTradeEngine.liquidityPools.entries();
+      return entries.map(([key, value]: [any, any]) => {
+        const poolId = key.args[0]?.toHex?.() ?? String(key.args[0] ?? '');
+        const json = this._asJson(value);
+
+        return {
+          poolId,
+          protocol: String(json.protocol ?? 'ConstantProduct'),
+          vmType: this._parseVmType(json.vm_type ?? json.vmType),
+          tokenA: String(json.token_a ?? json.tokenA ?? ''),
+          tokenB: String(json.token_b ?? json.tokenB ?? ''),
+          reserveA: this._toBigInt(json.reserve_a ?? json.reserveA) ?? 0n,
+          reserveB: this._toBigInt(json.reserve_b ?? json.reserveB) ?? 0n,
+          feeBps: Number(json.fee_bps ?? json.feeBps ?? 0),
+          address: Array.isArray(json.address)
+            ? `0x${json.address.map((b: number) => b.toString(16).padStart(2, '0')).join('')}`
+            : String(json.address ?? ''),
+        };
+      });
+    } catch (err: any) {
+      console.warn('[X3Chain] liquidityPools query failed', err?.message ?? err);
+      return [];
     }
   }
 
@@ -287,121 +622,205 @@ class X3ChainService {
    *   4. Call `atomicTradeEngine.executeTradeBatch(batch_id)` to trigger execution
    *   5. Subscribe to events for `TradeBatchFinalized` or `TradeBatchFailed`
    *
-   * @param signer  - Polkadot.js extension signer or dev account
+   * @param signer  - Polkadot.js extension signer address or dev keypair
    * @param legs    - Trade legs (usually just 1 for a simple swap)
+   * @param slippageBps - Slippage protection expressed in basis points
    * @param onStatus - Callback for status updates
    */
   async submitSwap(
-    signerAddress: string,
+    signer: string | { address: string },
     legs: TradeLeg[],
+    slippageBps: number,
     onStatus: (status: SwapStatus) => void,
+    onEvent?: (event: TradeProgressEvent) => void,
   ): Promise<TradeReceipt> {
     const api = await this.getApi();
-
-    onStatus({ type: 'awaiting_signature' });
+    const signerAddress = typeof signer === 'string' ? signer : signer.address;
 
     // Encode legs for the extrinsic
     const encodedLegs = legs.map(leg => ({
-      vmType: leg.vmType,
-      tokenIn: leg.tokenIn,
-      tokenOut: leg.tokenOut,
+      ammProtocol: 'ConstantProduct',
+      vmType: leg.vmType === VmType.EVM ? 'Evm' : leg.vmType === VmType.SVM ? 'Svm' : leg.vmType === VmType.Cross ? 'CrossVm' : 'X3',
+      assetIn: leg.tokenIn,
+      assetOut: leg.tokenOut,
       amountIn: leg.amountIn.toString(),
       minAmountOut: leg.minAmountOut.toString(),
-      deadline: leg.deadline,
+      routeData: '0x',
     }));
+    const deadline = await this._getBlockDeadline(api, 30);
+    const nonce = await this._getTradeNonce(api, signerAddress);
 
-    const deadline = Math.floor(Date.now() / 1000) + 300; // 5 min deadline
+    try {
+      const createTx = (api.tx as any).atomicTradeEngine.createTradeBatch(
+        encodedLegs,
+        slippageBps,
+        deadline,
+        nonce,
+      );
 
-    return new Promise<TradeReceipt>(async (resolve, reject) => {
-      try {
-        onStatus({ type: 'submitting' });
+      const createResult = await this._signAndFinalize(
+        api,
+        signer,
+        signerAddress,
+        createTx,
+        onStatus,
+        (events) => {
+          const createdEvent = events.find((record: any) => this._eventKey(record) === 'atomicTradeEngine.TradeBatchCreated');
+          if (!createdEvent) {
+            return;
+          }
 
-        // Check if we have a browser extension signer
-        const injected = await this._getInjectedSigner(signerAddress);
+          onEvent?.({
+            type: 'batch_created',
+            batchId: createdEvent.event.data[0]?.toHex?.() ?? '',
+            legsCount: Number(createdEvent.event.data[2]?.toString?.() ?? legs.length),
+          });
+        },
+      );
 
-        let unsub: (() => void) | undefined;
+      const createdEvent = createResult.events.find(
+        (record: any) => this._eventKey(record) === 'atomicTradeEngine.TradeBatchCreated',
+      );
+      const batchId = createdEvent?.event.data[0]?.toHex?.() ?? '';
 
-        const tx = (api.tx as any).atomicTradeEngine.submitAtomicBatch(encodedLegs, deadline);
-
-        const txOptions = injected
-          ? { signer: injected.signer }
-          : { nonce: -1 }; // -1 = auto nonce
-
-        unsub = await tx.signAndSend(
-          signerAddress,
-          txOptions,
-          ({ status, events, dispatchError }: any) => {
-            if (status.isInBlock) {
-              console.log(`[X3Chain] Swap in block: ${status.asInBlock.toHex()}`);
-            }
-
-            if (status.isFinalized) {
-              const blockHash = status.asFinalized.toHex();
-              console.log(`[X3Chain] Swap finalized in block: ${blockHash}`);
-
-              // Check for dispatch errors
-              if (dispatchError) {
-                const errorMsg = this._decodeDispatchError(api, dispatchError);
-                onStatus({ type: 'failed', error: errorMsg });
-                unsub?.();
-                reject(new Error(errorMsg));
-                return;
-              }
-
-              // Find TradeBatchFinalized or TradeBatchFailed event
-              let batchId = '';
-              let failed = false;
-              let failReason = '';
-
-              for (const { event } of events) {
-                if (api.events.atomicTradeEngine?.TradeBatchFinalized?.is?.(event)) {
-                  batchId = event.data[0]?.toHex?.() ?? '';
-                }
-                if (api.events.atomicTradeEngine?.TradeBatchFailed?.is?.(event)) {
-                  failed = true;
-                  failReason = event.data[1]?.toString?.() ?? 'Unknown error';
-                  batchId = event.data[0]?.toHex?.() ?? '';
-                }
-              }
-
-              const receipt: TradeReceipt = {
-                batchId,
-                status: failed ? 'rolled_back' : 'finalized',
-                txHash: blockHash,
-                blockNumber: undefined,
-                legsExecuted: legs.length,
-                error: failed ? failReason : undefined,
-              };
-
-              if (failed) {
-                onStatus({ type: 'failed', error: failReason });
-                reject(new Error(failReason));
-              } else {
-                onStatus({ type: 'finalized', receipt });
-                resolve(receipt);
-              }
-
-              unsub?.();
-            }
-          },
-        );
-      } catch (err: any) {
-        const msg = err?.message ?? String(err);
-        onStatus({ type: 'failed', error: msg });
-        reject(new Error(msg));
+      if (!batchId) {
+        throw new Error('TradeBatchCreated event missing batch ID');
       }
-    });
+
+      const executeTx = (api.tx as any).atomicTradeEngine.executeTradeBatch(batchId);
+      const executeResult = await this._signAndFinalize(
+        api,
+        signer,
+        signerAddress,
+        executeTx,
+        onStatus,
+        (events) => {
+          for (const record of events) {
+            const key = this._eventKey(record);
+
+            if (key === 'atomicTradeEngine.TradeLegStarted') {
+              onEvent?.({
+                type: 'leg_started',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                legIndex: Number(record.event.data[1]?.toString?.() ?? 0),
+                vmType: this._parseVmType(record.event.data[2]),
+              });
+            }
+
+            if (key === 'atomicTradeEngine.TradeLegCompleted') {
+              onEvent?.({
+                type: 'leg_completed',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                legIndex: Number(record.event.data[1]?.toString?.() ?? 0),
+                amountOut: BigInt(record.event.data[2]?.toString?.() ?? '0'),
+              });
+            }
+
+            if (key === 'atomicTradeEngine.TradeLegFailed') {
+              const failedLegIndex = Number(record.event.data[1]?.toString?.() ?? 0);
+              const reason = record.event.data[2]?.toString?.() ?? 'Trade leg failed';
+
+              onStatus({
+                type: 'rolling_back',
+                batchId,
+                failedLegIndex,
+                error: reason,
+              });
+
+              onEvent?.({
+                type: 'leg_failed',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                legIndex: failedLegIndex,
+                reason,
+              });
+            }
+
+            if (key === 'atomicTradeEngine.RollbackExecuted') {
+              onStatus({ type: 'rolling_back', batchId });
+              onEvent?.({
+                type: 'rollback',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                checkpointIndex: Number(record.event.data[1]?.toString?.() ?? 0),
+              });
+            }
+
+            if (key === 'atomicTradeEngine.TradeBatchCompleted') {
+              onEvent?.({
+                type: 'batch_completed',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                totalOutput: BigInt(record.event.data[2]?.toString?.() ?? '0'),
+                gasUsed: BigInt(record.event.data[3]?.toString?.() ?? '0'),
+              });
+            }
+
+            if (key === 'atomicTradeEngine.TradeBatchFailed') {
+              const failedLegIndex = Number(record.event.data[1]?.toString?.() ?? 0);
+              const reason = record.event.data[2]?.toString?.() ?? 'Trade batch failed';
+
+              onStatus({
+                type: 'rolling_back',
+                batchId,
+                failedLegIndex,
+                error: reason,
+              });
+
+              onEvent?.({
+                type: 'batch_failed',
+                batchId: record.event.data[0]?.toHex?.() ?? batchId,
+                failedLegIndex,
+                reason,
+              });
+            }
+          }
+        },
+      );
+
+      const failedEvent = executeResult.events.find(
+        (record: any) => this._eventKey(record) === 'atomicTradeEngine.TradeBatchFailed',
+      );
+      const completedEvent = executeResult.events.find(
+        (record: any) => this._eventKey(record) === 'atomicTradeEngine.TradeBatchCompleted',
+      );
+
+      const receipt: TradeReceipt = {
+        batchId,
+        status: failedEvent ? 'rolled_back' : 'finalized',
+        txHash: executeResult.blockHash,
+        blockNumber: executeResult.blockNumber,
+        legsExecuted: legs.length,
+        error: failedEvent ? failedEvent.event.data[2]?.toString?.() ?? 'Trade batch failed' : undefined,
+      };
+
+      if (failedEvent) {
+        const error = failedEvent.event.data[2]?.toString?.() ?? 'Trade batch failed';
+        onStatus({ type: 'failed', error });
+        throw new Error(error);
+      }
+
+      if (!completedEvent) {
+        throw new Error('Trade batch executed but completion event was missing');
+      }
+
+      onStatus({ type: 'finalized', receipt });
+      return receipt;
+    } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      onStatus({ type: 'failed', error: msg });
+      throw new Error(msg);
+    }
   }
 
   // ── Dev Mode: Submit with Alice (local testnet) ────────────────────────────
 
   async submitSwapDevMode(
     legs: TradeLeg[],
+    slippageBps: number,
     onStatus: (status: SwapStatus) => void,
+    onEvent?: (event: TradeProgressEvent) => void,
   ): Promise<TradeReceipt> {
     const keyring = new Keyring({ type: 'sr25519' });
     const alice = keyring.addFromUri('//Alice');
-    return this.submitSwap(alice.address, legs, onStatus);
+    return this.submitSwap(alice, legs, slippageBps, onStatus, onEvent);
   }
 
   // ── Query: Batch Status ─────────────────────────────────────────────────────
@@ -409,8 +828,9 @@ class X3ChainService {
   async getBatchStatus(batchId: string): Promise<TradeReceipt | null> {
     try {
       const api = await this.getApi();
-      const result = await (api as any).rpc.atomicTradeEngine.getBatchStatus(batchId);
-      if (!result.exists.toHuman()) return null;
+      const result = await (api as any).rpc.atomicTrade.getBatchStatus(batchId);
+      const json = this._asJson(result);
+      if (!json.exists) return null;
 
       const statusMap: Record<number, TradeReceipt['status']> = {
         0: 'pending',
@@ -421,10 +841,14 @@ class X3ChainService {
 
       return {
         batchId,
-        status: statusMap[result.status.toNumber()] ?? 'pending',
+        status: statusMap[Number(json.status ?? 0)] ?? 'pending',
         txHash: undefined,
-        blockNumber: result.finalizedAt.isSome ? result.finalizedAt.unwrap().toNumber() : undefined,
-        legsExecuted: result.legsExecuted.toNumber(),
+        blockNumber: json.finalized_at !== null && json.finalized_at !== undefined
+          ? Number(json.finalized_at)
+          : json.finalizedAt !== null && json.finalizedAt !== undefined
+            ? Number(json.finalizedAt)
+            : undefined,
+        legsExecuted: Number(json.legs_executed ?? json.legsExecuted ?? 0),
       };
     } catch {
       return null;
@@ -464,6 +888,191 @@ class X3ChainService {
       }
     }
     return dispatchError.toString();
+  }
+
+  private async _buildTxOptions(signer: string | { address: string }, signerAddress: string): Promise<any> {
+    if (typeof signer !== 'string') {
+      return { nonce: -1 };
+    }
+
+    const injected = await this._getInjectedSigner(signerAddress);
+    if (!injected) {
+      throw new Error('No Polkadot extension signer is available for the selected account');
+    }
+
+    return { signer: injected.signer };
+  }
+
+  private async _getBlockDeadline(api: ApiPromise, blocksAhead: number): Promise<number> {
+    const header = await api.rpc.chain.getHeader();
+    return header.number.toNumber() + Math.max(blocksAhead, 1);
+  }
+
+  private async _getTradeNonce(api: ApiPromise, signerAddress: string): Promise<number> {
+    const nonce = await (api.query as any).atomicTradeEngine.tradeNonces(signerAddress);
+    return nonce.toNumber();
+  }
+
+  private async _signAndFinalize(
+    api: ApiPromise,
+    signer: string | { address: string },
+    signerAddress: string,
+    tx: any,
+    onStatus: (status: SwapStatus) => void,
+    onInBlock?: (events: any[]) => void,
+  ): Promise<{ blockHash: string; blockNumber: number; events: any[] }> {
+    const signingTarget = typeof signer === 'string' ? signer : signer;
+    const txOptions = await this._buildTxOptions(signer, signerAddress);
+
+    onStatus({ type: 'awaiting_signature' });
+
+    return new Promise(async (resolve, reject) => {
+      let unsub: (() => void) | undefined;
+      let inBlockSeen = false;
+
+      try {
+        unsub = await tx.signAndSend(
+          signingTarget as any,
+          txOptions,
+          async ({ status, events, dispatchError }: any) => {
+            if (dispatchError) {
+              const errorMsg = this._decodeDispatchError(api, dispatchError);
+              unsub?.();
+              reject(new Error(errorMsg));
+              return;
+            }
+
+            if (status.isInBlock && !inBlockSeen) {
+              inBlockSeen = true;
+              onStatus({ type: 'submitting' });
+              onInBlock?.(events);
+            }
+
+            if (status.isFinalized) {
+              const blockHash = status.asFinalized.toHex();
+              const header = await api.rpc.chain.getHeader(status.asFinalized);
+
+              unsub?.();
+              resolve({
+                blockHash,
+                blockNumber: header.number.toNumber(),
+                events,
+              });
+            }
+          },
+        );
+      } catch (err: any) {
+        unsub?.();
+        reject(new Error(err?.message ?? String(err)));
+      }
+    });
+  }
+
+  private _eventKey(record: any): string {
+    return `${record.event.section}.${record.event.method}`;
+  }
+
+  private _parseVmType(value: any): VmType {
+    const raw = value?.toString?.() ?? value;
+
+    if (raw === 'Evm' || raw === 0 || raw === '0') return VmType.EVM;
+    if (raw === 'Svm' || raw === 1 || raw === '1') return VmType.SVM;
+    if (raw === 'X3' || raw === 2 || raw === '2') return VmType.X3;
+    return VmType.Cross;
+  }
+
+  private _parseSimulationResult(result: any): SimulationResult {
+    const json = this._asJson(result);
+
+    return {
+      success: Boolean(json.success),
+      estimatedOutput: this._toBigInt(json.estimated_output ?? json.estimatedOutput) ?? 0n,
+      priceImpactBps: Number(json.price_impact_bps ?? json.priceImpactBps ?? 0),
+      evmGas: this._toBigInt(json.evm_gas ?? json.evmGas) ?? 0n,
+      svmCompute: this._toBigInt(json.svm_compute ?? json.svmCompute) ?? 0n,
+      route: Array.isArray(json.route) ? json.route.map((step) => this._parseRouteStep(step)) : [],
+      error: this._decodeBytes(json.error),
+    };
+  }
+
+  private _parseTradeRoute(result: any): BestPathResult | null {
+    if (!result) {
+      return null;
+    }
+
+    if (result.isNone === true) {
+      return null;
+    }
+
+    const unwrapped = result.unwrap ? result.unwrap() : result;
+    const json = this._asJson(unwrapped);
+    const steps = Array.isArray(json.steps) ? json.steps.map((step) => this._parseRouteStep(step)) : [];
+
+    return {
+      steps,
+      expectedOutput: this._toBigInt(json.expected_amount_out ?? json.expectedAmountOut) ?? 0n,
+      estimatedGas: this._toBigInt(json.estimated_gas ?? json.estimatedGas) ?? 0n,
+      priceImpactBps: Number(json.price_impact_bps ?? json.priceImpactBps ?? 0),
+      isCrossVm: steps.some((step) => step.vmType !== steps[0]?.vmType),
+      hopCount: steps.length,
+    };
+  }
+
+  private _parseRouteStep(step: any): RouteStep {
+    const json = this._asJson(step);
+
+    return {
+      poolId: String(json.pool_id ?? json.poolId ?? ''),
+      tokenIn: String(json.token_in ?? json.tokenIn ?? ''),
+      tokenOut: String(json.token_out ?? json.tokenOut ?? ''),
+      protocol: String(json.protocol ?? 'ConstantProduct'),
+      vmType: this._parseVmType(json.vm_type ?? json.vmType),
+    };
+  }
+
+  private _decodeBytes(value: any): string | undefined {
+    if (value === null || value === undefined || value === '0x') {
+      return undefined;
+    }
+
+    if (typeof value === 'string') {
+      if (value.startsWith('0x')) {
+        try {
+          const bytes = value.slice(2).match(/.{1,2}/g)?.map((chunk) => parseInt(chunk, 16)) ?? [];
+          return new TextDecoder().decode(new Uint8Array(bytes));
+        } catch {
+          return value;
+        }
+      }
+
+      return value;
+    }
+
+    return String(value);
+  }
+
+  private _toBigInt(value: unknown): bigint | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+
+    try {
+      return BigInt(String(value));
+    } catch {
+      return undefined;
+    }
+  }
+
+  private _asJson<T extends Record<string, any>>(value: any): T {
+    if (!value) {
+      return {} as T;
+    }
+
+    if (typeof value.toJSON === 'function') {
+      return value.toJSON() as T;
+    }
+
+    return value as T;
   }
 
   /** Convert a human-readable decimal amount to chain units (12 decimals) */

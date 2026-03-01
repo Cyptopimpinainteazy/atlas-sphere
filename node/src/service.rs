@@ -13,6 +13,9 @@ use sp_core::{crypto::KeyTypeId, Pair};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use std::time::Duration;
+use crate::flash_finality::{FlashFinalityBridge};
+use flash_finality::{FlashFinalityGadget, FlashFinalityConfig, FLASH_FINALITY_PROTOCOL_ID};
+use poh_generator::{PoHState};
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -313,6 +316,14 @@ pub fn new_full(
         Vec::default(),
     ));
 
+    if feature_flags.enable_flash_finality {
+        net_config.add_notification_protocol(sc_network::config::NotificationProtocolConfig {
+            protocol_name: FLASH_FINALITY_PROTOCOL_ID.into(),
+            allow_non_reserved_nodes: true,
+            ..Default::default()
+        });
+    }
+
     // Build networking service
     let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
@@ -357,16 +368,42 @@ pub fn new_full(
         );
     }
 
+    // Initialize PoH State if enabled
+    let shared_poh_state = if feature_flags.enable_poh {
+        Some(Arc::new(Mutex::new(PoHState::default())))
+    } else {
+        None
+    };
+
+    // Initialize Flash Finality Gadget for RPC regardless of whether we run the bridge
+    let flash_finality_gadget = if feature_flags.enable_flash_finality {
+        let keystore = keystore_container.keystore();
+        let my_id = keystore.sr25519_public_keys(KeyTypeId(*b"flsh"))
+            .get(0)
+            .map(|k| k.0)
+            .unwrap_or([0xAA; 32]); // Fallback to mock if no key found
+
+        Some(Arc::new(FlashFinalityGadget::new(
+            FlashFinalityConfig::default(),
+            my_id,
+            Some(keystore),
+        )))
+    } else {
+        None
+    };
+
     // Spawn core Substrate tasks (RPC, network, telemetry, txpool, offchain, etc.)
     let rpc_builder = {
         let client = client.clone();
         let transaction_pool = transaction_pool.clone();
+        let gadget = flash_finality_gadget.clone();
         Box::new(move |deny_unsafe, subscription_executor| {
             crate::rpc::create_full(
                 client.clone(),
                 transaction_pool.clone(),
                 deny_unsafe,
                 subscription_executor,
+                gadget.clone(),
             )
             .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
         })
@@ -406,16 +443,32 @@ pub fn new_full(
                 select_chain,
                 block_import: grandpa_block_import,
                 proposer_factory,
-                create_inherent_data_providers: move |_, ()| async move {
-                    let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+                create_inherent_data_providers: move |_, ()| {
+                    let poh_state = shared_poh_state.clone();
+                    async move {
+                        let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+                        let slot =
+                            sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+                                *timestamp,
+                                slot_duration,
+                            );
 
-                    let slot =
-						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-							*timestamp,
-							slot_duration,
-						);
+                        // If PoH is enabled, advance and provide its inherent.
+                        // Otherwise, we still need a consistent return type, so we use an empty vec for the 3rd slot?
+                        // Actually, we can return a tuple of (slot, timestamp, Option<PoHInherentDataProvider>).
+                        // But we need to check if Option implements the trait. It does in some Substrate versions.
+                        // Let's use a simpler approach: return (slot, timestamp) and conditionally add PoH.
+                        // Wait, Aura's start_aura expects a single return type from the closure.
+                        
+                        let poh_digest = if let Some(state_arc) = poh_state {
+                            let mut state = state_arc.lock().await;
+                            Some(state.advance(&[]))
+                        } else {
+                            None
+                        };
 
-                    Ok((slot, timestamp))
+                        Ok((slot, timestamp, poh_digest.map(|digest| poh_generator::PoHInherentDataProvider { digest })))
+                    }
                 },
                 force_authoring,
                 backoff_authoring_blocks,
@@ -503,6 +556,54 @@ pub fn new_full(
                     log::info!("🔔 Block finalized: #{} ✅", number);
                 }
             });
+    }
+
+    // Start Flash Finality if enabled
+    if let Some(gadget) = flash_finality_gadget {
+        let bridge = FlashFinalityBridge::new(
+            gadget.clone(),
+            client.clone(),
+            network.clone(),
+            keystore_container.keystore(),
+        );
+
+        task_manager.spawn_essential_handle().spawn(
+            "flash-finality-bridge",
+            Some("flash-finality"),
+            bridge.run(),
+        );
+
+        task_manager.spawn_essential_handle().spawn(
+            "flash-finality-timeout",
+            Some("flash-finality"),
+            gadget.spawn_timeout_monitor(),
+        );
+
+        log::info!("⚡ Flash Finality gadget and network bridge started (shadow mode)");
+    }
+
+    // Start PoH Generator background task if enabled
+    if let Some(poh_state_arc) = shared_poh_state {
+        let client_clone = client.clone();
+        
+        task_manager.spawn_essential_handle().spawn(
+            "poh-watcher",
+            Some("poh"),
+            async move {
+                let mut import_notifications = client_clone.import_notification_stream();
+                while let Some(notification) = import_notifications.next().await {
+                    if notification.is_new_best {
+                        let mut state = poh_state_arc.lock().await;
+                        state.advance(&[]); 
+                        log::info!("⏱️  [PoH] Shadow tick {} anchored to block {}", 
+                            state.tick(), 
+                            notification.hash
+                        );
+                    }
+                }
+            }
+        );
+        log::info!("⏱️ Proof of History (PoH) generator enabled and wired to block loop");
     }
 
     log::info!("✨ X3 Chain node started successfully");

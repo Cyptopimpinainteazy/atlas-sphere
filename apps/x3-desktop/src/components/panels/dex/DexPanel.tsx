@@ -15,7 +15,14 @@ import {
   XCircle, Loader2, Wifi, WifiOff,
 } from 'lucide-react';
 import clsx from 'clsx';
-import x3Chain, { TOKEN_IDS, VmType, type SwapStatus, type SimulationResult } from '@/services/x3ChainService';
+import x3Chain, {
+  TOKEN_IDS,
+  VmType,
+  type SwapStatus,
+  type SimulationResult,
+  type TradeProgressEvent,
+  type LiquidityPool,
+} from '@/services/x3ChainService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +71,13 @@ const MOCK_TRADES = [
   { id: 10, type: 'buy'  as const, pair: 'SOL/USDC',  amount: '10.0',   price: '178.42',    time: '1m ago'  },
 ];
 
+const VM_LABELS: Record<VmType, string> = {
+  [VmType.EVM]: 'EVM',
+  [VmType.SVM]: 'SVM',
+  [VmType.X3]: 'X3',
+  [VmType.Cross]: 'Cross-VM',
+};
+
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 const SwapStatusBadge: React.FC<{ status: SwapStatus }> = ({ status }) => {
@@ -73,6 +87,7 @@ const SwapStatusBadge: React.FC<{ status: SwapStatus }> = ({ status }) => {
     simulating:        { icon: <Loader2 size={12} className="animate-spin" />, label: 'Simulating…',       cls: 'text-blue-400 border-blue-500/30 bg-blue-500/10'    },
     awaiting_signature:{ icon: <Loader2 size={12} className="animate-spin" />, label: 'Sign in wallet…',   cls: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10' },
     submitting:        { icon: <Loader2 size={12} className="animate-spin" />, label: 'Submitting…',       cls: 'text-orange-400 border-orange-500/30 bg-orange-500/10' },
+    rolling_back:      { icon: <RefreshCw size={12} className="animate-spin" />, label: 'Rolling back…',   cls: 'text-red-400 border-red-500/30 bg-red-500/10'        },
     finalized:         { icon: <CheckCircle2 size={12} />,                     label: 'Finalized ✓',       cls: 'text-green-400 border-green-500/30 bg-green-500/10'    },
     failed:            { icon: <XCircle size={12} />,                          label: 'Failed',            cls: 'text-red-400 border-red-500/30 bg-red-500/10'          },
   };
@@ -118,6 +133,9 @@ const DexPanel: React.FC = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationError, setSimulationError] = useState<string | null>(null);
   const [priceImpact, setPriceImpact] = useState<number | null>(null);
+  const [tradeProgressMessage, setTradeProgressMessage] = useState<string | null>(null);
+  const [liquidityPools, setLiquidityPools] = useState<LiquidityPool[]>([]);
+  const [isLoadingPools, setIsLoadingPools] = useState(false);
 
   // Debounce timer for simulation
   const simTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -131,6 +149,28 @@ const DexPanel: React.FC = () => {
     const unsub = x3Chain.onConnectionChange(setChainConnected);
     setChainConnected(x3Chain.isConnected);
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const loadPools = async () => {
+      setIsLoadingPools(true);
+      const pools = await x3Chain.getLiquidityPools();
+      if (active) {
+        setLiquidityPools(pools);
+        setIsLoadingPools(false);
+      }
+    };
+
+    loadPools();
+    timer = setInterval(loadPools, 12000);
+
+    return () => {
+      active = false;
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   // ── Run simulation when inputs change ─────────────────────────────────────
@@ -202,11 +242,13 @@ const DexPanel: React.FC = () => {
     if (swapStatus.type !== 'idle' && swapStatus.type !== 'finalized' && swapStatus.type !== 'failed') return;
 
     setSwapStatus({ type: 'simulating' });
+    setTradeProgressMessage(null);
 
     try {
       const amountIn  = x3Chain.toChainUnits(parseFloat(payAmount), payToken.decimals);
+      const slippageBps = Math.max(1, Math.round(slippage * 100));
       const minOut    = simulation
-        ? (simulation.estimatedOutput * BigInt(10000 - Math.round(slippage * 100))) / 10000n
+        ? (simulation.estimatedOutput * BigInt(10000 - slippageBps)) / 10000n
         : x3Chain.toChainUnits(parseFloat(receiveAmount) * (1 - slippage / 100), receiveToken.decimals);
 
       const legs = [{
@@ -217,6 +259,36 @@ const DexPanel: React.FC = () => {
         minAmountOut: minOut,
         deadline:    Math.floor(Date.now() / 1000) + 300,
       }];
+
+      const handleTradeProgress = (event: TradeProgressEvent) => {
+        if (event.type === 'batch_created') {
+          setTradeProgressMessage(`Batch ${event.batchId.slice(0, 10)}… created with ${event.legsCount} leg${event.legsCount === 1 ? '' : 's'}.`);
+        }
+
+        if (event.type === 'leg_started') {
+          setTradeProgressMessage(`Executing hop ${event.legIndex + 1} on ${VM_LABELS[event.vmType]}.`);
+        }
+
+        if (event.type === 'leg_completed') {
+          setTradeProgressMessage(`Hop ${event.legIndex + 1} cleared and committed.`);
+        }
+
+        if (event.type === 'leg_failed') {
+          setTradeProgressMessage(`Hop ${event.legIndex + 1} failed. Rollback armed: ${event.reason}`);
+        }
+
+        if (event.type === 'rollback') {
+          setTradeProgressMessage(`Rollback executed from checkpoint ${event.checkpointIndex}.`);
+        }
+
+        if (event.type === 'batch_completed') {
+          setTradeProgressMessage('Atomic batch completed successfully.');
+        }
+
+        if (event.type === 'batch_failed') {
+          setTradeProgressMessage(`Atomic rollback completed after hop ${event.failedLegIndex + 1}: ${event.reason}`);
+        }
+      };
 
       if (chainConnected) {
         // Try to get the connected wallet address from a browser extension
@@ -233,10 +305,10 @@ const DexPanel: React.FC = () => {
         }
 
         if (signerAddress) {
-          await x3Chain.submitSwap(signerAddress, legs, setSwapStatus);
+          await x3Chain.submitSwap(signerAddress, legs, slippageBps, setSwapStatus, handleTradeProgress);
         } else {
           // Dev mode: use Alice (local testnet)
-          await x3Chain.submitSwapDevMode(legs, setSwapStatus);
+          await x3Chain.submitSwapDevMode(legs, slippageBps, setSwapStatus, handleTradeProgress);
         }
       } else {
         // Simulate offline submission
@@ -254,14 +326,64 @@ const DexPanel: React.FC = () => {
       }
 
       // Reset after a few seconds on success
-      setTimeout(() => setSwapStatus({ type: 'idle' }), 6000);
+      setTimeout(() => {
+        setSwapStatus({ type: 'idle' });
+        setTradeProgressMessage(null);
+      }, 6000);
     } catch (err: any) {
       setSwapStatus({ type: 'failed', error: err.message });
-      setTimeout(() => setSwapStatus({ type: 'idle' }), 8000);
+      setTimeout(() => {
+        setSwapStatus({ type: 'idle' });
+        setTradeProgressMessage(null);
+      }, 8000);
     }
   }, [payAmount, payToken, receiveToken, receiveAmount, slippage, simulation, chainConnected, swapStatus.type]);
 
   const isSwapping = swapStatus.type !== 'idle' && swapStatus.type !== 'finalized' && swapStatus.type !== 'failed';
+
+  const resolveTokenSymbol = useCallback((tokenId: string) => {
+    const normalized = tokenId.toLowerCase();
+    const match = Object.entries(TOKEN_IDS).find(([, id]) => id.toLowerCase() === normalized);
+    return match?.[0] ?? `${tokenId.slice(0, 6)}…`;
+  }, []);
+
+  const routePathLabel = simulation?.route?.length
+    ? [payToken.symbol, ...simulation.route.map((step) => resolveTokenSymbol(step.tokenOut))].join(' → ')
+    : `${payToken.symbol} → ${receiveToken.symbol}`;
+
+  const routeEngineLabel = simulation?.route?.length
+    ? simulation.route.map((step) => `${step.protocol}/${VM_LABELS[step.vmType]}`).join(' • ')
+    : 'Awaiting solver';
+
+  const tokenInId = TOKEN_IDS[payToken.symbol] ?? TOKEN_IDS.X3;
+  const tokenOutId = TOKEN_IDS[receiveToken.symbol] ?? TOKEN_IDS.USDC;
+  const matchingPools = liquidityPools.filter((pool) =>
+    (pool.tokenA === tokenInId && pool.tokenB === tokenOutId) ||
+    (pool.tokenA === tokenOutId && pool.tokenB === tokenInId),
+  );
+  const totalReservePay = matchingPools.reduce((acc, pool) => {
+    if (pool.tokenA === tokenInId) return acc + pool.reserveA;
+    return acc + pool.reserveB;
+  }, 0n);
+  const totalReserveReceive = matchingPools.reduce((acc, pool) => {
+    if (pool.tokenB === tokenOutId) return acc + pool.reserveB;
+    return acc + pool.reserveA;
+  }, 0n);
+  const poolCount = matchingPools.length;
+
+  const formatReserve = (amount: bigint, decimals: number) => {
+    if (amount <= 0n) return '0';
+    const raw = x3Chain.fromChainUnits(amount, decimals);
+    const numeric = Number(raw);
+    if (!Number.isFinite(numeric)) return raw;
+    return numeric.toLocaleString(undefined, { maximumFractionDigits: 6 });
+  };
+
+  const poolLiquidityLabel = isLoadingPools
+    ? 'Loading...'
+    : poolCount > 0
+      ? `${formatReserve(totalReservePay, payToken.decimals)} ${payToken.symbol} / ${formatReserve(totalReserveReceive, receiveToken.decimals)} ${receiveToken.symbol}`
+      : 'No pools';
 
   // ─── Render helpers ────────────────────────────────────────────────────────
 
@@ -387,11 +509,27 @@ const DexPanel: React.FC = () => {
               <Zap size={10} className="text-orange-400" /> Atomic Cross-VM
             </span>
           </div>
+          <div className="flex justify-between text-gray-400">
+            <span>Pool Liquidity</span>
+            <span className="text-white">{poolLiquidityLabel}</span>
+          </div>
+          <div className="flex justify-between text-gray-400">
+            <span>Pool Count</span>
+            <span className="text-white">{isLoadingPools ? '...' : poolCount}</span>
+          </div>
           {simulation?.route && simulation.route.length > 0 && (
             <div className="flex justify-between text-gray-400">
-              <span>Route</span>
+              <span>Best Path</span>
               <span className="text-white font-mono text-[10px]">
-                {payToken.symbol} → {receiveToken.symbol}
+                {routePathLabel}
+              </span>
+            </div>
+          )}
+          {simulation?.route && simulation.route.length > 0 && (
+            <div className="flex justify-between text-gray-400">
+              <span>Routers</span>
+              <span className="text-white font-mono text-[10px]">
+                {routeEngineLabel}
               </span>
             </div>
           )}
@@ -409,6 +547,20 @@ const DexPanel: React.FC = () => {
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2 text-[11px] text-red-400 flex items-start gap-2">
           <XCircle size={12} className="mt-0.5 shrink-0" />
           {simulationError}
+        </div>
+      )}
+
+      {tradeProgressMessage && (
+        <div className={clsx(
+          'rounded-xl px-3 py-2 text-[11px] flex items-start gap-2 border',
+          swapStatus.type === 'rolling_back' || swapStatus.type === 'failed'
+            ? 'bg-red-500/10 border-red-500/30 text-red-300'
+            : 'bg-orange-500/10 border-orange-500/30 text-orange-200',
+        )}>
+          {swapStatus.type === 'rolling_back'
+            ? <RefreshCw size={12} className="mt-0.5 shrink-0 animate-spin" />
+            : <Zap size={12} className="mt-0.5 shrink-0" />}
+          {tradeProgressMessage}
         </div>
       )}
 
@@ -447,7 +599,15 @@ const DexPanel: React.FC = () => {
         )}
       >
         {isSwapping ? (
-          <><Loader2 size={16} className="animate-spin" /> {swapStatus.type === 'simulating' ? 'Simulating…' : swapStatus.type === 'awaiting_signature' ? 'Sign in wallet…' : 'Submitting…'}</>
+          <><Loader2 size={16} className="animate-spin" /> {
+            swapStatus.type === 'simulating'
+              ? 'Simulating…'
+              : swapStatus.type === 'awaiting_signature'
+                ? 'Sign in wallet…'
+                : swapStatus.type === 'rolling_back'
+                  ? 'Rolling back…'
+                  : 'Submitting…'
+          }</>
         ) : (
           <><Zap size={16} /> Swap</>
         )}
