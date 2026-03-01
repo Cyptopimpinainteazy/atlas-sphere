@@ -157,6 +157,23 @@ const TokenVestingPanel = lazy(() => import("@/components/panels/trading/TokenVe
 const APIGatewayPanel = lazy(() => import("@/components/panels/infrastructure/APIGatewayPanel"));
 const DisasterRecoveryPanel = lazy(() => import("@/components/panels/infrastructure/DisasterRecoveryPanel"));
 
+/* ── Sprint 11: Wallet Security, CRM Backend, Social Infrastructure, Developer Experience ──── */
+// Wallet - Real transaction signing, hardware wallets, multi-signature
+const RealTransactionSigningPanel = lazy(() => import("@/components/panels/wallet/RealTransactionSigningPanel"));
+const HardwareWalletPanel = lazy(() => import("@/components/panels/wallet/HardwareWalletPanel"));
+const MultiSignaturePanel = lazy(() => import("@/components/panels/wallet/MultiSignaturePanel"));
+
+// Social - CRM, E2E messaging, notifications, communities, creator monetization
+const RealCrmBackendPanel = lazy(() => import("@/components/panels/social/RealCrmBackendPanel"));
+const E2eMessagesPanel = lazy(() => import("@/components/panels/social/E2eMessagesPanel"));
+const RealTimeNotificationsPanel = lazy(() => import("@/components/panels/social/RealTimeNotificationsPanel"));
+const CommunitiesPanel = lazy(() => import("@/components/panels/social/CommunitiesPanel"));
+const CreatorMonetizationPremiumPanel = lazy(() => import("@/components/panels/social/CreatorMonetizationPremiumPanel"));
+
+// Documentation - Interactive code playground, SDK generator
+const InteractiveCodePlaygroundPanel = lazy(() => import("@/components/panels/documentation/InteractiveCodePlaygroundPanel"));
+const SdkCodeGeneratorPanel = lazy(() => import("@/components/panels/documentation/SdkCodeGeneratorPanel"));
+
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
@@ -518,6 +535,96 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "recovery-testing":       DisasterRecoveryPanel,
   "backup-management":      DisasterRecoveryPanel,
   "rto-rpo":                DisasterRecoveryPanel,
+
+  /* ── Sprint 11: Wallet Security, CRM Backend, Social Infrastructure, Developer Experience ── */
+  
+  // Wallet - Real transaction signing
+  "real-transaction-signing": RealTransactionSigningPanel,
+  "transaction-signing":      RealTransactionSigningPanel,
+  "sign-transactions":        RealTransactionSigningPanel,
+  "tx-approval":              RealTransactionSigningPanel,
+  "signed-history":           RealTransactionSigningPanel,
+
+  // Wallet - Hardware wallets
+  "hardware-wallet":          HardwareWalletPanel,
+  "ledger":                   HardwareWalletPanel,
+  "trezor":                   HardwareWalletPanel,
+  "hardware-device":          HardwareWalletPanel,
+  "device-connection":        HardwareWalletPanel,
+  "bip44-paths":              HardwareWalletPanel,
+  "hardware-security":        HardwareWalletPanel,
+
+  // Wallet - Multi-signature
+  "multi-signature":          MultiSignaturePanel,
+  "multisig":                 MultiSignaturePanel,
+  "multisig-wallet":          MultiSignaturePanel,
+  "approval-workflows":       MultiSignaturePanel,
+  "msig-approval":            MultiSignaturePanel,
+  "co-signers":               MultiSignaturePanel,
+  "threshold-approval":       MultiSignaturePanel,
+
+  // Social - CRM Backend
+  "crm-backend":              RealCrmBackendPanel,
+  "contact-manager":          RealCrmBackendPanel,
+  "crm-contacts":             RealCrmBackendPanel,
+  "sqlite-sync":              RealCrmBackendPanel,
+  "websocket-sync":           RealCrmBackendPanel,
+  "contact-tags":             RealCrmBackendPanel,
+  "contact-database":         RealCrmBackendPanel,
+
+  // Social - E2E Encrypted Messages
+  "e2e-messages":             E2eMessagesPanel,
+  "encrypted-messages":       E2eMessagesPanel,
+  "signal-protocol":          E2eMessagesPanel,
+  "x3dh":                     E2eMessagesPanel,
+  "double-ratchet":           E2eMessagesPanel,
+  "encrypted-conversations":  E2eMessagesPanel,
+  "key-exchange":             E2eMessagesPanel,
+
+  // Social - Real-time Notifications
+  "real-time-notifications":  RealTimeNotificationsPanel,
+  "notifications":            RealTimeNotificationsPanel,
+  "websocket-push":           RealTimeNotificationsPanel,
+  "notification-queue":       RealTimeNotificationsPanel,
+  "push-delivery":            RealTimeNotificationsPanel,
+  "notification-settings":    RealTimeNotificationsPanel,
+  "notification-types":       RealTimeNotificationsPanel,
+
+  // Social - Communities
+  "communities":              CommunitiesPanel,
+  "community-feed":           CommunitiesPanel,
+  "reddit-equivalent":        CommunitiesPanel,
+  "topic-communities":        CommunitiesPanel,
+  "community-moderation":     CommunitiesPanel,
+  "community-posts":          CommunitiesPanel,
+  "community-mods":           CommunitiesPanel,
+
+  // Social - Creator Monetization Premium
+  "creator-monetization-premium": CreatorMonetizationPremiumPanel,
+  "subscriptions":            CreatorMonetizationPremiumPanel,
+  "subscription-tiers":       CreatorMonetizationPremiumPanel,
+  "donation-pool":            CreatorMonetizationPremiumPanel,
+  "revenue-splitting":        CreatorMonetizationPremiumPanel,
+  "creator-revenue":          CreatorMonetizationPremiumPanel,
+  "tipping-pool":             CreatorMonetizationPremiumPanel,
+
+  // Documentation - Interactive Code Playground
+  "code-playground":          InteractiveCodePlaygroundPanel,
+  "interactive-playground":   InteractiveCodePlaygroundPanel,
+  "x3-lang-ide":              InteractiveCodePlaygroundPanel,
+  "browser-ide":              InteractiveCodePlaygroundPanel,
+  "compile-deploy":           InteractiveCodePlaygroundPanel,
+  "smart-contract-compiler":  InteractiveCodePlaygroundPanel,
+  "testnet-deploy":           InteractiveCodePlaygroundPanel,
+
+  // Documentation - SDK Code Generator
+  "sdk-generator":            SdkCodeGeneratorPanel,
+  "code-generator":           SdkCodeGeneratorPanel,
+  "abi-codegen":              SdkCodeGeneratorPanel,
+  "typescript-sdk":           SdkCodeGeneratorPanel,
+  "python-sdk":               SdkCodeGeneratorPanel,
+  "go-sdk":                   SdkCodeGeneratorPanel,
+  "sdk-codegen":              SdkCodeGeneratorPanel,
 };
 
 /**

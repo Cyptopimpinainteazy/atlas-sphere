@@ -364,6 +364,20 @@
 
 ---
 
+### Sprint 11: Wallet Security, CRM Backend, Social Infrastructure, Developer Experience
+- [x] **Real transaction signing** — Tauri keystore-backed transaction approval with pending request workflow and fee calculation. Shows raw TX hex and confirmation tracking.
+- [x] **Hardware wallet support** — Ledger + Trezor device management with WebUSB/WebHID, firmware version tracking, and BIP44 derivation path support.
+- [x] **Multi-signature wallets** — M-of-N multisig wallet UI with approval threshold workflows, auto-completion when threshold met, and co-signer management panel.
+- [x] **Real CRM backend** — SQLite-backed contact management with WebSocket sync monitoring, tag-based organization, import/export, and real-time DB size tracking.
+- [x] **E2E encrypted messages** — X3DH + Double Ratchet (Signal protocol) implementation with message history, key exchange status, and protocol debugging tools.
+- [x] **Real-time notifications** — WebSocket push notification system with queue monitoring, delivery tracking, and notification type preferences (like/comment/follow/mention/tip).
+- [x] **Communities** — SubReddit-equivalent topic-based communities with feed sorting, moderator panel, community rules, and post creation/interaction.
+- [x] **Creator monetization premium** — Subscription tier management with tier pricing, tipping pool distribution, revenue split configuration, and creator analytics.
+- [x] **Interactive code playground** — Browser-based X3-Lang IDE with compile button, testnet deployment, bytecode/ABI output, and code download/share.
+- [x] **SDK code generator** — ABI-to-code generator supporting TypeScript/Python/Go with language selector and download/copy functionality.
+
+---
+
 ## SUMMARY SCORECARD
 
 | Feature Area | Current | Target | Key Unlock |
