@@ -72,22 +72,22 @@
 ## 🔴 TIER 3 — DEX (Current: 80 → Target: 100)
 
 ### Core Trading
-- [ ] **Limit orders** — implement an offchain order book with onchain settlement. Use the `X3IntentsPanel` architecture as the intent layer.
-- [ ] **Stop-loss / Take-profit orders** — trigger orders at price thresholds using the offchain worker price feed.
-- [ ] **TWAP orders** — split large orders across time to minimize price impact. Frontend slider for "execute over N minutes".
-- [ ] **Options / Derivatives** — basic call/put options on X3 native assets using Black-Scholes pricing via the X3-VM math library.
-- [ ] **Perpetual futures** — funding-rate perpetuals with up to 10x leverage, backed by the treasury insurance fund.
+- [x] **Limit orders** — implement an offchain order book with onchain settlement. Use the `X3IntentsPanel` architecture as the intent layer.
+- [x] **Stop-loss / Take-profit orders** — trigger orders at price thresholds using the offchain worker price feed.
+- [x] **TWAP orders** — split large orders across time to minimize price impact. Frontend slider for "execute over N minutes".
+- [x] **Options / Derivatives** — basic call/put options on X3 native assets using Black-Scholes pricing via the X3-VM math library.
+- [x] **Perpetual futures** — funding-rate perpetuals with up to 10x leverage, backed by the treasury insurance fund.
 - [x] **Real-time price chart** — integrate TradingView Lightweight Charts library (free) into `DexOrderbookPanel`. Show candlesticks from real TWAP data.
 - [x] **Portfolio P&L tracker** — real trades from connected wallet auto-populate the portfolio panel with cost basis and realized/unrealized PnL.
 - [ ] **Trade history persistence** — store user trade history in the local Tauri SQLite DB so it survives reloads.
 
 ### Liquidity
-- [ ] **Concentrated liquidity (Uniswap V3 model)** — LPs set price ranges for 10-100x capital efficiency vs basic AMM.
+- [x] **Concentrated liquidity (Uniswap V3 model)** — LPs set price ranges for 10-100x capital efficiency vs basic AMM.
 - [ ] **LM (Liquidity Mining) rewards** — emit X3 tokens to LP providers proportional to their pool share each block.
-- [ ] **veX3 (vote-escrow) tokenomics** — lock X3 for 1-4 years to get veX3, which directs LM rewards to chosen pools (Curve Wars model).
-- [ ] **Pool analytics dashboard** — TVL, volume, fees earned, APY all live for every pool in `DexPoolsPanel`.
+- [x] **veX3 (vote-escrow) tokenomics** — lock X3 for 1-4 years to get veX3, which directs LM rewards to chosen pools (Curve Wars model).
+- [x] **Pool analytics dashboard** — TVL, volume, fees earned, APY all live for every pool in `DexPoolsPanel`.
 - [ ] **LP position NFTs** — each LP position is an NFT that can be traded, used as collateral in lending, or fractionalized.
-- [ ] **Flash loans** — allow uncollateralized loans within a single atomic transaction batch. Charge 0.09% fee. Massive arbitrage revenue.
+- [x] **Flash loans** — allow uncollateralized loans within a single atomic transaction batch. Charge 0.09% fee. Massive arbitrage revenue.
 - [x] **Real slippage calculation** — [DexPanel](file:///home/lojak/Desktop/x3-chain-master/apps/x3-desktop/src/components/panels/dex/DexPanel.tsx#57-357) currently shows `<0.01%` always. Wire the actual constant-product formula: `output = (input * reserve_out) / (reserve_in + input)`.
 
 ### AI Bot Traders
@@ -207,11 +207,11 @@
 
 ### X3-Specific Social Features (DIFFERENTIATOR)
 - [ ] **Token-gated communities** — hold 100 X3 to post in the validator community. Hold an NFT to join exclusive groups.
-- [ ] **Tipping in X3 tokens** — one-click tip on any post. Micropayments sent instantly via Flash Finality.
-- [ ] **Creator monetization** — creators set a subscription price in X3 tokens. Access-gated posts for subscribers.
+- [x] **Tipping in X3 tokens** — one-click tip on any post. Micropayments sent instantly via Flash Finality.
+- [x] **Creator monetization** — creators set a subscription price in X3 tokens. Access-gated posts for subscribers.
 - [ ] **On-chain reputation scores** — your validator uptime, governance participation, and DeFi activity generate a public reputation score shown on your profile.
-- [ ] **Proof-of-human verification** — link a Worldcoin or Proof of Humanity credential to your profile. Bot-proof social.
-- [ ] **NFT profile integration** — set your NFT as profile pic with verified ownership checkmark. Cross-chain NFT support.
+- [x] **Proof-of-human verification** — link a Worldcoin or Proof of Humanity credential to your profile. Bot-proof social.
+- [x] **NFT profile integration** — set your NFT as profile pic with verified ownership checkmark. Cross-chain NFT support.
 - [ ] **Social trading** — follow a trader's wallet. See every trade they make as a social post. One-click copy-trade.
 
 ### Music & Media (MusicPage)
@@ -246,13 +246,13 @@
 ## 🔴 TIER 9 — INFRASTRUCTURE & VALIDATORS (Current: 80 → Target: 100)
 
 ### Validator Operations
-- [ ] **ValidatorsPanel → real node data** — connect to live RPC endpoints and show real validator uptime, block production, slash history.
+- [x] **ValidatorsPanel → real node data** — connect to live RPC endpoints and show real validator uptime, block production, slash history.
 - [ ] **One-click validator setup** — `x3_operator` Python tool exists. Make it a GUI wizard in the Tauri app. Click → install → stake → live.
 - [ ] **Validator performance leaderboard** — ranked by: uptime, blocks produced, GPU benchmark score, MEV share returned.
 - [ ] **Automated validator alert system** — email/push notification when your validator misses a block, gets slashed, or needs an update.
 - [ ] **Geographic distribution map** — `WorldMonitorPanel` shows validator positions on a globe. Make it real-time with actual IP geolocation.
 - [ ] **Hardware requirement calculator** — input your hardware spec, get estimated TPS capacity and revenue projection.
-- [ ] **Validator staking pooling** — users who can't afford minimum stake delegate to a pool operator. Pool distributes rewards proportionally.
+- [x] **Validator staking pooling** — users who can't afford minimum stake delegate to a pool operator. Pool distributes rewards proportionally.
 
 ### RPC & Infrastructure
 - [x] **`RpcStatsPanel` → live data** — wire to actual JSON-RPC metrics endpoint (`/metrics` Prometheus-style). Show real requests/sec, error rate, latency percentiles.

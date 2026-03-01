@@ -39,6 +39,7 @@ const DexPoolsPanel: React.FC = () => {
   const [realPools, setRealPools] = useState<LiquidityPool[]>([]);
   const [loading, setLoading] = useState(true);
   const [chainConnected, setChainConnected] = useState(x3Chain.isConnected);
+  const [showAnalytics, setShowAnalytics] = useState<string | null>(null);
 
   const loadPools = useCallback(async () => {
     try {
@@ -102,6 +103,73 @@ const DexPoolsPanel: React.FC = () => {
     const mult = p.tvl.includes('M') ? 1000000 : 1;
     return acc + (isNaN(val) ? 0 : val * mult);
   }, 0);
+
+  const aprColor = (apr: number) => (apr > 20 ? 'text-green-400' : apr > 10 ? 'text-blue-400' : 'text-white');
+
+  const renderAnalytics = (pool: PoolUI) => {
+    const feesEarned = pool.yourLiquidity ? parseFloat(pool.yourLiquidity.replace(/[$,]/g, '')) * (pool.apr / 100) : 0;
+    const fee24h = parseFloat(pool.volume24h.replace(/[$,M]/g, '')) * 0.003; // 0.3% fee
+    const fee7d = parseFloat(pool.volume7d.replace(/[$,M]/g, '')) * 0.003;
+
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="bg-[#111111] border border-[#2a2a2a] rounded-lg p-6 w-96 shadow-2xl max-h-96 overflow-auto">
+          <h3 className="font-bold text-white mb-4">{pool.tokenA}/{pool.tokenB} Analytics</h3>
+          
+          <div className="space-y-4 text-sm">
+            <div className="bg-[#0a0a0f] rounded-lg p-3">
+              <div className="text-gray-500 mb-1">Pool TVL</div>
+              <div className="text-lg font-bold text-white">{pool.tvl}</div>
+            </div>
+
+            <div className="bg-[#0a0a0f] rounded-lg p-3">
+              <div className="text-gray-500 mb-1">Your Share & Fees (Annual)</div>
+              <div className="flex justify-between items-center">
+                <span className="text-white font-semibold">{pool.yourLiquidity || '—'}</span>
+                <span className="text-green-400 font-semibold">{feesEarned.toFixed(2)} X3</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-[#0a0a0f] rounded-lg p-3">
+                <div className="text-gray-500 text-xs mb-1">24h Fees Generated</div>
+                <div className="font-bold text-blue-400">${fee24h.toFixed(3)}K</div>
+              </div>
+              <div className="bg-[#0a0a0f] rounded-lg p-3">
+                <div className="text-gray-500 text-xs mb-1">7d Fees Generated</div>
+                <div className="font-bold text-blue-400">${fee7d.toFixed(2)}K</div>
+              </div>
+            </div>
+
+            <div className="bg-[#0a0a0f] rounded-lg p-3">
+              <div className="text-gray-500 mb-1">APY Breakdown</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Base APR</span>
+                  <span className="text-green-400">{pool.apr}% annual</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Swap Fees</span>
+                  <span className="text-green-400">{(pool.apr * 0.7).toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>LM Rewards</span>
+                  <span className="text-green-400">{(pool.apr * 0.3).toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowAnalytics(null)}
+            className="w-full mt-4 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const aprColor = (apr: number) => (apr > 20 ? 'text-green-400' : apr > 10 ? 'text-blue-400' : 'text-white');
 
@@ -190,6 +258,7 @@ const DexPoolsPanel: React.FC = () => {
               {filteredPools.map((pool) => (
                 <tr
                   key={pool.id}
+                  onClick={() => setShowAnalytics(pool.id)}
                   className="border-b border-[#1a1a1a] last:border-0 hover:bg-[#0f0f14] transition-colors cursor-pointer group"
                 >
                   <td className="p-3">
@@ -234,6 +303,9 @@ const DexPoolsPanel: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Analytics Modal */}
+      {showAnalytics && renderAnalytics(filteredPools.find(p => p.id === showAnalytics)!)}
     </div>
   );
 };

@@ -26,7 +26,7 @@ import x3Chain, {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'swap' | 'market' | 'trades';
+type Tab = 'swap' | 'market' | 'trades' | 'limits' | 'advanced';
 
 interface Token {
   symbol: string;
@@ -710,6 +710,110 @@ const DexPanel: React.FC = () => {
     </div>
   );
 
+  const renderLimits = () => (
+    <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in">
+      <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-6">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">📊 Limit Order</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 mb-2 block">Sell Token</label>
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm">ETH at <input type="number" placeholder="1875" className="w-24 bg-transparent text-orange-400 focus:outline-none" /></div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-2 block">Receive Token</label>
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 text-sm">USDC at <input type="number" placeholder="3100" className="w-24 bg-transparent text-green-400 focus:outline-none" /></div>
+          </div>
+          <button className="w-full bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-400 font-bold py-3 rounded-lg transition-colors">
+            📌 Place Limit Order
+          </button>
+        </div>
+      </div>
+      <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-4">
+        <h4 className="text-sm font-bold mb-3">Active Limit Orders</h4>
+        <div className="space-y-2 text-xs text-gray-400">
+          <div className="flex justify-between p-2 bg-[#111111] rounded">
+            <span>Buy 1 WETH @ $3,100 USDC</span>
+            <span className="text-yellow-400">⏳ Pending</span>
+          </div>
+          <div className="flex justify-between p-2 bg-[#111111] rounded">
+            <span>Sell 5 SOL @ $145 USDC</span>
+            <span className="text-green-400">✓ Filled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAdvanced = () => (
+    <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Stop-Loss / Take-Profit */}
+        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5">
+          <h4 className="font-bold mb-3 flex items-center gap-2">🛑 Stop-Loss / Take-Profit</h4>
+          <div className="space-y-3 text-sm">
+            <div>
+              <label className="text-xs text-gray-400">Trigger Price</label>
+              <input type="number" placeholder="1800 (USDC)" className="w-full bg-[#1a1a1a] border border-[#333] rounded p-2 text-white focus:outline-none" />
+            </div>
+            <div className="flex gap-2">
+              <button className="flex-1 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-400 py-2 rounded font-bold text-xs">⬇️ STOP-LOSS</button>
+              <button className="flex-1 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 py-2 rounded font-bold text-xs">⬆️ TAKE-PROFIT</button>
+            </div>
+            <button className="w-full bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-400 py-2 rounded font-bold text-xs">Set Order</button>
+          </div>
+        </div>
+
+        {/* TWAP Orders */}
+        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5">
+          <h4 className="font-bold mb-3 flex items-center gap-2">⏰ TWAP Orders</h4>
+          <div className="space-y-3 text-sm">
+            <div>
+              <label className="text-xs text-gray-400">Execute Over</label>
+              <input type="range" min="1" max="120" className="w-full" /> 
+              <div className="flex justify-between text-xs text-gray-500 mt-1"><span>1 min</span><span>120 min</span></div>
+            </div>
+            <div className="bg-[#1a1a1a] border border-[#333] rounded p-2 text-xs text-gray-300">
+              📊 Split into 12 orders of 0.083 ETH every 10 minutes
+            </div>
+            <button className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-400 py-2 rounded font-bold text-xs">Schedule TWAP</button>
+          </div>
+        </div>
+
+        {/* Options Pricing */}
+        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5">
+          <h4 className="font-bold mb-3 flex items-center gap-2">📈 Options / Derivatives</h4>
+          <div className="space-y-2 text-xs text-gray-400">
+            <div className="flex justify-between bg-[#1a1a1a] p-2 rounded">
+              <span>ETH Call @ $2000 (30d)</span>
+              <span className="text-green-400">0.045 ETH</span>
+            </div>
+            <div className="flex justify-between bg-[#1a1a1a] p-2 rounded">
+              <span>ETH Put @ $1500 (30d)</span>
+              <span className="text-red-400">0.032 ETH</span>
+            </div>
+            <button className="w-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 text-purple-400 py-2 rounded font-bold mt-2">Buy Options</button>
+          </div>
+        </div>
+
+        {/* Perpetuals */}
+        <div className="bg-[#111111] border border-[#1a1a1a] rounded-xl p-5">
+          <h4 className="font-bold mb-3 flex items-center gap-2">🔄 Perpetual Futures</h4>
+          <div className="space-y-3 text-sm">
+            <div>
+              <label className="text-xs text-gray-400">Leverage</label>
+              <div className="flex gap-2">
+                {['1x', '2x', '5x', '10x'].map(lev => (
+                  <button key={lev} className="flex-1 bg-[#1a1a1a] hover:bg-orange-500/20 border border-[#333] hover:border-orange-500/50 py-1 rounded text-xs font-bold">{lev}</button>
+                ))}
+              </div>
+            </div>
+            <button className="w-full bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-400 py-2 rounded font-bold text-xs">Open 5x Long ETH</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // ─── Main render ───────────────────────────────────────────────────────────
 
   return (
@@ -731,7 +835,7 @@ const DexPanel: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-1 bg-[#111111] rounded-lg p-1 border border-[#1a1a1a]">
-          {(['swap', 'market', 'trades'] as Tab[]).map((t) => (
+          {(['swap', 'market', 'trades', 'limits', 'advanced'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -751,9 +855,11 @@ const DexPanel: React.FC = () => {
 
       {/* Content */}
       <div className="flex-1 p-5 overflow-auto">
-        {tab === 'swap'   && renderSwap()}
-        {tab === 'market' && renderMarket()}
-        {tab === 'trades' && renderTrades()}
+        {tab === 'swap'     && renderSwap()}
+        {tab === 'market'   && renderMarket()}
+        {tab === 'trades'   && renderTrades()}
+        {tab === 'limits'   && renderLimits()}
+        {tab === 'advanced' && renderAdvanced()}
       </div>
     </div>
   );

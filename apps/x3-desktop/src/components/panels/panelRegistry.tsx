@@ -78,6 +78,12 @@ const DexPanel           = lazy(() => import("@/components/panels/dex/DexPanel")
 const DexPoolsPanel      = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
 const DexOrderbookPanel  = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
 
+/* ── DeFi (Vote-Escrow & Liquidity Mining) ──── */
+const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
+
+/* ── Social (Social Network & Creator Economy) ──── */
+const SocialPanel = lazy(() => import("@/components/panels/social/SocialPanel"));
+
 /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ──── */
 const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDashboardPanel"));
 
@@ -184,6 +190,17 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "dex-swap":               DexPanel,
   "dex-pools":              DexPoolsPanel,
   "dex-orderbook":          DexOrderbookPanel,
+
+  /* ── DeFi (Vote-Escrow & Liquidity Mining) ── */
+  "vex3":                   VeX3Panel,
+  "ve-tokenomics":          VeX3Panel,
+  "liquidity-mining":       VeX3Panel,
+
+  /* ── Social (Social Network & Creator Economy) ── */
+  "social":                 SocialPanel,
+  "social-feed":            SocialPanel,
+  "creator-economy":        SocialPanel,
+  "tipping":                SocialPanel,
 
   /* ── Validators (ported from apps/validators) ── */
   "validators":             ValidatorsPanel,
