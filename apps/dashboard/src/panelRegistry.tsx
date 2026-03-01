@@ -14,6 +14,23 @@ const PriceOraclePanel = lazy(() => import('./panels/integration/PriceOraclePane
 const WebWorkerOptimizationPanel = lazy(() => import('./panels/performance/WebWorkerOptimizationPanel'));
 const NFTCRMIntegrationPanel = lazy(() => import('./panels/integration/NFTCRMIntegrationPanel'));
 
+// Sprint 13 Phase 2: Developer Experience & Analytics (Panels 13-27)
+const DeveloperPlaygroundPanel = lazy(() => import('./panels/docs/DeveloperPlaygroundPanel'));
+const ValidatorHealthPanel = lazy(() => import('./panels/docs/ValidatorHealthPanel'));
+const AudioVisualizerPanel = lazy(() => import('./panels/docs/AudioVisualizerPanel'));
+const CryptoKeyManagementPanel = lazy(() => import('./panels/docs/CryptoKeyManagementPanel'));
+const CommunicationCenterPanel = lazy(() => import('./panels/docs/CommunicationCenterPanel'));
+const PortfolioAnalysisPanel = lazy(() => import('./panels/docs/PortfolioAnalysisPanel'));
+const DatastoreManagementPanel = lazy(() => import('./panels/docs/DatastoreManagementPanel'));
+const GeoLocationPanel = lazy(() => import('./panels/docs/GeoLocationPanel'));
+const SessionSecurityPanel = lazy(() => import('./panels/docs/SessionSecurityPanel'));
+const PerformanceMonitorPanel = lazy(() => import('./panels/docs/PerformanceMonitorPanel'));
+const DocumentationLibraryPanel = lazy(() => import('./panels/docs/DocumentationLibraryPanel'));
+const SettingsPanel = lazy(() => import('./panels/docs/SettingsPanel'));
+const GamificationAndAchievementsPanel = lazy(() => import('./panels/docs/GamificationAndAchievementsPanel'));
+const FAQSupportPanel = lazy(() => import('./panels/docs/FAQSupportPanel'));
+const AnalyticsReportingPanel = lazy(() => import('./panels/docs/AnalyticsReportingPanel'));
+
 export const panelRegistry = {
   // Infrastructure Panels (GPU, Fees, Bridges)
   'gpu-pooling': ChainCoreOptimizationPanel,
@@ -139,7 +156,113 @@ export const panelRegistry = {
   'frame-compositing': WebWorkerOptimizationPanel,
   'performance-optimization': WebWorkerOptimizationPanel,
   'page-load': WebWorkerOptimizationPanel,
-};
+
+  // Developer Experience & Analytics Panels (13-27)
+  'playground': DeveloperPlaygroundPanel,
+  'developer-playground': DeveloperPlaygroundPanel,
+  'ide': DeveloperPlaygroundPanel,
+  'code-editor': DeveloperPlaygroundPanel,
+  'compile': DeveloperPlaygroundPanel,
+  'deploy': DeveloperPlaygroundPanel,
+  'smart-contract': DeveloperPlaygroundPanel,
+
+  'validator-health': ValidatorHealthPanel,
+  'health': ValidatorHealthPanel,
+  'health-monitor': ValidatorHealthPanel,
+  'uptime': ValidatorHealthPanel,
+  'block-performance': ValidatorHealthPanel,
+  'validator-status': ValidatorHealthPanel,
+
+  'audio-visualizer': AudioVisualizerPanel,
+  'visualizer': AudioVisualizerPanel,
+  'spectrum': AudioVisualizerPanel,
+  'frequency': AudioVisualizerPanel,
+  'audio': AudioVisualizerPanel,
+
+  'crypto-keys': CryptoKeyManagementPanel,
+  'key-management': CryptoKeyManagementPanel,
+  'signing-keys': CryptoKeyManagementPanel,
+  'encryption-keys': CryptoKeyManagementPanel,
+  'key-generation': CryptoKeyManagementPanel,
+  'ed25519': CryptoKeyManagementPanel,
+
+  'messages': CommunicationCenterPanel,
+  'communication': CommunicationCenterPanel,
+  'inbox': CommunicationCenterPanel,
+  'compose': CommunicationCenterPanel,
+  'notifications': CommunicationCenterPanel,
+  'alerts': CommunicationCenterPanel,
+
+  'portfolio': PortfolioAnalysisPanel,
+  'portfolio-analysis': PortfolioAnalysisPanel,
+  'asset-allocation': PortfolioAnalysisPanel,
+  'holdings': PortfolioAnalysisPanel,
+  'pnl': PortfolioAnalysisPanel,
+  'rebalance': PortfolioAnalysisPanel,
+
+  'datastore': DatastoreManagementPanel,
+  'key-value': DatastoreManagementPanel,
+  'storage': DatastoreManagementPanel,
+  'database': DatastoreManagementPanel,
+  'kv-storage': DatastoreManagementPanel,
+  'config-storage': DatastoreManagementPanel,
+
+  'geolocation': GeoLocationPanel,
+  'location-tracking': GeoLocationPanel,
+  'geo': GeoLocationPanel,
+  'world-map': GeoLocationPanel,
+  'network-map': GeoLocationPanel,
+  'validator-locations': GeoLocationPanel,
+
+  'sessions': SessionSecurityPanel,
+  'session-security': SessionSecurityPanel,
+  'active-sessions': SessionSecurityPanel,
+  'device-management': SessionSecurityPanel,
+  'security-status': SessionSecurityPanel,
+  'ip-masking': SessionSecurityPanel,
+
+  'performance': PerformanceMonitorPanel,
+  'performance-monitor': PerformanceMonitorPanel,
+  'system-monitor': PerformanceMonitorPanel,
+  'cpu': PerformanceMonitorPanel,
+  'memory': PerformanceMonitorPanel,
+  'disk-usage': PerformanceMonitorPanel,
+  'latency': PerformanceMonitorPanel,
+
+  'docs': DocumentationLibraryPanel,
+  'documentation': DocumentationLibraryPanel,
+  'dev-docs': DocumentationLibraryPanel,
+  'guides': DocumentationLibraryPanel,
+  'tutorials': DocumentationLibraryPanel,
+  'api-reference': DocumentationLibraryPanel,
+
+  'settings': SettingsPanel,
+  'preferences': SettingsPanel,
+  'config': SettingsPanel,
+  'user-settings': SettingsPanel,
+  'theme': SettingsPanel,
+  'privacy-settings': SettingsPanel,
+
+  'achievements': GamificationAndAchievementsPanel,
+  'gamification': GamificationAndAchievementsPanel,
+  'leaderboard': GamificationAndAchievementsPanel,
+  'xp': GamificationAndAchievementsPanel,
+  'badges': GamificationAndAchievementsPanel,
+  'quests': GamificationAndAchievementsPanel,
+
+  'faq': FAQSupportPanel,
+  'support': FAQSupportPanel,
+  'help': FAQSupportPanel,
+  'contact-support': FAQSupportPanel,
+  'help-center': FAQSupportPanel,
+  'troubleshooting': FAQSupportPanel,
+
+  'analytics': AnalyticsReportingPanel,
+  'analytics-reporting': AnalyticsReportingPanel,
+  'reporting': AnalyticsReportingPanel,
+  'reports': AnalyticsReportingPanel,
+  'metrics': AnalyticsReportingPanel,
+  'trending': AnalyticsReportingPanel,
 
 export type PanelId = keyof typeof panelRegistry;
 
@@ -223,6 +346,98 @@ export const panelMetadata = {
     category: 'Performance',
     description: 'Worker threads, WebGL 2.0, WGPU, and startup preload optimization',
     tags: ['performance', 'workers', 'gpu', 'optimization'],
+  },
+
+  // Developer Experience & Analytics Metadata
+  'playground': {
+    name: 'Developer Playground',
+    category: 'Developer Tools',
+    description: 'X3-Lang IDE with code editor, compiler, and smart contract deployment',
+    tags: ['ide', 'development', 'smart-contract', 'compilation'],
+  },
+  'validator-health': {
+    name: 'Validator Health Monitor',
+    category: 'Monitoring',
+    description: 'Real-time validator performance, uptime, and slashing risk tracking',
+    tags: ['validator', 'monitoring', 'performance', 'health'],
+  },
+  'audio-visualizer': {
+    name: 'Audio Visualizer',
+    category: 'Tools',
+    description: 'Real-time frequency spectrum analyzer with Web Audio API integration',
+    tags: ['audio', 'visualization', 'spectrum', 'analytics'],
+  },
+  'crypto-keys': {
+    name: 'Cryptographic Key Management',
+    category: 'Security',
+    description: 'Generate, store, and manage Ed25519 signing and encryption keys securely',
+    tags: ['security', 'cryptography', 'keys', 'encryption'],
+  },
+  'messages': {
+    name: 'Communication Center',
+    category: 'Social',
+    description: 'Messages inbox, notifications, and alert management system',
+    tags: ['messaging', 'notifications', 'communication', 'alerts'],
+  },
+  'portfolio': {
+    name: 'Portfolio Analysis',
+    category: 'Analytics',
+    description: 'Real-time asset allocation, P&L tracking, and rebalancing analytics',
+    tags: ['portfolio', 'analytics', 'assets', 'allocation'],
+  },
+  'datastore': {
+    name: 'Datastore Management',
+    category: 'Backend',
+    description: 'Key-value storage management with search, creation, and monitoring',
+    tags: ['database', 'storage', 'key-value', 'configuration'],
+  },
+  'geolocation': {
+    name: 'Geolocation Tracking',
+    category: 'Monitoring',
+    description: 'Monitor validator node locations, geographic distribution, and risk assessment',
+    tags: ['geolocation', 'monitoring', 'security', 'validators'],
+  },
+  'sessions': {
+    name: 'Session Security',
+    category: 'Security',
+    description: 'Manage active sessions, devices, and IP address security controls',
+    tags: ['security', 'sessions', 'devices', 'authentication'],
+  },
+  'performance': {
+    name: 'Performance Monitor',
+    category: 'Monitoring',
+    description: 'Real-time CPU, memory, disk, network latency, and throughput metrics',
+    tags: ['performance', 'monitoring', 'metrics', 'system'],
+  },
+  'docs': {
+    name: 'Documentation Library',
+    category: 'Developer Tools',
+    description: 'Searchable developer documentation with guides, API reference, and code examples',
+    tags: ['documentation', 'guides', 'api', 'reference'],
+  },
+  'settings': {
+    name: 'Settings',
+    category: 'User',
+    description: 'User preferences, security settings, data retention, and privacy controls',
+    tags: ['settings', 'preferences', 'configuration', 'security'],
+  },
+  'achievements': {
+    name: 'Gamification & Achievements',
+    category: 'Engagement',
+    description: 'XP tracking, achievement badges, leaderboards, and quest management',
+    tags: ['gamification', 'achievements', 'leaderboard', 'engagement'],
+  },
+  'faq': {
+    name: 'FAQ & Support',
+    category: 'Support',
+    description: 'FAQ database, contact support forms, and help center resources',
+    tags: ['faq', 'support', 'help', 'troubleshooting'],
+  },
+  'analytics': {
+    name: 'Analytics & Reporting',
+    category: 'Analytics',
+    description: 'Comprehensive metrics, trend analysis, and downloadable reports',
+    tags: ['analytics', 'reporting', 'metrics', 'trends'],
   },
 };
 
