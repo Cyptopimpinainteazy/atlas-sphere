@@ -248,7 +248,7 @@
 ### Validator Operations
 - [x] **ValidatorsPanel → real node data** — connect to live RPC endpoints and show real validator uptime, block production, slash history.
 - [x] **One-click validator setup** — `x3_operator` Python tool exists. Make it a GUI wizard in the Tauri app. Click → install → stake → live.
-- [ ] **Validator performance leaderboard** — ranked by: uptime, blocks produced, GPU benchmark score, MEV share returned.
+- [x] **Validator performance leaderboard** — ranked by: uptime, blocks produced, GPU benchmark score, MEV share returned.
 - [ ] **Automated validator alert system** — email/push notification when your validator misses a block, gets slashed, or needs an update.
 - [ ] **Geographic distribution map** — `WorldMonitorPanel` shows validator positions on a globe. Make it real-time with actual IP geolocation.
 - [ ] **Hardware requirement calculator** — input your hardware spec, get estimated TPS capacity and revenue projection.
@@ -266,7 +266,7 @@
 - [x] **`BlockExplorerPanel` → live chain data** — currently static. Wire to chain RPC: `chain_getBlock`, `system_events`, `author_submitExtrinsic`.
 - [x] **Transaction decoder** — auto-decode any extrinsic into human-readable: "Alice swapped 100 X3 for 0.03 ETH on DEX".
 - [ ] **Smart contract verifier** — upload X3-Lang source, verify it matches the deployed bytecode. Show source on explorer.
-- [ ] **Analytics tab** — daily TPS, active addresses, new contracts deployed, fee revenue charts going back to genesis.
+- [x] **Analytics tab** — daily TPS, active addresses, new contracts deployed, fee revenue charts going back to genesis.
 - [ ] **Token tracker** — discover all tokens on the chain, sorted by market cap, holders, volume.
 - [ ] **NFT explorer** — browse all NFT collections. See rarity ranks, recent sales, floor prices.
 - [x] **Whale tracker** — alert when a wallet > $100K moves funds. Searchable whale watchlist.
@@ -280,7 +280,7 @@
 - [ ] **SDK code generator** — input contract ABI, get TypeScript/Python/Go SDK auto-generated. Download or copy.
 - [ ] **Tutorial series** — 10 progressively harder tutorials: Hello World → ERC-20 → DEX → Cross-VM → AI Agent.
 - [ ] **Video walkthroughs** — screen-recorded tutorial videos embedded directly in the docs panel.
-- [ ] **API reference** — auto-generated from Rust docstrings via `cargo doc`. Searchable, with examples.
+- [x] **API reference** — auto-generated from Rust docstrings via `cargo doc`. Searchable, with examples.
 - [ ] **Changelog** — versioned changelog auto-populated from Git tags and release notes.
 - [x] **Error code reference** — every pallet error has a page explaining what it means and how to fix it.
 - [ ] **Testnet faucet link** — one-click to get testnet X3 tokens from the `AirdropsPanel` faucet.

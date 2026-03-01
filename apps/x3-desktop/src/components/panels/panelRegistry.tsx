@@ -64,6 +64,7 @@ const ExplorerDetailPanel   = lazy(() => import("@/components/panels/explorer/Ex
 /* ── Wallet (ported from apps/wallet) ──── */
 const WalletPanel = lazy(() => import("@/components/panels/wallet/WalletPanel"));
 const NftGalleryPanel = lazy(() => import("@/components/panels/wallet/NftGalleryPanel"));
+const TokenChartsPanel = lazy(() => import("@/components/panels/wallet/TokenChartsPanel"));
 
 /* ── X3 Intelligence (ported from apps/x3-intelligence) ──── */
 const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
@@ -79,12 +80,15 @@ const DexPanel           = lazy(() => import("@/components/panels/dex/DexPanel")
 const DexPoolsPanel      = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
 const DexOrderbookPanel  = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
 const ConcentratedLiquidityPanel = lazy(() => import("@/components/panels/dex/ConcentratedLiquidityPanel"));
+const DexAdvancedOrdersPanel = lazy(() => import("@/components/panels/dex/DexAdvancedOrdersPanel"));
+const TransactionSimulatorPanel = lazy(() => import("@/components/panels/dex/TransactionSimulatorPanel"));
 
 /* ── DeFi (Vote-Escrow & Liquidity Mining) ──── */
 const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
 
 /* ── Social (Social Network & Creator Economy) ──── */
 const SocialPanel = lazy(() => import("@/components/panels/social/SocialPanel"));
+const CreatorMonetizationPanel = lazy(() => import("@/components/panels/social/CreatorMonetizationPanel"));
 
 /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ──── */
 const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDashboardPanel"));
@@ -94,6 +98,7 @@ const InfrastructurePanel = lazy(() => import("@/components/panels/infrastructur
 const RpcStatsPanel = lazy(() => import("@/components/panels/infrastructure/RpcStatsPanel"));
 const AirdropsPanel = lazy(() => import("@/components/panels/infrastructure/AirdropsPanel"));
 const WhaleTrackerPanel = lazy(() => import("@/components/panels/infrastructure/WhaleTrackerPanel"));
+const BridgeStatusPanel = lazy(() => import("@/components/panels/infrastructure/BridgeStatusPanel"));
 
 /* ── Desktop Updates & Settings ──── */
 const DesktopUpdatesPanel = lazy(() => import("@/components/panels/desktop/DesktopUpdatesPanel"));
@@ -102,12 +107,23 @@ const WidgetLayerPanel = lazy(() => import("@/components/panels/desktop/WidgetLa
 /* ── Validators Globe (ported from apps/validators) ──── */
 const ValidatorsPanel = lazy(() => import("@/components/panels/validators/ValidatorsPanel"));
 const ValidatorSetupWizardPanel = lazy(() => import("@/components/panels/validators/ValidatorSetupWizardPanel"));
+const ValidatorLeaderboardPanel = lazy(() => import("@/components/panels/validators/ValidatorLeaderboardPanel"));
 
 /* ── Health Dashboard (ported from apps/health-dashboard) ──── */
 const HealthDashboardPanel = lazy(() => import("@/components/panels/health/HealthDashboardPanel"));
 
 /* ── Admin Dashboard ──── */
 const AdminPanel = lazy(() => import("@/components/panels/admin/AdminPanel"));
+
+/* ── Analytics (Risk, Heatmap, etc) ──── */
+const CryptoHeatmapPanel = lazy(() => import("@/components/panels/analytics/CryptoHeatmapPanel"));
+const PortfolioRiskPanel = lazy(() => import("@/components/panels/analytics/PortfolioRiskPanel"));
+
+/* ── Documentation & API ──── */
+const ApiReferencePanel = lazy(() => import("@/components/panels/documentation/ApiReferencePanel"));
+
+/* ── Global Search ──── */
+const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 
 /**
  * Map of appId → lazy-loaded panel component.
@@ -250,6 +266,32 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "widget-layer":           WidgetLayerPanel,
   "widgets":                WidgetLayerPanel,
   "floating-widgets":       WidgetLayerPanel,
+
+  /* ── Sprint 7: Advanced Orders, Token Charts, Bridge, Creator Monetization, Leaderboard, API, Heatmap, Simulator, Risk, Search ── */
+  "advanced-orders":        DexAdvancedOrdersPanel,
+  "limit-orders":           DexAdvancedOrdersPanel,
+  "stop-loss":              DexAdvancedOrdersPanel,
+  "token-charts":           TokenChartsPanel,
+  "price-charts":           TokenChartsPanel,
+  "bridge-status":          BridgeStatusPanel,
+  "cross-chain-bridge":     BridgeStatusPanel,
+  "creator-monetization":   CreatorMonetizationPanel,
+  "creator-earnings":       CreatorMonetizationPanel,
+  "tipping":                CreatorMonetizationPanel,
+  "validator-leaderboard":  ValidatorLeaderboardPanel,
+  "validator-ranking":      ValidatorLeaderboardPanel,
+  "api-reference":          ApiReferencePanel,
+  "api-docs":               ApiReferencePanel,
+  "crypto-heatmap":         CryptoHeatmapPanel,
+  "market-heatmap":         CryptoHeatmapPanel,
+  "transaction-simulator":  TransactionSimulatorPanel,
+  "swap-preview":           TransactionSimulatorPanel,
+  "portfolio-risk":         PortfolioRiskPanel,
+  "portfolio-analytics":    PortfolioRiskPanel,
+  "risk-analysis":          PortfolioRiskPanel,
+  "global-search":          GlobalSearchPanel,
+  "search":                 GlobalSearchPanel,
+  "command-palette":        GlobalSearchPanel,
 };
 
 /**
