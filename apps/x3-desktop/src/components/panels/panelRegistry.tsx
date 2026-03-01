@@ -65,6 +65,7 @@ const ExplorerDetailPanel   = lazy(() => import("@/components/panels/explorer/Ex
 const WalletPanel = lazy(() => import("@/components/panels/wallet/WalletPanel"));
 const NftGalleryPanel = lazy(() => import("@/components/panels/wallet/NftGalleryPanel"));
 const TokenChartsPanel = lazy(() => import("@/components/panels/wallet/TokenChartsPanel"));
+const PrivacyModePanel = lazy(() => import("@/components/panels/wallet/PrivacyModePanel"));
 
 /* ── X3 Intelligence (ported from apps/x3-intelligence) ──── */
 const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
@@ -82,13 +83,22 @@ const DexOrderbookPanel  = lazy(() => import("@/components/panels/dex/DexOrderbo
 const ConcentratedLiquidityPanel = lazy(() => import("@/components/panels/dex/ConcentratedLiquidityPanel"));
 const DexAdvancedOrdersPanel = lazy(() => import("@/components/panels/dex/DexAdvancedOrdersPanel"));
 const TransactionSimulatorPanel = lazy(() => import("@/components/panels/dex/TransactionSimulatorPanel"));
+const LpNftMarketplacePanel = lazy(() => import("@/components/panels/dex/LpNftMarketplacePanel"));
 
 /* ── DeFi (Vote-Escrow & Liquidity Mining) ──── */
 const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
+const LiquidityMiningPanel = lazy(() => import("@/components/panels/defi/LiquidityMiningPanel"));
+const TokenLaunchpadPanel = lazy(() => import("@/components/panels/defi/TokenLaunchpadPanel"));
 
 /* ── Social (Social Network & Creator Economy) ──── */
 const SocialPanel = lazy(() => import("@/components/panels/social/SocialPanel"));
 const CreatorMonetizationPanel = lazy(() => import("@/components/panels/social/CreatorMonetizationPanel"));
+
+/* ── Trading & Bots ──── */
+const StrategyBuilderPanel = lazy(() => import("@/components/panels/trading/StrategyBuilderPanel"));
+const BacktestingPanel = lazy(() => import("@/components/panels/trading/BacktestingPanel"));
+const BotMarketplacePanel = lazy(() => import("@/components/panels/trading/BotMarketplacePanel"));
+const MevBotPanel = lazy(() => import("@/components/panels/trading/MevBotPanel"));
 
 /* ── Swarm Dashboard (ported from apps/swarm-dashboard) ──── */
 const SwarmDashboardPanel = lazy(() => import("@/components/panels/swarm/SwarmDashboardPanel"));
@@ -103,6 +113,7 @@ const BridgeStatusPanel = lazy(() => import("@/components/panels/infrastructure/
 /* ── Desktop Updates & Settings ──── */
 const DesktopUpdatesPanel = lazy(() => import("@/components/panels/desktop/DesktopUpdatesPanel"));
 const WidgetLayerPanel = lazy(() => import("@/components/panels/desktop/WidgetLayerPanel"));
+const WindowLayoutsPanel = lazy(() => import("@/components/panels/desktop/WindowLayoutsPanel"));
 
 /* ── Validators Globe (ported from apps/validators) ──── */
 const ValidatorsPanel = lazy(() => import("@/components/panels/validators/ValidatorsPanel"));
@@ -124,6 +135,7 @@ const ApiReferencePanel = lazy(() => import("@/components/panels/documentation/A
 
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
+const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
 
 /**
  * Map of appId → lazy-loaded panel component.
@@ -292,6 +304,34 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "global-search":          GlobalSearchPanel,
   "search":                 GlobalSearchPanel,
   "command-palette":        GlobalSearchPanel,
+
+  /* ── Sprint 8: Liquidity Mining, Strategy Builder, Backtesting, Bot Marketplace, Token Launchpad, Privacy Mode, Window Layouts, LP NFT Marketplace, MEV Bot, Crash Reporter ── */
+  "liquidity-mining":       LiquidityMiningPanel,
+  "lm-rewards":             LiquidityMiningPanel,
+  "strategy-builder":       StrategyBuilderPanel,
+  "bot-strategy-composer":  StrategyBuilderPanel,
+  "backtesting":            BacktestingPanel,
+  "backtest-engine":        BacktestingPanel,
+  "bot-marketplace":        BotMarketplacePanel,
+  "strategy-marketplace":   BotMarketplacePanel,
+  "token-launchpad":        TokenLaunchpadPanel,
+  "tokenomics-designer":    TokenLaunchpadPanel,
+  "presale":                TokenLaunchpadPanel,
+  "privacy-mode":           PrivacyModePanel,
+  "stealth-mode":           PrivacyModePanel,
+  "transaction-mixer":      PrivacyModePanel,
+  "window-layouts":         WindowLayoutsPanel,
+  "snap-layouts":           WindowLayoutsPanel,
+  "layout-manager":         WindowLayoutsPanel,
+  "lp-nft-marketplace":     LpNftMarketplacePanel,
+  "lp-position-nfts":       LpNftMarketplacePanel,
+  "liquidity-nft-market":   LpNftMarketplacePanel,
+  "mev-bot":                MevBotPanel,
+  "mev-capture":            MevBotPanel,
+  "sandwich-protection":    MevBotPanel,
+  "crash-reporter":         CrashReporterPanel,
+  "bug-reporter":           CrashReporterPanel,
+  "error-report":           CrashReporterPanel,
 };
 
 /**

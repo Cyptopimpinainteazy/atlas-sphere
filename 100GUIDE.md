@@ -83,23 +83,23 @@
 
 ### Liquidity
 - [x] **Concentrated liquidity (Uniswap V3 model)** — LPs set price ranges for 10-100x capital efficiency vs basic AMM.
-- [ ] **LM (Liquidity Mining) rewards** — emit X3 tokens to LP providers proportional to their pool share each block.
+- [x] **LM (Liquidity Mining) rewards** — emit X3 tokens to LP providers proportional to their pool share each block.
 - [x] **veX3 (vote-escrow) tokenomics** — lock X3 for 1-4 years to get veX3, which directs LM rewards to chosen pools (Curve Wars model).
 - [x] **Pool analytics dashboard** — TVL, volume, fees earned, APY all live for every pool in `DexPoolsPanel`.
-- [ ] **LP position NFTs** — each LP position is an NFT that can be traded, used as collateral in lending, or fractionalized.
+- [x] **LP position NFTs** — each LP position is an NFT that can be traded, used as collateral in lending, or fractionalized.
 - [x] **Flash loans** — allow uncollateralized loans within a single atomic transaction batch. Charge 0.09% fee. Massive arbitrage revenue.
 - [x] **Real slippage calculation** — [DexPanel](file:///home/lojak/Desktop/x3-chain-master/apps/x3-desktop/src/components/panels/dex/DexPanel.tsx#57-357) currently shows `<0.01%` always. Wire the actual constant-product formula: `output = (input * reserve_out) / (reserve_in + input)`.
 
 ### AI Bot Traders
-- [ ] **Strategy builder UI** — drag-and-drop strategy composer in `BotPage`. Define conditions (RSI < 30, price crosses MA-20) → actions (buy X, sell Y).
-- [ ] **Backtesting engine** — feed historical price data into the strategy and show simulated returns before going live.
-- [ ] **Risk management** — per-bot max drawdown limit, position sizing rules, kill switch if daily loss exceeds threshold.
-- [ ] **Bot marketplace** — users publish strategies as NFTs. Others pay a subscription fee to copy-trade them. Revenue shared with creator.
-- [ ] **MEV bot** — built-in sandwich attack protection AND an opt-in MEV capture bot that shares profits with users who enable it.
+- [x] **Strategy builder UI** — drag-and-drop strategy composer in `BotPage`. Define conditions (RSI < 30, price crosses MA-20) → actions (buy X, sell Y).
+- [x] **Backtesting engine** — feed historical price data into the strategy and show simulated returns before going live.
+- [x] **Risk management** — per-bot max drawdown limit, position sizing rules, kill switch if daily loss exceeds threshold.
+- [x] **Bot marketplace** — users publish strategies as NFTs. Others pay a subscription fee to copy-trade them. Revenue shared with creator.
+- [x] **MEV bot** — built-in sandwich attack protection AND an opt-in MEV capture bot that shares profits with users who enable it.
 
 ### Token Launchpad
-- [ ] **Bonding curve launches** — new tokens start on a bonding curve, graduate to the full AMM at a market cap threshold (like pump.fun).
-- [ ] **Vesting schedules** — team/investor tokens locked with on-chain vesting contracts. Cliff + linear release.
+- [x] **Bonding curve launches** — new tokens start on a bonding curve, graduate to the full AMM at a market cap threshold (like pump.fun).
+- [x] **Vesting schedules** — team/investor tokens locked with on-chain vesting contracts. Cliff + linear release.
 - [ ] **KYC/AML gating** — optional KYC for regulated token sales. Integrate Sumsub or Persona identity API.
 - [ ] **Whitelist presales** — NFT-gated or wallet-gated presale rounds before public launch.
 - [ ] **Anti-snipe protection** — block bots from buying more than 1% of supply in the first 3 blocks after launch.
@@ -134,7 +134,7 @@
 - [x] **Phishing detection** — blocklist of known scam contracts/sites. Warn before signing any transaction to a flagged address.
 - [x] **Simulation before sign** — every transaction is dry-run and shows exactly what state changes will happen (token in / token out / approvals) before user signs.
 - [x] **Approval management** — list all active token approvals and revoke them with one click (like revoke.cash).
-- [ ] **Private mode** — optional stealth addresses for privacy-preserving transfers.
+- [x] **Private mode** — optional stealth addresses for privacy-preserving transfers.
 - [x] **Encrypted local backup** — wallet encrypted backup to local file or IPFS with password protection.
 
 ---
@@ -143,14 +143,14 @@
 
 ### Desktop OS Experience
 - [ ] **App Store live listings** — `AppStorePage` needs real installable apps/plugins, not static cards. Build a plugin API so devs can submit panel plugins.
-- [ ] **Window snap layouts** — drag windows to screen edges for tiling (Windows 11-style). 2x2, 1+2, full-screen layouts.
+- [x] **Window snap layouts** — drag windows to screen edges for tiling (Windows 11-style). 2x2, 1+2, full-screen layouts.
 - [ ] **Multi-monitor support** — detect multiple displays. Allow windows to span or lock to specific monitors.
 - [x] **System notifications** — Tauri native notifications for: tx confirmed, validator alert, new message, price alert.
 - [x] **Keyboard shortcut map** — complete, configurable keyboard shortcuts for every action. Show cheatsheet with Ctrl+?.
 - [x] **Dark/light/custom themes** — `ThemeProvider` exists, extend it with a full theme marketplace. Users can create/share themes.
 - [x] **Widget layer** — always-on-top mini widgets: live X3 price ticker, validator status dot, unread message count.
 - [x] **Auto-update** — Tauri's built-in updater so users get new versions without downloading manually. Show changelog on update.
-- [ ] **Crash reporter** — if Tauri crashes, auto-collect logs and prompt user to submit a bug report with one click.
+- [x] **Crash reporter** — if Tauri crashes, auto-collect logs and prompt user to submit a bug report with one click.
 - [x] **Onboarding flow** — first-launch wizard: create wallet → connect validator → configure panels → set theme. No cold start confusion.
 
 ### Performance
