@@ -197,6 +197,32 @@ const QuantumSecurityPanel = lazy(() => import("@/components/panels/infrastructu
 // Media - Streaming
 const MediaStreamingPanel = lazy(() => import("@/components/panels/media/MediaStreamingPanel"));
 
+/* ── Sprint 13 Phase 2: Performance, Terminal, Infrastructure, CRM, Social, Security, Growth ──── */
+// Performance - Virtualization, WebWorkers, GPU, Startup, Memory
+const VirtualizedPanelPanel = lazy(() => import("@/components/panels/performance/VirtualizedPanelPanel"));
+
+// Terminal - Shell, CLI, REPL
+const X3TerminalPanel = lazy(() => import("@/components/panels/terminal/X3TerminalPanel"));
+
+// Infrastructure - Validator Alerts, Geo Distribution, RPC Keys
+const ValidatorAlertsPanel = lazy(() => import("@/components/panels/infrastructure/ValidatorAlertsPanel"));
+const GeoDistributionPanel = lazy(() => import("@/components/panels/infrastructure/GeoDistributionPanel"));
+const RpcKeysPanel = lazy(() => import("@/components/panels/infrastructure/RpcKeysPanel"));
+
+// CRM - Deal Pipeline, Hardware Acquisition, Task Management, Call Logging, Email Templates, Wallet-Linked Contacts
+const DealPipelinePanel = lazy(() => import("@/components/panels/crm/DealPipelinePanel"));
+const HardwareAcquisitionPanel = lazy(() => import("@/components/panels/crm/HardwareAcquisitionPanel"));
+const HardwareSourcesPanel = lazy(() => import("@/components/panels/crm/HardwareSourcesPanel"));
+
+// Social - E2E Messaging (enhanced), Communities (enhanced), Media Upload, Content Moderation (enhanced)
+const E2EMessagingPanel = lazy(() => import("@/components/panels/social/E2EMessagingPanel"));
+
+// Security - Compliance Checklist, Audit Tracking
+const ComplianceChecklistPanel = lazy(() => import("@/components/panels/security/ComplianceChecklistPanel"));
+
+// Growth - DAO Governance, Grants Program, Airdrop Campaign, Mainnet Genesis, Partnerships
+const DAOGovernancePanel = lazy(() => import("@/components/panels/growth/DAOGovernancePanel"));
+
 /* ── Global Search ──── */
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
@@ -740,6 +766,101 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "stream-analytics":         MediaStreamingPanel,
   "creator-profile":          MediaStreamingPanel,
   "content-monetization":     MediaStreamingPanel,
+
+  /* ── Sprint 13 Phase 2: Performance, Terminal, Infrastructure, CRM, Social, Security, Growth ── */
+  
+  // Performance - Virtualization
+  "virtualized-panels":       VirtualizedPanelPanel,
+  "panel-virtualization":     VirtualizedPanelPanel,
+  "webworker-offloading":     VirtualizedPanelPanel,
+  "gpu-compositing":          VirtualizedPanelPanel,
+  "startup-optimization":     VirtualizedPanelPanel,
+  "memory-leak-audit":        VirtualizedPanelPanel,
+  "performance-metrics":      VirtualizedPanelPanel,
+
+  // Terminal - Shell & CLI
+  "x3-terminal":              X3TerminalPanel,
+  "terminal-shell":           X3TerminalPanel,
+  "x3-cli":                   X3TerminalPanel,
+  "command-line":             X3TerminalPanel,
+  "x3-repl":                  X3TerminalPanel,
+  "shell-emulation":          X3TerminalPanel,
+  "cli-reference":            X3TerminalPanel,
+
+  // Infrastructure - Validator Alerts
+  "validator-alerts":         ValidatorAlertsPanel,
+  "alert-monitoring":         ValidatorAlertsPanel,
+  "validator-uptime":         ValidatorAlertsPanel,
+  "block-production":         ValidatorAlertsPanel,
+  "slashing-alerts":          ValidatorAlertsPanel,
+  "validator-status":         ValidatorAlertsPanel,
+  "threshold-monitoring":     ValidatorAlertsPanel,
+
+  // Infrastructure - Geographic Distribution
+  "geo-distribution":         GeoDistributionPanel,
+  "validator-map":            GeoDistributionPanel,
+  "world-map-validators":     GeoDistributionPanel,
+  "regional-stats":           GeoDistributionPanel,
+  "validator-regions":        GeoDistributionPanel,
+  "geographic-clustering":    GeoDistributionPanel,
+  "network-coverage":         GeoDistributionPanel,
+
+  // Infrastructure - RPC Keys
+  "rpc-keys":                 RpcKeysPanel,
+  "api-keys":                 RpcKeysPanel,
+  "access-keys":              RpcKeysPanel,
+  "rate-limiting":            RpcKeysPanel,
+  "key-management":           RpcKeysPanel,
+  "api-permissions":          RpcKeysPanel,
+  "usage-analytics":          RpcKeysPanel,
+
+  // CRM - Deal Pipeline
+  "deal-pipeline":            DealPipelinePanel,
+  "sales-kanban":             DealPipelinePanel,
+  "deal-stages":              DealPipelinePanel,
+  "win-probability":          DealPipelinePanel,
+  "sales-forecast":           DealPipelinePanel,
+  "deal-analytics":           DealPipelinePanel,
+  "crm-pipeline":             DealPipelinePanel,
+
+  // CRM - Hardware Acquisition
+  "hardware-acquisition":     HardwareAcquisitionPanel,
+  "gpu-sourcing":             HardwareAcquisitionPanel,
+  "hardware-contacts":        HardwareSourcesPanel,
+  "hardware-sources":         HardwareSourcesPanel,
+  "acquisition-campaigns":    HardwareAcquisitionPanel,
+  "hardware-roi":             HardwareAcquisitionPanel,
+  "supplier-management":      HardwareAcquisitionPanel,
+  "contact-browser":          HardwareSourcesPanel,
+  "supplier-contacts":        HardwareSourcesPanel,
+  "200-contacts":             HardwareSourcesPanel,
+
+  // Social - E2E Messaging
+  "e2e-messaging":            E2EMessagingPanel,
+  "direct-messages":          E2EMessagingPanel,
+  "encrypted-chat":           E2EMessagingPanel,
+  "x3dh-protocol":            E2EMessagingPanel,
+  "double-ratchet":           E2EMessagingPanel,
+  "forward-secrecy":          E2EMessagingPanel,
+  "message-encryption":       E2EMessagingPanel,
+
+  // Security - Compliance Checklist
+  "compliance-checklist":     ComplianceChecklistPanel,
+  "audit-tracking":           ComplianceChecklistPanel,
+  "soc2-compliance":          ComplianceChecklistPanel,
+  "security-audit":           ComplianceChecklistPanel,
+  "regulatory-compliance":    ComplianceChecklistPanel,
+  "audit-trail":              ComplianceChecklistPanel,
+  "compliance-reports":       ComplianceChecklistPanel,
+
+  // Growth - DAO Governance
+  "dao-governance":           DAOGovernancePanel,
+  "governance-dashboard":     DAOGovernancePanel,
+  "treasury-dao":             DAOGovernancePanel,
+  "voting-power-distribution": DAOGovernancePanel,
+  "proposal-voting":          DAOGovernancePanel,
+  "dao-treasury":             DAOGovernancePanel,
+  "governance-voting":        DAOGovernancePanel,
 };
 
 /**
@@ -748,7 +869,7 @@ const PANEL_MAP: Record<string, ComponentType> = {
 const PanelLoader: React.FC = () => (
   <div className="flex items-center justify-center h-full bg-[#0a0a0f]">
     <div className="text-center">
-      <div className="inline-block w-5 h-5 border-2 border-[#ff6b35]/30 border-t-[#ff6b35] rounded-full animate-spin mb-2" />
+      <div className="inline-block w-5 h-5 border-2 border-[#1a9fb5]/30 border-t-[#1a9fb5] rounded-full animate-spin mb-2" />
       <div className="text-[10px] font-mono text-[#666]">Loading panel...</div>
     </div>
   </div>
