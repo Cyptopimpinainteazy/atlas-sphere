@@ -18,7 +18,7 @@ const FeaturedAppCard: React.FC<FeaturedAppCardProps> = ({ app, isRunning, onLau
 
   const handleClick = useCallback(() => onLaunch(app.id), [app.id, onLaunch]);
 
-  const accent = app.icon.color ?? "#ff6b35";
+  const accent = app.icon.color ?? "#1a9fb5";
 
   return (
     <div
@@ -51,13 +51,13 @@ const FeaturedAppCard: React.FC<FeaturedAppCardProps> = ({ app, isRunning, onLau
             WebkitBackfaceVisibility: "hidden",
             borderRadius: 12,
             border: `2px solid ${accent}55`,
-            background: `linear-gradient(135deg, #111113 0%, #0a0a0f 100%)`,
+            background: `linear-gradient(135deg, #0d1f26 0%, #081315 100%)`,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             gap: 10,
-            boxShadow: `0 0 24px ${accent}22, inset 0 1px 0 #ffffff08`,
+            boxShadow: `0 0 30px ${accent}33, inset 0 1px 0 #ffffff08`,
             overflow: "hidden",
           }}
         >

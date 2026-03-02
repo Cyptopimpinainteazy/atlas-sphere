@@ -84,7 +84,10 @@ impl Blockstore {
         let index = shred.shred_index();
         let num_shreds = shred.num_shreds();
 
-        debug!("Inserting shred: slot={}, index={}/{}", slot, index, num_shreds);
+        debug!(
+            "Inserting shred: slot={}, index={}/{}",
+            slot, index, num_shreds
+        );
 
         // Check if we already have this shred
         {
@@ -100,9 +103,9 @@ impl Blockstore {
         // Mark as received
         {
             let mut indices = self.received_indices.write();
-            let slot_indices = indices.entry(slot).or_insert_with(|| {
-                vec![false; num_shreds as usize]
-            });
+            let slot_indices = indices
+                .entry(slot)
+                .or_insert_with(|| vec![false; num_shreds as usize]);
             if (index as usize) < slot_indices.len() {
                 slot_indices[index as usize] = true;
             }
@@ -172,9 +175,9 @@ impl Blockstore {
     /// Reconstruct block from shreds
     fn reconstruct_block(&self, slot: u64) -> TurbineResult<Vec<u8>> {
         let shreds = self.pending_shreds.read();
-        let slot_shreds = shreds.get(&slot).ok_or_else(|| {
-            TurbineError::BlockstoreError(format!("No shreds for slot {}", slot))
-        })?;
+        let slot_shreds = shreds
+            .get(&slot)
+            .ok_or_else(|| TurbineError::BlockstoreError(format!("No shreds for slot {}", slot)))?;
 
         // Sort by index
         let mut sorted_shreds: Vec<_> = slot_shreds.iter().collect();
@@ -263,7 +266,7 @@ mod tests {
         let config = BlockstoreConfig::default();
         let metrics = Arc::new(TurbineMetrics::new());
         let _store = Blockstore::new(config, metrics);
-        
+
         // This would require creating a proper Shred which depends on ErasureCode
         // Skipping full test for brevity
     }

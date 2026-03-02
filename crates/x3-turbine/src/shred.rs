@@ -5,7 +5,7 @@
 
 use crate::config::ShredConfig;
 use crate::error::{TurbineError, TurbineResult};
-use bincode::{serialize, deserialize};
+use bincode::{deserialize, serialize};
 use blake3::Hasher;
 use serde::{Deserialize, Serialize};
 
@@ -64,7 +64,7 @@ impl Shred {
         payload: ShredPayload,
     ) -> Self {
         let hash = Self::compute_hash(slot, shred_index, &payload);
-        
+
         Self {
             slot,
             shred_index,
@@ -87,7 +87,7 @@ impl Shred {
         payload: ShredPayload,
     ) -> Self {
         let hash = Self::compute_hash(slot, shred_index, &payload);
-        
+
         Self {
             slot,
             shred_index,
@@ -221,7 +221,7 @@ impl ErasureCode {
     pub fn new(data_shreds: usize, coding_shreds: usize) -> Self {
         let total = data_shreds + coding_shreds;
         let encoding_matrix = Self::generate_matrix(data_shreds, total);
-        
+
         Self {
             data_shreds,
             coding_shreds,
@@ -232,14 +232,14 @@ impl ErasureCode {
     /// Generate encoding matrix using Vandermonde matrix
     fn generate_matrix(k: usize, n: usize) -> Vec<Vec<f64>> {
         let mut matrix = vec![vec![0.0; k]; n];
-        
+
         for (i, row) in matrix.iter_mut().enumerate().take(n) {
             for (j, cell) in row.iter_mut().enumerate().take(k) {
                 // Use Galois Field arithmetic (simplified with floating point for demo)
                 *cell = Self::gf_pow(j as u32, i as u32, k as u32);
             }
         }
-        
+
         matrix
     }
 
@@ -248,7 +248,7 @@ impl ErasureCode {
         let mut result = 1u32;
         let mut b = base % 256;
         let mut e = exp;
-        
+
         while e > 0 {
             if e & 1 == 1 {
                 result = Self::gf_mul(result, b, m);
@@ -256,7 +256,7 @@ impl ErasureCode {
             b = Self::gf_mul(b, b, m);
             e >>= 1;
         }
-        
+
         result as f64
     }
 
@@ -265,7 +265,7 @@ impl ErasureCode {
         let mut result = 0u32;
         let mut a = a;
         let mut b = b;
-        
+
         while b > 0 {
             if b & 1 == 1 {
                 result ^= a;
@@ -277,20 +277,20 @@ impl ErasureCode {
             }
             b >>= 1;
         }
-        
+
         result
     }
 
     /// Encode data into shreds
     pub fn encode(&self, data: &[u8]) -> (Vec<Vec<u8>>, Vec<Vec<u8>>) {
         let chunk_size = data.len().div_ceil(self.data_shreds);
-        
+
         // Pad data if necessary
         let mut padded_data = data.to_vec();
         while padded_data.len() < chunk_size * self.data_shreds {
             padded_data.push(0);
         }
-        
+
         // Split into data chunks
         let mut data_chunks: Vec<Vec<u8>> = Vec::with_capacity(self.data_shreds);
         for i in 0..self.data_shreds {
@@ -298,42 +298,48 @@ impl ErasureCode {
             let end = std::cmp::min(start + chunk_size, padded_data.len());
             data_chunks.push(padded_data[start..end].to_vec());
         }
-        
+
         // Generate coding chunks
         let mut coding_chunks: Vec<Vec<u8>> = Vec::with_capacity(self.coding_shreds);
-        
+
         for i in 0..self.coding_shreds {
             let row = &self.encoding_matrix[self.data_shreds + i];
             let mut coding_chunk = vec![0u8; chunk_size];
-            
+
             for byte_idx in 0..chunk_size {
                 let mut value: u8 = 0;
                 for j in 0..self.data_shreds {
                     if byte_idx < data_chunks[j].len() {
-                        value ^= Self::gf_mul(data_chunks[j][byte_idx].into(), row[j] as u32, 285) as u8;
+                        value ^=
+                            Self::gf_mul(data_chunks[j][byte_idx].into(), row[j] as u32, 285) as u8;
                     }
                 }
                 coding_chunk[byte_idx] = value;
             }
-            
+
             coding_chunks.push(coding_chunk);
         }
-        
+
         (data_chunks, coding_chunks)
     }
 
     /// Decode data from available shreds
-    pub fn decode(&self, data_chunks: &[Vec<u8>], _coding_chunks: &[Vec<u8>], _required_indices: &[usize]) -> Option<Vec<u8>> {
+    pub fn decode(
+        &self,
+        data_chunks: &[Vec<u8>],
+        _coding_chunks: &[Vec<u8>],
+        _required_indices: &[usize],
+    ) -> Option<Vec<u8>> {
         // Simplified decode - in production would use proper Gaussian elimination
         if data_chunks.len() >= self.data_shreds {
             // We have enough data chunks
             let chunk_size = data_chunks[0].len();
             let mut result = Vec::with_capacity(chunk_size * self.data_shreds);
-            
+
             for chunk in data_chunks.iter().take(self.data_shreds) {
                 result.extend_from_slice(chunk);
             }
-            
+
             Some(result)
         } else {
             // Need to use coding chunks for recovery
@@ -353,7 +359,7 @@ impl Shredder {
     /// Create new shredder
     pub fn new(config: ShredConfig) -> Self {
         let erasure_code = ErasureCode::new(config.data_shreds, config.coding_shreds);
-        
+
         Self {
             config,
             erasure_code,
@@ -363,13 +369,13 @@ impl Shredder {
     /// Create shreds from block data
     pub fn create_shreds(&self, slot: u64, block_data: Vec<u8>) -> TurbineResult<Vec<Shred>> {
         let reference_block = Self::compute_reference(&block_data);
-        
+
         // Encode data using erasure coding
         let (data_chunks, coding_chunks) = self.erasure_code.encode(&block_data);
-        
+
         let mut shreds = Vec::new();
         let num_shreds = (self.config.data_shreds + self.config.coding_shreds) as u32;
-        
+
         // Create data shreds
         for (i, chunk) in data_chunks.into_iter().enumerate() {
             let shred = Shred::new_data(
@@ -381,7 +387,7 @@ impl Shredder {
             );
             shreds.push(shred);
         }
-        
+
         // Create coding shreds
         for (i, chunk) in coding_chunks.into_iter().enumerate() {
             let shred = Shred::new_coding(
@@ -393,7 +399,7 @@ impl Shredder {
             );
             shreds.push(shred);
         }
-        
+
         Ok(shreds)
     }
 
@@ -421,10 +427,10 @@ mod tests {
     fn test_shred_creation() {
         let config = ShredConfig::default();
         let shredder = Shredder::new(config);
-        
+
         let data = vec![0u8; 16000];
         let shreds = shredder.create_shreds(1, data).unwrap();
-        
+
         assert!(!shreds.is_empty());
     }
 
@@ -432,10 +438,10 @@ mod tests {
     fn test_shred_verification() {
         let config = ShredConfig::default();
         let shredder = Shredder::new(config);
-        
+
         let data = vec![1u8; 8000];
         let shreds = shredder.create_shreds(1, data).unwrap();
-        
+
         for shred in &shreds {
             assert!(shred.verify());
         }

@@ -755,15 +755,23 @@ pub mod pallet {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
             ensure!(token_a != token_b, Error::<T>::InvalidAssetPair);
-            ensure!(reserve_a > 0 && reserve_b > 0, Error::<T>::InvalidPoolConfiguration);
+            ensure!(
+                reserve_a > 0 && reserve_b > 0,
+                Error::<T>::InvalidPoolConfiguration
+            );
             ensure!(fee_bps < 10_000, Error::<T>::InvalidPoolConfiguration);
 
-            let bounded_address =
-                BoundedVec::<u8, ConstU32<MAX_ADDRESS_LEN>>::try_from(address)
-                    .map_err(|_| Error::<T>::InvalidPoolConfiguration)?;
+            let bounded_address = BoundedVec::<u8, ConstU32<MAX_ADDRESS_LEN>>::try_from(address)
+                .map_err(|_| Error::<T>::InvalidPoolConfiguration)?;
 
             let pool = types::LiquidityPool {
-                pool_id: Self::generate_pool_id(protocol, vm_type, token_a, token_b, &bounded_address),
+                pool_id: Self::generate_pool_id(
+                    protocol,
+                    vm_type,
+                    token_a,
+                    token_b,
+                    &bounded_address,
+                ),
                 protocol,
                 vm_type,
                 token_a,
@@ -771,7 +779,7 @@ pub mod pallet {
                 reserve_a,
                 reserve_b,
                 fee_bps,
-                address: bounded_address.to_vec(),
+                address: bounded_address,
             };
 
             let pool_id = pool.pool_id;
@@ -799,7 +807,10 @@ pub mod pallet {
         ) -> DispatchResult {
             T::AmmRegistrarOrigin::ensure_origin(origin)?;
 
-            ensure!(reserve_a > 0 && reserve_b > 0, Error::<T>::InvalidPoolConfiguration);
+            ensure!(
+                reserve_a > 0 && reserve_b > 0,
+                Error::<T>::InvalidPoolConfiguration
+            );
 
             LiquidityPools::<T>::try_mutate(pool_id, |maybe_pool| -> DispatchResult {
                 let pool = maybe_pool.as_mut().ok_or(Error::<T>::PoolNotFound)?;
@@ -1188,7 +1199,9 @@ pub mod pallet {
             token_b: H256,
             address: &BoundedVec<u8, ConstU32<MAX_ADDRESS_LEN>>,
         ) -> H256 {
-            H256::from(blake2_256(&(protocol, vm_type, token_a, token_b, address).encode()))
+            H256::from(blake2_256(
+                &(protocol, vm_type, token_a, token_b, address).encode(),
+            ))
         }
 
         /// Create a state checkpoint for rollback support.
@@ -1706,10 +1719,10 @@ pub mod pallet {
         ) -> Result<(), DispatchError> {
             let pool = LiquidityPools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
 
-            let forward_price =
-                Self::compute_scaled_price(pool.reserve_a, pool.reserve_b).ok_or(Error::<T>::InvalidPriceData)?;
-            let reverse_price =
-                Self::compute_scaled_price(pool.reserve_b, pool.reserve_a).ok_or(Error::<T>::InvalidPriceData)?;
+            let forward_price = Self::compute_scaled_price(pool.reserve_a, pool.reserve_b)
+                .ok_or(Error::<T>::InvalidPriceData)?;
+            let reverse_price = Self::compute_scaled_price(pool.reserve_b, pool.reserve_a)
+                .ok_or(Error::<T>::InvalidPriceData)?;
 
             let forward = types::PricePoint {
                 token_a: pool.token_a,
@@ -1816,9 +1829,7 @@ pub mod pallet {
             if pool_count == 0 {
                 // Fall back to synthetic pools derived from adapters until the pool
                 // registry is seeded on-chain.
-                let synthetic_reserve = amount_in
-                    .saturating_mul(1_000)
-                    .max(1_000_000_000_000u128);
+                let synthetic_reserve = amount_in.saturating_mul(1_000).max(1_000_000_000_000u128);
                 let mut adapter_count: u64 = 0;
 
                 for (protocol, config) in AmmAdapters::<T>::iter() {
@@ -1826,9 +1837,14 @@ pub mod pallet {
                         continue;
                     }
 
-                    let pool_seed =
-                        (protocol, token_in, token_out, config.vm_type, config.address.clone())
-                            .encode();
+                    let pool_seed = (
+                        protocol,
+                        token_in,
+                        token_out,
+                        config.vm_type,
+                        config.address.clone(),
+                    )
+                        .encode();
                     let pool_id = H256::from(blake2_256(&pool_seed));
 
                     graph.add_pool(types::LiquidityPool {
@@ -1840,14 +1856,14 @@ pub mod pallet {
                         reserve_a: synthetic_reserve,
                         reserve_b: synthetic_reserve,
                         fee_bps: config.fee_bps,
-                        address: config.address.to_vec(),
+                        address: config.address.clone(),
                     });
 
                     adapter_count = adapter_count.saturating_add(1);
                 }
 
                 if adapter_count == 0 {
-                let pool_seed = (token_in, token_out, amount_in, b"fallback").encode();
+                    let pool_seed = (token_in, token_out, amount_in, b"fallback").encode();
 
                     graph.add_pool(types::LiquidityPool {
                         pool_id: H256::from(blake2_256(&pool_seed)),
@@ -1858,7 +1874,7 @@ pub mod pallet {
                         reserve_a: synthetic_reserve,
                         reserve_b: synthetic_reserve,
                         fee_bps: 30,
-                        address: b"synthetic-router".to_vec(),
+                        address: BoundedVec::try_from(b"synthetic-router".to_vec()).unwrap(),
                     });
                 }
             }

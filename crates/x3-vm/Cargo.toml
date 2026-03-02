@@ -19,6 +19,10 @@ thiserror = "1.0"
 
 # Logging
 log = "0.4"
+tracing = "0.1"
+
+# Synchronization primitives
+parking_lot = "0.12"
 
 # Serialization (for VM state snapshots)
 serde = { version = "1.0", features = ["derive"] }

@@ -317,10 +317,10 @@ impl MultiDeviceDispatcher {
         let healthy: Vec<usize> = slots
             .iter()
             .enumerate()
+            .filter(|(_, s)| s.status == SlotStatus::Healthy || s.status == SlotStatus::Degraded)
             .filter(|(_, s)| {
-                s.status == SlotStatus::Healthy || s.status == SlotStatus::Degraded
+                s.attestation.remaining_ms() >= self.config.min_attestation_remaining_ms
             })
-            .filter(|(_, s)| s.attestation.remaining_ms() >= self.config.min_attestation_remaining_ms)
             .map(|(i, _)| i)
             .collect();
 
@@ -353,7 +353,10 @@ impl MultiDeviceDispatcher {
             #[cfg(test)]
             DispatchStrategy::Random => {
                 use std::time::{SystemTime, UNIX_EPOCH};
-                let t = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos();
+                let t = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_nanos();
                 Some(healthy[t as usize % healthy.len()])
             }
         }

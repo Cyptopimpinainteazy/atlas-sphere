@@ -21,6 +21,7 @@ members = [
     "crates/external-chains",
     "crates/x3-sdk",
     "crates/x3-cli",
+    "crates/x3-wallet",
     "crates/x3-indexer",
     "crates/x3-gateway",
     "crates/x3-lsp",
@@ -62,6 +63,7 @@ members = [
     "crates/x3-agent",
     "crates/x3-court",
     "crates/x3-flashloan",
+    "crates/x3-dex",
     "pallets/depin-marketplace",
     "pallets/private-execution",
     "crates/contention-predictor",
@@ -274,6 +276,9 @@ ahash = { path = "patches/ahash" }
 # Stub icu_properties to avoid rustc ICE on string literal unescaping
 # The real icu_properties triggers a compiler panic in rustc 1.93+ when compiling with full workspace features
 icu_properties = { path = "patches/icu_properties_stub" }
+# Patch idna_adapter to work with our icu_properties_stub GeneralCategory newtype
+idna_adapter = { path = "patches/idna_adapter" }
+
 # Experimental: attempt to unify `curve25519-dalek` across workspace to satisfy Solana and Substrate consumers
 # REVERTED: workspace unification proved incompatible with pinned Substrate deps — keeping isolated SVM integration test instead
 # (was: curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" })
@@ -301,7 +306,3 @@ frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2
 # Patch Substrate git sources for prometheus fix and executor bulk-memory support
 [patch."https://github.com/paritytech/substrate"]
 substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint" }
-# Enable bulk-memory support in the Wasmtime executor so LLVM-generated memory.fill/copy ops work
-sc-executor = { path = "patches/sc-executor" }
-pallet-collective = { path = "patches/pallet-collective" }
-pallet-transaction-payment-rpc-runtime-api = { path = "patches/pallet-transaction-payment-rpc-runtime-api" }

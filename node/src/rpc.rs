@@ -107,7 +107,10 @@ pub trait AtlasKernelApi<BlockHash> {
 pub trait FlashFinalityApi<BlockHash> {
     /// Get Flash Finality certificate for a given block hash
     #[method(name = "x3_finalityProof")]
-    fn get_finality_proof(&self, block_hash: BlockHash) -> RpcResult<Option<flash_finality::FinalityCertificate>>;
+    fn get_finality_proof(
+        &self,
+        block_hash: BlockHash,
+    ) -> RpcResult<Option<flash_finality::FinalityCertificate>>;
 }
 
 /// X3 Domains RPC API
@@ -287,12 +290,15 @@ impl<Block> FlashFinalityApiServer<<Block as BlockT>::Hash> for FlashFinalityRpc
 where
     Block: BlockT,
 {
-    fn get_finality_proof(&self, block_hash: <Block as BlockT>::Hash) -> RpcResult<Option<flash_finality::FinalityCertificate>> {
+    fn get_finality_proof(
+        &self,
+        block_hash: <Block as BlockT>::Hash,
+    ) -> RpcResult<Option<flash_finality::FinalityCertificate>> {
         enforce_rpc_rate_limit("x3_finalityProof")?;
-        
+
         // Convert H256 to [u8; 32]
-        let hash: [u8;32] = block_hash.as_ref().try_into().unwrap_or([0u8; 32]);
-        
+        let hash: [u8; 32] = block_hash.as_ref().try_into().unwrap_or([0u8; 32]);
+
         // Query gadget for certificate
         // We use block_on here because RPC methods are not async in this version of jsonrpsee
         // Or we can make it async if supported.

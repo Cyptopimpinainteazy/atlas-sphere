@@ -34,7 +34,10 @@ mod flash_finality_network_tests {
             finalized.sort();
 
             let mut certs = self.certificates_received.write().await;
-            certs.push(format!("V{}: block {} cert {}", self.id, block_number, cert_hash));
+            certs.push(format!(
+                "V{}: block {} cert {}",
+                self.id, block_number, cert_hash
+            ));
         }
 
         async fn get_finalized_head(&self) -> Option<u64> {
@@ -78,9 +81,11 @@ mod flash_finality_network_tests {
         for i in 0..quorum_needed {
             let head = validators[i].get_finalized_head().await;
             assert_eq!(
-                head, Some(block_number),
+                head,
+                Some(block_number),
                 "Validator {} should have finalized block {}",
-                validators[i].id, block_number
+                validators[i].id,
+                block_number
             );
         }
 
@@ -128,10 +133,20 @@ mod flash_finality_network_tests {
         // Check that finalization happened in order
         for (i, validator) in validators.iter().enumerate().take(2) {
             let count = validator.finalized_count().await;
-            assert_eq!(count, 6, "Validator {} should have finalized 6 blocks", i + 1);
+            assert_eq!(
+                count,
+                6,
+                "Validator {} should have finalized 6 blocks",
+                i + 1
+            );
 
             let head = validator.get_finalized_head().await;
-            assert_eq!(head, Some(105), "Validator {}'s head should be block 105", i + 1);
+            assert_eq!(
+                head,
+                Some(105),
+                "Validator {}'s head should be block 105",
+                i + 1
+            );
         }
     }
 
@@ -207,9 +222,15 @@ mod flash_finality_network_tests {
         // V3: votes for block 100
 
         // First round: all vote for block 100, quorum reached
-        validators[0].apply_certificate(100, block_100.to_string()).await;
-        validators[1].apply_certificate(100, block_100.to_string()).await;
-        validators[2].apply_certificate(100, block_100.to_string()).await;
+        validators[0]
+            .apply_certificate(100, block_100.to_string())
+            .await;
+        validators[1]
+            .apply_certificate(100, block_100.to_string())
+            .await;
+        validators[2]
+            .apply_certificate(100, block_100.to_string())
+            .await;
 
         let head_after_100 = validators[0].get_finalized_head().await;
         assert_eq!(head_after_100, Some(100));
@@ -217,8 +238,12 @@ mod flash_finality_network_tests {
         // In real system: V2's equivocation would be detected and slashed
         // Here we just verify consensus doesn't break:
         // V1 and V3 continue normally to block 101
-        validators[0].apply_certificate(101, block_101.to_string()).await;
-        validators[2].apply_certificate(101, block_101.to_string()).await;
+        validators[0]
+            .apply_certificate(101, block_101.to_string())
+            .await;
+        validators[2]
+            .apply_certificate(101, block_101.to_string())
+            .await;
 
         // V1 and V3 reach quorum, finalize block 101
         for i in [0, 2] {

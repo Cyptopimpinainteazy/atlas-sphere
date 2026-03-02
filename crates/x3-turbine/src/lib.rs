@@ -11,30 +11,30 @@
 //! - **Broadcast**: Efficient multi-peer block distribution
 //! - **Recovery**: Handles missing shreds through erasure coding
 
-pub mod config;
-pub mod shred;
 pub mod blockstore;
 pub mod broadcast;
-pub mod recovery;
-pub mod metrics;
+pub mod config;
 pub mod error;
+pub mod metrics;
 pub mod packet;
 pub mod peer;
+pub mod recovery;
+pub mod shred;
 #[cfg(test)]
 pub mod test_utils;
 
-pub use config::{TurbineConfig, ShredConfig, BroadcastConfig};
-pub use shred::{Shred, ShredType, ShredPayload, ShredFlag};
 pub use blockstore::{Blockstore, BlockstoreConfig, ReceivedShred};
 pub use broadcast::{BroadcastService, BroadcastStats};
-pub use recovery::{ShredRecovery, RecoveryConfig};
-pub use metrics::TurbineMetrics;
+pub use config::{BroadcastConfig, ShredConfig, TurbineConfig};
 pub use error::{TurbineError, TurbineResult};
+pub use metrics::TurbineMetrics;
 pub use packet::{Packet, PacketPool};
-pub use peer::{PeerManager, PeerInfo, PeerRole};
+pub use peer::{PeerInfo, PeerManager, PeerRole};
+pub use recovery::{RecoveryConfig, ShredRecovery};
+pub use shred::{Shred, ShredFlag, ShredPayload, ShredType};
 
-use std::sync::Arc;
 use parking_lot::RwLock;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
 
@@ -89,7 +89,8 @@ impl Turbine {
             self.config.clone(),
             self.peer_manager.clone(),
             self.metrics.clone(),
-        ).await?;
+        )
+        .await?;
 
         *self.broadcast.write() = Some(Arc::new(broadcast));
 
@@ -122,7 +123,11 @@ impl Turbine {
 
     /// Process incoming shred
     pub async fn process_shred(&self, shred: Shred) -> TurbineResult<Option<Vec<u8>>> {
-        debug!("Processing shred: slot={}, index={}", shred.slot(), shred.shred_index());
+        debug!(
+            "Processing shred: slot={}, index={}",
+            shred.slot(),
+            shred.shred_index()
+        );
 
         self.metrics.record_shred_received(shred.shred_type());
 
@@ -146,7 +151,11 @@ impl Turbine {
 
     /// Create and broadcast a new block
     pub async fn broadcast_block(&self, slot: u64, block_data: Vec<u8>) -> TurbineResult<()> {
-        debug!("Broadcasting block: slot={}, size={} bytes", slot, block_data.len());
+        debug!(
+            "Broadcasting block: slot={}, size={} bytes",
+            slot,
+            block_data.len()
+        );
 
         let start_time = std::time::Instant::now();
 
@@ -159,17 +168,17 @@ impl Turbine {
         // Get broadcast service
         let broadcast = {
             let guard = self.broadcast.read();
-            guard
-                .as_ref()
-                .cloned()
-                .ok_or_else(|| TurbineError::NotStarted("Broadcast service not initialized".into()))?
+            guard.as_ref().cloned().ok_or_else(|| {
+                TurbineError::NotStarted("Broadcast service not initialized".into())
+            })?
         };
 
         // Broadcast to peers
         broadcast.broadcast_shreds(shreds).await?;
 
         let elapsed = start_time.elapsed();
-        self.metrics.record_broadcast_time(elapsed.as_millis() as u64);
+        self.metrics
+            .record_broadcast_time(elapsed.as_millis() as u64);
 
         info!(
             "Block broadcast completed: slot={}, shreds={}, time={}ms",
@@ -183,7 +192,10 @@ impl Turbine {
 
     /// Request missing shreds from peers
     pub async fn request_missing_shreds(&self, slot: u64, indices: &[u32]) -> TurbineResult<()> {
-        debug!("Requesting missing shreds: slot={}, indices={:?}", slot, indices);
+        debug!(
+            "Requesting missing shreds: slot={}, indices={:?}",
+            slot, indices
+        );
 
         self.peer_manager.request_shreds(slot, indices).await
     }

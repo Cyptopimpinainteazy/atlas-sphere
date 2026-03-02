@@ -514,7 +514,7 @@ mod tests {
             reserve_a: 1_000_000_000_000_000_000u128,
             reserve_b: 2_000_000_000_000_000_000u128,
             fee_bps: 30,
-            address: vec![0u8; 20],
+            address: BoundedVec::try_from(vec![0u8; 20]).unwrap(),
         }
     }
 

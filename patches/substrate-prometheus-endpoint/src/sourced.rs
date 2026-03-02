@@ -111,7 +111,8 @@ impl<T: SourcedType, S: MetricSource> Collector for SourcedMetric<T, S> {
                         l
                     })
                     .chain(self.desc.const_label_pairs.iter().cloned())
-                    .collect::<Vec<_>>(), // Convert Vec<LabelPair> to RepeatedField<LabelPair>
+                    .collect::<Vec<_>>()
+                    .into(),
             );
 
             counters.push(m);
@@ -122,7 +123,7 @@ impl<T: SourcedType, S: MetricSource> Collector for SourcedMetric<T, S> {
         m.set_help(self.desc.help.clone());
         m.set_field_type(T::proto());
         // FIX: Convert Vec to RepeatedField using .into()
-        m.set_metric(counters);
+        m.set_metric(counters.into());
 
         vec![m]
     }

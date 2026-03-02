@@ -47,7 +47,7 @@ impl BroadcastService {
     /// Broadcast shreds to peers
     pub async fn broadcast_shreds(&self, shreds: Vec<Shred>) -> TurbineResult<()> {
         let peer_count = self.peer_manager.peer_count();
-        
+
         if peer_count == 0 {
             debug!("No peers available for broadcast");
             return Ok(());
@@ -58,8 +58,8 @@ impl BroadcastService {
         let shred_index = shreds[0].shred_index();
         // Here we simulate being 'peer-0' or the root if we're generating the block.
         // In full integration, the node's local PeerId would be used.
-        let my_id = "local-node-id"; 
-        
+        let my_id = "local-node-id";
+
         let peers = self.peer_manager.get_broadcast_children(
             slot,
             shred_index,
@@ -72,7 +72,11 @@ impl BroadcastService {
             return Ok(());
         }
 
-        debug!("Broadcasting {} shreds to {} peers", shreds.len(), peers.len());
+        debug!(
+            "Broadcasting {} shreds to {} peers",
+            shreds.len(),
+            peers.len()
+        );
 
         // In a real implementation, this would send to actual network
         // For now, we simulate the broadcast

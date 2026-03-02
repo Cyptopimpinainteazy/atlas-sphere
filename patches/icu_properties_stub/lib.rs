@@ -6,32 +6,8 @@
 
 // Props module with Unicode character properties
 pub mod props {
-    #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-    #[repr(transparent)]
-    pub struct GeneralCategory(pub u8);
-    
-    impl GeneralCategory {
-        pub const EnclosingMark: GeneralCategory = GeneralCategory(1);
-        pub const NonspacingMark: GeneralCategory = GeneralCategory(2);
-        pub const SpacingMark: GeneralCategory = GeneralCategory(3);
-    }
-    
-    impl From<GeneralCategory> for u32 {
-        fn from(gc: GeneralCategory) -> u32 {
-            gc.0 as u32
-        }
-    }
-    
-    #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-    #[repr(transparent)]
-    pub struct JoiningType(pub u8);
-    
-    impl JoiningType {
-        pub const DualJoining: JoiningType = JoiningType(1);
-        pub const LeftJoining: JoiningType = JoiningType(2);
-        pub const RightJoining: JoiningType = JoiningType(3);
-        pub const Transparent: JoiningType = JoiningType(4);
-    }
+    // For simplicity and compatibility, GeneralCategory is a u32 wrapper that acts like a primitive
+    pub use super::GeneralCategory;
     
     #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
     #[repr(transparent)]
@@ -50,12 +26,54 @@ pub mod props {
         pub const OtherNeutral: BidiClass = BidiClass(10);
         pub const RightToLeft: BidiClass = BidiClass(11);
         
-        pub fn to_icu4c_value(self) -> u32 {
+        pub const fn to_icu4c_value(self) -> u32 {
+            self.0 as u32
+        }
+    }
+    
+    #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+    #[repr(transparent)]
+    pub struct JoiningType(pub u8);
+    
+    impl JoiningType {
+        pub const DualJoining: JoiningType = JoiningType(1);
+        pub const LeftJoining: JoiningType = JoiningType(2);
+        pub const RightJoining: JoiningType = JoiningType(3);
+        pub const Transparent: JoiningType = JoiningType(4);
+        
+        pub const fn to_icu4c_value(self) -> u32 {
             self.0 as u32
         }
     }
     
     pub const ASCII_HEX_DIGIT: u8 = 0;
+}
+
+// GeneralCategory as a newtype struct with constants for idna_adapter compatibility
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct GeneralCategory(pub u32);
+
+impl GeneralCategory {
+    // Associated constants that idna_adapter expects
+    pub const NonspacingMark: Self = GeneralCategory(1);
+    pub const SpacingMark: Self = GeneralCategory(2);
+    pub const EnclosingMark: Self = GeneralCategory(3);
+}
+
+// Impl From so we can convert to u32
+impl From<GeneralCategory> for u32 {
+    #[inline]
+    fn from(gc: GeneralCategory) -> u32 {
+        gc.0
+    }
+}
+
+// Impl From u32 so we can convert from u32
+impl From<u32> for GeneralCategory {
+    #[inline]
+    fn from(v: u32) -> Self {
+        GeneralCategory(v)
+    }
 }
 
 pub mod provider {
@@ -71,21 +89,54 @@ pub struct CodePointMap<T> {
 }
 
 #[derive(Clone, Debug)]
-pub struct CodePointMapDataBorrowed;
+pub struct CodePointMapDataBorrowed<'a, T> {
+    pub _marker: (core::marker::PhantomData<&'a ()>, core::marker::PhantomData<T>),
+}
 
-/// Generic stub for CodePointMapData that matches the real icu_properties API
+impl<'a> CodePointMapDataBorrowed<'a, props::GeneralCategory> {
+    pub const fn get(&self, _cp: char) -> props::GeneralCategory {
+        props::GeneralCategory(0)
+    }
+    
+    // Also provide u32 version for compatibility
+    pub const fn get_u32(&self, _cp: u32) -> props::GeneralCategory {
+        props::GeneralCategory(0)
+    }
+}
+
+impl<'a> CodePointMapDataBorrowed<'a, props::BidiClass> {
+    pub const fn get(&self, _cp: char) -> props::BidiClass {
+        props::BidiClass(0)
+    }
+    
+    pub const fn get_u32(&self, _cp: u32) -> props::BidiClass {
+        props::BidiClass(0)
+    }
+}
+
+impl<'a> CodePointMapDataBorrowed<'a, props::JoiningType> {
+    pub const fn get(&self, _cp: char) -> props::JoiningType {
+        props::JoiningType(0)
+    }
+    
+    pub const fn get_u32(&self, _cp: u32) -> props::JoiningType {
+        props::JoiningType(0)
+    }
+}
+
+/// Generic stub for CodePointMapData - in the stub, this directly provides borrowed data
 #[derive(Clone, Debug)]
-pub struct CodePointMapData<T = ()> {
+pub struct CodePointMapData<T> {
     pub _marker: core::marker::PhantomData<T>,
 }
 
 impl<T: Default> CodePointMapData<T> {
-    pub fn new() -> Self {
-        CodePointMapData { _marker: core::marker::PhantomData }
+    pub const fn new() -> CodePointMapDataBorrowed<'static, T> {
+        CodePointMapDataBorrowed { _marker: (core::marker::PhantomData, core::marker::PhantomData) }
     }
     
-    pub fn as_borrowed(&self) -> CodePointMapDataBorrowed {
-        CodePointMapDataBorrowed
+    pub fn as_borrowed(&self) -> CodePointMapDataBorrowed<'static, T> {
+        CodePointMapDataBorrowed { _marker: (core::marker::PhantomData, core::marker::PhantomData) }
     }
 }
 

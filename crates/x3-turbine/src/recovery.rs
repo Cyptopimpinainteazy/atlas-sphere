@@ -49,7 +49,7 @@ impl ShredRecovery {
     pub fn new(config: RecoveryConfig, metrics: Arc<TurbineMetrics>) -> Self {
         // Default to reasonable values for erasure code
         let erasure_code = ErasureCode::new(32, 16);
-        
+
         Self {
             config,
             erasure_code,
@@ -76,7 +76,12 @@ impl ShredRecovery {
     }
 
     /// Attempt to recover missing shreds
-    pub fn recover(&self, slot: u64, data_shreds: &[Vec<u8>], coding_shreds: &[Vec<u8>]) -> TurbineResult<Vec<Shred>> {
+    pub fn recover(
+        &self,
+        slot: u64,
+        data_shreds: &[Vec<u8>],
+        coding_shreds: &[Vec<u8>],
+    ) -> TurbineResult<Vec<Shred>> {
         if !self.config.enable_coding_recovery {
             return Ok(Vec::new());
         }
@@ -87,24 +92,26 @@ impl ShredRecovery {
         if data_shreds.len() < data_needed && coding_shreds.is_empty() {
             warn!("Cannot recover: not enough shreds for recovery");
             self.metrics.record_recovery_failed();
-            return Err(TurbineError::RecoveryError("Insufficient shreds for recovery".into()));
+            return Err(TurbineError::RecoveryError(
+                "Insufficient shreds for recovery".into(),
+            ));
         }
 
         // Use erasure code to recover
         let recovered = self.erasure_code.decode(data_shreds, coding_shreds, &[]);
-        
+
         match recovered {
             Some(data) => {
                 self.metrics.record_recovery_success();
                 // Create recovered shreds
                 let shreds = Vec::new();
                 let chunk_size = data.len() / data_needed;
-                
+
                 for (i, _chunk) in data.chunks(chunk_size).enumerate() {
                     // In real implementation, would create proper Shred objects
                     debug!("Recovered shred {} for slot {}", i, slot);
                 }
-                
+
                 Ok(shreds)
             }
             None => {
@@ -117,7 +124,7 @@ impl ShredRecovery {
     /// Request recovery from peers
     pub fn request_recovery(&self, slot: u64, missing_indices: &[u32]) -> bool {
         let mut requests = self.pending_requests.write();
-        
+
         if let Some(req) = requests.get_mut(&slot) {
             if req.attempts >= self.config.max_recovery_attempts {
                 return false;
@@ -125,14 +132,17 @@ impl ShredRecovery {
             req.attempts += 1;
             debug!("Recovery attempt {} for slot {}", req.attempts, slot);
         } else {
-            requests.insert(slot, RecoveryRequest {
-                _slot: slot,
-                _missing_indices: missing_indices.to_vec(),
-                attempts: 1,
-                requested_at: Instant::now(),
-            });
+            requests.insert(
+                slot,
+                RecoveryRequest {
+                    _slot: slot,
+                    _missing_indices: missing_indices.to_vec(),
+                    attempts: 1,
+                    requested_at: Instant::now(),
+                },
+            );
         }
-        
+
         true
     }
 
@@ -140,7 +150,7 @@ impl ShredRecovery {
     pub fn check_timeouts(&self) -> Vec<u64> {
         let mut requests = self.pending_requests.write();
         let mut timed_out = Vec::new();
-        
+
         requests.retain(|slot, req| {
             let timed_out_now = req.requested_at.elapsed() > self.config.recovery_timeout;
             if timed_out_now {
@@ -148,7 +158,7 @@ impl ShredRecovery {
             }
             !timed_out_now
         });
-        
+
         timed_out
     }
 }

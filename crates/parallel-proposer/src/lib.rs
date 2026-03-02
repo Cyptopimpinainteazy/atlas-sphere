@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
-use tracing::{info, warn, trace};
+use tracing::{info, trace, warn};
 
 /// Transaction metadata consumed by the proposer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -145,7 +145,11 @@ impl ParallelProposer {
         declared_access: Option<DeclaredAccess>,
     ) -> Result<()> {
         let mut state = self.state.lock().await;
-        if state.tx_pool.iter().any(|pending| pending.tx_hash == tx.tx_hash) {
+        if state
+            .tx_pool
+            .iter()
+            .any(|pending| pending.tx_hash == tx.tx_hash)
+        {
             return Err(anyhow!("transaction already in pool"));
         }
 
@@ -216,7 +220,9 @@ impl ParallelProposer {
 
         // EXECUTION: Use rayon to execute shards in parallel on available CPU cores.
         // This satisfies the "assign tx batches to CPU cores" requirement.
-        let overlay_outputs: Vec<OverlayDiff> = plan.shards.par_iter()
+        let overlay_outputs: Vec<OverlayDiff> = plan
+            .shards
+            .par_iter()
             .map(|shard| execute_shard(shard, &valid_txs, &state.access_metadata))
             .collect();
 
@@ -256,7 +262,8 @@ impl ParallelProposer {
             .shards
             .iter()
             .map(|shard| {
-                shard.tx_indices
+                shard
+                    .tx_indices
                     .iter()
                     .map(|idx| valid_txs[*idx].1.tx_hash.clone())
                     .collect::<Vec<_>>()
@@ -337,21 +344,23 @@ use libloading::{Library, Symbol};
 use once_cell::sync::Lazy;
 
 /// Path to the CUDA kernels build directory.
-const CUDA_LIB_PATH: &str = "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src/cu_kernels/build/libed25519_batch.so";
+const CUDA_LIB_PATH: &str =
+    "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src/cu_kernels/build/libed25519_batch.so";
 
 type VerifyBatchFn = unsafe extern "C" fn(*const u8, i32, *mut u8) -> i32;
 
-static GPU_LIB: Lazy<Option<Library>> = Lazy::new(|| {
-    unsafe {
-        match Library::new(CUDA_LIB_PATH) {
-            Ok(lib) => {
-                info!("🚀 [ParallelProposer] NVIDIA GPU signature verifier loaded: {}", CUDA_LIB_PATH);
-                Some(lib)
-            }
-            Err(e) => {
-                warn!("⚠️ [ParallelProposer] GPU signature verifier unavailable (falling back to CPU): {}", e);
-                None
-            }
+static GPU_LIB: Lazy<Option<Library>> = Lazy::new(|| unsafe {
+    match Library::new(CUDA_LIB_PATH) {
+        Ok(lib) => {
+            info!(
+                "🚀 [ParallelProposer] NVIDIA GPU signature verifier loaded: {}",
+                CUDA_LIB_PATH
+            );
+            Some(lib)
+        }
+        Err(e) => {
+            warn!("⚠️ [ParallelProposer] GPU signature verifier unavailable (falling back to CPU): {}", e);
+            None
         }
     }
 });
@@ -361,7 +370,9 @@ struct SignatureVerifier;
 impl SignatureVerifier {
     fn verify_signatures(&self, txs: &[TransactionMeta], _batch_size: usize) -> Vec<bool> {
         let count = txs.len();
-        if count == 0 { return Vec::new(); }
+        if count == 0 {
+            return Vec::new();
+        }
 
         // Attempt GPU offload if library is available
         if let Some(lib) = &*GPU_LIB {
@@ -374,7 +385,7 @@ impl SignatureVerifier {
                         // Prepare 128-byte entry for CUDA kernel
                         // [0..31] R, [32..63] s, [64..95] A, [96..127] M
                         let mut entry = [0u8; 128];
-                        
+
                         // Parse signature (assumed hex R+s)
                         if let Ok(sig_bytes) = hex::decode(&tx.signature) {
                             if sig_bytes.len() >= 64 {
@@ -385,13 +396,13 @@ impl SignatureVerifier {
                         // Parse public key (assumed hex sender)
                         if let Ok(pub_bytes) = hex::decode(&tx.sender.trim_start_matches("0x")) {
                             let len = pub_bytes.len().min(32);
-                            entry[64..64+len].copy_from_slice(&pub_bytes[0..len]);
+                            entry[64..64 + len].copy_from_slice(&pub_bytes[0..len]);
                         }
 
                         // Message is SHA256 of tx_hash
                         if let Ok(hash_bytes) = hex::decode(&tx.tx_hash) {
                             let len = hash_bytes.len().min(32);
-                            entry[96..96+len].copy_from_slice(&hash_bytes[0..len]);
+                            entry[96..96 + len].copy_from_slice(&hash_bytes[0..len]);
                         }
 
                         entries.extend_from_slice(&entry);
@@ -399,7 +410,10 @@ impl SignatureVerifier {
 
                     let res = verify_fn(entries.as_ptr(), count as i32, results.as_mut_ptr());
                     if res == 0 {
-                        trace!("[ParallelProposer] GPU verified {} signatures successfully", count);
+                        trace!(
+                            "[ParallelProposer] GPU verified {} signatures successfully",
+                            count
+                        );
                         return results.iter().map(|&r| r == 1).collect();
                     } else {
                         warn!("[ParallelProposer] GPU batch verification failed (res={}), falling back to CPU", res);
@@ -437,7 +451,11 @@ impl ContentionPredictor {
         let mut out = HashMap::with_capacity(txs.len());
         for tx in txs {
             let contention_score = contention_score(tx);
-            let confidence = if tx.contract_address.is_some() { 0.88 } else { 0.62 };
+            let confidence = if tx.contract_address.is_some() {
+                0.88
+            } else {
+                0.62
+            };
             let suggested_shard = (stable_hash_u64(&tx.tx_hash) as usize) % self.shard_count;
             out.insert(
                 tx.tx_hash.clone(),
@@ -465,7 +483,11 @@ fn stable_hash_u64(input: &str) -> u64 {
 fn contention_score(tx: &TransactionMeta) -> f64 {
     let value_term = (tx.value as f64 / 10_000_000_000.0).min(0.4);
     let gas_term = (tx.gas_price as f64 / 200_000_000.0).min(0.4);
-    let vm_term = if tx.contract_address.is_some() { 0.2 } else { 0.05 };
+    let vm_term = if tx.contract_address.is_some() {
+        0.2
+    } else {
+        0.05
+    };
     (value_term + gas_term + vm_term).min(1.0)
 }
 
@@ -547,7 +569,8 @@ impl DeterministicScheduler {
             } else if let Some(conflict_idx) = conflicting_shards.first().copied() {
                 conflict_idx
             } else if let Some(pred) = hint {
-                if pred.confidence >= self.min_predictor_confidence && pred.suggested_shard < shards.len()
+                if pred.confidence >= self.min_predictor_confidence
+                    && pred.suggested_shard < shards.len()
                 {
                     pred.suggested_shard
                 } else {
@@ -848,12 +871,36 @@ mod tests {
     async fn determinism_same_txs_different_parallelism_same_state_root() {
         // Fixed tx set with declared non-overlapping access sets
         let txs: Vec<(&str, &str, DeclaredAccess)> = vec![
-            ("tx-1", "sig1111111111111111", mk_access(&["r:account:1"], &["w:balance:1"])),
-            ("tx-2", "sig2222222222222222", mk_access(&["r:account:2"], &["w:balance:2"])),
-            ("tx-3", "sig3333333333333333", mk_access(&["r:account:3"], &["w:balance:3"])),
-            ("tx-4", "sig4444444444444444", mk_access(&["r:account:4"], &["w:balance:4"])),
-            ("tx-5", "sig5555555555555555", mk_access(&["r:account:5"], &["w:balance:5"])),
-            ("tx-6", "sig6666666666666666", mk_access(&["r:account:6"], &["w:balance:6"])),
+            (
+                "tx-1",
+                "sig1111111111111111",
+                mk_access(&["r:account:1"], &["w:balance:1"]),
+            ),
+            (
+                "tx-2",
+                "sig2222222222222222",
+                mk_access(&["r:account:2"], &["w:balance:2"]),
+            ),
+            (
+                "tx-3",
+                "sig3333333333333333",
+                mk_access(&["r:account:3"], &["w:balance:3"]),
+            ),
+            (
+                "tx-4",
+                "sig4444444444444444",
+                mk_access(&["r:account:4"], &["w:balance:4"]),
+            ),
+            (
+                "tx-5",
+                "sig5555555555555555",
+                mk_access(&["r:account:5"], &["w:balance:5"]),
+            ),
+            (
+                "tx-6",
+                "sig6666666666666666",
+                mk_access(&["r:account:6"], &["w:balance:6"]),
+            ),
         ];
 
         let mut state_roots: Vec<String> = Vec::new();
@@ -877,8 +924,11 @@ mod tests {
 
             // Reconstruct overlays from the proposal's shard plan
             // (We use create_proposal's execution_order as the deterministic ordering)
-            let ordered_hashes: Vec<String> =
-                proposal.transactions.iter().map(|tx| tx.tx_hash.clone()).collect();
+            let ordered_hashes: Vec<String> = proposal
+                .transactions
+                .iter()
+                .map(|tx| tx.tx_hash.clone())
+                .collect();
 
             // Simulate overlay computation: write declared writes per tx in order
             let mut overlay_writes: BTreeMap<String, String> = BTreeMap::new();
@@ -935,7 +985,9 @@ mod tests {
         // Execution overlay writes a key not in the declared set
         let mut actual_writes = BTreeMap::new();
         actual_writes.insert("w:balance:42".to_string(), "tx-rogue".to_string());
-        let overlay = OverlayDiff { writes: actual_writes };
+        let overlay = OverlayDiff {
+            writes: actual_writes,
+        };
 
         let violations = find_undeclared_writes(&overlay, &declared);
 
@@ -960,7 +1012,9 @@ mod tests {
 
         let mut actual_writes = BTreeMap::new();
         actual_writes.insert("w:balance:42".to_string(), "tx-honest".to_string());
-        let overlay = OverlayDiff { writes: actual_writes };
+        let overlay = OverlayDiff {
+            writes: actual_writes,
+        };
 
         let violations = find_undeclared_writes(&overlay, &declared);
         assert!(violations.is_empty(), "No violation for declared write");
@@ -1064,4 +1118,3 @@ mod tests {
         assert!(conflicts.is_empty(), "No conflict for disjoint key sets");
     }
 }
-

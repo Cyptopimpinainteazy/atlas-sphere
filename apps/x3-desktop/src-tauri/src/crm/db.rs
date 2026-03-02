@@ -139,6 +139,28 @@ impl CrmDb {
                 created_at      TEXT NOT NULL
             );
 
+            /* ── Campaigns ── */
+            CREATE TABLE IF NOT EXISTS crm_campaigns (
+                id              TEXT PRIMARY KEY,
+                owner_user_id   TEXT NOT NULL,
+                name            TEXT NOT NULL,
+                description     TEXT DEFAULT '',
+                campaign_type   TEXT DEFAULT 'email',
+                status          TEXT DEFAULT 'draft',
+                target_contacts INTEGER DEFAULT 0,
+                sent_count      INTEGER DEFAULT 0,
+                opened_count    INTEGER DEFAULT 0,
+                clicked_count   INTEGER DEFAULT 0,
+                conversion_count INTEGER DEFAULT 0,
+                scheduled_at    TEXT DEFAULT '',
+                started_at      TEXT DEFAULT '',
+                completed_at    TEXT DEFAULT '',
+                created_at      TEXT NOT NULL,
+                updated_at      TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_crm_campaigns_owner ON crm_campaigns(owner_user_id);
+            CREATE INDEX IF NOT EXISTS idx_crm_campaigns_status ON crm_campaigns(status);
+
             CREATE INDEX IF NOT EXISTS idx_crm_contacts_owner ON crm_contacts(owner_user_id);
             CREATE INDEX IF NOT EXISTS idx_crm_events_owner ON crm_events(owner_user_id);
             CREATE INDEX IF NOT EXISTS idx_crm_events_start ON crm_events(start_at);

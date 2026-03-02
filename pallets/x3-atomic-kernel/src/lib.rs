@@ -72,11 +72,7 @@ pub mod proof;
 #[frame_support::pallet]
 pub mod pallet {
     use super::proof::{BundleLeg, PoaeProof};
-    use frame_support::{
-        dispatch::DispatchResult,
-        pallet_prelude::*,
-        traits::Currency,
-    };
+    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::Currency};
     use frame_system::pallet_prelude::*;
     use sp_core::H256;
     use sp_runtime::traits::Hash;
@@ -112,7 +108,7 @@ pub mod pallet {
     pub type Bundles<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        H256,    // bundle_id
+        H256, // bundle_id
         BundleRecord<T>,
         OptionQuery,
     >;
@@ -123,7 +119,7 @@ pub mod pallet {
     pub type PoaeProofs<T: Config> = StorageMap<
         _,
         Blake2_128Concat,
-        H256,     // bundle_id
+        H256, // bundle_id
         PoaeProof,
         OptionQuery,
     >;
@@ -277,16 +273,17 @@ pub mod pallet {
             );
 
             let now = <frame_system::Pallet<T>>::block_number();
-            let deadline = now.saturating_add(
-                deadline_blocks.min(T::BundleDeadlineBlocks::get())
-            );
+            let deadline = now.saturating_add(deadline_blocks.min(T::BundleDeadlineBlocks::get()));
 
             // Derive a deterministic bundle_id
             let legs_encoded = legs.encode();
             let legs_hash = T::Hashing::hash(&legs_encoded);
             let bundle_id = Self::derive_bundle_id(&submitter, now, legs_hash);
 
-            ensure!(!Bundles::<T>::contains_key(bundle_id), Error::<T>::BundleAlreadyExists);
+            ensure!(
+                !Bundles::<T>::contains_key(bundle_id),
+                Error::<T>::BundleAlreadyExists
+            );
 
             let record = BundleRecord::<T> {
                 submitter: submitter.clone(),
@@ -356,7 +353,10 @@ pub mod pallet {
             ensure!(now <= record.deadline_block, Error::<T>::DeadlineExpired);
 
             // Build and store PoAE proof
-            ensure!(!PoaeProofs::<T>::contains_key(bundle_id), Error::<T>::ProofAlreadyExists);
+            ensure!(
+                !PoaeProofs::<T>::contains_key(bundle_id),
+                Error::<T>::ProofAlreadyExists
+            );
 
             let proof = PoaeProof {
                 bundle_id,
@@ -405,8 +405,7 @@ pub mod pallet {
 
             // Only Pending or Executing bundles can be rolled back
             ensure!(
-                record.status == BundleStatus::Pending
-                    || record.status == BundleStatus::Executing,
+                record.status == BundleStatus::Pending || record.status == BundleStatus::Executing,
                 Error::<T>::InvalidBundleState
             );
 

@@ -101,13 +101,16 @@ impl PeerManager {
     /// Add a peer
     pub fn add_peer(&self, peer: PeerInfo) {
         let mut peers = self.peers.write();
-        peers.insert(peer.id.clone(), PeerState {
-            peer: peer.clone(),
-            _shreds_received: 0,
-            _shreds_sent: 0,
-            _last_slot: None,
-        });
-        
+        peers.insert(
+            peer.id.clone(),
+            PeerState {
+                peer: peer.clone(),
+                _shreds_received: 0,
+                _shreds_sent: 0,
+                _last_slot: None,
+            },
+        );
+
         // Update cache
         self.peer_cache.write().put(peer.id.clone(), peer);
     }
@@ -125,7 +128,8 @@ impl PeerManager {
 
     /// Get all active peers
     pub fn get_active_peers(&self) -> Vec<PeerInfo> {
-        self.peers.read()
+        self.peers
+            .read()
             .values()
             .filter(|s| s.peer.is_active)
             .map(|s| s.peer.clone())
@@ -149,7 +153,9 @@ impl PeerManager {
         }
 
         // Get peers sorted by stake (higher stake = more likely to have data)
-        let mut peers: Vec<_> = self.peers.read()
+        let mut peers: Vec<_> = self
+            .peers
+            .read()
             .values()
             .filter(|s| s.peer.is_active)
             .map(|s| &s.peer)
@@ -165,14 +171,14 @@ impl PeerManager {
     /// Request shreds from peers
     pub async fn request_shreds(&self, slot: u64, indices: &[u32]) -> TurbineResult<()> {
         debug!("Requesting shreds for slot {}: {:?}", slot, indices);
-        
+
         let peers = self.get_peers_for_slot(slot, 5);
-        
+
         for peer in peers {
             debug!("Requesting from peer: {}", peer.id);
             // In real implementation, would send actual request
         }
-        
+
         Ok(())
     }
 
@@ -194,14 +200,13 @@ impl PeerManager {
     /// Check for stale peers
     pub fn cleanup_stale_peers(&self, max_age: Duration) {
         let mut peers = self.peers.write();
-        peers.retain(|_, state| {
-            state.peer.last_seen.elapsed() < max_age
-        });
+        peers.retain(|_, state| state.peer.last_seen.elapsed() < max_age);
     }
 
     /// Get peers by role
     pub fn get_peers_by_role(&self, role: PeerRole) -> Vec<PeerInfo> {
-        self.peers.read()
+        self.peers
+            .read()
             .values()
             .filter(|s| s.peer.role == role && s.peer.is_active)
             .map(|s| s.peer.clone())
@@ -231,14 +236,12 @@ impl PeerManager {
 
         // 1. Gather & Sort (deterministic base list)
         let mut peers = self.get_active_peers();
-        peers.sort_by(|a, b| {
-            b.stake.cmp(&a.stake).then_with(|| a.id.cmp(&b.id))
-        });
+        peers.sort_by(|a, b| b.stake.cmp(&a.stake).then_with(|| a.id.cmp(&b.id)));
 
         // The generator node must be removed (it's the implicit root)
         // For simplicity in this implementation, we assume `peers` is the full set
         // of receivers (meaning the leader is excluded from this list, or handled separately).
-        
+
         if peers.is_empty() {
             return vec![];
         }
@@ -249,7 +252,7 @@ impl PeerManager {
         let mut bytes = Vec::with_capacity(12);
         bytes.extend_from_slice(&slot.to_le_bytes());
         bytes.extend_from_slice(&shred_index.to_le_bytes());
-        
+
         let hash = blake3::hash(&bytes);
         seed[..32].copy_from_slice(hash.as_bytes());
 
@@ -267,13 +270,13 @@ impl PeerManager {
         // For 0-indexed complete k-ary tree:
         // Children of node i are at `fanout * i + 1` to `fanout * i + fanout`
         let start_idx = fanout * my_pos + 1;
-        
+
         if start_idx >= peers.len() {
             return vec![]; // Leaf node, no children
         }
 
         let end_idx = (start_idx + fanout).min(peers.len());
-        
+
         peers[start_idx..end_idx].to_vec()
     }
 }
@@ -286,7 +289,7 @@ mod tests {
     fn test_turbine_propagation_tree() {
         let config = TurbineConfig::default();
         let manager = PeerManager::new(config);
-        
+
         // Add 13 peers (1 root + 3 children + 9 grandchildren) -> exactly fits fanout=3
         for i in 0..13 {
             manager.add_peer(PeerInfo::new(
@@ -298,29 +301,32 @@ mod tests {
 
         // Test one deterministic permutation
         let children = manager.get_broadcast_children(100, 5, "peer-0", 3);
-        
+
         assert!(children.len() <= 3, "Fanout limit respected");
-        
+
         // Let's verify no duplicate children overall by manually reconstructing the tree
         let mut all_assigned_children = std::collections::HashSet::new();
         let mut total_edges = 0;
-        
+
         for i in 0..13 {
             let peer_id = format!("peer-{}", i);
             let my_children = manager.get_broadcast_children(100, 5, &peer_id, 3);
             for c in my_children {
-                assert!(all_assigned_children.insert(c.id.clone()), "Duplicate child assigned!");
+                assert!(
+                    all_assigned_children.insert(c.id.clone()),
+                    "Duplicate child assigned!"
+                );
                 total_edges += 1;
             }
         }
-        
+
         // 13 nodes mapped to a k-ary tree means 1 root and 12 edges
         assert_eq!(total_edges, 12, "Tree should have N-1 edges");
-        
+
         // Verify different shred indices yield different trees
         let children_shred5 = manager.get_broadcast_children(100, 5, "peer-0", 3);
         let children_shred6 = manager.get_broadcast_children(100, 6, "peer-0", 3);
-        
+
         // While theoretically they could be identical randomly, the probability is 1/13!
         // so we can safely assert they differ for at least one node in practice.
         let mut diff_found = false;
@@ -328,11 +334,16 @@ mod tests {
             let pid = format!("peer-{}", i);
             let c5 = manager.get_broadcast_children(100, 5, &pid, 3);
             let c6 = manager.get_broadcast_children(100, 6, &pid, 3);
-            if c5.iter().map(|c| &c.id).collect::<Vec<_>>() != c6.iter().map(|c| &c.id).collect::<Vec<_>>() {
+            if c5.iter().map(|c| &c.id).collect::<Vec<_>>()
+                != c6.iter().map(|c| &c.id).collect::<Vec<_>>()
+            {
                 diff_found = true;
                 break;
             }
         }
-        assert!(diff_found, "Tree shape should jump unpredictably based on shred index");
+        assert!(
+            diff_found,
+            "Tree shape should jump unpredictably based on shred index"
+        );
     }
 }

@@ -2,10 +2,10 @@
 
 use crate::error::TurbineResult;
 use bytes::{Buf, BufMut};
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::Arc;
-use parking_lot::Mutex;
 
 /// Packet data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,58 +46,66 @@ impl Packet {
     /// Serialize packet to bytes
     pub fn serialize(&self) -> TurbineResult<Vec<u8>> {
         let mut buf = Vec::new();
-        
+
         // Write address length and address
         let addr_bytes = self.addr.as_bytes();
         buf.put_u32(addr_bytes.len() as u32);
         buf.put_slice(addr_bytes);
-        
+
         // Write data length and data
         buf.put_u32(self.data.len() as u32);
         buf.put_slice(&self.data);
-        
+
         // Write metadata
         buf.put_u64(self.meta.size as u64);
         buf.put_u64(self.meta.timestamp);
-        
+
         if let Some(slot) = self.meta.slot {
             buf.put_u8(1);
             buf.put_u64(slot);
         } else {
             buf.put_u8(0);
         }
-        
+
         if let Some(index) = self.meta.shred_index {
             buf.put_u8(1);
             buf.put_u32(index);
         } else {
             buf.put_u8(0);
         }
-        
+
         Ok(buf)
     }
 
     /// Deserialize packet from bytes
     pub fn deserialize(data: &[u8]) -> TurbineResult<Self> {
         let mut buf = data;
-        
+
         // Read address
         let addr_len = buf.get_u32() as usize;
         let addr = String::from_utf8_lossy(&buf[..addr_len]).to_string();
         buf.advance(addr_len);
-        
+
         // Read data
         let data_len = buf.get_u32() as usize;
         let data = buf[..data_len].to_vec();
         buf.advance(data_len);
-        
+
         // Read metadata
         let size = buf.get_u64() as usize;
         let timestamp = buf.get_u64();
-        
-        let slot = if buf.get_u8() == 1 { Some(buf.get_u64()) } else { None };
-        let shred_index = if buf.get_u8() == 1 { Some(buf.get_u32()) } else { None };
-        
+
+        let slot = if buf.get_u8() == 1 {
+            Some(buf.get_u64())
+        } else {
+            None
+        };
+        let shred_index = if buf.get_u8() == 1 {
+            Some(buf.get_u32())
+        } else {
+            None
+        };
+
         Ok(Self {
             addr,
             data,
@@ -127,9 +135,15 @@ impl PacketPool {
     }
 
     /// Get a packet from the pool
-    pub fn get(&self, addr: String, data: Vec<u8>, slot: Option<u64>, shred_index: Option<u32>) -> Packet {
+    pub fn get(
+        &self,
+        addr: String,
+        data: Vec<u8>,
+        slot: Option<u64>,
+        shred_index: Option<u32>,
+    ) -> Packet {
         let mut pool = self.pool.lock();
-        
+
         if let Some(mut packet) = pool.pop_front() {
             packet.addr = addr;
             let data_len = data.len();

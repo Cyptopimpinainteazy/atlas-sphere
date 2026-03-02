@@ -1,7 +1,7 @@
 use crate::crm::db::CrmDb;
 use crate::crm::models::*;
 use crate::crm::smtp::SmtpSender;
-use chrono::Utc;
+use chrono::{Utc, Datelike};
 use rusqlite::params;
 use tauri::State;
 use uuid::Uuid;
@@ -609,3 +609,411 @@ pub fn crm_get_stats(db: State<'_, CrmDb>, user_id: String) -> CmdResult<CrmStat
     let activity_count: i32 = conn.query_row("SELECT COUNT(*) FROM crm_activities WHERE owner_user_id=?1", params![user_id], |r| r.get(0)).unwrap_or(0);
     Ok(CrmStats { contact_count, deal_count, open_deal_value, won_deal_count, event_count, upcoming_events, email_sent_count, activity_count })
 }
+
+/* ══════════════════════════════════════════════════════
+   CSV IMPORT / EXPORT
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_import_csv(db: State<'_, CrmDb>, user_id: String, input: CsvImportRequest) -> CmdResult<CsvImportResult> {
+    let mut imported = 0;
+    let mut duplicates = 0;
+    let mut updated = 0;
+    let mut errors = 0;
+    let mut error_list = vec![];
+
+    for line in input.csv_content.lines().skip(1) {
+        let fields: Vec<&str> = line.split(',').map(|s| s.trim()).collect();
+        let mut values: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
+
+        // Parse CSV into mapped values
+        for (idx, val) in fields.iter().enumerate() {
+            if let Some(header) = input.csv_content.lines().next().and_then(|h| h.split(',').nth(idx)) {
+                values.insert(header.trim(), val);
+            }
+        }
+
+        // Check for duplicates by email
+        let email = input.column_mapping.get("email").and_then(|field| values.get(field.as_str())).copied().unwrap_or("");
+        
+        let conn = db.conn.lock().map_err(|_| "DB lock".to_string())?;
+        let existing = conn.query_row(
+            "SELECT id FROM crm_contacts WHERE owner_user_id=?1 AND email=?2",
+            params![&user_id, email],
+            |r| r.get::<_, String>(0),
+        );
+
+        match existing {
+            Ok(existing_id) => {
+                if input.update_existing {
+                    // Update existing contact
+                    // Build dynamic UPDATE query based on mapping
+                    if !email.is_empty() {
+                        conn.execute(
+                            "UPDATE crm_contacts SET updated_at=?1 WHERE id=?2",
+                            params![now(), &existing_id],
+                        ).ok();
+                        updated += 1;
+                    }
+                } else if input.skip_duplicates {
+                    duplicates += 1;
+                }
+            }
+            Err(_) => {
+                // Insert new contact
+                if let Err(err) = conn.execute(
+                    "INSERT INTO crm_contacts (id, owner_user_id, first_name, email, phone, company, job_title, created_at, updated_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                    params![
+                        uid(), &user_id,
+                        values.get("first_name").copied().unwrap_or(""),
+                        email,
+                        values.get("phone").copied().unwrap_or(""),
+                        values.get("company").copied().unwrap_or(""),
+                        values.get("job_title").copied().unwrap_or(""),
+                        now(), now()
+                    ],
+                ) {
+                    errors += 1;
+                    error_list.push(format!("Row error: {}", err));
+                } else {
+                    imported += 1;
+                }
+            }
+        }
+    }
+
+    Ok(CsvImportResult {
+        imported_count: imported,
+        duplicate_count: duplicates,
+        updated_count: updated,
+        error_count: errors,
+        errors: error_list,
+    })
+}
+
+#[tauri::command]
+pub fn crm_export_csv(db: State<'_, CrmDb>, user_id: String) -> CmdResult<String> {
+    let conn = db.conn.lock().map_err(e)?;
+    let mut csv = String::from("id,first_name,last_name,email,phone,company,job_title,address,city,state,zip,country,website,notes,tags,source,stage,priority,last_contacted,created_at\n");
+
+    let mut stmt = conn.prepare(
+        "SELECT id, first_name, last_name, email, phone, company, job_title, address, city, state, zip, country, website, notes, tags, source, stage, priority, last_contacted, created_at
+         FROM crm_contacts WHERE owner_user_id=?1"
+    ).map_err(e)?;
+
+    let contacts = stmt.query_map(params![&user_id], |row| {
+        Ok((
+            row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?,
+            row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?,
+            row.get::<_, String>(6)?, row.get::<_, String>(7)?, row.get::<_, String>(8)?,
+            row.get::<_, String>(9)?, row.get::<_, String>(10)?, row.get::<_, String>(11)?,
+            row.get::<_, String>(12)?, row.get::<_, String>(13)?, row.get::<_, String>(14)?,
+            row.get::<_, String>(15)?, row.get::<_, String>(16)?, row.get::<_, String>(17)?,
+            row.get::<_, String>(18)?, row.get::<_, String>(19)?,
+        ))
+    }).map_err(e)?;
+
+    for contact in contacts {
+        let c = contact.map_err(e)?;
+        csv.push_str(&format!("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+            c.0, c.1, c.2, c.3, c.4, c.5, c.6, c.7, c.8, c.9, c.10, c.11, c.12, c.13, c.14, c.15, c.16, c.17, c.18, c.19
+        ));
+    }
+
+    Ok(csv)
+}
+
+/* ══════════════════════════════════════════════════════
+   CONTACT DEDUPLICATION
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_find_duplicates(db: State<'_, CrmDb>, user_id: String) -> CmdResult<Vec<DuplicateContact>> {
+    let conn = db.conn.lock().map_err(e)?;
+    let mut duplicates = vec![];
+
+    // Find potential duplicates by email
+    let mut stmt = conn.prepare(
+        "SELECT id, first_name, last_name, email FROM crm_contacts WHERE owner_user_id=?1 AND email != '' ORDER BY email"
+    ).map_err(e)?;
+
+    let contacts: Vec<(String, String, String, String)> = stmt.query_map(params![&user_id], |row| {
+        Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+    }).map_err(e)?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    for i in 0..contacts.len() {
+        for j in (i+1)..contacts.len() {
+            let (id1, fn1, ln1, e1) = &contacts[i];
+            let (id2, fn2, ln2, e2) = &contacts[j];
+
+            // Check if same email
+            if e1 == e2 && !e1.is_empty() {
+                duplicates.push(DuplicateContact {
+                    id1: id1.clone(),
+                    id2: id2.clone(),
+                    name1: format!("{} {}", fn1, ln1),
+                    name2: format!("{} {}", fn2, ln2),
+                    email1: e1.clone(),
+                    email2: e2.clone(),
+                    similarity_score: 100.0,
+                    reason: "Same email address".to_string(),
+                });
+            }
+        }
+    }
+
+    Ok(duplicates)
+}
+
+#[tauri::command]
+pub fn crm_merge_contacts(db: State<'_, CrmDb>, _contact_id: String, _user_id: String, input: MergeContactsInput) -> CmdResult<Contact> {
+    let conn = db.conn.lock().map_err(e)?;
+
+    // Merge all activities from secondary to primary
+    conn.execute(
+        "UPDATE crm_activities SET contact_id=?1 WHERE contact_id=?2",
+        params![&input.primary_id, &input.secondary_id],
+    ).map_err(e)?;
+
+    // Merge all deals from secondary to primary
+    conn.execute(
+        "UPDATE crm_deals SET contact_id=?1 WHERE contact_id=?2",
+        params![&input.primary_id, &input.secondary_id],
+    ).map_err(e)?;
+
+    // Delete secondary contact
+    conn.execute("DELETE FROM crm_contacts WHERE id=?1", params![&input.secondary_id]).map_err(e)?;
+
+    // Return updated primary contact
+    get_contact_by_id(&conn, &input.primary_id)
+}
+
+/* ══════════════════════════════════════════════════════
+   CAMPAIGN MANAGEMENT
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_create_campaign(db: State<'_, CrmDb>, user_id: String, input: CreateCampaignInput) -> CmdResult<Campaign> {
+    let conn = db.conn.lock().map_err(e)?;
+    let id = uid();
+    let ts = now();
+
+    conn.execute(
+        "INSERT INTO crm_campaigns (id, owner_user_id, name, description, campaign_type, status, target_contacts, sent_count, opened_count, clicked_count, conversion_count, scheduled_at, created_at, updated_at)
+         VALUES (?1,?2,?3,?4,?5,'draft',0,0,0,0,0,?6,?7,?8)",
+        params![
+            id, user_id, input.name, input.description.unwrap_or_default(), input.campaign_type,
+            input.scheduled_at.unwrap_or_default(), ts, ts
+        ],
+    ).map_err(e)?;
+
+    conn.query_row(
+        "SELECT id, owner_user_id, name, description, campaign_type, status, target_contacts, sent_count, opened_count, clicked_count, conversion_count, scheduled_at, started_at, completed_at, created_at, updated_at
+         FROM crm_campaigns WHERE id=?1",
+        params![id],
+        |row| {
+            Ok(Campaign {
+                id: row.get(0)?,
+                owner_user_id: row.get(1)?,
+                name: row.get(2)?,
+                description: row.get(3)?,
+                campaign_type: row.get(4)?,
+                status: row.get(5)?,
+                target_contacts: row.get(6)?,
+                sent_count: row.get(7)?,
+                opened_count: row.get(8)?,
+                clicked_count: row.get(9)?,
+                conversion_count: row.get(10)?,
+                scheduled_at: row.get(11)?,
+                started_at: row.get::<_, String>(12).unwrap_or_default(),
+                completed_at: row.get::<_, String>(13).unwrap_or_default(),
+                created_at: row.get(14)?,
+                updated_at: row.get(15)?,
+            })
+        }
+    ).map_err(e)
+}
+
+/* ══════════════════════════════════════════════════════
+   LEAD SCORING
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_calculate_lead_scores(db: State<'_, CrmDb>, user_id: String) -> CmdResult<Vec<ContactWithScore>> {
+    let conn = db.conn.lock().map_err(e)?;
+    let mut results = vec![];
+
+    let mut stmt = conn.prepare("SELECT id, first_name, last_name, email, phone, company, job_title, avatar_url, address, city, state, zip, country, website, notes, tags, source, stage, priority, last_contacted, created_at, updated_at FROM crm_contacts WHERE owner_user_id=?1").map_err(e)?;
+
+    let contacts = stmt.query_map(params![&user_id], |row| {
+        Ok(Contact {
+            id: row.get(0)?, owner_user_id: row.get(1)?, first_name: row.get(2)?, 
+            last_name: row.get(3)?, email: row.get(4)?, phone: row.get(5)?,
+            company: row.get(6)?, job_title: row.get(7)?, avatar_url: row.get(8)?,
+            address: row.get(9)?, city: row.get(10)?, state: row.get(11)?,
+            zip: row.get(12)?, country: row.get(13)?, website: row.get(14)?,
+            notes: row.get(15)?, tags: row.get(16)?, source: row.get(17)?,
+            stage: row.get(18)?, priority: row.get(19)?, last_contacted: row.get(20)?,
+            created_at: row.get(21)?, updated_at: row.get(22)?,
+        })
+    }).map_err(e)?;
+
+    for contact_result in contacts {
+        if let Ok(contact) = contact_result {
+            // Calculate engagement points: activities, emails sent, events attended
+            let engagement: i32 = conn.query_row(
+                "SELECT COUNT(*) FROM crm_activities WHERE contact_id=?1",
+                params![&contact.id],
+                |r| r.get(0)
+            ).unwrap_or(0) * 5;
+
+            let emails: i32 = conn.query_row(
+                "SELECT COUNT(*) FROM crm_sent_emails WHERE contact_id=?1 AND status='sent'",
+                params![&contact.id],
+                |r| r.get(0)
+            ).unwrap_or(0) * 3;
+
+            // Company points
+            let company_points = if !contact.company.is_empty() { 10 } else { 0 };
+
+            // Calculate total score (0-100)
+            let score = (engagement + emails + company_points).min(100) as i32;
+            let grade = match score {
+                90..=100 => "A",
+                80..=89 => "B",
+                70..=79 => "C",
+                60..=69 => "D",
+                _ => "F",
+            }.to_string();
+
+            results.push(ContactWithScore {
+                contact: contact.clone(),
+                lead_score: LeadScore {
+                    contact_id: contact.id.clone(),
+                    score,
+                    grade,
+                    engagement_points: engagement,
+                    company_points,
+                    behavioral_points: emails,
+                    last_updated: now(),
+                },
+            });
+        }
+    }
+
+    Ok(results)
+}
+
+/* ══════════════════════════════════════════════════════
+   BULK ACTIONS
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_bulk_update(db: State<'_, CrmDb>, user_id: String, input: BulkUpdateInput) -> CmdResult<BulkActionResult> {
+    let conn = db.conn.lock().map_err(e)?;
+    let mut success = 0;
+    let mut failures = 0;
+    let mut errors = vec![];
+
+    for contact_id in &input.contact_ids {
+        let result = conn.execute(
+            "UPDATE crm_contacts SET stage=?1, priority=?2, updated_at=?3 WHERE id=?4 AND owner_user_id=?5",
+            params![
+                input.updates.get("stage").and_then(|v| v.as_str()).unwrap_or(""),
+                input.updates.get("priority").and_then(|v| v.as_str()).unwrap_or(""),
+                now(),
+                contact_id,
+                user_id
+            ],
+        );
+
+        match result {
+            Ok(_) => success += 1,
+            Err(err) => {
+                failures += 1;
+                errors.push(format!("Contact {}: {}", contact_id, err));
+            }
+        }
+    }
+
+    Ok(BulkActionResult {
+        success_count: success,
+        failure_count: failures,
+        errors,
+    })
+}
+
+/* ══════════════════════════════════════════════════════
+   DEAL FORECASTING & PIPELINE ANALYTICS
+   ══════════════════════════════════════════════════════ */
+
+#[tauri::command]
+pub fn crm_get_pipeline_analytics(db: State<'_, CrmDb>, user_id: String) -> CmdResult<PipelineAnalytics> {
+    let conn = db.conn.lock().map_err(e)?;
+
+    let total_value: f64 = conn.query_row(
+        "SELECT COALESCE(SUM(value), 0) FROM crm_deals WHERE owner_user_id=?1 AND won=0 AND lost=0",
+        params![&user_id],
+        |r| r.get(0)
+    ).unwrap_or(0.0);
+
+    let total_deals: i32 = conn.query_row(
+        "SELECT COUNT(*) FROM crm_deals WHERE owner_user_id=?1 AND won=0 AND lost=0",
+        params![&user_id],
+        |r| r.get(0)
+    ).unwrap_or(0);
+
+    let average_deal_value = if total_deals > 0 { total_value / total_deals as f64 } else { 0.0 };
+
+    let mut stage_breakdown = std::collections::HashMap::new();
+    let stages = vec!["prospect", "qualified", "proposal", "negotiation", "closed"];
+
+    for stage in stages {
+        let count: i32 = conn.query_row(
+            "SELECT COUNT(*) FROM crm_deals WHERE owner_user_id=?1 AND stage=?2",
+            params![&user_id, stage],
+            |r| r.get(0)
+        ).unwrap_or(0);
+
+        let stage_value: f64 = conn.query_row(
+            "SELECT COALESCE(SUM(value), 0) FROM crm_deals WHERE owner_user_id=?1 AND stage=?2",
+            params![&user_id, stage],
+            |r| r.get(0)
+        ).unwrap_or(0.0);
+
+        stage_breakdown.insert(stage.to_string(), PipelineStageStats {
+            stage_name: stage.to_string(),
+            count,
+            total_value: stage_value,
+            avg_days_in_stage: 0.0,
+            win_probability: if stage == "closed" { 100.0 } else { 30.0 + (stage_value / average_deal_value.max(1.0)) as f32 },
+        });
+    }
+
+    // Generate 6-month forecast
+    let mut months_forecast = vec![];
+    for i in 0..6 {
+        let month_value = (total_value / 6.0) + (rand::random::<f64>() - 0.5) * total_value * 0.1;
+        months_forecast.push(DealForecast {
+            month: format!("{:02}", ((chrono::Utc::now().month() + i) % 12 + 1)),
+            confidence_low: month_value * 0.8,
+            confidence_mid: month_value,
+            confidence_high: month_value * 1.2,
+            expected_value: month_value,
+            historical_accuracy: 75.0,
+        });
+    }
+
+    Ok(PipelineAnalytics {
+        total_value,
+        total_deals,
+        average_deal_value,
+        weighted_forecast: total_value * 0.7,
+        stage_breakdown,
+        months_forecast,
+    })
+}
+

@@ -1,20 +1,18 @@
-use flash_finality::{
-    FlashFinalityGadget, GossipMessage, FLASH_FINALITY_PROTOCOL_ID,
-};
+use flash_finality::{FlashFinalityGadget, GossipMessage, FLASH_FINALITY_PROTOCOL_ID};
 use futures::{future, prelude::*};
 use log::{debug, info, warn};
 use parity_scale_codec::{Decode, Encode};
 use sc_client_api::BlockchainEvents;
-use sc_network::{NetworkService};
+use sc_network::NetworkService;
 use sc_network_gossip::{GossipEngine, MessageIntent, Validator, ValidatorContext};
+use sp_core::crypto::KeyTypeId;
+use sp_keystore::KeystorePtr;
 use sp_runtime::{
     traits::{Block as BlockT, Header as HeaderT},
     SaturatedConversion,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use sp_keystore::KeystorePtr;
-use sp_core::crypto::KeyTypeId;
 
 /// A validator for Flash Finality gossip messages.
 pub struct FlashFinalityGossipValidator<Block: BlockT> {
@@ -99,13 +97,16 @@ where
     pub async fn run(self) {
         let mut import_notifications = self.client.import_notification_stream();
         let mut finality_notifications = self.client.finality_notification_stream();
-        
+
         let mut incoming_messages = {
             let mut engine = self.gossip_engine.lock().await;
             engine.messages_for(FLASH_FINALITY_PROTOCOL_ID.into())
         };
 
-        info!("⚡ [FlashFinality] Network bridge started — gossiping certificates on {} protocol", FLASH_FINALITY_PROTOCOL_ID);
+        info!(
+            "⚡ [FlashFinality] Network bridge started — gossiping certificates on {} protocol",
+            FLASH_FINALITY_PROTOCOL_ID
+        );
 
         loop {
             let mut gossip_poll = future::poll_fn(|cx| {
@@ -125,7 +126,7 @@ where
                 Some(notification) = import_notifications.next() => {
                     let number: u64 = (*notification.header.number()).saturated_into();
                     let hash: [u8; 32] = notification.hash.as_ref().try_into().unwrap_or([0u8; 32]);
-                    
+
                     if let Some(proposal) = self.gadget.on_new_block(hash, number).await {
                         self.broadcast(GossipMessage::Proposal(proposal)).await;
                     }
@@ -143,7 +144,7 @@ where
                         match gossip_msg {
                             GossipMessage::Proposal(p) => {
                                 self.gadget.on_proposal(p.clone()).await;
-                                
+
                                 // Sign a vote if we are a validator
                                 let public_keys = self.keystore.sr25519_public_keys(KeyTypeId(*b"flsh"));
                                 if let Some(pubkey) = public_keys.get(0) {

@@ -1,3 +1,8 @@
+use crate::flash_finality::FlashFinalityBridge;
+use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
+use futures_util::StreamExt;
+use parity_scale_codec;
+use poh_generator::PoHState;
 use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
@@ -13,11 +18,6 @@ use sp_core::{crypto::KeyTypeId, Pair};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::flash_finality::{FlashFinalityBridge};
-use flash_finality::{FlashFinalityGadget, FlashFinalityConfig, FLASH_FINALITY_PROTOCOL_ID};
-use poh_generator::{PoHState};
-use parity_scale_codec;
-use futures_util::StreamExt;
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -335,11 +335,13 @@ pub fn new_full(
     }
 
     let warp_sync = if enable_grandpa {
-        Some(Arc::new(sc_consensus_grandpa::warp_proof::NetworkProvider::new(
-            backend.clone(),
-            grandpa_link.shared_authority_set().clone(),
-            Vec::default(),
-        )))
+        Some(Arc::new(
+            sc_consensus_grandpa::warp_proof::NetworkProvider::new(
+                backend.clone(),
+                grandpa_link.shared_authority_set().clone(),
+                Vec::default(),
+            ),
+        ))
     } else {
         None
     };
@@ -420,7 +422,8 @@ pub fn new_full(
     // Initialize Flash Finality Gadget for RPC regardless of whether we run the bridge
     let flash_finality_gadget = if feature_flags.enable_flash_finality {
         let keystore = keystore_container.keystore();
-        let my_id = keystore.sr25519_public_keys(KeyTypeId(*b"flsh"))
+        let my_id = keystore
+            .sr25519_public_keys(KeyTypeId(*b"flsh"))
             .get(0)
             .map(|k| k.0)
             .unwrap_or([0xAA; 32]); // Fallback to mock if no key found
@@ -428,7 +431,7 @@ pub fn new_full(
         Some(Arc::new(FlashFinalityGadget::new(
             FlashFinalityConfig::default(),
             my_id,
-            Some(keystore),
+            Some(Box::new(keystore) as Box<dyn std::any::Any + Send + Sync>),
         )))
     } else {
         None
@@ -501,15 +504,20 @@ pub fn new_full(
                         // But we need to check if Option implements the trait. It does in some Substrate versions.
                         // Let's use a simpler approach: return (slot, timestamp) and conditionally add PoH.
                         // Wait, Aura's start_aura expects a single return type from the closure.
-                        
+
                         let poh_digest = if let Some(state_arc) = poh_state {
-                            let mut state = state_arc.lock().await;
+                            let mut state: poh_generator::PoHState = state_arc.lock().await;
                             Some(state.advance(&[]))
                         } else {
                             None
                         };
 
-                        Ok((slot, timestamp, poh_digest.map(|digest| poh_generator::PoHInherentDataProvider { digest })))
+                        Ok((
+                            slot,
+                            timestamp,
+                            poh_digest
+                                .map(|digest| poh_generator::PoHInherentDataProvider { digest }),
+                        ))
                     }
                 },
                 force_authoring,
@@ -628,7 +636,7 @@ pub fn new_full(
         let gadget_for_voter = gadget.clone();
         let client_for_voter = client.clone();
         let enable_flash_live_mode = feature_flags.enable_flash_finality && !config.disable_grandpa;
-        
+
         task_manager.spawn_essential_handle().spawn(
             "flash-finality-voter",
             Some("flash-finality"),
@@ -641,24 +649,23 @@ pub fn new_full(
     // Start PoH Generator background task if enabled
     if let Some(poh_state_arc) = shared_poh_state {
         let client_clone = client.clone();
-        
-        task_manager.spawn_essential_handle().spawn(
-            "poh-watcher",
-            Some("poh"),
-            async move {
+
+        task_manager
+            .spawn_essential_handle()
+            .spawn("poh-watcher", Some("poh"), async move {
                 let mut import_notifications = client_clone.import_notification_stream();
                 while let Some(notification) = import_notifications.next().await {
                     if notification.is_new_best {
-                        let mut state = poh_state_arc.lock().await;
-                        state.advance(&[]); 
-                        log::info!("⏱️  [PoH] Shadow tick {} anchored to block {}", 
-                            state.tick(), 
+                        let mut state: poh_generator::PoHState = poh_state_arc.lock().await;
+                        state.advance(&[]);
+                        log::info!(
+                            "⏱️  [PoH] Shadow tick {} anchored to block {}",
+                            state.tick(),
                             notification.hash
                         );
                     }
                 }
-            }
-        );
+            });
         log::info!("⏱️ Proof of History (PoH) generator enabled and wired to block loop");
     }
 
@@ -707,20 +714,28 @@ async fn run_flash_finality_voter<Client, Block>(
                         let encoded_cert = parity_scale_codec::Encode::encode(&cert);
                         log::info!(
                             "⚡✅ Live mode: applying Flash-Finality cert for #{} — votes: {}",
-                            number, cert.vote_count
+                            number,
+                            cert.vote_count
                         );
 
                         // In live mode we actually import the certificate as a justification
                         // so that the client advances the finalized head based on Flash.
                         // The certificate already contains a proof of quorum agreement.
-                        if let Err(e) = client.import_justification(hash.clone(), encoded_cert.into()) {
-                            log::error!("⚡❌ failed to import Flash justification for #{}: {:?}", number, e);
+                        if let Err(e) =
+                            client.import_justification(hash.clone(), encoded_cert.into())
+                        {
+                            log::error!(
+                                "⚡❌ failed to import Flash justification for #{}: {:?}",
+                                number,
+                                e
+                            );
                         }
                     } else {
                         // Shadow mode: log certificate for monitoring without applying it
                         log::debug!(
                             "⚡🔍 Shadow: Flash cert available for #{} — {} votes (not applied)",
-                            number, cert.vote_count
+                            number,
+                            cert.vote_count
                         );
                     }
 
@@ -728,7 +743,8 @@ async fn run_flash_finality_voter<Client, Block>(
                     let metrics = gadget.metrics().await;
                     log::info!(
                         "📊 Flash-Finality metrics: total_rounds={}, agreements={}",
-                        metrics.total_rounds, metrics.agreements
+                        metrics.total_rounds,
+                        metrics.agreements
                     );
                 } else {
                     // No Flash certificate yet; this could be normal if finality advanced
@@ -773,7 +789,10 @@ mod tests {
 
         // flash finality disables regardless of config
         cfg.disable_grandpa = false;
-        let flags = NodeFeatureFlags { enable_flash_finality: true, ..Default::default() };
+        let flags = NodeFeatureFlags {
+            enable_flash_finality: true,
+            ..Default::default()
+        };
         assert!(!compute_enable_grandpa(&cfg, flags));
     }
 
@@ -785,7 +804,10 @@ mod tests {
         // by capturing stderr via the `log` crate's test helper.
 
         let mut cfg = default_config();
-        let flags = NodeFeatureFlags { enable_flash_finality: true, ..Default::default() };
+        let flags = NodeFeatureFlags {
+            enable_flash_finality: true,
+            ..Default::default()
+        };
 
         // ensure the helper also indicates grandpa will be off
         assert!(!compute_enable_grandpa(&cfg, flags));

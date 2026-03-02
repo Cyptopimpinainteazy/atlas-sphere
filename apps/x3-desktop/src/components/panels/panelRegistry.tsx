@@ -227,6 +227,95 @@ const DAOGovernancePanel = lazy(() => import("@/components/panels/growth/DAOGove
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
 
+/* ── MISSING PANELS: Add all remaining 55 unregistered panels ──── */
+// Explorer panels (20+)
+const AISwarmPanel = lazy(() => import("@/components/panels/explorer/AISwarmPanel"));
+const BlogPanel = lazy(() => import("@/components/panels/explorer/BlogPanel"));
+const BridgePanel = lazy(() => import("@/components/panels/explorer/BridgePanel"));
+const CommunityPanel = lazy(() => import("@/components/panels/explorer/CommunityPanel"));
+const CommunitySubPanel = lazy(() => import("@/components/panels/explorer/CommunitySubPanel"));
+const EarnPanel = lazy(() => import("@/components/panels/explorer/EarnPanel"));
+const EcosystemPanel = lazy(() => import("@/components/panels/explorer/EcosystemPanel"));
+const ExplorerDetailPanel = lazy(() => import("@/components/panels/explorer/ExplorerDetailPanel"));
+const ExplorerHomePanel = lazy(() => import("@/components/panels/explorer/ExplorerHomePanel"));
+const LearnPanel = lazy(() => import("@/components/panels/explorer/LearnPanel"));
+const LearnArchitecturePanel = lazy(() => import("@/components/panels/explorer/LearnArchitecturePanel"));
+const MetricsPanel = lazy(() => import("@/components/panels/explorer/MetricsPanel"));
+const NetworkPanel2 = lazy(() => import("@/components/panels/explorer/NetworkPanel2"));
+const NetworkValidatorsPanel = lazy(() => import("@/components/panels/explorer/NetworkValidatorsPanel"));
+const PortfolioPanel = lazy(() => import("@/components/panels/explorer/PortfolioPanel"));
+const PrivacyPanel = lazy(() => import("@/components/panels/explorer/PrivacyPanel"));
+const QuantumEnhancedPanel = lazy(() => import("@/components/panels/explorer/QuantumEnhancedPanel"));
+const QuantumPanel = lazy(() => import("@/components/panels/explorer/QuantumPanel"));
+const SecurityPanel2 = lazy(() => import("@/components/panels/explorer/SecurityPanel2"));
+const SolutionsDetailPanel = lazy(() => import("@/components/panels/explorer/SolutionsDetailPanel"));
+const StakePanel = lazy(() => import("@/components/panels/explorer/StakePanel"));
+const SwapPanel = lazy(() => import("@/components/panels/explorer/SwapPanel"));
+const TermsPanel = lazy(() => import("@/components/panels/explorer/TermsPanel"));
+const TreasuryPanel = lazy(() => import("@/components/panels/explorer/TreasuryPanel"));
+const X3ChainPanel = lazy(() => import("@/components/panels/explorer/X3ChainPanel"));
+const X3OSPanel = lazy(() => import("@/components/panels/explorer/X3OSPanel"));
+const X3StarPanel = lazy(() => import("@/components/panels/explorer/X3StarPanel"));
+const X3SubPagesPanel = lazy(() => import("@/components/panels/explorer/X3SubPagesPanel"));
+
+// DEX panels (7)
+const DexPanel = lazy(() => import("@/components/panels/dex/DexPanel"));
+const DexPoolsPanel = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
+const DexOrderbookPanel = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
+const LpNftMarketplacePanel = lazy(() => import("@/components/panels/dex/LpNftMarketplacePanel"));
+const TransactionSimulatorPanel = lazy(() => import("@/components/panels/dex/TransactionSimulatorPanel"));
+const ConcentratedLiquidityPanel = lazy(() => import("@/components/panels/dex/ConcentratedLiquidityPanel"));
+const DexAdvancedOrdersPanel = lazy(() => import("@/components/panels/dex/DexAdvancedOrdersPanel"));
+
+// DeFi panels (3)
+const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
+const LiquidityMiningPanel = lazy(() => import("@/components/panels/defi/LiquidityMiningPanel"));
+const TokenLaunchpadPanel = lazy(() => import("@/components/panels/defi/TokenLaunchpadPanel"));
+
+// Wallet panels (3)
+const PrivacyWalletPanel = lazy(() => import("@/components/panels/wallet/PrivacyWalletPanel"));
+const TokenChartsPanel = lazy(() => import("@/components/panels/wallet/TokenChartsPanel"));
+const PrivacyModePanel = lazy(() => import("@/components/panels/wallet/PrivacyModePanel"));
+
+// X3 Intel panels (7)
+const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
+const X3AgentsPanel = lazy(() => import("@/components/panels/x3intel/X3AgentsPanel"));
+const X3BondsPanel = lazy(() => import("@/components/panels/x3intel/X3BondsPanel"));
+const X3GuidePanel = lazy(() => import("@/components/panels/x3intel/X3GuidePanel"));
+const X3IntentsPanel = lazy(() => import("@/components/panels/x3intel/X3IntentsPanel"));
+const X3SlashingPanel = lazy(() => import("@/components/panels/x3intel/X3SlashingPanel"));
+const X3WhyPanel = lazy(() => import("@/components/panels/x3intel/X3WhyPanel"));
+
+// Social panels (4)
+const CreatorMonetizationPanel = lazy(() => import("@/components/panels/social/CreatorMonetizationPanel"));
+
+// Trading panels (3)
+const StrategyBuilderPanel = lazy(() => import("@/components/panels/trading/StrategyBuilderPanel"));
+const BacktestingPanel = lazy(() => import("@/components/panels/trading/BacktestingPanel"));
+const BotMarketplacePanel = lazy(() => import("@/components/panels/trading/BotMarketplacePanel"));
+
+// Analytics panels (3)
+const AdvancedAnalyticsPanel = lazy(() => import("@/components/panels/analytics/AdvancedAnalyticsPanel"));
+const MarketHeatmapPanel = lazy(() => import("@/components/panels/analytics/MarketHeatmapPanel"));
+const CryptoHeatmapPanel = lazy(() => import("@/components/panels/analytics/CryptoHeatmapPanel"));
+
+// Validators panels (1)
+const ValidatorGlobe = lazy(() => import("@/components/panels/validators/ValidatorGlobe"));
+
+// Auction panels (1)
+const NftAuctionPanel = lazy(() => import("@/components/panels/auctions/NftAuctionPanel"));
+
+// Marketplace panels (1)
+const RealMarketplacePanel = lazy(() => import("@/components/panels/marketplace/RealMarketplacePanel"));
+
+// Root level panels (several)
+const IframePanel = lazy(() => import("@/components/panels/IframePanel"));
+const SecurityPanel = lazy(() => import("@/components/panels/SecurityPanel"));
+const DevDocsPanel = lazy(() => import("@/components/panels/explorer/DevDocsPanel"));
+
+// Governance panel (1)
+const GovernanceVotingPanel = lazy(() => import("@/components/panels/governance/GovernanceVotingPanel"));
+
 /**
  * Map of appId → lazy-loaded panel component.
  * Add new panels here as they are created.
@@ -861,6 +950,170 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "proposal-voting":          DAOGovernancePanel,
   "dao-treasury":             DAOGovernancePanel,
   "governance-voting":        DAOGovernancePanel,
+
+  /* ── ALL MISSING 55+ PANELS: Now Registered ──── */
+
+  // Explorer - Community & Ecosystem
+  "ai-swarm":                 AISwarmPanel,
+  "swarm-intelligence":       AISwarmPanel,
+  "blog":                     BlogPanel,
+  "news":                     BlogPanel,
+  "bridge":                   BridgePanel,
+  "atomic-swap":              BridgePanel,
+  "community":                CommunityPanel,
+  "community-sub":            CommunitySubPanel,
+  "earn":                     EarnPanel,
+  "earning-programs":         EarnPanel,
+  "ecosystem":                EcosystemPanel,
+  "partners":                 EcosystemPanel,
+  "explorer-home":            ExplorerHomePanel,
+  "explorer-detail":          ExplorerDetailPanel,
+  "learn":                    LearnPanel,
+  "learn-architecture":       LearnArchitecturePanel,
+  "developer-docs":           DevDocsPanel,
+  "api-documentation":        DevDocsPanel,
+  "network-metrics":          MetricsPanel,
+  "network-status":           NetworkPanel2,
+  "network-validators":       NetworkValidatorsPanel,
+  "portfolio":                PortfolioPanel,
+  "portfolio-dashboard":      PortfolioPanel,
+  "privacy-policy":           PrivacyPanel,
+  "privacy-agreement":        PrivacyPanel,
+  "quantum":                  QuantumPanel,
+  "quantum-landing":          QuantumPanel,
+  "quantum-enhanced":         QuantumEnhancedPanel,
+  "security-page":            SecurityPanel2,
+  "security-policy":          SecurityPanel2,
+  "solutions":                SolutionsDetailPanel,
+  "solutions-detail":         SolutionsDetailPanel,
+  "stake":                    StakePanel,
+  "staking":                  StakePanel,
+  "swap":                     SwapPanel,
+  "trading-swap":             SwapPanel,
+  "treasury":                 TreasuryPanel,
+  "treasury-dashboard":       TreasuryPanel,
+  "terms":                    TermsPanel,
+  "terms-of-service":         TermsPanel,
+  "x3-chain":                 X3ChainPanel,
+  "x3-blockchain":            X3ChainPanel,
+  "x3os":                     X3OSPanel,
+  "x3-operating-system":      X3OSPanel,
+  "x3star":                   X3StarPanel,
+  "x3-star":                  X3StarPanel,
+  "x3-pages":                 X3SubPagesPanel,
+  "x3-sub-pages":             X3SubPagesPanel,
+
+  // DEX - Complete Coverage
+  "dex":                      DexPanel,
+  "dex-main":                 DexPanel,
+  "dex-swap":                 DexPanel,
+  "dex-pools":                DexPoolsPanel,
+  "liquidity-pools":          DexPoolsPanel,
+  "dex-orderbook":            DexOrderbookPanel,
+  "orderbook":                DexOrderbookPanel,
+  "advanced-orders":          DexAdvancedOrdersPanel,
+  "limit-orders":             DexAdvancedOrdersPanel,
+  "stop-loss":                DexAdvancedOrdersPanel,
+  "transaction-simulator":    TransactionSimulatorPanel,
+  "swap-simulator":           TransactionSimulatorPanel,
+  "concentrated-liquidity":   ConcentratedLiquidityPanel,
+  "v3-pools":                 ConcentratedLiquidityPanel,
+  "lp-nft-marketplace":       LpNftMarketplacePanel,
+  "position-nfts":            LpNftMarketplacePanel,
+
+  // DeFi - Vote Escrow & Liquidity
+  "vex3":                     VeX3Panel,
+  "ve-tokenomics":            VeX3Panel,
+  "liquidity-mining":         LiquidityMiningPanel,
+  "lm-rewards":               LiquidityMiningPanel,
+  "token-launchpad":          TokenLaunchpadPanel,
+  "launchpad-tokens":         TokenLaunchpadPanel,
+
+  // Wallet - Privacy & Management
+  "privacy-wallet":           PrivacyWalletPanel,
+  "stealth-wallet":           PrivacyWalletPanel,
+  "token-charts":             TokenChartsPanel,
+  "token-price-charts":       TokenChartsPanel,
+  "privacy-mode":             PrivacyModePanel,
+  "stealth-mode":             PrivacyModePanel,
+
+  // X3 Intelligence - ALL
+  "x3-floor-dashboard":       X3FloorDashboardPanel,
+  "x3-floor-price":           X3FloorDashboardPanel,
+  "x3-agents":                X3AgentsPanel,
+  "x3-agent-management":      X3AgentsPanel,
+  "x3-bonds":                 X3BondsPanel,
+  "x3-bond-marketplace":      X3BondsPanel,
+  "x3-guide":                 X3GuidePanel,
+  "x3-tutorial":              X3GuidePanel,
+  "x3-intents":               X3IntentsPanel,
+  "x3-intent-system":         X3IntentsPanel,
+  "x3-slashing":              X3SlashingPanel,
+  "x3-slash-penalties":       X3SlashingPanel,
+  "x3-why":                   X3WhyPanel,
+  "x3-why-us":                X3WhyPanel,
+
+  // Social - Creator Economy
+  "creator-monetization":     CreatorMonetizationPanel,
+  "creator-earnings":         CreatorMonetizationPanel,
+  "tipping":                  CreatorMonetizationPanel,
+  "creator-tips":             CreatorMonetizationPanel,
+
+  // Trading - Strategy & Bots
+  "strategy-builder":         StrategyBuilderPanel,
+  "bot-strategy-composer":    StrategyBuilderPanel,
+  "backtesting":              BacktestingPanel,
+  "backtest-engine":          BacktestingPanel,
+  "bot-marketplace":          BotMarketplacePanel,
+  "strategy-marketplace":     BotMarketplacePanel,
+
+  // Analytics - Risk & Heatmaps
+  "advanced-analytics":       AdvancedAnalyticsPanel,
+  "analytics-dashboard":      AdvancedAnalyticsPanel,
+  "market-heatmap":           MarketHeatmapPanel,
+  "market-heat":              MarketHeatmapPanel,
+  "crypto-heatmap":           CryptoHeatmapPanel,
+  "token-heatmap":            CryptoHeatmapPanel,
+
+  // Validators
+  "validator-globe":          ValidatorGlobe,
+  "validator-world-map":      ValidatorGlobe,
+  "validators-globe":         ValidatorGlobe,
+
+  // Auctions
+  "nft-auction":              NftAuctionPanel,
+  "auction-marketplace":      NftAuctionPanel,
+
+  // Marketplace - Real Assets
+  "real-marketplace":         RealMarketplacePanel,
+  "real-asset-marketplace":   RealMarketplacePanel,
+
+  // Global & Root Panels
+  "iframe":                   IframePanel,
+  "embedded":                 IframePanel,
+  "security":                 SecurityPanel,
+  "security-vault":           SecurityPanel,
+  "governance-voting":        GovernanceVotingPanel,
+  "voting":                   GovernanceVotingPanel,
+
+  // Aliases for Discovery (Common Search Terms)
+  "apps":                     AppStorePanel,
+  "store":                    AppStorePanel,
+  "plugins":                  AppStorePanel,
+  "monitor":                  MultiMonitorPanel,
+  "displays":                 MultiMonitorPanel,
+  "analytics":                AdvancedAnalyticsPanel,
+  "risk":                     PortfolioRiskPanel,
+  "portfolio-risk":           PortfolioRiskPanel,
+  "onchain":                  OnChainAnalyticsPanel,
+  "nft-market":               NftMarketplacePanel,
+  "token-market":             TokenMarketplacePanel,
+  "dao":                      DAOGovernancePanel,
+  "proposals":                GovernanceProposalsPanel,
+  "treasury":                 TreasuryManagementPanel,
+  "terminal":                 X3TerminalPanel,
+  "cli":                      X3TerminalPanel,
+  "shell":                    X3TerminalPanel,
 };
 
 /**

@@ -28,7 +28,7 @@ export default function TerminalChatBot() {
 
   return (
     <div className="mt-4 border-t border-[#333] pt-3">
-      <div className="font-mono text-xs text-[#ff8c42] mb-1">Ask the X3 AI about the platform, X3 Lang, or docs:</div>
+      <div className="font-mono text-xs text-[#2ab4cc] mb-1">Ask the X3 AI about the platform, X3 Lang, or docs:</div>
       <div className="flex gap-2">
         <input
           className="flex-1 bg-[#181818] border border-[#444] rounded px-2 py-1 text-sm text-[#e0e0e0] font-mono"
@@ -39,7 +39,7 @@ export default function TerminalChatBot() {
           disabled={loading}
         />
         <button
-          className="bg-[#ff8c42] text-white px-3 py-1 rounded text-xs font-bold font-mono hover:bg-[#ffb142]"
+          className="bg-[#2ab4cc] text-white px-3 py-1 rounded text-xs font-bold font-mono hover:bg-[#1a9fb5]"
           onClick={askBot}
           disabled={loading}
         >Ask</button>

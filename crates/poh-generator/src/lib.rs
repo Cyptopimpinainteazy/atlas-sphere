@@ -34,7 +34,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tracing::{debug, warn};
 
-use parity_scale_codec::{Encode, Decode};
+use parity_scale_codec::{Decode, Encode};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,10 +65,27 @@ impl PoHDigest {
     pub fn encode_payload(&self) -> Vec<u8> {
         self.encode()
     }
+
+    /// Decode from the bytes stored in a `DigestItem`.
+    pub fn decode(bytes: &[u8]) -> Option<Self> {
+        if bytes.len() != 72 {
+            return None;
+        }
+        let tick = u64::from_le_bytes(bytes[0..8].try_into().ok()?);
+        let mut poh_hash = [0u8; 32];
+        let mut tx_mix_root = [0u8; 32];
+        poh_hash.copy_from_slice(&bytes[8..40]);
+        tx_mix_root.copy_from_slice(&bytes[40..72]);
+        Some(Self {
+            tick,
+            poh_hash,
+            tx_mix_root,
+        })
+    }
 }
 
 /// Inherent data for PoH.
-#[derive(Encode, Decode, sp_inherents::RuntimeString)]
+#[derive(Encode, Decode)]
 pub struct PoHInherentData {
     pub digest: PoHDigest,
 }
@@ -94,19 +111,6 @@ impl sp_inherents::InherentDataProvider for PoHInherentDataProvider {
         _error: &[u8],
     ) -> Option<Result<(), sp_inherents::Error>> {
         None
-    }
-}
-    /// Decode from the bytes stored in a `DigestItem`.
-    pub fn decode(bytes: &[u8]) -> Option<Self> {
-        if bytes.len() != 72 {
-            return None;
-        }
-        let tick = u64::from_le_bytes(bytes[0..8].try_into().ok()?);
-        let mut poh_hash = [0u8; 32];
-        let mut tx_mix_root = [0u8; 32];
-        poh_hash.copy_from_slice(&bytes[8..40]);
-        tx_mix_root.copy_from_slice(&bytes[40..72]);
-        Some(Self { tick, poh_hash, tx_mix_root })
     }
 }
 
@@ -165,7 +169,7 @@ impl PoHState {
         // Chain: new_hash = SHA256(prev_hash || tx_mix_root)
         let mut h = Sha256::new();
         h.update(&self.current_hash);
-        h.update(&tx_mix_root);
+        h.update(tx_mix_root);
         let new_hash: [u8; 32] = h.finalize().into();
 
         self.current_tick += 1;
@@ -226,7 +230,7 @@ impl PoHVerifier {
         // 3. Recompute PoH hash
         let mut h = Sha256::new();
         h.update(prev_hash);
-        h.update(&digest.tx_mix_root);
+        h.update(digest.tx_mix_root);
         let expected_hash: [u8; 32] = h.finalize().into();
 
         if digest.poh_hash != expected_hash {
@@ -255,9 +259,14 @@ pub enum PoHVerifyError {
 impl std::fmt::Display for PoHVerifyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NonMonotonicTick { expected, got } =>
-                write!(f, "PoH tick not monotonic: expected {}, got {}", expected, got),
-            Self::TxMixRootMismatch => write!(f, "PoH tx_mix_root does not match block transactions"),
+            Self::NonMonotonicTick { expected, got } => write!(
+                f,
+                "PoH tick not monotonic: expected {}, got {}",
+                expected, got
+            ),
+            Self::TxMixRootMismatch => {
+                write!(f, "PoH tx_mix_root does not match block transactions")
+            }
             Self::HashChainBroken => write!(f, "PoH hash chain is broken"),
             Self::MissingDigest => write!(f, "PoH digest missing from block header"),
         }
@@ -273,7 +282,7 @@ impl std::fmt::Display for PoHVerifyError {
 pub fn merkle_root(hashes: &[[u8; 32]]) -> [u8; 32] {
     if hashes.is_empty() {
         // Defined empty root — deterministic
-        return Sha256::digest(&[0u8; 64]).into();
+        return Sha256::digest([0u8; 64]).into();
     }
 
     if hashes.len() == 1 {
@@ -293,8 +302,8 @@ pub fn merkle_root(hashes: &[[u8; 32]]) -> [u8; 32] {
             .chunks(2)
             .map(|pair| {
                 let mut h = Sha256::new();
-                h.update(&pair[0]);
-                h.update(&pair[1]);
+                h.update(pair[0]);
+                h.update(pair[1]);
                 h.finalize().into()
             })
             .collect();
@@ -371,7 +380,13 @@ mod tests {
         digest.tick = 99; // tamper
 
         let result = PoHVerifier::verify(&digest, 0, &prev_hash, &txs);
-        assert_eq!(result, Err(PoHVerifyError::NonMonotonicTick { expected: 1, got: 99 }));
+        assert_eq!(
+            result,
+            Err(PoHVerifyError::NonMonotonicTick {
+                expected: 1,
+                got: 99
+            })
+        );
     }
 
     #[test]

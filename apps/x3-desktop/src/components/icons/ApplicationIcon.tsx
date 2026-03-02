@@ -165,8 +165,8 @@ const ApplicationIcon: React.FC<ApplicationIconProps> = ({
           style={{ 
             width: dims.icon, 
             height: dims.icon, 
-            border: `4px solid ${app.icon.color ?? '#ff6b35'}77`,
-            boxShadow: `0 0 15px ${app.icon.color ?? '#ff6b35'}44, inset 0 0 15px ${app.icon.color ?? '#ff6b35'}22`
+            border: `4px solid ${app.icon.color ?? '#1a9fb5'}77`,
+            boxShadow: `0 0 15px ${app.icon.color ?? '#1a9fb5'}44, inset 0 0 15px ${app.icon.color ?? '#1a9fb5'}22`
           }}
           draggable={false}
         />
@@ -183,7 +183,7 @@ const ApplicationIcon: React.FC<ApplicationIconProps> = ({
         className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100
           transition-all duration-300 pointer-events-none"
         style={{
-          boxShadow: `0 0 25px ${app.icon.color ?? '#ff6b35'}88, 0 0 50px ${app.icon.color ?? '#ff6b35'}44, 0 0 75px ${app.icon.color ?? '#ff6b35'}22`,
+          boxShadow: `0 0 25px ${app.icon.color ?? '#1a9fb5'}88, 0 0 50px ${app.icon.color ?? '#1a9fb5'}44, 0 0 75px ${app.icon.color ?? '#1a9fb5'}22`,
           filter: 'blur(1px)',
         }}
       />

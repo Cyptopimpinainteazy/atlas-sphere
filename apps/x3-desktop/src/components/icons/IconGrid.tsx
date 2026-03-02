@@ -41,7 +41,7 @@ type LauncherView = "main" | "all" | DesktopLauncherCategory;
 const tabClass = (active: boolean): string =>
   `px-2 py-1 text-[11px] rounded-md font-medium whitespace-nowrap ${
     active
-      ? "bg-[#ff6b35]/20 text-[#ffb18f] border border-[#ff6b35]/40"
+      ? "bg-[#1a9fb5]/20 text-[#1a9fb5] border border-[#1a9fb5]/40"
       : "text-[#9ca3af] border border-transparent hover:border-white/20 hover:text-[#d1d5db]"
   }`;
 

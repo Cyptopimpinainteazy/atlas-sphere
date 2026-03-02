@@ -75,8 +75,8 @@ class ErrorBoundary extends Component<
               {this.state.error?.message ?? "An unexpected error occurred."}
             </p>
             <button
-              className="px-4 py-2 rounded-lg bg-[#ff6b35] text-white text-sm
-                font-medium hover:bg-[#ff8c42] transition-colors"
+              className="px-4 py-2 rounded-lg bg-[#1a9fb5] text-white text-sm
+                font-medium hover:bg-[#2ab4cc] transition-colors"
               onClick={() => window.location.reload()}
             >
               Reload Application
@@ -125,15 +125,17 @@ const AppContent: React.FC = () => {
           {/* Performance Monitor - Press P to toggle */}
           <PerformanceMonitor />
 
-          {/* Video Background */}
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
+          {/* Background Image */}
+          <div
             className="fixed inset-0 w-full h-full object-cover pointer-events-none"
-            style={{ zIndex: 0 }}
-            src="/assets/background.mp4"
+            style={{
+              zIndex: 0,
+              backgroundImage: 'url(/bg.jpg)',
+              backgroundSize: '110%',
+              backgroundPosition: 'center top',
+              backgroundAttachment: 'fixed'
+            }}
+            aria-hidden="true"
           />
 
           {/* White glow behind pyramid */}

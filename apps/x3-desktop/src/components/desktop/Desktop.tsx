@@ -120,8 +120,8 @@ const Desktop: React.FC<DesktopProps> = ({
       {/* ── Main Desktop Area ─────────────────────────── */}
       <div className="flex-1 relative">
         {/* ── Eyeball background (centre) ────────────────── */}
-        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
-          <div className="w-[400px] h-[400px]" style={{ pointerEvents: 'none' }}>
+        <div className="absolute inset-0 flex justify-center" style={{ zIndex: 1, top: '22vh' }}>
+          <div className="w-[300px] h-[300px]" style={{ pointerEvents: 'none' }}>
             <Eyeball />
           </div>
         </div>

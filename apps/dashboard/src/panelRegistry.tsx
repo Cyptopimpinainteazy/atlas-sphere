@@ -30,6 +30,16 @@ const SettingsPanel = lazy(() => import('./panels/docs/SettingsPanel'));
 const GamificationAndAchievementsPanel = lazy(() => import('./panels/docs/GamificationAndAchievementsPanel'));
 const FAQSupportPanel = lazy(() => import('./panels/docs/FAQSupportPanel'));
 const AnalyticsReportingPanel = lazy(() => import('./panels/docs/AnalyticsReportingPanel'));
+const NftMarketplacePanel = lazy(() => import('./panels/docs/NftMarketplacePanel'));
+const AdvancedPortfolioAnalyticsPanel = lazy(() => import('./panels/docs/AdvancedPortfolioAnalyticsPanel'));
+const PrivacyVaultPanel = lazy(() => import('./panels/docs/PrivacyVaultPanel'));
+const TokenMarketplacePanel = lazy(() => import('./panels/docs/TokenMarketplacePanel'));
+const GovernanceProposalsPanel = lazy(() => import('./panels/docs/GovernanceProposalsPanel'));
+const TreasuryManagementPanel = lazy(() => import('./panels/docs/TreasuryManagementPanel'));
+const IntegrationMarketplacePanel = lazy(() => import('./panels/docs/IntegrationMarketplacePanel'));
+const MediaStreamingPanel = lazy(() => import('./panels/docs/MediaStreamingPanel'));
+const QuantumSecurityPanel = lazy(() => import('./panels/docs/QuantumSecurityPanel'));
+const OnChainAnalyticsPanel = lazy(() => import('./panels/docs/OnChainAnalyticsPanel'));
 
 export const panelRegistry = {
   // Infrastructure Panels (GPU, Fees, Bridges)
@@ -264,6 +274,63 @@ export const panelRegistry = {
   'metrics': AnalyticsReportingPanel,
   'trending': AnalyticsReportingPanel,
 
+  'nft-marketplace': NftMarketplacePanel,
+  'nft-market': NftMarketplacePanel,
+  'nft-collections': NftMarketplacePanel,
+  'nft-discovery': NftMarketplacePanel,
+  'nft-rarity': NftMarketplacePanel,
+  'floor-price': NftMarketplacePanel,
+  'collection-analytics': NftMarketplacePanel,
+  'nft-trading': NftMarketplacePanel,
+  'nft-sales': NftMarketplacePanel,
+
+  'token-marketplace': TokenMarketplacePanel,
+  'token-market': TokenMarketplacePanel,
+  'token-listings': TokenMarketplacePanel,
+  'market-cap': TokenMarketplacePanel,
+  'token-volume': TokenMarketplacePanel,
+  'token-launches': TokenMarketplacePanel,
+  'token-pairs': TokenMarketplacePanel,
+  'token-trading': TokenMarketplacePanel,
+
+  'governance': GovernanceProposalsPanel,
+  'proposals': GovernanceProposalsPanel,
+  'voting': GovernanceProposalsPanel,
+  'dao': GovernanceProposalsPanel,
+  'snapshot': GovernanceProposalsPanel,
+  'poll': GovernanceProposalsPanel,
+
+  'treasury': TreasuryManagementPanel,
+  'multisig': TreasuryManagementPanel,
+  'budget': TreasuryManagementPanel,
+  'spending': TreasuryManagementPanel,
+  'fund-allocation': TreasuryManagementPanel,
+
+  'integrations': IntegrationMarketplacePanel,
+  'plugins': IntegrationMarketplacePanel,
+  'marketplace': IntegrationMarketplacePanel,
+  'extensions': IntegrationMarketplacePanel,
+  'app-store': IntegrationMarketplacePanel,
+
+  'streaming': MediaStreamingPanel,
+  'music': MediaStreamingPanel,
+  'media': MediaStreamingPanel,
+  'audio': MediaStreamingPanel,
+  'creator-monetization': MediaStreamingPanel,
+
+  'quantum': QuantumSecurityPanel,
+  'post-quantum': QuantumSecurityPanel,
+  'quantum-security': QuantumSecurityPanel,
+  'lattice': QuantumSecurityPanel,
+
+  'on-chain': OnChainAnalyticsPanel,
+  'chain-analytics': OnChainAnalyticsPanel,
+  'tvl': OnChainAnalyticsPanel,
+  'gas-fees': OnChainAnalyticsPanel,
+  'smart-contracts': OnChainAnalyticsPanel,
+
+};
+
 export type PanelId = keyof typeof panelRegistry;
 
 export function getPanelComponent(panelId: PanelId): React.ComponentType | undefined {
@@ -438,6 +505,54 @@ export const panelMetadata = {
     category: 'Analytics',
     description: 'Comprehensive metrics, trend analysis, and downloadable reports',
     tags: ['analytics', 'reporting', 'metrics', 'trends'],
+  },
+  'nft-marketplace': {
+    name: 'NFT Marketplace',
+    category: 'Web3 Trading',
+    description: 'Collection discovery, rarity ranking, floor prices, and trading activity',
+    tags: ['nft', 'marketplace', 'trading', 'rarity', 'analytics'],
+  },
+  'token-marketplace': {
+    name: 'Token Marketplace',
+    category: 'Web3 Trading',
+    description: 'Token listings with market cap ranking, 24h volume, 7d returns, price charts, launch tracking',
+    tags: ['tokens', 'marketplace', 'trading', 'market-cap', 'volume'],
+  },
+  'governance': {
+    name: 'Governance Proposals',
+    category: 'DAO',
+    description: 'DAO proposal submission, voting interface, vote breakdown, quorum tracking, timeline visualization',
+    tags: ['governance', 'voting', 'dao', 'proposals', 'consensus'],
+  },
+  'treasury': {
+    name: 'Treasury Management',
+    category: 'DAO',
+    description: 'Multi-sig wallet control, budget allocation by category, spending history, approval workflows',
+    tags: ['treasury', 'multisig', 'budget', 'wallet', 'dao'],
+  },
+  'integrations': {
+    name: 'Integration Marketplace',
+    category: 'Ecosystem',
+    description: 'Plugin discovery with adoption stats, rating system, category browsing, developer ecosystem metrics',
+    tags: ['integrations', 'plugins', 'marketplace', 'ecosystem', 'extensions'],
+  },
+  'streaming': {
+    name: 'Media Streaming',
+    category: 'Creator Economy',
+    description: 'Decentralized music/video with creator micropayments per-stream, stream analytics, creator profiles',
+    tags: ['streaming', 'music', 'media', 'creator', 'monetization'],
+  },
+  'quantum': {
+    name: 'Quantum Security',
+    category: 'Security',
+    description: 'Post-quantum crypto readiness assessment, lattice algorithm migration status, security audit results',
+    tags: ['quantum', 'security', 'cryptography', 'latice', 'fips'],
+  },
+  'on-chain': {
+    name: 'On-Chain Analytics',
+    category: 'Analytics',
+    description: 'Real-time TVL tracking, transaction volume/velocity, gas fee trends, smart contract call monitoring',
+    tags: ['analytics', 'tvl', 'volume', 'gas', 'smart-contracts'],
   },
 };
 

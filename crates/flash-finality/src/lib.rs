@@ -36,6 +36,9 @@ use tokio::sync::{Mutex, RwLock};
 use tokio::time::{interval, Duration, Instant};
 use tracing::{debug, error, info, warn};
 
+pub mod gossip_bridge;
+pub use gossip_bridge::{FlashFinalityGossipBridge, FlashGossipMessage, NetworkStats};
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /// A block hash (32 bytes as hex string for human readability in logs).
@@ -64,9 +67,9 @@ pub struct Proposal {
 impl Proposal {
     pub fn message_hash(&self) -> [u8; 32] {
         let mut h = Sha256::new();
-        h.update(&self.block_hash);
+        h.update(self.block_hash);
         h.update(self.round.to_le_bytes());
-        h.update(&self.leader_id);
+        h.update(self.leader_id);
         h.finalize().into()
     }
 
@@ -99,13 +102,13 @@ pub struct Vote {
 impl Vote {
     pub fn message_hash(&self) -> [u8; 32] {
         let mut h = Sha256::new();
-        h.update(&self.block_hash);
+        h.update(self.block_hash);
         h.update(self.round.to_le_bytes());
-        h.update(&self.voter_id);
+        h.update(self.voter_id);
         h.finalize().into()
     }
 
-      /// Verify signature using sr25519.
+    /// Verify signature using sr25519.
     pub fn verify(&self) -> bool {
         // Stub implementation - in production this would use sp_core::sr25519::Pair::verify
         // For now, we just validate that signatures exist (non-empty)
@@ -135,11 +138,11 @@ impl FinalityCertificate {
     /// Compute a stable certificate hash for use as a PoAE proof anchor.
     pub fn cert_hash(&self) -> [u8; 32] {
         let mut h = Sha256::new();
-        h.update(&self.block_hash);
+        h.update(self.block_hash);
         h.update(self.block_number.to_le_bytes());
         h.update(self.round.to_le_bytes());
         h.update(self.vote_count.to_le_bytes());
-        h.update(&self.voter_set_hash);
+        h.update(self.voter_set_hash);
         h.finalize().into()
     }
 }
@@ -287,11 +290,16 @@ pub struct FlashFinalityGadget {
     /// Externally set GRANDPA finalized head for comparison.
     grandpa_head: Arc<RwLock<(BlockNumber, BlockHash)>>,
     /// Keystore for signing proposals (type-erased to avoid dependency).
+    #[allow(dead_code)]
     keystore: Option<Box<dyn std::any::Any + Send + Sync>>,
 }
 
 impl FlashFinalityGadget {
-    pub fn new(config: FlashFinalityConfig, my_id: ValidatorId, keystore: Option<Box<dyn std::any::Any + Send + Sync>>) -> Self {
+    pub fn new(
+        config: FlashFinalityConfig,
+        my_id: ValidatorId,
+        keystore: Option<Box<dyn std::any::Any + Send + Sync>>,
+    ) -> Self {
         Self {
             config,
             my_id,
@@ -327,7 +335,9 @@ impl FlashFinalityGadget {
 
         debug!(
             "[FlashFinality] New round {} for block #{} {:?}",
-            round.round, block_number, hex::encode(block_hash)
+            round.round,
+            block_number,
+            hex::encode(block_hash)
         );
 
         // Build proposal (leader = self for now — real impl uses VRF leader election)
@@ -356,7 +366,10 @@ impl FlashFinalityGadget {
         round.block_hash = Some(proposal.block_hash);
         round.proposal = Some(proposal.clone());
 
-        debug!("[FlashFinality] Accepted proposal for round {}", proposal.round);
+        debug!(
+            "[FlashFinality] Accepted proposal for round {}",
+            proposal.round
+        );
     }
 
     /// Called when a vote message arrives from the network.
@@ -380,7 +393,10 @@ impl FlashFinalityGadget {
         let block_hash = match round.block_hash {
             Some(h) => h,
             None => {
-                warn!("[FlashFinality] Vote received before proposal in round {}", vote.round);
+                warn!(
+                    "[FlashFinality] Vote received before proposal in round {}",
+                    vote.round
+                );
                 return None;
             }
         };
@@ -493,9 +509,15 @@ impl FlashFinalityGadget {
     }
 
     /// Get a recent finality certificate by block number.
-    pub async fn get_certificate_by_number(&self, block_number: BlockNumber) -> Option<FinalityCertificate> {
+    pub async fn get_certificate_by_number(
+        &self,
+        block_number: BlockNumber,
+    ) -> Option<FinalityCertificate> {
         let certs = self.certificates.lock().await;
-        certs.iter().find(|c| c.block_number == block_number).cloned()
+        certs
+            .iter()
+            .find(|c| c.block_number == block_number)
+            .cloned()
     }
 
     /// Get current metrics snapshot.
@@ -517,9 +539,9 @@ impl FlashFinalityGadget {
 
     /// Spawn a background task that monitors for round timeouts.
     /// Liveness alert: if a round exceeds `round_timeout_ms`, log and advance.
-    pub fn spawn_timeout_monitor(self: Arc<Self>) -> tokio::task::JoinHandle<()> {
+    pub fn spawn_timeout_monitor(self: Arc<Self>) -> impl std::future::Future<Output = ()> {
         let gadget = self.clone();
-        tokio::spawn(async move {
+        async move {
             let tick = Duration::from_millis(gadget.config.round_timeout_ms / 4);
             let mut ticker = interval(tick);
 
@@ -545,7 +567,7 @@ impl FlashFinalityGadget {
                     metrics.rounds_timed_out += 1;
                 }
             }
-        })
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -591,7 +613,11 @@ impl FlashFinalityGadget {
             is_shadow: self.config.shadow_mode,
         };
 
-        let mode = if self.config.shadow_mode { "SHADOW" } else { "LIVE" };
+        let mode = if self.config.shadow_mode {
+            "SHADOW"
+        } else {
+            "LIVE"
+        };
         info!(
             "[FlashFinality] 📜 [{mode}] Certificate produced: block #{} hash={} round={} votes={}/{}",
             cert.block_number,
@@ -797,7 +823,9 @@ mod tests {
                 shadow_validation_threshold: 3,
                 ..FlashFinalityConfig::default()
             },
-            make_id(0xAA),            None,        ));
+            make_id(0xAA),
+            None,
+        ));
 
         let h = make_hash(0x10);
         gadget.update_grandpa_head(1, h).await;
@@ -841,9 +869,15 @@ mod tests {
         assert_eq!(proposal.block_number, block_number);
 
         // 3 of 4 validators vote (quorum threshold)
-        let vote1 = gadget.on_vote(make_vote(block_hash, proposal.round, 0x11)).await;
-        let vote2 = gadget.on_vote(make_vote(block_hash, proposal.round, 0x22)).await;
-        let vote3 = gadget.on_vote(make_vote(block_hash, proposal.round, 0x33)).await;
+        let vote1 = gadget
+            .on_vote(make_vote(block_hash, proposal.round, 0x11))
+            .await;
+        let vote2 = gadget
+            .on_vote(make_vote(block_hash, proposal.round, 0x22))
+            .await;
+        let vote3 = gadget
+            .on_vote(make_vote(block_hash, proposal.round, 0x33))
+            .await;
 
         assert!(vote1.is_none(), "1st vote: no quorum yet");
         assert!(vote2.is_none(), "2nd vote: no quorum yet");
@@ -874,7 +908,10 @@ mod tests {
         // Depending on implementation, cert4 might be None or Some(cert) with vote_count=3
         // Either way, it shouldn't panic or break quorum tracking
         if let Some(c) = cert4 {
-            assert!(c.vote_count <= 4, "vote count should not exceed validator count");
+            assert!(
+                c.vote_count <= 4,
+                "vote count should not exceed validator count"
+            );
         }
     }
 
@@ -946,7 +983,10 @@ mod tests {
         let metrics = gadget.metrics().await;
         // Rounds are only completed when a certificate is produced (quorum reached)
         // Since we're not depositing votes here, no certificates are produced
-        assert_eq!(metrics.shadow_agreements, 0, "No explicit GRANDPA comparisons yet");
+        assert_eq!(
+            metrics.shadow_agreements, 0,
+            "No explicit GRANDPA comparisons yet"
+        );
     }
 
     /// Test that Live mode flag is correctly set during initialization.
@@ -954,7 +994,7 @@ mod tests {
     async fn test_live_mode_flag_controls_finality_application() {
         let live_gadget = Arc::new(FlashFinalityGadget::new(
             FlashFinalityConfig {
-                shadow_mode: false,  // LIVE mode
+                shadow_mode: false, // LIVE mode
                 ..Default::default()
             },
             make_id(0xAA),
@@ -963,15 +1003,20 @@ mod tests {
 
         let shadow_gadget = Arc::new(FlashFinalityGadget::new(
             FlashFinalityConfig {
-                shadow_mode: true,   // SHADOW mode
+                shadow_mode: true, // SHADOW mode
                 ..Default::default()
             },
             make_id(0xBB),
             None,
         ));
 
-        assert!(!live_gadget.config.shadow_mode, "Live gadget should have shadow_mode=false");
-        assert!(shadow_gadget.config.shadow_mode, "Shadow gadget should have shadow_mode=true");
+        assert!(
+            !live_gadget.config.shadow_mode,
+            "Live gadget should have shadow_mode=false"
+        );
+        assert!(
+            shadow_gadget.config.shadow_mode,
+            "Shadow gadget should have shadow_mode=true"
+        );
     }
 }
-

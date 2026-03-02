@@ -297,3 +297,146 @@ pub struct CrmStats {
     pub email_sent_count: i32,
     pub activity_count: i32,
 }
+
+/* ── CSV Import ──────────────────────────────────── */
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvImportRequest {
+    pub csv_content: String,
+    pub column_mapping: std::collections::HashMap<String, String>, // CSV header -> Contact field
+    pub skip_duplicates: bool,
+    pub update_existing: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CsvImportResult {
+    pub imported_count: i32,
+    pub duplicate_count: i32,
+    pub updated_count: i32,
+    pub error_count: i32,
+    pub errors: Vec<String>,
+}
+
+/* ── Contact Deduplication ───────────────────────── */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DuplicateContact {
+    pub id1: String,
+    pub id2: String,
+    pub name1: String,
+    pub name2: String,
+    pub email1: String,
+    pub email2: String,
+    pub similarity_score: f32,
+    pub reason: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeContactsInput {
+    pub primary_id: String,
+    pub secondary_id: String,
+    pub keep_fields: std::collections::HashMap<String, String>, // Field -> which ID's value to keep
+}
+
+/* ── Campaign Management ─────────────────────────── */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Campaign {
+    pub id: String,
+    pub owner_user_id: String,
+    pub name: String,
+    pub description: String,
+    pub campaign_type: String, // email, sms, social, etc.
+    pub status: String,        // draft, scheduled, active, completed
+    pub target_contacts: i32,
+    pub sent_count: i32,
+    pub opened_count: i32,
+    pub clicked_count: i32,
+    pub conversion_count: i32,
+    pub scheduled_at: String,
+    pub started_at: String,
+    pub completed_at: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCampaignInput {
+    pub name: String,
+    pub description: Option<String>,
+    pub campaign_type: String,
+    pub scheduled_at: Option<String>,
+}
+
+/* ── Lead Scoring ────────────────────────────────── */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LeadScore {
+    pub contact_id: String,
+    pub score: i32,      // 0-100
+    pub grade: String,   // A, B, C, D, F
+    pub engagement_points: i32,
+    pub company_points: i32,
+    pub behavioral_points: i32,
+    pub last_updated: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContactWithScore {
+    pub contact: Contact,
+    pub lead_score: LeadScore,
+}
+
+/* ── Bulk Actions ────────────────────────────────── */
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BulkUpdateInput {
+    pub contact_ids: Vec<String>,
+    pub updates: std::collections::HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BulkActionResult {
+    pub success_count: i32,
+    pub failure_count: i32,
+    pub errors: Vec<String>,
+}
+
+/* ── Deal Forecasting ────────────────────────────── */
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DealForecast {
+    pub month: String,  // YYYY-MM
+    pub confidence_low: f64,
+    pub confidence_mid: f64,
+    pub confidence_high: f64,
+    pub expected_value: f64,
+    pub historical_accuracy: f32, // 0-100 %
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PipelineAnalytics {
+    pub total_value: f64,
+    pub total_deals: i32,
+    pub average_deal_value: f64,
+    pub weighted_forecast: f64,
+    pub stage_breakdown: std::collections::HashMap<String, PipelineStageStats>,
+    pub months_forecast: Vec<DealForecast>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PipelineStageStats {
+    pub stage_name: String,
+    pub count: i32,
+    pub total_value: f64,
+    pub avg_days_in_stage: f32,
+    pub win_probability: f32,
+}
+

@@ -209,7 +209,7 @@ const TopNavBar: React.FC = () => {
   };
 
   const ROLE_ICON: Record<string, string> = { team: '🔶', admin: '👑', vip: '💎' };
-  const ROLE_COLOR: Record<string, string> = { team: '#ff6b35', admin: '#ff2d55', vip: '#a855f7' };
+  const ROLE_COLOR: Record<string, string> = { team: '#1a9fb5', admin: '#ff2d55', vip: '#0d5f7a' };
 
   const handleMenuClick = useCallback((menuName: string, event: React.MouseEvent) => {
     event.preventDefault();
@@ -307,17 +307,22 @@ const TopNavBar: React.FC = () => {
   return (
     <div className="relative">
       {/* Top Navigation Bar */}
-      <div className="h-10 bg-gradient-to-r from-bg-primary/95 via-bg-secondary/95 to-bg-primary/95
-        backdrop-blur-md border-b border-border-default flex items-center px-4 gap-1
-        shadow-lg z-30">
+      <div className="h-10 bg-gradient-to-r from-[#0a0a0c]/95 via-[#0d1f26]/95 to-[#0a0a0c]/95
+        backdrop-blur-md border-b border-[#1a9fb5]/30 flex items-center px-4 gap-1 z-30"
+        style={{
+          boxShadow: '0 4px 20px rgba(26, 159, 181, 0.3), 0 0 30px rgba(26, 159, 181, 0.15), inset 0 1px 0 rgba(26, 159, 181, 0.2)'
+        }}>
 
         {/* X3 Logo */}
         <div className="flex items-center gap-2 mr-6">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary
-            flex items-center justify-center text-xs font-bold text-white shadow-lg">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#1a9fb5] to-[#0d5f7a]
+            flex items-center justify-center text-xs font-bold text-white shadow-lg"
+            style={{
+              boxShadow: '0 0 15px rgba(26, 159, 181, 0.6)'
+            }}>
             A
           </div>
-          <span className="text-sm font-semibold text-text-primary">X3</span>
+          <span className="text-sm font-semibold text-[#2ab4cc]">X3</span>
         </div>
 
         {/* Menu Buttons */}
@@ -326,8 +331,8 @@ const TopNavBar: React.FC = () => {
             key={menuName}
             ref={(el) => menuRefs.current[menuName] = el}
             className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200
-              hover:bg-accent-primary/20 hover:text-accent-primary capitalize
-              ${openMenu === menuName ? 'bg-accent-primary/30 text-accent-primary shadow-md' : 'text-text-secondary'}`}
+              hover:bg-[#1a9fb5]/20 hover:text-[#2ab4cc] capitalize
+              ${openMenu === menuName ? 'bg-[#1a9fb5]/30 text-[#2ab4cc] shadow-md' : 'text-[#a8a8a8]'}`}
             onClick={(e) => handleMenuClick(menuName, e)}
           >
             {menuName}
@@ -338,8 +343,8 @@ const TopNavBar: React.FC = () => {
         <button
           ref={appsButtonRef}
           className={`px-3 py-1 text-sm font-medium rounded-md transition-all duration-200
-            hover:bg-accent-primary/20 hover:text-accent-primary
-            ${showAppsMenu ? 'bg-accent-primary/30 text-accent-primary shadow-md' : 'text-text-secondary'}`}
+            hover:bg-[#1a9fb5]/20 hover:text-[#2ab4cc]
+            ${showAppsMenu ? 'bg-[#1a9fb5]/30 text-[#2ab4cc] shadow-md' : 'text-[#a8a8a8]'}`}
           onClick={() => { setOpenMenu(null); setShowAppsMenu(!showAppsMenu); setAppsMenuFilter(''); }}
         >
           🚀 Apps

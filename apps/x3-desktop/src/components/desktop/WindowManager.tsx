@@ -32,7 +32,7 @@ const TitleBar: React.FC<TitleBarProps> = ({
     className="flex items-center h-9 px-3 cursor-grab active:cursor-grabbing
       select-none shrink-0 rounded-t-lg"
     style={{
-      background: `linear-gradient(90deg, ${win.accentColor ?? "#ff6b35"}22 0%, transparent 40%)`,
+      background: `linear-gradient(90deg, ${win.accentColor ?? "#1a9fb5"}22 0%, transparent 40%)`,
       borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}
     onMouseDown={onDragStart}
@@ -249,7 +249,7 @@ const WindowContent: React.FC<{ appId: string; title?: string }> = ({ appId, tit
     return (
       <Suspense fallback={
         <div className="flex items-center justify-center h-full bg-[#0a0a0f]">
-          <div className="inline-block w-5 h-5 border-2 border-[#ff6b35]/30 border-t-[#ff6b35] rounded-full animate-spin" />
+          <div className="inline-block w-5 h-5 border-2 border-[#1a9fb5]/30 border-t-[#1a9fb5] rounded-full animate-spin" />
         </div>
       }>
         <IframePanel url={app.launchCommand.target} title={app.name} />

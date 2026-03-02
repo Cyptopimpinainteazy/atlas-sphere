@@ -53,9 +53,9 @@ const BottomNavBar: React.FC<{
       role="navigation"
       aria-label="Bottom navigation"
     >
-      <div className="glass-panel flex items-center gap-3 px-6 py-3 rounded-full border border-white/20 shadow-2xl"
+      <div className="glass-panel flex items-center gap-3 px-6 py-3 rounded-full border border-[#1a9fb5]/40 shadow-2xl"
         style={{
-          boxShadow: '0 0 40px rgba(236, 72, 153, 0.6), 0 0 20px rgba(236, 72, 153, 0.4), 0 8px 16px rgba(0, 0, 0, 0.4)'
+          boxShadow: '0 0 40px rgba(26, 159, 181, 0.7), 0 0 20px rgba(26, 159, 181, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4)'
         }}>
         {/* Left column items */}
         <div className="flex gap-3">

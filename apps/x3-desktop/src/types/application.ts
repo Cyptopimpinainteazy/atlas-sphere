@@ -115,11 +115,11 @@ export type ProcessStatus =
 
 /** Category icon/color mapping for placeholder generation */
 export const CATEGORY_COLORS: Record<ApplicationCategory, string> = {
-  blockchain: "#ff6b35",
+  blockchain: "#1a9fb5",
   analysis: "#42a5f5",
   utility: "#66bb6a",
   service: "#ab47bc",
-  defi: "#ffa726",
+  defi: "#2ab4cc",
   security: "#ef5350",
   development: "#26c6da",
   other: "#78909c",

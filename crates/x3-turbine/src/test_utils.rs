@@ -2,8 +2,8 @@
 
 use crate::blockstore::BlockstoreConfig;
 use crate::config::{ShredConfig, TurbineConfig};
-use crate::shred::{Shred, ShredPayload};
 use crate::peer::{PeerInfo, PeerRole};
+use crate::shred::{Shred, ShredPayload};
 use crate::Turbine;
 
 /// Create a test turbine instance
@@ -14,7 +14,7 @@ pub fn create_test_turbine() -> Turbine {
         num_coding_shreds: 4,
         ..Default::default()
     };
-    
+
     Turbine::new(config)
 }
 
@@ -55,7 +55,7 @@ pub fn create_test_shred(slot: u64, index: u32, num_shreds: u32) -> Shred {
     let data = format!("test-shred-data-{}", index);
     let payload = ShredPayload::new(data.into_bytes());
     let reference = [0u8; 32];
-    
+
     if index < num_shreds / 2 {
         Shred::new_data(slot, index, num_shreds, reference, payload)
     } else {
@@ -72,14 +72,14 @@ pub fn create_test_shreds(slot: u64, num_shreds: u32) -> Vec<Shred> {
 
 /// Mock peer manager for testing
 pub mod mock_peer_manager {
-    use crate::peer::{PeerInfo, PeerManager, PeerRole};
     use crate::config::TurbineConfig;
-    
+    use crate::peer::{PeerInfo, PeerManager, PeerRole};
+
     pub fn create() -> PeerManager {
         let config = TurbineConfig::default();
         PeerManager::new(config)
     }
-    
+
     pub fn add_test_peers(manager: &PeerManager, count: usize) {
         for i in 0..count {
             let peer = PeerInfo::new(

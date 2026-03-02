@@ -4,10 +4,14 @@
 //! path resolution, and AMM integration.
 
 use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::BoundedVec;
 use scale_info::TypeInfo;
 use sp_core::{H256, U256};
 use sp_runtime::RuntimeDebug;
 use sp_std::vec::Vec;
+
+// Type alias for protocol address - max 64 bytes, covers all VM address formats
+pub type ProtocolAddress = BoundedVec<u8, frame_support::traits::ConstU32<64>>;
 
 // ============================================================================
 // Core Types (exported to crate root)
@@ -64,22 +68,22 @@ pub enum AmmProtocol {
 // ============================================================================
 
 /// Represents a tradeable asset in the system.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct Asset {
     /// Unique asset identifier (H256 for cross-VM compatibility)
     pub id: H256,
     /// Human-readable symbol (e.g., "ETH", "SOL")
-    pub symbol: Vec<u8>,
+    pub symbol: ProtocolAddress,
     /// Decimal precision
     pub decimals: u8,
     /// Native VM for this asset
     pub native_vm: VmType,
     /// Contract/program address on native VM
-    pub address: Vec<u8>,
+    pub address: ProtocolAddress,
 }
 
 /// Liquidity pool information for trade routing.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct LiquidityPool {
     /// Pool identifier
     pub pool_id: H256,
@@ -98,7 +102,7 @@ pub struct LiquidityPool {
     /// Fee in basis points
     pub fee_bps: u32,
     /// Pool address/account
-    pub address: Vec<u8>,
+    pub address: ProtocolAddress,
 }
 
 impl LiquidityPool {
@@ -435,7 +439,7 @@ mod tests {
             reserve_a: 1_000_000_000_000_000_000u128, // 1e18
             reserve_b: 2_000_000_000_000_000_000u128, // 2e18
             fee_bps: 30,                              // 0.3%
-            address: vec![0u8; 20],
+            address: BoundedVec::try_from(vec![0u8; 20]).unwrap(),
         }
     }
 
