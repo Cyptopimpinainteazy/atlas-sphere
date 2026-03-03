@@ -2,6 +2,7 @@
 name = "x3-intent"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 Arb Intent System — intent-based execution lifecycle"
 
 [dependencies]

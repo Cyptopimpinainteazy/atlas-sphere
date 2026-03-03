@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { act, screen } from '@testing-library/react';
+import { renderWithRouter } from './setup';
 import { FloorDashboard } from '../../src/pages/FloorDashboard';
 import * as api from '../../src/services/api';
 
@@ -15,11 +15,11 @@ describe('FloorDashboard', () => {
     (api.getFloorStats as any).mockRejectedValue(new Error('API error'));
     (api.getIntents as any).mockRejectedValue(new Error('API error'));
 
-    render(
-      <BrowserRouter>
-        <FloorDashboard />
-      </BrowserRouter>
-    );
+    // Wrapping render in act(async) drains all Promise microtasks (mock
+    // rejections → setState) before assertions, eliminating act() warnings.
+    await act(async () => {
+      renderWithRouter(<FloorDashboard />);
+    });
 
     expect(screen.getByText('X3 Floor')).toBeInTheDocument();
     expect(screen.getByText('Arbitrage jurisdiction — live')).toBeInTheDocument();
@@ -29,16 +29,12 @@ describe('FloorDashboard', () => {
     (api.getFloorStats as any).mockRejectedValue(new Error('API error'));
     (api.getIntents as any).mockRejectedValue(new Error('API error'));
 
-    render(
-      <BrowserRouter>
-        <FloorDashboard />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Active Agents')).toBeInTheDocument();
-      expect(screen.getByText('Total Intents')).toBeInTheDocument();
+    await act(async () => {
+      renderWithRouter(<FloorDashboard />);
     });
+
+    expect(screen.getByText('Active Agents')).toBeInTheDocument();
+    expect(screen.getByText('Total Intents')).toBeInTheDocument();
   });
 
   it('should fetch and display live data', async () => {
@@ -62,15 +58,11 @@ describe('FloorDashboard', () => {
     (api.getFloorStats as any).mockResolvedValue(mockStats);
     (api.getIntents as any).mockResolvedValue(mockIntents);
 
-    render(
-      <BrowserRouter>
-        <FloorDashboard />
-      </BrowserRouter>
-    );
-
-    await waitFor(() => {
-      expect(api.getFloorStats).toHaveBeenCalled();
-      expect(api.getIntents).toHaveBeenCalled();
+    await act(async () => {
+      renderWithRouter(<FloorDashboard />);
     });
+
+    expect(api.getFloorStats).toHaveBeenCalled();
+    expect(api.getIntents).toHaveBeenCalled();
   });
 });

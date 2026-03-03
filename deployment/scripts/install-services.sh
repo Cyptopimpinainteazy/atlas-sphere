@@ -33,6 +33,12 @@ mkdir -p /var/log/x3
 chown x3:x3 /var/log/x3
 chmod 755 /var/log/x3
 
+# Verify binaries exist before installing
+echo "📝 Verifying dependencies..."
+if ! command -v redis-server &> /dev/null; then
+    echo "⚠️  WARNING: redis-server not found. Install: sudo apt-get install redis-server"
+fi
+
 # Copy service files
 echo "📝 Installing systemd service files..."
 cp "$SERVICES_DIR/ccgv-validator.service" /etc/systemd/system/
@@ -41,7 +47,7 @@ cp "$SERVICES_DIR/redis.service" /etc/systemd/system/
 
 # Reload systemd daemon
 echo "🔄 Reloading systemd daemon..."
-systemctl daemon-reload
+systemctl daemon-reload || echo "⚠️  WARNING: systemctl daemon-reload failed. Your systemd may be unstable."
 
 # Enable services (auto-start on boot)
 echo "⚙️  Enabling services for auto-start..."

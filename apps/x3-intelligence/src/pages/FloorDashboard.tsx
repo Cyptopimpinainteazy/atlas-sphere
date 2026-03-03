@@ -6,6 +6,7 @@ import { IntentState } from "../types";
 import { getFloorStats, getIntents } from "../services/api";
 import { Button, Metric, ProgressBar, Badge, Loading } from "../components/UIComponents";
 import HelpModal from "../components/HelpModal";
+import { dataIntegrity } from "../services/dataIntegrity";
 import { useWebSocket } from "../hooks/useWebSocket";
 import {
   VolumeTrendChart,
@@ -177,7 +178,11 @@ export function FloorDashboard() {
         ]);
         setSuccessSeries((srs) => [...srs.slice(-4), s.avgSuccessRate]);
       } catch (e) {
-        // No backend? keep demo data
+        // No backend — keep demo data, but raise the integrity flag.
+        dataIntegrity.reportDemoFallback(
+          "FloorDashboard",
+          e instanceof Error ? e.message : String(e),
+        );
       } finally {
         setLoading(false);
       }

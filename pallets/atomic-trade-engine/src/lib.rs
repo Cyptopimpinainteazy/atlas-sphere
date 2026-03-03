@@ -43,6 +43,8 @@
 //! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
+// FRAME pallet macros generate functions with many parameters; suppress the lint.
+#![allow(clippy::too_many_arguments)]
 
 pub use pallet::*;
 

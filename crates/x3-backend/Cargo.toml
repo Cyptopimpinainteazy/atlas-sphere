@@ -2,6 +2,7 @@
 name = "x3-backend"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 bytecode backend: HIR → bytecode lowering for the X3 virtual machine"
 publish = false
 

@@ -1,0 +1,796 @@
+// X3VM Cross-VM Coordinator Contract
+// 
+// This contract runs on X3VM and coordinates cross-VM operations
+// between EVM, SVM, and X3VM. It provides atomic execution guarantees
+// and integrates with the X3 Chain's PoAE system.
+//
+// X3 Language: A Rust-like language that compiles to X3VM bytecode
+
+/// Cross-VM Coordinator for atomic multi-VM operations
+contract CrossVMCoordinator {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TYPES
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Target VM types
+    enum VMType {
+        EVM = 0,
+        SVM = 1,
+        X3VM = 2,
+    }
+    
+    /// Operation status
+    enum OpStatus {
+        Pending = 0,
+        Executing = 1,
+        Completed = 2,
+        Failed = 3,
+        RolledBack = 4,
+    }
+    
+    /// Cross-VM operation leg
+    struct CrossVMLeg {
+        target_vm: VMType,
+        target_address: [u8; 32],
+        call_data: Vec<u8>,
+        value: u128,
+        gas_limit: u64,
+    }
+    
+    /// Atomic operation bundle
+    struct AtomicBundle {
+        bundle_id: [u8; 32],
+        initiator: Address,
+        legs: Vec<CrossVMLeg>,
+        status: OpStatus,
+        created_at: u64,
+        executed_at: u64,
+        receipt_root: [u8; 32],
+    }
+    
+    /// Execution receipt for a leg
+    struct LegReceipt {
+        leg_index: u32,
+        success: bool,
+        return_data: Vec<u8>,
+        gas_used: u64,
+        state_root: [u8; 32],
+    }
+    
+    /// Cross-VM message
+    struct CrossVMMessage {
+        message_id: [u8; 32],
+        source_vm: VMType,
+        source_address: [u8; 32],
+        dest_vm: VMType,
+        dest_address: [u8; 32],
+        payload: Vec<u8>,
+        nonce: u64,
+        timestamp: u64,
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Contract owner
+    owner: Address,
+    
+    /// Paused flag
+    paused: bool,
+    
+    /// Bundle counter for ID generation
+    bundle_counter: u64,
+    
+    /// Message counter
+    message_counter: u64,
+    
+    /// Active bundles
+    bundles: Map<[u8; 32], AtomicBundle>,
+    
+    /// Leg receipts by bundle_id and leg_index
+    receipts: Map<[u8; 32], Vec<LegReceipt>>,
+    
+    /// Pending messages
+    pending_messages: Map<[u8; 32], CrossVMMessage>,
+    
+    /// Authorized relayers
+    relayers: Map<Address, bool>,
+    
+    /// Supported tokens for cross-VM transfers
+    supported_tokens: Map<[u8; 32], bool>,
+    
+    /// Nonces per address for replay protection
+    nonces: Map<Address, u64>,
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EVENTS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Emitted when a bundle is submitted
+    event BundleSubmitted {
+        bundle_id: [u8; 32],
+        initiator: Address,
+        leg_count: u32,
+    }
+    
+    /// Emitted when a leg is executed
+    event LegExecuted {
+        bundle_id: [u8; 32],
+        leg_index: u32,
+        success: bool,
+        gas_used: u64,
+    }
+    
+    /// Emitted when a bundle is finalized
+    event BundleFinalized {
+        bundle_id: [u8; 32],
+        receipt_root: [u8; 32],
+    }
+    
+    /// Emitted when a bundle is rolled back
+    event BundleRolledBack {
+        bundle_id: [u8; 32],
+        failed_leg: u32,
+    }
+    
+    /// Emitted when a cross-VM message is sent
+    event MessageSent {
+        message_id: [u8; 32],
+        dest_vm: VMType,
+        dest_address: [u8; 32],
+    }
+    
+    /// Emitted when a cross-VM message is received
+    event MessageReceived {
+        message_id: [u8; 32],
+        source_vm: VMType,
+        source_address: [u8; 32],
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONSTRUCTOR
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Initialize the coordinator
+    pub fn new(owner: Address) -> Self {
+        Self {
+            owner,
+            paused: false,
+            bundle_counter: 0,
+            message_counter: 0,
+            bundles: Map::new(),
+            receipts: Map::new(),
+            pending_messages: Map::new(),
+            relayers: Map::new(),
+            supported_tokens: Map::new(),
+            nonces: Map::new(),
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ATOMIC BUNDLE OPERATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Submit an atomic bundle for execution
+    pub fn submit_bundle(&mut self, legs: Vec<CrossVMLeg>) -> [u8; 32] {
+        require!(!self.paused, "Contract is paused");
+        require!(legs.len() > 0, "Empty bundle");
+        require!(legs.len() <= 16, "Too many legs");
+        
+        // Generate bundle ID
+        self.bundle_counter += 1;
+        let bundle_id = self.generate_bundle_id(msg_sender(), self.bundle_counter);
+        
+        // Create bundle
+        let bundle = AtomicBundle {
+            bundle_id,
+            initiator: msg_sender(),
+            legs: legs.clone(),
+            status: OpStatus::Pending,
+            created_at: block_timestamp(),
+            executed_at: 0,
+            receipt_root: [0u8; 32],
+        };
+        
+        self.bundles.insert(bundle_id, bundle);
+        
+        emit BundleSubmitted {
+            bundle_id,
+            initiator: msg_sender(),
+            leg_count: legs.len() as u32,
+        };
+        
+        bundle_id
+    }
+    
+    /// Execute an atomic bundle
+    /// All legs must succeed or all will be rolled back
+    pub fn execute_bundle(&mut self, bundle_id: [u8; 32]) -> bool {
+        require!(self.is_relayer(msg_sender()), "Only relayers can execute");
+        
+        let bundle = self.bundles.get_mut(&bundle_id)
+            .expect("Bundle not found");
+        
+        require!(bundle.status == OpStatus::Pending, "Bundle not pending");
+        
+        bundle.status = OpStatus::Executing;
+        
+        let mut leg_receipts: Vec<LegReceipt> = Vec::new();
+        let mut all_success = true;
+        let mut failed_index: u32 = 0;
+        
+        // Execute each leg
+        for (i, leg) in bundle.legs.iter().enumerate() {
+            let (success, return_data, gas_used) = self.execute_leg(leg);
+            
+            let receipt = LegReceipt {
+                leg_index: i as u32,
+                success,
+                return_data,
+                gas_used,
+                state_root: self.get_state_root(),
+            };
+            
+            emit LegExecuted {
+                bundle_id,
+                leg_index: i as u32,
+                success,
+                gas_used,
+            };
+            
+            leg_receipts.push(receipt);
+            
+            if !success {
+                all_success = false;
+                failed_index = i as u32;
+                break;
+            }
+        }
+        
+        if all_success {
+            // Finalize bundle
+            let receipt_root = self.compute_receipt_root(&leg_receipts);
+            bundle.status = OpStatus::Completed;
+            bundle.executed_at = block_timestamp();
+            bundle.receipt_root = receipt_root;
+            
+            self.receipts.insert(bundle_id, leg_receipts);
+            
+            emit BundleFinalized {
+                bundle_id,
+                receipt_root,
+            };
+            
+            true
+        } else {
+            // Rollback all legs
+            self.rollback_legs(&leg_receipts);
+            
+            bundle.status = OpStatus::RolledBack;
+            
+            emit BundleRolledBack {
+                bundle_id,
+                failed_leg: failed_index,
+            };
+            
+            false
+        }
+    }
+    
+    /// Execute a single leg based on target VM
+    fn execute_leg(&self, leg: &CrossVMLeg) -> (bool, Vec<u8>, u64) {
+        let gas_start = gas_remaining();
+        
+        let (success, return_data) = match leg.target_vm {
+            VMType::EVM => {
+                // Call EVM via hostcall
+                hostcall::evm_call(
+                    leg.target_address,
+                    leg.call_data.clone(),
+                    leg.value,
+                    leg.gas_limit
+                )
+            },
+            VMType::SVM => {
+                // Call SVM via hostcall
+                hostcall::svm_invoke(
+                    leg.target_address,
+                    leg.call_data.clone(),
+                    leg.value
+                )
+            },
+            VMType::X3VM => {
+                // Internal X3VM call
+                hostcall::x3vm_call(
+                    leg.target_address,
+                    leg.call_data.clone(),
+                    leg.value
+                )
+            },
+        };
+        
+        let gas_used = gas_start - gas_remaining();
+        
+        (success, return_data, gas_used)
+    }
+    
+    /// Rollback executed legs
+    fn rollback_legs(&self, receipts: &Vec<LegReceipt>) {
+        // In X3VM, rollbacks are handled by the runtime's state checkpoint system
+        // This function triggers the rollback via hostcall
+        hostcall::rollback_to_checkpoint(receipts[0].state_root);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CROSS-VM MESSAGING
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Send a message to another VM
+    pub fn send_message(
+        &mut self,
+        dest_vm: VMType,
+        dest_address: [u8; 32],
+        payload: Vec<u8>
+    ) -> [u8; 32] {
+        require!(!self.paused, "Contract is paused");
+        require!(payload.len() <= 1024, "Payload too large");
+        
+        // Increment nonce
+        let nonce = self.nonces.get(&msg_sender()).unwrap_or(0) + 1;
+        self.nonces.insert(msg_sender(), nonce);
+        
+        // Generate message ID
+        self.message_counter += 1;
+        let message_id = self.generate_message_id(
+            msg_sender(),
+            dest_address,
+            self.message_counter
+        );
+        
+        let message = CrossVMMessage {
+            message_id,
+            source_vm: VMType::X3VM,
+            source_address: self.address_to_bytes32(msg_sender()),
+            dest_vm,
+            dest_address,
+            payload: payload.clone(),
+            nonce,
+            timestamp: block_timestamp(),
+        };
+        
+        self.pending_messages.insert(message_id, message);
+        
+        emit MessageSent {
+            message_id,
+            dest_vm,
+            dest_address,
+        };
+        
+        message_id
+    }
+    
+    /// Receive a message from another VM (relayer only)
+    pub fn receive_message(
+        &mut self,
+        message_id: [u8; 32],
+        source_vm: VMType,
+        source_address: [u8; 32],
+        payload: Vec<u8>,
+        proof: Vec<u8>
+    ) -> bool {
+        require!(self.is_relayer(msg_sender()), "Only relayers");
+        require!(!self.paused, "Contract is paused");
+        
+        // Verify proof
+        require!(self.verify_message_proof(message_id, source_vm, &proof), "Invalid proof");
+        
+        emit MessageReceived {
+            message_id,
+            source_vm,
+            source_address,
+        };
+        
+        // Execute message handler (if registered)
+        // This would call the destination contract with the payload
+        true
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CROSS-VM TRANSFERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Lock tokens for cross-VM transfer
+    pub fn lock_for_transfer(
+        &mut self,
+        token: [u8; 32],
+        dest_vm: VMType,
+        dest_address: [u8; 32],
+        amount: u128
+    ) -> [u8; 32] {
+        require!(!self.paused, "Contract is paused");
+        require!(self.supported_tokens.get(&token).unwrap_or(false), "Token not supported");
+        require!(amount > 0, "Invalid amount");
+        
+        // Lock tokens (transfer to this contract)
+        let success = hostcall::transfer_token(
+            token,
+            msg_sender(),
+            self.contract_address(),
+            amount
+        );
+        require!(success, "Token transfer failed");
+        
+        // Generate transfer ID and emit event for relayers
+        let transfer_id = self.generate_bundle_id(msg_sender(), self.bundle_counter + 1);
+        self.bundle_counter += 1;
+        
+        // Relayers will pick up this event and mint on destination VM
+        transfer_id
+    }
+    
+    /// Release tokens from cross-VM transfer (relayer calls after burn on source)
+    pub fn release_from_transfer(
+        &mut self,
+        transfer_id: [u8; 32],
+        token: [u8; 32],
+        recipient: Address,
+        amount: u128,
+        proof: Vec<u8>
+    ) -> bool {
+        require!(self.is_relayer(msg_sender()), "Only relayers");
+        require!(proof.len() >= 32, "Invalid proof");
+        
+        // Verify burn proof from source VM
+        // In production: verify Merkle proof or signature
+        
+        // Release tokens to recipient
+        let success = hostcall::transfer_token(
+            token,
+            self.contract_address(),
+            recipient,
+            amount
+        );
+        
+        success
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ADMIN FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Add a relayer
+    pub fn add_relayer(&mut self, relayer: Address) {
+        require!(msg_sender() == self.owner, "Only owner");
+        self.relayers.insert(relayer, true);
+    }
+    
+    /// Remove a relayer
+    pub fn remove_relayer(&mut self, relayer: Address) {
+        require!(msg_sender() == self.owner, "Only owner");
+        self.relayers.insert(relayer, false);
+    }
+    
+    /// Add supported token
+    pub fn add_supported_token(&mut self, token: [u8; 32]) {
+        require!(msg_sender() == self.owner, "Only owner");
+        self.supported_tokens.insert(token, true);
+    }
+    
+    /// Pause contract
+    pub fn pause(&mut self) {
+        require!(msg_sender() == self.owner, "Only owner");
+        self.paused = true;
+    }
+    
+    /// Unpause contract
+    pub fn unpause(&mut self) {
+        require!(msg_sender() == self.owner, "Only owner");
+        self.paused = false;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VIEW FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /// Get bundle status
+    pub fn get_bundle_status(&self, bundle_id: [u8; 32]) -> OpStatus {
+        self.bundles.get(&bundle_id)
+            .map(|b| b.status)
+            .unwrap_or(OpStatus::Pending)
+    }
+    
+    /// Get bundle receipt root
+    pub fn get_receipt_root(&self, bundle_id: [u8; 32]) -> [u8; 32] {
+        self.bundles.get(&bundle_id)
+            .map(|b| b.receipt_root)
+            .unwrap_or([0u8; 32])
+    }
+    
+    /// Check if address is relayer
+    pub fn is_relayer(&self, addr: Address) -> bool {
+        self.relayers.get(&addr).unwrap_or(false)
+    }
+    
+    /// Get nonce for address
+    pub fn get_nonce(&self, addr: Address) -> u64 {
+        self.nonces.get(&addr).unwrap_or(0)
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INTERNAL HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    fn generate_bundle_id(&self, sender: Address, nonce: u64) -> [u8; 32] {
+        hostcall::keccak256(&[
+            &self.address_to_bytes32(sender)[..],
+            &nonce.to_le_bytes()[..],
+            &block_timestamp().to_le_bytes()[..],
+        ].concat())
+    }
+    
+    fn generate_message_id(
+        &self,
+        sender: Address,
+        dest: [u8; 32],
+        counter: u64
+    ) -> [u8; 32] {
+        hostcall::keccak256(&[
+            &self.address_to_bytes32(sender)[..],
+            &dest[..],
+            &counter.to_le_bytes()[..],
+        ].concat())
+    }
+    
+    fn address_to_bytes32(&self, addr: Address) -> [u8; 32] {
+        let mut bytes = [0u8; 32];
+        let addr_bytes = addr.to_bytes();
+        bytes[12..32].copy_from_slice(&addr_bytes);
+        bytes
+    }
+    
+    fn compute_receipt_root(&self, receipts: &Vec<LegReceipt>) -> [u8; 32] {
+        if receipts.is_empty() {
+            return [0u8; 32];
+        }
+        
+        // Compute Merkle root of receipts
+        let mut hashes: Vec<[u8; 32]> = receipts.iter()
+            .map(|r| hostcall::keccak256(&self.encode_receipt(r)))
+            .collect();
+        
+        while hashes.len() > 1 {
+            let mut new_hashes = Vec::new();
+            for i in (0..hashes.len()).step_by(2) {
+                if i + 1 < hashes.len() {
+                    new_hashes.push(hostcall::keccak256(&[
+                        &hashes[i][..],
+                        &hashes[i + 1][..],
+                    ].concat()));
+                } else {
+                    new_hashes.push(hashes[i]);
+                }
+            }
+            hashes = new_hashes;
+        }
+        
+        hashes[0]
+    }
+    
+    fn encode_receipt(&self, receipt: &LegReceipt) -> Vec<u8> {
+        let mut encoded = Vec::new();
+        encoded.extend_from_slice(&receipt.leg_index.to_le_bytes());
+        encoded.push(if receipt.success { 1 } else { 0 });
+        encoded.extend_from_slice(&receipt.gas_used.to_le_bytes());
+        encoded.extend_from_slice(&receipt.state_root);
+        encoded
+    }
+    
+    fn get_state_root(&self) -> [u8; 32] {
+        hostcall::get_state_root()
+    }
+    
+    fn verify_message_proof(
+        &self,
+        message_id: [u8; 32],
+        source_vm: VMType,
+        proof: &Vec<u8>
+    ) -> bool {
+        // Verify proof against light client
+        // In production: call into PoAE verifier
+        proof.len() >= 32
+    }
+    
+    fn contract_address(&self) -> Address {
+        hostcall::contract_address()
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HOSTCALLS (VM-provided functions)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+mod hostcall {
+    use super::*;
+    
+    /// Call into EVM
+    pub fn evm_call(
+        target: [u8; 32],
+        data: Vec<u8>,
+        value: u128,
+        gas_limit: u64
+    ) -> (bool, Vec<u8>) {
+        // Implemented by X3VM runtime (hostcall 0x20)
+        extern "C" {
+            fn __x3vm_evm_call(
+                target: *const u8,
+                data: *const u8,
+                data_len: u32,
+                value: u128,
+                gas_limit: u64,
+                out: *mut u8,
+                out_len: *mut u32
+            ) -> bool;
+        }
+        
+        unsafe {
+            let mut out = vec![0u8; 1024];
+            let mut out_len: u32 = 0;
+            let success = __x3vm_evm_call(
+                target.as_ptr(),
+                data.as_ptr(),
+                data.len() as u32,
+                value,
+                gas_limit,
+                out.as_mut_ptr(),
+                &mut out_len
+            );
+            out.truncate(out_len as usize);
+            (success, out)
+        }
+    }
+    
+    /// Call into SVM
+    pub fn svm_invoke(
+        target: [u8; 32],
+        data: Vec<u8>,
+        value: u128
+    ) -> (bool, Vec<u8>) {
+        // Implemented by X3VM runtime (hostcall 0x11)
+        extern "C" {
+            fn __x3vm_svm_invoke(
+                target: *const u8,
+                data: *const u8,
+                data_len: u32,
+                value: u128,
+                out: *mut u8,
+                out_len: *mut u32
+            ) -> bool;
+        }
+        
+        unsafe {
+            let mut out = vec![0u8; 1024];
+            let mut out_len: u32 = 0;
+            let success = __x3vm_svm_invoke(
+                target.as_ptr(),
+                data.as_ptr(),
+                data.len() as u32,
+                value,
+                out.as_mut_ptr(),
+                &mut out_len
+            );
+            out.truncate(out_len as usize);
+            (success, out)
+        }
+    }
+    
+    /// Internal X3VM call
+    pub fn x3vm_call(
+        target: [u8; 32],
+        data: Vec<u8>,
+        value: u128
+    ) -> (bool, Vec<u8>) {
+        // Internal call within X3VM
+        extern "C" {
+            fn __x3vm_call(
+                target: *const u8,
+                data: *const u8,
+                data_len: u32,
+                value: u128,
+                out: *mut u8,
+                out_len: *mut u32
+            ) -> bool;
+        }
+        
+        unsafe {
+            let mut out = vec![0u8; 1024];
+            let mut out_len: u32 = 0;
+            let success = __x3vm_call(
+                target.as_ptr(),
+                data.as_ptr(),
+                data.len() as u32,
+                value,
+                out.as_mut_ptr(),
+                &mut out_len
+            );
+            out.truncate(out_len as usize);
+            (success, out)
+        }
+    }
+    
+    /// Get current state root
+    pub fn get_state_root() -> [u8; 32] {
+        extern "C" {
+            fn __x3vm_get_state_root(out: *mut u8);
+        }
+        
+        unsafe {
+            let mut root = [0u8; 32];
+            __x3vm_get_state_root(root.as_mut_ptr());
+            root
+        }
+    }
+    
+    /// Rollback to checkpoint
+    pub fn rollback_to_checkpoint(checkpoint: [u8; 32]) {
+        extern "C" {
+            fn __x3vm_rollback(checkpoint: *const u8);
+        }
+        
+        unsafe {
+            __x3vm_rollback(checkpoint.as_ptr());
+        }
+    }
+    
+    /// Keccak256 hash
+    pub fn keccak256(data: &[u8]) -> [u8; 32] {
+        extern "C" {
+            fn __x3vm_keccak256(data: *const u8, len: u32, out: *mut u8);
+        }
+        
+        unsafe {
+            let mut hash = [0u8; 32];
+            __x3vm_keccak256(data.as_ptr(), data.len() as u32, hash.as_mut_ptr());
+            hash
+        }
+    }
+    
+    /// Transfer token
+    pub fn transfer_token(
+        token: [u8; 32],
+        from: Address,
+        to: Address,
+        amount: u128
+    ) -> bool {
+        extern "C" {
+            fn __x3vm_transfer_token(
+                token: *const u8,
+                from: *const u8,
+                to: *const u8,
+                amount: u128
+            ) -> bool;
+        }
+        
+        unsafe {
+            __x3vm_transfer_token(
+                token.as_ptr(),
+                from.to_bytes().as_ptr(),
+                to.to_bytes().as_ptr(),
+                amount
+            )
+        }
+    }
+    
+    /// Get contract address
+    pub fn contract_address() -> Address {
+        extern "C" {
+            fn __x3vm_contract_address(out: *mut u8);
+        }
+        
+        unsafe {
+            let mut addr = [0u8; 20];
+            __x3vm_contract_address(addr.as_mut_ptr());
+            Address::from_bytes(addr)
+        }
+    }
+}

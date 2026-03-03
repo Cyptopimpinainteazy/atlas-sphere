@@ -15,7 +15,6 @@ path = "src/main.rs"
 
 [dependencies]
 x3-chain-runtime = { path = "../runtime", features = ["std", "frontier", "native-real-vm-adapters"] }
-x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
 pallet-x3-kernel = { path = "../pallets/x3-kernel", features = ["std"] }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", features = ["std"] }
 pallet-evolution-core = { path = "../pallets/evolution-core", features = ["std"] }
@@ -24,38 +23,27 @@ pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", features =
 flash-finality = { package = "x3-flash-finality", path = "../crates/flash-finality" }
 poh-generator = { package = "x3-poh-generator", path = "../crates/poh-generator" }
 
-async-trait = "0.1"
 clap = { version = "4.4", features = ["derive"] }
 futures = "0.3"
 futures-util = { version = "0.3", default-features = false }
 hex = "0.4"
 log = "0.4"
 env_logger = "0.10"
-ansi_term = "0.12"
-chrono = { version = "0.4", features = ["serde"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-tracing-log = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-ethereum = { version = "0.14", default-features = false }
-ethereum-types = { version = "0.14", default-features = false }
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
 jsonrpsee = { version = "0.16.3", features = ["macros", "server", "client"] }
 tokio = { version = "1.37", default-features = false }
-tokio-stream = "0.1"
 
 
 
 sc-basic-authorship = { workspace = true }
-sc-chain-spec = { workspace = true }
 sc-cli = { workspace = true }
 sc-client-api = { workspace = true }
 sc-consensus = { workspace = true }
 sc-consensus-aura = { workspace = true }
 sc-consensus-grandpa = { workspace = true }
 sc-executor = { workspace = true }
-sc-keystore = { workspace = true }
 sc-network = { workspace = true }
 sc-network-gossip = { workspace = true }
 sc-rpc = { workspace = true }
@@ -69,24 +57,18 @@ substrate-prometheus-endpoint = { path = "../patches/substrate-prometheus-endpoi
 sp-api = { workspace = true }
 sp-block-builder = { workspace = true }
 sp-blockchain = { workspace = true }
-sp-consensus = { workspace = true }
 sp-consensus-aura = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
 sp-core = { workspace = true }
-sp-inherents = { workspace = true }
 sp-runtime = { workspace = true }
-sp-session = { workspace = true }
-sp-transaction-pool = { workspace = true }
 sp-io = { workspace = true }
 sp-timestamp = { workspace = true }
 sp-keystore = { workspace = true }
 
-frame-system-rpc-runtime-api = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 
 frame-benchmarking-cli = { workspace = true, optional = true, default-features = false }
-frame-try-runtime = { workspace = true, optional = true, default-features = false }
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", optional = true }
 
 [features]

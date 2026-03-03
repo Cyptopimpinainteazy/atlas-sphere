@@ -1,5 +1,5 @@
 // X3 Intelligence — API Service
-// Communicates with the X3 substrate node / sidecar.
+// Communicates with the X3 Intelligence Backend API Server
 
 import type {
   ArbIntent,
@@ -13,7 +13,15 @@ import type {
   FeeVector,
 } from "../types";
 
-const API_BASE = "/api/v1";
+// Try to connect to the backend API server on port 8001, fallback to local
+const API_BASE = (() => {
+  // During development, use the backend API server
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:8001/api/v1';
+  }
+  // In production, use relative path
+  return '/api/v1';
+})();
 
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);

@@ -51,6 +51,11 @@ async function main() {
   const derivationBase = process.env.DERIVATION_BASE || '//Alice//load';
   const funderSuri = process.env.FUNDER_SURI || '//Alice';
   const prefundSettleSec = envInt('PREFUND_SETTLE_SEC', 20);
+  const requireBaseline = envBool('REQUIRE_BASELINE', false);
+  const minDurationSec = envInt('MIN_DURATION_SEC', 1200);
+  const minFinalizedTps = envInt('MIN_FINALIZED_TPS', 0);
+  const maxErrorRateRaw = Number(process.env.MAX_ERROR_RATE || '0.01');
+  const maxErrorRate = Number.isFinite(maxErrorRateRaw) ? maxErrorRateRaw : 0.01;
 
   await cryptoWaitReady();
   const provider = new WsProvider(wsUrl);
@@ -253,9 +258,26 @@ async function main() {
     finalized_tps_submit_window: Number(finalizedTpsSubmitWindow.toFixed(3)),
     finalized_tps_wall: Number(finalizedTpsWall.toFixed(3)),
     wall_sec_including_finality_wait: Number(wallSec.toFixed(3)),
+    error_rate: sent > 0 ? Number((failed / sent).toFixed(4)) : 0,
+  };
+
+  const baselineOk =
+    durationSec >= minDurationSec &&
+    (minFinalizedTps <= 0 || finalizedTpsSubmitWindow >= minFinalizedTps) &&
+    report.error_rate <= maxErrorRate;
+
+  report.baseline_requirements = {
+    require_baseline: requireBaseline,
+    min_duration_sec: minDurationSec,
+    min_finalized_tps: minFinalizedTps,
+    max_error_rate: maxErrorRate,
+    baseline_ok: baselineOk,
   };
 
   console.log(JSON.stringify(report, null, 2));
+  if (requireBaseline && !baselineOk) {
+    process.exit(1);
+  }
   await api.disconnect();
 }
 

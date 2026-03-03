@@ -2,6 +2,7 @@
 name = "x3-svm-integration"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "SVM (Solana) integration for X3 Chain dual-VM execution"
 publish = false
 

@@ -119,6 +119,10 @@ impl HotPathTracker {
     }
 }
 
+impl Default for HotPathTracker {
+    fn default() -> Self { Self::new() }
+}
+
 /// Compiled native function (mocked as bytecode for now)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompiledFunction {

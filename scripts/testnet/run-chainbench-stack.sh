@@ -17,6 +17,11 @@ CHAINBENCH_CHAIN_DB_URL="${CHAINBENCH_CHAIN_DB_URL:-http://127.0.0.1:7070}"
 CHAINBENCH_TPS_URL="${CHAINBENCH_TPS_URL:-http://127.0.0.1:3010}"
 CHAINBENCH_DEFAULT_CHAIN_ID="${CHAINBENCH_DEFAULT_CHAIN_ID:-eth}"
 CHAINBENCH_CHAIN_DB_ADMIN_KEY="${CHAINBENCH_CHAIN_DB_ADMIN_KEY:-${CHAIN_DB_ADMIN_KEY:-${CHAINBENCH_ADMIN_KEY}}}"
+CHECK_TELEMETRY="${CHECK_TELEMETRY:-0}"
+PROM_HOST="${PROM_HOST:-127.0.0.1}"
+PROM_PORT="${PROM_PORT:-9090}"
+GRAFANA_HOST="${GRAFANA_HOST:-127.0.0.1}"
+GRAFANA_PORT="${GRAFANA_PORT:-3001}"
 INFRA_DIR="${INFRA_DIR:-$ROOT_DIR/infra-structure}"
 INFRA_START="${INFRA_START:-1}"
 DRPC_START="${DRPC_START:-1}"
@@ -92,6 +97,18 @@ if ! curl -s "http://${CHAINBENCH_HEALTH_HOST}:${CHAINBENCH_PORT}/health" >/dev/
   echo "Chainbench server failed to start. Log:"
   tail -n 120 "$LOG_DIR/chainbench-server.log" || true
   exit 1
+fi
+
+if [[ "$CHECK_TELEMETRY" == "1" ]]; then
+  if ! curl -s "http://${PROM_HOST}:${PROM_PORT}/-/healthy" >/dev/null 2>&1; then
+    echo "Prometheus health check failed at http://${PROM_HOST}:${PROM_PORT}/-/healthy"
+    exit 1
+  fi
+  if ! curl -s "http://${GRAFANA_HOST}:${GRAFANA_PORT}/api/health" >/dev/null 2>&1; then
+    echo "Grafana health check failed at http://${GRAFANA_HOST}:${GRAFANA_PORT}/api/health"
+    exit 1
+  fi
+  echo "Telemetry stack OK (Prometheus + Grafana)"
 fi
 
 echo "Chainbench stack ready"

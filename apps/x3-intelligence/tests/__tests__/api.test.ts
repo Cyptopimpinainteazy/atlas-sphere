@@ -33,7 +33,7 @@ describe('API Service', () => {
 
       const stats = await api.getFloorStats();
       expect(stats).toEqual(mockStats);
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/floor/stats');
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8001/api/v1/floor/stats');
     });
 
     it('should throw on API error', async () => {
@@ -60,7 +60,7 @@ describe('API Service', () => {
 
       const result = await api.getIntents(1, 25);
       expect(result).toEqual(mockResponse);
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/intents?page=1&pageSize=25');
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8001/api/v1/intents?page=1&pageSize=25');
     });
   });
 
@@ -114,7 +114,7 @@ describe('API Service', () => {
       const result = await api.getSlashEvents('agent-id', 1, 25);
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v1/slashes?page=1&pageSize=25&agentId=agent-id'
+        'http://localhost:8001/api/v1/slashes?page=1&pageSize=25&agentId=agent-id'
       );
     });
   });
@@ -158,7 +158,7 @@ describe('API Service', () => {
 
       const result = await api.getBondState();
       expect(result).toEqual(mockBondState);
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/bonds/state');
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:8001/api/v1/bonds/state');
     });
   });
 });

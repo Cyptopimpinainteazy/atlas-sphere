@@ -992,12 +992,30 @@ fn clamp_u8_signed(value: i16, min: u8, max: u8) -> u8 {
   value.max(min as i16).min(max as i16) as u8
 }
 
+/* ─── Application Registry ──────────────────────── */
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct Application {
+  id: String,
+  name: String,
+  description: String,
+  category: String,
+}
+
+#[tauri::command]
+fn get_app_registry() -> Result<Vec<Application>, IpcError> {
+  // Return an empty array; the frontend will use its default registry
+  // This handler exists primarily to signal the backend is alive
+  Ok(vec![])
+}
+
 fn main() {
   let telemetry_state = TelemetryState::new();
 
   Builder::default()
     .manage(telemetry_state.clone())
     .invoke_handler(generate_handler![
+      get_app_registry,
       launch_swarm_health,
       launch_network_control,
       launch_storage_monitor,

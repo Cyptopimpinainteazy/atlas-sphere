@@ -49,19 +49,20 @@ describe('UI Components', () => {
 
     it('should calculate correct width', () => {
       const { container } = render(<ProgressBar value={75} max={100} />);
-      const fill = container.querySelector('.progress-fill');
+      const fill = container.querySelector('.progress-bar-fill');
       expect(fill).toHaveStyle('width: 75%');
     });
 
     it('should cap width at 100%', () => {
       const { container } = render(<ProgressBar value={150} max={100} />);
-      const fill = container.querySelector('.progress-fill');
+      const fill = container.querySelector('.progress-bar-fill');
       expect(fill).toHaveStyle('width: 100%');
     });
 
     it('should apply color class', () => {
       const { container } = render(<ProgressBar value={50} max={100} color="red" />);
-      const fill = container.querySelector('.progress-red');
+      // Component renders: className="progress-bar-fill red"
+      const fill = container.querySelector('.progress-bar-fill.red');
       expect(fill).toBeInTheDocument();
     });
   });
@@ -77,7 +78,8 @@ describe('UI Components', () => {
       const { container } = render(
         <Metric label="Success Rate" value="94.7%" color="green" />
       );
-      expect(container.querySelector('.green')).toBeInTheDocument();
+      // color prop adds the class to the metric-value element
+      expect(container.querySelector('.metric-value.green')).toBeInTheDocument();
     });
   });
 });

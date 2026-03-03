@@ -205,8 +205,7 @@ impl DAPServer {
             .ok_or("Thread not found")?;
 
         // Build mock stack
-        let mut frames = Vec::new();
-        frames.push(StackFrame {
+        let frames = vec![StackFrame {
             frame_id: self.next_frame_id,
             name: "validate_block()".to_string(),
             source: "validator.rs".to_string(),
@@ -226,7 +225,7 @@ impl DAPServer {
                     reference: 0,
                 },
             ],
-        });
+        }];
         self.next_frame_id += 1;
 
         Ok(frames)
@@ -327,6 +326,10 @@ impl DAPServer {
         eprintln!("[DAP] Debugger disconnected");
         Ok(())
     }
+}
+
+impl Default for DAPServer {
+    fn default() -> Self { Self::new() }
 }
 
 #[cfg(test)]

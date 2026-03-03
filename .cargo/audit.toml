@@ -88,6 +88,13 @@ ignore = [
 
     # wasmtime-jit-debug 8.0.1 unsound JitDumpFile
     "RUSTSEC-2024-0442",
+
+    # protobuf 2.28.0 DoS via message parsing (dev-only via solana-program-test; not in production binary)
+    "RUSTSEC-2024-0437",
+
+    # wasmtime 8.0.1 CVEs (pinned by sc-executor-wasmtime; not exposed in public RPC)
+    "RUSTSEC-2026-0020",
+    "RUSTSEC-2026-0021",
 ]
 
 [yanked]

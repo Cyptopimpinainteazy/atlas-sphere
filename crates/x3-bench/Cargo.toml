@@ -2,6 +2,7 @@
 name = "x3-bench"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "Benchmark runner for X3 compiler optimizer"
 
 [[bin]]

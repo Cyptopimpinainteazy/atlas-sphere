@@ -25,7 +25,6 @@ scale-info = { workspace = true, default-features = false, features = ["derive"]
 frame-support = { workspace = true, default-features = false }
 frame-system = { workspace = true, default-features = false }
 frame-executive = { workspace = true, default-features = false }
-frame-benchmarking = { workspace = true, default-features = false, optional = true }
 
 pallet-aura = { workspace = true, default-features = false }
 pallet-grandpa = { workspace = true, default-features = false }
@@ -56,7 +55,6 @@ pallet-x3-settlement-engine = { path = "../pallets/x3-settlement-engine", defaul
 pallet-swarm = { path = "../pallets/swarm", default-features = false }
 pallet-depin-marketplace = { path = "../pallets/depin-marketplace", default-features = false }
 pallet-private-execution = { path = "../pallets/private-execution", default-features = false }
-x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
 x3-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
@@ -76,13 +74,14 @@ sp-io = { workspace = true, default-features = false }
 
 frame-system-rpc-runtime-api = { workspace = true, default-features = false }
 
-log = { workspace = true, default-features = false }
 serde = { workspace = true, default-features = false, features = ["derive"], optional = true }
 # Local X3 Chain EVM integration utilities (Frontier temporarily removed)
 # x3-evm-integration = { path = "../crates/evm-integration", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
+
+[dev-dependencies]
 
 [features]
 default = ["std"]
@@ -93,14 +92,13 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"frame-executive/std",
-	"frame-benchmarking",
-	"frame-benchmarking/std",
 	"frame-system-rpc-runtime-api/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
 	"pallet-timestamp/std",
 	"pallet-balances/std",
 	"pallet-transaction-payment/std",
+	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-sudo",
 	"pallet-sudo/std",
 	"pallet-collective/std",
@@ -124,7 +122,6 @@ std = [
 	"pallet-swarm/std",
 	"pallet-depin-marketplace/std",
 	"pallet-private-execution/std",
-	"x3-evm-integration/std",
 	"x3-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -140,13 +137,11 @@ std = [
 	"sp-version/std",
 	"sp-weights/std",
 	"sp-io/std",
-	"log/std",
 	"serde",
 	"serde/std",
 	# "x3-evm-integration/std",
 ]
 runtime-benchmarks = [
-	"frame-benchmarking/runtime-benchmarks",
 	"frame-support/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",

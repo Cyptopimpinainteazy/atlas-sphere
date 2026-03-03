@@ -2,6 +2,7 @@
 name = "x3-bot"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "☢️ World's Fastest Profitable Bot — Nuclear Edition. No mock data. Async Rust."
 
 [dependencies]

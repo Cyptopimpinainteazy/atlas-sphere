@@ -154,6 +154,10 @@ impl GasMeteringTable {
     }
 }
 
+impl Default for GasMeteringTable {
+    fn default() -> Self { Self::new() }
+}
+
 /// Real-world gas audit benchmarks
 pub mod benchmarks {
     /// Benchmark matrix multiply: 1024x1024 FP32 matrices on GTX 1070

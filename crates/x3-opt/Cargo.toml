@@ -2,6 +2,7 @@
 name = "x3-opt"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 MIR optimizer: constant folding, DCE, peephole, copy propagation"
 publish = false
 

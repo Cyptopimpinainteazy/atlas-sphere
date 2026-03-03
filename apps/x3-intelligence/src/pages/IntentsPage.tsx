@@ -5,6 +5,7 @@ import { IntentState } from "../types";
 import type { ArbIntent } from "../types";
 import { getIntents } from "../services/api";
 import { IntentStatePie, StateDistribution } from "../components/Charts";
+import { dataIntegrity } from "../services/dataIntegrity";
 
 const DEMO_INTENTS: ArbIntent[] = [
   {
@@ -100,8 +101,12 @@ export function IntentsPage() {
           setIntents(res.items);
         }
       })
-      .catch(() => {
-        // Use demo data
+      .catch((e: unknown) => {
+        // Use demo data — raise integrity flag so banner alerts the user.
+        dataIntegrity.reportDemoFallback(
+          "IntentsPage",
+          e instanceof Error ? e.message : String(e),
+        );
       })
       .finally(() => setLoading(false));
   }, []);

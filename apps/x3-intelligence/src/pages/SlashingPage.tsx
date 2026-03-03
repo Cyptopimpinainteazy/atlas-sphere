@@ -5,6 +5,7 @@ import { SlashSeverity } from "../types";
 import type { SlashEvent } from "../types";
 import { getSlashEvents } from "../services/api";
 import { SlashSeverityChart, type SlashCounts } from "../components/Charts";
+import { dataIntegrity } from "../services/dataIntegrity";
 
 const DEMO_SLASHES: SlashEvent[] = [
   {
@@ -85,8 +86,12 @@ export function SlashingPage() {
           setSlashes(res.items);
         }
       })
-      .catch(() => {
-        // Use demo data
+      .catch((e: unknown) => {
+        // Use demo data — raise integrity flag so banner alerts the user.
+        dataIntegrity.reportDemoFallback(
+          "SlashingPage",
+          e instanceof Error ? e.message : String(e),
+        );
       })
       .finally(() => setLoading(false));
   }, []);

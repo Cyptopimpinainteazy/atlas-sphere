@@ -2,6 +2,7 @@
 name = "x3-court"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 Deterministic Courts — replay-based dispute resolution with no humans"
 
 [dependencies]

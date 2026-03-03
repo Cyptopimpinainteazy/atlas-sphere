@@ -167,13 +167,14 @@ interface MetricProps {
   value: string | number;
   unit?: string;
   highlight?: boolean;
+  color?: "green" | "amber" | "red" | "blue";
 }
 
-export function Metric({ label, value, unit, highlight = false }: MetricProps) {
+export function Metric({ label, value, unit, highlight = false, color }: MetricProps) {
   return (
     <div className={`metric ${highlight ? "highlighted" : ""}`}>
       <div className="metric-label">{label}</div>
-      <div className="metric-value">
+      <div className={`metric-value${color ? ` ${color}` : ""}`}>
         {value}
         {unit && <span className="metric-unit">{unit}</span>}
       </div>

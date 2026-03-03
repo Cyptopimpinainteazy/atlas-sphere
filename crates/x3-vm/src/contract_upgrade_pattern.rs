@@ -23,8 +23,7 @@ pub struct ProxyContract {
 impl ProxyContract {
     /// Create proxy pointing to initial logic implementation
     pub fn new(admin: String, logic_address: String) -> Self {
-        let mut upgrade_history = Vec::new();
-        upgrade_history.push((0, logic_address.clone()));
+        let upgrade_history = vec![(0, logic_address.clone())];
 
         Self {
             logic_address,
@@ -100,15 +99,15 @@ pub struct LogicV1 {
 
 impl LogicV1 {
     pub fn new() -> Self {
-        let mut features = Vec::new();
-        features.push("basic_transfer".to_string());
-        features.push("balance_query".to_string());
-
         Self {
             version: 1,
-            features,
+            features: vec!["basic_transfer".to_string(), "balance_query".to_string()],
         }
     }
+}
+
+impl Default for LogicV1 {
+    fn default() -> Self { Self::new() }
 }
 
 /// Logic implementation V2 (upgraded)
@@ -120,17 +119,20 @@ pub struct LogicV2 {
 
 impl LogicV2 {
     pub fn new() -> Self {
-        let mut features = Vec::new();
-        features.push("basic_transfer".to_string());
-        features.push("balance_query".to_string());
-        features.push("yield_farming".to_string()); // NEW in V2
-        features.push("emergency_pause".to_string()); // NEW in V2
-
         Self {
             version: 2,
-            features,
+            features: vec![
+                "basic_transfer".to_string(),
+                "balance_query".to_string(),
+                "yield_farming".to_string(),   // NEW in V2
+                "emergency_pause".to_string(), // NEW in V2
+            ],
         }
     }
+}
+
+impl Default for LogicV2 {
+    fn default() -> Self { Self::new() }
 }
 
 /// Upgradeable attribute macro simulation
@@ -181,6 +183,10 @@ impl StorageLayout {
 
         true
     }
+}
+
+impl Default for StorageLayout {
+    fn default() -> Self { Self::new() }
 }
 
 /// Upgrade safety checker
@@ -234,6 +240,10 @@ impl UpgradeSafetyChecker {
             details,
         }
     }
+}
+
+impl Default for UpgradeSafetyChecker {
+    fn default() -> Self { Self::new() }
 }
 
 /// Upgrade audit report

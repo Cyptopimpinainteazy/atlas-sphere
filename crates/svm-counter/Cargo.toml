@@ -2,6 +2,7 @@
 name = "svm_counter"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "Simple Solana SVM counter program used for integration tests"
 publish = false
 

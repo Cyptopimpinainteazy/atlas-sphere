@@ -1,14 +1,14 @@
 [Unit]
 Description=X3 Chain Cross-Chain GPU Validator
 Documentation=man:ccgv(1)
-After=network-online.target
+After=network-online.target redis.service
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=x3
-WorkingDirectory=/home/x3/x3-chain/cross-chain-gpu-validator
-ExecStart=/home/x3/x3-chain/cross-chain-gpu-validator/.venv/bin/python -m cross_chain_gpu_validator.cli serve --host 0.0.0.0 --port 8000
+WorkingDirectory=/home/lojak/Desktop/x3-chain-master
+ExecStart=/usr/bin/python3 -m cross_chain_gpu_validator.cli serve --host 0.0.0.0 --port 8000
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

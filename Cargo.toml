@@ -77,6 +77,10 @@ members = [
     "crates/flash-finality",
     "crates/poh-generator",
     "pallets/x3-atomic-kernel",
+    "pallets/fraud-proofs",
+    # Note: crates/dylint-determinism is intentionally NOT listed here.
+    # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)
+    # compiled by `cargo dylint` with nightly+rustc-dev via workspace.metadata.dylint.
 ]
 default-members = ["node"]
 resolver = "2"
@@ -97,6 +101,14 @@ resolver = "2"
 # (auto-generated from cargo metadata). Removed earlier compact/duplicate
 # patch entries to avoid duplicate-key errors; keep the comprehensive
 # `[patch.crates-io]` block below which pins the workspace to rev 948fbd2.
+
+[workspace.metadata.dylint]
+libraries = [
+    { path = "crates/dylint-determinism" },
+]
+
+[workspace.package]
+license = "Apache-2.0"
 
 # SCALE codec & metadata (workspace shared deps)
 [workspace.dependencies]

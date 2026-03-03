@@ -26,6 +26,10 @@ def main() -> int:
     parser.add_argument("--concurrency-total", type=int, default=512)
     parser.add_argument("--prefund-amount-planck", default="1000000000000")
     parser.add_argument("--output", default="benchmarks/x3_chain_tps_multiprocess.json")
+    parser.add_argument("--require-baseline", action="store_true")
+    parser.add_argument("--min-duration-sec", type=int, default=1200)
+    parser.add_argument("--min-finalized-tps", type=float, default=0.0)
+    parser.add_argument("--max-error-rate", type=float, default=0.01)
     args = parser.parse_args()
 
     if args.workers < 1 or args.senders < 1 or args.concurrency_total < 1:
@@ -157,8 +161,22 @@ def main() -> int:
         "failed_total": failed,
         "finalized_total": finalized,
         "finalized_tps_submit_window": round(finalized / args.duration_sec, 3) if args.duration_sec > 0 else 0.0,
+        "error_rate": round((failed / sent), 4) if sent > 0 else 0.0,
         "successful_workers": len(ok),
         "runs": runs,
+    }
+
+    baseline_ok = (
+        args.duration_sec >= args.min_duration_sec
+        and (args.min_finalized_tps <= 0 or aggregate["finalized_tps_submit_window"] >= args.min_finalized_tps)
+        and aggregate["error_rate"] <= args.max_error_rate
+    )
+    aggregate["baseline_requirements"] = {
+        "require_baseline": args.require_baseline,
+        "min_duration_sec": args.min_duration_sec,
+        "min_finalized_tps": args.min_finalized_tps,
+        "max_error_rate": args.max_error_rate,
+        "baseline_ok": baseline_ok,
     }
 
     out = Path(args.output)
@@ -166,6 +184,8 @@ def main() -> int:
     out.write_text(json.dumps(aggregate, indent=2))
     print(str(out))
     print(json.dumps({k: aggregate[k] for k in ["workers", "senders_total", "concurrency_total", "finalized_total", "finalized_tps_submit_window", "successful_workers"]}, indent=2))
+    if args.require_baseline and not baseline_ok:
+        return 1
     return 0
 
 

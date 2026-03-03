@@ -2,6 +2,7 @@
 name = "x3-turbine"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 Chain Turbine - Block propagation and data distribution network"
 
 [dependencies]

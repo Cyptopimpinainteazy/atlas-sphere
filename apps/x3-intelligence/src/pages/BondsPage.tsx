@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getBondState, depositBond, requestWithdraw } from '../services/api';
+import { dataIntegrity } from '../services/dataIntegrity';
 import { Button, Loading, Metric, ProgressBar } from '../components/UIComponents';
 
 interface BondState {
@@ -27,7 +28,11 @@ export function BondsPage() {
         const b = await getBondState();
         if (mounted) setBond(b as any);
       } catch (e) {
-        // fallback: demo data
+        // fallback: demo data — raise integrity flag so banner alerts the user.
+        dataIntegrity.reportDemoFallback(
+          'BondsPage',
+          e instanceof Error ? e.message : String(e),
+        );
         if (mounted)
           setBond({
             balance: 50000,

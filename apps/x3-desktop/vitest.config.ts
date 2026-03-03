@@ -10,7 +10,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "jsdom",
+    environment: "happy-dom",
     setupFiles: ["./src/test-setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
     coverage: {
@@ -18,6 +18,11 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/main.tsx", "src/test-setup.ts", "src/**/*.d.ts"],
+      all: true,
+      lines: 100,
+      functions: 100,
+      branches: 100,
+      statements: 100,
     },
   },
 });

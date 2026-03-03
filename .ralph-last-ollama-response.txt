@@ -1,0 +1,13 @@
+To fulfill your request, I will create a valid unified diff patch that can be applied with `git apply` from the workspace root directory: /home/lojak/Desktop/x3-chain-master.
+
+Here is the content of the documentation for the task:
+```markdown
+Task: end to end docs
+Requirements:
+- Update README or relevant docs for behavior/API/config changes
+- Include usage examples for new/changed behavior
+- Keep docs concise and accurate to the codebase
+- Update PRD.md and progress.txt to reflect documentation completion
+```
+
+Please note that since I am an AI text model, I can provide you with the instructions in plain text format without any markdown or HTML tags.

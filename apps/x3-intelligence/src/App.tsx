@@ -10,12 +10,15 @@ import { BondsPage } from "./pages/BondsPage";
 import { GuidePage } from "./pages/GuidePage";
 import { WhyPage } from "./pages/WhyPage";
 import HelpModal from "./components/HelpModal";
+import { DemoDataBanner } from "./components/DemoDataBanner";
 
 export function App() {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
     <>
+      {/* Data integrity alert — renders only when demo/fallback data is active */}
+      <DemoDataBanner />
       <nav className="nav">
         <span className="nav-brand">X3</span>
         <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>

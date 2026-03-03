@@ -7,8 +7,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=x3
-WorkingDirectory=/home/x3/x3-chain/apps/x3-intelligence
-ExecStart=/usr/bin/npm run start
+WorkingDirectory=/home/lojak/Desktop/x3-chain-master/apps/x3-intelligence
+ExecStart=/usr/bin/npm run build && /usr/bin/npm run preview
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

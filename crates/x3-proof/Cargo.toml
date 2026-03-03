@@ -2,6 +2,7 @@
 name = "x3-proof"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "X3 Proof Engine — deterministic execution proofs and verification"
 
 [dependencies]

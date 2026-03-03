@@ -2,6 +2,7 @@
 name = "x3-compiler"
 version = "0.1.0"
 edition = "2024"
+license.workspace = true
 description = "X3 full compiler pipeline with optimization"
 publish = false
 

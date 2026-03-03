@@ -227,93 +227,27 @@ const DAOGovernancePanel = lazy(() => import("@/components/panels/growth/DAOGove
 const GlobalSearchPanel = lazy(() => import("@/components/panels/global/GlobalSearchPanel"));
 const CrashReporterPanel = lazy(() => import("@/components/panels/global/CrashReporterPanel"));
 
-/* ── MISSING PANELS: Add all remaining 55 unregistered panels ──── */
-// Explorer panels (20+)
-const AISwarmPanel = lazy(() => import("@/components/panels/explorer/AISwarmPanel"));
-const BlogPanel = lazy(() => import("@/components/panels/explorer/BlogPanel"));
-const BridgePanel = lazy(() => import("@/components/panels/explorer/BridgePanel"));
-const CommunityPanel = lazy(() => import("@/components/panels/explorer/CommunityPanel"));
-const CommunitySubPanel = lazy(() => import("@/components/panels/explorer/CommunitySubPanel"));
-const EarnPanel = lazy(() => import("@/components/panels/explorer/EarnPanel"));
-const EcosystemPanel = lazy(() => import("@/components/panels/explorer/EcosystemPanel"));
-const ExplorerDetailPanel = lazy(() => import("@/components/panels/explorer/ExplorerDetailPanel"));
-const ExplorerHomePanel = lazy(() => import("@/components/panels/explorer/ExplorerHomePanel"));
-const LearnPanel = lazy(() => import("@/components/panels/explorer/LearnPanel"));
-const LearnArchitecturePanel = lazy(() => import("@/components/panels/explorer/LearnArchitecturePanel"));
-const MetricsPanel = lazy(() => import("@/components/panels/explorer/MetricsPanel"));
-const NetworkPanel2 = lazy(() => import("@/components/panels/explorer/NetworkPanel2"));
-const NetworkValidatorsPanel = lazy(() => import("@/components/panels/explorer/NetworkValidatorsPanel"));
-const PortfolioPanel = lazy(() => import("@/components/panels/explorer/PortfolioPanel"));
-const PrivacyPanel = lazy(() => import("@/components/panels/explorer/PrivacyPanel"));
-const QuantumEnhancedPanel = lazy(() => import("@/components/panels/explorer/QuantumEnhancedPanel"));
-const QuantumPanel = lazy(() => import("@/components/panels/explorer/QuantumPanel"));
-const SecurityPanel2 = lazy(() => import("@/components/panels/explorer/SecurityPanel2"));
-const SolutionsDetailPanel = lazy(() => import("@/components/panels/explorer/SolutionsDetailPanel"));
-const StakePanel = lazy(() => import("@/components/panels/explorer/StakePanel"));
-const SwapPanel = lazy(() => import("@/components/panels/explorer/SwapPanel"));
-const TermsPanel = lazy(() => import("@/components/panels/explorer/TermsPanel"));
-const TreasuryPanel = lazy(() => import("@/components/panels/explorer/TreasuryPanel"));
-const X3ChainPanel = lazy(() => import("@/components/panels/explorer/X3ChainPanel"));
-const X3OSPanel = lazy(() => import("@/components/panels/explorer/X3OSPanel"));
-const X3StarPanel = lazy(() => import("@/components/panels/explorer/X3StarPanel"));
-const X3SubPagesPanel = lazy(() => import("@/components/panels/explorer/X3SubPagesPanel"));
-
-// DEX panels (7)
-const DexPanel = lazy(() => import("@/components/panels/dex/DexPanel"));
-const DexPoolsPanel = lazy(() => import("@/components/panels/dex/DexPoolsPanel"));
-const DexOrderbookPanel = lazy(() => import("@/components/panels/dex/DexOrderbookPanel"));
-const LpNftMarketplacePanel = lazy(() => import("@/components/panels/dex/LpNftMarketplacePanel"));
-const TransactionSimulatorPanel = lazy(() => import("@/components/panels/dex/TransactionSimulatorPanel"));
-const ConcentratedLiquidityPanel = lazy(() => import("@/components/panels/dex/ConcentratedLiquidityPanel"));
-const DexAdvancedOrdersPanel = lazy(() => import("@/components/panels/dex/DexAdvancedOrdersPanel"));
-
-// DeFi panels (3)
-const VeX3Panel = lazy(() => import("@/components/panels/defi/VeX3Panel"));
-const LiquidityMiningPanel = lazy(() => import("@/components/panels/defi/LiquidityMiningPanel"));
-const TokenLaunchpadPanel = lazy(() => import("@/components/panels/defi/TokenLaunchpadPanel"));
-
-// Wallet panels (3)
-const PrivacyWalletPanel = lazy(() => import("@/components/panels/wallet/PrivacyWalletPanel"));
-const TokenChartsPanel = lazy(() => import("@/components/panels/wallet/TokenChartsPanel"));
-const PrivacyModePanel = lazy(() => import("@/components/panels/wallet/PrivacyModePanel"));
-
-// X3 Intel panels (7)
-const X3FloorDashboardPanel = lazy(() => import("@/components/panels/x3intel/X3FloorDashboardPanel"));
-const X3AgentsPanel = lazy(() => import("@/components/panels/x3intel/X3AgentsPanel"));
-const X3BondsPanel = lazy(() => import("@/components/panels/x3intel/X3BondsPanel"));
-const X3GuidePanel = lazy(() => import("@/components/panels/x3intel/X3GuidePanel"));
-const X3IntentsPanel = lazy(() => import("@/components/panels/x3intel/X3IntentsPanel"));
-const X3SlashingPanel = lazy(() => import("@/components/panels/x3intel/X3SlashingPanel"));
-const X3WhyPanel = lazy(() => import("@/components/panels/x3intel/X3WhyPanel"));
-
-// Social panels (4)
-const CreatorMonetizationPanel = lazy(() => import("@/components/panels/social/CreatorMonetizationPanel"));
-
-// Trading panels (3)
-const StrategyBuilderPanel = lazy(() => import("@/components/panels/trading/StrategyBuilderPanel"));
-const BacktestingPanel = lazy(() => import("@/components/panels/trading/BacktestingPanel"));
-const BotMarketplacePanel = lazy(() => import("@/components/panels/trading/BotMarketplacePanel"));
-
-// Analytics panels (3)
+/* ── Additional missing panels (not yet imported above) ──── */
+// Analytics - Advanced
 const AdvancedAnalyticsPanel = lazy(() => import("@/components/panels/analytics/AdvancedAnalyticsPanel"));
 const MarketHeatmapPanel = lazy(() => import("@/components/panels/analytics/MarketHeatmapPanel"));
-const CryptoHeatmapPanel = lazy(() => import("@/components/panels/analytics/CryptoHeatmapPanel"));
 
-// Validators panels (1)
+// Wallet - Privacy
+const PrivacyWalletPanel = lazy(() => import("@/components/panels/wallet/PrivacyWalletPanel"));
+
+// Validators - Globe
 const ValidatorGlobe = lazy(() => import("@/components/panels/validators/ValidatorGlobe"));
 
-// Auction panels (1)
+// Auction
 const NftAuctionPanel = lazy(() => import("@/components/panels/auctions/NftAuctionPanel"));
 
-// Marketplace panels (1)
+// Marketplace - Real Assets
 const RealMarketplacePanel = lazy(() => import("@/components/panels/marketplace/RealMarketplacePanel"));
 
-// Root level panels (several)
+// Root level panels
 const IframePanel = lazy(() => import("@/components/panels/IframePanel"));
-const SecurityPanel = lazy(() => import("@/components/panels/SecurityPanel"));
-const DevDocsPanel = lazy(() => import("@/components/panels/explorer/DevDocsPanel"));
 
-// Governance panel (1)
+// Governance - Voting
 const GovernanceVotingPanel = lazy(() => import("@/components/panels/governance/GovernanceVotingPanel"));
 
 /**

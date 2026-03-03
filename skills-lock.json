@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "smart-contract-security": {
+      "source": "pluginagentmarketplace/custom-plugin-blockchain",
+      "sourceType": "github",
+      "computedHash": "c410c6406056bea05a1a51bbfaf4569d8a66ededc3feb03a7f6792482b7863b3"
+    },
+    "specstory-guard": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3441feb6ab944e12243b404ffd0d84e4ea87bf9cf692e3ee84493eee3a245766"
+    },
+    "specstory-link-trail": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c6b4555474a2bc93924eab7d552f9f7b7439ba604b0e621e04e0387daf409d78"
+    },
+    "specstory-organize": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "89b835ac5c8c95606adcbac62f50d5a1c41887790b3b54c9b9a9dfccfe2f2131"
+    },
+    "specstory-project-stats": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c548101743647c5cbd9486a7b5e7b4d1c6228f9bb2e372fda9a1d3112c73fbcb"
+    },
+    "specstory-session-summary": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "f6370b958820d87d8d9b94f31036f64c6786d25a68b4901852bbc7ebb82da521"
+    },
+    "specstory-yak": {
+      "source": "specstoryai/agent-skills",
+      "sourceType": "github",
+      "computedHash": "9c9a2e93d7fa734fea94df55a5fa92b251c9c47bf3de4380c350758270a8c324"
+    }
+  }
+}

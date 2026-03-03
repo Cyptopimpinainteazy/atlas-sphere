@@ -20,26 +20,53 @@ NC='\033[0m'
 echo -e "${YELLOW}[*] Cleaning up old processes...${NC}"
 pkill -f "npm run dev" || true
 pkill -f "cross_chain_gpu_validator" || true
+pkill -f "redis-server" || true
 sleep 1
+
+# Start Redis
+echo -e "${BLUE}[*] Starting Redis...${NC}"
+redis-server --port 6379 --daemonize yes --logfile /tmp/redis.log > /dev/null 2>&1
+sleep 1
+if redis-cli ping > /dev/null 2>&1; then
+    echo -e "${GREEN}✓ Redis started${NC}"
+else
+    echo -e "${YELLOW}⚠ Redis failed to start (may already be running)${NC}"
+fi
+echo ""
 
 # Start X3 Intelligence Dashboard
 echo -e "${BLUE}[*] Starting X3 Intelligence Dashboard...${NC}"
 cd "$PROJECT_ROOT/apps/x3-intelligence"
 npm install --silent > /dev/null 2>&1 || true
-PORT=5173 npm run dev > /tmp/x3-intelligence.log 2>&1 &
+npm run dev -- --port 5173 --host 0.0.0.0 > /tmp/x3-intelligence.log 2>&1 &
 X3_PID=$!
 echo -e "${GREEN}✓ X3 Intelligence started (PID: $X3_PID)${NC}"
 echo "   URL: http://localhost:5173"
 echo "   Logs: tail -f /tmp/x3-intelligence.log"
 echo ""
 
+# Start X3 Intelligence Backend API Server
+echo -e "${BLUE}[*] Starting X3 Intelligence API Server...${NC}"
+cd "$PROJECT_ROOT/apps/x3-intelligence"
+npm install --silent > /dev/null 2>&1 || true
+node server.js > /tmp/x3-api.log 2>&1 &
+API_PID=$!
+echo -e "${GREEN}✓ API Server started (PID: $API_PID)${NC}"
+echo "   URL: http://localhost:8001/api/v1"
+echo "   Logs: tail -f /tmp/x3-api.log"
+echo ""
+
 # Start Cross-Chain GPU Validator
 echo -e "${BLUE}[*] Starting Cross-Chain GPU Validator...${NC}"
-cd "$PROJECT_ROOT/cross-chain-gpu-validator"
-source .venv/bin/activate 2>/dev/null || python3 -m venv .venv && source .venv/bin/activate
-pip install -q -e . > /dev/null 2>&1 || true
-export CCGV_USE_MOCK_RPC=true
-python -m cross_chain_gpu_validator.cli serve --host 0.0.0.0 --port 8000 > /tmp/ccgv-validator.log 2>&1 &
+KERNELS_PATH="$PROJECT_ROOT/cross-chain-gpu-validator/kernels"
+(
+  cd "$PROJECT_ROOT/cross-chain-gpu-validator"
+  source .venv/bin/activate
+  export CCGV_KERNEL_DIR="$KERNELS_PATH"
+  export CCGV_USE_MOCK_RPC=true
+  export CCGV_REQUIRE_GPU=false
+  python -m cross_chain_gpu_validator.cli orchestrator > /tmp/ccgv-validator.log 2>&1
+) &
 CCGV_PID=$!
 echo -e "${GREEN}✓ GPU Validator started (PID: $CCGV_PID)${NC}"
 echo "   URL: http://localhost:8000/metrics.json"
@@ -49,6 +76,7 @@ echo ""
 # Save PIDs for later cleanup
 cat > /tmp/x3-chain-pids.txt << EOF
 X3_INTELLIGENCE_PID=$X3_PID
+API_SERVER_PID=$API_PID
 CCGV_VALIDATOR_PID=$CCGV_PID
 EOF
 
@@ -58,6 +86,7 @@ echo "╚═══════════════════════�
 echo ""
 echo "Services:"
 echo "  📊 X3 Intelligence:    http://localhost:5173"
+echo "  🔌 API Server:         http://localhost:8001/api/v1"
 echo "  ⚙️  GPU Validator:       http://localhost:8000/metrics.json"
 echo ""
 echo "Login:"
@@ -71,6 +100,7 @@ echo "  bash $PROJECT_ROOT/scripts/stop-beast.sh"
 echo ""
 echo "To view logs:"
 echo "  tail -f /tmp/x3-intelligence.log"
+echo "  tail -f /tmp/x3-api.log"
 echo "  tail -f /tmp/ccgv-validator.log"
 echo ""
 
@@ -83,6 +113,12 @@ if ps -p $X3_PID > /dev/null; then
     echo -e "${GREEN}✓ X3 Intelligence is running${NC}"
 else
     echo -e "${YELLOW}⚠ X3 Intelligence failed to start${NC}"
+fi
+
+if ps -p $API_PID > /dev/null; then
+    echo -e "${GREEN}✓ API Server is running${NC}"
+else
+    echo -e "${YELLOW}⚠ API Server failed to start${NC}"
 fi
 
 if ps -p $CCGV_PID > /dev/null; then

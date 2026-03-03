@@ -57,6 +57,8 @@ use sp_std::prelude::*;
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+pub mod fraud_proofs;
+
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 
@@ -195,6 +197,17 @@ parameter_types! {
     pub MaxProposalWeight: Weight = Perbill::from_percent(50) * BlockWeights::get().max_block;
 }
 
+// ── Fraud-proof pallet constants ─────────────────────────────────────────────
+parameter_types! {
+    /// Maximum transactions in a single scheduler witness (prevents DoS).
+    pub const FraudProofMaxTxCount: u32 = 256;
+    /// Blocks within which a fraud proof must be submitted after the disputed block.
+    /// At 200 ms/block this is approximately 24 hours.
+    pub const FraudProofDisputeWindowBlocks: u32 = 7_200;
+    /// Reward paid to the reporter on accepted fraud proof (1 ATLAS).
+    pub const FraudProofReporterReward: Balance = X3;
+}
+
 #[cfg(feature = "dev")]
 construct_runtime!(
     pub enum Runtime {
@@ -222,6 +235,7 @@ construct_runtime!(
         Swarm: pallet_swarm,
         DepinMarketplace: pallet_depin_marketplace,
         PrivateExecution: pallet_private_execution,
+        FraudProofs: crate::fraud_proofs::pallet::pallet,
     }
 );
 
@@ -251,6 +265,7 @@ construct_runtime!(
         Swarm: pallet_swarm,
         DepinMarketplace: pallet_depin_marketplace,
         PrivateExecution: pallet_private_execution,
+        FraudProofs: crate::fraud_proofs::pallet::pallet,
     }
 );
 
@@ -414,6 +429,16 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
     type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
     type SetMembersOrigin = frame_system::EnsureRoot<AccountId>;
     type MaxProposalWeight = MaxProposalWeight;
+}
+
+// ── Fraud-proof inline pallet config ─────────────────────────────────────────
+impl crate::fraud_proofs::pallet::pallet::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxTxCount = FraudProofMaxTxCount;
+    type DisputeWindowBlocks = FraudProofDisputeWindowBlocks;
+    type ReporterRewardAmount = FraudProofReporterReward;
+    type GovernanceOrigin = EnsureRootOrHalfCouncil;
 }
 
 impl pallet_evm::Config for Runtime {
