@@ -26,21 +26,21 @@
       fetchJson('/api/register',{method:'POST'})
         .then(r => {
           if(r.mnemonic){
-            alert('Your 12-word recovery phrase (save it now):\n\n' + r.mnemonic + '\n\nAddress: ' + r.address);
-            onRegister(r.address);
+            setMsg('SUCCESS! Save your 12-word phrase NOW:\n' + r.mnemonic + '\n\nAddress: ' + r.address);
+            setTimeout(() => onRegister(r.address), 15000); // Give them 15 seconds to copy before auto-redirecting
           }
-        });
+        }).catch(e => setMsg('Error registering'));
     }
 
     return e('div', {className:'login'},
       e('h2', null, 'GPU Swarm - Local Admin'),
       e('p', null, 'Enter your local admin token to control this node.'),
       e('input', {value: token, onChange: (ev) => setToken(ev.target.value), placeholder:'token'}),
-      e('div', {className:'row'},
+      e('div', {className:'row', style: {marginTop: 10}},
         e('button', {onClick: tryLogin}, 'Login'),
         e('button', {onClick: register, style:{marginLeft:10}}, 'Register (create wallet)')
       ),
-      e('p', {className:'muted'}, msg)
+      e('pre', {className:'muted', style: {whiteSpace: 'pre-wrap', marginTop: 15, color: '#ffb347', fontWeight: 'bold'}}, msg)
     );
   }
 
@@ -84,10 +84,24 @@
         .then(r=>r.json()).then(s=> setState(s)).catch(console.error);
     }
 
+    function generateNewWallet(){
+      if(confirm('Warning: This will overwrite your current node wallet. Continue?')) {
+        fetch('/api/register', {method:'POST'}).then(r=>r.json()).then(r => {
+           if(r.mnemonic) {
+             prompt('SUCCESS! Copy your 12-word recovery phrase NOW (Ctrl+C):', r.mnemonic);
+             fetch('/api/state').then(r=>r.json()).then(s=> setState(s));
+           }
+        });
+      }
+    }
+
     return e('div', {className:'dashboard'},
       e('h2', null, 'Node Dashboard'),
-      e('p', null, 'Wallet: ' + (state.wallet_address || 'not registered')),
-      e('div', null, 'Enabled: ' + (state.enabled ? 'Yes' : 'No') + ' ' , e('button',{onClick: toggleEnabled}, state.enabled ? 'Turn Off' : 'Turn On')),
+      e('div', {style: {display: 'flex', alignItems: 'center', gap: '10px'}}, 
+         e('span', null, 'Wallet: ' + (state.wallet_address || 'not registered')),
+         e('button', {onClick: generateNewWallet, style: {padding: '4px 8px', fontSize: '0.8rem'}}, 'Force Generate New Wallet')
+      ),
+      e('div', {style:{marginTop:10}}, 'Enabled: ' + (state.enabled ? 'Yes' : 'No') + ' ' , e('button',{onClick: toggleEnabled}, state.enabled ? 'Turn Off' : 'Turn On')),
       e('div', {style:{marginTop:10}}, 'GPU level: ', ['low','medium','high'].map(l => e('button', {key:l, onClick: ()=>setLevel(l), style:{marginLeft:6}}, l))),
       e('div',{style:{height:300, marginTop:20}}, e('canvas',{id:'rewardsChart'})),
       e('div',{style:{marginTop:10}}, e('p',null,'Uptime: ' + (state.uptime_seconds || 0) + 's'), e('p', null, 'Rewards: ' + (state.rewards || 0).toFixed(4)))
