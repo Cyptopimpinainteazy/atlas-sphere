@@ -1,0 +1,27 @@
+
+# LLM Reconnaissance Report
+**Target:** localhost
+**Scan Time:** 2026-03-04 20:14:25
+
+## Found Endpoints
+
+## Search Engine Results
+### Censys
+- {'ip': '192.168.1.100', 'ports': [8000, 11434], 'services': ['ollama', 'http'], 'location': 'Example Location'}
+### Zoomeye
+- No results found
+### Shodan
+- No results found
+
+## Google Dorks
+- `inurl:":11434" "localhost" -github`
+- `inurl:":1234" "localhost" -github`
+- `inurl:"/api" "ollama" "localhost"`
+- `inurl:".env" "OPENAI_API_KEY" "localhost" -github`
+
+## Ethical Recommendations
+- Always obtain explicit permission before scanning
+- Use VPN/Tor for anonymity during reconnaissance
+- Report findings through responsible disclosure
+- Never attempt to exploit or misuse discovered endpoints
+- Consider the legal implications in your jurisdiction

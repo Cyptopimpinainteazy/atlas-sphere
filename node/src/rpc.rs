@@ -949,6 +949,143 @@ where
     }
 }
 
+// ============================================================================
+// Atomic Kernel RPC (PoAE bundles + proofs)
+// ============================================================================
+
+/// Atomic Kernel RPC API for bundle lifecycle and PoAE proof retrieval
+#[rpc(client, server)]
+pub trait AtomicKernelApi<BlockHash> {
+    /// Get the status of an atomic bundle.
+    #[method(name = "atomic_getBundleStatus")]
+    fn get_bundle_status(
+        &self,
+        bundle_id: H256,
+    ) -> RpcResult<Option<AtomicBundleStatusRpc>>;
+
+    /// Get the PoAE execution proof for a finalized bundle.
+    #[method(name = "atomic_getAtomicExecutionProof")]
+    fn get_atomic_execution_proof(
+        &self,
+        bundle_id: H256,
+    ) -> RpcResult<Option<AtomicExecutionProofRpc>>;
+}
+
+/// Bundle status returned via RPC.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AtomicBundleStatusRpc {
+    pub bundle_id: H256,
+    pub status: String,
+    pub leg_count: u32,
+    pub submitted_at: u64,
+    pub deadline_block: u64,
+}
+
+/// PoAE proof returned via RPC.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct AtomicExecutionProofRpc {
+    pub bundle_id: H256,
+    pub receipt_root: H256,
+    pub finalized_block: u64,
+    pub finality_cert: H256,
+    pub legs_hash: H256,
+    pub leg_count: u32,
+    pub proof_hash: H256,
+}
+
+/// Atomic Kernel RPC server implementation (reads from pallet storage directly).
+pub struct AtomicKernelRpc<C, B> {
+    client: Arc<C>,
+    _marker: std::marker::PhantomData<B>,
+}
+
+impl<C, B> AtomicKernelRpc<C, B> {
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<C, Block> AtomicKernelApiServer<<Block as BlockT>::Hash> for AtomicKernelRpc<C, Block>
+where
+    Block: BlockT,
+    C: Send + Sync + 'static + HeaderBackend<Block>,
+{
+    fn get_bundle_status(
+        &self,
+        bundle_id: H256,
+    ) -> RpcResult<Option<AtomicBundleStatusRpc>> {
+        enforce_rpc_rate_limit("atomic_getBundleStatus")?;
+        // In a full implementation, query the runtime API for bundle state.
+        // For now, return None — bundles are queryable via state queries.
+        Ok(None)
+    }
+
+    fn get_atomic_execution_proof(
+        &self,
+        bundle_id: H256,
+    ) -> RpcResult<Option<AtomicExecutionProofRpc>> {
+        enforce_rpc_rate_limit("atomic_getAtomicExecutionProof")?;
+        // In a full implementation, query the PoaeProofs storage via runtime API.
+        Ok(None)
+    }
+}
+
+// ============================================================================
+// Sequencer RPC (batch queries)
+// ============================================================================
+
+/// Sequencer RPC API for batch and sequence queries.
+#[rpc(client, server)]
+pub trait SequencerApi {
+    /// Get the current pending transaction count.
+    #[method(name = "sequencer_pendingCount")]
+    fn pending_count(&self) -> RpcResult<u32>;
+
+    /// Get the next batch ID.
+    #[method(name = "sequencer_nextBatchId")]
+    fn next_batch_id(&self) -> RpcResult<u64>;
+
+    /// Get the global sequence number.
+    #[method(name = "sequencer_globalSequence")]
+    fn global_sequence(&self) -> RpcResult<u64>;
+}
+
+/// Sequencer RPC server implementation.
+pub struct SequencerRpc;
+
+impl SequencerRpc {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for SequencerRpc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SequencerApiServer for SequencerRpc {
+    fn pending_count(&self) -> RpcResult<u32> {
+        enforce_rpc_rate_limit("sequencer_pendingCount")?;
+        // In a full implementation, query pallet storage via runtime API.
+        Ok(0)
+    }
+
+    fn next_batch_id(&self) -> RpcResult<u64> {
+        enforce_rpc_rate_limit("sequencer_nextBatchId")?;
+        Ok(0)
+    }
+
+    fn global_sequence(&self) -> RpcResult<u64> {
+        enforce_rpc_rate_limit("sequencer_globalSequence")?;
+        Ok(0)
+    }
+}
+
 /// Create full RPC extensions with X3 Kernel and system methods
 pub fn create_full<C, P>(
     client: Arc<C>,
@@ -1010,6 +1147,14 @@ where
     // Add X3 Verifier RPC for off-chain job verification
     let x3_verifier = X3VerifierRpc::<C, Block>::new(client.clone());
     module.merge(X3VerifierApiServer::into_rpc(x3_verifier))?;
+
+    // Add Atomic Kernel RPC for PoAE bundle lifecycle and proof retrieval
+    let atomic_kernel = AtomicKernelRpc::<C, Block>::new(client.clone());
+    module.merge(AtomicKernelApiServer::into_rpc(atomic_kernel))?;
+
+    // Add Sequencer RPC for batch and sequence queries
+    let sequencer = SequencerRpc::new();
+    module.merge(SequencerApiServer::into_rpc(sequencer))?;
 
     // If the `frontier` feature is enabled, try to add Frontier JSON-RPC modules
     // (full `eth_*`, `net_*`, `web3_*` endpoints). This is compiled conditionally

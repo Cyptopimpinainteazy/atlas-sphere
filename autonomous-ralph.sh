@@ -76,18 +76,25 @@ start_ralph() {
 
 # Build the project during Ralph execution
 build_and_test() {
-    log_msg "Running cargo build and tests..."
-    
+    log_msg "Running cargo build and tests (safe profile)..."
+
     cd "$PROJECT_DIR"
-    
-    # Build
-    if cargo build --release --workspace >> "$RALPH_LOG" 2>&1; then
+
+    # Use a safer toolchain/profile to avoid the known rustc ICE in release builds.
+    export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-1.92.0}"
+    export RUSTFLAGS="${RUSTFLAGS:--C opt-level=1 -C codegen-units=8}"
+    export CC="${CC:-clang}"
+    export CXX="${CXX:-clang++}"
+    export CFLAGS="${CFLAGS:--O1}"
+
+    # Build (debug/low-opt to reduce compiler crashes)
+    if cargo build --workspace >> "$RALPH_LOG" 2>&1; then
         log_msg "✓ Build successful"
     else
         log_msg "⚠️  Build failed, fixing issues..."
     fi
-    
-    # Run tests
+
+    # Run tests (non-release to avoid heavy optimizations)
     if cargo test --workspace >> "$RALPH_LOG" 2>&1; then
         log_msg "✓ Tests passed"
     else

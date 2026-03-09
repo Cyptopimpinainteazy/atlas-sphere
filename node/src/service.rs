@@ -230,8 +230,14 @@ pub fn new_partial(
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
     // Create transaction pool with tuned limits to reduce rejection under heavy load
+    let mut txpool_config = config.transaction_pool.clone();
+    txpool_config.ready.max_count = 1_000_000;
+    txpool_config.ready.max_bytes = 256 * 1024 * 1024; // 256MB
+    txpool_config.future.max_count = 100_000;
+    txpool_config.future.max_bytes = 64 * 1024 * 1024; // 64MB
+
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
-        config.transaction_pool.clone(),
+        txpool_config,
         config.role.is_authority().into(),
         config.prometheus_registry(),
         task_manager.spawn_essential_handle(),

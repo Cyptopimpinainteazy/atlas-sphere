@@ -1,0 +1,198 @@
+/// X3-lang Hash Time-Locked Contract (HTLC)
+///
+/// This contract implements an HTLC for the X3 native VM.
+/// It supports:
+/// - Creating HTLCs with a hash lock and timelock
+/// - Claiming funds by revealing the preimage (secret)
+/// - Refunding funds after timelock expiry
+///
+/// ABI:
+///   create_htlc(recipient: address, hash_lock: bytes32, timelock: u64, amount: u64) -> bytes32
+///   claim_htlc(htlc_id: bytes32, secret: bytes32) -> u64
+///   refund_htlc(htlc_id: bytes32) -> u64
+///   get_htlc_status(htlc_id: bytes32) -> u8
+///
+/// Events:
+///   HTLCCreated(htlc_id, sender, recipient, amount, hash_lock, timelock)
+///   HTLCClaimed(htlc_id, secret)
+///   HTLCRefunded(htlc_id)
+
+/// HTLC status codes
+/// 0 = does not exist
+/// 1 = funded (active)
+/// 2 = claimed (completed)
+/// 3 = refunded (expired)
+
+/// Storage layout:
+///   htlc:{id}:sender    -> address (creator)
+///   htlc:{id}:recipient -> address (claimer)
+///   htlc:{id}:amount    -> u64
+///   htlc:{id}:hash_lock -> bytes32
+///   htlc:{id}:timelock  -> u64 (block number)
+///   htlc:{id}:status    -> u8
+///   htlc_count           -> u64 (global counter)
+
+fn sha256(data: bytes32) -> bytes32 {
+    /// Intrinsic: compute SHA-256 hash
+    return __x3_sha256(data);
+}
+
+fn block_number() -> u64 {
+    /// Intrinsic: current block number
+    return __x3_block_number();
+}
+
+fn caller() -> address {
+    /// Intrinsic: message sender
+    return __x3_caller();
+}
+
+fn transfer(to: address, amount: u64) -> bool {
+    /// Intrinsic: native token transfer
+    return __x3_transfer(to, amount);
+}
+
+/// Create a new HTLC.
+///
+/// The caller sends `amount` native tokens locked with `hash_lock`.
+/// The `recipient` can claim by providing the secret S where SHA256(S) == hash_lock.
+/// After `timelock` blocks, the sender can refund.
+fn create_htlc(
+    recipient: address,
+    hash_lock: bytes32,
+    timelock: u64,
+    amount: u64
+) -> bytes32 {
+    // Validate inputs
+    if amount == 0 {
+        revert("HTLC: zero amount");
+    }
+    if timelock <= block_number() {
+        revert("HTLC: timelock must be in the future");
+    }
+
+    // Generate HTLC ID from counter
+    let count = storage_get("htlc_count");
+    let htlc_id = sha256(count);
+    storage_set("htlc_count", count + 1);
+
+    // Store HTLC data
+    storage_set_keyed("htlc", htlc_id, "sender", caller());
+    storage_set_keyed("htlc", htlc_id, "recipient", recipient);
+    storage_set_keyed("htlc", htlc_id, "amount", amount);
+    storage_set_keyed("htlc", htlc_id, "hash_lock", hash_lock);
+    storage_set_keyed("htlc", htlc_id, "timelock", timelock);
+    storage_set_keyed("htlc", htlc_id, "status", 1);
+
+    // Lock funds (transfer from caller to contract)
+    if !__x3_lock_value(amount) {
+        revert("HTLC: failed to lock funds");
+    }
+
+    emit HTLCCreated(htlc_id, caller(), recipient, amount, hash_lock, timelock);
+
+    return htlc_id;
+}
+
+/// Claim an HTLC by revealing the secret preimage.
+///
+/// Only the designated recipient can claim.
+/// The secret must hash to the stored hash_lock.
+fn claim_htlc(htlc_id: bytes32, secret: bytes32) -> u64 {
+    let status = storage_get_keyed("htlc", htlc_id, "status");
+    if status != 1 {
+        revert("HTLC: not funded");
+    }
+
+    let recipient = storage_get_keyed("htlc", htlc_id, "recipient");
+    if caller() != recipient {
+        revert("HTLC: not recipient");
+    }
+
+    // Verify hash lock
+    let hash_lock = storage_get_keyed("htlc", htlc_id, "hash_lock");
+    let computed_hash = sha256(secret);
+    if computed_hash != hash_lock {
+        revert("HTLC: invalid secret");
+    }
+
+    // Check timelock not expired (recipient must claim before expiry)
+    let timelock = storage_get_keyed("htlc", htlc_id, "timelock");
+    if block_number() >= timelock {
+        revert("HTLC: timelock expired");
+    }
+
+    // Update status
+    storage_set_keyed("htlc", htlc_id, "status", 2);
+
+    // Release funds to recipient
+    let amount = storage_get_keyed("htlc", htlc_id, "amount");
+    if !transfer(recipient, amount) {
+        revert("HTLC: transfer failed");
+    }
+
+    emit HTLCClaimed(htlc_id, secret);
+
+    return amount;
+}
+
+/// Refund an HTLC after timelock expiry.
+///
+/// Only the original sender can refund.
+/// The timelock must have passed.
+fn refund_htlc(htlc_id: bytes32) -> u64 {
+    let status = storage_get_keyed("htlc", htlc_id, "status");
+    if status != 1 {
+        revert("HTLC: not funded");
+    }
+
+    let sender = storage_get_keyed("htlc", htlc_id, "sender");
+    if caller() != sender {
+        revert("HTLC: not sender");
+    }
+
+    // Ensure timelock has passed
+    let timelock = storage_get_keyed("htlc", htlc_id, "timelock");
+    if block_number() < timelock {
+        revert("HTLC: timelock not expired");
+    }
+
+    // Update status
+    storage_set_keyed("htlc", htlc_id, "status", 3);
+
+    // Return funds to sender
+    let amount = storage_get_keyed("htlc", htlc_id, "amount");
+    if !transfer(sender, amount) {
+        revert("HTLC: refund transfer failed");
+    }
+
+    emit HTLCRefunded(htlc_id);
+
+    return amount;
+}
+
+/// Query the status of an HTLC.
+/// Returns: 0 = nonexistent, 1 = funded, 2 = claimed, 3 = refunded
+fn get_htlc_status(htlc_id: bytes32) -> u64 {
+    return storage_get_keyed("htlc", htlc_id, "status");
+}
+
+/// Query the hash lock of an HTLC (for cross-chain verification).
+fn get_hash_lock(htlc_id: bytes32) -> bytes32 {
+    return storage_get_keyed("htlc", htlc_id, "hash_lock");
+}
+
+/// Query the timelock of an HTLC.
+fn get_timelock(htlc_id: bytes32) -> u64 {
+    return storage_get_keyed("htlc", htlc_id, "timelock");
+}
+
+/// Query the amount locked in an HTLC.
+fn get_amount(htlc_id: bytes32) -> u64 {
+    return storage_get_keyed("htlc", htlc_id, "amount");
+}
+
+/// Entry point for cross-VM coordinator calls.
+fn main() -> i64 {
+    return 0;
+}

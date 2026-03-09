@@ -38,13 +38,15 @@ impl fmt::Display for FlashloanId {
     }
 }
 
-/// Chain kind — unified EVM + SVM addressing.
+/// Chain kind — unified EVM + SVM + X3VM addressing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ChainKind {
     /// EVM-compatible chain with chain ID.
     Evm(u64),
     /// Solana Virtual Machine.
     Svm,
+    /// X3 Chain native VM (WASM-based, ~200ms finality).
+    X3,
 }
 
 impl fmt::Display for ChainKind {
@@ -52,6 +54,7 @@ impl fmt::Display for ChainKind {
         match self {
             ChainKind::Evm(id) => write!(f, "evm:{}", id),
             ChainKind::Svm => write!(f, "svm"),
+            ChainKind::X3 => write!(f, "x3"),
         }
     }
 }

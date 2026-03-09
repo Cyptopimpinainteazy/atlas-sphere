@@ -107,6 +107,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         AtomicLeg[] legs;          // Ordered legs to execute
         uint256 deadline;          // Block timestamp deadline
         uint256 bond;              // Deposited bond
+        uint256 nativeEscrow;      // ETH locked for native transfers
         BundleStatus status;       // Current status
         bytes32 receiptRoot;       // Merkle root of execution receipts
         uint256 submittedAt;       // Submission timestamp
@@ -247,7 +248,6 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
     error BundleNotExecuting();
     error TooManyLegs();
     error DeadlineTooFar();
-    error InsufficientBond();
     error CrossVMCallActive();
     error InvalidLeg();
     error LegExecutionFailed(uint256 legIndex, string reason);
@@ -258,6 +258,8 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
     error TimeLockNotExpired();
     error UnsupportedToken();
     error InvalidVMType();
+    error InsufficientNativeEscrow();
+    error NativeFundsNotFullyConsumed();
 
     // ═══════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -286,7 +288,8 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         // Validations
         if (legs.length == 0 || legs.length > MAX_LEGS_PER_BUNDLE) revert TooManyLegs();
         if (deadline > block.timestamp + MAX_DEADLINE) revert DeadlineTooFar();
-        if (msg.value < MIN_BOND) revert InsufficientBond();
+        uint256 nativeRequired = _calculateNativeRequirement(legs);
+        require(msg.value >= MIN_BOND + nativeRequired, "Insufficient bond + native value");
 
         // Generate unique bundle ID
         unchecked { _bundleNonce++; }
@@ -302,7 +305,10 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         bundle.id = bundleId;
         bundle.submitter = msg.sender;
         bundle.deadline = deadline;
-        bundle.bond = msg.value;
+        uint256 postBondValue = msg.value - MIN_BOND;
+        uint256 extraBond = postBondValue - nativeRequired;
+        bundle.bond = MIN_BOND + extraBond;
+        bundle.nativeEscrow = nativeRequired;
         bundle.status = BundleStatus.Pending;
         bundle.submittedAt = block.timestamp;
 
@@ -311,7 +317,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
             bundle.legs.push(legs[i]);
         }
 
-        totalBondsHeld += msg.value;
+        totalBondsHeld += bundle.bond;
 
         emit BundleSubmitted(bundleId, msg.sender, legs.length, deadline, msg.value);
     }
@@ -342,7 +348,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
             AtomicLeg storage leg = bundle.legs[i];
             
             uint256 gasStart = gasleft();
-            (bool success, bytes memory returnData) = _executeLeg(leg, bundle.submitter);
+            (bool success, bytes memory returnData) = _executeLeg(leg, bundle.submitter, bundleId);
             uint256 gasUsed = gasStart - gasleft();
             totalGasUsed += gasUsed;
 
@@ -367,6 +373,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
 
         // Calculate receipt Merkle root
         bundle.receiptRoot = _calculateMerkleRoot(receiptHashes);
+        if (bundle.nativeEscrow != 0) revert NativeFundsNotFullyConsumed();
         bundle.status = BundleStatus.Finalized;
         bundle.finalizedAt = block.timestamp;
 
@@ -382,7 +389,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
      * @param leg The leg to execute
      * @param submitter The original bundle submitter (for fund transfers)
      */
-    function _executeLeg(AtomicLeg storage leg, address submitter) internal returns (bool success, bytes memory returnData) {
+    function _executeLeg(AtomicLeg storage leg, address submitter, bytes32 bundleId) internal returns (bool success, bytes memory returnData) {
         if (_crossVMCallActive) revert CrossVMCallActive();
         _crossVMCallActive = true;
 
@@ -399,7 +406,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
             (success, returnData) = X3VM_PRECOMPILE.call{gas: leg.gasLimit}(precompileData);
         } else {
             // CrossVM - compound operation
-            (success, returnData) = _executeCrossVMLeg(leg, submitter);
+            (success, returnData) = _executeCrossVMLeg(leg, submitter, bundleId);
         }
 
         _crossVMCallActive = false;
@@ -410,7 +417,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
      * @param leg The leg to execute  
      * @param submitter The original bundle submitter (for fund transfers)
      */
-    function _executeCrossVMLeg(AtomicLeg storage leg, address submitter) internal returns (bool, bytes memory) {
+    function _executeCrossVMLeg(AtomicLeg storage leg, address submitter, bytes32 bundleId) internal returns (bool, bytes memory) {
         // Decode cross-VM instruction from callData
         // Format: [sourceVM(1), destVM(1), operation(1), payload(...)]
         if (leg.callData.length < 3) return (false, "Invalid cross-VM data");
@@ -423,7 +430,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         // Execute based on operation type
         if (operation == 0x01) {
             // Cross-VM transfer
-            return _executeCrossVMTransfer(VMType(sourceVM), VMType(destVM), payload, submitter);
+            return _executeCrossVMTransfer(VMType(sourceVM), VMType(destVM), payload, submitter, bundleId);
         } else if (operation == 0x02) {
             // Cross-VM call
             return _executeCrossVMCall(VMType(sourceVM), VMType(destVM), payload);
@@ -446,7 +453,8 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         VMType sourceVM,
         VMType destVM,
         bytes memory payload,
-        address submitter
+        address submitter,
+        bytes32 bundleId
     ) internal returns (bool, bytes memory) {
         // Decode: [token(20), amount(32), destAddress(32)]
         if (payload.length < 84) return (false, "Invalid transfer payload");
@@ -461,10 +469,12 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
             destAddress := mload(add(payload, 84))
         }
 
+        AtomicBundle storage bundle = bundles[bundleId];
         // Lock tokens in bridge from the SUBMITTER's account (not operator)
         if (token == address(0)) {
-            // Native transfer - value must have been sent with bundle submission
-            // The submitter should have included ETH value when submitting
+            // Native transfer - ensure ETH was locked up front
+            if (bundle.nativeEscrow < amount) revert InsufficientNativeEscrow();
+            bundle.nativeEscrow -= amount;
         } else {
             // Pull ERC20 from the bundle submitter who has given allowance
             IERC20(token).safeTransferFrom(submitter, address(this), amount);
@@ -538,6 +548,12 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
         // Return remaining bond
         if (returnAmount > 0) {
             payable(bundle.submitter).transfer(returnAmount);
+        }
+        // Return any unused native escrow (bundle did not execute)
+        if (bundle.nativeEscrow > 0) {
+            uint256 nativeRefund = bundle.nativeEscrow;
+            bundle.nativeEscrow = 0;
+            payable(bundle.submitter).transfer(nativeRefund);
         }
     }
 
@@ -687,6 +703,33 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
     // ═══════════════════════════════════════════════════════════════════════════
     // INTERNAL HELPERS
     // ═══════════════════════════════════════════════════════════════════════════
+
+    function _calculateNativeRequirement(
+        AtomicLeg[] calldata legs
+    ) internal pure returns (uint256 total) {
+        for (uint256 i = 0; i < legs.length; i++) {
+            AtomicLeg calldata leg = legs[i];
+            if (leg.targetVM != VMType.CrossVM) continue;
+            if (leg.callData.length < 4) continue;
+
+            uint8 operation = uint8(leg.callData[2]);
+            if (operation != 0x01) continue;
+
+            bytes memory payload = _slice(leg.callData, 3, leg.callData.length - 3);
+            if (payload.length < 84) continue;
+
+            address token;
+            uint256 amount;
+            assembly {
+                token := mload(add(payload, 20))
+                amount := mload(add(payload, 52))
+            }
+
+            if (token == address(0)) {
+                total += amount;
+            }
+        }
+    }
 
     function _calculateMerkleRoot(bytes32[] memory hashes) internal pure returns (bytes32) {
         if (hashes.length == 0) return bytes32(0);

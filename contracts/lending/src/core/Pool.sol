@@ -111,6 +111,7 @@ contract Pool is IPool, ReentrancyGuard {
         address _configurator
     ) external {
         require(priceOracle == address(0), "Pool: already initialized");
+        require(msg.sender == ADDRESSES_PROVIDER, "Pool: only provider");
 
         priceOracle = _priceOracle;
         treasury = _treasury;

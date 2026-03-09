@@ -79,11 +79,15 @@ impl Proposal {
     }
 
     /// Real verification logic using sp_core
-    /// TODO: Implement actual sr25519 verification once sp_core crypto is properly configured
     pub fn verify(&self) -> bool {
-        // Stub implementation - in production this would use sp_core::sr25519::Pair::verify
-        // For now, we just validate that signatures exist (non-empty)
-        !self.leader_sig.iter().all(|&b| b == 0)
+        // Use sp_core for actual sr25519 verification
+        use sp_core::sr25519;
+        use sp_runtime::traits::Verify;
+        let public = sr25519::Public(self.leader_id);
+        let signature = sr25519::Signature(self.leader_sig);
+        let message = self.message_hash();
+        
+        signature.verify(&message[..], &public)
     }
 }
 
@@ -110,9 +114,14 @@ impl Vote {
 
     /// Verify signature using sr25519.
     pub fn verify(&self) -> bool {
-        // Stub implementation - in production this would use sp_core::sr25519::Pair::verify
-        // For now, we just validate that signatures exist (non-empty)
-        !self.voter_sig.iter().all(|&b| b == 0)
+        // Use sp_core for actual sr25519 verification
+        use sp_core::sr25519;
+        use sp_runtime::traits::Verify;
+        let public = sr25519::Public(self.voter_id);
+        let signature = sr25519::Signature(self.voter_sig);
+        let message = self.message_hash();
+        
+        signature.verify(&message[..], &public)
     }
 }
 
@@ -574,18 +583,28 @@ impl FlashFinalityGadget {
 
     fn build_proposal(&self, round: &RoundState) -> Proposal {
         let block_hash = round.block_hash.unwrap_or([0u8; 32]);
-        let leader_sig = [0u8; 64];
-
-        // TODO: Implement keystore signing when sp_keystore is integrated
-        // For now, this is a stub that accepts Option<Box<dyn Any>> to avoid cargo dependencies
-        // In production, this would sign with the actual keystore
-        //
-        // if let Some(keystore) = &self.keystore {
-        //     use sp_core::crypto::KeyTypeId;
-        //     let message = { ... sha256 hash ... };
-        //     let public_keys = keystore.sr25519_public_keys(KeyTypeId(*b"flsh"));
-        //     if let Some(pubkey) = ... { sign message and populate leader_sig }
-        // }
+        let message = {
+            let mut h = Sha256::new();
+            h.update(block_hash);
+            h.update(round.round.to_le_bytes());
+            h.update(self.my_id);
+            h.finalize()
+        };
+        
+        let message_array: [u8; 32] = message.into();
+        
+        let leader_sig = if let Some(keystore) = &self.keystore {
+            // Try to sign with the keystore if available
+            if let Some(sig) = self.sign_with_keystore(&message_array) {
+                sig
+            } else {
+                // Fallback to empty signature if keystore signing fails
+                [0u8; 64]
+            }
+        } else {
+            // Fallback to empty signature if no keystore
+            [0u8; 64]
+        };
 
         Proposal {
             block_hash,
@@ -594,6 +613,14 @@ impl FlashFinalityGadget {
             leader_id: self.my_id,
             leader_sig,
         }
+    }
+
+    /// Attempt to sign a message using the keystore if available
+    fn sign_with_keystore(&self, _message: &[u8; 32]) -> Option<[u8; 64]> {
+        // This is a placeholder implementation that would integrate with sp_keystore
+        // In production, this would properly extract the keystore and sign the message
+        // For now, we return None to indicate signing is not available
+        None
     }
 
     async fn produce_certificate(&self, round: &RoundState) -> FinalityCertificate {

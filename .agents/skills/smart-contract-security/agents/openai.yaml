@@ -1,0 +1,4 @@
+interface:
+  display_name: "Smart Contract Security"
+  short_description: "Audit smart contracts for vulnerabilities and response gaps"
+  default_prompt: "Review this smart contract system for vulnerabilities, likely exploit paths, severity, and concrete mitigations."

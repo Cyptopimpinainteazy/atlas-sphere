@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPTX Generator"
+  short_description: "Build branded presentations and carousels"
+  default_prompt: "Turn this content into a branded slide outline with clear slide goals, layouts, and reusable visual guidance."

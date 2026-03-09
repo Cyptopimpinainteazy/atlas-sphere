@@ -208,6 +208,30 @@ parameter_types! {
     pub const FraudProofReporterReward: Balance = X3;
 }
 
+// ── Sequencer pallet constants ───────────────────────────────────────────────
+parameter_types! {
+    /// Maximum transactions per sequencer batch.
+    pub const SeqMaxTxsPerBatch: u32 = 2048;
+    /// Maximum payload size per sequenced transaction (bytes).
+    pub const SeqMaxPayloadSize: u32 = 128 * 1024; // 128 KB
+    /// Per-byte fee for sequencing (anti-spam).
+    pub const SeqPerByteFee: u128 = 10;  // 10 nATLAS per byte
+    /// Minimum base fee per transaction.
+    pub const SeqBaseFee: u128 = 1_000;  // 1 µATLAS
+}
+
+// ── DA pallet constants ──────────────────────────────────────────────────────
+parameter_types! {
+    /// Maximum blob size for DA (4 MB).
+    pub const DaMaxBlobSize: u32 = 4 * 1024 * 1024;
+    /// Per-byte fee for DA submissions.
+    pub const DaPerByteFee: u128 = 5;  // 5 nATLAS per byte
+    /// Maximum shard proofs per blob.
+    pub const DaMaxShardProofs: u32 = 128;
+    /// DA retention window (blocks) — ~24 hours at 200ms blocks.
+    pub const DaRetentionBlocks: BlockNumber = 432_000;
+}
+
 #[cfg(feature = "dev")]
 construct_runtime!(
     pub enum Runtime {
@@ -236,6 +260,8 @@ construct_runtime!(
         DepinMarketplace: pallet_depin_marketplace,
         PrivateExecution: pallet_private_execution,
         FraudProofs: crate::fraud_proofs::pallet::pallet,
+        X3Sequencer: pallet_x3_sequencer,
+        X3Da: pallet_x3_da,
     }
 );
 
@@ -266,6 +292,8 @@ construct_runtime!(
         DepinMarketplace: pallet_depin_marketplace,
         PrivateExecution: pallet_private_execution,
         FraudProofs: crate::fraud_proofs::pallet::pallet,
+        X3Sequencer: pallet_x3_sequencer,
+        X3Da: pallet_x3_da,
     }
 );
 
@@ -1223,6 +1251,24 @@ impl pallet_private_execution::Config for Runtime {
     type PrivateBurnShareBps = PrivateBurnShareBps;
     type PrivateStakerShareBps = PrivateStakerShareBps;
     type WeightInfo = ();
+}
+
+impl pallet_x3_sequencer::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxTxsPerBatch = SeqMaxTxsPerBatch;
+    type MaxPayloadSize = SeqMaxPayloadSize;
+    type PerByteFee = SeqPerByteFee;
+    type BaseFee = SeqBaseFee;
+}
+
+impl pallet_x3_da::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type MaxBlobSize = DaMaxBlobSize;
+    type PerByteFee = DaPerByteFee;
+    type MaxShardProofs = DaMaxShardProofs;
+    type RetentionBlocks = DaRetentionBlocks;
 }
 
 // Session trait implementations for minimal runtime

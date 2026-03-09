@@ -1,0 +1,4 @@
+interface:
+  display_name: "MCP Client"
+  short_description: "Use MCP tools without loading full tool catalogs"
+  default_prompt: "Connect to the right MCP server for this task, inspect only the needed tool schema, and execute the requested action."

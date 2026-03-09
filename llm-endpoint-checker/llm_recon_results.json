@@ -1,0 +1,86 @@
+[
+  {
+    "Platform": "OpenAI",
+    "Host": "api.openai.com",
+    "URL": "https://api.openai.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "OpenAI",
+    "Host": "api.openai.com",
+    "URL": "https://api.openai.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "OpenAI",
+    "Host": "api.openai.com",
+    "URL": "https://api.openai.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "Anthropic",
+    "Host": "api.anthropic.com",
+    "URL": "https://api.anthropic.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "Anthropic",
+    "Host": "api.anthropic.com",
+    "URL": "https://api.anthropic.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "Google",
+    "Host": "api.google.com",
+    "URL": "https://api.google.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "Google",
+    "Host": "api.google.com",
+    "URL": "https://api.google.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "HuggingFace",
+    "Host": "api.huggingface.com",
+    "URL": "https://api.huggingface.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "Replicate",
+    "Host": "api.replicate.com",
+    "URL": "https://api.replicate.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "Replicate",
+    "Host": "api.replicate.com",
+    "URL": "https://api.replicate.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "Replicate",
+    "Host": "api.replicate.com",
+    "URL": "https://api.replicate.com/v1/chat/completions",
+    "Live": false
+  },
+  {
+    "Platform": "TogetherAI",
+    "Host": "api.togetherai.com",
+    "URL": "https://api.togetherai.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "TogetherAI",
+    "Host": "api.togetherai.com",
+    "URL": "https://api.togetherai.com/v1/chat/completions",
+    "Live": true
+  },
+  {
+    "Platform": "TogetherAI",
+    "Host": "api.togetherai.com",
+    "URL": "https://api.togetherai.com/v1/chat/completions",
+    "Live": false
+  }
+]

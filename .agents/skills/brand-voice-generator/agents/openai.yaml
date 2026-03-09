@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brand & Voice Generator"
+  short_description: "Build reusable voice and brand-system files"
+  default_prompt: "Create a reusable brand and voice system from my inputs, with tone rules, visual tokens, and reuse guidance."

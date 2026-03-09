@@ -24,8 +24,13 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+var shodanKey string
+var osintMode bool
+var githubQuery string
+var githubToken string
+
 // Run llm_recon.py and stream output to the UI
-func runLLMRecon(proxy string, update func(string)) error {
+func runLLMRecon(proxy string, update func(string), addEndpoint func(Endpoint)) error {
 	args := []string{"scripts/llm_recon.py", "--search-all", "--timeout", "4", "--threads", "10"}
 	cmd := exec.Command("python3", args...)
 	cmd.Dir = exeDir()
@@ -45,7 +50,274 @@ func runLLMRecon(proxy string, update func(string)) error {
 	}
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
-		update(scanner.Text())
+		line := scanner.Text()
+		update(line)
+		
+		// Parse endpoint lines
+		if strings.Contains(line, "Found endpoint:") {
+			// Extract URL and live status from line like:
+			// "Found endpoint: https://api.openai.com/v1/chat/completions (Live: True)"
+			parts := strings.Split(line, "Found endpoint: ")
+			if len(parts) == 2 {
+				urlAndStatus := strings.TrimSpace(parts[1])
+				if strings.Contains(urlAndStatus, " (Live: ") {
+					urlParts := strings.Split(urlAndStatus, " (Live: ")
+					if len(urlParts) == 2 {
+						endpointURL := strings.TrimSpace(urlParts[0])
+						
+						// Extract platform from URL
+						platform := "Unknown"
+						if strings.Contains(endpointURL, "openai.com") {
+							platform = "OpenAI"
+						} else if strings.Contains(endpointURL, "anthropic.com") {
+							platform = "Anthropic"
+						} else if strings.Contains(endpointURL, "google.com") {
+							platform = "Google"
+						} else if strings.Contains(endpointURL, "huggingface.com") {
+							platform = "HuggingFace"
+						} else if strings.Contains(endpointURL, "replicate.com") {
+							platform = "Replicate"
+						} else if strings.Contains(endpointURL, "togetherai.com") {
+							platform = "TogetherAI"
+						}
+						
+						// Extract host
+						host := "unknown"
+						if u, err := url.Parse(endpointURL); err == nil {
+							host = u.Host
+						}
+						
+						endpoint := Endpoint{
+							Platform: platform,
+							Host:     host,
+							URL:      endpointURL,
+						}
+						
+						// Add to results list
+						addEndpoint(endpoint)
+					}
+				}
+			}
+		}
+	}
+	errScanner := bufio.NewScanner(stderr)
+	for errScanner.Scan() {
+		update("[ERR] " + errScanner.Text())
+	}
+	return cmd.Wait()
+}
+
+// Run GPU reconnaissance for mining rigs, data centers, and gaming PCs
+func runGPURecon(proxy string, update func(string), addEndpoint func(Endpoint)) error {
+	args := []string{"scripts/ollama_recon.py", "--gpu-only", "--timeout", "5", "--threads", "15"}
+	cmd := exec.Command("python3", args...)
+	cmd.Dir = exeDir()
+	if proxy != "" {
+		cmd.Env = append(os.Environ(), "HTTP_PROXY="+proxy, "HTTPS_PROXY="+proxy)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		update(line)
+		
+		// Parse GPU endpoint lines
+		if strings.Contains(line, "Found mining GPU at") || 
+		   strings.Contains(line, "Found data center GPU at") || 
+		   strings.Contains(line, "Found gaming GPU at") {
+			// Extract URL from line like:
+			// "Found mining GPU at http://example.com:4000"
+			parts := strings.Split(line, "Found ")
+			if len(parts) == 2 {
+				typeAndURL := strings.TrimSpace(parts[1])
+				if strings.Contains(typeAndURL, " at ") {
+					typeParts := strings.Split(typeAndURL, " at ")
+					if len(typeParts) == 2 {
+						endpointType := typeParts[0] // "mining GPU", "data center GPU", "gaming GPU"
+						endpointURL := strings.TrimSpace(typeParts[1])
+						
+						// Extract host from URL
+						parsedURL, err := url.Parse(endpointURL)
+						host := endpointURL
+						if err == nil {
+							host = parsedURL.Host
+						}
+						
+						endpoint := Endpoint{
+							Platform: endpointType,
+							Host:     host,
+							URL:      endpointURL,
+						}
+						
+						// Add to results list
+						addEndpoint(endpoint)
+					}
+				}
+			}
+		}
+	}
+	errScanner := bufio.NewScanner(stderr)
+	for errScanner.Scan() {
+		update("[ERR] " + errScanner.Text())
+	}
+	return cmd.Wait()
+}
+
+// Run web reconnaissance for exposed Ollama and LM Studio endpoints
+func runWebRecon(proxy string, update func(string), addEndpoint func(Endpoint)) error {
+	args := []string{"scripts/ollama_recon.py", "--web-only", "--timeout", "5", "--threads", "20"}
+	if shodanKey != "" {
+		args = append(args, "--shodan-api-key", shodanKey)
+	}
+	if githubQuery != "" {
+		args = append(args, "--github-query", githubQuery)
+	}
+	if githubToken != "" {
+		args = append(args, "--github-token", githubToken)
+	}
+	if osintMode {
+		args = append(args, "--osint")
+	}
+	cmd := exec.Command("python3", args...)
+	if proxy != "" {
+		cmd.Env = append(os.Environ(), "HTTP_PROXY="+proxy, "HTTPS_PROXY="+proxy)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		update(line)
+		
+		// Parse endpoint lines from web recon
+		if strings.Contains(line, "Found Ollama at") || strings.Contains(line, "Found LM Studio at") {
+			// Extract URL from line like:
+			// "Found Ollama at http://example.com:11434"
+			parts := strings.Split(line, "Found ")
+			if len(parts) == 2 {
+				typeAndURL := strings.TrimSpace(parts[1])
+				if strings.Contains(typeAndURL, " at ") {
+					typeParts := strings.Split(typeAndURL, " at ")
+					if len(typeParts) == 2 {
+						endpointType := typeParts[0] // "Ollama" or "LM Studio"
+						endpointURL := strings.TrimSpace(typeParts[1])
+						
+						// Extract host from URL
+						parsedURL, err := url.Parse(endpointURL)
+						host := endpointURL
+						if err == nil {
+							host = parsedURL.Host
+						}
+						
+						endpoint := Endpoint{
+							Platform: endpointType,
+							Host:     host,
+							URL:      endpointURL,
+						}
+						
+						// Add to results list
+						addEndpoint(endpoint)
+					}
+				}
+			}
+		}
+	}
+	errScanner := bufio.NewScanner(stderr)
+	for errScanner.Scan() {
+		update("[ERR] " + errScanner.Text())
+	}
+	return cmd.Wait()
+}
+
+// Run ollama_recon.py and stream output to the UI
+func runOllamaRecon(proxy string, update func(string), addEndpoint func(Endpoint)) error {
+	args := []string{"scripts/ollama_recon.py", "--search-all", "--timeout", "3", "--threads", "20"}
+	if shodanKey != "" {
+		args = append(args, "--shodan-api-key", shodanKey)
+	}
+	if githubQuery != "" {
+		args = append(args, "--github-query", githubQuery)
+	}
+	if githubToken != "" {
+		args = append(args, "--github-token", githubToken)
+	}
+	if osintMode {
+		args = append(args, "--osint")
+	}
+	cmd := exec.Command("python3", args...)
+	cmd.Dir = exeDir()
+	if proxy != "" {
+		cmd.Env = append(os.Environ(), "HTTP_PROXY="+proxy, "HTTPS_PROXY="+proxy)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		update(line)
+		
+		// Parse endpoint lines
+		if strings.Contains(line, "Found Ollama endpoint:") || strings.Contains(line, "Found LM Studio endpoint:") {
+			// Extract host from line like:
+			// "Found Ollama endpoint: 192.168.1.100:11434"
+			parts := strings.Split(line, "Found ")
+			if len(parts) == 2 {
+				typeAndHost := strings.TrimSpace(parts[1])
+				if strings.Contains(typeAndHost, " endpoint: ") {
+					typeParts := strings.Split(typeAndHost, " endpoint: ")
+					if len(typeParts) == 2 {
+						endpointType := typeParts[0] // "Ollama" or "LM Studio"
+						host := strings.TrimSpace(typeParts[1])
+						
+						// Extract platform and URL
+						platform := endpointType
+						url := ""
+						if endpointType == "Ollama" {
+							url = fmt.Sprintf("http://%s/api/tags", host)
+						} else if endpointType == "LM Studio" {
+							url = fmt.Sprintf("http://%s/v1/models", host)
+						}
+						
+						endpoint := Endpoint{
+							Platform: platform,
+							Host:     host,
+							URL:      url,
+						}
+						
+						// Add to results list
+						addEndpoint(endpoint)
+					}
+				}
+			}
+		}
 	}
 	errScanner := bufio.NewScanner(stderr)
 	for errScanner.Scan() {
@@ -222,8 +494,25 @@ func main() {
 
 	statusLabel := widget.NewLabel("")
 	proxyStatus := widget.NewLabel("")
-	listWidget := widget.NewMultiLineEntry()
-	listWidget.SetMinRowsVisible(25)
+	logWidget := widget.NewMultiLineEntry()
+	// logWidget.SetMinRowsVisible(25) // Not available in Fyne v2.3
+
+	// Create list for found endpoints
+	var foundEndpoints []Endpoint
+	endpointList := widget.NewList(
+		func() int {
+			return len(foundEndpoints)
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("Template")
+		},
+		func(id widget.ListItemID, obj fyne.CanvasObject) {
+			if label, ok := obj.(*widget.Label); ok && id < len(foundEndpoints) {
+				ep := foundEndpoints[id]
+				label.SetText(fmt.Sprintf("%s - %s - %s", ep.Platform, ep.Host, ep.URL))
+			}
+		},
+	)
 
 	orderOptions := []string{"Platform", "Host", "Live", "URL"}
 	orderSelect := widget.NewSelect(orderOptions, func(string) {})
@@ -248,6 +537,21 @@ func main() {
 			proxyStatus.SetText("")
 			statusLabel.SetText("Proxy mode disabled")
 		}
+	})
+	// Shodan API key entry for automated host discovery
+	shodanEntry := widget.NewEntry()
+	shodanEntry.SetPlaceHolder("Shodan API key (optional)")
+	shodanEntry.OnChanged = func(s string) { shodanKey = s }
+	// GitHub dork query entry
+	githubEntry := widget.NewEntry()
+	githubEntry.SetPlaceHolder("GitHub search query (dork)")
+	githubEntry.OnChanged = func(s string) { githubQuery = s }
+	githubTokenEntry := widget.NewEntry()
+	githubTokenEntry.SetPlaceHolder("GitHub API token (optional)")
+	githubTokenEntry.Password = true
+	githubTokenEntry.OnChanged = func(s string) { githubToken = s }
+	osintToggle := widget.NewCheck("Enable OSINT extras", func(on bool) {
+		osintMode = on
 	})
 
 	rotateProxyBtn := widget.NewButton("Rotate Proxy", func() {
@@ -307,13 +611,16 @@ func main() {
 			}
 			sb.WriteString(fmt.Sprintf("[%s] %s (%s) - %s\n", status, r.Platform, r.Host, r.URL))
 		}
-		listWidget.SetText(sb.String())
+		logWidget.SetText(sb.String())
 		statusLabel.SetText(fmt.Sprintf("Checked %d endpoints", len(results)))
 	})
 
 	searchLLMsButton := widget.NewButton("Search for Free LLMs (All Types)", func() {
 		statusLabel.SetText("Searching for free LLMs (text, image, video, etc)...")
-		listWidget.SetText("")
+		logWidget.SetText("")
+		foundEndpoints = nil // Clear previous results
+		endpointList.Refresh()
+		
 		var proxy string
 		proxyMu.Lock()
 		if proxyMode && proxyManager != nil {
@@ -325,18 +632,114 @@ func main() {
 			var textBuffer strings.Builder
 			err := runLLMRecon(proxy, func(line string) {
 				textBuffer.WriteString(line + "\n")
-				// Use fyne.Do to safely update UI from goroutine
-				fyne.Do(func() {
-					listWidget.SetText(textBuffer.String())
-				})
+				// Update log UI directly (Fyne v2.3 handles thread safety)
+				logWidget.SetText(textBuffer.String())
+			}, func(endpoint Endpoint) {
+				// Add endpoint to list
+				foundEndpoints = append(foundEndpoints, endpoint)
+				endpointList.Refresh()
 			})
-			fyne.Do(func() {
-				if err != nil {
-					statusLabel.SetText("LLM search error: " + err.Error())
-				} else {
-					statusLabel.SetText("LLM search complete.")
-				}
+			if err != nil {
+				statusLabel.SetText("LLM search error: " + err.Error())
+			} else {
+				statusLabel.SetText(fmt.Sprintf("LLM search complete. Found %d endpoints.", len(foundEndpoints)))
+			}
+		}()
+	})
+
+	searchOllamaButton := widget.NewButton("Find Exposed Ollama & LM Studio", func() {
+		statusLabel.SetText("Scanning for exposed Ollama and LM Studio endpoints...")
+		logWidget.SetText("")
+		foundEndpoints = nil // Clear previous results
+		endpointList.Refresh()
+		
+		var proxy string
+		proxyMu.Lock()
+		if proxyMode && proxyManager != nil {
+			proxy = proxyManager.RandomProxy()
+			proxyStatus.SetText("Current proxy: " + proxy)
+		}
+		proxyMu.Unlock()
+		go func() {
+			var textBuffer strings.Builder
+			err := runOllamaRecon(proxy, func(line string) {
+				textBuffer.WriteString(line + "\n")
+				// Update log UI directly (Fyne v2.3 handles thread safety)
+				logWidget.SetText(textBuffer.String())
+			}, func(endpoint Endpoint) {
+				// Add endpoint to list
+				foundEndpoints = append(foundEndpoints, endpoint)
+				endpointList.Refresh()
 			})
+			if err != nil {
+				statusLabel.SetText("Ollama/LM Studio scan error: " + err.Error())
+			} else {
+				statusLabel.SetText(fmt.Sprintf("Ollama/LM Studio scan complete. Found %d endpoints.", len(foundEndpoints)))
+			}
+		}()
+	})
+
+	searchWebButton := widget.NewButton("Web Recon for Exposed Endpoints", func() {
+		statusLabel.SetText("Performing web reconnaissance for exposed Ollama and LM Studio endpoints...")
+		logWidget.SetText("")
+		foundEndpoints = nil // Clear previous results
+		endpointList.Refresh()
+		
+		var proxy string
+		proxyMu.Lock()
+		if proxyMode && proxyManager != nil {
+			proxy = proxyManager.RandomProxy()
+			proxyStatus.SetText("Current proxy: " + proxy)
+		}
+		proxyMu.Unlock()
+		go func() {
+			var textBuffer strings.Builder
+			err := runWebRecon(proxy, func(line string) {
+				textBuffer.WriteString(line + "\n")
+				// Update log UI directly (Fyne v2.3 handles thread safety)
+				logWidget.SetText(textBuffer.String())
+			}, func(endpoint Endpoint) {
+				// Add endpoint to list
+				foundEndpoints = append(foundEndpoints, endpoint)
+				endpointList.Refresh()
+			})
+			if err != nil {
+				statusLabel.SetText("Web reconnaissance error: " + err.Error())
+			} else {
+				statusLabel.SetText(fmt.Sprintf("Web reconnaissance complete. Found %d exposed endpoints.", len(foundEndpoints)))
+			}
+		}()
+	})
+
+	searchGPUButton := widget.NewButton("Find GPU Resources (Miners/Data Centers/Gamers)", func() {
+		statusLabel.SetText("Performing GPU resource reconnaissance (miners, data centers, gaming rigs)...")
+		logWidget.SetText("")
+		foundEndpoints = nil // Clear previous results
+		endpointList.Refresh()
+		
+		var proxy string
+		proxyMu.Lock()
+		if proxyMode && proxyManager != nil {
+			proxy = proxyManager.RandomProxy()
+			proxyStatus.SetText("Current proxy: " + proxy)
+		}
+		proxyMu.Unlock()
+		go func() {
+			var textBuffer strings.Builder
+			err := runGPURecon(proxy, func(line string) {
+				textBuffer.WriteString(line + "\n")
+				// Update log UI directly (Fyne v2.3 handles thread safety)
+				logWidget.SetText(textBuffer.String())
+			}, func(endpoint Endpoint) {
+				// Add endpoint to list
+				foundEndpoints = append(foundEndpoints, endpoint)
+				endpointList.Refresh()
+			})
+			if err != nil {
+				statusLabel.SetText("GPU reconnaissance error: " + err.Error())
+			} else {
+				statusLabel.SetText(fmt.Sprintf("GPU reconnaissance complete. Found %d GPU resources.", len(foundEndpoints)))
+			}
 		}()
 	})
 
@@ -346,11 +749,19 @@ func main() {
 		orderSelect,
 		proxyToggle,
 		rotateProxyBtn,
+		shodanEntry,
+		osintToggle,
 		goButton,
 		searchLLMsButton,
+		searchOllamaButton,
+		searchWebButton,
+		searchGPUButton,
 		statusLabel,
 		proxyStatus,
-		listWidget,
+		widget.NewLabelWithStyle("Search Log:", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		logWidget,
+		widget.NewLabelWithStyle("Found Endpoints:", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		endpointList,
 	)
 	w.SetContent(content)
 	w.ShowAndRun()
