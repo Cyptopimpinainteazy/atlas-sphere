@@ -21,8 +21,8 @@ tracing = "0.1"
 # Error handling
 anyhow = "1"
 thiserror = "1"
-sp-core = { version = "21.0.0", default-features = false }
-sp-runtime = { version = "24.0.0", default-features = false }
+sp-core = { workspace = true, default-features = false }
+sp-runtime = { workspace = true, default-features = false }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

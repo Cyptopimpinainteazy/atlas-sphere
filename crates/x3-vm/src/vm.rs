@@ -1563,7 +1563,6 @@ mod tests {
         code2.push(1u8);
 
         // build module using same const/global layout
-        let mut out2 = out.clone();
         // replace code section (overwrite code len + bytes at the end of out)
         // quick-and-dirty: reserialize header..const..func..globals then new code
         // For simplicity reconstruct minimal module like above

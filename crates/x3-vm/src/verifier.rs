@@ -1066,7 +1066,7 @@ mod tests {
 
     #[test]
     fn verify_nop_halt() {
-        let mut module = make_simple_module(vec![Opcode::Nop.to_byte(), Opcode::Halt.to_byte()]);
+        let module = make_simple_module(vec![Opcode::Nop.to_byte(), Opcode::Halt.to_byte()]);
         let result = Verifier::verify_module(&module, &VerifyOptions::default());
         assert!(result.is_ok());
     }
@@ -1083,7 +1083,7 @@ mod tests {
 
     #[test]
     fn verify_jump_target_oob() {
-        let mut module = make_simple_module(vec![
+        let module = make_simple_module(vec![
             Opcode::Jump.to_byte(),
             0xFF,
             0x00,

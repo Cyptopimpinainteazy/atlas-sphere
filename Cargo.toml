@@ -296,6 +296,12 @@ ahash = { path = "patches/ahash" }
 icu_properties = { path = "patches/icu_properties_stub" }
 # Patch idna_adapter to work with our icu_properties_stub GeneralCategory newtype
 idna_adapter = { path = "patches/idna_adapter" }
+# Force sp-io to use patched Substrate git version (don't use crates.io 23.0.0 which lacks wasm support)
+sp-application-crypto = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-inherents = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
 # Experimental: attempt to unify `curve25519-dalek` across workspace to satisfy Solana and Substrate consumers
 # REVERTED: workspace unification proved incompatible with pinned Substrate deps — keeping isolated SVM integration test instead
@@ -304,13 +310,23 @@ idna_adapter = { path = "patches/idna_adapter" }
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sc-service = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+# Redirect crates.io sp-* references (pulled by Frontier/WASM build) to the git
+# version so that workspace feature `disable_target_static_assertions` propagates
+# and prevents host-target assert_eq_size!(usize, u32) failures on x86_64.
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-runtime-interface-proc-macro = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-externalities = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-storage = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-tracing = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-wasm-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-debug-derive = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
 # Patch polkadot-sdk sources to use our substrate rev - comprehensive list
 [patch."https://github.com/paritytech/polkadot-sdk"]
 # Enable disable_target_static_assertions to prevent host builds (pointer width 64) from tripping WASM-only size checks during native coverage runs.
 sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false, features = ["std", "disable_target_static_assertions"] }
 sp-externalities = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
-sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-application-crypto = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }

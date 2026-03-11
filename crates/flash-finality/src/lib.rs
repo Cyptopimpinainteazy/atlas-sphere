@@ -593,7 +593,7 @@ impl FlashFinalityGadget {
         
         let message_array: [u8; 32] = message.into();
         
-        let leader_sig = if let Some(keystore) = &self.keystore {
+        let leader_sig = if let Some(_keystore) = &self.keystore {
             // Try to sign with the keystore if available
             if let Some(sig) = self.sign_with_keystore(&message_array) {
                 sig

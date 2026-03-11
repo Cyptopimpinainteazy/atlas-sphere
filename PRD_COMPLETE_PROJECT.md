@@ -24,16 +24,16 @@ The tasks are organized starting from foundation layers and moving up the stack,
 - [ ] Ensure all crates compile with `cargo build --release --workspace`
 - [ ] Add missing documentation comments for public APIs in all core crates
 - [ ] Run `cargo fmt --all` to standardize code formatting across workspace
-- [ ] Update rust-toolchain.toml to pin stable version for reproducible builds
+- [x] Update rust-toolchain.toml to pin stable version for reproducible builds
 
 ### 1.2 X3 VM - Complete TODO Items
 
-- [ ] Implement proper base calculation for nested calls in X3 VM (crates/x3-vm/src/vm.rs line 449)
-- [ ] Implement global variable storage system in X3 VM (crates/x3-vm/src/vm.rs lines 492, 500)
-- [ ] Implement transaction rollback mechanism in X3 VM (crates/x3-vm/src/vm.rs line 894)
-- [ ] Add comprehensive unit tests for X3 VM global variable storage
+- [x] Implement proper base calculation for nested calls in X3 VM (crates/x3-vm/src/vm.rs line 449)
+- [x] Implement global variable storage system in X3 VM (crates/x3-vm/src/vm.rs lines 492, 500)
+- [x] Implement transaction rollback mechanism in X3 VM (crates/x3-vm/src/vm.rs line 894)
+- [x] Add comprehensive unit tests for X3 VM global variable storage
 - [ ] Add integration tests for X3 VM nested call handling
-- [ ] Add rollback scenario tests with state verification
+- [x] Add rollback scenario tests with state verification
 
 ### 1.3 Node RPC - WebSocket Support
 

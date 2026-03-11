@@ -1,5 +1,6 @@
 [toolchain]
-channel = "1.93.1"
+# Pin an exact stable toolchain for reproducible local and CI builds.
+channel = "1.88.0"
 components = ["rustfmt", "clippy", "rust-src"]
 targets = ["wasm32-unknown-unknown"]
 profile = "minimal"
