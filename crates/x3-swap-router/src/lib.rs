@@ -22,18 +22,18 @@ pub mod routing;
 pub mod fee_calculator;
 
 pub use optimization::{RouteOptimizer, OptimizationParams, RouteScore};
-pub use atomic_execution::{AtomicSwapExecutor, SwapBundle, ExecutionStatus};
+pub use atomic_execution::{AtomicSwapExecutor, SwapBundle, ExecutionStatus, ExecutionResult};
 pub use quote_engine::{QuoteEngine, PriceOracle, QuoteResult, PriceSource};
-pub use mev_protection::{MEVProtector, ProtectionStrategy, SandwichProtection};
+pub use mev_protection::{MEVProtector, ProtectionStrategy, SandwichProtection, Route, Hop};
 pub use gas_optimization::{GasOptimizer, ChainGasParams, GasEstimate};
-pub use slippage_control::{SlippageController, SlippageConfig, ProtectionLevel};
+pub use slippage_control::{SlippageController, SlippageConfig, ProtectionLevel, SlippageProtectedParams};
 pub use routing::{RouteFinder, SwapRoute, HopInfo, RouteConstraints};
 pub use fee_calculator::{FeeCalculator, FeeStructure, ProtocolFees};
-
-use sp_std::vec::Vec;
 use sp_core::{H160, H256, U256};
-use frame_support::debug;
 use serde::{Deserialize, Serialize};
+
+#[cfg(test)]
+mod tests;
 
 /// Main atomic swap router for cross-chain transactions
 pub struct AtomicSwapRouter {
@@ -49,7 +49,7 @@ pub struct AtomicSwapRouter {
 impl AtomicSwapRouter {
     /// Create new atomic swap router
     pub fn new() -> Result<Self, SwapRouterError> {
-        debug::info!("Initializing X3 Chain Atomic Swap Router...");
+        log::info!("Initializing X3 Chain Atomic Swap Router...");
         
         let route_optimizer = RouteOptimizer::new()?;
         let quote_engine = QuoteEngine::new()?;
@@ -75,7 +75,7 @@ impl AtomicSwapRouter {
         &self,
         params: SwapParams,
     ) -> Result<SwapExecutionResult, SwapRouterError> {
-        debug::info!("Starting atomic swap execution: {:?}", params);
+        log::info!("Starting atomic swap execution: {:?}", params);
 
         // Step 1: Get comprehensive quotes across all routes
         let quotes = self.quote_engine.get_comprehensive_quotes(&params).await?;
@@ -87,26 +87,26 @@ impl AtomicSwapRouter {
         let protected_route = self.mev_protector.protect_route(&optimized_route).await?;
 
         // Step 4: Calculate gas optimization
-        let gas_params = self.gas_optimizer.calculate_gas(&protected_route).await?;
+        let gas_params = self.gas_optimizer.calculate_gas(&protected_route.route).await?;
 
         // Step 5: Apply slippage protection
-        let protected_params = self.slippage_controller.apply_protection(&params, &protected_route).await?;
+        let protected_params = self.slippage_controller.apply_protection(&params, &protected_route.route).await?;
 
         // Step 6: Calculate fees
-        let fees = self.fee_calculator.calculate_swap_fees(&protected_route).await?;
+        let fees = self.fee_calculator.calculate_swap_fees(&protected_route.route).await?;
 
         // Step 7: Execute atomic bundle
         let execution_result = self.atomic_executor.execute_swap_bundle(
-            &protected_route,
+            &protected_route.route,
             &gas_params,
             &protected_params,
         ).await?;
 
-        debug::info!("Atomic swap completed: {:?}", execution_result);
+        log::info!("Atomic swap completed: {:?}", execution_result);
 
         Ok(SwapExecutionResult {
             execution_id: execution_result.execution_id,
-            route: protected_route,
+            route: protected_route.route,
             fees,
             gas_used: execution_result.gas_used,
             slippage_achieved: execution_result.slippage_achieved,
@@ -160,6 +160,12 @@ pub enum SwapRouterError {
     InvalidParams,
 }
 
+impl From<crate::mev_protection::MEVProtectionError> for SwapRouterError {
+    fn from(_: crate::mev_protection::MEVProtectionError) -> Self {
+        SwapRouterError::MEVDetected
+    }
+}
+
 impl core::fmt::Display for SwapRouterError {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
@@ -171,16 +177,5 @@ impl core::fmt::Display for SwapRouterError {
             SwapRouterError::MEVDetected => write!(f, "MEV attack detected"),
             SwapRouterError::InvalidParams => write!(f, "Invalid swap parameters"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_swap_router_creation() {
-        let router = AtomicSwapRouter::new();
-        assert!(router.is_ok());
     }
 }

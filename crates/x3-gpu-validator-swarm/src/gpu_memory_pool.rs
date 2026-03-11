@@ -48,7 +48,7 @@ pub struct SlabHandle {
 }
 
 /// Slab allocation state
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SlabState {
     /// Available for allocation
     Free,
@@ -83,7 +83,7 @@ pub struct GpuMemoryPool {
 }
 
 /// Pool statistics for monitoring
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct MemoryPoolStats {
     pub device_id: GpuDeviceId,
     pub total_slabs: u32,
@@ -152,9 +152,12 @@ impl GpuMemoryPool {
         let start = std::time::Instant::now();
 
         loop {
-            let mut free_list = self.free_list.write();
-            if !free_list.is_empty() {
-                let slab_id = free_list.pop().unwrap();
+            let slab_id = {
+                let mut free_list = self.free_list.write();
+                free_list.pop()
+            };
+
+            if let Some(slab_id) = slab_id {
                 let mut slabs = self.slabs.write();
                 let slab = &mut slabs[slab_id as usize];
 
@@ -181,7 +184,6 @@ impl GpuMemoryPool {
                 };
             }
 
-            drop(free_list); // Release lock
             tokio::time::sleep(tokio::time::Duration::from_micros(10)).await;
         }
     }

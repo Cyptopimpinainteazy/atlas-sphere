@@ -11,12 +11,12 @@ scale-info = { version = "2.11.1", default-features = false, features = ["derive
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 log = { version = "0.4", default-features = false }
 
 [dev-dependencies]
-sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 pallet-balances = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
@@ -28,6 +28,7 @@ std = [
     "frame-support/std",
     "frame-system/std",
     "sp-core/std",
+    "sp-io/std",
     "sp-runtime/std",
     "sp-std/std",
     "log/std",

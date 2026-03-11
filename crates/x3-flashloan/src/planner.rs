@@ -201,6 +201,17 @@ mod tests {
     }
 
     #[test]
+    fn test_zero_borrow_amount_rejected() {
+        let planner = FlashloanPlanner::new();
+        let mut plan = sample_plan();
+        plan.borrows[0].amount = 0;
+        assert!(matches!(
+            planner.plan(plan),
+            Err(FlashloanError::InvalidPlan(_))
+        ));
+    }
+
+    #[test]
     fn test_zero_deadline_rejected() {
         let planner = FlashloanPlanner::new();
         let mut plan = sample_plan();

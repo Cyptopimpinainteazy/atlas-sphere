@@ -64,6 +64,7 @@ members = [
     "crates/x3-court",
     "crates/x3-flashloan",
     "crates/x3-dex",
+    "crates/x3-swap-router",
     "pallets/depin-marketplace",
     "pallets/private-execution",
     "crates/contention-predictor",
@@ -158,6 +159,7 @@ sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate", rev = 
 sp-inherents = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-keystore = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-offchain = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false, features = ["disable_target_static_assertions"] }
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-version = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
@@ -305,7 +307,8 @@ pallet-aura = { git = "https://github.com/paritytech/substrate", rev = "948fbd2"
 
 # Patch polkadot-sdk sources to use our substrate rev - comprehensive list
 [patch."https://github.com/paritytech/polkadot-sdk"]
-sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+# Enable disable_target_static_assertions to prevent host builds (pointer width 64) from tripping WASM-only size checks during native coverage runs.
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false, features = ["std", "disable_target_static_assertions"] }
 sp-externalities = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }

@@ -15,3 +15,17 @@ sp-core = { workspace = true }
 sp-runtime = { workspace = true }
 parity-scale-codec = { workspace = true }
 scale-info = { workspace = true }
+sp-std = { workspace = true }
+frame-support = { workspace = true }
+rand = "0.8"
+
+[features]
+default = ["std"]
+std = [
+    "sp-core/std",
+    "sp-runtime/std",
+    "parity-scale-codec/std",
+    "scale-info/std",
+    "sp-std/std",
+    "frame-support/std",
+]

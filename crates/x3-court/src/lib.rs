@@ -25,6 +25,7 @@ pub mod error;
 pub mod replay;
 pub mod types;
 pub mod verdict;
+pub mod vm;
 
 pub use court::Court;
 pub use docket::CourtDocket;
@@ -32,3 +33,4 @@ pub use error::CourtError;
 pub use replay::ReplayEngine;
 pub use types::*;
 pub use verdict::Verdict;
+pub use vm::*;

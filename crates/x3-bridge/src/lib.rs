@@ -10,7 +10,9 @@ pub mod l2_bridge;
 pub mod bitcoin_htlc;
 pub mod cross_chain_account;
 pub mod gas_relayer;
+pub mod cross_chain_proofs;
 
+pub use cross_chain_proofs::*;
 pub use ethereum_bridge::{EthereumBridge, BridgeDeposit, ERC20Token};
 pub use wormhole_adapter::{WormholeBridge, WrappedSPLToken, VAA};
 pub use security_council::{BridgeSecurityCouncil, Proposal, ProposalType};

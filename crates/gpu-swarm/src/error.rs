@@ -108,6 +108,10 @@ pub enum SwarmError {
     /// Execution error
     #[error("Execution error: {0}")]
     ExecutionError(String),
+
+    /// Invalid allocation plan
+    #[error("Invalid allocation: {0}")]
+    InvalidAllocation(String),
 }
 
 impl From<std::io::Error> for SwarmError {

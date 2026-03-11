@@ -308,7 +308,7 @@ pub mod pallet {
                         let mut data = [0u8; 64];
                         data[..32].copy_from_slice(pair[0].as_bytes());
                         data[32..].copy_from_slice(pair[1].as_bytes());
-                        H256(sp_core::hashing::blake2_256(&data))
+                        H256(sp_io::hashing::blake2_256(&data))
                     })
                     .collect();
             }

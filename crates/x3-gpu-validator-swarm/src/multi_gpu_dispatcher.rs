@@ -190,7 +190,7 @@ impl MultiGpuDispatcher {
             stat.avg_throughput_ops_sec = (stat.avg_throughput_ops_sec + throughput_ops_sec) / 2.0;
 
             debug!(
-                "[MultiGpuDispatcher] GPU {} job completed: {}µs, {:.2M} ops/sec",
+                "[MultiGpuDispatcher] GPU {} job completed: {}µs, {:.2}M ops/sec",
                 device_id,
                 execution_time_ms,
                 throughput_ops_sec / 1_000_000.0

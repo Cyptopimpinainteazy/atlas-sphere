@@ -14,6 +14,7 @@ from typing import Iterable, List, Tuple
 REPO = Path(__file__).resolve().parents[1]
 
 CONSENSUS_MAP_FILE = Path(".codex/consensus_paths.txt")
+COVERAGE_MAP_FILE = Path(".codex/coverage_paths.txt")
 REQUIRED_ARTIFACTS = [
     Path(".codex/CONSENSUS_INVARIANTS.md"),
     Path(".codex/FUZZ_OR_PROPERTY_PLAN.md"),
@@ -82,6 +83,24 @@ def load_globs(path: Path) -> List[str]:
             continue
         globs.append(line)
     return globs
+
+def load_coverage_rules(path: Path) -> List[Tuple[str, str, str]]:
+    """Load coverage enforcement rules formatted as glob|spec_id|report_path."""
+    rules: List[Tuple[str, str, str]] = []
+    fp = REPO / path
+    if not fp.exists():
+        return rules
+
+    for line in fp.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|")
+        if len(parts) != 3:
+            continue
+        glob, spec_id, report = parts
+        rules.append((glob.strip(), spec_id.strip(), report.strip()))
+    return rules
 
 def is_match_any(path: str, globs: Iterable[str]) -> bool:
     p = path.replace("\\", "/")
@@ -165,6 +184,7 @@ def enforce(files: List[str], diff_fn) -> List[Finding]:
     consensus_globs = load_globs(CONSENSUS_MAP_FILE)
     touched_consensus = [f for f in files if is_match_any(f, consensus_globs)] if consensus_globs else []
     touched_tests = [f for f in files if is_match_any(f, TEST_GLOBS)]
+    coverage_rules = load_coverage_rules(COVERAGE_MAP_FILE)
 
     if touched_tests and not has_allow_test_edit():
         findings.append(Finding(
@@ -205,6 +225,29 @@ def enforce(files: List[str], diff_fn) -> List[Finding]:
             "WARN",
             "Consensus/state-touching change detected. Run audit profile:\n  codex --profile x3-audit"
         ))
+
+    # Enforce coverage artifacts for critical paths when enabled
+    if os.getenv("X3_ENFORCE_COVERAGE", "").strip() == "1" and coverage_rules:
+        touched_specs: List[Tuple[str, str]] = []
+        for f in files:
+            for glob, spec_id, report in coverage_rules:
+                if fnmatch.fnmatch(f.replace("\\", "/"), glob):
+                    touched_specs.append((spec_id, report))
+
+        missing_reports = []
+        for spec_id, report in touched_specs:
+            report_path = REPO / report
+            if (not report_path.exists()) or report_path.stat().st_size == 0:
+                missing_reports.append((spec_id, report))
+
+        if missing_reports:
+            msg_lines = [
+                "Coverage reports missing for critical paths touched in this change (X3_ENFORCE_COVERAGE=1):"
+            ]
+            for spec_id, report in missing_reports:
+                msg_lines.append(f"- {spec_id}: expected coverage artifact at {report}")
+            msg_lines.append("Run the coverage job (tarpaulin/grcov) and ensure reports are generated before merging.")
+            findings.append(Finding("BLOCK", "\n".join(msg_lines)))
 
     return findings
 

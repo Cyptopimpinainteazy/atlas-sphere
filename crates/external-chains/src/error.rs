@@ -15,6 +15,8 @@ pub enum ExternalChainError {
     TransactionFailed(Vec<u8>),
     /// Transaction reverted
     TransactionReverted(Vec<u8>),
+    /// Parse or serialization error
+    ParseError(Vec<u8>),
     /// Insufficient gas
     InsufficientGas,
     /// Insufficient balance
@@ -72,6 +74,11 @@ impl ExternalChainError {
     /// Create transaction reverted error
     pub fn tx_reverted(msg: &str) -> Self {
         Self::TransactionReverted(msg.as_bytes().to_vec())
+    }
+
+    /// Create parse error
+    pub fn parse_error(msg: &str) -> Self {
+        Self::ParseError(msg.as_bytes().to_vec())
     }
 
     /// Create internal error

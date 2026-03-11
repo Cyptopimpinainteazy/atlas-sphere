@@ -250,6 +250,9 @@ const IframePanel = lazy(() => import("@/components/panels/IframePanel"));
 // Governance - Voting
 const GovernanceVotingPanel = lazy(() => import("@/components/panels/governance/GovernanceVotingPanel"));
 
+// Governance - CRM Swarm Governance
+const CrmGovernancePanel = lazy(() => import("@/components/panels/governance/CrmGovernancePanel"));
+
 /**
  * Map of appId → lazy-loaded panel component.
  * Add new panels here as they are created.
@@ -507,6 +510,8 @@ const PANEL_MAP: Record<string, ComponentType> = {
   "voting":                 GovernancePanel,
   "dao-voting":             GovernancePanel,
   "quorum":                 GovernancePanel,
+  "crm-governance":         CrmGovernancePanel,
+  "agent-voting":           CrmGovernancePanel,
 
   // Global - Analytics Audit
   "analytics-audit":        AnalyticsAuditPanel,

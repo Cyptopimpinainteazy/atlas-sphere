@@ -82,3 +82,53 @@ jobs:
 
       - name: Cargo tests (release, all features)
         run: cargo test --workspace --release --all-features
+
+  critical-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy,rustfmt
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install coverage tools
+        run: cargo install cargo-tarpaulin --locked --force
+
+      - name: Run tarpaulin on critical crates
+        run: |
+          set -euo pipefail
+          mkdir -p target/coverage
+          for crate in x3-dex x3-flashloan x3-swap-router gpu-swarm; do
+            out_dir="target/coverage/${crate}"
+            mkdir -p "${out_dir}"
+            cargo tarpaulin -p "${crate}" --out Lcov --output-dir "${out_dir}" --timeout 240
+          done
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: critical-path-coverage
+          path: target/coverage
+
+      - name: Run x3-enforce (coverage guard)
+        env:
+          X3_ENFORCE_COVERAGE: "1"
+          BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base_ref="${BASE_REF:-origin/main}"
+          python3 scripts/x3_enforce.py --mode ci --base "$base_ref" --head "${GITHUB_SHA}"

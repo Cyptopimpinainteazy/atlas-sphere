@@ -72,29 +72,37 @@ bmad-generate-workflows-dry: .bmad/workflows-templates.yaml
 
 bmad-validate-workflows:
 	@echo "Validating workflow files..."
-	@python3 << 'EOF'
-from pathlib import Path
-import yaml
-workflows_dir = Path(".github/workflows")
-workflows = list(workflows_dir.glob("*.yml"))
-valid_count = 0
-for wf in workflows:
-    try:
-        yaml.safe_load(wf.read_text())
-        valid_count += 1
-    except yaml.YAMLError as e:
-        print(f"✗ Invalid YAML in {wf.name}: {e}")
-
-if valid_count == len(workflows):
-    print(f"✓ All {valid_count} workflow files are valid YAML")
-else:
-    print(f"⚠ {valid_count}/{len(workflows)} workflows are valid")
-EOF
+	@python3 -c '\
+from pathlib import Path; \
+import yaml; \
+workflows_dir = Path(".github/workflows"); \
+workflows = list(workflows_dir.glob("*.yml")); \
+valid_count = 0; \
+for wf in workflows: \
+    try: \
+        yaml.safe_load(wf.read_text()); \
+        valid_count += 1; \
+    except yaml.YAMLError as e: \
+        print(f"✗ Invalid YAML in {wf.name}: {e}"); \
+if valid_count == len(workflows): \
+    print(f"✓ All {valid_count} workflow files are valid YAML"); \
+else: \
+    print(f"⚠ {valid_count}/{len(workflows)} workflows are valid"); \
+'
 
 bmad-clean-workflows:
 	@echo "Removing generated workflow files..."
 	@rm -f .github/workflows/*.yml
 	@echo "✓ Workflow files cleaned"
+
+# ============================================================================
+# SWARM ORCHESTRA 
+# ============================================================================
+
+start:
+	@echo "Delegating to x3-swarm-orchestra..."
+	@$(MAKE) -C x3-swarm-orchestra start
+
 
 # ============================================================================
 # COMBINED TARGETS (BOTH PHASES)

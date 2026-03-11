@@ -76,6 +76,7 @@ pub mod hostcall;
 pub mod jit_compiler;
 pub mod verifier;
 pub mod vm;
+pub mod execution_guards;
 
 // Re-exports
 pub use bridge::{BridgeConfig, BridgeError, X3VMBridge};
@@ -90,4 +91,5 @@ pub use hostcall::{Hostcall, HostcallRegistry};
 pub use jit_compiler::{CompiledFunction, HotPathTracker, JitCompiler, JitConfig, JitStats};
 pub use verifier::{opcode_gas_cost, DecodedInstr, Verifier, VerifyOptions};
 pub use vm::{ExecutionResult, Frame, VMConfig, Value, VM};
+pub use execution_guards::*;
 pub use x3_backend::bc_format::BytecodeModule;

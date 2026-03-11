@@ -9,6 +9,8 @@ use crate::types::ChainId;
 /// Main configuration for ChronosFlash oracle
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChronosConfig {
+    /// Whether the oracle is enabled (defaults to false for production safety).
+    pub enabled: bool,
     /// Maximum chains to monitor simultaneously
     pub max_chains: usize,
     /// Target latency in milliseconds
@@ -36,6 +38,7 @@ pub struct ChronosConfig {
 impl Default for ChronosConfig {
     fn default() -> Self {
         Self {
+            enabled: false,
             max_chains: 150,
             target_latency_ms: 50,
             max_timewarp_ms: 400,

@@ -8,7 +8,9 @@ pub mod proof_of_history;
 pub mod finality_proof_api;
 pub mod network_partition_recovery;
 pub mod ghost_fork_choice;
+pub mod hotstuff;
 
+pub use hotstuff::*;
 pub use flash_finality_gossip::GossipBridge;
 pub use parallel_proposer::{ParallelProposer, MempoolTx, AccessSet, Shard};
 pub use proof_of_history::{PoHTick, PoHGenerator, PoHVerifier, PoHBlockProof};

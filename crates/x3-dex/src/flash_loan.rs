@@ -342,6 +342,14 @@ mod tests {
     }
 
     #[test]
+    fn test_initiate_flash_loan_invalid_amounts() {
+        // Too small
+        assert!(FlashLoanEngine::initiate_flash_loan([1; 32], 1, 0, 100).is_err());
+        // Too large / overflow guarded
+        assert!(FlashLoanEngine::initiate_flash_loan([1; 32], 1, u64::MAX, 100).is_err());
+    }
+
+    #[test]
     fn test_execute_flash_loan() {
         let mut loan = FlashLoanEngine::initiate_flash_loan([1; 32], 1, 10_000_000, 100).unwrap();
 
@@ -396,6 +404,14 @@ mod tests {
         .unwrap();
 
         assert!(arb.success);
+    }
+
+    #[test]
+    fn test_execute_flash_loan_paused_pool_fails() {
+        let mut loan = FlashLoanEngine::initiate_flash_loan([1; 32], 1, 1_000_000, 100).unwrap();
+        let mut pool = FlashLoanEngine::create_flash_loan_pool(1, 2_000_000).unwrap();
+        FlashLoanEngine::pause_pool(&mut pool).unwrap();
+        assert!(FlashLoanEngine::execute_flash_loan(&mut loan, &mut pool, 100).is_err());
     }
 
     #[test]

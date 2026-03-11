@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X3STAR — Node Health Observatory</title>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;400;500;600;700&family=Red+Hat+Display:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070B12;
+  --blue:#1E90FF;--blue2:#0055CC;--bluefaint:rgba(30,144,255,0.06);
+  --green:#00D68F;--red:#FF3355;--gold:#FFB800;--purple:#9966FF;
+  --text:#E8F4FF;--muted:rgba(100,160,220,0.3);--dim:#0C1220;
+  --border:rgba(30,144,255,0.12);
+  --rhm:'Red Hat Mono',monospace;--rhd:'Red Hat Display',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--rhd);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(30,144,255,0.05),transparent);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;height:54px;display:flex;align-items:center;
+  padding:0 24px;background:rgba(7,11,18,0.98);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);}
+.logo{font-family:var(--rhm);font-size:14px;font-weight:600;letter-spacing:4px;color:var(--blue);margin-right:auto;}
+.nb{padding:8px 18px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;border:none;font-family:var(--rhd);transition:all 0.2s;
+  background:var(--blue);color:#fff;}
+.nb:hover{box-shadow:0 0 24px rgba(30,144,255,0.4);}
+
+/* HEADER ROW */
+.header-row{padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:20px;position:relative;z-index:1;}
+.hr-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;}
+.hr-title span{color:var(--blue);}
+.hr-stats{display:flex;gap:16px;margin-left:auto;}
+.hrs{text-align:center;}
+.hrs-val{font-family:var(--rhm);font-size:16px;font-weight:700;}
+.hrs-key{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.status-light{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:100px;font-size:10px;font-weight:700;letter-spacing:2px;font-family:var(--rhm);}
+.sl-green{background:rgba(0,214,143,0.1);color:var(--green);border:1px solid rgba(0,214,143,0.25);}
+.sl-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:slBlink 1.5s infinite;}
+@keyframes slBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* HEALTH GRID */
+.health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:12px;padding:20px 24px 80px;position:relative;z-index:1;}
+
+/* NODE CARD */
+.node-card{background:rgba(10,16,26,0.9);border-radius:16px;padding:18px;
+  border:1px solid rgba(255,255,255,0.05);transition:all 0.25s;cursor:pointer;}
+.node-card:hover{border-color:var(--border);transform:translateY(-3px);
+  box-shadow:0 8px 40px rgba(0,0,0,0.3);}
+.node-card.ok{border-left:3px solid var(--green);}
+.node-card.warn{border-left:3px solid var(--gold);}
+.node-card.err{border-left:3px solid var(--red);}
+
+/* CARD HEADER */
+.nc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.nc-flag{font-size:20px;flex-shrink:0;}
+.nc-id{flex:1;}
+.nc-name{font-family:var(--rhm);font-size:13px;font-weight:600;}
+.nc-loc{font-size:10px;color:var(--muted);}
+.nc-tier{font-size:8px;letter-spacing:1.5px;padding:3px 9px;border-radius:100px;font-weight:700;}
+.nt-genesis{background:rgba(255,184,0,0.1);color:var(--gold);border:1px solid rgba(255,184,0,0.2);}
+.nt-star{background:rgba(30,144,255,0.1);color:var(--blue);border:1px solid rgba(30,144,255,0.2);}
+.nt-lite{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);}
+.nc-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* METRICS ROW */
+.nc-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.ncm{text-align:center;background:rgba(255,255,255,0.02);border-radius:8px;padding:8px 4px;}
+.ncm-val{font-family:var(--rhm);font-size:14px;font-weight:700;line-height:1;}
+.ncm-key{font-size:8px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-top:3px;}
+
+/* MINI BARS */
+.nc-bars{display:flex;flex-direction:column;gap:5px;}
+.ncb-row{display:flex;align-items:center;gap:8px;}
+.ncb-label{font-size:9px;color:var(--muted);width:72px;flex-shrink:0;}
+.ncb-track{flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
+.ncb-fill{height:100%;border-radius:2px;transition:width 1s ease;}
+.ncb-val{font-family:var(--rhm);font-size:9px;color:var(--muted);width:36px;text-align:right;flex-shrink:0;}
+
+/* SLASH BADGE */
+.nc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.slash-badge{font-size:8px;letter-spacing:1px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.sb-clean{background:rgba(0,214,143,0.1);color:var(--green);border:1px solid rgba(0,214,143,0.2);}
+.sb-warn{background:rgba(255,184,0,0.1);color:var(--gold);border:1px solid rgba(255,184,0,0.2);}
+.nc-time{font-family:var(--rhm);font-size:9px;color:var(--muted);}
+
+/* HEARTBEAT PULSE */
+.pulse-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.pd-ok{background:var(--green);box-shadow:0 0 6px var(--green);animation:pdBlink 2s infinite;}
+.pd-warn{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:pdBlink 1.2s infinite;}
+.pd-err{background:var(--red);box-shadow:0 0 6px var(--red);animation:pdBlink 0.6s infinite;}
+@keyframes pdBlink{0%,100%{transform:scale(1)}50%{transform:scale(1.3);}}
+
+/* BOTTOM FIXED BAR */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;height:52px;
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+  background:rgba(7,11,18,0.98);border-top:1px solid var(--border);}
+.bb-text{font-size:12px;color:var(--muted);}
+.bb-cta{padding:9px 22px;border-radius:7px;background:var(--blue);color:#fff;border:none;
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--rhd);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">X3STAR</div>
+  <a href="x3star-operator-war-room.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:16px;">War Room</a>
+  <a href="x3star-hall-of-fame.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:20px;">Hall of Fame</a>
+  <button class="nb" onclick="location.href='x3star-validator-presale.html'">Run a Node →</button>
+</nav>
+
+<div class="header-row">
+  <div>
+    <h1 class="hr-title">Node Health <span>Observatory</span></h1>
+    <div style="font-size:12px;color:var(--muted);margin-top:3px;">Live per-node health scores across the X3STAR network</div>
+  </div>
+  <div class="status-light sl-green"><div class="sl-dot"></div>NETWORK HEALTHY</div>
+  <div class="hr-stats">
+    <div class="hrs"><div class="hrs-val" style="color:var(--green)">1,847</div><div class="hrs-key">Online</div></div>
+    <div class="hrs"><div class="hrs-val" style="color:var(--red)">0</div><div class="hrs-key">Slashed</div></div>
+    <div class="hrs"><div class="hrs-val" style="color:var(--gold)">4</div><div class="hrs-key">Warnings</div></div>
+    <div class="hrs"><div class="hrs-val">99.8%</div><div class="hrs-key">Avg Uptime</div></div>
+    <div class="hrs"><div class="hrs-val" style="color:var(--blue)">4,218</div><div class="hrs-key">Net TPS</div></div>
+  </div>
+</div>
+
+<div class="health-grid" id="health-grid"></div>
+
+<div class="bottom-bar">
+  <div class="bb-text">46 Genesis slots remaining · 18% APY · Zero slashes across entire network · <strong>Join the most reliable validator set in DeFi.</strong></div>
+  <button class="bb-cta" onclick="location.href='x3star-validator-presale.html'" style="margin-left:auto;">Reserve Your Node →</button>
+</div>
+
+<script>
+const nodes=[
+  {id:'US-NODE-01',flag:'🇺🇸',loc:'New York, USA',tier:'Genesis',status:'ok',uptime:'100.00%',blocks:'847,291',latency:'12ms',earnings:'$184,200',slash:'0',score:100,cpu:42,mem:38,disk:18,peers:47,rewards:'2,841 X3S/wk'},
+  {id:'SG-NODE-01',flag:'🇸🇬',loc:'Singapore',tier:'Genesis',status:'ok',uptime:'99.97%',blocks:'840,184',latency:'18ms',earnings:'$142,800',slash:'0',score:99,cpu:51,mem:44,disk:22,peers:43,rewards:'2,798 X3S/wk'},
+  {id:'SG-NODE-02',flag:'🇸🇬',loc:'Singapore',tier:'Genesis',status:'ok',uptime:'99.91%',blocks:'831,024',latency:'19ms',earnings:'$128,400',slash:'0',score:97,cpu:48,mem:41,disk:20,peers:45,rewards:'2,741 X3S/wk'},
+  {id:'JP-NODE-01',flag:'🇯🇵',loc:'Tokyo, Japan',tier:'Genesis',status:'ok',uptime:'99.88%',blocks:'827,441',latency:'24ms',earnings:'$118,200',slash:'0',score:96,cpu:55,mem:48,disk:24,peers:38,rewards:'2,698 X3S/wk'},
+  {id:'US-NODE-07',flag:'🇺🇸',loc:'San Francisco, USA',tier:'Genesis',status:'ok',uptime:'99.84%',blocks:'820,884',latency:'15ms',earnings:'$112,800',slash:'0',score:95,cpu:44,mem:40,disk:19,peers:49,rewards:'2,664 X3S/wk'},
+  {id:'AE-NODE-01',flag:'🇦🇪',loc:'Dubai, UAE',tier:'Genesis',status:'ok',uptime:'99.81%',blocks:'816,204',latency:'22ms',earnings:'$108,400',slash:'0',score:94,cpu:52,mem:46,disk:23,peers:41,rewards:'2,631 X3S/wk'},
+  {id:'EU-NODE-01',flag:'🇬🇧',loc:'London, UK',tier:'Genesis',status:'ok',uptime:'99.76%',blocks:'808,812',latency:'16ms',earnings:'$102,100',slash:'0',score:93,cpu:49,mem:43,disk:21,peers:44,rewards:'2,584 X3S/wk'},
+  {id:'KR-NODE-01',flag:'🇰🇷',loc:'Seoul, Korea',tier:'Genesis',status:'ok',uptime:'99.72%',blocks:'802,441',latency:'21ms',earnings:'$98,400',slash:'0',score:92,cpu:57,mem:50,disk:25,peers:40,rewards:'2,541 X3S/wk'},
+  {id:'AU-NODE-01',flag:'🇦🇺',loc:'Sydney, Australia',tier:'Star',status:'ok',uptime:'99.68%',blocks:'796,024',latency:'29ms',earnings:'$48,200',slash:'0',score:91,cpu:46,mem:42,disk:20,peers:36,rewards:'1,024 X3S/wk'},
+  {id:'DE-NODE-01',flag:'🇩🇪',loc:'Frankfurt, Germany',tier:'Star',status:'warn',uptime:'99.42%',blocks:'778,441',latency:'52ms',earnings:'$44,800',slash:'0',score:87,cpu:78,mem:72,disk:34,peers:28,rewards:'981 X3S/wk'},
+  {id:'CA-NODE-01',flag:'🇨🇦',loc:'Toronto, Canada',tier:'Star',status:'ok',uptime:'99.61%',blocks:'788,284',latency:'20ms',earnings:'$42,100',slash:'0',score:90,cpu:50,mem:44,disk:22,peers:39,rewards:'954 X3S/wk'},
+  {id:'FR-NODE-01',flag:'🇫🇷',loc:'Paris, France',tier:'Lite',status:'ok',uptime:'99.54%',blocks:'780,024',latency:'17ms',earnings:'$18,400',slash:'0',score:89,cpu:43,mem:38,disk:18,peers:35,rewards:'421 X3S/wk'},
+  {id:'IN-NODE-01',flag:'🇮🇳',loc:'Mumbai, India',tier:'Star',status:'warn',uptime:'99.38%',blocks:'764,884',latency:'68ms',earnings:'$40,100',slash:'0',score:85,cpu:82,mem:74,disk:37,peers:24,rewards:'897 X3S/wk'},
+  {id:'BR-NODE-01',flag:'🇧🇷',loc:'São Paulo, Brazil',tier:'Lite',status:'ok',uptime:'99.31%',blocks:'756,024',latency:'35ms',earnings:'$16,800',slash:'0',score:84,cpu:47,mem:43,disk:21,peers:31,rewards:'384 X3S/wk'},
+  {id:'HK-NODE-01',flag:'🇭🇰',loc:'Hong Kong',tier:'Genesis',status:'ok',uptime:'99.28%',blocks:'751,884',latency:'23ms',earnings:'$88,400',slash:'0',score:83,cpu:53,mem:47,disk:23,peers:37,rewards:'2,141 X3S/wk'},
+  {id:'CH-NODE-01',flag:'🇨🇭',loc:'Zurich, Switzerland',tier:'Star',status:'ok',uptime:'99.24%',blocks:'746,284',latency:'18ms',earnings:'$37,800',slash:'0',score:82,cpu:45,mem:40,disk:19,peers:36,rewards:'841 X3S/wk'},
+  {id:'NL-NODE-01',flag:'🇳🇱',loc:'Amsterdam, Netherlands',tier:'Lite',status:'ok',uptime:'99.18%',blocks:'738,024',latency:'16ms',earnings:'$14,400',slash:'0',score:81,cpu:44,mem:39,disk:17,peers:33,rewards:'324 X3S/wk'},
+  {id:'SA-NODE-01',flag:'🇸🇦',loc:'Riyadh, Saudi Arabia',tier:'Genesis',status:'ok',uptime:'99.14%',blocks:'732,884',latency:'28ms',earnings:'$82,100',slash:'0',score:80,cpu:56,mem:50,disk:25,peers:32,rewards:'2,041 X3S/wk'},
+];
+
+const grid=document.getElementById('health-grid');
+nodes.forEach(n=>{
+  const card=document.createElement('div');
+  card.className=`node-card ${n.status}`;
+
+  const statusColor=n.status==='ok'?'var(--green)':n.status==='warn'?'var(--gold)':'var(--red)';
+  const tierCls=n.tier==='Genesis'?'nt-genesis':n.tier==='Star'?'nt-star':'nt-lite';
+  const pdCls=n.status==='ok'?'pd-ok':n.status==='warn'?'pd-warn':'pd-err';
+  const cpuColor=n.cpu>70?'var(--red)':n.cpu>50?'var(--gold)':'var(--green)';
+  const memColor=n.mem>70?'var(--red)':n.mem>50?'var(--gold)':'var(--green)';
+  const latColor=parseInt(n.latency)>50?'var(--gold)':'var(--green)';
+
+  card.innerHTML=`
+    <div class="nc-head">
+      <div class="nc-flag">${n.flag}</div>
+      <div class="nc-id">
+        <div class="nc-name">${n.id}</div>
+        <div class="nc-loc">${n.loc}</div>
+      </div>
+      <div class="nc-tier ${tierCls}">${n.tier}</div>
+      <div class="pulse-dot ${pdCls}"></div>
+    </div>
+    <div class="nc-metrics">
+      <div class="ncm"><div class="ncm-val" style="color:${n.status==='ok'?'var(--green)':'var(--gold)'}">${n.uptime}</div><div class="ncm-key">Uptime</div></div>
+      <div class="ncm"><div class="ncm-val" style="color:${latColor}">${n.latency}</div><div class="ncm-key">Latency</div></div>
+      <div class="ncm"><div class="ncm-val" style="color:var(--gold)">${n.earnings}</div><div class="ncm-key">Earned</div></div>
+    </div>
+    <div class="nc-bars">
+      <div class="ncb-row"><span class="ncb-label">CPU Usage</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.cpu}%;background:${cpuColor}"></div></div><span class="ncb-val" style="color:${cpuColor}">${n.cpu}%</span></div>
+      <div class="ncb-row"><span class="ncb-label">Memory</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.mem}%;background:${memColor}"></div></div><span class="ncb-val" style="color:${memColor}">${n.mem}%</span></div>
+      <div class="ncb-row"><span class="ncb-label">Disk</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.disk}%;background:var(--blue)"></div></div><span class="ncb-val" style="color:var(--blue)">${n.disk}%</span></div>
+      <div class="ncb-row"><span class="ncb-label">Peer score</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.peers/50*100}%;background:var(--purple)"></div></div><span class="ncb-val" style="color:var(--purple)">${n.peers}</span></div>
+    </div>
+    <div class="nc-footer">
+      <div class="slash-badge ${n.slash==='0'?'sb-clean':'sb-warn'}">⚔ ${n.slash==='0'?'0 SLASHES':'SLASH HISTORY'}</div>
+      <div style="font-family:var(--rhm);font-size:10px;color:var(--blue)">${n.rewards}</div>
+      <div class="nc-time" id="timer-${n.id}">live</div>
+    </div>
+  `;
+  card.addEventListener('click',()=>location.href='x3star-validator-presale.html');
+  grid.appendChild(card);
+});
+
+// Randomize some values every few seconds
+setInterval(()=>{
+  const cards=document.querySelectorAll('.node-card');
+  const card=cards[Math.floor(Math.random()*cards.length)];
+  const fills=card.querySelectorAll('.ncb-fill');
+  // Slightly vary CPU
+  const cpuFill=fills[0];
+  if(cpuFill){
+    const curr=parseInt(cpuFill.style.width)||50;
+    const next=Math.max(20,Math.min(90,curr+(Math.random()-0.5)*8));
+    cpuFill.style.width=next+'%';
+    const color=next>70?'var(--red)':next>50?'var(--gold)':'var(--green)';
+    cpuFill.style.background=color;
+    const val=cpuFill.parentElement.nextElementSibling;
+    if(val){val.textContent=Math.round(next)+'%';val.style.color=color;}
+  }
+},3000);
+</script>
+</body>
+</html>

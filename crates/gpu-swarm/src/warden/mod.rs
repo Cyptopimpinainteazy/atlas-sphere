@@ -30,7 +30,7 @@ pub use signals::{
     AlertSeverity, LaneAlert, LaneMetrics, LaneSignal, SignalAggregator, SignalType,
 };
 
-use crate::error::SwarmResult;
+use crate::error::{SwarmResult, SwarmError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -229,6 +229,12 @@ impl Warden {
             total_vram_mb,
             is_emergency,
         );
+
+        let allocation_errors = allocation_plan.validate(self.allocator.policy());
+        if !allocation_errors.is_empty() {
+            return Err(SwarmError::InvalidAllocation(allocation_errors.join("; ")));
+        }
+        debug_assert!(allocation_plan.utilization() <= 1.0 + 1e-6);
 
         // 6. Generate justification
         let justification =

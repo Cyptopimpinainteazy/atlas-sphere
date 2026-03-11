@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X3STAR — Validator Hall of Fame</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09080E;
+  --gold:#FFD700;--gold2:#FF9500;--gold3:#FFF5B0;
+  --silver:#C8D0E0;--silver2:#A0AABB;
+  --bronze:#CD7F32;--bronze2:#A86028;
+  --green:#00E676;--red:#FF3B55;--blue:#448AFF;--purple:#E040FB;
+  --text:#F0EEFF;--muted:rgba(240,238,255,0.2);--dim:#12101C;
+  --border:rgba(255,215,0,0.1);
+  --bhs:'Black Han Sans',sans-serif;--body:'Noto Sans',sans-serif;--mono:'Fira Code',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.05),transparent);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;
+  padding:0 28px;background:rgba(9,8,14,0.98);border-bottom:1px solid var(--border);}
+.logo{font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:3px;color:var(--gold);margin-right:auto;}
+.nb{padding:8px 20px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;font-family:var(--body);transition:all 0.2s;}
+.nb-gold{background:var(--gold);color:#000;}
+.nb-gold:hover{box-shadow:0 0 24px rgba(255,215,0,0.4);}
+
+/* HERO */
+.hero{padding:40px 28px 0;position:relative;z-index:1;text-align:center;}
+.hero-icon{font-size:48px;margin-bottom:12px;}
+.hero-title{font-family:var(--bhs);font-size:clamp(32px,5vw,64px);letter-spacing:2px;
+  background:linear-gradient(135deg,var(--gold),var(--gold3),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
+.hero-sub{font-size:13px;color:var(--muted);margin-bottom:32px;}
+
+/* PODIUM (top 3) */
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:16px;
+  padding:0 28px 0;position:relative;z-index:1;max-width:900px;margin:0 auto;}
+.podium-slot{display:flex;flex-direction:column;align-items:center;flex:1;max-width:240px;}
+.ps-card{width:100%;border-radius:20px;padding:24px 20px;text-align:center;
+  position:relative;overflow:hidden;transition:transform 0.3s;cursor:pointer;}
+.ps-card:hover{transform:translateY(-6px);}
+.ps-rank{font-family:var(--bhs);font-size:48px;line-height:1;margin-bottom:8px;}
+.ps-crown{font-size:28px;margin-bottom:4px;}
+.ps-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:20px;font-weight:800;margin:0 auto 10px;
+  border:2px solid rgba(255,255,255,0.2);}
+.ps-name{font-size:14px;font-weight:700;margin-bottom:2px;}
+.ps-node{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;}
+.ps-stats{display:flex;flex-direction:column;gap:5px;}
+.pss-row{display:flex;justify-content:space-between;font-size:11px;}
+.pss-key{color:var(--muted);}
+.pss-val{font-family:var(--mono);font-weight:600;}
+.ps-score-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:10px;margin-bottom:3px;}
+.ps-score{font-family:var(--bhs);font-size:28px;}
+
+/* GOLD card */
+.slot-1 .ps-card{background:linear-gradient(160deg,#1A1400,#2A1E00);
+  border:1px solid rgba(255,215,0,0.3);box-shadow:0 0 60px rgba(255,215,0,0.08);}
+.slot-1 .ps-rank{color:var(--gold);}
+.slot-1 .ps-avatar{background:linear-gradient(135deg,var(--gold),var(--gold2));}
+.slot-1 .ps-score{color:var(--gold);}
+/* SILVER card */
+.slot-2 .ps-card{background:linear-gradient(160deg,#0E1018,#161824);
+  border:1px solid rgba(200,208,224,0.2);}
+.slot-2 .ps-rank{color:var(--silver);}
+.slot-2 .ps-avatar{background:linear-gradient(135deg,var(--silver),#8090AA);}
+.slot-2 .ps-score{color:var(--silver);}
+/* BRONZE card */
+.slot-3 .ps-card{background:linear-gradient(160deg,#140C06,#201408);
+  border:1px solid rgba(205,127,50,0.2);}
+.slot-3 .ps-rank{color:var(--bronze);}
+.slot-3 .ps-avatar{background:linear-gradient(135deg,var(--bronze),var(--bronze2));}
+.slot-3 .ps-score{color:var(--bronze);}
+
+/* TABS */
+.tabs{display:flex;gap:0;padding:28px 28px 0;position:relative;z-index:1;
+  border-bottom:1px solid var(--border);}
+.tab{padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);
+  border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab:hover,.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:100px;
+  font-size:8px;background:rgba(255,215,0,0.1);color:var(--gold);}
+
+/* LEADERBOARD TABLE */
+.lb-wrap{padding:20px 28px 60px;position:relative;z-index:1;}
+.lb-table{width:100%;border-collapse:collapse;}
+.lb-table th{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  padding:0 16px 12px;text-align:left;font-weight:600;}
+.lb-table th:not(:first-child){text-align:right;}
+.lb-row{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;cursor:pointer;}
+.lb-row:hover{background:rgba(255,215,0,0.03);}
+.lb-row td{padding:14px 16px;font-size:12px;}
+.lb-row td:not(:first-child){text-align:right;}
+
+/* RANK COL */
+.rank-col{display:flex;align-items:center;gap:12px;min-width:200px;}
+.rank-num{font-family:var(--bhs);font-size:20px;width:32px;flex-shrink:0;text-align:center;}
+.rank-flag{font-size:18px;flex-shrink:0;}
+.rank-name{font-size:13px;font-weight:700;}
+.rank-node{font-family:var(--mono);font-size:9px;color:var(--muted);}
+
+/* SCORE BAR */
+.score-cell{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.score-val{font-family:var(--mono);font-size:13px;font-weight:700;}
+.score-bar{width:80px;height:3px;background:rgba(255,255,255,0.08);border-radius:1px;overflow:hidden;}
+.score-fill{height:100%;border-radius:1px;transition:width 1s ease;}
+
+/* BADGES */
+.merit-badges{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap;}
+.merit{font-size:8px;padding:2px 6px;border-radius:3px;font-weight:700;}
+
+/* SHARE THIS */
+.share-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;height:52px;
+  display:flex;align-items:center;padding:0 28px;gap:16px;
+  background:rgba(9,8,14,0.98);border-top:1px solid var(--border);}
+.sb-text{font-size:12px;color:var(--muted);}
+.sb-text strong{color:var(--gold);}
+.sb-cta{padding:9px 20px;border-radius:7px;background:var(--gold);color:#000;border:none;
+  font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:var(--body);margin-left:auto;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">X3STAR</div>
+  <a href="x3star-proof-wall.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:16px;">Proof Wall</a>
+  <a href="x3star-transparency-ledger.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:20px;">Ledger</a>
+  <button class="nb nb-gold" onclick="location.href='x3star-validator-presale.html'">Claim Your Spot →</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-icon">🏆</div>
+  <h1 class="hero-title">Hall of Fame</h1>
+  <p class="hero-sub">The top validators securing the X3STAR network. Ranked by composite score: uptime + earnings + governance participation.</p>
+</div>
+
+<!-- PODIUM -->
+<div class="podium">
+  <div class="podium-slot slot-2" style="margin-bottom:32px;">
+    <div class="ps-card">
+      <div class="ps-rank">#2</div>
+      <div class="ps-avatar">NK</div>
+      <div class="ps-name">nebula_dao 🇩🇪</div>
+      <div class="ps-node">SG-NODE-09 · Genesis</div>
+      <div class="ps-stats">
+        <div class="pss-row"><span class="pss-key">Uptime</span><span class="pss-val" style="color:var(--green)">99.97%</span></div>
+        <div class="pss-row"><span class="pss-key">Earned</span><span class="pss-val">$142,800</span></div>
+        <div class="pss-row"><span class="pss-key">Votes cast</span><span class="pss-val">47/48</span></div>
+      </div>
+      <div class="ps-score-label">Score</div>
+      <div class="ps-score">9,821</div>
+    </div>
+  </div>
+
+  <div class="podium-slot slot-1">
+    <div class="ps-card">
+      <div class="ps-crown">👑</div>
+      <div class="ps-rank">#1</div>
+      <div class="ps-avatar">AK</div>
+      <div class="ps-name">apex.eth 🇺🇸</div>
+      <div class="ps-node">US-NODE-01 · Genesis</div>
+      <div class="ps-stats">
+        <div class="pss-row"><span class="pss-key">Uptime</span><span class="pss-val" style="color:var(--green)">100%</span></div>
+        <div class="pss-row"><span class="pss-key">Earned</span><span class="pss-val">$184,200</span></div>
+        <div class="pss-row"><span class="pss-key">Votes cast</span><span class="pss-val">48/48</span></div>
+      </div>
+      <div class="ps-score-label">Score</div>
+      <div class="ps-score">10,000</div>
+    </div>
+  </div>
+
+  <div class="podium-slot slot-3" style="margin-bottom:48px;">
+    <div class="ps-card">
+      <div class="ps-rank">#3</div>
+      <div class="ps-avatar">QF</div>
+      <div class="ps-name">quantum_fund 🇸🇬</div>
+      <div class="ps-node">SG-NODE-02 · Genesis</div>
+      <div class="ps-stats">
+        <div class="pss-row"><span class="pss-key">Uptime</span><span class="pss-val" style="color:var(--green)">99.91%</span></div>
+        <div class="pss-row"><span class="pss-key">Earned</span><span class="pss-val">$128,400</span></div>
+        <div class="pss-row"><span class="pss-key">Votes cast</span><span class="pss-val">45/48</span></div>
+      </div>
+      <div class="ps-score-label">Score</div>
+      <div class="ps-score">9,644</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab(this,'all')">All Operators <span class="tab-badge">312</span></div>
+  <div class="tab" onclick="showTab(this,'genesis')">Genesis <span class="tab-badge">154</span></div>
+  <div class="tab" onclick="showTab(this,'uptime')">🟢 Best Uptime</div>
+  <div class="tab" onclick="showTab(this,'earnings')">💰 Top Earners</div>
+  <div class="tab" onclick="showTab(this,'gov')">🗳 Gov Champions</div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="lb-wrap">
+  <table class="lb-table">
+    <thead><tr>
+      <th>Rank & Operator</th>
+      <th>Tier</th>
+      <th>Uptime</th>
+      <th>Total Earned</th>
+      <th>Gov Score</th>
+      <th>Merits</th>
+      <th>Composite Score</th>
+    </tr></thead>
+    <tbody id="lb-body"></tbody>
+  </table>
+</div>
+
+<div class="share-bar">
+  <div class="sb-text"><strong>Want to appear on this leaderboard?</strong> Reserve your Genesis node today — APY starts earning from day one.</div>
+  <button class="sb-cta" onclick="location.href='x3star-validator-presale.html'">Claim Your Slot →</button>
+</div>
+
+<script>
+const ops=[
+  {rank:1,name:'apex.eth',flag:'🇺🇸',node:'US-NODE-01',tier:'Genesis',uptime:'100.00%',earned:'$184,200',govScore:100,merits:['Perfect','Veteran','Gov Lead'],score:10000},
+  {rank:2,name:'nebula_dao',flag:'🇩🇪',node:'SG-NODE-09',tier:'Genesis',uptime:'99.97%',earned:'$142,800',govScore:98,merits:['Reliable','Whale'],score:9821},
+  {rank:3,name:'quantum_fund',flag:'🇸🇬',node:'SG-NODE-02',tier:'Genesis',uptime:'99.91%',earned:'$128,400',govScore:94,merits:['Consistent','Whale'],score:9644},
+  {rank:4,name:'delta_stake',flag:'🇯🇵',node:'JP-NODE-03',tier:'Genesis',uptime:'99.88%',earned:'$118,200',govScore:91,merits:['Reliable'],score:9420},
+  {rank:5,name:'cryptoking.eth',flag:'🇺🇸',node:'US-NODE-07',tier:'Genesis',uptime:'99.84%',earned:'$112,800',govScore:88,merits:['Veteran'],score:9280},
+  {rank:6,name:'polaris_fund',flag:'🇦🇪',node:'AE-NODE-01',tier:'Genesis',uptime:'99.81%',earned:'$108,400',govScore:85,merits:['Gov Lead'],score:9140},
+  {rank:7,name:'starfall.eth',flag:'🇬🇧',node:'EU-NODE-04',tier:'Genesis',uptime:'99.76%',earned:'$102,100',govScore:82,merits:['Reliable'],score:8980},
+  {rank:8,name:'zkbuilder.eth',flag:'🇰🇷',node:'KR-NODE-01',tier:'Genesis',uptime:'99.72%',earned:'$98,400',govScore:90,merits:['Dev','Gov Lead'],score:8840},
+  {rank:9,name:'defi_degen',flag:'🇦🇺',node:'AU-NODE-02',tier:'Star',uptime:'99.68%',earned:'$48,200',govScore:79,merits:['Active'],score:8620},
+  {rank:10,name:'yield_hunter',flag:'🇨🇳',node:'HK-NODE-01',tier:'Star',uptime:'99.61%',earned:'$44,800',govScore:76,merits:['Consistent'],score:8440},
+  {rank:11,name:'moonbase.eth',flag:'🇨🇦',node:'CA-NODE-03',tier:'Star',uptime:'99.54%',earned:'$42,100',govScore:72,merits:['Active'],score:8220},
+  {rank:12,name:'galaxy_inv',flag:'🇫🇷',node:'EU-NODE-11',tier:'Genesis',uptime:'99.48%',earned:'$94,200',govScore:68,merits:['Whale'],score:8080},
+  {rank:13,name:'0xDelta',flag:'🇧🇷',node:'SA-NODE-01',tier:'Lite',uptime:'99.42%',earned:'$18,400',govScore:64,merits:['Newcomer'],score:7840},
+  {rank:14,name:'nodemaster',flag:'🇮🇳',node:'IN-NODE-02',tier:'Star',uptime:'99.38%',earned:'$40,100',govScore:61,merits:['Active'],score:7680},
+  {rank:15,name:'satoshi_v',flag:'🇸🇬',node:'SG-NODE-07',tier:'Lite',uptime:'99.31%',earned:'$16,800',govScore:58,merits:['Newcomer'],score:7440},
+];
+
+const meritColors={'Perfect':'background:rgba(255,215,0,0.15);color:var(--gold);border:1px solid rgba(255,215,0,0.25)',
+  'Veteran':'background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.2)',
+  'Gov Lead':'background:rgba(228,64,251,0.1);color:var(--purple);border:1px solid rgba(228,64,251,0.18)',
+  'Reliable':'background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.18)',
+  'Whale':'background:rgba(255,215,0,0.08);color:var(--gold2);border:1px solid rgba(255,149,0,0.2)',
+  'Dev':'background:rgba(0,230,118,0.08);color:var(--green);border:1px solid rgba(0,230,118,0.15)',
+  'Active':'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)',
+  'Consistent':'background:rgba(68,138,255,0.08);color:var(--blue);border:1px solid rgba(68,138,255,0.15)',
+  'Newcomer':'background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.07)',
+};
+
+const tierColor={Genesis:'background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.2)',
+  Star:'background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.2)',
+  Lite:'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1)'};
+
+function renderLB(data){
+  const body=document.getElementById('lb-body');body.innerHTML='';
+  data.forEach((op,i)=>{
+    const tr=document.createElement('tr');tr.className='lb-row';
+    const rankColor=op.rank===1?'var(--gold)':op.rank===2?'var(--silver)':op.rank===3?'var(--bronze)':'var(--muted)';
+    const merits=op.merits.map(m=>`<span class="merit" style="${meritColors[m]||''}">${m}</span>`).join('');
+    const scorePct=(op.score/10000*100).toFixed(0);
+    const scoreColor=op.score>9000?'var(--gold)':op.score>8000?'var(--silver)':op.score>7000?'var(--bronze)':'var(--text)';
+    tr.innerHTML=`
+      <td><div class="rank-col">
+        <div class="rank-num" style="color:${rankColor}">${op.rank}</div>
+        <div class="rank-flag">${op.flag}</div>
+        <div><div class="rank-name">${op.name}</div><div class="rank-node">${op.node}</div></div>
+      </div></td>
+      <td><span class="merit" style="${tierColor[op.tier]}">${op.tier}</span></td>
+      <td style="font-family:var(--mono);color:var(--green)">${op.uptime}</td>
+      <td style="font-family:var(--mono);font-weight:600">${op.earned}</td>
+      <td style="font-family:var(--mono)">${op.govScore}/100</td>
+      <td><div class="merit-badges">${merits}</div></td>
+      <td><div class="score-cell">
+        <div class="score-val" style="color:${scoreColor}">${op.score.toLocaleString()}</div>
+        <div class="score-bar"><div class="score-fill" style="width:${scorePct}%;background:${scoreColor}"></div></div>
+      </div></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function showTab(el,filter){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  let data=[...ops];
+  if(filter==='genesis')data=ops.filter(o=>o.tier==='Genesis');
+  else if(filter==='uptime')data=[...ops].sort((a,b)=>parseFloat(b.uptime)-parseFloat(a.uptime));
+  else if(filter==='earnings')data=[...ops].sort((a,b)=>parseInt(b.earned.replace(/\D/g,''))-parseInt(a.earned.replace(/\D/g,'')));
+  else if(filter==='gov')data=[...ops].sort((a,b)=>b.govScore-a.govScore);
+  renderLB(data);
+}
+renderLB(ops);
+
+// Animate score bars
+setTimeout(()=>{
+  document.querySelectorAll('.score-fill').forEach(b=>{
+    const w=b.style.width;b.style.width='0';
+    setTimeout(()=>b.style.width=w,200);
+  });
+},100);
+</script>
+</body>
+</html>

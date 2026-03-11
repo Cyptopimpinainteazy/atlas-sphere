@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "./InvariantProperties.sol";
 
 /**
- * CrossVMAtomicity — Foundry Stateful Invariant Tests
+ * CrossVMAtomicity - Foundry Stateful Invariant Tests
  *
  * Uses Foundry's `invariant_*` harness (depth=500, runs=10000 per foundry.toml).
  * A separate Handler contract drives randomised call sequences so the fuzzer
@@ -94,7 +94,7 @@ contract CrossVMAtomicityTest is Test {
     function invariant_noPartialCommit() public view {
         assertFalse(
             props.partialStateWritten(),
-            "partial cross-VM state write detected — atomicity broken"
+            "partial cross-VM state write detected - atomicity broken"
         );
     }
 
@@ -102,7 +102,7 @@ contract CrossVMAtomicityTest is Test {
     function invariant_noReentrancyWindow() public view {
         assertFalse(
             props.crossVMCallActive(),
-            "cross-VM call still active after tx boundary — reentrancy leak"
+            "cross-VM call still active after tx boundary - reentrancy leak"
         );
     }
 
@@ -111,7 +111,7 @@ contract CrossVMAtomicityTest is Test {
         assertLe(
             props.gasUsed(),
             props.GAS_CAP() * 1_000,
-            "gas accounting unbounded — possible griefing vector"
+            "gas accounting unbounded - possible griefing vector"
         );
     }
 

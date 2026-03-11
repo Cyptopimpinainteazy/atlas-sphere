@@ -200,6 +200,33 @@ cargo build
 
 ---
 
+## Security Scanning & Fuzzing (contest procedure)
+
+To help with the million-dollar bug bounty, this repository provides a
+lightweight framework for analysing every Solidity contract.  See
+`scan_all.sh` at the repo root; running it will:
+
+1. install npm dependencies (OpenZeppelin, etc.)
+2. regenerate `remappings.txt` for solidity imports
+3. run **Slither** on each non-test `.sol` file
+4. run **Semgrep** across `contracts/`
+5. execute every Foundry test/fuzz suite discovered under `contracts/`
+
+```bash
+./scan_all.sh | tee audit-output.txt
+```
+
+Fix the reported warnings / failing tests and re-run until the output
+is clean.  Manual review should accompany these automated scans, focusing
+on critical modules such as `X3AMM.sol`, `AtlasTreasury.sol`,
+`AISwarmCoordinator.sol`, etc.  Additional invariants and fuzz harnesses
+can be added in any package (`tests/security` already contains one).
+
+A polished security results bundle (logs + corrected code) is the
+submission for the contest.
+
+---
+
 ## Running a Node
 
 ✅ **STATUS: Node binary is functional with networking and RPC server.**

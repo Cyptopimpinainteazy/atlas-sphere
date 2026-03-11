@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X3STAR — If You Had Run a Node Since...</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080A14;
+  --teal:#00D4AA;--teal2:#00A882;--tealfaint:rgba(0,212,170,0.08);
+  --gold:#FFD060;--red:#FF4560;--green:#00E676;
+  --text:#F0F4FF;--muted:rgba(240,244,255,0.25);--dim:#0E1020;
+  --border:rgba(0,212,170,0.15);
+  --anton:'Anton',sans-serif;--syne:'Syne',sans-serif;--mono:'Syne Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--syne);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 30% 30%,rgba(0,212,170,0.05),transparent),
+  radial-gradient(ellipse 50% 70% at 80% 70%,rgba(255,208,96,0.03),transparent);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;
+  padding:0 28px;background:rgba(8,10,20,0.98);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(16px);}
+.logo{font-family:var(--mono);font-size:15px;letter-spacing:4px;color:var(--teal);margin-right:auto;}
+.cta-nav{padding:9px 22px;border-radius:8px;background:var(--teal);color:#000;
+  border:none;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;font-family:var(--syne);transition:all 0.3s;}
+.cta-nav:hover{box-shadow:0 0 24px rgba(0,212,170,0.4);transform:translateY(-1px);}
+
+/* HERO */
+.hero{padding:60px 28px 48px;text-align:center;position:relative;z-index:1;}
+.hero-kicker{font-size:11px;letter-spacing:5px;text-transform:uppercase;
+  color:var(--teal);margin-bottom:20px;font-family:var(--mono);}
+.hero-h1{font-family:var(--anton);font-size:clamp(36px,6vw,72px);
+  line-height:1;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.hero-h1 em{color:var(--teal);font-style:normal;}
+.hero-h2{font-family:var(--anton);font-size:clamp(20px,3vw,40px);
+  line-height:1;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:24px;}
+.hero-sub{font-size:14px;color:var(--muted);max-width:480px;margin:0 auto;}
+
+/* MILESTONE CARDS */
+.milestones{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:16px;padding:0 28px 48px;position:relative;z-index:1;max-width:1300px;margin:0 auto;}
+
+/* MILESTONE CARD */
+.ms-card{border-radius:20px;padding:28px;position:relative;overflow:hidden;
+  cursor:pointer;transition:all 0.35s;border:1px solid rgba(255,255,255,0.06);}
+.ms-card::before{content:'';position:absolute;inset:0;opacity:0;
+  background:linear-gradient(135deg,var(--tealfaint),transparent);transition:opacity 0.3s;}
+.ms-card:hover::before{opacity:1;}
+.ms-card:hover{transform:translateY(-6px);border-color:var(--border);}
+.ms-card.selected{border-color:var(--teal);box-shadow:0 0 40px rgba(0,212,170,0.1);}
+
+.mc-when{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:12px;}
+.mc-event{font-family:var(--anton);font-size:22px;letter-spacing:1px;text-transform:uppercase;
+  line-height:1.1;margin-bottom:16px;}
+.mc-was{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.mc-price{font-family:var(--mono);font-size:13px;}
+.mc-price-val{font-weight:700;}
+.mc-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0;}
+
+/* EARNINGS SECTION */
+.mc-earnings{display:flex;flex-direction:column;gap:6px;}
+.me-row{display:flex;justify-content:space-between;font-size:12px;}
+.me-key{color:var(--muted);}
+.me-val{font-family:var(--mono);font-weight:700;}
+.mc-total{margin-top:12px;padding:14px;border-radius:12px;text-align:center;}
+.mt-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+.mt-val{font-family:var(--anton);font-size:32px;letter-spacing:1px;}
+.mt-roi{font-size:11px;margin-top:4px;font-family:var(--mono);}
+
+/* SHARE CARD */
+.share-section{padding:0 28px 80px;position:relative;z-index:1;max-width:700px;margin:0 auto;}
+.ss-title{font-family:var(--anton);font-size:28px;letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:6px;text-align:center;}
+.ss-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:28px;}
+
+/* SHARE PREVIEW CARD */
+.share-preview{background:linear-gradient(135deg,#0D1428,#0A1E18);
+  border:1px solid var(--teal);border-radius:20px;padding:32px;
+  text-align:center;margin-bottom:20px;position:relative;overflow:hidden;}
+.sp-bg{position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,212,170,0.1),transparent);
+  pointer-events:none;}
+.sp-logo{font-family:var(--mono);font-size:13px;letter-spacing:4px;color:var(--teal);margin-bottom:20px;}
+.sp-headline{font-family:var(--anton);font-size:clamp(18px,4vw,28px);letter-spacing:1px;
+  text-transform:uppercase;line-height:1.15;margin-bottom:4px;}
+.sp-headline em{color:var(--teal);font-style:normal;}
+.sp-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.sp-earnings{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+  background:rgba(255,255,255,0.06);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.spe-cell{background:rgba(8,10,20,0.8);padding:16px;text-align:center;}
+.spe-val{font-family:var(--mono);font-size:20px;font-weight:700;}
+.spe-key{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+.sp-cta{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.sp-cta span{color:var(--teal);}
+
+/* SHARE BUTTONS */
+.share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.share-btn{padding:12px 24px;border-radius:10px;font-size:11px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;cursor:pointer;border:none;
+  font-family:var(--syne);transition:all 0.2s;display:flex;align-items:center;gap:8px;}
+.sb-twitter{background:#1D9BF0;color:#fff;}
+.sb-twitter:hover{box-shadow:0 0 20px rgba(29,155,240,0.4);}
+.sb-copy{background:rgba(255,255,255,0.08);color:var(--text);border:1px solid rgba(255,255,255,0.12);}
+.sb-copy:hover{background:rgba(255,255,255,0.12);}
+.sb-telegram{background:#229ED9;color:#fff;}
+
+/* BOTTOM CTA */
+.bottom-cta{background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(255,208,96,0.04));
+  border:1px solid var(--border);border-radius:20px;padding:40px;
+  text-align:center;margin:0 28px 60px;position:relative;z-index:1;max-width:700px;margin:0 auto 60px;}
+.bc-title{font-family:var(--anton);font-size:32px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.bc-title em{color:var(--teal);}
+.bc-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.bc-btn{padding:18px 48px;border-radius:12px;background:var(--teal);color:#000;
+  border:none;font-family:var(--syne);font-size:13px;font-weight:800;letter-spacing:3px;
+  text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.bc-btn:hover{box-shadow:0 0 40px rgba(0,212,170,0.4);transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">X3STAR</div>
+  <a href="x3star-proof-wall.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:16px;">Proof Wall</a>
+  <a href="x3star-roi-calculator.html" style="font-size:10px;letter-spacing:2px;color:var(--muted);text-decoration:none;margin-right:20px;">ROI Calc</a>
+  <button class="cta-nav" onclick="location.href='x3star-validator-presale.html'">Reserve Node →</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-kicker">The numbers don't lie</div>
+  <h1 class="hero-h1">If you had run<br>a node <em>since...</em></h1>
+  <p class="hero-sub">Every past milestone, made real. This is what early operators have already earned.</p>
+</div>
+
+<!-- MILESTONE CARDS -->
+<div class="milestones" id="ms-grid">
+
+  <div class="ms-card selected" style="background:#0C1A14;" data-id="seed" onclick="selectCard(this,'seed')">
+    <div class="mc-when" style="color:var(--green)">Q4 2023 · SEED ROUND</div>
+    <div class="mc-event">Network<br>Founded</div>
+    <div class="mc-was">
+      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--green)">$0.010</span></div>
+      <div style="font-size:10px;color:var(--muted)">15 months ago</div>
+    </div>
+    <div class="mc-divider"></div>
+    <div class="mc-earnings">
+      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
+      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">5,000,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+900,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">5,900,000 X3S</span></div>
+    </div>
+    <div class="mc-total" style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.15);">
+      <div class="mt-label" style="color:var(--green)">Portfolio Value Today</div>
+      <div class="mt-val" style="color:var(--green)">$497,000</div>
+      <div class="mt-roi" style="color:var(--green)">+894% ROI · 9.9× your money</div>
+    </div>
+  </div>
+
+  <div class="ms-card" style="background:#161008;" data-id="privA" onclick="selectCard(this,'privA')">
+    <div class="mc-when" style="color:var(--gold)">Q1 2024 · PRIVATE ROUND A</div>
+    <div class="mc-event">First<br>Testnet</div>
+    <div class="mc-was">
+      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--gold)">$0.030</span></div>
+      <div style="font-size:10px;color:var(--muted)">12 months ago</div>
+    </div>
+    <div class="mc-divider"></div>
+    <div class="mc-earnings">
+      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
+      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">1,667,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+240,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">1,907,000 X3S</span></div>
+    </div>
+    <div class="mc-total" style="background:rgba(255,208,96,0.06);border:1px solid rgba(255,208,96,0.15);">
+      <div class="mt-label" style="color:var(--gold)">Portfolio Value Today</div>
+      <div class="mt-val" style="color:var(--gold)">$160,600</div>
+      <div class="mt-roi" style="color:var(--green)">+221% ROI · 3.2× your money</div>
+    </div>
+  </div>
+
+  <div class="ms-card" style="background:#0C1018;" data-id="serA" onclick="selectCard(this,'serA')">
+    <div class="mc-when" style="color:#40A0FF">Q2 2024 · SERIES A</div>
+    <div class="mc-event">$10.5M<br>Raised</div>
+    <div class="mc-was">
+      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:#40A0FF">$0.050</span></div>
+      <div style="font-size:10px;color:var(--muted)">9 months ago</div>
+    </div>
+    <div class="mc-divider"></div>
+    <div class="mc-earnings">
+      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
+      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">1,000,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+112,500 X3S</span></div>
+      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">1,112,500 X3S</span></div>
+    </div>
+    <div class="mc-total" style="background:rgba(64,160,255,0.06);border:1px solid rgba(64,160,255,0.15);">
+      <div class="mt-label" style="color:#40A0FF">Portfolio Value Today</div>
+      <div class="mt-val" style="color:#40A0FF">$93,700</div>
+      <div class="mt-roi" style="color:var(--green)">+87% ROI · 1.9× your money</div>
+    </div>
+  </div>
+
+  <div class="ms-card" style="background:#141008;" data-id="testnet" onclick="selectCard(this,'testnet')">
+    <div class="mc-when" style="color:var(--gold)">Q3 2024 · PUBLIC TESTNET</div>
+    <div class="mc-event">1,847<br>Validators</div>
+    <div class="mc-was">
+      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--gold)">$0.062</span></div>
+      <div style="font-size:10px;color:var(--muted)">6 months ago</div>
+    </div>
+    <div class="mc-divider"></div>
+    <div class="mc-earnings">
+      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
+      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">806,452 X3S</span></div>
+      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+72,581 X3S</span></div>
+      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">879,033 X3S</span></div>
+    </div>
+    <div class="mc-total" style="background:rgba(255,208,96,0.06);border:1px solid rgba(255,208,96,0.15);">
+      <div class="mt-label" style="color:var(--gold)">Portfolio Value Today</div>
+      <div class="mt-val" style="color:var(--gold)">$74,000</div>
+      <div class="mt-roi" style="color:var(--green)">+48% ROI · 1.5× your money</div>
+    </div>
+  </div>
+
+  <!-- TODAY — CALL TO ACTION CARD -->
+  <div class="ms-card" style="background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(0,212,170,0.03));border-color:var(--teal);" onclick="location.href='x3star-validator-presale.html'">
+    <div class="mc-when" style="color:var(--teal)">NOW · ROUND III PRESALE</div>
+    <div class="mc-event" style="color:var(--teal)">Your<br>Moment.</div>
+    <div class="mc-was">
+      <div class="mc-price">X3S price now: <span class="mc-price-val" style="color:var(--teal)">$0.075</span></div>
+      <div style="font-size:10px;color:var(--teal);opacity:0.6;">6 days left</div>
+    </div>
+    <div class="mc-divider" style="background:rgba(0,212,170,0.15)"></div>
+    <div class="mc-earnings">
+      <div class="me-row"><span class="me-key">Node cost today</span><span class="me-val">$50,000</span></div>
+      <div class="me-row"><span class="me-key">X3S you'd get</span><span class="me-val" style="color:var(--teal)">666,667 X3S</span></div>
+      <div class="me-row"><span class="me-key">At mainnet $0.12</span><span class="me-val" style="color:var(--green)">$80,000</span></div>
+      <div class="me-row"><span class="me-key">Base APY</span><span class="me-val" style="color:var(--green)">18% annually</span></div>
+    </div>
+    <div class="mc-total" style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);">
+      <div class="mt-label" style="color:var(--teal)">In 12 months at $0.50</div>
+      <div class="mt-val" style="color:var(--teal)">$370,000</div>
+      <div class="mt-roi" style="color:var(--teal)">→ Reserve your slot now</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SHAREABLE CARD -->
+<div class="share-section">
+  <h2 class="ss-title">Share your scenario</h2>
+  <p class="ss-sub">Tell your network what early operators have already earned</p>
+
+  <div class="share-preview" id="share-preview">
+    <div class="sp-bg"></div>
+    <div class="sp-logo">X3STAR PROTOCOL</div>
+    <div class="sp-headline">If I had run a node<br>since <em id="sp-when">Seed Round (Q4 2023)</em></div>
+    <div class="sp-sub" id="sp-sub">Genesis validator · $50,000 invested · 15 months ago</div>
+    <div class="sp-earnings">
+      <div class="spe-cell">
+        <div class="spe-val" style="color:var(--green)" id="sp-val1">$497K</div>
+        <div class="spe-key">Portfolio today</div>
+      </div>
+      <div class="spe-cell">
+        <div class="spe-val" style="color:var(--teal)" id="sp-val2">5.9M X3S</div>
+        <div class="spe-key">Total held</div>
+      </div>
+      <div class="spe-cell">
+        <div class="spe-val" style="color:var(--gold)" id="sp-val3">+894%</div>
+        <div class="spe-key">ROI</div>
+      </div>
+    </div>
+    <div class="sp-cta">Round III now open at <span>$0.075</span> · 46 Genesis slots left · x3star.io</div>
+  </div>
+
+  <div class="share-btns">
+    <button class="share-btn sb-twitter" onclick="shareTwitter()">
+      <span>𝕏</span> Share on X
+    </button>
+    <button class="share-btn sb-telegram" onclick="shareTelegram()">
+      ✈ Telegram
+    </button>
+    <button class="share-btn sb-copy" onclick="copyLink()">
+      📋 Copy Link
+    </button>
+  </div>
+</div>
+
+<div style="height:40px;"></div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta" style="padding:40px 28px;margin:0 28px 60px;max-width:700px;display:block;border-radius:20px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(0,212,170,0.06),rgba(255,208,96,0.03));text-align:center;position:relative;z-index:1;">
+  <div class="bc-title">The <em>next</em> milestone<br>is being written now.</div>
+  <div class="bc-sub" style="margin-bottom:24px;">In 12 months, someone will be looking at this page and wishing they had acted today. Don't be that person.</div>
+  <button class="bc-btn" onclick="location.href='x3star-validator-presale.html'">Reserve Your Node →</button>
+  <div style="font-size:10px;color:var(--muted);margin-top:14px;font-family:var(--mono);">46 Genesis slots · $50,000 · 18% APY · 6 days remaining</div>
+</div>
+
+<script>
+const cardData={
+  seed:{when:'Seed Round (Q4 2023)',sub:'Genesis validator · $50,000 invested · 15 months ago',v1:'$497K',v2:'5.9M X3S',v3:'+894%'},
+  privA:{when:'Private Round A (Q1 2024)',sub:'Genesis validator · $50,000 invested · 12 months ago',v1:'$160K',v2:'1.9M X3S',v3:'+221%'},
+  serA:{when:'Series A (Q2 2024)',sub:'Genesis validator · $50,000 invested · 9 months ago',v1:'$93.7K',v2:'1.1M X3S',v3:'+87%'},
+  testnet:{when:'Public Testnet (Q3 2024)',sub:'Genesis validator · $50,000 invested · 6 months ago',v1:'$74K',v2:'879K X3S',v3:'+48%'},
+};
+
+function selectCard(el,id){
+  document.querySelectorAll('.ms-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const d=cardData[id];
+  if(!d)return;
+  document.getElementById('sp-when').textContent=d.when;
+  document.getElementById('sp-sub').textContent=d.sub;
+  document.getElementById('sp-val1').textContent=d.v1;
+  document.getElementById('sp-val2').textContent=d.v2;
+  document.getElementById('sp-val3').textContent=d.v3;
+}
+function shareTwitter(){
+  const d=cardData[document.querySelector('.ms-card.selected')?.dataset?.id||'seed'];
+  const text=`If I had run an @X3STAR_Protocol validator node since ${d?.when||'Seed Round'}, my portfolio would be worth ${d?.v1||'$497K'} today (${d?.v3||'+894%'} ROI).\n\nRound III is LIVE. 46 Genesis slots left. $0.075.\n\nx3star.io/nodes`;
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text));
+}
+function shareTelegram(){
+  window.open('https://t.me/share/url?url=https://x3star.io/nodes&text=X3STAR validator nodes: 18% APY. Round III open now.');
+}
+function copyLink(){
+  navigator.clipboard.writeText('https://x3star.io/nodes').then(()=>{
+    const b=document.querySelector('.sb-copy');
+    b.textContent='✓ Copied!';
+    setTimeout(()=>b.innerHTML='📋 Copy Link',2000);
+  });
+}
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 
 use crate::adapter::*;
 use crate::ChainType;
+use crate::error::ExternalChainError;
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
@@ -96,7 +97,8 @@ impl BaseAdapter {
         // In a no_std/substrate context this would use offchain workers.
         // For now we use a lightweight HTTP abstraction.
         let response_bytes = crate::rpc_http::post_json(&url, &body).await.map_err(|e| {
-            crate::error::ExternalChainError::RpcError(format!("HTTP error: {}", e))
+            // convert error string into RpcError using helper
+            ExternalChainError::rpc_error(&format!("HTTP error: {}", e))
         })?;
 
         Ok(response_bytes)
@@ -107,7 +109,7 @@ impl BaseAdapter {
         let trimmed = hex_str.trim().trim_matches('"');
         let without_prefix = trimmed.strip_prefix("0x").unwrap_or(trimmed);
         u64::from_str_radix(without_prefix, 16)
-            .map_err(|e| crate::error::ExternalChainError::ParseError(format!("hex parse: {}", e)))
+            .map_err(|e| ExternalChainError::parse_error(&format!("hex parse: {}", e)))
     }
 
     /// Parse a hex string from JSON-RPC result into U256
@@ -117,7 +119,7 @@ impl BaseAdapter {
         // Pad to 64 chars for U256
         let padded = format!("{:0>64}", without_prefix);
         let bytes = hex::decode(&padded).map_err(|e| {
-            crate::error::ExternalChainError::ParseError(format!("hex decode: {}", e))
+            ExternalChainError::parse_error(&format!("hex decode: {}", e))
         })?;
         Ok(U256::from_big_endian(&bytes))
     }
@@ -129,7 +131,7 @@ impl BaseAdapter {
 
         // Check for error
         if text.contains("\"error\"") {
-            return Err(crate::error::ExternalChainError::RpcError(format!(
+            return Err(ExternalChainError::rpc_error(&format!(
                 "RPC error: {}",
                 text
             )));
@@ -171,8 +173,8 @@ impl BaseAdapter {
             }
         }
 
-        Err(crate::error::ExternalChainError::ParseError(
-            "Could not extract result from RPC response".to_string(),
+        Err(ExternalChainError::parse_error(
+            "Could not extract result from RPC response",
         ))
     }
 

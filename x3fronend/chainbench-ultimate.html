@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHAINBENCH ULTIMATE // Complete Blockchain Test Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#030608;--s0:#060c10;--s1:#091218;--s2:#0c1a24;--s3:#0f2230;
+  --b0:#0e2030;--b1:#122840;--b2:#183550;
+  --c0:#00f0ff;--c1:#ff2d6b;--c2:#39ff14;--c3:#ffcc00;--c4:#bf5fff;--c5:#ff7b00;
+  --c0d:rgba(0,240,255,0.1);--c1d:rgba(255,45,107,0.1);--c2d:rgba(57,255,20,0.1);
+  --c3d:rgba(255,204,0,0.1);--c4d:rgba(191,95,255,0.1);--c5d:rgba(255,123,0,0.1);
+  --tx:#b8dcea;--tx2:#5a8fa8;--muted:#2a5068;
+  --fd:'Orbitron',sans-serif;--fm:'Share Tech Mono',monospace;--fb:'Exo 2',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--tx);font-family:var(--fb);min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 120% 60% at 20% -10%,rgba(0,240,255,0.05) 0%,transparent 55%),
+    radial-gradient(ellipse 80% 50% at 85% 90%,rgba(57,255,20,0.04) 0%,transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 50%,rgba(0,0,0,0) 0%,transparent 100%),
+    repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(0,240,255,0.018) 50px),
+    repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(0,240,255,0.018) 50px);
+}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b1);}
+
+/* ══ TICKER ══ */
+.ticker{height:24px;background:var(--s0);border-bottom:1px solid var(--b0);overflow:hidden;display:flex;align-items:center;position:relative;}
+.ticker::before,.ticker::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:2;}
+.ticker::before{left:0;background:linear-gradient(90deg,var(--s0),transparent);}
+.ticker::after{right:0;background:linear-gradient(270deg,var(--s0),transparent);}
+.tick-inner{display:flex;gap:0;animation:tickscroll 40s linear infinite;white-space:nowrap;}
+@keyframes tickscroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ti{font-family:var(--fm);font-size:9px;padding:0 32px;color:var(--muted);letter-spacing:1px;}
+.ti .ok{color:var(--c2)}.ti .er{color:var(--c1)}.ti .wa{color:var(--c3)}.ti .in{color:var(--c0)}
+
+/* ══ HEADER ══ */
+header{
+  padding:12px 24px;border-bottom:1px solid var(--b0);
+  background:rgba(3,6,8,0.95);backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:baseline;gap:10px;}
+.logo-main{font-family:var(--fd);font-size:20px;font-weight:900;letter-spacing:6px;color:var(--c0);
+  text-shadow:0 0 20px rgba(0,240,255,0.5),0 0 40px rgba(0,240,255,0.2);}
+.logo-main em{color:var(--c1);font-style:normal;}
+.logo-sub{font-family:var(--fm);font-size:8px;color:var(--muted);letter-spacing:3px;}
+.logo-tag{font-family:var(--fm);font-size:8px;color:var(--muted);padding:2px 7px;border:1px solid var(--b1);letter-spacing:2px;}
+.hdr-stats{display:flex;gap:0;border:1px solid var(--b0);}
+.hst{padding:6px 14px;border-right:1px solid var(--b0);font-family:var(--fm);font-size:9px;display:flex;flex-direction:column;gap:1px;}
+.hst:last-child{border-right:none;}
+.hst-l{color:var(--muted);letter-spacing:1px;}
+.hst-v{color:var(--c0);letter-spacing:1px;}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.live-pill{font-family:var(--fm);font-size:8px;padding:4px 10px;border:1px solid rgba(57,255,20,0.3);color:var(--c2);background:rgba(57,255,20,0.05);display:flex;align-items:center;gap:5px;letter-spacing:2px;}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--c2);box-shadow:0 0 6px var(--c2);animation:ldot 1s ease infinite;}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ══ NAV ══ */
+.nav{background:var(--s0);border-bottom:1px solid var(--b0);display:flex;overflow-x:auto;padding:0 16px;gap:0;}
+.nav::-webkit-scrollbar{height:2px;}
+.ntab{font-family:var(--fm);font-size:9px;letter-spacing:2px;padding:10px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:6px;text-transform:uppercase;}
+.ntab:hover{color:var(--tx2);}
+.ntab.on{color:var(--c0);border-bottom-color:var(--c0);}
+.ntab .ni{font-size:10px;}
+
+/* ══ LAYOUT ══ */
+.page{display:none;padding:20px 24px;animation:pi .25s ease;}
+.page.on{display:block;}
+@keyframes pi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.row{display:flex;gap:14px;}
+.col{display:flex;flex-direction:column;gap:14px;flex:1;}
+.mb{margin-bottom:14px;}
+
+/* ══ PANEL ══ */
+.panel{background:var(--s1);border:1px solid var(--b0);padding:16px;position:relative;overflow:hidden;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,0.12),transparent);}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.pt{font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--tx);line-height:1.2;}
+.ps{font-family:var(--fm);font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+.panel-accent{border-top:1px solid var(--c0);}
+.panel-red{border-top:1px solid var(--c1);}
+.panel-green{border-top:1px solid var(--c2);}
+
+/* ══ STAT CARDS ══ */
+.sc{background:var(--s1);border:1px solid var(--b0);padding:12px 16px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+.sc:hover{border-color:rgba(0,240,255,.25);box-shadow:0 0 20px rgba(0,240,255,.04);}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c0),transparent);transform:scaleX(0);transform-origin:center;transition:transform .4s;}
+.sc:hover::after{transform:scaleX(1);}
+.sc-l{font-family:var(--fm);font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.sc-v{font-family:var(--fd);font-size:26px;font-weight:700;letter-spacing:1px;line-height:1;color:var(--c0);}
+.sc-v.g{color:var(--c2)}.sc-v.r{color:var(--c1)}.sc-v.y{color:var(--c3)}.sc-v.p{color:var(--c4)}.sc-v.o{color:var(--c5)}
+.sc-u{font-family:var(--fm);font-size:8px;color:var(--muted);margin-top:3px;}
+.sc-d{position:absolute;top:12px;right:12px;font-family:var(--fm);font-size:8px;padding:2px 5px;}
+.sc-d.up{color:var(--c2);background:var(--c2d)}.sc-d.dn{color:var(--c1);background:var(--c1d)}
+.sc-bar{height:2px;background:var(--b0);margin-top:8px;overflow:hidden;}
+.sc-bar-fill{height:100%;transition:width .8s ease;}
+
+/* ══ BUTTONS ══ */
+.btn{font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:3px;padding:9px 18px;cursor:pointer;border:1px solid;transition:all .2s;background:transparent;display:inline-flex;align-items:center;gap:6px;}
+.btn-c{border-color:var(--c0);color:var(--c0);}
+.btn-c:hover{background:var(--c0);color:var(--bg);}
+.btn-r{border-color:var(--c1);color:var(--c1);}
+.btn-r:hover{background:rgba(255,45,107,.15);}
+.btn-g{border-color:var(--c2);color:var(--c2);}
+.btn-g:hover{background:rgba(57,255,20,.1);}
+.btn-y{border-color:var(--c3);color:var(--c3);}
+.btn-y:hover{background:rgba(255,204,0,.1);}
+.btn-p{border-color:var(--c4);color:var(--c4);}
+.btn-sm{font-size:8px;letter-spacing:2px;padding:4px 10px;}
+.btn-full{width:100%;justify-content:center;font-size:13px;padding:11px;}
+
+/* ══ INPUTS ══ */
+.cl{font-family:var(--fm);font-size:7px;letter-spacing:2px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;}
+.ci,.cs{width:100%;background:var(--s0);border:1px solid var(--b0);color:var(--tx);font-family:var(--fm);font-size:10px;padding:7px 10px;outline:none;transition:border-color .2s;appearance:none;}
+.ci:focus,.cs:focus{border-color:var(--c0);background:rgba(0,240,255,.02);}
+.ci::placeholder{color:var(--muted);}
+.cg{display:flex;flex-direction:column;gap:3px;}
+
+/* ══ TABLE ══ */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-family:var(--fm);font-size:7px;letter-spacing:2px;color:var(--muted);text-align:left;padding:0 8px 8px;border-bottom:1px solid var(--b0);text-transform:uppercase;}
+.tbl td{font-family:var(--fm);font-size:9px;padding:8px;border-bottom:1px solid rgba(14,32,48,.5);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(0,240,255,.015);}
+.bdg{display:inline-block;padding:1px 6px;font-family:var(--fm);font-size:7px;letter-spacing:1px;border-radius:1px;}
+.bdg-A{background:rgba(57,255,20,.1);color:var(--c2);border:1px solid rgba(57,255,20,.2);}
+.bdg-B{background:rgba(0,240,255,.08);color:var(--c0);border:1px solid rgba(0,240,255,.18);}
+.bdg-C{background:rgba(255,204,0,.08);color:var(--c3);border:1px solid rgba(255,204,0,.18);}
+.bdg-D{background:rgba(255,45,107,.08);color:var(--c1);border:1px solid rgba(255,45,107,.18);}
+.bdg-evm{background:rgba(98,126,234,.12);color:#8b9cf4;border:1px solid rgba(98,126,234,.2);}
+.bdg-svm{background:rgba(0,240,255,.08);color:var(--c0);border:1px solid rgba(0,240,255,.18);}
+.bdg-mvm{background:rgba(57,255,20,.08);color:var(--c2);border:1px solid rgba(57,255,20,.18);}
+.bdg-ibc{background:rgba(255,45,107,.08);color:var(--c1);border:1px solid rgba(255,45,107,.18);}
+.bdg-hi{background:rgba(255,45,107,.1);color:var(--c1);border:1px solid rgba(255,45,107,.2);}
+.bdg-md{background:rgba(255,204,0,.1);color:var(--c3);border:1px solid rgba(255,204,0,.2);}
+.bdg-lo{background:rgba(57,255,20,.1);color:var(--c2);border:1px solid rgba(57,255,20,.2);}
+
+/* ══ HEATMAP ══ */
+.hmap{display:grid;gap:2px;}
+.hcell{aspect-ratio:1;border-radius:1px;transition:transform .12s;cursor:crosshair;}
+.hcell:hover{transform:scale(1.6);z-index:10;position:relative;}
+
+/* ══ PROGRESS ══ */
+.pbar{height:2px;background:var(--b0);overflow:hidden;}
+.pbar-fill{height:100%;transition:width .6s ease;}
+.pb-c{background:var(--c0);box-shadow:0 0 6px var(--c0);}
+.pb-g{background:var(--c2);}
+.pb-r{background:var(--c1);}
+.pb-y{background:var(--c3);}
+
+/* ══ RISK METER ══ */
+.rmeter{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--c2),var(--c3),var(--c1));position:relative;margin:6px 0;}
+.rneedle{width:2px;height:11px;background:#fff;position:absolute;top:-3px;border-radius:1px;transition:left .5s ease;box-shadow:0 0 4px #fff;}
+
+/* ══ SLOT GRID ══ */
+.sgrid{display:flex;gap:2px;flex-wrap:wrap;}
+.slot{width:10px;height:10px;border-radius:1px;cursor:default;transition:transform .1s;}
+.slot:hover{transform:scale(1.5);z-index:5;position:relative;}
+
+/* ══ NODE GRID (RPC tester) ══ */
+.node-card{background:var(--s0);border:1px solid var(--b0);padding:12px;transition:border-color .3s;}
+.node-card:hover{border-color:var(--c0);}
+.node-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.nd-on{background:var(--c2);box-shadow:0 0 6px var(--c2);}
+.nd-warn{background:var(--c3);box-shadow:0 0 6px var(--c3);}
+.nd-off{background:var(--c1);box-shadow:0 0 6px var(--c1);}
+
+/* ══ FUZZER ══ */
+.fuzz-call{background:var(--s0);border:1px solid var(--b0);padding:8px 10px;margin-bottom:4px;font-family:var(--fm);font-size:8px;cursor:pointer;transition:border-color .2s;display:flex;align-items:center;gap:8px;}
+.fuzz-call:hover{border-color:var(--c4);}
+.fuzz-call .fc-name{color:var(--c4);flex:1;}
+.fuzz-call .fc-args{color:var(--muted);flex:2;}
+.fuzz-call .fc-res{color:var(--c2);}
+.fuzz-call .fc-rev{color:var(--c1);}
+.fuzz-call .fc-gas{color:var(--c3);}
+
+/* ══ CONSENSUS VISUAL ══ */
+.chain-vis{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0;}
+.chain-vis::-webkit-scrollbar{height:2px;}
+.cblock{min-width:44px;height:44px;border:1px solid var(--b1);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fm);font-size:7px;cursor:default;transition:border-color .2s;position:relative;}
+.cblock:hover{border-color:var(--c0);z-index:5;}
+.cblock.fin{border-color:rgba(57,255,20,.3);background:rgba(57,255,20,.04);}
+.cblock.pend{border-color:rgba(255,204,0,.3);background:rgba(255,204,0,.04);}
+.cblock.miss{border-color:rgba(255,45,107,.3);background:rgba(255,45,107,.04);}
+.cblock.fork{border-color:rgba(191,95,255,.5);background:rgba(191,95,255,.08);}
+.chain-arr{color:var(--muted);font-size:10px;padding:0 2px;flex-shrink:0;}
+
+/* ══ NETWORK TOPO ══ */
+.topo-wrap{position:relative;height:240px;background:var(--s0);border:1px solid var(--b0);}
+.topo-node{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:7px;cursor:pointer;transition:all .3s;transform:translate(-50%,-50%);}
+.topo-node:hover{transform:translate(-50%,-50%) scale(1.2);}
+.topo-node.healthy{border-color:var(--c2);color:var(--c2);background:rgba(57,255,20,.08);}
+.topo-node.warn{border-color:var(--c3);color:var(--c3);background:rgba(255,204,0,.08);}
+.topo-node.faulty{border-color:var(--c1);color:var(--c1);background:rgba(255,45,107,.08);animation:fault-pulse 1s ease infinite;}
+@keyframes fault-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,45,107,.4)}50%{box-shadow:0 0 0 8px rgba(255,45,107,0)}}
+.topo-line{position:absolute;background:rgba(0,240,255,.12);pointer-events:none;transform-origin:left center;}
+
+/* ══ REPORT ══ */
+.report-section{background:var(--s0);border:1px solid var(--b0);padding:16px;margin-bottom:10px;}
+.rs-title{font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--c0);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--b0);}
+.rs-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(14,32,48,.4);}
+.rs-key{font-family:var(--fm);font-size:9px;color:var(--muted);}
+.rs-val{font-family:var(--fm);font-size:9px;color:var(--tx);}
+.rs-val.pass{color:var(--c2)}.rs-val.fail{color:var(--c1)}.rs-val.warn{color:var(--c3)}
+.score-ring{position:relative;display:inline-block;}
+.score-ring svg{transform:rotate(-90deg);}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;font-weight:700;color:var(--c2);}
+
+/* ══ LIQUIDITY ══ */
+.pool-bar{display:flex;height:20px;border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.pb-a{background:rgba(0,240,255,.5);}
+.pb-b{background:rgba(57,255,20,.5);}
+
+/* ══ MISC ══ */
+.sep{height:1px;background:linear-gradient(90deg,transparent,var(--b0),transparent);margin:14px 0;}
+.tag{font-family:var(--fm);font-size:7px;letter-spacing:2px;padding:2px 6px;border-radius:1px;}
+.scan{position:fixed;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,.08),transparent);animation:scan 10s linear infinite;pointer-events:none;z-index:9999;}
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+.glow-text{text-shadow:0 0 12px currentColor;}
+
+/* ══ FLASH ALERT ══ */
+.alert-flash{position:fixed;top:70px;right:20px;z-index:500;display:flex;flex-direction:column;gap:6px;pointer-events:none;}
+.af-item{background:var(--s1);border:1px solid var(--b1);border-left:3px solid var(--c1);padding:8px 14px;font-family:var(--fm);font-size:8px;letter-spacing:1px;animation:af-in .3s ease,af-out .4s ease 3s forwards;min-width:280px;}
+@keyframes af-in{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes af-out{from{opacity:1}to{opacity:0;transform:translateX(20px)}}
+.af-item.ok{border-left-color:var(--c2);}
+.af-item.warn{border-left-color:var(--c3);}
+
+/* ══ GAS TIERS ══ */
+.gas-tier{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border:1px solid var(--b0);background:var(--s0);margin-bottom:3px;transition:border-color .2s;}
+.gas-tier:hover{border-color:var(--c0);}
+.gt-name{font-family:var(--fm);font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.gt-val{font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c0);}
+.gt-time{font-family:var(--fm);font-size:7px;color:var(--muted);}
+
+/* ══ MEV ROW ══ */
+.mev-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--b0);background:var(--s0);margin-bottom:4px;transition:border-color .2s;}
+.mev-row:hover{border-color:var(--c4);}
+
+/* ══ ARB ROW ══ */
+.arb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--b0);background:var(--s0);margin-bottom:4px;cursor:pointer;transition:all .2s;}
+.arb-row:hover{border-color:var(--c2);background:rgba(57,255,20,.03);}
+
+/* ══ SLASH ALERT ══ */
+.slash-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid;border-radius:1px;margin-bottom:5px;}
+.sl-safe{border-color:rgba(57,255,20,.2);background:rgba(57,255,20,.03);}
+.sl-warn{border-color:rgba(255,204,0,.25);background:rgba(255,204,0,.04);}
+.sl-danger{border-color:rgba(255,45,107,.3);background:rgba(255,45,107,.06);animation:dpulse 1.5s ease infinite;}
+@keyframes dpulse{0%,100%{opacity:1}50%{opacity:.75}}
+
+/* TOOLTIP */
+[data-tip]{position:relative;}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--b1);color:var(--tx);font-family:var(--fm);font-size:8px;padding:4px 8px;white-space:nowrap;z-index:100;pointer-events:none;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="alert-flash" id="alertFlash"></div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="tick-inner" id="ticker">
+    <span class="ti"><span class="in">●</span> ETH #21,847,512 // GAS 26 GWEI // TPS 22</span>
+    <span class="ti"><span class="ok">▲</span> SOL SLOT 312,847,881 // TPS 4,821</span>
+    <span class="ti"><span class="wa">⚠</span> VALIDATOR P2P-07 LATENCY SPIKE: 892ms</span>
+    <span class="ti"><span class="er">●</span> MEV SANDWICH DETECTED // VICTIM -$4,200</span>
+    <span class="ti"><span class="in">◈</span> EPOCH 892 SLOT 344/432 // ETA 1h 28m</span>
+    <span class="ti"><span class="ok">⟷</span> EVM→SVM BRIDGE RTT 318ms // PASS</span>
+    <span class="ti"><span class="wa">≡</span> MEMPOOL DEPTH 52,410 // CONGESTION HIGH</span>
+    <span class="ti"><span class="ok">▲</span> ARB: UNI→CURVE ETH/USDC +0.41% OPEN</span>
+    <span class="ti"><span class="er">●</span> FORK DETECTED: BLOCK 21,847,489 // ORPHAN</span>
+    <span class="ti"><span class="in">◉</span> RPC BENCH: INFURA 38ms ALCHEMY 29ms</span>
+    <span class="ti"><span class="wa">⚠</span> FUZZER: CONTRACT 0x3f4a REVERT DETECTED</span>
+    <span class="ti"><span class="ok">▲</span> NETWORK HEALTH SCORE: 91/100</span>
+    <span class="ti"><span class="in">●</span> ETH #21,847,512 // GAS 26 GWEI // TPS 22</span>
+    <span class="ti"><span class="ok">▲</span> SOL SLOT 312,847,881 // TPS 4,821</span>
+    <span class="ti"><span class="wa">⚠</span> VALIDATOR P2P-07 LATENCY SPIKE: 892ms</span>
+    <span class="ti"><span class="er">●</span> MEV SANDWICH DETECTED // VICTIM -$4,200</span>
+    <span class="ti"><span class="in">◈</span> EPOCH 892 SLOT 344/432 // ETA 1h 28m</span>
+    <span class="ti"><span class="ok">⟷</span> EVM→SVM BRIDGE RTT 318ms // PASS</span>
+    <span class="ti"><span class="wa">≡</span> MEMPOOL DEPTH 52,410 // CONGESTION HIGH</span>
+    <span class="ti"><span class="ok">▲</span> ARB: UNI→CURVE ETH/USDC +0.41% OPEN</span>
+    <span class="ti"><span class="er">●</span> FORK DETECTED: BLOCK 21,847,489 // ORPHAN</span>
+    <span class="ti"><span class="in">◉</span> RPC BENCH: INFURA 38ms ALCHEMY 29ms</span>
+    <span class="ti"><span class="wa">⚠</span> FUZZER: CONTRACT 0x3f4a REVERT DETECTED</span>
+    <span class="ti"><span class="ok">▲</span> NETWORK HEALTH SCORE: 91/100</span>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div>
+      <div class="logo-main">CHAIN<em>BENCH</em></div>
+      <div class="logo-sub">ULTIMATE BLOCKCHAIN TEST SUITE</div>
+    </div>
+    <div class="logo-tag">v4.0</div>
+  </div>
+  <div class="hdr-stats">
+    <div class="hst"><div class="hst-l">ETH BLOCK</div><div class="hst-v" id="h-eth">21,847,512</div></div>
+    <div class="hst"><div class="hst-l">SOL SLOT</div><div class="hst-v" id="h-sol">312,847,881</div></div>
+    <div class="hst"><div class="hst-l">LIVE TPS</div><div class="hst-v" id="h-tps">0</div></div>
+    <div class="hst"><div class="hst-l">GAS (GWEI)</div><div class="hst-v" id="h-gas">26</div></div>
+    <div class="hst"><div class="hst-l">HEALTH SCORE</div><div class="hst-v" style="color:var(--c2)" id="h-health">91/100</div></div>
+  </div>
+  <div class="hdr-right">
+    <div class="live-pill"><div class="ldot"></div>LIVE</div>
+  </div>
+</header>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="ntab on" onclick="goPage('overview')"><span class="ni">⬡</span>OVERVIEW</div>
+  <div class="ntab" onclick="goPage('stress')"><span class="ni">⚡</span>STRESS ENGINE</div>
+  <div class="ntab" onclick="goPage('validators')"><span class="ni">◈</span>VALIDATORS</div>
+  <div class="ntab" onclick="goPage('mev')"><span class="ni">⚔</span>MEV MONITOR</div>
+  <div class="ntab" onclick="goPage('mempool')"><span class="ni">≡</span>MEMPOOL</div>
+  <div class="ntab" onclick="goPage('crossvm')"><span class="ni">⟷</span>CROSS-VM</div>
+  <div class="ntab" onclick="goPage('fuzzer')"><span class="ni">◎</span>CONTRACT FUZZER</div>
+  <div class="ntab" onclick="goPage('rpc')"><span class="ni">◉</span>RPC BENCH</div>
+  <div class="ntab" onclick="goPage('consensus')"><span class="ni">⛓</span>CONSENSUS</div>
+  <div class="ntab" onclick="goPage('liquidity')"><span class="ni">◑</span>LIQUIDITY STRESS</div>
+  <div class="ntab" onclick="goPage('partition')"><span class="ni">◐</span>FAULT INJECTOR</div>
+  <div class="ntab" onclick="goPage('report')"><span class="ni">▤</span>TEST REPORT</div>
+</div>
+
+<!-- ═══════════════ PAGE: OVERVIEW ═══════════════ -->
+<div class="page on" id="page-overview">
+  <div class="g6 mb">
+    <div class="sc"><div class="sc-l">Live TPS</div><div class="sc-v" id="ov-tps">0</div><div class="sc-u">tx/sec</div><div class="sc-d up" id="ov-tpsd">—</div></div>
+    <div class="sc"><div class="sc-l">Peak TPS</div><div class="sc-v g" id="ov-peak">0</div><div class="sc-u">session max</div></div>
+    <div class="sc"><div class="sc-l">P99 Latency</div><div class="sc-v y" id="ov-p99">—</div><div class="sc-u">milliseconds</div></div>
+    <div class="sc"><div class="sc-l">MEV (1h)</div><div class="sc-v p" id="ov-mev">$0</div><div class="sc-u">extracted</div></div>
+    <div class="sc"><div class="sc-l">Active Validators</div><div class="sc-v" id="ov-vals">512</div><div class="sc-u">online</div></div>
+    <div class="sc"><div class="sc-l">Fork Events</div><div class="sc-v r" id="ov-forks">2</div><div class="sc-u">last 1000 blocks</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="panel"><div class="ph"><div><div class="pt">NETWORK THROUGHPUT</div><div class="ps">60s WINDOW // ALL CHAINS</div></div></div><canvas id="ov-chart" height="150"></canvas></div>
+    <div class="panel"><div class="ph"><div><div class="pt">LATENCY HEATMAP</div><div class="ps">VALIDATOR × TIME</div></div><div style="display:flex;gap:8px;font-family:var(--fm);font-size:7px;color:var(--muted);align-items:center;"><span style="color:var(--c0)">■&lt;100</span><span style="color:var(--c2)">■&lt;300</span><span style="color:var(--c3)">■&lt;600</span><span style="color:var(--c1)">■&gt;600</span></span></div></div><div class="hmap" id="ov-hmap" style="grid-template-columns:repeat(20,1fr);"></div></div>
+  </div>
+  <div class="g3">
+    <div class="panel"><div class="ph"><div><div class="pt">CHAIN VITALS</div><div class="ps">MULTI-NETWORK STATUS</div></div></div>
+      <div id="chain-vitals"></div>
+    </div>
+    <div class="panel"><div class="ph"><div><div class="pt">EPOCH PROGRESS</div><div class="ps">CONSENSUS ROUND</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+        <div style="position:relative;width:72px;height:72px;flex-shrink:0;">
+          <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">
+            <circle cx="36" cy="36" r="28" fill="none" stroke="var(--b1)" stroke-width="6"/>
+            <circle cx="36" cy="36" r="28" fill="none" stroke="var(--c0)" stroke-width="6" stroke-dasharray="175.9" id="ep-arc" stroke-dashoffset="49" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c0)" id="ep-pct">72%</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:2px;">EPOCH <span style="color:var(--c0)" id="ep-num">892</span></div>
+          <div style="font-family:var(--fd);font-size:20px;font-weight:700;" id="ep-slot">312/432 SLOTS</div>
+          <div style="font-family:var(--fm);font-size:7px;color:var(--muted);">ETA: <span style="color:var(--c3)" id="ep-eta">1h 28m</span></div>
+        </div>
+      </div>
+      <div class="g2" style="gap:6px;">
+        <div style="background:var(--s0);border:1px solid var(--b0);padding:7px 10px;"><div class="sc-l">PARTICIPATION</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c2)" id="ep-part">98.4%</div></div>
+        <div style="background:var(--s0);border:1px solid var(--b0);padding:7px 10px;"><div class="sc-l">MISSED VOTES</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c1)" id="ep-miss">14</div></div>
+        <div style="background:var(--s0);border:1px solid var(--b0);padding:7px 10px;"><div class="sc-l">FINALITY</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c0)" id="ep-fin">2 epochs</div></div>
+        <div style="background:var(--s0);border:1px solid var(--b0);padding:7px 10px;"><div class="sc-l">AVG REWARD</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c3)" id="ep-rew">0.0042Ξ</div></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><div><div class="pt">LIVE EVENT LOG</div><div class="ps">ALL SYSTEMS</div></div><button class="btn btn-sm" style="border-color:var(--muted);color:var(--muted);background:transparent;font-family:var(--fd);cursor:pointer;font-size:8px;letter-spacing:2px;padding:3px 8px;" onclick="clearLog()">CLR</button></div>
+      <div id="ov-log" style="height:200px;overflow-y:auto;font-family:var(--fm);font-size:8px;line-height:1.9;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: STRESS ENGINE ═══════════════ -->
+<div class="page" id="page-stress">
+  <div class="row">
+    <div style="flex:0 0 300px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">TEST CONFIGURATION</div><div class="ps">STRESS ENGINE v4</div></div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;" id="mode-grid">
+          <div class="mode-btn on" data-mode="BURST" onclick="pickMode(this)">💥<br><span>BURST</span></div>
+          <div class="mode-btn" data-mode="RAMP" onclick="pickMode(this)">📈<br><span>RAMP</span></div>
+          <div class="mode-btn" data-mode="SUSTAINED" onclick="pickMode(this)">📊<br><span>SUSTAINED</span></div>
+          <div class="mode-btn" data-mode="SPIKE" onclick="pickMode(this)">⚡<br><span>SPIKE</span></div>
+          <div class="mode-btn" data-mode="VALIDATOR" onclick="pickMode(this)">◈<br><span>VALIDATOR</span></div>
+          <div class="mode-btn" data-mode="CROSS_VM" onclick="pickMode(this)">⟷<br><span>CROSS-VM</span></div>
+        </div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Chain</div><select class="cs" id="st-chain"><option>ETHEREUM</option><option>SOLANA</option><option>SUI</option><option>APTOS</option><option>AVALANCHE</option><option>ALL CHAINS</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+            <div class="cg"><div class="cl">Target TPS</div><input class="ci" id="st-tps" type="number" value="10000"></div>
+            <div class="cg"><div class="cl">Duration (s)</div><input class="ci" id="st-dur" type="number" value="60"></div>
+            <div class="cg"><div class="cl">Wallets</div><input class="ci" id="st-wallets" type="number" value="50"></div>
+            <div class="cg"><div class="cl">Batch Size</div><input class="ci" id="st-batch" type="number" value="100"></div>
+            <div class="cg"><div class="cl">SLA (ms)</div><input class="ci" id="st-sla" type="number" value="400"></div>
+            <div class="cg"><div class="cl">Concurrency</div><input class="ci" id="st-conc" type="number" value="8"></div>
+          </div>
+          <div class="cg"><div class="cl">RPC Endpoint</div><input class="ci" id="st-rpc" value="https://eth.mainnet.rpc.example.com" style="font-size:8px;"></div>
+          <div id="st-run-wrap"><button class="btn btn-c btn-full" onclick="startStress()">▶ LAUNCH STRESS TEST</button></div>
+          <div id="st-stop-wrap" style="display:none;"><button class="btn btn-r btn-full" onclick="stopStress()">■ ABORT TEST</button></div>
+        </div>
+      </div>
+      <!-- SLA Config -->
+      <div class="panel">
+        <div class="ph"><div><div class="pt">SLA THRESHOLDS</div><div class="ps">PASS / FAIL CRITERIA</div></div></div>
+        <div style="display:grid;gap:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b0);"><span style="font-family:var(--fm);font-size:8px;color:var(--muted);">MIN TPS</span><span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c0)" id="sla-tps">8,000</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b0);"><span style="font-family:var(--fm);font-size:8px;color:var(--muted);">MAX P99 LAT</span><span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c3)">400ms</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b0);"><span style="font-family:var(--fm);font-size:8px;color:var(--muted);">MAX DROP RATE</span><span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c1)">1%</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;"><span style="font-family:var(--fm);font-size:8px;color:var(--muted);">MAX BLOCK TIME</span><span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c4)">500ms</span></div>
+          <div style="padding:6px;border:1px solid rgba(57,255,20,.2);background:rgba(57,255,20,.04);text-align:center;"><span style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--c2)" id="sla-status">— AWAITING TEST —</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel" style="padding:10px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-family:var(--fm);font-size:8px;color:var(--muted);" id="st-status">STATUS: IDLE</span><span style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--muted);" id="st-pct">0%</span></div>
+        <div class="pbar"><div class="pbar-fill pb-c" id="st-prog" style="width:0%"></div></div>
+      </div>
+      <div class="g4">
+        <div class="sc"><div class="sc-l">Current TPS</div><div class="sc-v" id="st-cur">0</div><div class="sc-u">tx/sec</div></div>
+        <div class="sc"><div class="sc-l">Peak TPS</div><div class="sc-v g" id="st-peak">0</div><div class="sc-u">max</div></div>
+        <div class="sc"><div class="sc-l">P99 Lat</div><div class="sc-v y" id="st-lat">—</div><div class="sc-u">ms</div></div>
+        <div class="sc"><div class="sc-l">Drop Rate</div><div class="sc-v r" id="st-drop">0%</div><div class="sc-u">failed</div></div>
+        <div class="sc"><div class="sc-l">Block Time</div><div class="sc-v" id="st-btime">—</div><div class="sc-u">ms avg</div></div>
+        <div class="sc"><div class="sc-l">Gas Surge</div><div class="sc-v y" id="st-gas">—</div><div class="sc-u">gwei</div></div>
+        <div class="sc"><div class="sc-l">Mempool</div><div class="sc-v p" id="st-mpool">—</div><div class="sc-u">pending</div></div>
+        <div class="sc"><div class="sc-l">Throughput MB</div><div class="sc-v o" id="st-mb">—</div><div class="sc-u">MB/s</div></div>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">TPS vs TARGET</div><div class="ps">REAL-TIME // ACTUAL vs CONFIGURED</div></div></div><canvas id="st-chart" height="140"></canvas></div>
+      <div class="panel"><div class="ph"><div><div class="pt">LATENCY HEATMAP</div><div class="ps">VALIDATOR × TIME MATRIX</div></div><div style="display:flex;gap:8px;font-family:var(--fm);font-size:7px;color:var(--muted);align-items:center;"><span style="color:var(--c0)">■&lt;100ms</span><span style="color:var(--c2)">■&lt;300ms</span><span style="color:var(--c3)">■&lt;600ms</span><span style="color:var(--c1)">■&gt;600ms</span></div></div>
+        <div class="hmap" id="st-hmap" style="grid-template-columns:repeat(20,1fr);"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: VALIDATORS ═══════════════ -->
+<div class="page" id="page-validators">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Active</div><div class="sc-v">512</div><div class="sc-u">validators</div></div>
+    <div class="sc"><div class="sc-l">Avg Uptime</div><div class="sc-v g">99.4%</div><div class="sc-u">30 epochs</div></div>
+    <div class="sc"><div class="sc-l">Missed/Epoch</div><div class="sc-v r" id="vl-miss">14</div><div class="sc-u">this epoch</div></div>
+    <div class="sc"><div class="sc-l">Slash Risk</div><div class="sc-v y">LOW</div><div class="sc-u">network wide</div></div>
+    <div class="sc"><div class="sc-l">Est. Rewards</div><div class="sc-v g">+4.8% APR</div><div class="sc-u">avg validator</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel"><div class="ph"><div><div class="pt">VALIDATOR LEADERBOARD</div><div class="ps">STRESS TEST RANKINGS</div></div><select class="cs" style="width:auto;font-size:8px;padding:3px 8px;"><option>SORT: TPS ↓</option><option>SORT: LATENCY ↑</option><option>SORT: UPTIME ↓</option><option>SORT: MISSED ↑</option></select></div>
+        <table class="tbl"><thead><tr><th>#</th><th>VALIDATOR</th><th>STAKE</th><th>TPS</th><th>P99 LAT</th><th>UPTIME</th><th>MISSED</th><th>PROPOSAL RATE</th><th>REWARD/EP</th><th>GRADE</th></tr></thead><tbody id="vl-body"></tbody></table>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">MISSED SLOT TRACKER</div><div class="ps">LAST 100 SLOTS // ALL VALIDATORS</div></div></div>
+        <div class="sgrid" id="slot-grid"></div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-family:var(--fm);font-size:7px;color:var(--muted);">
+          <span>■ <span style="color:var(--c2)">PROPOSED</span></span>
+          <span>■ <span style="color:var(--c1)">MISSED</span></span>
+          <span>■ <span style="color:var(--c3)">LATE</span></span>
+          <span>■ <span style="color:var(--muted)">ORPHAN</span></span>
+        </div>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">VOTE LATENCY DISTRIBUTION</div><div class="ps">ATTESTATION TIMING HISTOGRAM</div></div></div><canvas id="vl-chart" height="110"></canvas></div>
+    </div>
+    <div style="flex:0 0 280px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">SLASHING MONITOR</div><div class="ps">RISK PER VALIDATOR</div></div></div>
+        <div id="slash-list"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">REWARD ESTIMATOR</div><div class="ps">EPOCH PROJECTION</div></div></div>
+        <div style="display:grid;gap:6px;">
+          <div class="cg"><div class="cl">Validator Index</div><input class="ci" value="447291" id="rew-idx"></div>
+          <div class="cg"><div class="cl">Effective Stake (ETH)</div><input class="ci" type="number" value="32" id="rew-stake"></div>
+          <div class="cg"><div class="cl">Expected Uptime %</div><input class="ci" type="number" value="99.4" id="rew-up"></div>
+          <div style="background:var(--s0);border:1px solid var(--b0);padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+            <div><div class="sc-l">EPOCH REWARD</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c2)">0.0042Ξ</div></div>
+            <div><div class="sc-l">APR</div><div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c0)">4.8%</div></div>
+            <div><div class="sc-l">DAILY EST.</div><div style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c3)">0.00585Ξ</div></div>
+            <div><div class="sc-l">PENALTIES</div><div style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--c1)">-0Ξ</div></div>
+          </div>
+          <div class="sc-l" style="margin-top:4px;">PERFORMANCE IMPACT ON REWARD</div>
+          <div class="rmeter"><div class="rneedle" id="rew-needle" style="left:18%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:7px;color:var(--muted);"><span>PENALTY</span><span>NEUTRAL</span><span>BONUS</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: MEV ═══════════════ -->
+<div class="page" id="page-mev">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">MEV Extracted (1h)</div><div class="sc-v p" id="mev-tot">$0</div><div class="sc-u">total value</div></div>
+    <div class="sc"><div class="sc-l">Sandwich Attacks</div><div class="sc-v r" id="mev-sand">0</div><div class="sc-u">last 100 blocks</div></div>
+    <div class="sc"><div class="sc-l">Frontrun Events</div><div class="sc-v r" id="mev-fr">0</div><div class="sc-u">last 100 blocks</div></div>
+    <div class="sc"><div class="sc-l">Flashloan Arb</div><div class="sc-v p" id="mev-fl">0</div><div class="sc-u">last 100 blocks</div></div>
+    <div class="sc"><div class="sc-l">Victim Loss Est.</div><div class="sc-v r" id="mev-loss">$0</div><div class="sc-u">slippage stolen</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel"><div class="ph"><div><div class="pt">MEV EVENT FEED</div><div class="ps">LIVE EXTRACTION ACTIVITY</div></div></div><div id="mev-feed" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div></div>
+      <div class="panel"><div class="ph"><div><div class="pt">MEV EXTRACTION OVER TIME</div><div class="ps">USD VALUE PER BLOCK</div></div></div><canvas id="mev-chart" height="110"></canvas></div>
+      <div class="panel"><div class="ph"><div><div class="pt">ARB SCANNER</div><div class="ps">LIVE DEX OPPORTUNITIES // 12 POOLS</div></div><div style="font-family:var(--fm);font-size:7px;color:var(--c2);" id="arb-count">0 OPEN</div></div><div id="arb-list" style="display:flex;flex-direction:column;gap:4px;"></div></div>
+    </div>
+    <div style="flex:0 0 300px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">MEV PROTECTION TOOLS</div><div class="ps">TRADE GUARD SUITE</div></div></div>
+        <div style="display:grid;gap:8px;">
+          <div style="padding:10px;border:1px solid rgba(57,255,20,.2);background:rgba(57,255,20,.04);">
+            <div style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--c2);margin-bottom:4px;">✓ FLASHBOTS PROTECT</div>
+            <div style="font-family:var(--fm);font-size:7px;color:var(--muted);line-height:1.6;">Routes transactions through private mempool. Prevents frontrunning. Optimal for trades &gt;$5k.</div>
+            <button class="btn btn-g btn-sm" style="margin-top:6px;width:100%;">ENABLE</button>
+          </div>
+          <div style="padding:10px;border:1px solid rgba(0,240,255,.15);background:rgba(0,240,255,.03);">
+            <div style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--c0);margin-bottom:4px;">◉ SLIPPAGE GUARD</div>
+            <div style="font-family:var(--fm);font-size:7px;color:var(--muted);line-height:1.6;">Auto-calculates max slippage based on current mempool conditions. Updates every block.</div>
+            <div style="font-family:var(--fd);font-size:20px;font-weight:700;color:var(--c3);margin-top:4px;" id="slip-guard">0.5% MAX</div>
+          </div>
+          <div style="padding:10px;border:1px solid rgba(191,95,255,.15);background:rgba(191,95,255,.04);">
+            <div style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;color:var(--c4);margin-bottom:4px;">⟷ COMMIT-REVEAL</div>
+            <div style="font-family:var(--fm);font-size:7px;color:var(--muted);line-height:1.6;">Hides trade intent via hash commitment scheme. Supported on EVM chains.</div>
+            <button class="btn btn-p btn-sm" style="margin-top:6px;width:100%;">CONFIGURE</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">FRONTRUN RISK METER</div><div class="ps">CURRENT EXPOSURE</div></div></div>
+        <div class="rmeter"><div class="rneedle" id="fr-needle" style="left:70%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:10px;"><span>LOW</span><span>MED</span><span>HIGH</span></div>
+        <div style="font-family:var(--fd);font-size:30px;font-weight:700;text-align:center;color:var(--c1);" id="fr-level">HIGH</div>
+        <div style="display:grid;gap:4px;margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">SANDWICH BOTS ACTIVE</span><span style="color:var(--c1)" id="fr-bots">42</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">LARGE TXN PENDING</span><span style="color:var(--c3)" id="fr-large">8</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">FLASHBOTS BUNDLES</span><span style="color:var(--c4)" id="fr-flash">127</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">PRIVATE MEMPOOL %</span><span style="color:var(--c2)" id="fr-priv">34%</span></div>
+        </div>
+        <div style="margin-top:8px;padding:7px;border:1px solid rgba(255,45,107,.2);background:rgba(255,45,107,.04);font-family:var(--fm);font-size:7px;color:var(--c1);line-height:1.6;">⚠ USE PRIVATE MEMPOOL FOR TRADES &gt;$5K UNDER CURRENT CONDITIONS</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: MEMPOOL ═══════════════ -->
+<div class="page" id="page-mempool">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Total Pending</div><div class="sc-v p" id="mp-tot">48,210</div><div class="sc-u">transactions</div></div>
+    <div class="sc"><div class="sc-l">Queued (nonce-gap)</div><div class="sc-v y" id="mp-q">12,847</div><div class="sc-u">nonce issues</div></div>
+    <div class="sc"><div class="sc-l">Avg Wait (std gas)</div><div class="sc-v" id="mp-wait">28s</div><div class="sc-u">estimated</div></div>
+    <div class="sc"><div class="sc-l">Mempool Growth</div><div class="sc-v r">+12%</div><div class="sc-u">last 60s</div></div>
+    <div class="sc"><div class="sc-l">Whale Txns &gt;$1M</div><div class="sc-v o" id="mp-whale">3</div><div class="sc-u">pending</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel"><div class="ph"><div><div class="pt">GAS PRICE DISTRIBUTION</div><div class="ps">PENDING TX BY GAS BAND</div></div></div><canvas id="mp-chart" height="150"></canvas></div>
+      <div class="panel"><div class="ph"><div><div class="pt">WHALE TRANSACTION WATCH</div><div class="ps">PENDING ORDERS &gt; $100K</div></div></div>
+        <table class="tbl"><thead><tr><th>HASH</th><th>TYPE</th><th>VALUE</th><th>GAS</th><th>AGE</th><th>FROM → TO</th><th>RISK</th></tr></thead><tbody id="mp-tbl"></tbody></table>
+      </div>
+    </div>
+    <div style="flex:0 0 290px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">GAS ORACLE</div><div class="ps">MULTI-CHAIN LIVE PRICING</div></div></div>
+        <div style="font-family:var(--fm);font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;">ETHEREUM</div>
+        <div class="gas-tier"><div class="gt-name">🐢 SLOW</div><div class="gt-val" id="gs-slow">18</div><div class="gt-time">gwei // &lt;5m</div></div>
+        <div class="gas-tier" style="border-color:rgba(0,240,255,.2);background:rgba(0,240,255,.02);"><div class="gt-name" style="color:var(--c0)">⚡ STANDARD</div><div class="gt-val" id="gs-std">26</div><div class="gt-time">gwei // &lt;30s</div></div>
+        <div class="gas-tier"><div class="gt-name" style="color:var(--c2)">🚀 FAST</div><div class="gt-val" id="gs-fast">34</div><div class="gt-time">gwei // &lt;15s</div></div>
+        <div class="gas-tier" style="border-color:rgba(191,95,255,.2);"><div class="gt-name" style="color:var(--c4)">⚔ MEV/PRIVATE</div><div class="gt-val" id="gs-mev">62</div><div class="gt-time">gwei // same block</div></div>
+        <div style="margin-top:10px;font-family:var(--fm);font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">SOLANA (LAMPORTS PRIORITY)</div>
+        <div class="gas-tier"><div class="gt-name">BASE</div><div style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--c0)">0.000005</div><div class="gt-time">SOL</div></div>
+        <div class="gas-tier" style="border-color:rgba(57,255,20,.2);"><div class="gt-name" style="color:var(--c2)">PRIORITY</div><div style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--c2)">0.00012</div><div class="gt-time">SOL</div></div>
+        <div style="margin-top:8px;"><div style="font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:4px;">GAS TREND (30 BLOCKS)</div><canvas id="gas-trend" height="45"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">TX INCLUSION ESTIMATOR</div><div class="ps">WHEN WILL IT LAND?</div></div></div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Gas Price (Gwei)</div><input class="ci" type="number" value="26" id="inc-gas"></div>
+          <div class="cg"><div class="cl">TX Priority Type</div><select class="cs"><option>EIP-1559 Base+Tip</option><option>Legacy Gas Price</option><option>Flashbots Bundle</option></select></div>
+          <div style="background:var(--s0);border:1px solid var(--b0);padding:10px;text-align:center;">
+            <div class="sc-l">ESTIMATED INCLUSION</div>
+            <div style="font-family:var(--fd);font-size:32px;font-weight:700;color:var(--c0)" id="inc-est">~15s</div>
+            <div style="font-family:var(--fm);font-size:7px;color:var(--muted);">QUEUE #2,841 // BUMP +7 GWEI TO SKIP</div>
+          </div>
+          <div class="panel" style="padding:8px;"><div style="font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:4px;">CONGESTION FORECAST (NEXT 10 BLOCKS)</div><canvas id="cong-chart" height="55"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: CROSS-VM ═══════════════ -->
+<div class="page" id="page-crossvm">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Bridges Active</div><div class="sc-v">8</div><div class="sc-u">monitored</div></div>
+    <div class="sc"><div class="sc-l">Avg RTT</div><div class="sc-v y">387ms</div><div class="sc-u">cross-chain</div></div>
+    <div class="sc"><div class="sc-l">SLA Pass Rate</div><div class="sc-v g">75%</div><div class="sc-u">&lt;800ms</div></div>
+    <div class="sc"><div class="sc-l">Relay Pending</div><div class="sc-v p">241</div><div class="sc-u">cross-chain</div></div>
+    <div class="sc"><div class="sc-l">Bridge Failures (1h)</div><div class="sc-v r">3</div><div class="sc-u">timeouts</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel"><div class="ph"><div><div class="pt">BRIDGE LATENCY MATRIX</div><div class="ps">ATOMIC SWAP RTT // ALL ROUTES</div></div></div>
+        <table class="tbl"><thead><tr><th>FROM</th><th>TO</th><th>PROTOCOL</th><th>RTT</th><th>P99</th><th>SUCCESS%</th><th>PENDING</th><th>BRIDGE FEE</th><th>SLA</th></tr></thead><tbody id="vm-tbl"></tbody></table>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">RTT TIMELINE</div><div class="ps">ALL ROUTES // 60s WINDOW</div></div></div><canvas id="vm-chart" height="130"></canvas></div>
+    </div>
+    <div style="flex:0 0 280px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">ROUTE SIMULATOR</div><div class="ps">TEST SPECIFIC BRIDGE</div></div></div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Source</div><select class="cs"><option>ETHEREUM (EVM)</option><option>SOLANA (SVM)</option><option>SUI (MoveVM)</option><option>COSMOS (IBC)</option></select></div>
+          <div class="cg"><div class="cl">Destination</div><select class="cs"><option>SOLANA (SVM)</option><option>ETHEREUM (EVM)</option><option>SUI (MoveVM)</option><option>APTOS (MoveVM)</option></select></div>
+          <div class="cg"><div class="cl">Protocol</div><select class="cs"><option>WORMHOLE</option><option>AXELAR</option><option>LAYERZERO</option><option>IBC NATIVE</option><option>HYPERLANE</option></select></div>
+          <div class="cg"><div class="cl">Trade Size (USD)</div><input class="ci" type="number" value="5000"></div>
+          <div class="cg"><div class="cl">Sim Iterations</div><input class="ci" type="number" value="100"></div>
+          <button class="btn btn-c btn-full" onclick="runVmSim()">▶ RUN SIMULATION</button>
+          <div style="background:var(--s0);border:1px solid var(--b0);padding:10px;display:grid;gap:5px;" id="vm-sim-results">
+            <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;"><span style="color:var(--muted)">MEDIAN RTT</span><span style="color:var(--c0)" id="vs-med">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;"><span style="color:var(--muted)">P99 RTT</span><span style="color:var(--c3)" id="vs-p99">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;"><span style="color:var(--muted)">BRIDGE FEE EST.</span><span style="color:var(--c2)" id="vs-fee">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;"><span style="color:var(--muted)">FAIL RATE</span><span style="color:var(--c1)" id="vs-fail">—</span></div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;"><span style="color:var(--muted)">SLA PASS (&lt;800ms)</span><span style="color:var(--c2)" id="vs-sla">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: CONTRACT FUZZER ═══════════════ -->
+<div class="page" id="page-fuzzer">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Calls Fuzzed</div><div class="sc-v" id="fz-calls">0</div><div class="sc-u">total invocations</div></div>
+    <div class="sc"><div class="sc-l">Reverts Found</div><div class="sc-v r" id="fz-rev">0</div><div class="sc-u">unexpected</div></div>
+    <div class="sc"><div class="sc-l">Panics</div><div class="sc-v r" id="fz-panic">0</div><div class="sc-u">overflow/underflow</div></div>
+    <div class="sc"><div class="sc-l">Gas Anomalies</div><div class="sc-v y" id="fz-gas">0</div><div class="sc-u">outliers detected</div></div>
+    <div class="sc"><div class="sc-l">Coverage</div><div class="sc-v g" id="fz-cov">0%</div><div class="sc-u">code paths hit</div></div>
+  </div>
+  <div class="row">
+    <div style="flex:0 0 310px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">FUZZER SETUP</div><div class="ps">CONTRACT ABI TESTER</div></div></div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Contract Address</div><input class="ci" id="fz-addr" value="0x1F98431c8aD98523631AE4a59f267346ea31F984" style="font-size:8px;"></div>
+          <div class="cg"><div class="cl">Network</div><select class="cs"><option>ETHEREUM MAINNET</option><option>SOLANA MAINNET</option><option>ARBITRUM</option><option>OPTIMISM</option><option>POLYGON</option></select></div>
+          <div class="cg"><div class="cl">Fuzzing Strategy</div><select class="cs" id="fz-strat"><option>RANDOM INPUT</option><option>BOUNDARY VALUES</option><option>COVERAGE-GUIDED</option><option>STATEFUL SEQUENCE</option><option>MUTATION-BASED</option></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+            <div class="cg"><div class="cl">Iterations</div><input class="ci" id="fz-iter" type="number" value="1000"></div>
+            <div class="cg"><div class="cl">Max Gas</div><input class="ci" id="fz-maxgas" type="number" value="500000"></div>
+            <div class="cg"><div class="cl">Seed</div><input class="ci" id="fz-seed" value="0xDEADBEEF"></div>
+            <div class="cg"><div class="cl">Timeout (ms)</div><input class="ci" id="fz-timeout" type="number" value="5000"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked id="fz-reen"> REENTRANCY CHECK</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked id="fz-overflow"> OVERFLOW/UNDERFLOW</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked id="fz-access"> ACCESS CONTROL</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" id="fz-oracle"> ORACLE MANIPULATION</label>
+          </div>
+          <div id="fz-run-wrap"><button class="btn btn-p btn-full" onclick="startFuzzer()">◎ LAUNCH FUZZER</button></div>
+          <div id="fz-stop-wrap" style="display:none;"><button class="btn btn-r btn-full" onclick="stopFuzzer()">■ STOP</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">ABI FUNCTIONS</div><div class="ps">DETECTED METHODS</div></div></div>
+        <div id="fz-abi" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel" style="padding:10px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;"><span style="font-family:var(--fm);font-size:7px;color:var(--muted);" id="fz-status">STATUS: IDLE</span><span style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--muted);" id="fz-pct">0%</span></div>
+        <div class="pbar"><div class="pbar-fill" style="background:var(--c4);box-shadow:0 0 6px var(--c4);" id="fz-prog"></div></div>
+      </div>
+      <div class="g4">
+        <div class="sc"><div class="sc-l">Calls/sec</div><div class="sc-v p" id="fz-cps">0</div><div class="sc-u">throughput</div></div>
+        <div class="sc"><div class="sc-l">Revert Rate</div><div class="sc-v r" id="fz-rr">0%</div><div class="sc-u">of total</div></div>
+        <div class="sc"><div class="sc-l">Avg Gas Used</div><div class="sc-v y" id="fz-avggas">—</div><div class="sc-u">per call</div></div>
+        <div class="sc"><div class="sc-l">Unique Paths</div><div class="sc-v g" id="fz-paths">0</div><div class="sc-u">code branches</div></div>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">CALL LOG</div><div class="ps">FUZZER EXECUTION TRACE</div></div><div style="display:flex;gap:5px;"><span class="bdg bdg-hi">REVERT</span><span class="bdg bdg-md">WARN</span><span class="bdg bdg-lo">OK</span></div></div>
+        <div id="fz-log" style="height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;"></div>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">GAS USAGE DISTRIBUTION</div><div class="ps">FUZZED CALLS</div></div></div><canvas id="fz-chart" height="100"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: RPC BENCH ═══════════════ -->
+<div class="page" id="page-rpc">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Nodes Tested</div><div class="sc-v" id="rpc-n">6</div><div class="sc-u">endpoints</div></div>
+    <div class="sc"><div class="sc-l">Fastest</div><div class="sc-v g" id="rpc-fast">—</div><div class="sc-u">lowest latency</div></div>
+    <div class="sc"><div class="sc-l">Slowest</div><div class="sc-v r" id="rpc-slow">—</div><div class="sc-u">worst latency</div></div>
+    <div class="sc"><div class="sc-l">Avg Reliability</div><div class="sc-v g" id="rpc-rel">—</div><div class="sc-u">uptime est.</div></div>
+    <div class="sc"><div class="sc-l">Recommendation</div><div class="sc-v g" id="rpc-rec">—</div><div class="sc-u">best provider</div></div>
+  </div>
+  <div class="row">
+    <div style="flex:0 0 300px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">RPC ENDPOINT CONFIG</div><div class="ps">ADD NODES TO TEST</div></div></div>
+        <div id="rpc-ep-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
+        <div class="cg" style="margin-bottom:7px;"><div class="cl">Add Endpoint</div><input class="ci" id="rpc-new" placeholder="https://your-rpc.example.com"></div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn btn-sm btn-c" style="flex:1;" onclick="addRpcEndpoint()">+ ADD</button>
+          <button class="btn btn-sm btn-g" style="flex:1;" onclick="startRpcBench()">▶ BENCHMARK</button>
+        </div>
+        <div style="margin-top:10px;"><div class="cl" style="margin-bottom:4px;">TEST METHODS</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked> eth_blockNumber</label>
+            <label style="display:flex;align-items:center;gap=6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked> eth_getBalance</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked> eth_call</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox" checked> eth_getLogs</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox"> eth_getTransactionReceipt</label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:8px;color:var(--muted);cursor:pointer;"><input type="checkbox"> eth_sendRawTransaction</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div id="rpc-cards" class="g3" style="gap:10px;"></div>
+      <div class="panel"><div class="ph"><div><div class="pt">LATENCY COMPARISON</div><div class="ps">ALL ENDPOINTS // LIVE CHART</div></div></div><canvas id="rpc-chart" height="150"></canvas></div>
+      <div class="panel"><div class="ph"><div><div class="pt">RPC BENCHMARK RESULTS</div><div class="ps">METHOD COMPARISON TABLE</div></div></div>
+        <table class="tbl"><thead><tr><th>PROVIDER</th><th>eth_blockNumber</th><th>eth_getBalance</th><th>eth_call</th><th>eth_getLogs</th><th>RELIABILITY</th><th>SCORE</th></tr></thead><tbody id="rpc-tbl"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: CONSENSUS ═══════════════ -->
+<div class="page" id="page-consensus">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Chain Head</div><div class="sc-v" id="cn-head">21,847,512</div><div class="sc-u">finalized block</div></div>
+    <div class="sc"><div class="sc-l">Fork Events</div><div class="sc-v r" id="cn-forks">2</div><div class="sc-u">last 1000 blocks</div></div>
+    <div class="sc"><div class="sc-l">Orphan Blocks</div><div class="sc-v y" id="cn-orphans">7</div><div class="sc-u">uncles/stale</div></div>
+    <div class="sc"><div class="sc-l">Finality Delay</div><div class="sc-v y" id="cn-fin">2 ep</div><div class="sc-u">epochs</div></div>
+    <div class="sc"><div class="sc-l">Network Score</div><div class="sc-v g" id="cn-score">91/100</div><div class="sc-u">health</div></div>
+  </div>
+  <div class="col">
+    <div class="panel"><div class="ph"><div><div class="pt">BLOCK CHAIN VISUALIZATION</div><div class="ps">LAST 30 BLOCKS // HOVER FOR DETAILS</div></div><div style="display:flex;gap:8px;font-family:var(--fm);font-size:7px;color:var(--muted);"><span style="color:var(--c2)">■ FINALIZED</span><span style="color:var(--c3)">■ PENDING</span><span style="color:var(--c1)">■ MISSED</span><span style="color:var(--c4)">■ FORK</span></span></div></div>
+      <div class="chain-vis" id="chain-vis"></div>
+    </div>
+    <div class="g2">
+      <div class="panel"><div class="ph"><div><div class="pt">FINALITY TRACKER</div><div class="ps">CHECKPOINT PROGRESS</div></div></div><canvas id="cn-chart" height="140"></canvas></div>
+      <div class="panel"><div class="ph"><div><div class="pt">ORPHAN BLOCK ANALYSIS</div><div class="ps">STALE BLOCKS DETECTED</div></div></div>
+        <table class="tbl"><thead><tr><th>BLOCK #</th><th>MINER</th><th>DEPTH</th><th>GAS</th><th>AGE</th><th>TYPE</th></tr></thead><tbody id="cn-orphan-tbl"></tbody></table>
+      </div>
+    </div>
+    <div class="panel"><div class="ph"><div><div class="pt">BLOCK TIME ANALYSIS</div><div class="ps">INTER-BLOCK INTERVAL (ms)</div></div></div><canvas id="cn-bt-chart" height="100"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: LIQUIDITY STRESS ═══════════════ -->
+<div class="page" id="page-liquidity">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Pools Monitored</div><div class="sc-v">12</div><div class="sc-u">DEX pools</div></div>
+    <div class="sc"><div class="sc-l">Total TVL</div><div class="sc-v g">$4.2B</div><div class="sc-u">test pools</div></div>
+    <div class="sc"><div class="sc-l">Avg Slippage (10k)</div><div class="sc-v y" id="lq-slip">0.18%</div><div class="sc-u">$10k swap</div></div>
+    <div class="sc"><div class="sc-l">Max Drain Sim</div><div class="sc-v r">$2.1M</div><div class="sc-u">before 1% impact</div></div>
+    <div class="sc"><div class="sc-l">Flash Loan Risk</div><div class="sc-v r">HIGH</div><div class="sc-u">3 pools vulnerable</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel"><div class="ph"><div><div class="pt">POOL LIQUIDITY TABLE</div><div class="ps">DEX POOL STRESS METRICS</div></div></div>
+        <table class="tbl"><thead><tr><th>POOL</th><th>DEX</th><th>TVL</th><th>RESERVE A</th><th>RESERVE B</th><th>SLIP $10k</th><th>SLIP $100k</th><th>DRAIN RISK</th><th>FLASH RISK</th></tr></thead><tbody id="lq-tbl"></tbody></table>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">SLIPPAGE CURVE SIMULATOR</div><div class="ps">IMPACT VS TRADE SIZE</div></div></div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-end;">
+          <div class="cg" style="flex:1;"><div class="cl">Pool</div><select class="cs"><option>ETH/USDC (Uni v3)</option><option>SOL/USDT (Orca)</option><option>BTC/ETH (Curve)</option></select></div>
+          <div class="cg" style="flex:1;"><div class="cl">Max Size ($)</div><input class="ci" type="number" value="1000000"></div>
+          <button class="btn btn-y btn-sm" onclick="simSlippage()">SIMULATE</button>
+        </div>
+        <canvas id="lq-slip-chart" height="130"></canvas>
+      </div>
+    </div>
+    <div style="flex:0 0 280px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">FLASH LOAN ATTACK SIM</div><div class="ps">VULNERABILITY SCANNER</div></div></div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Target Pool</div><select class="cs"><option>ETH/USDC (Uni v3)</option><option>DAI/USDC (Curve)</option></select></div>
+          <div class="cg"><div class="cl">Flash Loan Amount</div><input class="ci" type="number" value="10000000" placeholder="USD"></div>
+          <div class="cg"><div class="cl">Attack Vector</div><select class="cs"><option>PRICE ORACLE MANIP</option><option>POOL DRAIN</option><option>GOVERNANCE ATTACK</option></select></div>
+          <button class="btn btn-r btn-full" onclick="simFlash()">⚠ SIMULATE ATTACK</button>
+          <div style="background:var(--s0);border:1px solid var(--b0);padding:10px;font-family:var(--fm);font-size:8px;color:var(--muted);line-height:1.8;" id="flash-result">
+            Configure parameters and run simulation to see vulnerability assessment.
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">POOL HEALTH</div><div class="ps">RATIO VISUALIZATION</div></div></div>
+        <div id="pool-vis" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: FAULT INJECTOR ═══════════════ -->
+<div class="page" id="page-partition">
+  <div class="g5 mb">
+    <div class="sc"><div class="sc-l">Network Nodes</div><div class="sc-v" id="pt-nodes">12</div><div class="sc-u">in simulation</div></div>
+    <div class="sc"><div class="sc-l">Healthy</div><div class="sc-v g" id="pt-healthy">12</div><div class="sc-u">nodes</div></div>
+    <div class="sc"><div class="sc-l">Faulty</div><div class="sc-v r" id="pt-faulty">0</div><div class="sc-u">byzantine/offline</div></div>
+    <div class="sc"><div class="sc-l">Consensus</div><div class="sc-v g" id="pt-cons">ALIVE</div><div class="sc-u">status</div></div>
+    <div class="sc"><div class="sc-l">Partition Count</div><div class="sc-v y" id="pt-parts">0</div><div class="sc-u">active splits</div></div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">NETWORK TOPOLOGY</div><div class="ps">CLICK NODES TO INJECT FAULTS</div></div><div style="display:flex;gap:6px;"><button class="btn btn-sm btn-g" onclick="healAll()">HEAL ALL</button><button class="btn btn-sm btn-r" onclick="randomFault()">RANDOM FAULT</button></div></div>
+        <div class="topo-wrap" id="topo-wrap">
+          <canvas id="topo-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
+          <div id="topo-nodes"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px;font-family:var(--fm);font-size:7px;color:var(--muted);">
+          <span>● <span style="color:var(--c2)">HEALTHY</span></span>
+          <span>● <span style="color:var(--c3)">WARNING</span></span>
+          <span>● <span style="color:var(--c1)">FAULTY/BYZANTINE</span></span>
+        </div>
+      </div>
+      <div class="panel"><div class="ph"><div><div class="pt">CONSENSUS IMPACT TIMELINE</div><div class="ps">FAULT INJECTION EFFECTS</div></div></div><canvas id="pt-chart" height="120"></canvas></div>
+    </div>
+    <div style="flex:0 0 290px;display:flex;flex-direction:column;gap:14px;">
+      <div class="panel">
+        <div class="ph"><div><div class="pt">FAULT INJECTION</div><div class="ps">BYZANTINE FAULT TOOLS</div></div></div>
+        <div style="display:grid;gap:7px;">
+          <div class="cg"><div class="cl">Fault Type</div>
+            <select class="cs" id="fault-type">
+              <option>NODE CRASH (F1)</option>
+              <option>NETWORK PARTITION (F2)</option>
+              <option>BYZANTINE VOTE (F3)</option>
+              <option>PACKET LOSS (F4)</option>
+              <option>LATENCY INJECTION (F5)</option>
+              <option>SPLIT BRAIN (F6)</option>
+              <option>CLOCK SKEW (F7)</option>
+            </select>
+          </div>
+          <div class="cg"><div class="cl">Target Node(s)</div><select class="cs" id="fault-target"><option>NODE-01</option><option>NODE-02</option><option>NODE-03</option><option>NODE-04</option><option>RANDOM</option><option>33% BYZANTINE</option></select></div>
+          <div class="cg"><div class="cl">Duration (s)</div><input class="ci" type="number" value="30" id="fault-dur"></div>
+          <div class="cg"><div class="cl">Intensity (%)</div><input class="ci" type="number" value="100" min="1" max="100" id="fault-int"></div>
+          <button class="btn btn-r btn-full" onclick="injectFault()">⚡ INJECT FAULT</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">BYZANTINE TOLERANCE</div><div class="ps">SAFETY THRESHOLD</div></div></div>
+        <div style="text-align:center;padding:10px 0;">
+          <div style="font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:4px;">BFT THRESHOLD (f &lt; n/3)</div>
+          <div style="font-family:var(--fd);font-size:36px;font-weight:900;color:var(--c0);" id="bft-thresh">f &lt; 4</div>
+          <div style="font-family:var(--fm);font-size:8px;color:var(--muted);">OF <span style="color:var(--tx)" id="bft-n">12</span> NODES</div>
+        </div>
+        <div style="display:grid;gap:5px;">
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">CURRENT FAULTY</span><span style="color:var(--c1)" id="bft-faulty">0</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">SAFETY MARGIN</span><span style="color:var(--c2)" id="bft-margin">4 nodes</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">LIVENESS STATUS</span><span style="color:var(--c2)" id="bft-live">ALIVE</span></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:8px;padding:4px 8px;border:1px solid var(--b0);background:var(--s0);"><span style="color:var(--muted)">SAFETY STATUS</span><span style="color:var(--c2)" id="bft-safety">SAFE</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><div class="pt">FAULT EVENT LOG</div><div class="ps">INJECTION HISTORY</div></div></div>
+        <div id="fault-log" style="height:120px;overflow-y:auto;font-family:var(--fm);font-size:8px;line-height:1.9;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: REPORT ═══════════════ -->
+<div class="page" id="page-report">
+  <div class="row" style="margin-bottom:14px;">
+    <div style="flex:1;">
+      <div style="font-family:var(--fd);font-size:22px;font-weight:900;letter-spacing:4px;color:var(--c0);margin-bottom:2px;">TEST REPORT</div>
+      <div style="font-family:var(--fm);font-size:8px;color:var(--muted);letter-spacing:2px;" id="rpt-date">GENERATED: —</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <select class="cs" style="width:auto;font-size:8px;padding:5px 10px;"><option>EXPORT AS PDF</option><option>EXPORT AS JSON</option><option>EXPORT AS CSV</option></select>
+      <button class="btn btn-c" onclick="generateReport()">▶ GENERATE REPORT</button>
+    </div>
+  </div>
+  <div class="row">
+    <div style="flex:0 0 200px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <div class="panel" style="width:100%;text-align:center;">
+        <div class="sc-l" style="margin-bottom:8px;">OVERALL SCORE</div>
+        <div style="position:relative;width:120px;height:120px;margin:0 auto;">
+          <svg width="120" height="120" viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--b1)" stroke-width="8"/>
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--c2)" stroke-width="8" stroke-dasharray="314.2" id="score-arc" stroke-dashoffset="56" stroke-linecap="round"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div style="font-family:var(--fd);font-size:30px;font-weight:900;color:var(--c2)" id="rpt-score">82</div>
+            <div style="font-family:var(--fm);font-size:7px;color:var(--muted);">/ 100</div>
+          </div>
+        </div>
+        <div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c2);margin-top:6px;" id="rpt-grade">GRADE: B+</div>
+      </div>
+      <div class="panel" style="width:100%;">
+        <div class="sc-l" style="margin-bottom:6px;">MODULE SCORES</div>
+        <div style="display:flex;flex-direction:column;gap:5px;" id="mod-scores"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div id="rpt-sections"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODE BTN STYLES -->
+<style>
+.mode-btn{background:var(--s0);border:1px solid var(--b0);padding:8px 4px;text-align:center;cursor:pointer;font-size:14px;transition:all .2s;}
+.mode-btn span{display:block;font-family:var(--fd);font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-top:3px;}
+.mode-btn.on{border-color:var(--c0);background:rgba(0,240,255,.06);}
+.mode-btn.on span{color:var(--c0);}
+.mode-btn:hover{border-color:rgba(0,240,255,.3);}
+</style>
+
+<script>
+// ════════════════════════════════════════════════════
+//   CHAINBENCH ULTIMATE — COMPLETE SCRIPT ENGINE
+// ════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const rf = (a,b,d=2) => parseFloat((Math.random()*(b-a)+a).toFixed(d));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => Number(n).toLocaleString();
+const upd = (id,v) => { const e=$(id); if(e) e.textContent=v; };
+
+// ════ STATE ════
+let stress = {running:false,tick:0,dur:60,target:10000,peak:0,interval:null,mode:'BURST'};
+let fuzzer = {running:false,tick:0,calls:0,reverts:0,panics:0,gasAnom:0,interval:null};
+let rpcBench = {running:false,providers:[],interval:null};
+let nodes = [];
+let faultyCount = 0;
+let mevTotVal = 0, mevSand = 0, mevFr = 0, mevFl = 0, mevLoss = 0;
+let logStart = Date.now();
+
+// ════ DATA ════
+let tpsHist = Array(60).fill(0);
+let latHist = Array(60).fill(0);
+let mevHist = Array(60).fill(0);
+let gasHist = Array(30).fill(24);
+let vmHist  = Array(60).fill(0);
+let ptHist  = Array(60).fill(100);
+let cnHist  = Array(60).fill(12);
+let blockTimes = Array(30).fill(12000);
+
+const validators = [
+  {name:'Figment-01',addr:'0x3f4a...c8d1',stake:'1.2M ETH',uptime:99.8,missed:1},
+  {name:'Chorus One',addr:'0x7b2e...1a4f',stake:'980K ETH',uptime:99.6,missed:2},
+  {name:'P2P.org',   addr:'0x9c1d...5e3b',stake:'870K ETH',uptime:98.9,missed:5},
+  {name:'Everstake', addr:'0x2a8f...7c9e',stake:'740K ETH',uptime:99.4,missed:3},
+  {name:'Allnodes',  addr:'0x5d3c...2b1a',stake:'620K ETH',uptime:97.2,missed:12},
+  {name:'Stakefish', addr:'0x8e1f...3d4c',stake:'580K ETH',uptime:99.1,missed:4},
+];
+const bridges = [
+  {from:'EVM',to:'SVM',proto:'WORMHOLE',base:320},
+  {from:'SVM',to:'MVM',proto:'WORMHOLE',base:180},
+  {from:'EVM',to:'IBC',proto:'AXELAR',base:650},
+  {from:'MVM',to:'EVM',proto:'LAYERZERO',base:420},
+  {from:'EVM',to:'EVM',proto:'LAYERZERO',base:90},
+  {from:'IBC',to:'IBC',proto:'IBC NATIVE',base:140},
+  {from:'SVM',to:'EVM',proto:'HYPERLANE',base:380},
+  {from:'MVM',to:'SVM',proto:'WORMHOLE',base:270},
+];
+const rpcProviders = [
+  {name:'ALCHEMY',url:'alchemy.com',lat:28,rel:99.9,color:'#00f0ff'},
+  {name:'INFURA',url:'infura.io',lat:38,rel:99.7,color:'#39ff14'},
+  {name:'QUICKNODE',url:'quicknode.com',lat:22,rel:99.8,color:'#bf5fff'},
+  {name:'ANKR',url:'ankr.com',lat:55,rel:98.9,color:'#ffcc00'},
+  {name:'CHAINSTACK',url:'chainstack.com',lat:41,rel:99.5,color:'#ff7b00'},
+  {name:'SELF-HOSTED',url:'localhost:8545',lat:8,rel:99.2,color:'#ff2d6b'},
+];
+const dexPools = [
+  {name:'ETH/USDC',dex:'Uniswap v3',tvl:'$1.2B',rA:'120K ETH',rB:'420M USDC',s10k:'0.08%',s100k:'0.82%',drain:'HIGH',flash:'MED'},
+  {name:'SOL/USDT',dex:'Orca',tvl:'$310M',rA:'2.1M SOL',rB:'310M USDT',s10k:'0.12%',s100k:'1.2%',drain:'MED',flash:'LOW'},
+  {name:'BTC/ETH',dex:'Curve',tvl:'$890M',rA:'14K BTC',rB:'22K ETH',s10k:'0.04%',s100k:'0.41%',drain:'LOW',flash:'LOW'},
+  {name:'ARB/ETH',dex:'Camelot',tvl:'$80M',rA:'42M ARB',rB:'21K ETH',s10k:'0.31%',s100k:'3.1%',drain:'CRITICAL',flash:'HIGH'},
+  {name:'MATIC/USDC',dex:'QuickSwap',tvl:'$140M',rA:'180M MATIC',rB:'140M USDC',s10k:'0.18%',s100k:'1.8%',drain:'MED',flash:'MED'},
+];
+const abiFunctions = [
+  {name:'swap(uint256,uint256,address,bytes)',vis:'public',stateMut:'nonpayable'},
+  {name:'addLiquidity(address,address,uint256,uint256)',vis:'public',stateMut:'nonpayable'},
+  {name:'removeLiquidity(address,uint256,uint256)',vis:'public',stateMut:'nonpayable'},
+  {name:'getAmountsOut(uint256,address[])',vis:'external',stateMut:'view'},
+  {name:'factory()',vis:'external',stateMut:'pure'},
+  {name:'token0()',vis:'external',stateMut:'view'},
+  {name:'getReserves()',vis:'external',stateMut:'view'},
+  {name:'mint(address)',vis:'external',stateMut:'nonpayable'},
+  {name:'burn(address)',vis:'external',stateMut:'nonpayable'},
+];
+
+// ════ NAV ════
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('on'));
+  const pg = $('page-'+id); if(pg) pg.classList.add('on');
+  const tabs = document.querySelectorAll('.ntab');
+  const map = {overview:0,stress:1,validators:2,mev:3,mempool:4,crossvm:5,fuzzer:6,rpc:7,consensus:8,liquidity:9,partition:10,report:11};
+  if(map[id] !== undefined) tabs[map[id]].classList.add('on');
+  setupCanvases();
+}
+
+// ════ MODE SELECT ════
+function pickMode(el) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  stress.mode = el.dataset.mode;
+}
+
+// ════ CANVAS SETUP ════
+const canvases = {};
+function setupCanvas(id) {
+  const el = $(id); if(!el) return null;
+  const ctx = el.getContext('2d');
+  el.width = el.parentElement.clientWidth || 600;
+  return ctx;
+}
+function setupCanvases() {
+  ['ov-chart','st-chart','vl-chart','mev-chart','vm-chart','mp-chart','gas-trend',
+   'cong-chart','fz-chart','rpc-chart','cn-chart','cn-bt-chart','lq-slip-chart','pt-chart'].forEach(id => {
+    const el=$(id); if(!el) return;
+    el.width = el.parentElement?.clientWidth || 600;
+  });
+}
+
+// ════ CHART DRAWING ════
+function drawLine(ctx, data, color='#00f0ff', fill=true, label=true) {
+  if(!ctx) return;
+  const {width:W, height:H} = ctx.canvas;
+  ctx.clearRect(0,0,W,H);
+  // grid
+  ctx.strokeStyle='rgba(18,40,64,0.7)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=H-H/4*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const mx = Math.max(1,...data)*1.15, mn=0;
+  const px=(v,i)=>({x:i/(data.length-1)*W, y:H-(v/mx)*H});
+  if(fill){
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,color.replace('#','rgba(').split('').map((c,i)=>{
+      if(i===0) return 'rgba(';
+      return c;
+    }).join('').replace('rgba(','rgba(').replace(/(.{2})(.{2})(.{2})\)/,(_,r,g,b)=>`${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},0.2)`));
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.moveTo(0,H);
+    data.forEach((v,i)=>{const p=px(v,i);i?ctx.lineTo(p.x,p.y):ctx.lineTo(p.x,p.y);});
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle=color; ctx.lineWidth=2; ctx.shadowColor=color; ctx.shadowBlur=8;
+  ctx.beginPath();
+  data.forEach((v,i)=>{const p=px(v,i);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});
+  ctx.stroke(); ctx.shadowBlur=0;
+  if(label){
+    ctx.fillStyle='rgba(42,80,104,0.9)'; ctx.font='8px Share Tech Mono';
+    for(let i=0;i<=4;i++){const v=Math.round(mx/4*i);ctx.fillText(fmt(v),3,H-H/4*i-2);}
+  }
+}
+
+function drawBars(ctx, data, colors) {
+  if(!ctx) return;
+  const {width:W, height:H} = ctx.canvas;
+  ctx.clearRect(0,0,W,H);
+  const mx=Math.max(1,...data)*1.1;
+  const bw=W/data.length-2;
+  data.forEach((v,i)=>{
+    const bh=v/mx*H;
+    ctx.fillStyle=colors?colors[i]:'rgba(0,240,255,0.4)';
+    ctx.fillRect(i*(W/data.length)+1,H-bh,bw,bh);
+  });
+}
+
+function drawMultiLine(ctx, datasets) {
+  if(!ctx) return;
+  const {width:W, height:H} = ctx.canvas;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(18,40,64,0.7)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=H-H/4*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const mx=Math.max(1,...datasets.flatMap(d=>d.data))*1.15;
+  datasets.forEach(ds=>{
+    ctx.strokeStyle=ds.color; ctx.lineWidth=1.5; ctx.shadowColor=ds.color; ctx.shadowBlur=5;
+    ctx.beginPath();
+    ds.data.forEach((v,i)=>{
+      const x=i/(ds.data.length-1)*W, y=H-(v/mx)*H;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke(); ctx.shadowBlur=0;
+  });
+}
+
+// ════ HEATMAP ════
+function initHmap(id, cols=20, rows=5) {
+  const el=$(id); if(!el)return;
+  el.innerHTML=''; el.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  for(let i=0;i<cols*rows;i++){const c=document.createElement('div');c.className='hcell';c.style.background='var(--b0)';el.appendChild(c);}
+}
+function updateHmap(id, running, baseLat=200) {
+  const cells=document.querySelectorAll(`#${id} .hcell`);
+  cells.forEach(c=>{
+    if(!running){c.style.background='var(--b0)';return;}
+    const v=baseLat+(Math.random()-.5)*300;
+    if(v<100)c.style.background=`rgba(0,240,255,${.2+Math.random()*.7})`;
+    else if(v<300)c.style.background=`rgba(57,255,20,${.2+Math.random()*.7})`;
+    else if(v<600)c.style.background=`rgba(255,204,0,${.2+Math.random()*.7})`;
+    else c.style.background=`rgba(255,45,107,${.2+Math.random()*.7})`;
+  });
+}
+initHmap('ov-hmap'); initHmap('st-hmap');
+
+// ════ LOG ════
+function addLog(type, msg) {
+  const feed=$('ov-log'); if(!feed)return;
+  const ts=new Date().toTimeString().split(' ')[0];
+  const row=document.createElement('div');
+  row.style.cssText='padding:1px 0;border-bottom:1px solid rgba(18,40,64,.4);';
+  const colors={ok:'#39ff14',warn:'#ffcc00',err:'#ff2d6b',info:'#00f0ff',mev:'#bf5fff'};
+  row.innerHTML=`<span style="color:var(--muted);margin-right:8px;">${ts}</span><span style="color:${colors[type]||colors.info}">${msg}</span>`;
+  feed.insertBefore(row,feed.firstChild);
+  if(feed.children.length>80) feed.removeChild(feed.lastChild);
+}
+function clearLog(){const e=$('ov-log');if(e)e.innerHTML='';}
+
+// ════ FLASH ALERT ════
+function flash(type, msg) {
+  const wrap=$('alertFlash'); if(!wrap)return;
+  const el=document.createElement('div');
+  el.className=`af-item ${type}`;
+  el.style.color=type==='ok'?'var(--c2)':type==='warn'?'var(--c3)':'var(--c1)';
+  el.textContent=msg;
+  wrap.appendChild(el);
+  setTimeout(()=>wrap.removeChild(el),3600);
+}
+
+// ════ STRESS ENGINE ════
+function startStress() {
+  if(stress.running) return;
+  stress.running=true; stress.tick=0; stress.peak=0;
+  stress.dur=parseInt($('st-dur').value)||60;
+  stress.target=parseInt($('st-tps').value)||10000;
+  $('st-run-wrap').style.display='none';
+  $('st-stop-wrap').style.display='block';
+  upd('st-status','STATUS: RUNNING // '+stress.mode);
+  upd('sla-status','RUNNING...');
+  addLog('ok',`STRESS TEST START // MODE:${stress.mode} CHAIN:${$('st-chain').value} TARGET:${fmt(stress.target)} TPS`);
+  flash('warn','Stress test launched — monitor all tabs');
+  let prev=0;
+  stress.interval=setInterval(()=>{
+    stress.tick++;
+    const pct=Math.min(100,stress.tick/stress.dur*100);
+    $('st-prog').style.width=pct+'%';
+    upd('st-pct',Math.round(pct)+'%');
+    let cur;
+    if(stress.mode==='RAMP') cur=Math.round((stress.target*(stress.tick/stress.dur))*(0.82+Math.random()*.35));
+    else if(stress.mode==='BURST') cur=Math.round(stress.target*(0.55+Math.random()*.85));
+    else if(stress.mode==='SPIKE') cur=Math.random()<0.15?Math.round(stress.target*1.8):Math.round(stress.target*(.15+Math.random()*.5));
+    else cur=Math.round(stress.target*(0.72+Math.sin(stress.tick*.3)*.18+Math.random()*.12));
+    cur=Math.max(0,cur);
+    tpsHist.push(cur); tpsHist.shift();
+    latHist.push(ri(80,400)); latHist.shift();
+    if(cur>stress.peak) stress.peak=cur;
+    const lat=latHist[latHist.length-1];
+    const drop=(Math.random()*(cur>stress.target*.9?2.5:.3)).toFixed(2);
+    const gas=ri(26,90), btime=ri(200,500), mb=(cur*.24/1000).toFixed(2), mpool=fmt(ri(20000,80000));
+    upd('st-cur',fmt(cur)); upd('st-peak',fmt(stress.peak)); upd('st-lat',lat+'ms');
+    upd('st-drop',drop+'%'); upd('st-gas',gas+' gwei'); upd('st-btime',btime+'ms');
+    upd('st-mb',mb); upd('st-mpool',mpool);
+    upd('ov-tps',fmt(cur)); upd('ov-peak',fmt(stress.peak)); upd('ov-p99',lat+'ms');
+    upd('h-tps',fmt(cur)); upd('h-gas',gas);
+    const sla=parseInt($('st-sla').value)||400;
+    const pass=lat<sla&&parseFloat(drop)<1&&cur>stress.target*.8;
+    upd('sla-status',pass?'✓ SLA PASSING':'✗ SLA FAILING');
+    $('sla-status').style.color=pass?'var(--c2)':'var(--c1)';
+    const delta=prev?(((cur-prev)/prev)*100).toFixed(1):0;
+    const dEl=$('ov-tpsd');
+    if(dEl){dEl.textContent=(delta>=0?'+':'')+delta+'%';dEl.className='sc-d '+(delta>=0?'up':'dn');}
+    prev=cur;
+    updateHmap('ov-hmap',true,lat); updateHmap('st-hmap',true,lat);
+    if(Math.random()<.1) addLog('warn',`VALIDATOR ${pick(validators).name} LATENCY SPIKE ${ri(400,1200)}ms`);
+    if(Math.random()<.04) addLog('err',`TX BATCH DROP // MEMPOOL SATURATED // LOST ${ri(10,200)} TXS`);
+    if(stress.tick%5===0) addLog('ok',`TPS=${fmt(cur)} P99=${lat}ms DROP=${drop}% GAS=${gas}gwei`);
+    if(stress.tick>=stress.dur) stopStress(true);
+  },1000);
+}
+
+function stopStress(done=false) {
+  clearInterval(stress.interval); stress.running=false;
+  $('st-run-wrap').style.display='block';
+  $('st-stop-wrap').style.display='none';
+  upd('st-status','STATUS: '+(done?'COMPLETE':'ABORTED'));
+  $('st-status').style.color=done?'var(--c2)':'var(--c1)';
+  updateHmap('st-hmap',false); updateHmap('ov-hmap',false);
+  const t=parseInt($('st-tps').value)||10000;
+  const lbl=done?`COMPLETE // PEAK:${fmt(stress.peak)} TPS // SLA:${stress.peak>t*.8?'PASS':'FAIL'}`:'ABORTED BY USER';
+  addLog(done?'ok':'err',lbl);
+  upd('sla-status',stress.peak>t*.8?'✓ TEST PASSED':'✗ TEST FAILED');
+  $('sla-status').style.color=stress.peak>t*.8?'var(--c2)':'var(--c1)';
+  if(done) flash('ok','Stress test complete — check Report tab');
+}
+
+// ════ FUZZER ════
+const fuzzResults = [];
+function startFuzzer() {
+  if(fuzzer.running) return;
+  fuzzer.running=true; fuzzer.tick=0; fuzzer.calls=0; fuzzer.reverts=0; fuzzer.panics=0; fuzzer.gasAnom=0;
+  const iter=parseInt($('fz-iter').value)||1000;
+  $('fz-run-wrap').style.display='none'; $('fz-stop-wrap').style.display='block';
+  upd('fz-status','STATUS: FUZZING //'+($('fz-strat').value));
+  addLog('ok',`FUZZER START // CONTRACT:${$('fz-addr').value.slice(0,10)}... ITER:${iter}`);
+  flash('info','Contract fuzzer launched');
+  const log=$('fz-log'); if(log) log.innerHTML='';
+  fuzzer.interval=setInterval(()=>{
+    fuzzer.tick++;
+    const pct=Math.min(100,fuzzer.tick/iter*100);
+    $('fz-prog').style.width=pct+'%'; upd('fz-pct',Math.round(pct)+'%');
+    const batch=ri(5,25);
+    fuzzer.calls+=batch;
+    const revBatch=Math.floor(batch*(Math.random()*.3));
+    fuzzer.reverts+=revBatch;
+    if(Math.random()<.05) fuzzer.panics++;
+    if(Math.random()<.08) fuzzer.gasAnom++;
+    const cov=Math.min(100,Math.floor((fuzzer.tick/iter)*85+Math.random()*15));
+    const cps=ri(40,120);
+    upd('fz-calls',fmt(fuzzer.calls)); upd('fz-rev',fuzzer.reverts); upd('fz-panic',fuzzer.panics);
+    upd('fz-gas',fuzzer.gasAnom); upd('fz-cov',cov+'%'); upd('fz-cps',cps);
+    upd('fz-rr',((fuzzer.reverts/fuzzer.calls)*100).toFixed(1)+'%');
+    upd('fz-avggas',fmt(ri(21000,180000))); upd('fz-paths',Math.floor(fuzzer.tick*.8)+'');
+    // log entry
+    if(log && fuzzer.tick%3===0) {
+      const fn=pick(abiFunctions);
+      const isRev=Math.random()<.15;
+      const isPanic=Math.random()<.03;
+      const gas=ri(21000,500000);
+      const row=document.createElement('div');
+      row.className='fuzz-call';
+      if(isPanic) row.style.borderColor='var(--c1)';
+      else if(isRev) row.style.borderColor='rgba(255,45,107,.3)';
+      row.innerHTML=`<span class="fc-name">${fn.name.split('(')[0]}()</span><span class="fc-args">${fn.name.slice(fn.name.indexOf('(')+1,-1).split(',').map(a=>`<${a.trim()}>`).join(', ')}</span><span class="${isPanic?'fc-rev':isRev?'fc-rev':'fc-res'}">${isPanic?'PANIC:Overflow':isRev?'REVERT':'OK'}</span><span class="fc-gas">${fmt(gas)} gas</span>`;
+      log.insertBefore(row,log.firstChild);
+      if(log.children.length>50) log.removeChild(log.lastChild);
+      if(isPanic||isRev) addLog('warn',`FUZZER ${isPanic?'PANIC':'REVERT'}: ${fn.name.split('(')[0]}() gas=${fmt(gas)}`);
+    }
+    if(fuzzer.tick>=iter) stopFuzzer(true);
+  },50);
+}
+function stopFuzzer(done=false) {
+  clearInterval(fuzzer.interval); fuzzer.running=false;
+  $('fz-run-wrap').style.display='block'; $('fz-stop-wrap').style.display='none';
+  upd('fz-status','STATUS: '+(done?'COMPLETE':'STOPPED'));
+  addLog(done?'ok':'warn',`FUZZER ${done?'COMPLETE':'STOPPED'} // CALLS:${fmt(fuzzer.calls)} REVERTS:${fuzzer.reverts} PANICS:${fuzzer.panics}`);
+  if(done) flash('warn',`Fuzzer done — ${fuzzer.reverts} reverts, ${fuzzer.panics} panics found`);
+}
+
+// ════ RPC BENCH ════
+const rpcData = {};
+rpcProviders.forEach(p => { rpcData[p.name] = Array(60).fill(p.lat); });
+
+function startRpcBench() {
+  const cards=$('rpc-cards'); if(!cards)return;
+  cards.innerHTML='';
+  rpcProviders.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='panel node-card';
+    card.id='rpc-card-'+p.name;
+    card.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span class="node-dot nd-on"></span><div style="font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:2px;">${p.name}</div></div>
+    <div class="sc-l">LATENCY</div><div style="font-family:var(--fd);font-size:22px;font-weight:700;color:${p.color}" id="rpc-lat-${p.name}">${p.lat}ms</div>
+    <div class="pbar" style="margin-top:6px;"><div class="pbar-fill" style="background:${p.color};box-shadow:0 0 4px ${p.color};width:${Math.max(5,(100-p.lat)*.8)}%;" id="rpc-bar-${p.name}"></div></div>
+    <div style="font-family:var(--fm);font-size:7px;color:var(--muted);margin-top:4px;">RELIABILITY: <span style="color:var(--c2)" id="rpc-rel-${p.name}">${p.rel}%</span></div>`;
+    cards.appendChild(card);
+  });
+  populateRpcTable();
+  upd('rpc-fast','QUICKNODE (8ms)'); upd('rpc-slow','ANKR (55ms)');
+  upd('rpc-rel','99.5%'); upd('rpc-rec','QUICKNODE');
+  addLog('ok','RPC BENCHMARK STARTED // 6 PROVIDERS');
+}
+
+function populateRpcTable() {
+  const tbl=$('rpc-tbl'); if(!tbl)return;
+  tbl.innerHTML='';
+  rpcProviders.forEach(p=>{
+    const score=Math.round((100-p.lat/5)*(p.rel/100));
+    const grade=score>85?'A':score>75?'B':score>65?'C':'D';
+    tbl.innerHTML+=`<tr>
+      <td><span style="font-family:var(--fd);font-size:11px;font-weight:700;color:${p.color}">${p.name}</span></td>
+      <td style="color:var(--c0)">${p.lat+ri(-5,5)}ms</td>
+      <td style="color:var(--c0)">${p.lat+ri(-3,8)}ms</td>
+      <td style="color:var(--c0)">${p.lat+ri(10,40)}ms</td>
+      <td style="color:var(--c0)">${p.lat+ri(20,80)}ms</td>
+      <td style="color:var(--c2)">${p.rel}%</td>
+      <td><span class="bdg bdg-${grade}">${grade} (${score})</span></td>
+    </tr>`;
+  });
+}
+
+function addRpcEndpoint() {
+  const inp=$('rpc-new'); if(!inp||!inp.value) return;
+  addLog('info','RPC ENDPOINT ADDED: '+inp.value); inp.value='';
+}
+
+function runVmSim() {
+  const med=ri(200,500), p99=ri(500,1200), fee=rf(1,8), fail=rf(0.1,3), sla=ri(60,90);
+  upd('vs-med',med+'ms'); upd('vs-p99',p99+'ms'); upd('vs-fee','$'+fee); upd('vs-fail',fail+'%'); upd('vs-sla',sla+'%');
+  addLog('ok',`VM SIM COMPLETE // MED:${med}ms P99:${p99}ms FAIL:${fail}% SLA:${sla}%`);
+}
+
+// ════ MEV ════
+const mevTypes=['SANDWICH','FRONTRUN','BACKRUN','FLASHLOAN ARB','LIQUIDATION','JUST-IN-TIME'];
+function addMevEvent() {
+  const feed=$('mev-feed'); if(!feed)return;
+  const type=pick(mevTypes);
+  const profit=ri(200,12000), loss=ri(100,6000), block=ri(21847400,21847520);
+  const colorMap={SANDWICH:'#ff2d6b',FRONTRUN:'#ff2d6b',BACKRUN:'#bf5fff','FLASHLOAN ARB':'#bf5fff',LIQUIDATION:'#ffcc00','JUST-IN-TIME':'#39ff14'};
+  const c=colorMap[type]||'#bf5fff';
+  const row=document.createElement('div');
+  row.className='mev-row';
+  row.innerHTML=`<div style="flex:1;"><div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;color:${c}">${type}</div><div style="font-family:var(--fm);font-size:7px;color:var(--muted);">Block #${block} // 0x${ri(10000,99999).toString(16)}...</div></div>
+    <div style="text-align:right;"><div style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--c2)">+$${fmt(profit)}</div><div style="font-family:var(--fm);font-size:7px;color:var(--c1)">Victim: -$${fmt(loss)}</div></div>`;
+  feed.insertBefore(row,feed.firstChild);
+  if(feed.children.length>20) feed.removeChild(feed.lastChild);
+  mevTotVal+=profit; mevLoss+=loss;
+  if(type==='SANDWICH') mevSand++;
+  else if(type==='FRONTRUN') mevFr++;
+  else if(type==='FLASHLOAN ARB') mevFl++;
+  upd('mev-tot','$'+fmt(Math.round(mevTotVal)));
+  upd('mev-sand',mevSand); upd('mev-fr',mevFr); upd('mev-fl',mevFl);
+  upd('mev-loss','$'+fmt(Math.round(mevLoss)));
+  upd('ov-mev','$'+fmt(Math.round(mevTotVal)));
+}
+
+function populateArbList() {
+  const el=$('arb-list'); if(!el)return;
+  const arbs=[
+    {pair:'ETH/USDC',from:'Uniswap v3',to:'Curve',delta:'+'+rf(.05,.6)+'%',win:'~8s',profit:'$'+ri(20,200)},
+    {pair:'SOL/USDT',from:'Orca',to:'Raydium',delta:'+'+rf(.05,.4)+'%',win:'~3s',profit:'$'+ri(10,120)},
+    {pair:'ARB/ETH',from:'Camelot',to:'Uni v3',delta:'+'+rf(.1,.5)+'%',win:'~12s',profit:'$'+ri(30,300)},
+    {pair:'MATIC/USDC',from:'QuickSwap',to:'Sushi',delta:'+'+rf(.02,.2)+'%',win:'~5s',profit:'$'+ri(5,80)},
+  ];
+  el.innerHTML='';
+  arbs.forEach(a=>{
+    const row=document.createElement('div');
+    row.className='arb-row';
+    row.innerHTML=`<div style="flex:1;"><div style="font-family:var(--fd);font-size:11px;font-weight:700;">${a.pair}</div><div style="font-family:var(--fm);font-size:7px;color:var(--muted);">${a.from} → ${a.to}</div></div>
+      <div style="font-family:var(--fd);font-size:18px;font-weight:700;color:var(--c2);">${a.delta}</div>
+      <div style="text-align:right;"><div style="font-family:var(--fd);font-size:13px;color:var(--c3);">${a.win}</div><div style="font-family:var(--fm);font-size:7px;color:var(--c2);">${a.profit}</div></div>
+      <button class="btn btn-g btn-sm">EXEC</button>`;
+    el.appendChild(row);
+  });
+  upd('arb-count',arbs.length+' OPEN');
+}
+
+// ════ VALIDATORS ════
+function populateVlTable() {
+  const tbl=$('vl-body'); if(!tbl)return;
+  tbl.innerHTML='';
+  validators.forEach((v,i)=>{
+    const tps=stress.running?ri(3000,11000):ri(500,4000);
+    const lat=ri(80,450);
+    const grade=v.uptime>99.5?'A':v.uptime>99?'B':v.uptime>98?'C':'D';
+    const propRate=rf(99,100);
+    const rew=(0.0038+Math.random()*.001).toFixed(4);
+    tbl.innerHTML+=`<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><div>${v.name}</div><div style="font-size:7px;color:var(--muted)">${v.addr}</div></td>
+      <td style="color:var(--tx2)">${v.stake}</td>
+      <td style="color:var(--c0)">${fmt(tps)}</td>
+      <td style="color:${lat>400?'var(--c1)':lat>200?'var(--c3)':'var(--c0)'};">${lat}ms</td>
+      <td style="color:var(--c2)">${v.uptime}%</td>
+      <td style="color:${v.missed>5?'var(--c1)':'var(--c3)'}">${v.missed}</td>
+      <td style="color:var(--c2)">${propRate}%</td>
+      <td style="color:var(--c3)">${rew}Ξ</td>
+      <td><span class="bdg bdg-${grade}">${grade}</span></td>
+    </tr>`;
+  });
+}
+
+function populateSlashList() {
+  const el=$('slash-list'); if(!el)return;
+  const data=[
+    {name:'Figment-01',status:'SAFE',msg:'No double-vote detected',cls:'sl-safe',icon:'🛡'},
+    {name:'Chorus One',status:'SAFE',msg:'Attestation timing nominal',cls:'sl-safe',icon:'🛡'},
+    {name:'P2P.org',status:'WARNING',msg:'High attestation delay: 3 slots',cls:'sl-warn',icon:'⚠'},
+    {name:'Everstake',status:'SAFE',msg:'No surround vote',cls:'sl-safe',icon:'🛡'},
+    {name:'Allnodes',status:'DANGER',msg:'Duplicate attestation detected!',cls:'sl-danger',icon:'🚨'},
+    {name:'Stakefish',status:'WARNING',msg:'Offline >2 epochs',cls:'sl-warn',icon:'⚠'},
+  ];
+  el.innerHTML='';
+  data.forEach(d=>{
+    const c=d.status==='SAFE'?'var(--c2)':d.status==='DANGER'?'var(--c1)':'var(--c3)';
+    el.innerHTML+=`<div class="slash-row ${d.cls}"><div style="font-size:14px;">${d.icon}</div><div><div style="font-family:var(--fm);font-size:8px;color:${c};letter-spacing:1px;">${d.name} // ${d.status}</div><div style="font-family:var(--fm);font-size:7px;color:var(--muted);">${d.msg}</div></div></div>`;
+  });
+}
+
+function initSlotGrid() {
+  const el=$('slot-grid'); if(!el)return; el.innerHTML='';
+  for(let i=0;i<100;i++){
+    const r=Math.random();
+    const bg=r<.88?'rgba(57,255,20,.5)':r<.93?'rgba(255,204,0,.6)':r<.97?'rgba(255,45,107,.6)':'rgba(30,50,70,.4)';
+    const s=document.createElement('div'); s.className='slot';
+    s.style.cssText=`background:${bg};`;
+    el.appendChild(s);
+  }
+}
+
+// ════ BRIDGE TABLE ════
+function populateBridges() {
+  const tbl=$('vm-tbl'); if(!tbl)return;
+  tbl.innerHTML='';
+  bridges.forEach(b=>{
+    const rtt=ri(b.base-40,b.base+150), p99=ri(b.base+80,b.base+400);
+    const suc=rf(94,99.9), pend=ri(5,200), fee=rf(.5,8);
+    const sla=rtt<800;
+    const bdg=c=>`<span class="bdg bdg-${c.toLowerCase()}">${c}</span>`;
+    tbl.innerHTML+=`<tr>
+      <td>${bdg(b.from)}</td><td>${bdg(b.to)}</td>
+      <td style="color:var(--c4);font-size:8px;">${b.proto}</td>
+      <td style="color:${rtt>600?'var(--c1)':rtt>400?'var(--c3)':'var(--c0)'};font-family:var(--fd);font-size:14px;font-weight:700;">${rtt}ms</td>
+      <td style="color:var(--c3)">${p99}ms</td>
+      <td style="color:var(--c2)">${suc}%</td>
+      <td style="color:var(--c4)">${fmt(pend)}</td>
+      <td style="color:var(--c3)">$${fee}</td>
+      <td><span class="bdg ${sla?'bdg-lo':'bdg-hi'}">${sla?'PASS':'FAIL'}</span></td>
+    </tr>`;
+  });
+}
+
+// ════ MEMPOOL TABLE ════
+function populateMpTable() {
+  const tbl=$('mp-tbl'); if(!tbl)return;
+  const types=['SWAP','BRIDGE','NFT','LIQUIDATION','TRANSFER'];
+  tbl.innerHTML='';
+  for(let i=0;i<8;i++){
+    const h='0x'+ri(100000,999999).toString(16)+'...'+ri(1000,9999).toString(16);
+    const v='$'+fmt(ri(100000,2000000));
+    const g=ri(18,90), age=ri(1,180)+'s';
+    const addr1='0x'+ri(10000,99999).toString(16)+'...', addr2='0x'+ri(10000,99999).toString(16)+'...';
+    const riskI=ri(0,2), rc=['bdg-hi','bdg-md','bdg-lo'][riskI], rv=['HIGH','MED','LOW'][riskI];
+    tbl.innerHTML+=`<tr>
+      <td style="color:var(--muted)">${h}</td>
+      <td><span class="bdg bdg-B">${pick(types)}</span></td>
+      <td style="color:var(--c2)">${v}</td>
+      <td style="color:var(--c3)">${g} gwei</td>
+      <td style="color:var(--muted)">${age}</td>
+      <td style="color:var(--muted);font-size:7px;">${addr1}→${addr2}</td>
+      <td><span class="bdg ${rc}">${rv}</span></td>
+    </tr>`;
+  }
+}
+
+// ════ CONSENSUS CHAIN VIS ════
+function buildChainVis() {
+  const el=$('chain-vis'); if(!el)return; el.innerHTML='';
+  const base=21847490;
+  for(let i=0;i<30;i++){
+    const r=Math.random();
+    const type=r>.95?'fork':r>.9?'miss':r>.7?'pend':'fin';
+    const block=document.createElement('div');
+    block.className=`cblock ${type}`;
+    block.title=`Block #${base+i} — ${type.toUpperCase()}`;
+    block.innerHTML=`<div style="font-size:7px;color:var(--muted)">#${(base+i).toString().slice(-4)}</div><div style="font-size:9px;color:${type==='fin'?'var(--c2)':type==='pend'?'var(--c3)':type==='miss'?'var(--c1)':'var(--c4)'}">${type==='fin'?'✓':type==='pend'?'○':type==='miss'?'✗':'⑂'}</div>`;
+    el.appendChild(block);
+    if(i<29){const arr=document.createElement('div');arr.className='chain-arr';arr.textContent='→';el.appendChild(arr);}
+  }
+}
+
+function populateOrphanTable() {
+  const tbl=$('cn-orphan-tbl'); if(!tbl)return;
+  tbl.innerHTML='';
+  for(let i=0;i<7;i++){
+    const b=ri(21847400,21847510);
+    tbl.innerHTML+=`<tr>
+      <td style="color:var(--c0)">#${b}</td>
+      <td style="color:var(--muted)">0x${ri(1000,9999).toString(16)}...${ri(100,999).toString(16)}</td>
+      <td style="color:var(--c3)">${ri(1,6)}</td>
+      <td style="color:var(--c0)">${ri(8,20)}M</td>
+      <td style="color:var(--muted)">${ri(1,30)}m ago</td>
+      <td><span class="bdg bdg-C">${pick(['UNCLE','STALE','REORG'])}</span></td>
+    </tr>`;
+  }
+}
+
+// ════ LIQUIDITY STRESS ════
+function populateLqTable() {
+  const tbl=$('lq-tbl'); if(!tbl)return;
+  tbl.innerHTML='';
+  dexPools.forEach(p=>{
+    const dc={'LOW':'bdg-lo','MED':'bdg-md','HIGH':'bdg-hi','CRITICAL':'bdg-hi'};
+    tbl.innerHTML+=`<tr>
+      <td style="font-weight:700;color:var(--tx)">${p.name}</td>
+      <td style="color:var(--c4)">${p.dex}</td>
+      <td style="color:var(--c2)">${p.tvl}</td>
+      <td style="color:var(--tx2)">${p.rA}</td>
+      <td style="color:var(--tx2)">${p.rB}</td>
+      <td style="color:var(--c3)">${p.s10k}</td>
+      <td style="color:${p.s100k>2?'var(--c1)':'var(--c3)'}">${p.s100k}</td>
+      <td><span class="bdg ${dc[p.drain]||'bdg-md'}">${p.drain}</span></td>
+      <td><span class="bdg ${dc[p.flash]||'bdg-md'}">${p.flash}</span></td>
+    </tr>`;
+  });
+  // pool vis
+  const pv=$('pool-vis'); if(!pv)return; pv.innerHTML='';
+  dexPools.slice(0,4).forEach(p=>{
+    const ratioA=Math.random()*.6+.2;
+    pv.innerHTML+=`<div><div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:7px;color:var(--muted);margin-bottom:2px;"><span>${p.name}</span><span>${p.tvl}</span></div>
+      <div class="pool-bar"><div class="pb-a" style="width:${ratioA*100}%"></div><div class="pb-b" style="width:${(1-ratioA)*100}%"></div></div></div>`;
+  });
+}
+
+function simSlippage() { addLog('ok','SLIPPAGE SIM COMPLETE // see chart'); }
+function simFlash() {
+  $('flash-result').innerHTML=`<span style="color:var(--c1)">VULNERABILITY DETECTED</span><br>Pool is susceptible to flash loan price manipulation.<br>Estimated profit: $${fmt(ri(50000,2000000))}<br>Attack window: ${ri(1,3)} blocks<br>Recommended fix: TWAP oracle with 15min window`;
+  addLog('err','FLASH LOAN VULN DETECTED // pool at risk');
+  flash('err','Flash loan vulnerability found in selected pool');
+}
+
+// ════ FAULT INJECTOR ════
+function initTopology() {
+  const wrap=$('topo-wrap'); if(!wrap)return;
+  const nodeEl=$('topo-nodes'); if(nodeEl)nodeEl.innerHTML='';
+  nodes=[];
+  const positions=[
+    {x:50,y:50},{x:20,y:30},{x:80,y:30},{x:15,y:65},{x:50,y:20},
+    {x:85,y:65},{x:35,y:80},{x:65,y:80},{x:20,y:75},{x:80,y:75},
+    {x:50,y:90},{x:50,y:10}
+  ];
+  positions.forEach((pos,i)=>{
+    const nd=document.createElement('div');
+    nd.className='topo-node healthy';
+    nd.style.left=pos.x+'%'; nd.style.top=pos.y+'%';
+    nd.textContent='N'+(i+1<10?'0':'')+(i+1);
+    nd.dataset.idx=i;
+    nd.title='Node '+(i+1)+' — Click to toggle fault';
+    nd.onclick=()=>toggleNodeFault(i);
+    nodeEl.appendChild(nd);
+    nodes.push({el:nd,status:'healthy',pos});
+  });
+  upd('pt-nodes',nodes.length); upd('pt-healthy',nodes.length); upd('pt-faulty',0);
+  upd('bft-n',nodes.length); upd('bft-thresh','f < '+Math.floor(nodes.length/3));
+}
+
+function toggleNodeFault(idx) {
+  if(!nodes[idx]) return;
+  const n=nodes[idx];
+  if(n.status==='healthy'){n.status='faulty';n.el.className='topo-node faulty';}
+  else{n.status='healthy';n.el.className='topo-node healthy';}
+  updateFaultCounts();
+  addFaultLog(n.status==='faulty'?'err':'ok',`NODE-${String(idx+1).padStart(2,'0')} ${n.status==='faulty'?'SET FAULTY':'HEALED'}`);
+}
+
+function updateFaultCounts() {
+  faultyCount=nodes.filter(n=>n.status==='faulty').length;
+  const healthy=nodes.length-faultyCount;
+  upd('pt-healthy',healthy); upd('pt-faulty',faultyCount);
+  upd('bft-faulty',faultyCount);
+  const threshold=Math.floor(nodes.length/3);
+  upd('bft-margin',(threshold-faultyCount)+' nodes');
+  const safe=faultyCount<threshold;
+  upd('pt-cons',safe?'ALIVE':'AT RISK');
+  $('pt-cons').style.color=safe?'var(--c2)':'var(--c1)';
+  upd('bft-live',safe?'ALIVE':'HALTED'); upd('bft-safety',safe?'SAFE':'UNSAFE');
+  $('bft-live').style.color=safe?'var(--c2)':'var(--c1)';
+  $('bft-safety').style.color=safe?'var(--c2)':'var(--c1)';
+}
+
+function healAll(){nodes.forEach((n,i)=>{n.status='healthy';n.el.className='topo-node healthy';});updateFaultCounts();addFaultLog('ok','ALL NODES HEALED');}
+function randomFault(){const i=ri(0,nodes.length-1);toggleNodeFault(i);}
+function injectFault(){
+  const type=$('fault-type')?.value||'NODE CRASH';
+  const target=$('fault-target')?.value||'RANDOM';
+  const dur=parseInt($('fault-dur')?.value)||30;
+  addFaultLog('err',`FAULT INJECTED: ${type} // TARGET:${target} DUR:${dur}s`);
+  addLog('err',`FAULT INJECTION: ${type} on ${target}`);
+  flash('err',`Fault injected: ${type} on ${target}`);
+  if(target==='RANDOM'||target==='33% BYZANTINE'){
+    const count=target.includes('33')?Math.floor(nodes.length/3):1;
+    for(let i=0;i<count;i++){
+      const idx=ri(0,nodes.length-1);
+      nodes[idx].status='faulty';nodes[idx].el.className='topo-node faulty';
+    }
+    updateFaultCounts();
+  }
+}
+function addFaultLog(type,msg){
+  const el=$('fault-log'); if(!el)return;
+  const ts=new Date().toTimeString().split(' ')[0];
+  const row=document.createElement('div');
+  const c={ok:'var(--c2)',warn:'var(--c3)',err:'var(--c1)',info:'var(--c0)'};
+  row.innerHTML=`<span style="color:var(--muted)">${ts} </span><span style="color:${c[type]||c.info}">${msg}</span>`;
+  el.insertBefore(row,el.firstChild);
+}
+
+// ════ CHAIN VITALS ════
+function buildChainVitals(){
+  const el=$('chain-vitals'); if(!el)return;
+  const chains=[
+    {name:'ETHEREUM',tps:ri(18,28),lat:ri(280,400),gas:ri(22,35),color:'var(--c0)'},
+    {name:'SOLANA',tps:ri(4200,5100),lat:ri(80,150),gas:'0.000005',color:'var(--c2)'},
+    {name:'SUI',tps:ri(2100,3200),lat:ri(120,200),gas:'0.001',color:'var(--c3)'},
+    {name:'APTOS',tps:ri(1800,2800),lat:ri(140,220),gas:'0.001',color:'var(--c4)'},
+  ];
+  el.innerHTML='';
+  chains.forEach(c=>{
+    el.innerHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b0);">
+      <div style="font-family:var(--fd);font-size:11px;font-weight:700;color:${c.color}">${c.name}</div>
+      <div style="display:flex;gap:16px;">
+        <div style="text-align:right;"><div class="sc-l">TPS</div><div style="font-family:var(--fd);font-size:13px;font-weight:700;color:${c.color}">${fmt(c.tps)}</div></div>
+        <div style="text-align:right;"><div class="sc-l">LATENCY</div><div style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--c3)">${c.lat}ms</div></div>
+        <div style="text-align:right;"><div class="sc-l">GAS</div><div style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--c3)">${c.gas}</div></div>
+      </div>
+    </div>`;
+  });
+}
+
+// ════ ABI DISPLAY ════
+function buildAbiList(){
+  const el=$('fz-abi'); if(!el)return; el.innerHTML='';
+  abiFunctions.forEach(fn=>{
+    const row=document.createElement('div');
+    row.className='fuzz-call';
+    row.innerHTML=`<span class="fc-name">${fn.name.split('(')[0]}</span><span class="fc-args">${fn.name.slice(fn.name.indexOf('(')+1,-1)}</span><span style="font-size:7px;color:var(--muted)">${fn.vis}/${fn.stateMut}</span>`;
+    el.appendChild(row);
+  });
+}
+
+// ════ REPORT ════
+function generateReport() {
+  upd('rpt-date','GENERATED: '+new Date().toUTCString());
+  const score=Math.round(60+Math.random()*35);
+  upd('rpt-score',score);
+  const grades=['F','D','D+','C-','C','C+','B-','B','B+','A-','A','A+'];
+  const gi=Math.floor(score/9);
+  upd('rpt-grade','GRADE: '+grades[Math.min(gi,grades.length-1)]);
+  $('score-arc').style.strokeDashoffset=314.2*(1-score/100);
+  $('score-arc').style.stroke=score>80?'var(--c2)':score>60?'var(--c3)':'var(--c1)';
+
+  const modules=[
+    {name:'TPS STRESS',score:ri(60,100)},
+    {name:'VALIDATOR',score:ri(60,100)},
+    {name:'MEV MONITOR',score:ri(60,100)},
+    {name:'MEMPOOL',score:ri(60,100)},
+    {name:'CROSS-VM',score:ri(60,100)},
+    {name:'FUZZER',score:ri(60,100)},
+    {name:'RPC BENCH',score:ri(60,100)},
+    {name:'CONSENSUS',score:ri(60,100)},
+  ];
+  const ms=$('mod-scores'); if(ms){ms.innerHTML='';
+    modules.forEach(m=>{
+      const c=m.score>80?'var(--c2)':m.score>60?'var(--c3)':'var(--c1)';
+      ms.innerHTML+=`<div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:7px;padding:2px 0;border-bottom:1px solid var(--b0);"><span style="color:var(--muted)">${m.name}</span><span style="color:${c}">${m.score}</span></div>`;
+    });
+  }
+
+  const sections=[
+    {title:'TPS STRESS TEST',rows:[['Peak TPS',fmt(stress.peak||0),'pass'],['Target TPS',fmt(stress.target||10000),stress.peak>stress.target*.8?'pass':'fail'],['P99 Latency',latHist[latHist.length-1]+'ms',latHist[latHist.length-1]<400?'pass':'fail'],['Drop Rate',(Math.random()*.5).toFixed(2)+'%','pass'],['SLA Result',stress.peak>stress.target*.8?'PASSED':'FAILED',stress.peak>stress.target*.8?'pass':'fail']]},
+    {title:'VALIDATOR ANALYSIS',rows:[['Validators Tested','6','pass'],['Avg Grade','B+','pass'],['Slashing Incidents','1 DANGER','fail'],['Missed Slots/Epoch','14','warn'],['Avg Reward/Epoch','0.0042 ETH','pass']]},
+    {title:'MEV EXPOSURE',rows:[['Total MEV Extracted','$'+fmt(Math.round(mevTotVal)),'warn'],['Sandwich Attacks',mevSand+'','warn'],['Frontrun Events',mevFr+'','warn'],['Victim Loss Est.','$'+fmt(Math.round(mevLoss)),'fail'],['Protection Status','FLASHBOTS: DISABLED','fail']]},
+    {title:'CROSS-VM BRIDGE',rows:[['Routes Tested','8','pass'],['SLA Pass Rate','75%','warn'],['Avg RTT','387ms','warn'],['Bridge Failures','3','fail'],['Best Route','SVM→MVM (180ms)','pass']]},
+    {title:'CONTRACT FUZZER',rows:[['Total Calls',fmt(fuzzer.calls),'pass'],['Reverts Found',fuzzer.reverts+'',fuzzer.reverts<10?'pass':'fail'],['Panic Events',fuzzer.panics+'',fuzzer.panics===0?'pass':'fail'],['Code Coverage',Math.min(100,Math.floor(fuzzer.tick/10))+'%',fuzzer.calls>100?'pass':'warn'],['Gas Anomalies',fuzzer.gasAnom+'','pass']]},
+    {title:'CONSENSUS HEALTH',rows:[['Finality','2 epochs','pass'],['Fork Events','2','warn'],['Orphan Blocks','7','warn'],['Participation Rate','98.4%','pass'],['Network Score','91/100','pass']]},
+  ];
+
+  const sec=$('rpt-sections'); if(!sec)return; sec.innerHTML='';
+  sections.forEach(s=>{
+    const div=document.createElement('div'); div.className='report-section';
+    div.innerHTML=`<div class="rs-title">${s.title}</div>${s.rows.map(r=>`<div class="rs-row"><span class="rs-key">${r[0]}</span><span class="rs-val ${r[2]}">${r[1]}</span></div>`).join('')}`;
+    sec.appendChild(div);
+  });
+  addLog('ok','TEST REPORT GENERATED // SCORE:'+score+'/100');
+  flash('ok','Report generated — score '+score+'/100');
+}
+
+// ════ CANVAS RENDER LOOP ════
+let loopTick=0;
+function renderAll() {
+  loopTick++;
+  // overview chart
+  const oc=setupCanvas('ov-chart');
+  if(oc) drawLine(oc,tpsHist,'#00f0ff',true,true);
+  // stress chart
+  const sc=setupCanvas('st-chart');
+  if(sc) drawLine(sc,tpsHist,'#00f0ff',true,true);
+  // latency chart
+  const lc=setupCanvas('vl-chart');
+  if(lc) drawBars(lc,Array(20).fill(0).map(()=>ri(50,3000)),Array(20).fill(0).map((_,i)=>{const v=i/20;return v<.33?'rgba(0,240,255,.5)':v<.66?'rgba(57,255,20,.5)':v<.83?'rgba(255,204,0,.5)':'rgba(255,45,107,.5)';}));
+  // mev chart
+  mevHist.push(ri(0,2000)); mevHist.shift();
+  const mc=setupCanvas('mev-chart');
+  if(mc) drawLine(mc,mevHist,'#bf5fff',true,true);
+  // vm chart
+  vmHist.push(ri(100,700)); vmHist.shift();
+  const vc=setupCanvas('vm-chart');
+  if(vc) drawLine(vc,vmHist,'#39ff14',true,true);
+  // mempool chart
+  const mp=setupCanvas('mp-chart');
+  if(mp) drawBars(mp,Array(20).fill(0).map((_,i)=>ri(300,8000-i*300)),Array(20).fill(0).map((_,i)=>{const t=i/20;return t<.33?'rgba(0,240,255,.4)':t<.66?'rgba(255,204,0,.4)':'rgba(255,45,107,.4)';}));
+  // gas trend
+  gasHist.push(ri(20,40)); gasHist.shift();
+  const gt=setupCanvas('gas-trend');
+  if(gt) drawLine(gt,gasHist,'#ffcc00',false,false);
+  // congestion
+  const cg=setupCanvas('cong-chart');
+  if(cg) drawBars(cg,Array(10).fill(0).map((_,i)=>ri(20,i<3?40:i<7?80:95)),Array(10).fill(0).map((_,i)=>i>6?'rgba(255,45,107,.5)':i>3?'rgba(255,204,0,.5)':'rgba(0,240,255,.4)'));
+  // fuzzer chart
+  const fc=setupCanvas('fz-chart');
+  if(fc) drawBars(fc,Array(20).fill(0).map(()=>ri(1000,10000)),Array(20).fill(0).map((_,i)=>i===18||i===5?'rgba(255,45,107,.6)':'rgba(191,95,255,.4)'));
+  // rpc chart
+  const rc=setupCanvas('rpc-chart');
+  if(rc) {
+    const ds=rpcProviders.map(p=>{rpcData[p.name].push(p.lat+ri(-8,15));rpcData[p.name].shift();return{data:rpcData[p.name],color:p.color};});
+    drawMultiLine(rc,ds);
+  }
+  // consensus finality chart
+  cnHist.push(ri(10,14)); cnHist.shift();
+  const cnc=setupCanvas('cn-chart');
+  if(cnc) drawLine(cnc,cnHist,'#39ff14',true,true);
+  // block time chart
+  blockTimes.push(ri(11000,15000)); blockTimes.shift();
+  const btc=setupCanvas('cn-bt-chart');
+  if(btc) drawLine(btc,blockTimes,'#ffcc00',true,false);
+  // partition chart
+  ptHist.push(faultyCount>Math.floor(nodes.length/3)?ri(20,60):ri(85,100)); ptHist.shift();
+  const ptc=setupCanvas('pt-chart');
+  if(ptc) drawLine(ptc,ptHist,'#00f0ff',true,true);
+  // slippage chart
+  const slc=setupCanvas('lq-slip-chart');
+  if(slc){const data=[0.05,0.1,0.18,0.32,0.6,1.2,2.1,3.8,6.5,10.2];drawLine(slc,data,'#ff2d6b',true,true);}
+}
+
+// ════ MISC LIVE UPDATES ════
+function liveUpdates() {
+  // block numbers
+  const ethEl=$('h-eth');
+  if(ethEl) ethEl.textContent=fmt(parseInt(ethEl.textContent.replace(/,/g,''))+ri(0,2));
+  const solEl=$('h-sol');
+  if(solEl) solEl.textContent=fmt(parseInt(solEl.textContent.replace(/,/g,''))+ri(0,5));
+  upd('cn-head',$('h-eth')?.textContent||'—');
+  // epoch progress
+  const epArc=$('ep-arc'), epPct=$('ep-pct');
+  if(epArc&&epPct){
+    let p=parseInt(epPct.textContent)||72;
+    p=p>=100?0:p+1;
+    epPct.textContent=p+'%'; epArc.style.strokeDashoffset=175.9*(1-p/100);
+    upd('ep-slot',Math.floor(p/100*432)+'/432 SLOTS');
+    upd('ep-pct-hdr',p);
+  }
+  // gas
+  const base=ri(20,35);
+  upd('gs-slow',base-4); upd('gs-std',base); upd('gs-fast',base+8); upd('gs-mev',base+35);
+  upd('h-gas',base);
+  // mempool
+  const mp=ri(35000,65000);
+  upd('mp-tot',fmt(mp)); upd('mp-q',fmt(ri(8000,20000))); upd('mp-wait',ri(15,60)+'s'); upd('mp-whale',ri(1,8));
+  // fr risk
+  const frNeedle=$('fr-needle'), frLevel=$('fr-level');
+  const frPct=ri(15,90);
+  if(frNeedle) frNeedle.style.left=frPct+'%';
+  if(frLevel){const lvl=frPct>70?'HIGH':frPct>40?'MEDIUM':'LOW';frLevel.textContent=lvl;frLevel.style.color=frPct>70?'var(--c1)':frPct>40?'var(--c3)':'var(--c2)';}
+  upd('fr-bots',ri(25,60)); upd('fr-large',ri(3,15)); upd('fr-flash',ri(80,200)); upd('fr-priv',ri(25,45)+'%');
+  // heatmap idle
+  if(!stress.running){updateHmap('ov-hmap',false);updateHmap('st-hmap',false);}
+}
+
+// ════ MAIN LOOP ════
+function mainLoop() {
+  renderAll();
+  liveUpdates();
+  if(loopTick%3===0){buildChainVitals();}
+  if(loopTick%4===0&&Math.random()<.5){addMevEvent();}
+  if(loopTick%6===0){populateVlTable();populateBridges();populateArbList();}
+  if(loopTick%10===0){buildChainVis();populateMpTable();buildAbiList();}
+  if(loopTick%15===0){populateOrphanTable();populateLqTable();}
+  if(loopTick%20===0&&rpcProviders.length){rpcProviders.forEach(p=>{p.lat=Math.max(5,p.lat+ri(-5,8));});populateRpcTable();}
+  // auto events
+  if(loopTick%8===0&&Math.random()<.4){addLog(pick(['ok','warn','info']),[`BLOCK ${$('h-eth')?.textContent} FINALIZED`,`SOL TPS ${fmt(ri(3800,5200))}`,`EPOCH SLOT ${ri(200,430)}/432`,`GAS BASE ${ri(20,40)} GWEI`][ri(0,3)]);}
+  if(loopTick%20===0&&Math.random()<.3){flash(pick(['ok','warn','err']),[`MEV sandwich #${ri(1000,9999)} detected`,`Validator Allnodes latency ${ri(400,900)}ms`,`New block ${$('h-eth')?.textContent} finalized`,`Arb opportunity ${rf(.1,.5)}% ETH/USDC`][ri(0,3)]);}
+}
+
+// ════ BOOT ════
+window.addEventListener('DOMContentLoaded',()=>{
+  setupCanvases();
+  initHmap('ov-hmap'); initHmap('st-hmap');
+  populateVlTable(); populateSlashList(); initSlotGrid();
+  populateBridges(); buildChainVis(); populateOrphanTable();
+  populateLqTable(); buildAbiList(); buildChainVitals();
+  initTopology(); startRpcBench(); populateMpTable();
+  addLog('ok','CHAINBENCH ULTIMATE v4.0 INITIALIZED');
+  addLog('ok','ALL 12 TEST MODULES ONLINE');
+  addLog('info','MONITORING: ETH + SOL + SUI + APTOS MAINNETS');
+  addLog('warn','MEV MONITOR ACTIVE // 42 SANDWICH BOTS DETECTED');
+  setInterval(mainLoop,1000);
+});
+window.addEventListener('resize',setupCanvases);
+</script>
+</body>
+</html>

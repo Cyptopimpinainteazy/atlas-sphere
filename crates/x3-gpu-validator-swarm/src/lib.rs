@@ -61,6 +61,7 @@ pub mod quarantine;
 pub mod telemetry;
 pub mod validator;
 pub mod x3_kernel_versioning;
+pub mod gpu_receipt;
 
 pub use config::{SwarmConfig, ValidatorConfig};
 pub use cpu_validator::{
@@ -75,7 +76,7 @@ pub use deterministic::{DeterministicEngine, ExecutionMode, VerificationLevel};
 pub use error::{SwarmError, SwarmResult};
 pub use gpu_fallback_chain::{DegradationStrategy, FallbackChain, FallbackStats};
 pub use gpu_memory_pool::{GpuMemoryManager, GpuMemoryPool, MemoryPoolStats, SlabHandle};
-pub use health::{HealthCheck, HealthStatus, MetricsCollector, SwarmMetrics, ValidatorHealth};
+pub use metrics::{HealthCheck, HealthStatus, MetricsCollector, SwarmMetrics, ValidatorHealth};
 pub use multi_gpu_dispatcher::{GpuDeviceInfo, JobResult, MultiGpuDispatcher, PerformanceStats};
 pub use network::{
     Network, NetworkConfig, NetworkEvent, NetworkManager, NetworkMessage, NetworkPeer,
@@ -87,6 +88,7 @@ pub use quarantine::{DivergenceRecord, QuarantineManager, QuarantineReason};
 pub use telemetry::{TelemetryConfig, TelemetrySink};
 pub use validator::{Validator, ValidatorEvent, ValidatorState};
 pub use x3_kernel_versioning::{X3KernelManifest, X3KernelRegistry, X3KernelRuntime};
+pub use gpu_receipt::{GpuReceipt, GpuClass, ProofType, GpuReceiptValidator};
 
 /// Current version of the X3 GPU Validator Swarm protocol
 pub const PROTOCOL_VERSION: u32 = 3;

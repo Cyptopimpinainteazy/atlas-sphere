@@ -1,5 +1,9 @@
 # Progress Log
 
+## Codebase Patterns
+- Use helper constructors on error enums (e.g., `rpc_error`, `parse_error`) to centralize Vec<u8> conversions and avoid type mismatches.
+
+
 [2026-02-20T10:12:00.000Z] ✅ TASK RESUMPTION CHECK - Project verified complete:
   - x3-opt tests: 155/155 passing
   - PASS A (Dominance-based Conditional Folding): Production ready
@@ -12,3 +16,14 @@ Completed: Run `cargo clippy --workspace --all-targets --all-features` and fix a
 
 [2026-02-13T18:22:00.000Z] ✅ Completed: Run `cargo test --workspace` and ensure all tests pass — fixed failing BIP39 test expectations and adjusted runtime EVM adapter fallback for TestExternalities.
 [2026-02-13T16:22:26.427Z] ✅ Completed: Run `cargo test --workspace` and ensure all tests pass (took 1530s)
+
+[2026-03-11T10:00:00.000Z] - Fixed build failures in `x3-external-chains`
+- Added missing `hex` and `reqwest` dependencies and created `rpc_http` module for HTTP calls.
+- Introduced `ParseError` variant and helper in `error.rs`; updated all parsing routines accordingly.
+- Revised error handling in `base.rs` to use helper constructors and corrected type conversions.
+- Verified `x3-external-chains` compiles cleanly and unit tests execute (compilation stage).
+**Learnings for future iterations:**
+  - Add a dependency before referencing its API; missing crates cause cascading compile failures.
+  - Maintain error enum variants in sync with code and prefer helper methods to convert strings to Vec<u8>.
+  - Utility modules (e.g., `rpc_http`) simplify platform-specific code and avoid missing imports.
+---

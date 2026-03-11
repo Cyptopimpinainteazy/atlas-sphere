@@ -27,6 +27,12 @@ async-trait = "0.1"
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 hex-literal = "0.4"
 
+# Utilities
+hex = "0.4"
+
+# HTTP client for JSON-RPC calls (std-only)
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
+
 # Logging
 log = { workspace = true, default-features = false }
 

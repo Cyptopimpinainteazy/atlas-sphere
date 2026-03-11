@@ -10,9 +10,14 @@
 //! - **Commit-Reveal MEV**: 2-phase transaction submission blocks sandwich attacks
 //! - **Slashing Insurance**: 5% of slashed stake funds insurance pool; validators can claim recovery
 
-use sp_core::H256;
 use sp_runtime::Permill;
 use std::collections::HashMap;
+
+pub mod calculator;
+pub mod curve;
+pub mod error;
+pub mod reputation;
+pub mod types;
 
 /// EIP-1559 style dynamic base fee market
 #[derive(Clone, Debug)]
