@@ -80,7 +80,7 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Runtime compiles WASM cleanly | ⬜ | `runtime/src/lib.rs` |
+| Runtime compiles WASM cleanly | ✅ | `runtime/src/lib.rs` |
 | Weight annotations complete on all calls | ⬜ | `pallets/*/src/lib.rs` — `#[pallet::weight]` |
 | No unchecked arithmetic (saturating/checked) | ⬜ | `rg 'as u\|as i' runtime/ pallets/` |
 | Storage migrations versioned | ⬜ | `runtime/src/migrations.rs` |
