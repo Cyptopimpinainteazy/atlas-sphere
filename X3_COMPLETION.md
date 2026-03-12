@@ -29,7 +29,7 @@
 | `cargo test --all` passes 100% | ⬜ | all 82 crates + 22 pallets |
 | No `unwrap()` in production paths | ⬜ | `rg 'unwrap\(\)' --glob '!**/tests/**' --glob '!**/*_test*'` |
 | No `expect()` outside test code | ⬜ | same scan |
-| All feature flags documented | ⬜ | each `Cargo.toml` `[features]` section |
+| All feature flags documented | ✅ | each `Cargo.toml` `[features]` section |
 
 ### 1.3 Dependency Control
 
@@ -37,8 +37,8 @@
 |------|--------|-----------------|
 | Locked dependency versions (`Cargo.lock` audited) | ✅ | `Cargo.lock` + `deny.toml` |
 | No abandoned crates (`cargo deny check`) | ✅ | `deny.toml` |
-| Unsafe blocks justified + documented | ⬜ | `rg 'unsafe \{' --glob '!**/tests/**'` |
-| Rust edition standardized (2021) | ⬜ | all `Cargo.toml` files |
+| Unsafe blocks justified + documented | ✅ | `rg 'unsafe \{' --glob '!**/tests/**'` |
+| Rust edition standardized (2021) | ✅ | all `Cargo.toml` files |
 
 ---
 
