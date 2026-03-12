@@ -186,6 +186,9 @@ fn load_sha256_lib() -> Result<Sha256Lib, String> {
     let path = find_lib("libsha256_batch.so")
         .ok_or_else(|| "libsha256_batch.so not found in search paths".to_string())?;
 
+    // Safety: `path` is an operator-controlled library path and the requested
+    // symbols are copied into owned function pointers while the `Library`
+    // handle is retained in `CudaLib`, so the symbol lifetimes remain valid.
     unsafe {
         let lib = libloading::Library::new(&path)
             .map_err(|e| format!("Failed to load {}: {}", path.display(), e))?;
@@ -219,6 +222,8 @@ fn load_ed25519_lib() -> Result<Ed25519Lib, String> {
     let path = find_lib("libed25519_batch.so")
         .ok_or_else(|| "libed25519_batch.so not found in search paths".to_string())?;
 
+    // Safety: same invariant as `load_sha256_lib`; the library handle is kept
+    // alive for the lifetime of the copied symbols.
     unsafe {
         let lib = libloading::Library::new(&path)
             .map_err(|e| format!("Failed to load {}: {}", path.display(), e))?;

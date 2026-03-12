@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-use x3_ast::ast::*;
-use x3_common::{BytePos, Span, Spanned, Symbol};
+use x3_lang_ast::ast::*;
+use x3_lang_common::{BytePos, Span, Spanned, Symbol};
 
 #[test]
 fn build_and_serialize_sample_agent() {
@@ -42,7 +42,7 @@ fn build_and_serialize_sample_agent() {
     struct Visitor {
         calls: usize,
     }
-    impl x3_ast::visitor::AstVisitor for Visitor {
+    impl x3_lang_ast::visitor::AstVisitor for Visitor {
         fn visit_agent(&mut self, _a: &Agent) {
             self.calls += 1;
         }

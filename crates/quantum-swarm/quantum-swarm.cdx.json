@@ -1643,7 +1643,7 @@
       "externalReferences": [
         {
           "type": "documentation",
-          "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/master/README.md"
+          "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/master/docs/root/README.md"
         },
         {
           "type": "website",
@@ -8205,7 +8205,7 @@
       "externalReferences": [
         {
           "type": "documentation",
-          "url": "https://github.com/stepancheg/rust-protobuf/blob/master/README.md"
+          "url": "https://github.com/stepancheg/rust-protobuf/blob/master/docs/root/README.md"
         },
         {
           "type": "website",
@@ -8240,7 +8240,7 @@
       "externalReferences": [
         {
           "type": "documentation",
-          "url": "https://github.com/stepancheg/rust-protobuf/blob/master/README.md"
+          "url": "https://github.com/stepancheg/rust-protobuf/blob/master/docs/root/README.md"
         },
         {
           "type": "website",

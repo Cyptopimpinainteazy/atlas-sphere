@@ -1,5 +1,0 @@
-# X3 consensus/state-touching map (surgical, current repo)
-
-apps/blockchain-adapter/src/index.ts
-apps/blockchain-adapter/src/worker.ts
-apps/blockchain-adapter/scripts/deploy_provenance.ts

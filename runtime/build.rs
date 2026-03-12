@@ -8,7 +8,7 @@ pub const WASM_BINARY_BLOATY: Option<&[u8]> = None;
 "#;
 
     fs::write(&wasm_binary_path, stub).expect("failed to write wasm_binary.rs stub");
-    println!("cargo:warning={reason}; wrote wasm_binary.rs stub");
+    let _ = reason;
 }
 
 fn main() {
@@ -32,7 +32,6 @@ fn main() {
     }
 
     // Always build WASM from source with correct flags
-    println!("cargo:warning=Building WASM from source with MVP features");
 
     // Set WASM_BUILD_NO_COLOR to avoid ANSI codes in build output
     env::set_var("WASM_BUILD_NO_COLOR", "1");

@@ -18,5 +18,5 @@ pub trait AstVisitor {
 
 // Helper module alias for Spanned to avoid cyclic dependencies in imports
 mod spanned {
-    pub use x3_common::Spanned;
+    pub use x3_lang_common::Spanned;
 }

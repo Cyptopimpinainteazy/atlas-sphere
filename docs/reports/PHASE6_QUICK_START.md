@@ -6,20 +6,20 @@
 
 ### 👑 B: Register Allocator (Chaitin Algorithm)
 - **What**: Graph coloring algorithm for register allocation
-- **Where**: [crates/x3-opt/src/regalloc.rs#L24](crates/x3-opt/src/regalloc.rs#L24)
+- **Where**: [/crates/x3-opt/src/regalloc.rs#L24](/crates/x3-opt/src/regalloc.rs#L24)
 - **Key Method**: `ChaitinAllocator::allocate(interference_edges, live_ranges)`
 - **Tests**: 4 new (chaitin_simple_triangle, chaitin_with_spilling, etc.)
 
 ### 👑 C: Peephole Autogen (AI Pattern Mining)
 - **What**: Auto-discovers optimization patterns from telemetry
-- **Where**: [crates/x3-opt/src/peephole_autogen.rs](crates/x3-opt/src/peephole_autogen.rs)
+- **Where**: [/crates/x3-opt/src/peephole_autogen.rs](/crates/x3-opt/src/peephole_autogen.rs)
 - **Key Method**: `PeepholeAutogen::auto_generate()`
 - **Pipeline**: Telemetry → Mutation → Swarm Optimization
 - **Tests**: 4 new (telemetry_hotness, mutation_explorer, swarm_optimization, autogen_pipeline)
 
 ### 👑 D: Superoptimizer Core (SMT + Brute Force)
 - **What**: Searches instruction sequence space for optimal code
-- **Where**: [crates/x3-opt/src/superoptimizer.rs](crates/x3-opt/src/superoptimizer.rs)
+- **Where**: [/crates/x3-opt/src/superoptimizer.rs](/crates/x3-opt/src/superoptimizer.rs)
 - **Key Method**: `Superoptimizer::search()`
 - **Cost Model**: Weighted (latency, throughput, energy, code size)
 - **Tests**: 4 new (symbolic_value_creation, smt_commutative, superoptimizer_simple, superoptimizer_candidates)
@@ -41,10 +41,10 @@ Status:       ✅ PRODUCTION READY
 
 | File                                                                           | Lines | Purpose           |
 | ------------------------------------------------------------------------------ | ----- | ----------------- |
-| [crates/x3-opt/src/regalloc.rs](crates/x3-opt/src/regalloc.rs)                 | ~150  | Chaitin allocator |
-| [crates/x3-opt/src/peephole_autogen.rs](crates/x3-opt/src/peephole_autogen.rs) | ~350  | Pattern mining    |
-| [crates/x3-opt/src/superoptimizer.rs](crates/x3-opt/src/superoptimizer.rs)     | ~400  | SMT + search      |
-| [crates/x3-opt/src/lib.rs](crates/x3-opt/src/lib.rs)                           | +20   | Module exports    |
+| [/crates/x3-opt/src/regalloc.rs](/crates/x3-opt/src/regalloc.rs)                 | ~150  | Chaitin allocator |
+| [/crates/x3-opt/src/peephole_autogen.rs](/crates/x3-opt/src/peephole_autogen.rs) | ~350  | Pattern mining    |
+| [/crates/x3-opt/src/superoptimizer.rs](/crates/x3-opt/src/superoptimizer.rs)     | ~400  | SMT + search      |
+| [/crates/x3-opt/src/lib.rs](/crates/x3-opt/src/lib.rs)                           | +20   | Module exports    |
 
 ---
 
@@ -128,8 +128,8 @@ cargo test --all
 
 For complete understanding:
 - [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md) - Full architecture guide (3000+ words)
-- [crates/x3-opt/src/lib.rs](crates/x3-opt/src/lib.rs) - Module structure
-- [docs/reports/PHASE4_DOCUMENTATION_INDEX.md](docs/reports/PHASE4_DOCUMENTATION_INDEX.md) - Previous phases context
+- [/crates/x3-opt/src/lib.rs](/crates/x3-opt/src/lib.rs) - Module structure
+- [/docs/reports/PHASE4_DOCUMENTATION_INDEX.md](/docs/reports/PHASE4_DOCUMENTATION_INDEX.md) - Previous phases context
 
 ---
 

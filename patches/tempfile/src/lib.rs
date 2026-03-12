@@ -189,7 +189,7 @@
 #![allow(clippy::redundant_field_names)]
 
 #[cfg(doctest)]
-doc_comment::doctest!("../README.md");
+doc_comment::doctest!("../docs/root/README.md");
 
 const NUM_RETRIES: u32 = 65536;
 const NUM_RAND_CHARS: usize = 6;

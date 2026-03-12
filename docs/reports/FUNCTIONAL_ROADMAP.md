@@ -461,7 +461,7 @@ This roadmap describes the step-by-step path to transform X3 Chain from a **proo
 
 ### 4.2 SVM Pallet & Receipt Verification
 
-**Status:** Design in `pallets/svm-integration/README.md`; not implemented.
+**Status:** Design in `pallets/svm-integration/docs/root/README.md`; not implemented.
 
 **Tasks:**
 

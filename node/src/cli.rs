@@ -40,20 +40,74 @@ pub struct Cli {
 }
 
 #[derive(Debug, Clone, Args, Default)]
+/// Feature flags controlling optional node behavior.
+///
+/// IMPORTANT: All feature flags default to OFF for stability. Enable only after
+/// thorough testing and validation in canary/staging environments.
+///
+/// Example usage:
+///   x3-chain-node --enable-flash-finality --enable-poh
+///   CHAIN_SPEC=staging x3-chain-node --enable-flash-finality
 pub struct NodeFeatureFlags {
-    /// Enable the parallel proposer pipeline (currently staged and off by default).
+    /// Enable the parallel proposer pipeline.
+    ///
+    /// The parallel proposer pipeline allows multiple block proposals to be
+    /// processed concurrently, improving block authorship throughput. Currently
+    /// in SHADOW MODE - enable only for testing, not for block inclusion.
+    ///
+    /// Requirements:
+    /// - Deterministic scheduler enabled in runtime
+    /// - Min 4 CPU cores recommended
+    /// 
+    /// Default: false
     #[arg(long, default_value_t = false)]
     pub enable_parallel_proposer: bool,
 
-    /// Enable Flash Finality tasks (shadow mode wiring should be used first).
+    /// Enable Flash Finality tasks.
+    ///
+    /// Flash Finality is an alternative finality mechanism providing faster
+    /// consensus commitment than GRANDPA. When enabled, GRANDPA is automatically
+    /// disabled. Operates in SHADOW MODE by default - consensus remains driven
+    /// by GRANDPA while Flash Finality runs in parallel for testing.
+    ///
+    /// Mutually exclusive with GRANDPA. Set --disable-grandpa=false to run both.
+    ///
+    /// Requirements:
+    /// - Native support for flash finality certificates
+    /// - Network with 2/3+ validators supporting Flash Finality
+    ///
+    /// Default: false
     #[arg(long, default_value_t = false)]
     pub enable_flash_finality: bool,
 
-    /// Enable PoH digest validation path.
+    /// Enable PoH (Proof of History) digest validation path.
+    ///
+    /// PoH digests provide verifiable time proofs integrated with block headers.
+    /// When enabled, the node validates PoH digests during block import and
+    /// includes PoH tickets in authored blocks. Currently in VALIDATION-ONLY mode.
+    ///
+    /// Requirements:
+    /// - PoH generator service enabled
+    /// - Additional ~50ms latency per block for validation
+    ///
+    /// Default: false
     #[arg(long, default_value_t = false)]
     pub enable_poh: bool,
 
-    /// Require GPU path for validation critical flows. Defaults to false for safe CPU fallback.
+    /// Require GPU path for validation critical flows.
+    ///
+    /// When set to true, the node will enforce GPU execution for performance-critical
+    /// operations. If no GPU is available, validation will fail. This is useful for
+    /// performance-constrained deployments or to guarantee consistent hardware profiles.
+    ///
+    /// WARNING: Set to true only if GPU is guaranteed to be available. Defaults to
+    /// CPU fallback for safe operation.
+    ///
+    /// Requirements:
+    /// - Compatible NVIDIA GPU (compute capability 6.0+) or AMD GPU
+    /// - CUDA 11.0+ or ROCm 4.0+ installed
+    ///
+    /// Default: false
     #[arg(long, default_value_t = false)]
     pub gpu_required: bool,
 }
@@ -128,7 +182,7 @@ pub enum AtomicSwapSubcommand {
         slippage_bps: u32,
 
         /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
         rpc_url: String,
     },
 
@@ -143,7 +197,7 @@ pub enum AtomicSwapSubcommand {
         token_b: H256,
 
         /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
         rpc_url: String,
     },
 
@@ -205,6 +259,7 @@ impl SubstrateCli for Cli {
             "" | "dev" => crate::chain_spec::development_config(),
             "local" => crate::chain_spec::local_testnet_config(),
             "staging" | "staging-net" => crate::chain_spec::staging_config(),
+            "production" | "prod" => crate::chain_spec::production_config(),
             path => crate::chain_spec::ChainSpec::from_json_file(PathBuf::from(path)),
         }?;
         Ok(Box::new(spec))

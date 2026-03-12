@@ -111,6 +111,8 @@ interface SocialState {
 }
 
 const STORAGE_KEY = "x3-social-session";
+const hasTauriRuntime = () =>
+  typeof window !== "undefined" && (((window as any).__TAURI_INTERNALS__) || ((window as any).__TAURI__));
 
 export const useSocialStore = create<SocialState>((set, get) => ({
   session: null,
@@ -189,8 +191,10 @@ export const useSocialStore = create<SocialState>((set, get) => ({
       if (raw) {
         const session: AuthSession = JSON.parse(raw);
         set({ session, isLoggedIn: true });
-        get().loadProfile();
-        get().loadStats();
+        if (hasTauriRuntime()) {
+          get().loadProfile();
+          get().loadStats();
+        }
       }
     } catch { /* ignore */ }
   },

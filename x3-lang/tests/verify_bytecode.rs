@@ -1,7 +1,7 @@
 #[test]
 fn test_verify_simple() {
-    use x3_vm::verifier::verify;
-    use x3_vm::x3_vm::InstructionStream;
+    use x3_lang_vm::verifier::verify;
+    use x3_lang_vm::InstructionStream;
 
     let code = vec![
         0x20u8, 0x00, 0x01, 0x00, // PUSH_IMM 1

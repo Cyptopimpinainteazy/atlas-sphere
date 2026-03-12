@@ -128,9 +128,9 @@
 ## 🔗 Validation Documents
 
 - 📄 **[Final Validation Report](archive/reports/final-validation-results.md)** - Complete technical validation
-- 📄 **[High Priority Results](docs/reports/validation-results-high-priority.md)** - Detailed high-priority findings
+- 📄 **[High Priority Results](/docs/reports/validation-results-high-priority.md)** - Detailed high-priority findings
 - 📄 **[Security Audit Report](archive/reports/SECURITY_AUDIT_REPORT.md)** - Comprehensive security assessment
-- 📄 **[Codebase Analysis](docs/reports/X3_X3_SPHERE_CODEBASE_ANALYSIS.md)** - Architectural documentation
+- 📄 **[Codebase Analysis](/docs/reports/X3_X3_SPHERE_CODEBASE_ANALYSIS.md)** - Architectural documentation
 
 ---
 

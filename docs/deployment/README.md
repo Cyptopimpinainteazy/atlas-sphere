@@ -8,13 +8,13 @@
 - **[PUBLIC_RPC.md](PUBLIC_RPC.md)** - Run public RPC (dev/local/staging/testnet) safely
 
 ### Deployment Scripts
-- **[deploy-local-testnet.sh](deploy-local-testnet.sh)** - Automated single-server deployment
-- **[deploy-multi-server.sh](deploy-multi-server.sh)** - Multi-server deployment automation
-- **[manage-testnet.sh](manage-testnet.sh)** - Control and monitor your testnet
+- **[../../deployment/deploy-local-testnet.sh](deploy-local-testnet.sh)** - Automated single-server deployment
+- **[../../deployment/deploy-multi-server.sh](deploy-multi-server.sh)** - Multi-server deployment automation
+- **[../../deployment/manage-testnet.sh](manage-testnet.sh)** - Control and monitor your testnet
 
 ### Build & Keys
-- **[build-and-keygen.sh](build-and-keygen.sh)** - Build binary and generate validator keys
-- **[keys/](keys/)** - Validator keys and bootnode key (KEEP SECURE!)
+- **[../../deployment/build-and-keygen.sh](build-and-keygen.sh)** - Build binary and generate validator keys
+- **[../../deployment/keys](keys/)** - Validator keys and bootnode key (KEEP SECURE!)
 - **[chain-specs/](chain-specs/)** - Chain specification files
 
 ---
@@ -317,7 +317,7 @@ sudo journalctl -u x3-validator-01 -f
 **Questions? Check:**
 - [QUICKSTART.md](QUICKSTART.md) for fast paths
 - [IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md) for detailed guide
-- [manage-testnet.sh](manage-testnet.sh) for operations
+- [../../deployment/manage-testnet.sh](manage-testnet.sh) for operations
 
 ---
 

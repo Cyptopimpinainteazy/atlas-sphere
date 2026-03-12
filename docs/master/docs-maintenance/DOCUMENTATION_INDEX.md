@@ -24,7 +24,7 @@
    - Testnet roadmap
 
 ### For Operators Deploying Nodes
-1. **[docs/reports/TESTNET_DEPLOYMENT_GUIDE.md](./docs/reports/TESTNET_DEPLOYMENT_GUIDE.md)** (30 min read)
+1. **[docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md](./docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md)** (30 min read)
    - Pre-deployment checklist
    - Validator node setup
    - RPC node configuration
@@ -32,7 +32,7 @@
    - Troubleshooting guide
    - Maintenance procedures
 
-2. **[docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md](./docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md)** (Interactive)
+2. **[docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](./docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)** (Interactive)
    - Step-by-step deployment tracker
    - Infrastructure preparation
    - Key generation
@@ -53,7 +53,7 @@ Start here based on your role:
    - Success criteria checklist
    - Next steps and timeline
 
-2. **[docs/reports/QUICK_REFERENCE.md](./docs/reports/QUICK_REFERENCE.md)** (2 min read)
+2. **[docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md](./docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md)** (2 min read)
    - One-page overview
    - Quick statistics
    - Status apps/dash-legacy-2-legacy-2board
@@ -79,7 +79,7 @@ Start here based on your role:
 
 ### 🔧 For DevOps & Infrastructure
 1. **[docs/reports/INTEGRATION_COMPILATION_GUIDE.md](./docs/reports/INTEGRATION_COMPILATION_GUIDE.md)** - Integration points
-2. **[docs/reports/QUICK_REFERENCE.md](./docs/reports/QUICK_REFERENCE.md)** - Deployment commands
+2. **[docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md](./docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md)** - Deployment commands
 3. **[PHASES_1_TO_7_COMPLETE.md](./PHASES_1_TO_7_COMPLETE.md)** - Monitoring setup
 
 ### 🔒 For Security & Audit
@@ -137,7 +137,7 @@ Start here based on your role:
 ## 🚀 QUICK START GUIDE
 
 ### For New Developers
-1. Read **docs/reports/QUICK_REFERENCE.md** (2 min)
+1. Read **docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md** (2 min)
 2. Skim **PHASES_1_TO_7_COMPLETE.md** (5 min)
 3. Review **docs/reports/INTEGRATION_COMPILATION_GUIDE.md** (20 min)
 4. Check implementation files you'll work with
@@ -149,7 +149,7 @@ Start here based on your role:
 4. Run tests after each phase
 
 ### For Operations Teams
-1. Read **docs/reports/QUICK_REFERENCE.md**
+1. Read **docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md**
 2. Review deployment section in **PHASES_1_TO_7_COMPLETE.md**
 3. Set up metrics collection (Phase 7)
 4. Configure monitoring and alerts
@@ -214,7 +214,7 @@ Start here based on your role:
 - Testnet roadmap and success metrics
 - Important disclaimers (mock VMs, no economic value)
 
-### docs/reports/TESTNET_DEPLOYMENT_GUIDE.md ⭐ NEW
+### docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md ⭐ NEW
 **Best For**: Node operators, infrastructure teams, validator setup
 **Length**: ~30 minutes
 **Content**: 
@@ -230,7 +230,7 @@ Start here based on your role:
 - Maintenance procedures (backup, purge, updates)
 - Testnet roadmap (4 phases to mainnet)
 
-### docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md ⭐ NEW
+### docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md ⭐ NEW
 **Best For**: Deployment tracking, team coordination, incident response
 **Length**: Interactive (check boxes as you progress)
 **Content**: 
@@ -257,7 +257,7 @@ Start here based on your role:
 - Success criteria
 - Next steps
 
-### docs/reports/QUICK_REFERENCE.md
+### docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md
 **Best For**: Quick lookup, team onboarding, daily reference
 **Length**: ~2-3 minutes
 **Content**:
@@ -348,7 +348,7 @@ Start here based on your role:
 - What are the next steps?
 - When should we deploy?
 
-### docs/reports/QUICK_REFERENCE.md
+### docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md
 **Questions Answered**:
 - Where are the files?
 - How do I import these modules?
@@ -388,13 +388,13 @@ Start here based on your role:
 → Start with **docs/reports/TESTNET_QUICKSTART.md** (get tokens, try RPC, submit Comit)
 
 ### "I want to run a validator or RPC node" ⭐ NEW
-→ Go to **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** (complete setup instructions)
+→ Go to **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** (complete setup instructions)
 
 ### "I want testnet status and endpoints" ⭐ NEW
 → Check **docs/reports/TESTNET_ANNOUNCEMENT.md** (public info, community links)
 
 ### "I'm deploying testnet infrastructure" ⭐ NEW
-→ Use **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** (step-by-step tracker)
+→ Use **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** (step-by-step tracker)
 
 ### "I need to understand what was built"
 → Start with **PHASES_1_TO_7_COMPLETE.md**
@@ -403,7 +403,7 @@ Start here based on your role:
 → Go to **docs/reports/INTEGRATION_COMPILATION_GUIDE.md**
 
 ### "I need a quick overview"
-→ Check **docs/reports/QUICK_REFERENCE.md**
+→ Check **docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md**
 
 ### "I need to verify everything is correct"
 → Review **docs/reports/IMPLEMENTATION_VERIFICATION.md**
@@ -415,13 +415,13 @@ Start here based on your role:
 → Read relevant section in **archive/reports/PHASE_1_7_COMPLETION.md**
 
 ### "I need to know the file locations"
-→ Check **docs/reports/QUICK_REFERENCE.md** or **docs/reports/IMPLEMENTATION_VERIFICATION.md**
+→ Check **docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md** or **docs/reports/IMPLEMENTATION_VERIFICATION.md**
 
 ### "I need to set up monitoring"
-→ See **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** monitoring section or **docs/reports/INTEGRATION_COMPILATION_GUIDE.md** Phase 7
+→ See **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** monitoring section or **docs/reports/INTEGRATION_COMPILATION_GUIDE.md** Phase 7
 
 ### "I need to deploy this"
-→ Testnet: **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** | Production: **docs/reports/INTEGRATION_COMPILATION_GUIDE.md**
+→ Testnet: **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** | Production: **docs/reports/INTEGRATION_COMPILATION_GUIDE.md**
 
 ---
 
@@ -431,10 +431,10 @@ Start here based on your role:
 |----------|---------|----------|--------|----------|
 | **docs/reports/TESTNET_QUICKSTART.md** ⭐ | **Get started on testnet** | **Developers** | **5 min** | **⭐⭐⭐** |
 | **docs/reports/TESTNET_ANNOUNCEMENT.md** ⭐ | **Public launch info** | **Community** | **3 min** | **⭐⭐** |
-| **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** ⭐ | **Node operator guide** | **DevOps** | **30 min** | **⭐⭐⭐** |
-| **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** ⭐ | **Deployment tracking** | **Ops Teams** | **Interactive** | **⭐⭐⭐** |
+| **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** ⭐ | **Node operator guide** | **DevOps** | **30 min** | **⭐⭐⭐** |
+| **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** ⭐ | **Deployment tracking** | **Ops Teams** | **Interactive** | **⭐⭐⭐** |
 | PHASES_1_TO_7_COMPLETE.md | Executive summary | All | 15 min | ⭐⭐⭐ |
-| docs/reports/QUICK_REFERENCE.md | Quick lookup | Developers, Ops | 2 min | ⭐⭐⭐ |
+| docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md | Quick lookup | Developers, Ops | 2 min | ⭐⭐⭐ |
 | docs/reports/IMPLEMENTATION_VERIFICATION.md | Verification report | QA, Audit | 10 min | ⭐⭐ |
 | docs/reports/INTEGRATION_COMPILATION_GUIDE.md | Integration guide | Developers | 20 min | ⭐⭐⭐ |
 | archive/reports/PHASE_1_7_COMPLETION.md | Technical details | Architects | 15 min | ⭐⭐⭐ |
@@ -444,7 +444,7 @@ Start here based on your role:
 ## 🎓 RECOMMENDED READING ORDER
 
 ### First Time?
-1. docs/reports/QUICK_REFERENCE.md (2 min) - Get oriented
+1. docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md (2 min) - Get oriented
 2. PHASES_1_TO_7_COMPLETE.md (15 min) - Understand scope
 3. docs/reports/INTEGRATION_COMPILATION_GUIDE.md (20 min) - Learn integration
 4. Implementation files (30 min) - Review code
@@ -456,7 +456,7 @@ Start here based on your role:
 4. docs/reports/INTEGRATION_COMPILATION_GUIDE.md (20 min) - Integration
 
 ### For Project Status Report
-1. docs/reports/QUICK_REFERENCE.md (2 min) - Overview
+1. docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md (2 min) - Overview
 2. PHASES_1_TO_7_COMPLETE.md (15 min) - Details
 3. Look up specific metrics as needed
 
@@ -504,7 +504,7 @@ Start here based on your role:
 📄 PHASES_1_TO_7_COMPLETE.md
    └─ Executive summary and detailed breakdown
 
-📄 docs/reports/QUICK_REFERENCE.md
+📄 docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md
    └─ One-page quick lookup guide
 
 📄 docs/reports/IMPLEMENTATION_VERIFICATION.md
@@ -516,7 +516,7 @@ Start here based on your role:
 📄 archive/reports/PHASE_1_7_COMPLETION.md
    └─ Detailed phase-by-phase implementation
 
-📄 README.md (THIS FILE)
+📄 docs/root/README.md (THIS FILE)
    └─ Documentation index and navigation
 ```
 
@@ -529,7 +529,7 @@ All seven phases of the X3 Chain roadmap have been successfully implemented. Com
 **Start with**: 
 - Stakeholders → PHASES_1_TO_7_COMPLETE.md
 - Developers → docs/reports/INTEGRATION_COMPILATION_GUIDE.md
-- Everyone → docs/reports/QUICK_REFERENCE.md
+- Everyone → docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md
 
 **Status**: ✅ **READY FOR PRODUCTION DEPLOYMENT**
 

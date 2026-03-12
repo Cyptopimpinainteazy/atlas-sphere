@@ -135,11 +135,7 @@ pub mod svm_discriminators {
 }
 
 /// Encode SVM create_htlc instruction data.
-pub fn encode_svm_create_htlc(
-    hash_lock: &[u8; 32],
-    timelock: u64,
-    amount: u64,
-) -> Vec<u8> {
+pub fn encode_svm_create_htlc(hash_lock: &[u8; 32], timelock: u64, amount: u64) -> Vec<u8> {
     let mut data = Vec::with_capacity(8 + 32 + 8 + 8);
     data.extend_from_slice(&svm_discriminators::CREATE_HTLC);
     data.extend_from_slice(hash_lock);

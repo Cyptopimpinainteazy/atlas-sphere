@@ -21,7 +21,7 @@ include = [
     "/Cargo.toml",
     "/CHANGELOG",
     "/LICENSE-*",
-    "/README.md",
+    "/docs/root/README.md",
 ]
 autolib = false
 autobins = false
@@ -31,7 +31,7 @@ autobenches = false
 description = "Shared definitions of home directories."
 homepage = "https://github.com/rust-lang/cargo"
 documentation = "https://docs.rs/home"
-readme = "README.md"
+readme = "docs/root/README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/cargo"
 

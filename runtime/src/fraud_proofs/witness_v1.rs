@@ -14,11 +14,7 @@
 use codec::{Compact, Decode, Encode};
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
-use sp_std::{
-    collections::btree_map::BTreeMap,
-    prelude::*,
-    vec::Vec,
-};
+use sp_std::{collections::btree_map::BTreeMap, prelude::*, vec::Vec};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -73,16 +69,16 @@ pub enum WitnessError {
 #[repr(u8)]
 pub enum AccessDomain {
     StorageKey = 0,
-    Account    = 1,
-    Contract   = 2,
-    Nonce      = 3,
-    Custom     = 4,
+    Account = 1,
+    Contract = 2,
+    Nonce = 3,
+    Custom = 4,
 }
 
 /// A single resource access: a (domain, key) pair.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub struct AccessKeyV1 {
-    pub domain: u8,   // raw byte; validated against known domain values implicitly
+    pub domain: u8, // raw byte; validated against known domain values implicitly
     pub key: H256,
 }
 
@@ -111,14 +107,14 @@ pub struct AccessListV1 {
 /// Top-level v0 witness structure.  SCALE-encoded into `reexec_witness` bytes.
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode)]
 pub struct SchedulerWitnessV1 {
-    pub version:      u8,
+    pub version: u8,
     pub rules_version: u32,
-    pub tx_count:     Compact<u32>,
-    pub tx_ids:       Vec<H256>,
+    pub tx_count: Compact<u32>,
+    pub tx_ids: Vec<H256>,
     pub access_lists: Vec<AccessListV1>,
-    pub seed:         Option<H256>,
+    pub seed: Option<H256>,
     /// Must be empty (`BoundedVec<u8, 32>` encoded as zero-length in v0).
-    pub reserved:     Vec<u8>,
+    pub reserved: Vec<u8>,
 }
 
 // ── Commitments ───────────────────────────────────────────────────────────────
@@ -362,4 +358,3 @@ fn kahn_topological_sort(
 }
 
 // (codec helpers removed — use .encode() + extend_from_slice directly)
-

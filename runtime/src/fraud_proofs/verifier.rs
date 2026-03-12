@@ -9,8 +9,6 @@
 
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
-use sp_std::vec::Vec;
-
 use super::scheduler_v1::scheduler_commitment_from_bytes;
 use super::types::{DisputedBlockMeta, FraudProofV1, PROOF_TYPE_SCHED_MISMATCH_V1};
 use super::witness_v1::WitnessError;
@@ -43,7 +41,10 @@ impl From<WitnessError> for VerifyError {
 /// `proof_id = blake2_256(proof_type || block_hash || observed_hash || expected_hash || blake2_256(reexec_witness))`
 ///
 /// Canonical, deterministic, used for replay protection storage key.
-pub fn compute_proof_id<AccountId>(proof: &FraudProofV1<AccountId>, disputed_block_hash: H256) -> H256 {
+pub fn compute_proof_id<AccountId>(
+    proof: &FraudProofV1<AccountId>,
+    disputed_block_hash: H256,
+) -> H256 {
     let witness_hash = H256(blake2_256(&proof.reexec_witness));
     let mut input = [0u8; 1 + 32 * 4];
     input[0] = proof.proof_type;
@@ -108,7 +109,9 @@ pub fn verify_scheduler_mismatch_v1<AccountId: Clone>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fraud_proofs::types::{FraudProofV1, DisputedBlockMeta, HeaderRef, PROOF_TYPE_SCHED_MISMATCH_V1};
+    use crate::fraud_proofs::types::{
+        DisputedBlockMeta, FraudProofV1, HeaderRef, PROOF_TYPE_SCHED_MISMATCH_V1,
+    };
     use crate::fraud_proofs::witness_v1::{
         AccessKeyV1, AccessListV1, SchedulerWitnessV1, WITNESS_VERSION,
     };
@@ -130,7 +133,10 @@ mod tests {
                 k[..8].copy_from_slice(&(i as u64).to_be_bytes());
                 AccessListV1 {
                     access_count: Compact(1),
-                    accesses: sp_std::vec![AccessKeyV1 { domain: 0, key: H256(k) }],
+                    accesses: sp_std::vec![AccessKeyV1 {
+                        domain: 0,
+                        key: H256(k)
+                    }],
                 }
             })
             .collect();
@@ -145,9 +151,7 @@ mod tests {
         }
     }
 
-    fn make_disputed(
-        scheduler_commitment: H256,
-    ) -> DisputedBlockMeta<AccountId> {
+    fn make_disputed(scheduler_commitment: H256) -> DisputedBlockMeta<AccountId> {
         DisputedBlockMeta {
             block_hash: H256([0xAA; 32]),
             block_number: 42,
@@ -164,7 +168,10 @@ mod tests {
     ) -> FraudProofV1<AccountId> {
         FraudProofV1 {
             proof_type: PROOF_TYPE_SCHED_MISMATCH_V1,
-            header_ref: HeaderRef { block_number: 42, block_hash: H256([0xAA; 32]) },
+            header_ref: HeaderRef {
+                block_number: 42,
+                block_hash: H256([0xAA; 32]),
+            },
             tx_set_commitment: H256::zero(),
             claimed_scheduler_commitment: observed,
             reexec_witness: witness.encode(),

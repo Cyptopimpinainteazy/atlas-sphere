@@ -17,7 +17,7 @@
   "files": [
     "dist",
     "src",
-    "README.md"
+    "docs/root/README.md"
   ],
   "keywords": [
     "x3-chain",

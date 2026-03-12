@@ -256,11 +256,11 @@ python3 scripts/p4_utils/baseline_measurement.py --gpu
 
 ## 📌 Reference Files
 
-- Implementation: [solana_accelerators.py](crates/gpu-swarm/src/solana_accelerators.py)
-- CUDA Kernels: [solana_gpu_kernels.cu](crates/gpu-swarm/src/cu_kernels/solana_gpu_kernels.cu)
-- Tests: [p4_gpu_integration_tests.py](tests/p4_gpu_integration_tests.py)
+- Implementation: [solana_accelerators.py](/crates/gpu-swarm/src/solana_accelerators.py)
+- CUDA Kernels: [solana_gpu_kernels.cu](/crates/gpu-swarm/src/cu_kernels/solana_gpu_kernels.cu)
+- Tests: [p4_gpu_integration_tests.py](/tests/p4_gpu_integration_tests.py)
 - Roadmap: [P4_IMPLEMENTATION_GUIDE.md](openspec/changes/p4-solana-gpu-acceleration/P4_IMPLEMENTATION_GUIDE.md)
-- Baseline Script: [baseline_measurement.py](scripts/p4_utils/baseline_measurement.py)
+- Baseline Script: [baseline_measurement.py](/scripts/p4_utils/baseline_measurement.py)
 
 ---
 

@@ -137,88 +137,10 @@ nav{position:sticky;top:0;z-index:100;height:54px;display:flex;align-items:cente
   <button class="bb-cta" onclick="location.href='x3star-validator-presale.html'" style="margin-left:auto;">Reserve Your Node →</button>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-const nodes=[
-  {id:'US-NODE-01',flag:'🇺🇸',loc:'New York, USA',tier:'Genesis',status:'ok',uptime:'100.00%',blocks:'847,291',latency:'12ms',earnings:'$184,200',slash:'0',score:100,cpu:42,mem:38,disk:18,peers:47,rewards:'2,841 X3S/wk'},
-  {id:'SG-NODE-01',flag:'🇸🇬',loc:'Singapore',tier:'Genesis',status:'ok',uptime:'99.97%',blocks:'840,184',latency:'18ms',earnings:'$142,800',slash:'0',score:99,cpu:51,mem:44,disk:22,peers:43,rewards:'2,798 X3S/wk'},
-  {id:'SG-NODE-02',flag:'🇸🇬',loc:'Singapore',tier:'Genesis',status:'ok',uptime:'99.91%',blocks:'831,024',latency:'19ms',earnings:'$128,400',slash:'0',score:97,cpu:48,mem:41,disk:20,peers:45,rewards:'2,741 X3S/wk'},
-  {id:'JP-NODE-01',flag:'🇯🇵',loc:'Tokyo, Japan',tier:'Genesis',status:'ok',uptime:'99.88%',blocks:'827,441',latency:'24ms',earnings:'$118,200',slash:'0',score:96,cpu:55,mem:48,disk:24,peers:38,rewards:'2,698 X3S/wk'},
-  {id:'US-NODE-07',flag:'🇺🇸',loc:'San Francisco, USA',tier:'Genesis',status:'ok',uptime:'99.84%',blocks:'820,884',latency:'15ms',earnings:'$112,800',slash:'0',score:95,cpu:44,mem:40,disk:19,peers:49,rewards:'2,664 X3S/wk'},
-  {id:'AE-NODE-01',flag:'🇦🇪',loc:'Dubai, UAE',tier:'Genesis',status:'ok',uptime:'99.81%',blocks:'816,204',latency:'22ms',earnings:'$108,400',slash:'0',score:94,cpu:52,mem:46,disk:23,peers:41,rewards:'2,631 X3S/wk'},
-  {id:'EU-NODE-01',flag:'🇬🇧',loc:'London, UK',tier:'Genesis',status:'ok',uptime:'99.76%',blocks:'808,812',latency:'16ms',earnings:'$102,100',slash:'0',score:93,cpu:49,mem:43,disk:21,peers:44,rewards:'2,584 X3S/wk'},
-  {id:'KR-NODE-01',flag:'🇰🇷',loc:'Seoul, Korea',tier:'Genesis',status:'ok',uptime:'99.72%',blocks:'802,441',latency:'21ms',earnings:'$98,400',slash:'0',score:92,cpu:57,mem:50,disk:25,peers:40,rewards:'2,541 X3S/wk'},
-  {id:'AU-NODE-01',flag:'🇦🇺',loc:'Sydney, Australia',tier:'Star',status:'ok',uptime:'99.68%',blocks:'796,024',latency:'29ms',earnings:'$48,200',slash:'0',score:91,cpu:46,mem:42,disk:20,peers:36,rewards:'1,024 X3S/wk'},
-  {id:'DE-NODE-01',flag:'🇩🇪',loc:'Frankfurt, Germany',tier:'Star',status:'warn',uptime:'99.42%',blocks:'778,441',latency:'52ms',earnings:'$44,800',slash:'0',score:87,cpu:78,mem:72,disk:34,peers:28,rewards:'981 X3S/wk'},
-  {id:'CA-NODE-01',flag:'🇨🇦',loc:'Toronto, Canada',tier:'Star',status:'ok',uptime:'99.61%',blocks:'788,284',latency:'20ms',earnings:'$42,100',slash:'0',score:90,cpu:50,mem:44,disk:22,peers:39,rewards:'954 X3S/wk'},
-  {id:'FR-NODE-01',flag:'🇫🇷',loc:'Paris, France',tier:'Lite',status:'ok',uptime:'99.54%',blocks:'780,024',latency:'17ms',earnings:'$18,400',slash:'0',score:89,cpu:43,mem:38,disk:18,peers:35,rewards:'421 X3S/wk'},
-  {id:'IN-NODE-01',flag:'🇮🇳',loc:'Mumbai, India',tier:'Star',status:'warn',uptime:'99.38%',blocks:'764,884',latency:'68ms',earnings:'$40,100',slash:'0',score:85,cpu:82,mem:74,disk:37,peers:24,rewards:'897 X3S/wk'},
-  {id:'BR-NODE-01',flag:'🇧🇷',loc:'São Paulo, Brazil',tier:'Lite',status:'ok',uptime:'99.31%',blocks:'756,024',latency:'35ms',earnings:'$16,800',slash:'0',score:84,cpu:47,mem:43,disk:21,peers:31,rewards:'384 X3S/wk'},
-  {id:'HK-NODE-01',flag:'🇭🇰',loc:'Hong Kong',tier:'Genesis',status:'ok',uptime:'99.28%',blocks:'751,884',latency:'23ms',earnings:'$88,400',slash:'0',score:83,cpu:53,mem:47,disk:23,peers:37,rewards:'2,141 X3S/wk'},
-  {id:'CH-NODE-01',flag:'🇨🇭',loc:'Zurich, Switzerland',tier:'Star',status:'ok',uptime:'99.24%',blocks:'746,284',latency:'18ms',earnings:'$37,800',slash:'0',score:82,cpu:45,mem:40,disk:19,peers:36,rewards:'841 X3S/wk'},
-  {id:'NL-NODE-01',flag:'🇳🇱',loc:'Amsterdam, Netherlands',tier:'Lite',status:'ok',uptime:'99.18%',blocks:'738,024',latency:'16ms',earnings:'$14,400',slash:'0',score:81,cpu:44,mem:39,disk:17,peers:33,rewards:'324 X3S/wk'},
-  {id:'SA-NODE-01',flag:'🇸🇦',loc:'Riyadh, Saudi Arabia',tier:'Genesis',status:'ok',uptime:'99.14%',blocks:'732,884',latency:'28ms',earnings:'$82,100',slash:'0',score:80,cpu:56,mem:50,disk:25,peers:32,rewards:'2,041 X3S/wk'},
-];
-
-const grid=document.getElementById('health-grid');
-nodes.forEach(n=>{
-  const card=document.createElement('div');
-  card.className=`node-card ${n.status}`;
-
-  const statusColor=n.status==='ok'?'var(--green)':n.status==='warn'?'var(--gold)':'var(--red)';
-  const tierCls=n.tier==='Genesis'?'nt-genesis':n.tier==='Star'?'nt-star':'nt-lite';
-  const pdCls=n.status==='ok'?'pd-ok':n.status==='warn'?'pd-warn':'pd-err';
-  const cpuColor=n.cpu>70?'var(--red)':n.cpu>50?'var(--gold)':'var(--green)';
-  const memColor=n.mem>70?'var(--red)':n.mem>50?'var(--gold)':'var(--green)';
-  const latColor=parseInt(n.latency)>50?'var(--gold)':'var(--green)';
-
-  card.innerHTML=`
-    <div class="nc-head">
-      <div class="nc-flag">${n.flag}</div>
-      <div class="nc-id">
-        <div class="nc-name">${n.id}</div>
-        <div class="nc-loc">${n.loc}</div>
-      </div>
-      <div class="nc-tier ${tierCls}">${n.tier}</div>
-      <div class="pulse-dot ${pdCls}"></div>
-    </div>
-    <div class="nc-metrics">
-      <div class="ncm"><div class="ncm-val" style="color:${n.status==='ok'?'var(--green)':'var(--gold)'}">${n.uptime}</div><div class="ncm-key">Uptime</div></div>
-      <div class="ncm"><div class="ncm-val" style="color:${latColor}">${n.latency}</div><div class="ncm-key">Latency</div></div>
-      <div class="ncm"><div class="ncm-val" style="color:var(--gold)">${n.earnings}</div><div class="ncm-key">Earned</div></div>
-    </div>
-    <div class="nc-bars">
-      <div class="ncb-row"><span class="ncb-label">CPU Usage</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.cpu}%;background:${cpuColor}"></div></div><span class="ncb-val" style="color:${cpuColor}">${n.cpu}%</span></div>
-      <div class="ncb-row"><span class="ncb-label">Memory</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.mem}%;background:${memColor}"></div></div><span class="ncb-val" style="color:${memColor}">${n.mem}%</span></div>
-      <div class="ncb-row"><span class="ncb-label">Disk</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.disk}%;background:var(--blue)"></div></div><span class="ncb-val" style="color:var(--blue)">${n.disk}%</span></div>
-      <div class="ncb-row"><span class="ncb-label">Peer score</span><div class="ncb-track"><div class="ncb-fill" style="width:${n.peers/50*100}%;background:var(--purple)"></div></div><span class="ncb-val" style="color:var(--purple)">${n.peers}</span></div>
-    </div>
-    <div class="nc-footer">
-      <div class="slash-badge ${n.slash==='0'?'sb-clean':'sb-warn'}">⚔ ${n.slash==='0'?'0 SLASHES':'SLASH HISTORY'}</div>
-      <div style="font-family:var(--rhm);font-size:10px;color:var(--blue)">${n.rewards}</div>
-      <div class="nc-time" id="timer-${n.id}">live</div>
-    </div>
-  `;
-  card.addEventListener('click',()=>location.href='x3star-validator-presale.html');
-  grid.appendChild(card);
-});
-
-// Randomize some values every few seconds
-setInterval(()=>{
-  const cards=document.querySelectorAll('.node-card');
-  const card=cards[Math.floor(Math.random()*cards.length)];
-  const fills=card.querySelectorAll('.ncb-fill');
-  // Slightly vary CPU
-  const cpuFill=fills[0];
-  if(cpuFill){
-    const curr=parseInt(cpuFill.style.width)||50;
-    const next=Math.max(20,Math.min(90,curr+(Math.random()-0.5)*8));
-    cpuFill.style.width=next+'%';
-    const color=next>70?'var(--red)':next>50?'var(--gold)':'var(--green)';
-    cpuFill.style.background=color;
-    const val=cpuFill.parentElement.nextElementSibling;
-    if(val){val.textContent=Math.round(next)+'%';val.style.color=color;}
-  }
-},3000);
+X3PageAdapters.start();
 </script>
 </body>
 </html>

@@ -8,19 +8,68 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { Header, SignedBlock } from '@polkadot/types/interfaces';
 
+function hasTauriRuntime(): boolean {
+  return typeof window !== 'undefined' && !!(((window as any).__TAURI_INTERNALS__) || ((window as any).__TAURI__));
+}
+
+function isLoopbackEndpoint(endpoint?: string): boolean {
+  return !!endpoint && /(127\.0\.0\.1|localhost)/i.test(endpoint);
+}
+
+function allowLoopbackInBrowser(): boolean {
+  return String((import.meta as any).env?.VITE_ALLOW_LOOPBACK_RPC_IN_BROWSER ?? "").toLowerCase() === "true";
+}
+
+const PUBLIC_BROWSER_WS_FALLBACK = 'wss://ws.x3star.net/ws';
+const PUBLIC_TESTNET_WS_FALLBACK = 'wss://rpc.testnet.x3-chain.io:9944';
+const BROWSER_RPC_BACKOFF_MS = 30_000;
+
+function isBrowserPreviewRpcMode(): boolean {
+  return !hasTauriRuntime() && !allowLoopbackInBrowser();
+}
+
+function shouldRetryRpcInCurrentRuntime(): boolean {
+  return !isBrowserPreviewRpcMode();
+}
+
 function resolveWsEndpoint(): string {
+  const configuredMainnet = (import.meta.env.VITE_RPC_WS as string) || PUBLIC_BROWSER_WS_FALLBACK;
+  const localWs = (import.meta.env.VITE_RPC_WS_LOCAL as string) || 'ws://127.0.0.1:9944';
+  const publicTestnet = PUBLIC_TESTNET_WS_FALLBACK;
+  const publicMainnet = !hasTauriRuntime() && !allowLoopbackInBrowser() && isLoopbackEndpoint(configuredMainnet)
+    ? PUBLIC_BROWSER_WS_FALLBACK
+    : configuredMainnet;
+  const browserSafe = (preferred: string, fallback: string) =>
+    !hasTauriRuntime() && !allowLoopbackInBrowser() && isLoopbackEndpoint(preferred) ? fallback : preferred;
+
   try {
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('x3_active_network');
-      if (stored === 'local') return (import.meta.env.VITE_RPC_WS_LOCAL as string) || 'ws://127.0.0.1:9944';
-      if (stored === 'testnet') return 'wss://rpc.testnet.x3-chain.io:9944';
-      if (stored === 'mainnet') return 'wss://rpc.x3-chain.io:9944';
+      if (stored === 'local') {
+        // In browser preview we usually do not have a local node running, so prefer the public endpoint
+        // unless the app is running under Tauri or a local WS endpoint was explicitly provided.
+        if (hasTauriRuntime()) return localWs;
+        return browserSafe(localWs, publicMainnet);
+      }
+      if (stored === 'testnet') {
+        return browserSafe(publicTestnet, publicTestnet);
+      }
+      if (stored === 'mainnet') {
+        return browserSafe(publicMainnet, publicMainnet);
+      }
+      if (!hasTauriRuntime()) {
+        return browserSafe(publicMainnet, PUBLIC_BROWSER_WS_FALLBACK);
+      }
+      if (import.meta.env.VITE_RPC_WS_LOCAL) {
+        return localWs;
+      }
+      if (hasTauriRuntime() || import.meta.env.VITE_RPC_WS_LOCAL) return localWs;
     }
   } catch (err) {
     /* ignore */
   }
-  const envWs = (import.meta.env.VITE_RPC_WS as string) || (import.meta.env.VITE_RPC_WS_LOCAL as string);
-  const fallback = envWs || 'wss://rpc.x3-chain.io:9944';
+  const envWs = browserSafe(publicMainnet || (import.meta.env.VITE_RPC_WS_LOCAL as string), PUBLIC_BROWSER_WS_FALLBACK);
+  const fallback = envWs || PUBLIC_BROWSER_WS_FALLBACK;
   console.log('[Substrate] Resolved WS endpoint →', fallback);
   return fallback;
 }
@@ -118,15 +167,25 @@ const X3_RPC = {
 let apiInstance: ApiPromise | null = null;
 let connectionPromise: Promise<ApiPromise> | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+let browserRpcCooldown: { endpoint: string; until: number } | null = null;
 
 export async function getApi(): Promise<ApiPromise> {
   if (apiInstance?.isConnected) return apiInstance;
   if (connectionPromise) return connectionPromise;
 
   const endpoint = resolveWsEndpoint();
+  if (
+    isBrowserPreviewRpcMode() &&
+    browserRpcCooldown &&
+    browserRpcCooldown.endpoint === endpoint &&
+    browserRpcCooldown.until > Date.now()
+  ) {
+    throw new Error(`[Substrate] RPC temporarily disabled in browser preview for ${endpoint}`);
+  }
   connectionPromise = createConnection(endpoint);
   try {
     apiInstance = await connectionPromise;
+    browserRpcCooldown = null;
     return apiInstance;
   } finally {
     connectionPromise = null;
@@ -135,30 +194,47 @@ export async function getApi(): Promise<ApiPromise> {
 
 async function createConnection(endpoint: string): Promise<ApiPromise> {
   console.log(`[Substrate] Connecting to ${endpoint}…`);
-  const provider = new WsProvider(endpoint, 1000);
-  const api = await ApiPromise.create({ provider, types: X3_TYPES, rpc: X3_RPC });
-  await api.isReady;
+  const provider = new WsProvider(endpoint, shouldRetryRpcInCurrentRuntime() ? 1000 : false);
 
-  const [chain, nodeName, nodeVersion] = await Promise.all([
-    api.rpc.system.chain(),
-    api.rpc.system.name(),
-    api.rpc.system.version(),
-  ]);
-  console.log(`[Substrate] Connected to ${chain} via ${nodeName} v${nodeVersion}`);
+  try {
+    const api = await ApiPromise.create({ provider, types: X3_TYPES, rpc: X3_RPC });
+    await api.isReady;
 
-  api.on('disconnected', () => {
-    console.warn('[Substrate] Disconnected');
-    apiInstance = null;
-    if (!reconnectTimeout)
-      reconnectTimeout = setTimeout(async () => {
-        reconnectTimeout = null;
-        try { await getApi(); } catch { /* retry later */ }
-      }, 5000);
-  });
+    const [chain, nodeName, nodeVersion] = await Promise.all([
+      api.rpc.system.chain(),
+      api.rpc.system.name(),
+      api.rpc.system.version(),
+    ]);
+    console.log(`[Substrate] Connected to ${chain} via ${nodeName} v${nodeVersion}`);
 
-  api.on('connected', () => console.log('[Substrate] Reconnected'));
-  api.on('error', (e) => console.error('[Substrate] Error:', e));
-  return api;
+    api.on('disconnected', () => {
+      console.warn('[Substrate] Disconnected');
+      apiInstance = null;
+      if (isBrowserPreviewRpcMode()) {
+        browserRpcCooldown = { endpoint, until: Date.now() + BROWSER_RPC_BACKOFF_MS };
+        return;
+      }
+      if (!reconnectTimeout)
+        reconnectTimeout = setTimeout(async () => {
+          reconnectTimeout = null;
+          try { await getApi(); } catch { /* retry later */ }
+        }, 5000);
+    });
+
+    api.on('connected', () => console.log('[Substrate] Reconnected'));
+    api.on('error', (e) => console.error('[Substrate] Error:', e));
+    return api;
+  } catch (error) {
+    browserRpcCooldown = isBrowserPreviewRpcMode()
+      ? { endpoint, until: Date.now() + BROWSER_RPC_BACKOFF_MS }
+      : null;
+    try {
+      await provider.disconnect();
+    } catch {
+      /* ignore cleanup errors */
+    }
+    throw error;
+  }
 }
 
 export async function disconnect(): Promise<void> {

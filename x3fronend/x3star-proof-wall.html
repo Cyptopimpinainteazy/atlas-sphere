@@ -283,104 +283,10 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
   <div class="ticker-inner" id="ticker-inner"></div>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-const operators=[
-  {name:'David K.',loc:'New York, US',flag:'🇺🇸',tier:'genesis',amount:'$50,000',time:'2m ago'},
-  {name:'Sarah L.',loc:'Singapore',flag:'🇸🇬',tier:'genesis',amount:'$50,000',time:'4m ago'},
-  {name:'Marcus R.',loc:'London, UK',flag:'🇬🇧',tier:'star',amount:'$20,000',time:'7m ago'},
-  {name:'Yuki T.',loc:'Tokyo, JP',flag:'🇯🇵',tier:'genesis',amount:'$50,000',time:'12m ago'},
-  {name:'Hans M.',loc:'Berlin, DE',flag:'🇩🇪',tier:'star',amount:'$20,000',time:'18m ago'},
-  {name:'Priya S.',loc:'Mumbai, IN',flag:'🇮🇳',tier:'lite',amount:'$5,000',time:'24m ago'},
-  {name:'Omar A.',loc:'Dubai, AE',flag:'🇦🇪',tier:'genesis',amount:'$50,000',time:'31m ago'},
-  {name:'Emma W.',loc:'Sydney, AU',flag:'🇦🇺',tier:'star',amount:'$20,000',time:'38m ago'},
-  {name:'Chen L.',loc:'Hong Kong',flag:'🇭🇰',tier:'genesis',amount:'$50,000',time:'45m ago'},
-  {name:'Pedro R.',loc:'São Paulo, BR',flag:'🇧🇷',tier:'lite',amount:'$5,000',time:'52m ago'},
-  {name:'Anna K.',loc:'Stockholm, SE',flag:'🇸🇪',tier:'star',amount:'$20,000',time:'1h ago'},
-  {name:'James O.',loc:'Lagos, NG',flag:'🇳🇬',tier:'lite',amount:'$5,000',time:'1h ago'},
-  {name:'Wei Z.',loc:'Shanghai, CN',flag:'🇨🇳',tier:'genesis',amount:'$50,000',time:'1h ago'},
-  {name:'Sophie B.',loc:'Paris, FR',flag:'🇫🇷',tier:'star',amount:'$20,000',time:'2h ago'},
-  {name:'Carlos M.',loc:'Madrid, ES',flag:'🇪🇸',tier:'star',amount:'$20,000',time:'2h ago'},
-  {name:'Fatima A.',loc:'Riyadh, SA',flag:'🇸🇦',tier:'genesis',amount:'$50,000',time:'2h ago'},
-  {name:'Liam C.',loc:'Toronto, CA',flag:'🇨🇦',tier:'lite',amount:'$5,000',time:'3h ago'},
-  {name:'Mia N.',loc:'Seoul, KR',flag:'🇰🇷',tier:'genesis',amount:'$50,000',time:'3h ago'},
-];
-
-const tierClass={genesis:'pt-genesis',star:'pt-star',lite:'pt-lite'};
-
-function makeCard(op,isNew=false){
-  const d=document.createElement('div');
-  d.className='proof-card'+(isNew?' new':'');
-  d.innerHTML=`
-    <div class="pc-top">
-      <div class="pc-flag">${op.flag}</div>
-      <div class="pc-identity">
-        <div class="pc-name">${op.name}</div>
-        <div class="pc-location">${op.loc}</div>
-      </div>
-      <div class="pc-tier ${tierClass[op.tier]}">${op.tier.toUpperCase()}</div>
-    </div>
-    <div class="pc-bottom">
-      <span class="pc-amount" style="color:${op.tier==='genesis'?'var(--gold)':op.tier==='star'?'var(--blue)':'rgba(255,255,255,0.4)'}">${op.amount}</span>
-      <span class="pc-time">${op.time}</span>
-      <span class="pc-action">✓ Reserved</span>
-    </div>`;
-  return d;
-}
-
-const grid=document.getElementById('wall-grid');
-operators.forEach(op=>grid.appendChild(makeCard(op)));
-
-// New arrivals
-const newOps=[
-  {name:'Alex F.',loc:'Amsterdam, NL',flag:'🇳🇱',tier:'genesis',amount:'$50,000'},
-  {name:'Nadia P.',loc:'Moscow, RU',flag:'🇷🇺',tier:'star',amount:'$20,000'},
-  {name:'Tom B.',loc:'Chicago, US',flag:'🇺🇸',tier:'genesis',amount:'$50,000'},
-  {name:'Hiro S.',loc:'Osaka, JP',flag:'🇯🇵',tier:'lite',amount:'$5,000'},
-  {name:'Layla H.',loc:'Cairo, EG',flag:'🇪🇬',tier:'star',amount:'$20,000'},
-  {name:'Felix W.',loc:'Zurich, CH',flag:'🇨🇭',tier:'genesis',amount:'$50,000'},
-];
-let totalOps=312,slotsLeft=46,newOpIdx=0;
-
-function addNewOp(){
-  const op={...newOps[newOpIdx%newOps.length],time:'just now'};
-  newOpIdx++;
-  if(op.tier==='genesis'&&slotsLeft>0){slotsLeft--;document.getElementById('slots-left').textContent=slotsLeft;document.getElementById('v-slots').textContent=slotsLeft;}
-  totalOps++;
-  document.getElementById('join-count').textContent=totalOps.toLocaleString();
-  document.getElementById('wall-count').textContent=`Showing ${totalOps} reservations`;
-  const card=makeCard(op,true);
-  grid.insertBefore(card,grid.firstChild);
-  if(grid.children.length>30)grid.removeChild(grid.lastChild);
-  // Update slot fill
-  const pct=(200-slotsLeft)/200*100;
-  document.getElementById('slot-fill').style.width=pct+'%';
-}
-setInterval(addNewOp,8000+Math.random()*12000);
-
-// PACE BAR
-const paceBar=document.getElementById('pace-bar');
-const paceData=[2,1,3,1,4,2,5,3,6,4,7,5,8,6,9,7,8,9,10,8,7,9,11,6];
-paceData.forEach((v,i)=>{
-  const seg=document.createElement('div');
-  seg.className='pb-seg'+(i===paceData.length-1?' current':'');
-  seg.style.height=(v/12*100)+'%';
-  paceBar.appendChild(seg);
-});
-
-// TICKER
-const tickerInner=document.getElementById('ticker-inner');
-const tickItems=[...operators,...newOps].map(op=>
-  `<div class="tick-item"><span class="tick-flag">${op.flag}</span><span>${op.name}</span><span class="tick-gold">reserved ${op.tier} node</span><span class="tick-green">✓</span></div>`
-).join('');
-tickerInner.innerHTML=tickItems+tickItems;
-
-// SELLOUT COUNTDOWN
-let h=4,m=22,s=0;
-setInterval(()=>{
-  s--;if(s<0){s=59;m--;}if(m<0){m=59;h--;}if(h<0)h=0;
-  document.getElementById('sellout-time').textContent=
-    (h>0?h+'h ':'')+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'s';
-},1000);
+X3PageAdapters.start();
 </script>
 </body>
 </html>

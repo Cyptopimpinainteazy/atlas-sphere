@@ -474,7 +474,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
   <div style="font-size:11px;color:var(--muted);opacity:0.5;">© 2025 X3STAR Protocol</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
+function updatePoolCards() {
+  return;
+}
+
 // Calc rewards
 function calcRewards() {
   const amount = parseFloat(document.getElementById('calc-amount').value) || 0;
@@ -518,16 +524,23 @@ function confirmStake() {
 function filterPools(el, type) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  
+  // Filter pool cards
+  const cards = document.querySelectorAll('.pool-card');
+  cards.forEach(card => {
+    if (type === 'all' || card.dataset.type.includes(type)) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
 }
 
 // Reveal
 const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.05});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// Update TVL live
-setInterval(() => {
-  const tvls = document.querySelectorAll('.pstat-val, .ms-val, .ps-val');
-}, 10000);
+X3PageAdapters.start();
 </script>
 </body>
 </html>

@@ -38,7 +38,6 @@ async-trait = "0.1"
 
 # Networking
 libp2p = { version = "0.53", features = ["tcp", "noise", "yamux", "gossipsub", "mdns", "kad", "identify", "ping"] }
-quinn = "0.10"
 hyper-util = "0.1"
 
 # Serialization
@@ -91,4 +90,3 @@ reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"] }
 tokio-test = "0.4"
 tempfile = "3.9"
 criterion = "0.5"
-

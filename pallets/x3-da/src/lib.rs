@@ -159,15 +159,9 @@ pub mod pallet {
             attester: T::AccountId,
         },
         /// A blob was marked as fully available (enough shard proofs).
-        BlobAvailable {
-            blob_id: u64,
-            data_hash: H256,
-        },
+        BlobAvailable { blob_id: u64, data_hash: H256 },
         /// A blob commitment expired and was pruned.
-        BlobExpired {
-            blob_id: u64,
-            data_hash: H256,
-        },
+        BlobExpired { blob_id: u64, data_hash: H256 },
     }
 
     // ── Errors ─────────────────────────────────────────────────────────────
@@ -226,8 +220,14 @@ pub mod pallet {
         ) -> DispatchResult {
             let submitter = ensure_signed(origin)?;
 
-            ensure!(size_bytes <= T::MaxBlobSize::get(), Error::<T>::BlobTooLarge);
-            ensure!(!Blobs::<T>::contains_key(data_hash), Error::<T>::BlobAlreadyExists);
+            ensure!(
+                size_bytes <= T::MaxBlobSize::get(),
+                Error::<T>::BlobTooLarge
+            );
+            ensure!(
+                !Blobs::<T>::contains_key(data_hash),
+                Error::<T>::BlobAlreadyExists
+            );
 
             let _fee = T::PerByteFee::get().saturating_mul(size_bytes as u128);
             // TODO: Charge fee via T::Currency
@@ -290,7 +290,10 @@ pub mod pallet {
         ) -> DispatchResult {
             let attester = ensure_signed(origin)?;
 
-            ensure!(Blobs::<T>::contains_key(blob_hash), Error::<T>::BlobNotFound);
+            ensure!(
+                Blobs::<T>::contains_key(blob_hash),
+                Error::<T>::BlobNotFound
+            );
 
             let now = <frame_system::Pallet<T>>::block_number();
             let shard = ShardProof::<T> {

@@ -212,7 +212,7 @@ pallets/x3-jury-anchor/
 │   ├── tests.rs (16+ tests)
 │   └── benchmarking.rs (performance)
 ├── Cargo.toml
-└── README.md
+└── docs/root/README.md
 ```
 
 ### Core Types

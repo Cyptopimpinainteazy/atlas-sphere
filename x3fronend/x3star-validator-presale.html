@@ -532,6 +532,8 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="footer-legal">© 2025 X3STAR Protocol</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
 // Cursor
 const cursor = document.getElementById('cursor');
@@ -577,28 +579,14 @@ function updateSummary() {
   document.getElementById('os-total').textContent = '$' + (curTier.price * qty).toLocaleString();
 }
 
-// Live slot counter
-let slotsLeft = 47;
-setInterval(() => {
-  if (Math.random() < 0.3 && slotsLeft > 1) {
-    slotsLeft--;
-    document.getElementById('slots-left').textContent = slotsLeft;
-    document.getElementById('slots-remain').textContent = slotsLeft + ' SLOTS LEFT';
-    // fill a slot
-    const avails = grid.querySelectorAll('.slot-avail');
-    if (avails.length) avails[0].className = 'slot-cell slot-taken';
-  }
-}, 15000);
-
 function handleBuy() {
-  const btn = document.querySelector('.buy-btn');
-  btn.textContent = '⟁ CONNECTING...';
-  setTimeout(() => { btn.textContent = '⬡ SECURE NODE SPOT'; alert('Connect your wallet to reserve your validator node slot!'); }, 1500);
+  return;
 }
 
 // Reveal
 const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+X3PageAdapters.start();
 </script>
 </body>
 </html>

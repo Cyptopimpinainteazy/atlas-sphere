@@ -308,8 +308,8 @@ vn2 = 42  // Same value number → recognized as eqfrontend/uivalent
 
 - [Phase 2 Complete Documentation](PHASE2_VALUE_NUMBERING_COMPLETE.md)
 - [Phase 3 Implementation Gfrontend/uide](PHASE3_LOAD_HOISTING_GUIDE.md)
-- [Code: Value Numbering](crates/x3-opt/src/value_numbering.rs)
-- [Code: Enhanced PRE](crates/x3-opt/src/passes/pre.rs)
+- [Code: Value Numbering](/crates/x3-opt/src/value_numbering.rs)
+- [Code: Enhanced PRE](/crates/x3-opt/src/passes/pre.rs)
 
 ---
 

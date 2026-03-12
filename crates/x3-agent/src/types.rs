@@ -1,7 +1,81 @@
 //! Core agent types.
+//!
+//! Per the X3 Master Architecture spec (vΩ-1.0):
+//!   `Agent = (Code, Policy, Constraints, Proof)`
+//!
+//! Every registered agent carries a policy declaration, a constraint set, and a
+//! cryptographic proof commitment that is verified before execution.
 
 use serde::{Deserialize, Serialize};
 use x3_proof::types::{AgentIdentity, BlockHeight};
+
+// ---------------------------------------------------------------------------
+// Agent Policy — what the agent is constitutionally permitted to do
+// ---------------------------------------------------------------------------
+
+/// Declares which execution contexts an agent is authorized for.
+/// Agents negotiate exclusively via proof exchange; policy specifies
+/// the scope of permitted operations.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentPolicy {
+    /// Set of permitted action categories (e.g. "swap", "lend", "bridge").
+    pub permitted_actions: Vec<String>,
+    /// Which VMs may this agent target (evm | svm | x3vm).
+    pub permitted_vms: Vec<VmTarget>,
+    /// Maximum number of concurrent open intents.
+    pub max_concurrent_intents: u32,
+    /// Whether this agent may submit governance proposals.
+    pub governance_participation: bool,
+}
+
+impl Default for AgentPolicy {
+    fn default() -> Self {
+        Self {
+            permitted_actions: vec![],
+            permitted_vms: vec![VmTarget::X3Vm],
+            max_concurrent_intents: 8,
+            governance_participation: false,
+        }
+    }
+}
+
+/// VM targeting enum for agent policy.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum VmTarget {
+    Evm,
+    Svm,
+    X3Vm,
+}
+
+// ---------------------------------------------------------------------------
+// Agent Constraints — budget and action bounds
+// ---------------------------------------------------------------------------
+
+/// Hard limits on an agent's resource usage, enforced by the constitutional
+/// invariant engine before each execution.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentConstraints {
+    /// Maximum spend per epoch (in smallest token units).
+    /// Must not exceed `InvariantBounds::max_agent_epoch_budget`.
+    pub max_epoch_budget: u128,
+    /// Maximum gas per single transaction.
+    pub max_gas_per_tx: u64,
+    /// Maximum number of state writes per intent execution.
+    pub max_state_writes: u32,
+    /// The agent's proof must be re-verified after this many executions.
+    pub proof_refresh_interval: u64,
+}
+
+impl Default for AgentConstraints {
+    fn default() -> Self {
+        Self {
+            max_epoch_budget: 10_000 * 1_000_000_000_000_000_000u128,
+            max_gas_per_tx: 30_000_000,
+            max_state_writes: 1024,
+            proof_refresh_interval: 1000,
+        }
+    }
+}
 
 /// Agent registration status.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -17,9 +91,16 @@ pub enum AgentStatus {
 }
 
 /// Full agent record — the permanent identity of an agent in the jurisdiction.
+///
+/// Implements the spec's `Agent = (Code, Policy, Constraints, Proof)` model:
+/// - Code: identified by `identity` (persistent key → deterministic execution)
+/// - Policy: `policy` field declares permitted actions and VMs
+/// - Constraints: `constraints` field sets hard resource limits
+/// - Proof: `proof_commitment` is a non-zero hash of the off-chain proof bundle
+///   that must be verified before the agent may execute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentRecord {
-    /// Primary identity (persistent key).
+    /// Primary identity (persistent key). Represents the `Code` component.
     pub identity: AgentIdentity,
     /// Registration block.
     pub registered_at: BlockHeight,
@@ -35,6 +116,28 @@ pub struct AgentRecord {
     pub stats: AgentStats,
     /// Reputation data (computed from stats).
     pub reputation: x3_fees::types::AgentReputation,
+
+    // --- Proof-Carrying Code fields (vΩ-1.0) ---
+
+    /// Policy declaration: permitted actions, VMs, governance participation.
+    /// Constitutes the `Policy` component of `Agent = (Code, Policy, Constraints, Proof)`.
+    pub policy: AgentPolicy,
+
+    /// Hard resource constraints enforced by the constitutional invariant engine
+    /// before each execution. Constitutes the `Constraints` component.
+    pub constraints: AgentConstraints,
+
+    /// SHA-256 commitment to the off-chain formal proof bundle for this agent.
+    /// A zero value means the agent has not yet submitted a proof and MUST NOT execute.
+    /// Constitutes the `Proof` component.
+    /// Refreshed every `constraints.proof_refresh_interval` executions.
+    pub proof_commitment: [u8; 32],
+
+    /// Block at which `proof_commitment` was last submitted/verified.
+    pub proof_verified_at: BlockHeight,
+
+    /// Number of executions since last proof refresh.
+    pub executions_since_proof_refresh: u64,
 }
 
 /// Agent execution statistics.

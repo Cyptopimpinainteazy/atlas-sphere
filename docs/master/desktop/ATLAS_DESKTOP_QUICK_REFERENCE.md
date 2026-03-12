@@ -117,7 +117,7 @@ kill <PID>
 - `start-all-desktop-apps.sh` - Automation script
 - `setup-app-env.sh` - Configuration script
 - `.env.apps.template` - Environment template
-- `X3_DESKTOP_QUICK_REFERENCE.md` - This file
+- `X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md` - This file
 
 ---
 

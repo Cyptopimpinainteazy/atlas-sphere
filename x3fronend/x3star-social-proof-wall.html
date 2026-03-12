@@ -230,90 +230,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:10
   </div>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-// SET DATE
-document.getElementById('today-date').textContent=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}).toUpperCase();
-
-// PROOF CARD DATA
-const investors=[
-  {name:'J. Chen',flag:'🇺🇸',loc:'San Francisco, USA',type:'token',amount:'$25,000',tokens:'333,333 X3S',ago:'2 min ago',color:'#C8950A'},
-  {name:'apex.eth',flag:'🇸🇬',loc:'Singapore',type:'node',amount:'$50,000',tokens:'Genesis Node #154',ago:'4 min ago',color:'#1A6B3A',validator:true},
-  {name:'M. Braun',flag:'🇩🇪',loc:'Berlin, Germany',type:'token',amount:'$10,000',tokens:'133,333 X3S',ago:'7 min ago',color:'#C8950A'},
-  {name:'zkbuilder.eth',flag:'🇬🇧',loc:'London, UK',type:'node',amount:'$20,000',tokens:'Star Node Reserved',ago:'11 min ago',color:'#1A6B3A',validator:true},
-  {name:'K. Tanaka',flag:'🇯🇵',loc:'Tokyo, Japan',type:'token',amount:'$50,000',tokens:'666,666 X3S',ago:'14 min ago',color:'#C8950A'},
-  {name:'A. Patel',flag:'🇮🇳',loc:'Mumbai, India',type:'stake',amount:'$15,000',tokens:'200,000 X3S → Staked',ago:'18 min ago',color:'#003C78'},
-  {name:'crypto_rio',flag:'🇧🇷',loc:'São Paulo, Brazil',type:'token',amount:'$8,400',tokens:'111,111 X3S',ago:'22 min ago',color:'#C8950A'},
-  {name:'nordic_vc',flag:'🇸🇪',loc:'Stockholm, Sweden',type:'node',amount:'$50,000',tokens:'Genesis Node #155',ago:'28 min ago',color:'#1A6B3A',validator:true},
-  {name:'P. Wilson',flag:'🇦🇺',loc:'Sydney, Australia',type:'token',amount:'$30,000',tokens:'400,000 X3S',ago:'31 min ago',color:'#C8950A'},
-  {name:'gulf_node',flag:'🇦🇪',loc:'Dubai, UAE',type:'node',amount:'$50,000',tokens:'Genesis Node #156',ago:'35 min ago',color:'#1A6B3A',validator:true},
-  {name:'T. Müller',flag:'🇨🇭',loc:'Zurich, Switzerland',type:'token',amount:'$100,000',tokens:'1,333,333 X3S',ago:'38 min ago',color:'#C8950A'},
-  {name:'defi_max',flag:'🇳🇱',loc:'Amsterdam, NL',type:'stake',amount:'$5,000',tokens:'66,666 X3S → Staked',ago:'42 min ago',color:'#003C78'},
-];
-
-const typeLabels={token:'TOKEN',node:'VALIDATOR NODE',stake:'STAKING'};
-const typeClass={token:'pct-token',node:'pct-node',stake:'pct-stake'};
-
-function makeCard(inv,isNew=false){
-  const card=document.createElement('div');
-  card.className='proof-card'+(inv.validator?' validator-card':'')+(isNew?' new-card':'');
-  card.innerHTML=`
-    <div class="pc-stripe" style="background:${inv.color}"></div>
-    <div class="pc-top">
-      <div class="pc-flag">${inv.flag}</div>
-      <div class="pc-type ${typeClass[inv.type]}">${typeLabels[inv.type]}</div>
-    </div>
-    <div class="pc-name">${inv.name}</div>
-    <div class="pc-loc">${inv.loc}</div>
-    <div class="pc-amount" style="color:${inv.color}">${inv.amount}</div>
-    <div class="pc-detail">${inv.tokens}</div>
-    <div class="pc-time">${inv.ago}</div>
-  `;
-  return card;
-}
-
-const grid=document.getElementById('card-grid');
-investors.forEach(inv=>grid.appendChild(makeCard(inv)));
-
-// HEATMAP
-const hm=document.getElementById('heatmap');
-const now=new Date().getHours();
-for(let i=0;i<24;i++){
-  const cell=document.createElement('div');
-  cell.className='hm-cell';
-  const heat=i<now?Math.random():0;
-  const intense=i===now-1||i===now-2?0.9:heat;
-  cell.style.background=intense>0.6?`rgba(200,149,10,${intense})`:
-    intense>0.3?`rgba(200,149,10,${intense})`:`rgba(26,18,8,${0.06+intense*0.15})`;
-  hm.appendChild(cell);
-}
-
-// NEW CARDS every few seconds
-const newInvestors=[
-  {name:'L. Dubois',flag:'🇫🇷',loc:'Paris, France',type:'token',amount:'$20,000',tokens:'266,666 X3S',ago:'just now',color:'#C8950A'},
-  {name:'byte_ops',flag:'🇰🇷',loc:'Seoul, S. Korea',type:'node',amount:'$50,000',tokens:'Genesis Node #157',ago:'just now',color:'#1A6B3A',validator:true},
-  {name:'R. Osei',flag:'🇬🇭',loc:'Accra, Ghana',type:'token',amount:'$5,000',tokens:'66,666 X3S',ago:'just now',color:'#C8950A'},
-  {name:'Pacific_DAO',flag:'🇳🇿',loc:'Auckland, NZ',type:'stake',amount:'$12,000',tokens:'160,000 X3S → Staked',ago:'just now',color:'#003C78'},
-  {name:'mesh_node',flag:'🇨🇦',loc:'Vancouver, Canada',type:'node',amount:'$20,000',tokens:'Star Node Reserved',ago:'just now',color:'#1A6B3A',validator:true},
-];
-let ni=0,count=312;
-setInterval(()=>{
-  const inv={...newInvestors[ni%newInvestors.length],ago:'just now'};
-  const card=makeCard(inv,true);
-  grid.insertBefore(card,grid.firstChild);
-  if(grid.children.length>24)grid.removeChild(grid.lastChild);
-  ni++;count++;
-  document.getElementById('sh-inv').textContent=count;
-  document.getElementById('r-investors').textContent=count;
-  document.getElementById('wall-count').innerHTML=`Showing <strong>24</strong> of ${count} recent purchases`;
-},6000+Math.random()*4000);
-
-let raised=14702400,today=142800;
-setInterval(()=>{
-  const add=Math.floor(Math.random()*8000+2000);
-  raised+=add;today+=add;
-  document.getElementById('sh-raised').textContent='$'+raised.toLocaleString();
-  document.getElementById('sh-today').textContent='$'+Math.round(today/1000)+'K';
-},4000);
+X3PageAdapters.start();
 </script>
 </body>
 </html>

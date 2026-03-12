@@ -95,7 +95,7 @@ class DeploymentPackage:
                 "scripts (installation automation)",
                 "configs (testnet/mainnet validator configs)",
                 "docs (runbooks, troubleshooting, requirements)",
-                "README.md (quick start guide)",
+                "docs/root/README.md (quick start guide)",
             ],
             "total_size_mb": 269,
             "format": "tar.gz",
@@ -487,7 +487,7 @@ solana-gpu-validator-v1.0.tar.gz (269 MB)
 ├── scripts/                       # Installation automation
 ├── configs/                       # Testnet/mainnet configurations
 ├── docs/                          # Comprehensive runbooks
-└── README.md                      # Quick start guide
+└── docs/root/README.md                      # Quick start guide
 ```
 
 ## Installation

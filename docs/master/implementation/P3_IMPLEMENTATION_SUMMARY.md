@@ -193,7 +193,7 @@ swarm-cli jury verify --task-id=task-123
 
 **Files Created**:
 
-#### Deployment Guide (`DEPLOYMENT_GUIDE.md` - 400 LOC)
+#### Deployment Guide (`docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` - 400 LOC)
 - Prerequisites and system requirements
 - Local development setup
 - Docker Compose deployment (quick start)

@@ -33,13 +33,13 @@ pub fn encrypt_for_committee(
     let shared_secret = ecdh(&ephemeral_sk, committee_pk);
 
     // KDF: derive AES key
-    let aes_key = hkdf_derive(&shared_secret);
+    let aes_key = hkdf_derive(&shared_secret)?;
 
     // Generate nonce
     let nonce = generate_nonce();
 
     // AES-256-GCM encrypt
-    let ciphertext = aes_gcm_encrypt(plaintext, &aes_key, &nonce);
+    let ciphertext = aes_gcm_encrypt(plaintext, &aes_key, &nonce)?;
 
     // Compute TX ID as hash of ciphertext
     let id = blake3_hash(&ciphertext);
@@ -94,7 +94,7 @@ pub fn decrypt_transaction(
     tx: &EncryptedTransaction,
     shared_secret: &[u8; 32],
 ) -> Result<Vec<u8>, MempoolError> {
-    let aes_key = hkdf_derive(shared_secret);
+    let aes_key = hkdf_derive(shared_secret)?;
     aes_gcm_decrypt(&tx.ciphertext, &aes_key, &tx.nonce)
         .map_err(|e| MempoolError::EncryptionError(e))
 }
@@ -132,12 +132,12 @@ fn ecdh(sk: &[u8; 32], pk: &[u8; 32]) -> [u8; 32] {
     *shared.as_bytes()
 }
 
-fn hkdf_derive(ikm: &[u8; 32]) -> [u8; 32] {
+fn hkdf_derive(ikm: &[u8; 32]) -> Result<[u8; 32], MempoolError> {
     let hk = Hkdf::<Sha256>::new(Some(ikm), &[]);
     let mut okm = [0u8; 32];
     hk.expand(b"encryption", &mut okm)
-        .expect("HKDF expand failed");
-    okm
+        .map_err(|e| MempoolError::EncryptionError(e.to_string()))?;
+    Ok(okm)
 }
 
 fn generate_nonce() -> [u8; 12] {
@@ -146,11 +146,17 @@ fn generate_nonce() -> [u8; 12] {
     nonce
 }
 
-fn aes_gcm_encrypt(plaintext: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Vec<u8> {
-    let cipher = Aes256Gcm::new_from_slice(key).expect("Invalid key length");
+fn aes_gcm_encrypt(
+    plaintext: &[u8],
+    key: &[u8; 32],
+    nonce: &[u8; 12],
+) -> Result<Vec<u8>, MempoolError> {
+    let cipher =
+        Aes256Gcm::new_from_slice(key).map_err(|e| MempoolError::EncryptionError(e.to_string()))?;
     let nonce = Nonce::from_slice(nonce);
-    let ciphertext = cipher.encrypt(nonce, plaintext).expect("Encryption failed");
-    ciphertext
+    cipher
+        .encrypt(nonce, plaintext)
+        .map_err(|e| MempoolError::EncryptionError(e.to_string()))
 }
 
 fn aes_gcm_decrypt(ciphertext: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Result<Vec<u8>, String> {

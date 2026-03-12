@@ -22,13 +22,15 @@ pub struct BootstrapConfig {
 
 impl Default for BootstrapConfig {
     fn default() -> Self {
+        let bootstrap_nodes = "/ip4/127.0.0.1/tcp/30333"
+            .parse()
+            .ok()
+            .into_iter()
+            .collect();
+
         Self {
-            bootstrap_nodes: vec![
-                // Local development nodes
-                "/ip4/127.0.0.1/tcp/30333"
-                    .parse()
-                    .unwrap_or_else(|_| "/ip4/127.0.0.1/tcp/30333".parse().unwrap()),
-            ],
+            // Local development nodes
+            bootstrap_nodes,
             enable_discovery: true,
             enable_mdns: true,
             enable_kad: true,

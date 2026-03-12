@@ -8,11 +8,12 @@ mod rest;
 
 use crate::config::GatewayConfig;
 use crate::db::Database;
+use crate::error::{GatewayError, Result};
 use crate::graphql::create_schema;
 use crate::rest::create_router;
 use clap::Parser;
 use std::net::SocketAddr;
-use tracing::{error, info};
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 /// X3 Chain API Gateway
@@ -54,7 +55,7 @@ fn init_logging(level: &str) {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let args = Args::parse();
     init_logging(&args.log_level);
 
@@ -62,7 +63,7 @@ async fn main() {
 
     // Load configuration
     let config = match args.config {
-        Some(path) => GatewayConfig::load(&path).expect("Failed to load config"),
+        Some(path) => GatewayConfig::load(&path)?,
         None => {
             let mut config = GatewayConfig::default();
             config.server.host = args.host;
@@ -75,13 +76,7 @@ async fn main() {
     };
 
     // Connect to database
-    let db = match Database::connect(&config.database).await {
-        Ok(db) => db,
-        Err(e) => {
-            error!("Failed to connect to database: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let db = Database::connect(&config.database).await?;
 
     info!("Database connected");
 
@@ -94,7 +89,7 @@ async fn main() {
     // Start server
     let addr: SocketAddr = format!("{}:{}", config.server.host, config.server.port)
         .parse()
-        .expect("Invalid address");
+        .map_err(|e| GatewayError::Config(format!("invalid bind address: {e}")))?;
 
     info!("Server listening on http://{}", addr);
     info!("GraphQL endpoint: http://{}/graphql", addr);
@@ -102,35 +97,42 @@ async fn main() {
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(async {
+            if let Err(err) = shutdown_signal().await {
+                tracing::error!("graceful shutdown setup failed: {}", err);
+            }
+        })
         .await
-        .unwrap();
+        .map_err(|e| GatewayError::Internal(format!("gateway server failed: {e}")))?;
 
     info!("Server shutdown complete");
+    Ok(())
 }
 
-async fn shutdown_signal() {
+async fn shutdown_signal() -> Result<()> {
     let ctrl_c = async {
         tokio::signal::ctrl_c()
             .await
-            .expect("Failed to install Ctrl+C handler");
+            .map_err(|e| GatewayError::Internal(format!("failed to install Ctrl+C handler: {e}")))
     };
 
     #[cfg(unix)]
     let terminate = async {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("Failed to install signal handler")
+            .map_err(|e| GatewayError::Internal(format!("failed to install signal handler: {e}")))?
             .recv()
             .await;
+        Ok(())
     };
 
     #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
+    let terminate = std::future::pending::<Result<()>>();
 
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        result = ctrl_c => result?,
+        result = terminate => result?,
     }
 
     info!("Shutdown signal received");
+    Ok(())
 }

@@ -515,17 +515,9 @@ footer{padding:60px 5%;border-top:1px solid var(--border);display:flex;align-ite
   <div style="font-size:11px;color:rgba(255,255,255,0.15);">© 2025 X3STAR Protocol</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-// Countdown
-const end = new Date(Date.now() + (6*86400+14*3600+32*60+47)*1000);
-setInterval(()=>{
-  const d=end-Date.now();
-  if(d<=0)return;
-  document.getElementById('cd-d').textContent=String(Math.floor(d/86400000)).padStart(2,'0');
-  document.getElementById('cd-h').textContent=String(Math.floor((d%86400000)/3600000)).padStart(2,'0');
-  document.getElementById('cd-m').textContent=String(Math.floor((d%3600000)/60000)).padStart(2,'0');
-  document.getElementById('cd-s').textContent=String(Math.floor((d%60000)/1000)).padStart(2,'0');
-},1000);
 
 // Animate bars
 const obs=new IntersectionObserver(e=>e.forEach(en=>{
@@ -537,6 +529,7 @@ const obs=new IntersectionObserver(e=>e.forEach(en=>{
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
 function submitForm(){alert('Thank you! Our IR team will contact you within 24 hours.');}
+X3PageAdapters.start();
 </script>
 </body>
 </html>

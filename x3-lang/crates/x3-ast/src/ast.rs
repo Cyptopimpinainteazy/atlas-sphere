@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use x3_common::{
+use x3_lang_common::{
     BinOp, DurationUnit, FloatSuffix, IntBase, IntSuffix, SizeUnit, Span, Spanned, Symbol, UnOp,
 };
 

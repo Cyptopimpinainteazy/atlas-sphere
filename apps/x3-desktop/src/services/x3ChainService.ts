@@ -14,8 +14,39 @@ import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** Default local X3 node RPC endpoint */
-const DEFAULT_WS = import.meta.env.VITE_X3_NODE_WS ?? 'ws://127.0.0.1:9944';
+function hasTauriRuntime(): boolean {
+  return typeof window !== 'undefined' && !!(((window as any).__TAURI_INTERNALS__) || ((window as any).__TAURI__));
+}
+
+function isLoopbackEndpoint(endpoint?: string): boolean {
+  return !!endpoint && /(127\.0\.0\.1|localhost)/i.test(endpoint);
+}
+
+function allowLoopbackInBrowser(): boolean {
+  return String((import.meta as any).env?.VITE_ALLOW_LOOPBACK_RPC_IN_BROWSER ?? "").toLowerCase() === "true";
+}
+
+const PUBLIC_BROWSER_WS_FALLBACK = 'wss://ws.x3star.net/ws';
+const BROWSER_RPC_BACKOFF_MS = 30_000;
+
+function isBrowserPreviewRpcMode(): boolean {
+  return !hasTauriRuntime() && !allowLoopbackInBrowser();
+}
+
+/** Prefer public RPC in browser preview unless a local endpoint is explicitly configured. */
+const CONFIGURED_MAINNET_WS = (import.meta.env.VITE_RPC_WS as string) || PUBLIC_BROWSER_WS_FALLBACK;
+const SAFE_MAINNET_WS = !hasTauriRuntime() && !allowLoopbackInBrowser() && isLoopbackEndpoint(CONFIGURED_MAINNET_WS)
+  ? PUBLIC_BROWSER_WS_FALLBACK
+  : CONFIGURED_MAINNET_WS;
+
+const RAW_DEFAULT_WS = import.meta.env.VITE_X3_NODE_WS
+  ?? (hasTauriRuntime()
+    ? ((import.meta.env.VITE_RPC_WS_LOCAL as string) || 'ws://127.0.0.1:9944')
+    : SAFE_MAINNET_WS);
+
+const DEFAULT_WS = !hasTauriRuntime() && !allowLoopbackInBrowser() && isLoopbackEndpoint(RAW_DEFAULT_WS)
+  ? SAFE_MAINNET_WS
+  : RAW_DEFAULT_WS;
 
 /** Well-known token H256 identifiers (derived from AssetId 0-3 in little-endian) */
 export const TOKEN_IDS: Record<string, string> = {
@@ -236,6 +267,7 @@ class X3ChainService {
   private wsEndpoint: string = DEFAULT_WS;
   private connectionAttempts = 0;
   private connectionListeners: Array<(connected: boolean) => void> = [];
+  private browserRpcCooldownUntil = 0;
 
   // ── Connection ──────────────────────────────────────────────────────────────
 
@@ -245,14 +277,22 @@ class X3ChainService {
     this.wsEndpoint = endpoint ?? DEFAULT_WS;
     this.connectionAttempts++;
 
-    const provider = new WsProvider(this.wsEndpoint, 2_500, {}, 30_000);
+    if (isBrowserPreviewRpcMode() && this.browserRpcCooldownUntil > Date.now()) {
+      throw new Error(`[X3Chain] RPC temporarily disabled in browser preview for ${this.wsEndpoint}`);
+    }
+
+    const provider = new WsProvider(this.wsEndpoint, isBrowserPreviewRpcMode() ? false : 2_500, {}, 30_000);
     provider.on('connected', () => {
       console.log('[X3Chain] Connected to', this.wsEndpoint);
+      this.browserRpcCooldownUntil = 0;
       this.connectionListeners.forEach(fn => fn(true));
     });
 
     provider.on('disconnected', () => {
       console.warn('[X3Chain] Disconnected from', this.wsEndpoint);
+      if (isBrowserPreviewRpcMode()) {
+        this.browserRpcCooldownUntil = Date.now() + BROWSER_RPC_BACKOFF_MS;
+      }
       this.connectionListeners.forEach(fn => fn(false));
     });
 
@@ -260,24 +300,38 @@ class X3ChainService {
       console.error('[X3Chain] WS error:', err);
     });
 
-    this.api = await ApiPromise.create({
-      provider,
-      throwOnConnect: false,
-      noInitWarn: true,
-      types: X3_RPC_TYPES,
-      rpc: X3_RPC,
-    });
+    try {
+      this.api = await ApiPromise.create({
+        provider,
+        throwOnConnect: false,
+        noInitWarn: true,
+        types: X3_RPC_TYPES,
+        rpc: X3_RPC,
+      });
 
-    await this.api.isReady;
+      await this.api.isReady;
 
-    const [chain, nodeName, nodeVersion] = await Promise.all([
-      this.api.rpc.system.chain(),
-      this.api.rpc.system.name(),
-      this.api.rpc.system.version(),
-    ]);
+      const [chain, nodeName, nodeVersion] = await Promise.all([
+        this.api.rpc.system.chain(),
+        this.api.rpc.system.name(),
+        this.api.rpc.system.version(),
+      ]);
 
-    console.log(`[X3Chain] 🟢 Connected to ${chain} via ${nodeName} v${nodeVersion}`);
-    return this.api;
+      console.log(`[X3Chain] 🟢 Connected to ${chain} via ${nodeName} v${nodeVersion}`);
+      return this.api;
+    } catch (error) {
+      this.api = null;
+      this.connectionListeners.forEach(fn => fn(false));
+      if (isBrowserPreviewRpcMode()) {
+        this.browserRpcCooldownUntil = Date.now() + BROWSER_RPC_BACKOFF_MS;
+      }
+      try {
+        await provider.disconnect();
+      } catch {
+        /* ignore cleanup errors */
+      }
+      throw error;
+    }
   }
 
   async disconnect(): Promise<void> {

@@ -3,6 +3,7 @@
 //! without the problematic string literals that trigger compiler panic.
 
 #![no_std]
+#![allow(non_upper_case_globals)]
 
 // Props module with Unicode character properties
 pub mod props {

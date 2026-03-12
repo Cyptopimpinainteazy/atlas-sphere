@@ -12,25 +12,27 @@
 
 extern crate alloc;
 
-pub mod optimization;
 pub mod atomic_execution;
-pub mod quote_engine;
-pub mod mev_protection;
-pub mod gas_optimization;
-pub mod slippage_control;
-pub mod routing;
 pub mod fee_calculator;
+pub mod gas_optimization;
+pub mod mev_protection;
+pub mod optimization;
+pub mod quote_engine;
+pub mod routing;
+pub mod slippage_control;
 
-pub use optimization::{RouteOptimizer, OptimizationParams, RouteScore};
-pub use atomic_execution::{AtomicSwapExecutor, SwapBundle, ExecutionStatus, ExecutionResult};
-pub use quote_engine::{QuoteEngine, PriceOracle, QuoteResult, PriceSource};
-pub use mev_protection::{MEVProtector, ProtectionStrategy, SandwichProtection, Route, Hop};
-pub use gas_optimization::{GasOptimizer, ChainGasParams, GasEstimate};
-pub use slippage_control::{SlippageController, SlippageConfig, ProtectionLevel, SlippageProtectedParams};
-pub use routing::{RouteFinder, SwapRoute, HopInfo, RouteConstraints};
+pub use atomic_execution::{AtomicSwapExecutor, ExecutionResult, ExecutionStatus, SwapBundle};
 pub use fee_calculator::{FeeCalculator, FeeStructure, ProtocolFees};
-use sp_core::{H160, H256, U256};
+pub use gas_optimization::{ChainGasParams, GasEstimate, GasOptimizer};
+pub use mev_protection::{Hop, MEVProtector, ProtectionStrategy, Route, SandwichProtection};
+pub use optimization::{OptimizationParams, RouteOptimizer, RouteScore};
+pub use quote_engine::{PriceOracle, PriceSource, QuoteEngine, QuoteResult};
+pub use routing::{HopInfo, RouteConstraints, RouteFinder, SwapRoute};
 use serde::{Deserialize, Serialize};
+pub use slippage_control::{
+    ProtectionLevel, SlippageConfig, SlippageController, SlippageProtectedParams,
+};
+use sp_core::{H160, H256, U256};
 
 #[cfg(test)]
 mod tests;
@@ -50,7 +52,7 @@ impl AtomicSwapRouter {
     /// Create new atomic swap router
     pub fn new() -> Result<Self, SwapRouterError> {
         log::info!("Initializing X3 Chain Atomic Swap Router...");
-        
+
         let route_optimizer = RouteOptimizer::new()?;
         let quote_engine = QuoteEngine::new()?;
         let atomic_executor = AtomicSwapExecutor::new()?;
@@ -81,26 +83,37 @@ impl AtomicSwapRouter {
         let quotes = self.quote_engine.get_comprehensive_quotes(&params).await?;
 
         // Step 2: Optimize route for best execution
-        let optimized_route = self.route_optimizer.optimize_route(&quotes, &params).await?;
+        let optimized_route = self
+            .route_optimizer
+            .optimize_route(&quotes, &params)
+            .await?;
 
         // Step 3: Apply MEV protection
         let protected_route = self.mev_protector.protect_route(&optimized_route).await?;
 
         // Step 4: Calculate gas optimization
-        let gas_params = self.gas_optimizer.calculate_gas(&protected_route.route).await?;
+        let gas_params = self
+            .gas_optimizer
+            .calculate_gas(&protected_route.route)
+            .await?;
 
         // Step 5: Apply slippage protection
-        let protected_params = self.slippage_controller.apply_protection(&params, &protected_route.route).await?;
+        let protected_params = self
+            .slippage_controller
+            .apply_protection(&params, &protected_route.route)
+            .await?;
 
         // Step 6: Calculate fees
-        let fees = self.fee_calculator.calculate_swap_fees(&protected_route.route).await?;
+        let fees = self
+            .fee_calculator
+            .calculate_swap_fees(&protected_route.route)
+            .await?;
 
         // Step 7: Execute atomic bundle
-        let execution_result = self.atomic_executor.execute_swap_bundle(
-            &protected_route.route,
-            &gas_params,
-            &protected_params,
-        ).await?;
+        let execution_result = self
+            .atomic_executor
+            .execute_swap_bundle(&protected_route.route, &gas_params, &protected_params)
+            .await?;
 
         log::info!("Atomic swap completed: {:?}", execution_result);
 

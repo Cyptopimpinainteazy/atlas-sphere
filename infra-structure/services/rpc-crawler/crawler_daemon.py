@@ -825,12 +825,12 @@ SCRAPE_SOURCES = [
     "https://chainid.network/chains.json",
     "https://raw.githubusercontent.com/DefiLlama/chainlist/main/constants/extraRpcs.js",
     # GitHub awesome lists
-    "https://raw.githubusercontent.com/arddluma/awesome-list-rpc-nodes-providers/main/README.md",
-    "https://raw.githubusercontent.com/sambacha/ethereum-rpc-archive/main/README.md",
+    "https://raw.githubusercontent.com/arddluma/awesome-list-rpc-nodes-providers/main/docs/root/README.md",
+    "https://raw.githubusercontent.com/sambacha/ethereum-rpc-archive/main/docs/root/README.md",
     # PublicNode directory
     "https://www.publicnode.com/",
     # Polkadot / Substrate
-    "https://raw.githubusercontent.com/nickytonline/polkadot-rpc-list/main/README.md",
+    "https://raw.githubusercontent.com/nickytonline/polkadot-rpc-list/main/docs/root/README.md",
 ]
 
 

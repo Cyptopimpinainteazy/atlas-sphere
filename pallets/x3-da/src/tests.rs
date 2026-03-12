@@ -52,7 +52,7 @@ fn submit_blob_with_batch_id() {
             RuntimeOrigin::signed(1),
             h256(0xBB),
             256,
-            Some(42),  // linked to sequencer batch 42
+            Some(42), // linked to sequencer batch 42
             None,
         ));
 
@@ -107,13 +107,7 @@ fn duplicate_blob_rejected() {
 
         // Same hash again should fail
         assert_noop!(
-            X3Da::submit_blob_commitment(
-                RuntimeOrigin::signed(1),
-                h256(0xDD),
-                100,
-                None,
-                None,
-            ),
+            X3Da::submit_blob_commitment(RuntimeOrigin::signed(1), h256(0xDD), 100, None, None,),
             Error::<Test>::BlobAlreadyExists
         );
     });
@@ -134,9 +128,9 @@ fn submit_shard_proof_works() {
         // Submit shard proof
         assert_ok!(X3Da::submit_shard_proof(
             RuntimeOrigin::signed(2),
-            h256(0xAA),    // blob hash
-            0,             // shard index
-            h256(0x11),    // proof hash
+            h256(0xAA), // blob hash
+            0,          // shard index
+            h256(0x11), // proof hash
         ));
 
         // Proof should be stored
@@ -195,12 +189,7 @@ fn too_many_shard_proofs_rejected() {
 
         // 9th should fail
         assert_noop!(
-            X3Da::submit_shard_proof(
-                RuntimeOrigin::signed(99),
-                h256(0xAA),
-                8,
-                h256(0x99),
-            ),
+            X3Da::submit_shard_proof(RuntimeOrigin::signed(99), h256(0xAA), 8, h256(0x99),),
             Error::<Test>::TooManyShardProofs
         );
     });
@@ -210,13 +199,25 @@ fn too_many_shard_proofs_rejected() {
 fn multiple_blobs_tracked_independently() {
     new_test_ext().execute_with(|| {
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0x01), 100, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            100,
+            None,
+            None,
         ));
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(2), h256(0x02), 200, Some(1), None,
+            RuntimeOrigin::signed(2),
+            h256(0x02),
+            200,
+            Some(1),
+            None,
         ));
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(3), h256(0x03), 300, None, Some(h256(0xEE)),
+            RuntimeOrigin::signed(3),
+            h256(0x03),
+            300,
+            None,
+            Some(h256(0xEE)),
         ));
 
         assert_eq!(X3Da::total_bytes_committed(), 600);
@@ -233,7 +234,11 @@ fn multiple_blobs_tracked_independently() {
 fn is_blob_available_helper() {
     new_test_ext().execute_with(|| {
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0xAA), 100, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0xAA),
+            100,
+            None,
+            None,
         ));
 
         // Initially not available (status = 0 = Pending)
@@ -249,7 +254,11 @@ fn get_blob_helper() {
         assert!(X3Da::get_blob(h256(0xAA)).is_none());
 
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0xAA), 100, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0xAA),
+            100,
+            None,
+            None,
         ));
 
         let blob = X3Da::get_blob(h256(0xAA));
@@ -264,17 +273,29 @@ fn blob_bytes_accumulate() {
         assert_eq!(X3Da::total_bytes_committed(), 0);
 
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0x01), 100, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            100,
+            None,
+            None,
         ));
         assert_eq!(X3Da::total_bytes_committed(), 100);
 
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0x02), 250, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            250,
+            None,
+            None,
         ));
         assert_eq!(X3Da::total_bytes_committed(), 350);
 
         assert_ok!(X3Da::submit_blob_commitment(
-            RuntimeOrigin::signed(1), h256(0x03), 1024, None, None,
+            RuntimeOrigin::signed(1),
+            h256(0x03),
+            1024,
+            None,
+            None,
         ));
         assert_eq!(X3Da::total_bytes_committed(), 1374);
     });

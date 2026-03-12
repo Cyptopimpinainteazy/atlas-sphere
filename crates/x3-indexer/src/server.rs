@@ -73,7 +73,16 @@ async fn prometheus_metrics(State(state): State<AppState>) -> impl IntoResponse 
     let metric_families = state.metrics.registry().gather();
 
     let mut buffer = Vec::new();
-    encoder.encode(&metric_families, &mut buffer).unwrap();
+    if let Err(err) = encoder.encode(&metric_families, &mut buffer) {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            [(
+                axum::http::header::CONTENT_TYPE,
+                "text/plain; charset=utf-8",
+            )],
+            format!("failed to encode prometheus metrics: {err}").into_bytes(),
+        );
+    }
 
     (
         StatusCode::OK,

@@ -50,10 +50,10 @@ openspec/changes/jury-blockchain-anchoring/
 ├── proposal.md ............................ ✅ 800 lines
 ├── design.md ............................ ✅ 800+ lines
 ├── GUIDE.md ........................... ✅ 2,500+ lines
-├── DEPLOYMENT_GUIDE.md ................... ✅ 600 lines
+├── docs/runbooks/deployment/DEPLOYMENT_GUIDE.md ................... ✅ 600 lines
 ├── COMPLETE_DELIVERY.md .................. ✅ 400 lines
-├── FILE_MANIFEST.md ..................... ✅ 500 lines
-└── QUICK_REFERENCE.md ................... ✅ 300 lines
+├── docs/reports/FILE_MANIFEST.md ..................... ✅ 500 lines
+└── docs/runbooks/getting-started/QUICK_REFERENCE.md ................... ✅ 300 lines
 
 pallets/x3-jury-anchor/
 ├── src/lib.rs ........................... ✅ 500+ lines (8 tests)

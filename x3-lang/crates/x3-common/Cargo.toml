@@ -1,5 +1,5 @@
 [package]
-name = "x3-common"
+name = "x3-lang-common"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true

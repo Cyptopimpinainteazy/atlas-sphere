@@ -41,9 +41,9 @@ openspec/changes/jury-blockchain-anchoring/
 ├── proposal.md .......................... 800 lines (what & why)
 ├── design.md ........................... 800+ lines (how)
 ├── GUIDE.md ........................... 2,500+ lines (operations)
-├── DEPLOYMENT_GUIDE.md .................. 600 lines (ship tomorrow)
+├── docs/runbooks/deployment/DEPLOYMENT_GUIDE.md .................. 600 lines (ship tomorrow)
 ├── COMPLETE_DELIVERY.md ................. 400 lines (executive summary)
-└── FILE_MANIFEST.md .................... 500 lines (this is us)
+└── docs/reports/FILE_MANIFEST.md .................... 500 lines (this is us)
 
 pallets/x3-jury-anchor/
 ├── src/lib.rs .......................... 500+ lines (Rust pallet)
@@ -141,7 +141,7 @@ These aren't needed for shipping tomorrow:
 **Then:** Can review pull requests and integrate  
 
 ### If You're DevOps…
-**What to do:** Read `DEPLOYMENT_GUIDE.md` Part 2-3  
+**What to do:** Read `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` Part 2-3  
 **Time:** 1 hour to prepare  
 **Then:** Follow the checklist tomorrow morning  
 
@@ -231,7 +231,7 @@ TODAY (2026-02-08):
   ✅ Tests passing
   ✅ Documentation done
   ✅ Deployment guide ready
-  └─ Read DEPLOYMENT_GUIDE.md part 2
+  └─ Read docs/runbooks/deployment/DEPLOYMENT_GUIDE.md part 2
 
 TOMORROW MORNING (2026-02-09):
   → Execute deployment checklist (1 hour)
@@ -259,7 +259,7 @@ Everything is prepared. No surprises. No missing pieces.
 
 **What to do next:**
 
-1. **Read:** `/openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md`
+1. **Read:** `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 2. **Prepare:** Run morning checklist (Part 2)
 3. **Ship:** Follow afternoon procedures (Part 3)
 4. **Monitor:** Watch metrics (Part 4)
@@ -273,8 +273,8 @@ All answers are in the documentation:
 
 - **"What is this?"** → `proposal.md` + `COMPLETE_DELIVERY.md`
 - **"How does it work?"** → `design.md` + `GUIDE.md` architecture section
-- **"How do I ship it?"** → `DEPLOYMENT_GUIDE.md`
-- **"What if something breaks?"** → `DEPLOYMENT_GUIDE.md` part 4 + `GUIDE.md` troubleshooting
+- **"How do I ship it?"** → `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
+- **"What if something breaks?"** → `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` part 4 + `GUIDE.md` troubleshooting
 - **"Can I modify it?"** → `design.md` shows extension points
 - **"Is it secure?"** → Yes, threat model in `design.md`, security checklist in `GUIDE.md`
 
@@ -294,7 +294,7 @@ All answers are in the documentation:
 
 **Status: ✅ READY TO DEPLOY**
 
-🎯 **Recommended Next Step:** Read `DEPLOYMENT_GUIDE.md` Part 2 (morning checklist)
+🎯 **Recommended Next Step:** Read `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` Part 2 (morning checklist)
 
 **Expected Result:** Tomorrow at 6 PM, jury decisions will be immutably anchored to blockchain.
 

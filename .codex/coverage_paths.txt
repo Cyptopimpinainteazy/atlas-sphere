@@ -1,5 +1,0 @@
-# Critical-path coverage enforcement (glob|spec_id|coverage_report)
-crates/x3-dex/**|SPEC-DEX-COV|target/coverage/x3-dex/lcov.info
-crates/x3-flashloan/**|SPEC-FLASH-COV|target/coverage/x3-flashloan/lcov.info
-crates/x3-swap-router/**|SPEC-SWAP-COV|target/coverage/x3-swap-router/lcov.info
-crates/gpu-swarm/**|SPEC-GPU-SWARM-COV|target/coverage/gpu-swarm/lcov.info

@@ -70,13 +70,13 @@ pub mod bridge;
 pub mod contract_upgrade_pattern;
 pub mod dap_debugging;
 pub mod error;
+pub mod execution_guards;
 pub mod gas_metering_audit;
 pub mod gpu_hostcalls;
 pub mod hostcall;
 pub mod jit_compiler;
 pub mod verifier;
 pub mod vm;
-pub mod execution_guards;
 
 // Re-exports
 pub use bridge::{BridgeConfig, BridgeError, X3VMBridge};
@@ -85,11 +85,11 @@ pub use contract_upgrade_pattern::{
 };
 pub use dap_debugging::{DAPMessage, DAPServer, DAPSession};
 pub use error::{VMError, VMErrorKind, VMResult, VerifierError, VerifierErrorKind};
+pub use execution_guards::*;
 pub use gas_metering_audit::{GasMeteringTable, OpcodeGasAudit};
 pub use gpu_hostcalls::{GpuConfig, GpuHostcalls};
 pub use hostcall::{Hostcall, HostcallRegistry};
 pub use jit_compiler::{CompiledFunction, HotPathTracker, JitCompiler, JitConfig, JitStats};
 pub use verifier::{opcode_gas_cost, DecodedInstr, Verifier, VerifyOptions};
 pub use vm::{ExecutionResult, Frame, VMConfig, Value, VM};
-pub use execution_guards::*;
 pub use x3_backend::bc_format::BytecodeModule;

@@ -21,11 +21,29 @@ const ENDOWMENT: u128 = 1_000_000 * X3;
 type AccountPublic = <Signature as Verify>::Signer;
 
 /// Load the named `ChainSpec` via the supplied identifier string.
+/// 
+/// Chain specs can be loaded by:
+/// - Name: "dev", "local", "staging", "production"
+/// - Environment: $CHAIN_SPEC env var (if no other ID specified)
+/// - File path: Any JSON chainspec file path
+///
+/// Environment variables:
+/// - `CHAIN_SPEC`: Override default chain spec (e.g., "dev", "staging", "production")
+/// - `X3_ENVIRONMENT`: Set environment tier for auto-config selection
 pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
-    match id {
+    let effective_id = if id.is_empty() {
+        // Check environment for chain spec override
+        std::env::var("CHAIN_SPEC")
+            .unwrap_or_else(|_| "dev".to_string())
+    } else {
+        id.to_string()
+    };
+
+    match effective_id.as_str() {
         "" | "dev" => Ok(Box::new(development_config()?)),
         "local" => Ok(Box::new(local_testnet_config()?)),
         "staging" => Ok(Box::new(staging_config()?)),
+        "production" => Ok(Box::new(production_config()?)),
         path => Ok(Box::new(ChainSpec::from_json_file(PathBuf::from(path))?)),
     }
 }
@@ -128,6 +146,57 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     Ok(ChainSpec::from_genesis(
         "X3 Chain Staging",
         "x3_chain_staging",
+        ChainType::Live,
+        move || {
+            x3_chain_genesis(
+                wasm_binary,
+                initial_authorities.clone(),
+                endowed_accounts.clone(),
+            )
+        },
+        vec![],
+        None,
+        Some(DEFAULT_PROTOCOL_ID),
+        None,
+        Default::default(),
+        None,
+    ))
+}
+
+/// Build the production `ChainSpec` for mainnet deployment.
+///
+/// Production network requires:
+/// - Valid WASM runtime (no fallback to native-only)
+/// - Multiple validators for security
+/// - Production-grade authorities and bootstrap nodes
+/// - Persistent network configuration
+///
+/// # Safety
+/// This function will fail if WASM binary is not available, ensuring 
+/// only properly built binaries can boot the network.
+pub fn production_config() -> Result<ChainSpec, String> {
+    let wasm_binary =
+        WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available for production".to_string())?;
+    
+    // Production uses distinct, high-security authority identities.
+    // These should be replaced with actual validator keys during mainnet launch.
+    let initial_authorities = vec![
+        authority_keys_from_seed("ValidatorAlpha"),
+        authority_keys_from_seed("ValidatorBeta"),
+        authority_keys_from_seed("ValidatorGamma"),
+        authority_keys_from_seed("ValidatorDelta"),
+        authority_keys_from_seed("ValidatorEpsilon"),
+    ];
+    
+    let endowed_accounts = vec![
+        get_account_id_from_seed::<sr25519::Public>("TreasuryFoundation"),
+        get_account_id_from_seed::<sr25519::Public>("CommunityFund"),
+        get_account_id_from_seed::<sr25519::Public>("DevelopmentAllocation"),
+    ];
+
+    Ok(ChainSpec::from_genesis(
+        "X3 Chain Production",
+        "x3_chain_production",
         ChainType::Live,
         move || {
             x3_chain_genesis(

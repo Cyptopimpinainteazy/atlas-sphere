@@ -218,7 +218,7 @@ pallets/x3-jury-anchor/
 │   ├── types.rs        (optional: data structures)
 │   └── benchmarking.rs (optional: performance)
 ├── Cargo.toml
-└── README.md
+└── docs/root/README.md
 ```
 
 #### Adding New Functionality

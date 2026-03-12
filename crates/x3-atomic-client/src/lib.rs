@@ -250,36 +250,28 @@ impl X3AtomicClient {
     pub async fn submit_bundle(&self, bundle: &AtomicBundle) -> Result<SubmitResult> {
         debug!("Submitting bundle with {} legs", bundle.legs.len());
         // TODO: Call atomic_submitAtomicBundle RPC
-        Err(anyhow!(
-            "RPC client not yet connected — use with live node"
-        ))
+        Err(anyhow!("RPC client not yet connected — use with live node"))
     }
 
     /// Get the status of a bundle.
     pub async fn get_status(&self, bundle_id: H256) -> Result<BundleStatus> {
         debug!("Getting status for bundle {:?}", bundle_id);
         // TODO: Call atomic_getBundleStatus RPC
-        Err(anyhow!(
-            "RPC client not yet connected — use with live node"
-        ))
+        Err(anyhow!("RPC client not yet connected — use with live node"))
     }
 
     /// Get the PoAE proof for a finalized bundle.
     pub async fn get_proof(&self, bundle_id: H256) -> Result<PoaeProof> {
         debug!("Getting proof for bundle {:?}", bundle_id);
         // TODO: Call atomic_getAtomicExecutionProof RPC
-        Err(anyhow!(
-            "RPC client not yet connected — use with live node"
-        ))
+        Err(anyhow!("RPC client not yet connected — use with live node"))
     }
 
     /// Simulate a bundle without executing it.
     pub async fn simulate(&self, bundle: &AtomicBundle) -> Result<SimulationResult> {
         debug!("Simulating bundle with {} legs", bundle.legs.len());
         // TODO: Call atomic_simulateAtomicBundle RPC
-        Err(anyhow!(
-            "RPC client not yet connected — use with live node"
-        ))
+        Err(anyhow!("RPC client not yet connected — use with live node"))
     }
 
     /// The WebSocket endpoint this client is connected to.
@@ -313,14 +305,7 @@ mod tests {
     fn test_builder_rejects_too_many_legs() {
         let mut builder = AtomicBundleBuilder::new();
         for _ in 0..17 {
-            builder = builder.add_leg(
-                VmType::Evm,
-                H256::zero(),
-                H256::zero(),
-                100,
-                90,
-                60,
-            );
+            builder = builder.add_leg(VmType::Evm, H256::zero(), H256::zero(), 100, 90, 60);
         }
         let result = builder.build();
         assert!(result.is_err());

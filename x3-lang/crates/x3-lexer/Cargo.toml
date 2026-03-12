@@ -1,5 +1,5 @@
 [package]
-name = "x3-lexer"
+name = "x3-lang-lexer"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 description = "Lexical analyzer for the X3 programming language"
 
 [dependencies]
-x3-common = { path = "../x3-common" }
+x3-lang-common = { path = "../x3-common" }
 logos = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }

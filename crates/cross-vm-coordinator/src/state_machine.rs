@@ -48,7 +48,12 @@ impl SwapCoordinator {
     pub fn active_sessions(&self) -> usize {
         self.sessions
             .values()
-            .filter(|s| !matches!(s.phase, SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed))
+            .filter(|s| {
+                !matches!(
+                    s.phase,
+                    SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed
+                )
+            })
             .count()
     }
 
@@ -125,7 +130,9 @@ impl SwapCoordinator {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         // Read phase first, then validate, then mutate.
-        let current_phase = self.sessions.get(session_id)
+        let current_phase = self
+            .sessions
+            .get(session_id)
             .ok_or_else(|| CoordinatorError::SessionNotFound {
                 session_id: session_id.to_string(),
             })?
@@ -155,11 +162,12 @@ impl SwapCoordinator {
         record: HtlcRecord,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         info!(
             session = %session_id,
@@ -188,11 +196,12 @@ impl SwapCoordinator {
         confirmations: u32,
         now_unix: u64,
     ) -> Result<bool, CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         let htlc = if is_fast {
             session.htlc_fast.as_mut()
@@ -200,9 +209,12 @@ impl SwapCoordinator {
             session.htlc_slow.as_mut()
         };
 
-        let htlc = htlc.ok_or_else(|| CoordinatorError::Internal(
-            format!("HTLC not found for {} chain", if is_fast { "fast" } else { "slow" })
-        ))?;
+        let htlc = htlc.ok_or_else(|| {
+            CoordinatorError::Internal(format!(
+                "HTLC not found for {} chain",
+                if is_fast { "fast" } else { "slow" }
+            ))
+        })?;
 
         htlc.confirmations = confirmations;
         session.updated_at = now_unix;
@@ -230,7 +242,9 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let current_phase = self.sessions.get(session_id)
+        let current_phase = self
+            .sessions
+            .get(session_id)
             .ok_or_else(|| CoordinatorError::SessionNotFound {
                 session_id: session_id.to_string(),
             })?
@@ -273,11 +287,12 @@ impl SwapCoordinator {
         outcome: FlashLegOutcome,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         let leg_index = session.leg_outcomes.len();
 
@@ -345,7 +360,9 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<HtlcHash, CoordinatorError> {
-        let current_phase = self.sessions.get(session_id)
+        let current_phase = self
+            .sessions
+            .get(session_id)
             .ok_or_else(|| CoordinatorError::SessionNotFound {
                 session_id: session_id.to_string(),
             })?
@@ -377,11 +394,12 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         if let Some(ref mut htlc) = session.htlc_fast {
             htlc.status = HtlcStatus::Claimed;
@@ -400,11 +418,12 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         if let Some(ref mut htlc) = session.htlc_slow {
             htlc.status = HtlcStatus::Claimed;
@@ -426,11 +445,12 @@ impl SwapCoordinator {
         reason: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         warn!(session = %session_id, reason, "Aborting swap — will refund after timelocks");
 
@@ -445,11 +465,12 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session = self.sessions.get_mut(session_id).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
-                session_id: session_id.to_string(),
-            }
-        })?;
+        let session =
+            self.sessions
+                .get_mut(session_id)
+                .ok_or_else(|| CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                })?;
 
         if let Some(ref mut htlc) = session.htlc_fast {
             htlc.status = HtlcStatus::Refunded;
@@ -467,10 +488,7 @@ impl SwapCoordinator {
 
     // ── Internal Helpers ──────────────────────────────────────────────────
 
-    fn validate_phase_transition(
-        from: SwapPhase,
-        to: SwapPhase,
-    ) -> Result<(), CoordinatorError> {
+    fn validate_phase_transition(from: SwapPhase, to: SwapPhase) -> Result<(), CoordinatorError> {
         let valid = matches!(
             (from, to),
             (SwapPhase::Setup, SwapPhase::LockingHtlcs)

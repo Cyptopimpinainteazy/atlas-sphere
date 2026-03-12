@@ -170,7 +170,7 @@ TransactionMetrics        // TX stats
 | `docs/reports/IMPLEMENTATION_VERIFICATION.md` | File structure & verification |
 | `docs/reports/INTEGRATION_COMPILATION_GUIDE.md` | Integration instructions |
 | `PHASES_1_TO_7_COMPLETE.md` | Executive summary |
-| `docs/reports/QUICK_REFERENCE.md` | This file |
+| `docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md` | This file |
 
 ---
 

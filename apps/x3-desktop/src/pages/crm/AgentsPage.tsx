@@ -35,6 +35,7 @@ const inputStyle: React.CSSProperties = {
 const AgentsPage: React.FC = () => {
   const { session, currentUser } = useSocialStore();
   const userId = session?.userId ?? "";
+  const username = currentUser?.username ?? session?.username ?? "";
   const isKing = currentUser?.username === "King" && currentUser?.role === "admin";
 
   /* ── Core state ── */
@@ -148,8 +149,8 @@ const AgentsPage: React.FC = () => {
   };
 
   const assignMyEmail = async () => {
-    if (!userId || !currentUser?.username) return;
-    try { setUserEmail(await agentSvc.assignEmail(userId, currentUser.username)); } catch (err) { console.error(err); }
+    if (!userId || !username) return;
+    try { setUserEmail(await agentSvc.assignEmail(userId, username)); } catch (err) { console.error(err); }
   };
 
   const doSearch = async () => {

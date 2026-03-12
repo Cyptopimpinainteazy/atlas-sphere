@@ -22,7 +22,7 @@ authors = [
 build = false
 include = [
     "src",
-    "README.md",
+    "docs/root/README.md",
     "LICENSE-APACHE",
     "LICENSE-MIT",
 ]
@@ -34,7 +34,7 @@ autobenches = false
 description = "A library to generate and parse UUIDs."
 homepage = "https://github.com/uuid-rs/uuid"
 documentation = "https://docs.rs/uuid"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "guid",
     "unique",

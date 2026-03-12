@@ -329,7 +329,9 @@ impl DAPServer {
 }
 
 impl Default for DAPServer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]

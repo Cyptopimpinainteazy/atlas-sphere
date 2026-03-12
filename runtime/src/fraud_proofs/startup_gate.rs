@@ -62,7 +62,11 @@ pub enum GateError {
 impl core::fmt::Display for GateError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            GateError::VectorMismatch { name, expected, got } => write!(
+            GateError::VectorMismatch {
+                name,
+                expected,
+                got,
+            } => write!(
                 f,
                 "startup-gate FAIL [{name}]: expected {expected:?} got {got:?}"
             ),
@@ -96,26 +100,16 @@ impl core::fmt::Display for GateError {
 ///   dep_edges: u32 (compact) = 0
 const VECTOR_1TX_NODEPS: &[u8] = &[
     // version: u8 = 1
-    0x01,
-    // rules_version: u32 = 1 (fixed 4-byte LE; NOT compact)
-    0x01, 0x00, 0x00, 0x00,
-    // tx_count: Compact<u32> = 1
-    0x04,
-    // tx_ids: Vec<H256> — Compact length prefix = 1, then 32 zero bytes
-    0x04,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    // access_lists: Vec<AccessListV1> — Compact length prefix = 1
-    0x04,
-    // access_lists[0].access_count: Compact<u32> = 0
-    0x00,
-    // access_lists[0].accesses: Vec<AccessKeyV1> — Compact length = 0
-    0x00,
-    // seed: Option<H256> = None
-    0x00,
-    // reserved: Vec<u8> = [] (Compact length = 0)
+    0x01, // rules_version: u32 = 1 (fixed 4-byte LE; NOT compact)
+    0x01, 0x00, 0x00, 0x00, // tx_count: Compact<u32> = 1
+    0x04, // tx_ids: Vec<H256> — Compact length prefix = 1, then 32 zero bytes
+    0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, // access_lists: Vec<AccessListV1> — Compact length prefix = 1
+    0x04, // access_lists[0].access_count: Compact<u32> = 0
+    0x00, // access_lists[0].accesses: Vec<AccessKeyV1> — Compact length = 0
+    0x00, // seed: Option<H256> = None
+    0x00, // reserved: Vec<u8> = [] (Compact length = 0)
     0x00,
 ];
 
@@ -159,8 +153,11 @@ pub fn required_vectors() -> Vec<TestVector> {
 /// passes.  On the first failure returns `Err(GateError)` with details.
 pub fn run_startup_gate() -> Result<(), GateError> {
     for vector in required_vectors() {
-        let result =
-            scheduler_commitment_from_bytes(vector.witness_bytes, vector.rules_version, vector.max_tx_count);
+        let result = scheduler_commitment_from_bytes(
+            vector.witness_bytes,
+            vector.rules_version,
+            vector.max_tx_count,
+        );
         match result {
             Err(e) => {
                 return Err(GateError::WitnessError {
@@ -213,7 +210,8 @@ mod tests {
     #[test]
     fn dump_vectors_for_bootstrapping() {
         for v in required_vectors() {
-            let commitment = scheduler_commitment_from_bytes(v.witness_bytes, v.rules_version, v.max_tx_count);
+            let commitment =
+                scheduler_commitment_from_bytes(v.witness_bytes, v.rules_version, v.max_tx_count);
             println!("vector={} commitment={:?}", v.name, commitment);
         }
     }

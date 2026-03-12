@@ -120,7 +120,9 @@ impl HotPathTracker {
 }
 
 impl Default for HotPathTracker {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Compiled native function (mocked as bytecode for now)

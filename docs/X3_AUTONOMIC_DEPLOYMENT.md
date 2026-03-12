@@ -576,7 +576,7 @@ curl -X POST http://127.0.0.1:8080/api/autonomic/override/state \
 
 - **GitHub Issues**: Report bugs or feature requests
 - **Documentation**: `docs/X3_ENTERPRISE_READINESS.md`
-- **Architecture**: `swarm/autonomic/README.md`
+- **Architecture**: `docs/swarm/autonomic/README.md`
 - **API Reference**: `swarm/autonomic/api_routes.py`
 
 ---

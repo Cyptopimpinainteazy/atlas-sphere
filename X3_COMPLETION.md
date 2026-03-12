@@ -25,8 +25,8 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| `cargo build --release` passes clean | ⬜ | root `Cargo.toml` |
-| `cargo test --all` passes 100% | ⬜ | all 82 crates + 22 pallets |
+| `cargo build --release` passes clean | ✅ | root `Cargo.toml` |
+| `cargo test --all` passes 100% | ✅ | all 82 crates + 22 pallets |
 | No `unwrap()` in production paths | ⬜ | `rg 'unwrap\(\)' --glob '!**/tests/**' --glob '!**/*_test*'` |
 | No `expect()` outside test code | ⬜ | same scan |
 | All feature flags documented | ✅ | each `Cargo.toml` `[features]` section |

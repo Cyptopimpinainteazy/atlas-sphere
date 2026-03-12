@@ -970,6 +970,8 @@
 </div><!-- /app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
 // ── STARS ──
 const canvas = document.getElementById('stars-canvas');
@@ -998,15 +1000,52 @@ function drawStars() {
 resizeStars(); drawStars();
 window.addEventListener('resize', resizeStars);
 
-// ── BLOCK + GAS LIVE ──
-let block = 19847221;
-setInterval(() => {
-  block += Math.floor(Math.random()*3);
-  document.getElementById('block-num').textContent = block.toLocaleString();
-  const gas = Math.floor(18 + Math.random()*20);
-  document.getElementById('gas').textContent = gas + ' gwei';
-  document.getElementById('gas').style.color = gas > 30 ? 'var(--red)' : 'var(--green)';
-}, 4000);
+function updateTokenChart(token) {
+  // Update token analytics cards
+  const mcapEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(1) .metric-val');
+  const circEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(2) .metric-val');
+  const volEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(3) .metric-val');
+  const holdEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(4) .metric-val');
+  
+  if (mcapEl) mcapEl.textContent = '$' + (token.marketCap / 1000000).toFixed(1) + 'M';
+  if (circEl) circEl.textContent = (token.circulatingSupply / 1000000).toFixed(0) + 'M';
+  if (volEl) volEl.textContent = '$' + (token.volume24h / 1000000).toFixed(1) + 'M';
+  if (holdEl) holdEl.textContent = token.holders.toLocaleString();
+}
+
+function updateFundingData(funding) {
+  // Update total raised
+  const raisedEl = document.querySelector('.kpi-card.gold .kpi-value');
+  if (raisedEl) {
+    raisedEl.textContent = '$' + (funding.raised / 1000000).toFixed(1) + 'M';
+  }
+  
+  // Update active grants
+  const grantsEl = document.querySelector('.kpi-card.cyan .kpi-value');
+  if (grantsEl) {
+    grantsEl.textContent = funding.activeGrants;
+  }
+  
+  // Update investors
+  const investorsEl = document.querySelector('.kpi-card.green .kpi-value');
+  if (investorsEl) {
+    investorsEl.textContent = funding.investorCount;
+  }
+  
+  // Update round progress
+  const progressBar = document.querySelector('.chart-card .metric-list > div > div > div');
+  const progressText = document.querySelector('.chart-card .metric-list > div > div:last-child');
+  if (progressBar) {
+    const pct = (funding.raised / funding.hardCap) * 100;
+    progressBar.style.width = pct + '%';
+  }
+  if (progressText) {
+    const pct = ((funding.raised / funding.hardCap) * 100).toFixed(1);
+    progressText.textContent = pct + '% filled • $' + (funding.raised/1000000).toFixed(1) + 'M raised';
+  }
+}
+
+X3PageAdapters.start();
 
 // ── FUNDING CHART ──
 const fundingCtx = document.getElementById('fundingChart').getContext('2d');
@@ -1119,31 +1158,7 @@ function switchTab(el, period) {
   fundingChart.update('active');
 }
 
-// ── LIVE ACTIVITY ──
-const activities = [
-  {icon:'💰',text:'Apex Ventures committed <b class="text-gold">$250K</b>',time:'2m ago'},
-  {icon:'✅',text:'DeFi Infrastructure grant <b class="text-green">approved</b>',time:'8m ago'},
-  {icon:'🔗',text:'ZK Bridge milestone <b class="text-cyan">submitted</b>',time:'15m ago'},
-  {icon:'👤',text:'New investor: <b class="text-purple">DeltaStake.io</b>',time:'22m ago'},
-  {icon:'⚡',text:'X3S staking yield updated to <b class="text-gold">12.4%</b>',time:'1h ago'},
-  {icon:'📊',text:'Round III hit <b class="text-cyan">70% target</b>',time:'2h ago'},
-];
-
-let actIdx = 0;
-function addActivity() {
-  const feed = document.getElementById('activity-feed');
-  const a = activities[actIdx % activities.length];
-  const div = document.createElement('div');
-  div.style.cssText = 'display:flex;align-items:flex-start;gap:8px;opacity:0;transform:translateX(-8px);transition:all 0.4s';
-  div.innerHTML = `<span style="font-size:13px;flex-shrink:0">${a.icon}</span><div style="flex:1"><div style="font-size:11px;line-height:1.4">${a.text}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${a.time}</div></div>`;
-  feed.insertBefore(div, feed.firstChild);
-  setTimeout(()=>{div.style.opacity='1';div.style.transform='translateX(0)'},50);
-  if (feed.children.length > 4) feed.removeChild(feed.lastChild);
-  actIdx++;
-}
-// Init feed
-for(let i=0;i<4;i++) addActivity();
-setInterval(addActivity, 6000);
+document.getElementById('activity-feed').innerHTML = '<div style="font-size:11px;color:var(--muted)">Loading reservations activity…</div>';
 
 // ── ANIMATE PROGRESS BARS ──
 setTimeout(()=>{

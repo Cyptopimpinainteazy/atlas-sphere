@@ -88,7 +88,7 @@ apps/swarm-dashboard/
 ├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-└── README.md
+└── docs/root/README.md
 ```
 
 ## Core Components

@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Guard"
-  short_description: "Protect SpecStory history from accidental secret commits"
-  default_prompt: "Set up or verify SpecStory secret scanning so .specstory/history is checked before commits."

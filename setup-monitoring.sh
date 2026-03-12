@@ -152,5 +152,5 @@ Key metrics to monitor:
 Documentation:
   - Prometheus: https://prometheus.io/docs
   - Grafana: https://grafana.com/docs
-  - Query examples in: MONITORING_GUIDE.md
+  - Query examples in: docs/runbooks/operations/MONITORING_GUIDE.md
 "

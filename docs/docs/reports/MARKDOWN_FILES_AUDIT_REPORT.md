@@ -20,7 +20,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 **Location**: Root level, docs/, openspec/
 
 **Key Files**:
-- `README.md` - Main project overview ✅
+- `docs/root/README.md` - Main project overview ✅
 - `docs/DOCUMENTATION_INDEX.md` - Documentation navigation
 - `docs/X3_LANGUAGE_SPECIFICATION.md` - X3 language specs
 - `openspec/` - Specification management system
@@ -47,7 +47,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 - `PHASE5_ROADMAP.md`
 - `PHASE6_COMPLETE.md`
 - `PHASE6_DOCUMENTATION_INDEX.md`
-- `PHASE6_QUICK_START.md`
+- `PHASE6_docs/runbooks/getting-started/QUICK_START.md`
 - `PHASE7_CLI_INTEGRATION.md`
 - `PHASES_1_TO_7_COMPLETE.md`
 - `SESSION_COMPLETION_REPORT.md`
@@ -97,7 +97,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 - `COMPILATION_SUCCESS.md`
 - `COMPILER_MILESTONE_70_PERCENT.md`
 - `TESTNET_ANNOUNCEMENT.md`
-- `TESTNET_DEPLOYMENT_GUIDE.md`
+- `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 - `TESTNET_QUICKSTART.md`
 - `deployment/` directory
 - `WASM_BUILD_FIXED.md`
@@ -109,7 +109,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 **Location**: `x3-lang/`, `docs/`
 
 **Files**:
-- `x3-lang/README.md`
+- `docs/x3-lang/README.md`
 - `docs/X3_LANGUAGE_REFERENCE.md`
 - `docs/X3SCRIPT_DSL_SPECIFICATION.md`
 - `docs/X3SCRIPT_STDLIB_REFERENCE.md`
@@ -192,7 +192,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 
 ```
 /docs/
-├── README.md                 # Main documentation index
+├── docs/root/README.md                 # Main documentation index
 ├── architecture/             # System architecture docs
 ├── development/              # Development gfrontend/uides
 ├── deployment/               # Deployment procedures
@@ -204,7 +204,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 └── archive/                  # Historical documentation
 
 /root/
-├── README.md                 # Project overview
+├── docs/root/README.md                 # Project overview
 ├── PROJECT_STATUS.md         # Current status (unified)
 ├── CONTRIBUTING.md           # Contribution gfrontend/uidelines
 └── CHANGELOG.md             # Project changes
@@ -228,7 +228,7 @@ The X3-x3-chain project contains **400+ markdown files** with significant organi
 ### High Priority (This Session)
 - [ ] Create `PROJECT_STATUS.md` to replace multiple status files
 - [ ] Consolidate BMAD documentation into single location
-- [ ] Update main `README.md` with current information
+- [ ] Update main `docs/root/README.md` with current information
 - [ ] Create unified documentation index
 
 ### Medium Priority (Next Sessions)

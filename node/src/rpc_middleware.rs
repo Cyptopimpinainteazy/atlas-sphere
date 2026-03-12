@@ -125,38 +125,55 @@ impl RateLimiter {
     }
 
     /// Get or create connection state
-    fn get_connection_state(&self, connection_id: u64) -> Arc<ConnectionState> {
-        let mut conns = self.connections.write().unwrap();
-        conns
+    fn get_connection_state(
+        &self,
+        connection_id: u64,
+    ) -> Result<Arc<ConnectionState>, RateLimitError> {
+        let mut conns = self
+            .connections
+            .write()
+            .map_err(|_| RateLimitError::InternalStateCorrupted)?;
+        Ok(conns
             .entry(connection_id)
             .or_insert_with(|| Arc::new(ConnectionState::new(self.config.burst_size)))
-            .clone()
+            .clone())
     }
 
     /// Check if a request should be allowed
     pub fn check_request(&self, connection_id: u64, method: &str) -> Result<(), RateLimitError> {
         self.total_requests.fetch_add(1, Ordering::Relaxed);
 
-        let state = self.get_connection_state(connection_id);
+        let state = self.get_connection_state(connection_id)?;
 
         // Check if banned
-        if let Some(banned_until) = *state.banned_until.read().unwrap() {
+        let banned_until = *state
+            .banned_until
+            .read()
+            .map_err(|_| RateLimitError::InternalStateCorrupted)?;
+        if let Some(banned_until) = banned_until {
             if Instant::now() < banned_until {
                 self.total_rejected.fetch_add(1, Ordering::Relaxed);
                 return Err(RateLimitError::Banned);
             } else {
-                *state.banned_until.write().unwrap() = None;
+                *state
+                    .banned_until
+                    .write()
+                    .map_err(|_| RateLimitError::InternalStateCorrupted)? = None;
             }
         }
 
         // Refill tokens based on elapsed time
-        self.refill_tokens(&state);
+        self.refill_tokens(&state)?;
 
         // Try to consume a token
         let tokens = state.tokens.load(Ordering::Relaxed);
         if tokens == 0 {
             // Rate limited - apply ban
-            *state.banned_until.write().unwrap() = Some(Instant::now() + self.config.ban_duration);
+            *state
+                .banned_until
+                .write()
+                .map_err(|_| RateLimitError::InternalStateCorrupted)? =
+                Some(Instant::now() + self.config.ban_duration);
             self.total_rejected.fetch_add(1, Ordering::Relaxed);
             return Err(RateLimitError::TooManyRequests);
         }
@@ -169,8 +186,11 @@ impl RateLimiter {
     }
 
     /// Refill tokens based on elapsed time
-    fn refill_tokens(&self, state: &ConnectionState) {
-        let mut last_refill = state.last_refill.write().unwrap();
+    fn refill_tokens(&self, state: &ConnectionState) -> Result<(), RateLimitError> {
+        let mut last_refill = state
+            .last_refill
+            .write()
+            .map_err(|_| RateLimitError::InternalStateCorrupted)?;
         let now = Instant::now();
         let elapsed = now.duration_since(*last_refill);
 
@@ -187,6 +207,8 @@ impl RateLimiter {
                 .store((current + new_tokens).min(max), Ordering::Relaxed);
             *last_refill = now;
         }
+
+        Ok(())
     }
 
     /// Check per-method rate limit
@@ -202,7 +224,10 @@ impl RateLimiter {
             .copied()
             .unwrap_or(self.config.default_method_limit);
 
-        let mut counts = state.method_counts.write().unwrap();
+        let mut counts = state
+            .method_counts
+            .write()
+            .map_err(|_| RateLimitError::InternalStateCorrupted)?;
         let now = Instant::now();
         let window = Duration::from_secs(60);
 
@@ -225,7 +250,7 @@ impl RateLimiter {
 
     /// Track subscription count
     pub fn add_subscription(&self, connection_id: u64) -> Result<(), RateLimitError> {
-        let state = self.get_connection_state(connection_id);
+        let state = self.get_connection_state(connection_id)?;
         let current = state.subscriptions.fetch_add(1, Ordering::Relaxed);
 
         if current >= self.config.max_subscriptions_per_connection as u64 {
@@ -238,8 +263,9 @@ impl RateLimiter {
 
     /// Remove subscription tracking
     pub fn remove_subscription(&self, connection_id: u64) {
-        let state = self.get_connection_state(connection_id);
-        state.subscriptions.fetch_sub(1, Ordering::Relaxed);
+        if let Ok(state) = self.get_connection_state(connection_id) {
+            state.subscriptions.fetch_sub(1, Ordering::Relaxed);
+        }
     }
 
     /// Get metrics snapshot
@@ -247,18 +273,27 @@ impl RateLimiter {
         RateLimitMetrics {
             total_requests: self.total_requests.load(Ordering::Relaxed),
             total_rejected: self.total_rejected.load(Ordering::Relaxed),
-            active_connections: self.connections.read().unwrap().len(),
+            active_connections: self
+                .connections
+                .read()
+                .map(|conns| conns.len())
+                .unwrap_or(0),
         }
     }
 
     /// Cleanup stale connections (call periodically)
     pub fn cleanup_stale_connections(&self, max_age: Duration) {
-        let mut conns = self.connections.write().unwrap();
+        let Ok(mut conns) = self.connections.write() else {
+            return;
+        };
         let now = Instant::now();
 
         conns.retain(|_, state| {
-            let last = *state.last_refill.read().unwrap();
-            now.duration_since(last) < max_age
+            state
+                .last_refill
+                .read()
+                .map(|last| now.duration_since(*last) < max_age)
+                .unwrap_or(false)
         });
     }
 }
@@ -274,6 +309,8 @@ pub enum RateLimitError {
     TooManySubscriptions,
     /// Temporarily banned due to repeated violations.
     Banned,
+    /// Internal synchronization state was poisoned.
+    InternalStateCorrupted,
 }
 
 impl std::fmt::Display for RateLimitError {
@@ -283,6 +320,7 @@ impl std::fmt::Display for RateLimitError {
             Self::MethodLimitExceeded => write!(f, "Method rate limit exceeded"),
             Self::TooManySubscriptions => write!(f, "Too many active subscriptions"),
             Self::Banned => write!(f, "Temporarily banned due to rate limit violation"),
+            Self::InternalStateCorrupted => write!(f, "Rate limiter internal state corrupted"),
         }
     }
 }

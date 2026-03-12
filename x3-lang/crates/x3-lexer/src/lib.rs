@@ -16,7 +16,7 @@
 //! # Example
 //!
 //! ```
-//! use x3_lexer::Lexer;
+//! use x3_lang_lexer::Lexer;
 //!
 //! let source = "fn main() { let x = 42; }";
 //! let mut lexer = Lexer::new(source, 0);

@@ -529,6 +529,16 @@ pub mod pallet {
         AIProposalPayloadTooLarge,
         /// Emergency signer has already approved this AI execution
         AIExecutionAlreadyApproved,
+
+        // ====================================================================
+        // Constitutional proof gate errors (vΩ-1.0)
+        // ====================================================================
+        /// Proposal touches a constitutional invariant but carries no proof commitment.
+        /// Per Article IV: voting is necessary but not sufficient. Proof is required.
+        ProofRequiredForInvariantProposal,
+        /// Proposal was authored against a superseded constitution hash.
+        /// Must be re-submitted against the current constitution.
+        ConstitutionHashMismatch,
     }
 
     // ========================================================================
@@ -593,6 +603,10 @@ pub mod pallet {
         ///
         /// The proposer must deposit `ProposalDeposit` which is returned if the
         /// proposal is approved or slashed if rejected.
+        ///
+        /// Per Constitution vΩ-1.0 Article IV: proposals that touch constitutional
+        /// invariants (`touches_invariants = true`) MUST include a non-zero
+        /// `proof_commitment`. Voting alone is not sufficient for execution.
         #[pallet::call_index(0)]
         #[pallet::weight(T::WeightInfo::submit_proposal())]
         pub fn submit_proposal(
@@ -600,8 +614,20 @@ pub mod pallet {
             call: Box<<T as Config>::RuntimeCall>,
             title: BoundedVec<u8, ConstU32<256>>,
             description: BoundedVec<u8, ConstU32<4096>>,
+            touches_invariants: bool,
+            proof_commitment: Option<[u8; 32]>,
+            constitution_hash: Option<[u8; 32]>,
         ) -> DispatchResult {
             let proposer = T::SubmitOrigin::ensure_origin(origin)?;
+
+            // Constitutional proof gate (Article IV): invariant-touching proposals
+            // must carry a non-zero proof commitment at submission time.
+            if touches_invariants {
+                let has_proof = proof_commitment
+                    .map(|c| c != [0u8; 32])
+                    .unwrap_or(false);
+                ensure!(has_proof, Error::<T>::ProofRequiredForInvariantProposal);
+            }
 
             let config = GovernanceConfig::<T>::get();
             let deposit = config.proposal_deposit;
@@ -629,6 +655,9 @@ pub mod pallet {
                 submitted_at: current_block,
                 voting_end,
                 enacted_at: None,
+                proof_commitment,
+                constitution_hash,
+                touches_invariants,
             };
 
             Proposals::<T>::insert(proposal_id, proposal);
@@ -1309,6 +1338,35 @@ pub mod pallet {
 
             if let Some(mut proposal) = Proposals::<T>::get(proposal_id) {
                 if proposal.status == ProposalStatus::Approved {
+                    // ----------------------------------------------------------
+                    // Constitutional proof gate (Article IV, vΩ-1.0)
+                    //
+                    // Proposals that touch constitutional invariants MUST carry a
+                    // non-zero proof commitment. Voting alone is not sufficient.
+                    // If the gate fails, the proposal is cancelled (not enacted)
+                    // and the deposit is slashed per Article VI.
+                    // ----------------------------------------------------------
+                    if proposal.touches_invariants {
+                        let has_proof = proposal
+                            .proof_commitment
+                            .map(|c| c != [0u8; 32])
+                            .unwrap_or(false);
+
+                        if !has_proof {
+                            // Slash deposit for attempting bypass without proof
+                            let _ = T::Currency::slash_reserved(
+                                &proposal.proposer,
+                                proposal.deposit,
+                            );
+                            proposal.status = ProposalStatus::Cancelled;
+                            Proposals::<T>::insert(proposal_id, &proposal);
+                            // Emit cancellation with proof-gate reason
+                            Self::deposit_event(Event::ProposalCancelled { proposal_id });
+                            weight = weight.saturating_add(T::DbWeight::get().writes(1));
+                            return weight;
+                        }
+                    }
+
                     let result = proposal
                         .call
                         .clone()

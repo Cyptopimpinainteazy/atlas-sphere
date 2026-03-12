@@ -16,6 +16,7 @@
 
 pub mod chain;
 pub mod engine;
+pub mod epoch;
 pub mod error;
 pub mod hasher;
 pub mod types;
@@ -24,6 +25,10 @@ pub mod verifier;
 pub use chain::ProofChain;
 pub use engine::ProofEngine;
 pub use engine::ProofEngineConfig;
+pub use epoch::{
+    EpochProof, RecursiveProofAggregator, ZkBlockProof, ZkBlockVerifier, ZkProofError,
+    BLOCKS_PER_EPOCH,
+};
 pub use error::ProofError;
 pub use hasher::DeterministicHasher;
 pub use types::*;

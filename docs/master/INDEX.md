@@ -5,8 +5,8 @@ project docs into a single, predictable structure. Legacy files may remain in
 place as stubs that point to the new locations.
 
 ## Start Here
-- Project overview: [../../README.md](../../README.md)
-- Docs home: [../README.md](../README.md)
+- Project overview: [../../docs/root/README.md](../../docs/root/README.md)
+- Docs home: [../docs/root/README.md](../docs/root/README.md)
 - Canonical docs index: [../DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md)
 
 ## Getting Started
@@ -16,7 +16,7 @@ place as stubs that point to the new locations.
 
 ## Desktop Apps
 - Desktop complete guide: [desktop/X3_DESKTOP_COMPLETE_GUIDE.md](desktop/X3_DESKTOP_COMPLETE_GUIDE.md)
-- Desktop quick reference: [desktop/X3_DESKTOP_QUICK_REFERENCE.md](desktop/X3_DESKTOP_QUICK_REFERENCE.md)
+- Desktop quick reference: [desktop/X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md](desktop/X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md)
 - Desktop verification: [desktop/X3_DESKTOP_VERIFICATION.md](desktop/X3_DESKTOP_VERIFICATION.md)
 
 ## Architecture and Specifications
@@ -34,11 +34,11 @@ place as stubs that point to the new locations.
 - GPU swarm implementation index: [implementation/GPU_SWARM_IMPLEMENTATION_INDEX.md](implementation/GPU_SWARM_IMPLEMENTATION_INDEX.md)
 - GPU swarm completion artifact: [implementation/GPU_SWARM_IMPLEMENTATION_COMPLETION_ARTIFACT.md](implementation/GPU_SWARM_IMPLEMENTATION_COMPLETION_ARTIFACT.md)
 - Orchestra implementation plan: [implementation/ORCHESTRA_IMPLEMENTATION_PLAN.md](implementation/ORCHESTRA_IMPLEMENTATION_PLAN.md)
-- Phase 3 implementation summary: [implementation/P3_IMPLEMENTATION_SUMMARY.md](implementation/P3_IMPLEMENTATION_SUMMARY.md)
-- Phase 4 implementation summary: [implementation/P4_IMPLEMENTATION_SUMMARY.md](implementation/P4_IMPLEMENTATION_SUMMARY.md)
+- Phase 3 implementation summary: [implementation/P3_docs/reports/IMPLEMENTATION_SUMMARY.md](implementation/P3_docs/reports/IMPLEMENTATION_SUMMARY.md)
+- Phase 4 implementation summary: [implementation/P4_docs/reports/IMPLEMENTATION_SUMMARY.md](implementation/P4_docs/reports/IMPLEMENTATION_SUMMARY.md)
 
 ## Roadmaps
-- Phase 3 quick reference: [roadmaps/P3_QUICK_REFERENCE.md](roadmaps/P3_QUICK_REFERENCE.md)
+- Phase 3 quick reference: [roadmaps/P3_docs/runbooks/getting-started/QUICK_REFERENCE.md](roadmaps/P3_docs/runbooks/getting-started/QUICK_REFERENCE.md)
 - Phase 5 EVM GPU kernel roadmap: [roadmaps/P5_DAYS1-5_EVM_GPU_KERNEL_ROADMAP.md](roadmaps/P5_DAYS1-5_EVM_GPU_KERNEL_ROADMAP.md)
 - Phase 5 atomic swap roadmap: [roadmaps/P5_DAYS6-10_ATOMIC_SWAP_ORCHESTRATOR_ROADMAP.md](roadmaps/P5_DAYS6-10_ATOMIC_SWAP_ORCHESTRATOR_ROADMAP.md)
 - Phase 5 strategic summary: [roadmaps/P5_STRATEGIC_SUMMARY.md](roadmaps/P5_STRATEGIC_SUMMARY.md)
@@ -68,14 +68,14 @@ place as stubs that point to the new locations.
 - Ship it checklist: [releases/SHIP_IT.md](releases/SHIP_IT.md)
 - Pass A completion: [releases/PASS_A_COMPLETE.txt](releases/PASS_A_COMPLETE.txt)
 - Phase 5 execution complete: [releases/PHASE5_EXECUTION_COMPLETE.md](releases/PHASE5_EXECUTION_COMPLETE.md)
-- Phase 5 file manifest: [releases/PHASE5_FILE_MANIFEST.md](releases/PHASE5_FILE_MANIFEST.md)
+- Phase 5 file manifest: [releases/PHASE5_docs/reports/FILE_MANIFEST.md](releases/PHASE5_docs/reports/FILE_MANIFEST.md)
 - Phase 5 final delivery summary: [releases/PHASE5_FINAL_DELIVERY_SUMMARY.md](releases/PHASE5_FINAL_DELIVERY_SUMMARY.md)
 - Phase 5 quick shipping guide: [releases/PHASE5_QUICK_SHIPPING_GUIDE.md](releases/PHASE5_QUICK_SHIPPING_GUIDE.md)
 - Phase 5 verification complete: [releases/PHASE5_VERIFICATION_COMPLETE.md](releases/PHASE5_VERIFICATION_COMPLETE.md)
 - Phase 6 build report: [releases/PHASE6_BUILD_REPORT.txt](releases/PHASE6_BUILD_REPORT.txt)
 
 ## Security
-- Security policy: [../../SECURITY.md](../../SECURITY.md)
+- Security policy: [../../docs/security/docs/security/SECURITY.md](../../docs/security/docs/security/SECURITY.md)
 - Voir dire specification: [security/VOIR_DIRE_SPECIFICATION.md](security/VOIR_DIRE_SPECIFICATION.md)
 
 ## Testing and QA
@@ -87,4 +87,4 @@ place as stubs that point to the new locations.
 - MD path updates: [docs-maintenance/MD_PATH_UPDATES.md](docs-maintenance/MD_PATH_UPDATES.md)
 
 ## App-Specific Docs
-- X3 Intelligence upgrade summary: [apps/x3-intelligence/UPGRADE_SUMMARY.md](apps/x3-intelligence/UPGRADE_SUMMARY.md)
+- X3 Intelligence upgrade summary: [/docs/docs/apps/x3-intelligence/UPGRADE_SUMMARY.md](/docs/docs/apps/x3-intelligence/UPGRADE_SUMMARY.md)

@@ -10,7 +10,7 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "memfd"
 version = "0.6.5"
 authors = [
@@ -29,7 +29,7 @@ autotests = false
 autobenches = false
 description = "A pure-Rust library to work with Linux memfd and sealing"
 documentation = "https://docs.rs/memfd"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "Linux",
     "memfd",

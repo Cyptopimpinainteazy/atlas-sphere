@@ -34,14 +34,14 @@ X3 Chain is ready to launch **Testnet v1** with current functionality:
 |----------|---------|--------|
 | **TESTNET_ANNOUNCEMENT.md** | Public launch communication | ✅ Ready |
 | **TESTNET_QUICKSTART.md** | Developer onboarding (5 min) | ✅ Ready |
-| **TESTNET_DEPLOYMENT_GUIDE.md** | Operator manual (30 min) | ✅ Ready |
-| **TESTNET_DEPLOYMENT_CHECKLIST.md** | Deployment tracker | ✅ Ready |
+| **docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** | Operator manual (30 min) | ✅ Ready |
+| **docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** | Deployment tracker | ✅ Ready |
 
 ### Updated Documentation (3 files)
 
 | Document | Changes | Status |
 |----------|---------|--------|
-| **README.md** | Updated Current Status to reflect testnet launch | ✅ Complete |
+| **docs/root/README.md** | Updated Current Status to reflect testnet launch | ✅ Complete |
 | **DOCUMENTATION_INDEX.md** | Added testnet resources section | ✅ Complete |
 | **FINAL_COMPLETION_REPORT.md** | Already accurate ("Developer Preview") | ✅ Complete |
 
@@ -372,7 +372,7 @@ Post every Monday in Discord #testnet-announcements:
 
 X3 Chain is **ready for Testnet v1 deployment**. All documentation, code, and deployment procedures are complete. The deployment strategy enables immediate community engagement while continfrontend/uing feature development in parallel.
 
-**Next Action:** Execute deployment using `TESTNET_DEPLOYMENT_CHECKLIST.md` as the step-by-step gfrontend/uide.
+**Next Action:** Execute deployment using `docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md` as the step-by-step gfrontend/uide.
 
 ---
 

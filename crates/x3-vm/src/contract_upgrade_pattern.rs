@@ -107,7 +107,9 @@ impl LogicV1 {
 }
 
 impl Default for LogicV1 {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Logic implementation V2 (upgraded)
@@ -132,7 +134,9 @@ impl LogicV2 {
 }
 
 impl Default for LogicV2 {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Upgradeable attribute macro simulation
@@ -186,7 +190,9 @@ impl StorageLayout {
 }
 
 impl Default for StorageLayout {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Upgrade safety checker
@@ -243,7 +249,9 @@ impl UpgradeSafetyChecker {
 }
 
 impl Default for UpgradeSafetyChecker {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Upgrade audit report

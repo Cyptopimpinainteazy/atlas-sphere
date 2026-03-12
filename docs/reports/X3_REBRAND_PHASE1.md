@@ -7,12 +7,12 @@
    - Ganache CLI
    - Foundry (`forge`, `anvil`)
 2. Added X3 developer template matrix:
-   - `docs/templates/X3_DEVELOPER_TEMPLATES.md`
+   - `docs/docs/docs/templates/X3_DEVELOPER_TEMPLATES.md`
    - `templates/x3-chain/*` starter folders
    - `scripts/bootstrap-x3-template-matrix.sh`
 3. Performed initial branding pass:
    - Replaced user-facing `X3 Chain` wording with `X3 Chain` across docs and selected code strings.
-   - Updated key entry docs (`README.md`, `docs/DOCUMENTATION_INDEX.md`, `run-dev-node.sh`) to X3 naming.
+   - Updated key entry docs (`docs/root/README.md`, `docs/DOCUMENTATION_INDEX.md`, `run-dev-node.sh`) to X3 naming.
 
 ## Intentionally Deferred
 

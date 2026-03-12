@@ -1,9 +1,9 @@
 #[test]
 fn run_simple_add() {
-    use x3_common::Span;
-    use x3_vm::executor::execute;
-    use x3_vm::x3_vm::VMConfig;
-    use x3_vm::x3_vm::VM;
+    use x3_lang_common::Span;
+    use x3_lang_vm::executor::execute;
+    use x3_lang_vm::VMConfig;
+    use x3_lang_vm::VM;
 
     // Program: PUSH_IMM 1, PUSH_IMM 2, ADD_RRR (use regs), HALT
     let code = vec![

@@ -2,22 +2,11 @@
 resolver = "2"
 members = [
     "crates/x3-lexer",
-    "crates/x3-parser",
     "crates/x3-ast",
-    "crates/x3-ir",
-    "crates/x3-codegen",
-    "crates/x3-runtime",
-    "crates/x3-stdlib",
-    "crates/x3-reaper",
-    "crates/x3-cli",
-    "crates/x3-lsp",
-    "crates/x3-fmt",
-    "crates/x3-lint",
-    "crates/x3-pkg",
-    "crates/x3-repl",
-    "crates/x3-doc",
-    "crates/x3-test",
     "crates/x3-common",
+    "crates/x3-tools",
+    "compiler",
+    "vm",
 ]
 
 [workspace.package]

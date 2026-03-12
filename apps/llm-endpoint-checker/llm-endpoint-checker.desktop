@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=LLM Endpoint Checker
-Comment=Check and search for live LLM endpoints
-Exec=/home/lojak/Desktop/x3-chain-master/llm-endpoint-checker/llm-endpoint-checker
-Icon=/home/lojak/Desktop/x3-chain-master/llm-endpoint-checker/icon.png
-Terminal=false
-Categories=Utility;Network;AI;

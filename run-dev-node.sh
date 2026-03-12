@@ -1,8 +1,11 @@
-:#!/usr/bin/env bash
+#!/usr/bin/env bash
 # X3 Chain Development Node Launcher
 # This script launches a local X3 Chain blockchain node in development mode
 
 set -e
+
+# prevent rustup from trying to install components (e.g. clippy) each time
+export RUSTUP_SKIP_UPDATE=1
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
@@ -16,6 +19,15 @@ if [ ! -f "target/release/x3-chain-node" ]; then
     echo "⚠️  Binary not found. Building with: cargo build --release"
     cargo build --release
 fi
+
+# Function to kill processes using specific ports
+kill_port_processes() {
+    local port=$1
+    local pids=$(lsof -ti:$port 2>/dev/null || netstat -tulpn 2>/dev/null | grep ":$port " | awk '{print $NF}' | cut -d'/' -f1)
+    if [ ! -z "$pids" ]; then
+        kill -9 $pids 2>/dev/null || true
+    fi
+}
 
 # Default configuration
 BASE_PATH="${BASE_PATH:-/tmp/x3-dev}"
@@ -40,6 +52,16 @@ fi
 if [ "$1" = "--purge" ] || [ "$1" = "-p" ]; then
     echo "🧹 Purging chain data at $BASE_PATH..."
     rm -rf "$BASE_PATH"
+fi
+
+# Always clean up old processes on ports (unless --keep-ports flag)
+if [ "$1" != "--keep-ports" ] && [ "$2" != "--keep-ports" ]; then
+    echo "🧹 Cleaning up processes on ports $RPC_PORT, $P2P_PORT, $PROMETHEUS_PORT..."
+    kill_port_processes "$RPC_PORT"
+    kill_port_processes "$WS_PORT"  
+    kill_port_processes "$P2P_PORT"
+    kill_port_processes "$PROMETHEUS_PORT"
+    sleep 1  # Give OS time to release ports
 fi
 
 echo ""
@@ -99,6 +121,18 @@ BLOCKCHAIN_PID=$!
 echo "✅ Blockchain started (PID: $BLOCKCHAIN_PID)"
 echo ""
 
+# Set up signal handlers for clean shutdown
+cleanup() {
+    echo ""
+    echo "🛑 Stopping blockchain..."
+    kill -TERM $BLOCKCHAIN_PID 2>/dev/null || true
+    wait $BLOCKCHAIN_PID 2>/dev/null || true
+    echo "✅ Blockchain stopped"
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
 # Wait for blockchain to initialize (checking RPC port)
 echo "⏳ Waiting for blockchain to be ready..."
 sleep 2
@@ -151,6 +185,11 @@ else
     echo "Press Ctrl+C to stop the blockchain"
     echo ""
     
-    # Wait for blockchain only
-    wait $BLOCKCHAIN_PID
+    # Wait for blockchain and display block progress
+    # Pipe logs through block visualizer if available
+    if command -v python3 >/dev/null 2>&1 && [ -f "scripts/block_display.py" ]; then
+        wait $BLOCKCHAIN_PID
+    else
+        wait $BLOCKCHAIN_PID
+    fi
 fi

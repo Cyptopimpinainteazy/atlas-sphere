@@ -300,15 +300,10 @@ nav{height:56px;background:var(--white);border-bottom:1px solid var(--border);
   </div>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-document.getElementById('last-verified').textContent=new Date().toISOString().slice(0,19).replace('T',' ')+' UTC';
-let raised=14702400;
-setInterval(()=>{
-  raised+=Math.floor(Math.random()*5000+1000);
-  document.getElementById('sum-raised').textContent='$'+raised.toLocaleString();
-  document.getElementById('r3-amount').textContent='+$'+raised.toLocaleString();
-  document.getElementById('sum-treasury').textContent='$'+(raised-6284000).toLocaleString();
-},5000);
+X3PageAdapters.start();
 // Animate allocation bars on load
 setTimeout(()=>document.querySelectorAll('.ar-bar').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);}),200);
 </script>

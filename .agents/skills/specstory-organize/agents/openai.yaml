@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Organize"
-  short_description: "Sort SpecStory sessions into clean date-based folders"
-  default_prompt: "Organize the SpecStory history into a clean year/month structure and summarize what changed."

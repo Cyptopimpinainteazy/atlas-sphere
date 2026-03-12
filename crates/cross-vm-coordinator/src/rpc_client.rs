@@ -50,11 +50,7 @@ impl RpcClient {
     }
 
     /// Execute a JSON-RPC call.
-    pub async fn call(
-        &self,
-        method: &str,
-        params: Value,
-    ) -> Result<Value, CoordinatorError> {
+    pub async fn call(&self, method: &str, params: Value) -> Result<Value, CoordinatorError> {
         let id = self
             .request_id
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -84,9 +80,9 @@ impl RpcClient {
             )));
         }
 
-        response.result.ok_or_else(|| {
-            CoordinatorError::Internal("RPC response missing result".into())
-        })
+        response
+            .result
+            .ok_or_else(|| CoordinatorError::Internal("RPC response missing result".into()))
     }
 
     /// Minimal HTTP POST implementation using tokio TCP.
@@ -96,9 +92,8 @@ impl RpcClient {
 
         // Parse URL
         let url = &self.url;
-        let (host, port, path) = parse_url(url).map_err(|e| {
-            CoordinatorError::Internal(format!("Invalid RPC URL: {}", e))
-        })?;
+        let (host, port, path) = parse_url(url)
+            .map_err(|e| CoordinatorError::Internal(format!("Invalid RPC URL: {}", e)))?;
 
         let addr = format!("{}:{}", host, port);
         let mut stream = TcpStream::connect(&addr).await.map_err(|e| {
@@ -114,17 +109,22 @@ impl RpcClient {
              Connection: close\r\n\
              \r\n\
              {}",
-            path, host, body.len(), body
+            path,
+            host,
+            body.len(),
+            body
         );
 
-        stream.write_all(http_request.as_bytes()).await.map_err(|e| {
-            CoordinatorError::Internal(format!("HTTP write failed: {}", e))
-        })?;
+        stream
+            .write_all(http_request.as_bytes())
+            .await
+            .map_err(|e| CoordinatorError::Internal(format!("HTTP write failed: {}", e)))?;
 
         let mut response = Vec::new();
-        stream.read_to_end(&mut response).await.map_err(|e| {
-            CoordinatorError::Internal(format!("HTTP read failed: {}", e))
-        })?;
+        stream
+            .read_to_end(&mut response)
+            .await
+            .map_err(|e| CoordinatorError::Internal(format!("HTTP read failed: {}", e)))?;
 
         let response_str = String::from_utf8_lossy(&response);
 
@@ -132,9 +132,7 @@ impl RpcClient {
         let body_start = response_str.find("\r\n\r\n");
         match body_start {
             Some(pos) => Ok(response_str[pos + 4..].to_string()),
-            None => Err(CoordinatorError::Internal(
-                "Malformed HTTP response".into(),
-            )),
+            None => Err(CoordinatorError::Internal("Malformed HTTP response".into())),
         }
     }
 }
@@ -169,11 +167,7 @@ fn parse_url(url: &str) -> Result<(String, u16, String), String> {
 
 impl RpcClient {
     /// eth_call — read-only EVM call.
-    pub async fn eth_call(
-        &self,
-        to: &str,
-        data: &str,
-    ) -> Result<String, CoordinatorError> {
+    pub async fn eth_call(&self, to: &str, data: &str) -> Result<String, CoordinatorError> {
         let params = serde_json::json!([
             {
                 "to": to,
@@ -182,32 +176,22 @@ impl RpcClient {
             "latest"
         ]);
         let result = self.call("eth_call", params).await?;
-        result
-            .as_str()
-            .map(|s| s.to_string())
-            .ok_or_else(|| CoordinatorError::Internal("eth_call: expected hex string result".into()))
+        result.as_str().map(|s| s.to_string()).ok_or_else(|| {
+            CoordinatorError::Internal("eth_call: expected hex string result".into())
+        })
     }
 
     /// eth_sendRawTransaction — broadcast signed transaction.
-    pub async fn eth_send_raw_tx(
-        &self,
-        raw_tx: &str,
-    ) -> Result<String, CoordinatorError> {
+    pub async fn eth_send_raw_tx(&self, raw_tx: &str) -> Result<String, CoordinatorError> {
         let params = serde_json::json!([raw_tx]);
         let result = self.call("eth_sendRawTransaction", params).await?;
-        result
-            .as_str()
-            .map(|s| s.to_string())
-            .ok_or_else(|| {
-                CoordinatorError::Internal("eth_sendRawTransaction: expected tx hash".into())
-            })
+        result.as_str().map(|s| s.to_string()).ok_or_else(|| {
+            CoordinatorError::Internal("eth_sendRawTransaction: expected tx hash".into())
+        })
     }
 
     /// eth_getTransactionReceipt — check if tx is confirmed.
-    pub async fn eth_get_receipt(
-        &self,
-        tx_hash: &str,
-    ) -> Result<Option<Value>, CoordinatorError> {
+    pub async fn eth_get_receipt(&self, tx_hash: &str) -> Result<Option<Value>, CoordinatorError> {
         let params = serde_json::json!([tx_hash]);
         let result = self.call("eth_getTransactionReceipt", params).await?;
         if result.is_null() {
@@ -224,9 +208,8 @@ impl RpcClient {
             .as_str()
             .ok_or_else(|| CoordinatorError::Internal("expected hex block number".into()))?;
         let without_prefix = hex_str.strip_prefix("0x").unwrap_or(hex_str);
-        u64::from_str_radix(without_prefix, 16).map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to parse block number: {}", e))
-        })
+        u64::from_str_radix(without_prefix, 16)
+            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse block number: {}", e)))
     }
 
     /// eth_getBlock — get block timestamp.
@@ -237,9 +220,8 @@ impl RpcClient {
             .as_str()
             .ok_or_else(|| CoordinatorError::Internal("Missing block timestamp".into()))?;
         let without_prefix = timestamp_hex.strip_prefix("0x").unwrap_or(timestamp_hex);
-        u64::from_str_radix(without_prefix, 16).map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to parse timestamp: {}", e))
-        })
+        u64::from_str_radix(without_prefix, 16)
+            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse timestamp: {}", e)))
     }
 }
 
@@ -274,18 +256,14 @@ impl RpcClient {
             .ok_or_else(|| CoordinatorError::Internal("Expected base64 account data".into()))?;
 
         // Decode base64
-        let data = base64_decode(data_str).map_err(|e| {
-            CoordinatorError::Internal(format!("Base64 decode failed: {}", e))
-        })?;
+        let data = base64_decode(data_str)
+            .map_err(|e| CoordinatorError::Internal(format!("Base64 decode failed: {}", e)))?;
 
         Ok(Some(data))
     }
 
     /// sendTransaction — broadcast Solana transaction.
-    pub async fn solana_send_tx(
-        &self,
-        tx_base64: &str,
-    ) -> Result<String, CoordinatorError> {
+    pub async fn solana_send_tx(&self, tx_base64: &str) -> Result<String, CoordinatorError> {
         let params = serde_json::json!([
             tx_base64,
             {"encoding": "base64", "preflightCommitment": "finalized"}
@@ -309,9 +287,7 @@ impl RpcClient {
 
     /// chain_getHeader — current finalized header.
     pub async fn x3_get_block_number(&self) -> Result<u64, CoordinatorError> {
-        let result = self
-            .call("chain_getHeader", serde_json::json!([]))
-            .await?;
+        let result = self.call("chain_getHeader", serde_json::json!([])).await?;
         let number_hex = result["number"]
             .as_str()
             .ok_or_else(|| CoordinatorError::Internal("Missing block number".into()))?;
@@ -334,9 +310,11 @@ fn base64_decode(input: &str) -> Result<Vec<u8>, String> {
     let mut bits = 0u32;
 
     for c in input.bytes() {
-        let val = TABLE.iter().position(|&b| b == c).ok_or_else(|| {
-            format!("Invalid base64 character: {}", c as char)
-        })? as u32;
+        let val = TABLE
+            .iter()
+            .position(|&b| b == c)
+            .ok_or_else(|| format!("Invalid base64 character: {}", c as char))?
+            as u32;
         buf = (buf << 6) | val;
         bits += 6;
         if bits >= 8 {

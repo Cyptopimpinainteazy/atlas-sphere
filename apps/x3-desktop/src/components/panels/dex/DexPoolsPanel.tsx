@@ -171,8 +171,6 @@ const DexPoolsPanel: React.FC = () => {
     );
   };
 
-  const aprColor = (apr: number) => (apr > 20 ? 'text-green-400' : apr > 10 ? 'text-blue-400' : 'text-white');
-
   return (
     <div className="h-full flex flex-col bg-[#0a0a0f] text-white overflow-auto">
       {/* Header */}

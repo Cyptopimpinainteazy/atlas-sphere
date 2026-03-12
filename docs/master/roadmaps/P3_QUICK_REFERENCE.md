@@ -237,7 +237,7 @@ secrets.yaml - Encrypted credential management
 
 | Guide | Path | Size | Purpose |
 |-------|------|------|---------|
-| **Deployment Guide** | `DEPLOYMENT_GUIDE.md` | 400 LOC | How to deploy locally & production |
+| **Deployment Guide** | `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` | 400 LOC | How to deploy locally & production |
 | **Architecture Guide** | `ARCHITECTURE.md` | 300 LOC | System design & data flows |
 | **Operational Runbooks** | `RUNBOOKS.md` | 300+ LOC | Alert response procedures |
 | **Production Checklist** | `PRODUCTION_CHECKLIST.md` | 200+ LOC | Launch validation |
@@ -372,11 +372,11 @@ Status: ✅ PASS
 
 ```
 /deployment/
-├─ DEPLOYMENT_GUIDE.md (Comprehensive deployment)
+├─ docs/runbooks/deployment/DEPLOYMENT_GUIDE.md (Comprehensive deployment)
 ├─ ARCHITECTURE.md (System design & flows)
 ├─ RUNBOOKS.md (28+ alert response procedures)
 ├─ PRODUCTION_CHECKLIST.md (Launch validation)
-└─ P3_IMPLEMENTATION_SUMMARY.md (This summary)
+└─ P3_docs/reports/IMPLEMENTATION_SUMMARY.md (This summary)
 ```
 
 ---

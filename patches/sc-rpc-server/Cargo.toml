@@ -22,7 +22,7 @@ autotests = false
 autobenches = false
 description = "Substrate RPC servers."
 homepage = "https://paritytech.github.io/polkadot-sdk/"
-readme = "README.md"
+readme = "docs/root/README.md"
 license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
 repository = "https://github.com/paritytech/polkadot-sdk.git"
 

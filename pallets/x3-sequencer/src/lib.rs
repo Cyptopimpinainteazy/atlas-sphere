@@ -69,11 +69,8 @@ pub mod pallet {
     /// Current pending batch — transactions waiting to be sealed.
     #[pallet::storage]
     #[pallet::getter(fn pending_txs)]
-    pub type PendingTxs<T: Config> = StorageValue<
-        _,
-        BoundedVec<SequencedTx, T::MaxTxsPerBatch>,
-        ValueQuery,
-    >;
+    pub type PendingTxs<T: Config> =
+        StorageValue<_, BoundedVec<SequencedTx, T::MaxTxsPerBatch>, ValueQuery>;
 
     /// Monotonically increasing batch counter.
     #[pallet::storage]
@@ -268,9 +265,7 @@ pub mod pallet {
             };
 
             PendingTxs::<T>::try_mutate(|pending| {
-                pending
-                    .try_push(tx)
-                    .map_err(|_| Error::<T>::BatchFull)
+                pending.try_push(tx).map_err(|_| Error::<T>::BatchFull)
             })?;
 
             Self::deposit_event(Event::TransactionSequenced {

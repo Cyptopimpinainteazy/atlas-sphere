@@ -621,6 +621,8 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="footer-legal">© 2025 X3STAR Protocol. All rights reserved.</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
 // Cursor
 const cursor = document.getElementById('cursor');
@@ -657,14 +659,7 @@ function updateCountdown() {
 updateCountdown();
 
 // Progress bar animate
-setTimeout(() => document.getElementById('raise-fill').style.width = '73.5%', 400);
-
-// Live raised counter
-let raised = 14700000;
-setInterval(() => {
-  raised += Math.floor(Math.random() * 500 + 100);
-  document.getElementById('raised-amt').textContent = '$' + raised.toLocaleString();
-}, 8000);
+setTimeout(() => document.getElementById('raise-fill').style.width = '0%', 100);
 
 // Token calc
 const rates = {ETH:44186, BTC:285000, USDT:13.3, CARD:12};
@@ -687,6 +682,8 @@ function handleBuy() {
   btn.textContent = '⟁ CONNECTING WALLET...';
   setTimeout(() => { btn.textContent = '⬡ BUY X3STAR NOW'; alert('Connect your wallet to proceed with the purchase!'); }, 1500);
 }
+
+X3PageAdapters.start();
 
 // FAQ
 function toggleFaq(el) {

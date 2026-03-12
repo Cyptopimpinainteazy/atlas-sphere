@@ -10,7 +10,7 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.36"
 name = "fastrand"
 version = "2.3.0"
@@ -23,7 +23,7 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "A simple and fast random number generator"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "simple",
     "fast",

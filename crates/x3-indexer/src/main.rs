@@ -88,7 +88,9 @@ async fn main() -> Result<()> {
     }
 
     // Initialize metrics
-    let metrics = metrics::Metrics::new();
+    let metrics = metrics::Metrics::try_new().map_err(|e| {
+        error::IndexerError::Internal(format!("metrics initialization failed: {e}"))
+    })?;
 
     // Start metrics/health server
     let server_handle = tokio::spawn(server::run(config.metrics.port, metrics.clone()));

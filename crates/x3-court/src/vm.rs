@@ -38,7 +38,13 @@ pub enum Verdict {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ChallengeType { Execution, Dag, Resource, Receipt, Equivocation }
+pub enum ChallengeType {
+    Execution,
+    Dag,
+    Resource,
+    Receipt,
+    Equivocation,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Challenge {
@@ -131,7 +137,9 @@ struct DagStub {
     root: Hash,
 }
 impl DagStub {
-    fn root_hash(&self) -> Hash { self.root }
+    fn root_hash(&self) -> Hash {
+        self.root
+    }
 }
 
 fn derive_action_dag(_: &[Action]) -> Result<DagStub, CourtVmError> {
@@ -160,8 +168,7 @@ pub fn adjudicate(
         return Err(CourtVmError::BlockHashMismatch);
     }
     // Derive DAG and order
-    let dag = derive_action_dag(&block.actions)
-        .map_err(|_| CourtVmError::InvalidDag)?;
+    let dag = derive_action_dag(&block.actions).map_err(|_| CourtVmError::InvalidDag)?;
     if dag.root_hash() != block.action_dag_root {
         return Ok(Verdict::InvalidDag);
     }
@@ -173,8 +180,8 @@ pub fn adjudicate(
     let mut state = pre_state.clone();
     let mut receipts = Vec::new();
     for action in order.iter() {
-        let receipt = execute_action(&mut state, action)
-            .map_err(|_| CourtVmError::ExecutionFailure)?;
+        let receipt =
+            execute_action(&mut state, action).map_err(|_| CourtVmError::ExecutionFailure)?;
         receipts.push(receipt);
     }
     // Verify receipts
@@ -192,7 +199,9 @@ pub fn adjudicate(
     }
     // Proposer equivocation check (distinct blocks at same height signed)
     if let ChallengePayload::Equivocation { block_a, block_b } = &chal.payload {
-        if block_a == block_b { return Err(CourtVmError::InvalidEquivocationProof); }
+        if block_a == block_b {
+            return Err(CourtVmError::InvalidEquivocationProof);
+        }
         return Ok(Verdict::ProposerEquivocation);
     }
     Ok(Verdict::Valid)

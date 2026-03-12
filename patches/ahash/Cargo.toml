@@ -10,7 +10,7 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.60.0"
 name = "ahash"
 version = "0.8.12"
@@ -22,7 +22,7 @@ exclude = [
 ]
 description = "A non-cryptographic hash function using AES-NI for high performance"
 documentation = "https://docs.rs/ahash"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "hash",
     "hasher",

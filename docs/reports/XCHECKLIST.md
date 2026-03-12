@@ -249,7 +249,7 @@
 | DEPLOYMENT.md                          | ✅      |
 | RPC_INTEGRATION_GUIDE.md               | ✅      |
 | FRONTIER_INTEGRATION_STEPS.md          | ✅      |
-| SECURITY.md                            | ✅      |
+| docs/security/docs/security/SECURITY.md                            | ✅      |
 | Developer Tutorial ("How to Write X3") | ❌      |
 | API Reference (auto-generated)         | ❌      |
 

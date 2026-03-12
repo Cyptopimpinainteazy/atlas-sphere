@@ -23,7 +23,7 @@ autotests = false
 autobenches = false
 description = "The fastest Bloom filter in Rust. No accuracy compromises. Full concurrency support and compatible with any hasher."
 homepage = "https://github.com/tomtomwombat/fastbloom/"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "data-structures",
     "bloom-filter",

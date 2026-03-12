@@ -13,7 +13,7 @@
 
 ### **B: Register Allocator (Chaitin Algorithm)**
 
-**Location**: [crates/x3-opt/src/regalloc.rs](crates/x3-opt/src/regalloc.rs)
+**Location**: [/crates/x3-opt/src/regalloc.rs](/crates/x3-opt/src/regalloc.rs)
 
 **What It Does**:
 Graph coloring-based register allocation. Converts unlimited virtual registers (MIR) into limited physical registers (target machine).
@@ -64,7 +64,7 @@ Result: {
 
 ### **C: Peephole Autogen (AI-Driven Pattern Mining)**
 
-**Location**: [crates/x3-opt/src/peephole_autogen.rs](crates/x3-opt/src/peephole_autogen.rs)
+**Location**: [/crates/x3-opt/src/peephole_autogen.rs](/crates/x3-opt/src/peephole_autogen.rs)
 
 **What It Does**:
 Automatically discovers peephole optimization patterns using three discovery methods:
@@ -116,7 +116,7 @@ Discovery: telemetry (executed 50,000x)
 
 ### **D: Superoptimizer Core (SMT + Brute Force)**
 
-**Location**: [crates/x3-opt/src/superoptimizer.rs](crates/x3-opt/src/superoptimizer.rs)
+**Location**: [/crates/x3-opt/src/superoptimizer.rs](/crates/x3-opt/src/superoptimizer.rs)
 
 **What It Does**:
 **The Crown Jewel** 👑  

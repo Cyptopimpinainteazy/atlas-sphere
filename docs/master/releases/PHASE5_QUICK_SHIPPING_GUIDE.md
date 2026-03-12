@@ -22,16 +22,16 @@
 |------|---------|--------|
 | [openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md](openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md) | 24-hour checklist | **MUST DO TONIGHT** - get 4 sign-offs |
 | [openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md](openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md) | Message templates | Copy & paste ready for tomorrow |
-| [openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md](openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md) | How to deploy | Reference guide |
+| [openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md](openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md) | How to deploy | Reference guide |
 
 ### DURING Deployment (Tomorrow 2:00 PM - 5:30 PM)
 | File | Purpose | When |
 |------|---------|------|
-| [scripts/deploy-phase5.sh](scripts/deploy-phase5.sh) | Main deployment | T+0:00 - Execute |
+| [/scripts/deploy-phase5.sh](/scripts/deploy-phase5.sh) | Main deployment | T+0:00 - Execute |
 | [openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md#deployment-day](openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md) | T+N checklist | Every 15 min during 3h window |
 | [openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md](openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md) | Status updates | T+0:30, T+1:00, T+1:30, T+2:00, T+2:30, T+3:00 |
 | [monitoring/alerts.yml](monitoring/alerts.yml) | Watch alerts | Continuous - 15 rules active |
-| [scripts/verify_jury_decision.sh](scripts/verify_jury_decision.sh) | Test deployment | T+3:00 - Run verification |
+| [/scripts/verify_jury_decision.sh](/scripts/verify_jury_decision.sh) | Test deployment | T+3:00 - Run verification |
 
 ### AFTER Deployment (Tomorrow Evening)
 | File | Purpose | Action |
@@ -275,7 +275,7 @@ cat monitoring/alerts.yml | head -20
 - `openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md` - **KEY CHECKLIST** (800 LOC)
 - `openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md` - **MESSAGE TEMPLATES** (400 LOC)
 - `openspec/changes/jury-blockchain-anchoring/OPERATIONS_RUNBOOK.md` - Operations manual (600 LOC)
-- `openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md` - How to deploy (600 LOC)
+- `openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` - How to deploy (600 LOC)
 
 ### Examples & CI/CD
 - `examples/example_jury_anchor_python.py` - Python example (300 LOC)
@@ -339,7 +339,7 @@ cat monitoring/alerts.yml | head -20
 5. Next Monday: Send weekly report
 
 **If you're SECURITY:**
-1. Tonight: Review deployment in `DEPLOYMENT_GUIDE.md`
+1. Tonight: Review deployment in `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 2. Check `.github/workflows/phase5-ci-cd.yml` for security job
 3. Verify `monitoring/alerts.yml` covers security scenarios
 4. Sign off in `PRE_FLIGHT_CHECKLIST.md`

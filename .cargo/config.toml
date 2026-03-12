@@ -15,6 +15,7 @@ rustflags = [
 # Set WASM build flags for substrate-wasm-builder
 # This is picked up by the wasm builder when spawning cargo
 WASM_BUILD_RUSTFLAGS = "-C target-cpu=mvp -C target-feature=-sign-ext,-reference-types,-bulk-memory"
+RUST_MIN_STACK = "33554432"
 
 [net]
 # Git fetch with CLI for better performance

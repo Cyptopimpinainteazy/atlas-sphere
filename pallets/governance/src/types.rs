@@ -92,6 +92,15 @@ pub enum ProposalStatus {
 }
 
 /// A governance proposal.
+///
+/// Per X3 Constitution vΩ-1.0 Article IV:
+///   "Governance may propose changes but may not violate invariants, expand powers
+///    beyond constitutional limits, or bypass proof requirements."
+///
+/// Proposals that touch constitutional invariants (supply, treasury, agent limits,
+/// governance bounds) MUST include a non-zero `proof_commitment` and a
+/// `constitution_hash` matching the current on-chain constitution. Voting is
+/// **necessary but not sufficient** for execution. Proof verification is required.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, TypeInfo, RuntimeDebug)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct Proposal<AccountId, Balance, BlockNumber, Call> {
@@ -115,6 +124,26 @@ pub struct Proposal<AccountId, Balance, BlockNumber, Call> {
     pub voting_end: BlockNumber,
     /// Block when enacted (if applicable).
     pub enacted_at: Option<BlockNumber>,
+
+    // --- Constitutional proof gate (vΩ-1.0) ---
+
+    /// SHA-256 commitment to the off-chain compliance proof for this proposal.
+    ///
+    /// Required when `touches_invariants == true`. A zero value means no proof
+    /// is attached. Per Article IV, the engine will halt execution if this is
+    /// zero and the proposal touches a constitutional invariant.
+    pub proof_commitment: Option<[u8; 32]>,
+
+    /// Hash of the constitution version this proposal was authored against.
+    ///
+    /// When set, the engine verifies this matches the current on-chain constitution
+    /// hash before execution. Proposals authored against a superseded constitution
+    /// are invalid.
+    pub constitution_hash: Option<[u8; 32]>,
+
+    /// Whether this proposal touches any constitutional invariant (supply, treasury,
+    /// agent limits, governance bounds). Set by the proposer; the runtime verifies.
+    pub touches_invariants: bool,
 }
 
 /// Tally of votes for a proposal.

@@ -8,7 +8,7 @@ Allows external validators to:
 3. Choose SLA tier (Basic/Pro/Enterprise)
 4. Test acceleration immediately
 
-Integrated with existing JWT authentication from AUTHENTICATION_SETUP.md
+Integrated with existing JWT authentication from docs/runbooks/getting-started/AUTHENTICATION_SETUP.md
 """
 
 import hashlib
@@ -27,7 +27,7 @@ from aiohttp import web
 import aiohttp_cors
 
 
-# From AUTHENTICATION_SETUP.md
+# From docs/runbooks/getting-started/AUTHENTICATION_SETUP.md
 AUTH_SALT = "x3-chain-inferstructor-2026"  # Change in production!
 JWT_SECRET = "inferstructor-jwt-secret-change-me"  # Must match .env
 

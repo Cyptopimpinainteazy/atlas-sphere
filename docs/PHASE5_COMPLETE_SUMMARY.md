@@ -35,7 +35,7 @@ Over **8 hours of continuous development**, delivered a complete distributed jur
 | `docs/PHASE5_PROPOSAL.md` | Specification | 400 | ✅ 12-section proposal |
 | `docs/PHASE5_DESIGN.md` | Architecture | 600 | ✅ 500-block diagram, complete tech spec |
 | `docs/PHASE5_IMPLEMENTATION_GUIDE.md` | Guide | 1500+ | ✅ Step-by-step implementation |
-| `docs/PHASE5_DEPLOYMENT_GUIDE.md` | Deployment | 1200+ | ✅ Infrastructure, networking, security |
+| `docs/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` | Deployment | 1200+ | ✅ Infrastructure, networking, security |
 | `apps/jury-sphere-manifest.json` | Manifest | 300 | ✅ Component registry |
 
 **Session 1 Result:** 9 files, ~5,650 LOC, 85% Phase 5 Complete (missing deployment automation)

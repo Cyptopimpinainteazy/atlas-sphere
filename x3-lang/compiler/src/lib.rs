@@ -4,10 +4,10 @@ pub mod regalloc;
 
 use lowering::lower_program;
 use emitter::emit;
-use x3_vm::verifier;
-use x3_vm::x3_vm::InstructionStream;
+use x3_lang_vm::verifier;
+use x3_lang_vm::InstructionStream;
 
-use x3_ast::ast::Program;
+use x3_lang_ast::ast::Program;
 
 pub fn compile_program(program: &Program) -> Result<Vec<u8>, String> {
     let lowered = lower_program(program)?;

@@ -62,7 +62,7 @@
 ### Documentation & Knowledge Transfer
 
 - [ ] **Deployment Documentation**
-  - [ ] `DEPLOYMENT_GUIDE.md` complete and reviewed
+  - [ ] `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` complete and reviewed
   - [ ] Architecture diagrams verified
   - [ ] Quick start guide written
   - [ ] Troubleshooting guide available

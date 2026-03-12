@@ -32,7 +32,6 @@ async-trait = "0.1"
 
 # Networking
 libp2p = { version = "0.53", features = ["tokio", "tcp", "noise", "yamux", "gossipsub", "mdns", "kad", "identify", "ping", "macros"] }
-quinn = "0.10"
 hyper-util = "0.1"
 
 # Serialization

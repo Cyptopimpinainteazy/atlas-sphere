@@ -297,11 +297,11 @@ pub struct ValueNumbering {
 ## 12. Files Modified
 
 ### Created
-- [crates/x3-opt/src/value_numbering.rs](crates/x3-opt/src/value_numbering.rs) — 200 lines
+- [/crates/x3-opt/src/value_numbering.rs](/crates/x3-opt/src/value_numbering.rs) — 200 lines
 
 ### Modified
-- [crates/x3-opt/src/lib.rs](crates/x3-opt/src/lib.rs) — +1 line (pub mod)
-- [crates/x3-opt/src/passes/pre.rs](crates/x3-opt/src/passes/pre.rs) — +3 sig changes
+- [/crates/x3-opt/src/lib.rs](/crates/x3-opt/src/lib.rs) — +1 line (pub mod)
+- [/crates/x3-opt/src/passes/pre.rs](/crates/x3-opt/src/passes/pre.rs) — +3 sig changes
 
 ---
 

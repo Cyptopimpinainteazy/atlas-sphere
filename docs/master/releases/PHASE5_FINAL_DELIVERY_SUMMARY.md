@@ -81,7 +81,7 @@ pytest tests/test_jury_anchoring.py -v  # All PASS
 - `openspec/changes/jury-blockchain-anchoring/proposal.md` (800 lines) - Complete specification
 - `openspec/changes/jury-blockchain-anchoring/design.md` (800+ lines) - Architecture & design
 - `DOCUMENTATION/PHASE5_GUIDE.md` (2,500+ lines) - Complete developer guide
-- `openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md` (600 lines) - How to deploy
+- `openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` (600 lines) - How to deploy
 - Manifest files with quick references
 
 ---
@@ -424,8 +424,8 @@ tests/test_jury_anchoring.py                   (350 lines - Test suite 13/13)
 openspec/changes/jury-blockchain-anchoring/proposal.md      (800 lines)
 openspec/changes/jury-blockchain-anchoring/design.md        (800 lines)
 DOCUMENTATION/PHASE5_GUIDE.md                  (2,500 lines)
-openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md (600 lines)
-openspec/changes/jury-blockchain-anchoring/QUICK_REFERENCE.md  (quick ref)
+openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md (600 lines)
+openspec/changes/jury-blockchain-anchoring/docs/runbooks/getting-started/QUICK_REFERENCE.md  (quick ref)
 ```
 
 ### Session 2 Files (Deployment Infrastructure)
@@ -534,7 +534,7 @@ monitoring/alerts.yml                          (300 lines - Alert rules)
 ## Support & Questions
 
 **For deployment procedure questions:**  
-→ See: `openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md`
+→ See: `openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 
 **For operational issues:**  
 → See: `openspec/changes/jury-blockchain-anchoring/OPERATIONS_RUNBOOK.md`

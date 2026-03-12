@@ -495,6 +495,8 @@ footer{padding:60px 5%;border-top:1px solid var(--border);display:flex;align-ite
   <div style="font-size:11px;color:rgba(255,255,255,0.15);">© 2025 X3STAR Protocol</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
 function copyRefCode() {
   navigator.clipboard?.writeText('https://x3star.io/?ref=AMB7421').catch(()=>{});
@@ -509,10 +511,11 @@ function shareTelegram() {
   window.open('https://t.me/share/url?url=https://x3star.io&text='+text,'_blank');
 }
 function registerAffiliate() {
-  alert('🎉 Welcome to the X3STAR Ambassador Program!\n\nYour referral code: X3STAR-' + Math.floor(Math.random()*90000+10000) + '\n\nCheck your email for your dashboard login and marketing materials.');
+  alert('Submitting affiliate application…');
 }
 const obs = new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible');}),{threshold:0.08});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+X3PageAdapters.start();
 </script>
 </body>
 </html>

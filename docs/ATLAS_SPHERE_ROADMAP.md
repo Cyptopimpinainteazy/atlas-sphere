@@ -41,12 +41,12 @@ Deliver a secure, observable, and governable X3 chain stack over the next 14 day
 3. **CI/CD, deployment, and documentation**
    - Have the DevOps team harden each workflow (`.github/workflows/security-guardrails.yml`, `production-deploy.yml`, `mainnet-gating.yml`) with linting, secret scanning, and dependency checks. Replace any baked-in keys/URLs with env vars or templates from `deployment/` and gate mainnet pushes behind the `mainnet-gating` workflow.
    - Stand up a staging pipeline (mirror the mainnet config defined in `deployment/`, `k8s-deployment.yaml`, `docker-compose.production.yml`) so upgrades can be validated before hitting production.
-   - Assign a Docs Owner to refresh `README.md`, `QUICK_START.md`, and the developer guides (e.g., `README_SETUP.md`, `docs/reports/X3_ATLAS_SPHERE_CODEBASE_ANALYSIS.md`) so they mention the new `x3-*` names, updated setup steps, and matching Cargo version numbers.
+   - Assign a Docs Owner to refresh `docs/root/README.md`, `docs/runbooks/getting-started/QUICK_START.md`, and the developer guides (e.g., `docs/runbooks/getting-started/README_SETUP.md`, `docs/reports/X3_ATLAS_SPHERE_CODEBASE_ANALYSIS.md`) so they mention the new `x3-*` names, updated setup steps, and matching Cargo version numbers.
 
 4. **Monitoring & continuity**
    - Ops/SRE owns alerts for abnormal behavior (huge token transfers, mempool spikes, block time drift). Hook these alerts into the existing Grafana/Prometheus stack (`prometheus.yml`, `grafana-dashboards.yml`) and call out what the Warden should do when `ThreatLevel::is_emergency()` becomes true.
    - Use `crates/gpu-swarm/src/warden/signals.rs` + `monitoring/` to detect failing GPU nodes, inconsistent proofs, or repeated verification failures. Document an incident playbook (freeze agent keys, rollback, emergency override via `crates/gpu-swarm/src/warden/governance.rs::EmergencyOverride`).
-   - Refresh `MONITORING_GUIDE.md` so it outlines drill frequency and “measure as we go” KPIs (200ms block target, zero stalls). Include the `WardenDecision` payload fields as part of the dashboard so the “ThreatLevel” can be tied to alerts.
+   - Refresh `docs/runbooks/operations/docs/runbooks/operations/MONITORING_GUIDE.md` so it outlines drill frequency and “measure as we go” KPIs (200ms block target, zero stalls). Include the `WardenDecision` payload fields as part of the dashboard so the “ThreatLevel” can be tied to alerts.
 
 ## Ownership / Milestones
 
@@ -56,7 +56,7 @@ Deliver a secure, observable, and governable X3 chain stack over the next 14 day
 | MEV & Chronos guardrails | Trading/ML Engineers | Docs for `mev_protection`, `ChronosFlash` toggle config, MEV dashboard | Multi-review gate after each MEV change + disable ChronosFlash unless validated |
 | Governance stack | Blockchain Core + Legal/Compliance | `pallets/x3-governance` runtime params, `pallets/treasury` funding playbook, `crates/x3-court` spec with ZK hooks | Migration off Sudo + treasury funding flow defined |
 | CI/CD + Deployment | DevOps | Hardened `.github/workflows`, templated deployment scripts, staging pipeline | No mainnet deploy without security lints + staging validation run |
-| Docs | Docs Owner | Updated `README.md`, `QUICK_START.md`, developer guides, architecture diagrams | All top-level docs reflect current dual-VM status + `x3-*` naming |
+| Docs | Docs Owner | Updated `docs/root/README.md`, `docs/runbooks/getting-started/QUICK_START.md`, developer guides, architecture diagrams | All top-level docs reflect current dual-VM status + `x3-*` naming |
 | Monitoring & Continuity | Ops/SRE | Alerting playbook, Grafana dashboards, `EmergencyOverride` drill docs | Regular drills + measurable KPIs (ThreatLevel mapping, block time drift) |
 
 ## Immediate Next Steps
@@ -70,7 +70,7 @@ Deliver a secure, observable, and governable X3 chain stack over the next 14 day
 Keep track of these success indicators each day:
 - Test/coverage: run `cargo test` + `cargo tarpaulin` for critical crates, confirm coverage thresholds in CI.
 - MEV/Chronos: show a documented review and dashboard event for each ThreatLevel change.
-- Governance/Docs: confirm new runtime params are reflected in `docs/reports/X3_ATLAS_SPHERE_CODEBASE_ANALYSIS.md` and `README.md`.
+- Governance/Docs: confirm new runtime params are reflected in `docs/reports/X3_ATLAS_SPHERE_CODEBASE_ANALYSIS.md` and `docs/root/README.md`.
 - Monitoring: verify Grafana `ThreatLevel` chart updates when the Warden emits high severity alerts.
 
 Document blockers immediately so the team can re-prioritize rather than rushing at the deadline.

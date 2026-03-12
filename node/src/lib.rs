@@ -55,6 +55,7 @@ pub mod metrics;
 /// network configurations.
 pub mod chain_spec;
 
+/// Flash Finality network bridge and gossip message handling.
 pub mod flash_finality;
 /// Service factory implementations, including node initialization, consensus
 /// wiring, and RPC setup for the X3 Chain blockchain.
@@ -69,7 +70,7 @@ mod logging;
 /// without depending on the internal module layout.
 #[cfg(feature = "cli")]
 #[cfg_attr(docsrs, doc(cfg(feature = "cli")))]
-pub use cli::*;
+pub use cli::{AtomicSwapCmd, AtomicSwapSubcommand, Cli, Commands};
 
 // Command module internals are accessed via the `run()` function below.
 

@@ -30,15 +30,6 @@ const CrmShell: React.FC = () => {
 
   return (
     <div className="crm-app">
-      {/* Global Back to Desktop Button */}
-      <button 
-        onClick={() => navigate("/")}
-        className="fixed top-4 right-4 z-[9999] flex items-center gap-2 px-4 py-2 bg-[#ff6b35] text-white rounded-full shadow-lg hover:bg-[#ff8c42] transition-colors font-medium text-sm"
-        style={{ boxShadow: "0 4px 12px rgba(255, 107, 53, 0.3)" }}
-      >
-        <span className="text-lg leading-none mb-[2px]">←</span> Back to Desktop
-      </button>
-
       {/* Sidebar */}
       <aside className="crm-sidebar">
         <div className="crm-sidebar-header">
@@ -92,6 +83,15 @@ const CrmShell: React.FC = () => {
 
       {/* Main Content */}
       <main className="crm-main">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+          <button
+            onClick={() => navigate("/")}
+            className="crm-btn primary"
+            style={{ boxShadow: "0 4px 12px rgba(255, 107, 53, 0.3)" }}
+          >
+            ← Back to Desktop
+          </button>
+        </div>
         <Routes>
           <Route index element={<DashboardPage />} />
           <Route path="agents" element={<AgentsPage />} />

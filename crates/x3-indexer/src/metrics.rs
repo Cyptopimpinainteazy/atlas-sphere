@@ -19,62 +19,50 @@ pub struct Metrics {
 
 impl Metrics {
     /// Create a new metrics collection.
-    pub fn new() -> Self {
+    pub fn try_new() -> Result<Self, prometheus::Error> {
         let registry = Registry::new();
 
         let blocks_indexed =
-            IntCounter::new("indexer_blocks_indexed_total", "Total blocks indexed")
-                .expect("metric creation failed");
+            IntCounter::new("indexer_blocks_indexed_total", "Total blocks indexed")?;
 
-        let latest_block = IntGauge::new("indexer_latest_block", "Latest indexed block number")
-            .expect("metric creation failed");
+        let latest_block = IntGauge::new("indexer_latest_block", "Latest indexed block number")?;
 
         let block_processing_time = Histogram::with_opts(HistogramOpts::new(
             "indexer_block_processing_ms",
             "Block processing time in milliseconds",
-        ))
-        .expect("metric creation failed");
+        ))?;
 
         let extrinsics_indexed = IntCounter::new(
             "indexer_extrinsics_indexed_total",
             "Total extrinsics indexed",
-        )
-        .expect("metric creation failed");
+        )?;
 
         let events_indexed =
-            IntCounter::new("indexer_events_indexed_total", "Total events indexed")
-                .expect("metric creation failed");
+            IntCounter::new("indexer_events_indexed_total", "Total events indexed")?;
 
         let comits_indexed = IntCounter::new(
             "indexer_comits_indexed_total",
             "Total Comit transactions indexed",
-        )
-        .expect("metric creation failed");
+        )?;
 
-        let errors = IntCounter::new("indexer_errors_total", "Total indexer errors")
-            .expect("metric creation failed");
+        let errors = IntCounter::new("indexer_errors_total", "Total indexer errors")?;
 
         let db_query_time = Histogram::with_opts(HistogramOpts::new(
             "indexer_db_query_ms",
             "Database query time in milliseconds",
-        ))
-        .expect("metric creation failed");
+        ))?;
 
         // Register all metrics
-        registry.register(Box::new(blocks_indexed.clone())).unwrap();
-        registry.register(Box::new(latest_block.clone())).unwrap();
-        registry
-            .register(Box::new(block_processing_time.clone()))
-            .unwrap();
-        registry
-            .register(Box::new(extrinsics_indexed.clone()))
-            .unwrap();
-        registry.register(Box::new(events_indexed.clone())).unwrap();
-        registry.register(Box::new(comits_indexed.clone())).unwrap();
-        registry.register(Box::new(errors.clone())).unwrap();
-        registry.register(Box::new(db_query_time.clone())).unwrap();
+        registry.register(Box::new(blocks_indexed.clone()))?;
+        registry.register(Box::new(latest_block.clone()))?;
+        registry.register(Box::new(block_processing_time.clone()))?;
+        registry.register(Box::new(extrinsics_indexed.clone()))?;
+        registry.register(Box::new(events_indexed.clone()))?;
+        registry.register(Box::new(comits_indexed.clone()))?;
+        registry.register(Box::new(errors.clone()))?;
+        registry.register(Box::new(db_query_time.clone()))?;
 
-        Self {
+        Ok(Self {
             registry: Arc::new(registry),
             blocks_indexed,
             latest_block,
@@ -84,7 +72,7 @@ impl Metrics {
             comits_indexed,
             errors,
             db_query_time,
-        }
+        })
     }
 
     /// Get the prometheus registry.
@@ -141,11 +129,5 @@ impl Metrics {
     /// Get total errors.
     pub fn total_errors(&self) -> u64 {
         self.errors.get()
-    }
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self::new()
     }
 }

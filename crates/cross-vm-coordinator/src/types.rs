@@ -182,14 +182,14 @@ impl FlashloanProvider {
     /// Fee in basis points.
     pub fn fee_bps(&self) -> u32 {
         match self {
-            Self::AaveV3 => 5,        // 0.05%
-            Self::BalancerV2 => 0,     // 0%
+            Self::AaveV3 => 5,     // 0.05%
+            Self::BalancerV2 => 0, // 0%
             Self::UniswapV3 { fee_tier } => *fee_tier / 100,
-            Self::Solend => 30,        // 0.3%
-            Self::MarginFi => 0,       // 0%
-            Self::Kamino => 0,         // 0%
-            Self::Euler => 0,          // 0%
-            Self::X3Native => 9,       // 0.09% (X3 default)
+            Self::Solend => 30,  // 0.3%
+            Self::MarginFi => 0, // 0%
+            Self::Kamino => 0,   // 0%
+            Self::Euler => 0,    // 0%
+            Self::X3Native => 9, // 0.09% (X3 default)
         }
     }
 
@@ -241,9 +241,7 @@ pub enum FlashLegOutcome {
         premium_paid: u128,
     },
     /// Leg reverted: entire atomic tx rolled back.
-    Reverted {
-        reason: String,
-    },
+    Reverted { reason: String },
 }
 
 // ─── Swap Session Types ───────────────────────────────────────────────────────
@@ -346,7 +344,10 @@ pub enum CoordinatorError {
     InsufficientConfirmations { have: u32, need: u32 },
 
     #[error("Flashloan provider unavailable: {provider:?} on {vm}")]
-    ProviderUnavailable { provider: FlashloanProvider, vm: String },
+    ProviderUnavailable {
+        provider: FlashloanProvider,
+        vm: String,
+    },
 
     #[error("Inventory insufficient: need {need}, have {have}")]
     InsufficientInventory { need: u128, have: u128 },

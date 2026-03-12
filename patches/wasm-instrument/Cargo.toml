@@ -18,10 +18,10 @@ authors = ["Parity Technologies <admin@parity.io>"]
 include = [
     "src/**/*",
     "LICENSE-*",
-    "README.md",
+    "docs/root/README.md",
 ]
 description = "Instrument and transform wasm modules."
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "wasm",
     "webassembly",

@@ -1,9 +1,9 @@
 use crate::rpc_middleware::{RateLimitConfig, RateLimitMetrics, RateLimiter};
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use pallet_atomic_trade_engine::{
+    AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
     types::TradeRoute,
-    AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
 };
 use pallet_evolution_core::runtime_api::{
     BlockMetricsResponse, EvolutionCoreApi as EvolutionCoreRuntimeApi, EvolutionStatusResponse,
@@ -20,13 +20,13 @@ use pallet_x3_verifier::runtime_api::{
     ExecutorResponse, JobResponse, ReceiptResponse, VerifierStatusResponse,
     X3VerifierApi as X3VerifierRuntimeApi,
 };
-use sc_client_api::{BlockBackend, BlockchainEvents};
-use sc_rpc::SubscriptionTaskExecutor;
+use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider, ProofProvider};
 use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
+use sp_api::{CallApiAt, Metadata};
 use sp_block_builder::BlockBuilder;
-use sp_blockchain::HeaderBackend;
+use sp_blockchain::{HeaderBackend, HeaderMetadata};
 use sp_core::H256;
 use sp_runtime::traits::{Block as BlockT, SaturatedConversion};
 use std::sync::Arc;
@@ -38,7 +38,7 @@ use substrate_frame_rpc_system::{System, SystemApiServer};
 /// Includes system RPC methods for account nonce queries
 /// Supports WebSocket subscriptions for real-time block and event updates
 use x3_chain_runtime::{
-    opaque::Block, AccountId, AssetId, Balance, BlockNumber, ChainId, Nonce, NATIVE_GAS_PRICE,
+    AccountId, AssetId, Balance, BlockNumber, ChainId, NATIVE_GAS_PRICE, Nonce, opaque::Block,
 };
 
 fn runtime_api_error<E: std::fmt::Debug>(e: E) -> jsonrpsee::core::Error {
@@ -278,6 +278,7 @@ pub struct FlashFinalityRpc<B> {
 }
 
 impl<B> FlashFinalityRpc<B> {
+    /// Create a new Flash Finality RPC handler.
     pub fn new(gadget: Arc<flash_finality::FlashFinalityGadget>) -> Self {
         Self {
             gadget,
@@ -958,10 +959,7 @@ where
 pub trait AtomicKernelApi<BlockHash> {
     /// Get the status of an atomic bundle.
     #[method(name = "atomic_getBundleStatus")]
-    fn get_bundle_status(
-        &self,
-        bundle_id: H256,
-    ) -> RpcResult<Option<AtomicBundleStatusRpc>>;
+    fn get_bundle_status(&self, bundle_id: H256) -> RpcResult<Option<AtomicBundleStatusRpc>>;
 
     /// Get the PoAE execution proof for a finalized bundle.
     #[method(name = "atomic_getAtomicExecutionProof")]
@@ -974,22 +972,34 @@ pub trait AtomicKernelApi<BlockHash> {
 /// Bundle status returned via RPC.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct AtomicBundleStatusRpc {
+    /// Bundle identifier.
     pub bundle_id: H256,
+    /// Current status string for the bundle.
     pub status: String,
+    /// Number of legs in the bundle.
     pub leg_count: u32,
+    /// Unix timestamp (seconds) when the bundle was submitted.
     pub submitted_at: u64,
+    /// Block height deadline for execution.
     pub deadline_block: u64,
 }
 
 /// PoAE proof returned via RPC.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct AtomicExecutionProofRpc {
+    /// Bundle identifier.
     pub bundle_id: H256,
+    /// Receipt root for the execution.
     pub receipt_root: H256,
+    /// Block number when the bundle was finalized.
     pub finalized_block: u64,
+    /// Finality certificate hash.
     pub finality_cert: H256,
+    /// Hash of the legs included in the bundle.
     pub legs_hash: H256,
+    /// Number of legs in the bundle.
     pub leg_count: u32,
+    /// Proof hash for verification.
     pub proof_hash: H256,
 }
 
@@ -1000,6 +1010,7 @@ pub struct AtomicKernelRpc<C, B> {
 }
 
 impl<C, B> AtomicKernelRpc<C, B> {
+    /// Create a new RPC handler for Atomic Kernel queries.
     pub fn new(client: Arc<C>) -> Self {
         Self {
             client,
@@ -1013,11 +1024,10 @@ where
     Block: BlockT,
     C: Send + Sync + 'static + HeaderBackend<Block>,
 {
-    fn get_bundle_status(
-        &self,
-        bundle_id: H256,
-    ) -> RpcResult<Option<AtomicBundleStatusRpc>> {
+    fn get_bundle_status(&self, bundle_id: H256) -> RpcResult<Option<AtomicBundleStatusRpc>> {
         enforce_rpc_rate_limit("atomic_getBundleStatus")?;
+        let _ = &self.client;
+        let _ = bundle_id;
         // In a full implementation, query the runtime API for bundle state.
         // For now, return None — bundles are queryable via state queries.
         Ok(None)
@@ -1028,6 +1038,8 @@ where
         bundle_id: H256,
     ) -> RpcResult<Option<AtomicExecutionProofRpc>> {
         enforce_rpc_rate_limit("atomic_getAtomicExecutionProof")?;
+        let _ = &self.client;
+        let _ = bundle_id;
         // In a full implementation, query the PoaeProofs storage via runtime API.
         Ok(None)
     }
@@ -1057,6 +1069,7 @@ pub trait SequencerApi {
 pub struct SequencerRpc;
 
 impl SequencerRpc {
+    /// Create a new Sequencer RPC handler.
     pub fn new() -> Self {
         Self
     }
@@ -1091,7 +1104,6 @@ pub fn create_full<C, P>(
     client: Arc<C>,
     pool: Arc<P>,
     deny_unsafe: DenyUnsafe,
-    _subscription_executor: SubscriptionTaskExecutor,
     flash_finality_gadget: Option<Arc<flash_finality::FlashFinalityGadget>>,
 ) -> Result<jsonrpsee::RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
@@ -1101,7 +1113,11 @@ where
         + ProvideRuntimeApi<Block>
         + HeaderBackend<Block>
         + BlockBackend<Block>
-        + BlockchainEvents<Block>,
+        + BlockchainEvents<Block>
+        + HeaderMetadata<Block, Error = sp_blockchain::Error>
+        + ExecutorProvider<Block>
+        + ProofProvider<Block>
+        + CallApiAt<Block>,
     C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
     C::Api: TransactionPaymentRuntimeApi<Block, Balance>,
     C::Api: BlockBuilder<Block>,
@@ -1110,13 +1126,14 @@ where
     C::Api: AtomicTradeEngineRuntimeApi<Block>,
     C::Api: EvolutionCoreRuntimeApi<Block, AccountId, BlockNumber>,
     C::Api: X3VerifierRuntimeApi<Block, AccountId, Balance, BlockNumber>,
+    C::Api: Metadata<Block>,
     P: TransactionPool + 'static,
 {
     use jsonrpsee::RpcModule;
 
     let mut module = RpcModule::new(());
 
-    // Add standard Substrate modules
+    // Add standard Substrate modules (chain/state/child_state are added by sc_service::spawn_tasks)
     module.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
     module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
@@ -1167,7 +1184,7 @@ where
     }
 
     if let Some(gadget) = flash_finality_gadget {
-        module.merge(FlashFinalityRpc::new(gadget).into_rpc())?;
+        module.merge(FlashFinalityRpc::<Block>::new(gadget).into_rpc())?;
     }
 
     Ok(module)

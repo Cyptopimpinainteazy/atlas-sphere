@@ -156,7 +156,7 @@ cargo build --release
 ./target/release/x3-chain-node --dev --tmp
 ```
 
-**Full deployment guide**: See `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
+**Full deployment guide**: See `docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 
 ### Connect to Testnet
 

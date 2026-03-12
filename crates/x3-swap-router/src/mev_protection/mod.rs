@@ -7,9 +7,9 @@
 //! - Transaction reordering
 //! - Miner extractable value (MEV)
 
-use sp_std::vec::Vec;
-use sp_core::{H160, H256, U256};
 use serde::{Deserialize, Serialize};
+use sp_core::{H160, H256, U256};
+use sp_std::vec::Vec;
 
 /// MEV Protection strategies
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,13 +35,9 @@ pub enum ProtectionStrategy {
         reveal_delay_ms: u64,
     },
     /// Use time-locked transactions
-    TimeLock {
-        lock_duration_ms: u64,
-    },
+    TimeLock { lock_duration_ms: u64 },
     /// Multi-layer protection combining multiple strategies
-    MultiLayer {
-        strategies: Vec<ProtectionStrategy>,
-    },
+    MultiLayer { strategies: Vec<ProtectionStrategy> },
 }
 
 /// Sandwich attack detection and prevention
@@ -137,23 +133,38 @@ impl MEVProtector {
 
         // Apply protection strategies
         match &self.config.strategy {
-            ProtectionStrategy::RandomDelay { min_delay_ms, max_delay_ms } => {
+            ProtectionStrategy::RandomDelay {
+                min_delay_ms,
+                max_delay_ms,
+            } => {
                 let delay = Self::calculate_random_delay(*min_delay_ms, *max_delay_ms);
                 protections_applied.push(format!("Random delay: {}ms", delay));
                 total_overhead_ms += delay;
                 success_probability *= 0.95; // 5% chance of still being front-run
             }
-            ProtectionStrategy::PrivateTransaction { private_pool, bundle_priority } => {
-                protections_applied.push(format!("Private pool: {} (priority: {})", private_pool, bundle_priority));
+            ProtectionStrategy::PrivateTransaction {
+                private_pool,
+                bundle_priority,
+            } => {
+                protections_applied.push(format!(
+                    "Private pool: {} (priority: {})",
+                    private_pool, bundle_priority
+                ));
                 success_probability *= 0.98; // Private pools are safer but not foolproof
             }
-            ProtectionStrategy::TransactionSplitting { max_chunk_size, delay_between_chunks_ms } => {
+            ProtectionStrategy::TransactionSplitting {
+                max_chunk_size,
+                delay_between_chunks_ms,
+            } => {
                 let chunks = Self::calculate_chunks(route.amount_in, *max_chunk_size);
                 protections_applied.push(format!("Transaction splitting: {} chunks", chunks.len()));
                 total_overhead_ms += (chunks.len() - 1) as u64 * delay_between_chunks_ms;
                 success_probability *= 0.92; // Splitting adds complexity
             }
-            ProtectionStrategy::CommitReveal { commit_hash: _, reveal_delay_ms } => {
+            ProtectionStrategy::CommitReveal {
+                commit_hash: _,
+                reveal_delay_ms,
+            } => {
                 protections_applied.push(format!("Commit-reveal: {}ms delay", reveal_delay_ms));
                 total_overhead_ms += *reveal_delay_ms;
                 success_probability *= 0.99; // Very effective against front-running
@@ -246,13 +257,22 @@ impl MEVProtector {
             "0x10ED43C718714eb63d5aA57B78B54704E256024E", // PancakeSwap
         ];
 
-        popular_dexes.iter().any(|dex| dex.parse::<H160>().unwrap() == *dex_address)
+        popular_dexes
+            .iter()
+            .any(|dex| dex.parse::<H160>().unwrap() == *dex_address)
     }
 
     /// Apply a single protection strategy
-    async fn apply_single_strategy(&self, route: &Route, strategy: &ProtectionStrategy) -> Result<ProtectedRoute, MEVProtectionError> {
+    async fn apply_single_strategy(
+        &self,
+        route: &Route,
+        strategy: &ProtectionStrategy,
+    ) -> Result<ProtectedRoute, MEVProtectionError> {
         match strategy {
-            ProtectionStrategy::RandomDelay { min_delay_ms, max_delay_ms } => {
+            ProtectionStrategy::RandomDelay {
+                min_delay_ms,
+                max_delay_ms,
+            } => {
                 let delay = Self::calculate_random_delay(*min_delay_ms, *max_delay_ms);
                 Ok(ProtectedRoute {
                     route: route.clone(),
@@ -261,14 +281,18 @@ impl MEVProtector {
                     success_probability: 0.95,
                 })
             }
-            ProtectionStrategy::PrivateTransaction { private_pool, bundle_priority } => {
-                Ok(ProtectedRoute {
-                    route: route.clone(),
-                    protection_applied: vec![format!("Private pool: {} (priority: {})", private_pool, bundle_priority)],
-                    estimated_overhead_ms: 100,
-                    success_probability: 0.98,
-                })
-            }
+            ProtectionStrategy::PrivateTransaction {
+                private_pool,
+                bundle_priority,
+            } => Ok(ProtectedRoute {
+                route: route.clone(),
+                protection_applied: vec![format!(
+                    "Private pool: {} (priority: {})",
+                    private_pool, bundle_priority
+                )],
+                estimated_overhead_ms: 100,
+                success_probability: 0.98,
+            }),
             _ => {
                 // For other strategies, return the route unchanged with basic protection
                 Ok(ProtectedRoute {
@@ -380,10 +404,19 @@ pub enum MEVProtectionError {
 impl core::fmt::Display for MEVProtectionError {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
-            MEVProtectionError::OverheadExceeded { overhead, max_allowed } => {
-                write!(f, "Protection overhead {}ms exceeded max allowed {}ms", overhead, max_allowed)
+            MEVProtectionError::OverheadExceeded {
+                overhead,
+                max_allowed,
+            } => {
+                write!(
+                    f,
+                    "Protection overhead {}ms exceeded max allowed {}ms",
+                    overhead, max_allowed
+                )
             }
-            MEVProtectionError::StrategyNotSupported => write!(f, "Protection strategy not supported"),
+            MEVProtectionError::StrategyNotSupported => {
+                write!(f, "Protection strategy not supported")
+            }
             MEVProtectionError::ProtectionFailed(msg) => write!(f, "Protection failed: {}", msg),
             MEVProtectionError::InvalidRoute => write!(f, "Invalid route for protection"),
         }
@@ -411,7 +444,7 @@ mod tests {
         let total = U256::from(1000);
         let max_chunk = U256::from(300);
         let chunks = MEVProtector::calculate_chunks(total, max_chunk);
-        
+
         assert_eq!(chunks.len(), 4); // 300, 300, 300, 100
         let sum = chunks.iter().fold(U256::zero(), |acc, x| acc + *x);
         assert_eq!(sum, total);

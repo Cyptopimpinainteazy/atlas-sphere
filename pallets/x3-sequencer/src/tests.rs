@@ -101,17 +101,26 @@ fn sequential_batches() {
     new_test_ext().execute_with(|| {
         // Block 1: 2 transactions
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0xAA), 10, 0
+            RuntimeOrigin::signed(1),
+            h256(0xAA),
+            10,
+            0
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(2), h256(0xBB), 20, 1
+            RuntimeOrigin::signed(2),
+            h256(0xBB),
+            20,
+            1
         ));
         X3Sequencer::on_finalize(1);
 
         // Block 2: 1 transaction
         System::set_block_number(2);
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(3), h256(0xCC), 30, 0
+            RuntimeOrigin::signed(3),
+            h256(0xCC),
+            30,
+            0
         ));
         X3Sequencer::on_finalize(2);
 
@@ -160,12 +169,7 @@ fn batch_full_rejected() {
 
         // 17th transaction should fail
         assert_noop!(
-            X3Sequencer::submit_transaction(
-                RuntimeOrigin::signed(1),
-                h256(0xFF),
-                10,
-                0
-            ),
+            X3Sequencer::submit_transaction(RuntimeOrigin::signed(1), h256(0xFF), 10, 0),
             Error::<Test>::BatchFull
         );
     });
@@ -175,10 +179,16 @@ fn batch_full_rejected() {
 fn merkle_root_deterministic() {
     new_test_ext().execute_with(|| {
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            32,
+            0
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x02), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            32,
+            0
         ));
         X3Sequencer::on_finalize(1);
         let root1 = X3Sequencer::batches(0).unwrap().merkle_root;
@@ -186,10 +196,16 @@ fn merkle_root_deterministic() {
         // Start fresh with same transactions
         System::set_block_number(2);
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            32,
+            0
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x02), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            32,
+            0
         ));
         X3Sequencer::on_finalize(2);
         let root2 = X3Sequencer::batches(1).unwrap().merkle_root;
@@ -204,10 +220,16 @@ fn merkle_root_order_matters() {
     new_test_ext().execute_with(|| {
         // Block 1: [0x01, 0x02]
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            32,
+            0
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x02), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            32,
+            0
         ));
         X3Sequencer::on_finalize(1);
         let root_a = X3Sequencer::batches(0).unwrap().merkle_root;
@@ -215,10 +237,16 @@ fn merkle_root_order_matters() {
         // Block 2: [0x02, 0x01] — different order
         System::set_block_number(2);
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x02), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            32,
+            0
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            32,
+            0
         ));
         X3Sequencer::on_finalize(2);
         let root_b = X3Sequencer::batches(1).unwrap().merkle_root;
@@ -233,7 +261,10 @@ fn single_tx_merkle_root_equals_tx_hash() {
     new_test_ext().execute_with(|| {
         let tx_hash = h256(0x42);
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), tx_hash, 32, 0
+            RuntimeOrigin::signed(1),
+            tx_hash,
+            32,
+            0
         ));
         X3Sequencer::on_finalize(1);
 
@@ -248,7 +279,10 @@ fn global_sequence_monotonic() {
     new_test_ext().execute_with(|| {
         for _ in 0..5 {
             assert_ok!(X3Sequencer::submit_transaction(
-                RuntimeOrigin::signed(1), h256(0x01), 10, 0
+                RuntimeOrigin::signed(1),
+                h256(0x01),
+                10,
+                0
             ));
         }
         assert_eq!(X3Sequencer::global_sequence(), 5);
@@ -258,7 +292,10 @@ fn global_sequence_monotonic() {
         // Sequence continues after batch seal
         System::set_block_number(2);
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 10, 0
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            10,
+            0
         ));
         assert_eq!(X3Sequencer::global_sequence(), 6);
     });
@@ -270,7 +307,10 @@ fn get_batch_helper_works() {
         assert!(X3Sequencer::get_batch(0).is_none());
 
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0xAA), 32, 0
+            RuntimeOrigin::signed(1),
+            h256(0xAA),
+            32,
+            0
         ));
         X3Sequencer::on_finalize(1);
 
@@ -285,13 +325,22 @@ fn source_chain_stored_correctly() {
     new_test_ext().execute_with(|| {
         // Submit from different source chains
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x01), 10, 0 // native
+            RuntimeOrigin::signed(1),
+            h256(0x01),
+            10,
+            0 // native
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x02), 10, 1 // rollup 1
+            RuntimeOrigin::signed(1),
+            h256(0x02),
+            10,
+            1 // rollup 1
         ));
         assert_ok!(X3Sequencer::submit_transaction(
-            RuntimeOrigin::signed(1), h256(0x03), 10, 42 // rollup 42
+            RuntimeOrigin::signed(1),
+            h256(0x03),
+            10,
+            42 // rollup 42
         ));
         assert_eq!(X3Sequencer::pending_count(), 3);
     });

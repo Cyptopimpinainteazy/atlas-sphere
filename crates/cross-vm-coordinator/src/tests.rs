@@ -35,12 +35,7 @@ fn test_setup_swap_creates_session() {
     let now = 1700000000u64;
 
     let (session_id, secret, hash) = coordinator
-        .setup_swap(
-            VmTarget::Svm,
-            VmTarget::Evm { chain_id: 1 },
-            vec![],
-            now,
-        )
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
         .unwrap();
 
     assert!(!session_id.is_empty());
@@ -91,7 +86,9 @@ fn test_phase_transitions_happy_path() {
         confirmations_required: 50,
         confirmations: 0,
     };
-    coordinator.record_htlc_fast(&session_id, fast_htlc, now).unwrap();
+    coordinator
+        .record_htlc_fast(&session_id, fast_htlc, now)
+        .unwrap();
 
     let slow_htlc = HtlcRecord {
         id: HtlcId::from_bytes(vec![2u8; 32]),
@@ -108,7 +105,9 @@ fn test_phase_transitions_happy_path() {
         confirmations_required: 12,
         confirmations: 0,
     };
-    coordinator.record_htlc_slow(&session_id, slow_htlc, now).unwrap();
+    coordinator
+        .record_htlc_slow(&session_id, slow_htlc, now)
+        .unwrap();
 
     // Both locked → phase should be HtlcsLocked
     let session = coordinator.get_session(&session_id).unwrap();
@@ -189,7 +188,9 @@ fn test_flash_leg_revert_aborts_swap() {
         confirmations_required: 1,
         confirmations: 1,
     };
-    coordinator.record_htlc_fast(&session_id, fast, now).unwrap();
+    coordinator
+        .record_htlc_fast(&session_id, fast, now)
+        .unwrap();
 
     let slow = HtlcRecord {
         id: HtlcId::from_bytes(vec![2; 32]),
@@ -206,7 +207,9 @@ fn test_flash_leg_revert_aborts_swap() {
         confirmations_required: 1,
         confirmations: 1,
     };
-    coordinator.record_htlc_slow(&session_id, slow, now).unwrap();
+    coordinator
+        .record_htlc_slow(&session_id, slow, now)
+        .unwrap();
 
     // Begin flash execution
     coordinator.begin_flash_execution(&session_id, now).unwrap();
@@ -249,7 +252,9 @@ fn test_timelock_near_expiry_prevents_execution() {
         confirmations_required: 1,
         confirmations: 1,
     };
-    coordinator.record_htlc_fast(&session_id, fast, now).unwrap();
+    coordinator
+        .record_htlc_fast(&session_id, fast, now)
+        .unwrap();
 
     let slow = HtlcRecord {
         id: HtlcId::from_bytes(vec![2; 32]),
@@ -266,7 +271,9 @@ fn test_timelock_near_expiry_prevents_execution() {
         confirmations_required: 1,
         confirmations: 1,
     };
-    coordinator.record_htlc_slow(&session_id, slow, now).unwrap();
+    coordinator
+        .record_htlc_slow(&session_id, slow, now)
+        .unwrap();
 
     // Try to begin flash execution NEAR timelock expiry (within safety margin)
     let near_expiry = now + 3600 - 200; // 200s before expiry, safety = 300s
@@ -331,8 +338,8 @@ fn test_premium_calculation() {
     ];
 
     let total = router.total_premium(&legs);
-    let expected_aave = 1_000_000_000_000 * 5 / 10_000;   // 500M = 0.05%
-    let expected_solend = 500_000_000_000 * 30 / 10_000;   // 1.5B = 0.3%
+    let expected_aave = 1_000_000_000_000 * 5 / 10_000; // 500M = 0.05%
+    let expected_solend = 500_000_000_000 * 30 / 10_000; // 1.5B = 0.3%
     assert_eq!(total, expected_aave + expected_solend);
 }
 

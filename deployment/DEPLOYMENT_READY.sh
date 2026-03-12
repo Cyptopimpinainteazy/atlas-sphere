@@ -84,16 +84,16 @@ SCENARIO 1: Infrastructure NOT Ready Yet
      ./deployment/provision-digitalocean.sh
    
    AWS EC2 (manual):
-     Follow guide: deployment/provision-aws.md
+     Follow guide: docs/docs/deployment/provision-aws.md
    
    Other VPS provider (manual):
-     Follow guide: deployment/provision-manual.md
+     Follow guide: docs/docs/deployment/provision-manual.md
 
 2. Update inventory with actual IPs:
      vim deployment/inventory.yaml
 
 3. Configure DNS records:
-     Follow: deployment/dns-config.md
+     Follow: docs/docs/deployment/dns-config.md
      Required domains:
        • rpc.testnet.x3-chain.io
        • bootnode.testnet.x3-chain.io
@@ -176,8 +176,8 @@ Deployment Scripts:
   Firewall Setup:   deployment/configure-firewall.sh
 
 Documentation:
-  Full Guide:       docs/reports/TESTNET_DEPLOYMENT_GUIDE.md
-  Completion Report: deployment/DAY_MINUS_1_COMPLETE.md
+  Full Guide:       docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
+  Completion Report: docs/docs/deployment/DAY_MINUS_1_COMPLETE.md
   Roadmap:          docs/reports/TESTNET_ROADMAP.md
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ Ready to deploy? Choose your next action:
 
   🏗️  Need infrastructure?    → ./deployment/provision-digitalocean.sh
   🚀 Infrastructure ready?    → ./deployment/deploy-nodes-day1.sh
-  📖 Need guidance?           → cat docs/reports/TESTNET_DEPLOYMENT_GUIDE.md
+  📖 Need guidance?           → cat docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
   🔐 Backup keys?             → tar czf - deployment/keys | gpg -e -r you@email.com > backup.tar.gz.gpg
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════

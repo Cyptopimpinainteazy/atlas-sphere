@@ -40,7 +40,7 @@ md_supervisor/
 ├── audit.py                       ✅ Immutable JSONL logging + verification
 ├── schema.py                      ✅ Typed data models (no type errors)
 ├── requirements.txt               ✅ Python dependencies
-├── README.md                      ✅ Full documentation (500+ lines)
+├── docs/root/README.md                      ✅ Full documentation (500+ lines)
 ├── ADVANCED_FEATURES.md           ✅ Deep dive on complex features
 ├── tests/
 │   ├── __init__.py               ✅ Test package
@@ -380,7 +380,7 @@ assert verify_audit_integrity()  # Raises if tampered
 
 | File | Purpose |
 |------|---------|
-| `README.md` | Full system guide (500+ lines) |
+| `docs/root/README.md` | Full system guide (500+ lines) |
 | `ADVANCED_FEATURES.md` | Deep dive on complex features |
 | `QUICKSTART.md` | 5-minute onboarding |
 | `shot_blaster_config.yaml` | Full config reference |
