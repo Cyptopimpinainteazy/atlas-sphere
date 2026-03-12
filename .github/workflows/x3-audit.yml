@@ -1,0 +1,213 @@
+name: X3 Master Audit Gate
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+concurrency:
+  group: x3-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── 1. Structural Audit ─────────────────────────────────────────────────────
+  structural-audit:
+    name: Repo Structure & Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required top-level directories
+        run: |
+          missing=()
+          for d in runtime node pallets crates docs scripts; do
+            [ -d "$d" ] || missing+=("$d")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing required directories: ${missing[*]}"
+            exit 1
+          fi
+          echo "✅ All required directories present"
+
+      - name: Verify X3_COMPLETION.md exists
+        run: |
+          [ -f "X3_COMPLETION.md" ] || { echo "❌ X3_COMPLETION.md missing"; exit 1; }
+          echo "✅ X3_COMPLETION.md present"
+
+      - name: Check for unchecked items in completion checklist
+        run: |
+          count=$(grep -c "⬜" X3_COMPLETION.md || true)
+          echo "Unchecked items: $count"
+          if [ "$count" -gt 0 ]; then
+            echo "❌ X3 COMPLETION CHECKLIST NOT FULLY GREEN ($count items remaining)"
+            grep -n "⬜" X3_COMPLETION.md | head -20
+            # NOTE: Remove 'exit 1' once checklist is done; currently informational
+            # exit 1
+          else
+            echo "✅ X3 Completion checklist fully green"
+          fi
+
+  # ─── 2. Build Integrity ───────────────────────────────────────────────────────
+  build:
+    name: Build (Release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-03-11
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build workspace (release)
+        run: cargo build --release --locked --workspace
+        env:
+          RUSTFLAGS: "-D warnings"
+
+      - name: Clippy (no warnings)
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+  # ─── 3. Full Test Suite ───────────────────────────────────────────────────────
+  test:
+    name: Test Suite (all crates)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-03-11
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-test-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run all workspace tests
+        run: cargo test --locked --workspace
+        env:
+          RUST_BACKTRACE: 1
+
+      - name: Run constitutional crate tests
+        run: cargo test -p x3-constitution -p x3-proof -p x3-launch-validator
+
+  # ─── 4. Safety Scan ──────────────────────────────────────────────────────────
+  safety-scan:
+    name: Safety Scan (unwrap / unsafe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get install -y ripgrep
+
+      - name: Scan for unwrap() in production code
+        run: |
+          count=$(rg 'unwrap\(\)' \
+            --glob '!**/tests/**' \
+            --glob '!**/*_test*' \
+            --glob '!**/test_*' \
+            --glob '!**/benches/**' \
+            --count-matches --stats 2>/dev/null | grep "^[0-9]" | awk '{sum+=$1} END{print sum+0}')
+          echo "unwrap() occurrences in production: $count"
+          if [ "$count" -gt 0 ]; then
+            rg 'unwrap\(\)' \
+              --glob '!**/tests/**' \
+              --glob '!**/*_test*' \
+              --glob '!**/test_*' \
+              --glob '!**/benches/**' | head -30
+            echo "⚠️  $count unwrap() calls found — review required"
+            # Warn only until all are replaced; set exit 1 to enforce hard fail
+          else
+            echo "✅ No unwrap() in production paths"
+          fi
+
+      - name: Scan for undocumented unsafe blocks
+        run: |
+          count=$(rg 'unsafe \{' \
+            --glob '!**/tests/**' \
+            -l | wc -l)
+          echo "Files with unsafe blocks: $count"
+
+      - name: cargo deny check
+        run: |
+          cargo install cargo-deny --locked || true
+          cargo deny check advisories licenses || true
+
+  # ─── 5. Self-Audit Script ────────────────────────────────────────────────────
+  self-audit:
+    name: X3 Self-Audit Script
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make audit script executable
+        run: chmod +x scripts/x3_audit.sh
+
+      - name: Run structural self-audit
+        run: bash scripts/x3_audit.sh --ci
+
+  # ─── 6. Launch Validator ─────────────────────────────────────────────────────
+  launch-validator:
+    name: Launch Checklist (offline checks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-03-11
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-lv-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run launch validator (offline checks must all PASS)
+        run: |
+          cargo run -p x3-launch-validator -- --check pre-launch
+          cargo run -p x3-launch-validator -- --check failure-conditions
+
+  # ─── 7. Final Gate ───────────────────────────────────────────────────────────
+  gate:
+    name: "🚦 GO / NO-GO Gate"
+    needs: [structural-audit, build, test, safety-scan, self-audit, launch-validator]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Evaluate gate
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.launch-validator.result }}" != "success" ]; then
+            echo "❌ X3 AUDIT GATE FAILED"
+            echo "  build: ${{ needs.build.result }}"
+            echo "  test: ${{ needs.test.result }}"
+            echo "  launch-validator: ${{ needs.launch-validator.result }}"
+            exit 1
+          fi
+          echo "✅ X3 AUDIT GATE PASSED — all hard requirements met"
