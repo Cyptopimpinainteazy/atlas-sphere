@@ -16,10 +16,10 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Canonical top-level dirs present | ⬜ | `/runtime` `/node` `/pallets` `/crates` `/apps` `/docs` `/scripts` |
+| Canonical top-level dirs present | ✅ | `/runtime` `/node` `/pallets` `/crates` `/apps` `/docs` `/scripts` |
 | No orphaned experimental folders | ⬜ | repo root scan — `_unused/` must be empty or removed |
-| No duplicated logic across locations | ⬜ | `runtime/*` vs `crates/*` overlap check |
-| Ownership boundaries documented | ⬜ | `docs/ARCHITECTURE.md` |
+| No duplicated logic across locations | ✅ | `runtime/*` vs `crates/*` overlap check |
+| Ownership boundaries documented | ✅ | `docs/ARCHITECTURE.md` |
 
 ### 1.2 Build Integrity
 
@@ -35,8 +35,8 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Locked dependency versions (`Cargo.lock` audited) | ⬜ | `Cargo.lock` + `deny.toml` |
-| No abandoned crates (`cargo deny check`) | ⬜ | `deny.toml` |
+| Locked dependency versions (`Cargo.lock` audited) | ✅ | `Cargo.lock` + `deny.toml` |
+| No abandoned crates (`cargo deny check`) | ✅ | `deny.toml` |
 | Unsafe blocks justified + documented | ⬜ | `rg 'unsafe \{' --glob '!**/tests/**'` |
 | Rust edition standardized (2021) | ⬜ | all `Cargo.toml` files |
 
@@ -48,8 +48,8 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Node boots deterministically | ⬜ | `node/src/main.rs` |
-| CLI flags documented and tested | ⬜ | `node/src/cli.rs` |
+| Node boots deterministically | ✅ | `node/src/main.rs` |
+| CLI flags documented and tested | ✅ | `node/src/cli.rs` |
 | Dev / Test / Prod configs separated | ⬜ | `node/src/chain_spec.rs` |
 | Telemetry hooks optional but functional | ⬜ | `node/src/service.rs` |
 | Graceful shutdown confirmed | ⬜ | `node/src/service.rs` |
@@ -112,14 +112,14 @@
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
 | Memory sandboxing enforced | ⬜ | `crates/x3-vm/src/sandbox.rs` |
-| No shared mutable state leaks across VMs | ⬜ | `crates/cross-vm-bridge/src/lib.rs` |
+| No shared mutable state leaks across VMs | ✅ | `crates/cross-vm-bridge/src/lib.rs` |
 | Gas / compute accounting correct | ⬜ | `crates/x3-fees/src/lib.rs` |
 
 ### 4.2 EVM
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| ABI decoding validated | ⬜ | `crates/evm-integration/src/lib.rs` |
+| ABI decoding validated | ✅ | `crates/evm-integration/src/lib.rs` |
 | Precompile set finalized | ⬜ | `crates/evm-integration/src/precompiles.rs` |
 | Deterministic gas behavior | ⬜ | `crates/evm-integration/src/gas.rs` |
 | Reentrancy boundaries respected | ⬜ | `crates/evm-integration/src/` — reentrancy guards |
@@ -128,8 +128,8 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Instruction translation audited | ⬜ | `crates/x3-svm/src/lib.rs` |
-| Account model bridged correctly | ⬜ | `crates/svm-integration/src/lib.rs` |
+| Instruction translation audited | ✅ | `crates/x3-svm/src/lib.rs` |
+| Account model bridged correctly | ✅ | `crates/svm-integration/src/lib.rs` |
 | Determinism confirmed under replay | ⬜ | `crates/svm-integration/src/replay.rs` |
 
 ### 4.4 X3 Native VM
@@ -179,16 +179,16 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Spawn / Kill / Replace logic stable | ⬜ | `pallets/agent-accounts/src/lib.rs` |
+| Spawn / Kill / Replace logic stable | ✅ | `pallets/agent-accounts/src/lib.rs` |
 | No zombie agents | ⬜ | `crates/x3-agent/src/lifecycle.rs` |
-| State persistence verified | ⬜ | `pallets/agent-memory/src/lib.rs` |
-| Memory store versioned | ⬜ | same |
+| State persistence verified | ✅ | `pallets/agent-memory/src/lib.rs` |
+| Memory store versioned | ✅ | same |
 
 ### 6.2 Evolution Core
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Reward model wired | ⬜ | `pallets/evolution-core/src/lib.rs` |
+| Reward model wired | ✅ | `pallets/evolution-core/src/lib.rs` |
 | Mutation constraints enforced | ⬜ | `crates/x3-evolution/src/constraints.rs` |
 | Regression detection active | ⬜ | `crates/x3-evolution/src/regression.rs` |
 | Scrap-yard routing working | ⬜ | `crates/x3-evolution/src/scrapyard.rs` |
@@ -210,17 +210,17 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Strategy compiler deterministic | ⬜ | `crates/x3-bot/src/strategy.rs` |
-| Backtests reproducible | ⬜ | `crates/x3-bot/src/backtest.rs` |
-| Simulation vs mainnet parity verified | ⬜ | `crates/x3-bot/src/sim.rs` |
+| Strategy compiler deterministic | ✅ | `crates/x3-bot/src/strategy.rs` |
+| Backtests reproducible | ✅ | `crates/x3-bot/src/backtest.rs` |
+| Simulation vs mainnet parity verified | ✅ | `crates/x3-bot/src/sim.rs` |
 
 ### 7.2 Execution
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Flashloan contracts audited | ⬜ | `crates/x3-flashloan/src/lib.rs` |
+| Flashloan contracts audited | ✅ | `crates/x3-flashloan/src/lib.rs` |
 | Reentrancy impossible in flashloan | ⬜ | same |
-| MEV protection validated | ⬜ | `crates/private-mempool/src/lib.rs` |
+| MEV protection validated | ✅ | `crates/private-mempool/src/lib.rs` |
 | Fallback RPC logic works | ⬜ | `crates/x3-rpc/src/fallback.rs` |
 
 ### 7.3 PnL & Risk
@@ -248,7 +248,7 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| One-command bootstrap works | ⬜ | `crates/x3-cli/src/main.rs` |
+| One-command bootstrap works | ✅ | `crates/x3-cli/src/main.rs` |
 | Idempotent commands | ⬜ | all CLI commands |
 | Dry-run mode supported | ⬜ | `--dry-run` flag |
 | Clear error output | ⬜ | `crates/x3-cli/src/errors.rs` |
@@ -257,8 +257,8 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| One-shot GOD MODE prompt exists | ⬜ | `.github/copilot-instructions.md` |
-| Repo-aware instructions included | ⬜ | same |
+| One-shot GOD MODE prompt exists | ✅ | `.github/copilot-instructions.md` |
+| Repo-aware instructions included | ✅ | same |
 | No redundant clarification loops | ⬜ | prompt review |
 
 ---
@@ -269,18 +269,18 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Live chain state visible | ⬜ | `apps/dashboard/` |
+| Live chain state visible | ✅ | `apps/dashboard/` |
 | Agent health monitoring | ⬜ | `apps/dashboard/` |
 | Strategy performance charts | ⬜ | `apps/analytics/` |
-| Alerting wired | ⬜ | `prometheus.yml` + `grafana-dashboards.yml` |
+| Alerting wired | ✅ | `prometheus.yml` + `grafana-dashboards.yml` |
 
 ### 9.2 Controls
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Permission-gated actions | ⬜ | `apps/dashboard/` |
+| Permission-gated actions | ✅ | `apps/dashboard/` |
 | No destructive ops without confirmation | ⬜ | UI gate checks |
-| Read-only safe mode | ⬜ | `apps/dashboard/` |
+| Read-only safe mode | ✅ | `apps/dashboard/` |
 
 ---
 
@@ -308,7 +308,7 @@
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
 | Manual override exists | ⬜ | `crates/x3-constitution/src/engine.rs` |
-| Multisig support ready | ⬜ | `pallets/governance/src/lib.rs` |
+| Multisig support ready | ✅ | `pallets/governance/src/lib.rs` |
 | Emergency halt tested | ⬜ | `scripts/kill-switch-test.sh` |
 
 ---
@@ -319,19 +319,19 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| Architecture diagrams complete | ⬜ | `docs/ARCHITECTURE.md` |
-| VM specs written | ⬜ | `docs/vm-spec.md` |
-| Agent lifecycle documented | ⬜ | `docs/agents.md` |
-| Disaster recovery documented | ⬜ | `docs/disaster-recovery.md` |
+| Architecture diagrams complete | ✅ | `docs/ARCHITECTURE.md` |
+| VM specs written | ✅ | `docs/vm-spec.md` |
+| Agent lifecycle documented | ✅ | `docs/agents.md` |
+| Disaster recovery documented | ✅ | `docs/disaster-recovery.md` |
 
 ### 11.2 Operations
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
 | Backup & restore tested | ⬜ | `scripts/backup.sh` |
-| Upgrade path defined | ⬜ | `docs/upgrade.md` |
-| Rollback strategy proven | ⬜ | `docs/upgrade.md` |
-| Monitoring hooks active | ⬜ | `prometheus.yml` |
+| Upgrade path defined | ✅ | `docs/upgrade.md` |
+| Rollback strategy proven | ✅ | `docs/upgrade.md` |
+| Monitoring hooks active | ✅ | `prometheus.yml` |
 
 ---
 
