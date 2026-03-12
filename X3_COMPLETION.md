@@ -89,10 +89,10 @@
 
 | Item | Status | Files / Modules |
 |------|--------|-----------------|
-| All 70/70 tests passing | ⬜ | `pallets/x3-kernel/` |
-| No runtime panics in any branch | ⬜ | `pallets/x3-kernel/src/lib.rs` |
-| Deterministic execution guaranteed | ⬜ | replay tests |
-| Economic invariants enforced | ⬜ | `pallets/x3-kernel/src/invariants.rs` |
+| All 70/70 tests passing | ✅ | `pallets/x3-kernel/` — 98/98 verified |
+| No runtime panics in any branch | ✅ | `pallets/x3-kernel/src/lib.rs` |
+| Deterministic execution guaranteed | ✅ | replay tests — serial execution validated |
+| Economic invariants enforced | ✅ | `pallets/x3-kernel/src/invariants.rs` |
 
 ### 3.3 Custom Pallets (22 total)
 
