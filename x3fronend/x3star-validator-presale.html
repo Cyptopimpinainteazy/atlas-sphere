@@ -409,19 +409,19 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
       <div class="bc-icon">💰</div>
       <div class="bc-title">Protocol Fee Share</div>
       <div class="bc-text">Genesis validators receive a protocol fee share distributed proportionally as the network scales.</div>
-      <div class="bc-val" id="benefit-fee-share">TBD</div>
+      <div class="bc-val" id="benefit-fee-share">--</div>
     </div>
     <div class="benefit-card">
       <div class="bc-icon">🎁</div>
       <div class="bc-title">Token Bonus</div>
       <div class="bc-text">Node buyers may receive a token bonus on top of their purchase; details are published per round.</div>
-      <div class="bc-val" id="benefit-bonus">TBD</div>
+      <div class="bc-val" id="benefit-bonus">--</div>
     </div>
     <div class="benefit-card">
       <div class="bc-icon">🛡</div>
       <div class="bc-title">Slashing Protection</div>
       <div class="bc-text">Genesis nodes benefit from an insurance pool to protect against accidental slashing events during the early mainnet period.</div>
-      <div class="bc-val">Coverage TBD</div>
+      <div class="bc-val">Coverage pending</div>
     </div>
     <div class="benefit-card">
       <div class="bc-icon">🔑</div>
@@ -449,7 +449,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
       <tr><td>Minimum Stake</td><td class="col-genesis" id="ct-min-genesis">--</td><td class="col-star" id="ct-min-star">--</td><td class="col-lite" id="ct-min-lite">--</td></tr>
       <tr><td>Base APY</td><td class="col-genesis" id="ct-apy-genesis">--</td><td class="col-star" id="ct-apy-star">--</td><td class="col-lite" id="ct-apy-lite">--</td></tr>
       <tr><td>Governance Voting</td><td class="check">✓ Enhanced</td><td class="check">✓ Standard</td><td style="color:var(--muted)">Observer</td></tr>
-      <tr><td>Protocol Fee Share</td><td class="check" id="ct-fee-genesis">TBD</td><td style="color:var(--muted)">—</td><td class="cross">✗</td></tr>
+      <tr><td>Protocol Fee Share</td><td class="check" id="ct-fee-genesis">--</td><td style="color:var(--muted)">—</td><td class="cross">✗</td></tr>
       <tr><td>Priority Block Rewards</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td></tr>
       <tr><td>Slashing Insurance</td><td class="check">✓ Included</td><td class="check">✓ Included</td><td class="cross">✗</td></tr>
       <tr><td>Token Bonus</td><td class="col-genesis" id="ct-bonus-genesis">--</td><td class="col-star" id="ct-bonus-star">--</td><td class="col-lite" id="ct-bonus-lite">--</td></tr>
@@ -588,7 +588,7 @@ function updateSummary() {
   document.getElementById('os-qty').textContent = '× ' + qty;
   document.getElementById('os-total').textContent = curTier.price ? '$' + (curTier.price * qty).toLocaleString() : '--';
   const bonusEl = document.getElementById('os-bonus');
-  if (bonusEl) bonusEl.textContent = 'TBD';
+  if (bonusEl) bonusEl.textContent = window.__x3PresaleBonusLabel || '--';
 }
 
 function handleBuy() {

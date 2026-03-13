@@ -9,15 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@x3-chain/ts-sdk": "file:../../packages/ts-sdk",
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
+    "@x3-chain/ts-sdk": "file:../../packages/ts-sdk",
     "autoprefixer": "^10.4.24",
     "clsx": "^2.1.1",
     "decimal.js": "^10.6.0",
     "framer-motion": "^12.34.0",
     "lucide-react": "^0.563.0",
-    "next": "^14.0.0",
+    "next": "^16.1.6",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-hot-toast": "^2.6.0",

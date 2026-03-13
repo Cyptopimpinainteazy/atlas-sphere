@@ -1145,6 +1145,13 @@
     var data = payloads[0].data;
     var dashboard = payloads[1].data;
     var tokenomics = payloads[2].data || {};
+    global.__x3PresaleQuote = data.quoteRates || data.quotes || {};
+    var roundLabel = data.currentRoundLabel || data.currentRound || "Presale";
+    if (byId("presale-round")) setText("#presale-round", roundLabel);
+    if (byId("presale-stage")) setText("#presale-stage", "⬡ " + String(roundLabel).toUpperCase());
+    if (byId("presale-status")) {
+      setText("#presale-status", data.status ? String(data.status).toUpperCase() : "STATUS");
+    }
     countdown(data.closesAt, {
       days: "#cd-d",
       hours: "#cd-h",
@@ -1157,11 +1164,12 @@
     var remaining = Math.max(0, Number(data.hardCapUsd || 0) - Number(data.raisedUsd || 0));
     setText("#raise-pct", pct + "% filled — " + fmtCompactMoney(remaining) + " remaining");
     setText("#pf-price", "$" + Number(data.tokenPriceUsd || 0).toFixed(3));
-    setText("#pf-bonus", data.bonusPct ? "+" + data.bonusPct + "%" : "TBD");
-    var bonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD";
+    setText("#pf-bonus", data.bonusPct ? "+" + data.bonusPct + "%" : "--");
+    setText("#pf-vesting", data.vesting || data.vestingSchedule || "--");
+    var bonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--";
     setText("#bonus-pct", bonusLabel);
     if (byId("bonus-text") && !data.bonusPct) {
-      byId("bonus-text").textContent = "Round III Bonus: TBD tokens included";
+      byId("bonus-text").textContent = "Round III Bonus: pending";
     }
     setText("#stat-raised", fmtCompactMoney(data.raisedUsd));
     setText("#stat-investors", fmtNumber(data.investors));
@@ -1207,6 +1215,7 @@
     if (byId("tko-bar-team")) byId("tko-bar-team").style.width = teamPct + "%";
     if (byId("tko-bar-staking")) byId("tko-bar-staking").style.width = stakingPct + "%";
     api.renderModuleMeta(".round-card", "presale", envelope);
+    if (global.calcTokens) global.calcTokens();
   }
 
   async function initReservationsPages(api) {
@@ -1373,19 +1382,24 @@
       setText("#tier-genesis-apy", genesis.apy ? "✓ " + genesis.apy + " APY" : "✓ -- APY");
       setText("#tier-star-apy", star.apy ? "✓ " + star.apy + " APY" : "✓ -- APY");
       setText("#tier-lite-apy", lite.apy ? "✓ " + lite.apy + " APY" : "✓ -- APY");
+      var feeShare =
+        data.feeSharePct != null
+          ? data.feeSharePct + "%"
+          : data.feeShareLabel || data.feeShare || "--";
+      global.__x3PresaleBonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--";
       setText("#benefit-apy", genesis.apy ? genesis.apy + " APY" : "--");
-      setText("#benefit-fee-share", "TBD");
-      setText("#benefit-bonus", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#benefit-fee-share", feeShare);
+      setText("#benefit-bonus", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
       setText("#ct-min-genesis", genesis.priceUsd ? "$" + genesis.priceUsd.toLocaleString("en-US") : "--");
       setText("#ct-min-star", star.priceUsd ? "$" + star.priceUsd.toLocaleString("en-US") : "--");
       setText("#ct-min-lite", lite.priceUsd ? "$" + lite.priceUsd.toLocaleString("en-US") : "--");
       setText("#ct-apy-genesis", genesis.apy || "--");
       setText("#ct-apy-star", star.apy || "--");
       setText("#ct-apy-lite", lite.apy || "--");
-      setText("#ct-fee-genesis", "TBD");
-      setText("#ct-bonus-genesis", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
-      setText("#ct-bonus-star", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
-      setText("#ct-bonus-lite", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#ct-fee-genesis", feeShare);
+      setText("#ct-bonus-genesis", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
+      setText("#ct-bonus-star", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
+      setText("#ct-bonus-lite", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
       setText("#ct-genesis", genesis.slotsLeft != null ? genesis.slotsLeft : "--");
       setText("#ct-star", star.slotsLeft != null ? star.slotsLeft : "--");
       setText("#ct-lite", lite.slotsLeft != null ? lite.slotsLeft : "--");

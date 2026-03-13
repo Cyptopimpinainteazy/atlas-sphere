@@ -319,7 +319,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
 <!-- HERO -->
 <section class="hero">
   <div>
-    <div class="hero-eyebrow">Round III Live Now</div>
+    <div class="hero-eyebrow" id="presale-round">Presale</div>
     <h1 class="hero-title">
       <span class="ht-1">BUY</span>
       <span class="ht-2">X3STAR</span>
@@ -330,16 +330,16 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     <!-- PRESALE CARD -->
     <div class="presale-card">
       <div class="presale-stage">
-        <span class="stage-badge">⬡ PRESALE ROUND III</span>
-        <span class="stage-live">LIVE</span>
+        <span class="stage-badge" id="presale-stage">⬡ PRESALE</span>
+        <span class="stage-live" id="presale-status">STATUS</span>
       </div>
 
       <!-- COUNTDOWN -->
       <div class="countdown">
-        <div class="cd-unit"><span class="cd-num" id="cd-d">06</span><span class="cd-label">Days</span></div>
-        <div class="cd-unit"><span class="cd-num" id="cd-h">14</span><span class="cd-label">Hours</span></div>
-        <div class="cd-unit"><span class="cd-num" id="cd-m">32</span><span class="cd-label">Mins</span></div>
-        <div class="cd-unit"><span class="cd-num" id="cd-s">47</span><span class="cd-label">Secs</span></div>
+        <div class="cd-unit"><span class="cd-num" id="cd-d">--</span><span class="cd-label">Days</span></div>
+        <div class="cd-unit"><span class="cd-num" id="cd-h">--</span><span class="cd-label">Hours</span></div>
+        <div class="cd-unit"><span class="cd-num" id="cd-m">--</span><span class="cd-label">Mins</span></div>
+        <div class="cd-unit"><span class="cd-num" id="cd-s">--</span><span class="cd-label">Secs</span></div>
       </div>
 
       <!-- PROGRESS -->
@@ -363,16 +363,16 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
       <div class="input-group">
         <label class="input-label">Amount to spend</label>
         <div class="input-wrap">
-          <input class="presale-input" type="number" id="spend-input" placeholder="0.00" value="1" oninput="calcTokens()">
-          <span class="input-max" onclick="document.getElementById('spend-input').value=10;calcTokens()">MAX</span>
+          <input class="presale-input" type="number" id="spend-input" placeholder="0.00" oninput="calcTokens()">
+          <span class="input-max" onclick="calcTokens()">MAX</span>
           <span class="input-suffix" id="spend-sym">ETH</span>
         </div>
       </div>
 
       <div class="convert-row">
-        <span id="spend-display">1 ETH</span>
+        <span id="spend-display">--</span>
         <span class="convert-arrow">→</span>
-        <span class="convert-val" id="tokens-out">44,186 X3S</span>
+        <span class="convert-val" id="tokens-out">--</span>
       </div>
 
       <div class="bonus-tag">
@@ -392,7 +392,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
           <div class="pf-key">R3 Bonus</div>
         </div>
         <div class="pf-item">
-          <div class="pf-val">12mo</div>
+          <div class="pf-val" id="pf-vesting">--</div>
           <div class="pf-key">Vesting</div>
         </div>
       </div>
@@ -474,46 +474,46 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="roadmap-grid">
     <div class="rm-item rm-done">
       <div class="rm-dot-wrap"><div class="rm-dot">✓</div></div>
-      <div class="rm-q">Q1 2024</div>
-      <div class="rm-title">Genesis</div>
+      <div class="rm-q">Phase 1</div>
+      <div class="rm-title">Foundation</div>
       <div class="rm-items">
-        <div>✓ Protocol design</div>
-        <div>✓ Team formation</div>
-        <div>✓ Seed round</div>
-        <div>✓ Whitepaper v1</div>
-      </div>
-    </div>
-    <div class="rm-item rm-done">
-      <div class="rm-dot-wrap"><div class="rm-dot">✓</div></div>
-      <div class="rm-q">Q2–Q3 2024</div>
-      <div class="rm-title">Testnet</div>
-      <div class="rm-items">
-        <div>✓ Testnet launch</div>
-        <div>✓ validator onboarding live</div>
-        <div>✓ Series A raise</div>
-        <div>✓ public artifact verification</div>
+        <div>✓ Protocol architecture</div>
+        <div>✓ Validator onboarding</div>
+        <div>✓ Public telemetry</div>
+        <div>✓ Governance scaffolding</div>
       </div>
     </div>
     <div class="rm-item rm-active">
       <div class="rm-dot-wrap"><div class="rm-dot">⬡</div></div>
-      <div class="rm-q">Q1 2025</div>
-      <div class="rm-title">Prefunding III</div>
+      <div class="rm-q">Phase 2</div>
+      <div class="rm-title">Prefunding</div>
       <div class="rm-items">
         <div class="text-gold">◈ Presale live</div>
-        <div class="text-gold">◈ Validator spots</div>
-        <div style="color:var(--muted)">· DEX partnerships</div>
-        <div style="color:var(--muted)">· Grant launch</div>
+        <div class="text-gold">◈ Validator reservations</div>
+        <div style="color:var(--muted)">· Partner integrations</div>
+        <div style="color:var(--muted)">· Grant intake</div>
       </div>
     </div>
     <div class="rm-item rm-soon">
       <div class="rm-dot-wrap"><div class="rm-dot">○</div></div>
-      <div class="rm-q">Q2 2025</div>
-      <div class="rm-title">Mainnet</div>
+      <div class="rm-q">Phase 3</div>
+      <div class="rm-title">Activation</div>
       <div class="rm-items">
-        <div>· TGE & listing</div>
-        <div>· CEX launches</div>
-        <div>· Grants Phase 1</div>
-        <div>· Staking live</div>
+        <div>· Mainnet readiness</div>
+        <div>· Validator reward routing</div>
+        <div>· Staking activation</div>
+        <div>· Ecosystem rollouts</div>
+      </div>
+    </div>
+    <div class="rm-item rm-soon">
+      <div class="rm-dot-wrap"><div class="rm-dot">○</div></div>
+      <div class="rm-q">Phase 4</div>
+      <div class="rm-title">Expansion</div>
+      <div class="rm-items">
+        <div>· Interop rollouts</div>
+        <div>· Governance upgrades</div>
+        <div>· Proof verification</div>
+        <div>· Treasury programs</div>
       </div>
     </div>
   </div>
@@ -547,12 +547,12 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     <div class="feat-card c-gold">
       <div class="feat-icon">◈</div>
       <div class="feat-title">Grant Ecosystem</div>
-      <div class="feat-text">$5M+ in grants for builders. Streamlined application, on-chain milestone verification, and community governance.</div>
+      <div class="feat-text">Grant availability, budgets, and milestones are published in the grants hub and backed by live funding records.</div>
     </div>
     <div class="feat-card c-cyan">
       <div class="feat-icon">⟁</div>
       <div class="feat-title">Validator Rewards</div>
-      <div class="feat-text">Genesis validators receive priority block rewards, governance weight, and protocol fee sharing based on live network terms.</div>
+      <div class="feat-text">Validator rewards, governance weight, and protocol fee sharing follow the live network terms published through the backend.</div>
     </div>
   </div>
 </section>
@@ -577,7 +577,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="faq-list">
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">How do I participate in the presale? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Connect your wallet (MetaMask, WalletConnect, or Coinbase Wallet), enter the amount of ETH/USDT/BTC you want to spend, and click Buy. Tokens are automatically allocated to your wallet and vest over 12 months after the TGE.</div>
+      <div class="faq-a">Connect a supported wallet, enter the amount you want to spend, and follow the checkout flow. Allocation and vesting terms are shown during checkout and in the presale memo.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What is the token vesting schedule? <span class="faq-icon">+</span></div>
@@ -585,15 +585,15 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">When is the TGE (Token Generation Event)? <span class="faq-icon">+</span></div>
-      <div class="faq-a">The TGE is scheduled for Q2 2025, contingent on mainnet launch. All presale participants will be notified via email and our official Telegram channel at least 30 days in advance.</div>
+      <div class="faq-a">TGE timing is announced only after mainnet readiness is confirmed. Participants are notified through official email and community channels.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">Is there a minimum purchase? <span class="faq-icon">+</span></div>
-      <div class="faq-a">The minimum purchase is $500 equivalent (in any supported currency). For Validator Node slots, the minimum is $5,000. There is no maximum cap per wallet in Round III.</div>
+      <div class="faq-a">Minimums and maximums are shown at checkout and may vary by payment rail and jurisdiction.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">Which networks/currencies are accepted? <span class="faq-icon">+</span></div>
-      <div class="faq-a">We accept ETH (Ethereum mainnet), BTC (native), USDT, USDC, and card payments (via Stripe for qualified jurisdictions). We do not accept purchases from sanctioned jurisdictions.</div>
+      <div class="faq-a">Supported networks and payment rails are listed in the live checkout experience and can change by jurisdiction.</div>
     </div>
   </div>
 </section>
@@ -630,36 +630,18 @@ document.querySelectorAll('button,a,.nav-link,.faq-q,.tko-item,.feat-card,.inv-l
   el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
 });
 
-// Countdown
-function updateCountdown() {
-  const end = new Date(Date.now() + (6*24*3600 + 14*3600 + 32*60 + 47) * 1000);
-  function tick() {
-    const diff = end - Date.now();
-    if (diff <= 0) return;
-    const d = Math.floor(diff/86400000);
-    const h = Math.floor((diff%86400000)/3600000);
-    const m = Math.floor((diff%3600000)/60000);
-    const s = Math.floor((diff%60000)/1000);
-    document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
-    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
-    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
-    document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
-  }
-  tick();
-  setInterval(tick, 1000);
-}
-updateCountdown();
-
-// Progress bar animate
-
 // Token calc
-const rates = {ETH:44186, BTC:285000, USDT:13.3, CARD:12};
 let curSym = 'ETH';
 function calcTokens() {
   const v = parseFloat(document.getElementById('spend-input').value) || 0;
-  const tokens = Math.floor(v * (rates[curSym] || 13.3) * 1.12);
-  document.getElementById('tokens-out').textContent = tokens.toLocaleString() + ' X3S';
-  document.getElementById('spend-display').textContent = v + ' ' + curSym;
+  document.getElementById('spend-display').textContent = v ? v + ' ' + curSym : '--';
+  const quote = (window.__x3PresaleQuote || {})[curSym];
+  if (quote && quote.tokensPerUnit) {
+    const tokens = Math.floor(v * quote.tokensPerUnit);
+    document.getElementById('tokens-out').textContent = tokens.toLocaleString() + ' X3S';
+  } else {
+    document.getElementById('tokens-out').textContent = '--';
+  }
 }
 function setTab(el, sym) {
   document.querySelectorAll('.buy-tab').forEach(t => t.classList.remove('active'));
