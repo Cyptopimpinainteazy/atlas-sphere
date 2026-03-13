@@ -150,16 +150,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:10
 
 <!-- SUB HEADER -->
 <div class="sub-header">
-  <div class="sh-stat"><div class="sh-val" style="color:var(--gold2)" id="sh-raised">$14,702,400</div><div class="sh-key">Total Raised</div></div>
+  <div class="sh-stat"><div class="sh-val" style="color:var(--gold2)" id="sh-raised">--</div><div class="sh-key">Total Raised</div></div>
   <div class="sh-sep"></div>
-  <div class="sh-stat"><div class="sh-val" id="sh-inv">312</div><div class="sh-key">Investors</div></div>
+  <div class="sh-stat"><div class="sh-val" id="sh-inv">--</div><div class="sh-key">Investors</div></div>
   <div class="sh-sep"></div>
-  <div class="sh-stat"><div class="sh-val" id="sh-today">$142,800</div><div class="sh-key">Today</div></div>
+  <div class="sh-stat"><div class="sh-val" id="sh-today">--</div><div class="sh-key">Today</div></div>
   <div class="sh-sep"></div>
-  <div class="sh-stat"><div class="sh-val" style="color:#F87171">46</div><div class="sh-key">Genesis Slots Left</div></div>
+  <div class="sh-stat"><div class="sh-val" style="color:#F87171" id="sh-slots">--</div><div class="sh-key">Genesis Slots Left</div></div>
   <div class="sh-sep"></div>
   <div class="sh-ticker">
-    <div class="sh-ticker-inner">🔥 ROUND III IS 73.5% FILLED &nbsp;·&nbsp; 46 GENESIS VALIDATOR SLOTS REMAINING &nbsp;·&nbsp; NEXT ROUND PRICE: $0.12 (+42%) &nbsp;·&nbsp; CLOSES IN ~6 DAYS &nbsp;·&nbsp; 312 INVESTORS COMMITTED &nbsp;·&nbsp; X3S AT $0.0842</div>
+    <div class="sh-ticker-inner" id="sh-ticker">Loading live presale data…</div>
   </div>
 </div>
 
@@ -186,12 +186,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:10
       <div class="rps-title">Top Investors by Commitment</div>
       <table class="inv-table">
         <tbody id="top-investors">
-          <tr><td class="it-rank">#1</td><td class="it-flag">🇦🇪</td><td class="it-name">gulf_fund<div class="it-badge ib-whale">WHALE</div></td><td class="it-amount" style="color:var(--gold)">$500K</td></tr>
-          <tr><td class="it-rank">#2</td><td class="it-flag">🇸🇬</td><td class="it-name">apex.eth<div class="it-badge ib-node">GENESIS NODE</div></td><td class="it-amount" style="color:var(--green)">$250K</td></tr>
-          <tr><td class="it-rank">#3</td><td class="it-flag">🇺🇸</td><td class="it-name">quantum_fund<div class="it-badge ib-whale">INSTITUTION</div></td><td class="it-amount">$200K</td></tr>
-          <tr><td class="it-rank">#4</td><td class="it-flag">🇬🇧</td><td class="it-name">starfall.eth<div class="it-badge ib-node">STAR NODE</div></td><td class="it-amount">$75K</td></tr>
-          <tr><td class="it-rank">#5</td><td class="it-flag">🇨🇭</td><td class="it-name">alpine_vc<div class="it-badge ib-whale">INSTITUTION</div></td><td class="it-amount">$50K</td></tr>
-          <tr><td class="it-rank">#6</td><td class="it-flag">🇯🇵</td><td class="it-name">K. Tanaka<div class="it-badge ib-node">GENESIS NODE</div></td><td class="it-amount">$50K</td></tr>
+          <tr><td class="it-rank">#--</td><td class="it-flag">--</td><td class="it-name">Loading…</td><td class="it-amount">--</td></tr>
         </tbody>
       </table>
     </div>
@@ -207,12 +202,12 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:10
     <div class="rp-section">
       <div class="rps-title">Round Snapshot</div>
       <div class="stats-grid">
-        <div class="sg-item"><div class="sgi-val" style="color:var(--gold)">73.5%</div><div class="sgi-key">Filled</div></div>
-        <div class="sg-item"><div class="sgi-val" id="r-investors">312</div><div class="sgi-key">Investors</div></div>
-        <div class="sg-item"><div class="sgi-val" style="color:var(--green)">$0.075</div><div class="sgi-key">Current Price</div></div>
-        <div class="sg-item"><div class="sgi-val" style="color:var(--red)">46</div><div class="sgi-key">Genesis Left</div></div>
-        <div class="sg-item"><div class="sgi-val">6d</div><div class="sgi-key">Closes In</div></div>
-        <div class="sg-item"><div class="sgi-val" style="color:var(--orange)">$0.12</div><div class="sgi-key">Next Round</div></div>
+        <div class="sg-item"><div class="sgi-val" style="color:var(--gold)" id="r-filled">--</div><div class="sgi-key">Filled</div></div>
+        <div class="sg-item"><div class="sgi-val" id="r-investors">--</div><div class="sgi-key">Investors</div></div>
+        <div class="sg-item"><div class="sgi-val" style="color:var(--green)" id="r-price">--</div><div class="sgi-key">Current Price</div></div>
+        <div class="sg-item"><div class="sgi-val" style="color:var(--red)" id="r-genesis">--</div><div class="sgi-key">Genesis Left</div></div>
+        <div class="sg-item"><div class="sgi-val" id="r-closes">--</div><div class="sgi-key">Closes In</div></div>
+        <div class="sg-item"><div class="sgi-val" style="color:var(--orange)" id="r-next">--</div><div class="sgi-key">Next Round</div></div>
       </div>
     </div>
 

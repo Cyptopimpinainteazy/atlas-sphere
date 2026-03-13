@@ -4,6 +4,28 @@
 
 set -e
 
+update_chain_spec_bootnodes() {
+    local spec_path="$1"
+    local multiaddr="$2"
+    python3 - "$spec_path" "$multiaddr" <<'PY'
+import json
+import sys
+
+spec_path, multiaddr = sys.argv[1], sys.argv[2]
+with open(spec_path, "r", encoding="utf-8") as fh:
+    spec = json.load(fh)
+
+boot_nodes = spec.get("bootNodes") or []
+if multiaddr not in boot_nodes:
+    boot_nodes = [multiaddr]
+spec["bootNodes"] = boot_nodes
+
+with open(spec_path, "w", encoding="utf-8") as fh:
+    json.dump(spec, fh, indent=2)
+    fh.write("\n")
+PY
+}
+
 echo "🚀 X3 Chain Testnet v1 - Node Deployment (Day 1)"
 echo "===================================================="
 echo ""
@@ -123,10 +145,16 @@ if [ -n "$PEER_ID" ]; then
     echo "  /ip4/$BOOTNODE_IP/tcp/30333/p2p/$PEER_ID"
     echo "  /dns/bootnode.testnet.x3-chain.io/tcp/30333/p2p/$PEER_ID"
     echo ""
-    echo "⚠️  Update chain spec with this bootnode multiaddr!"
+    echo "🛠 Updating local chain spec with the live bootnode multiaddr..."
+    BOOTNODE_MULTIADDR="/ip4/$BOOTNODE_IP/tcp/30333/p2p/$PEER_ID"
+    update_chain_spec_bootnodes "$CHAIN_SPEC" "$BOOTNODE_MULTIADDR"
+    scp "$CHAIN_SPEC" "$BOOTNODE_USER@$BOOTNODE_IP:/tmp/x3-testnet-raw.json"
+    ssh "$BOOTNODE_USER@$BOOTNODE_IP" 'sudo mv /tmp/x3-testnet-raw.json /etc/x3/'
+    echo "✅ Chain spec updated: $BOOTNODE_MULTIADDR"
     echo "$PEER_ID" > "$DEPLOYMENT_DIR/bootnode-peer-id.txt"
 else
     echo "⚠️  Could not extract peer ID. Check logs manually."
+    exit 1
 fi
 
 # Step 2: Deploy validators

@@ -70,6 +70,11 @@ impl AgentRegistry {
                 total_volume: 0,
                 age_blocks: 0,
             },
+            policy: AgentPolicy::default(),
+            constraints: AgentConstraints::default(),
+            proof_commitment: [0u8; 32],
+            proof_verified_at: 0,
+            executions_since_proof_refresh: 0,
         };
 
         self.agents.insert(identity.pubkey, record);

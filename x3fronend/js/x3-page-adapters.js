@@ -89,6 +89,177 @@
     return "rgba(255,255,255,0.5)";
   }
 
+  function governanceVoteTotal(proposal) {
+    return Number((proposal && proposal.votesFor) || 0) + Number((proposal && proposal.votesAgainst) || 0);
+  }
+
+  function governanceSupportPct(proposal) {
+    var total = governanceVoteTotal(proposal);
+    return total > 0 ? Math.round((Number(proposal.votesFor || 0) / total) * 100) : 0;
+  }
+
+  function mountTopNav() {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("x3-topnav")) return;
+
+    var style = document.createElement("style");
+    style.textContent =
+      ".x3-topnav{position:fixed;left:0;right:0;top:var(--x3-status-height,0px);z-index:2000;font-family:JetBrains Mono,monospace;background:rgba(6,10,20,0.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.08);}" +
+      ".x3-topnav-inner{display:flex;align-items:center;gap:16px;padding:12px 20px;max-width:1200px;margin:0 auto;}" +
+      ".x3-topnav-logo{font-weight:800;letter-spacing:0.12em;font-size:12px;text-decoration:none;color:#fff;}" +
+      ".x3-topnav-toggle{display:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;}" +
+      ".x3-topnav-links{display:flex;gap:12px;align-items:center;flex:1;}" +
+      ".x3-menu{position:relative;}" +
+      ".x3-menu-btn{background:transparent;border:0;color:rgba(255,255,255,0.72);font-size:11px;letter-spacing:0.12em;text-transform:uppercase;padding:10px 12px;border-radius:8px;cursor:pointer;}" +
+      ".x3-menu-btn:hover,.x3-menu:hover .x3-menu-btn{color:#fff;background:rgba(255,255,255,0.06);}" +
+      ".x3-menu-panel{position:absolute;top:38px;left:0;min-width:220px;background:rgba(8,12,24,0.98);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px;display:none;flex-direction:column;gap:6px;box-shadow:0 18px 45px rgba(0,0,0,0.45);}" +
+      ".x3-menu-panel a{color:rgba(255,255,255,0.7);text-decoration:none;padding:8px 10px;border-radius:8px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;}" +
+      ".x3-menu-panel a:hover,.x3-menu-panel a.active{color:#fff;background:rgba(0,212,255,0.12);}" +
+      ".x3-menu:hover .x3-menu-panel,.x3-menu:focus-within .x3-menu-panel{display:flex;}" +
+      ".x3-topnav-actions{display:flex;align-items:center;gap:10px;}" +
+      ".x3-topnav-cta{background:linear-gradient(135deg,#00D4FF,#4B72FF);color:#06121f;text-decoration:none;padding:10px 16px;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;}" +
+      ".x3-topnav-secondary{border:1px solid rgba(255,255,255,0.16);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;}" +
+      "body.x3-has-topnav{padding-top:calc(62px + var(--x3-status-height,0px));}" +
+      "body.x3-topnav-open .x3-topnav-links{display:flex;flex-direction:column;align-items:flex-start;padding:12px 0;}" +
+      "body.x3-topnav-open .x3-menu-panel{position:static;display:flex;box-shadow:none;border-radius:10px;margin-left:10px;}" +
+      "@media (max-width: 980px){.x3-topnav-inner{flex-wrap:wrap;}.x3-topnav-toggle{display:inline-flex;}.x3-topnav-links{display:none;width:100%;}.x3-topnav-actions{margin-left:auto;}}";
+    document.head.appendChild(style);
+
+    var nav = document.createElement("nav");
+    nav.id = "x3-topnav";
+    nav.className = "x3-topnav";
+    nav.innerHTML =
+      '<div class="x3-topnav-inner">' +
+      '<a class="x3-topnav-logo" href="x3star-landing.html">X3STAR</a>' +
+      '<button class="x3-topnav-toggle" type="button" aria-expanded="false">Menu</button>' +
+      '<div class="x3-topnav-links">' +
+      buildTopNavMenus() +
+      "</div>" +
+      '<div class="x3-topnav-actions">' +
+      '<a class="x3-topnav-secondary" href="x3star-dashboard.html">Dashboard</a>' +
+      '<a class="x3-topnav-cta" href="x3star-token-presale.html">Buy X3S</a>' +
+      "</div>" +
+      "</div>";
+
+    document.body.insertBefore(nav, document.body.firstChild);
+    document.body.classList.add("x3-has-topnav");
+    hideLegacyNavs();
+    wireTopNav(nav);
+  }
+
+  function buildTopNavMenus() {
+    var menus = [
+      {
+        label: "Network",
+        items: [
+          { label: "Dashboard", href: "x3star-dashboard.html" },
+          { label: "Network Pulse", href: "x3star-network-pulse.html" },
+          { label: "Node Health", href: "x3star-node-health.html" },
+          { label: "Operator War Room", href: "x3star-operator-war-room.html" },
+          { label: "Whale Tracker", href: "x3star-whale-tracker.html" },
+          { label: "Tokenomics War Room", href: "x3star-tokenomics-warroom.html" },
+          { label: "Ecosystem Heartbeat", href: "x3star-ecosystem-heartbeat.html" },
+          { label: "Mission Terminal", href: "x3star-mission-terminal.html" },
+        ],
+      },
+      {
+        label: "Token",
+        items: [
+          { label: "Token Presale", href: "x3star-token-presale.html" },
+          { label: "Validator Presale", href: "x3star-validator-presale.html" },
+          { label: "Slot Tracker", href: "x3star-slot-tracker.html" },
+          { label: "Scarcity Clock", href: "x3star-scarcity-clock.html" },
+          { label: "Fundraise Thermometer", href: "x3star-fundraise-thermometer.html" },
+          { label: "Staking", href: "x3star-staking.html" },
+          { label: "Governance", href: "x3star-governance.html" },
+          { label: "ROI Calculator", href: "x3star-roi-calculator.html" },
+          { label: "If You Had", href: "x3star-if-you-had.html" },
+          { label: "If You Invested", href: "x3star-if-you-invested.html" },
+          { label: "Portfolio", href: "x3star-portfolio.html" },
+        ],
+      },
+      {
+        label: "Proof",
+        items: [
+          { label: "Proof Wall", href: "x3star-proof-wall.html" },
+          { label: "Transparency Ledger", href: "x3star-transparency-ledger.html" },
+          { label: "Social Proof Wall", href: "x3star-social-proof-wall.html" },
+          { label: "Hall of Fame", href: "x3star-hall-of-fame.html" },
+          { label: "Leaderboard Arena", href: "x3star-leaderboard-arena.html" },
+        ],
+      },
+      {
+        label: "Business",
+        items: [
+          { label: "Investor Relations", href: "x3star-investor-relations.html" },
+          { label: "KYC Onboarding", href: "x3star-kyc-onboarding.html" },
+          { label: "Affiliate Program", href: "x3star-affiliate.html" },
+          { label: "Grant Hub", href: "x3star-grant-hub.html" },
+          { label: "Grant Mission Control", href: "x3star-grant-mission-control.html" },
+          { label: "Bounty Board", href: "x3star-bounty-board.html" },
+          { label: "Barter Exchange", href: "x3star-barter-exchange.html" },
+        ],
+      },
+      {
+        label: "Intel",
+        items: [
+          { label: "Arbitrage Engine", href: "x3star-arbitrage-engine.html" },
+          { label: "The Spine", href: "x3star-spine.html" },
+          { label: "Competitor Graveyard", href: "x3star-competitor-graveyard.html" },
+          { label: "Chainbench Pro", href: "chainbench-pro.html" },
+          { label: "Chainbench Ultimate", href: "chainbench-ultimate.html" },
+          { label: "Stress Test", href: "blockchain-stress-test.html" },
+        ],
+      },
+    ];
+
+    return menus
+      .map(function (menu) {
+        return (
+          '<div class="x3-menu">' +
+          '<button class="x3-menu-btn" type="button">' +
+          menu.label +
+          "</button>" +
+          '<div class="x3-menu-panel">' +
+          menu.items
+            .map(function (item) {
+              return '<a data-page="' + item.href + '" href="' + item.href + '">' + item.label + "</a>";
+            })
+            .join("") +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+
+  function hideLegacyNavs() {
+    var navs = Array.from(document.querySelectorAll("nav"));
+    navs.forEach(function (nav) {
+      if (nav.id === "x3-topnav") return;
+      if (nav.classList.contains("sidebar")) return;
+      nav.style.display = "none";
+    });
+  }
+
+  function wireTopNav(nav) {
+    var toggle = nav.querySelector(".x3-topnav-toggle");
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        var isOpen = document.body.classList.toggle("x3-topnav-open");
+        toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      });
+    }
+
+    var page = (global.location.pathname.split("/").pop() || "x3star-landing.html").toLowerCase();
+    var links = nav.querySelectorAll(".x3-menu-panel a");
+    links.forEach(function (link) {
+      if (link.getAttribute("data-page") === page) {
+        link.classList.add("active");
+      }
+    });
+  }
+
   function countdown(closesAt, ids) {
     function tick() {
       var diff = Math.max(0, new Date(closesAt).getTime() - Date.now());
@@ -232,13 +403,38 @@
 
   async function initLanding(api) {
     async function load() {
-      var envelope = await api.getDashboardEnvelope({ refresh: true });
-      var data = envelope.data;
+      var payloads = await Promise.all([
+        api.getDashboardEnvelope({ refresh: true }),
+        api.getGovernanceEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var data = payloads[0].data;
+      var governance = payloads[1].data;
       setText("#hm1", fmtCompactMoney(data.funding.raised));
+      var heroSub = query(".hero-sub");
+      if (heroSub) {
+        heroSub.innerHTML =
+          "Live network snapshot: <strong>" +
+          fmtNumber(data.network.tps || 0) +
+          " TPS</strong>, " +
+          fmtNumber(data.network.validators || 0) +
+          " validators, " +
+          fmtNumber(data.token.holders || 0) +
+          " token holders, and treasury visibility through the X3 site backend.";
+      }
+      var heroMetrics = queryAll(".hero-metrics .hm-val");
+      if (heroMetrics[0]) setText(heroMetrics[0], fmtCompactMoney(data.funding.raised));
+      if (heroMetrics[1]) setText(heroMetrics[1], fmtNumber(data.funding.investorCount || 0));
+      if (heroMetrics[2]) setText(heroMetrics[2], "$" + Number(data.token.priceUsd || 0).toFixed(4));
+      if (heroMetrics[3]) setText(heroMetrics[3], fmtNumber(Math.round(Number(data.token.totalSupply || 0) / 1000000)) + "M");
+      if (heroMetrics[4]) setText(heroMetrics[4], fmtNumber(data.funding.activeGrants || 0));
       var traction = queryAll(".tr-num");
       if (traction[0]) setText(traction[0], fmtCompactMoney(data.funding.raised));
+      if (traction[1]) setText(traction[1], fmtNumber(data.funding.investorCount || 0));
       if (traction[2]) setText(traction[2], fmtNumber(data.network.validators));
       if (traction[3]) setText(traction[3], fmtNumber(data.token.holders));
+      if (traction[4]) setText(traction[4], fmtCompactMoney(governance.treasury));
+      if (traction[5]) setText(traction[5], fmtNumber(data.funding.activeGrants || 0));
       var badge = query(".hero-badge");
       if (badge) {
         badge.innerHTML =
@@ -247,6 +443,21 @@
           " Raised — " +
           data.funding.daysRemaining +
           " Days Remaining";
+      }
+      var techCards = queryAll(".tech-card");
+      if (techCards[0]) {
+        setText(techCards[0].querySelector(".tc-number"), fmtNumber(data.network.tps || 0) + "TPS");
+      }
+      if (techCards[1]) {
+        setText(techCards[1].querySelector(".tc-number"), (data.network.finality || 0.4) + "sec");
+      }
+      if (techCards[2]) {
+        setText(techCards[2].querySelector(".tc-number"), (data.network.uptime || 0).toFixed(1) + "%");
+        var uptimeDesc = techCards[2].querySelector("div[style*='font-size:13px']");
+        if (uptimeDesc) uptimeDesc.textContent = "Across " + fmtNumber(data.network.validators || 0) + " observed peers";
+      }
+      if (techCards[4]) {
+        setText(techCards[4].querySelector(".tc-number"), fmtNumber(data.network.validators || 0));
       }
       api.renderModuleMeta(".hero-badges", "landing", envelope);
     }
@@ -512,8 +723,86 @@
     var envelope = await api.getLedgerEnvelope({ refresh: true });
     var data = envelope.data;
     setText("#sum-raised", fmtMoney(data.raisedUsd));
-    setText("#r3-amount", "+" + fmtMoney(data.round3AmountUsd));
     setText("#sum-treasury", fmtMoney(data.treasuryUsd));
+    var inflowsTotal = (data.events || []).reduce(function (sum, entry) {
+      return sum + Number(entry.amountUsd || 0);
+    }, 0);
+    var outflowsTotal = (data.outflows || []).reduce(function (sum, entry) {
+      return sum + Math.abs(Number(entry.amountUsd || 0));
+    }, 0);
+    setText("#inflows-total", "+" + fmtMoney(inflowsTotal));
+    setText("#outflows-total", "−" + fmtMoney(outflowsTotal));
+    var inflowsBody = byId("ledger-inflows");
+    if (inflowsBody) {
+      inflowsBody.innerHTML = "";
+      (data.events || []).forEach(function (entry) {
+        var row = document.createElement("tr");
+        var date = new Date(entry.timestamp).toISOString().slice(0, 10);
+        row.innerHTML =
+          '<td class="l-date">' +
+          date +
+          '</td><td><div class="l-desc">' +
+          entry.kind +
+          '</div><div class="l-sub">' +
+          entry.description +
+          '</div></td><td><span class="l-cat lc-in">RAISE</span></td><td><div class="l-chain"><span class="lc-hash">offchain</span></div></td><td class="l-amount l-in">+' +
+          fmtMoney(entry.amountUsd) +
+          "</td>";
+        inflowsBody.appendChild(row);
+      });
+      if (!(data.events || []).length) {
+        inflowsBody.innerHTML =
+          '<tr><td class="l-date">--</td><td><div class="l-desc">No inflow events published yet.</div><div class="l-sub">Data will appear once the ledger store is updated.</div></td><td><span class="l-cat lc-in">RAISE</span></td><td><div class="l-chain"><span class="lc-hash">n/a</span></div></td><td class="l-amount l-in">--</td></tr>';
+      }
+    }
+    var outflowsBody = byId("ledger-outflows");
+    if (outflowsBody) {
+      outflowsBody.innerHTML = "";
+      (data.outflows || []).forEach(function (entry) {
+        var row = document.createElement("tr");
+        var date = new Date(entry.timestamp).toISOString().slice(0, 10);
+        row.innerHTML =
+          '<td class="l-date">' +
+          date +
+          '</td><td><div class="l-desc">' +
+          entry.kind +
+          '</div><div class="l-sub">' +
+          entry.description +
+          '</div></td><td><span class="l-cat lc-out">OUTFLOW</span></td><td><div class="l-chain"><span class="lc-hash">offchain</span></div></td><td class="l-amount l-out">−' +
+          fmtMoney(entry.amountUsd) +
+          "</td>";
+        outflowsBody.appendChild(row);
+      });
+      if (!(data.outflows || []).length) {
+        outflowsBody.innerHTML =
+          '<tr><td class="l-date">--</td><td><div class="l-desc">No outflow ledger is published in the live store yet.</div><div class="l-sub">This table will populate once finance events are available.</div></td><td><span class="l-cat lc-out">OUTFLOW</span></td><td><div class="l-chain"><span class="lc-hash">n/a</span></div></td><td class="l-amount l-out">--</td></tr>';
+      }
+    }
+    var multisigList = byId("multisig-list");
+    if (multisigList) {
+      multisigList.innerHTML = "";
+      (data.multisigSigners || []).forEach(function (signer, index) {
+        var row = document.createElement("div");
+        row.className = "msig-row";
+        row.innerHTML =
+          '<div class="ms-sig ' +
+          (signer.status === "signed" ? "signed" : "") +
+          '">' +
+          (signer.status === "signed" ? "✓" : String(index + 1)) +
+          '</div><div><div class="ms-name">' +
+          signer.name +
+          '</div><div class="ms-addr">' +
+          signer.address +
+          '</div></div><div class="ms-date" style="margin-left:auto">' +
+          (signer.status || "active") +
+          "</div>";
+        multisigList.appendChild(row);
+      });
+      if (!(data.multisigSigners || []).length) {
+        multisigList.innerHTML =
+          '<div class="msig-row"><div class="ms-sig">--</div><div><div class="ms-name">No signer list published.</div><div class="ms-addr">n/a</div></div><div class="ms-date" style="margin-left:auto">unverified</div></div>';
+      }
+    }
     setText(
       "#last-verified",
       new Date(data.lastVerified).toISOString().slice(0, 19).replace("T", " ") + " UTC",
@@ -529,8 +818,32 @@
       setText("#wall-count", "Showing " + fmtNumber(data.operators.length) + " reservations");
       setText("#slots-left", data.slotsLeft);
       setText("#v-slots", data.slotsLeft);
+      setText("#slots-total", fmtNumber(data.totalSlots || 0));
+      setText("#v-price", data.tokenPriceUsd ? "$" + Number(data.tokenPriceUsd).toFixed(3) : "n/a");
+      var reservedSlots = Number(data.reservedSlots || 0);
+      var totalSlots = Number(data.totalSlots || 0);
+      var slotPct = totalSlots ? Math.round((reservedSlots / totalSlots) * 100) : 0;
+      setText("#slot-sub", fmtNumber(reservedSlots) + " reserved · " + slotPct + "% filled");
+      var slotFill = byId("slot-fill");
+      if (slotFill) slotFill.style.width = slotPct + "%";
       var etaHours = Number(data.selloutEtaHours || 0);
-      setText("#sellout-time", etaHours > 0 ? Math.floor(etaHours) + "h" : "n/a");
+      if (etaHours > 0) {
+        var etaH = Math.floor(etaHours);
+        var etaM = Math.floor((etaHours - etaH) * 60);
+        setText("#sellout-time", etaH + "h " + String(etaM).padStart(2, "0") + "m");
+      } else {
+        setText("#sellout-time", "n/a");
+      }
+      var pace = data.pace24h || [];
+      var lastHour = pace.length ? pace[pace.length - 1] : 0;
+      var last6h = pace.slice(-6).reduce(function (sum, value) { return sum + value; }, 0);
+      var last24h = pace.reduce(function (sum, value) { return sum + value; }, 0);
+      setText("#v-hour", fmtNumber(lastHour));
+      setText("#v-today", fmtNumber(last24h));
+      setText("#p-1h", fmtNumber(lastHour) + " reservations");
+      setText("#p-6h", fmtNumber(last6h) + " reservations");
+      setText("#p-24h", fmtNumber(last24h) + " reservations");
+      setText("#p-all", fmtNumber(data.totalOperators) + " operators");
       var grid = byId("wall-grid");
       if (grid) {
         grid.innerHTML = "";
@@ -565,12 +878,36 @@
       var pace = byId("pace-bar");
       if (pace) {
         pace.innerHTML = "";
-        data.pace24h.forEach(function (count, index) {
+        (data.pace24h || []).forEach(function (count, index) {
           var segment = document.createElement("div");
           segment.className = "pb-seg" + (index === data.pace24h.length - 1 ? " current" : "");
           segment.style.height = Math.max(6, count * 8) + "%";
           pace.appendChild(segment);
         });
+      }
+      var countries = byId("country-list");
+      if (countries) {
+        countries.innerHTML = "";
+        var rows = data.topCountries || [];
+        var maxCount = rows.reduce(function (max, entry) { return Math.max(max, entry.count || 0); }, 1);
+        rows.forEach(function (entry) {
+          var row = document.createElement("div");
+          row.className = "country-row";
+          var pct = maxCount ? Math.round((entry.count / maxCount) * 100) : 0;
+          row.innerHTML =
+            '<span class="cr-flag">' +
+            entry.flag +
+            '</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:' +
+            pct +
+            '%"></div></div><span class="cr-count">' +
+            fmtNumber(entry.count) +
+            "</span>";
+          countries.appendChild(row);
+        });
+        if (!rows.length) {
+          countries.innerHTML =
+            '<div class="country-row"><span class="cr-flag">🌍</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:10%"></div></div><span class="cr-count">--</span></div>';
+        }
       }
       var ticker = byId("ticker-inner");
       if (ticker) {
@@ -597,8 +934,13 @@
   }
 
   async function initPresaleMetrics(api) {
-    var envelope = await api.getPresaleEnvelope({ refresh: true });
-    var data = envelope.data;
+    var payloads = await Promise.all([
+      api.getPresaleEnvelope({ refresh: true }),
+      api.getDashboardEnvelope({ refresh: true }),
+    ]);
+    var envelope = payloads[0];
+    var data = payloads[0].data;
+    var dashboard = payloads[1].data;
     countdown(data.closesAt, {
       days: "#cd-d",
       hours: "#cd-h",
@@ -606,6 +948,24 @@
       seconds: "#cd-s",
     });
     setText("#raised-amt", fmtMoney(data.raisedUsd));
+    setText("#raise-cap", "Hard Cap: " + fmtMoney(data.hardCapUsd));
+    var pct = data.hardCapUsd ? Math.round((data.raisedUsd / data.hardCapUsd) * 1000) / 10 : 0;
+    var remaining = Math.max(0, Number(data.hardCapUsd || 0) - Number(data.raisedUsd || 0));
+    setText("#raise-pct", pct + "% filled — " + fmtCompactMoney(remaining) + " remaining");
+    setText("#pf-price", "$" + Number(data.tokenPriceUsd || 0).toFixed(3));
+    setText("#pf-bonus", data.bonusPct ? "+" + data.bonusPct + "%" : "TBD");
+    var bonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD";
+    setText("#bonus-pct", bonusLabel);
+    if (byId("bonus-text") && !data.bonusPct) {
+      byId("bonus-text").textContent = "Round III Bonus: TBD tokens included";
+    }
+    setText("#stat-raised", fmtCompactMoney(data.raisedUsd));
+    setText("#stat-investors", fmtNumber(data.investors));
+    setText("#stat-holders", fmtNumber(dashboard.token.holders || 0));
+    setText(
+      "#stat-supply",
+      fmtNumber(Math.round(Number(dashboard.token.totalSupply || 0) / 1000000)) + "M",
+    );
     var fill = byId("raise-fill");
     if (fill) {
       fill.style.width = ((data.raisedUsd / data.hardCapUsd) * 100).toFixed(1) + "%";
@@ -628,11 +988,17 @@
       setText("#thermo-pct", ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%");
       setText("#hdr-raised", fmtMoney(presale.raisedUsd));
       setText("#hdr-inv", fmtNumber(presale.investors));
-      setText("#today-total", "$" + Math.round(Number(presale.todayUsd || 0) / 1000) + "K");
       setText("#sh-raised", fmtMoney(presale.raisedUsd));
       setText("#sh-inv", fmtNumber(presale.investors));
       setText("#sh-today", fmtMoney(presale.todayUsd));
+      setText("#sh-slots", fmtNumber(presale.tiers[0].slotsLeft));
+      setText("#today-total", "$" + Math.round(Number(presale.todayUsd || 0) / 1000) + "K");
       setText("#r-investors", fmtNumber(presale.investors));
+      setText("#r-filled", ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%");
+      setText("#r-price", "$" + Number(presale.tokenPriceUsd || 0).toFixed(3));
+      setText("#r-genesis", fmtNumber(presale.tiers[0].slotsLeft));
+      setText("#r-closes", presale.daysRemaining + "d");
+      setText("#r-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD");
       setHtml(
         "#wall-count",
         "Showing <strong>" +
@@ -646,6 +1012,40 @@
       setText("#today-date", formatDateLabel());
       var closesLabel = byId("closes-label");
       if (closesLabel) closesLabel.textContent = "in ~" + presale.daysRemaining + " days";
+      var nextRound = byId("next-round");
+      if (nextRound) {
+        if (presale.nextRoundPriceUsd && presale.tokenPriceUsd) {
+          var premium = Math.round(((presale.nextRoundPriceUsd - presale.tokenPriceUsd) / presale.tokenPriceUsd) * 100);
+          nextRound.textContent =
+            "$" + Number(presale.nextRoundPriceUsd).toFixed(2) + " (" + (premium >= 0 ? "+" : "") + premium + "%)";
+        } else {
+          nextRound.textContent = "TBD";
+        }
+      }
+      var ticker = byId("sh-ticker");
+      if (ticker) {
+        var pctFilled = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1);
+        var premiumPct = presale.nextRoundPriceUsd && presale.tokenPriceUsd
+          ? Math.round(((presale.nextRoundPriceUsd - presale.tokenPriceUsd) / presale.tokenPriceUsd) * 100)
+          : 0;
+        ticker.textContent =
+          "ROUND III " +
+          pctFilled +
+          "% FILLED · " +
+          fmtNumber(presale.tiers[0].slotsLeft) +
+          " GENESIS SLOTS LEFT · NEXT ROUND: " +
+          (presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD") +
+          " (" +
+          (premiumPct >= 0 ? "+" : "") +
+          premiumPct +
+          "%) · CLOSES IN ~" +
+          presale.daysRemaining +
+          " DAYS · " +
+          fmtNumber(presale.investors) +
+          " INVESTORS · X3S " +
+          "$" +
+          Number(presale.tokenPriceUsd || 0).toFixed(3);
+      }
       renderReservationsCards(byId("card-grid"), reservations.recentCards);
       renderTopInvestors(byId("top-investors"), reservations.topInvestors);
       renderReservationsHeatmap(byId("heatmap"), reservations.activityHeatmap);
@@ -816,6 +1216,7 @@
       var tracker = envelope.data.slotTracker;
       setText("#avail-num", tracker.availableSlots);
       setText("#pct-fill", Math.round((tracker.reservedSlots / tracker.totalSlots) * 100) + "%");
+      setText("#fill-detail", tracker.reservedSlots + " of " + tracker.totalSlots + " filled");
       setText("#tb-genesis", tracker.reservedSlots);
       var bigSub = query(".big-sub");
       if (bigSub) bigSub.textContent = "Genesis slots remaining";
@@ -837,6 +1238,10 @@
           }, 0),
         );
       }
+      setText("#tb-genesis-sub", presale.tiers[0].slotsLeft + " left");
+      setText("#tb-star-sub", presale.tiers[1].slotsLeft + " left");
+      setText("#tb-lite-sub", presale.tiers[2].slotsLeft + " left");
+      setText("#tb-total-sub", "indexed");
       var ringArc = byId("ring-arc");
       if (ringArc) {
         var circ = 201.1;
@@ -957,6 +1362,18 @@
       if (byId("sell-bar")) byId("sell-bar").style.width = data.sellPct + "%";
       setText("#sent-dominant", data.dominantSentiment);
       setText("#accum-score", Number(data.accumulationScore).toFixed(1));
+      setText(
+        "#accum-sub",
+        "out of 10 · " +
+          (data.accumulationScore >= 7
+            ? "STRONG ACCUMULATION"
+            : data.accumulationScore >= 4
+              ? "BALANCED FLOW"
+              : "DISTRIBUTION"),
+      );
+      if (byId("accum-bar")) {
+        byId("accum-bar").style.width = Math.min(100, Math.max(0, data.accumulationScore * 10)) + "%";
+      }
       var headPrice = query(".page-head [style*='X3S/USD']");
       if (headPrice) {
         headPrice.innerHTML =
@@ -969,6 +1386,19 @@
           Number(Math.abs(data.priceChange24h)).toFixed(1) +
           "%</span>";
       }
+      var whales = data.whales || [];
+      var top1 = whales[0] ? whales[0].holdingsX3S : 0;
+      var top10 = whales.slice(0, 10).reduce(function (sum, wallet) { return sum + (wallet.holdingsX3S || 0); }, 0);
+      var top50 = whales.slice(0, 50).reduce(function (sum, wallet) { return sum + (wallet.holdingsX3S || 0); }, 0);
+      setText("#whale-top1", (top1 / 1000000).toFixed(1) + "M X3S");
+      setText("#whale-top10", (top10 / 1000000).toFixed(1) + "M X3S");
+      setText("#whale-top50", (top50 / 1000000).toFixed(1) + "M X3S");
+      var supply = Number(data.totalSupplyX3S || 0);
+      var supplyPct = supply ? ((top50 / supply) * 100).toFixed(1) : "0.0";
+      setText("#whale-supply-pct", supplyPct + "%");
+      var netFlow = Number(data.netFlowX3S24h || 0);
+      var netFlowLabel = (netFlow >= 0 ? "+" : "−") + (Math.abs(netFlow) / 1000000).toFixed(1) + "M X3S";
+      setText("#whale-netflow", netFlowLabel);
       var whaleList = byId("whale-list");
       if (whaleList) {
         whaleList.innerHTML = "";
@@ -1103,10 +1533,18 @@
     async function load() {
       var envelope = await api.getTokenomicsEnvelope({ refresh: true });
       var data = envelope.data;
+      setText("#total-supply", fmtNumber(data.totalSupplyX3S));
       setText("#em-rate", fmtX3S(data.dailyEmissionsX3S));
+      setText("#halving-days", fmtNumber(data.halvingInDays));
       setText("#burn-val", fmtNumber(data.burnedX3S));
       setText("#burn-rate", "burning ~" + fmtNumber(data.burnRateHourlyX3S) + " X3S/hr");
       setText("#ctr-supply", Math.round(data.lockedSupplyX3S / 1000000) + "M");
+      if (byId("em-bar")) {
+        var emPct = data.totalSupplyX3S
+          ? (data.dailyEmissionsX3S / data.totalSupplyX3S) * 100
+          : 0;
+        byId("em-bar").style.width = Math.max(2, Math.min(100, emPct * 100)) + "%";
+      }
       setText("#mktcap", fmtCompactMoney(data.marketCapUsd));
       setText("#lock-rate", fmtPct(data.lockRatePct));
       setText("#daily-burn", fmtNumber(data.burnDailyX3S));
@@ -1214,7 +1652,814 @@
     global.setInterval(load, 20000);
   }
 
+  async function initScarcityClock(api) {
+    var countdownStarted = false;
+
+    global.shareThis = async function () {
+      var text = "X3STAR Round III live status: " + global.location.href;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "X3STAR Round III", text: text, url: global.location.href });
+          return;
+        } catch (error) {}
+      }
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+      global.alert("Share link copied to clipboard.");
+    };
+
+    async function load() {
+      var payloads = await Promise.all([
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getReservationsEnvelope({ refresh: true }),
+        api.getProofsEnvelope({ refresh: true }),
+        api.getDashboardEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var presale = payloads[0].data;
+      var reservations = payloads[1].data;
+      var proofs = payloads[2].data;
+      var dashboard = payloads[3].data;
+      var remainingUsd = Math.max(0, Number(presale.hardCapUsd || 0) - Number(presale.raisedUsd || 0));
+      var selloutHours = Math.max(1, Number(proofs.selloutEtaHours || presale.daysRemaining * 24 || 24));
+      var perMinuteUsd = Math.max(1, Math.round(remainingUsd / (selloutHours * 60)));
+      var pct = Number(((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1));
+      if (!countdownStarted) {
+        countdown(presale.closesAt, {
+          days: "#cd-d",
+          hours: "#cd-h",
+          minutes: "#cd-m",
+          seconds: "#cd-s",
+        });
+        countdownStarted = true;
+      }
+      setText("#price", "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
+      if (presale.nextRoundPriceUsd) {
+        setText("#next-price", "$" + Number(presale.nextRoundPriceUsd).toFixed(2));
+        var premiumPct = dashboard.token.priceUsd
+          ? Math.round(((presale.nextRoundPriceUsd - dashboard.token.priceUsd) / dashboard.token.priceUsd) * 100)
+          : 0;
+        setText("#next-premium", (premiumPct >= 0 ? "+" : "") + premiumPct + "%");
+      } else {
+        setText("#next-price", "TBD");
+        setText("#next-premium", "n/a");
+      }
+      setText("#raised-num", fmtMoney(presale.raisedUsd));
+      setText("#hard-cap", fmtCompactMoney(presale.hardCapUsd));
+      setText("#pct-num", pct + "%");
+      setText("#s-investors", fmtNumber(presale.investors));
+      setText("#s-remaining", fmtCompactMoney(remainingUsd));
+      setText("#s-ph", fmtCompactMoney(perMinuteUsd));
+      setText("#s-today", fmtCompactMoney(presale.todayUsd));
+      setText("#vel-rate", fmtCompactMoney(perMinuteUsd));
+      setText(
+        "#vel-est",
+        fmtCompactMoney(remainingUsd) + " remaining fills in ~" + Math.round(selloutHours) + " hours",
+      );
+      setText("#s-wallets", fmtNumber(presale.investors));
+      setText("#s-genesis-left", proofs.slotsLeft);
+      if (byId("prog-fill")) byId("prog-fill").style.width = pct + "%";
+      if (byId("mk-0")) setText("#mk-0", "$0");
+      if (byId("mk-25")) setText("#mk-25", fmtCompactMoney(presale.hardCapUsd * 0.25));
+      if (byId("mk-50")) setText("#mk-50", fmtCompactMoney(presale.hardCapUsd * 0.5));
+      if (byId("mk-100")) setText("#mk-100", fmtCompactMoney(presale.hardCapUsd));
+      var ticker = byId("ticker");
+      if (ticker) {
+        var items = reservations.recentCards
+          .slice(0, 8)
+          .map(function (entry) {
+            return (
+              '<span class="tick-item"><span class="ti-flag">' +
+              entry.flag +
+              '</span><span class="ti-name">' +
+              entry.name +
+              '</span><span class="ti-amt">+' +
+              fmtCompactMoney(entry.amountUsd).replace("$", "$") +
+              "</span></span><span class=\"ti-sep\">|</span>"
+            );
+          })
+          .join("");
+        ticker.innerHTML = items + items;
+      }
+      api.renderModuleMeta(".top-strip", "scarcity clock", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 15000);
+  }
+
+  async function initEcosystemHeartbeat(api) {
+    var ecgFrame = null;
+
+    function startEcg(bpm) {
+      var canvas = byId("ecg-canvas");
+      if (!canvas || !canvas.getContext || canvas.dataset.started === "true") return;
+      canvas.dataset.started = "true";
+      var ctx = canvas.getContext("2d");
+      function resize() {
+        canvas.width = global.innerWidth;
+      }
+      resize();
+      global.addEventListener("resize", resize);
+      function draw() {
+        var now = Date.now() / 1000;
+        var width = canvas.width;
+        var height = 80;
+        ctx.clearRect(0, 0, width, height);
+        ctx.beginPath();
+        for (var x = 0; x < width; x += 2) {
+          var beatPeriod = 60 / Math.max(60, bpm);
+          var t = now + x / 160;
+          var phase = (t % beatPeriod) / beatPeriod;
+          var y = 40;
+          if (phase > 0.45 && phase < 0.48) y = 12;
+          else if (phase >= 0.48 && phase < 0.5) y = 70;
+          else if (phase >= 0.5 && phase < 0.53) y = 5;
+          else if (phase >= 0.53 && phase < 0.56) y = 42;
+          else y = 40 + Math.sin((t + x / 90) * 6) * 1.5;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = "rgba(0,255,106,0.7)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ecgFrame = global.requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    global.showEmbed = async function () {
+      var code =
+        '<iframe src="' +
+        global.location.origin +
+        '/x3star-ecosystem-heartbeat.html" width="400" height="300" frameborder="0"></iframe>';
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(code);
+      }
+      global.alert("Embed code copied to clipboard.");
+    };
+
+    async function load() {
+      var payloads = await Promise.all([
+        api.getDashboardEnvelope({ refresh: true }),
+        api.getStakingEnvelope({ refresh: true }),
+        api.getGovernanceEnvelope({ refresh: true }),
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getNetworkEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var dashboard = payloads[0].data;
+      var staking = payloads[1].data;
+      var governance = payloads[2].data;
+      var presale = payloads[3].data;
+      var network = payloads[4].data;
+      var bpm = Math.max(96, Math.min(180, 90 + Math.round(Number(network.tps || 0) / 100)));
+      var totalValue =
+        Number(dashboard.token.volume24hUsd || 0) +
+        Number(presale.raisedUsd || 0) +
+        Number(staking.totalValueLocked || 0) +
+        Number(governance.treasury || 0);
+      setText("#beat-bpm", bpm + " BPM");
+      setText("#main-num", fmtMoney(totalValue));
+      setText("#bd-tvl", fmtCompactMoney(dashboard.token.volume24hUsd));
+      setText("#bd-raised", fmtCompactMoney(presale.raisedUsd));
+      setText("#bd-staked", fmtCompactMoney(staking.totalValueLocked));
+      setText("#bd-grants", fmtCompactMoney(governance.treasury));
+      var footer = query(".main > div:last-child");
+      if (footer) {
+        footer.textContent =
+          fmtNumber((network.validators || []).length) +
+          " validators · " +
+          fmtNumber(network.tps) +
+          " TPS · " +
+          fmtNumber(dashboard.token.holders) +
+          " holders · " +
+          fmtNumber(governance.proposalsCount) +
+          " proposals · treasury " +
+          fmtCompactMoney(governance.treasury);
+      }
+      startEcg(bpm);
+      api.renderModuleMeta(".main", "ecosystem heartbeat", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 15000);
+  }
+
+  async function initOperatorWarRoom(api) {
+    async function load() {
+      var payloads = await Promise.all([
+        api.getNodeHealthEnvelope({ refresh: true }),
+        api.getNetworkEnvelope({ refresh: true }),
+        api.getGovernanceEnvelope({ refresh: true }),
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getDashboardEnvelope({ refresh: true }),
+        api.getStakingEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var health = payloads[0].data;
+      var network = payloads[1].data;
+      var governance = payloads[2].data;
+      var presale = payloads[3].data;
+      var dashboard = payloads[4].data;
+      var staking = payloads[5].data;
+      var primary = (health.nodes || [])[0];
+      if (!primary) return;
+      var annualRewardsUsd =
+        (Number(primary.stakeX3S || 0) * Number(dashboard.token.priceUsd || 0) * Number(staking.avgApy || 0)) / 100;
+      setText("#bonus-apy", "0.0%");
+      setText("#uptime-val", fmtPct(primary.uptimePct));
+      setText("#earned-val", fmtCompactMoney(annualRewardsUsd));
+      setText("#blocks-val", "#" + fmtNumber(network.blockNumber));
+      setText("#pending-val", "+" + fmtNumber(Math.round(primary.stakeX3S * 0.012)) + " X3S");
+      setText("#net-tps", fmtNumber(network.tps));
+      setText("#net-block", "#" + fmtNumber(network.blockNumber));
+      var networkCards = queryAll(".panel .nkpi-val");
+      if (networkCards[6]) setText(networkCards[6], fmtNumber(network.validators.length));
+      if (networkCards[7]) setText(networkCards[7], "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
+      setText("#mult-display", Number(staking.avgApy || 0).toFixed(1) + "%");
+      setText("#alert-count", governance.activeProposals + " active");
+      var govFeed = byId("gov-feed");
+      if (govFeed) {
+        govFeed.innerHTML = "";
+        governance.proposals.slice(0, 4).forEach(function (proposal) {
+          var item = document.createElement("div");
+          item.className = "gov-item";
+          item.innerHTML =
+            '<div class="gi-top"><span class="gi-id">' +
+            proposal.id +
+            '</span><span class="gi-status ' +
+            (proposal.status === "active" ? "gs-active" : "gs-new") +
+            '">' +
+            String(proposal.status).toUpperCase() +
+            "</span></div><div class=\"gi-title\">" +
+            proposal.title +
+            '</div><div class="gi-progress"><div class="gi-fill" style="width:' +
+            governanceSupportPct(proposal) +
+            '%"></div></div><div class="gi-meta"><span>' +
+            governanceSupportPct(proposal) +
+            "% support</span><span>" +
+            fmtNumber(governanceVoteTotal(proposal)) +
+            " votes</span></div>";
+          govFeed.appendChild(item);
+        });
+      }
+      var alerts = [
+        {
+          badge: "ab-vote",
+          label: "GOVERNANCE",
+          msg:
+            governance.proposals[0].id +
+            " is active with " +
+            governanceSupportPct(governance.proposals[0]) +
+            "% support.",
+        },
+        {
+          badge: "ab-info",
+          label: "REWARDS",
+          msg: "Projected annual rewards " + fmtCompactMoney(annualRewardsUsd) + " at current APY.",
+        },
+        {
+          badge: "ab-info",
+          label: "PRESALE",
+          msg: presale.tiers[0].slotsLeft + " Genesis slots remain in Round III.",
+        },
+      ];
+      var alertFeed = byId("alert-feed");
+      if (alertFeed) {
+        alertFeed.innerHTML = "";
+        alerts.forEach(function (alertItem, index) {
+          var item = document.createElement("div");
+          item.className = "alert-item";
+          item.innerHTML =
+            '<div class="ai-badge ' +
+            alertItem.badge +
+            '">' +
+            alertItem.label +
+            '</div><div class="ai-msg">' +
+            alertItem.msg +
+            '</div><div class="ai-time">' +
+            (index === 0 ? "just now" : index * 2 + " hours ago") +
+            "</div>";
+          alertFeed.appendChild(item);
+        });
+      }
+      var blockFeed = byId("block-feed");
+      if (blockFeed) {
+        blockFeed.innerHTML = "";
+        (network.transactions || []).slice(0, 8).forEach(function (tx) {
+          var item = document.createElement("div");
+          item.style.cssText =
+            "display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);";
+          item.innerHTML =
+            '<span style="color:rgba(0,200,100,0.5)">#' +
+            fmtNumber(tx.blockNumber || network.blockNumber) +
+            '</span><span style="color:var(--muted)">' +
+            tx.type +
+            '</span><span style="color:rgba(0,200,100,0.4)">' +
+            (tx.amount || "live") +
+            '</span><span style="color:var(--gold)">' +
+            tx.hash +
+            "</span>";
+          blockFeed.appendChild(item);
+        });
+      }
+      var refTree = query(".ref-tree");
+      if (refTree) {
+        refTree.innerHTML =
+          '<div class="rt-label">Referral State</div><div style="font-size:10px;color:var(--muted);line-height:1.7;">No referral ledger is available from the authoritative business store yet. This panel remains live but intentionally degraded until referral records are persisted server-side.</div>';
+      }
+      var earnSummary = query(".earn-summary");
+      if (earnSummary) {
+        earnSummary.innerHTML =
+          '<div class="es-grid"><div class="esg"><div class="esg-val" style="color:var(--gold)">$0</div><div class="esg-key">Ref Bonus/yr</div></div><div class="esg"><div class="esg-val" style="color:var(--grn)">0</div><div class="esg-key">Referred</div></div><div class="esg"><div class="esg-val">' +
+          Number(staking.avgApy || 0).toFixed(1) +
+          '%</div><div class="esg-key">Base APY</div></div><div class="esg"><div class="esg-val" style="color:var(--gold)">unavailable</div><div class="esg-key">Next level</div></div></div><button class="share-ref-btn" disabled style="opacity:0.5;cursor:not-allowed;">REFERRAL STATE UNAVAILABLE</button>';
+      }
+      var clock = byId("net-clock");
+      if (clock) {
+        clock.textContent = new Date().toISOString().slice(11, 19) + " UTC";
+      }
+      api.renderModuleMeta(".topbar", "operator war room", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 15000);
+  }
+
+  async function initMissionTerminal(api) {
+    var latestMissionState = null;
+    var countdownStarted = false;
+
+    global.handleCmd = function (event) {
+      if (event.key !== "Enter") return;
+      var input = byId("terminal");
+      if (!input) return;
+      var cmd = String(input.value || "").trim().toLowerCase();
+      input.value = "";
+      if (!cmd) return;
+      var feed = byId("mission-log");
+      if (!feed) return;
+      function appendLine(text, className) {
+        var row = document.createElement("div");
+        row.className = "log-line";
+        row.innerHTML =
+          '<span class="ll-time">[' +
+          new Date().toISOString().slice(11, 19) +
+          ']</span><span class="' +
+          className +
+          '">' +
+          text +
+          "</span>";
+        feed.insertBefore(row, feed.firstChild);
+      }
+      appendLine("> " + cmd, "ll-info");
+      if (!latestMissionState) return;
+      var responses = {
+        help: "Available: status, tps, validators, price, block, presale, clear",
+        status:
+          latestMissionState.health.status.toUpperCase() +
+          " · " +
+          latestMissionState.network.validators.length +
+          " validators · " +
+          latestMissionState.network.tps +
+          " TPS",
+        tps: "Current TPS: " + fmtNumber(latestMissionState.network.tps),
+        validators: "Indexed validators: " + fmtNumber(latestMissionState.network.validators.length),
+        price: "X3S: $" + Number(latestMissionState.dashboard.token.priceUsd || 0).toFixed(4),
+        block: "Current block: #" + fmtNumber(latestMissionState.network.blockNumber),
+        presale:
+          "Round III: " +
+          fmtMoney(latestMissionState.presale.raisedUsd) +
+          "/" +
+          fmtMoney(latestMissionState.presale.hardCapUsd) +
+          " · " +
+          latestMissionState.presale.daysRemaining +
+          " days left",
+      };
+      if (cmd === "clear") {
+        feed.innerHTML = "";
+        return;
+      }
+      appendLine(responses[cmd] || "Command not found. Type 'help' for supported commands.", responses[cmd] ? "ll-ok" : "ll-warn");
+    };
+
+    function appendMissionLines(lines) {
+      var feed = byId("mission-log");
+      if (!feed) return;
+      feed.innerHTML = "";
+      lines.forEach(function (entry) {
+        var row = document.createElement("div");
+        row.className = "log-line";
+        row.innerHTML =
+          '<span class="ll-time">[' +
+          entry.time +
+          ']</span><span class="' +
+          entry.className +
+          '">' +
+          entry.message +
+          "</span>";
+        feed.appendChild(row);
+      });
+    }
+
+    async function load() {
+      var payloads = await Promise.all([
+        api.getHealthEnvelope({ refresh: true }),
+        api.getDashboardEnvelope({ refresh: true }),
+        api.getNetworkEnvelope({ refresh: true }),
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getGovernanceEnvelope({ refresh: true }),
+        api.getWhalesEnvelope({ refresh: true }),
+        api.getStakingEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var health = payloads[0];
+      var dashboard = payloads[1].data;
+      var network = payloads[2].data;
+      var presale = payloads[3].data;
+      var governance = payloads[4].data;
+      var whales = payloads[5].data;
+      var staking = payloads[6].data;
+      latestMissionState = {
+        health: health,
+        dashboard: dashboard,
+        network: network,
+        presale: presale,
+      };
+      setText("#utc-clock", new Date().toISOString().slice(11, 19) + " UTC");
+      setText("#hdr-block", "#" + fmtNumber(network.blockNumber));
+      var headerVals = queryAll(".hs-val");
+      if (headerVals[1]) setText(headerVals[1], "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
+      if (headerVals[2]) setText(headerVals[2], String(envelope.status).toUpperCase());
+      var heroName = query(".lh-name");
+      if (heroName) heroName.textContent = "ROUND III CLOSE";
+      var heroDesc = query(".lh-desc");
+      if (heroDesc) {
+        heroDesc.textContent =
+          "Presale close checkpoint · " +
+          fmtMoney(presale.raisedUsd) +
+          " raised · " +
+          presale.tiers[0].slotsLeft +
+          " Genesis slots left";
+      }
+      if (!countdownStarted) {
+        countdown(presale.closesAt, {
+          days: "#cd-d",
+          hours: "#cd-h",
+          minutes: "#cd-m",
+          seconds: "#cd-s",
+        });
+        countdownStarted = true;
+      }
+      if (byId("launch-prog")) {
+        byId("launch-prog").style.width = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%";
+      }
+      if (byId("r3-bar")) {
+        byId("r3-bar").style.width = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%";
+      }
+      var sysVals = queryAll(".sys-item .si-val");
+      if (sysVals[0]) setText(sysVals[0], "● " + String(health.status).toUpperCase());
+      if (sysVals[1]) setText(sysVals[1], "● " + fmtNumber(network.validators.length) + " ONLINE");
+      if (sysVals[2]) setText(sysVals[2], "● " + fmtNumber(network.tps) + " TPS");
+      if (sysVals[3]) setText(sysVals[3], "● " + network.finalitySeconds + "s AVG");
+      if (sysVals[10]) setText(sysVals[10], "● " + Number(staking.avgApy || 0).toFixed(1) + "% APY");
+      if (sysVals[11]) setText(sysVals[11], "● " + governance.proposalsCount + " LIVE");
+      var utilizationPct = Math.max(1, Math.min(100, Math.round((Number(network.tps || 0) / 10000) * 100)));
+      setText("#tps-pct", utilizationPct + "%");
+      if (byId("tps-bar")) byId("tps-bar").style.width = utilizationPct + "%";
+      appendMissionLines(
+        [
+          {
+            className: "ll-ok",
+            message:
+              "Current network throughput " +
+              fmtNumber(network.tps) +
+              " TPS across " +
+              fmtNumber(network.validators.length) +
+              " indexed validators.",
+          },
+          {
+            className: "ll-info",
+            message:
+              governance.proposals[0].id +
+              " live with " +
+              governanceSupportPct(governance.proposals[0]) +
+              "% support.",
+          },
+          {
+            className: "ll-ok",
+            message:
+              "Round III now at " +
+              fmtMoney(presale.raisedUsd) +
+              " raised with " +
+              presale.tiers[0].slotsLeft +
+              " Genesis slots left.",
+          },
+          {
+            className: "ll-alert",
+            message:
+              whales.events[0].wallet +
+              " latest movement: " +
+              whales.events[0].amountDisplay +
+              " at block #" +
+              whales.events[0].blockNumber +
+              ".",
+          },
+        ].map(function (entry, index) {
+          return {
+            className: entry.className,
+            message: entry.message,
+            time: new Date(Date.now() - index * 60000).toISOString().slice(11, 19),
+          };
+        }),
+      );
+      api.renderModuleMeta(".header", "mission terminal", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 15000);
+    global.setInterval(function () {
+      setText("#utc-clock", new Date().toISOString().slice(11, 19) + " UTC");
+    }, 1000);
+  }
+
+  async function initArbitrageEngine(api) {
+    async function load() {
+      var payloads = await Promise.all([
+        api.getBenchmarkEnvelope("overview", { refresh: true }),
+        api.getNetworkEnvelope({ refresh: true }),
+        api.getDashboardEnvelope({ refresh: true }),
+        api.getWhalesEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var overview = payloads[0].data;
+      var network = payloads[1].data;
+      var dashboard = payloads[2].data;
+      var whales = payloads[3].data;
+      var liveTps = Number(overview.live.summary.combined_tps || 0);
+      setText("#tps-counter", fmtNumber(liveTps));
+      var ticker = byId("ticker");
+      if (ticker) {
+        var items = [
+          "LIVE BENCH: " + fmtNumber(liveTps) + " TPS",
+          "SCHEDULER: " + fmtNumber(overview.tps.summary.scheduler.schedules_per_sec) + "/sec",
+          "NETWORK: " + fmtNumber(network.tps) + " TPS",
+          "PRICE: $" + Number(dashboard.token.priceUsd || 0).toFixed(4),
+          "FLOW: " + whales.events[0].amountDisplay + " " + whales.events[0].type,
+        ];
+        var tickerHtml = items
+          .map(function (item, index) {
+            return (
+              '<div class="ti-item"><span class="' +
+              (index % 2 === 0 ? "ti-hot" : "ti-green") +
+              '">' +
+              item +
+              '</span><span style="color:rgba(57,255,20,0.1)">|</span></div>'
+            );
+          })
+          .join("");
+        ticker.innerHTML = tickerHtml + tickerHtml;
+      }
+      var benchRows = queryAll(".bench-row");
+      var metrics = [
+        {
+          label: "X3 Live",
+          value: liveTps,
+          color: "linear-gradient(90deg,var(--hot),var(--gold))",
+          note: "artifact",
+        },
+        {
+          label: "Scheduler",
+          value: Number(overview.tps.summary.scheduler.schedules_per_sec || 0),
+          color: "var(--cyan)",
+          note: "sched/sec",
+        },
+        {
+          label: "SHA-256 GPU",
+          value: Number(overview.crypto.summary.benchmarks[5].throughput_hashes_per_sec || 0),
+          color: "var(--green)",
+          note: "hashes/sec",
+        },
+        {
+          label: "PoH GPU",
+          value: Number(overview.crypto.summary.benchmarks[6].throughput_hashes_per_sec || 0),
+          color: "#A060FF",
+          note: "hashes/sec",
+        },
+        {
+          label: "Ed25519 GPU",
+          value: Number(overview.crypto.summary.benchmarks[7].throughput_sigs_per_sec || 0),
+          color: "#FF6B6B",
+          note: "sigs/sec",
+        },
+        {
+          label: "Network TPS",
+          value: Number(network.tps || 0),
+          color: "rgba(255,255,255,0.3)",
+          note: "live",
+        },
+      ];
+      var maxMetric = Math.max.apply(
+        null,
+        metrics.map(function (metric) {
+          return metric.value;
+        }),
+      );
+      benchRows.forEach(function (row, index) {
+        var metric = metrics[index];
+        if (!metric) return;
+        var chain = row.querySelector(".br-chain");
+        var bar = row.querySelector(".br-bar");
+        var val = row.querySelector(".br-val");
+        var note = row.querySelector(".br-note");
+        if (chain) setText(chain, metric.label);
+        if (bar) {
+          bar.style.width = ((metric.value / maxMetric) * 100).toFixed(2) + "%";
+          bar.style.background = metric.color;
+        }
+        if (val) setText(val, fmtNumber(Math.round(metric.value)));
+        if (note) setText(note, metric.note);
+      });
+      var names = queryAll(".arb-flow .ac-name");
+      var prices = queryAll(".arb-flow .ac-price");
+      if (names[0]) setText(names[0], "NETWORK TPS");
+      if (names[1]) setText(names[1], "X3KERNEL");
+      if (names[2]) setText(names[2], "BENCH TPS");
+      if (prices[0]) setText(prices[0], fmtNumber(network.tps));
+      if (prices[1]) setText(prices[1], fmtNumber(liveTps));
+      var delta = liveTps - Number(network.tps || 0);
+      setText("#spread-display", "Delta: +" + fmtNumber(delta) + " → HEADROOM");
+      api.renderModuleMeta("nav", "arbitrage engine", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 15000);
+  }
+
+  function benchmarkPageConfig() {
+    var page = (global.location.pathname.split("/").pop() || "").toLowerCase();
+    var configs = {
+      "blockchain-stress-test.html": {
+        kind: "stress-test",
+        title: "Stress Test Artifact",
+        kicker: "Saved throughput artifact plus live network health",
+      },
+      "blockchain-stress-test(1).html": {
+        kind: "stress-test",
+        title: "Stress Test Artifact",
+        kicker: "Saved throughput artifact plus live network health",
+      },
+      "chainbench-pro.html": {
+        kind: "chainbench",
+        title: "Chainbench RPC Report",
+        kicker: "Read-only benchmark console sourced from saved reports",
+      },
+      "chainbench-ultimate.html": {
+        kind: "overview",
+        title: "Benchmark Overview",
+        kicker: "Artifact-backed suite summary plus live network snapshot",
+      },
+      "chainbench-ultimate(1).html": {
+        kind: "overview",
+        title: "Benchmark Overview",
+        kicker: "Artifact-backed suite summary plus live network snapshot",
+      },
+    };
+    return configs[page];
+  }
+
+  async function initBenchmarkConsole(api) {
+    function metricCards(config, specific, overview, network, health) {
+      if (config.kind === "stress-test") {
+        return [
+          { label: "Combined TPS", value: fmtNumber(specific.summary.combined_tps) },
+          { label: "Duration", value: specific.summary.duration_seconds + "s" },
+          { label: "SVM Processed", value: fmtNumber(specific.summary.svm_processed) },
+          { label: "EVM Processed", value: fmtNumber(specific.summary.evm_processed) },
+        ];
+      }
+      if (config.kind === "chainbench") {
+        return [
+          { label: "Checks Passed", value: fmtNumber(specific.summary.ok) },
+          { label: "Total Checks", value: fmtNumber(specific.summary.total) },
+          { label: "Skipped", value: fmtNumber(specific.summary.skipped) },
+          { label: "Live TPS Artifact", value: fmtNumber(overview.live.summary.combined_tps) },
+        ];
+      }
+      return [
+        { label: "Live TPS Artifact", value: fmtNumber(overview.live.summary.combined_tps) },
+        { label: "RPC Checks", value: fmtNumber(overview.chainbench.summary.ok) + "/" + fmtNumber(overview.chainbench.summary.total) },
+        { label: "Scheduler Rate", value: fmtNumber(overview.tps.summary.scheduler.schedules_per_sec) + "/sec" },
+        { label: "Network Status", value: String(health.status).toUpperCase() + " · " + fmtNumber(network.tps) + " TPS" },
+      ];
+    }
+
+    function renderRows(target, rows) {
+      if (!target) return;
+      target.innerHTML = rows
+        .map(function (row) {
+          return (
+            '<tr><td class="table-key">' +
+            row.key +
+            '</td><td class="table-val">' +
+            row.value +
+            "</td></tr>"
+          );
+        })
+        .join("");
+    }
+
+    async function load() {
+      var config = benchmarkPageConfig();
+      if (!config) return;
+      var payloads = await Promise.all([
+        api.getBenchmarkEnvelope(config.kind, { refresh: true }),
+        api.getBenchmarkEnvelope("overview", { refresh: true }),
+        api.getNetworkEnvelope({ refresh: true }),
+        api.getHealthEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var specific = payloads[0].data;
+      var overview = payloads[1].data;
+      var network = payloads[2].data;
+      var health = payloads[3];
+      setText("#bench-title", config.title);
+      setText("#bench-kicker", config.kicker);
+      setText("#bench-status", String(envelope.status).toUpperCase());
+      setText("#bench-updated", "Updated " + new Date(envelope.lastUpdated).toLocaleString());
+      setText("#bench-source", specific && specific.sourceFile ? specific.sourceFile : "artifact unavailable");
+      metricCards(config, specific || { summary: {} }, overview, network, health).forEach(function (card, index) {
+        setText("#bench-card-" + (index + 1) + "-label", card.label);
+        setText("#bench-card-" + (index + 1) + "-value", card.value);
+      });
+      renderRows(byId("bench-summary"), [
+        { key: "Benchmark status", value: String(envelope.status).toUpperCase() },
+        { key: "Current network TPS", value: fmtNumber(network.tps) },
+        { key: "Current validators", value: fmtNumber(network.validators.length) },
+        { key: "Health source", value: health.source },
+      ]);
+      renderRows(byId("bench-artifacts"), [
+        {
+          key: "RPC checks",
+          value:
+            fmtNumber(overview.chainbench.summary.ok) +
+            "/" +
+            fmtNumber(overview.chainbench.summary.total) +
+            " passed",
+        },
+        { key: "Live benchmark", value: fmtNumber(overview.live.summary.combined_tps) + " combined TPS" },
+        { key: "Scheduler", value: fmtNumber(overview.tps.summary.scheduler.schedules_per_sec) + " schedules/sec" },
+        {
+          key: "Fastest crypto op",
+          value: fmtNumber(Math.round(overview.crypto.summary.benchmarks[6].throughput_hashes_per_sec)) + " hashes/sec",
+        },
+      ]);
+      var detailRows = [];
+      if (config.kind === "stress-test" && specific && specific.summary) {
+        detailRows = Object.keys(specific.summary).map(function (key) {
+          return { key: key, value: fmtNumber(specific.summary[key]) };
+        });
+      } else if (config.kind === "chainbench" && specific && specific.summary) {
+        detailRows = Object.keys(specific.summary).map(function (key) {
+          return { key: key, value: fmtNumber(specific.summary[key]) };
+        });
+      } else {
+        detailRows = overview.crypto.summary.benchmarks.slice(0, 6).map(function (benchmark) {
+          return {
+            key: benchmark.operation,
+            value: fmtNumber(Math.round(benchmark.ops_per_sec || benchmark.throughput_hashes_per_sec || benchmark.throughput_sigs_per_sec || 0)),
+          };
+        });
+      }
+      renderRows(byId("bench-details"), detailRows);
+      var feed = byId("bench-feed");
+      if (feed) {
+        feed.innerHTML = (network.transactions || [])
+          .slice(0, 6)
+          .map(function (tx) {
+            return (
+              '<div class="feed-row"><span class="feed-type">' +
+              tx.type +
+              '</span><span class="feed-detail">' +
+              tx.detail +
+              '</span><span class="feed-hash">' +
+              tx.hash +
+              "</span></div>"
+            );
+          })
+          .join("");
+      }
+      api.renderModuleMeta(".bench-shell", "benchmark console", envelope);
+    }
+
+    await load();
+    global.setInterval(load, 20000);
+  }
+
   async function start() {
+    mountTopNav();
     if (!global.X3API) return;
     var api = await global.X3API.init();
     var page = (global.location.pathname.split("/").pop() || "x3star-landing.html").toLowerCase();
@@ -1234,9 +2479,19 @@
       "x3star-token-presale.html": initPresaleMetrics,
       "x3star-social-proof-wall.html": initReservationsPages,
       "x3star-fundraise-thermometer.html": initReservationsPages,
+      "x3star-scarcity-clock.html": initScarcityClock,
+      "x3star-ecosystem-heartbeat.html": initEcosystemHeartbeat,
+      "x3star-operator-war-room.html": initOperatorWarRoom,
+      "x3star-mission-terminal.html": initMissionTerminal,
+      "x3star-arbitrage-engine.html": initArbitrageEngine,
       "x3star-slot-tracker.html": initSlotTracker,
       "x3star-whale-tracker.html": initWhales,
       "x3star-tokenomics-warroom.html": initTokenomics,
+      "blockchain-stress-test.html": initBenchmarkConsole,
+      "blockchain-stress-test(1).html": initBenchmarkConsole,
+      "chainbench-pro.html": initBenchmarkConsole,
+      "chainbench-ultimate.html": initBenchmarkConsole,
+      "chainbench-ultimate(1).html": initBenchmarkConsole,
     };
     if (adapters[page]) {
       await adapters[page](api);

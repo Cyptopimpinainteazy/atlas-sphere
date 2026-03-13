@@ -75,7 +75,14 @@
     banner.style.color = "#dbeafe";
     banner.textContent = "Connecting to X3 site data…";
     document.body.appendChild(banner);
+    updateStatusOffset(banner);
     return banner;
+  }
+
+  function updateStatusOffset(banner) {
+    if (typeof document === "undefined" || !banner) return;
+    var height = Math.ceil(banner.getBoundingClientRect().height || 0);
+    document.documentElement.style.setProperty("--x3-status-height", height + "px");
   }
 
   function renderStatusBanner(envelope) {
@@ -114,6 +121,7 @@
       " • updated: " +
       formatTime(envelope.lastUpdated) +
       (envelope.staleReason ? " • " + envelope.staleReason : "");
+    updateStatusOffset(banner);
   }
 
   function renderModuleMeta(target, label, envelope) {

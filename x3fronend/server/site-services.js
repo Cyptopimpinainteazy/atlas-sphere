@@ -649,12 +649,29 @@ function createSiteServices(options) {
     );
     const genesisTier = store.presale.tiers.find((tier) => tier.name === "genesis");
     const slotsLeft = genesisTier.totalSlots - genesisTier.reservedSlots;
+    const countryCounts = new Map();
+    for (const reservation of reservations) {
+      const key = String(reservation.countryCode || "??").toUpperCase();
+      countryCounts.set(key, (countryCounts.get(key) || 0) + 1);
+    }
+    const topCountries = Array.from(countryCounts.entries())
+      .sort((left, right) => right[1] - left[1])
+      .slice(0, 7)
+      .map(([code, count]) => ({
+        code,
+        flag: countryFlag(code),
+        count,
+      }));
     return envelope(
       {
         totalOperators: store.presale.investors,
         slotsLeft,
+        totalSlots: genesisTier.totalSlots,
+        reservedSlots: genesisTier.reservedSlots,
         selloutEtaHours: store.presale.daysRemaining * 24,
+        tokenPriceUsd: store.presale.tokenPriceUsd,
         pace24h: bucketReservations(reservations),
+        topCountries,
         operators: reservations.slice(0, 24).map((reservation) => ({
           name: reservation.name,
           location: reservation.location,
@@ -850,7 +867,7 @@ function createSiteServices(options) {
   async function getBenchmark(name) {
     const benchmarks = await getBenchmarksOverview();
     const mapping = {
-      chainbench: benchmarks.rpc,
+      chainbench: benchmarks.chainbench,
       "stress-test": benchmarks.live,
       tps: benchmarks.tps,
       crypto: benchmarks.crypto,
@@ -907,6 +924,8 @@ function createSiteServices(options) {
         netFlowX3S24h: store.marketWhales?.netFlowX3S24h || 0,
         priceUsd: price,
         priceChange24h: store.token.priceChange24h,
+        totalSupplyX3S: store.token.totalSupply,
+        circulatingSupplyX3S: store.token.circulatingSupply,
         whales,
         events,
         alerts: events.filter((event) => event.type === "BUY").length,

@@ -50,7 +50,7 @@ Next: Provision infrastructure OR deploy if infrastructure ready
      Validator 03 GRANDPA: 5HcAwUc7rYEaPYPYDN2LBW6bN8qZWu88uWqRD79YACqz1mxe
 
 3. ✅ Chain Specifications
-   Raw Spec (DEPLOY THIS): deployment/chain-specs/x3-testnet-raw.json
+   Raw Spec (deploy only after live bootnode injection): deployment/chain-specs/x3-testnet-raw.json
    Plain Specs: deployment/chain-specs/x3-testnet-plain.json
    Dev Spec: deployment/chain-specs/x3-dev-plain.json
 
@@ -188,7 +188,7 @@ You now have everything needed to launch X3 Chain Testnet v1:
   ✅ Production blockchain binary (52MB)
   ✅ Cryptographic keys for 3 validators (Aura + GRANDPA)
   ✅ Bootnode network identity
-  ✅ Chain specifications (raw format ready for deployment)
+  ✅ Chain specifications (raw format ready after bootnode multiaddr injection)
   ✅ Deployment automation scripts
 
 ⚠️  Don't forget to BACKUP YOUR KEYS immediately!

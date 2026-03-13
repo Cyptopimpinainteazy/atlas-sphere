@@ -36,22 +36,57 @@ function json(response, statusCode, payload) {
   response.end(`${JSON.stringify(payload)}\n`);
 }
 
+function injectGlobalChrome(html) {
+  const headInjection =
+    '<link rel="stylesheet" href="/css/x3-site-nav.css">\n<script defer src="/js/x3-site-nav.js"></script>';
+  if (!html.includes("/css/x3-site-nav.css")) {
+    html = html.includes("</head>") ? html.replace("</head>", `${headInjection}\n</head>`) : `${headInjection}\n${html}`;
+  }
+  return html;
+}
+
 async function serveStatic(requestUrl, response) {
-  const pathname = requestUrl.pathname === "/" ? "/x3star-landing.html" : requestUrl.pathname;
+  // if we have a built React app, serve that first.
+  const distDir = path.join(rootDir, 'dist');
+  if (await fs.stat(distDir).catch(() => false)) {
+    // build exists
+    const filePath = requestUrl.pathname === '/' ? '/index.html' : requestUrl.pathname;
+    const resolvedDist = path.normalize(path.join(distDir, filePath));
+    if (resolvedDist.startsWith(distDir)) {
+      try {
+        const file = await fs.readFile(resolvedDist);
+        const ext = path.extname(resolvedDist).toLowerCase();
+        response.writeHead(200, {
+          'content-type': CONTENT_TYPES[ext] || 'application/octet-stream',
+        });
+        response.end(file);
+        return;
+      } catch (e) {
+        // fall through to legacy static
+      }
+    }
+  }
+
+  // legacy behaviour (serve original html/js/css)
+  const pathname = requestUrl.pathname === '/' ? '/x3star-landing.html' : requestUrl.pathname;
   const resolved = path.normalize(path.join(rootDir, pathname));
   if (!resolved.startsWith(rootDir)) {
-    json(response, 403, { error: "Forbidden" });
+    json(response, 403, { error: 'Forbidden' });
     return;
   }
   try {
     const file = await fs.readFile(resolved);
     const extension = path.extname(resolved).toLowerCase();
+    let body = file;
+    if (extension === '.html') {
+      body = Buffer.from(injectGlobalChrome(file.toString('utf8')), 'utf8');
+    }
     response.writeHead(200, {
-      "content-type": CONTENT_TYPES[extension] || "application/octet-stream",
+      'content-type': CONTENT_TYPES[extension] || 'application/octet-stream',
     });
-    response.end(file);
+    response.end(body);
   } catch {
-    json(response, 404, { error: "Not found" });
+    json(response, 404, { error: 'Not found' });
   }
 }
 

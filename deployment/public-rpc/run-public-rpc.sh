@@ -25,11 +25,13 @@ set -euo pipefail
 # - confirm_public_rpc:                  Set to "yes" when require_confirm_public_rpc=true
 # - require_safe_rpc_methods_on_public:  true|false (default: true)
 # - node_bin:           Path to x3-chain-node binary
+# - bootnodes:          Comma-separated bootnode multiaddrs to pass via --bootnodes
 
 node_name="${node_name:-x3-rpc}"
 base_path="${base_path:-/var/lib/x3-chain/rpc}"
 chain="${chain:-testnet}"
 chain_spec_dir="${chain_spec_dir:-deployment/chain-specs}"
+bootnodes="${bootnodes:-}"
 
 rpc_port="${rpc_port:-9944}"
 p2p_port="${p2p_port:-30333}"
@@ -125,10 +127,16 @@ if [ -n "${rpc_cors}" ]; then
   rpc_cors_args=(--rpc-cors "${rpc_cors}")
 fi
 
+bootnode_args=()
+if [ -n "${bootnodes}" ]; then
+  bootnode_args=(--bootnodes "${bootnodes}")
+fi
+
 echo "🌐 X3 Chain RPC Node"
 echo "  node_name=${node_name}"
 echo "  base_path=${base_path}"
 echo "  chain=${chain}"
+echo "  bootnodes=${bootnodes:-<from chainspec>}"
 echo "  rpc_bind=${rpc_bind} rpc_port=${rpc_port}"
 echo "  p2p_port=${p2p_port} prometheus_port=${prometheus_port}"
 echo "  rpc_methods=${rpc_methods} rpc_cors=${rpc_cors:-<none>}"
@@ -148,6 +156,7 @@ exec "${node_bin}" \
   --prometheus-port "${prometheus_port}" \
   --prometheus-external=false \
   --no-hardware-benchmarks \
+  "${bootnode_args[@]}" \
   "${rpc_bind_args[@]}" \
   "${rpc_cors_args[@]}" \
   "$@"

@@ -2,9 +2,7 @@
   "name": "X3 Chain Testnet v1",
   "id": "x3_testnet_v1",
   "chainType": "Live",
-  "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWBSaza7uxscbwQNzAeHqoqEWWdKEqib7uMe3q65jsrKgn"
-  ],
+  "bootNodes": [],
   "telemetryEndpoints": null,
   "protocolId": "x3",
   "properties": {

@@ -177,7 +177,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="panel-body">
       <div class="node-kpi">
         <div class="nkpi"><div class="nkpi-val" style="color:var(--grn)" id="uptime-val">100.00%</div><div class="nkpi-key">Uptime</div></div>
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)" id="earned-val">$184,200</div><div class="nkpi-key">Earned</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)" id="earned-val">--</div><div class="nkpi-key">Earned</div></div>
         <div class="nkpi"><div class="nkpi-val" id="blocks-val">847,291</div><div class="nkpi-key">Blocks Signed</div></div>
         <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)">18%+</div><div class="nkpi-key">APY</div></div>
       </div>
@@ -283,8 +283,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="panel-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
         <div class="nkpi"><div class="nkpi-val" style="color:var(--grn)" id="net-tps">4,218</div><div class="nkpi-key">TPS</div></div>
-        <div class="nkpi"><div class="nkpi-val" id="net-block">#1,847,291</div><div class="nkpi-key">Block</div></div>
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)">1,847</div><div class="nkpi-key">Validators</div></div>
+        <div class="nkpi"><div class="nkpi-val" id="net-block">--</div><div class="nkpi-key">Block</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)">--</div><div class="nkpi-key">Validators</div></div>
         <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)">$0.0842</div><div class="nkpi-key">X3S Price</div></div>
       </div>
       <div class="node-health" style="gap:8px;">
@@ -345,57 +345,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-// Clock
-function tick(){
-  const now=new Date();
-  const t=[now.getUTCHours(),now.getUTCMinutes(),now.getUTCSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
-  document.getElementById('net-clock').textContent=t+' UTC';
-}
-setInterval(tick,1000);tick();
-
-// Block counter
-let block=1847291;
-setInterval(()=>{
-  block++;
-  document.getElementById('net-block').textContent='#'+block.toLocaleString();
-  document.getElementById('blocks-val').textContent=(847291+block-1847291).toLocaleString();
-  // Add block feed item
-  const feed=document.getElementById('block-feed');
-  const item=document.createElement('div');
-  item.style.cssText='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);';
-  const tps=4000+Math.floor(Math.random()*400);
-  item.innerHTML=`<span style="color:rgba(0,200,100,0.5)">#${block.toLocaleString()}</span><span style="color:var(--muted)">${tps} txs</span><span style="color:rgba(0,200,100,0.4)">0.4s</span><span style="color:var(--gold)">+${(tps*0.00001).toFixed(4)} X3S</span>`;
-  feed.insertBefore(item,feed.firstChild);
-  if(feed.children.length>8)feed.removeChild(feed.lastChild);
-  document.getElementById('net-tps').textContent=tps.toLocaleString();
-},400);
-
-// Pending rewards counter
-let pending=2841;
-setInterval(()=>{
-  pending+=Math.random()*0.5;
-  document.getElementById('pending-val').textContent='+'+Math.round(pending).toLocaleString()+' X3S';
-},1500);
-
-// Live alerts
-const alerts=[
-  {type:'ab-info',msg:'Your referral link shared by <strong>nebula_dao</strong> — new Genesis reservation from 🇫🇷 Paris.'},
-  {type:'ab-vote',msg:'XIP-143 quorum reached — your vote now carries extra weight.'},
-  {type:'ab-info',msg:'Epoch complete. You signed <strong>847 blocks</strong> — 100% participation.'},
-  {type:'ab-warn',msg:'Network: Temporary validator queue delay 8s — your node unaffected.'},
-];
-let alertIdx=0;
-setInterval(()=>{
-  const a=alerts[alertIdx%alerts.length];alertIdx++;
-  const feed=document.getElementById('alert-feed');
-  const item=document.createElement('div');
-  item.className='alert-item';
-  item.innerHTML=`<div class="ai-badge ${a.type}">NEW</div><div class="ai-msg">${a.msg}</div><div class="ai-time">just now</div>`;
-  feed.insertBefore(item,feed.firstChild);
-  const cnt=parseInt(document.getElementById('alert-count').textContent)+1;
-  document.getElementById('alert-count').textContent=cnt+' new';
-},25000);
+X3PageAdapters.start();
 </script>
 </body>
 </html>

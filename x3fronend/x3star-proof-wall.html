@@ -184,31 +184,31 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
     <div class="live-pill"><div class="live-dot"></div><span style="font-size:9px;letter-spacing:2px;font-family:var(--mono);color:var(--green)">LIVE</span></div>
     <span style="font-size:9px;letter-spacing:3px;color:var(--muted);font-family:var(--mono)">VALIDATOR RESERVATIONS · UPDATING IN REAL TIME</span>
   </div>
-  <h1 class="hero-title"><em id="join-count">312</em> operators<br>have already joined.</h1>
+  <h1 class="hero-title"><em id="join-count">--</em> operators<br>have already joined.</h1>
   <p class="hero-sub">Every reservation you see below is real. Watch the network fill up live.</p>
 </div>
 
 <!-- VELOCITY STRIP -->
 <div class="velocity">
   <div class="vel-item">
-    <div class="vi-num" id="v-today">47</div>
+    <div class="vi-num" id="v-today">--</div>
     <div class="vi-key">Joined Today</div>
     <div class="vi-change">▲ fastest day yet</div>
   </div>
   <div class="vel-item">
-    <div class="vi-num" id="v-hour">6</div>
+    <div class="vi-num" id="v-hour">--</div>
     <div class="vi-key">Last Hour</div>
     <div class="vi-change vi-change" style="color:var(--gold)">1 every ~10 min</div>
   </div>
   <div class="vel-item">
-    <div class="vi-num" id="v-slots" style="color:var(--red)">46</div>
+    <div class="vi-num" id="v-slots" style="color:var(--red)">--</div>
     <div class="vi-key">Genesis Slots Left</div>
     <div class="vi-change" style="color:var(--red)">▼ filling fast</div>
   </div>
   <div class="vel-item">
-    <div class="vi-num">$0.075</div>
+    <div class="vi-num" id="v-price">--</div>
     <div class="vi-key">Current Price</div>
-    <div class="vi-change" style="color:var(--muted)">→ $0.12 after TGE</div>
+    <div class="vi-change" style="color:var(--muted)">Next round pricing TBD</div>
   </div>
 </div>
 
@@ -218,7 +218,7 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
   <div class="wall">
     <div class="wall-header">
       <span class="wh-title">Live Operator Feed</span>
-      <span class="wh-count" id="wall-count">Showing 312 reservations</span>
+      <span class="wh-count" id="wall-count">Showing -- reservations</span>
     </div>
     <div class="wall-grid" id="wall-grid"></div>
   </div>
@@ -227,13 +227,13 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
   <div class="sidebar">
     <div class="sb-section">
       <div class="sbs-title">Genesis Slots Remaining</div>
-      <div class="slot-big" id="slots-left">46</div>
-      <div class="slot-label">of 200 total</div>
-      <div class="slot-bar"><div class="slot-fill" id="slot-fill" style="width:77%"></div></div>
-      <div class="slot-sub">154 reserved · 77% filled</div>
+      <div class="slot-big" id="slots-left">--</div>
+      <div class="slot-label">of <span id="slots-total">--</span> total</div>
+      <div class="slot-bar"><div class="slot-fill" id="slot-fill" style="width:0%"></div></div>
+      <div class="slot-sub" id="slot-sub">-- reserved · -- filled</div>
       <div class="urgency">
         <div class="urg-title">⚡ At current pace</div>
-        <div class="urg-body">Genesis tier sells out in <span class="urg-val" id="sellout-time">4h 22m</span> · <span class="urg-val">Star tier: 98% full</span> · Only <span class="urg-val">Lite</span> will remain after tonight.</div>
+        <div class="urg-body">Genesis tier sells out in <span class="urg-val" id="sellout-time">n/a</span> · <span class="urg-val" id="sellout-note">Tier fill rates updating</span></div>
       </div>
     </div>
 
@@ -244,24 +244,16 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
         <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>Now</span>
       </div>
       <div class="pace" style="margin-top:12px;">
-        <div class="pace-row"><span class="pr-key">Last 1h</span><span class="pr-val" style="color:var(--green)" id="p-1h">6 reservations</span></div>
-        <div class="pace-row"><span class="pr-key">Last 6h</span><span class="pr-val" id="p-6h">29 reservations</span></div>
-        <div class="pace-row"><span class="pr-key">Last 24h</span><span class="pr-val" style="color:var(--gold)" id="p-24h">47 reservations</span></div>
-        <div class="pace-row"><span class="pr-key">All time</span><span class="pr-val">312 operators</span></div>
+        <div class="pace-row"><span class="pr-key">Last 1h</span><span class="pr-val" style="color:var(--green)" id="p-1h">--</span></div>
+        <div class="pace-row"><span class="pr-key">Last 6h</span><span class="pr-val" id="p-6h">--</span></div>
+        <div class="pace-row"><span class="pr-key">Last 24h</span><span class="pr-val" style="color:var(--gold)" id="p-24h">--</span></div>
+        <div class="pace-row"><span class="pr-key">All time</span><span class="pr-val" id="p-all">--</span></div>
       </div>
     </div>
 
     <div class="sb-section">
       <div class="sbs-title">Top Countries</div>
-      <div class="country-list">
-        <div class="country-row"><span class="cr-flag">🇺🇸</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:82%"></div></div><span class="cr-count">84</span></div>
-        <div class="country-row"><span class="cr-flag">🇸🇬</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:62%"></div></div><span class="cr-count">64</span></div>
-        <div class="country-row"><span class="cr-flag">🇩🇪</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:44%"></div></div><span class="cr-count">45</span></div>
-        <div class="country-row"><span class="cr-flag">🇯🇵</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:38%"></div></div><span class="cr-count">39</span></div>
-        <div class="country-row"><span class="cr-flag">🇬🇧</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:32%"></div></div><span class="cr-count">33</span></div>
-        <div class="country-row"><span class="cr-flag">🇦🇪</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:24%"></div></div><span class="cr-count">24</span></div>
-        <div class="country-row"><span class="cr-flag">🌍</span><div class="cr-bar-wrap"><div class="cr-bar" style="width:22%"></div></div><span class="cr-count">23</span></div>
-      </div>
+      <div class="country-list" id="country-list"></div>
     </div>
 
     <div class="sb-section" style="border:none;flex:1;">

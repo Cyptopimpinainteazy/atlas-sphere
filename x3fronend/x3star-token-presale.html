@@ -344,13 +344,13 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
 
       <!-- PROGRESS -->
       <div class="raise-info">
-        <span class="raise-raised" id="raised-amt">$14,700,000</span>
-        <span class="raise-cap">Hard Cap: $20,000,000</span>
+        <span class="raise-raised" id="raised-amt">--</span>
+        <span class="raise-cap" id="raise-cap">Hard Cap: --</span>
       </div>
       <div class="raise-bar">
         <div class="raise-fill" id="raise-fill" style="width:0%"></div>
       </div>
-      <div class="raise-pct">73.5% filled — $5.3M remaining</div>
+      <div class="raise-pct" id="raise-pct">--</div>
 
       <!-- BUY TABS -->
       <div class="buy-tabs">
@@ -377,18 +377,18 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
 
       <div class="bonus-tag">
         <span class="bonus-icon">🎁</span>
-        <span class="bonus-text">Round III Bonus: <span class="bonus-pct">+12% X3S</span> tokens included</span>
+        <span class="bonus-text" id="bonus-text">Round III Bonus: <span class="bonus-pct" id="bonus-pct">--</span> tokens included</span>
       </div>
 
       <button class="buy-btn" onclick="handleBuy()">⬡ BUY X3STAR NOW</button>
 
       <div class="presale-footer">
         <div class="pf-item">
-          <div class="pf-val">$0.075</div>
+          <div class="pf-val" id="pf-price">--</div>
           <div class="pf-key">Token Price</div>
         </div>
         <div class="pf-item">
-          <div class="pf-val">+12%</div>
+          <div class="pf-val" id="pf-bonus">--</div>
           <div class="pf-key">R3 Bonus</div>
         </div>
         <div class="pf-item">
@@ -403,19 +403,19 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
 <!-- STATS BAR -->
 <div class="stats-bar reveal">
   <div class="stat-item">
-    <div class="stat-num text-gold">$14.7M</div>
+    <div class="stat-num text-gold" id="stat-raised">--</div>
     <div class="stat-label">Total Raised</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num text-cyan">312</div>
+    <div class="stat-num text-cyan" id="stat-investors">--</div>
     <div class="stat-label">Investors</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num text-green">4,821</div>
+    <div class="stat-num text-green" id="stat-holders">--</div>
     <div class="stat-label">Token Holders</div>
   </div>
   <div class="stat-item">
-    <div class="stat-num" style="color:var(--purple)">1B</div>
+    <div class="stat-num" style="color:var(--purple)" id="stat-supply">--</div>
     <div class="stat-label">Total Supply</div>
   </div>
 </div>
@@ -497,9 +497,9 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
       <div class="rm-title">Testnet</div>
       <div class="rm-items">
         <div>✓ Testnet launch</div>
-        <div>✓ 12K validators</div>
+        <div>✓ validator onboarding live</div>
         <div>✓ Series A raise</div>
-        <div>✓ Security audit</div>
+        <div>✓ public artifact verification</div>
       </div>
     </div>
     <div class="rm-item rm-active">
@@ -535,22 +535,22 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     <div class="feat-card c-gold">
       <div class="feat-icon">⚡</div>
       <div class="feat-title">Ultra-Fast Finality</div>
-      <div class="feat-text">Sub-second finality with our proprietary Stellar Consensus Protocol. 4,200+ TPS at genesis, scaling to 50K+ with sharding.</div>
+      <div class="feat-text">Performance claims on the public surface now defer to live benchmark artifacts and network telemetry instead of static marketing numbers.</div>
     </div>
     <div class="feat-card c-cyan">
       <div class="feat-icon">🔗</div>
       <div class="feat-title">Cross-Chain Native</div>
-      <div class="feat-text">Native bridges to Ethereum, Solana, and Cosmos. Zero-slippage cross-chain swaps via our ZK bridge layer.</div>
+      <div class="feat-text">Interoperability remains part of the roadmap, but this page only claims the integrations that are currently wired and exposed through the backend.</div>
     </div>
     <div class="feat-card c-purple">
       <div class="feat-icon">🛡</div>
       <div class="feat-title">Quantum-Ready Security</div>
-      <div class="feat-text">Post-quantum cryptographic signature scheme (CRYSTALS-Dilithium) protects against future quantum threats.</div>
+      <div class="feat-text">Security posture is communicated through implemented code paths, published disclosures, and investor-relations updates rather than unsupported slogans.</div>
     </div>
     <div class="feat-card c-green">
       <div class="feat-icon">🌱</div>
       <div class="feat-title">Carbon Negative</div>
-      <div class="feat-text">Proof-of-Stake with on-chain carbon offset treasury. Every transaction plants a tree and offsets 10x its emissions.</div>
+      <div class="feat-text">Environmental and treasury narratives must be backed by live accounting and published disclosures before they appear as hard claims on the site.</div>
     </div>
     <div class="feat-card c-gold">
       <div class="feat-icon">◈</div>
@@ -589,7 +589,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What is the token vesting schedule? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Presale tokens have a 12-month cliff from TGE, followed by 12-month linear vesting (total 24 months). Round III participants also receive a 12% bonus, which follows the same schedule.</div>
+      <div class="faq-a">Presale tokens follow the published vesting schedule. Round III bonus allocations, if active, follow the same schedule outlined in the presale memo.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">When is the TGE (Token Generation Event)? <span class="faq-icon">+</span></div>

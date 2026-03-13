@@ -4,6 +4,15 @@
 
 set -e
 
+ensure_no_loopback_bootnodes() {
+    local spec_path="$1"
+    if grep -Eq '"(/ip4/(127\.0\.0\.1|0\.0\.0\.0)|localhost)' "$spec_path"; then
+        echo "❌ Refusing to keep loopback bootnodes in $spec_path"
+        echo "   Update bootNodes to public multiaddrs or leave them empty until the bootnode exists."
+        exit 1
+    fi
+}
+
 echo "🔨 X3 Chain Testnet v1 - Build & Key Generation"
 echo "===================================================="
 echo ""
@@ -78,10 +87,12 @@ echo "   Things to customize:"
 echo "   • name: \"X3 Chain Testnet\""
 echo "   • id: \"x3-testnet\""
 echo "   • chainType: \"Live\""
-echo "   • bootNodes: Add bootnode multiaddr after Day 1"
+echo "   • bootNodes: Leave empty now or set real public bootnode multiaddrs only"
 echo "   • Add validator initial authorities (after generating keys below)"
 echo ""
 read -p "Press Enter after editing the chain spec, or Ctrl+C to exit and edit later..."
+
+ensure_no_loopback_bootnodes "$CHAIN_SPEC_DIR/x3-testnet-plain.json"
 
 # Convert to raw format (after user edits)
 echo ""
@@ -90,6 +101,7 @@ $BUILD_DIR/x3-chain-node build-spec \
     --chain "$CHAIN_SPEC_DIR/x3-testnet-plain.json" \
     --raw \
     > "$CHAIN_SPEC_DIR/x3-testnet-raw.json"
+ensure_no_loopback_bootnodes "$CHAIN_SPEC_DIR/x3-testnet-raw.json"
 echo -e "${GREEN}✅ Created: x3-testnet-raw.json (use this for deployment)${NC}"
 
 # Step 3: Generate validator keys
@@ -218,7 +230,7 @@ Deployment:
 1. Copy node key to bootnode server:
    echo "$BOOTNODE_KEY" | ssh x3@BOOTNODE_IP 'cat > /var/lib/x3/node-key'
 
-2. Update chain spec bootNodes with the multiaddr above
+2. Update chain spec bootNodes with the multiaddr above (never localhost/127.0.0.1)
 
 3. Start bootnode with:
    x3-chain-node \\

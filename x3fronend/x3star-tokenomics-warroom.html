@@ -173,48 +173,48 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;
   <!-- LEFT: SUPPLY BREAKDOWN -->
   <div class="panel" style="grid-row:1;">
     <div class="pt">Supply Breakdown</div>
-    <div class="pval" style="color:var(--gold)">1,000,000,000</div>
+    <div class="pval" style="color:var(--gold)" id="total-supply">--</div>
     <div class="pkey">Total X3S Supply</div>
     <div class="supply-bars">
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Circulating</span><span class="sb-pct" style="color:var(--green)">8.4%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:8.4%;background:var(--green)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Circulating</span><span class="sb-pct" style="color:var(--green)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--green)"></div></div>
       </div>
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Presale Locked</span><span class="sb-pct" style="color:var(--gold)">44%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:44%;background:var(--gold)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Presale Locked</span><span class="sb-pct" style="color:var(--gold)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--gold)"></div></div>
       </div>
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Staking Locked</span><span class="sb-pct" style="color:var(--cyan)">22.1%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:22.1%;background:var(--cyan)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Staking Locked</span><span class="sb-pct" style="color:var(--cyan)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--cyan)"></div></div>
       </div>
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Team (Vesting)</span><span class="sb-pct" style="color:var(--purple)">18%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:18%;background:var(--purple)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Team (Vesting)</span><span class="sb-pct" style="color:var(--purple)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--purple)"></div></div>
       </div>
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Ecosystem</span><span class="sb-pct" style="color:var(--blue)">28%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:28%;background:var(--blue)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Ecosystem</span><span class="sb-pct" style="color:var(--blue)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--blue)"></div></div>
       </div>
       <div class="sb-row">
-        <div class="sb-labels"><span class="sb-name">Burned</span><span class="sb-pct" style="color:var(--red)">1.5%</span></div>
-        <div class="sb-track"><div class="sb-fill" style="width:1.5%;background:var(--red)"></div></div>
+        <div class="sb-labels"><span class="sb-name">Burned</span><span class="sb-pct" style="color:var(--red)">--</span></div>
+        <div class="sb-track"><div class="sb-fill" style="width:0%;background:var(--red)"></div></div>
       </div>
     </div>
     <div class="pt" style="padding-top:8px;">Emission Rate</div>
     <div class="emission-viz">
       <div style="display:flex;justify-content:space-between;font-size:10px;">
         <span style="color:rgba(255,255,255,0.4)">Daily Emissions</span>
-        <span style="font-family:var(--mono);color:var(--cyan)" id="em-rate">142,400 X3S</span>
+        <span style="font-family:var(--mono);color:var(--cyan)" id="em-rate">--</span>
       </div>
       <div class="ev-bar"><div class="ev-fill" id="em-bar" style="width:14%"></div></div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.25)">Halving in 284 days</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.25)">Halving in <span id="halving-days">--</span> days</div>
     </div>
     <div class="pt" style="padding-top:4px;">Burn Counter</div>
     <div class="burn-counter">
       <div class="bc-flames">🔥</div>
-      <div class="bc-val" id="burn-val">14,821,440</div>
-      <div class="bc-rate" id="burn-rate">burning ~1,200 X3S/hr</div>
+      <div class="bc-val" id="burn-val">--</div>
+      <div class="bc-rate" id="burn-rate">burning --</div>
     </div>
   </div>
 
@@ -225,7 +225,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;
     <div class="center-canvas">
       <canvas id="main-donut"></canvas>
       <div class="center-title">
-        <div class="ct-main" id="ctr-supply">840M</div>
+        <div class="ct-main" id="ctr-supply">--</div>
         <div class="ct-sub">Locked Supply</div>
       </div>
     </div>
@@ -249,38 +249,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;
   <!-- RIGHT: VESTING SCHEDULE -->
   <div class="panel" style="grid-row:1;overflow-y:auto;">
     <div class="pt">Vesting Schedule</div>
-    <div class="vest-list" id="vest-list">
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Team & Advisors</span><span class="vr-date">Cliff: Jun 2025</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:0%;background:var(--purple)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--purple)">180M X3S</span><span class="vr-status vs-locked">LOCKED</span></div>
-      </div>
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Seed Round</span><span class="vr-date">Cliff: Mar 2025</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:25%;background:var(--gold)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--gold)">40M X3S</span><span class="vr-status vs-cliff">CLIFF</span></div>
-      </div>
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Series A Investors</span><span class="vr-date">Vesting: 15mo</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:60%;background:var(--cyan)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--cyan)">105M X3S</span><span class="vr-status vs-active">ACTIVE</span></div>
-      </div>
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Ecosystem Fund</span><span class="vr-date">48mo linear</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:18%;background:var(--blue)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--blue)">280M X3S</span><span class="vr-status vs-active">ACTIVE</span></div>
-      </div>
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Round III Presale</span><span class="vr-date">Cliff: Dec 2025</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:0%;background:var(--gold2)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--gold2)">196M X3S</span><span class="vr-status vs-locked">LOCKED</span></div>
-      </div>
-      <div class="vest-row">
-        <div class="vr-top"><span class="vr-name">Staking Rewards Pool</span><span class="vr-date">Ongoing</span></div>
-        <div class="vr-bar-track"><div class="vr-bar" style="width:45%;background:var(--green)"></div></div>
-        <div class="vr-bottom"><span class="vr-amt" style="color:var(--green)">120M X3S</span><span class="vr-status vs-active">EMITTING</span></div>
-      </div>
-    </div>
+    <div class="vest-list" id="vest-list"></div>
 
     <div class="pt" style="padding-top:14px;">Unlock Pressure</div>
     <div class="circ-meter">

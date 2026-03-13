@@ -444,49 +444,10 @@ nav{position:sticky;top:0;z-index:100;height:54px;display:flex;align-items:cente
   </div>
 </section>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-// Ticker
-const tickItems=[
-  'BTC/ETH SPREAD','$2.41','ATOMIC ARB','EXECUTED','X3KERNEL','2.4B TPS',
-  'GPU ROUTER','ACTIVE','AI SWARM','LEARNING','4-CHAIN','ATOMIC TX',
-  'EVM+SVM+BTC+X3VM','ONE TRANSACTION','SOLANA?','WE BEAT THEM','CPU-ONLY','STILL WINNING',
-];
-const ticker=document.getElementById('ticker');
-const inner=tickItems.map((t,i)=>`<div class="ti-item"><span class="${i%3===0?'ti-hot':i%3===1?'ti-green':''}">${t}</span><span style="color:rgba(57,255,20,0.1)">|</span></div>`).join('');
-ticker.innerHTML=inner+inner;
-
-// Live spread simulation
-const ethBase=2841.20,solBase=2843.61;
-setInterval(()=>{
-  const ethP=(ethBase+((Math.random()-0.5)*4)).toFixed(2);
-  const solP=(solBase+((Math.random()-0.5)*4)).toFixed(2);
-  const spread=(parseFloat(solP)-parseFloat(ethP)).toFixed(2);
-  document.getElementById('eth-price').textContent='$'+ethP;
-  document.getElementById('sol-price').textContent='$'+solP;
-  const sd=document.getElementById('spread-display');
-  if(parseFloat(spread)>0){
-    sd.textContent='Spread: +$'+spread+' → EXECUTE';
-    sd.style.color='var(--green)';
-  } else {
-    sd.textContent='Spread: $'+spread+' → HOLD';
-    sd.style.color='var(--muted)';
-  }
-},1200);
-
-// Animate bars on scroll
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      setTimeout(()=>{
-        document.getElementById('sui-bar').style.width='12.4%';
-        document.getElementById('sol-bar').style.width='2.7%';
-        document.getElementById('apt-bar').style.width='1.25%';
-      },200);
-    }
-  });
-},{threshold:0.3});
-const benchPanel=document.querySelector('.bench-panel');
-if(benchPanel)observer.observe(benchPanel);
+X3PageAdapters.start();
 </script>
 </body>
 </html>
