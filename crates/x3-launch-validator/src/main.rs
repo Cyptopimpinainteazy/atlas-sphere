@@ -9,7 +9,7 @@
 //!   x3-launch-check --json          (emit JSON report to stdout)
 
 use x3_launch_validator::{
-    checklist::{LaunchChecklist, CheckPhase},
+    checklist::{CheckPhase, LaunchChecklist},
     checks::run_all,
     reporter::ChecklistReporter,
 };
@@ -29,8 +29,7 @@ fn main() {
 
     if json_mode {
         // Output machine-readable JSON
-        let json = serde_json::to_string_pretty(&checklist.items)
-            .expect("serialization failed");
+        let json = serde_json::to_string_pretty(&checklist.items).expect("serialization failed");
         println!("{json}");
         if checklist.any_blocking_failed() {
             std::process::exit(1);

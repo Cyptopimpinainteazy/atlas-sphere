@@ -155,13 +155,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="tb-live"><div class="tb-dot"></div><span class="tb-val">OPS WAR ROOM</span></div>
   <div class="tb-sep"></div>
   <span class="tb-label">Your Node</span>
-  <span class="tb-val" style="color:var(--gold)">US-NODE-01 · GENESIS</span>
+  <span class="tb-val" style="color:var(--gold)" id="tb-node">--</span>
   <div class="tb-sep"></div>
   <span class="tb-label">APY</span>
-  <span class="tb-val">18% + <span style="color:var(--gold)" id="bonus-apy">2%</span> referral bonus</span>
+  <span class="tb-val"><span id="tb-apy">--</span> + <span style="color:var(--gold)" id="bonus-apy">--</span> referral bonus</span>
   <div class="tb-sep"></div>
   <span class="tb-label">Uptime</span>
-  <span class="tb-val" style="color:var(--grn)">100.00%</span>
+  <span class="tb-val" style="color:var(--grn)" id="tb-uptime">--</span>
   <div class="tb-right">
     <a href="x3star-hall-of-fame.html" style="font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:4px;">Hall of Fame</a>
     <a href="x3star-proof-wall.html" style="font-size:9px;letter-spacing:2px;color:var(--muted);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:4px;">Proof Wall</a>
@@ -178,101 +178,46 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
       <div class="node-kpi">
         <div class="nkpi"><div class="nkpi-val" style="color:var(--grn)" id="uptime-val">100.00%</div><div class="nkpi-key">Uptime</div></div>
         <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)" id="earned-val">--</div><div class="nkpi-key">Earned</div></div>
-        <div class="nkpi"><div class="nkpi-val" id="blocks-val">847,291</div><div class="nkpi-key">Blocks Signed</div></div>
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)">18%+</div><div class="nkpi-key">APY</div></div>
+        <div class="nkpi"><div class="nkpi-val" id="blocks-val">--</div><div class="nkpi-key">Blocks Signed</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)" id="apy-val">--</div><div class="nkpi-key">APY</div></div>
       </div>
       <div class="node-health">
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Consensus</span><span class="nh-val" style="color:var(--grn)">ACTIVE</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Block production</span><div class="nh-bar"><div class="nh-fill" style="width:94%;background:var(--grn)"></div></div></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Peer connections</span><span class="nh-val" style="color:var(--grn)">47 peers</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Latency</span><span class="nh-val">14ms</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Slashes</span><span class="nh-val" style="color:var(--grn)">0</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--gold)"></div><span class="nh-label">Rewards pending</span><span class="nh-val" style="color:var(--gold)" id="pending-val">+2,841 X3S</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Software version</span><span class="nh-val">v2.4.1 ✓ latest</span></div>
-        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Staked</span><span class="nh-val" style="color:var(--gold)">50,000 X3S</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Consensus</span><span class="nh-val" style="color:var(--grn)" id="nh-consensus">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Block production</span><div class="nh-bar"><div class="nh-fill" id="nh-block-fill" style="width:0%;background:var(--grn)"></div></div></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Peer connections</span><span class="nh-val" style="color:var(--grn)" id="nh-peers">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Latency</span><span class="nh-val" id="nh-latency">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Slashes</span><span class="nh-val" style="color:var(--grn)" id="nh-slashes">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--gold)"></div><span class="nh-label">Rewards pending</span><span class="nh-val" style="color:var(--gold)" id="pending-val">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Software version</span><span class="nh-val" id="nh-version">--</span></div>
+        <div class="nh-row"><div class="nh-dot" style="background:var(--grn)"></div><span class="nh-label">Staked</span><span class="nh-val" style="color:var(--gold)" id="nh-staked">--</span></div>
       </div>
     </div>
   </div>
 
   <!-- ALERTS (bottom-left) -->
   <div class="panel">
-    <div class="phead">Network Alerts <div class="phead-right" style="color:var(--grn)" id="alert-count">3 new</div></div>
+    <div class="phead">Network Alerts <div class="phead-right" style="color:var(--grn)" id="alert-count">--</div></div>
     <div class="panel-body" id="alert-feed">
       <div class="alert-item">
-        <div class="ai-badge ab-vote">GOVERNANCE</div>
-        <div class="ai-msg">XIP-143 is live: Validator reward increase proposal. Your vote can decide the outcome. <strong>47% YES</strong> with 2 days left.</div>
-        <div class="ai-time">5 minutes ago</div>
-      </div>
-      <div class="alert-item">
-        <div class="ai-badge ab-info">REWARDS</div>
-        <div class="ai-msg">Weekly staking rewards distributed. Your node earned <strong>2,841 X3S ($239)</strong> this epoch.</div>
-        <div class="ai-time">2 hours ago</div>
-      </div>
-      <div class="alert-item">
-        <div class="ai-badge ab-warn">NETWORK</div>
-        <div class="ai-msg">Minor fee market spike detected — resolved in 4 blocks. No impact to your earnings.</div>
-        <div class="ai-time">6 hours ago</div>
-      </div>
-      <div class="alert-item">
-        <div class="ai-badge ab-info">PRESALE</div>
-        <div class="ai-msg">Genesis tier at <strong>79% filled</strong>. 42 slots remain. Your referral link shared 3 new reservations today.</div>
-        <div class="ai-time">8 hours ago</div>
-      </div>
-      <div class="alert-item">
-        <div class="ai-badge ab-info">MILESTONE</div>
-        <div class="ai-msg">Bridge grant M2 payment approved. Ethereum bridge now processing <strong>12 txs/min</strong>.</div>
-        <div class="ai-time">Yesterday</div>
-      </div>
-      <div class="alert-item">
-        <div class="ai-badge ab-info">UPGRADE</div>
-        <div class="ai-msg">Protocol v2.4.1 deployed successfully. TPS improved by +4.2% · Finality unchanged.</div>
-        <div class="ai-time">Yesterday</div>
+        <div class="ai-badge ab-info">LIVE</div>
+        <div class="ai-msg">Loading live alerts…</div>
+        <div class="ai-time">--</div>
       </div>
     </div>
   </div>
 
   <!-- GOVERNANCE (top-center) -->
   <div class="panel">
-    <div class="phead">Active Governance <div class="phead-right" style="color:var(--gold)">Your power: 4,821 veX3S</div></div>
+    <div class="phead">Active Governance <div class="phead-right" style="color:var(--gold)">Your power: --</div></div>
     <div class="panel-body" id="gov-feed">
       <div class="gov-item">
         <div class="gi-top">
-          <span class="gi-id">XIP-143</span>
-          <span class="gi-status gs-urgent">⚡ URGENT · 2d left</span>
+          <span class="gi-id">--</span>
+          <span class="gi-status gs-active">Loading</span>
         </div>
-        <div class="gi-title">Increase validator base APY from 18% to 20%</div>
-        <div class="gi-progress"><div class="gi-fill" style="width:47%"></div></div>
-        <div class="gi-meta"><span>47% YES · 38% NO · 15% abstain</span><span>312 votes cast</span></div>
-        <button class="gi-vote-btn" onclick="alert('Opening governance vote...')">CAST YOUR VOTE →</button>
-      </div>
-      <div class="gov-item">
-        <div class="gi-top">
-          <span class="gi-id">XIP-142</span>
-          <span class="gi-status gs-active">ACTIVE · 5d left</span>
-        </div>
-        <div class="gi-title">Reduce Genesis validator minimum stake from 50K to 40K X3S</div>
-        <div class="gi-progress"><div class="gi-fill" style="width:72%"></div></div>
-        <div class="gi-meta"><span>72% YES · 18% NO</span><span>284 votes cast</span></div>
-        <button class="gi-vote-btn" onclick="alert('Opening governance vote...')">CAST YOUR VOTE →</button>
-      </div>
-      <div class="gov-item">
-        <div class="gi-top">
-          <span class="gi-id">XIP-141</span>
-          <span class="gi-status gs-new">NEW · 7d left</span>
-        </div>
-        <div class="gi-title">Add Solana ZK bridge to official roadmap Q2 2025</div>
-        <div class="gi-progress"><div class="gi-fill" style="width:84%;background:var(--blue)"></div></div>
-        <div class="gi-meta"><span>84% YES · 10% NO</span><span>147 votes cast</span></div>
-        <button class="gi-vote-btn" onclick="alert('Opening governance vote...')">CAST YOUR VOTE →</button>
-      </div>
-      <div class="gov-item" style="border:none;">
-        <div class="gi-top">
-          <span class="gi-id">XIP-140</span>
-          <span class="gi-status" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.08);">PASSED ✓</span>
-        </div>
-        <div class="gi-title">Expand grant pool by $2M from treasury reserve</div>
-        <div class="gi-progress"><div class="gi-fill" style="width:91%"></div></div>
-        <div class="gi-meta"><span>91% YES · Final result</span><span>Executed on-chain</span></div>
+        <div class="gi-title">Loading live proposals…</div>
+        <div class="gi-progress"><div class="gi-fill" style="width:0%"></div></div>
+        <div class="gi-meta"><span>--</span><span>--</span></div>
       </div>
     </div>
   </div>
@@ -282,10 +227,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="phead">Live Network Stats <div class="phead-right" id="net-clock">00:00:00</div></div>
     <div class="panel-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--grn)" id="net-tps">4,218</div><div class="nkpi-key">TPS</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--grn)" id="net-tps">--</div><div class="nkpi-key">TPS</div></div>
         <div class="nkpi"><div class="nkpi-val" id="net-block">--</div><div class="nkpi-key">Block</div></div>
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)">--</div><div class="nkpi-key">Validators</div></div>
-        <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)">$0.0842</div><div class="nkpi-key">X3S Price</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--gold)" id="net-vals">--</div><div class="nkpi-key">Validators</div></div>
+        <div class="nkpi"><div class="nkpi-val" style="color:var(--blue)" id="net-price">--</div><div class="nkpi-key">X3S Price</div></div>
       </div>
       <div class="node-health" style="gap:8px;">
         <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Recent Blocks</div>
@@ -297,50 +242,24 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- REFERRAL PANEL (right, full height) -->
   <div class="panel ref-panel">
     <div class="phead" style="background:rgba(255,204,0,0.04);border-color:rgba(255,204,0,0.12);">
-      Referral Multiplier <div class="phead-right" style="color:var(--gold)">Your Code: X3S-OPS7421</div>
+      Referral Multiplier <div class="phead-right" style="color:var(--gold)">Your Code: --</div>
     </div>
     <div class="ref-hero">
       <div class="rh-label">Your Current Multiplier</div>
-      <div class="rh-mult" id="mult-display">20.0%</div>
+      <div class="rh-mult" id="mult-display">--</div>
       <div class="rh-sub">Total APY (base + referral bonus)</div>
       <div class="rh-base">
-        <span class="rhb-label">18% base</span>
+        <span class="rhb-label" id="base-apy">--</span>
         <span class="rhb-arrow">+</span>
-        <span class="rhb-val">2% bonus</span>
+        <span class="rhb-val" id="ref-apy">--</span>
         <span class="rhb-arrow">= 20% total</span>
       </div>
       <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.6;">
-        Refer 1 more Genesis operator to unlock <span style="color:var(--gold);font-weight:700">+0.5% more APY</span>. Max 4% referral bonus.
+        Referral bonuses are unavailable until the referral ledger is published.
       </div>
     </div>
-    <div class="ref-tree">
-      <div class="rt-label">Your Referral Tree · 4 operators</div>
-      <div class="tier-row">
-        <div class="tr-head">
-          <div class="tr-tier tt-1">Tier 1 · Direct</div>
-          <div class="tr-bonus">+2.0% APY</div>
-        </div>
-        <div class="ref-person"><span class="rp-flag">🇸🇬</span><div style="flex:1;"><div class="rp-name">nebula_dao</div><div style="font-size:9px;color:var(--muted)">Genesis · $50,000</div></div><span class="rp-bonus">+$1,000/yr</span><div class="rp-status" style="background:var(--grn)"></div></div>
-        <div class="ref-person"><span class="rp-flag">🇯🇵</span><div style="flex:1;"><div class="rp-name">Yuki T.</div><div style="font-size:9px;color:var(--muted)">Genesis · $50,000</div></div><span class="rp-bonus">+$1,000/yr</span><div class="rp-status" style="background:var(--grn)"></div></div>
-        <div class="ref-person"><span class="rp-flag">🇦🇪</span><div style="flex:1;"><div class="rp-name">Omar A.</div><div style="font-size:9px;color:var(--muted)">Star · $20,000</div></div><span class="rp-bonus">+$400/yr</span><div class="rp-status" style="background:var(--grn)"></div></div>
-      </div>
-      <div class="tier-row">
-        <div class="tr-head">
-          <div class="tr-tier tt-2">Tier 2 · Indirect</div>
-          <div class="tr-bonus">+0.5% APY</div>
-        </div>
-        <div class="ref-person"><span class="rp-flag">🇩🇪</span><div style="flex:1;"><div class="rp-name">Hans M. (via nebula)</div><div style="font-size:9px;color:var(--muted)">Star · $20,000</div></div><span class="rp-bonus">+$100/yr</span><div class="rp-status" style="background:var(--blue)"></div></div>
-      </div>
-    </div>
-    <div class="earn-summary">
-      <div class="es-grid">
-        <div class="esg"><div class="esg-val" style="color:var(--gold)">$2,500</div><div class="esg-key">Ref Bonus/yr</div></div>
-        <div class="esg"><div class="esg-val" style="color:var(--grn)">4 ops</div><div class="esg-key">Referred</div></div>
-        <div class="esg"><div class="esg-val">20%</div><div class="esg-key">Total APY</div></div>
-        <div class="esg"><div class="esg-val" style="color:var(--gold)">1 more</div><div class="esg-key">To next level</div></div>
-      </div>
-      <button class="share-ref-btn" onclick="navigator.clipboard.writeText('https://x3star.io/?ref=X3S-OPS7421').then(()=>{this.textContent='✓ LINK COPIED!';setTimeout(()=>this.textContent='COPY MY REFERRAL LINK',2000)})">COPY MY REFERRAL LINK</button>
-    </div>
+    <div class="ref-tree"></div>
+    <div class="earn-summary"></div>
   </div>
 
 </div>

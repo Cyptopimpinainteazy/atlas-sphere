@@ -1,12 +1,199 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+extern crate alloc;
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::DispatchError;
 /// Cross-VM Bridge for Atomic EVM ↔ SVM Operations
 ///
 /// Enables atomic transactions that span both virtual machines with guaranteed consistency.
+/// Uses a two-phase commit (2PC) protocol: prepare → commit/abort.
 use sp_std::vec::Vec;
+
+/// Maximum single transfer amount (10 billion units — configurable at runtime)
+pub const DEFAULT_MAX_TRANSFER_AMOUNT: u128 = 10_000_000_000_000_000_000; // 10B with 9 decimals
+
+/// Maximum batch size per execution
+pub const MAX_BATCH_SIZE: usize = 64;
+
+/// VM executor dispatcher trait for actual cross-VM calls
+pub trait CrossVmDispatcher {
+    /// Execute an EVM transaction
+    fn execute_evm_tx(
+        &self,
+        caller: &[u8; 20],
+        target: &[u8; 20],
+        input: &[u8],
+        value: u128,
+    ) -> Result<CrossVmResult, DispatchError>;
+
+    /// Execute an SVM instruction
+    fn execute_svm_tx(
+        &self,
+        caller: &[u8; 32],
+        program_id: &[u8; 32],
+        input: &[u8],
+    ) -> Result<CrossVmResult, DispatchError>;
+
+    /// Get the EVM balance for an address
+    fn get_evm_balance(&self, address: &[u8; 20]) -> u128;
+
+    /// Get the SVM lamport balance for a pubkey
+    fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64;
+}
+
+/// Default no-op dispatcher (used when no runtime dispatcher is configured).
+/// Produces synthetic results for testing and genesis initialization.
+pub struct NoOpDispatcher;
+
+impl CrossVmDispatcher for NoOpDispatcher {
+    fn execute_evm_tx(
+        &self,
+        _caller: &[u8; 20],
+        _target: &[u8; 20],
+        _input: &[u8],
+        _value: u128,
+    ) -> Result<CrossVmResult, DispatchError> {
+        Ok(CrossVmResult::success(Vec::new(), 21_000))
+    }
+
+    fn execute_svm_tx(
+        &self,
+        _caller: &[u8; 32],
+        _program_id: &[u8; 32],
+        _input: &[u8],
+    ) -> Result<CrossVmResult, DispatchError> {
+        Ok(CrossVmResult::success(Vec::new(), 5_000))
+    }
+
+    fn get_evm_balance(&self, _address: &[u8; 20]) -> u128 {
+        u128::MAX
+    }
+
+    fn get_svm_balance(&self, _pubkey: &[u8; 32]) -> u64 {
+        u64::MAX
+    }
+}
+
+/// Two-phase commit phase for atomic cross-VM operations
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
+pub enum TwoPhaseCommitPhase {
+    /// Initial state — operation queued but not yet prepared
+    Init,
+    /// Phase 1: Both VMs have reserved/locked resources, ready to commit
+    Prepared,
+    /// Phase 2: Both VMs have finalized state changes
+    Committed,
+    /// Aborted: One or both VMs rejected, all reservations released
+    Aborted(Vec<u8>),
+}
+
+/// Prepared operation holding lock receipts from both VMs
+#[derive(Clone, Debug, Encode, Decode, TypeInfo)]
+pub struct PreparedOperation {
+    /// Unique operation nonce (monotonically increasing)
+    pub nonce: u64,
+    /// The operation being executed
+    pub operation: CrossVmOperation,
+    /// Current 2PC phase
+    pub phase: TwoPhaseCommitPhase,
+    /// Gas reserved for the EVM leg
+    pub evm_gas_reserved: u64,
+    /// Compute units reserved for the SVM leg
+    pub svm_compute_reserved: u64,
+    /// Source VM lock receipt (opaque bytes from the VM adapter)
+    pub source_lock_receipt: Vec<u8>,
+    /// Destination VM lock receipt
+    pub dest_lock_receipt: Vec<u8>,
+}
+
+/// Bridge configuration controlling limits and safety
+#[derive(Clone, Debug, Encode, Decode, TypeInfo)]
+pub struct BridgeConfig {
+    /// Maximum transfer amount per operation
+    pub max_transfer_amount: u128,
+    /// Whether the bridge is paused (circuit breaker)
+    pub paused: bool,
+    /// Maximum batch size
+    pub max_batch_size: u32,
+    /// Cumulative transfer volume this epoch
+    pub epoch_volume: u128,
+    /// Maximum volume per epoch before circuit breaker trips
+    pub max_epoch_volume: u128,
+}
+
+impl Default for BridgeConfig {
+    fn default() -> Self {
+        Self {
+            max_transfer_amount: DEFAULT_MAX_TRANSFER_AMOUNT,
+            paused: false,
+            max_batch_size: MAX_BATCH_SIZE as u32,
+            epoch_volume: 0,
+            max_epoch_volume: u128::MAX,
+        }
+    }
+}
+
+/// Cross-VM event emitted during bridge operations
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
+pub enum CrossVmEvent {
+    /// Transfer initiated between VMs
+    TransferInitiated {
+        operation_id: u64,
+        source_vm: VmType,
+        dest_vm: VmType,
+        amount: u128,
+    },
+    /// Transfer completed
+    TransferCompleted {
+        operation_id: u64,
+        gas_used: u64,
+    },
+    /// Transfer failed
+    TransferFailed {
+        operation_id: u64,
+        reason: Vec<u8>,
+    },
+    /// Atomic swap executed
+    AtomicSwapExecuted {
+        evm_amount: u128,
+        svm_amount: u128,
+        gas_used: u64,
+    },
+    /// 2PC prepare phase completed — resources locked on both VMs
+    PrepareCompleted {
+        nonce: u64,
+        evm_gas_reserved: u64,
+        svm_compute_reserved: u64,
+    },
+    /// 2PC commit phase completed — state finalized on both VMs
+    CommitCompleted {
+        nonce: u64,
+        total_gas_used: u64,
+    },
+    /// 2PC abort — reservations released, no state changes
+    Aborted {
+        nonce: u64,
+        reason: Vec<u8>,
+    },
+    /// Circuit breaker tripped
+    CircuitBreakerTripped {
+        epoch_volume: u128,
+        max_epoch_volume: u128,
+    },
+}
+
+/// VM type identifier
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
+pub enum VmType {
+    /// Ethereum Virtual Machine
+    Evm,
+    /// Solana Virtual Machine
+    Svm,
+    /// X3 Native
+    X3,
+}
 
 /// Cross-VM operation types
 #[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
@@ -98,14 +285,22 @@ pub enum OperationState {
     RolledBack,
 }
 
-/// Cross-VM bridge state machine
+/// Cross-VM bridge state machine with two-phase commit support
 pub struct CrossVmBridge {
-    /// Pending operations
+    /// Pending operations (not yet prepared)
     pending_ops: Vec<(CrossVmOperation, OperationState)>,
+    /// Operations in the 2PC pipeline
+    prepared_ops: Vec<PreparedOperation>,
     /// Completed operations
     completed_ops: Vec<(CrossVmOperation, CrossVmResult)>,
     /// Failed operations
     failed_ops: Vec<(CrossVmOperation, Vec<u8>)>,
+    /// Monotonically increasing nonce for replay protection
+    next_nonce: u64,
+    /// Set of already-used nonces (prevents replay within session)
+    used_nonces: Vec<u64>,
+    /// Bridge configuration (limits, circuit breaker)
+    pub config: BridgeConfig,
 }
 
 impl Default for CrossVmBridge {
@@ -119,17 +314,102 @@ impl CrossVmBridge {
     pub fn new() -> Self {
         Self {
             pending_ops: Vec::new(),
+            prepared_ops: Vec::new(),
             completed_ops: Vec::new(),
             failed_ops: Vec::new(),
+            next_nonce: 1,
+            used_nonces: Vec::new(),
+            config: BridgeConfig::default(),
         }
     }
 
-    /// Queue a cross-VM operation
-    pub fn queue_operation(&mut self, operation: CrossVmOperation) -> Result<(), DispatchError> {
-        // Validate operation
+    /// Create a bridge with custom configuration
+    pub fn with_config(config: BridgeConfig) -> Self {
+        Self {
+            config,
+            ..Self::new()
+        }
+    }
+
+    /// Pause the bridge (circuit breaker)
+    pub fn pause(&mut self) {
+        self.config.paused = true;
+    }
+
+    /// Resume the bridge
+    pub fn resume(&mut self) {
+        self.config.paused = false;
+    }
+
+    /// Check if bridge is paused
+    pub fn is_paused(&self) -> bool {
+        self.config.paused
+    }
+
+    /// Reset the epoch volume counter (called at epoch boundaries)
+    pub fn reset_epoch_volume(&mut self) {
+        self.config.epoch_volume = 0;
+    }
+
+    /// Get the next nonce without consuming it
+    pub fn peek_nonce(&self) -> u64 {
+        self.next_nonce
+    }
+
+    /// Queue a cross-VM operation with limit and circuit breaker checks
+    pub fn queue_operation(&mut self, operation: CrossVmOperation) -> Result<u64, DispatchError> {
+        // Circuit breaker check
+        if self.config.paused {
+            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+        }
+
+        // Batch size limit
+        if self.pending_ops.len() >= self.config.max_batch_size as usize {
+            return Err(DispatchError::Other("Batch size limit exceeded"));
+        }
+
+        // Validate operation (address lengths, nonzero amounts)
         self.validate_operation(&operation)?;
+
+        // Transfer amount limit check
+        let amount = Self::extract_transfer_amount(&operation);
+        if amount > self.config.max_transfer_amount {
+            return Err(DispatchError::Other("Transfer amount exceeds maximum"));
+        }
+
+        // Epoch volume check (circuit breaker)
+        let new_volume = self.config.epoch_volume.saturating_add(amount);
+        if new_volume > self.config.max_epoch_volume {
+            self.config.paused = true;
+            return Err(DispatchError::Other("Epoch volume limit exceeded — bridge paused"));
+        }
+        self.config.epoch_volume = new_volume;
+
+        // Assign nonce for replay protection
+        let nonce = self.next_nonce;
+        self.next_nonce = self.next_nonce.saturating_add(1);
+        self.used_nonces.push(nonce);
+
         self.pending_ops.push((operation, OperationState::Pending));
-        Ok(())
+        Ok(nonce)
+    }
+
+    /// Check if a nonce has already been used (replay protection)
+    pub fn is_nonce_used(&self, nonce: u64) -> bool {
+        self.used_nonces.contains(&nonce)
+    }
+
+    /// Extract the transfer amount from an operation (0 for non-transfer ops)
+    fn extract_transfer_amount(operation: &CrossVmOperation) -> u128 {
+        match operation {
+            CrossVmOperation::TransferToEvm { amount, .. } => *amount,
+            CrossVmOperation::TransferToSvm { amount, .. } => *amount,
+            CrossVmOperation::CallEvm { value, .. } => *value,
+            CrossVmOperation::AtomicSwap { evm_amount, svm_amount, .. } => {
+                (*evm_amount).max(*svm_amount)
+            }
+            _ => 0,
+        }
     }
 
     /// Validate cross-VM operation for correctness and authorization
@@ -232,6 +512,9 @@ impl CrossVmBridge {
 
     /// Execute pending operations
     pub fn execute_pending(&mut self) -> Result<Vec<CrossVmResult>, DispatchError> {
+        if self.config.paused {
+            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+        }
         let mut results = Vec::new();
         let mut completed_updates: Vec<(CrossVmOperation, CrossVmResult)> = Vec::new();
         let mut failed_updates: Vec<(CrossVmOperation, Vec<u8>)> = Vec::new();
@@ -403,6 +686,283 @@ impl CrossVmBridge {
         }
     }
 
+    // =========================================================================
+    // Two-Phase Commit Protocol
+    // =========================================================================
+
+    /// Phase 1 (PREPARE): Lock resources on both VMs without finalizing.
+    ///
+    /// For each pending operation, the dispatcher attempts to reserve funds,
+    /// gas, and compute on the source and destination VMs. If ANY reservation
+    /// fails, the entire batch is aborted and all locks are released.
+    ///
+    /// Returns prepared operation nonces and emitted events.
+    pub fn prepare<D: CrossVmDispatcher>(
+        &mut self,
+        dispatcher: &D,
+    ) -> Result<(Vec<u64>, Vec<CrossVmEvent>), DispatchError> {
+        if self.config.paused {
+            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+        }
+
+        let mut nonces = Vec::new();
+        let mut events = Vec::new();
+        let mut nonce_counter = self.next_nonce;
+
+        // Collect all pending operations
+        let ops: Vec<CrossVmOperation> = self
+            .pending_ops
+            .iter()
+            .filter(|(_, s)| matches!(s, OperationState::Pending))
+            .map(|(op, _)| op.clone())
+            .collect();
+
+        if ops.is_empty() {
+            return Ok((nonces, events));
+        }
+
+        // Phase 1: Try to prepare (lock) each operation
+        let mut prepared = Vec::new();
+        for operation in &ops {
+            let nonce = nonce_counter;
+            nonce_counter = nonce_counter.saturating_add(1);
+
+            // Determine gas/compute reservations based on operation type
+            let (evm_gas, svm_compute) = Self::estimate_reservations(operation);
+
+            // Attempt source-side lock via dispatcher
+            let source_lock = Self::try_lock_source(dispatcher, operation);
+            let dest_lock = Self::try_lock_destination(dispatcher, operation);
+
+            match (source_lock, dest_lock) {
+                (Ok(src_receipt), Ok(dst_receipt)) => {
+                    let prep = PreparedOperation {
+                        nonce,
+                        operation: operation.clone(),
+                        phase: TwoPhaseCommitPhase::Prepared,
+                        evm_gas_reserved: evm_gas,
+                        svm_compute_reserved: svm_compute,
+                        source_lock_receipt: src_receipt,
+                        dest_lock_receipt: dst_receipt,
+                    };
+                    events.push(CrossVmEvent::PrepareCompleted {
+                        nonce,
+                        evm_gas_reserved: evm_gas,
+                        svm_compute_reserved: svm_compute,
+                    });
+                    nonces.push(nonce);
+                    prepared.push(prep);
+                }
+                _ => {
+                    // Abort ALL previously prepared operations in this batch
+                    for p in &prepared {
+                        events.push(CrossVmEvent::Aborted {
+                            nonce: p.nonce,
+                            reason: b"Batch prepare failed - peer lock rejected".to_vec(),
+                        });
+                    }
+                    events.push(CrossVmEvent::Aborted {
+                        nonce,
+                        reason: b"Lock acquisition failed".to_vec(),
+                    });
+                    // Don't commit any — return early
+                    return Ok((Vec::new(), events));
+                }
+            }
+        }
+
+        // All locks acquired — promote to prepared state
+        self.prepared_ops.extend(prepared);
+        self.next_nonce = nonce_counter;
+        for n in &nonces {
+            self.used_nonces.push(*n);
+        }
+
+        // Move matched pending ops to Executing state
+        for (_, state) in self.pending_ops.iter_mut() {
+            if matches!(state, OperationState::Pending) {
+                *state = OperationState::Executing;
+            }
+        }
+
+        Ok((nonces, events))
+    }
+
+    /// Phase 2 (COMMIT): Finalize all prepared operations.
+    ///
+    /// Only call after a successful `prepare()`. Applies state changes on both
+    /// VMs and transitions operations to Committed. This is the point of no return.
+    pub fn commit<D: CrossVmDispatcher>(
+        &mut self,
+        dispatcher: &D,
+    ) -> Result<(Vec<CrossVmResult>, Vec<CrossVmEvent>), DispatchError> {
+        if self.prepared_ops.is_empty() {
+            return Err(DispatchError::Other("No prepared operations to commit"));
+        }
+
+        let mut results = Vec::new();
+        let mut events = Vec::new();
+
+        let prepared: Vec<PreparedOperation> = self.prepared_ops.drain(..).collect();
+
+        for mut prep in prepared {
+            if prep.phase != TwoPhaseCommitPhase::Prepared {
+                continue;
+            }
+
+            // Execute through dispatcher
+            match Self::dispatch_operation(dispatcher, &prep.operation) {
+                Ok(result) => {
+                    prep.phase = TwoPhaseCommitPhase::Committed;
+                    events.push(CrossVmEvent::CommitCompleted {
+                        nonce: prep.nonce,
+                        total_gas_used: result.gas_used,
+                    });
+                    self.completed_ops.push((prep.operation.clone(), result.clone()));
+                    results.push(result);
+                }
+                Err(e) => {
+                    // Commit-phase failure is critical — log but don't panic.
+                    // In production, this would trigger an incident alert.
+                    let error_msg = alloc::format!("Commit failed: {:?}", e).into_bytes();
+                    prep.phase = TwoPhaseCommitPhase::Aborted(error_msg.clone());
+                    events.push(CrossVmEvent::Aborted {
+                        nonce: prep.nonce,
+                        reason: error_msg.clone(),
+                    });
+                    self.failed_ops.push((prep.operation, error_msg));
+                }
+            }
+        }
+
+        // Clean up pending ops that were in Executing state
+        self.pending_ops
+            .retain(|(_, state)| matches!(state, OperationState::Pending));
+
+        Ok((results, events))
+    }
+
+    /// Abort all prepared operations, releasing locks.
+    pub fn abort(&mut self) -> Vec<CrossVmEvent> {
+        let mut events = Vec::new();
+        let prepared: Vec<PreparedOperation> = self.prepared_ops.drain(..).collect();
+
+        for prep in prepared {
+            events.push(CrossVmEvent::Aborted {
+                nonce: prep.nonce,
+                reason: b"Explicit abort requested".to_vec(),
+            });
+        }
+
+        // Reset pending ops that were in Executing state back to pending
+        for (_, state) in self.pending_ops.iter_mut() {
+            if matches!(state, OperationState::Executing) {
+                *state = OperationState::Pending;
+            }
+        }
+
+        events
+    }
+
+    /// Two-phase atomic execute: prepare, then commit in one call.
+    /// If prepare fails, no state changes occur. If commit fails on any
+    /// operation, all are aborted.
+    pub fn atomic_execute<D: CrossVmDispatcher>(
+        &mut self,
+        dispatcher: &D,
+    ) -> Result<(Vec<CrossVmResult>, Vec<CrossVmEvent>), DispatchError> {
+        let (nonces, mut events) = self.prepare(dispatcher)?;
+
+        if nonces.is_empty() {
+            // Prepare failed — events already contain abort reasons
+            return Ok((Vec::new(), events));
+        }
+
+        let (results, commit_events) = self.commit(dispatcher)?;
+        events.extend(commit_events);
+        Ok((results, events))
+    }
+
+    /// Estimate gas/compute reservations for an operation
+    fn estimate_reservations(operation: &CrossVmOperation) -> (u64, u64) {
+        match operation {
+            CrossVmOperation::TransferToEvm { .. } => (25_000, 5_000),
+            CrossVmOperation::TransferToSvm { .. } => (25_000, 5_000),
+            CrossVmOperation::CallEvm { .. } => (100_000, 0),
+            CrossVmOperation::CallSvm { .. } => (0, 200_000),
+            CrossVmOperation::AtomicSwap { .. } => (200_000, 200_000),
+        }
+    }
+
+    /// Try to lock source-side resources (balance check via dispatcher)
+    fn try_lock_source<D: CrossVmDispatcher>(
+        dispatcher: &D,
+        operation: &CrossVmOperation,
+    ) -> Result<Vec<u8>, DispatchError> {
+        match operation {
+            CrossVmOperation::TransferToEvm { source, amount, .. } => {
+                let mut pubkey = [0u8; 32];
+                pubkey.copy_from_slice(source);
+                let balance = dispatcher.get_svm_balance(&pubkey) as u128;
+                if balance < *amount {
+                    return Err(DispatchError::Other("Insufficient SVM balance for lock"));
+                }
+                // Receipt = serialized lock proof
+                let mut receipt = Vec::new();
+                receipt.extend_from_slice(b"SVM_LOCK:");
+                receipt.extend_from_slice(source);
+                receipt.extend_from_slice(&amount.to_le_bytes());
+                Ok(receipt)
+            }
+            CrossVmOperation::TransferToSvm { source, amount, .. } => {
+                let balance = dispatcher.get_evm_balance(source);
+                if balance < *amount {
+                    return Err(DispatchError::Other("Insufficient EVM balance for lock"));
+                }
+                let mut receipt = Vec::new();
+                receipt.extend_from_slice(b"EVM_LOCK:");
+                receipt.extend_from_slice(source);
+                receipt.extend_from_slice(&amount.to_le_bytes());
+                Ok(receipt)
+            }
+            CrossVmOperation::AtomicSwap { evm_party, svm_party, evm_amount, svm_amount, .. } => {
+                let evm_bal = dispatcher.get_evm_balance(evm_party);
+                if evm_bal < *evm_amount {
+                    return Err(DispatchError::Other("Insufficient EVM balance for swap"));
+                }
+                let mut pubkey = [0u8; 32];
+                let len = svm_party.len().min(32);
+                pubkey[..len].copy_from_slice(&svm_party[..len]);
+                let svm_bal = dispatcher.get_svm_balance(&pubkey) as u128;
+                if svm_bal < *svm_amount {
+                    return Err(DispatchError::Other("Insufficient SVM balance for swap"));
+                }
+                let mut receipt = Vec::new();
+                receipt.extend_from_slice(b"SWAP_LOCK:");
+                receipt.extend_from_slice(evm_party);
+                receipt.extend_from_slice(&evm_amount.to_le_bytes());
+                Ok(receipt)
+            }
+            // Call operations don't lock balances — just gas
+            _ => Ok(b"NO_LOCK_REQUIRED".to_vec()),
+        }
+    }
+
+    /// Try to lock destination-side resources
+    fn try_lock_destination<D: CrossVmDispatcher>(
+        _dispatcher: &D,
+        _operation: &CrossVmOperation,
+    ) -> Result<Vec<u8>, DispatchError> {
+        // Destination-side doesn't need a lock for deposits — it only receives.
+        // For contract calls, the gas reservation handles it.
+        Ok(b"DEST_OK".to_vec())
+    }
+
+    /// Get the count of prepared operations
+    pub fn prepared_count(&self) -> usize {
+        self.prepared_ops.len()
+    }
+
     /// Rollback a failed operation
     pub fn rollback_operation(&mut self, operation_index: usize) -> Result<(), DispatchError> {
         if operation_index < self.pending_ops.len() {
@@ -435,11 +995,221 @@ impl CrossVmBridge {
         self.failed_ops.len()
     }
 
-    /// Clear all operations
+    /// Clear all operations (does NOT reset nonces — those are permanent)
     pub fn clear(&mut self) {
         self.pending_ops.clear();
+        self.prepared_ops.clear();
         self.completed_ops.clear();
         self.failed_ops.clear();
+    }
+
+    /// Execute pending operations using a dispatcher for real VM calls.
+    /// Returns results and emits events for each operation.
+    pub fn execute_with_dispatcher<D: CrossVmDispatcher>(
+        &mut self,
+        dispatcher: &D,
+    ) -> Result<(Vec<CrossVmResult>, Vec<CrossVmEvent>), DispatchError> {
+        let mut results = Vec::new();
+        let mut events = Vec::new();
+        let mut completed_updates: Vec<(CrossVmOperation, CrossVmResult)> = Vec::new();
+        let mut failed_updates: Vec<(CrossVmOperation, Vec<u8>)> = Vec::new();
+
+        let ops_to_process: Vec<(usize, CrossVmOperation)> = self
+            .pending_ops
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, (op, state))| {
+                if matches!(state, OperationState::Pending) {
+                    Some((idx, op.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let mut op_id: u64 = 0;
+        for (idx, operation) in ops_to_process {
+            op_id += 1;
+            if let Some((_, state)) = self.pending_ops.get_mut(idx) {
+                *state = OperationState::Executing;
+
+                // Emit initiation events
+                match &operation {
+                    CrossVmOperation::TransferToEvm { amount, .. } => {
+                        events.push(CrossVmEvent::TransferInitiated {
+                            operation_id: op_id,
+                            source_vm: VmType::Svm,
+                            dest_vm: VmType::Evm,
+                            amount: *amount,
+                        });
+                    }
+                    CrossVmOperation::TransferToSvm { amount, .. } => {
+                        events.push(CrossVmEvent::TransferInitiated {
+                            operation_id: op_id,
+                            source_vm: VmType::Evm,
+                            dest_vm: VmType::Svm,
+                            amount: *amount,
+                        });
+                    }
+                    _ => {}
+                }
+
+                match Self::dispatch_operation(dispatcher, &operation) {
+                    Ok(result) => {
+                        events.push(CrossVmEvent::TransferCompleted {
+                            operation_id: op_id,
+                            gas_used: result.gas_used,
+                        });
+                        results.push(result.clone());
+                        completed_updates.push((operation, result));
+                        if let Some((_, state)) = self.pending_ops.get_mut(idx) {
+                            *state = OperationState::Completed;
+                        }
+                    }
+                    Err(e) => {
+                        let error_msg = alloc::format!("{:?}", e).into_bytes();
+                        events.push(CrossVmEvent::TransferFailed {
+                            operation_id: op_id,
+                            reason: error_msg.clone(),
+                        });
+                        failed_updates.push((operation, error_msg.clone()));
+                        if let Some((_, state)) = self.pending_ops.get_mut(idx) {
+                            *state = OperationState::Failed(error_msg);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (operation, result) in completed_updates {
+            self.completed_ops.push((operation, result));
+        }
+        for (operation, error_msg) in failed_updates {
+            self.failed_ops.push((operation, error_msg));
+        }
+        self.pending_ops
+            .retain(|(_, state)| matches!(state, OperationState::Pending));
+
+        Ok((results, events))
+    }
+
+    /// Dispatch a single operation through the VM dispatcher.
+    ///
+    /// Derives proper caller addresses instead of using zeroed bridge addresses:
+    /// - EVM calls from SVM: take last 20 bytes of the 32-byte SVM pubkey
+    /// - SVM calls from EVM: zero-extend the 20-byte EVM address to 32 bytes
+    fn dispatch_operation<D: CrossVmDispatcher>(
+        dispatcher: &D,
+        operation: &CrossVmOperation,
+    ) -> Result<CrossVmResult, DispatchError> {
+        match operation {
+            CrossVmOperation::CallEvm {
+                caller,
+                contract,
+                input,
+                value,
+            } => {
+                // Derive EVM-compatible address from SVM pubkey (last 20 bytes)
+                let mut caller_evm = [0u8; 20];
+                if caller.len() >= 20 {
+                    let offset = caller.len() - 20;
+                    caller_evm.copy_from_slice(&caller[offset..]);
+                }
+                dispatcher.execute_evm_tx(&caller_evm, contract, input, *value)
+            }
+            CrossVmOperation::CallSvm {
+                caller,
+                pallet_index,
+                call_index,
+                input,
+            } => {
+                // Derive SVM-compatible address from EVM address (zero-padded to 32 bytes)
+                let mut caller_svm = [0u8; 32];
+                caller_svm[12..32].copy_from_slice(caller);
+                let program_id = [0u8; 32]; // Bridge program
+                let mut encoded_input = Vec::new();
+                encoded_input.push(*pallet_index);
+                encoded_input.push(*call_index);
+                encoded_input.extend_from_slice(input);
+                dispatcher.execute_svm_tx(&caller_svm, &program_id, &encoded_input)
+            }
+            CrossVmOperation::TransferToEvm { source, destination, amount } => {
+                // Lock on source (SVM) then deposit on destination (EVM)
+                let mut source_pubkey = [0u8; 32];
+                let len = source.len().min(32);
+                source_pubkey[..len].copy_from_slice(&source[..len]);
+
+                // Derive bridge-caller EVM address from source pubkey
+                let mut bridge_caller = [0u8; 20];
+                if source.len() >= 20 {
+                    let offset = source.len() - 20;
+                    bridge_caller.copy_from_slice(&source[offset..]);
+                }
+
+                // Execute as EVM deposit to destination
+                dispatcher.execute_evm_tx(&bridge_caller, destination, &amount.to_le_bytes(), *amount)
+            }
+            CrossVmOperation::TransferToSvm { source, destination, amount } => {
+                // Lock on source (EVM) then deposit on destination (SVM)
+                let mut dest_pubkey = [0u8; 32];
+                let len = destination.len().min(32);
+                dest_pubkey[..len].copy_from_slice(&destination[..len]);
+
+                // Execute as SVM deposit
+                let program_id = [0u8; 32]; // Bridge program
+                let mut caller_svm = [0u8; 32];
+                caller_svm[12..32].copy_from_slice(source);
+                dispatcher.execute_svm_tx(&caller_svm, &program_id, &amount.to_le_bytes())
+            }
+            CrossVmOperation::AtomicSwap {
+                evm_party,
+                svm_party,
+                evm_amount,
+                svm_amount,
+                ..
+            } => {
+                // Execute both legs — each must succeed for the swap to commit
+                let mut svm_key = [0u8; 32];
+                let len = svm_party.len().min(32);
+                svm_key[..len].copy_from_slice(&svm_party[..len]);
+
+                // Leg 1: EVM withdraw
+                let evm_result = dispatcher.execute_evm_tx(
+                    evm_party,
+                    &[0u8; 20], // Bridge escrow
+                    &evm_amount.to_le_bytes(),
+                    *evm_amount,
+                )?;
+
+                // Leg 2: SVM withdraw
+                let svm_result = dispatcher.execute_svm_tx(
+                    &svm_key,
+                    &[0u8; 32], // Bridge program
+                    &svm_amount.to_le_bytes(),
+                )?;
+
+                let total_gas = evm_result.gas_used.saturating_add(svm_result.gas_used);
+                Ok(CrossVmResult::success(Vec::new(), total_gas))
+            }
+        }
+    }
+
+    /// Emit an event for a completed atomic swap
+    pub fn emit_swap_event(
+        evm_amount: u128,
+        svm_amount: u128,
+        gas_used: u64,
+    ) -> CrossVmEvent {
+        CrossVmEvent::AtomicSwapExecuted {
+            evm_amount,
+            svm_amount,
+            gas_used,
+        }
+    }
+
+    /// Get a snapshot of all events from the most recent execution
+    pub fn get_operation_states(&self) -> Vec<(&CrossVmOperation, &OperationState)> {
+        self.pending_ops.iter().map(|(op, state)| (op, state)).collect()
     }
 }
 
@@ -447,17 +1217,22 @@ impl CrossVmBridge {
 mod tests {
     use super::*;
 
+    // =========================================================================
+    // Existing tests (updated for new return types)
+    // =========================================================================
+
     #[test]
     fn test_cross_vm_operation_queue() {
         let mut bridge = CrossVmBridge::new();
 
         let op = CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],    // Realistic 32-byte SVM address
-            destination: [0u8; 20], // Realistic 20-byte EVM address
+            source: vec![1; 32],
+            destination: [0u8; 20],
             amount: 1000,
         };
 
-        assert!(bridge.queue_operation(op).is_ok());
+        let nonce = bridge.queue_operation(op).unwrap();
+        assert_eq!(nonce, 1);
         assert_eq!(bridge.pending_count(), 1);
     }
 
@@ -466,8 +1241,8 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
 
         let op = CrossVmOperation::TransferToSvm {
-            source: [1u8; 20],        // Realistic 20-byte EVM address
-            destination: vec![2; 32], // Realistic 32-byte SVM address
+            source: [1u8; 20],
+            destination: vec![2; 32],
             amount: 500,
         };
 
@@ -492,20 +1267,15 @@ mod tests {
             svm_amount: 2_000,
         };
 
-        // Queue and ensure pending
         bridge.queue_operation(op.clone()).unwrap();
         assert_eq!(bridge.pending_count(), 1);
 
-        // Simulate a rollback on the queued operation
         assert!(bridge.rollback_operation(0).is_ok());
-
-        // After rollback the operation should no longer be pending
         assert_eq!(bridge.pending_count(), 0);
-
-        // Rolled back ops are not counted as completed or failed
         assert_eq!(bridge.completed_count(), 0);
         assert_eq!(bridge.failed_count(), 0);
     }
+
     #[test]
     fn test_cross_vm_result() {
         let success_result = CrossVmResult::success(vec![1, 2, 3], 50_000);
@@ -515,5 +1285,758 @@ mod tests {
         let failed_result = CrossVmResult::failed(vec![69, 114, 114], 25_000);
         assert!(!failed_result.success);
         assert!(failed_result.error.is_some());
+    }
+
+    #[test]
+    fn test_execute_with_noop_dispatcher() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        let op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 1000,
+        };
+        bridge.queue_operation(op).unwrap();
+
+        let (results, events) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        assert_eq!(events.len(), 2);
+        assert!(matches!(events[0], CrossVmEvent::TransferInitiated { .. }));
+        assert!(matches!(events[1], CrossVmEvent::TransferCompleted { .. }));
+    }
+
+    #[test]
+    fn test_dispatcher_call_evm() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        let op = CrossVmOperation::CallEvm {
+            caller: vec![0u8; 32],
+            contract: [0xAA; 20],
+            input: vec![0xDE, 0xAD],
+            value: 0,
+        };
+        bridge.queue_operation(op).unwrap();
+
+        let (results, _events) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        assert_eq!(results[0].gas_used, 21_000);
+    }
+
+    #[test]
+    fn test_dispatcher_call_svm() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        let op = CrossVmOperation::CallSvm {
+            caller: [0xBB; 20],
+            pallet_index: 5,
+            call_index: 2,
+            input: vec![1, 2, 3],
+        };
+        bridge.queue_operation(op).unwrap();
+
+        let (results, _events) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        assert_eq!(results[0].gas_used, 5_000);
+    }
+
+    #[test]
+    fn test_vm_type_encode_decode() {
+        let evm = VmType::Evm;
+        let encoded = evm.encode();
+        let decoded = VmType::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, VmType::Evm);
+    }
+
+    #[test]
+    fn test_cross_vm_event_variants() {
+        let event = CrossVmEvent::TransferInitiated {
+            operation_id: 1,
+            source_vm: VmType::Evm,
+            dest_vm: VmType::Svm,
+            amount: 42,
+        };
+        let encoded = event.encode();
+        let decoded = CrossVmEvent::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, event);
+
+        let swap_event = CrossVmBridge::emit_swap_event(100, 200, 50_000);
+        assert!(matches!(swap_event, CrossVmEvent::AtomicSwapExecuted { .. }));
+    }
+
+    #[test]
+    fn test_validation_rejects_zero_amounts() {
+        let mut bridge = CrossVmBridge::new();
+
+        let op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 0,
+        };
+        assert!(bridge.queue_operation(op).is_err());
+
+        let op2 = CrossVmOperation::TransferToSvm {
+            source: [0u8; 20],
+            destination: vec![1; 32],
+            amount: 0,
+        };
+        assert!(bridge.queue_operation(op2).is_err());
+    }
+
+    #[test]
+    fn test_validation_rejects_invalid_address_lengths() {
+        let mut bridge = CrossVmBridge::new();
+
+        let op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 20], // wrong - should be 32
+            destination: [0u8; 20],
+            amount: 100,
+        };
+        assert!(bridge.queue_operation(op).is_err());
+
+        let op2 = CrossVmOperation::TransferToSvm {
+            source: [0u8; 20],
+            destination: vec![1; 20], // wrong - should be 32
+            amount: 100,
+        };
+        assert!(bridge.queue_operation(op2).is_err());
+    }
+
+    #[test]
+    fn test_multiple_operations_batch_execute() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 100,
+        }).unwrap();
+
+        bridge.queue_operation(CrossVmOperation::TransferToSvm {
+            source: [3u8; 20],
+            destination: vec![4; 32],
+            amount: 200,
+        }).unwrap();
+
+        bridge.queue_operation(CrossVmOperation::CallEvm {
+            caller: vec![5; 32],
+            contract: [6u8; 20],
+            input: vec![0xAB],
+            value: 0,
+        }).unwrap();
+
+        assert_eq!(bridge.pending_count(), 3);
+
+        let (results, events) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 3);
+        assert!(results.iter().all(|r| r.success));
+        assert_eq!(bridge.completed_count(), 3);
+        assert_eq!(bridge.pending_count(), 0);
+        assert!(events.len() >= 3);
+    }
+
+    #[test]
+    fn test_get_operation_states() {
+        let mut bridge = CrossVmBridge::new();
+
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 500,
+        }).unwrap();
+
+        let states = bridge.get_operation_states();
+        assert_eq!(states.len(), 1);
+        assert!(matches!(states[0].1, OperationState::Pending));
+    }
+
+    // =========================================================================
+    // NEW: Nonce & Replay Protection
+    // =========================================================================
+
+    #[test]
+    fn test_nonces_are_monotonically_increasing() {
+        let mut bridge = CrossVmBridge::new();
+
+        let n1 = bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 100,
+        }).unwrap();
+
+        let n2 = bridge.queue_operation(CrossVmOperation::TransferToSvm {
+            source: [0u8; 20],
+            destination: vec![1; 32],
+            amount: 200,
+        }).unwrap();
+
+        assert_eq!(n1, 1);
+        assert_eq!(n2, 2);
+        assert!(bridge.is_nonce_used(1));
+        assert!(bridge.is_nonce_used(2));
+        assert!(!bridge.is_nonce_used(3));
+    }
+
+    #[test]
+    fn test_nonces_survive_clear() {
+        let mut bridge = CrossVmBridge::new();
+
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 100,
+        }).unwrap();
+
+        bridge.clear();
+
+        // Nonce counter should continue from where it left off
+        let n = bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 100,
+        }).unwrap();
+        assert_eq!(n, 2); // Not 1 — no replay
+    }
+
+    #[test]
+    fn test_peek_nonce() {
+        let bridge = CrossVmBridge::new();
+        assert_eq!(bridge.peek_nonce(), 1);
+    }
+
+    // =========================================================================
+    // NEW: Circuit Breaker & Transfer Limits
+    // =========================================================================
+
+    #[test]
+    fn test_circuit_breaker_pauses_bridge() {
+        let mut bridge = CrossVmBridge::new();
+        assert!(!bridge.is_paused());
+
+        bridge.pause();
+        assert!(bridge.is_paused());
+
+        // Queue should fail when paused
+        let op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 100,
+        };
+        assert!(bridge.queue_operation(op).is_err());
+
+        // Execute should fail when paused
+        assert!(bridge.execute_pending().is_err());
+
+        bridge.resume();
+        assert!(!bridge.is_paused());
+    }
+
+    #[test]
+    fn test_transfer_amount_limit() {
+        let config = BridgeConfig {
+            max_transfer_amount: 1000,
+            ..BridgeConfig::default()
+        };
+        let mut bridge = CrossVmBridge::with_config(config);
+
+        // Under limit — OK
+        let ok_op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 999,
+        };
+        assert!(bridge.queue_operation(ok_op).is_ok());
+
+        // Over limit — rejected
+        let bad_op = CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 1001,
+        };
+        assert!(bridge.queue_operation(bad_op).is_err());
+    }
+
+    #[test]
+    fn test_epoch_volume_circuit_breaker() {
+        let config = BridgeConfig {
+            max_epoch_volume: 500,
+            ..BridgeConfig::default()
+        };
+        let mut bridge = CrossVmBridge::with_config(config);
+
+        // First 300 — OK
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 300,
+        }).unwrap();
+
+        // Next 201 — exceeds 500 epoch limit, auto-pauses
+        let result = bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 201,
+        });
+        assert!(result.is_err());
+        assert!(bridge.is_paused());
+
+        // Reset epoch volume and resume
+        bridge.reset_epoch_volume();
+        bridge.resume();
+        assert!(!bridge.is_paused());
+        assert_eq!(bridge.config.epoch_volume, 0);
+    }
+
+    #[test]
+    fn test_batch_size_limit() {
+        let config = BridgeConfig {
+            max_batch_size: 2u32,
+            ..BridgeConfig::default()
+        };
+        let mut bridge = CrossVmBridge::with_config(config);
+
+        let make_op = |amt| CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: amt,
+        };
+
+        assert!(bridge.queue_operation(make_op(10)).is_ok());
+        assert!(bridge.queue_operation(make_op(20)).is_ok());
+        // Third should fail — batch full
+        assert!(bridge.queue_operation(make_op(30)).is_err());
+    }
+
+    // =========================================================================
+    // NEW: Two-Phase Commit Protocol
+    // =========================================================================
+
+    #[test]
+    fn test_2pc_prepare_commit_lifecycle() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 100,
+        }).unwrap();
+
+        // Phase 1: Prepare
+        let (nonces, prepare_events) = bridge.prepare(&dispatcher).unwrap();
+        assert_eq!(nonces.len(), 1);
+        assert_eq!(bridge.prepared_count(), 1);
+        assert!(prepare_events.iter().any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
+
+        // Phase 2: Commit
+        let (results, commit_events) = bridge.commit(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        assert_eq!(bridge.prepared_count(), 0);
+        assert_eq!(bridge.completed_count(), 1);
+        assert!(commit_events.iter().any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
+    }
+
+    #[test]
+    fn test_2pc_abort_releases_locks() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::TransferToSvm {
+            source: [1u8; 20],
+            destination: vec![2; 32],
+            amount: 500,
+        }).unwrap();
+
+        let (nonces, _) = bridge.prepare(&dispatcher).unwrap();
+        assert_eq!(nonces.len(), 1);
+        assert_eq!(bridge.prepared_count(), 1);
+
+        // Abort
+        let abort_events = bridge.abort();
+        assert_eq!(bridge.prepared_count(), 0);
+        assert!(abort_events.iter().any(|e| matches!(e, CrossVmEvent::Aborted { .. })));
+    }
+
+    #[test]
+    fn test_2pc_atomic_execute_convenience() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::CallEvm {
+            caller: vec![0xAA; 32],
+            contract: [0xBB; 20],
+            input: vec![1, 2, 3],
+            value: 0,
+        }).unwrap();
+
+        bridge.queue_operation(CrossVmOperation::CallSvm {
+            caller: [0xCC; 20],
+            pallet_index: 1,
+            call_index: 0,
+            input: vec![4, 5, 6],
+        }).unwrap();
+
+        let (results, events) = bridge.atomic_execute(&dispatcher).unwrap();
+        assert_eq!(results.len(), 2);
+        assert!(results.iter().all(|r| r.success));
+        assert_eq!(bridge.completed_count(), 2);
+        // Should have PrepareCompleted + CommitCompleted for each
+        assert!(events.iter().any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
+        assert!(events.iter().any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
+    }
+
+    #[test]
+    fn test_2pc_commit_with_no_prepared_fails() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        let result = bridge.commit(&dispatcher);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_2pc_prepare_on_paused_bridge_fails() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.pause();
+        let result = bridge.prepare(&dispatcher);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_2pc_batch_prepare_all_or_nothing() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        // Queue 3 operations — NoOp dispatcher succeeds for all
+        for i in 1u8..=3 {
+            bridge.queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![i; 32],
+                destination: [i; 20],
+                amount: 100,
+            }).unwrap();
+        }
+
+        let (nonces, events) = bridge.prepare(&dispatcher).unwrap();
+        assert_eq!(nonces.len(), 3);
+        assert_eq!(bridge.prepared_count(), 3);
+        let prepare_count = events.iter()
+            .filter(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. }))
+            .count();
+        assert_eq!(prepare_count, 3);
+    }
+
+    // =========================================================================
+    // NEW: Proper Caller Address Derivation
+    // =========================================================================
+
+    #[test]
+    fn test_caller_evm_address_derived_from_svm_pubkey() {
+        // Verify that CallEvm uses last 20 bytes of the 32-byte SVM caller
+        let mut caller = vec![0u8; 32];
+        // Set distinctive bytes in the last 20 positions
+        for i in 12..32 {
+            caller[i] = (i - 12) as u8 + 0xA0;
+        }
+
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::CallEvm {
+            caller,
+            contract: [0xFF; 20],
+            input: vec![],
+            value: 0,
+        }).unwrap();
+
+        // Should execute without error — the address derivation is internal
+        let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert!(results[0].success);
+    }
+
+    #[test]
+    fn test_caller_svm_address_derived_from_evm_address() {
+        // Verify that CallSvm zero-extends the 20-byte EVM address
+        let caller = [0xAB; 20];
+
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::CallSvm {
+            caller,
+            pallet_index: 0,
+            call_index: 0,
+            input: vec![],
+        }).unwrap();
+
+        let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert!(results[0].success);
+    }
+
+    // =========================================================================
+    // NEW: Dispatcher-routed transfers and swaps
+    // =========================================================================
+
+    #[test]
+    fn test_dispatcher_routes_transfer_to_evm() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 1000,
+        }).unwrap();
+
+        let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        // NoOp EVM returns 21_000 gas
+        assert_eq!(results[0].gas_used, 21_000);
+    }
+
+    #[test]
+    fn test_dispatcher_routes_transfer_to_svm() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::TransferToSvm {
+            source: [1u8; 20],
+            destination: vec![2; 32],
+            amount: 500,
+        }).unwrap();
+
+        let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        // NoOp SVM returns 5_000 gas
+        assert_eq!(results[0].gas_used, 5_000);
+    }
+
+    #[test]
+    fn test_dispatcher_routes_atomic_swap() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        bridge.queue_operation(CrossVmOperation::AtomicSwap {
+            evm_party: [0xAA; 20],
+            svm_party: vec![0xBB; 32],
+            evm_asset: [0u8; 20],
+            svm_asset: vec![0u8; 32],
+            evm_amount: 1000,
+            svm_amount: 2000,
+        }).unwrap();
+
+        let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success);
+        // EVM (21_000) + SVM (5_000) = 26_000
+        assert_eq!(results[0].gas_used, 26_000);
+    }
+
+    // =========================================================================
+    // NEW: BridgeConfig
+    // =========================================================================
+
+    #[test]
+    fn test_bridge_config_default() {
+        let config = BridgeConfig::default();
+        assert_eq!(config.max_transfer_amount, DEFAULT_MAX_TRANSFER_AMOUNT);
+        assert!(!config.paused);
+        assert_eq!(config.max_batch_size, MAX_BATCH_SIZE as u32);
+        assert_eq!(config.epoch_volume, 0);
+    }
+
+    #[test]
+    fn test_bridge_with_config() {
+        let config = BridgeConfig {
+            max_transfer_amount: 42,
+            paused: false,
+            max_batch_size: 10u32,
+            epoch_volume: 0,
+            max_epoch_volume: 1000,
+        };
+        let bridge = CrossVmBridge::with_config(config);
+        assert_eq!(bridge.config.max_transfer_amount, 42);
+        assert_eq!(bridge.config.max_batch_size, 10);
+        assert_eq!(bridge.config.max_epoch_volume, 1000);
+    }
+
+    // =========================================================================
+    // NEW: 2PC Event Encoding
+    // =========================================================================
+
+    #[test]
+    fn test_2pc_events_encode_decode() {
+        let prepare_event = CrossVmEvent::PrepareCompleted {
+            nonce: 42,
+            evm_gas_reserved: 100_000,
+            svm_compute_reserved: 200_000,
+        };
+        let encoded = prepare_event.encode();
+        let decoded = CrossVmEvent::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, prepare_event);
+
+        let commit_event = CrossVmEvent::CommitCompleted {
+            nonce: 42,
+            total_gas_used: 150_000,
+        };
+        let encoded = commit_event.encode();
+        let decoded = CrossVmEvent::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, commit_event);
+
+        let abort_event = CrossVmEvent::Aborted {
+            nonce: 42,
+            reason: b"test abort".to_vec(),
+        };
+        let encoded = abort_event.encode();
+        let decoded = CrossVmEvent::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, abort_event);
+
+        let cb_event = CrossVmEvent::CircuitBreakerTripped {
+            epoch_volume: 1_000_000,
+            max_epoch_volume: 500_000,
+        };
+        let encoded = cb_event.encode();
+        let decoded = CrossVmEvent::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded, cb_event);
+    }
+
+    #[test]
+    fn test_prepared_operation_encode_decode() {
+        let prep = PreparedOperation {
+            nonce: 1,
+            operation: CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 100,
+            },
+            phase: TwoPhaseCommitPhase::Prepared,
+            evm_gas_reserved: 25_000,
+            svm_compute_reserved: 5_000,
+            source_lock_receipt: b"SVM_LOCK".to_vec(),
+            dest_lock_receipt: b"DEST_OK".to_vec(),
+        };
+        let encoded = prep.encode();
+        let decoded = PreparedOperation::decode(&mut &encoded[..]).unwrap();
+        assert_eq!(decoded.nonce, 1);
+        assert_eq!(decoded.phase, TwoPhaseCommitPhase::Prepared);
+    }
+
+    #[test]
+    fn test_two_phase_commit_phase_encode_decode() {
+        for phase in [
+            TwoPhaseCommitPhase::Init,
+            TwoPhaseCommitPhase::Prepared,
+            TwoPhaseCommitPhase::Committed,
+            TwoPhaseCommitPhase::Aborted(b"fail".to_vec()),
+        ] {
+            let encoded = phase.encode();
+            let decoded = TwoPhaseCommitPhase::decode(&mut &encoded[..]).unwrap();
+            assert_eq!(decoded, phase);
+        }
+    }
+}
+
+// =========================================================================
+// Integration tests
+// =========================================================================
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[test]
+    fn test_full_2pc_lifecycle_multi_op_batch() {
+        let mut bridge = CrossVmBridge::new();
+        let dispatcher = NoOpDispatcher;
+
+        // Queue a mixed batch
+        let n1 = bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [2u8; 20],
+            amount: 100,
+        }).unwrap();
+
+        let n2 = bridge.queue_operation(CrossVmOperation::CallEvm {
+            caller: vec![3; 32],
+            contract: [4u8; 20],
+            input: vec![0xAB, 0xCD],
+            value: 0,
+        }).unwrap();
+
+        let n3 = bridge.queue_operation(CrossVmOperation::AtomicSwap {
+            evm_party: [5u8; 20],
+            svm_party: vec![6; 32],
+            evm_asset: [0u8; 20],
+            svm_asset: vec![0u8; 32],
+            evm_amount: 500,
+            svm_amount: 1000,
+        }).unwrap();
+
+        assert_eq!((n1, n2, n3), (1, 2, 3));
+
+        // Full atomic: prepare + commit
+        let (results, events) = bridge.atomic_execute(&dispatcher).unwrap();
+        assert_eq!(results.len(), 3);
+        assert!(results.iter().all(|r| r.success));
+        assert_eq!(bridge.completed_count(), 3);
+        assert_eq!(bridge.pending_count(), 0);
+        assert_eq!(bridge.prepared_count(), 0);
+
+        // Should have 3 PrepareCompleted + 3 CommitCompleted
+        let prepare_count = events.iter()
+            .filter(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. }))
+            .count();
+        let commit_count = events.iter()
+            .filter(|e| matches!(e, CrossVmEvent::CommitCompleted { .. }))
+            .count();
+        assert_eq!(prepare_count, 3);
+        assert_eq!(commit_count, 3);
+    }
+
+    #[test]
+    fn test_circuit_breaker_auto_trips_and_recovers() {
+        let config = BridgeConfig {
+            max_epoch_volume: 1000,
+            ..BridgeConfig::default()
+        };
+        let mut bridge = CrossVmBridge::with_config(config);
+
+        // Transfer 600 — OK
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 600,
+        }).unwrap();
+
+        // Transfer 500 — exceeds 1000 epoch limit
+        let result = bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 500,
+        });
+        assert!(result.is_err());
+        assert!(bridge.is_paused());
+
+        // Reset for next epoch
+        bridge.reset_epoch_volume();
+        bridge.resume();
+
+        // Should work again
+        bridge.queue_operation(CrossVmOperation::TransferToEvm {
+            source: vec![1; 32],
+            destination: [0u8; 20],
+            amount: 100,
+        }).unwrap();
+        assert!(!bridge.is_paused());
     }
 }

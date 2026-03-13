@@ -424,7 +424,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
 <section class="section reveal">
   <div class="section-eyebrow">Tokenomics</div>
   <h2 class="section-title">Token <span class="text-gold">Distribution</span></h2>
-  <p class="section-sub">1,000,000,000 X3S tokens with a deflationary model, quarterly burns, and staking rewards.</p>
+  <p class="section-sub">Token supply and distribution are reported live from the X3 backend.</p>
 
   <div class="tokenomics-grid">
     <div class="tko-chart-wrap">
@@ -433,43 +433,35 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
         <div class="ring ring-2"></div>
         <div class="ring ring-3"></div>
         <div class="tko-center">
-          <div class="tko-center-val">1B</div>
+          <div class="tko-center-val" id="tko-total">--</div>
           <div class="tko-center-lbl">Total Supply</div>
         </div>
-        <!-- SVG donut -->
-        <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 320 320">
-          <circle cx="160" cy="160" r="110" fill="none" stroke="rgba(255,215,0,0.7)" stroke-width="20" stroke-dasharray="276 125" stroke-dashoffset="-10" transform="rotate(-90 160 160)"/>
-          <circle cx="160" cy="160" r="110" fill="none" stroke="rgba(0,200,255,0.7)" stroke-width="20" stroke-dasharray="176 225" stroke-dashoffset="-296" transform="rotate(-90 160 160)"/>
-          <circle cx="160" cy="160" r="110" fill="none" stroke="rgba(200,50,255,0.7)" stroke-width="20" stroke-dasharray="113 288" stroke-dashoffset="-472" transform="rotate(-90 160 160)"/>
-          <circle cx="160" cy="160" r="110" fill="none" stroke="rgba(0,255,136,0.7)" stroke-width="20" stroke-dasharray="75 326" stroke-dashoffset="-585" transform="rotate(-90 160 160)"/>
-          <circle cx="160" cy="160" r="110" fill="none" stroke="rgba(255,100,50,0.7)" stroke-width="20" stroke-dasharray="47 354" stroke-dashoffset="-660" transform="rotate(-90 160 160)"/>
-        </svg>
       </div>
     </div>
     <div class="tko-list">
       <div class="tko-item">
         <div class="tko-color" style="background:var(--gold)"></div>
         <div><div class="tko-name">Presale & Public</div><div class="tko-sub">Community distribution</div></div>
-        <div class="tko-bar-wrap"><div class="tko-bar" style="width:44%;background:var(--gold)"></div></div>
-        <div class="tko-pct text-gold">44%</div>
+        <div class="tko-bar-wrap"><div class="tko-bar" id="tko-bar-presale" style="width:0%;background:var(--gold)"></div></div>
+        <div class="tko-pct text-gold" id="tko-presale">--</div>
       </div>
       <div class="tko-item">
         <div class="tko-color" style="background:var(--cyan)"></div>
         <div><div class="tko-name">Ecosystem & Grants</div><div class="tko-sub">Builder incentives</div></div>
-        <div class="tko-bar-wrap"><div class="tko-bar" style="width:28%;background:var(--cyan)"></div></div>
-        <div class="tko-pct text-cyan">28%</div>
+        <div class="tko-bar-wrap"><div class="tko-bar" id="tko-bar-ecosystem" style="width:0%;background:var(--cyan)"></div></div>
+        <div class="tko-pct text-cyan" id="tko-ecosystem">--</div>
       </div>
       <div class="tko-item">
         <div class="tko-color" style="background:var(--purple)"></div>
         <div><div class="tko-name">Team & Advisors</div><div class="tko-sub">36mo vesting</div></div>
-        <div class="tko-bar-wrap"><div class="tko-bar" style="width:18%;background:var(--purple)"></div></div>
-        <div class="tko-pct text-purple">18%</div>
+        <div class="tko-bar-wrap"><div class="tko-bar" id="tko-bar-team" style="width:0%;background:var(--purple)"></div></div>
+        <div class="tko-pct text-purple" id="tko-team">--</div>
       </div>
       <div class="tko-item">
         <div class="tko-color" style="background:var(--green)"></div>
         <div><div class="tko-name">Staking Rewards</div><div class="tko-sub">10yr emission</div></div>
-        <div class="tko-bar-wrap"><div class="tko-bar" style="width:12%;background:var(--green)"></div></div>
-        <div class="tko-pct text-green">12%</div>
+        <div class="tko-bar-wrap"><div class="tko-bar" id="tko-bar-staking" style="width:0%;background:var(--green)"></div></div>
+        <div class="tko-pct text-green" id="tko-staking">--</div>
       </div>
     </div>
   </div>
@@ -560,7 +552,7 @@ footer{padding:60px;border-top:1px solid var(--border);display:flex;align-items:
     <div class="feat-card c-cyan">
       <div class="feat-icon">⟁</div>
       <div class="feat-title">Validator Rewards</div>
-      <div class="feat-text">18% APY for Genesis validators. Priority block rewards, governance weight, and exclusive protocol fee sharing.</div>
+      <div class="feat-text">Genesis validators receive priority block rewards, governance weight, and protocol fee sharing based on live network terms.</div>
     </div>
   </div>
 </section>
@@ -659,7 +651,6 @@ function updateCountdown() {
 updateCountdown();
 
 // Progress bar animate
-setTimeout(() => document.getElementById('raise-fill').style.width = '0%', 100);
 
 // Token calc
 const rates = {ETH:44186, BTC:285000, USDT:13.3, CARD:12};

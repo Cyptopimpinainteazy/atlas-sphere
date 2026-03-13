@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 import os
 import ctypes
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Optional, Sequence
 
 from .cuda_loader import CudaRuntime
+
+logger = logging.getLogger(__name__)
 
 
 def _keccak256(data: bytes) -> bytes:
@@ -43,6 +46,7 @@ class KeccakBatchHasher:
     kernel_dir: str
     parity_check: bool
     allow_failover: bool
+    on_gpu_disabled: Optional[Callable[[str], None]]
 
     def __init__(
         self,
@@ -50,11 +54,13 @@ class KeccakBatchHasher:
         kernel_dir: str,
         parity_check: bool = True,
         allow_failover: bool = True,
+        on_gpu_disabled: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.runtime = runtime
         self.kernel_dir = kernel_dir
         self.parity_check = parity_check
         self.allow_failover = allow_failover
+        self.on_gpu_disabled = on_gpu_disabled
         self._lib = None
         if self.runtime.available:
             lib_path = os.path.join(self.kernel_dir, "build", "libkeccak256_batch.so")
@@ -69,6 +75,19 @@ class KeccakBatchHasher:
             elif not self.allow_failover:
                 raise RuntimeError("Missing libkeccak256_batch.so for required GPU mode")
 
+    def _disable_gpu(self, reason: str, exc: Exception | None = None) -> None:
+        """Disable GPU execution and optionally report via callback/logging."""
+        msg = f"GPU keccak256 disabled (reason={reason}) -> using CPU fallback"
+        if exc is not None:
+            logger.warning(msg + ": %s", exc)
+        else:
+            logger.warning(msg)
+        if self.on_gpu_disabled:
+            try:
+                self.on_gpu_disabled("gpu_keccak256_disabled")
+            except Exception:
+                logger.exception("failed to report GPU disabled metric")
+
     def hash_batch(self, payloads: Iterable[bytes]) -> list[bytes]:
         # Materialize once so we can replay for GPU + parity check
         payloads_list: Sequence[bytes] = (
@@ -77,7 +96,8 @@ class KeccakBatchHasher:
         try:
             if self.runtime.available and self._lib is not None:
                 return self._hash_gpu(payloads_list)
-        except Exception:
+        except Exception as e:
+            self._disable_gpu("runtime_failure", exc=e)
             if self.allow_failover:
                 return self._hash_cpu(payloads_list)
             raise

@@ -199,7 +199,6 @@ impl SidecarDaemon {
         Ok(())
     }
 
-    /// Job processor loop
     async fn job_processor_loop(&self) {
         loop {
             // Try to get next job
@@ -305,7 +304,7 @@ impl SidecarDaemon {
 }
 
 /// Initialize logging
-pub fn init_logging(level: Level) {
+pub fn init_logging(level: Level) -> anyhow::Result<()> {
     let subscriber = FmtSubscriber::builder()
         .with_max_level(level)
         .with_target(true)
@@ -314,5 +313,23 @@ pub fn init_logging(level: Level) {
         .with_line_number(true)
         .finish();
 
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set tracing subscriber");
+    // Attempt to set the global subscriber. If one is already set (typical in tests
+    // or when multiple components initialize logging), just continue.
+    match tracing::subscriber::set_global_default(subscriber) {
+        Ok(()) => Ok(()),
+        Err(_e) => Ok(()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tracing::Level;
+
+    #[test]
+    fn init_logging_is_idempotent() {
+        // Should succeed even if called multiple times (no panic)
+        assert!(init_logging(Level::INFO).is_ok());
+        assert!(init_logging(Level::DEBUG).is_ok());
+    }
 }

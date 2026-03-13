@@ -171,26 +171,37 @@ impl X3Executor {
         }
     }
 
-    /// Execute without std (mock for WASM runtime)
+    /// Execute X3BC bytecode (no_std — uses mini_x3 interpreter)
     #[cfg(not(feature = "std"))]
     pub fn execute(
         bytecode: &[u8],
         _args: &[X3Value],
         config: X3ExecutorConfig,
     ) -> X3Result<X3ExecutionReceipt> {
-        // In no_std context, return mock receipt
-        // Real execution happens in native std context
-        let gas_used = (bytecode.len() as u64).min(config.gas_limit / 10);
-
-        Ok(X3ExecutionReceipt {
-            success: true,
-            gas_used,
-            return_data: vec![],
-            logs: vec![],
-            state_changes: vec![],
-            function_index: 0,
-            instructions_executed: 0,
-        })
+        use crate::mini_x3;
+        match mini_x3::execute_x3bc(bytecode, config.gas_limit) {
+            Ok(res) => Ok(X3ExecutionReceipt {
+                success: true,
+                gas_used: res.gas_used,
+                return_data: res.return_val.to_bytes(),
+                logs: vec![],
+                state_changes: vec![],
+                function_index: 0,
+                instructions_executed: res.gas_used,
+            }),
+            Err(mini_x3::X3Error::GasExhausted) => Ok(X3ExecutionReceipt {
+                success: false,
+                gas_used: config.gas_limit,
+                return_data: b"gas exhausted".to_vec(),
+                logs: vec![],
+                state_changes: vec![],
+                function_index: 0,
+                instructions_executed: config.gas_limit,
+            }),
+            Err(e) => Err(X3IntegrationError::ExecutionFailed(
+                format!("{:?}", e),
+            )),
+        }
     }
 
     /// Verify bytecode without execution
@@ -206,10 +217,12 @@ impl X3Executor {
         Ok(())
     }
 
-    /// Verify bytecode (no_std stub)
+    /// Verify bytecode (no_std — uses mini_x3 validator)
     #[cfg(not(feature = "std"))]
-    pub fn verify(_bytecode: &[u8], _allow_debug_ops: bool) -> X3Result<()> {
-        Ok(())
+    pub fn verify(bytecode: &[u8], _allow_debug_ops: bool) -> X3Result<()> {
+        use crate::mini_x3;
+        mini_x3::validate_x3bc(bytecode)
+            .map_err(|e| X3IntegrationError::VerificationFailed(format!("{:?}", e)))
     }
 
     /// Estimate gas for bytecode execution
@@ -229,11 +242,11 @@ impl X3Executor {
         Ok(gas_estimate)
     }
 
-    /// Estimate gas (no_std stub)
+    /// Estimate gas (no_std — uses mini_x3 estimator)
     #[cfg(not(feature = "std"))]
     pub fn estimate_gas(bytecode: &[u8]) -> X3Result<u64> {
-        // Conservative estimate based on size
-        Ok((bytecode.len() as u64) * 10)
+        use crate::mini_x3;
+        Ok(mini_x3::estimate_gas_x3bc(bytecode))
     }
 
     /// Compute code hash for bytecode

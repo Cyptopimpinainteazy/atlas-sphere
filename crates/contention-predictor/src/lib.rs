@@ -244,12 +244,17 @@ impl ContentionPredictor {
 
         stats.total_predictions += 1;
 
-        // TODO: Implement actual accuracy tracking
-        // For now, assume 80% accuracy
-        if rand::thread_rng().gen_bool(0.8) {
+        // Accuracy tracking: in production, compare predicted vs actual outcomes
+        // For now, use heuristic-based estimation
+        let predicted_high = prediction.contention_score > 0.7;
+        let actual_high = features.value > 1_000_000_000.0 || features.gas_price > 100_000_000.0;
+
+        if predicted_high == actual_high {
             stats.accurate_predictions += 1;
-        } else {
+        } else if predicted_high && !actual_high {
             stats.false_positives += 1;
+        } else {
+            stats.false_negatives += 1;
         }
 
         // Calculate metrics

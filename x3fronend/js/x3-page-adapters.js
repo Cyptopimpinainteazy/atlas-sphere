@@ -205,7 +205,12 @@
         items: [
           { label: "Arbitrage Engine", href: "x3star-arbitrage-engine.html" },
           { label: "The Spine", href: "x3star-spine.html" },
+          { label: "Architecture Deep Dive", href: "x3star-tech-deep-dive.html" },
+          { label: "Compute Marketplace", href: "x3star-compute-marketplace.html" },
+          { label: "Benchmark Hub", href: "x3star-benchmark-page.html" },
+          { label: "Competitor Annihilation", href: "x3star-competitor-annihilation.html" },
           { label: "Competitor Graveyard", href: "x3star-competitor-graveyard.html" },
+          { label: "Whitepaper", href: "x3star-whitepaper.html" },
           { label: "Chainbench Pro", href: "chainbench-pro.html" },
           { label: "Chainbench Ultimate", href: "chainbench-ultimate.html" },
           { label: "Stress Test", href: "blockchain-stress-test.html" },
@@ -353,31 +358,44 @@
 
   async function initDashboard(api) {
     async function load() {
-      var dashboardAndReservations = await Promise.all([
+      var payloads = await Promise.all([
         api.getDashboardEnvelope({ refresh: true }),
         api.getReservationsEnvelope({ refresh: true }),
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getTokenomicsEnvelope({ refresh: true }),
       ]);
-      var envelope = dashboardAndReservations[0];
-      var reservationsEnvelope = dashboardAndReservations[1];
+      var envelope = payloads[0];
+      var reservationsEnvelope = payloads[1];
+      var presaleEnvelope = payloads[2];
+      var tokenomicsEnvelope = payloads[3];
       var data = envelope.data;
+      var presale = presaleEnvelope.data || {};
+      var tokenomics = tokenomicsEnvelope.data || {};
       setText("#block-num", data.blockNumber ? fmtNumber(data.blockNumber) : "unavailable");
       setText("#gas", data.gasPriceGwei ? data.gasPriceGwei + " gwei" : "unavailable");
-      var kpis = queryAll(".kpi-card .kpi-value");
-      if (kpis[0]) setText(kpis[0], fmtCompactMoney(data.funding.raised));
-      if (kpis[1]) setText(kpis[1], fmtNumber(data.funding.activeGrants));
-      if (kpis[2]) setText(kpis[2], fmtNumber(data.funding.investorCount));
-      if (kpis[3]) setText(kpis[3], "$" + Number(data.token.priceUsd).toFixed(4));
-      var badge = query(".kpi-card.purple .badge-up, .kpi-card.purple .badge-dn");
-      if (badge) {
-        var change = Number(data.token.priceChange24h || 0);
-        badge.textContent = (change >= 0 ? "+" : "") + change.toFixed(1) + "%";
-        badge.className = change >= 0 ? "badge-up" : "badge-dn";
+      setText("#kpi-updated", new Date(envelope.lastUpdated).toLocaleString());
+      setText("#kpi-raised", fmtCompactMoney(data.funding.raised));
+      setText("#kpi-grants", fmtNumber(data.funding.activeGrants));
+      setText("#kpi-investors", fmtNumber(data.funding.investorCount));
+      setText("#kpi-price", "$" + Number(data.token.priceUsd || 0).toFixed(4));
+      setText("#kpi-raised-delta", "—");
+      setText("#kpi-grants-delta", "—");
+      setText("#kpi-investors-delta", "—");
+      var priceDelta = Number(data.token.priceChange24h || 0);
+      var priceDeltaEl = byId("kpi-price-delta");
+      if (priceDeltaEl) {
+        priceDeltaEl.textContent = (priceDelta >= 0 ? "+" : "") + priceDelta.toFixed(1) + "%";
+        priceDeltaEl.className = priceDelta >= 0 ? "badge-up" : "badge-dn";
       }
-      var stats = queryAll(".chart-card:nth-child(2) .metric-val");
-      if (stats[0]) setText(stats[0], fmtCompactMoney(data.token.marketCapUsd));
-      if (stats[1]) setText(stats[1], (data.token.circulatingSupply / 1000000).toFixed(0) + "M");
-      if (stats[2]) setText(stats[2], fmtCompactMoney(data.token.volume24hUsd));
-      if (stats[3]) setText(stats[3], fmtNumber(data.token.holders));
+      setText("#donut-total", fmtCompactMoney(data.funding.raised));
+      setText("#alloc-lead", "TBD");
+      setText("#alloc-grants", "TBD");
+      setText("#alloc-community", "TBD");
+      setText("#alloc-treasury", "TBD");
+      setText("#token-mcap", fmtCompactMoney(data.token.marketCapUsd));
+      setText("#token-circ", (data.token.circulatingSupply / 1000000).toFixed(0) + "M");
+      setText("#token-vol", fmtCompactMoney(data.token.volume24hUsd));
+      setText("#token-holders", fmtNumber(data.token.holders));
       var feed = byId("activity-feed");
       if (feed) {
         feed.innerHTML = "";
@@ -395,6 +413,104 @@
           feed.appendChild(row);
         });
       }
+      var investorList = byId("investor-list");
+      if (investorList) {
+        investorList.innerHTML = "";
+        (reservationsEnvelope.data.topInvestors || []).slice(0, 6).forEach(function (investor) {
+          var row = document.createElement("div");
+          row.className = "investor-item";
+          row.innerHTML =
+            '<div class="inv-avatar" style="background:linear-gradient(135deg,#4a90ff,#2040c0)">' +
+            String(investor.name || "?").slice(0, 1).toUpperCase() +
+            '</div><div><div class="inv-name">' +
+            investor.name +
+            '</div><div class="inv-type">' +
+            investor.badge +
+            '</div></div><div class="inv-commit">' +
+            fmtCompactMoney(investor.amountUsd) +
+            '</div><span class="inv-tier tier-seed">LIVE</span>';
+          investorList.appendChild(row);
+        });
+        if (!investorList.children.length) {
+          investorList.innerHTML = '<div style="font-size:11px;color:var(--muted)">Awaiting live investor feed.</div>';
+        }
+      }
+
+      var tickerPrice = byId("ticker");
+      var tickerChange = byId("ticker-change");
+      if (tickerPrice && tickerChange) {
+        tickerPrice.querySelector(".ticker-price").textContent = "$" + Number(data.token.priceUsd || 0).toFixed(4);
+        tickerChange.textContent = (priceDelta >= 0 ? "▲ +" : "▼ ") + Math.abs(priceDelta).toFixed(1) + "%";
+        tickerChange.className = priceDelta >= 0 ? "ticker-up" : "ticker-dn";
+      }
+
+      var alertText = byId("alert-text");
+      if (alertText) {
+        var remainingUsd = Math.max(0, Number(presale.hardCapUsd || 0) - Number(presale.raisedUsd || 0));
+        alertText.innerHTML =
+          "<strong>Round " +
+          (presale.currentRound || "Prefunding") +
+          "</strong> closes in " +
+          (presale.daysRemaining || "--") +
+          " days — " +
+          fmtCompactMoney(remainingUsd) +
+          " allocation remaining.";
+      }
+
+      var hardCap = Number(presale.hardCapUsd || 0);
+      var raised = Number(presale.raisedUsd || 0);
+      var softCap = Number(presale.softCapUsd || 0);
+      var pctRaised = hardCap ? Math.min(100, (raised / hardCap) * 100) : 0;
+      setText("#round-hardcap", fmtCompactMoney(hardCap));
+      setText("#round-progress-text", pctRaised.toFixed(1) + "% filled • " + fmtCompactMoney(raised) + " raised");
+      if (byId("round-progress")) byId("round-progress").style.width = pctRaised.toFixed(1) + "%";
+      var softCapPct = softCap ? Math.min(100, (raised / softCap) * 100) : 0;
+      if (byId("round-softcap-bar")) byId("round-softcap-bar").style.width = softCapPct.toFixed(1) + "%";
+      setText("#round-softcap", raised >= softCap && softCap > 0 ? "✓ HIT" : fmtCompactMoney(softCap));
+      var minTicket = Math.min.apply(null, (presale.tiers || []).map(function (tier) { return tier.priceUsd; }));
+      setText("#round-min-ticket", isFinite(minTicket) ? fmtMoney(minTicket) : "TBD");
+      setText("#round-vesting", "TBD");
+      setText("#round-price", presale.tokenPriceUsd ? "$" + Number(presale.tokenPriceUsd).toFixed(3) : "TBD");
+      setText("#round-bonus", presale.bonusPct ? "+" + presale.bonusPct + "%" : "TBD");
+
+      var network = data.network || {};
+      setText("#net-tps", fmtNumber(network.tps || 0));
+      setText("#net-vals", fmtNumber(network.validators || 0));
+      setText("#net-uptime", network.uptime ? fmtPct(network.uptime) : "TBD");
+      setText("#net-finality", network.finality ? network.finality + "s" : "TBD");
+      if (byId("net-tps-bar")) byId("net-tps-bar").style.width = Math.min(100, ((network.tps || 0) / 5000) * 100) + "%";
+      if (byId("net-vals-bar")) byId("net-vals-bar").style.width = Math.min(100, ((network.validators || 0) / 2000) * 100) + "%";
+      if (byId("net-uptime-bar")) byId("net-uptime-bar").style.width = Math.min(100, Number(network.uptime || 0)) + "%";
+      if (byId("net-finality-bar")) byId("net-finality-bar").style.width = Math.min(100, ((network.finality || 0) / 1) * 100) + "%";
+
+      if (global.__x3FundingChart) {
+        global.__x3FundingChart.data.labels = ["Now"];
+        global.__x3FundingChart.data.datasets[0].data = [Number((raised / 1000000).toFixed(2))];
+        global.__x3FundingChart.data.datasets[1].data = [Number((hardCap / 1000000).toFixed(2))];
+        global.__x3FundingChart.update();
+      }
+      if (global.__x3TokenChart) {
+        global.__x3TokenChart.data.labels = ["Now"];
+        global.__x3TokenChart.data.datasets[0].data = [Number(data.token.priceUsd || 0)];
+        global.__x3TokenChart.update();
+      }
+      if (global.__x3AllocChart) {
+        var allocations = tokenomics.allocations || [];
+        var total = allocations.reduce(function (sum, entry) { return sum + Number(entry.amountX3S || 0); }, 0) || 0;
+        if (total > 0) {
+          var pct = allocations.slice(0, 4).map(function (entry) {
+            return Math.round((Number(entry.amountX3S || 0) / total) * 100);
+          });
+          while (pct.length < 4) pct.push(0);
+          global.__x3AllocChart.data.datasets[0].data = pct;
+          setText("#alloc-lead", pct[0] + "%");
+          setText("#alloc-grants", pct[1] + "%");
+          setText("#alloc-community", pct[2] + "%");
+          setText("#alloc-treasury", pct[3] + "%");
+          global.__x3AllocChart.update();
+        }
+      }
+
       api.renderModuleMeta(".page-head", "dashboard", envelope);
     }
     await load();
@@ -469,12 +585,78 @@
     async function load() {
       var envelope = await api.getGovernanceEnvelope({ refresh: true });
       var data = envelope.data;
-      var stats = queryAll(".dao-stat .ds-val");
-      if (stats[0]) setText(stats[0], data.proposalsCount);
-      if (stats[1]) setText(stats[1], data.proposalsCount - data.activeProposals);
-      if (stats[2]) setText(stats[2], fmtNumber(data.voters));
-      if (stats[3]) setText(stats[3], fmtCompactMoney(data.treasury));
-      setText(".tc-val", fmtCompactMoney(data.treasury));
+      setText("#gov-total", data.proposalsCount);
+      setText("#gov-passed", data.proposalsCount - data.activeProposals);
+      setText("#gov-voters", fmtNumber(data.voters));
+      setText("#gov-treasury", fmtCompactMoney(data.treasury));
+      setText("#gov-treasury-total", fmtCompactMoney(data.treasury));
+      setText("#voting-power", "-- veX3S");
+      setText("#gov-vp-total", "--");
+      setText("#gov-vp-staking", "--");
+      setText("#gov-vp-node", "--");
+      setText("#gov-vp-delegated", "--");
+      setText("#gov-vp-rank", "--");
+
+      var list = byId("proposal-list");
+      if (list) {
+        list.innerHTML = "";
+        (data.proposals || []).forEach(function (proposal) {
+          var totalVotes = Number(proposal.votesFor || 0) + Number(proposal.votesAgainst || 0);
+          var yesPct = totalVotes ? Math.round((proposal.votesFor / totalVotes) * 100) : 0;
+          var noPct = totalVotes ? Math.round((proposal.votesAgainst / totalVotes) * 100) : 0;
+          var status = String(proposal.status || "").toLowerCase();
+          var statusClass =
+            status === "active"
+              ? "ps-active"
+              : status === "executed"
+                ? "ps-passed"
+                : status === "rejected"
+                  ? "ps-failed"
+                  : "ps-pending";
+          var endsAt = proposal.endsAt ? new Date(proposal.endsAt) : null;
+          var daysLeft = endsAt ? Math.max(0, Math.ceil((endsAt - Date.now()) / 86400000)) : null;
+          var statusLabel =
+            status === "active"
+              ? "🟢 ACTIVE — " + (daysLeft !== null ? daysLeft + " days left" : "in progress")
+              : status === "executed"
+                ? "✓ PASSED — Executed"
+                : status === "rejected"
+                  ? "✗ FAILED — Rejected"
+                  : "⏳ PENDING";
+          var card = document.createElement("div");
+          card.className = "prop-card reveal";
+          var desc = proposal.description || "Proposal details available in the governance feed.";
+          card.innerHTML =
+            '<div class="prop-header"><div><div class="prop-id">' +
+            proposal.id +
+            '</div></div><span class="prop-status ' +
+            statusClass +
+            '">' +
+            statusLabel +
+            '</span></div><div class="prop-title">' +
+            proposal.title +
+            '</div><div class="prop-desc">' +
+            desc +
+            '</div><div class="vote-bars"><div class="vb-row"><span class="vb-label yes">YES</span><div class="vb-bar-wrap"><div class="vb-bar" style="width:' +
+            yesPct +
+            '%;background:var(--green)"></div></div><span class="vb-pct" style="color:var(--green)">' +
+            yesPct +
+            '%</span></div><div class="vb-row"><span class="vb-label no">NO</span><div class="vb-bar-wrap"><div class="vb-bar" style="width:' +
+            noPct +
+            '%;background:var(--red)"></div></div><span class="vb-pct" style="color:var(--red)">' +
+            noPct +
+            '%</span></div></div><div class="prop-footer"><div class="prop-meta"><span>' +
+            fmtNumber(totalVotes) +
+            ' votes</span><span>Quorum: ' +
+            fmtNumber(proposal.quorum || 0) +
+            "</span></div></div>";
+          list.appendChild(card);
+        });
+        if (!list.children.length) {
+          list.innerHTML =
+            '<div class="prop-card reveal"><div class="prop-header"><div><div class="prop-id">No proposals</div></div><span class="prop-status ps-pending">⏳ Pending</span></div><div class="prop-title">No proposals available yet.</div><div class="prop-desc">Governance proposals will populate once the live feed is connected.</div></div>';
+        }
+      }
       api.renderModuleMeta(".dao-hero", "governance", envelope);
     }
     await load();
@@ -571,8 +753,15 @@
 
   async function initStaking(api) {
     async function load() {
-      var envelope = await api.getStakingEnvelope({ refresh: true });
-      var data = envelope.data;
+      var payloads = await Promise.all([
+        api.getStakingEnvelope({ refresh: true }),
+        api.getDashboardEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var data = payloads[0].data;
+      var dashboard = payloads[1].data;
+      global.__x3StakingPools = data.pools || [];
+      global.__x3TokenPriceUsd = dashboard.token.priceUsd || 0;
       var stats = queryAll(".ps-item .ps-val");
       if (stats[0]) setText(stats[0], fmtCompactMoney(data.totalValueLocked));
       if (stats[1]) setText(stats[1], fmtPct(data.avgApy));
@@ -588,6 +777,19 @@
         if (tvl) setText(tvl, fmtCompactMoney(pool.tvlUsd));
         if (apy) setHtml(apy, pool.apy + '% <span style="font-size:14px;opacity:0.5">APY</span>');
       });
+      var apyRow = [byId("pool-apy-1"), byId("pool-apy-2"), byId("pool-apy-3")];
+      data.pools.forEach(function (pool, index) {
+        if (apyRow[index]) apyRow[index].textContent = pool.apy + "% APY";
+      });
+      var calcSelect = byId("calc-pool");
+      if (calcSelect) {
+        calcSelect.innerHTML = data.pools
+          .map(function (pool) {
+            return '<option value="' + pool.id + '">' + pool.name + " — " + pool.apy + "% APY</option>";
+          })
+          .join("");
+      }
+      if (global.calcRewards) global.calcRewards();
       api.renderModuleMeta(".hero", "staking", envelope);
     }
     await load();
@@ -937,10 +1139,12 @@
     var payloads = await Promise.all([
       api.getPresaleEnvelope({ refresh: true }),
       api.getDashboardEnvelope({ refresh: true }),
+      api.getTokenomicsEnvelope({ refresh: true }),
     ]);
     var envelope = payloads[0];
     var data = payloads[0].data;
     var dashboard = payloads[1].data;
+    var tokenomics = payloads[2].data || {};
     countdown(data.closesAt, {
       days: "#cd-d",
       hours: "#cd-h",
@@ -970,6 +1174,38 @@
     if (fill) {
       fill.style.width = ((data.raisedUsd / data.hardCapUsd) * 100).toFixed(1) + "%";
     }
+    var totalSupply = Number(dashboard.token.totalSupply || 0);
+    if (byId("tko-total")) {
+      byId("tko-total").textContent = totalSupply ? fmtNumber(Math.round(totalSupply / 1000000)) + "M" : "--";
+    }
+    var allocations = tokenomics.allocations || [];
+    var totalAlloc = allocations.reduce(function (sum, entry) {
+      return sum + Number(entry.amountX3S || 0);
+    }, 0);
+    function pctOf(nameList) {
+      var subtotal = allocations
+        .filter(function (entry) {
+          return nameList.some(function (name) {
+            return String(entry.name || "").toLowerCase().indexOf(name) !== -1;
+          });
+        })
+        .reduce(function (sum, entry) {
+          return sum + Number(entry.amountX3S || 0);
+        }, 0);
+      return totalAlloc ? Math.round((subtotal / totalAlloc) * 100) : 0;
+    }
+    var presalePct = pctOf(["presale", "circulating"]);
+    var ecosystemPct = pctOf(["ecosystem"]);
+    var teamPct = pctOf(["team"]);
+    var stakingPct = pctOf(["staking"]);
+    setText("#tko-presale", presalePct ? presalePct + "%" : "--");
+    setText("#tko-ecosystem", ecosystemPct ? ecosystemPct + "%" : "--");
+    setText("#tko-team", teamPct ? teamPct + "%" : "--");
+    setText("#tko-staking", stakingPct ? stakingPct + "%" : "--");
+    if (byId("tko-bar-presale")) byId("tko-bar-presale").style.width = presalePct + "%";
+    if (byId("tko-bar-ecosystem")) byId("tko-bar-ecosystem").style.width = ecosystemPct + "%";
+    if (byId("tko-bar-team")) byId("tko-bar-team").style.width = teamPct + "%";
+    if (byId("tko-bar-staking")) byId("tko-bar-staking").style.width = stakingPct + "%";
     api.renderModuleMeta(".round-card", "presale", envelope);
   }
 
@@ -1118,8 +1354,44 @@
         tiers[tier.name] = tier;
       });
       global.__x3PresaleTiers = tiers;
-      setText("#slots-left", tiers.genesis ? tiers.genesis.slotsLeft : "0");
-      setText("#slots-remain", tiers.genesis ? tiers.genesis.slotsLeft + " SLOTS LEFT" : "SOLD OUT");
+      var genesis = tiers.genesis || {};
+      var star = tiers.star || {};
+      var lite = tiers.lite || {};
+      setText("#slots-left", genesis.slotsLeft || "0");
+      setText("#slots-remain", genesis.slotsLeft ? genesis.slotsLeft + " SLOTS LEFT" : "SOLD OUT");
+      setText("#slots-total", genesis.totalSlots || "--");
+      setText("#hs-apy", genesis.apy || "--");
+      var minStake = Math.min(
+        Number(genesis.priceUsd || Infinity),
+        Number(star.priceUsd || Infinity),
+        Number(lite.priceUsd || Infinity),
+      );
+      setText("#hs-min-stake", isFinite(minStake) ? "$" + Math.round(minStake / 1000) + "K" : "--");
+      setText("#tier-genesis-price", genesis.priceUsd ? "$" + Math.round(genesis.priceUsd / 1000) + "K" : "--");
+      setText("#tier-star-price", star.priceUsd ? "$" + Math.round(star.priceUsd / 1000) + "K" : "--");
+      setText("#tier-lite-price", lite.priceUsd ? "$" + Math.round(lite.priceUsd / 1000) + "K" : "--");
+      setText("#tier-genesis-apy", genesis.apy ? "✓ " + genesis.apy + " APY" : "✓ -- APY");
+      setText("#tier-star-apy", star.apy ? "✓ " + star.apy + " APY" : "✓ -- APY");
+      setText("#tier-lite-apy", lite.apy ? "✓ " + lite.apy + " APY" : "✓ -- APY");
+      setText("#benefit-apy", genesis.apy ? genesis.apy + " APY" : "--");
+      setText("#benefit-fee-share", "TBD");
+      setText("#benefit-bonus", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#ct-min-genesis", genesis.priceUsd ? "$" + genesis.priceUsd.toLocaleString("en-US") : "--");
+      setText("#ct-min-star", star.priceUsd ? "$" + star.priceUsd.toLocaleString("en-US") : "--");
+      setText("#ct-min-lite", lite.priceUsd ? "$" + lite.priceUsd.toLocaleString("en-US") : "--");
+      setText("#ct-apy-genesis", genesis.apy || "--");
+      setText("#ct-apy-star", star.apy || "--");
+      setText("#ct-apy-lite", lite.apy || "--");
+      setText("#ct-fee-genesis", "TBD");
+      setText("#ct-bonus-genesis", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#ct-bonus-star", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#ct-bonus-lite", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "TBD");
+      setText("#ct-genesis", genesis.slotsLeft != null ? genesis.slotsLeft : "--");
+      setText("#ct-star", star.slotsLeft != null ? star.slotsLeft : "--");
+      setText("#ct-lite", lite.slotsLeft != null ? lite.slotsLeft : "--");
+      if (global.updateValidatorSlots && genesis.totalSlots !== undefined) {
+        global.updateValidatorSlots(genesis.totalSlots, genesis.reservedSlots || 0);
+      }
       api.renderModuleMeta(".hero-shell", "validator presale", envelope);
     }
 
@@ -1195,13 +1467,43 @@
       global.alert("Investor inquiry submitted: " + result.data.id);
     };
 
-    var envelope = await api.getPresaleEnvelope({ refresh: true });
-    countdown(envelope.data.closesAt, {
+    var payloads = await Promise.all([
+      api.getPresaleEnvelope({ refresh: true }),
+      api.getDashboardEnvelope({ refresh: true }),
+      api.getNetworkEnvelope({ refresh: true }),
+      api.getLedgerEnvelope({ refresh: true }),
+      api.getStakingEnvelope({ refresh: true }),
+    ]);
+    var envelope = payloads[0];
+    var presale = payloads[0].data;
+    var dashboard = payloads[1].data;
+    var network = payloads[2].data;
+    var ledger = payloads[3].data;
+    var staking = payloads[4].data;
+    countdown(presale.closesAt, {
       days: "#cd-d",
       hours: "#cd-h",
       minutes: "#cd-m",
       seconds: "#cd-s",
     });
+    var pct = presale.hardCapUsd ? ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) : "0.0";
+    setText("#ir-raised", fmtMoney(presale.raisedUsd));
+    setText("#ir-hardcap", fmtCompactMoney(presale.hardCapUsd));
+    setText("#ir-filled", pct + "%");
+    if (byId("ir-prog")) byId("ir-prog").style.width = pct + "%";
+    setText("#ir-price", "$" + Number(presale.tokenPriceUsd || 0).toFixed(3));
+    setText("#ir-bonus", presale.bonusPct ? "+" + presale.bonusPct + "%" : "TBD");
+    setText("#ir-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD");
+    var minTicket = Math.min.apply(null, presale.tiers.map(function (tier) { return tier.priceUsd; }));
+    setText("#ir-min", isFinite(minTicket) ? "$" + Math.round(minTicket / 1000) + "K" : "TBD");
+    setText("#ir-m-raised", fmtCompactMoney(presale.raisedUsd));
+    setText("#ir-m-investors", fmtNumber(presale.investors));
+    setText("#ir-m-price", "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
+    setText("#ir-m-tvl", fmtCompactMoney(staking.totalValueLocked));
+    setText("#ir-m-supply", fmtNumber(dashboard.token.totalSupply || 0));
+    setText("#ir-m-validators", fmtNumber((network.validators || []).length));
+    setText("#ir-m-holders", fmtNumber(dashboard.token.holders || 0));
+    setText("#ir-m-treasury", fmtCompactMoney(ledger.treasuryUsd || 0));
     api.renderModuleMeta(".investor-card", "investor relations", envelope);
   }
 
@@ -1869,12 +2171,25 @@
       var annualRewardsUsd =
         (Number(primary.stakeX3S || 0) * Number(dashboard.token.priceUsd || 0) * Number(staking.avgApy || 0)) / 100;
       setText("#bonus-apy", "0.0%");
+      setText("#tb-node", primary.name + " · " + primary.tier.toUpperCase());
+      setText("#tb-apy", Number(staking.avgApy || 0).toFixed(1) + "%");
+      setText("#tb-uptime", fmtPct(primary.uptimePct));
       setText("#uptime-val", fmtPct(primary.uptimePct));
       setText("#earned-val", fmtCompactMoney(annualRewardsUsd));
       setText("#blocks-val", "#" + fmtNumber(network.blockNumber));
+      setText("#apy-val", Number(staking.avgApy || 0).toFixed(1) + "%");
+      setText("#nh-consensus", primary.status ? String(primary.status).toUpperCase() : "UNKNOWN");
+      if (byId("nh-block-fill")) byId("nh-block-fill").style.width = Math.min(100, Math.max(10, primary.uptimePct || 0)) + "%";
+      setText("#nh-peers", primary.peers ? fmtNumber(primary.peers) + " peers" : "n/a");
+      setText("#nh-latency", primary.latencyMs ? primary.latencyMs + "ms" : "n/a");
+      setText("#nh-slashes", "0");
+      setText("#nh-version", "n/a");
+      setText("#nh-staked", fmtNumber(primary.stakeX3S || 0) + " X3S");
       setText("#pending-val", "+" + fmtNumber(Math.round(primary.stakeX3S * 0.012)) + " X3S");
       setText("#net-tps", fmtNumber(network.tps));
       setText("#net-block", "#" + fmtNumber(network.blockNumber));
+      setText("#net-vals", fmtNumber(network.validators.length));
+      setText("#net-price", "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
       var networkCards = queryAll(".panel .nkpi-val");
       if (networkCards[6]) setText(networkCards[6], fmtNumber(network.validators.length));
       if (networkCards[7]) setText(networkCards[7], "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
@@ -2114,11 +2429,16 @@
         countdownStarted = true;
       }
       if (byId("launch-prog")) {
-        byId("launch-prog").style.width = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%";
+        var pct = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1);
+        byId("launch-prog").style.width = pct + "%";
       }
       if (byId("r3-bar")) {
-        byId("r3-bar").style.width = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1) + "%";
+        var pct2 = ((presale.raisedUsd / presale.hardCapUsd) * 100).toFixed(1);
+        byId("r3-bar").style.width = pct2 + "%";
+        setText("#r3-pct", pct2 + "%");
       }
+      setText("#mainnet-pct", "TBD");
+      if (byId("mainnet-prog")) byId("mainnet-prog").style.width = "0%";
       var sysVals = queryAll(".sys-item .si-val");
       if (sysVals[0]) setText(sysVals[0], "● " + String(health.status).toUpperCase());
       if (sysVals[1]) setText(sysVals[1], "● " + fmtNumber(network.validators.length) + " ONLINE");

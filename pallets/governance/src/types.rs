@@ -126,7 +126,6 @@ pub struct Proposal<AccountId, Balance, BlockNumber, Call> {
     pub enacted_at: Option<BlockNumber>,
 
     // --- Constitutional proof gate (vΩ-1.0) ---
-
     /// SHA-256 commitment to the off-chain compliance proof for this proposal.
     ///
     /// Required when `touches_invariants == true`. A zero value means no proof

@@ -8,12 +8,21 @@ use pallet::{
     MaxProposalDepth, MaxSupply, ProposalDepth, ViolationCount,
 };
 
+fn init_block(block: u64) {
+    System::set_block_number(block);
+}
+
 // ── set_bounds ────────────────────────────────────────────────────────────────
 
 #[test]
 fn set_bounds_works() {
     new_test_ext().execute_with(|| {
-        assert_ok!(Invariants::set_bounds(RuntimeOrigin::root(), 500_000_000_000_000_000, 5_000, 50));
+        assert_ok!(Invariants::set_bounds(
+            RuntimeOrigin::root(),
+            500_000_000_000_000_000,
+            5_000,
+            50
+        ));
         assert_eq!(MaxSupply::<Test>::get(), 500_000_000_000_000_000);
         assert_eq!(MaxAgents::<Test>::get(), 5_000);
         assert_eq!(MaxProposalDepth::<Test>::get(), 50);
@@ -61,6 +70,7 @@ fn report_issuance_works() {
 #[test]
 fn enforce_all_passes_when_within_bounds() {
     new_test_ext().execute_with(|| {
+        init_block(1);
         LastObservedIssuance::<Test>::put(999_999_999_000_000_000u128);
         AgentCount::<Test>::put(9_999);
         ProposalDepth::<Test>::put(99);
@@ -68,7 +78,9 @@ fn enforce_all_passes_when_within_bounds() {
         Invariants::enforce_all(1u64);
 
         assert_eq!(ViolationCount::<Test>::get(), 0);
-        System::assert_has_event(RuntimeEvent::Invariants(Event::InvariantCheckPassed { block: 1 }));
+        System::assert_has_event(RuntimeEvent::Invariants(Event::InvariantCheckPassed {
+            block: 1,
+        }));
     });
 }
 
@@ -77,6 +89,7 @@ fn enforce_all_passes_when_within_bounds() {
 #[test]
 fn enforce_all_emits_event_on_supply_violation() {
     new_test_ext().execute_with(|| {
+        init_block(2);
         // Exceed max supply
         LastObservedIssuance::<Test>::put(2_000_000_000_000_000_000u128);
 
@@ -97,6 +110,7 @@ fn enforce_all_emits_event_on_supply_violation() {
 #[test]
 fn enforce_all_emits_event_on_agent_violation() {
     new_test_ext().execute_with(|| {
+        init_block(3);
         AgentCount::<Test>::put(20_000); // exceeds max 10_000
 
         Invariants::enforce_all(3u64);
@@ -116,6 +130,7 @@ fn enforce_all_emits_event_on_agent_violation() {
 #[test]
 fn enforce_all_emits_event_on_depth_violation() {
     new_test_ext().execute_with(|| {
+        init_block(4);
         ProposalDepth::<Test>::put(200); // exceeds max 100
 
         Invariants::enforce_all(4u64);
@@ -168,9 +183,15 @@ fn all_invariants_hold_returns_false_on_supply_breach() {
 fn set_halt_on_violation_toggles_flag() {
     new_test_ext().execute_with(|| {
         assert_eq!(HaltOnViolation::<Test>::get(), false);
-        assert_ok!(Invariants::set_halt_on_violation(RuntimeOrigin::root(), true));
+        assert_ok!(Invariants::set_halt_on_violation(
+            RuntimeOrigin::root(),
+            true
+        ));
         assert_eq!(HaltOnViolation::<Test>::get(), true);
-        assert_ok!(Invariants::set_halt_on_violation(RuntimeOrigin::root(), false));
+        assert_ok!(Invariants::set_halt_on_violation(
+            RuntimeOrigin::root(),
+            false
+        ));
         assert_eq!(HaltOnViolation::<Test>::get(), false);
     });
 }
@@ -181,7 +202,10 @@ fn set_halt_on_violation_toggles_flag() {
 fn set_constitution_hash_works() {
     new_test_ext().execute_with(|| {
         let hash = [0xABu8; 32];
-        assert_ok!(Invariants::set_constitution_hash(RuntimeOrigin::root(), hash));
+        assert_ok!(Invariants::set_constitution_hash(
+            RuntimeOrigin::root(),
+            hash
+        ));
         assert_eq!(ConstitutionHash::<Test>::get(), hash);
     });
 }

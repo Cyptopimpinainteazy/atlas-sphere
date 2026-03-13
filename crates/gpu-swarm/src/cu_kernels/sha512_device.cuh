@@ -277,40 +277,41 @@ __device__ void sc_reduce(unsigned char s[64]) {
     carry9 = s9  >> 21; s10 += carry9;  s9  -= carry9  << 21;
     carry10= s10 >> 21; s11 += carry10; s10 -= carry10 << 21;
 
-    s[0]  = (unsigned char)(s0  >>  0);
-    s[1]  = (unsigned char)(s0  >>  8);
-    s[2]  = (unsigned char)((s0  >> 16) | (s1  <<  5));
-    s[3]  = (unsigned char)(s1  >>  3);
-    s[4]  = (unsigned char)((s1  >> 11) | (s2  <<  2));
-    s[5]  = (unsigned char)(s2  >>  6);
-    s[6]  = (unsigned char)((s2  >> 14) | (s3  <<  7));
-    s[7]  = (unsigned char)(s3  >>  1);
-    s[8]  = (unsigned char)(s3  >>  9);
-    s[9]  = (unsigned char)((s3  >> 17) | (s4  <<  4));
-    s[10] = (unsigned char)(s4  >>  4);
-    s[11] = (unsigned char)((s4  >> 12) | (s5  <<  1));
-    s[12] = (unsigned char)(s5  >>  7);
-    s[13] = (unsigned char)((s5  >> 15) | (s6  <<  6));
-    s[14] = (unsigned char)(s6  >>  2);
-    s[15] = (unsigned char)(s6  >> 10);
-    s[16] = (unsigned char)((s6  >> 18) | (s7  <<  3));
-    s[17] = (unsigned char)(s7  >>  5);
-    s[18] = (unsigned char)(s7  >> 13);
-    s[19] = (unsigned char)((s7  >> 21) | (s8  <<  0));  /* Hmm, s8 << 0 = s8 */
-    s[19] = (unsigned char)(s8  >>  0);
-    s[20] = (unsigned char)(s8  >>  8);
-    s[21] = (unsigned char)((s8  >> 16) | (s9  <<  5));
-    s[22] = (unsigned char)(s9  >>  3);
-    s[23] = (unsigned char)((s9  >> 11) | (s10 <<  2));
-    s[24] = (unsigned char)(s10 >>  6);
-    s[25] = (unsigned char)((s10 >> 14) | (s11 <<  7));
-    s[26] = (unsigned char)(s11 >>  1);
-    s[27] = (unsigned char)(s11 >>  9);
-    s[28] = (unsigned char)(s11 >> 17);
-    s[29] = 0;
-    s[30] = 0;
-    s[31] = 0;
-    /* Zero the upper 32 bytes */
+    /* Pack 12 reduced limbs (each < 2^21) into 32 bytes little-endian.
+     * Direct ref10 bit-packing — no accumulator needed. */
+    s[ 0] = (unsigned char)(s0  >>  0);
+    s[ 1] = (unsigned char)(s0  >>  8);
+    s[ 2] = (unsigned char)((s0 >> 16) | (s1 << 5));
+    s[ 3] = (unsigned char)(s1  >>  3);
+    s[ 4] = (unsigned char)(s1  >> 11);
+    s[ 5] = (unsigned char)((s1 >> 19) | (s2 << 2));
+    s[ 6] = (unsigned char)(s2  >>  6);
+    s[ 7] = (unsigned char)((s2 >> 14) | (s3 << 7));
+    s[ 8] = (unsigned char)(s3  >>  1);
+    s[ 9] = (unsigned char)(s3  >>  9);
+    s[10] = (unsigned char)((s3 >> 17) | (s4 << 4));
+    s[11] = (unsigned char)(s4  >>  4);
+    s[12] = (unsigned char)(s4  >> 12);
+    s[13] = (unsigned char)((s4 >> 20) | (s5 << 1));
+    s[14] = (unsigned char)(s5  >>  7);
+    s[15] = (unsigned char)((s5 >> 15) | (s6 << 6));
+    s[16] = (unsigned char)(s6  >>  2);
+    s[17] = (unsigned char)(s6  >> 10);
+    s[18] = (unsigned char)((s6 >> 18) | (s7 << 3));
+    s[19] = (unsigned char)(s7  >>  5);
+    s[20] = (unsigned char)(s7  >> 13);
+    s[21] = (unsigned char)(s8  >>  0);
+    s[22] = (unsigned char)(s8  >>  8);
+    s[23] = (unsigned char)((s8 >> 16) | (s9 << 5));
+    s[24] = (unsigned char)(s9  >>  3);
+    s[25] = (unsigned char)(s9  >> 11);
+    s[26] = (unsigned char)((s9 >> 19) | (s10 << 2));
+    s[27] = (unsigned char)(s10 >>  6);
+    s[28] = (unsigned char)((s10 >> 14) | (s11 << 7));
+    s[29] = (unsigned char)(s11 >>  1);
+    s[30] = (unsigned char)(s11 >>  9);
+    s[31] = (unsigned char)(s11 >> 17);
+    /* Zero upper half */
     for (int i = 32; i < 64; i++) s[i] = 0;
 }
 

@@ -136,155 +136,68 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
 <div class="hero">
   <div class="hero-kicker">The numbers don't lie</div>
   <h1 class="hero-h1">If you had run<br>a node <em>since...</em></h1>
-  <p class="hero-sub">Every past milestone, made real. This is what early operators have already earned.</p>
+  <p class="hero-sub">Historical validator earnings are being verified. This page will update once the chain history feed is online.</p>
 </div>
 
 <!-- MILESTONE CARDS -->
 <div class="milestones" id="ms-grid">
-
-  <div class="ms-card selected" style="background:#0C1A14;" data-id="seed" onclick="selectCard(this,'seed')">
-    <div class="mc-when" style="color:var(--green)">Q4 2023 · SEED ROUND</div>
-    <div class="mc-event">Network<br>Founded</div>
+  <div class="ms-card selected" style="background:#0C1A14;">
+    <div class="mc-when" style="color:var(--green)">HISTORICAL NODE EARNINGS</div>
+    <div class="mc-event">Awaiting<br>chain data</div>
     <div class="mc-was">
-      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--green)">$0.010</span></div>
-      <div style="font-size:10px;color:var(--muted)">15 months ago</div>
+      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--green)">--</span></div>
+      <div style="font-size:10px;color:var(--muted)">Historical feed pending</div>
     </div>
     <div class="mc-divider"></div>
     <div class="mc-earnings">
-      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
-      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">5,000,000 X3S</span></div>
-      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+900,000 X3S</span></div>
-      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">5,900,000 X3S</span></div>
+      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">--</span></div>
+      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">--</span></div>
+      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val">--</span></div>
+      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">--</span></div>
     </div>
     <div class="mc-total" style="background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.15);">
       <div class="mt-label" style="color:var(--green)">Portfolio Value Today</div>
-      <div class="mt-val" style="color:var(--green)">$497,000</div>
-      <div class="mt-roi" style="color:var(--green)">+894% ROI · 9.9× your money</div>
+      <div class="mt-val" style="color:var(--green)">--</div>
+      <div class="mt-roi" style="color:var(--green)">Awaiting historical data feed</div>
     </div>
   </div>
-
-  <div class="ms-card" style="background:#161008;" data-id="privA" onclick="selectCard(this,'privA')">
-    <div class="mc-when" style="color:var(--gold)">Q1 2024 · PRIVATE ROUND A</div>
-    <div class="mc-event">First<br>Testnet</div>
-    <div class="mc-was">
-      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--gold)">$0.030</span></div>
-      <div style="font-size:10px;color:var(--muted)">12 months ago</div>
-    </div>
-    <div class="mc-divider"></div>
-    <div class="mc-earnings">
-      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
-      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">1,667,000 X3S</span></div>
-      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+240,000 X3S</span></div>
-      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">1,907,000 X3S</span></div>
-    </div>
-    <div class="mc-total" style="background:rgba(255,208,96,0.06);border:1px solid rgba(255,208,96,0.15);">
-      <div class="mt-label" style="color:var(--gold)">Portfolio Value Today</div>
-      <div class="mt-val" style="color:var(--gold)">$160,600</div>
-      <div class="mt-roi" style="color:var(--green)">+221% ROI · 3.2× your money</div>
-    </div>
-  </div>
-
-  <div class="ms-card" style="background:#0C1018;" data-id="serA" onclick="selectCard(this,'serA')">
-    <div class="mc-when" style="color:#40A0FF">Q2 2024 · SERIES A</div>
-    <div class="mc-event">$10.5M<br>Raised</div>
-    <div class="mc-was">
-      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:#40A0FF">$0.050</span></div>
-      <div style="font-size:10px;color:var(--muted)">9 months ago</div>
-    </div>
-    <div class="mc-divider"></div>
-    <div class="mc-earnings">
-      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
-      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">1,000,000 X3S</span></div>
-      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+112,500 X3S</span></div>
-      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">1,112,500 X3S</span></div>
-    </div>
-    <div class="mc-total" style="background:rgba(64,160,255,0.06);border:1px solid rgba(64,160,255,0.15);">
-      <div class="mt-label" style="color:#40A0FF">Portfolio Value Today</div>
-      <div class="mt-val" style="color:#40A0FF">$93,700</div>
-      <div class="mt-roi" style="color:var(--green)">+87% ROI · 1.9× your money</div>
-    </div>
-  </div>
-
-  <div class="ms-card" style="background:#141008;" data-id="testnet" onclick="selectCard(this,'testnet')">
-    <div class="mc-when" style="color:var(--gold)">Q3 2024 · PUBLIC TESTNET</div>
-    <div class="mc-event">1,847<br>Validators</div>
-    <div class="mc-was">
-      <div class="mc-price">X3S price then: <span class="mc-price-val" style="color:var(--gold)">$0.062</span></div>
-      <div style="font-size:10px;color:var(--muted)">6 months ago</div>
-    </div>
-    <div class="mc-divider"></div>
-    <div class="mc-earnings">
-      <div class="me-row"><span class="me-key">Node cost then</span><span class="me-val">$50,000</span></div>
-      <div class="me-row"><span class="me-key">X3S acquired</span><span class="me-val">806,452 X3S</span></div>
-      <div class="me-row"><span class="me-key">Staking rewards earned</span><span class="me-val" style="color:var(--green)">+72,581 X3S</span></div>
-      <div class="me-row"><span class="me-key">Total X3S today</span><span class="me-val">879,033 X3S</span></div>
-    </div>
-    <div class="mc-total" style="background:rgba(255,208,96,0.06);border:1px solid rgba(255,208,96,0.15);">
-      <div class="mt-label" style="color:var(--gold)">Portfolio Value Today</div>
-      <div class="mt-val" style="color:var(--gold)">$74,000</div>
-      <div class="mt-roi" style="color:var(--green)">+48% ROI · 1.5× your money</div>
-    </div>
-  </div>
-
-  <!-- TODAY — CALL TO ACTION CARD -->
-  <div class="ms-card" style="background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(0,212,170,0.03));border-color:var(--teal);" onclick="location.href='x3star-validator-presale.html'">
-    <div class="mc-when" style="color:var(--teal)">NOW · ROUND III PRESALE</div>
-    <div class="mc-event" style="color:var(--teal)">Your<br>Moment.</div>
-    <div class="mc-was">
-      <div class="mc-price">X3S price now: <span class="mc-price-val" style="color:var(--teal)">$0.075</span></div>
-      <div style="font-size:10px;color:var(--teal);opacity:0.6;">6 days left</div>
-    </div>
-    <div class="mc-divider" style="background:rgba(0,212,170,0.15)"></div>
-    <div class="mc-earnings">
-      <div class="me-row"><span class="me-key">Node cost today</span><span class="me-val">$50,000</span></div>
-      <div class="me-row"><span class="me-key">X3S you'd get</span><span class="me-val" style="color:var(--teal)">666,667 X3S</span></div>
-      <div class="me-row"><span class="me-key">At mainnet $0.12</span><span class="me-val" style="color:var(--green)">$80,000</span></div>
-      <div class="me-row"><span class="me-key">Base APY</span><span class="me-val" style="color:var(--green)">18% annually</span></div>
-    </div>
-    <div class="mc-total" style="background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);">
-      <div class="mt-label" style="color:var(--teal)">In 12 months at $0.50</div>
-      <div class="mt-val" style="color:var(--teal)">$370,000</div>
-      <div class="mt-roi" style="color:var(--teal)">→ Reserve your slot now</div>
-    </div>
-  </div>
-
 </div>
 
 <!-- SHAREABLE CARD -->
 <div class="share-section">
   <h2 class="ss-title">Share your scenario</h2>
-  <p class="ss-sub">Tell your network what early operators have already earned</p>
+  <p class="ss-sub">Historical earnings data is pending — sharing is disabled for now.</p>
 
   <div class="share-preview" id="share-preview">
     <div class="sp-bg"></div>
     <div class="sp-logo">X3STAR PROTOCOL</div>
-    <div class="sp-headline">If I had run a node<br>since <em id="sp-when">Seed Round (Q4 2023)</em></div>
-    <div class="sp-sub" id="sp-sub">Genesis validator · $50,000 invested · 15 months ago</div>
+    <div class="sp-headline">Historical validator earnings<br><em>are pending</em></div>
+    <div class="sp-sub">Awaiting verified chain history</div>
     <div class="sp-earnings">
       <div class="spe-cell">
-        <div class="spe-val" style="color:var(--green)" id="sp-val1">$497K</div>
+        <div class="spe-val" style="color:var(--green)">--</div>
         <div class="spe-key">Portfolio today</div>
       </div>
       <div class="spe-cell">
-        <div class="spe-val" style="color:var(--teal)" id="sp-val2">5.9M X3S</div>
+        <div class="spe-val" style="color:var(--teal)">--</div>
         <div class="spe-key">Total held</div>
       </div>
       <div class="spe-cell">
-        <div class="spe-val" style="color:var(--gold)" id="sp-val3">+894%</div>
+        <div class="spe-val" style="color:var(--gold)">--</div>
         <div class="spe-key">ROI</div>
       </div>
     </div>
-    <div class="sp-cta">Round III now open at <span>$0.075</span> · 46 Genesis slots left · x3star.io</div>
+    <div class="sp-cta">Visit the presale page for live availability.</div>
   </div>
 
   <div class="share-btns">
-    <button class="share-btn sb-twitter" onclick="shareTwitter()">
+    <button class="share-btn sb-twitter" onclick="shareUnavailable()">
       <span>𝕏</span> Share on X
     </button>
-    <button class="share-btn sb-telegram" onclick="shareTelegram()">
+    <button class="share-btn sb-telegram" onclick="shareUnavailable()">
       ✈ Telegram
     </button>
-    <button class="share-btn sb-copy" onclick="copyLink()">
+    <button class="share-btn sb-copy" onclick="shareUnavailable()">
       📋 Copy Link
     </button>
   </div>
@@ -295,44 +208,18 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
 <!-- BOTTOM CTA -->
 <div class="bottom-cta" style="padding:40px 28px;margin:0 28px 60px;max-width:700px;display:block;border-radius:20px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(0,212,170,0.06),rgba(255,208,96,0.03));text-align:center;position:relative;z-index:1;">
   <div class="bc-title">The <em>next</em> milestone<br>is being written now.</div>
-  <div class="bc-sub" style="margin-bottom:24px;">In 12 months, someone will be looking at this page and wishing they had acted today. Don't be that person.</div>
+  <div class="bc-sub" style="margin-bottom:24px;">When the historical feed is live, this page will show verified node earnings. For now, reserve your spot from the presale page.</div>
   <button class="bc-btn" onclick="location.href='x3star-validator-presale.html'">Reserve Your Node →</button>
-  <div style="font-size:10px;color:var(--muted);margin-top:14px;font-family:var(--mono);">46 Genesis slots · $50,000 · 18% APY · 6 days remaining</div>
+  <div style="font-size:10px;color:var(--muted);margin-top:14px;font-family:var(--mono);">Live availability updates are on the presale page.</div>
 </div>
 
 <script>
-const cardData={
-  seed:{when:'Seed Round (Q4 2023)',sub:'Genesis validator · $50,000 invested · 15 months ago',v1:'$497K',v2:'5.9M X3S',v3:'+894%'},
-  privA:{when:'Private Round A (Q1 2024)',sub:'Genesis validator · $50,000 invested · 12 months ago',v1:'$160K',v2:'1.9M X3S',v3:'+221%'},
-  serA:{when:'Series A (Q2 2024)',sub:'Genesis validator · $50,000 invested · 9 months ago',v1:'$93.7K',v2:'1.1M X3S',v3:'+87%'},
-  testnet:{when:'Public Testnet (Q3 2024)',sub:'Genesis validator · $50,000 invested · 6 months ago',v1:'$74K',v2:'879K X3S',v3:'+48%'},
-};
+function shareUnavailable(){
+  alert('Historical earnings feed is not available yet.');
+}
 
-function selectCard(el,id){
-  document.querySelectorAll('.ms-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  const d=cardData[id];
-  if(!d)return;
-  document.getElementById('sp-when').textContent=d.when;
-  document.getElementById('sp-sub').textContent=d.sub;
-  document.getElementById('sp-val1').textContent=d.v1;
-  document.getElementById('sp-val2').textContent=d.v2;
-  document.getElementById('sp-val3').textContent=d.v3;
-}
-function shareTwitter(){
-  const d=cardData[document.querySelector('.ms-card.selected')?.dataset?.id||'seed'];
-  const text=`If I had run an @X3STAR_Protocol validator node since ${d?.when||'Seed Round'}, my portfolio would be worth ${d?.v1||'$497K'} today (${d?.v3||'+894%'} ROI).\n\nRound III is LIVE. 46 Genesis slots left. $0.075.\n\nx3star.io/nodes`;
-  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text));
-}
-function shareTelegram(){
-  window.open('https://t.me/share/url?url=https://x3star.io/nodes&text=X3STAR validator nodes: 18% APY. Round III open now.');
-}
-function copyLink(){
-  navigator.clipboard.writeText('https://x3star.io/nodes').then(()=>{
-    const b=document.querySelector('.sb-copy');
-    b.textContent='✓ Copied!';
-    setTimeout(()=>b.innerHTML='📋 Copy Link',2000);
-  });
+if (window.X3PageAdapters) {
+  window.X3PageAdapters.start();
 }
 </script>
 </body>

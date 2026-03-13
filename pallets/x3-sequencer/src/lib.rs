@@ -34,9 +34,10 @@ mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::Currency};
+    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::ReservableCurrency};
     use frame_system::pallet_prelude::*;
     use sp_core::H256;
+    use sp_runtime::SaturatedConversion;
 
     // ── Config ─────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// Currency for sequencing fees.
-        type Currency: Currency<Self::AccountId>;
+        type Currency: ReservableCurrency<Self::AccountId>;
 
         /// Maximum transactions per batch.
         #[pallet::constant]
@@ -244,10 +245,12 @@ pub mod pallet {
             );
 
             // Fee calculation: base + per-byte
-            let _fee = T::BaseFee::get()
+            let fee_u128 = T::BaseFee::get()
                 .saturating_add(T::PerByteFee::get().saturating_mul(payload_size as u128));
+            let fee = fee_u128.saturated_into();
 
-            // TODO: Charge fee via T::Currency
+            // Charge fee via T::Currency
+            T::Currency::reserve(&submitter, fee).map_err(|_| Error::<T>::InsufficientFee)?;
 
             let now = <frame_system::Pallet<T>>::block_number();
             let sequence = GlobalSequence::<T>::mutate(|seq| {

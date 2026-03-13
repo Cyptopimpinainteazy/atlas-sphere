@@ -1,7 +1,7 @@
 //! The six articles of the X3 Constitution.
 
-use serde::{Deserialize, Serialize};
 use crate::types::ConstitutionHash;
+use serde::{Deserialize, Serialize};
 
 /// One of the six constitutional articles.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

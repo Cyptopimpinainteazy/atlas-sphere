@@ -56,6 +56,7 @@ use alloc::{string::String, vec, vec::Vec};
 pub mod error;
 pub mod executor;
 pub mod hostcalls;
+pub mod mini_x3;
 pub mod types;
 
 #[cfg(feature = "compile")]

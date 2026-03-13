@@ -143,15 +143,10 @@ impl SystemMonitor {
                         }
                     }
 
-                    // Battery info from sysinfo
-                    let batteries = sysinfo::System::new_all().batteries();
-                    if let Some(battery) = batteries.first() {
-                        stats.on_battery = battery.is_charging();
-                        stats.battery_level = Some(battery.charge_percent() as f32);
-                    } else {
-                        stats.on_battery = false;
-                        stats.battery_level = Some(100.0);
-                    }
+                    // Battery info: sysinfo 0.32 doesn't expose a stable battery API.
+                    // Default to plugged-in/full for now.
+                    stats.on_battery = false;
+                    stats.battery_level = Some(100.0);
                 }
 
                 tokio::time::sleep(tokio::time::Duration::from_secs(interval)).await;

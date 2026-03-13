@@ -300,3 +300,16 @@ fn blob_bytes_accumulate() {
         assert_eq!(X3Da::total_bytes_committed(), 1374);
     });
 }
+
+#[test]
+fn submit_blob_commitment_insufficient_funds_fails() {
+    new_test_ext().execute_with(|| {
+        // Ensure the submitter has no funds.
+        Balances::make_free_balance_be(&1, 0);
+
+        assert_noop!(
+            X3Da::submit_blob_commitment(RuntimeOrigin::signed(1), h256(0xEE), 100, None, None,),
+            Error::<Test>::InsufficientFee
+        );
+    });
+}

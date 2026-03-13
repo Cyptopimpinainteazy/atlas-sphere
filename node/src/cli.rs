@@ -58,7 +58,7 @@ pub struct NodeFeatureFlags {
     /// Requirements:
     /// - Deterministic scheduler enabled in runtime
     /// - Min 4 CPU cores recommended
-    /// 
+    ///
     /// Default: false
     #[arg(long, default_value_t = false)]
     pub enable_parallel_proposer: bool,
@@ -259,6 +259,7 @@ impl SubstrateCli for Cli {
             "" | "dev" => crate::chain_spec::development_config(),
             "local" => crate::chain_spec::local_testnet_config(),
             "staging" | "staging-net" => crate::chain_spec::staging_config(),
+            "testnet" | "test-net" => crate::chain_spec::testnet_config(),
             "production" | "prod" => crate::chain_spec::production_config(),
             path => crate::chain_spec::ChainSpec::from_json_file(PathBuf::from(path)),
         }?;

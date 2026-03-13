@@ -31,9 +31,14 @@ mod mock;
 mod tests;
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::Currency};
+    use frame_support::{
+        dispatch::DispatchResult,
+        pallet_prelude::*,
+        traits::ReservableCurrency,
+    };
     use frame_system::pallet_prelude::*;
     use sp_core::H256;
+    use sp_runtime::SaturatedConversion;
 
     // ── Config ─────────────────────────────────────────────────────────────
 
@@ -42,7 +47,7 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// Currency for DA fees.
-        type Currency: Currency<Self::AccountId>;
+        type Currency: ReservableCurrency<Self::AccountId>;
 
         /// Maximum blob size in bytes (anti-spam cap).
         #[pallet::constant]
@@ -229,8 +234,10 @@ pub mod pallet {
                 Error::<T>::BlobAlreadyExists
             );
 
-            let _fee = T::PerByteFee::get().saturating_mul(size_bytes as u128);
-            // TODO: Charge fee via T::Currency
+            let fee_u128 = T::PerByteFee::get().saturating_mul(size_bytes as u128);
+            let fee = fee_u128.saturated_into();
+            // Charge fee via T::Currency
+            T::Currency::reserve(&submitter, fee).map_err(|_| Error::<T>::InsufficientFee)?;
 
             let now = <frame_system::Pallet<T>>::block_number();
             let blob_id = NextBlobId::<T>::mutate(|id| {

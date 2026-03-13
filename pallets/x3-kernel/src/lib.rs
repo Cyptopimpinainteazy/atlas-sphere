@@ -43,6 +43,7 @@ pub mod authority;
 /// **H-5 Note**: For production, configure runtime with `FrontierEvmAdapter` and `RbpfSvmAdapter`
 /// instead of mock adapters. Mock adapters are for testing only.
 pub mod adapters;
+pub mod wasm_adapters;
 pub use adapters::{
     EvmExecutorAdapter, FailingMockEvmAdapter, FailingMockSvmAdapter, FailingMockX3Adapter,
     MockEvmAdapter, MockSvmAdapter, MockX3Adapter, SvmExecutorAdapter, X3ExecutorAdapter,
@@ -76,8 +77,9 @@ use sp_core::H256;
 use sp_io::hashing::blake2_256;
 use sp_runtime::traits::MaybeSerializeDeserialize;
 use sp_std::convert::TryInto;
+use sp_std::marker::PhantomData;
 use sp_std::vec::Vec;
-use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
+use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
 
 /// Represents a Comit transaction submitted to the X3 Kernel.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -314,9 +316,48 @@ pub trait DualVmDispatcher {
     ) -> Result<(), DispatchError>;
 }
 
+/// Proof types for cross-chain lock/receipt verification.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub enum CrossChainProof {
+    /// No proof supplied.
+    None,
+    /// Proof of lock on source chain.
+    LockProof(Vec<u8>),
+    /// Merkle receipt or inclusion proof.
+    MerkleReceipt(Vec<u8>),
+}
+
+/// Cross-chain proof verification hook.
+pub trait CrossChainProofVerifier<AccountId> {
+    /// Verify a proof for a cross-VM operation.
+    fn verify_proof(
+        origin: &AccountId,
+        operation: &CrossVmOperation,
+        proof: &CrossChainProof,
+    ) -> Result<(), DispatchError>;
+}
+
+/// No-op proof verifier for development and testing.
+pub struct NoopProofVerifier;
+
+impl<AccountId> CrossChainProofVerifier<AccountId> for NoopProofVerifier {
+    fn verify_proof(
+        _origin: &AccountId,
+        _operation: &CrossVmOperation,
+        proof: &CrossChainProof,
+    ) -> Result<(), DispatchError> {
+        match proof {
+            CrossChainProof::None => Ok(()),
+            _ => Err(DispatchError::Other("Cross-chain proof verifier not configured")),
+        }
+    }
+}
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
+    use frame_support::traits::ReservableCurrency;
+    use sp_runtime::traits::{Saturating, Zero};
 
     #[pallet::config]
     pub trait Config: frame_system::Config + pallet_timestamp::Config {
@@ -397,6 +438,22 @@ pub mod pallet {
         #[pallet::constant]
         type DefaultX3GasLimit: Get<u64>;
 
+        /// Cross-VM prepare TTL (blocks) before forced abort.
+        #[pallet::constant]
+        type CrossVmPrepareTtl: Get<BlockNumberFor<Self>>;
+
+        /// Maximum number of prepared cross-VM ops stored on-chain.
+        #[pallet::constant]
+        type MaxPreparedCrossVmOps: Get<u32>;
+
+        /// Maximum number of prepared ops to scan per block for expiry.
+        #[pallet::constant]
+        type MaxPreparedOpsPerBlock: Get<u32>;
+
+        /// Require a cross-chain proof for cross-VM operations.
+        #[pallet::constant]
+        type RequireCrossVmProof: Get<bool>;
+
         /// Weight information provider for extrinsics.
         type WeightInfo: WeightInfo;
 
@@ -412,6 +469,9 @@ pub mod pallet {
         /// Implement X3ExecutorAdapter trait for X3 bytecode execution
         type X3Adapter: X3ExecutorAdapter;
 
+        /// Cross-chain proof verification hook.
+        type CrossChainProofVerifier: CrossChainProofVerifier<Self::AccountId>;
+
         /// Origin that can execute privileged governance functions.
         /// Typically EnsureRoot or a council-based origin.
         type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -419,6 +479,28 @@ pub mod pallet {
 
     type AssetSymbolOf<T> = BoundedVec<u8, <T as Config>::MaxAssetSymbolLength>;
     type AssetMetadataOf<T> = AssetMetadata<AssetSymbolOf<T>>;
+    type PreparedCrossVmOpOf<T> = PreparedCrossVmOp<<T as frame_system::Config>::AccountId, <T as Config>::Balance, BlockNumberFor<T>>;
+
+    /// Prepared cross-VM operation held during 2PC timeout window.
+    #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+    pub struct PreparedCrossVmOp<AccountId, Balance, BlockNumber> {
+        /// Origin account that prepared the operation.
+        pub origin: AccountId,
+        /// Cross-VM operation payload.
+        pub operation: CrossVmOperation,
+        /// Origin-scoped nonce.
+        pub nonce: u64,
+        /// Block number when prepared.
+        pub prepared_at: BlockNumber,
+        /// Block number when this operation expires.
+        pub expires_at: BlockNumber,
+        /// Fee reserved during prepare.
+        pub reserved_fee: Balance,
+        /// Proof hash for auditability.
+        pub proof_hash: H256,
+        /// Proof kind: 0=None, 1=LockProof, 2=MerkleReceipt.
+        pub proof_kind: u8,
+    }
 
     /// Canonical ledger mapping (account, asset_id) -> balance.
     /// Uses a double-storage map for efficient access without requiring nested collections.
@@ -446,6 +528,11 @@ pub mod pallet {
     #[pallet::storage]
     pub type Nonces<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
+    /// Nonce tracker for cross-VM operation submissions by account.
+    #[pallet::storage]
+    pub type CrossVmNonces<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+
     /// Accounts authorized to submit Comits.
     ///
     /// Security: If AuthorizedAccounts is empty, all submissions are rejected (secure by default).
@@ -472,6 +559,20 @@ pub mod pallet {
     #[pallet::storage]
     pub type SubmittedComits<T: Config> =
         StorageMap<_, Blake2_128Concat, H256, BlockNumberFor<T>, OptionQuery>;
+
+    /// Prepared cross-VM operations awaiting commit.
+    #[pallet::storage]
+    #[pallet::unbounded]
+    pub type PreparedCrossVmOps<T: Config> =
+        StorageMap<_, Blake2_128Concat, H256, PreparedCrossVmOpOf<T>, OptionQuery>;
+
+    /// Queue of prepared cross-VM operation IDs for expiry scanning.
+    #[pallet::storage]
+    pub type PreparedCrossVmQueue<T: Config> = StorageValue<
+        _,
+        BoundedVec<H256, <T as Config>::MaxPreparedCrossVmOps>,
+        ValueQuery,
+    >;
 
     /// Rate limiting: tracks Comit submissions per account per block.
     /// Key: (AccountId, BlockNumber), Value: submission count.
@@ -581,6 +682,39 @@ pub mod pallet {
             gas_used: u64,
             changes_applied: u32,
         },
+        /// Cross-VM operation prepared and awaiting commit.
+        CrossVmOperationPrepared {
+            comit_id: H256,
+            nonce: u64,
+            expires_at: BlockNumberFor<T>,
+        },
+        /// Cross-VM operation committed and finalized.
+        CrossVmOperationCommitted {
+            comit_id: H256,
+            gas_used: u64,
+            fee_charged: T::Balance,
+            fee_refund: T::Balance,
+        },
+        /// Cross-VM operation aborted.
+        CrossVmOperationAborted {
+            comit_id: H256,
+            reason: Vec<u8>,
+        },
+        /// Cross-VM fee reserved for a prepared operation.
+        CrossVmFeeReserved {
+            comit_id: H256,
+            amount: T::Balance,
+        },
+        /// Cross-VM fee refunded after commit/abort.
+        CrossVmFeeRefunded {
+            comit_id: H256,
+            amount: T::Balance,
+        },
+        /// Cross-chain proof verified for a cross-VM operation.
+        CrossVmProofVerified {
+            comit_id: H256,
+            proof_kind: u8,
+        },
         /// An authority was added to the current authority set.
         AuthorityAdded { authority: T::AccountId },
         /// An authority was removed from the current authority set.
@@ -659,6 +793,20 @@ pub mod pallet {
         InvalidCrossVmOperation,
         /// Cross-VM operation execution failed.
         CrossVmExecutionFailed,
+        /// Cross-VM nonce does not match expected value.
+        CrossVmInvalidNonce,
+        /// Cross-VM nonce increment overflow.
+        CrossVmNonceOverflow,
+        /// Cross-VM operation already prepared or missing.
+        CrossVmOperationNotPrepared,
+        /// Cross-VM prepared operation expired.
+        CrossVmOperationExpired,
+        /// Cross-VM proof verification failed.
+        CrossVmProofInvalid,
+        /// Cross-VM fee exceeds user-provided max fee.
+        CrossVmFeeExceeded,
+        /// Cross-VM prepared queue full.
+        CrossVmPreparedQueueFull,
     }
 
     use frame_support::traits::StorageVersion;
@@ -668,6 +816,28 @@ pub mod pallet {
     #[pallet::pallet]
     #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
+
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_initialize(now: BlockNumberFor<T>) -> Weight {
+            // Abort expired prepared cross-VM operations (bounded per block)
+            let mut processed: u32 = 0;
+            let limit = T::MaxPreparedOpsPerBlock::get();
+
+            for (comit_id, prepared) in PreparedCrossVmOps::<T>::iter() {
+                if processed >= limit {
+                    break;
+                }
+                if prepared.expires_at <= now {
+                    Self::abort_prepared_op(&comit_id, b"expired".to_vec());
+                    processed = processed.saturating_add(1);
+                }
+            }
+
+            // Minimal weight for bounded iteration.
+            T::DbWeight::get().reads_writes(processed as u64, processed as u64)
+        }
+    }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
@@ -1190,75 +1360,78 @@ pub mod pallet {
             Ok(())
         }
 
-        /// Submit a cross-VM bridge operation for atomic execution.
+        /// Submit a cross-VM bridge operation for atomic execution (prepare + commit).
         #[pallet::call_index(10)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
         pub fn submit_cross_vm_operation(
             origin: OriginFor<T>,
             operation: CrossVmOperation,
+            nonce: u64,
+            max_fee: T::Balance,
+            proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
-            let comit_id = H256::from(blake2_256(&operation.encode()));
+            let comit_id = Self::prepare_cross_vm_operation_inner(
+                &who,
+                operation,
+                nonce,
+                max_fee,
+                proof,
+            )?;
 
-            ensure!(
-                !SubmittedComits::<T>::contains_key(comit_id),
-                Error::<T>::DuplicateComitId
-            );
+            Self::commit_cross_vm_operation_inner(&who, comit_id)
+        }
 
-            const MAX_SUBMISSIONS_PER_BLOCK: u32 = 10;
-            let current_block = frame_system::Pallet::<T>::block_number();
-            let current_count = SubmissionsPerBlock::<T>::get(&who, current_block);
-            ensure!(
-                current_count < MAX_SUBMISSIONS_PER_BLOCK,
-                Error::<T>::RateLimitExceeded
-            );
+        /// Prepare a cross-VM operation and hold locks until commit.
+        #[pallet::call_index(11)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
+        pub fn prepare_cross_vm_operation(
+            origin: OriginFor<T>,
+            operation: CrossVmOperation,
+            nonce: u64,
+            max_fee: T::Balance,
+            proof: CrossChainProof,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            let _ = Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
+            Ok(())
+        }
 
-            let operation_context = Self::encode_cross_vm_operation_context(&who, comit_id);
-            Self::auth_check(&who, &operation_context)?;
+        /// Commit a previously prepared cross-VM operation.
+        #[pallet::call_index(12)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
+        pub fn commit_cross_vm_operation(
+            origin: OriginFor<T>,
+            comit_id: H256,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            Self::commit_cross_vm_operation_inner(&who, comit_id)
+        }
 
-            let mut bridge = CrossVmBridge::new();
-            bridge
-                .queue_operation(operation.clone())
-                .map_err(|_| Error::<T>::InvalidCrossVmOperation)?;
+        /// Abort a prepared cross-VM operation (origin must match).
+        #[pallet::call_index(13)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
+        pub fn abort_cross_vm_operation(
+            origin: OriginFor<T>,
+            comit_id: H256,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            let prepared = PreparedCrossVmOps::<T>::get(comit_id)
+                .ok_or(Error::<T>::CrossVmOperationNotPrepared)?;
+            ensure!(prepared.origin == who, Error::<T>::Unauthorized);
+            Self::abort_prepared_op(&comit_id, b"user_abort".to_vec());
+            Ok(())
+        }
 
-            let result = bridge
-                .execute_pending()
-                .map_err(|_| Error::<T>::CrossVmExecutionFailed)?
-                .into_iter()
-                .next()
-                .ok_or(Error::<T>::CrossVmExecutionFailed)?;
-
-            ensure!(result.success, Error::<T>::CrossVmExecutionFailed);
-
-            let bridge_state_changes = Self::build_cross_vm_state_changes(&operation)?;
-            let bridge_receipt = ExecutionReceipt {
-                success: true,
-                gas_used: result.gas_used,
-                return_data: result.output,
-                logs: Vec::new(),
-                state_changes: bridge_state_changes,
-            };
-
-            let changes_applied =
-                Self::apply_canonical_ledger_update(comit_id, Some(&bridge_receipt), None)?;
-
-            SubmittedComits::<T>::insert(comit_id, current_block);
-            SubmissionsPerBlock::<T>::mutate(&who, current_block, |count| {
-                *count = count.saturating_add(1);
-            });
-
-            if changes_applied > 0 {
-                Self::deposit_event(Event::CanonicalLedgerUpdated {
-                    comit_id,
-                    changes_applied,
-                });
-            }
-            Self::deposit_event(Event::CrossVmOperationExecuted {
-                comit_id,
-                gas_used: bridge_receipt.gas_used,
-                changes_applied,
-            });
-            Self::deposit_event(Event::ComitFinalized { comit_id });
+        /// Force-abort a prepared cross-VM operation (governance only).
+        #[pallet::call_index(14)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
+        pub fn force_abort_cross_vm_operation(
+            origin: OriginFor<T>,
+            comit_id: H256,
+        ) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            Self::abort_prepared_op(&comit_id, b"force_abort".to_vec());
             Ok(())
         }
 
@@ -1624,6 +1797,322 @@ pub mod pallet {
             context.extend_from_slice(&caller.encode());
             context.extend_from_slice(comit_id.as_bytes());
             context
+        }
+
+        fn compute_cross_vm_comit_id(
+            origin: &T::AccountId,
+            operation: &CrossVmOperation,
+            nonce: u64,
+        ) -> H256 {
+            let mut data = Vec::new();
+            data.extend_from_slice(&origin.encode());
+            data.extend_from_slice(&operation.encode());
+            data.extend_from_slice(&nonce.to_le_bytes());
+            H256::from(blake2_256(&data))
+        }
+
+        fn proof_kind(proof: &CrossChainProof) -> u8 {
+            match proof {
+                CrossChainProof::None => 0,
+                CrossChainProof::LockProof(_) => 1,
+                CrossChainProof::MerkleReceipt(_) => 2,
+            }
+        }
+
+        fn proof_hash(proof: &CrossChainProof) -> H256 {
+            match proof {
+                CrossChainProof::None => H256::zero(),
+                CrossChainProof::LockProof(bytes) => H256::from(blake2_256(bytes)),
+                CrossChainProof::MerkleReceipt(bytes) => H256::from(blake2_256(bytes)),
+            }
+        }
+
+        fn estimate_cross_vm_fee(
+            operation: &CrossVmOperation,
+        ) -> Result<T::Balance, DispatchError> {
+            let (evm_gas, svm_compute) = match operation {
+                CrossVmOperation::TransferToEvm { .. } => (25_000u64, 0u64),
+                CrossVmOperation::TransferToSvm { .. } => (0u64, 5_000u64),
+                CrossVmOperation::CallEvm { input, .. } => {
+                    let gas = T::EvmAdapter::estimate_gas(input)
+                        .unwrap_or(T::DefaultEvmGasLimit::get().min(100_000));
+                    (gas, 0u64)
+                }
+                CrossVmOperation::CallSvm { .. } => (0u64, T::DefaultSvmComputeLimit::get()),
+                CrossVmOperation::AtomicSwap { .. } => (200_000u64, 200_000u64),
+            };
+
+            let base_fee = T::Balance::default();
+            Self::calculate_execution_fee(evm_gas, svm_compute, base_fee)
+        }
+
+        fn cross_vm_prepare_checks(
+            dispatcher: &KernelCrossVmDispatcher<T>,
+            operation: &CrossVmOperation,
+        ) -> Result<(), DispatchError> {
+            match operation {
+                CrossVmOperation::TransferToEvm { source, amount, .. } => {
+                    let mut pubkey = [0u8; 32];
+                    pubkey.copy_from_slice(&source[..32]);
+                    let balance = dispatcher.get_svm_balance(&pubkey) as u128;
+                    ensure!(balance >= *amount, Error::<T>::InsufficientBalance);
+                }
+                CrossVmOperation::TransferToSvm { source, amount, .. } => {
+                    let balance = dispatcher.get_evm_balance(source);
+                    ensure!(balance >= *amount, Error::<T>::InsufficientBalance);
+                }
+                CrossVmOperation::AtomicSwap { evm_party, svm_party, evm_amount, svm_amount, .. } => {
+                    let evm_balance = dispatcher.get_evm_balance(evm_party);
+                    ensure!(evm_balance >= *evm_amount, Error::<T>::InsufficientBalance);
+                    let mut pubkey = [0u8; 32];
+                    let len = svm_party.len().min(32);
+                    pubkey[..len].copy_from_slice(&svm_party[..len]);
+                    let svm_balance = dispatcher.get_svm_balance(&pubkey) as u128;
+                    ensure!(svm_balance >= *svm_amount, Error::<T>::InsufficientBalance);
+                }
+                _ => {}
+            }
+            Ok(())
+        }
+
+        fn prepare_cross_vm_operation_inner(
+            who: &T::AccountId,
+            operation: CrossVmOperation,
+            nonce: u64,
+            max_fee: T::Balance,
+            proof: CrossChainProof,
+        ) -> Result<H256, DispatchError> {
+            let comit_id = Self::compute_cross_vm_comit_id(who, &operation, nonce);
+
+            ensure!(
+                !SubmittedComits::<T>::contains_key(comit_id),
+                Error::<T>::DuplicateComitId
+            );
+
+            const MAX_SUBMISSIONS_PER_BLOCK: u32 = 10;
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let current_count = SubmissionsPerBlock::<T>::get(who, current_block);
+            ensure!(
+                current_count < MAX_SUBMISSIONS_PER_BLOCK,
+                Error::<T>::RateLimitExceeded
+            );
+
+            let operation_context = Self::encode_cross_vm_operation_context(who, comit_id);
+            Self::auth_check(who, &operation_context)?;
+
+            if T::RequireCrossVmProof::get() {
+                ensure!(
+                    !matches!(proof, CrossChainProof::None),
+                    Error::<T>::CrossVmProofInvalid
+                );
+            }
+
+            T::CrossChainProofVerifier::verify_proof(who, &operation, &proof)
+                .map_err(|_| Error::<T>::CrossVmProofInvalid)?;
+
+            let proof_kind = Self::proof_kind(&proof);
+            let proof_hash = Self::proof_hash(&proof);
+
+            // Cross-VM nonce check
+            CrossVmNonces::<T>::try_mutate(who, |current_nonce| -> DispatchResult {
+                if nonce != *current_nonce {
+                    return Err(Error::<T>::CrossVmInvalidNonce.into());
+                }
+                *current_nonce = current_nonce
+                    .checked_add(1)
+                    .ok_or(Error::<T>::CrossVmNonceOverflow)?;
+                Ok(())
+            })?;
+
+            let required_fee = Self::estimate_cross_vm_fee(&operation)?;
+            ensure!(max_fee >= required_fee, Error::<T>::CrossVmFeeExceeded);
+
+            // Reserve max fee up-front
+            T::Currency::reserve(who, max_fee.into())
+                .map_err(|_| Error::<T>::InsufficientBalance)?;
+            Self::deposit_event(Event::CrossVmFeeReserved {
+                comit_id,
+                amount: max_fee,
+            });
+
+            let dispatcher = KernelCrossVmDispatcher::<T>::new();
+            Self::cross_vm_prepare_checks(&dispatcher, &operation).map_err(|e| {
+                T::Currency::unreserve(who, max_fee.into());
+                e
+            })?;
+
+            let expires_at = current_block + T::CrossVmPrepareTtl::get();
+            let prepared = PreparedCrossVmOp::<T::AccountId, T::Balance, BlockNumberFor<T>> {
+                origin: who.clone(),
+                operation: operation.clone(),
+                nonce,
+                prepared_at: current_block,
+                expires_at,
+                reserved_fee: max_fee,
+                proof_hash,
+                proof_kind,
+            };
+
+            PreparedCrossVmQueue::<T>::try_mutate(|queue| -> DispatchResult {
+                queue
+                    .try_push(comit_id)
+                    .map_err(|_| Error::<T>::CrossVmPreparedQueueFull)?;
+                Ok(())
+            }).map_err(|e| {
+                T::Currency::unreserve(who, max_fee.into());
+                e
+            })?;
+
+            PreparedCrossVmOps::<T>::insert(comit_id, prepared);
+
+            SubmittedComits::<T>::insert(comit_id, current_block);
+            SubmissionsPerBlock::<T>::mutate(who, current_block, |count| {
+                *count = count.saturating_add(1);
+            });
+
+            Self::deposit_event(Event::CrossVmProofVerified {
+                comit_id,
+                proof_kind,
+            });
+            Self::deposit_event(Event::CrossVmOperationPrepared {
+                comit_id,
+                nonce,
+                expires_at,
+            });
+
+            Ok(comit_id)
+        }
+
+        fn commit_cross_vm_operation_inner(
+            who: &T::AccountId,
+            comit_id: H256,
+        ) -> DispatchResult {
+            let prepared = PreparedCrossVmOps::<T>::get(comit_id)
+                .ok_or(Error::<T>::CrossVmOperationNotPrepared)?;
+            ensure!(prepared.origin == *who, Error::<T>::Unauthorized);
+
+            let now = frame_system::Pallet::<T>::block_number();
+            if prepared.expires_at <= now {
+                Self::abort_prepared_op(&comit_id, b"expired".to_vec());
+                return Err(Error::<T>::CrossVmOperationExpired.into());
+            }
+
+            let dispatcher = KernelCrossVmDispatcher::<T>::new();
+            let mut bridge = CrossVmBridge::new();
+            bridge
+                .queue_operation(prepared.operation.clone())
+                .map_err(|_| Error::<T>::InvalidCrossVmOperation)?;
+
+            let (results, _events) = bridge
+                .execute_with_dispatcher(&dispatcher)
+                .map_err(|_| {
+                    // Refund reserved fee on execution failure
+                    T::Currency::unreserve(who, prepared.reserved_fee.into());
+                    Error::<T>::CrossVmExecutionFailed
+                })?;
+
+            let result = results.into_iter().next().ok_or(Error::<T>::CrossVmExecutionFailed)?;
+            if !result.success {
+                T::Currency::unreserve(who, prepared.reserved_fee.into());
+                return Err(Error::<T>::CrossVmExecutionFailed.into());
+            }
+
+            let (evm_gas, svm_compute) = match prepared.operation {
+                CrossVmOperation::TransferToEvm { .. } => (result.gas_used, 0u64),
+                CrossVmOperation::TransferToSvm { .. } => (0u64, result.gas_used),
+                CrossVmOperation::CallEvm { .. } => (result.gas_used, 0u64),
+                CrossVmOperation::CallSvm { .. } => (0u64, result.gas_used),
+                CrossVmOperation::AtomicSwap { .. } => {
+                    let evm = result.gas_used / 2;
+                    (evm, result.gas_used.saturating_sub(evm))
+                }
+            };
+
+            let required_fee = Self::calculate_execution_fee(
+                evm_gas,
+                svm_compute,
+                T::Balance::default(),
+            )?;
+            if required_fee > prepared.reserved_fee {
+                T::Currency::unreserve(who, prepared.reserved_fee.into());
+                return Err(Error::<T>::CrossVmFeeExceeded.into());
+            }
+
+            // Refund reserved fee then charge actual
+            T::Currency::unreserve(who, prepared.reserved_fee.into());
+            let refund = prepared.reserved_fee.saturating_sub(required_fee);
+
+            if !refund.is_zero() {
+                Self::deposit_event(Event::CrossVmFeeRefunded {
+                    comit_id,
+                    amount: refund,
+                });
+            }
+
+            let imbalance = T::Currency::withdraw(
+                who,
+                required_fee.into(),
+                frame_support::traits::WithdrawReasons::FEE,
+                frame_support::traits::ExistenceRequirement::KeepAlive,
+            )?;
+            drop(imbalance);
+
+            // Remove prepared op only after successful fee settlement
+            PreparedCrossVmOps::<T>::remove(comit_id);
+            PreparedCrossVmQueue::<T>::mutate(|queue| {
+                if let Some(pos) = queue.iter().position(|id| id == &comit_id) {
+                    queue.remove(pos);
+                }
+            });
+
+            let bridge_state_changes = Self::build_cross_vm_state_changes(&prepared.operation)?;
+            let bridge_receipt = ExecutionReceipt {
+                success: true,
+                gas_used: result.gas_used,
+                return_data: result.output,
+                logs: Vec::new(),
+                state_changes: bridge_state_changes,
+            };
+
+            let changes_applied =
+                Self::apply_canonical_ledger_update(comit_id, Some(&bridge_receipt), None)?;
+
+            if changes_applied > 0 {
+                Self::deposit_event(Event::CanonicalLedgerUpdated {
+                    comit_id,
+                    changes_applied,
+                });
+            }
+
+            Self::deposit_event(Event::CrossVmOperationExecuted {
+                comit_id,
+                gas_used: bridge_receipt.gas_used,
+                changes_applied,
+            });
+            Self::deposit_event(Event::CrossVmOperationCommitted {
+                comit_id,
+                gas_used: bridge_receipt.gas_used,
+                fee_charged: required_fee,
+                fee_refund: refund,
+            });
+            Self::deposit_event(Event::ComitFinalized { comit_id });
+            Ok(())
+        }
+
+        fn abort_prepared_op(comit_id: &H256, reason: Vec<u8>) {
+            if let Some(prepared) = PreparedCrossVmOps::<T>::get(comit_id) {
+                T::Currency::unreserve(&prepared.origin, prepared.reserved_fee.into());
+                Self::deposit_event(Event::CrossVmOperationAborted {
+                    comit_id: *comit_id,
+                    reason,
+                });
+                PreparedCrossVmOps::<T>::remove(comit_id);
+                PreparedCrossVmQueue::<T>::mutate(|queue| {
+                    if let Some(pos) = queue.iter().position(|id| id == comit_id) {
+                        queue.remove(pos);
+                    }
+                });
+            }
         }
 
         fn canonical_asset_state_key(asset_id: T::AssetId) -> H256 {
@@ -2101,7 +2590,6 @@ pub mod pallet {
                 ComitFailureReason::X3ExecutionFailed { .. } => Error::<T>::X3ExecutionFailed,
             }
         }
-
         /// Calculate the total execution fee for a v2 Comit based on gas/compute usage.
         pub fn calculate_execution_fee_v2(
             evm_gas_used: u64,
@@ -2391,6 +2879,70 @@ pub mod pallet {
             });
 
             Ok(())
+        }
+    }
+
+    /// Runtime-backed dispatcher for cross-VM bridge operations.
+    pub struct KernelCrossVmDispatcher<T: Config>(PhantomData<T>);
+
+    impl<T: Config> KernelCrossVmDispatcher<T> {
+        pub fn new() -> Self {
+            Self(PhantomData)
+        }
+    }
+
+    impl<T: Config> CrossVmDispatcher for KernelCrossVmDispatcher<T> {
+        fn execute_evm_tx(
+            &self,
+            _caller: &[u8; 20],
+            _target: &[u8; 20],
+            input: &[u8],
+            _value: u128,
+        ) -> Result<CrossVmResult, DispatchError> {
+            let receipt = T::EvmAdapter::execute(input, T::DefaultEvmGasLimit::get())?;
+            if receipt.success {
+                Ok(CrossVmResult::success(receipt.return_data, receipt.gas_used))
+            } else {
+                Ok(CrossVmResult::failed(b"evm_execution_failed".to_vec(), receipt.gas_used))
+            }
+        }
+
+        fn execute_svm_tx(
+            &self,
+            _caller: &[u8; 32],
+            _program_id: &[u8; 32],
+            input: &[u8],
+        ) -> Result<CrossVmResult, DispatchError> {
+            let receipt = T::SvmAdapter::execute(input, T::DefaultSvmComputeLimit::get())?;
+            if receipt.success {
+                Ok(CrossVmResult::success(receipt.return_data, receipt.gas_used))
+            } else {
+                Ok(CrossVmResult::failed(b"svm_execution_failed".to_vec(), receipt.gas_used))
+            }
+        }
+
+        fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
+            let account = Pallet::<T>::decode_state_change_account(address);
+            let asset = T::AssetId::default();
+            match account {
+                Some(acc) => {
+                    let bal: u128 = CanonicalLedger::<T>::get(&acc, asset).saturated_into();
+                    bal
+                }
+                None => 0,
+            }
+        }
+
+        fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64 {
+            let account = Pallet::<T>::decode_state_change_account(pubkey);
+            let asset = T::AssetId::default();
+            match account {
+                Some(acc) => {
+                    let bal: u128 = CanonicalLedger::<T>::get(&acc, asset).saturated_into();
+                    bal.min(u64::MAX as u128) as u64
+                }
+                None => 0,
+            }
         }
     }
 

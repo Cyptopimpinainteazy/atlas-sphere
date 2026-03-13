@@ -391,8 +391,11 @@ impl VM {
                     }
                 }
                 StepResult::Return(value) => {
-                    // Pop frame
-                    let frame = self.call_stack.pop().unwrap();
+                    // Pop frame (should never underflow if VM logic is correct)
+                    let frame = self
+                        .call_stack
+                        .pop()
+                        .ok_or_else(|| self.error_at(ip, VMErrorKind::ReturnFromEmptyStack))?;
                     if frame.ret_addr == usize::MAX {
                         // Top-level return
                         return Ok(value);

@@ -603,3 +603,4 @@ mod real_adapter_tests {
         assert!(result.is_ok());
     }
 }
+

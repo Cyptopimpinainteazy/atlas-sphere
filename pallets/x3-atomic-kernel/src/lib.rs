@@ -124,6 +124,18 @@ pub mod pallet {
         OptionQuery,
     >;
 
+    /// Deadline index: block number → bundle IDs pending deadline
+    /// Enables O(1) lookup for bundle expiration instead of O(n) scan
+    #[pallet::storage]
+    #[pallet::getter(fn deadline_index)]
+    pub type DeadlineIndex<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        BlockNumberFor<T>, // deadline block
+        BoundedVec<H256, T::MaxLegsPerBundle>,
+        ValueQuery,
+    >;
+
     // ── Types ─────────────────────────────────────────────────────────────────
 
     /// Bundle execution status.
@@ -235,11 +247,55 @@ pub mod pallet {
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
         /// On each block, expire bundles that have passed their deadline.
         fn on_initialize(now: BlockNumberFor<T>) -> Weight {
-            // In a production implementation, use a BTreeMap-keyed expiry index
-            // to avoid full-scan O(n). For now, iterate Pending bundles.
-            // TODO: Replace with `DeadlineIndex` storage map (block → bundle_ids).
-            let _ = now;
-            Weight::zero()
+            // Use DeadlineIndex for O(1) lookup of bundles expiring at this block
+            // instead of iterating all pending bundles (O(n))
+
+            // Get all bundle IDs that have deadlines at or before current block
+            let expired_bundle_ids = DeadlineIndex::<T>::get(now);
+
+            let mut processed_count: u32 = 0;
+
+            // Process each expired bundle
+            for bundle_id in expired_bundle_ids.iter() {
+                if let Some(record) = Bundles::<T>::get(bundle_id) {
+                    if record.status == BundleStatus::Pending
+                        || record.status == BundleStatus::Executing
+                    {
+                        // Bundle has expired - trigger rollback
+                        let mut updated_record = record.clone();
+                        updated_record.status = BundleStatus::RolledBack;
+                        Bundles::<T>::insert(bundle_id, updated_record);
+
+                        // Slash for deadline exceeded (5%)
+                        let bond = T::MinBond::get();
+                        let slash_amount = bond.saturating_div(20);
+                        if slash_amount > 0 {
+                            let _ = T::Currency::slash(&record.submitter, slash_amount);
+                        }
+
+                        Self::deposit_event(Event::BundleRolledBack {
+                            bundle_id: *bundle_id,
+                            reason: BundleRollbackReason::DeadlineExceeded,
+                        });
+
+                        log::warn!(
+                            target: "x3-atomic-kernel",
+                            "Bundle {:?} expired at block {:?}, slashed {}",
+                            bundle_id, now, slash_amount
+                        );
+
+                        processed_count += 1;
+                    }
+                }
+            }
+
+            // Clean up the deadline index for this block
+            if !expired_bundle_ids.is_empty() {
+                DeadlineIndex::<T>::remove(now);
+            }
+
+            // Return weight based on processed bundles
+            Weight::from_parts(processed_count * 10_000, 0)
         }
     }
 
@@ -295,6 +351,12 @@ pub mod pallet {
             };
 
             Bundles::<T>::insert(bundle_id, record);
+
+            // Add to deadline index for O(1) expiry lookup
+            let mut deadline_bundles = DeadlineIndex::<T>::get(deadline);
+            if deadline_bundles.try_push(bundle_id).is_ok() {
+                DeadlineIndex::<T>::insert(deadline, deadline_bundles);
+            }
 
             Self::deposit_event(Event::BundleSubmitted {
                 bundle_id,
@@ -418,10 +480,33 @@ pub mod pallet {
             record.status = BundleStatus::RolledBack;
             Bundles::<T>::insert(bundle_id, &record);
 
-            // TODO: slash bond proportional to reason severity
-            // - ExecutionFailed / AccessSetViolation → slash 10% of bond
-            // - DeadlineExceeded → slash 5% of bond
-            // - SubmitterCancelled → return full bond
+            // Slash bond proportional to reason severity
+            let slash_amount = match reason {
+                BundleRollbackReason::ExecutionFailed
+                | BundleRollbackReason::AccessSetViolation => {
+                    // Slash 10% of bond for execution failures or access violations
+                    let bond = T::MinBond::get();
+                    bond.saturating_div(10)
+                }
+                BundleRollbackReason::DeadlineExceeded => {
+                    // Slash 5% of bond for deadline exceeded
+                    let bond = T::MinBond::get();
+                    bond.saturating_div(20)
+                }
+                BundleRollbackReason::SubmitterCancelled => {
+                    // Return full bond for voluntary cancellation
+                    0
+                }
+            };
+
+            if slash_amount > 0 {
+                let _ = T::Currency::slash(&record.submitter, slash_amount);
+                log::info!(
+                    target: "x3-atomic-kernel",
+                    "Bundle {:?} slashed by {} for reason {:?}",
+                    bundle_id, slash_amount, reason
+                );
+            }
 
             Self::deposit_event(Event::BundleRolledBack { bundle_id, reason });
 

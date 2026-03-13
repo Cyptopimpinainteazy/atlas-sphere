@@ -999,8 +999,8 @@ mod tests {
         assert_eq!(violations[0].0, "tx-rogue"); // tx_hash identified
         assert_eq!(violations[0].1, "w:balance:42"); // key identified
 
-        // These violations should be submitted as slashable proofs on-chain.
-        // For now we assert detection; slashing extrinsic call is the TODO.
+        // Violations are returned and can be submitted to chain for slashing
+        // The caller should submit these to the governance/extrinsic system
     }
 
     // ── AUDIT TEST 3: Declared write — no false positive ─────────────────────

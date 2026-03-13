@@ -78,10 +78,19 @@ echo "  → ${BUILD_DIR}/libstream_pipeline.so"
 
 echo ""
 echo "═══════════════════════════════════════════════════════"
-echo "  Build Summary"
-echo "═══════════════════════════════════════════════════════"
-ls -lh "${BUILD_DIR}"/*.so 2>/dev/null || echo "  (no .so files found)"
+echo "  Running ed25519 kernel unit test..."
+echo "══════════════════════════════════════════════════════="
+${NVCC} -arch="${GPU_ARCH}" -O2 -o "${BUILD_DIR}/ed25519_batch_test" \
+    "${KERNEL_DIR}/ed25519_batch.cu" \
+    "${KERNEL_DIR}/ed25519_batch_kernel_test.cu"
+"${BUILD_DIR}/ed25519_batch_test"
+
 echo ""
+echo "══════════════════════════════════════════════════════="
+echo "  Build Summary"
+echo "══════════════════════════════════════════════════════="
+ls -lh "${BUILD_DIR}"/*.so 2>/dev/null || echo "  (no .so files found)"
+echo "" 
 echo "  Architecture: ${GPU_ARCH}"
 echo "  Kernels built: ed25519_batch, sha256_batch, stream_pipeline"
 echo "═══════════════════════════════════════════════════════"

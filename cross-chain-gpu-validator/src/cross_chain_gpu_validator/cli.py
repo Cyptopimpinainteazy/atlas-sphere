@@ -13,7 +13,7 @@ from cross_chain_gpu_validator.evm import EvmValidator
 from cross_chain_gpu_validator.svm import SvmValidator
 from cross_chain_gpu_validator.cosmos import CosmosValidator
 from cross_chain_gpu_validator.substrate import SubstrateValidator
-from cross_chain_gpu_validator.gpu import CudaRuntime, KeccakBatchHasher, Secp256k1BatchVerifier
+from cross_chain_gpu_validator.gpu import CudaRuntime, KeccakBatchHasher, Secp256k1BatchVerifier, Ed25519BatchVerifier
 from cross_chain_gpu_validator.logging_utils import configure_logging, get_logger
 from cross_chain_gpu_validator.metrics import MetricsStore
 from cross_chain_gpu_validator.orchestrator import AtomicSwapRegistry, MultiChainOrchestrator
@@ -22,7 +22,7 @@ from cross_chain_gpu_validator.chain_adapter import SignatureAlgorithm, HashAlgo
 from cross_chain_gpu_validator.benchmark import run_benchmark, write_report
 
 
-def _build_chain_registry(settings, sig_verifier, keccak_hasher, logger):
+def _build_chain_registry(settings, secp_verifier, ed25519_verifier, keccak_hasher, logger):
     """Build and populate the chain registry with 103+ chains."""
     chain_registry = ChainRegistry()
     all_configs = load_default_chain_configs()
@@ -35,17 +35,17 @@ def _build_chain_registry(settings, sig_verifier, keccak_hasher, logger):
             if config.sig_algorithm == SignatureAlgorithm.SECP256K1:
                 if config.hash_algorithm == HashAlgorithm.KECCAK256:
                     # EVM chains
-                    validator = EvmValidator(config, sig_verifier, keccak_hasher)
+                    validator = EvmValidator(config, secp_verifier, keccak_hasher)
                 else:
                     # Cosmos chains
-                    validator = CosmosValidator(config, sig_verifier)
+                    validator = CosmosValidator(config, secp_verifier)
             elif config.sig_algorithm == SignatureAlgorithm.ED25519:
                 if chain_id.startswith("solana"):
                     # Solana (SVM)
-                    validator = SvmValidator(config, sig_verifier)
+                    validator = SvmValidator(config, ed25519_verifier)
                 else:
                     # Substrate and other ED25519 chains
-                    validator = SubstrateValidator(config, sig_verifier)
+                    validator = SubstrateValidator(config, ed25519_verifier)
             else:
                 logger.warning(
                     "unsupported signature algorithm",
@@ -80,24 +80,38 @@ def _run_orchestrator() -> None:
         runtime.require()
     logger.info("cuda runtime detected", extra={"trace_id": "bootstrap", "span_id": "n/a"})
 
+    # Metrics needs to exist early so GPU disable events can be reported.
+    metrics = MetricsStore()
+
     sig_verifier = Secp256k1BatchVerifier(
         runtime,
         settings.kernel_dir,
         parity_check=settings.gpu_parity_check,
         allow_failover=not settings.require_gpu,
+        on_gpu_disabled=metrics.update_gpu_health,
     )
     keccak_hasher = KeccakBatchHasher(
         runtime,
         settings.kernel_dir,
         parity_check=settings.gpu_parity_check,
         allow_failover=not settings.require_gpu,
+        on_gpu_disabled=metrics.update_gpu_health,
     )
 
     # Build chain registry with all 103+ chains
-    chain_registry = _build_chain_registry(settings, sig_verifier, keccak_hasher, logger)
+    ed25519_verifier = Ed25519BatchVerifier(
+        runtime,
+        settings.kernel_dir,
+        parity_check=settings.gpu_parity_check,
+        allow_failover=not settings.require_gpu,
+        on_gpu_disabled=metrics.update_gpu_health,
+    )
+
+    chain_registry = _build_chain_registry(
+        settings, sig_verifier, ed25519_verifier, keccak_hasher, logger
+    )
 
     registry = AtomicSwapRegistry(settings.redis_url)
-    metrics = MetricsStore()
 
     orchestrator = MultiChainOrchestrator(registry, chain_registry, metrics)
     logger.info("multi-chain orchestrator started", extra={"trace_id": "bootstrap", "span_id": "n/a"})

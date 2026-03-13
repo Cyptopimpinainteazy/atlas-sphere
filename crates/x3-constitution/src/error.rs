@@ -1,7 +1,7 @@
 //! Constitutional error types.
 
-use thiserror::Error;
 use crate::invariants::CoreInvariant;
+use thiserror::Error;
 
 #[derive(Debug, Clone, Error)]
 pub enum ConstitutionError {

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Iterable
 
 from cross_chain_gpu_validator.chain_adapter import ChainValidator, ChainConfig, ChainTransaction
-from cross_chain_gpu_validator.gpu import Secp256k1BatchVerifier
+from cross_chain_gpu_validator.gpu import Ed25519BatchVerifier
 
 
 class SubstrateValidator(ChainValidator):
@@ -15,7 +15,7 @@ class SubstrateValidator(ChainValidator):
     with Blake2b hashing. This validator uses GPU-accelerated ED25519 batch verification.
     """
 
-    def __init__(self, config: ChainConfig, sig_verifier: Secp256k1BatchVerifier) -> None:
+    def __init__(self, config: ChainConfig, sig_verifier: Ed25519BatchVerifier) -> None:
         super().__init__(config)
         self._sig_verifier = sig_verifier
 

@@ -12,6 +12,9 @@ sp-runtime = { workspace = true, default-features = false }
 sp-std = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 
+# SputnikVM — real no-std EVM interpreter
+evm = { workspace = true, default-features = false }
+
 # Frontier EVM
 pallet-evm = { workspace = true, default-features = false }
 fp-evm = { workspace = true, default-features = false }
@@ -44,4 +47,5 @@ std = [
     "parity-scale-codec/std",
     "scale-info/std",
     "log/std",
+    "evm/std",
 ]

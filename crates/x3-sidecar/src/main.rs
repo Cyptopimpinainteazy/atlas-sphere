@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
         "error" => Level::ERROR,
         _ => Level::INFO,
     };
-    init_logging(level);
+    init_logging(level)?;
 
     println!(
         r#"

@@ -30,20 +30,17 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 
     /// Storage: `LastObservedIssuance` (r:0 w:1)
     fn report_issuance() -> Weight {
-        Weight::from_parts(8_000_000, 0)
-            .saturating_add(RocksDbWeight::get().writes(1_u64))
+        Weight::from_parts(8_000_000, 0).saturating_add(RocksDbWeight::get().writes(1_u64))
     }
 
     /// Storage: `HaltOnViolation` (r:0 w:1)
     fn set_halt_on_violation() -> Weight {
-        Weight::from_parts(8_000_000, 0)
-            .saturating_add(RocksDbWeight::get().writes(1_u64))
+        Weight::from_parts(8_000_000, 0).saturating_add(RocksDbWeight::get().writes(1_u64))
     }
 
     /// Storage: `ConstitutionHash` (r:0 w:1)
     fn set_constitution_hash() -> Weight {
-        Weight::from_parts(8_000_000, 0)
-            .saturating_add(RocksDbWeight::get().writes(1_u64))
+        Weight::from_parts(8_000_000, 0).saturating_add(RocksDbWeight::get().writes(1_u64))
     }
 }
 

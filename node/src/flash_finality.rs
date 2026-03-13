@@ -3,8 +3,10 @@ use futures::{future, prelude::*};
 use log::{debug, info, warn};
 use parity_scale_codec::{Decode, Encode};
 use sc_client_api::BlockchainEvents;
-use sc_network_gossip::{GossipEngine, MessageIntent, Network, Syncing, ValidationResult, Validator, ValidatorContext};
 use sc_network::PeerId;
+use sc_network_gossip::{
+    GossipEngine, MessageIntent, Network, Syncing, ValidationResult, Validator, ValidatorContext,
+};
 use sp_core::crypto::KeyTypeId;
 use sp_keystore::KeystorePtr;
 use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
@@ -50,7 +52,6 @@ impl<Block: BlockT> Validator<Block> for FlashFinalityGossipValidator<Block> {
         Box::new(move |_who, _intent, _topic, _data| true)
     }
 }
-
 
 /// A bridge between the Flash Finality gadget and the network.
 pub struct FlashFinalityBridge<Block: BlockT, Client> {

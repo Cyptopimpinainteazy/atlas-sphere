@@ -184,13 +184,13 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
       <div class="lh-pre">T-MINUS · NEXT MILESTONE</div>
       <div class="lh-name">MAINNET GENESIS</div>
       <div class="lh-countdown">
-        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-d">47</span><div class="lh-cd-lbl">DAYS</div></div>
-        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-h">14</span><div class="lh-cd-lbl">HRS</div></div>
-        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-m">32</span><div class="lh-cd-lbl">MIN</div></div>
-        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-s">08</span><div class="lh-cd-lbl">SEC</div></div>
+        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-d">--</span><div class="lh-cd-lbl">DAYS</div></div>
+        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-h">--</span><div class="lh-cd-lbl">HRS</div></div>
+        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-m">--</span><div class="lh-cd-lbl">MIN</div></div>
+        <div class="lh-cd-unit"><span class="lh-cd-num" id="cd-s">--</span><div class="lh-cd-lbl">SEC</div></div>
       </div>
-      <div class="lh-desc">Full mainnet launch · 10,000 validators · Public token listing · All dApps live</div>
-      <div class="lh-prog"><div class="lh-prog-fill" id="launch-prog" style="width:62%"></div></div>
+      <div class="lh-desc">Presale close checkpoint · live metrics flowing from the site backend</div>
+      <div class="lh-prog"><div class="lh-prog-fill" id="launch-prog" style="width:0%"></div></div>
     </div>
 
     <!-- MILESTONE TIMELINE -->
@@ -211,7 +211,7 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-dot-col"><div class="ms-dot">✓</div><div class="ms-line"></div></div>
         <div class="ms-body">
           <div class="ms-title">Testnet Alpha — Internal</div>
-          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">4,200 TPS</span></div>
+          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">BENCHMARKED</span></div>
           <div class="ms-desc">Internal alpha milestone completed. Performance artifacts and implementation progress are tracked in the repo and surfaced through the live benchmark views.</div>
         </div>
       </div>
@@ -220,8 +220,8 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-date">Q2 2024</div>
         <div class="ms-dot-col"><div class="ms-dot">✓</div><div class="ms-line"></div></div>
         <div class="ms-body">
-          <div class="ms-title">Series A — $10.5M Raised</div>
-          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">$0.050</span></div>
+          <div class="ms-title">Series A — Archived</div>
+          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">ARCHIVED</span></div>
           <div class="ms-desc">Capital formation milestone completed. Public pages now defer to the live funding and network data feeds instead of fixed historical counters.</div>
         </div>
       </div>
@@ -231,7 +231,7 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-dot-col"><div class="ms-dot">✓</div><div class="ms-line"></div></div>
         <div class="ms-body">
           <div class="ms-title">Testnet Beta — Public Launch</div>
-          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">1,847 VALIDATORS</span></div>
+          <div class="ms-tags"><span class="ms-tag mt-done">COMPLETE</span><span class="ms-tag mt-done">LIVE VALIDATORS</span></div>
           <div class="ms-desc">Public testnet milestone tracked here. Current validator participation, treasury state, and open governance activity are rendered from the active site backend.</div>
           <div class="ms-progress">
             <div class="msp-bar"><div class="msp-fill" style="width:100%;background:var(--green)"></div></div>
@@ -245,11 +245,11 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-dot-col"><div class="ms-dot">✓</div><div class="ms-line"></div></div>
         <div class="ms-body">
           <div class="ms-title">Prefunding Round III — LIVE NOW</div>
-          <div class="ms-tags"><span class="ms-tag mt-done">IN PROGRESS</span><span class="ms-tag mt-done">$14.7M/$20M</span></div>
+          <div class="ms-tags"><span class="ms-tag mt-done">IN PROGRESS</span><span class="ms-tag mt-done">LIVE RAISE</span></div>
           <div class="ms-desc">Round III remains active. Funding progress, investor count, and close window are driven by the authoritative presale store and refreshed on page load.</div>
           <div class="ms-progress">
-            <div class="msp-bar"><div class="msp-fill" id="r3-bar" style="width:73.5%;background:var(--gold)"></div></div>
-            <div class="msp-label"><span>Raise Progress</span><span style="color:var(--gold)">73.5%</span></div>
+            <div class="msp-bar"><div class="msp-fill" id="r3-bar" style="width:0%;background:var(--gold)"></div></div>
+            <div class="msp-label"><span>Raise Progress</span><span style="color:var(--gold)" id="r3-pct">--</span></div>
           </div>
         </div>
       </div>
@@ -259,11 +259,11 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-dot-col"><div class="ms-dot">◉</div><div class="ms-line"></div></div>
         <div class="ms-body">
           <div class="ms-title">Mainnet Genesis Launch Track</div>
-          <div class="ms-tags"><span class="ms-tag mt-active">IN PROGRESS</span><span class="ms-tag mt-active">47 DAYS</span></div>
+          <div class="ms-tags"><span class="ms-tag mt-active">IN PROGRESS</span><span class="ms-tag mt-active">LIVE COUNTDOWN</span></div>
           <div class="ms-desc">Current launch track for the network. This milestone stays qualitative until the chain, RPC surface, and production feature set are actually shipped.</div>
           <div class="ms-progress">
-            <div class="msp-bar"><div class="msp-fill" style="width:62%;background:var(--cyan);box-shadow:0 0 6px rgba(0,255,255,0.4)"></div></div>
-            <div class="msp-label"><span>Launch readiness</span><span style="color:var(--cyan)">62%</span></div>
+            <div class="msp-bar"><div class="msp-fill" id="mainnet-prog" style="width:0%;background:var(--cyan);box-shadow:0 0 6px rgba(0,255,255,0.4)"></div></div>
+            <div class="msp-label"><span>Launch readiness</span><span style="color:var(--cyan)" id="mainnet-pct">--</span></div>
           </div>
         </div>
       </div>
@@ -274,7 +274,7 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-body">
           <div class="ms-title">DeFi Ecosystem Launch</div>
           <div class="ms-tags"><span class="ms-tag mt-future">PENDING</span><span class="ms-tag mt-future">PLANNED</span></div>
-          <div class="ms-desc">Native DEX, lending protocol, yield aggregator. $2B+ TVL target. 100+ dApps live.</div>
+          <div class="ms-desc">Native DEX, lending protocol, yield aggregator. Targets published when ready.</div>
         </div>
       </div>
 
@@ -283,8 +283,8 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
         <div class="ms-dot-col"><div class="ms-dot">○</div><div class="ms-line"></div></div>
         <div class="ms-body">
           <div class="ms-title">Sharding — 50,000 TPS</div>
-          <div class="ms-tags"><span class="ms-tag mt-future">PENDING</span><span class="ms-tag mt-future">50K TPS</span></div>
-          <div class="ms-desc">Horizontal sharding implementation. Scale to 50,000 TPS. Enterprise partnerships announced.</div>
+          <div class="ms-tags"><span class="ms-tag mt-future">PENDING</span><span class="ms-tag mt-future">SCALING</span></div>
+          <div class="ms-desc">Horizontal sharding implementation. Performance targets published later.</div>
         </div>
       </div>
 
@@ -306,16 +306,16 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
     <div class="st">Systems Status</div>
     <div class="sys-list">
       <div class="sys-item"><span class="si-name">CONSENSUS</span><span class="si-val si-ok">● NOMINAL</span></div>
-      <div class="sys-item"><span class="si-name">VALIDATOR NET</span><span class="si-val si-ok">● 1,847 ONLINE</span></div>
-      <div class="sys-item"><span class="si-name">BLOCK PROD.</span><span class="si-val si-ok">● 4,218 TPS</span></div>
-      <div class="sys-item"><span class="si-name">FINALITY</span><span class="si-val si-ok">● 0.4s AVG</span></div>
+      <div class="sys-item"><span class="si-name">VALIDATOR NET</span><span class="si-val si-ok">● --</span></div>
+      <div class="sys-item"><span class="si-name">BLOCK PROD.</span><span class="si-val si-ok">● --</span></div>
+      <div class="sys-item"><span class="si-name">FINALITY</span><span class="si-val si-ok">● --</span></div>
       <div class="sys-item"><span class="si-name">ZK BRIDGE ETH</span><span class="si-val si-ok">● LIVE</span></div>
       <div class="sys-item"><span class="si-name">ZK BRIDGE SOL</span><span class="si-val si-warn">● BETA</span></div>
       <div class="sys-item"><span class="si-name">DEX</span><span class="si-val si-off">○ PENDING</span></div>
       <div class="sys-item"><span class="si-name">LENDING</span><span class="si-val si-off">○ PENDING</span></div>
       <div class="sys-item"><span class="si-name">MOBILE WALLET</span><span class="si-val si-warn">● TESTNET</span></div>
       <div class="sys-item"><span class="si-name">GOVERNANCE</span><span class="si-val si-ok">● LIVE</span></div>
-      <div class="sys-item"><span class="si-name">STAKING</span><span class="si-val si-ok">● 32.8% APY</span></div>
+      <div class="sys-item"><span class="si-name">STAKING</span><span class="si-val si-ok">● --</span></div>
       <div class="sys-item"><span class="si-name">GRANT PORTAL</span><span class="si-val si-ok">● LIVE</span></div>
       <div class="sys-item"><span class="si-name">CEX LISTING</span><span class="si-val si-off">○ Q2 2025</span></div>
       <div class="sys-item"><span class="si-name">SHARDING</span><span class="si-val si-off">○ Q3 2025</span></div>
@@ -325,17 +325,17 @@ body::after{content:'';position:fixed;inset:0;z-index:998;pointer-events:none;
     <div style="border-top:1px solid var(--muted);padding:12px 14px;">
       <div class="st" style="border:none;padding:0 0 8px;">Network Load</div>
       <div style="display:flex;flex-direction:column;gap:5px;">
-        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;"><span>TPS UTILIZATION</span><span id="tps-pct" style="color:var(--green)">84%</span></div>
+        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;"><span>TPS UTILIZATION</span><span id="tps-pct" style="color:var(--green)">--</span></div>
         <div style="height:4px;background:rgba(0,255,65,0.08);border-radius:2px;overflow:hidden;">
           <div id="tps-bar" style="height:100%;width:84%;background:var(--green);border-radius:2px;box-shadow:0 0 6px var(--green);transition:width 0.5s"></div>
         </div>
-        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin-top:4px;"><span>MEMORY</span><span style="color:var(--amber)">67%</span></div>
+        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin-top:4px;"><span>MEMORY</span><span style="color:var(--amber)">--</span></div>
         <div style="height:4px;background:rgba(0,255,65,0.08);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;width:67%;background:var(--amber);border-radius:2px;transition:width 0.5s"></div>
+          <div style="height:100%;width:0%;background:var(--amber);border-radius:2px;transition:width 0.5s"></div>
         </div>
-        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin-top:4px;"><span>STORAGE</span><span style="color:var(--green)">12%</span></div>
+        <div style="font-size:9px;color:var(--muted);display:flex;justify-content:space-between;margin-top:4px;"><span>STORAGE</span><span style="color:var(--green)">--</span></div>
         <div style="height:4px;background:rgba(0,255,65,0.08);border-radius:2px;overflow:hidden;">
-          <div style="height:100%;width:12%;background:var(--green);border-radius:2px;"></div>
+          <div style="height:100%;width:0%;background:var(--green);border-radius:2px;"></div>
         </div>
       </div>
     </div>

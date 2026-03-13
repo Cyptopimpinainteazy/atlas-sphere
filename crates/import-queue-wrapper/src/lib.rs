@@ -278,7 +278,23 @@ async fn process_entry(
 ) -> Result<()> {
     // Stage 1: Contention check
     entry.processing_stage = ProcessingStage::ContentionCheck;
-    // TODO: Implement contention checking
+    
+    // Check for potential contention using the transaction features
+    // High-value or high-gas transactions are flagged for contention analysis
+    let has_high_value = entry.transaction.value > 1_000_000_000;
+    let has_high_gas = entry.transaction.gas_price > 50_000_000;
+    
+    if has_high_value || has_high_gas {
+        // Log potential contention for monitoring
+        debug!(
+            "Transaction {} flagged for contention check (value: {}, gas_price: {})",
+            entry.id,
+            entry.transaction.value,
+            entry.transaction.gas_price
+        );
+        // In production, this would query the contention predictor
+        // For now, we proceed but track the potential for parallel execution
+    }
 
     // Stage 2: Signature verification
     entry.processing_stage = ProcessingStage::SignatureVerification;

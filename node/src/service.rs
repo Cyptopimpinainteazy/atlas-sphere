@@ -1,5 +1,5 @@
 use crate::flash_finality::FlashFinalityBridge;
-use flash_finality::{FLASH_FINALITY_PROTOCOL_ID, FlashFinalityConfig, FlashFinalityGadget};
+use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
 use futures_util::StreamExt;
 use poh_generator::PoHState;
 use sc_client_api::{BlockBackend, BlockchainEvents};
@@ -13,11 +13,11 @@ use sc_service::{
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_api::HeaderT;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_core::{Pair, crypto::KeyTypeId};
+use sp_core::{crypto::KeyTypeId, Pair};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use std::time::Duration;
+use tokio::sync::Mutex;
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -25,7 +25,7 @@ use std::time::Duration;
 /// - GRANDPA finality gadget
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
-use x3_chain_runtime::{RuntimeApi, opaque::Block};
+use x3_chain_runtime::{opaque::Block, RuntimeApi};
 
 /// Key type for Aura block authoring
 const AURA: KeyTypeId = KeyTypeId(*b"aura");
@@ -333,10 +333,11 @@ pub fn new_full(
         log::info!("⚡ Flash Finality flag is set; GRANDPA will be disabled for this node");
     }
 
-    let grandpa_protocol_name = sc_consensus_grandpa::protocol_standard_name(
-        &client.block_hash(0)?.expect("Genesis block exists; qed"),
-        &config.chain_spec,
-    );
+    let genesis_hash = client
+        .block_hash(0)?
+        .ok_or_else(|| ServiceError::Other("Genesis block not found".to_string()))?;
+    let grandpa_protocol_name =
+        sc_consensus_grandpa::protocol_standard_name(&genesis_hash, &config.chain_spec);
 
     if enable_grandpa {
         net_config.add_notification_protocol(sc_consensus_grandpa::grandpa_peers_set_config(
@@ -588,7 +589,10 @@ pub fn new_full(
                 while let Some(notification) = notifications.next().await {
                     let number: u64 = (*notification.header.number()).saturated_into();
                     // Purple color for block imported
-                    log::info!("\x1b[35m📦 Block imported: #{} — syncing state\x1b[0m", number);
+                    log::info!(
+                        "\x1b[35m📦 Block imported: #{} — syncing state\x1b[0m",
+                        number
+                    );
                 }
             });
     }

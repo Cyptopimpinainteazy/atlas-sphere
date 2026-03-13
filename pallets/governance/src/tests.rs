@@ -21,6 +21,9 @@ fn submit_proposal_works() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         assert_eq!(Governance::proposal_count(), 1);
@@ -45,6 +48,9 @@ fn submit_proposal_reserves_deposit() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         assert_eq!(
@@ -72,6 +78,9 @@ fn vote_works() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Vote
@@ -103,6 +112,9 @@ fn vote_with_conviction_multiplies_power() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Vote with 3x conviction
@@ -133,6 +145,9 @@ fn vote_fails_after_voting_period() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Advance past voting period
@@ -165,6 +180,9 @@ fn change_vote_works() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Initial vote
@@ -260,6 +278,9 @@ fn delegated_account_cannot_vote() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Delegate
@@ -300,6 +321,9 @@ fn finalize_approved_proposal() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Vote to exceed quorum (10% of 50000 = 5000) and approval (50%)
@@ -338,6 +362,9 @@ fn finalize_rejected_proposal() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Vote Nay with enough for quorum
@@ -376,6 +403,9 @@ fn cannot_finalize_during_voting() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Try to finalize immediately
@@ -403,6 +433,9 @@ fn fast_track_works() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Fast track (root origin)
@@ -430,6 +463,9 @@ fn cancel_proposal_works() {
             Box::new(call),
             title,
             description,
+            false,
+            None,
+            None,
         ));
 
         // Cancel (root origin)
@@ -458,6 +494,9 @@ fn governance_snapshot_works() {
                 Box::new(call),
                 title,
                 description,
+                false,
+                None,
+                None,
             ));
         }
 

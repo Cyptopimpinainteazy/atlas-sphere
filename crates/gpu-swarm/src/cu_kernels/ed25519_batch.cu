@@ -28,6 +28,7 @@
 #include <cuda_runtime.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "ed25519_field.cuh"
 #include "ed25519_ge.cuh"
 #include "sha512_device.cuh"
@@ -90,7 +91,9 @@ __global__ void ed25519_verify_batch_kernel(
         results[idx] = 0;
         return;
     }
-    /* R_point is -R; we'll need to negate back for comparison */
+    /* ge_frombytes_negate_vartime returns -R; negate to get R for comparison. */
+    fe_neg(&R_point.X, &R_point.X);
+    fe_neg(&R_point.T, &R_point.T);
 
     /* 4. Compute h = SHA-512(R || A || M) mod ℓ */
     unsigned char hash_input[96];
@@ -100,7 +103,13 @@ __global__ void ed25519_verify_batch_kernel(
 
     unsigned char h_full[64];
     sha512_hash(hash_input, 96, h_full);
+
+    /* sc_reduce takes the raw SHA-512 bytes as-is (same convention as libsodium/nacl).
+     * No byte reversal — both our sha512_hash (store64_be) and libsodium output big-endian
+     * SHA-512, and sc_reduce reads them with load_3/load_4 the same way on both sides. */
     sc_reduce(h_full);  /* h = h_full mod ℓ, result in h_full[0..31] */
+
+    unsigned char *h_bytes = h_full;
 
     /* 5. Compute check_point = [s]B + [h](-A) = [s]B - [h]A
      *    (recall A was decoded as -A by ge_frombytes_negate_vartime) */
@@ -111,7 +120,7 @@ __global__ void ed25519_verify_batch_kernel(
     fe_neg(&B.T, &B.T);
 
     ge_p2 check_point;
-    ge_double_scalarmult_vartime(&check_point, h_full, &A, sig_s, &B);
+    ge_double_scalarmult_vartime(&check_point, h_bytes, &A, sig_s, &B);
 
     /* 6. Encode check_point to bytes and compare with R */
     unsigned char check_bytes[32];
@@ -191,6 +200,44 @@ extern "C" int ed25519_verify_batch_host(
 
     cudaFree(d_entries);
     cudaFree(d_results);
+
+    return 0;
+}
+
+/* ───── Kernel helper: scalar reduction ───── */
+__global__ void sc_reduce_kernel(unsigned char *s) {
+    sc_reduce(s);
+}
+
+/* ───── Test helper: scalar reduction (host wrapper) ───── */
+extern "C" int ed25519_sc_reduce_host(
+    const unsigned char *hash64, /* 64-byte hash input */
+    unsigned char *out32        /* 32-byte reduced scalar output */
+) {
+    unsigned char *d_hash = nullptr;
+    cudaError_t err = cudaMalloc(&d_hash, 64);
+    if (err != cudaSuccess) {
+        return -1;
+    }
+
+    err = cudaMemcpy(d_hash, hash64, 64, cudaMemcpyHostToDevice);
+    if (err != cudaSuccess) {
+        cudaFree(d_hash);
+        return -1;
+    }
+
+    sc_reduce_kernel<<<1, 1>>>(d_hash);
+    err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        cudaFree(d_hash);
+        return -1;
+    }
+
+    err = cudaMemcpy(out32, d_hash, 32, cudaMemcpyDeviceToHost);
+    cudaFree(d_hash);
+    if (err != cudaSuccess) {
+        return -1;
+    }
 
     return 0;
 }

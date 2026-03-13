@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 import os
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Optional, Sequence
 import ctypes
 
 from .cuda_loader import CudaRuntime
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +163,7 @@ class Secp256k1BatchVerifier:
     kernel_dir: str
     parity_check: bool
     allow_failover: bool
+    on_gpu_disabled: Optional[Callable[[str], None]]
 
     def __init__(
         self,
@@ -167,11 +171,13 @@ class Secp256k1BatchVerifier:
         kernel_dir: str,
         parity_check: bool = True,
         allow_failover: bool = True,
+        on_gpu_disabled: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.runtime = runtime
         self.kernel_dir = kernel_dir
         self.parity_check = parity_check
         self.allow_failover = allow_failover
+        self.on_gpu_disabled = on_gpu_disabled
         self._lib = None
         if self.runtime.available:
             lib_path = os.path.join(self.kernel_dir, "build", "libsecp256k1_batch.so")
@@ -188,6 +194,19 @@ class Secp256k1BatchVerifier:
             elif not self.allow_failover:
                 raise RuntimeError("Missing libsecp256k1_batch.so for required GPU mode")
 
+    def _disable_gpu(self, reason: str, exc: Exception | None = None) -> None:
+        """Disable GPU execution and optionally report via callback/logging."""
+        msg = f"GPU secp256k1 disabled (reason={reason}) -> using CPU fallback"
+        if exc is not None:
+            logger.warning(msg + ": %s", exc)
+        else:
+            logger.warning(msg)
+        if self.on_gpu_disabled:
+            try:
+                self.on_gpu_disabled("gpu_secp256k1_disabled")
+            except Exception:
+                logger.exception("failed to report GPU disabled metric")
+
     def verify_batch(
         self, signatures: Iterable[bytes], messages: Iterable[bytes], pubkeys: Iterable[bytes]
     ) -> list[bool]:
@@ -200,7 +219,8 @@ class Secp256k1BatchVerifier:
         try:
             if self.runtime.available and self._lib is not None:
                 return self._verify_gpu(signatures, messages, pubkeys)
-        except Exception:
+        except Exception as e:
+            self._disable_gpu("runtime_failure", exc=e)
             if self.allow_failover:
                 return self._verify_cpu(signatures, messages, pubkeys)
             raise
@@ -267,12 +287,14 @@ class Secp256k1BatchVerifier:
         r_values: list[int] = []
 
         for signature, message in zip(signatures, messages):
-            if len(signature) != 64:
-                raise ValueError("signature must be 64 bytes (r||s)")
+            if len(signature) not in (64, 65):
+                raise ValueError("signature must be 64 bytes (r||s) or 65 bytes (r||s||v)")
             if len(message) != 32:
                 raise ValueError("message must be 32 bytes")
-            r = int.from_bytes(signature[:32], "big")
-            s = int.from_bytes(signature[32:], "big")
+            # Accept optional recovery byte at the end
+            sig_body = signature[:64]
+            r = int.from_bytes(sig_body[:32], "big")
+            s = int.from_bytes(sig_body[32:], "big")
             if r == 0 or s == 0 or r >= order or s >= order:
                 u1 = 0
                 u2 = 0
@@ -295,11 +317,12 @@ class Secp256k1BatchVerifier:
         results: list[bool] = []
 
         for signature, message, pubkey in zip(signatures, messages, pubkeys):
-            if len(signature) != 64 or len(message) != 32 or len(pubkey) != 64:
+            if len(signature) not in (64, 65) or len(message) != 32 or len(pubkey) != 64:
                 results.append(False)
                 continue
-            r = int.from_bytes(signature[:32], "big")
-            s = int.from_bytes(signature[32:], "big")
+            sig_body = signature[:64]
+            r = int.from_bytes(sig_body[:32], "big")
+            s = int.from_bytes(sig_body[32:], "big")
             if r == 0 or s == 0 or r >= _N or s >= _N:
                 results.append(False)
                 continue

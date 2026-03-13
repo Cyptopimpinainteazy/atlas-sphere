@@ -1,7 +1,7 @@
 //! Core invariants that the constitution enforces.
 
-use serde::{Deserialize, Serialize};
 use crate::types::InvariantBounds;
+use serde::{Deserialize, Serialize};
 
 /// A single named constitutional invariant.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -129,9 +129,7 @@ impl InvariantSet {
         if total_supply == 0 {
             return Ok(());
         }
-        let max_allowed = total_supply
-            .saturating_mul(self.bounds.max_treasury_pct as u128)
-            / 100;
+        let max_allowed = total_supply.saturating_mul(self.bounds.max_treasury_pct as u128) / 100;
         if treasury_balance > max_allowed {
             return Err(InvariantViolation::new(
                 CoreInvariant::TreasuryBound,
@@ -146,7 +144,11 @@ impl InvariantSet {
     }
 
     /// Check that `agent_count` does not exceed the constitutional limit.
-    pub fn check_agent_count(&self, agent_count: u64, block: u64) -> Result<(), InvariantViolation> {
+    pub fn check_agent_count(
+        &self,
+        agent_count: u64,
+        block: u64,
+    ) -> Result<(), InvariantViolation> {
         if agent_count > self.bounds.max_agent_count {
             return Err(InvariantViolation::new(
                 CoreInvariant::AgentCountLimit,
@@ -176,7 +178,11 @@ impl InvariantSet {
     }
 
     /// Check that an agent's epoch spend does not exceed the per-agent budget.
-    pub fn check_agent_budget(&self, epoch_spend: u128, block: u64) -> Result<(), InvariantViolation> {
+    pub fn check_agent_budget(
+        &self,
+        epoch_spend: u128,
+        block: u64,
+    ) -> Result<(), InvariantViolation> {
         if epoch_spend > self.bounds.max_agent_epoch_budget {
             return Err(InvariantViolation::new(
                 CoreInvariant::AgentBudgetBound,

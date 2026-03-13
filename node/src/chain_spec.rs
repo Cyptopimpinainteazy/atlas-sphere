@@ -21,7 +21,7 @@ const ENDOWMENT: u128 = 1_000_000 * X3;
 type AccountPublic = <Signature as Verify>::Signer;
 
 /// Load the named `ChainSpec` via the supplied identifier string.
-/// 
+///
 /// Chain specs can be loaded by:
 /// - Name: "dev", "local", "staging", "production"
 /// - Environment: $CHAIN_SPEC env var (if no other ID specified)
@@ -33,8 +33,7 @@ type AccountPublic = <Signature as Verify>::Signer;
 pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     let effective_id = if id.is_empty() {
         // Check environment for chain spec override
-        std::env::var("CHAIN_SPEC")
-            .unwrap_or_else(|_| "dev".to_string())
+        std::env::var("CHAIN_SPEC").unwrap_or_else(|_| "dev".to_string())
     } else {
         id.to_string()
     };
@@ -43,6 +42,7 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
         "" | "dev" => Ok(Box::new(development_config()?)),
         "local" => Ok(Box::new(local_testnet_config()?)),
         "staging" => Ok(Box::new(staging_config()?)),
+        "testnet" => Ok(Box::new(testnet_config()?)),
         "production" => Ok(Box::new(production_config()?)),
         path => Ok(Box::new(ChainSpec::from_json_file(PathBuf::from(path))?)),
     }
@@ -57,14 +57,14 @@ pub fn development_config() -> Result<ChainSpec, String> {
     // entirely on the native runtime. Runtime upgrades via `set_code` will not
     // work in this mode, which is acceptable for local development.
     let wasm_binary = WASM_BINARY.unwrap_or(&[]);
-    let initial_authorities = vec![authority_keys_from_seed("Alice")];
+    let initial_authorities = vec![authority_keys_from_seed("Alice")?];
     let endowed_accounts = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-        get_account_id_from_seed::<sr25519::Public>("Dave"),
-        get_account_id_from_seed::<sr25519::Public>("Eve"),
-        get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+        get_account_id_from_seed::<sr25519::Public>("Alice")?,
+        get_account_id_from_seed::<sr25519::Public>("Bob")?,
+        get_account_id_from_seed::<sr25519::Public>("Charlie")?,
+        get_account_id_from_seed::<sr25519::Public>("Dave")?,
+        get_account_id_from_seed::<sr25519::Public>("Eve")?,
+        get_account_id_from_seed::<sr25519::Public>("Ferdie")?,
     ];
 
     Ok(ChainSpec::from_genesis(
@@ -93,16 +93,16 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     // without an embedded WASM blob when using native-only execution.
     let wasm_binary = WASM_BINARY.unwrap_or(&[]);
     let initial_authorities = vec![
-        authority_keys_from_seed("Alice"),
-        authority_keys_from_seed("Bob"),
+        authority_keys_from_seed("Alice")?,
+        authority_keys_from_seed("Bob")?,
     ];
     let endowed_accounts = vec![
-        get_account_id_from_seed::<sr25519::Public>("Alice"),
-        get_account_id_from_seed::<sr25519::Public>("Bob"),
-        get_account_id_from_seed::<sr25519::Public>("Charlie"),
-        get_account_id_from_seed::<sr25519::Public>("Dave"),
-        get_account_id_from_seed::<sr25519::Public>("Eve"),
-        get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+        get_account_id_from_seed::<sr25519::Public>("Alice")?,
+        get_account_id_from_seed::<sr25519::Public>("Bob")?,
+        get_account_id_from_seed::<sr25519::Public>("Charlie")?,
+        get_account_id_from_seed::<sr25519::Public>("Dave")?,
+        get_account_id_from_seed::<sr25519::Public>("Eve")?,
+        get_account_id_from_seed::<sr25519::Public>("Ferdie")?,
     ];
 
     Ok(ChainSpec::from_genesis(
@@ -133,14 +133,14 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     let wasm_binary =
         WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available".to_string())?;
     let initial_authorities = vec![
-        authority_keys_from_seed("AtlasAlpha"),
-        authority_keys_from_seed("AtlasBeta"),
-        authority_keys_from_seed("AtlasGamma"),
+        authority_keys_from_seed("AtlasAlpha")?,
+        authority_keys_from_seed("AtlasBeta")?,
+        authority_keys_from_seed("AtlasGamma")?,
     ];
     let endowed_accounts = vec![
-        get_account_id_from_seed::<sr25519::Public>("AtlasFoundation"),
-        get_account_id_from_seed::<sr25519::Public>("AtlasEcosystem"),
-        get_account_id_from_seed::<sr25519::Public>("AtlasCommunity"),
+        get_account_id_from_seed::<sr25519::Public>("AtlasFoundation")?,
+        get_account_id_from_seed::<sr25519::Public>("AtlasEcosystem")?,
+        get_account_id_from_seed::<sr25519::Public>("AtlasCommunity")?,
     ];
 
     Ok(ChainSpec::from_genesis(
@@ -163,6 +163,62 @@ pub fn staging_config() -> Result<ChainSpec, String> {
     ))
 }
 
+/// Build a multi-validator testnet `ChainSpec` for external testing.
+///
+/// This config is designed for public testnet deployments with:
+/// - 3+ validators (TestnetAlpha, TestnetBeta, TestnetGamma, TestnetDelta)
+/// - Faucet accounts for distributing test tokens
+/// - ChainType::Live for realistic peer-to-peer networking
+///
+/// Usage:
+/// ```bash
+/// x3-chain-node --chain=testnet --validator --name=TestnetAlpha
+/// x3-chain-node --chain=testnet --validator --name=TestnetBeta
+/// x3-chain-node --chain=testnet --validator --name=TestnetGamma
+/// x3-chain-node --chain=testnet --validator --name=TestnetDelta
+/// ```
+pub fn testnet_config() -> Result<ChainSpec, String> {
+    let wasm_binary =
+        WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available for testnet".to_string())?;
+
+    let initial_authorities = vec![
+        authority_keys_from_seed("TestnetAlpha")?,
+        authority_keys_from_seed("TestnetBeta")?,
+        authority_keys_from_seed("TestnetGamma")?,
+        authority_keys_from_seed("TestnetDelta")?,
+    ];
+
+    let endowed_accounts = vec![
+        // Validator accounts (auto-endowed in genesis fn)
+        // Faucet and test accounts
+        get_account_id_from_seed::<sr25519::Public>("TestnetFaucet")?,
+        get_account_id_from_seed::<sr25519::Public>("TestnetAlice")?,
+        get_account_id_from_seed::<sr25519::Public>("TestnetBob")?,
+        get_account_id_from_seed::<sr25519::Public>("TestnetCharlie")?,
+        get_account_id_from_seed::<sr25519::Public>("TestnetDave")?,
+    ];
+
+    Ok(ChainSpec::from_genesis(
+        "X3 Chain Testnet",
+        "x3_chain_testnet",
+        ChainType::Live,
+        move || {
+            x3_chain_genesis(
+                wasm_binary,
+                initial_authorities.clone(),
+                endowed_accounts.clone(),
+            )
+        },
+        // Bootnodes (empty for initial launch, populate after first validator starts)
+        vec![],
+        None,
+        Some(DEFAULT_PROTOCOL_ID),
+        None,
+        Default::default(),
+        None,
+    ))
+}
+
 /// Build the production `ChainSpec` for mainnet deployment.
 ///
 /// Production network requires:
@@ -172,26 +228,26 @@ pub fn staging_config() -> Result<ChainSpec, String> {
 /// - Persistent network configuration
 ///
 /// # Safety
-/// This function will fail if WASM binary is not available, ensuring 
+/// This function will fail if WASM binary is not available, ensuring
 /// only properly built binaries can boot the network.
 pub fn production_config() -> Result<ChainSpec, String> {
-    let wasm_binary =
-        WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available for production".to_string())?;
-    
+    let wasm_binary = WASM_BINARY
+        .ok_or_else(|| "X3 Chain WASM binary not available for production".to_string())?;
+
     // Production uses distinct, high-security authority identities.
     // These should be replaced with actual validator keys during mainnet launch.
     let initial_authorities = vec![
-        authority_keys_from_seed("ValidatorAlpha"),
-        authority_keys_from_seed("ValidatorBeta"),
-        authority_keys_from_seed("ValidatorGamma"),
-        authority_keys_from_seed("ValidatorDelta"),
-        authority_keys_from_seed("ValidatorEpsilon"),
+        authority_keys_from_seed("ValidatorAlpha")?,
+        authority_keys_from_seed("ValidatorBeta")?,
+        authority_keys_from_seed("ValidatorGamma")?,
+        authority_keys_from_seed("ValidatorDelta")?,
+        authority_keys_from_seed("ValidatorEpsilon")?,
     ];
-    
+
     let endowed_accounts = vec![
-        get_account_id_from_seed::<sr25519::Public>("TreasuryFoundation"),
-        get_account_id_from_seed::<sr25519::Public>("CommunityFund"),
-        get_account_id_from_seed::<sr25519::Public>("DevelopmentAllocation"),
+        get_account_id_from_seed::<sr25519::Public>("TreasuryFoundation")?,
+        get_account_id_from_seed::<sr25519::Public>("CommunityFund")?,
+        get_account_id_from_seed::<sr25519::Public>("DevelopmentAllocation")?,
     ];
 
     Ok(ChainSpec::from_genesis(
@@ -274,31 +330,33 @@ fn x3_chain_genesis(
     }
 }
 
-fn authority_keys_from_seed(seed: &str) -> (AuraId, GrandpaId) {
-    (
-        get_from_seed::<AuraId>(seed),
-        get_from_seed::<GrandpaId>(seed),
-    )
+fn authority_keys_from_seed(seed: &str) -> Result<(AuraId, GrandpaId), String> {
+    Ok((
+        get_from_seed::<AuraId>(seed)?,
+        get_from_seed::<GrandpaId>(seed)?,
+    ))
 }
 
-fn get_account_id_from_seed<TPublic>(seed: &str) -> AccountId
+fn get_account_id_from_seed<TPublic>(seed: &str) -> Result<AccountId, String>
 where
     AccountPublic: From<TPublic>,
     TPublic: Public,
     TPublic::Pair: Pair,
     TPublic: From<<TPublic::Pair as Pair>::Public>,
 {
-    AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
+    Ok(AccountPublic::from(get_from_seed::<TPublic>(seed)?).into_account())
 }
 
-fn get_from_seed<TPublic>(seed: &str) -> TPublic
+fn get_from_seed<TPublic>(seed: &str) -> Result<TPublic, String>
 where
     TPublic: Public,
     TPublic::Pair: Pair,
     TPublic: From<<TPublic::Pair as Pair>::Public>,
 {
-    TPublic::Pair::from_string(&format!("//{}", seed), None)
-        .expect("static seeds are valid; qed")
+    let public: TPublic = TPublic::Pair::from_string(&format!("//{}", seed), None)
+        .map_err(|e| format!("invalid seed '{}': {}", seed, e))?
         .public()
-        .into()
+        .into();
+
+    Ok(public)
 }

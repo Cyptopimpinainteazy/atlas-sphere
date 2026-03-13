@@ -43,13 +43,8 @@ nvcc ${NVCC_FLAGS} \
   "${KERNEL_DIR}/keccak256_batch.cu" \
   -o "${OUTPUT_DIR}/libkeccak256_batch.so"
 
-# 2.5 Atomic Swap
-echo "[*] Atomic Swap (Cross-Chain Consistency) ..."
-nvcc ${NVCC_FLAGS} \
-  "${KERNEL_DIR}/atomic_swap.cu" \
-  -o "${OUTPUT_DIR}/libatomic_swap.so"
-
-# 3-5. SHA-256 / Ed25519 / Stream pipeline (from gpu-swarm crate)
+# 2.5 SHA-256 / Ed25519 / Stream pipeline (from gpu-swarm crate)
+#    Build these first so atomic_swap can link against them.
 if [[ -d "${GPU_SWARM_DIR}" ]]; then
   GPU_SWARM_BUILD="${GPU_SWARM_DIR}/build"
   mkdir -p "${GPU_SWARM_BUILD}"
@@ -78,6 +73,14 @@ if [[ -d "${GPU_SWARM_DIR}" ]]; then
 else
   echo "[3-5/5] gpu-swarm crate not found at ${GPU_SWARM_DIR}, skipping SHA/Ed25519/Pipeline"
 fi
+
+# 6. Atomic Swap (Cross-Chain Consistency) - links against secp256k1 + ed25519 libs
+echo "[*] Atomic Swap (Cross-Chain Consistency) ..."
+nvcc ${NVCC_FLAGS} \
+  -I "${KERNEL_DIR}/../third_party/secp256k1-cuda-ecc" \
+  "${KERNEL_DIR}/atomic_swap.cu" \
+  -L "${OUTPUT_DIR}" -lsecp256k1_batch -led25519_batch \
+  -o "${OUTPUT_DIR}/libatomic_swap.so"
 
 echo ""
 echo "=== Built kernels ==="

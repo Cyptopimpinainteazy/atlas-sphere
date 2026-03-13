@@ -1,7 +1,7 @@
 //! Amendment proof type — required before any constitutional change may execute.
 
-use serde::{Deserialize, Serialize};
 use crate::types::{ConstitutionHash, InvariantBounds};
+use serde::{Deserialize, Serialize};
 
 /// A proof that a proposed constitutional amendment is valid.
 ///
@@ -38,7 +38,11 @@ impl AmendmentProof {
     ///
     /// This is the minimum set of conditions that must hold before `ConstitutionEngine`
     /// will permit applying the amendment on-chain.
-    pub fn is_valid(&self, current_hash: &ConstitutionHash, prior_bounds: &InvariantBounds) -> bool {
+    pub fn is_valid(
+        &self,
+        current_hash: &ConstitutionHash,
+        prior_bounds: &InvariantBounds,
+    ) -> bool {
         // 1. Must reference the actual current constitution
         &self.prior_constitution_hash == current_hash
         // 2. Proposed bounds must be a refinement (only tightening allowed)
@@ -198,6 +202,9 @@ mod tests {
         proof.proof_root = [0u8; 32]; // governance voted but proof is zero
         let verifier = AmendmentVerifier::new();
         let result = verifier.verify(&proof, &hash, &bounds);
-        assert!(result.is_err(), "voting alone must be insufficient per Article V");
+        assert!(
+            result.is_err(),
+            "voting alone must be insufficient per Article V"
+        );
     }
 }

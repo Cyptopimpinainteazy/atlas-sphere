@@ -118,7 +118,6 @@ pub struct AgentRecord {
     pub reputation: x3_fees::types::AgentReputation,
 
     // --- Proof-Carrying Code fields (vΩ-1.0) ---
-
     /// Policy declaration: permitted actions, VMs, governance participation.
     /// Constitutes the `Policy` component of `Agent = (Code, Policy, Constraints, Proof)`.
     pub policy: AgentPolicy,

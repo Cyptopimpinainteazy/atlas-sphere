@@ -219,15 +219,13 @@ pub mod amm {
         // Calculate amounts to return
         let amount_a = (lp_amount as u128)
             .checked_mul(pool.reserve_a as u128)
-            .unwrap()
-            .checked_div(pool.lp_supply as u128)
-            .unwrap() as u64;
+            .and_then(|v| v.checked_div(pool.lp_supply as u128))
+            .ok_or(AmmError::CalculationOverflow)? as u64;
 
         let amount_b = (lp_amount as u128)
             .checked_mul(pool.reserve_b as u128)
-            .unwrap()
-            .checked_div(pool.lp_supply as u128)
-            .unwrap() as u64;
+            .and_then(|v| v.checked_div(pool.lp_supply as u128))
+            .ok_or(AmmError::CalculationOverflow)? as u64;
 
         require!(amount_a >= amount_a_min, AmmError::SlippageExceeded);
         require!(amount_b >= amount_b_min, AmmError::SlippageExceeded);
@@ -675,18 +673,18 @@ fn calculate_optimal_amounts(
 ) -> Result<(u64, u64)> {
     let amount_b_optimal = (amount_a_desired as u128)
         .checked_mul(reserve_b as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(reserve_a as u128)
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     if amount_b_optimal <= amount_b_desired {
         Ok((amount_a_desired, amount_b_optimal))
     } else {
         let amount_a_optimal = (amount_b_desired as u128)
             .checked_mul(reserve_a as u128)
-            .unwrap()
+            .ok_or(AmmError::CalculationOverflow)?
             .checked_div(reserve_b as u128)
-            .unwrap() as u64;
+            .ok_or(AmmError::CalculationOverflow)? as u64;
         Ok((amount_a_optimal, amount_b_desired))
     }
 }
@@ -700,15 +698,15 @@ fn calculate_lp_tokens(
 ) -> Result<u64> {
     let lp_a = (amount_a as u128)
         .checked_mul(lp_supply as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(reserve_a as u128)
-        .unwrap();
+        .ok_or(AmmError::CalculationOverflow)?;
 
     let lp_b = (amount_b as u128)
         .checked_mul(lp_supply as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(reserve_b as u128)
-        .unwrap();
+        .ok_or(AmmError::CalculationOverflow)?;
 
     Ok(lp_a.min(lp_b) as u64)
 }
@@ -722,25 +720,25 @@ fn calculate_swap_output(
     // Fee calculation
     let fee_amount = (amount_in as u128)
         .checked_mul(fee_tier as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(10000)
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     let amount_in_after_fee = amount_in - fee_amount;
 
     // Protocol fee (portion of swap fee)
     let protocol_fee = (fee_amount as u128)
         .checked_mul(PROTOCOL_FEE_BPS as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(10000)
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     // Constant product formula: dy = y * dx / (x + dx)
     let amount_out = (reserve_out as u128)
         .checked_mul(amount_in_after_fee as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div((reserve_in as u128) + (amount_in_after_fee as u128))
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     Ok((amount_out, fee_amount, protocol_fee))
 }
@@ -752,23 +750,26 @@ fn calculate_swap_input(
     fee_tier: u16,
 ) -> Result<(u64, u64, u64)> {
     // Inverse constant product formula: dx = x * dy / (y - dy)
-    let numerator = (reserve_in as u128) * (amount_out as u128);
-    let denominator = (reserve_out as u128) - (amount_out as u128);
-    let amount_in_before_fee = numerator.checked_div(denominator).unwrap() as u64 + 1;
+    let numerator = (reserve_in as u128).checked_mul(amount_out as u128)
+        .ok_or(AmmError::CalculationOverflow)?;
+    let denominator = (reserve_out as u128).checked_sub(amount_out as u128)
+        .ok_or(AmmError::CalculationOverflow)?;
+    let amount_in_before_fee = numerator.checked_div(denominator)
+        .ok_or(AmmError::CalculationOverflow)? as u64 + 1;
 
     // Add fee
     let amount_in = (amount_in_before_fee as u128)
         .checked_mul(10000)
-        .unwrap()
-        .checked_div(10000 - fee_tier as u128)
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)?
+        .checked_div((10000 - fee_tier as u128) as u128)
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     let fee_amount = amount_in - amount_in_before_fee;
     let protocol_fee = (fee_amount as u128)
         .checked_mul(PROTOCOL_FEE_BPS as u128)
-        .unwrap()
+        .ok_or(AmmError::CalculationOverflow)?
         .checked_div(10000)
-        .unwrap() as u64;
+        .ok_or(AmmError::CalculationOverflow)? as u64;
 
     Ok((amount_in, fee_amount, protocol_fee))
 }
@@ -1305,6 +1306,8 @@ pub enum AmmError {
     KInvariantViolated,
     #[msg("No fees to collect")]
     NoFeesToCollect,
+    #[msg("Calculation overflow")]
+    CalculationOverflow,
 }
 
 /// Integer square root helper for u128

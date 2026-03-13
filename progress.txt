@@ -398,3 +398,32 @@ tail -f /tmp/x3-node.log
 4. Create validator onboarding guide
 5. Deploy to testnet with all requirements active
 
+
+## Option C: Real No-Std Adapters — COMPLETE
+
+**Completed:** $(date -u +%Y-%m-%d)
+
+### Summary
+Replaced all three `#[cfg(not(feature = "std"))]` mock adapters with real
+inline interpreter implementations, enabling actual code execution in the WASM runtime.
+
+### Files Created
+- `crates/x3-integration/src/mini_x3.rs` — 700-line standalone X3BC bytecode interpreter
+  - Full X3BC binary format parser (header, const pool, function table, globals, code)
+  - Instruction dispatch for all opcodes 0x00–0xFF (arithmetic, control flow, bitwise, conversions, context ops)
+  - Register window per call frame, gas metering, recursive function calls
+  - 5 unit tests: all pass
+- `pallets/x3-kernel/src/wasm_adapters.rs` — WasmEvmAdapter, WasmSvmAdapter, WasmX3Adapter
+
+### Files Modified
+- `crates/x3-integration/src/lib.rs` — Added `pub mod mini_x3;`
+- `crates/x3-integration/src/executor.rs` — Replaced 3 no-std stubs with real mini_x3 calls
+- `crates/x3-integration/Cargo.toml` — Made x3-vm/compiler/backend/verifier optional (std-only)
+- `pallets/x3-kernel/src/lib.rs` — Added `pub mod wasm_adapters;`
+- `pallets/x3-kernel/Cargo.toml` — Made integration crates non-optional (always available)
+- `runtime/src/lib.rs` — Replaced MockEvmAdapter/MockSvmAdapter/MockX3Adapter with
+  WasmEvmAdapter/WasmSvmAdapter/WasmX3Adapter in both pallet_x3_kernel and pallet_atomic_trade_engine
+
+### Build Status
+- All 4 modified crates: 0 errors, only minor unused-import warnings
+- 5/5 mini_x3 unit tests pass

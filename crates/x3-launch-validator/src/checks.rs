@@ -151,9 +151,7 @@ fn check_replay_verification_running() -> CheckResult {
 }
 
 fn check_adversarial_fuzzing() -> CheckResult {
-    CheckResult::Skipped(
-        "requires live network; confirm invariant fuzzer is scheduled".to_string(),
-    )
+    CheckResult::Skipped("requires live network; confirm invariant fuzzer is scheduled".to_string())
 }
 
 fn check_governance_proposals_disabled() -> CheckResult {
@@ -179,7 +177,9 @@ fn check_no_replay_mismatch() -> CheckResult {
 }
 
 fn check_no_invalid_zk_proof() -> CheckResult {
-    CheckResult::Skipped("requires live chain data — monitor ZkBlockVerifier rejection logs".to_string())
+    CheckResult::Skipped(
+        "requires live chain data — monitor ZkBlockVerifier rejection logs".to_string(),
+    )
 }
 
 fn check_no_invariant_violation() -> CheckResult {
@@ -189,7 +189,9 @@ fn check_no_invariant_violation() -> CheckResult {
     // Supply cap: zero supply must pass
     let r = engine.assert_supply_cap(0, 0);
     if r.is_err() {
-        return CheckResult::Fail("ConstitutionEngine rejected zero supply — engine misconfigured".to_string());
+        return CheckResult::Fail(
+            "ConstitutionEngine rejected zero supply — engine misconfigured".to_string(),
+        );
     }
 
     // Supply cap: max supply must pass

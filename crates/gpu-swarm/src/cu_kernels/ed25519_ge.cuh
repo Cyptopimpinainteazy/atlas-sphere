@@ -228,9 +228,9 @@ __device__ int ge_frombytes_negate_vartime(ge_p3 *h, const unsigned char *s) {
         fe_mul(&h->X, &h->X, &sqrtm1);
     }
 
+    /* "negate_vartime": return -point, so negate when sign AGREES with sign_bit.
+     * This gives isneg(result_X) == 1 - sign_bit = sign of -correct_x. */
     if (fe_isnegative(&h->X) == ((s[31] >> 7) & 1)) {
-        /* Negate x to get the correct sign */
-    } else {
         fe_neg(&h->X, &h->X);
     }
 

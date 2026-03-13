@@ -623,9 +623,7 @@ pub mod pallet {
             // Constitutional proof gate (Article IV): invariant-touching proposals
             // must carry a non-zero proof commitment at submission time.
             if touches_invariants {
-                let has_proof = proof_commitment
-                    .map(|c| c != [0u8; 32])
-                    .unwrap_or(false);
+                let has_proof = proof_commitment.map(|c| c != [0u8; 32]).unwrap_or(false);
                 ensure!(has_proof, Error::<T>::ProofRequiredForInvariantProposal);
             }
 
@@ -1354,10 +1352,8 @@ pub mod pallet {
 
                         if !has_proof {
                             // Slash deposit for attempting bypass without proof
-                            let _ = T::Currency::slash_reserved(
-                                &proposal.proposer,
-                                proposal.deposit,
-                            );
+                            let _ =
+                                T::Currency::slash_reserved(&proposal.proposer, proposal.deposit);
                             proposal.status = ProposalStatus::Cancelled;
                             Proposals::<T>::insert(proposal_id, &proposal);
                             // Emit cancellation with proof-gate reason

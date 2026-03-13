@@ -36,10 +36,8 @@ pub use weights::WeightInfo;
 #[frame_support::pallet]
 pub mod pallet {
     use super::WeightInfo;
-    use frame_support::{
-        pallet_prelude::*,
-        traits::Get,
-    };
+    use crate::InvariantKind;
+    use frame_support::{pallet_prelude::*, traits::Get};
     use frame_system::pallet_prelude::*;
     use sp_runtime::traits::Zero;
 
@@ -191,10 +189,16 @@ pub mod pallet {
 
             // Bounds may only be tightened if already set (non-zero).
             if !current_supply.is_zero() {
-                ensure!(max_supply <= current_supply, Error::<T>::BoundWeakeningNotAllowed);
+                ensure!(
+                    max_supply <= current_supply,
+                    Error::<T>::BoundWeakeningNotAllowed
+                );
             }
             if current_agents > 0 {
-                ensure!(max_agents <= current_agents, Error::<T>::BoundWeakeningNotAllowed);
+                ensure!(
+                    max_agents <= current_agents,
+                    Error::<T>::BoundWeakeningNotAllowed
+                );
             }
             if current_depth > 0 {
                 ensure!(
@@ -252,10 +256,7 @@ pub mod pallet {
         /// Origin: `UpdateOrigin`.
         #[pallet::call_index(3)]
         #[pallet::weight(T::WeightInfo::set_constitution_hash())]
-        pub fn set_constitution_hash(
-            origin: OriginFor<T>,
-            hash: [u8; 32],
-        ) -> DispatchResult {
+        pub fn set_constitution_hash(origin: OriginFor<T>, hash: [u8; 32]) -> DispatchResult {
             T::UpdateOrigin::ensure_origin(origin)?;
             ensure!(hash != [0u8; 32], Error::<T>::InvalidConstitutionHash);
             ConstitutionHash::<T>::put(hash);

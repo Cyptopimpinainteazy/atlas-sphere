@@ -33,10 +33,10 @@ sp-io = { workspace = true, default-features = false }
 sp-runtime = { workspace = true, default-features = false }
 sp-std = { workspace = true, default-features = false }
 
-# Real VM integration crates (std only for now)
-x3-evm-integration = { path = "../../crates/evm-integration", default-features = false, optional = true }
-x3-svm-integration = { path = "../../crates/svm-integration", default-features = false, optional = true }
-x3-x3-integration = { path = "../../crates/x3-integration", default-features = false, optional = true }
+# Real VM integration crates (no-std paths always available; std paths activated via std feature)
+x3-evm-integration = { path = "../../crates/evm-integration", default-features = false }
+x3-svm-integration = { path = "../../crates/svm-integration", default-features = false }
+x3-x3-integration = { path = "../../crates/x3-integration", default-features = false }
 x3-cross-vm-bridge = { path = "../../crates/cross-vm-bridge", default-features = false }
 
 [features]

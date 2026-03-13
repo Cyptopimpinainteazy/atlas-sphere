@@ -1032,4 +1032,6 @@ pub enum StakingError {
     InsufficientSelfStake,
     #[msg("Reward rate too high")]
     RewardRateTooHigh,
+    #[msg("Calculation overflow")]
+    CalculationOverflow,
 }

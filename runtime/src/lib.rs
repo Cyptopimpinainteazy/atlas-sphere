@@ -146,6 +146,10 @@ parameter_types! {
     pub const DefaultEvmGasLimit: u64 = 12_000_000;  // tuned for 200ms slots on commodity validators
     pub const DefaultSvmComputeLimit: u64 = 200_000;  // 200k compute units for SVM
     pub const DefaultX3GasLimit: u64 = 6_000_000;  // tuned for 200ms slots on commodity validators
+    pub const CrossVmPrepareTtl: BlockNumber = 50; // 50 blocks (~10s at 200ms)
+    pub const MaxPreparedCrossVmOps: u32 = 1024;
+    pub const MaxPreparedOpsPerBlock: u32 = 64;
+    pub const RequireCrossVmProof: bool = false;
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
         // Keep max execution budget below slot time (200ms) to avoid author/import divergence.
         Weight::from_parts((WEIGHT_REF_TIME_PER_SECOND / 1000) * 150, 5 * 1024 * 1024),
@@ -509,11 +513,15 @@ impl pallet_x3_kernel::Config for Runtime {
     type DefaultEvmGasLimit = DefaultEvmGasLimit;
     type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
     type DefaultX3GasLimit = DefaultX3GasLimit;
+    type CrossVmPrepareTtl = CrossVmPrepareTtl;
+    type MaxPreparedCrossVmOps = MaxPreparedCrossVmOps;
+    type MaxPreparedOpsPerBlock = MaxPreparedOpsPerBlock;
+    type RequireCrossVmProof = RequireCrossVmProof;
     type WeightInfo = pallet_x3_kernel::weights::SubstrateWeight<Runtime>;
     type Currency = Balances;
     // VM adapters:
-    // - Native runtime (std): always use real adapters.
-    // - WASM runtime (no_std): keep mock adapters until real no_std adapters are available.
+    // - Native runtime (std): use real native adapters.
+    // - WASM runtime (no_std): use inline interpreter adapters.
     #[cfg(feature = "std")]
     type EvmAdapter = native_vm_adapters::NativeEvmAdapter;
     #[cfg(feature = "std")]
@@ -521,12 +529,13 @@ impl pallet_x3_kernel::Config for Runtime {
     #[cfg(feature = "std")]
     type X3Adapter = pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
     #[cfg(not(feature = "std"))]
-    type EvmAdapter = pallet_x3_kernel::MockEvmAdapter;
+    type EvmAdapter = pallet_x3_kernel::wasm_adapters::WasmEvmAdapter;
     #[cfg(not(feature = "std"))]
-    type SvmAdapter = pallet_x3_kernel::MockSvmAdapter;
+    type SvmAdapter = pallet_x3_kernel::wasm_adapters::WasmSvmAdapter;
     #[cfg(not(feature = "std"))]
-    type X3Adapter = pallet_x3_kernel::MockX3Adapter;
+    type X3Adapter = pallet_x3_kernel::wasm_adapters::WasmX3Adapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
+    type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
 }
 
 // ===== AtomicTradeEngine Configuration =====
@@ -552,11 +561,11 @@ impl pallet_atomic_trade_engine::Config for Runtime {
     #[cfg(feature = "std")]
     type X3Adapter = pallet_x3_kernel::adapters::real_adapters::X3VmAdapter;
     #[cfg(not(feature = "std"))]
-    type EvmAdapter = pallet_x3_kernel::MockEvmAdapter;
+    type EvmAdapter = pallet_x3_kernel::wasm_adapters::WasmEvmAdapter;
     #[cfg(not(feature = "std"))]
-    type SvmAdapter = pallet_x3_kernel::MockSvmAdapter;
+    type SvmAdapter = pallet_x3_kernel::wasm_adapters::WasmSvmAdapter;
     #[cfg(not(feature = "std"))]
-    type X3Adapter = pallet_x3_kernel::MockX3Adapter;
+    type X3Adapter = pallet_x3_kernel::wasm_adapters::WasmX3Adapter;
     type MaxTradeLegs = MaxTradeLegs;
     type MaxCheckpoints = MaxCheckpoints;
     type MaxPendingBatchesPerAccount = MaxPendingBatchesPerAccount;

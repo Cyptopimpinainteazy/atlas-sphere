@@ -169,7 +169,9 @@ impl Indexer {
             }
 
             let guard = self.client.lock().await;
-            let client = guard.as_ref().unwrap();
+            let client = guard
+                .as_ref()
+                .ok_or_else(|| IndexerError::Connection("Not connected".to_string()))?;
             self.index_block(client, block_num).await?;
             drop(guard);
 

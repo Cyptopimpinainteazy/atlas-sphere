@@ -10,7 +10,7 @@ use crate::{
     articles::ConstitutionManifest,
     error::ConstitutionError,
     invariants::{CoreInvariant, InvariantSet, InvariantViolation},
-    types::ConstitutionHash,
+    types::{ConstitutionHash, InvariantBounds},
 };
 
 /// The live constitution engine.
@@ -89,7 +89,11 @@ impl ConstitutionEngine {
     }
 
     /// Assert that an agent's epoch spend does not violate AgentBudgetBound.
-    pub fn assert_agent_epoch_budget(&self, spend: u128, block: u64) -> Result<(), ConstitutionError> {
+    pub fn assert_agent_epoch_budget(
+        &self,
+        spend: u128,
+        block: u64,
+    ) -> Result<(), ConstitutionError> {
         self.invariants
             .check_agent_budget(spend, block)
             .map_err(|v| ConstitutionError::InvariantViolation(v.invariant, v.message))

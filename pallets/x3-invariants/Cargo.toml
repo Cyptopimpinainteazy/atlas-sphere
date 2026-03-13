@@ -25,6 +25,7 @@ sp-core = { workspace = true, default-features = false }
 sp-io = { workspace = true, default-features = false }
 sp-runtime = { workspace = true, default-features = false }
 sp-std = { workspace = true, default-features = false }
+serde = { workspace = true, optional = true, features = ["derive"] }
 
 [dev-dependencies]
 sp-io = { workspace = true }
@@ -43,6 +44,7 @@ std = [
     "sp-io/std",
     "sp-runtime/std",
     "sp-std/std",
+    "serde/std",
     "frame-benchmarking?/std",
 ]
 runtime-benchmarks = [

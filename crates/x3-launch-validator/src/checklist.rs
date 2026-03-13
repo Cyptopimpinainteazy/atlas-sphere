@@ -224,18 +224,12 @@ impl LaunchChecklist {
 
     /// Returns `true` if all blocking items have passed.
     pub fn all_blocking_passed(&self) -> bool {
-        self.items
-            .iter()
-            .filter(|i| i.blocking)
-            .all(|i| i.passed())
+        self.items.iter().filter(|i| i.blocking).all(|i| i.passed())
     }
 
     /// Returns `true` if any blocking item has failed.
     pub fn any_blocking_failed(&self) -> bool {
-        self.items
-            .iter()
-            .filter(|i| i.blocking)
-            .any(|i| i.failed())
+        self.items.iter().filter(|i| i.blocking).any(|i| i.failed())
     }
 
     /// Count of (pass, fail, skip) across all items.
@@ -249,9 +243,7 @@ impl LaunchChecklist {
         let skip = self
             .items
             .iter()
-            .filter(|i| {
-                matches!(i.result, Some(CheckResult::Skipped(_))) || i.result.is_none()
-            })
+            .filter(|i| matches!(i.result, Some(CheckResult::Skipped(_))) || i.result.is_none())
             .count();
         (pass, fail, skip)
     }
@@ -274,6 +266,10 @@ mod tests {
     fn all_blocking_items_are_present() {
         let cl = LaunchChecklist::canonical();
         let blocking_count = cl.items.iter().filter(|i| i.blocking).count();
-        assert!(blocking_count >= 12, "expected ≥12 blocking checks, got {}", blocking_count);
+        assert!(
+            blocking_count >= 12,
+            "expected ≥12 blocking checks, got {}",
+            blocking_count
+        );
     }
 }

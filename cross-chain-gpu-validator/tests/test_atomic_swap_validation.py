@@ -143,6 +143,32 @@ class TestGpuSigVerificationConsistency(unittest.TestCase):
             except ImportError:
                 self.skipTest("No keccak library available")
 
+    def test_ed25519_batch_verifier_cpu_fallback(self):
+        """Ensure Ed25519BatchVerifier can verify a signature using CPU fallback."""
+        try:
+            import nacl.signing
+            import nacl.encoding
+        except ImportError:
+            self.skipTest("PyNaCl not installed")
+
+        from cross_chain_gpu_validator.gpu import CudaRuntime, Ed25519BatchVerifier
+
+        runtime = CudaRuntime.detect()
+        verifier = Ed25519BatchVerifier(
+            runtime,
+            os.path.join(os.path.dirname(__file__), "..", "kernels"),
+            parity_check=True,
+            allow_failover=True,
+        )
+
+        signing_key = nacl.signing.SigningKey.generate()
+        message = b"x3-chain-ed25519-fallback-test"
+        msg_hash = __import__("hashlib").sha256(message).digest()
+        signature = signing_key.sign(msg_hash).signature
+        pubkey = signing_key.verify_key.encode()
+
+        self.assertTrue(verifier.verify_batch([signature], [msg_hash], [pubkey])[0])
+
 
 class TestCrossChainSwapE2E(unittest.TestCase):
     """End-to-end swap validation across chain families."""

@@ -1,5 +1,5 @@
 /// Comprehensive test suite for X3 Chain node production requirements
-/// 
+///
 /// Tests verify:
 /// 1. Deterministic boot - genesis is reproducible across runs
 /// 2. CLI flags - all feature flags documented and functional
@@ -19,18 +19,18 @@ mod deterministic_boot_tests {
         // Substrate's sr25519 key derivation is deterministic from seed
         // We can't directly call the node's private functions, but we can verify
         // the concept by ensuring the seed string itself hashes identically
-        
+
         let seed1 = "Alice";
         let seed2 = "Alice";
-        
+
         let mut hasher1 = DefaultHasher::new();
         seed1.hash(&mut hasher1);
         let hash1 = hasher1.finish();
-        
+
         let mut hasher2 = DefaultHasher::new();
         seed2.hash(&mut hasher2);
         let hash2 = hasher2.finish();
-        
+
         assert_eq!(hash1, hash2, "Seed hashes should be deterministic");
     }
 
@@ -39,16 +39,19 @@ mod deterministic_boot_tests {
     fn different_seeds_produce_different_keys() {
         let seed1 = "Alice";
         let seed2 = "Bob";
-        
+
         let mut hasher1 = DefaultHasher::new();
         seed1.hash(&mut hasher1);
         let hash1 = hasher1.finish();
-        
+
         let mut hasher2 = DefaultHasher::new();
         seed2.hash(&mut hasher2);
         let hash2 = hasher2.finish();
-        
-        assert_ne!(hash1, hash2, "Different seeds should produce different hashes");
+
+        assert_ne!(
+            hash1, hash2,
+            "Different seeds should produce different hashes"
+        );
     }
 
     /// Test that endowed accounts list is deterministic
@@ -56,8 +59,11 @@ mod deterministic_boot_tests {
     fn deterministic_endowed_accounts() {
         let accounts_list1 = vec!["Alice", "Bob", "Charlie"];
         let accounts_list2 = vec!["Alice", "Bob", "Charlie"];
-        
-        assert_eq!(accounts_list1, accounts_list2, "Account lists should be identical");
+
+        assert_eq!(
+            accounts_list1, accounts_list2,
+            "Account lists should be identical"
+        );
     }
 
     /// Test that account initialization uses consistent balances
@@ -65,9 +71,12 @@ mod deterministic_boot_tests {
     fn consistent_endowment_amounts() {
         const ENDOWMENT_UNIT: u128 = 1_000_000_000_000;
         const MULTIPLIER: u128 = 1_000_000;
-        
+
         let expected_endowment = ENDOWMENT_UNIT * MULTIPLIER;
-        assert_eq!(expected_endowment, 1_000_000_000_000_000_000, "Endowment calculation should be deterministic");
+        assert_eq!(
+            expected_endowment, 1_000_000_000_000_000_000,
+            "Endowment calculation should be deterministic"
+        );
     }
 
     /// Test that canonical seed derivation format is consistent
@@ -75,7 +84,10 @@ mod deterministic_boot_tests {
     fn canonical_seed_format() {
         let seed = "Alice";
         let canonical_seed = format!("//{}", seed);
-        assert_eq!(canonical_seed, "//Alice", "Seed format should be consistent");
+        assert_eq!(
+            canonical_seed, "//Alice",
+            "Seed format should be consistent"
+        );
     }
 }
 
@@ -89,11 +101,20 @@ mod cli_flags_tests {
         let enable_flash_finality_default = false;
         let enable_poh_default = false;
         let gpu_required_default = false;
-        
-        assert!(!enable_parallel_proposer_default, "Parallel proposer should default to off");
-        assert!(!enable_flash_finality_default, "Flash finality should default to off");
+
+        assert!(
+            !enable_parallel_proposer_default,
+            "Parallel proposer should default to off"
+        );
+        assert!(
+            !enable_flash_finality_default,
+            "Flash finality should default to off"
+        );
         assert!(!enable_poh_default, "PoH should default to off");
-        assert!(!gpu_required_default, "GPU requirement should default to off");
+        assert!(
+            !gpu_required_default,
+            "GPU requirement should default to off"
+        );
     }
 
     /// Test that feature flag names follow naming convention
@@ -105,21 +126,31 @@ mod cli_flags_tests {
             "enable_poh",
             "gpu_required",
         ];
-        
+
         // All enable_* flags should be toggles
         for flag in flags.iter().take(3) {
-            assert!(flag.starts_with("enable_"), "Feature flags should start with 'enable_'");
+            assert!(
+                flag.starts_with("enable_"),
+                "Feature flags should start with 'enable_'"
+            );
         }
-        
+
         // GPU requirement flag is exception (is_required pattern)
-        assert_eq!(flags[3], "gpu_required", "GPU flag should be named gpu_required");
+        assert_eq!(
+            flags[3], "gpu_required",
+            "GPU flag should be named gpu_required"
+        );
     }
 
     /// Test that feature flags are boolean-valued
     #[test]
     fn feature_flags_are_boolean() {
         let values = vec![true, false];
-        assert_eq!(values.len(), 2, "Boolean flags should have exactly 2 possible values");
+        assert_eq!(
+            values.len(),
+            2,
+            "Boolean flags should have exactly 2 possible values"
+        );
     }
 
     /// Test mutual exclusivity of Flash Finality and GRANDPA
@@ -128,7 +159,7 @@ mod cli_flags_tests {
         // When flash_finality is enabled, grandpa must be disabled
         let flash_finality_enabled = true;
         let grandpa_should_be_disabled = flash_finality_enabled; // Implies GRANDPA disabled
-        
+
         assert!(grandpa_should_be_disabled);
     }
 
@@ -139,7 +170,7 @@ mod cli_flags_tests {
         let enable_parallel_proposer = true;
         let enable_flash_finality = false;
         let enable_poh = true;
-        
+
         // No assertion needed; this is just smoke testing compatibility
         assert!(enable_parallel_proposer || enable_poh);
     }
@@ -161,7 +192,11 @@ mod config_separation_tests {
         // This is tested implicitly in chain_spec.rs with `unwrap_or(&[])`
         let wasm_binary_dev = Option::<&[u8]>::None;
         let fallback = wasm_binary_dev.unwrap_or(&[]);
-        assert_eq!(fallback.len(), 0, "Dev config should fall back to empty WASM blob");
+        assert_eq!(
+            fallback.len(),
+            0,
+            "Dev config should fall back to empty WASM blob"
+        );
     }
 
     /// Test that local testnet allows missing WASM
@@ -169,7 +204,11 @@ mod config_separation_tests {
     fn local_config_supports_native_only_execution() {
         let wasm_binary_local = Option::<&[u8]>::None;
         let fallback = wasm_binary_local.unwrap_or(&[]);
-        assert_eq!(fallback.len(), 0, "Local config should fall back to empty WASM blob");
+        assert_eq!(
+            fallback.len(),
+            0,
+            "Local config should fall back to empty WASM blob"
+        );
     }
 
     /// Test that staging requires WASM
@@ -178,7 +217,7 @@ mod config_separation_tests {
         // Staging (and by extension, production) must have WASM binary
         let wasm_binary_staging = Option::<&[u8]>::None;
         let result = wasm_binary_staging.ok_or("WASM binary required for staging");
-        
+
         assert!(result.is_err(), "Staging should require WASM binary");
     }
 
@@ -186,11 +225,11 @@ mod config_separation_tests {
     #[test]
     fn chain_types_correctly_assigned() {
         let chain_types = vec![
-            ("dev", "development"),      // Development = local node
-            ("local", "local"),          // Local = testnet
-            ("staging", "live"),         // Staging = live (production-like)
+            ("dev", "development"), // Development = local node
+            ("local", "local"),     // Local = testnet
+            ("staging", "live"),    // Staging = live (production-like)
         ];
-        
+
         assert_eq!(chain_types.len(), 3);
         // Verify progression from development -> local -> live
         assert_eq!(chain_types[0].1, "development");
@@ -207,9 +246,15 @@ mod config_separation_tests {
         let local_authorities = 2;
         // Staging: 3 authorities (AlphaProvider: 3 (Alpha, Beta, Gamma)
         let staging_authorities = 3;
-        
-        assert_ne!(dev_authorities, local_authorities, "Dev should differ from local");
-        assert_ne!(local_authorities, staging_authorities, "Local should differ from staging");
+
+        assert_ne!(
+            dev_authorities, local_authorities,
+            "Dev should differ from local"
+        );
+        assert_ne!(
+            local_authorities, staging_authorities,
+            "Local should differ from staging"
+        );
     }
 
     /// Test that endowed account counts differ between tiers
@@ -219,7 +264,7 @@ mod config_separation_tests {
         let dev_endowed = 6;
         let local_endowed = 6;
         let staging_endowed = 3; // Staging uses different names
-        
+
         assert_eq!(dev_endowed, 6, "Dev should have 6 endowed accounts");
         assert_eq!(local_endowed, 6, "Local should have 6 endowed accounts");
         assert_eq!(staging_endowed, 3, "Staging should have 3 endowed accounts");
@@ -249,12 +294,15 @@ mod telemetry_tests {
     fn metrics_have_sensible_defaults() {
         // Block import metrics
         let block_import_gauge: u64 = 0;
-        assert_eq!(block_import_gauge, 0, "Block import metric should start at 0");
-        
+        assert_eq!(
+            block_import_gauge, 0,
+            "Block import metric should start at 0"
+        );
+
         // Finality metrics
         let finality_counter: u64 = 0;
         assert_eq!(finality_counter, 0, "Finality metric should start at 0");
-        
+
         // Transaction pool metrics
         let txpool_size: u64 = 0;
         assert_eq!(txpool_size, 0, "TxPool size should start at 0");
@@ -269,9 +317,12 @@ mod telemetry_tests {
             "x3_transaction_pool_size",
             "x3_consensus_rounds_completed",
         ];
-        
+
         for name in metric_names {
-            assert!(name.starts_with("x3_"), "Metrics should be prefixed with 'x3_'");
+            assert!(
+                name.starts_with("x3_"),
+                "Metrics should be prefixed with 'x3_'"
+            );
         }
     }
 
@@ -279,7 +330,7 @@ mod telemetry_tests {
     #[test]
     fn flash_finality_metrics_available() {
         let flash_finality_enabled = true;
-        
+
         if flash_finality_enabled {
             // These metrics should be available
             let metrics = vec![
@@ -295,12 +346,9 @@ mod telemetry_tests {
     #[test]
     fn poh_metrics_available() {
         let poh_enabled = true;
-        
+
         if poh_enabled {
-            let poh_metrics = vec![
-                "x3_poh_tickets_verified",
-                "x3_poh_digests_validated",
-            ];
+            let poh_metrics = vec!["x3_poh_tickets_verified", "x3_poh_digests_validated"];
             assert_eq!(poh_metrics.len(), 2, "Should have PoH metrics");
         }
     }
@@ -315,15 +363,24 @@ mod graceful_shutdown_tests {
     fn shutdown_timeout_is_reasonable() {
         // Allow up to 30 seconds for graceful shutdown
         let shutdown_timeout = Duration::from_secs(30);
-        assert!(shutdown_timeout > Duration::from_secs(5), "Timeout should be > 5s");
-        assert!(shutdown_timeout < Duration::from_secs(120), "Timeout should be < 120s");
+        assert!(
+            shutdown_timeout > Duration::from_secs(5),
+            "Timeout should be > 5s"
+        );
+        assert!(
+            shutdown_timeout < Duration::from_secs(120),
+            "Timeout should be < 120s"
+        );
     }
 
     /// Test that SIGTERM is the primary shutdown signal
     #[test]
     fn sigterm_is_primary_signal() {
         let shutdown_signals = vec!["SIGTERM", "SIGINT"];
-        assert!(shutdown_signals.contains(&"SIGTERM"), "SIGTERM should be supported");
+        assert!(
+            shutdown_signals.contains(&"SIGTERM"),
+            "SIGTERM should be supported"
+        );
         assert_eq!(shutdown_signals[0], "SIGTERM", "SIGTERM should be primary");
     }
 
@@ -335,7 +392,7 @@ mod graceful_shutdown_tests {
         // 2. Flush database
         // 3. Close connections
         // 4. Exit with code 0
-        
+
         let should_save_state = true;
         assert!(should_save_state, "Graceful shutdown should save state");
     }
@@ -344,7 +401,10 @@ mod graceful_shutdown_tests {
     #[test]
     fn force_shutdown_available() {
         let force_shutdown_available = true;
-        assert!(force_shutdown_available, "Force shutdown should be available after timeout");
+        assert!(
+            force_shutdown_available,
+            "Force shutdown should be available after timeout"
+        );
     }
 
     /// Test that shutdown logs key state
@@ -354,7 +414,7 @@ mod graceful_shutdown_tests {
         // - Final block number
         // - Pending votes count
         // - Cleanup status
-        
+
         let logs_expected = vec![
             "Shutdown initiated",
             "Final block",
@@ -379,18 +439,18 @@ mod integration_tests {
     fn all_requirements_compatible() {
         // Deterministic boot + CLI flags + Config separation + Telemetry + Shutdown
         // should all work together without conflicts
-        
+
         let has_deterministic_boot = true;
         let has_cli_flags = true;
         let has_config_separation = true;
         let has_telemetry = true;
         let has_graceful_shutdown = true;
-        
+
         assert!(
-            has_deterministic_boot 
-                && has_cli_flags 
-                && has_config_separation 
-                && has_telemetry 
+            has_deterministic_boot
+                && has_cli_flags
+                && has_config_separation
+                && has_telemetry
                 && has_graceful_shutdown,
             "All production requirements should be implemented"
         );
@@ -402,7 +462,7 @@ mod integration_tests {
         // Minimal: no feature flags, default config, no telemetry
         let flags_enabled = false;
         let telemetry_enabled = false;
-        
+
         assert!(!flags_enabled);
         assert!(!telemetry_enabled);
     }
@@ -414,10 +474,10 @@ mod integration_tests {
         let enable_parallel_proposer = true;
         let enable_poh = true;
         let telemetry_enabled = true;
-        
+
         // Flash finality not simultaneously with GRANDPA
         let enable_flash_finality = false; // Keep GRANDPA
-        
+
         assert!(enable_parallel_proposer);
         assert!(enable_poh);
         assert!(!enable_flash_finality); // Mutually exclusive

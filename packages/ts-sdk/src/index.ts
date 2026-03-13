@@ -317,6 +317,17 @@ export {
 // =============================================================================
 
 export {
+  X3SubscriptionManager,
+} from './subscriptions';
+
+export type {
+  BlockNotification,
+  ComitNotification,
+  EvmLogNotification,
+  SubscriptionHandlers,
+} from './subscriptions';
+
+export {
   X3SettlementClient,
   X3AtomicTradeClient,
   X3DomainClient,

@@ -48,7 +48,9 @@ impl ChecklistReporter {
         let (pass, fail, skip) = checklist.summary();
         println!("║                                                                  ║");
         println!("╠══════════════════════════════════════════════════════════════════╣");
-        println!("║  RESULTS  Pass: {pass:3}   Fail: {fail:3}   Skip/Pending: {skip:3}            ║");
+        println!(
+            "║  RESULTS  Pass: {pass:3}   Fail: {fail:3}   Skip/Pending: {skip:3}            ║"
+        );
 
         if checklist.any_blocking_failed() {
             println!("║  STATUS: LAUNCH BLOCKED — resolve all '!' failures before launch ║");

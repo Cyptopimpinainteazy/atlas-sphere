@@ -394,13 +394,11 @@ fn generate_job_id() -> [u8; 32] {
     use blake2::{Blake2s256, Digest};
 
     let mut hasher = Blake2s256::new();
-    hasher.update(
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-            .to_le_bytes(),
-    );
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    hasher.update(nanos.to_le_bytes());
     hasher.update(&rand::random::<[u8; 16]>());
 
     let result = hasher.finalize();

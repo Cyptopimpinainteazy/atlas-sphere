@@ -1,9 +1,9 @@
 use crate::rpc_middleware::{RateLimitConfig, RateLimitMetrics, RateLimiter};
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use pallet_atomic_trade_engine::{
-    AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
     runtime_api::{BatchStatusResponse, PriceDataResponse, SimulationResult},
     types::TradeRoute,
+    AtomicTradeEngineApi as AtomicTradeEngineRuntimeApi,
 };
 use pallet_evolution_core::runtime_api::{
     BlockMetricsResponse, EvolutionCoreApi as EvolutionCoreRuntimeApi, EvolutionStatusResponse,
@@ -38,7 +38,7 @@ use substrate_frame_rpc_system::{System, SystemApiServer};
 /// Includes system RPC methods for account nonce queries
 /// Supports WebSocket subscriptions for real-time block and event updates
 use x3_chain_runtime::{
-    AccountId, AssetId, Balance, BlockNumber, ChainId, NATIVE_GAS_PRICE, Nonce, opaque::Block,
+    opaque::Block, AccountId, AssetId, Balance, BlockNumber, ChainId, Nonce, NATIVE_GAS_PRICE,
 };
 
 fn runtime_api_error<E: std::fmt::Debug>(e: E) -> jsonrpsee::core::Error {
@@ -1099,6 +1099,218 @@ impl SequencerApiServer for SequencerRpc {
     }
 }
 
+// ============================================================================
+// WebSocket Subscription API
+// ============================================================================
+
+/// Block header info sent to WebSocket subscribers
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct NewBlockNotification {
+    /// Block number
+    pub number: u64,
+    /// Block hash (hex)
+    pub hash: String,
+    /// Parent hash (hex)
+    pub parent_hash: String,
+    /// State root (hex)
+    pub state_root: String,
+    /// Extrinsics root (hex)
+    pub extrinsics_root: String,
+}
+
+/// Comit (transaction) notification for subscribers
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ComitNotification {
+    /// Block number that included this comit
+    pub block_number: u64,
+    /// Block hash (hex)
+    pub block_hash: String,
+    /// Index within the block
+    pub extrinsic_index: u32,
+    /// Extrinsic hash (hex, if available)
+    pub hash: String,
+}
+
+/// EVM log event notification
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct EvmLogNotification {
+    /// Block number
+    pub block_number: u64,
+    /// EVM contract address (hex)
+    pub address: String,
+    /// Log topics (hex array)
+    pub topics: Vec<String>,
+    /// Log data (hex)
+    pub data: String,
+}
+
+/// X3 Chain WebSocket subscription API
+///
+/// Provides real-time notifications for new blocks, finalized blocks,
+/// comit (transaction) events, and EVM logs via WebSocket subscriptions.
+#[rpc(client, server)]
+pub trait X3SubscriptionApi {
+    /// Subscribe to new block headers as they are imported
+    #[subscription(
+        name = "x3_subscribeNewBlocks" => "x3_newBlock",
+        unsubscribe = "x3_unsubscribeNewBlocks",
+        item = NewBlockNotification
+    )]
+    fn subscribe_new_blocks(&self);
+
+    /// Subscribe to finalized block headers
+    #[subscription(
+        name = "x3_subscribeFinalizedBlocks" => "x3_finalizedBlock",
+        unsubscribe = "x3_unsubscribeFinalizedBlocks",
+        item = NewBlockNotification
+    )]
+    fn subscribe_finalized_blocks(&self);
+
+    /// Subscribe to all comit (transaction) events in new blocks
+    #[subscription(
+        name = "x3_subscribeComits" => "x3_newComit",
+        unsubscribe = "x3_unsubscribeComits",
+        item = ComitNotification
+    )]
+    fn subscribe_comits(&self);
+}
+
+/// WebSocket subscription server implementation
+pub struct X3SubscriptionRpc<C, B: BlockT> {
+    client: Arc<C>,
+    _phantom: std::marker::PhantomData<B>,
+}
+
+impl<C, B: BlockT> X3SubscriptionRpc<C, B> {
+    /// Create a new WebSocket subscription handler backed by the given client.
+    pub fn new(client: Arc<C>) -> Self {
+        Self {
+            client,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<C> X3SubscriptionApiServer for X3SubscriptionRpc<C, Block>
+where
+    C: Send
+        + Sync
+        + 'static
+        + HeaderBackend<Block>
+        + BlockBackend<Block>
+        + BlockchainEvents<Block>,
+{
+    fn subscribe_new_blocks(
+        &self,
+        mut sink: jsonrpsee::SubscriptionSink,
+    ) -> jsonrpsee::types::SubscriptionResult {
+        let client = self.client.clone();
+
+        let stream = client.import_notification_stream();
+
+        std::thread::spawn(move || {
+            use futures::StreamExt;
+            let rt = tokio::runtime::Handle::current();
+            rt.block_on(async {
+                let mut stream = stream;
+                while let Some(notification) = stream.next().await {
+                    let header = &notification.header;
+                    let block_notification = NewBlockNotification {
+                        number: header.number as u64,
+                        hash: format!("{:?}", notification.hash),
+                        parent_hash: format!("{:?}", header.parent_hash),
+                        state_root: format!("{:?}", header.state_root),
+                        extrinsics_root: format!("{:?}", header.extrinsics_root),
+                    };
+                    if sink
+                        .send(&block_notification)
+                        .is_err()
+                    {
+                        break;
+                    }
+                }
+            });
+        });
+
+        Ok(())
+    }
+
+    fn subscribe_finalized_blocks(
+        &self,
+        mut sink: jsonrpsee::SubscriptionSink,
+    ) -> jsonrpsee::types::SubscriptionResult {
+        let client = self.client.clone();
+
+        let stream = client.finality_notification_stream();
+
+        std::thread::spawn(move || {
+            use futures::StreamExt;
+            let rt = tokio::runtime::Handle::current();
+            rt.block_on(async {
+                let mut stream = stream;
+                while let Some(notification) = stream.next().await {
+                    let header = &notification.header;
+                    let block_notification = NewBlockNotification {
+                        number: header.number as u64,
+                        hash: format!("{:?}", notification.hash),
+                        parent_hash: format!("{:?}", header.parent_hash),
+                        state_root: format!("{:?}", header.state_root),
+                        extrinsics_root: format!("{:?}", header.extrinsics_root),
+                    };
+                    if sink
+                        .send(&block_notification)
+                        .is_err()
+                    {
+                        break;
+                    }
+                }
+            });
+        });
+
+        Ok(())
+    }
+
+    fn subscribe_comits(
+        &self,
+        mut sink: jsonrpsee::SubscriptionSink,
+    ) -> jsonrpsee::types::SubscriptionResult {
+        let client = self.client.clone();
+
+        let stream = client.import_notification_stream();
+
+        std::thread::spawn(move || {
+            use futures::StreamExt;
+            let rt = tokio::runtime::Handle::current();
+            rt.block_on(async {
+                let mut stream = stream;
+                while let Some(notification) = stream.next().await {
+                    let hash = notification.hash;
+                    let header = &notification.header;
+                    let block_number: u64 = header.number as u64;
+
+                    if let Ok(Some(body)) = client.block_body(hash) {
+                        for (idx, ext) in body.iter().enumerate() {
+                            use sp_runtime::traits::Hash;
+                            let ext_hash = sp_runtime::traits::BlakeTwo256::hash_of(ext);
+                            let comit = ComitNotification {
+                                block_number,
+                                block_hash: format!("{:?}", hash),
+                                extrinsic_index: idx as u32,
+                                hash: format!("{:?}", ext_hash),
+                            };
+                            if sink.send(&comit).is_err() {
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        Ok(())
+    }
+}
+
 /// Create full RPC extensions with X3 Kernel and system methods
 pub fn create_full<C, P>(
     client: Arc<C>,
@@ -1172,6 +1384,10 @@ where
     // Add Sequencer RPC for batch and sequence queries
     let sequencer = SequencerRpc::new();
     module.merge(SequencerApiServer::into_rpc(sequencer))?;
+
+    // Add WebSocket subscription API for real-time block/comit notifications
+    let x3_subscriptions = X3SubscriptionRpc::<C, Block>::new(client.clone());
+    module.merge(X3SubscriptionApiServer::into_rpc(x3_subscriptions))?;
 
     // If the `frontier` feature is enabled, try to add Frontier JSON-RPC modules
     // (full `eth_*`, `net_*`, `web3_*` endpoints). This is compiled conditionally

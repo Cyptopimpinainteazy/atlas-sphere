@@ -199,6 +199,98 @@ impl EvmContext {
             gas_limit: 1_000_000,
         }
     }
+
+    /// Set block context
+    pub fn with_block(mut self, number: u32, timestamp: u64) -> Self {
+        self.block_number = number;
+        self.block_timestamp = timestamp;
+        self
+    }
+
+    /// Set gas parameters
+    pub fn with_gas(mut self, limit: u64, price: u128) -> Self {
+        self.gas_limit = limit;
+        self.gas_price = price;
+        self
+    }
+}
+
+/// Gas metering tracker for EVM execution
+pub struct GasMeter {
+    /// Gas limit for the execution
+    limit: u64,
+    /// Gas consumed so far
+    consumed: u64,
+    /// Gas refunded (SSTORE clears etc.)
+    refunded: u64,
+}
+
+impl GasMeter {
+    /// Create a new gas meter with the given limit
+    pub fn new(limit: u64) -> Self {
+        Self {
+            limit,
+            consumed: 0,
+            refunded: 0,
+        }
+    }
+
+    /// Consume gas; returns Err if out of gas
+    pub fn consume(&mut self, amount: u64) -> Result<(), &'static str> {
+        let new_consumed = self.consumed.checked_add(amount).ok_or("gas overflow")?;
+        if new_consumed > self.limit {
+            return Err("out of gas");
+        }
+        self.consumed = new_consumed;
+        Ok(())
+    }
+
+    /// Record a gas refund
+    pub fn refund(&mut self, amount: u64) {
+        self.refunded = self.refunded.saturating_add(amount);
+    }
+
+    /// Get remaining gas
+    pub fn remaining(&self) -> u64 {
+        self.limit.saturating_sub(self.consumed)
+    }
+
+    /// Get effective gas used (consumed - min(refunded, consumed/5) per EIP-3529)
+    pub fn effective_gas_used(&self) -> u64 {
+        let max_refund = self.consumed / 5;
+        let actual_refund = core::cmp::min(self.refunded, max_refund);
+        self.consumed.saturating_sub(actual_refund)
+    }
+
+    /// Get total consumed gas
+    pub fn consumed(&self) -> u64 {
+        self.consumed
+    }
+
+    /// Get total refunded gas
+    pub fn refunded_gas(&self) -> u64 {
+        self.refunded
+    }
+}
+
+/// Compute state root hash from the state database
+pub fn compute_state_root(db: &EvmStateDb) -> [u8; 32] {
+    use sp_io::hashing::blake2_256;
+
+    let mut data = Vec::new();
+    for (addr, account) in db.accounts() {
+        data.extend_from_slice(addr);
+        data.extend_from_slice(&account.nonce.to_le_bytes());
+        data.extend_from_slice(&account.balance.to_le_bytes());
+        data.extend_from_slice(&account.code_hash);
+        data.extend_from_slice(&account.storage_root);
+    }
+
+    if data.is_empty() {
+        [0u8; 32]
+    } else {
+        blake2_256(&data)
+    }
 }
 
 #[cfg(test)]
@@ -246,5 +338,84 @@ mod tests {
         let code = EvmCode::new(bytecode.clone());
         assert_eq!(code.len(), 3);
         assert!(!code.is_empty());
+    }
+
+    #[test]
+    fn test_gas_meter_basic() {
+        let mut meter = GasMeter::new(1_000_000);
+        assert_eq!(meter.remaining(), 1_000_000);
+
+        assert!(meter.consume(21_000).is_ok());
+        assert_eq!(meter.remaining(), 979_000);
+        assert_eq!(meter.consumed(), 21_000);
+    }
+
+    #[test]
+    fn test_gas_meter_out_of_gas() {
+        let mut meter = GasMeter::new(100);
+        assert!(meter.consume(50).is_ok());
+        assert!(meter.consume(51).is_err());
+    }
+
+    #[test]
+    fn test_gas_meter_refund() {
+        let mut meter = GasMeter::new(100_000);
+        meter.consume(50_000).unwrap();
+        meter.refund(15_000);
+        // EIP-3529: max refund = consumed/5 = 10,000
+        assert_eq!(meter.effective_gas_used(), 40_000); // 50000 - min(15000, 10000)
+    }
+
+    #[test]
+    fn test_evm_context_builder() {
+        let ctx = EvmContext::new([0xAA; 20])
+            .with_block(100, 1_700_000_000)
+            .with_gas(5_000_000, 20_000_000_000);
+        assert_eq!(ctx.block_number, 100);
+        assert_eq!(ctx.gas_limit, 5_000_000);
+        assert_eq!(ctx.gas_price, 20_000_000_000);
+    }
+
+    #[test]
+    fn test_state_db_storage() {
+        let mut db = EvmStateDb::new();
+        let addr = [0x01; 20];
+        let key = [0x02; 32];
+        let val = [0x03; 32];
+
+        db.set_storage(&addr, key, val);
+        assert_eq!(db.storage(&addr, &key), val);
+    }
+
+    #[test]
+    fn test_state_db_code() {
+        let mut db = EvmStateDb::new();
+        let addr = [0x01; 20];
+        let code = EvmCode::new(vec![0x60, 0x01]);
+
+        let code_hash = code.code_hash;
+        db.set_code(&addr, code);
+
+        let stored = db.code(&code_hash).unwrap();
+        assert_eq!(stored.len(), 2);
+        assert_eq!(db.account(&addr).unwrap().code_hash, code_hash);
+    }
+
+    #[test]
+    fn test_compute_state_root_empty() {
+        let db = EvmStateDb::new();
+        assert_eq!(compute_state_root(&db), [0u8; 32]);
+    }
+
+    #[test]
+    fn test_compute_state_root_deterministic() {
+        let mut db = EvmStateDb::new();
+        db.set_balance(&[1u8; 20], 1000);
+        db.set_balance(&[2u8; 20], 2000);
+
+        let root1 = compute_state_root(&db);
+        let root2 = compute_state_root(&db);
+        assert_eq!(root1, root2);
+        assert_ne!(root1, [0u8; 32]);
     }
 }

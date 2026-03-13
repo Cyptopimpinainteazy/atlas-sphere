@@ -7,11 +7,11 @@
 
 #![allow(dead_code)]
 
-use sp_core::H256;
-use sp_io::hashing::blake2_256;
 use super::scheduler_v1::scheduler_commitment_from_bytes;
 use super::types::{DisputedBlockMeta, FraudProofV1, PROOF_TYPE_SCHED_MISMATCH_V1};
 use super::witness_v1::WitnessError;
+use sp_core::H256;
+use sp_io::hashing::blake2_256;
 
 // ── Verifier error ────────────────────────────────────────────────────────────
 

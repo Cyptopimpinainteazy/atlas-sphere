@@ -33,6 +33,7 @@
 
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
+use jsonrpsee::ws_client::{WsClient, WsClientBuilder};
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use tracing::{debug, info};
@@ -232,46 +233,90 @@ impl Default for AtomicBundleBuilder {
 /// lifecycle operations.
 pub struct X3AtomicClient {
     endpoint: String,
-    // In production, this would hold a jsonrpsee WS client handle.
-    // For now, we expose the interface for external integration.
+    client: WsClient,
 }
 
 impl X3AtomicClient {
-    /// Connect to an X3 chain node.
+    /// Connect to an X3 chain node via WebSocket.
     pub async fn connect(endpoint: &str) -> Result<Self> {
         info!("Connecting to X3 node at {}", endpoint);
-        // TODO: Initialize jsonrpsee WebSocket client
+
+        let client = WsClientBuilder::default()
+            .build(endpoint)
+            .await
+            .map_err(|e| anyhow!("Failed to connect to WebSocket: {}", e))?;
+
         Ok(Self {
             endpoint: endpoint.to_string(),
+            client,
         })
     }
 
-    /// Submit an atomic bundle for execution.
+    /// Submit an atomic bundle for execution via RPC.
     pub async fn submit_bundle(&self, bundle: &AtomicBundle) -> Result<SubmitResult> {
         debug!("Submitting bundle with {} legs", bundle.legs.len());
-        // TODO: Call atomic_submitAtomicBundle RPC
-        Err(anyhow!("RPC client not yet connected — use with live node"))
+
+        let params = serde_json::json!({
+            "legs": bundle.legs,
+            "deadline_blocks": bundle.deadline_blocks
+        });
+
+        let result: SubmitResult = self
+            .client
+            .request("atomic_submitAtomicBundle", Some(params))
+            .await
+            .map_err(|e| anyhow!("RPC call failed: {}", e))?;
+
+        info!("Bundle submitted: {:?}", result.bundle_id);
+        Ok(result)
     }
 
-    /// Get the status of a bundle.
+    /// Get the status of a bundle via RPC.
     pub async fn get_status(&self, bundle_id: H256) -> Result<BundleStatus> {
         debug!("Getting status for bundle {:?}", bundle_id);
-        // TODO: Call atomic_getBundleStatus RPC
-        Err(anyhow!("RPC client not yet connected — use with live node"))
+
+        let params = serde_json::json!({ "bundle_id": bundle_id });
+
+        let result: BundleStatus = self
+            .client
+            .request("atomic_getBundleStatus", Some(params))
+            .await
+            .map_err(|e| anyhow!("RPC call failed: {}", e))?;
+
+        Ok(result)
     }
 
-    /// Get the PoAE proof for a finalized bundle.
+    /// Get the PoAE proof for a finalized bundle via RPC.
     pub async fn get_proof(&self, bundle_id: H256) -> Result<PoaeProof> {
         debug!("Getting proof for bundle {:?}", bundle_id);
-        // TODO: Call atomic_getAtomicExecutionProof RPC
-        Err(anyhow!("RPC client not yet connected — use with live node"))
+
+        let params = serde_json::json!({ "bundle_id": bundle_id });
+
+        let result: PoaeProof = self
+            .client
+            .request("atomic_getAtomicExecutionProof", Some(params))
+            .await
+            .map_err(|e| anyhow!("RPC call failed: {}", e))?;
+
+        Ok(result)
     }
 
-    /// Simulate a bundle without executing it.
+    /// Simulate a bundle without executing it via RPC.
     pub async fn simulate(&self, bundle: &AtomicBundle) -> Result<SimulationResult> {
         debug!("Simulating bundle with {} legs", bundle.legs.len());
-        // TODO: Call atomic_simulateAtomicBundle RPC
-        Err(anyhow!("RPC client not yet connected — use with live node"))
+
+        let params = serde_json::json!({
+            "legs": bundle.legs,
+            "deadline_blocks": bundle.deadline_blocks
+        });
+
+        let result: SimulationResult = self
+            .client
+            .request("atomic_simulateAtomicBundle", Some(params))
+            .await
+            .map_err(|e| anyhow!("RPC call failed: {}", e))?;
+
+        Ok(result)
     }
 
     /// The WebSocket endpoint this client is connected to.
