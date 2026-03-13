@@ -427,3 +427,24 @@ inline interpreter implementations, enabling actual code execution in the WASM r
 ### Build Status
 - All 4 modified crates: 0 errors, only minor unused-import warnings
 - 5/5 mini_x3 unit tests pass
+
+---
+## Session: npm Security Vulnerability Remediation
+**Commits:** fcaa15b5, a83fd694
+
+### Summary
+Fixed all npm security vulnerabilities across 30 package-lock.json files in the repository. Locally: 0 vulnerabilities in all tracked packages.
+
+### Vulnerabilities Fixed
+- **ROOT + workspaces**: Updated `@typescript-eslint/*` from ^6 to ^8.0.0 (fixes HIGH 6.16.0-7.5.0 chain). flatted, minimatch, serialize-javascript, terser-webpack-plugin, esbuild, vite/vitest all patched via `npm audit fix`.
+- **apps/x3-desktop**: Fixed CRITICAL `happy-dom`, HIGH `flatted`, MODERATE `esbuild/dompurify/vite` via `npm audit fix --force`.
+- **apps/wallet, apps/validators, apps/x3-intelligence**: 0 vulnerabilities via `npm audit fix --force`.
+- **apps/shared**: Regenerated corrupted `package-lock.json` (had invalid `@babel/helper-module-archive/archive/imports` entry). 0 vulnerabilities.
+- **contracts/core**: Added `overrides` to force `serialize-javascript ^7.0.4` (RCE fix), `undici ^6.23.0`, `cookie ^0.7.0`, `braces ^3.0.3`, `minimatch ^9.0.5`, `flatted ^3.3.2`. Eliminated all 5 HIGH severity CVEs.
+- **x3-app-store/frontend**: Added `overrides` for `braces`, `micromatch`, `anymatch`, `readdirp`, `chokidar` to fix `live-server` transitive deps. 0 vulnerabilities.
+- **TPS TESTING/txps, apps/x3-desktop/rag-bot, infra/*, scripts/***: All fixed via `npm audit fix --force`.
+- **Committed all package-lock.json files** (previously gitignored) so GitHub Dependabot can scan resolved secure versions.
+
+### Build Status
+- All 31 npm packages: 0 vulnerabilities locally (verified via python subprocess batch scan)
+- GitHub Dependabot re-scan pending (may take time to process updated lockfiles)
