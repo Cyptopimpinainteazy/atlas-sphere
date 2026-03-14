@@ -29,8 +29,16 @@
 use crate::gpu_hostcalls::GpuHostcalls;
 use crate::{ExecutionResult, VMConfig, VMError, VMErrorKind, Value, VM};
 
-// Re-export x3-backend types for bytecode helpers
+// Re-export x3-backend types for bytecode helpers (used by tests and callers)
 pub use x3_backend::bc_format_helpers;
+
+#[cfg(feature = "x3-evm-integration")]
+use x3_evm_integration::{EvmConfig, EvmExecutor};
+#[cfg(feature = "x3-svm-integration")]
+use x3_svm_integration::{SvmConfig, SvmExecutor};
+
+#[cfg(any(feature = "x3-evm-integration", feature = "x3-svm-integration"))]
+use std::sync::Arc;
 
 /// Configuration for the X3VM bridge
 #[derive(Clone, Debug)]
@@ -64,7 +72,7 @@ impl Default for BridgeConfig {
 
 fn bridge_disabled_error(name: &str) -> VMError {
     VMError::without_ip(VMErrorKind::HostcallError(format!(
-        "bridge hostcall '{}' disabled (enable real backend or build with --features bridge-mocks for dev/testing)",
+        "bridge hostcall '{}': no executor configured (call X3VMBridge::with_executors())",
         name
     )))
 }
@@ -73,22 +81,50 @@ fn bridge_disabled_error(name: &str) -> VMError {
 pub struct X3VMBridge {
     config: BridgeConfig,
     gpu: Option<GpuHostcalls>,
+    #[cfg(feature = "x3-evm-integration")]
+    evm: Option<Arc<dyn EvmExecutor + Send + Sync>>,
+    #[cfg(feature = "x3-svm-integration")]
+    svm: Option<Arc<dyn SvmExecutor + Send + Sync>>,
 }
 
 impl X3VMBridge {
-    /// Create a new X3VM bridge with default configuration
+    /// Create a new X3VM bridge with default configuration (no EVM/SVM executors).
     pub fn new() -> Self {
         Self::with_config(BridgeConfig::default())
     }
 
-    /// Create a new X3VM bridge with custom configuration
+    /// Create a new X3VM bridge with custom configuration.
     pub fn with_config(config: BridgeConfig) -> Self {
         let gpu = if config.enable_gpu {
             Some(GpuHostcalls::new())
         } else {
             None
         };
-        Self { config, gpu }
+        Self {
+            config,
+            gpu,
+            #[cfg(feature = "x3-evm-integration")]
+            evm: None,
+            #[cfg(feature = "x3-svm-integration")]
+            svm: None,
+        }
+    }
+
+    /// Attach real EVM and SVM executors to the bridge.
+    ///
+    /// When executors are provided the bridge hostcalls (0x10-0x22) route to
+    /// them instead of returning an error. The bridge ops (0x30-0x31) that
+    /// require canonical ledger context remain fail-closed until the canonical
+    /// ledger is wired at the runtime level.
+    #[cfg(all(feature = "x3-evm-integration", feature = "x3-svm-integration"))]
+    pub fn with_executors(
+        mut self,
+        evm: Arc<dyn EvmExecutor + Send + Sync>,
+        svm: Arc<dyn SvmExecutor + Send + Sync>,
+    ) -> Self {
+        self.evm = Some(evm);
+        self.svm = Some(svm);
+        self
     }
 
     /// Execute X3 bytecode with bridge hostcalls enabled
@@ -112,6 +148,15 @@ impl X3VMBridge {
             .map_err(|e| BridgeError::ExecutionError(format!("{:?}", e)))
     }
 
+    /// Register cross-VM hostcalls on a VM instance.
+    ///
+    /// This is exposed publicly so callers (e.g. `AtomicSwapOrchestrator`) can
+    /// wire bridge hostcalls onto an externally-created VM without going through
+    /// `execute()`.
+    pub fn register_bridge_hostcalls(&self, vm: &mut VM) {
+        self.register_hostcalls(vm);
+    }
+
     /// Register cross-VM hostcalls
     fn register_hostcalls(&self, vm: &mut VM) {
         // GPU compute hostcalls (0xD0 - 0xDF)
@@ -119,131 +164,228 @@ impl X3VMBridge {
             gpu.register_on_vm(vm);
         }
 
-        // SVM hostcalls
+        // ── SVM hostcalls ────────────────────────────────────────────────
         if self.config.enable_svm {
-            vm.register_hostcall(0x10, "svm_transfer", 3, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock SVM transfer: from, to, lamports
-                    log::debug!("SVM Transfer (mock): {:?}", args);
-                    return Ok(Some(Value::Bool(true)));
-                }
+            #[cfg(feature = "x3-svm-integration")]
+            {
+                let svm_exec = self.svm.clone();
 
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("svm_transfer"));
-                }
-            });
+                vm.register_hostcall(0x10, "svm_transfer", 3, {
+                    let svm = svm_exec.clone();
+                    move |args| {
+                        // SVM balance transfers require canonical ledger context
+                        // (pallet storage).  Without it we fail-closed so callers
+                        // know they must route through the Substrate runtime.
+                        let _ = (args, &svm);
+                        Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "svm_transfer requires canonical ledger (wire via Substrate runtime)"
+                                .into(),
+                        )))
+                    }
+                });
 
-            vm.register_hostcall(0x11, "svm_invoke", 3, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock SVM CPI
-                    log::debug!("SVM Invoke (mock): {:?}", args);
-                    return Ok(Some(Value::I64(0)));
-                }
+                vm.register_hostcall(0x11, "svm_invoke", 3, {
+                    let svm = svm_exec.clone();
+                    move |args| {
+                        let executor = svm.as_ref().ok_or_else(|| {
+                            VMError::without_ip(VMErrorKind::HostcallError(
+                                "svm_invoke: no SVM executor configured".into(),
+                            ))
+                        })?;
+                        let program = match args.first() {
+                            Some(Value::Bytes(b)) => b.clone(),
+                            _ => {
+                                return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "svm_invoke: arg[0] (program) must be Bytes".into(),
+                                )))
+                            }
+                        };
+                        let input = match args.get(1) {
+                            Some(Value::Bytes(b)) => b.clone(),
+                            _ => vec![],
+                        };
+                        let compute_units = match args.get(2) {
+                            Some(Value::I64(v)) => (*v).max(0) as u64,
+                            _ => 200_000,
+                        };
+                        let cfg = SvmConfig {
+                            compute_unit_limit: compute_units,
+                            ..SvmConfig::default()
+                        };
+                        let result = executor
+                            .execute_bpf(&program, &input, &cfg)
+                            .map_err(|e| {
+                                VMError::without_ip(VMErrorKind::HostcallError(format!(
+                                    "svm_invoke failed: {:?}",
+                                    e
+                                )))
+                            })?;
+                        Ok(Some(Value::Bytes(result.output)))
+                    }
+                });
 
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("svm_invoke"));
-                }
-            });
+                vm.register_hostcall(0x12, "svm_get_balance", 1, {
+                    let svm = svm_exec;
+                    move |args| {
+                        // Balance lookup requires Substrate storage access; fail-closed.
+                        let _ = (args, &svm);
+                        Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "svm_get_balance requires canonical ledger (wire via Substrate runtime)"
+                                .into(),
+                        )))
+                    }
+                });
+            }
 
-            vm.register_hostcall(0x12, "svm_get_balance", 1, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock get balance
-                    log::debug!("SVM Get Balance (mock): {:?}", args);
-                    return Ok(Some(Value::I64(1_000_000_000))); // 1 SOL in lamports
-                }
-
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("svm_get_balance"));
-                }
-            });
+            #[cfg(not(feature = "x3-svm-integration"))]
+            {
+                vm.register_hostcall(0x10, "svm_transfer", 3, |_args| {
+                    Err(bridge_disabled_error("svm_transfer"))
+                });
+                vm.register_hostcall(0x11, "svm_invoke", 3, |_args| {
+                    Err(bridge_disabled_error("svm_invoke"))
+                });
+                vm.register_hostcall(0x12, "svm_get_balance", 1, |_args| {
+                    Err(bridge_disabled_error("svm_get_balance"))
+                });
+            }
         }
 
-        // EVM hostcalls
+        // ── EVM hostcalls ────────────────────────────────────────────────
         if self.config.enable_evm {
-            vm.register_hostcall(0x20, "evm_call", 4, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock EVM call: gas, address, value, data
-                    log::debug!("EVM Call (mock): {:?}", args);
-                    return Ok(Some(Value::Bool(true)));
-                }
+            #[cfg(feature = "x3-evm-integration")]
+            {
+                let evm_exec = self.evm.clone();
 
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("evm_call"));
-                }
-            });
+                vm.register_hostcall(0x20, "evm_call", 4, {
+                    let evm = evm_exec.clone();
+                    move |args| {
+                        let executor = evm.as_ref().ok_or_else(|| {
+                            VMError::without_ip(VMErrorKind::HostcallError(
+                                "evm_call: no EVM executor configured".into(),
+                            ))
+                        })?;
+                        let gas = match args.first() {
+                            Some(Value::I64(v)) => (*v).max(0) as u64,
+                            _ => 21_000,
+                        };
+                        let addr_bytes = match args.get(1) {
+                            Some(Value::Bytes(b)) if b.len() == 20 => {
+                                sp_core::H160::from_slice(b)
+                            }
+                            _ => sp_core::H160::zero(),
+                        };
+                        let value_u256 = match args.get(2) {
+                            Some(Value::I64(v)) => sp_core::U256::from((*v).max(0) as u64),
+                            _ => sp_core::U256::zero(),
+                        };
+                        let data = match args.get(3) {
+                            Some(Value::Bytes(b)) => b.clone(),
+                            _ => vec![],
+                        };
+                        let cfg = EvmConfig {
+                            gas_limit: gas,
+                            ..EvmConfig::default()
+                        };
+                        let result = executor
+                            .call(
+                                &data,
+                                sp_core::H160::zero(),
+                                addr_bytes,
+                                value_u256,
+                                &cfg,
+                            )
+                            .map_err(|e| {
+                                VMError::without_ip(VMErrorKind::HostcallError(format!(
+                                    "evm_call failed: {:?}",
+                                    e
+                                )))
+                            })?;
+                        Ok(Some(Value::Bytes(result.output)))
+                    }
+                });
 
-            vm.register_hostcall(0x21, "evm_staticcall", 3, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock EVM staticcall
-                    log::debug!("EVM StaticCall (mock): {:?}", args);
-                    return Ok(Some(Value::Bool(true)));
-                }
+                vm.register_hostcall(0x21, "evm_staticcall", 3, {
+                    let evm = evm_exec.clone();
+                    move |args| {
+                        let executor = evm.as_ref().ok_or_else(|| {
+                            VMError::without_ip(VMErrorKind::HostcallError(
+                                "evm_staticcall: no EVM executor configured".into(),
+                            ))
+                        })?;
+                        let addr_bytes = match args.first() {
+                            Some(Value::Bytes(b)) if b.len() == 20 => {
+                                sp_core::H160::from_slice(b)
+                            }
+                            _ => sp_core::H160::zero(),
+                        };
+                        let gas = match args.get(1) {
+                            Some(Value::I64(v)) => (*v).max(0) as u64,
+                            _ => 21_000,
+                        };
+                        let data = match args.get(2) {
+                            Some(Value::Bytes(b)) => b.clone(),
+                            _ => vec![],
+                        };
+                        let cfg = EvmConfig {
+                            gas_limit: gas,
+                            ..EvmConfig::default()
+                        };
+                        let result = executor
+                            .call(
+                                &data,
+                                sp_core::H160::zero(),
+                                addr_bytes,
+                                sp_core::U256::zero(),
+                                &cfg,
+                            )
+                            .map_err(|e| {
+                                VMError::without_ip(VMErrorKind::HostcallError(format!(
+                                    "evm_staticcall failed: {:?}",
+                                    e
+                                )))
+                            })?;
+                        Ok(Some(Value::Bytes(result.output)))
+                    }
+                });
 
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("evm_staticcall"));
-                }
-            });
+                vm.register_hostcall(0x22, "evm_balance", 1, {
+                    let evm = evm_exec;
+                    move |args| {
+                        // Balance lookup requires pallet-evm storage; fail-closed.
+                        let _ = (args, &evm);
+                        Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "evm_balance requires canonical ledger (wire via Substrate runtime)"
+                                .into(),
+                        )))
+                    }
+                });
+            }
 
-            vm.register_hostcall(0x22, "evm_balance", 1, |args| {
-                #[cfg(feature = "bridge-mocks")]
-                {
-                    // Mock EVM balance
-                    log::debug!("EVM Balance (mock): {:?}", args);
-                    return Ok(Some(Value::I64(1_000_000_000_000_000_000))); // 1 ETH in wei
-                }
-
-                #[cfg(not(feature = "bridge-mocks"))]
-                {
-                    let _ = args;
-                    return Err(bridge_disabled_error("evm_balance"));
-                }
-            });
+            #[cfg(not(feature = "x3-evm-integration"))]
+            {
+                vm.register_hostcall(0x20, "evm_call", 4, |_args| {
+                    Err(bridge_disabled_error("evm_call"))
+                });
+                vm.register_hostcall(0x21, "evm_staticcall", 3, |_args| {
+                    Err(bridge_disabled_error("evm_staticcall"))
+                });
+                vm.register_hostcall(0x22, "evm_balance", 1, |_args| {
+                    Err(bridge_disabled_error("evm_balance"))
+                });
+            }
         }
 
-        // Cross-VM bridge hostcalls
-        vm.register_hostcall(0x30, "bridge_svm_to_evm", 2, |args| {
-            #[cfg(feature = "bridge-mocks")]
-            {
-                // Bridge tokens from SVM to EVM
-                log::debug!("Bridge SVM->EVM (mock): {:?}", args);
-                return Ok(Some(Value::Bool(true)));
-            }
-
-            #[cfg(not(feature = "bridge-mocks"))]
-            {
-                let _ = args;
-                return Err(bridge_disabled_error("bridge_svm_to_evm"));
-            }
+        // ── Cross-VM bridge ops (require canonical ledger — fail-closed) ──
+        vm.register_hostcall(0x30, "bridge_svm_to_evm", 2, |_args| {
+            Err(VMError::without_ip(VMErrorKind::HostcallError(
+                "bridge_svm_to_evm: wire canonical bridge + ledger (not yet implemented)".into(),
+            )))
         });
-
-        vm.register_hostcall(0x31, "bridge_evm_to_svm", 2, |args| {
-            #[cfg(feature = "bridge-mocks")]
-            {
-                // Bridge tokens from EVM to SVM
-                log::debug!("Bridge EVM->SVM (mock): {:?}", args);
-                return Ok(Some(Value::Bool(true)));
-            }
-
-            #[cfg(not(feature = "bridge-mocks"))]
-            {
-                let _ = args;
-                return Err(bridge_disabled_error("bridge_evm_to_svm"));
-            }
+        vm.register_hostcall(0x31, "bridge_evm_to_svm", 2, |_args| {
+            Err(VMError::without_ip(VMErrorKind::HostcallError(
+                "bridge_evm_to_svm: wire canonical bridge + ledger (not yet implemented)".into(),
+            )))
         });
     }
 }
