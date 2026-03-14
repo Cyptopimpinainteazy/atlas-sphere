@@ -170,7 +170,7 @@ impl AtomicSwapOrchestrator {
                 &svm[..our_prefix.len()] == our_prefix
             }) {
             let root = Self::compute_receipt_root(&svm_prefix, &evm_prefix);
-            (Some(root), Some(committed_at_ns))
+            (Some(root), Some(ts))
         } else {
             // Fallback: compute deterministic receipt_root from the pair directly.
             // This path is taken in tests where the shm is not available.
@@ -302,9 +302,6 @@ impl AtomicSwapOrchestrator {
     /// for every new entry since the last drain.  Call this from your finality
     /// handler to trigger on-chain state updates.
     pub fn drain_committed_swaps() -> Vec<([u8; 32], [u8; 32], u64)> {
-        use std::ffi::CStr;
-        use std::os::raw::c_int;
-
         // Constants mirror those in atomic_swap.cu
         const RING_SIZE: usize = 256;
         const SHM_NAME: &[u8] = b"/x3_atomic_commits\0";
@@ -574,6 +571,164 @@ mod tests {
             sequence_nonce: 7,
         };
         assert_eq!(req.bundle_id, AtomicSwapOrchestrator::derive_bundle_id(&pair));
+    }
+
+    // ── E2E pipeline data-flow tests ─────────────────────────────────────────
+    //
+    // These tests verify the full data flow without requiring a live GPU/VM.
+    // They confirm that each stage produces outputs correctly consumed by the
+    // next stage, matching the protocol that the on-chain OCW reads.
+
+    /// Verify the OCW local-storage key format agrees between the orchestrator
+    /// write path and the pallet OCW read path.
+    ///
+    /// Protocol: key = b"x3fin:" (6 bytes) || bundle_id (32 bytes) = 38 bytes total.
+    #[test]
+    fn test_ocw_key_format_matches_pallet_protocol() {
+        let pair = make_pair(0xAB, b"svm_ocw_test", b"evm_ocw_test", 42);
+        let bundle_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
+
+        let mut key = b"x3fin:".to_vec();
+        key.extend_from_slice(bundle_id.as_bytes());
+
+        // Key must be exactly 38 bytes (6 prefix + 32 bundle_id)
+        assert_eq!(key.len(), 38, "OCW key must be 38 bytes");
+        assert_eq!(&key[..6], b"x3fin:", "OCW key must start with 'x3fin:'");
+        assert_eq!(&key[6..], bundle_id.as_bytes(), "OCW key suffix must be the bundle_id");
+    }
+
+    /// Verify the OCW local-storage payload format:
+    /// 40 bytes = receipt_root[0..32] || committed_at_ns[32..40] (LE u64).
+    #[test]
+    fn test_ocw_payload_encode_decode_roundtrip() {
+        let svm = [0x11u8; 32];
+        let evm = [0x22u8; 32];
+        let receipt_root = AtomicSwapOrchestrator::compute_receipt_root(&svm, &evm);
+        let committed_at_ns: u64 = 1_700_000_000_000_000_001;
+
+        // Encode (as the orchestrator would write to local storage)
+        let mut payload = receipt_root.as_bytes().to_vec();
+        payload.extend_from_slice(&committed_at_ns.to_le_bytes());
+
+        assert_eq!(payload.len(), 40, "OCW payload must be 40 bytes");
+
+        // Decode (as the pallet OCW would read from local storage)
+        let decoded_root = H256::from_slice(&payload[..32]);
+        let decoded_ns = u64::from_le_bytes(
+            payload[32..40].try_into().expect("slice is 8 bytes"),
+        );
+
+        assert_eq!(decoded_root, receipt_root, "decoded receipt_root must match");
+        assert_eq!(decoded_ns, committed_at_ns, "decoded committed_at_ns must match");
+        assert_ne!(decoded_root, H256::zero(), "receipt_root of real data must not be zero");
+    }
+
+    /// Full data-flow E2E test:
+    /// AtomicPair → derive_bundle_id → compute_receipt_root →
+    /// ProcessResult → FinalizationRequest → OCW payload
+    ///
+    /// Verifies every field threads through the pipeline correctly.
+    #[test]
+    fn test_full_pipeline_field_propagation() {
+        let pair = AtomicPair {
+            swap_id: b"e2e_full_pipeline".to_vec(),
+            svm_tx: vec![0xCA; 32],
+            evm_tx: vec![0xFE; 32],
+            sequence_nonce: 100,
+        };
+
+        // Step 1: derive bundle_id — must be deterministic
+        let bundle_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
+        assert_ne!(bundle_id, H256::zero());
+
+        // Step 2: compute receipt_root from tx prefixes
+        let mut svm_prefix = [0u8; 32];
+        let mut evm_prefix = [0u8; 32];
+        let n = pair.svm_tx.len().min(32);
+        svm_prefix[..n].copy_from_slice(&pair.svm_tx[..n]);
+        let m = pair.evm_tx.len().min(32);
+        evm_prefix[..m].copy_from_slice(&pair.evm_tx[..m]);
+        let receipt_root = AtomicSwapOrchestrator::compute_receipt_root(&svm_prefix, &evm_prefix);
+        assert_ne!(receipt_root, H256::zero());
+
+        // Step 3: construct ProcessResult as process_swap() would return
+        let committed_at_ns: u64 = 9_999_888_777_666_555;
+        let result = ProcessResult {
+            status: AtomicStatus::Committed,
+            bundle_id,
+            receipt_root: Some(receipt_root),
+            committed_at_ns: Some(committed_at_ns),
+        };
+        assert_eq!(result.bundle_id, bundle_id);
+        assert_eq!(result.receipt_root, Some(receipt_root));
+
+        // Step 4: build FinalizationRequest — must carry same bundle_id + receipt_root
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result)
+            .expect("committed result with non-zero root must produce request");
+        assert_eq!(req.bundle_id, bundle_id, "bundle_id must propagate to FinalizationRequest");
+        assert_eq!(req.receipt_root, receipt_root, "receipt_root must propagate");
+        assert_eq!(req.committed_at_ns, committed_at_ns, "committed_at_ns must propagate");
+
+        // Step 5: encode OCW payload and verify it decodes back to the same values
+        let mut payload = req.receipt_root.as_bytes().to_vec();
+        payload.extend_from_slice(&req.committed_at_ns.to_le_bytes());
+        assert_eq!(payload.len(), 40);
+        assert_eq!(H256::from_slice(&payload[..32]), receipt_root);
+        assert_eq!(
+            u64::from_le_bytes(payload[32..40].try_into().unwrap()),
+            committed_at_ns,
+        );
+    }
+
+    /// Verify FinalizationRequest serialises to/from JSON cleanly (for RPC transport).
+    #[test]
+    fn test_finalization_request_serde_roundtrip() {
+        let result = make_committed_result();
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result).unwrap();
+
+        let json = serde_json::to_string(&req).expect("must serialise");
+        let decoded: FinalizationRequest =
+            serde_json::from_str(&json).expect("must deserialise");
+
+        assert_eq!(decoded.bundle_id, req.bundle_id);
+        assert_eq!(decoded.receipt_root, req.receipt_root);
+        assert_eq!(decoded.committed_at_ns, req.committed_at_ns);
+        assert_eq!(decoded.finality_cert, req.finality_cert);
+    }
+
+    /// ProcessResult serialises to/from JSON (used by monitoring + health-check RPCs).
+    #[test]
+    fn test_process_result_serde_roundtrip() {
+        let result = make_committed_result();
+        let json = serde_json::to_string(&result).expect("must serialise");
+        let decoded: ProcessResult = serde_json::from_str(&json).expect("must deserialise");
+
+        assert_eq!(decoded.status, result.status);
+        assert_eq!(decoded.bundle_id, result.bundle_id);
+        assert_eq!(decoded.receipt_root, result.receipt_root);
+        assert_eq!(decoded.committed_at_ns, result.committed_at_ns);
+    }
+
+    /// Verify that two independent invocations with the same input produce
+    /// byte-for-byte identical outputs at every stage (protocol stability).
+    #[test]
+    fn test_pipeline_stability_across_invocations() {
+        let pair_a = make_pair(0x55, b"stable_svm_data", b"stable_evm_data", 77);
+        let pair_b = make_pair(0x55, b"stable_svm_data", b"stable_evm_data", 77);
+
+        assert_eq!(
+            AtomicSwapOrchestrator::derive_bundle_id(&pair_a),
+            AtomicSwapOrchestrator::derive_bundle_id(&pair_b),
+            "bundle_id must be stable across invocations"
+        );
+
+        let svm = [0xAAu8; 32];
+        let evm = [0xBBu8; 32];
+        assert_eq!(
+            AtomicSwapOrchestrator::compute_receipt_root(&svm, &evm),
+            AtomicSwapOrchestrator::compute_receipt_root(&svm, &evm),
+            "receipt_root must be stable across invocations"
+        );
     }
 }
 

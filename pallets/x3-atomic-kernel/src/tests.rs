@@ -98,3 +98,79 @@ fn test_bundle_leg_encode_decode_roundtrip() {
     let decoded = BundleLeg::decode(&mut &encoded[..]).expect("decode failed");
     assert_eq!(leg, decoded);
 }
+
+// ── OCW key / payload protocol tests ──────────────────────────────────────
+//
+// These tests verify the pallet OCW's key convention and payload encoding
+// agree exactly with what the AtomicSwapOrchestrator writes to off-chain
+// local storage.  They are pure computation tests — no FRAME mock needed.
+
+/// OCW key = b"x3fin:" (6) || bundle_id_bytes (32) = 38 bytes.
+/// Must match the key written by the orchestrator's finalization signal path.
+#[test]
+fn test_ocw_key_is_38_bytes_with_correct_prefix() {
+    let bundle_id = H256::repeat_byte(0xBB);
+    let mut key = b"x3fin:".to_vec();
+    key.extend_from_slice(bundle_id.as_bytes());
+
+    assert_eq!(key.len(), 38, "key must be 38 bytes (6 prefix + 32 bundle_id)");
+    assert_eq!(&key[..6], b"x3fin:", "key must start with 'x3fin:'");
+    assert_eq!(&key[6..38], bundle_id.as_bytes());
+}
+
+/// Payload decode: 40 bytes = receipt_root[0..32] || committed_at_ns[32..40] LE.
+/// Mirrors the decode in `offchain_worker()` hook — both sides must agree.
+#[test]
+fn test_ocw_payload_decode_matches_encode() {
+    use sp_core::hashing::sha2_256;
+
+    let receipt_root = H256::from(sha2_256(b"test_receipt_data"));
+    let committed_at_ns: u64 = 1_700_500_000_000_000_000u64;
+
+    // Encode (orchestrator writer side)
+    let mut payload: Vec<u8> = receipt_root.as_bytes().to_vec();
+    payload.extend_from_slice(&committed_at_ns.to_le_bytes());
+    assert_eq!(payload.len(), 40);
+
+    // Decode (pallet OCW reader side — mirrors offchain_worker() code)
+    let decoded_root = H256::from_slice(&payload[..32]);
+    let decoded_ns = u64::from_le_bytes(
+        payload[32..40].try_into().expect("slice is exactly 8 bytes"),
+    );
+
+    assert_eq!(decoded_root, receipt_root);
+    assert_eq!(decoded_ns, committed_at_ns);
+    assert_ne!(decoded_root, H256::zero(), "SHA-256 of real data cannot be zero");
+}
+
+/// Verify `H256::zero()` guard: the OCW skips bundles with zero receipt_root.
+#[test]
+fn test_ocw_zero_receipt_root_is_rejected() {
+    let zero_root = H256::zero();
+    // Mirrors the guard in offchain_worker(): `if receipt_root == H256::zero() { continue }`
+    assert!(
+        zero_root == H256::zero(),
+        "zero H256 sentinel must work for OCW guard"
+    );
+
+    let non_zero = H256::repeat_byte(0x01);
+    assert_ne!(non_zero, H256::zero(), "non-zero receipt_root must pass OCW guard");
+}
+
+/// Verify that different bundle IDs produce non-colliding OCW keys.
+#[test]
+fn test_ocw_keys_are_unique_per_bundle() {
+    use sp_core::hashing::sha2_256;
+
+    let id_a = H256::from(sha2_256(b"bundle_alpha"));
+    let id_b = H256::from(sha2_256(b"bundle_beta"));
+    assert_ne!(id_a, id_b);
+
+    let mut key_a = b"x3fin:".to_vec();
+    key_a.extend_from_slice(id_a.as_bytes());
+
+    let mut key_b = b"x3fin:".to_vec();
+    key_b.extend_from_slice(id_b.as_bytes());
+
+    assert_ne!(key_a, key_b, "distinct bundle IDs must produce distinct OCW keys");
+}

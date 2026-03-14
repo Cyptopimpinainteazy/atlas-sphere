@@ -73,9 +73,11 @@ pub mod proof;
 pub mod pallet {
     use super::proof::{BundleLeg, PoaeProof};
     use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::Currency};
+    use frame_system::offchain::SubmitTransaction;
     use frame_system::pallet_prelude::*;
-    use sp_core::H256;
-    use sp_runtime::traits::Hash;
+    use sp_core::{hashing::sha2_256, H256};
+    use sp_runtime::offchain::StorageKind;
+    use sp_runtime::traits::{Saturating, SaturatedConversion};
     use sp_runtime::transaction_validity::{
         InvalidTransaction, TransactionPriority, TransactionSource, TransactionValidity,
         ValidTransaction,
@@ -83,8 +85,14 @@ pub mod pallet {
 
     // ── Config ────────────────────────────────────────────────────────────────
 
+    /// Convenience alias for the pallet's currency balance type.
+    pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
     #[pallet::config]
-    pub trait Config: frame_system::Config {
+    pub trait Config:
+        frame_system::Config
+        + frame_system::offchain::SendTransactionTypes<Call<Self>>
+    {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// The currency used for executor bonds.
@@ -249,6 +257,77 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        /// Off-chain worker: auto-submits unsigned `submit_finalization_result` for
+        /// any `Executing` bundle whose GPU-committed finalization data is waiting
+        /// in off-chain local storage.
+        ///
+        /// The `AtomicSwapOrchestrator` (running as a node-side service) writes the
+        /// finalization record via `sp_io::offchain::local_storage_set` using the key
+        /// convention:  `b"x3fin:" + bundle_id_bytes (32)`.
+        /// The value is 40 bytes: `receipt_root (32) || committed_at_ns (8, LE)`.
+        fn offchain_worker(now: BlockNumberFor<T>) {
+            log::debug!(
+                target: "x3-atomic-kernel",
+                "[OCW] block {:?}: scanning Executing bundles",
+                now
+            );
+
+            for (bundle_id, record) in Bundles::<T>::iter() {
+                if record.status != BundleStatus::Executing {
+                    continue;
+                }
+
+                // Build the storage key used by the orchestrator to signal finalization.
+                let mut key = b"x3fin:".to_vec();
+                key.extend_from_slice(bundle_id.as_bytes());
+
+                let data = match sp_io::offchain::local_storage_get(StorageKind::PERSISTENT, &key) {
+                    Some(v) if v.len() >= 40 => v,
+                    _ => continue,
+                };
+
+                // Parse receipt_root and committed_at_ns from the 40-byte payload.
+                let receipt_root = H256::from_slice(&data[..32]);
+                let committed_at_ns = u64::from_le_bytes(
+                    data[32..40].try_into().unwrap_or([0u8; 8]),
+                );
+
+                if receipt_root == H256::zero() {
+                    log::warn!(
+                        target: "x3-atomic-kernel",
+                        "[OCW] bundle {:?}: skipping zero receipt_root in local storage",
+                        bundle_id
+                    );
+                    continue;
+                }
+
+                let call = Call::submit_finalization_result {
+                    bundle_id,
+                    receipt_root,
+                    committed_at_ns,
+                };
+
+                match SubmitTransaction::<T, Call<T>>::submit_unsigned_transaction(call.into()) {
+                    Ok(()) => {
+                        // Clear the entry so we don't resubmit next block.
+                        sp_io::offchain::local_storage_clear(StorageKind::PERSISTENT, &key);
+                        log::info!(
+                            target: "x3-atomic-kernel",
+                            "[OCW] submitted finalization for bundle {:?} (receipt_root={:?})",
+                            bundle_id, receipt_root
+                        );
+                    }
+                    Err(()) => {
+                        log::error!(
+                            target: "x3-atomic-kernel",
+                            "[OCW] failed to submit unsigned tx for bundle {:?}",
+                            bundle_id
+                        );
+                    }
+                }
+            }
+        }
+
         /// On each block, expire bundles that have passed their deadline.
         fn on_initialize(now: BlockNumberFor<T>) -> Weight {
             // Use DeadlineIndex for O(1) lookup of bundles expiring at this block
@@ -274,7 +353,8 @@ pub mod pallet {
                         let bond = T::MinBond::get();
                         let slash_amount = bond.saturating_div(20);
                         if slash_amount > 0 {
-                            let _ = T::Currency::slash(&record.submitter, slash_amount);
+                            let slash: BalanceOf<T> = slash_amount.saturated_into();
+                            let _ = T::Currency::slash(&record.submitter, slash);
                         }
 
                         Self::deposit_event(Event::BundleRolledBack {
@@ -299,7 +379,7 @@ pub mod pallet {
             }
 
             // Return weight based on processed bundles
-            Weight::from_parts(processed_count * 10_000, 0)
+            Weight::from_parts((processed_count as u64) * 10_000, 0)
         }
     }
 
@@ -335,9 +415,9 @@ pub mod pallet {
             let now = <frame_system::Pallet<T>>::block_number();
             let deadline = now.saturating_add(deadline_blocks.min(T::BundleDeadlineBlocks::get()));
 
-            // Derive a deterministic bundle_id
+            // Derive a deterministic bundle_id using sha2_256 so it's always H256.
             let legs_encoded = legs.encode();
-            let legs_hash = T::Hashing::hash(&legs_encoded);
+            let legs_hash = H256(sha2_256(&legs_encoded));
             let bundle_id = Self::derive_bundle_id(&submitter, now, legs_hash);
 
             ensure!(
@@ -424,7 +504,7 @@ pub mod pallet {
             origin: OriginFor<T>,
             bundle_id: H256,
             receipt_root: H256,
-            committed_at_ns: u64,
+            _committed_at_ns: u64,
         ) -> DispatchResult {
             ensure_none(origin)?;
             let now = <frame_system::Pallet<T>>::block_number();
@@ -503,7 +583,7 @@ pub mod pallet {
             Bundles::<T>::insert(bundle_id, &record);
 
             // Slash bond proportional to reason severity
-            let slash_amount = match reason {
+            let slash_amount: u128 = match reason {
                 BundleRollbackReason::ExecutionFailed
                 | BundleRollbackReason::AccessSetViolation => {
                     // Slash 10% of bond for execution failures or access violations
@@ -522,7 +602,8 @@ pub mod pallet {
             };
 
             if slash_amount > 0 {
-                let _ = T::Currency::slash(&record.submitter, slash_amount);
+                let slash: BalanceOf<T> = slash_amount.saturated_into();
+                let _ = T::Currency::slash(&record.submitter, slash);
                 log::info!(
                     target: "x3-atomic-kernel",
                     "Bundle {:?} slashed by {} for reason {:?}",
@@ -643,6 +724,8 @@ pub mod pallet {
         }
 
         /// Derive a deterministic bundle ID from submitter + block + legs_hash.
+        /// Uses SHA-256 directly (not T::Hashing) so the result is always H256,
+        /// matching the off-chain `derive_bundle_id()` in the AtomicSwapOrchestrator.
         pub fn derive_bundle_id(
             submitter: &T::AccountId,
             block: BlockNumberFor<T>,
@@ -651,7 +734,7 @@ pub mod pallet {
             let mut data = submitter.encode();
             data.extend_from_slice(&block.encode());
             data.extend_from_slice(legs_hash.as_bytes());
-            T::Hashing::hash(&data)
+            H256(sha2_256(&data))
         }
 
         /// Get a PoAE proof for external verification.
