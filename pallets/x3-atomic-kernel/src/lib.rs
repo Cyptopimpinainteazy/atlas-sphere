@@ -449,6 +449,45 @@ pub mod pallet {
             Ok(())
         }
 
+        /// Assign an executor to a pending bundle, transitioning it to `Executing`.
+        ///
+        /// Called by an off-chain worker or privileged executor account.
+        /// This is a lightweight state transition: it only changes the status so
+        /// that `on_initialize` expiry logic (and external observers) know the bundle
+        /// is actively being processed.  Execution itself happens off-chain via the
+        /// `AtomicSwapOrchestrator`; the result is submitted via `finalize_atomic_bundle`.
+        #[pallet::call_index(3)]
+        #[pallet::weight(Weight::from_parts(5_000, 0))]
+        pub fn assign_bundle_executor(
+            origin: OriginFor<T>,
+            bundle_id: H256,
+        ) -> DispatchResult {
+            let executor = ensure_signed(origin)?;
+
+            let mut record = Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
+
+            ensure!(
+                record.status == BundleStatus::Pending,
+                Error::<T>::InvalidBundleState
+            );
+
+            let now = <frame_system::Pallet<T>>::block_number();
+            ensure!(now <= record.deadline_block, Error::<T>::DeadlineExpired);
+
+            record.status = BundleStatus::Executing;
+            Bundles::<T>::insert(bundle_id, &record);
+
+            Self::deposit_event(Event::BundleAssigned { bundle_id, executor });
+
+            log::info!(
+                target: "x3-atomic-kernel",
+                "Bundle {:?} assigned to executor, now Executing",
+                bundle_id
+            );
+
+            Ok(())
+        }
+
         /// Roll back a bundle, emitting a reason for the rollback.
         ///
         /// Called by the submitter to cancel, or by governance/runtime on deadline.
