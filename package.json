@@ -83,6 +83,11 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "overrides": {
+    "elliptic": "^6.6.1",
+    "axios": "^1.7.9",
+    "ws": "^8.18.0"
+  },
   "bugs": {
     "url": "https://github.com/Cyptopimpinainteazy/x3-chain/issues"
   },
