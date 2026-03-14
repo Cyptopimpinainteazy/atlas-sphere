@@ -1,8 +1,32 @@
 #include <cuda_runtime.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "secp256k1.cuh"  // for BigInt + modular math helpers
+
+/* Shared-memory ring buffer for committed atomic swaps.
+ * The X3 runtime monitors /x3_atomic_commits to detect finalized swaps. */
+#define X3_COMMIT_SHM_NAME  "/x3_atomic_commits"
+#define X3_COMMIT_RING_SIZE 256
+
+typedef struct {
+    uint8_t  svm_prefix[32];       /* first 32 bytes of SVM entry (contains swap_id) */
+    uint8_t  evm_prefix[32];       /* first 32 bytes of EVM entry                    */
+    uint64_t committed_at_ns;      /* CLOCK_REALTIME nanoseconds                     */
+    volatile uint8_t valid;        /* set last; reader checks this with ACQUIRE       */
+    uint8_t  _pad[7];
+} AtomicCommitEntry;
+
+typedef struct {
+    volatile uint32_t write_idx;   /* monotonic counter, mod ring size for slot       */
+    uint32_t          _pad[7];     /* separate from data on a cache line              */
+    AtomicCommitEntry entries[X3_COMMIT_RING_SIZE];
+} AtomicCommitRing;
 
 extern "C" {
 
@@ -179,9 +203,48 @@ int atomic_commit_host(
     const uint8_t* evm_data,
     int batch_size
 ) {
-    // Commit logic: Persist or signal to X3 VM that transition is final.
-    // This often involves zero-copy IPC to shared state buffers.
-    return 0;
+    if (!svm_data || !evm_data || batch_size <= 0) return 0;
+
+    /* Open (or create) the POSIX shm ring buffer. */
+    int fd = shm_open(X3_COMMIT_SHM_NAME, O_CREAT | O_RDWR, 0600);
+    if (fd < 0) return 0;
+
+    const size_t shm_size = sizeof(AtomicCommitRing);
+    if (ftruncate(fd, (off_t)shm_size) < 0) {
+        close(fd);
+        return 0;
+    }
+
+    AtomicCommitRing* ring = (AtomicCommitRing*)mmap(
+        NULL, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0
+    );
+    close(fd);
+    if (ring == MAP_FAILED) return 0;
+
+    int committed = 0;
+    for (int i = 0; i < batch_size; i++) {
+        /* Atomically claim the next ring slot. */
+        uint32_t slot = __atomic_fetch_add(&ring->write_idx, 1u, __ATOMIC_SEQ_CST)
+                        % X3_COMMIT_RING_SIZE;
+        AtomicCommitEntry* e = &ring->entries[slot];
+
+        const size_t svm_copy = SVM_ENTRY_SIZE < 32 ? SVM_ENTRY_SIZE : 32;
+        const size_t evm_copy = EVM_ENTRY_SIZE < 32 ? EVM_ENTRY_SIZE : 32;
+        memcpy(e->svm_prefix, svm_data + (size_t)i * SVM_ENTRY_SIZE, svm_copy);
+        memcpy(e->evm_prefix, evm_data + (size_t)i * EVM_ENTRY_SIZE, evm_copy);
+
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        e->committed_at_ns = (uint64_t)ts.tv_sec * 1000000000ULL
+                           + (uint64_t)ts.tv_nsec;
+
+        /* Release store: make the entry visible to readers. */
+        __atomic_store_n(&e->valid, 1u, __ATOMIC_RELEASE);
+        committed++;
+    }
+
+    munmap(ring, shm_size);
+    return committed;
 }
 
 }

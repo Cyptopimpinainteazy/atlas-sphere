@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use x3_vm::{Value, VM};
+use x3_vm::{gpu_hostcalls::GpuHostcalls, Value, VM};
 
 /// Atomic Transaction Pair (SVM + EVM)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +32,15 @@ impl AtomicSwapOrchestrator {
         }
     }
 
+    /// Creates an orchestrator with GPU hostcalls (0xD8/0xD9) pre-registered on `vm`.
+    /// Use this instead of `new()` unless the caller has already registered them.
+    pub fn new_with_gpu(mut vm: VM) -> Self {
+        GpuHostcalls::new().register_on_vm(&mut vm);
+        Self {
+            vm: Arc::new(Mutex::new(vm)),
+        }
+    }
+
     /// Primary entry point for atomic validation and commitment.
     /// This follows the Hard Gate: 100% Determinism, <10ms Overhead.
     pub async fn process_swap(&self, pair: AtomicPair) -> Result<AtomicStatus> {
@@ -42,7 +51,7 @@ impl AtomicSwapOrchestrator {
         let is_valid = self.verify_gpu(&pair).await?;
 
         if !is_valid {
-            log::error!(
+            log::warn!(
                 "Atomic swap failed GPU verification: {:?}",
                 hex::encode(&pair.swap_id)
             );
@@ -50,11 +59,23 @@ impl AtomicSwapOrchestrator {
         }
 
         // 2. PHASE: COMMIT (GPU-Accelerated)
-        // We call the X3 VM hostcall 0xD9 (GPU_ATOMIC_COMMIT)
-        self.commit_gpu(&pair).await?;
-
-        log::info!("Atomic swap committed: {:?}", hex::encode(&pair.swap_id));
-        Ok(AtomicStatus::Committed)
+        // We call the X3 VM hostcall 0xD9 (GPU_ATOMIC_COMMIT).
+        // On commit failure we roll back and propagate the status — callers
+        // should not re-submit the same swap_id after a rollback.
+        match self.commit_gpu(&pair).await {
+            Ok(()) => {
+                log::info!("Atomic swap committed: {:?}", hex::encode(&pair.swap_id));
+                Ok(AtomicStatus::Committed)
+            }
+            Err(e) => {
+                log::error!(
+                    "Atomic swap commit failed, rolling back {:?}: {:?}",
+                    hex::encode(&pair.swap_id),
+                    e
+                );
+                Ok(AtomicStatus::RolledBack)
+            }
+        }
     }
 
     async fn verify_gpu(&self, pair: &AtomicPair) -> Result<bool> {

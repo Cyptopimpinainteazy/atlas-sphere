@@ -1099,9 +1099,9 @@ impl GpuHostcalls {
 
         let ret = unsafe { (lib.commit)(svm_data.as_ptr(), evm_data.as_ptr(), 1) };
 
-        if ret != 0 {
+        if ret <= 0 {
             return Err(VMError::without_ip(VMErrorKind::HostcallError(format!(
-                "gpu_atomic_commit: CUDA error code {}",
+                "gpu_atomic_commit: commit failed (returned {})",
                 ret
             ))));
         }
