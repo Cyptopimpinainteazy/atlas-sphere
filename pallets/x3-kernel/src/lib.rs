@@ -2995,6 +2995,12 @@ sp_api::decl_runtime_apis! {
 
         /// Query the EVM transaction count (nonce) for an EVM address
         fn get_evm_nonce(evm_address: Vec<u8>) -> u64;
+
+        /// Query the native lamport balance for an SVM public key (32 bytes)
+        fn get_svm_balance(svm_pubkey: Vec<u8>) -> u64;
+
+        /// Check whether an SVM public key has an executable program deployed
+        fn is_svm_program(svm_pubkey: Vec<u8>) -> bool;
     }
 }
 

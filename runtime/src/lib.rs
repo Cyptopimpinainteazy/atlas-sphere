@@ -1415,6 +1415,26 @@ impl_runtime_apis! {
                 as pallet_evm::AddressMapping<AccountId>>::into_account_id(evm_addr);
             frame_system::Pallet::<Runtime>::account_nonce(&account_id) as u64
         }
+
+        fn get_svm_balance(svm_pubkey: Vec<u8>) -> u64 {
+            use codec::Decode;
+            if svm_pubkey.len() != 32 { return 0; }
+            let Ok(account_id) = AccountId::decode(&mut &svm_pubkey[..]) else { return 0; };
+            let balance = pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &0u32);
+            use sp_runtime::traits::SaturatedConversion;
+            balance.saturated_into::<u64>()
+        }
+
+        fn is_svm_program(svm_pubkey: Vec<u8>) -> bool {
+            use codec::Decode;
+            if svm_pubkey.len() != 32 { return false; }
+            let Ok(account_id) = AccountId::decode(&mut &svm_pubkey[..]) else { return false; };
+            // A program account holds code in pallet_evm AccountCodes keyed by
+            // EVM-mapped address. For native SVM programs we check if the
+            // canonical balance is non-zero as a proxy for account existence.
+            let balance = pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &0u32);
+            balance > 0
+        }
     }
 
     impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {

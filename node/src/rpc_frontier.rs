@@ -136,3 +136,69 @@ where
 
     Ok(module)
 }
+
+/// Create an SVM-compatible JSON-RPC module backed by runtime API calls.
+/// Provides svm_getBalance and svm_isProgram endpoints for querying SVM state.
+pub fn create_svm_stub<C>(
+    client: Arc<C>,
+) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
+where
+    C: Send
+        + Sync
+        + 'static
+        + ProvideRuntimeApi<Block>
+        + HeaderBackend<Block>
+        + BlockBackend<Block>,
+    C::Api: pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>,
+{
+    let mut module = RpcModule::new(());
+
+    // svm_getBalance — returns lamport balance for a base58 or hex SVM pubkey
+    let c = client.clone();
+    module.register_method("svm_getBalance", move |params, _| {
+        let pubkey_str: String = params.one()?;
+        let bytes = decode_svm_pubkey(&pubkey_str)?;
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+        let balance: u64 = api
+            .get_svm_balance(at, bytes)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
+        Ok(serde_json::json!({ "value": balance }))
+    })?;
+
+    // svm_isProgram — returns whether a pubkey has a deployed executable program
+    let c = client.clone();
+    module.register_method("svm_isProgram", move |params, _| {
+        let pubkey_str: String = params.one()?;
+        let bytes = decode_svm_pubkey(&pubkey_str)?;
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+        let is_prog: bool = api
+            .is_svm_program(at, bytes)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
+        Ok(serde_json::json!({ "result": is_prog }))
+    })?;
+
+    Ok(module)
+}
+
+/// Decode a SVM pubkey from either a 0x-prefixed hex string (32 bytes) or
+/// a base58-encoded Solana-style pubkey.
+fn decode_svm_pubkey(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
+    if let Some(hex_str) = s.strip_prefix("0x") {
+        let bytes = hex::decode(hex_str)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid hex pubkey: {}", e)))?;
+        if bytes.len() != 32 {
+            return Err(jsonrpsee::core::Error::Custom("SVM pubkey must be 32 bytes".into()));
+        }
+        return Ok(bytes);
+    }
+    // base58 decode
+    let bytes = bs58::decode(s)
+        .into_vec()
+        .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid base58 pubkey: {}", e)))?;
+    if bytes.len() != 32 {
+        return Err(jsonrpsee::core::Error::Custom("SVM pubkey must be 32 bytes".into()));
+    }
+    Ok(bytes)
+}

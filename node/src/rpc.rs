@@ -1397,6 +1397,9 @@ where
         if let Ok(fmod) = crate::rpc_frontier::create_frontier_stub(client.clone()) {
             module.merge(fmod)?;
         }
+        if let Ok(smod) = crate::rpc_frontier::create_svm_stub(client.clone()) {
+            module.merge(smod)?;
+        }
     }
 
     if let Some(gadget) = flash_finality_gadget {
