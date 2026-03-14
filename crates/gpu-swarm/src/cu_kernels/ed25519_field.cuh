@@ -231,9 +231,44 @@ __device__ void fe_sq(fe *h, const fe *f) {
 }
 
 /* fe_sq2: h = 2 * f^2 (used by ge_madd etc.) */
+/* Inlined with carry chain to keep output limbs bounded (avoids limb overflow in fe_mul). */
 __device__ void fe_sq2(fe *h, const fe *f) {
-    fe_sq(h, f);
-    fe_add(h, h, h);
+    int32_t f0 = f->v[0], f1 = f->v[1], f2 = f->v[2], f3 = f->v[3], f4 = f->v[4];
+    int32_t f5 = f->v[5], f6 = f->v[6], f7 = f->v[7], f8 = f->v[8], f9 = f->v[9];
+    int32_t f0_2 = 2*f0, f1_2 = 2*f1, f2_2 = 2*f2, f3_2 = 2*f3, f4_2 = 2*f4;
+    int32_t f5_2 = 2*f5, f6_2 = 2*f6, f7_2 = 2*f7;
+    int32_t f5_38 = 38*f5, f6_19 = 19*f6, f7_38 = 38*f7, f8_19 = 19*f8, f9_38 = 38*f9;
+
+    /* Compute 2*f^2 by doubling each accumulator before carrying */
+    int64_t h0 = 2*((int64_t)f0*f0     + (int64_t)f1_2*f9_38 + (int64_t)f2_2*f8_19 + (int64_t)f3_2*f7_38 + (int64_t)f4_2*f6_19 + (int64_t)f5*f5_38);
+    int64_t h1 = 2*((int64_t)f0_2*f1   + (int64_t)f2*f9_38   + (int64_t)f3_2*f8_19 + (int64_t)f4*f7_38   + (int64_t)f5_2*f6_19);
+    int64_t h2 = 2*((int64_t)f0_2*f2   + (int64_t)f1_2*f1    + (int64_t)f3_2*f9_38 + (int64_t)f4_2*f8_19 + (int64_t)f5_2*f7_38 + (int64_t)f6*f6_19);
+    int64_t h3 = 2*((int64_t)f0_2*f3   + (int64_t)f1_2*f2    + (int64_t)f4*f9_38   + (int64_t)f5_2*f8_19 + (int64_t)f6*f7_38);
+    int64_t h4 = 2*((int64_t)f0_2*f4   + (int64_t)f1_2*f3_2  + (int64_t)f2*f2      + (int64_t)f5_2*f9_38 + (int64_t)f6_2*f8_19 + (int64_t)f7*f7_38);
+    int64_t h5 = 2*((int64_t)f0_2*f5   + (int64_t)f1_2*f4    + (int64_t)f2_2*f3    + (int64_t)f6*f9_38   + (int64_t)f7_2*f8_19);
+    int64_t h6 = 2*((int64_t)f0_2*f6   + (int64_t)f1_2*f5_2  + (int64_t)f2_2*f4    + (int64_t)f3_2*f3    + (int64_t)f7_2*f9_38 + (int64_t)f8*f8_19);
+    int64_t h7 = 2*((int64_t)f0_2*f7   + (int64_t)f1_2*f6    + (int64_t)f2_2*f5    + (int64_t)f3_2*f4    + (int64_t)f8*f9_38);
+    int64_t h8 = 2*((int64_t)f0_2*f8   + (int64_t)f1_2*f7_2  + (int64_t)f2_2*f6    + (int64_t)f3_2*f5_2  + (int64_t)f4*f4    + (int64_t)f9*f9_38);
+    int64_t h9 = 2*((int64_t)f0_2*f9   + (int64_t)f1_2*f8    + (int64_t)f2_2*f7    + (int64_t)f3_2*f6    + (int64_t)f4_2*f5);
+
+    int64_t c0, c1, c2, c3, c4, c5, c6, c7, c8, c9;
+    c0 = (h0 + ((int64_t)1 << 25)) >> 26; h1 += c0; h0 -= c0 << 26;
+    c4 = (h4 + ((int64_t)1 << 25)) >> 26; h5 += c4; h4 -= c4 << 26;
+    c1 = (h1 + ((int64_t)1 << 24)) >> 25; h2 += c1; h1 -= c1 << 25;
+    c5 = (h5 + ((int64_t)1 << 24)) >> 25; h6 += c5; h5 -= c5 << 25;
+    c2 = (h2 + ((int64_t)1 << 25)) >> 26; h3 += c2; h2 -= c2 << 26;
+    c6 = (h6 + ((int64_t)1 << 25)) >> 26; h7 += c6; h6 -= c6 << 26;
+    c3 = (h3 + ((int64_t)1 << 24)) >> 25; h4 += c3; h3 -= c3 << 25;
+    c7 = (h7 + ((int64_t)1 << 24)) >> 25; h8 += c7; h7 -= c7 << 25;
+    c4 = (h4 + ((int64_t)1 << 25)) >> 26; h5 += c4; h4 -= c4 << 26;
+    c8 = (h8 + ((int64_t)1 << 25)) >> 26; h9 += c8; h8 -= c8 << 26;
+    c9 = (h9 + ((int64_t)1 << 24)) >> 25; h0 += c9 * 19; h9 -= c9 << 25;
+    c0 = (h0 + ((int64_t)1 << 25)) >> 26; h1 += c0; h0 -= c0 << 26;
+
+    h->v[0] = (int32_t)h0; h->v[1] = (int32_t)h1; h->v[2] = (int32_t)h2;
+    h->v[3] = (int32_t)h3; h->v[4] = (int32_t)h4; h->v[5] = (int32_t)h5;
+    h->v[6] = (int32_t)h6; h->v[7] = (int32_t)h7; h->v[8] = (int32_t)h8;
+    h->v[9] = (int32_t)h9;
 }
 
 /* ───────────────────── fe_invert ───────────────────── */
