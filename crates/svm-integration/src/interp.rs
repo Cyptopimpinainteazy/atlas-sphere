@@ -17,7 +17,7 @@
 //! interpreter locates the `.text` section and executes it.  Otherwise
 //! the bytes are treated as a raw instruction stream.
 
-use crate::{AccountUpdate, SvmConfig, SvmError, SvmExecutionResult, SvmResult};
+use crate::{SvmConfig, SvmError, SvmExecutionResult, SvmResult};
 use sp_std::vec;
 use sp_std::vec::Vec;
 
@@ -26,7 +26,7 @@ use sp_std::vec::Vec;
 // ---------------------------------------------------------------------------
 
 // Class (low 3 bits)
-const CLS_LD: u8    = 0x00;
+const _CLS_LD: u8   = 0x00;
 const CLS_LDX: u8   = 0x01;
 const CLS_ST: u8    = 0x02;
 const CLS_STX: u8   = 0x03;
@@ -36,8 +36,8 @@ const CLS_JMP32: u8 = 0x06;
 const CLS_ALU64: u8 = 0x07;
 
 // Source mode (bit 3)
-const SRC_IMM: u8 = 0x00;
-const SRC_REG: u8 = 0x08;
+const _SRC_IMM: u8 = 0x00;
+const SRC_REG: u8  = 0x08;
 
 // ALU operation (high nibble >> 4)
 const ALU_ADD:  u8 = 0x0;
@@ -198,7 +198,7 @@ impl<'a> Vm<'a> {
     fn mem_read(&self, addr: u64, size: usize, input: &[u8]) -> u64 {
         let addr = addr as usize;
         let read_bytes = |buf: &[u8], off: usize, n: usize| -> u64 {
-            let end = off.saturating_add(n);
+            let _end = off.saturating_add(n);
             let n = n.min(buf.len().saturating_sub(off));
             let mut out = [0u8; 8];
             if n > 0 { out[..n].copy_from_slice(&buf[off..off + n]); }

@@ -92,6 +92,7 @@ impl MiniValue {
             _ => Err(X3Error::TypeMismatch),
         }
     }
+    #[allow(dead_code)]
     fn to_bytes(&self) -> Vec<u8> {
         match self {
             MiniValue::I64(v) => v.to_le_bytes().to_vec(),
@@ -118,6 +119,7 @@ enum MiniConst {
 #[derive(Debug, Clone)]
 struct MiniFunc {
     entry:       u32,
+    #[allow(dead_code)]
     param_count: u8,
     local_count: u16,
 }

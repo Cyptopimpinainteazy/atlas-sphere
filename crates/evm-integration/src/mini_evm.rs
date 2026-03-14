@@ -17,7 +17,7 @@ use evm::{
     executor::stack::{MemoryStackState, PrecompileFn, StackExecutor, StackSubstateMetadata},
     Config, ExitReason,
 };
-use sp_core::{H160, H256, U256};
+use sp_core::{H160, U256};
 use sp_std::collections::btree_map::BTreeMap;
 use sp_std::prelude::Vec;
 use sp_std::vec;

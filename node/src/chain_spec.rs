@@ -50,7 +50,6 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
 
 /// Build the `ChainSpec` powering the development network (local node).
 pub fn development_config() -> Result<ChainSpec, String> {
-    eprintln!("DEBUG: WASM_BINARY is: {:?}", WASM_BINARY.is_some());
     // For native-dev builds (e.g., with `skip-wasm-build`), we still want to be
     // able to construct a development chain spec even if no WASM runtime blob
     // is embedded. In that case, we fall back to an empty code blob and rely
