@@ -1840,6 +1840,9 @@ pub mod pallet {
                 }
                 CrossVmOperation::CallSvm { .. } => (0u64, T::DefaultSvmComputeLimit::get()),
                 CrossVmOperation::AtomicSwap { .. } => (200_000u64, 200_000u64),
+                // Message passing: moderate gas, no balance lock
+                CrossVmOperation::MessageToEvm { .. } => (50_000u64, 0u64),
+                CrossVmOperation::MessageToSvm { .. } => (0u64, 50_000u64),
             };
 
             let base_fee = T::Balance::default();
@@ -2026,6 +2029,8 @@ pub mod pallet {
                     let evm = result.gas_used / 2;
                     (evm, result.gas_used.saturating_sub(evm))
                 }
+                CrossVmOperation::MessageToEvm { .. } => (result.gas_used, 0u64),
+                CrossVmOperation::MessageToSvm { .. } => (0u64, result.gas_used),
             };
 
             let required_fee = Self::calculate_execution_fee(
@@ -2208,7 +2213,12 @@ pub mod pallet {
                         true,
                     )?);
                 }
-                CrossVmOperation::CallEvm { .. } | CrossVmOperation::CallSvm { .. } => {}
+                CrossVmOperation::CallEvm { .. }
+                | CrossVmOperation::CallSvm { .. }
+                | CrossVmOperation::MessageToEvm { .. }
+                | CrossVmOperation::MessageToSvm { .. } => {
+                    // Message/call operations carry no balance state changes
+                }
                 CrossVmOperation::AtomicSwap {
                     evm_party,
                     svm_party,
