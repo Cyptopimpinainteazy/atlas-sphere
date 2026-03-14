@@ -448,3 +448,83 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 ### Build Status
 - All 31 npm packages: 0 vulnerabilities locally (verified via python subprocess batch scan)
 - GitHub Dependabot re-scan pending (may take time to process updated lockfiles)
+
+
+# Session: March 14, 2026 - Cross-VM Bridge & EVM/SVM Integration (COMPLETE)
+
+## ✅ COMPLETED THIS SESSION
+
+### BRIDGE-002/003/004/005: Cross-VM Message Passing
+- Added `MessageToEvm` and `MessageToSvm` variants to `CrossVmOperation` enum
+  - `MessageToEvm { sender: Vec<u8>, target_contract: [u8;20], message: Vec<u8>, nonce: u64 }`
+  - `MessageToSvm { sender: [u8;20], target_program: Vec<u8>, message: Vec<u8>, nonce: u64 }`
+- Wired through all 5 match sites in `crates/cross-vm-bridge/src/lib.rs`:
+  `execute_operation`, `dispatch_operation`, `validate_operation`, `estimate_reservations`, `try_lock_source`
+- Payload capped at 1024 bytes (BRIDGE-004) — enforced at `validate_operation()` (queue time)
+- Gas: MessageToEvm = 50,000 EVM gas; MessageToSvm = 50,000 SVM compute units
+- Nonce ordering and replay protection (BRIDGE-005)
+- Added `used_nonces_snapshot()` accessor on CrossVmBridge
+- Added 9 new tests in `message_passing_tests` module
+- Committed: `fb8590f6`
+
+### pallet-x3-kernel Non-Exhaustive Match Fix
+- Fixed 3 non-exhaustive pattern errors at lines 1833, 2020, 2174 in `pallets/x3-kernel/src/lib.rs`
+  - `estimate_cross_vm_fee`: MessageToEvm→(50k,0), MessageToSvm→(0,50k)
+  - Gas attribution at commit: MessageToEvm→EVM bucket, MessageToSvm→SVM bucket
+  - `build_cross_vm_state_changes`: both to no-op arm (messages carry data only)
+- Committed: `d9536578`
+
+### EVM Integration (eth_ RPC endpoints)
+- 5+ real `eth_` RPC methods implemented in `node/src/rpc.rs`
+- EVM runtime APIs in `crates/x3-evm-integration/`
+- 33 tests passing
+- Committed: `b216229d`
+
+### SVM Integration (svm_ RPC endpoints)
+- 2 `svm_` RPC methods implemented
+- SVM runtime APIs in `crates/x3-svm-integration/`
+- 24 tests passing
+- Committed: `03d36f37`
+
+### Compiler Warnings Removed
+- Removed debug `eprintln!` and resolved all compiler warnings
+- Committed: `b6d4658a`
+
+### Security Audit Report Updated
+- Updated `docs/security-audit.md`:
+  - Date updated to 2026-03-14
+  - Added MED-005 finding: Cross-VM Message Payload DoS (BRIDGE-004)
+  - Updated Executive Summary: Medium count 4→5
+  - Updated test coverage table: cross-vm-bridge 13→46, evm 33, svm 24
+
+### RPC WebSocket Subscriptions (Verified)
+- `X3SubscriptionRpc` in `node/src/rpc.rs` confirmed real implementation
+  - `x3_subscribeNewBlocks`, `x3_subscribeFinalizedBlocks`, `x3_subscribeComits`
+  - All backed by genuine `client.import_notification_stream()` / `finality_notification_stream()`
+
+### TypeScript SDK WebSocket (Verified)
+- `X3SubscriptionManager` in `packages/ts-sdk/src/subscriptions.ts` confirmed complete
+  - All 3 subscriptions using real `WsProvider.subscribe()` calls
+
+### 3+ Validator Testnet Config (Verified)
+- `testnet/docker-compose.yml` confirmed: 3 validators (ports 30333/9944, 30334/9945, 30335/9946)
+  + 1 RPC-only node (30336/9947) + Prometheus
+- `testnet_config()` in `node/src/chain_spec.rs` has TestnetAlpha/Beta/Charlie authorities
+
+## Test Results
+- x3-cross-vm-bridge: 57 tests passing (46 unit + 2 integration + 9 message-passing)
+- x3-evm-integration: 33 tests passing
+- x3-svm-integration: 24+ tests passing
+
+## Commits Created This Session
+1. `b6d4658a` — fix: remove debug eprintln and resolve all compiler warnings
+2. `b216229d` — feat(evm): implement real EVM runtime APIs and expand eth_ RPC endpoints
+3. `03d36f37` — feat(svm): implement SVM runtime APIs and svm_ RPC endpoints
+4. `fb8590f6` — feat(bridge): add EVM↔SVM message passing (BRIDGE-002/003/004/005)
+5. `d9536578` — fix(kernel): add MessageToEvm/MessageToSvm arms to all CrossVmOperation matches
+
+## masterchecklist.md Progress
+- Section 4.2 (EVM): ABI decoding, gas behavior ✅
+- Section 4.3 (SVM): Instruction translation, account model ✅
+- Section 10.1 (Security): Security audit updated with new findings ✅
+- Cross-VM bridge message passing: BRIDGE-002/003/004/005 all complete ✅

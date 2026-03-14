@@ -1,6 +1,6 @@
 # X3 Chain Security Audit Report
 
-**Audit Date**: 2025  
+**Audit Date**: 2025-03-14 (updated)
 **Scope**: All Rust crates, runtime pallets, RPC layer, TypeScript SDK  
 **Methodology**: Static analysis, code review, threat modeling  
 
@@ -16,7 +16,7 @@ This security audit covers the X3 Chain dual-VM (EVM + SVM) Layer-1 blockchain i
 |----------|-------|--------|
 | Critical | 0 | - |
 | High | 2 | Mitigated |
-| Medium | 4 | Mitigated/Tracked |
+| Medium | 5 | Mitigated/Tracked |
 | Low | 5 | Informational |
 | Informational | 3 | Noted |
 
@@ -89,6 +89,25 @@ This security audit covers the X3 Chain dual-VM (EVM + SVM) Layer-1 blockchain i
 - Non-zero swap amounts for both sides
 
 **Status**: Mitigated. `validate_operation()` returns `DispatchError` for all invalid inputs.
+
+---
+
+### MED-005: Cross-VM Message Payload Size Limit (BRIDGE-004)
+
+**Component**: `crates/cross-vm-bridge/src/lib.rs` (new, 2026-03-14)  
+**Severity**: MEDIUM → MITIGATED  
+
+**Description**: The new `MessageToEvm` (BRIDGE-002) and `MessageToSvm` (BRIDGE-003) variants allow arbitrary data to be relayed between VMs. Without a cap, a malicious actor could submit >1MB payloads to cause unbounded gas consumption and memory allocation in the receiving VM.
+
+**Mitigations applied**:
+1. `validate_operation()` rejects payloads >1024 bytes at queue time (before any gas is consumed).
+2. `execute_operation()` and `dispatch_operation()` both re-check the 1024-byte limit as a defense-in-depth guard.
+3. Empty payloads are also rejected (must be at least 1 byte).
+4. `estimate_cross_vm_fee()` in `pallet-x3-kernel` charges 50,000 EVM gas or 50,000 SVM compute units per message — substantially more than a simple transfer — discouraging spam.
+
+**Status**: Mitigated. Tests `test_message_to_evm_max_size_enforced` and `test_message_to_svm_max_size_enforced` confirm rejection at queue time.
+
+**Residual risk**: Future protocol upgrades should consider making the payload cap a configurable runtime constant (e.g., `MaxCrossVmMessageSize`) to allow governance-controlled adjustment without a code fork.
 
 ---
 
@@ -225,12 +244,14 @@ This security audit covers the X3 Chain dual-VM (EVM + SVM) Layer-1 blockchain i
 
 | Component | Unit Tests | Integration Tests | Coverage Estimate |
 |-----------|-----------|-------------------|-------------------|
-| evm-integration | 12+ | 2 | ~80% |
-| svm-integration | 12+ | 2 | ~75% |
-| cross-vm-bridge | 13 | 2 | ~85% |
+| evm-integration | 33 | 2 | ~82% |
+| svm-integration | 24 | 1 | ~78% |
+| cross-vm-bridge | 46 | 2 | ~88% |
 | pallet-x3-kernel | 98 | - | ~75% |
 | RPC layer | - | Manual | ~60% |
 | TypeScript SDK | 8 test files | 1 live test | ~70% |
+
+*Cross-vm-bridge tests updated 2026-03-14: 9 new message-passing tests added (BRIDGE-002/003/004/005).*
 
 ---
 
