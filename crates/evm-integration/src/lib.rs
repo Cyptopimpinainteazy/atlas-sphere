@@ -541,4 +541,74 @@ mod tests {
         };
         assert_eq!(contract.deploy_block, 100);
     }
+
+    #[test]
+    fn test_frontier_executor_validate_bytecode_empty() {
+        let exec = MockEvmExecutor;
+        assert_eq!(exec.validate_bytecode(&[]).unwrap_err(), EvmError::InvalidPayload);
+    }
+
+    #[test]
+    fn test_frontier_executor_validate_bytecode_too_large() {
+        let exec = MockEvmExecutor;
+        let big = vec![0u8; 24_577]; // EIP-170: 24KB + 1 byte
+        assert!(exec.validate_bytecode(&big).is_err());
+    }
+
+    #[test]
+    fn test_frontier_executor_validate_bytecode_valid() {
+        let exec = MockEvmExecutor;
+        let code = vec![0x60, 0x00, 0x56]; // PUSH1 0x00, JUMP
+        assert!(exec.validate_bytecode(&code).is_ok());
+    }
+
+    #[test]
+    fn test_estimate_gas_adds_buffer() {
+        let exec = MockEvmExecutor;
+        let caller = H160::from_low_u64_be(1);
+        let target = H160::from_low_u64_be(2);
+        let config = EvmConfig::default();
+        // estimate should be >= base execution gas
+        let gas = exec
+            .estimate_gas(&[0x60, 0x00], caller, Some(target), U256::zero(), &config)
+            .expect("estimate gas ok");
+        // MockEvmExecutor charges intrinsic_gas (21_000) base plus data cost
+        // estimate adds 10% buffer: result >= 21_000
+        assert!(gas >= 21_000, "gas estimate too low: {}", gas);
+    }
+
+    #[test]
+    fn test_compute_evm_prepare_root_changes_with_input() {
+        let comit_id = [0xABu8; 32];
+        let payload1 = b"contract_a";
+        let payload2 = b"contract_b";
+        let result = EvmExecutionResult {
+            success: true,
+            output: vec![],
+            gas_used: 21_000,
+            logs: vec![],
+            state_changes: vec![],
+            state_root: [0u8; 32],
+        };
+        let root1 = compute_evm_prepare_root(&comit_id, payload1, &result);
+        let root2 = compute_evm_prepare_root(&comit_id, payload2, &result);
+        assert_ne!(root1, root2, "different payloads must produce different roots");
+    }
+
+    #[test]
+    fn test_compute_evm_prepare_root_deterministic() {
+        let comit_id = [0x01u8; 32];
+        let payload = b"deterministic";
+        let result = EvmExecutionResult {
+            success: true,
+            output: vec![],
+            gas_used: 0,
+            logs: vec![],
+            state_changes: vec![],
+            state_root: [0u8; 32],
+        };
+        let r1 = compute_evm_prepare_root(&comit_id, payload, &result);
+        let r2 = compute_evm_prepare_root(&comit_id, payload, &result);
+        assert_eq!(r1, r2, "same inputs must produce same root");
+    }
 }

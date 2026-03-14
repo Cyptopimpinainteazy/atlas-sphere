@@ -1385,14 +1385,35 @@ impl_runtime_apis! {
             Some(pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &asset_id))
         }
 
-        fn get_evm_code(_evm_address: Vec<u8>) -> Vec<u8> {
-            // Placeholder: return empty bytecode until real bytecode storage is implemented
-            Vec::new()
+        fn get_evm_code(evm_address: Vec<u8>) -> Vec<u8> {
+            use sp_core::H160;
+            if evm_address.len() != 20 { return Vec::new(); }
+            let mut slice = [0u8; 20];
+            slice.copy_from_slice(&evm_address[..20]);
+            let evm_addr = H160::from(slice);
+            pallet_evm::AccountCodes::<Runtime>::get(evm_addr)
         }
 
-        fn get_evm_storage(_evm_address: Vec<u8>, _storage_key: H256) -> Option<H256> {
-            // Placeholder: not implemented yet
-            None
+        fn get_evm_storage(evm_address: Vec<u8>, storage_key: H256) -> Option<H256> {
+            use sp_core::H160;
+            if evm_address.len() != 20 { return None; }
+            let mut slice = [0u8; 20];
+            slice.copy_from_slice(&evm_address[..20]);
+            let evm_addr = H160::from(slice);
+            let val = pallet_evm::AccountStorages::<Runtime>::get(evm_addr, storage_key);
+            if val == H256::zero() { None } else { Some(val) }
+        }
+
+        fn get_evm_nonce(evm_address: Vec<u8>) -> u64 {
+            use sp_core::H160;
+            use sp_runtime::traits::BlakeTwo256;
+            if evm_address.len() != 20 { return 0; }
+            let mut slice = [0u8; 20];
+            slice.copy_from_slice(&evm_address[..20]);
+            let evm_addr = H160::from(slice);
+            let account_id: AccountId = <pallet_evm::HashedAddressMapping<BlakeTwo256>
+                as pallet_evm::AddressMapping<AccountId>>::into_account_id(evm_addr);
+            frame_system::Pallet::<Runtime>::account_nonce(&account_id) as u64
         }
     }
 

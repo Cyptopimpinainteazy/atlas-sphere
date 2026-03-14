@@ -2992,6 +2992,9 @@ sp_api::decl_runtime_apis! {
 
         /// Query EVM storage at a specific storage key for an EVM address
         fn get_evm_storage(evm_address: Vec<u8>, storage_key: H256) -> Option<H256>;
+
+        /// Query the EVM transaction count (nonce) for an EVM address
+        fn get_evm_nonce(evm_address: Vec<u8>) -> u64;
     }
 }
 
