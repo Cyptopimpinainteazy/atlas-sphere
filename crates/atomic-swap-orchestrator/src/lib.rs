@@ -40,6 +40,27 @@ pub struct ProcessResult {
     pub committed_at_ns: Option<u64>,
 }
 
+/// Parameters for the `submit_finalization_result` (unsigned) or
+/// `finalize_atomic_bundle` (signed) extrinsic on the x3-atomic-kernel pallet.
+///
+/// After `process_swap()` succeeds, call `build_finalization_request()` to get
+/// this struct, then submit it via the Substrate RPC (`author_submitExtrinsic`)
+/// or through an off-chain worker.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FinalizationRequest {
+    /// Bundle identifier — must match the one registered on-chain via
+    /// `submit_atomic_bundle`.
+    pub bundle_id: H256,
+    /// SHA-256(svm_prefix || evm_prefix) from the GPU-committed shm entry.
+    /// Non-zero value proves GPU execution completed.
+    pub receipt_root: H256,
+    /// GRANDPA justification hash.  Set to `H256::zero()` until Flash Finality
+    /// is wired; the pallet accepts zero for the unsigned path.
+    pub finality_cert: H256,
+    /// GPU commit timestamp in nanoseconds (for auditing; not stored on-chain).
+    pub committed_at_ns: u64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AtomicStatus {
     Pending,
@@ -205,6 +226,38 @@ impl AtomicSwapOrchestrator {
         data[..32].copy_from_slice(svm_prefix);
         data[32..].copy_from_slice(evm_prefix);
         H256(sha2_256(&data))
+    }
+
+    /// Build a `FinalizationRequest` from a completed `ProcessResult`.
+    ///
+    /// Returns `None` if the swap was rolled back or the receipt root is missing
+    /// (i.e. GPU commit did not complete).  The returned request should be
+    /// submitted to the pallet via `submit_finalization_result` (unsigned) or
+    /// `finalize_atomic_bundle` (signed with a funded account).
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let result = orchestrator.process_swap(pair).await?;
+    /// if let Some(req) = AtomicSwapOrchestrator::build_finalization_request(&result) {
+    ///     // submit req.bundle_id, req.receipt_root, req.committed_at_ns via RPC
+    /// }
+    /// ```
+    pub fn build_finalization_request(result: &ProcessResult) -> Option<FinalizationRequest> {
+        if result.status != AtomicStatus::Committed {
+            return None;
+        }
+        let receipt_root = result.receipt_root?;
+        // receipt_root must be non-zero (pallet rejects zeros as invalid)
+        if receipt_root == H256::zero() {
+            return None;
+        }
+        Some(FinalizationRequest {
+            bundle_id: result.bundle_id,
+            receipt_root,
+            // GRANDPA cert not yet wired — pallet unsigned path accepts zero
+            finality_cert: H256::zero(),
+            committed_at_ns: result.committed_at_ns.unwrap_or(0),
+        })
     }
 
     async fn verify_gpu(&self, pair: &AtomicPair) -> Result<bool> {
@@ -448,6 +501,79 @@ mod tests {
         assert_eq!(AtomicStatus::Committed, AtomicStatus::Committed);
         assert_ne!(AtomicStatus::Committed, AtomicStatus::RolledBack);
         assert_ne!(AtomicStatus::Pending, AtomicStatus::Verified);
+    }
+
+    // ── FinalizationRequest builder ───────────────────────────────────────────
+
+    fn make_committed_result() -> ProcessResult {
+        let pair = AtomicPair {
+            swap_id: b"swap_fin_test".to_vec(),
+            svm_tx: vec![0xDE; 32],
+            evm_tx: vec![0xAD; 32],
+            sequence_nonce: 7,
+        };
+        let bundle_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
+        let svm_prefix: [u8; 32] = {
+            let mut a = [0u8; 32];
+            a.copy_from_slice(&pair.svm_tx[..32]);
+            a
+        };
+        let evm_prefix: [u8; 32] = {
+            let mut a = [0u8; 32];
+            a.copy_from_slice(&pair.evm_tx[..32]);
+            a
+        };
+        let receipt_root = AtomicSwapOrchestrator::compute_receipt_root(&svm_prefix, &evm_prefix);
+        ProcessResult {
+            status: AtomicStatus::Committed,
+            bundle_id,
+            receipt_root: Some(receipt_root),
+            committed_at_ns: Some(1_700_000_000_000_000_000),
+        }
+    }
+
+    #[test]
+    fn test_build_finalization_request_on_commit() {
+        let result = make_committed_result();
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result);
+        assert!(req.is_some(), "committed swap must produce a FinalizationRequest");
+        let req = req.unwrap();
+        assert_eq!(req.bundle_id, result.bundle_id);
+        assert_ne!(req.receipt_root, H256::zero());
+        // GRANDPA not yet wired — cert is zero placeholder
+        assert_eq!(req.finality_cert, H256::zero());
+        assert_eq!(req.committed_at_ns, 1_700_000_000_000_000_000);
+    }
+
+    #[test]
+    fn test_build_finalization_request_on_rollback() {
+        let mut result = make_committed_result();
+        result.status = AtomicStatus::RolledBack;
+        result.receipt_root = None;
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result);
+        assert!(req.is_none(), "rolled-back swap must NOT produce a FinalizationRequest");
+    }
+
+    #[test]
+    fn test_build_finalization_request_zero_receipt_root_rejected() {
+        let mut result = make_committed_result();
+        result.receipt_root = Some(H256::zero()); // tampered to zero
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result);
+        assert!(req.is_none(), "zero receipt_root must be rejected");
+    }
+
+    #[test]
+    fn test_finalization_request_bundle_id_matches_pair() {
+        let result = make_committed_result();
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result).unwrap();
+        // bundle_id in request must equal derive_bundle_id of the same pair
+        let pair = AtomicPair {
+            swap_id: b"swap_fin_test".to_vec(),
+            svm_tx: vec![0xDE; 32],
+            evm_tx: vec![0xAD; 32],
+            sequence_nonce: 7,
+        };
+        assert_eq!(req.bundle_id, AtomicSwapOrchestrator::derive_bundle_id(&pair));
     }
 }
 

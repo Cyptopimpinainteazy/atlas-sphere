@@ -77,6 +77,58 @@ fn bridge_disabled_error(name: &str) -> VMError {
     )))
 }
 
+// ── Cross-VM trait abstractions ───────────────────────────────────────────────
+
+/// Provides native balance queries and transfers for X3VM hostcalls (0x10/0x12/0x22).
+///
+/// Implementors connect the bridge to the canonical Substrate ledger — typically
+/// `pallet-balances` (SVM pubkeys) and `pallet-evm` (EVM H160 addresses).
+/// When not wired the relevant hostcalls remain fail-closed.
+pub trait BalanceProvider: Send + Sync {
+    /// Get the free balance of `address`. `address` is a raw SVM pubkey (32 B)
+    /// or EVM address (20 B) depending on which hostcall is being dispatched.
+    fn get_balance(&self, address: &[u8]) -> u128;
+
+    /// Transfer `amount` from `from` to `to`. Returns `Err(&'static str)` on
+    /// insufficient balance or if accounts are unknown.
+    fn transfer(&self, from: &[u8], to: &[u8], amount: u128) -> Result<(), &'static str>;
+}
+
+/// Provides cross-VM escrow operations for bridge ops (0x30/0x31).
+///
+/// Implementors handle lock-and-release between SVM and EVM.  The expected
+/// flow for `bridge_svm_to_evm` (0x30) is:
+///   1. `lock_svm(from, amount)` → ticket
+///   2. `release_evm(to_h160, ticket, amount)`
+///
+/// For `bridge_evm_to_svm` (0x31):
+///   1. `lock_evm(from_h160, amount)` → ticket
+///   2. `release_svm(to_pubkey, ticket, amount)`
+pub trait CrossVmEscrow: Send + Sync {
+    /// Lock `amount` of native tokens on the SVM side.  Returns a 32-byte
+    /// escrow ticket that authorises the corresponding EVM release.
+    fn lock_svm(&self, from: &[u8], amount: u128) -> Result<[u8; 32], &'static str>;
+
+    /// Release `amount` of wrapped tokens on the EVM side given a valid ticket.
+    fn release_evm(
+        &self,
+        to: &[u8; 20],
+        ticket: &[u8; 32],
+        amount: u128,
+    ) -> Result<(), &'static str>;
+
+    /// Lock `amount` of EVM tokens and return an escrow ticket for SVM release.
+    fn lock_evm(&self, from: &[u8; 20], amount: u128) -> Result<[u8; 32], &'static str>;
+
+    /// Release `amount` of native tokens on the SVM side given a valid ticket.
+    fn release_svm(
+        &self,
+        to: &[u8],
+        ticket: &[u8; 32],
+        amount: u128,
+    ) -> Result<(), &'static str>;
+}
+
 /// X3VM Bridge for cross-VM execution
 pub struct X3VMBridge {
     config: BridgeConfig,
@@ -85,6 +137,10 @@ pub struct X3VMBridge {
     evm: Option<Arc<dyn EvmExecutor + Send + Sync>>,
     #[cfg(feature = "x3-svm-integration")]
     svm: Option<Arc<dyn SvmExecutor + Send + Sync>>,
+    /// Optional canonical balance provider for 0x10 / 0x12 / 0x22 hostcalls.
+    balance_provider: Option<std::sync::Arc<dyn BalanceProvider>>,
+    /// Optional cross-VM escrow for 0x30 / 0x31 hostcalls.
+    escrow: Option<std::sync::Arc<dyn CrossVmEscrow>>,
 }
 
 impl X3VMBridge {
@@ -107,7 +163,26 @@ impl X3VMBridge {
             evm: None,
             #[cfg(feature = "x3-svm-integration")]
             svm: None,
+            balance_provider: None,
+            escrow: None,
         }
+    }
+
+    /// Attach a canonical balance provider for 0x10/0x12/0x22 hostcalls.
+    ///
+    /// Without this, `svm_transfer`, `svm_get_balance`, and `evm_balance` remain
+    /// fail-closed and return an error directing callers to wire Substrate storage.
+    pub fn with_balances(mut self, provider: std::sync::Arc<dyn BalanceProvider>) -> Self {
+        self.balance_provider = Some(provider);
+        self
+    }
+
+    /// Attach a cross-VM escrow provider for 0x30/0x31 bridge hostcalls.
+    ///
+    /// Without this, `bridge_svm_to_evm` and `bridge_evm_to_svm` remain fail-closed.
+    pub fn with_escrow(mut self, escrow: std::sync::Arc<dyn CrossVmEscrow>) -> Self {
+        self.escrow = Some(escrow);
+        self
     }
 
     /// Attach real EVM and SVM executors to the bridge.
@@ -164,6 +239,10 @@ impl X3VMBridge {
             gpu.register_on_vm(vm);
         }
 
+        // Clone shared state before the hostcall closures capture it
+        let balance_provider = self.balance_provider.clone();
+        let escrow = self.escrow.clone();
+
         // ── SVM hostcalls ────────────────────────────────────────────────
         if self.config.enable_svm {
             #[cfg(feature = "x3-svm-integration")]
@@ -171,16 +250,41 @@ impl X3VMBridge {
                 let svm_exec = self.svm.clone();
 
                 vm.register_hostcall(0x10, "svm_transfer", 3, {
+                    let bp = balance_provider.clone();
                     let svm = svm_exec.clone();
                     move |args| {
-                        // SVM balance transfers require canonical ledger context
-                        // (pallet storage).  Without it we fail-closed so callers
-                        // know they must route through the Substrate runtime.
-                        let _ = (args, &svm);
-                        Err(VMError::without_ip(VMErrorKind::HostcallError(
-                            "svm_transfer requires canonical ledger (wire via Substrate runtime)"
-                                .into(),
-                        )))
+                        if let Some(ref provider) = bp {
+                            let from = match args.first() {
+                                Some(Value::Bytes(b)) => b.clone(),
+                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "svm_transfer: arg[0] (from) must be Bytes".into(),
+                                ))),
+                            };
+                            let to = match args.get(1) {
+                                Some(Value::Bytes(b)) => b.clone(),
+                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "svm_transfer: arg[1] (to) must be Bytes".into(),
+                                ))),
+                            };
+                            let amount = match args.get(2) {
+                                Some(Value::I64(v)) => (*v).max(0) as u128,
+                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "svm_transfer: arg[2] (amount) must be I64".into(),
+                                ))),
+                            };
+                            provider.transfer(&from, &to, amount).map_err(|e| {
+                                VMError::without_ip(VMErrorKind::HostcallError(format!(
+                                    "svm_transfer: {}", e
+                                )))
+                            })?;
+                            Ok(Some(Value::Bool(true)))
+                        } else {
+                            let _ = (&svm, args);
+                            Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                "svm_transfer requires canonical ledger (wire via Substrate runtime)"
+                                    .into(),
+                            )))
+                        }
                     }
                 });
 
@@ -225,14 +329,25 @@ impl X3VMBridge {
                 });
 
                 vm.register_hostcall(0x12, "svm_get_balance", 1, {
+                    let bp = balance_provider.clone();
                     let svm = svm_exec;
                     move |args| {
-                        // Balance lookup requires Substrate storage access; fail-closed.
-                        let _ = (args, &svm);
-                        Err(VMError::without_ip(VMErrorKind::HostcallError(
-                            "svm_get_balance requires canonical ledger (wire via Substrate runtime)"
-                                .into(),
-                        )))
+                        if let Some(ref provider) = bp {
+                            let addr = match args.first() {
+                                Some(Value::Bytes(b)) => b.clone(),
+                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "svm_get_balance: arg[0] (address) must be Bytes".into(),
+                                ))),
+                            };
+                            let bal = provider.get_balance(&addr);
+                            Ok(Some(Value::I64(bal.min(i64::MAX as u128) as i64)))
+                        } else {
+                            let _ = (&svm, args);
+                            Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                "svm_get_balance requires canonical ledger (wire via Substrate runtime)"
+                                    .into(),
+                            )))
+                        }
                     }
                 });
             }
@@ -350,14 +465,25 @@ impl X3VMBridge {
                 });
 
                 vm.register_hostcall(0x22, "evm_balance", 1, {
+                    let bp = balance_provider.clone();
                     let evm = evm_exec;
                     move |args| {
-                        // Balance lookup requires pallet-evm storage; fail-closed.
-                        let _ = (args, &evm);
-                        Err(VMError::without_ip(VMErrorKind::HostcallError(
-                            "evm_balance requires canonical ledger (wire via Substrate runtime)"
-                                .into(),
-                        )))
+                        if let Some(ref provider) = bp {
+                            let addr = match args.first() {
+                                Some(Value::Bytes(b)) => b.clone(),
+                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                    "evm_balance: arg[0] (address) must be Bytes".into(),
+                                ))),
+                            };
+                            let bal = provider.get_balance(&addr);
+                            Ok(Some(Value::I64(bal.min(i64::MAX as u128) as i64)))
+                        } else {
+                            let _ = (&evm, args);
+                            Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                "evm_balance requires canonical ledger (wire via Substrate runtime)"
+                                    .into(),
+                            )))
+                        }
                     }
                 });
             }
@@ -376,16 +502,96 @@ impl X3VMBridge {
             }
         }
 
-        // ── Cross-VM bridge ops (require canonical ledger — fail-closed) ──
-        vm.register_hostcall(0x30, "bridge_svm_to_evm", 2, |_args| {
-            Err(VMError::without_ip(VMErrorKind::HostcallError(
-                "bridge_svm_to_evm: wire canonical bridge + ledger (not yet implemented)".into(),
-            )))
+        // ── Cross-VM bridge ops ───────────────────────────────────────────────
+        vm.register_hostcall(0x30, "bridge_svm_to_evm", 3, {
+            let esc = escrow.clone();
+            move |args| {
+                let Some(ref provider) = esc else {
+                    return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_svm_to_evm: wire canonical escrow (X3VMBridge::with_escrow())"
+                            .into(),
+                    )));
+                };
+                let from = match args.first() {
+                    Some(Value::Bytes(b)) => b.clone(),
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_svm_to_evm: arg[0] (from_svm_pubkey) must be Bytes".into(),
+                    ))),
+                };
+                let to_bytes = match args.get(1) {
+                    Some(Value::Bytes(b)) if b.len() == 20 => {
+                        let mut arr = [0u8; 20];
+                        arr.copy_from_slice(b);
+                        arr
+                    }
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_svm_to_evm: arg[1] (to_evm_address) must be 20-byte Bytes".into(),
+                    ))),
+                };
+                let amount = match args.get(2) {
+                    Some(Value::I64(v)) => (*v).max(0) as u128,
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_svm_to_evm: arg[2] (amount) must be I64".into(),
+                    ))),
+                };
+                let ticket = provider.lock_svm(&from, amount).map_err(|e| {
+                    VMError::without_ip(VMErrorKind::HostcallError(format!(
+                        "bridge_svm_to_evm lock_svm: {}", e
+                    )))
+                })?;
+                provider.release_evm(&to_bytes, &ticket, amount).map_err(|e| {
+                    VMError::without_ip(VMErrorKind::HostcallError(format!(
+                        "bridge_svm_to_evm release_evm: {}", e
+                    )))
+                })?;
+                Ok(Some(Value::Bytes(ticket.to_vec())))
+            }
         });
-        vm.register_hostcall(0x31, "bridge_evm_to_svm", 2, |_args| {
-            Err(VMError::without_ip(VMErrorKind::HostcallError(
-                "bridge_evm_to_svm: wire canonical bridge + ledger (not yet implemented)".into(),
-            )))
+
+        vm.register_hostcall(0x31, "bridge_evm_to_svm", 3, {
+            let esc = escrow;
+            move |args| {
+                let Some(ref provider) = esc else {
+                    return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_evm_to_svm: wire canonical escrow (X3VMBridge::with_escrow())"
+                            .into(),
+                    )));
+                };
+                let from_bytes = match args.first() {
+                    Some(Value::Bytes(b)) if b.len() == 20 => {
+                        let mut arr = [0u8; 20];
+                        arr.copy_from_slice(b);
+                        arr
+                    }
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_evm_to_svm: arg[0] (from_evm_address) must be 20-byte Bytes"
+                            .into(),
+                    ))),
+                };
+                let to = match args.get(1) {
+                    Some(Value::Bytes(b)) => b.clone(),
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_evm_to_svm: arg[1] (to_svm_pubkey) must be Bytes".into(),
+                    ))),
+                };
+                let amount = match args.get(2) {
+                    Some(Value::I64(v)) => (*v).max(0) as u128,
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_evm_to_svm: arg[2] (amount) must be I64".into(),
+                    ))),
+                };
+                let ticket = provider.lock_evm(&from_bytes, amount).map_err(|e| {
+                    VMError::without_ip(VMErrorKind::HostcallError(format!(
+                        "bridge_evm_to_svm lock_evm: {}", e
+                    )))
+                })?;
+                provider.release_svm(&to, &ticket, amount).map_err(|e| {
+                    VMError::without_ip(VMErrorKind::HostcallError(format!(
+                        "bridge_evm_to_svm release_svm: {}", e
+                    )))
+                })?;
+                Ok(Some(Value::Bytes(ticket.to_vec())))
+            }
         });
     }
 }
@@ -466,5 +672,186 @@ mod tests {
         let bridge = X3VMBridge::with_config(config);
         assert!(!bridge.config.enable_evm);
         assert_eq!(bridge.config.gas_limit, 500_000);
+    }
+
+    // ── BalanceProvider mock + tests ─────────────────────────────────────────
+
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex as StdMutex};
+
+    struct MockBalanceProvider {
+        ledger: StdMutex<HashMap<Vec<u8>, u128>>,
+    }
+
+    impl MockBalanceProvider {
+        fn new(initial: &[(&[u8], u128)]) -> Self {
+            let mut m = HashMap::new();
+            for (addr, bal) in initial {
+                m.insert(addr.to_vec(), *bal);
+            }
+            Self { ledger: StdMutex::new(m) }
+        }
+    }
+
+    impl BalanceProvider for MockBalanceProvider {
+        fn get_balance(&self, address: &[u8]) -> u128 {
+            *self.ledger.lock().unwrap().get(address).unwrap_or(&0)
+        }
+
+        fn transfer(&self, from: &[u8], to: &[u8], amount: u128) -> Result<(), &'static str> {
+            let mut ledger = self.ledger.lock().unwrap();
+            let from_bal = *ledger.get(from).unwrap_or(&0);
+            if from_bal < amount {
+                return Err("insufficient balance");
+            }
+            *ledger.entry(from.to_vec()).or_insert(0) -= amount;
+            *ledger.entry(to.to_vec()).or_insert(0) += amount;
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn test_balance_provider_get_balance() {
+        let alice = b"alice_svm_pubkey_32bytes_pad00000" as &[u8];
+        let provider = MockBalanceProvider::new(&[(alice, 1_000_000)]);
+        assert_eq!(provider.get_balance(alice), 1_000_000);
+        assert_eq!(provider.get_balance(b"unknown"), 0);
+    }
+
+    #[test]
+    fn test_balance_provider_transfer_success() {
+        let alice = b"alice00000000000000000000000000000" as &[u8];
+        let bob = b"bob0000000000000000000000000000000" as &[u8];
+        let provider = MockBalanceProvider::new(&[(alice, 500), (bob, 100)]);
+        assert!(provider.transfer(alice, bob, 200).is_ok());
+        assert_eq!(provider.get_balance(alice), 300);
+        assert_eq!(provider.get_balance(bob), 300);
+    }
+
+    #[test]
+    fn test_balance_provider_transfer_insufficient() {
+        let alice = b"alice00000000000000000000000000000" as &[u8];
+        let bob = b"bob0000000000000000000000000000000" as &[u8];
+        let provider = MockBalanceProvider::new(&[(alice, 50)]);
+        let result = provider.transfer(alice, bob, 100);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "insufficient balance");
+        // Balance unchanged
+        assert_eq!(provider.get_balance(alice), 50);
+    }
+
+    #[test]
+    fn test_with_balances_builder_sets_provider() {
+        let provider: Arc<dyn BalanceProvider> =
+            Arc::new(MockBalanceProvider::new(&[(b"x", 999)]));
+        let bridge = X3VMBridge::new().with_balances(provider);
+        assert!(bridge.balance_provider.is_some());
+    }
+
+    // ── CrossVmEscrow mock + tests ───────────────────────────────────────────
+
+    struct MockCrossVmEscrow {
+        /// Tracks locked SVM amounts: ticket → amount
+        svm_locks: StdMutex<HashMap<[u8; 32], u128>>,
+        /// Tracks locked EVM amounts: ticket → amount
+        evm_locks: StdMutex<HashMap<[u8; 32], u128>>,
+    }
+
+    impl MockCrossVmEscrow {
+        fn new() -> Self {
+            Self {
+                svm_locks: StdMutex::new(HashMap::new()),
+                evm_locks: StdMutex::new(HashMap::new()),
+            }
+        }
+    }
+
+    impl CrossVmEscrow for MockCrossVmEscrow {
+        fn lock_svm(&self, from: &[u8], amount: u128) -> Result<[u8; 32], &'static str> {
+            let mut ticket = [0u8; 32];
+            ticket[..from.len().min(16)].copy_from_slice(&from[..from.len().min(16)]);
+            ticket[16..24].copy_from_slice(&amount.to_le_bytes()[..8]);
+            self.svm_locks.lock().unwrap().insert(ticket, amount);
+            Ok(ticket)
+        }
+
+        fn release_evm(
+            &self,
+            _to: &[u8; 20],
+            ticket: &[u8; 32],
+            amount: u128,
+        ) -> Result<(), &'static str> {
+            let mut locks = self.svm_locks.lock().unwrap();
+            match locks.get(ticket) {
+                Some(&locked) if locked == amount => {
+                    locks.remove(ticket);
+                    Ok(())
+                }
+                Some(_) => Err("amount mismatch"),
+                None => Err("ticket not found"),
+            }
+        }
+
+        fn lock_evm(
+            &self,
+            from: &[u8; 20],
+            amount: u128,
+        ) -> Result<[u8; 32], &'static str> {
+            let mut ticket = [0u8; 32];
+            ticket[..20].copy_from_slice(from);
+            ticket[20..28].copy_from_slice(&amount.to_le_bytes()[..8]);
+            self.evm_locks.lock().unwrap().insert(ticket, amount);
+            Ok(ticket)
+        }
+
+        fn release_svm(
+            &self,
+            _to: &[u8],
+            ticket: &[u8; 32],
+            amount: u128,
+        ) -> Result<(), &'static str> {
+            let mut locks = self.evm_locks.lock().unwrap();
+            match locks.get(ticket) {
+                Some(&locked) if locked == amount => {
+                    locks.remove(ticket);
+                    Ok(())
+                }
+                Some(_) => Err("amount mismatch"),
+                None => Err("ticket not found"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_escrow_lock_svm_produces_ticket() {
+        let esc = MockCrossVmEscrow::new();
+        let ticket = esc.lock_svm(b"alice_svm_pubkey", 1_000).unwrap();
+        assert_ne!(ticket, [0u8; 32]);
+    }
+
+    #[test]
+    fn test_escrow_svm_to_evm_round_trip() {
+        let esc = MockCrossVmEscrow::new();
+        let to_evm = [0xABu8; 20];
+        let ticket = esc.lock_svm(b"alice_svm_pubkey", 500).unwrap();
+        assert!(esc.release_evm(&to_evm, &ticket, 500).is_ok());
+        // Double-release should fail (ticket consumed)
+        assert!(esc.release_evm(&to_evm, &ticket, 500).is_err());
+    }
+
+    #[test]
+    fn test_escrow_evm_to_svm_round_trip() {
+        let esc = MockCrossVmEscrow::new();
+        let from_evm = [0x01u8; 20];
+        let ticket = esc.lock_evm(&from_evm, 250).unwrap();
+        assert!(esc.release_svm(b"bob_svm_pubkey", &ticket, 250).is_ok());
+        assert!(esc.release_svm(b"bob_svm_pubkey", &ticket, 250).is_err());
+    }
+
+    #[test]
+    fn test_with_escrow_builder_sets_provider() {
+        let esc: Arc<dyn CrossVmEscrow> = Arc::new(MockCrossVmEscrow::new());
+        let bridge = X3VMBridge::new().with_escrow(esc);
+        assert!(bridge.escrow.is_some());
     }
 }

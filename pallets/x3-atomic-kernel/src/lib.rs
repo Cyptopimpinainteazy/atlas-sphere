@@ -76,6 +76,10 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_core::H256;
     use sp_runtime::traits::Hash;
+    use sp_runtime::transaction_validity::{
+        InvalidTransaction, TransactionPriority, TransactionSource, TransactionValidity,
+        ValidTransaction,
+    };
 
     // ── Config ────────────────────────────────────────────────────────────────
 
@@ -398,55 +402,34 @@ pub mod pallet {
             finality_cert: H256,
             finalized_block: BlockNumberFor<T>,
         ) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+            ensure_signed(origin)?;
+            Self::do_finalize_bundle(bundle_id, receipt_root, finality_cert, finalized_block)
+        }
 
-            // Validate receipt_root is non-zero
-            ensure!(receipt_root != H256::zero(), Error::<T>::InvalidReceiptRoot);
-
-            let mut record = Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
-
-            ensure!(
-                record.status == BundleStatus::Pending || record.status == BundleStatus::Executing,
-                Error::<T>::InvalidBundleState
-            );
-
-            // Check deadline not exceeded
+        /// Submit finalization data as an **unsigned** transaction.
+        ///
+        /// This is the off-chain path: the `AtomicSwapOrchestrator` calls this
+        /// after GPU commit to close the bundle lifecycle without needing a funded
+        /// Substrate account.  The `receipt_root` itself acts as proof-of-execution
+        /// (it is SHA-256 of the GPU-committed shm entry).
+        ///
+        /// `committed_at_ns` is the GPU commit timestamp for auditing only — it is
+        /// not stored on-chain but is included for `ValidateUnsigned` deduplication.
+        ///
+        /// GRANDPA finality cert is set to `H256::zero()` in this path; set it
+        /// properly once Flash Finality is wired.
+        #[pallet::call_index(4)]
+        #[pallet::weight(Weight::from_parts(12_000, 0))]
+        pub fn submit_finalization_result(
+            origin: OriginFor<T>,
+            bundle_id: H256,
+            receipt_root: H256,
+            committed_at_ns: u64,
+        ) -> DispatchResult {
+            ensure_none(origin)?;
             let now = <frame_system::Pallet<T>>::block_number();
-            ensure!(now <= record.deadline_block, Error::<T>::DeadlineExpired);
-
-            // Build and store PoAE proof
-            ensure!(
-                !PoaeProofs::<T>::contains_key(bundle_id),
-                Error::<T>::ProofAlreadyExists
-            );
-
-            let proof = PoaeProof {
-                bundle_id,
-                receipt_root,
-                finalized_block: finalized_block.try_into().unwrap_or(0u64),
-                finality_cert,
-                legs_hash: record.legs_hash,
-                leg_count: record.leg_count,
-            };
-
-            PoaeProofs::<T>::insert(bundle_id, proof);
-            record.status = BundleStatus::Finalized;
-            Bundles::<T>::insert(bundle_id, &record);
-
-            Self::deposit_event(Event::BundleFinalized {
-                bundle_id,
-                receipt_root,
-                finality_cert,
-                finalized_block,
-            });
-
-            log::info!(
-                target: "x3-atomic-kernel",
-                "Bundle {:?} finalized. PoAE proof stored. cert={:?}",
-                bundle_id, finality_cert
-            );
-
-            Ok(())
+            // finality_cert = zero until GRANDPA Flash Finality is wired
+            Self::do_finalize_bundle(bundle_id, receipt_root, H256::zero(), now)
         }
 
         /// Assign an executor to a pending bundle, transitioning it to `Executing`.
@@ -559,9 +542,106 @@ pub mod pallet {
         }
     }
 
+    // ── ValidateUnsigned ──────────────────────────────────────────────────
+
+    #[pallet::validate_unsigned]
+    impl<T: Config> ValidateUnsigned for Pallet<T> {
+        type Call = Call<T>;
+
+        fn validate_unsigned(
+            _source: TransactionSource,
+            call: &Self::Call,
+        ) -> TransactionValidity {
+            if let Call::submit_finalization_result {
+                bundle_id,
+                receipt_root,
+                ..
+            } = call
+            {
+                // receipt_root must be non-zero (proves GPU committed actual data)
+                if *receipt_root == H256::zero() {
+                    return InvalidTransaction::BadProof.into();
+                }
+                // Bundle must exist and be finalizable
+                match Bundles::<T>::get(bundle_id) {
+                    Some(record)
+                        if record.status == BundleStatus::Pending
+                            || record.status == BundleStatus::Executing =>
+                    {
+                        ValidTransaction::with_tag_prefix("X3AtomicFinalize")
+                            .priority(TransactionPriority::max_value() / 2)
+                            .and_provides([bundle_id.as_bytes()])
+                            .longevity(5)
+                            .propagate(true)
+                            .build()
+                    }
+                    _ => InvalidTransaction::Stale.into(),
+                }
+            } else {
+                InvalidTransaction::Call.into()
+            }
+        }
+    }
+
     // ── Internal Helpers ──────────────────────────────────────────────────────
 
     impl<T: Config> Pallet<T> {
+        /// Shared finalization logic used by both `finalize_atomic_bundle` (signed)
+        /// and `submit_finalization_result` (unsigned).
+        fn do_finalize_bundle(
+            bundle_id: H256,
+            receipt_root: H256,
+            finality_cert: H256,
+            finalized_block: BlockNumberFor<T>,
+        ) -> DispatchResult {
+            ensure!(receipt_root != H256::zero(), Error::<T>::InvalidReceiptRoot);
+
+            let mut record =
+                Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
+
+            ensure!(
+                record.status == BundleStatus::Pending
+                    || record.status == BundleStatus::Executing,
+                Error::<T>::InvalidBundleState
+            );
+
+            let now = <frame_system::Pallet<T>>::block_number();
+            ensure!(now <= record.deadline_block, Error::<T>::DeadlineExpired);
+
+            ensure!(
+                !PoaeProofs::<T>::contains_key(bundle_id),
+                Error::<T>::ProofAlreadyExists
+            );
+
+            let proof = PoaeProof {
+                bundle_id,
+                receipt_root,
+                finalized_block: finalized_block.try_into().unwrap_or(0u64),
+                finality_cert,
+                legs_hash: record.legs_hash,
+                leg_count: record.leg_count,
+            };
+
+            PoaeProofs::<T>::insert(bundle_id, proof);
+            record.status = BundleStatus::Finalized;
+            Bundles::<T>::insert(bundle_id, &record);
+
+            Self::deposit_event(Event::BundleFinalized {
+                bundle_id,
+                receipt_root,
+                finality_cert,
+                finalized_block,
+            });
+
+            log::info!(
+                target: "x3-atomic-kernel",
+                "Bundle {:?} finalized. PoAE proof stored. cert={:?}",
+                bundle_id, finality_cert
+            );
+
+            Ok(())
+        }
+
         /// Derive a deterministic bundle ID from submitter + block + legs_hash.
         pub fn derive_bundle_id(
             submitter: &T::AccountId,
