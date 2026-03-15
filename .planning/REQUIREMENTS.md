@@ -8,12 +8,14 @@
 ### Core
 
 - [ ] **REQ-01**: Repository has planning artifacts (roadmap, requirements, state, phase structure) to support structured development.
+- [ ] **REQ-02**: Gap closure workflow can create and execute a phase when a milestone audit reports gaps.
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | REQ-01 | Phase 1 | Pending |
+| REQ-02 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 1 total
