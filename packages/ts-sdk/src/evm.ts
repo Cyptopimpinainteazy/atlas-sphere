@@ -10,6 +10,7 @@ import { hexToU8a, u8aToHex, isHex } from '@polkadot/util';
 import type { AccountId } from './types';
 import { ValidationError } from './errors';
 import { EVM_ADDRESS_LENGTH, EVM_SELECTORS } from './constants';
+import { decodeAccountId } from './utils';
 
 // =============================================================================
 // Types
@@ -110,8 +111,8 @@ export function accountIdToAddress(accountId: AccountId): HexString {
   if (isHex(accountId)) {
     bytes = hexToU8a(accountId);
   } else {
-    // SS58 decode would be needed
-    throw new ValidationError('accountId', 'SS58 decoding not implemented');
+    // SS58 decode via utils
+    bytes = decodeAccountId(accountId);
   }
 
   // Take first 20 bytes

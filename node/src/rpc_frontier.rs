@@ -134,6 +134,27 @@ where
         Ok(format!("0x{:x}", estimate))
     })?;
 
+    // eth_sendRawTransaction — submit a signed RLP-encoded Ethereum transaction
+    // Executes via the X3 kernel EVM adapter and returns the keccak256 tx hash.
+    let c = client.clone();
+    module.register_method("eth_sendRawTransaction", move |params, _| {
+        let raw_hex: String = params.one()?;
+        let stripped = raw_hex.strip_prefix("0x").unwrap_or(&raw_hex);
+        let raw_bytes = hex::decode(stripped)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid hex: {}", e)))?;
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+        let result: Result<Vec<u8>, Vec<u8>> = api
+            .submit_evm_transaction(at, raw_bytes)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
+        match result {
+            Ok(tx_hash) => Ok(format!("0x{}", hex::encode(tx_hash))),
+            Err(err_bytes) => Err(jsonrpsee::core::Error::Custom(
+                format!("EVM execution failed: {}", String::from_utf8_lossy(&err_bytes))
+            )),
+        }
+    })?;
+
     Ok(module)
 }
 

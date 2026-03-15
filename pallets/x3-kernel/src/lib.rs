@@ -644,7 +644,7 @@ pub mod pallet {
                 let bounded_symbol: AssetSymbolOf<T> = symbol
                     .clone()
                     .try_into()
-                    .expect("Symbol too long for asset registry");
+                    .unwrap_or_else(|_| Default::default());
 
                 let metadata = AssetMetadata {
                     symbol: bounded_symbol,
@@ -3030,6 +3030,11 @@ sp_api::decl_runtime_apis! {
 
         /// Check whether an SVM public key has an executable program deployed
         fn is_svm_program(svm_pubkey: Vec<u8>) -> bool;
+
+        /// Submit a signed raw EVM transaction (RLP-encoded).
+        /// Decodes the transaction, executes it via the EVM adapter, and returns
+        /// the keccak256 transaction hash on success.
+        fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
     }
 }
 

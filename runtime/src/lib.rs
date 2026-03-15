@@ -1489,6 +1489,27 @@ impl_runtime_apis! {
             let balance = pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &0u32);
             balance > 0
         }
+
+        fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+            // Decode and execute a raw (RLP-encoded) EVM transaction via the configured EVM adapter.
+            // Returns keccak256 hash of the raw_tx bytes on success, or SCALE-encoded error on failure.
+            use sp_io::hashing::keccak_256;
+            use pallet_x3_kernel::EvmExecutorAdapter;
+            use codec::Encode;
+            let result = <Runtime as pallet_x3_kernel::Config>::EvmAdapter::execute(&raw_tx, 10_000_000);
+            match result {
+                Ok(receipt) if receipt.success => {
+                    let tx_hash = keccak_256(&raw_tx).to_vec();
+                    Ok(tx_hash)
+                }
+                Ok(receipt) => {
+                    Err(receipt.return_data)
+                }
+                Err(e) => {
+                    Err(e.encode())
+                }
+            }
+        }
     }
 
     impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {

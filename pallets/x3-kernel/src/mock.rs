@@ -3,7 +3,7 @@
 use crate as pallet_x3_kernel;
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::{ConstU32, ConstU64, OnRuntimeUpgrade},
+    traits::{ConstBool, ConstU32, ConstU64, OnRuntimeUpgrade},
 };
 use frame_system as system;
 use parity_scale_codec::Encode;
@@ -123,6 +123,11 @@ impl pallet_x3_kernel::Config for Test {
     type SvmAdapter = ();
     type X3Adapter = crate::FailingMockX3Adapter;
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
+    type CrossVmPrepareTtl = ConstU64<10>;
+    type MaxPreparedCrossVmOps = ConstU32<16>;
+    type MaxPreparedOpsPerBlock = ConstU32<8>;
+    type RequireCrossVmProof = ConstBool<false>;
+    type CrossChainProofVerifier = crate::NoopProofVerifier;
 }
 
 pub struct ExtBuilder {

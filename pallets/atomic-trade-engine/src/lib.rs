@@ -1876,7 +1876,8 @@ pub mod pallet {
                         reserve_a: synthetic_reserve,
                         reserve_b: synthetic_reserve,
                         fee_bps: 30,
-                        address: BoundedVec::try_from(b"synthetic-router".to_vec()).unwrap(),
+                        address: BoundedVec::try_from(b"synthetic-router".to_vec())
+                            .unwrap_or_default(),
                     });
                 }
             }

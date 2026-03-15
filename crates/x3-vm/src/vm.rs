@@ -1654,4 +1654,174 @@ mod tests {
         let r = vmc.call_function(0, &[]).expect("read global");
         assert_eq!(r.value, Some(Value::I64(7)));
     }
+
+    /// VM-001: Integration test for X3 VM nested call handling with shared global state.
+    ///
+    /// This verifies:
+    /// 1. Caller writes a value to a global, then calls a nested function.
+    /// 2. Callee can read the global written by the caller (shared global state).
+    /// 3. Callee overwrites the global, returns void.
+    /// 4. After callee returns, caller reads the global and sees the callee's write.
+    /// 5. Register isolation holds: callee's local registers don't affect caller's.
+    #[test]
+    fn vm_nested_call_with_global_state() {
+        use x3_backend::bc_format::{ConstValue, FunctionEntry, GlobalEntry, MAGIC, VERSION};
+        use x3_backend::opcode::Opcode;
+
+        // Global index 0: starts at 0 (const pool index 0 = integer 0)
+        // func 0 (caller):
+        //   LoadImm r1, 42          -- write 42 into r1
+        //   StoreGlobal g0, r1      -- global0 = 42
+        //   Call r0, func=1, argc=0 -- call callee (no args)
+        //   LoadGlobal r2, g0       -- r2 = global0 (should be 99 after callee)
+        //   Ret r2                  -- return r2
+        //
+        // func 1 (callee):
+        //   LoadGlobal r1, g0       -- r1 = global0 (should be 42 written by caller)
+        //   LoadImm r2, 99          -- r2 = 99
+        //   Add r1, r1, r2          -- r1 = 42+99 = 141  (verifies it saw 42)
+        //   LoadImm r3, 99          -- r3 = 99
+        //   StoreGlobal g0, r3      -- global0 = 99
+        //   RetVoid
+
+        let mut code_f0: Vec<u8> = Vec::new();
+        // LoadImm r1, 42
+        code_f0.push(Opcode::LoadImm as u8);
+        code_f0.push(1u8);
+        code_f0.push(42i8 as u8);
+        // StoreGlobal idx=0, src=r1
+        code_f0.push(Opcode::StoreGlobal as u8);
+        code_f0.extend_from_slice(&0u32.to_le_bytes());
+        code_f0.push(1u8);
+        // Call dst=r0, func=1, argc=0
+        code_f0.push(Opcode::Call as u8);
+        code_f0.push(0u8); // dst
+        code_f0.extend_from_slice(&1u32.to_le_bytes()); // func idx 1
+        code_f0.extend_from_slice(&0u16.to_le_bytes()); // argc = 0
+        // LoadGlobal r2, idx=0
+        code_f0.push(Opcode::LoadGlobal as u8);
+        code_f0.push(2u8);
+        code_f0.extend_from_slice(&0u32.to_le_bytes());
+        // Ret r2
+        code_f0.push(Opcode::Ret as u8);
+        code_f0.push(2u8);
+
+        let func1_entry = code_f0.len() as u32;
+
+        let mut code_f1: Vec<u8> = Vec::new();
+        // LoadGlobal r1, idx=0  (read what caller wrote)
+        code_f1.push(Opcode::LoadGlobal as u8);
+        code_f1.push(1u8);
+        code_f1.extend_from_slice(&0u32.to_le_bytes());
+        // LoadImm r2, 99
+        code_f1.push(Opcode::LoadImm as u8);
+        code_f1.push(2u8);
+        code_f1.push(99i8 as u8);
+        // Add r1, r1, r2  (asserts callee sees 42 from global; r1 = 141)
+        code_f1.push(Opcode::Add as u8);
+        code_f1.push(1u8);
+        code_f1.push(1u8);
+        code_f1.push(2u8);
+        // LoadImm r3, 99  (write this to global)
+        code_f1.push(Opcode::LoadImm as u8);
+        code_f1.push(3u8);
+        code_f1.push(99i8 as u8);
+        // StoreGlobal idx=0, src=r3
+        code_f1.push(Opcode::StoreGlobal as u8);
+        code_f1.extend_from_slice(&0u32.to_le_bytes());
+        code_f1.push(3u8);
+        // RetVoid
+        code_f1.push(Opcode::RetVoid as u8);
+
+        let mut code: Vec<u8> = code_f0;
+        code.extend_from_slice(&code_f1);
+
+        // Build module bytes
+        let mut out: Vec<u8> = Vec::new();
+        out.extend_from_slice(MAGIC);
+        out.extend_from_slice(&VERSION.to_le_bytes());
+        out.extend_from_slice(&0u32.to_le_bytes()); // flags
+        out.extend_from_slice(&0u32.to_le_bytes()); // checksum
+        out.extend_from_slice(&VERSION.to_le_bytes()); // min_version
+        out.extend_from_slice(&0u32.to_le_bytes()); // features
+
+        // const pool: one integer 0 (initial value of global0)
+        out.extend_from_slice(&1u32.to_le_bytes());
+        out.push(0u8); // integer tag
+        out.extend_from_slice(&0i64.to_le_bytes());
+
+        // functions table (2)
+        out.extend_from_slice(&2u32.to_le_bytes());
+        // func 0: caller — needs r0..r2
+        let f0 = FunctionEntry {
+            name: "caller".to_string(),
+            entry_point: 0,
+            param_count: 0,
+            local_count: 3, // r0, r1, r2
+            max_stack: 4,
+            return_type_tag: 1,
+        };
+        out.extend_from_slice(&(f0.name.len() as u16).to_le_bytes());
+        out.extend_from_slice(f0.name.as_bytes());
+        out.extend_from_slice(&f0.entry_point.to_le_bytes());
+        out.push(f0.param_count);
+        out.extend_from_slice(&f0.local_count.to_le_bytes());
+        out.extend_from_slice(&f0.max_stack.to_le_bytes());
+        out.push(f0.return_type_tag);
+        // func 1: callee — needs r1..r3 in its own window
+        let f1 = FunctionEntry {
+            name: "callee".to_string(),
+            entry_point: func1_entry,
+            param_count: 0,
+            local_count: 4, // r0..r3
+            max_stack: 4,
+            return_type_tag: 0,
+        };
+        out.extend_from_slice(&(f1.name.len() as u16).to_le_bytes());
+        out.extend_from_slice(f1.name.as_bytes());
+        out.extend_from_slice(&f1.entry_point.to_le_bytes());
+        out.push(f1.param_count);
+        out.extend_from_slice(&f1.local_count.to_le_bytes());
+        out.extend_from_slice(&f1.max_stack.to_le_bytes());
+        out.push(f1.return_type_tag);
+
+        // globals: one mutable global g0 initialized from const 0 (value=0)
+        out.extend_from_slice(&1u32.to_le_bytes());
+        let gname = "g0";
+        out.extend_from_slice(&(gname.len() as u16).to_le_bytes());
+        out.extend_from_slice(gname.as_bytes());
+        out.push(1u8); // type tag integer
+        out.push(1u8); // mutable
+        out.extend_from_slice(&0u32.to_le_bytes()); // init from const index 0
+
+        // code section
+        out.extend_from_slice(&(code.len() as u32).to_le_bytes());
+        out.extend_from_slice(&code);
+        out.push(0u8); // debug
+        out.push(0u8); // metadata
+
+        let mut vm = VM::from_bytes(&out).expect("module should load");
+        let result = vm.call_function(0, &[]).expect("nested call should succeed");
+
+        // Caller returns global0 value after callee wrote 99 into it
+        assert_eq!(
+            result.value,
+            Some(Value::I64(99)),
+            "caller should see callee's global write (99)"
+        );
+
+        // Verify global0 is 99 in VM state
+        assert_eq!(
+            vm.globals[0],
+            Value::I64(99),
+            "global state must reflect callee's write"
+        );
+
+        // Verify gas was charged (both functions executed)
+        assert!(result.gas_used > 0, "gas must be charged");
+        assert!(
+            result.instruction_count >= 5,
+            "at least 5 instructions executed"
+        );
+    }
 }

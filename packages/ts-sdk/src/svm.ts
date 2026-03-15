@@ -10,6 +10,7 @@ import { hexToU8a, u8aToHex, isHex } from '@polkadot/util';
 import type { AccountId } from './types';
 import { ValidationError } from './errors';
 import { SOLANA_PUBKEY_LENGTH, ACCOUNT_ID_LENGTH } from './constants';
+import { base58Decode } from './utils';
 
 // =============================================================================
 // Types
@@ -87,8 +88,12 @@ export function pubkeyToBytes(pubkey: Pubkey): Uint8Array {
     return bytes;
   }
 
-  // Would need base58 decoding for string pubkeys
-  throw new ValidationError('pubkey', 'Base58 decoding not implemented');
+  // Base58 decode for Solana-style pubkeys
+  const decoded = base58Decode(pubkey);
+  if (decoded.length !== SOLANA_PUBKEY_LENGTH) {
+    throw new ValidationError('pubkey', `Pubkey must be ${SOLANA_PUBKEY_LENGTH} bytes after decode`, decoded.length);
+  }
+  return decoded;
 }
 
 /**

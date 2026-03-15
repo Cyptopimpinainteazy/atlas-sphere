@@ -2,7 +2,7 @@ use crate::flash_finality::FlashFinalityBridge;
 use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
 use futures_util::StreamExt;
 use poh_generator::PoHState;
-use sc_client_api::{BlockBackend, BlockchainEvents};
+use sc_client_api::{Backend, BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
@@ -663,16 +663,18 @@ pub fn new_full(
         let balance_adapter =
             Arc::new(SubstrateClientBalanceAdapter::new(client.clone()));
 
-        let offchain_storage = backend
-            .offchain_storage()
-            .expect("x3-chain node requires off-chain storage; use RocksDB backend");
-
-        let _escrow_adapter = Arc::new(PalletEscrowAdapter::with_persistence(
-            balance_adapter.clone(),
-            OffchainEscrowPersistence::new(offchain_storage),
-        ));
-
-        log::info!("🌉 Cross-VM bridge adapters wired (balance + escrow)");
+        match backend.offchain_storage() {
+            Some(offchain_storage) => {
+                let _escrow_adapter = Arc::new(PalletEscrowAdapter::with_persistence(
+                    balance_adapter.clone(),
+                    OffchainEscrowPersistence::new(offchain_storage),
+                ));
+                log::info!("🌉 Cross-VM bridge adapters wired (balance + escrow)");
+            }
+            None => {
+                log::warn!("⚠️  Off-chain storage unavailable (in-memory backend?); escrow persistence disabled");
+            }
+        }
     }
 
     // Start PoH Generator background task if enabled

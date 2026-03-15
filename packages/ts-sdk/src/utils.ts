@@ -192,7 +192,7 @@ const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvw
 /**
  * Decode Base58-encoded string to bytes
  */
-function base58Decode(input: string): Uint8Array {
+export function base58Decode(input: string): Uint8Array {
   // Base58 decoding algorithm
   let result: number[] = [0];
   

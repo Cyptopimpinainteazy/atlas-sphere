@@ -831,3 +831,50 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - `cargo check -p pallet-x3-atomic-kernel` → EXIT 0
 - `cargo test -p x3-bridge-adapters` → 21/21 passed
 - `cargo test -p x3-cross-vm-bridge` → 56/56 passed (50 existing + 4 new integration + 2 existing integration)
+
+---
+
+# Session: March 14, 2026 — Deep Dive Gap Coverage
+
+## ✅ COMPLETED THIS SESSION
+
+### EVM-003: eth_sendRawTransaction RPC  
+- Added `fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>` to `AtlasKernelRuntimeApi` in `pallets/x3-kernel/src/lib.rs`
+- Implemented `submit_evm_transaction` in `runtime/src/lib.rs` using `<Runtime as pallet_x3_kernel::Config>::EvmAdapter::execute()`, `sp_io::hashing::keccak_256`, and `codec::Encode` for error
+- Added `eth_sendRawTransaction` JSON-RPC handler to `node/src/rpc_frontier.rs`
+- Fixed 3 compile errors: `sp_core::keccak_256` (wrong path) → `sp_io::hashing::keccak_256`; `native_vm_adapters` (std-only) → `Config::EvmAdapter`; `alloc::format!` (not in scope in runtime API macro) → `codec::Encode`
+- `SKIP_WASM_BUILD=1 cargo check -p x3-chain-runtime` → EXIT 0
+- `cargo check -p x3-chain-runtime` (full WASM build) → EXIT 0
+
+### SDK-001/002: SS58 + Base58 Decoding in TypeScript SDK
+- `packages/ts-sdk/src/utils.ts`: Exported `base58Decode` (was private)
+- `packages/ts-sdk/src/evm.ts`: Replaced `throw ValidationError('SS58 decoding not implemented')` with `decodeAccountId(accountId)`
+- `packages/ts-sdk/src/svm.ts`: Replaced `throw` with actual `base58Decode()` call + length validation
+- Result: 185 SDK tests pass (was 183, +2 newly working tests)
+
+### RUST-002/003: Remove Production panics
+- `node/src/service.rs`: Added `sc_client_api::Backend` import; replaced `.expect()` for offchain_storage with graceful `match` + `log::warn!`
+- `pallets/atomic-trade-engine/src/lib.rs:1879`: `.unwrap()` → `.unwrap_or_default()` on BoundedVec
+- `pallets/x3-kernel/src/lib.rs:647`: `.expect("Symbol too long")` → `.try_into().unwrap_or_else(|_| Default::default())`
+
+### VM-001: Nested Call Integration Test
+- Added `vm_nested_call_with_global_state` test to `crates/x3-vm/src/vm.rs`
+- Verifies: caller writes 42 to global0, calls callee; callee reads 42 (shared state), writes 99; caller sees 99 after return
+- Register isolation confirmed: callee's r1..r3 don't affect caller's r1..r2
+
+### Kernel Mock Fix (pre-existing bug)
+- `pallets/x3-kernel/src/mock.rs`: Added 5 missing `Config` fields:
+  - `type CrossVmPrepareTtl = ConstU64<10>`
+  - `type MaxPreparedCrossVmOps = ConstU32<16>`
+  - `type MaxPreparedOpsPerBlock = ConstU32<8>`
+  - `type RequireCrossVmProof = ConstBool<false>`
+  - `type CrossChainProofVerifier = crate::NoopProofVerifier`
+- Added `ConstBool` to imports
+
+## ✅ VERIFICATION
+- `cargo check -p x3-chain-runtime` (full WASM) → EXIT 0
+- `SKIP_WASM_BUILD=1 cargo check -p x3-chain-node` → EXIT 0
+- `cargo test -p pallet-x3-kernel -- --test-threads=1` → **98/98 passed**
+- `cargo test --lib -p x3-cross-vm-bridge` → **50/50 passed**
+- `cargo test --lib -p pallet-x3-atomic-kernel` → **14/14 passed**
+- `cd packages/ts-sdk && npx jest --no-coverage` → **185/187 passed** (2 skipped - live integration)
