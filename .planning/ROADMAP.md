@@ -17,7 +17,7 @@ X3 Chain is a modular blockchain execution platform focused on high throughput, 
 **Plans:** 1 plan
 
 Plans:
-- [ ] 01-01: Bootstrap planning (create roadmap, requirements, state, phase structure)
+- [x] 01-01: Bootstrap planning (create roadmap, requirements, state, phase structure)
 
 
 ### Phase 2: Gap closure placeholder
@@ -28,4 +28,4 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 02-01: Create gap closure phase scaffold (placeholder)
+- [x] 02-01: Create gap closure phase scaffold (placeholder)
