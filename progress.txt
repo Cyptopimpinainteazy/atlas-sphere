@@ -626,3 +626,69 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - bridge_svm_to_evm / bridge_evm_to_svm (0x30/0x31) require escrow semantics
 - Sequence/nonce for BRIDGE-005 swap ordering not yet on AtomicPair struct
 - PoaeProof submission to x3-atomic-kernel pallet not yet linked to orchestrator commit path
+
+## Pallet OCW Auto-Finalization + E2E Pipeline Tests (b7885ead)
+
+### OCW Hook (pallet)
+- Added `offchain_worker()` hook to `pallets/x3-atomic-kernel/src/lib.rs`
+- Hook iterates `Bundles::<T>::iter()` for `Executing` status bundles
+- Reads off-chain local storage key `b"x3fin:" + bundle_id` (38 bytes)
+- Payload format: `receipt_root[0..32] || committed_at_ns[32..40 LE u64]` = 40 bytes
+- Guards against zero receipt roots (skips)
+- Submits unsigned `submit_finalization_result` tx via `SubmitTransaction`
+- Clears storage key on successful submission
+- `Config` supertrait extended: `+ frame_system::offchain::SendTransactionTypes<Call<Self>>`
+
+### Bug Fixes (orchestrator)
+- Fixed `committed_at_ns` variable shadowing bug — was referencing undefined name, now uses `ts`
+- Removed unused `use std::ffi::CStr` and `use std::os::raw::c_int` imports from `drain_committed_swaps()`
+
+### Tests Added
+- 4 pallet OCW protocol tests: key format (38 bytes), payload decode roundtrip, zero-root rejection, key uniqueness
+- 6 E2E orchestrator tests: OCW key protocol, payload encode/decode, full pipeline field propagation, serde roundtrips (FinalizationRequest + ProcessResult), pipeline stability
+- Pallet test result: 10/10 pass (`cargo test -p pallet-x3-atomic-kernel`)
+- Orchestrator tests blocked by pre-existing `sp-state-machine` compile failure in substrate git dep (rev=948fbd2) — not introduced by this session
+
+## Commit
+- `b7885ead` — feat(ocw+e2e): pallet OCW auto-finalization + 10 new E2E pipeline tests
+
+## Fix Blocked Compilation Issues (26024734, 4c86216f)
+
+### x3-vm Cargo.toml fix (26024734)
+- Added `sp-core = { workspace = true, default-features = false }` to x3-vm/Cargo.toml
+- Added `sp-core/std` to the `std` feature list
+- Root cause: bridge.rs uses `sp_core::H160` and `sp_core::U256` in EVM hostcall
+  blocks (`#[cfg(feature = "x3-evm-integration")]`) but sp-core was missing as a dep
+- `cargo check -p x3-vm` now exits 0
+
+### proof.rs + ed25519_ge.cuh (4c86216f)
+- proof.rs: `sp_std::BoundedVec` → `frame_support::BoundedVec` (correct FRAME type)
+- ed25519_ge.cuh: cleaned up double-and-add loop (remove redundant `ge_p3 doubled` temp)
+
+### Test Status
+- pallet-x3-atomic-kernel: 10/10 pass
+- x3-vm: cargo check passes
+- sp-state-machine (substrate rev=948fbd2): pre-existing compile failure, unrelated
+
+---
+
+# Session: Fix Pre-existing Workspace Compile Failures (commit 49dfc92e)
+
+## ✅ Hickory DNS Version Skew Fixed
+- x3-dns-server: Exact-pinned all 4 hickory deps to `=0.26.0-alpha.1`
+  (Cargo was resolving to beta.1 which depends on rand 0.10 with broken API)
+- Updated lockfile via `cargo update -p hickory-server --precise 0.26.0-alpha.1`
+- `hickory-net 0.26.0-beta.1` completely removed from lockfile
+- `x3-dns-server` now compiles cleanly
+
+## ✅ 6 Pre-existing Crate Compile Errors Fixed
+- **parallel-proposer**: Added `hex = "0.4.3"` dep (used in GPU sig verifier)
+- **x3-wallet**: Fixed `u32::MAX` returned as `u128` in health_factor — cast to `u32` with `.min(u32::MAX as u128) as u32`
+- **x3-gateway**: Annotated `Ok::<(), GatewayError>(())` to resolve type inference ambiguity
+- **x3-dex**: Added `sp-runtime` dep; fixed `u128/u64` arithmetic with explicit casts; converted `[u8;32] as u64` → `u64::from_le_bytes`; fixed `u32*u64` in options.rs; fixed `u32` negation in pool_analytics
+- **x3-atomic-client**: Added `use jsonrpsee::core::client::ClientT` + `use jsonrpsee::rpc_params!` for all 4 `.request()` calls
+- **contention-predictor**: Added `TransactionMeta` struct; replaced `std::sync::Mutex` with `tokio::sync::Mutex`; added `Display` impl for `ModelType`; added `f64` type annotations on score variables; fixed `&history` borrow in `retrain()` call
+
+## Test Status
+- Workspace: only `sp-io` fails (WASM builder cross-compilation — not Rust source)
+- All 6 previously-failing Rust crates now compile cleanly
