@@ -20,6 +20,11 @@ RUST_MIN_STACK = "33554432"
 # ring's P384 C code (gfp_p384.c / ecp_nistz384.inl) and blake3's AVX512 asm.
 CC = "gcc-12"
 
+[target.x86_64-unknown-linux-gnu]
+# Use clang-14 (LLVM 14) as linker driver to avoid LLVM 20.1 SIGSEGV crashes
+# when linking Substrate proc-macro crates on AMD Threadripper 1900X.
+linker = "clang-14"
+
 [net]
 # Git fetch with CLI for better performance
 git-fetch-with-cli = true
