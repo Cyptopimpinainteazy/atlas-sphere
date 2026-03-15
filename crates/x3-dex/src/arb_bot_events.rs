@@ -224,9 +224,9 @@ impl ArbBotEventSystem {
             .saturating_add(execution.net_profit);
         performance.average_profit_per_execution = performance.total_profit
             / if performance.total_executions > 0 {
-                performance.total_executions
+                performance.total_executions as u128
             } else {
-                1
+                1u128
             };
         performance.total_gas_spent = performance
             .total_gas_spent

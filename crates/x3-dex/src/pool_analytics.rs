@@ -340,10 +340,10 @@ impl PoolAnalyticsEngine {
         trend: i32,            // Positive = uptrend, more volume expected
     ) -> u32 {
         // Simple projection: adjust APY up/down based on trend
-        let adjustment = if trend > 0 {
-            (volatility_score / 100).min(5_000) // Up to 50% boost
+        let adjustment: i32 = if trend > 0 {
+            (volatility_score / 100).min(5_000) as i32 // Up to 50% boost
         } else {
-            -((volatility_score / 100).min(5_000)) as i32
+            -(((volatility_score / 100).min(5_000)) as i32)
         };
 
         let projected = (current_apy_24h as i32 + adjustment).max(0) as u32;

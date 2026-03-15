@@ -9,11 +9,11 @@ license = "MIT"
 repository = "https://github.com/Cyptopimpinainteazy/x3-chain"
 
 [dependencies]
-# Core DNS dependencies
-hickory-server = "0.26.0-alpha.1"
-hickory-resolver = "0.26.0-alpha.1"
-hickory-proto = "0.26.0-alpha.1"
-hickory-client = "0.26.0-alpha.1"
+# Core DNS dependencies — pinned exact to prevent Cargo resolving to beta.1 which has rand 0.10 API breakage
+hickory-server = "=0.26.0-alpha.1"
+hickory-resolver = "=0.26.0-alpha.1"
+hickory-proto = "=0.26.0-alpha.1"
+hickory-client = "=0.26.0-alpha.1"
 
 # Async runtime
 tokio = { version = "1.0", features = ["full"] }
@@ -30,8 +30,8 @@ sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "postgre
 
 # Blockchain integration
 parity-scale-codec = "3.6"
-sp-core = { version = "22", default-features = false, features = ["std"] }
-sp-runtime = { version = "24", default-features = false, features = ["std"] }
+sp-core = { workspace = true, default-features = false, features = ["std"] }
+sp-runtime = { workspace = true, default-features = false, features = ["std"] }
 
 # Networking and HTTP
 axum = "0.7"

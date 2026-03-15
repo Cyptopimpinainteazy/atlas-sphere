@@ -122,7 +122,7 @@ async fn shutdown_signal() -> Result<()> {
             .map_err(|e| GatewayError::Internal(format!("failed to install signal handler: {e}")))?
             .recv()
             .await;
-        Ok(())
+        Ok::<(), GatewayError>(())
     };
 
     #[cfg(not(unix))]

@@ -150,7 +150,7 @@ impl OptionsEngine {
         };
 
         let gamma = (volatility_bps as u64 / 40).min(200);
-        let theta = -((volatility_bps * underlying_price / 10000) as i64 / 100);
+        let theta = -((volatility_bps as u64 * underlying_price / 10000) as i64 / 100);
         let vega = volatility_bps as u64 / 2;
         let rho = time_to_expiry_blocks as u64 / 100;
 

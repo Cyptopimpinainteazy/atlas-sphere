@@ -210,7 +210,10 @@ impl LimitOrderBookEngine {
         let bid_id = best_bid;
         let ask_id = best_ask;
 
-        Ok((bid_id as u64, ask_id as u64))
+        Ok((
+            u64::from_le_bytes(bid_id[..8].try_into().unwrap()),
+            u64::from_le_bytes(ask_id[..8].try_into().unwrap()),
+        ))
     }
 
     /// Calculate execution fee (taker fee - maker gets rebate)

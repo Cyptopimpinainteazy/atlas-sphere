@@ -33,6 +33,8 @@
 
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
+use jsonrpsee::core::client::ClientT;
+use jsonrpsee::rpc_params;
 use jsonrpsee::ws_client::{WsClient, WsClientBuilder};
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
@@ -263,7 +265,7 @@ impl X3AtomicClient {
 
         let result: SubmitResult = self
             .client
-            .request("atomic_submitAtomicBundle", Some(params))
+            .request("atomic_submitAtomicBundle", rpc_params!(params))
             .await
             .map_err(|e| anyhow!("RPC call failed: {}", e))?;
 
@@ -279,7 +281,7 @@ impl X3AtomicClient {
 
         let result: BundleStatus = self
             .client
-            .request("atomic_getBundleStatus", Some(params))
+            .request("atomic_getBundleStatus", rpc_params!(params))
             .await
             .map_err(|e| anyhow!("RPC call failed: {}", e))?;
 
@@ -294,7 +296,7 @@ impl X3AtomicClient {
 
         let result: PoaeProof = self
             .client
-            .request("atomic_getAtomicExecutionProof", Some(params))
+            .request("atomic_getAtomicExecutionProof", rpc_params!(params))
             .await
             .map_err(|e| anyhow!("RPC call failed: {}", e))?;
 
@@ -312,7 +314,7 @@ impl X3AtomicClient {
 
         let result: SimulationResult = self
             .client
-            .request("atomic_simulateAtomicBundle", Some(params))
+            .request("atomic_simulateAtomicBundle", rpc_params!(params))
             .await
             .map_err(|e| anyhow!("RPC call failed: {}", e))?;
 

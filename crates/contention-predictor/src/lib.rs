@@ -8,15 +8,30 @@ use once_cell::sync::Lazy;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{mpsc, Mutex, RwLock};
 use tracing::{debug, info, warn};
 
 pub const FEATURE_VECTOR_DIM: usize = 64;
 
-/// Transaction metadata used by the predictor.
+/// Transaction metadata for contention prediction.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactionMeta {
+    pub tx_hash: String,
+    pub sender: String,
+    pub receiver: String,
+    pub value: u64,
+    pub gas_limit: u64,
+    pub gas_price: u64,
+    pub nonce: u64,
+    pub signature: String,
+    pub contract_address: Option<String>,
+    pub timestamp: u64,
+}
+
+/// Low-level transaction metadata used by the feature extractor.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TxMetadata {
     pub tx_hash: [u8; 32],
@@ -103,6 +118,17 @@ pub enum ModelType {
     LinearRegression,
 }
 
+impl std::fmt::Display for ModelType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ModelType::RandomForest => write!(f, "RandomForest"),
+            ModelType::GradientBoosting => write!(f, "GradientBoosting"),
+            ModelType::NeuralNetwork => write!(f, "NeuralNetwork"),
+            ModelType::LinearRegression => write!(f, "LinearRegression"),
+        }
+    }
+}
+
 /// Contention prediction result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContentionPrediction {
@@ -150,9 +176,10 @@ pub struct ContentionPredictor {
 impl ContentionPredictor {
     /// Create a new contention predictor
     pub fn new(config: PredictorConfig) -> Self {
+        let model_type = config.model_type.clone();
         Self {
             config,
-            model: Arc::new(Mutex::new(PredictionModel::new(config.model_type.clone()))),
+            model: Arc::new(Mutex::new(PredictionModel::new(model_type))),
             transaction_history: Arc::new(Mutex::new(Vec::new())),
             stats: Arc::new(Mutex::new(PredictionStats::default())),
             feature_extractor: Arc::new(Mutex::new(FeatureExtractor::new())),
@@ -217,7 +244,7 @@ impl ContentionPredictor {
             // Retrain model periodically
             if history.len() % 100 == 0 {
                 let mut model = self.model.lock().await;
-                model.retrain(history).await?;
+                model.retrain(&history).await?;
             }
         }
         Ok(())
@@ -335,7 +362,7 @@ impl PredictionModel {
             3
         };
 
-        let conflicting_txs = self.find_conflicting_txs(features).await?;
+        let conflicting_txs = self.find_conflicting_txs(features)?;
 
         Ok(ContentionPrediction {
             tx_hash: "simulated_tx".to_string(), // Would be actual tx hash
@@ -368,7 +395,7 @@ impl PredictionModel {
 
     fn random_forest_predict(&self, features: &TransactionFeatures) -> f64 {
         // Simple heuristic-based prediction
-        let mut score = 0.0;
+        let mut score: f64 = 0.0;
 
         if features.value > 1_000_000_000.0 {
             score += 0.3;
@@ -379,7 +406,7 @@ impl PredictionModel {
         if features.contract_interaction {
             score += 0.2;
         }
-        if features.nonce % 2 == 0 {
+        if features.nonce % 2.0 == 0.0 {
             score += 0.1;
         }
 
@@ -388,7 +415,7 @@ impl PredictionModel {
 
     fn gradient_boosting_predict(&self, features: &TransactionFeatures) -> f64 {
         // Simple heuristic-based prediction
-        let mut score = 0.0;
+        let mut score: f64 = 0.0;
 
         if features.value > 500_000_000.0 {
             score += 0.4;
@@ -405,7 +432,7 @@ impl PredictionModel {
 
     fn neural_network_predict(&self, features: &TransactionFeatures) -> f64 {
         // Simple heuristic-based prediction
-        let mut score = 0.0;
+        let mut score: f64 = 0.0;
 
         if features.value > 2_000_000_000.0 {
             score += 0.5;
@@ -422,7 +449,7 @@ impl PredictionModel {
 
     fn linear_regression_predict(&self, features: &TransactionFeatures) -> f64 {
         // Simple heuristic-based prediction
-        let mut score = 0.0;
+        let mut score: f64 = 0.0;
 
         score += features.value / 10_000_000_000.0;
         score += features.gas_price / 1_000_000_000.0;

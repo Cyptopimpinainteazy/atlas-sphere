@@ -198,8 +198,8 @@ impl DeFiTracker {
 
         // Simple health factor: (collateral_amount * 1000) / (borrowed_amount * 2)
         // threshold is 1000 (1.0x), liquidation at < 1000
-        let health_factor = if borrowed_amount > 0 {
-            ((collateral_amount / 2) * 1000) / borrowed_amount
+        let health_factor: u32 = if borrowed_amount > 0 {
+            (((collateral_amount / 2) * 1000) / borrowed_amount).min(u32::MAX as u128) as u32
         } else {
             u32::MAX
         };
