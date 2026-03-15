@@ -593,6 +593,25 @@ pub mod pallet {
     #[pallet::storage]
     pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
 
+    /// Maximum size in bytes of SVM account data stored per 32-byte pubkey.
+    /// 64 KiB is sufficient for most programs; programs requiring more storage
+    /// should use on-chain accounts managed by the native pallet assets pallet.
+    pub const MAX_SVM_ACCOUNT_DATA_BYTES: u32 = 65_536;
+
+    /// Persisted SVM account data keyed by 32-byte public key.
+    ///
+    /// Written back by `NativeSvmAdapter` (std) and `WasmSvmAdapter` (no_std)
+    /// after each SVM execution so that stateful programs retain their account
+    /// data across calls.  The kernel reads this map when providing pre-existing
+    /// account state to the SVM executor.
+    #[pallet::storage]
+    pub type SvmAccountData<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        [u8; 32],
+        frame_support::BoundedVec<u8, frame_support::traits::ConstU32<65_536>>,
+    >;
+
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
     pub struct GenesisConfig<T: Config> {

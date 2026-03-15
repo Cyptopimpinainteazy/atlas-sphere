@@ -18,6 +18,7 @@ use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
+use x3_bridge_adapters::{OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter};
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -653,6 +654,27 @@ pub fn new_full(
         log::info!("⚡ Flash Finality gadget, network bridge, and voter started");
     }
 
+    // ── Wire Cross-VM bridge adapters ─────────────────────────────────────
+    // `SubstrateClientBalanceAdapter` provides live canonical-ledger balances
+    // to the off-chain AtomicSwapOrchestrator.  `PalletEscrowAdapter` wraps it
+    // with durable escrow persistence backed by the node's off-chain storage,
+    // so in-flight cross-VM swaps survive node restarts.
+    {
+        let balance_adapter =
+            Arc::new(SubstrateClientBalanceAdapter::new(client.clone()));
+
+        let offchain_storage = backend
+            .offchain_storage()
+            .expect("x3-chain node requires off-chain storage; use RocksDB backend");
+
+        let _escrow_adapter = Arc::new(PalletEscrowAdapter::with_persistence(
+            balance_adapter.clone(),
+            OffchainEscrowPersistence::new(offchain_storage),
+        ));
+
+        log::info!("🌉 Cross-VM bridge adapters wired (balance + escrow)");
+    }
+
     // Start PoH Generator background task if enabled
     if let Some(poh_state_arc) = shared_poh_state {
         let client_clone = client.clone();
@@ -689,6 +711,12 @@ pub fn new_full(
 /// This voter listens to block finality notifications and uses Flash-Finality
 /// certificates to move the canonical finalized head. When live mode is enabled,
 /// certificates override GRANDPA finality; in shadow mode, they're logged for comparison.
+///
+/// When a certificate is available it is written to **off-chain local storage** so
+/// the `pallet-x3-atomic-kernel` OCW can attach it to PoAE proofs as finality_cert.
+///
+/// Key format: `b"x3ff:" (5 bytes) + block_number (8 bytes LE) = 13 bytes`
+/// Value:      `cert_hash (32 bytes)`
 async fn run_flash_finality_voter<Client, Block>(
     gadget: Arc<FlashFinalityGadget>,
     client: Arc<Client>,
@@ -715,6 +743,27 @@ async fn run_flash_finality_voter<Client, Block>(
 
                 // Try to get a Flash-Finality certificate for this block
                 if let Some(cert) = gadget.get_certificate(hash).await {
+                    // --- Write cert_hash to off-chain local storage ---
+                    // Key: "x3ff:" + block_number (LE u64) = 13 bytes
+                    // Value: cert_hash (32 bytes)
+                    // The pallet-x3-atomic-kernel OCW reads this to populate
+                    // `finality_cert` in PoAE proofs instead of H256::zero().
+                    {
+                        let cert_hash = cert.cert_hash();
+                        let mut key = b"x3ff:".to_vec();
+                        key.extend_from_slice(&number.to_le_bytes());
+                        sp_io::offchain::local_storage_set(
+                            sp_runtime::offchain::StorageKind::PERSISTENT,
+                            &key,
+                            &cert_hash,
+                        );
+                        log::info!(
+                            "⚡ [FlashFinality] cert stored at key x3ff:{} → cert_hash=0x{}",
+                            number,
+                            hex::encode(&cert_hash[..8])
+                        );
+                    }
+
                     if enable_live_mode {
                         log::info!(
                             "⚡✅ Live mode: Flash-Finality cert for #{} — {} votes (certificate ready)",

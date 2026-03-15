@@ -1172,10 +1172,21 @@ impl CrossVmBridge {
 
                 match Self::dispatch_operation(dispatcher, &operation) {
                     Ok(result) => {
-                        events.push(CrossVmEvent::TransferCompleted {
-                            operation_id: op_id,
-                            gas_used: result.gas_used,
-                        });
+                        match &operation {
+                            CrossVmOperation::AtomicSwap { evm_amount, svm_amount, .. } => {
+                                events.push(CrossVmEvent::AtomicSwapExecuted {
+                                    evm_amount: *evm_amount,
+                                    svm_amount: *svm_amount,
+                                    gas_used: result.gas_used,
+                                });
+                            }
+                            _ => {
+                                events.push(CrossVmEvent::TransferCompleted {
+                                    operation_id: op_id,
+                                    gas_used: result.gas_used,
+                                });
+                            }
+                        }
                         results.push(result.clone());
                         completed_updates.push((operation, result));
                         if let Some((_, state)) = self.pending_ops.get_mut(idx) {
@@ -2397,5 +2408,206 @@ mod message_passing_tests {
             .count();
         assert_eq!(commit_count, 2,
             "Both messages should emit CommitCompleted events");
+    }
+}
+
+// =========================================================================
+// Stub-kernel integration test (BRIDGE-INT-001)
+// Verifies that execute_with_dispatcher works correctly with a deterministic
+// dispatcher that actually tracks state (balance reads/writes) rather than the
+// no-op that always returns MAX balance.
+// =========================================================================
+
+#[cfg(test)]
+mod kernel_dispatcher_integration_tests {
+    use super::*;
+    use alloc::collections::BTreeMap;
+
+    /// A stub dispatcher that maintains simple in-memory balance maps.
+    /// Used to validate that the bridge correctly checks balances before
+    /// transfers and routes calls to the appropriate VM.
+    struct StubKernelDispatcher {
+        evm_balances: BTreeMap<[u8; 20], u128>,
+        svm_balances: BTreeMap<[u8; 32], u64>,
+        evm_calls: core::cell::Cell<u32>,
+        svm_calls: core::cell::Cell<u32>,
+    }
+
+    impl StubKernelDispatcher {
+        fn new() -> Self {
+            Self {
+                evm_balances: BTreeMap::new(),
+                svm_balances: BTreeMap::new(),
+                evm_calls: core::cell::Cell::new(0),
+                svm_calls: core::cell::Cell::new(0),
+            }
+        }
+
+        fn set_evm_balance(&mut self, address: [u8; 20], amount: u128) {
+            self.evm_balances.insert(address, amount);
+        }
+
+        fn set_svm_balance(&mut self, pubkey: [u8; 32], lamports: u64) {
+            self.svm_balances.insert(pubkey, lamports);
+        }
+    }
+
+    impl CrossVmDispatcher for StubKernelDispatcher {
+        fn execute_evm_tx(
+            &self,
+            _caller: &[u8; 20],
+            _target: &[u8; 20],
+            input: &[u8],
+            _value: u128,
+        ) -> Result<CrossVmResult, DispatchError> {
+            self.evm_calls.set(self.evm_calls.get() + 1);
+            // Simulate a realistic gas cost based on input size
+            let gas = 21_000u64 + (input.len() as u64) * 16;
+            Ok(CrossVmResult::success(Vec::new(), gas))
+        }
+
+        fn execute_svm_tx(
+            &self,
+            _caller: &[u8; 32],
+            _program_id: &[u8; 32],
+            input: &[u8],
+        ) -> Result<CrossVmResult, DispatchError> {
+            self.svm_calls.set(self.svm_calls.get() + 1);
+            let compute = 5_000u64 + (input.len() as u64) * 2;
+            Ok(CrossVmResult::success(Vec::new(), compute))
+        }
+
+        fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
+            self.evm_balances.get(address).copied().unwrap_or(0)
+        }
+
+        fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64 {
+            self.svm_balances.get(pubkey).copied().unwrap_or(0)
+        }
+    }
+
+    /// BRIDGE-INT-001: TransferToEvm succeeds when source has sufficient SVM balance.
+    #[test]
+    fn test_transfer_to_evm_with_stub_kernel_dispatcher() {
+        let mut dispatcher = StubKernelDispatcher::new();
+        let svm_payer = [0xAA; 32];
+        let evm_recipient = [0xBB; 20];
+
+        // Fund the SVM source account with enough lamports for the transfer
+        dispatcher.set_svm_balance(svm_payer, 1_000_000_000);
+
+        let mut bridge = CrossVmBridge::new();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: svm_payer.to_vec(),
+                destination: evm_recipient,
+                amount: 500_000,
+            })
+            .expect("queue should succeed");
+
+        let (results, events) = bridge
+            .execute_with_dispatcher(&dispatcher)
+            .expect("execute_with_dispatcher must not fail");
+
+        assert_eq!(results.len(), 1, "one result per queued op");
+        assert!(results[0].success, "transfer must succeed with funded source");
+
+        let completed_events = events
+            .iter()
+            .filter(|e| matches!(e, CrossVmEvent::TransferCompleted { .. }))
+            .count();
+        assert_eq!(completed_events, 1, "exactly one TransferCompleted event");
+    }
+
+    /// BRIDGE-INT-002: CallEvm is routed to the EVM dispatcher only.
+    #[test]
+    fn test_call_evm_routes_to_evm_dispatcher() {
+        let mut dispatcher = StubKernelDispatcher::new();
+        dispatcher.set_evm_balance([0xCC; 20], 10_000);
+
+        let mut bridge = CrossVmBridge::new();
+        bridge
+            .queue_operation(CrossVmOperation::CallEvm {
+                caller: vec![0u8; 32],
+                contract: [0xCC; 20],
+                input: vec![0xAB, 0xCD, 0xEF],
+                value: 0,
+            })
+            .expect("queue should succeed");
+
+        let (results, _events) = bridge
+            .execute_with_dispatcher(&dispatcher)
+            .expect("execute must succeed");
+
+        assert!(results[0].success);
+        // Gas = 21_000 + 3 bytes * 16 = 21_048
+        assert_eq!(results[0].gas_used, 21_048, "gas must reflect input size");
+        assert_eq!(dispatcher.evm_calls.get(), 1, "exactly one EVM dispatch call");
+        assert_eq!(dispatcher.svm_calls.get(), 0, "no SVM dispatch calls");
+    }
+
+    /// BRIDGE-INT-003: CallSvm is routed to the SVM dispatcher only.
+    #[test]
+    fn test_call_svm_routes_to_svm_dispatcher() {
+        let mut dispatcher = StubKernelDispatcher::new();
+        dispatcher.set_svm_balance([0xDD; 32], 9_999);
+
+        let mut bridge = CrossVmBridge::new();
+        bridge
+            .queue_operation(CrossVmOperation::CallSvm {
+                caller: [0xDD; 20],
+                pallet_index: 1,
+                call_index: 2,
+                input: vec![1, 2],
+            })
+            .expect("queue should succeed");
+
+        let (results, _events) = bridge
+            .execute_with_dispatcher(&dispatcher)
+            .expect("execute must succeed");
+
+        assert!(results[0].success);
+        // Compute = 5_000 + 4 bytes * 2 = 5_008
+        // (pallet_index + call_index prepended to input = 2 + 2 bytes)
+        assert_eq!(results[0].gas_used, 5_008, "compute reflects input size");
+        assert_eq!(dispatcher.svm_calls.get(), 1, "exactly one SVM dispatch call");
+        assert_eq!(dispatcher.evm_calls.get(), 0, "no EVM dispatch calls");
+    }
+
+    /// BRIDGE-INT-004: AtomicSwap with a stub dispatcher executes both VM legs
+    /// and returns success for both.
+    #[test]
+    fn test_atomic_swap_stub_dispatcher_both_legs_succeed() {
+        let mut dispatcher = StubKernelDispatcher::new();
+        let evm_party = [0x11; 20];
+        let svm_party = [0x22; 32];
+        // Fund both sides
+        dispatcher.set_evm_balance(evm_party, 5_000_000);
+        dispatcher.set_svm_balance(svm_party, 5_000_000_000);
+
+        let mut bridge = CrossVmBridge::new();
+        bridge
+            .queue_operation(CrossVmOperation::AtomicSwap {
+                evm_party,
+                svm_party: svm_party.to_vec(),
+                evm_asset: [0u8; 20],
+                svm_asset: vec![0u8; 32],
+                evm_amount: 1_000,
+                svm_amount: 2_000,
+            })
+            .expect("queue should succeed");
+
+        let (results, events) = bridge
+            .execute_with_dispatcher(&dispatcher)
+            .expect("execute must succeed");
+
+        assert_eq!(results.len(), 1);
+        assert!(results[0].success, "atomic-swap must succeed with funded parties");
+
+        let swap_events: Vec<_> = events
+            .iter()
+            .filter(|e| matches!(e, CrossVmEvent::AtomicSwapExecuted { .. }))
+            .collect();
+        assert_eq!(swap_events.len(), 1, "one AtomicSwapExecuted event expected");
     }
 }

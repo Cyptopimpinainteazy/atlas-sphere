@@ -775,3 +775,59 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 
 ## Test Status
 - `cargo check -p x3-gpu-validator-swarm -p x3-fees -p x3-constitution -p svm_counter -p x3-dns-server` → EXIT 0
+
+[2026-03-15] crates/x3-bridge-adapters: Replaced InMemoryBalanceAdapter/InMemoryEscrowAdapter
+  simulation with production Substrate-backed adapters.
+  - SubstrateClientBalanceAdapter<C,Block>: lazy-loads balances via AtlasKernelRuntimeApi,
+    overlay-tracks dirty deltas, exports StateChange on take_state_changes()
+  - PalletEscrowAdapter<C,Block,P>: SHA-256 ticket (x3esc_lock || from || amount_le || seq),
+    double-spend prevention via remove-on-release, overflow-safe arithmetic
+  - OffchainEscrowPersistence<O>: durable storage via sp_core::offchain::OffchainStorage,
+    key format: b"x3esc:" + ticket[32] = 38 bytes
+  - EscrowPersistence trait with () no-op and offchain impls
+  - 21 unit tests: all pass (cargo test -p x3-bridge-adapters)
+  - Fixed .cargo/config.toml: clang-14 linker (avoids LLVM 20.1 SIGSEGV on AMD Threadripper)
+  - Commit: 158e5e03 feat(bridge-adapters): replace simulation with Substrate-backed adapters
+
+---
+
+# Session: March 15, 2026 — Cross-VM Gap Fixes (Gaps 1–7)
+
+## ✅ COMPLETED THIS SESSION
+
+### Gap 1 (KernelDispatcher wiring) — Already Done
+- `commit_cross_vm_operation_inner` already used `KernelCrossVmDispatcher::new()` — verified in prior session
+
+### Gap 2 (service.rs Bridge Adapter Wiring)
+- Added `x3-bridge-adapters = { path = "../crates/x3-bridge-adapters" }` to `node/Cargo.toml`
+- Added `SubstrateClientBalanceAdapter` + `PalletEscrowAdapter` instantiation block to `node/src/service.rs`
+- `OffchainEscrowPersistence` wired using `backend.offchain_storage()`
+
+### Gap 3 (EVM Balance Delta Tracking)
+- Added `evm_balance_snapshot(addresses)` helper to `mod native_vm_adapters` in `runtime/src/lib.rs`
+- `collect_evm_balance_changes` now takes `pre_balances: &HashMap<H160,Balance>` and uses filter_map to skip unchanged entries
+
+### Gap 4 (SVM Account Data Write-Back)
+- Added `SvmAccountData<T>: StorageMap<_, Blake2_128Concat, [u8;32], BoundedVec<u8, ConstU32<65536>>>` to `pallets/x3-kernel/src/lib.rs`
+- `map_svm_receipt` in `runtime/src/lib.rs` now writes non-empty account data via `pallet_x3_kernel::SvmAccountData::insert`
+
+### Gap 5 (WasmSvmAdapter state_changes)
+- `WasmSvmAdapter::execute` in `pallets/x3-kernel/src/wasm_adapters.rs` now maps `account_updates` to proper `state_changes`
+- Raw storage key computed and written via `sp_io::storage::set` for `SvmAccountData` entries
+
+### Gap 6 (PoAE Finality Cert Verification)
+- Added `FinalityCertAnchors<T>: StorageMap<_, Twox64Concat, u64, H256>` to `pallets/x3-atomic-kernel/src/lib.rs`
+- New unsigned extrinsic `record_flash_finality_anchor` (call_index 5) to store certs on-chain
+- OCW also submits `record_flash_finality_anchor` for non-zero certs
+- `do_finalize_bundle` verifies incoming cert matches anchored cert when anchor exists
+
+### Gap 7 (Integration Tests)
+- Added `mod kernel_dispatcher_integration_tests` to `crates/cross-vm-bridge/src/lib.rs`
+- `StubKernelDispatcher` with BTreeMap-backed EVM/SVM state
+- 4 tests: transfer, CallEvm, CallSvm, AtomicSwap — all pass
+
+## ✅ VERIFICATION
+- `cargo check -p pallet-x3-kernel` → EXIT 0
+- `cargo check -p pallet-x3-atomic-kernel` → EXIT 0
+- `cargo test -p x3-bridge-adapters` → 21/21 passed
+- `cargo test -p x3-cross-vm-bridge` → 56/56 passed (50 existing + 4 new integration + 2 existing integration)

@@ -589,6 +589,7 @@ mod native_vm_adapters {
         traits::{SaturatedConversion, UniqueSaturatedInto},
         DispatchError,
     };
+    use std::collections::HashMap;
     use x3_svm_integration::{
         RbpfSvmExecutor, SvmConfig, SvmError, SvmExecutionResult, SvmExecutor,
     };
@@ -605,6 +606,10 @@ mod native_vm_adapters {
             let target = H160::zero(); // Default target (for create, this is ignored)
             let value = U256::zero();
             let evm_config = fp_evm::Config::shanghai();
+
+            // Capture pre-execution balance for the source account so that
+            // collect_evm_balance_changes can compute deltas instead of snapshots.
+            let pre_balances = evm_balance_snapshot(&[source]);
 
             // Determine whether to perform a contract call or creation.
             // If the payload represents raw bytecode (typical for contract deployment),
@@ -630,7 +635,8 @@ mod native_vm_adapters {
 
             if let Ok(info) = create_res {
                 let success = matches!(info.exit_reason, ExitReason::Succeed(_));
-                let state_changes = collect_evm_balance_changes(source, None, &info.logs);
+                let state_changes =
+                    collect_evm_balance_changes(source, None, &info.logs, &pre_balances);
                 return Ok(ExecutionReceipt {
                     success,
                     gas_used: info.used_gas.standard.unique_saturated_into(),
@@ -667,7 +673,7 @@ mod native_vm_adapters {
             );
 
             match call_res {
-                Ok(info) => Ok(map_call_info_to_receipt(info, source, Some(target))),
+                Ok(info) => Ok(map_call_info_to_receipt(info, source, Some(target), &pre_balances)),
                 Err(_) => {
                     // As a safe fallback in tests or non-fully-initialized environments,
                     // delegate to the Kernel's mock adapter for deterministic behavior.
@@ -718,9 +724,11 @@ mod native_vm_adapters {
         info: CallInfo,
         source: H160,
         target: Option<H160>,
+        pre_balances: &HashMap<H160, Balance>,
     ) -> ExecutionReceipt {
         let success = matches!(info.exit_reason, ExitReason::Succeed(_));
-        let state_changes = collect_evm_balance_changes(source, target, &info.logs);
+        let state_changes =
+            collect_evm_balance_changes(source, target, &info.logs, pre_balances);
         ExecutionReceipt {
             success,
             gas_used: info.used_gas.standard.unique_saturated_into(),
@@ -785,6 +793,32 @@ mod native_vm_adapters {
     }
 
     fn map_svm_receipt(result: SvmExecutionResult) -> ExecutionReceipt {
+        let state_changes: Vec<StateChange> = result
+            .account_updates
+            .iter()
+            .map(|update| {
+                // Write non-empty account data back to persistent SVM account storage
+                // so that stateful SVM programs retain their state across calls.
+                if !update.data.is_empty() {
+                    if let Ok(bounded) = frame_support::BoundedVec::<
+                        u8,
+                        frame_support::traits::ConstU32<{ pallet_x3_kernel::MAX_SVM_ACCOUNT_DATA_BYTES }>,
+                    >::try_from(update.data.clone())
+                    {
+                        pallet_x3_kernel::SvmAccountData::<super::Runtime>::insert(
+                            update.pubkey,
+                            bounded,
+                        );
+                    }
+                }
+                StateChange {
+                    // SVM pubkeys are 32 bytes and can be decoded by the kernel as AccountId32.
+                    address: update.pubkey.to_vec(),
+                    key: canonical_asset_key(CANONICAL_NATIVE_ASSET_ID),
+                    value: canonical_balance_value(update.lamports as Balance),
+                }
+            })
+            .collect();
         ExecutionReceipt {
             success: result.success,
             gas_used: result.compute_units_used,
@@ -798,16 +832,7 @@ mod native_vm_adapters {
                     data,
                 })
                 .collect(),
-            state_changes: result
-                .account_updates
-                .into_iter()
-                .map(|update| StateChange {
-                    // SVM pubkeys are 32 bytes and can be decoded by the kernel as AccountId32.
-                    address: update.pubkey.to_vec(),
-                    key: canonical_asset_key(CANONICAL_NATIVE_ASSET_ID),
-                    value: canonical_balance_value(update.lamports as Balance),
-                })
-                .collect(),
+            state_changes,
         }
     }
 
@@ -815,6 +840,7 @@ mod native_vm_adapters {
         source: H160,
         target: Option<H160>,
         logs: &[fp_evm::Log],
+        pre_balances: &HashMap<H160, Balance>,
     ) -> Vec<StateChange> {
         let mut touched = Vec::<H160>::new();
         let mut push_unique = |address: H160| {
@@ -833,20 +859,48 @@ mod native_vm_adapters {
 
         touched
             .into_iter()
-            .map(|evm_address| {
+            .filter_map(|evm_address| {
                 let account_id: AccountId = <pallet_evm::HashedAddressMapping<
                     sp_runtime::traits::BlakeTwo256,
                 > as pallet_evm::AddressMapping<AccountId>>::into_account_id(
                     evm_address
                 );
-                let balance: Balance =
+                let post_balance: Balance =
                     pallet_balances::Pallet::<super::Runtime>::free_balance(&account_id);
-                StateChange {
+
+                // Skip addresses where we know the balance is unchanged — this
+                // prevents phantom canonical-ledger updates on every EVM call.
+                if let Some(&pre) = pre_balances.get(&evm_address) {
+                    if pre == post_balance {
+                        return None;
+                    }
+                }
+
+                Some(StateChange {
                     // Canonical ledger decoding expects SCALE-encoded account IDs.
                     address: encode_account_address(&account_id),
                     key: canonical_asset_key(CANONICAL_NATIVE_ASSET_ID),
-                    value: canonical_balance_value(balance),
-                }
+                    value: canonical_balance_value(post_balance),
+                })
+            })
+            .collect()
+    }
+
+    /// Snapshot the native balances for a set of EVM addresses before execution.
+    /// The resulting map is passed to `collect_evm_balance_changes` so it can
+    /// emit delta-only StateChange records.
+    fn evm_balance_snapshot(addresses: &[H160]) -> HashMap<H160, Balance> {
+        addresses
+            .iter()
+            .map(|&addr| {
+                let account_id: AccountId = <pallet_evm::HashedAddressMapping<
+                    sp_runtime::traits::BlakeTwo256,
+                > as pallet_evm::AddressMapping<AccountId>>::into_account_id(
+                    addr
+                );
+                let balance =
+                    pallet_balances::Pallet::<super::Runtime>::free_balance(&account_id);
+                (addr, balance)
             })
             .collect()
     }

@@ -148,6 +148,15 @@ pub mod pallet {
         ValueQuery,
     >;
 
+    /// On-chain anchors for Flash-Finality certificates, keyed by block number
+    /// (as LE-encoded u64).  The off-chain worker writes an entry here (via an
+    /// unsigned extrinsic `record_flash_finality_anchor`) whenever it observes
+    /// a valid certificate in off-chain local storage.  `do_finalize_bundle`
+    /// checks this map when the caller supplies a non-zero `finality_cert`.
+    #[pallet::storage]
+    pub type FinalityCertAnchors<T: Config> =
+        StorageMap<_, Twox64Concat, u64, H256, OptionQuery>;
+
     // ── Types ─────────────────────────────────────────────────────────────────
 
     /// Bundle execution status.
@@ -251,6 +260,10 @@ pub mod pallet {
         NotBundleSubmitter,
         /// Receipt root is malformed or empty.
         InvalidReceiptRoot,
+        /// Finality certificate does not match the on-chain anchor for the
+        /// finalized block.  Submitted cert differs from the one written by
+        /// the Flash Finality voter.
+        InvalidFinalityCert,
     }
 
     // ── Hooks ─────────────────────────────────────────────────────────────────
@@ -265,12 +278,47 @@ pub mod pallet {
         /// finalization record via `sp_io::offchain::local_storage_set` using the key
         /// convention:  `b"x3fin:" + bundle_id_bytes (32)`.
         /// The value is 40 bytes: `receipt_root (32) || committed_at_ns (8, LE)`.
+        ///
+        /// The Flash Finality voter in `service.rs` writes the cert hash under
+        /// key `b"x3ff:" + block_number_le (8 bytes)` = 13-byte key, 32-byte value.
+        /// The OCW reads this cert and attaches it to the PoAE proof so external
+        /// verifiers can validate finality without trusting a zero placeholder.
         fn offchain_worker(now: BlockNumberFor<T>) {
             log::debug!(
                 target: "x3-atomic-kernel",
                 "[OCW] block {:?}: scanning Executing bundles",
                 now
             );
+
+            // Look up any Flash Finality certificate for the current block.
+            // Key: "x3ff:" (5 bytes) + block_number as LE u64 (8 bytes) = 13 bytes
+            // Value: cert_hash (32 bytes) written by run_flash_finality_voter in service.rs
+            let block_num_u64: u64 = now.try_into().unwrap_or(0u64);
+            let finality_cert: H256 = {
+                let mut cert_key = b"x3ff:".to_vec();
+                cert_key.extend_from_slice(&block_num_u64.to_le_bytes());
+                match sp_io::offchain::local_storage_get(StorageKind::PERSISTENT, &cert_key) {
+                    Some(v) if v.len() == 32 => H256::from_slice(&v),
+                    _ => H256::zero(), // Flash Finality not yet running — pallet accepts zero
+                }
+            };
+
+            if finality_cert != H256::zero() {
+                log::info!(
+                    target: "x3-atomic-kernel",
+                    "[OCW] block {:?}: Flash Finality cert found: {:?}",
+                    now, finality_cert
+                );
+                // Anchor the cert on-chain so do_finalize_bundle can verify
+                // non-zero certs submitted via the signed extrinsic path.
+                let anchor_call = Call::record_flash_finality_anchor {
+                    block_num: block_num_u64,
+                    cert: finality_cert,
+                };
+                let _ = SubmitTransaction::<T, Call<T>>::submit_unsigned_transaction(
+                    anchor_call.into(),
+                );
+            }
 
             for (bundle_id, record) in Bundles::<T>::iter() {
                 if record.status != BundleStatus::Executing {
@@ -304,6 +352,7 @@ pub mod pallet {
                 let call = Call::submit_finalization_result {
                     bundle_id,
                     receipt_root,
+                    finality_cert,
                     committed_at_ns,
                 };
 
@@ -313,8 +362,8 @@ pub mod pallet {
                         sp_io::offchain::local_storage_clear(StorageKind::PERSISTENT, &key);
                         log::info!(
                             target: "x3-atomic-kernel",
-                            "[OCW] submitted finalization for bundle {:?} (receipt_root={:?})",
-                            bundle_id, receipt_root
+                            "[OCW] submitted finalization for bundle {:?} (receipt_root={:?}, finality_cert={:?})",
+                            bundle_id, receipt_root, finality_cert
                         );
                     }
                     Err(()) => {
@@ -493,23 +542,54 @@ pub mod pallet {
         /// Substrate account.  The `receipt_root` itself acts as proof-of-execution
         /// (it is SHA-256 of the GPU-committed shm entry).
         ///
+        /// `finality_cert` is the Flash Finality certificate hash written by
+        /// `run_flash_finality_voter` in `service.rs` to off-chain local storage
+        /// under key `"x3ff:" + block_number_le`.  Set to `H256::zero()` when
+        /// Flash Finality is not running (pallet accepts zero for this path).
+        ///
         /// `committed_at_ns` is the GPU commit timestamp for auditing only — it is
         /// not stored on-chain but is included for `ValidateUnsigned` deduplication.
-        ///
-        /// GRANDPA finality cert is set to `H256::zero()` in this path; set it
-        /// properly once Flash Finality is wired.
         #[pallet::call_index(4)]
         #[pallet::weight(Weight::from_parts(12_000, 0))]
         pub fn submit_finalization_result(
             origin: OriginFor<T>,
             bundle_id: H256,
             receipt_root: H256,
+            finality_cert: H256,
             _committed_at_ns: u64,
         ) -> DispatchResult {
             ensure_none(origin)?;
             let now = <frame_system::Pallet<T>>::block_number();
-            // finality_cert = zero until GRANDPA Flash Finality is wired
-            Self::do_finalize_bundle(bundle_id, receipt_root, H256::zero(), now)
+            Self::do_finalize_bundle(bundle_id, receipt_root, finality_cert, now)
+        }
+
+        /// Store an on-chain anchor for a Flash Finality certificate.
+        ///
+        /// Submitted as an **unsigned** transaction by the off-chain worker
+        /// whenever a non-zero cert is found in off-chain local storage.
+        /// Once anchored, `do_finalize_bundle` uses this to verify the
+        /// `finality_cert` supplied via the signed `finalize_atomic_bundle`
+        /// extrinsic, preventing submission of fabricated cert hashes.
+        #[pallet::call_index(5)]
+        #[pallet::weight(Weight::from_parts(3_000, 0))]
+        pub fn record_flash_finality_anchor(
+            origin: OriginFor<T>,
+            block_num: u64,
+            cert: H256,
+        ) -> DispatchResult {
+            ensure_none(origin)?;
+            ensure!(cert != H256::zero(), Error::<T>::InvalidFinalityCert);
+            // Only store the first cert seen for each block — the Flash-Finality voter
+            // derives a deterministic cert per block, so the first non-zero one wins.
+            if !FinalityCertAnchors::<T>::contains_key(block_num) {
+                FinalityCertAnchors::<T>::insert(block_num, cert);
+                log::info!(
+                    target: "x3-atomic-kernel",
+                    "Flash Finality anchor stored for block {}: {:?}",
+                    block_num, cert
+                );
+            }
+            Ok(())
         }
 
         /// Assign an executor to a pending bundle, transitioning it to `Executing`.
@@ -636,6 +716,7 @@ pub mod pallet {
             if let Call::submit_finalization_result {
                 bundle_id,
                 receipt_root,
+                finality_cert,
                 ..
             } = call
             {
@@ -649,15 +730,34 @@ pub mod pallet {
                         if record.status == BundleStatus::Pending
                             || record.status == BundleStatus::Executing =>
                     {
+                        // Include finality_cert bytes in the dedup tag so that a zero-cert and a
+                        // real-cert tx for the same bundle are treated as distinct (the real one
+                        // should win in the pool).
+                        let mut tag = bundle_id.as_bytes().to_vec();
+                        tag.extend_from_slice(finality_cert.as_bytes());
                         ValidTransaction::with_tag_prefix("X3AtomicFinalize")
-                            .priority(TransactionPriority::max_value() / 2)
-                            .and_provides([bundle_id.as_bytes()])
+                            .priority(if *finality_cert == H256::zero() {
+                                TransactionPriority::max_value() / 4
+                            } else {
+                                TransactionPriority::max_value() / 2
+                            })
+                            .and_provides([tag.as_slice()])
                             .longevity(5)
                             .propagate(true)
                             .build()
                     }
                     _ => InvalidTransaction::Stale.into(),
                 }
+            } else if let Call::record_flash_finality_anchor { block_num, cert } = call {
+                if *cert == H256::zero() {
+                    return InvalidTransaction::BadProof.into();
+                }
+                ValidTransaction::with_tag_prefix("X3FinalityAnchor")
+                    .priority(TransactionPriority::max_value() / 8)
+                    .and_provides([(b"anchor", block_num.to_le_bytes()).encode().as_slice()])
+                    .longevity(10)
+                    .propagate(true)
+                    .build()
             } else {
                 InvalidTransaction::Call.into()
             }
@@ -676,6 +776,23 @@ pub mod pallet {
             finalized_block: BlockNumberFor<T>,
         ) -> DispatchResult {
             ensure!(receipt_root != H256::zero(), Error::<T>::InvalidReceiptRoot);
+
+            // If a finality cert is supplied, cross-check it against any on-chain
+            // anchor that the OCW has previously stored.  Accepting H256::zero()
+            // is intentional for environments where Flash Finality is not running.
+            if finality_cert != H256::zero() {
+                let block_num: u64 = finalized_block
+                    .try_into()
+                    .unwrap_or(0u64);
+                if let Some(anchored) = FinalityCertAnchors::<T>::get(block_num) {
+                    ensure!(
+                        finality_cert == anchored,
+                        Error::<T>::InvalidFinalityCert
+                    );
+                }
+                // If no anchor found yet (OCW hasn't stored one), accept the cert
+                // tentatively — external verifiers will catch mismatch.
+            }
 
             let mut record =
                 Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;

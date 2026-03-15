@@ -11,6 +11,8 @@
 use crate::ExecutionReceipt;
 use crate::adapters::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
 use frame_support::pallet_prelude::DispatchError;
+#[allow(unused_imports)]
+use parity_scale_codec::Encode as _;
 use sp_std::vec::Vec;
 
 // ---------------------------------------------------------------------------
@@ -75,12 +77,56 @@ impl SvmExecutorAdapter for WasmSvmAdapter {
             max_cpi_depth: 0,
         };
         x3_svm_integration::interp_execute_bpf(payload, &[], &config)
-            .map(|res| ExecutionReceipt {
-                success: res.success,
-                gas_used: res.compute_units_used,
-                return_data: res.output,
-                logs: Vec::new(),
-                state_changes: Vec::new(),
+            .map(|res| {
+                let state_changes: Vec<crate::StateChange> = res
+                    .account_updates
+                    .iter()
+                    .map(|update| {
+                        // Persist account data via the pallet storage key so
+                        // stateful SVM programs retain state across calls.
+                        // We compute the raw storage key for SvmAccountData to
+                        // avoid importing the pallet type in this no_std crate.
+                        if !update.data.is_empty() {
+                            // Key layout: twox128("X3Kernel") || twox128("SvmAccountData")
+                            //             || blake2_128(pubkey) || pubkey
+                            let pallet_hash = sp_io::hashing::twox_128(b"X3Kernel");
+                            let item_hash = sp_io::hashing::twox_128(b"SvmAccountData");
+                            let key_hash = sp_io::hashing::blake2_128(&update.pubkey);
+                            let mut full_key = Vec::with_capacity(80);
+                            full_key.extend_from_slice(&pallet_hash);
+                            full_key.extend_from_slice(&item_hash);
+                            full_key.extend_from_slice(&key_hash);
+                            full_key.extend_from_slice(&update.pubkey);
+                            // SCALE-encode BoundedVec<u8>: compact length prefix + bytes
+                            let mut encoded = Vec::with_capacity(update.data.len() + 4);
+                            parity_scale_codec::Encode::encode_to(&update.data, &mut encoded);
+                            sp_io::storage::set(&full_key, &encoded);
+                        }
+                        // Map lamport balance change to a canonical StateChange.
+                        let asset_key = {
+                            let out = [0u8; 32];
+                            // CANONICAL_NATIVE_ASSET_ID = 0u128 LE
+                            sp_core::H256::from(out)
+                        };
+                        let balance_value = {
+                            let mut out = [0u8; 32];
+                            out[..8].copy_from_slice(&update.lamports.to_le_bytes());
+                            sp_core::H256::from(out)
+                        };
+                        crate::StateChange {
+                            address: update.pubkey.to_vec(),
+                            key: asset_key,
+                            value: balance_value,
+                        }
+                    })
+                    .collect();
+                ExecutionReceipt {
+                    success: res.success,
+                    gas_used: res.compute_units_used,
+                    return_data: res.output,
+                    logs: Vec::new(),
+                    state_changes,
+                }
             })
             .map_err(|_| DispatchError::Other("SVM execution failed"))
     }
