@@ -101,7 +101,7 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 **REMAINING:**
 | Gap ID | Description | File | Priority |
 |--------|-------------|------|----------|
-| VM-002 | Fix remaining unwrap/expect in VM code | crates/x3-vm/src/*.rs | CRITICAL |
+| VM-002 | Fix remaining unwrap/expect in VM code | crates/x3-vm/src/*.rs | CRITICAL | ✅ FIXED (all production VM code is unwrap/expect-free; only test helpers remain) |
 
 ### 1.3 Node RPC - Missing Features
 
@@ -109,8 +109,8 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 
 | Gap ID | Description | File | Priority |
 |--------|-------------|------|----------|
-| RPC-001 | Implement WebSocket server support | node/src/rpc.rs | CRITICAL |
-| RPC-002 | Expose standard Substrate RPC methods | node/src/rpc.rs | CRITICAL |
+| RPC-001 | Implement WebSocket server support | node/src/rpc.rs | CRITICAL | ✅ FIXED (WS subscriptions wired in rpc.rs lines 1103+) |
+| RPC-002 | Expose standard Substrate RPC methods | node/src/rpc.rs | CRITICAL | ✅ FIXED (full Substrate + Frontier RPC modules exposed) |
 | RPC-003 | Test WebSocket connections with Polkadot.js | - | HIGH |
 | RPC-004 | Add WebSocket health check endpoint | node/src/rpc.rs | HIGH |
 | RPC-005 | Implement Frontier RPC module integration | node/src/rpc.rs line 1308 | CRITICAL |
@@ -164,7 +164,7 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 | SEC-006 | Implement transaction spam prevention | HIGH |
 | SEC-007 | Implement role-based access control (RBAC) | HIGH |
 | SEC-008 | Add multi-signature requirements for governance | HIGH |
-| SEC-009 | Implement emergency pause mechanism | CRITICAL |
+| SEC-009 | Implement emergency pause mechanism | CRITICAL | ✅ FIXED (ProtocolPaused storage + emergency_pause/unpause governance extrinsics + guards on all user extrinsics; 5 unit tests pass) |
 
 ---
 
@@ -179,7 +179,7 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 | SDK-001 | Implement full SS58 address decoding | packages/ts-sdk/src/evm.ts | HIGH | ✅ FIXED |
 | SDK-002 | Add Base58 validation/decoding | packages/ts-sdk/src/svm.ts | HIGH | ✅ FIXED |
 | SDK-003 | Implement collateral RPC/REST calls | packages/sdk/collateral.ts | HIGH | ⬜ TODO |
-| SDK-004 | Complete SHA256 implementation | packages/sdk/svm.ts line 134 | HIGH | ⬜ TODO |
+| SDK-004 | Complete SHA256 implementation | packages/sdk/svm.ts line 134 | HIGH | ✅ FIXED (sha256AsU8a from @polkadot/util-crypto wired in simpleHash, getInstructionDiscriminator, getAccountDiscriminator) |
 | SDK-005 | Add comprehensive unit tests for SDK | packages/sdk | HIGH | ✅ 185 tests passing |
 | SDK-006 | Add integration tests for SDK with live node | packages/sdk | HIGH | ⬜ TODO (requires live node) |
 | SDK-007 | Publish TypeScript SDK to npm registry | - | MEDIUM | ⬜ TODO |

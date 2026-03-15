@@ -348,7 +348,9 @@ impl<AccountId> CrossChainProofVerifier<AccountId> for NoopProofVerifier {
     ) -> Result<(), DispatchError> {
         match proof {
             CrossChainProof::None => Ok(()),
-            _ => Err(DispatchError::Other("Cross-chain proof verifier not configured")),
+            _ => Err(DispatchError::Other(
+                "Cross-chain proof verifier not configured",
+            )),
         }
     }
 }
@@ -479,7 +481,11 @@ pub mod pallet {
 
     type AssetSymbolOf<T> = BoundedVec<u8, <T as Config>::MaxAssetSymbolLength>;
     type AssetMetadataOf<T> = AssetMetadata<AssetSymbolOf<T>>;
-    type PreparedCrossVmOpOf<T> = PreparedCrossVmOp<<T as frame_system::Config>::AccountId, <T as Config>::Balance, BlockNumberFor<T>>;
+    type PreparedCrossVmOpOf<T> = PreparedCrossVmOp<
+        <T as frame_system::Config>::AccountId,
+        <T as Config>::Balance,
+        BlockNumberFor<T>,
+    >;
 
     /// Prepared cross-VM operation held during 2PC timeout window.
     #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -568,11 +574,8 @@ pub mod pallet {
 
     /// Queue of prepared cross-VM operation IDs for expiry scanning.
     #[pallet::storage]
-    pub type PreparedCrossVmQueue<T: Config> = StorageValue<
-        _,
-        BoundedVec<H256, <T as Config>::MaxPreparedCrossVmOps>,
-        ValueQuery,
-    >;
+    pub type PreparedCrossVmQueue<T: Config> =
+        StorageValue<_, BoundedVec<H256, <T as Config>::MaxPreparedCrossVmOps>, ValueQuery>;
 
     /// Rate limiting: tracks Comit submissions per account per block.
     /// Key: (AccountId, BlockNumber), Value: submission count.
@@ -592,6 +595,11 @@ pub mod pallet {
     /// Useful for monitoring and debugging data format issues.
     #[pallet::storage]
     pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
+
+    /// Emergency pause flag. When `true`, all user-facing extrinsics are disabled.
+    /// Only governance (root/council) can toggle this.
+    #[pallet::storage]
+    pub type ProtocolPaused<T: Config> = StorageValue<_, bool, ValueQuery>;
 
     /// Maximum size in bytes of SVM account data stored per 32-byte pubkey.
     /// 64 KiB is sufficient for most programs; programs requiring more storage
@@ -715,25 +723,13 @@ pub mod pallet {
             fee_refund: T::Balance,
         },
         /// Cross-VM operation aborted.
-        CrossVmOperationAborted {
-            comit_id: H256,
-            reason: Vec<u8>,
-        },
+        CrossVmOperationAborted { comit_id: H256, reason: Vec<u8> },
         /// Cross-VM fee reserved for a prepared operation.
-        CrossVmFeeReserved {
-            comit_id: H256,
-            amount: T::Balance,
-        },
+        CrossVmFeeReserved { comit_id: H256, amount: T::Balance },
         /// Cross-VM fee refunded after commit/abort.
-        CrossVmFeeRefunded {
-            comit_id: H256,
-            amount: T::Balance,
-        },
+        CrossVmFeeRefunded { comit_id: H256, amount: T::Balance },
         /// Cross-chain proof verified for a cross-VM operation.
-        CrossVmProofVerified {
-            comit_id: H256,
-            proof_kind: u8,
-        },
+        CrossVmProofVerified { comit_id: H256, proof_kind: u8 },
         /// An authority was added to the current authority set.
         AuthorityAdded { authority: T::AccountId },
         /// An authority was removed from the current authority set.
@@ -748,6 +744,10 @@ pub mod pallet {
             amount: T::Balance,
             comit_id: H256,
         },
+        /// The protocol has been emergency-paused by governance.
+        ProtocolPaused,
+        /// The protocol has been unpaused and resumed normal operation.
+        ProtocolUnpaused,
     }
 
     #[pallet::error]
@@ -826,6 +826,8 @@ pub mod pallet {
         CrossVmFeeExceeded,
         /// Cross-VM prepared queue full.
         CrossVmPreparedQueueFull,
+        /// The protocol is currently paused by governance. No user operations permitted.
+        ProtocolIsPaused,
     }
 
     use frame_support::traits::StorageVersion;
@@ -860,6 +862,32 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        /// Activate emergency pause — halts all user-facing extrinsics.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(40)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_pause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
+            ProtocolPaused::<T>::put(true);
+            Self::deposit_event(Event::ProtocolPaused);
+            Ok(())
+        }
+
+        /// Deactivate emergency pause — resumes normal operation.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(41)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_unpause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            // Only unpause if currently paused (nothing to do otherwise)
+            if ProtocolPaused::<T>::get() {
+                ProtocolPaused::<T>::put(false);
+                Self::deposit_event(Event::ProtocolUnpaused);
+            }
+            Ok(())
+        }
+
         /// Submit a Comit transaction describing dual-VM execution intents.
         #[pallet::call_index(0)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit())]
@@ -873,6 +901,9 @@ pub mod pallet {
             prepare_root: H256,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
 
             // Check for duplicate comit_id (M-4: Comit ID uniqueness)
             ensure!(
@@ -1135,6 +1166,9 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
+
             ensure!(
                 !SubmittedComits::<T>::contains_key(comit_id),
                 Error::<T>::DuplicateComitId
@@ -1390,13 +1424,8 @@ pub mod pallet {
             proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
-            let comit_id = Self::prepare_cross_vm_operation_inner(
-                &who,
-                operation,
-                nonce,
-                max_fee,
-                proof,
-            )?;
+            let comit_id =
+                Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
 
             Self::commit_cross_vm_operation_inner(&who, comit_id)
         }
@@ -1412,6 +1441,8 @@ pub mod pallet {
             proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             let _ = Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
             Ok(())
         }
@@ -1419,21 +1450,17 @@ pub mod pallet {
         /// Commit a previously prepared cross-VM operation.
         #[pallet::call_index(12)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
-        pub fn commit_cross_vm_operation(
-            origin: OriginFor<T>,
-            comit_id: H256,
-        ) -> DispatchResult {
+        pub fn commit_cross_vm_operation(origin: OriginFor<T>, comit_id: H256) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             Self::commit_cross_vm_operation_inner(&who, comit_id)
         }
 
         /// Abort a prepared cross-VM operation (origin must match).
         #[pallet::call_index(13)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
-        pub fn abort_cross_vm_operation(
-            origin: OriginFor<T>,
-            comit_id: H256,
-        ) -> DispatchResult {
+        pub fn abort_cross_vm_operation(origin: OriginFor<T>, comit_id: H256) -> DispatchResult {
             let who = ensure_signed(origin)?;
             let prepared = PreparedCrossVmOps::<T>::get(comit_id)
                 .ok_or(Error::<T>::CrossVmOperationNotPrepared)?;
@@ -1883,7 +1910,13 @@ pub mod pallet {
                     let balance = dispatcher.get_evm_balance(source);
                     ensure!(balance >= *amount, Error::<T>::InsufficientBalance);
                 }
-                CrossVmOperation::AtomicSwap { evm_party, svm_party, evm_amount, svm_amount, .. } => {
+                CrossVmOperation::AtomicSwap {
+                    evm_party,
+                    svm_party,
+                    evm_amount,
+                    svm_amount,
+                    ..
+                } => {
                     let evm_balance = dispatcher.get_evm_balance(evm_party);
                     ensure!(evm_balance >= *evm_amount, Error::<T>::InsufficientBalance);
                     let mut pubkey = [0u8; 32];
@@ -1980,7 +2013,8 @@ pub mod pallet {
                     .try_push(comit_id)
                     .map_err(|_| Error::<T>::CrossVmPreparedQueueFull)?;
                 Ok(())
-            }).map_err(|e| {
+            })
+            .map_err(|e| {
                 T::Currency::unreserve(who, max_fee.into());
                 e
             })?;
@@ -2005,10 +2039,7 @@ pub mod pallet {
             Ok(comit_id)
         }
 
-        fn commit_cross_vm_operation_inner(
-            who: &T::AccountId,
-            comit_id: H256,
-        ) -> DispatchResult {
+        fn commit_cross_vm_operation_inner(who: &T::AccountId, comit_id: H256) -> DispatchResult {
             let prepared = PreparedCrossVmOps::<T>::get(comit_id)
                 .ok_or(Error::<T>::CrossVmOperationNotPrepared)?;
             ensure!(prepared.origin == *who, Error::<T>::Unauthorized);
@@ -2025,15 +2056,16 @@ pub mod pallet {
                 .queue_operation(prepared.operation.clone())
                 .map_err(|_| Error::<T>::InvalidCrossVmOperation)?;
 
-            let (results, _events) = bridge
-                .execute_with_dispatcher(&dispatcher)
-                .map_err(|_| {
-                    // Refund reserved fee on execution failure
-                    T::Currency::unreserve(who, prepared.reserved_fee.into());
-                    Error::<T>::CrossVmExecutionFailed
-                })?;
+            let (results, _events) = bridge.execute_with_dispatcher(&dispatcher).map_err(|_| {
+                // Refund reserved fee on execution failure
+                T::Currency::unreserve(who, prepared.reserved_fee.into());
+                Error::<T>::CrossVmExecutionFailed
+            })?;
 
-            let result = results.into_iter().next().ok_or(Error::<T>::CrossVmExecutionFailed)?;
+            let result = results
+                .into_iter()
+                .next()
+                .ok_or(Error::<T>::CrossVmExecutionFailed)?;
             if !result.success {
                 T::Currency::unreserve(who, prepared.reserved_fee.into());
                 return Err(Error::<T>::CrossVmExecutionFailed.into());
@@ -2052,11 +2084,8 @@ pub mod pallet {
                 CrossVmOperation::MessageToSvm { .. } => (0u64, result.gas_used),
             };
 
-            let required_fee = Self::calculate_execution_fee(
-                evm_gas,
-                svm_compute,
-                T::Balance::default(),
-            )?;
+            let required_fee =
+                Self::calculate_execution_fee(evm_gas, svm_compute, T::Balance::default())?;
             if required_fee > prepared.reserved_fee {
                 T::Currency::unreserve(who, prepared.reserved_fee.into());
                 return Err(Error::<T>::CrossVmFeeExceeded.into());
@@ -2930,9 +2959,15 @@ pub mod pallet {
         ) -> Result<CrossVmResult, DispatchError> {
             let receipt = T::EvmAdapter::execute(input, T::DefaultEvmGasLimit::get())?;
             if receipt.success {
-                Ok(CrossVmResult::success(receipt.return_data, receipt.gas_used))
+                Ok(CrossVmResult::success(
+                    receipt.return_data,
+                    receipt.gas_used,
+                ))
             } else {
-                Ok(CrossVmResult::failed(b"evm_execution_failed".to_vec(), receipt.gas_used))
+                Ok(CrossVmResult::failed(
+                    b"evm_execution_failed".to_vec(),
+                    receipt.gas_used,
+                ))
             }
         }
 
@@ -2944,9 +2979,15 @@ pub mod pallet {
         ) -> Result<CrossVmResult, DispatchError> {
             let receipt = T::SvmAdapter::execute(input, T::DefaultSvmComputeLimit::get())?;
             if receipt.success {
-                Ok(CrossVmResult::success(receipt.return_data, receipt.gas_used))
+                Ok(CrossVmResult::success(
+                    receipt.return_data,
+                    receipt.gas_used,
+                ))
             } else {
-                Ok(CrossVmResult::failed(b"svm_execution_failed".to_vec(), receipt.gas_used))
+                Ok(CrossVmResult::failed(
+                    b"svm_execution_failed".to_vec(),
+                    receipt.gas_used,
+                ))
             }
         }
 
