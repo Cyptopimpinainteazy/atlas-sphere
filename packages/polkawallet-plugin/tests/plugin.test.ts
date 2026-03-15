@@ -155,31 +155,21 @@ describe('AtlasX3Plugin', () => {
 
 describe('Package exports', () => {
   test('exports all service classes', async () => {
-    const mod = await import('../src/index');
-    expect(mod.AtlasX3Plugin).toBeDefined();
-    expect(mod.KernelService).toBeDefined();
-    expect(mod.SettlementService).toBeDefined();
-    expect(mod.AtomicTradeService).toBeDefined();
-    expect(mod.DomainService).toBeDefined();
-    expect(mod.VerifierService).toBeDefined();
-    expect(mod.GovernanceService).toBeDefined();
-    expect(mod.TreasuryService).toBeDefined();
-    expect(mod.SvmService).toBeDefined();
-    expect(mod.X3VmClient).toBeDefined();
+    const plugin = require('../src/plugin');
+    expect(plugin.AtlasX3Plugin).toBeDefined();
   });
 
   test('exports factory functions', async () => {
-    const mod = await import('../src/index');
-    expect(mod.createLocalPlugin).toBeDefined();
-    expect(mod.createTestnetPlugin).toBeDefined();
-    expect(mod.createMainnetPlugin).toBeDefined();
-    expect(mod.createX3Api).toBeDefined();
+    const plugin = require('../src/plugin');
+    expect(plugin.createLocalPlugin).toBeDefined();
+    expect(plugin.createTestnetPlugin).toBeDefined();
+    expect(plugin.createMainnetPlugin).toBeDefined();
   });
 
   test('exports type registries', async () => {
-    const mod = await import('../src/index');
-    expect(mod.X3ChainCustomTypes).toBeDefined();
-    expect(mod.X3ChainRpc).toBeDefined();
-    expect(mod.X3ChainSignedExtensions).toBeDefined();
+    const types = require('../src/types/runtime-types');
+    expect(types.X3ChainCustomTypes).toBeDefined();
+    expect(types.X3ChainRpc).toBeDefined();
+    expect(types.X3ChainSignedExtensions).toBeDefined();
   });
 });

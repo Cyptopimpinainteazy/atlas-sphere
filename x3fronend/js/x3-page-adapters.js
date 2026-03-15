@@ -34,6 +34,285 @@
     element.innerHTML = value;
   }
 
+  function getNested(obj, path) {
+    if (!obj || !path) return undefined;
+    var parts = Array.isArray(path) ? path : String(path).split(".");
+    var cur = obj;
+    for (var i = 0; i < parts.length; i++) {
+      if (cur == null) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+
+  function pickFirst(obj, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var value = Array.isArray(key) ? getNested(obj, key) : getNested(obj, key);
+      if (value !== undefined && value !== null) return value;
+    }
+    return undefined;
+  }
+
+  var debugState = {
+    enabled: false,
+    entries: [],
+    payloads: {},
+  };
+
+  function addDebug(section, label, value) {
+    if (!debugState.enabled) return;
+    debugState.entries.push({
+      section: section,
+      label: label,
+      value: value !== undefined && value !== null ? value : "--",
+    });
+  }
+
+  function ensureDebugFooter() {
+    if (!debugState.enabled) return null;
+    if (!document || !document.body) return null;
+    var existing = byId("x3-debug-footer");
+    if (existing) return existing;
+    var footer = document.createElement("div");
+    footer.id = "x3-debug-footer";
+    footer.setAttribute(
+      "style",
+      [
+        "position:fixed",
+        "bottom:12px",
+        "right:12px",
+        "z-index:9999",
+        "background:rgba(8,12,16,0.92)",
+        "border:1px solid rgba(255,255,255,0.12)",
+        "border-radius:12px",
+        "padding:10px 12px",
+        "font-family:monospace",
+        "font-size:10px",
+        "color:#d0d6dc",
+        "max-width:320px",
+        "max-height:260px",
+        "overflow:auto",
+        "box-shadow:0 12px 30px rgba(0,0,0,0.35)",
+      ].join(";"),
+    );
+    footer.innerHTML = "<div style=\"font-weight:700;margin-bottom:6px;\">X3 Contract Debug</div>";
+    document.body.appendChild(footer);
+    return footer;
+  }
+
+  function renderDebugFooter() {
+    var footer = ensureDebugFooter();
+    if (!footer) return;
+    var payloadHtml = "";
+    var payloadKeys = Object.keys(debugState.payloads || {});
+    if (payloadKeys.length) {
+      payloadHtml =
+        "<div style=\"margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;\">" +
+        "<div style=\"font-weight:700;margin-bottom:6px;\">Raw Payloads</div>" +
+        payloadKeys
+          .map(function (key) {
+            var payload = debugState.payloads[key];
+            var json = safeJson(payload);
+            return (
+              "<details style=\"margin-bottom:6px;\">" +
+              "<summary style=\"cursor:pointer;color:#a7f3d0;\">" +
+              escapeHtml(key) +
+              "</summary>" +
+              "<pre style=\"white-space:pre-wrap;word-break:break-word;margin:6px 0 0;color:#cbd5f5;\">" +
+              escapeHtml(json) +
+              "</pre>" +
+              "</details>"
+            );
+          })
+          .join("") +
+        "</div>";
+    }
+    var content =
+      "<div style=\"display:grid;gap:6px;\">" +
+      debugState.entries
+        .map(function (entry) {
+          return (
+            "<div>" +
+            "<span style=\"color:#7dd3fc;\">[" +
+            entry.section +
+            "]</span> " +
+            entry.label +
+            ": <span style=\"color:#fbbf24;\">" +
+            entry.value +
+            "</span></div>"
+          );
+        })
+        .join("") +
+      "</div>";
+    footer.innerHTML =
+      "<div style=\"font-weight:700;margin-bottom:6px;\">X3 Contract Debug</div>" +
+      content +
+      payloadHtml;
+  }
+
+  function escapeHtml(input) {
+    return String(input)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function safeJson(value) {
+    var json;
+    try {
+      json = JSON.stringify(value, null, 2);
+    } catch (err) {
+      json = String(value);
+    }
+    var max = 6000;
+    if (json.length > max) {
+      json = json.slice(0, max) + "\n…(truncated)";
+    }
+    return json;
+  }
+
+  function wrapApiForDebug(api) {
+    if (!debugState.enabled || !api) return;
+    if (api.__x3DebugWrapped) return;
+    Object.keys(api).forEach(function (key) {
+      if (typeof api[key] !== "function") return;
+      if (!/Envelope$/.test(key)) return;
+      var original = api[key];
+      api[key] = async function () {
+        var result = await original.apply(api, arguments);
+        debugState.payloads[key] = result;
+        renderDebugFooter();
+        return result;
+      };
+    });
+    if (typeof api.subscribe === "function") {
+      var originalSubscribe = api.subscribe;
+      api.subscribe = function (topic, handler) {
+        var wrapped = handler;
+        if (typeof handler === "function") {
+          wrapped = function (payload) {
+            debugState.payloads["stream:" + topic] = payload;
+            renderDebugFooter();
+            return handler(payload);
+          };
+        }
+        return originalSubscribe.call(api, topic, wrapped);
+      };
+    }
+    api.__x3DebugWrapped = true;
+  }
+
+  function initDebugMode() {
+    if (typeof window === "undefined") return;
+    if (window.location && /[?&]x3debug=1/.test(window.location.search)) {
+      debugState.enabled = true;
+      window.__x3Debug = debugState;
+    }
+  }
+
+  function normalizeBonus(data) {
+    var bonus = pickFirst(data, [
+      "bonusPct",
+      "bonusPercent",
+      "bonus_pct",
+      "bonus_percent",
+      "bonusRate",
+      "bonus_rate",
+      "roundBonusPct",
+      "round_bonus_pct",
+      "bonus.pct",
+      "bonus.percent",
+      "bonus.rate",
+    ]);
+    var label = pickFirst(data, [
+      "bonusLabel",
+      "bonus_label",
+      "bonus.label",
+      "roundBonusLabel",
+      "round_bonus_label",
+    ]);
+    addDebug("presale", "bonusPct", bonus);
+    addDebug("presale", "bonusLabel", label);
+    return { pct: bonus, label: label };
+  }
+
+  function normalizeFeeShare(data) {
+    var pct = pickFirst(data, [
+      "feeSharePct",
+      "fee_share_pct",
+      "protocolFeeSharePct",
+      "protocol_fee_share_pct",
+      "feeShare.percent",
+      "feeShare.pct",
+      "fee_share.percent",
+      "fee_share.pct",
+    ]);
+    var label = pickFirst(data, [
+      "feeShareLabel",
+      "fee_share_label",
+      "protocolFeeShareLabel",
+      "protocol_fee_share_label",
+      "feeShare.label",
+      "fee_share.label",
+      "feeShare",
+      "fee_share",
+      "protocolFeeShare",
+      "protocol_fee_share",
+    ]);
+    addDebug("presale", "feeSharePct", pct);
+    addDebug("presale", "feeShareLabel", label);
+    return { pct: pct, label: label };
+  }
+
+  function normalizeVotingPower(data) {
+    var total = pickFirst(data, [
+      "votingPowerTotal",
+      "voting_power_total",
+      "votingPower",
+      "voting_power",
+      "vp.total",
+      "vpTotal",
+      "vp_total",
+      "stats.votingPower",
+    ]);
+    var staking = pickFirst(data, [
+      "votingPowerStaking",
+      "voting_power_staking",
+      "vp.staking",
+    ]);
+    var node = pickFirst(data, ["votingPowerNode", "voting_power_node", "vp.node"]);
+    var delegated = pickFirst(data, [
+      "votingPowerDelegated",
+      "voting_power_delegated",
+      "vp.delegated",
+    ]);
+    var rank = pickFirst(data, ["votingPowerRank", "voting_power_rank", "vp.rank"]);
+    var unit = pickFirst(data, [
+      "votingPowerUnit",
+      "voting_power_unit",
+      "vp.unit",
+      "vpUnit",
+      "unit",
+    ]);
+    addDebug("governance", "votingPowerTotal", total);
+    addDebug("governance", "votingPowerUnit", unit);
+    addDebug("governance", "votingPowerStaking", staking);
+    addDebug("governance", "votingPowerNode", node);
+    addDebug("governance", "votingPowerDelegated", delegated);
+    addDebug("governance", "votingPowerRank", rank);
+    return {
+      total: total,
+      staking: staking,
+      node: node,
+      delegated: delegated,
+      rank: rank,
+      unit: unit || "veX3S",
+    };
+  }
+
   function fmtMoney(value) {
     return "$" + Number(value || 0).toLocaleString("en-US");
   }
@@ -388,10 +667,10 @@
         priceDeltaEl.className = priceDelta >= 0 ? "badge-up" : "badge-dn";
       }
       setText("#donut-total", fmtCompactMoney(data.funding.raised));
-      setText("#alloc-lead", "TBD");
-      setText("#alloc-grants", "TBD");
-      setText("#alloc-community", "TBD");
-      setText("#alloc-treasury", "TBD");
+      setText("#alloc-lead", "--");
+      setText("#alloc-grants", "--");
+      setText("#alloc-community", "--");
+      setText("#alloc-treasury", "--");
       setText("#token-mcap", fmtCompactMoney(data.token.marketCapUsd));
       setText("#token-circ", (data.token.circulatingSupply / 1000000).toFixed(0) + "M");
       setText("#token-vol", fmtCompactMoney(data.token.volume24hUsd));
@@ -436,6 +715,56 @@
         }
       }
 
+      var grantsBody = byId("grants-body");
+      if (grantsBody) {
+        grantsBody.innerHTML = "";
+        var grants = Array.isArray(data.grants) ? data.grants : [];
+        grants.slice(0, 4).forEach(function (grant) {
+          var name =
+            grant.name ||
+            grant.projectName ||
+            grant.title ||
+            grant.organization ||
+            grant.team ||
+            "Grant";
+          var amount =
+            grant.amountUsd ||
+            grant.fundingRequestedUsd ||
+            grant.requestedUsd ||
+            grant.amount ||
+            0;
+          var progress =
+            grant.progressPct ||
+            grant.progress ||
+            grant.milestonePct ||
+            grant.completionPct ||
+            null;
+          var status = grant.status || grant.state || grant.stage || "pending";
+          var pctValue =
+            progress === null || progress === undefined
+              ? null
+              : Math.max(0, Math.min(100, Number(progress)));
+          var row = document.createElement("tr");
+          row.innerHTML =
+            "<td>" +
+            escapeHtml(name) +
+            "</td><td>" +
+            fmtCompactMoney(amount) +
+            '</td><td><div class="metric-bar-wrap"><div class="prog-bar" style="height:6px;width:' +
+            (pctValue == null ? 0 : pctValue) +
+            '%;background:var(--cyan)"></div></div><div style="font-size:9px;color:var(--muted);margin-top:4px">' +
+            (pctValue == null ? "--" : pctValue + "%") +
+            '</div></td><td><span class="badge-up">' +
+            String(status).toUpperCase() +
+            "</span></td>";
+          grantsBody.appendChild(row);
+        });
+        if (!grantsBody.children.length) {
+          grantsBody.innerHTML =
+            '<tr><td colspan="4" style="color:var(--muted);font-size:11px;padding:16px 0;">Awaiting live grant feed.</td></tr>';
+        }
+      }
+
       var tickerPrice = byId("ticker");
       var tickerChange = byId("ticker-change");
       if (tickerPrice && tickerChange) {
@@ -468,16 +797,20 @@
       if (byId("round-softcap-bar")) byId("round-softcap-bar").style.width = softCapPct.toFixed(1) + "%";
       setText("#round-softcap", raised >= softCap && softCap > 0 ? "✓ HIT" : fmtCompactMoney(softCap));
       var minTicket = Math.min.apply(null, (presale.tiers || []).map(function (tier) { return tier.priceUsd; }));
-      setText("#round-min-ticket", isFinite(minTicket) ? fmtMoney(minTicket) : "TBD");
-      setText("#round-vesting", "TBD");
-      setText("#round-price", presale.tokenPriceUsd ? "$" + Number(presale.tokenPriceUsd).toFixed(3) : "TBD");
-      setText("#round-bonus", presale.bonusPct ? "+" + presale.bonusPct + "%" : "TBD");
+      var bonusMeta = normalizeBonus(presale);
+      setText("#round-min-ticket", isFinite(minTicket) ? fmtMoney(minTicket) : "--");
+      setText("#round-vesting", presale.vesting || presale.vestingSchedule || "--");
+      setText("#round-price", presale.tokenPriceUsd ? "$" + Number(presale.tokenPriceUsd).toFixed(3) : "--");
+      setText(
+        "#round-bonus",
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "%" : bonusMeta.label || "--",
+      );
 
       var network = data.network || {};
       setText("#net-tps", fmtNumber(network.tps || 0));
       setText("#net-vals", fmtNumber(network.validators || 0));
-      setText("#net-uptime", network.uptime ? fmtPct(network.uptime) : "TBD");
-      setText("#net-finality", network.finality ? network.finality + "s" : "TBD");
+      setText("#net-uptime", network.uptime ? fmtPct(network.uptime) : "--");
+      setText("#net-finality", network.finality ? network.finality + "s" : "--");
       if (byId("net-tps-bar")) byId("net-tps-bar").style.width = Math.min(100, ((network.tps || 0) / 5000) * 100) + "%";
       if (byId("net-vals-bar")) byId("net-vals-bar").style.width = Math.min(100, ((network.validators || 0) / 2000) * 100) + "%";
       if (byId("net-uptime-bar")) byId("net-uptime-bar").style.width = Math.min(100, Number(network.uptime || 0)) + "%";
@@ -590,12 +923,86 @@
       setText("#gov-voters", fmtNumber(data.voters));
       setText("#gov-treasury", fmtCompactMoney(data.treasury));
       setText("#gov-treasury-total", fmtCompactMoney(data.treasury));
-      setText("#voting-power", "-- veX3S");
-      setText("#gov-vp-total", "--");
-      setText("#gov-vp-staking", "--");
-      setText("#gov-vp-node", "--");
-      setText("#gov-vp-delegated", "--");
-      setText("#gov-vp-rank", "--");
+      var vp = normalizeVotingPower(data);
+      setText("#voting-power", (vp.total != null ? fmtNumber(vp.total) : "--") + " " + vp.unit);
+      setText("#gov-vp-total", vp.total != null ? fmtNumber(vp.total) : "--");
+      setText("#gov-vp-staking", vp.staking != null ? fmtNumber(vp.staking) : "--");
+      setText("#gov-vp-node", vp.node != null ? fmtNumber(vp.node) : "--");
+      setText("#gov-vp-delegated", vp.delegated != null ? fmtNumber(vp.delegated) : "--");
+      setText("#gov-vp-rank", vp.rank != null ? vp.rank : "--");
+
+      var allocationSource =
+        data.treasuryAllocations ||
+        data.treasuryAllocation ||
+        data.treasuryBreakdown ||
+        data.treasury_allocations ||
+        null;
+      var allocationList = [];
+      if (Array.isArray(allocationSource)) {
+        allocationList = allocationSource;
+      } else if (allocationSource && typeof allocationSource === "object") {
+        allocationList = Object.keys(allocationSource).map(function (key) {
+          return { label: key, amountUsd: allocationSource[key] };
+        });
+      }
+      var allocationTotal = allocationList.reduce(function (sum, entry) {
+        return sum + Number(entry.amountUsd || entry.amount || 0);
+      }, 0);
+      function findAllocation(names) {
+        var entry = allocationList.find(function (item) {
+          var label = String(item.label || item.name || "").toLowerCase();
+          return names.some(function (name) { return label.indexOf(name) !== -1; });
+        });
+        if (!entry) return null;
+        var amount = Number(entry.amountUsd || entry.amount || 0);
+        var pct = allocationTotal ? Math.round((amount / allocationTotal) * 100) : 0;
+        return { amount: amount, pct: pct };
+      }
+      var dev = findAllocation(["dev", "development"]);
+      var grants = findAllocation(["grant"]);
+      var marketing = findAllocation(["marketing", "growth", "community"]);
+      var reserve = findAllocation(["reserve", "treasury", "stability"]);
+      if (byId("treasury-dev")) setText("#treasury-dev", dev ? fmtCompactMoney(dev.amount) : "--");
+      if (byId("treasury-dev-bar")) byId("treasury-dev-bar").style.width = dev ? dev.pct + "%" : "0%";
+      if (byId("treasury-grants")) setText("#treasury-grants", grants ? fmtCompactMoney(grants.amount) : "--");
+      if (byId("treasury-grants-bar")) byId("treasury-grants-bar").style.width = grants ? grants.pct + "%" : "0%";
+      if (byId("treasury-marketing")) setText("#treasury-marketing", marketing ? fmtCompactMoney(marketing.amount) : "--");
+      if (byId("treasury-marketing-bar")) byId("treasury-marketing-bar").style.width = marketing ? marketing.pct + "%" : "0%";
+      if (byId("treasury-reserve")) setText("#treasury-reserve", reserve ? fmtCompactMoney(reserve.amount) : "--");
+      if (byId("treasury-reserve-bar")) byId("treasury-reserve-bar").style.width = reserve ? reserve.pct + "%" : "0%";
+
+      var delegateList = byId("delegate-list");
+      if (delegateList) {
+        delegateList.innerHTML = "";
+        var delegates =
+          data.delegates ||
+          data.topDelegates ||
+          data.delegateLeaders ||
+          data.delegations ||
+          [];
+        if (!Array.isArray(delegates) || !delegates.length) {
+          delegateList.textContent = "Awaiting delegate feed.";
+        } else {
+          delegates.slice(0, 6).forEach(function (delegate) {
+            var row = document.createElement("div");
+            row.className = "delegate-item";
+            var name = delegate.name || delegate.label || delegate.wallet || delegate.id || "Delegate";
+            var power = delegate.power || delegate.votingPower || delegate.votes || delegate.weight || "--";
+            var avatarColor = delegate.color || "rgba(180,80,255,0.25)";
+            row.innerHTML =
+              '<div class="d-avatar" style="background:' +
+              avatarColor +
+              '">' +
+              String(name).slice(0, 2).toUpperCase() +
+              '</div><div class="d-name">' +
+              escapeHtml(name) +
+              '</div><div class="d-power">' +
+              (typeof power === "number" ? fmtNumber(power) : power) +
+              "</div>";
+            delegateList.appendChild(row);
+          });
+        }
+      }
 
       var list = byId("proposal-list");
       if (list) {
@@ -657,7 +1064,7 @@
             '<div class="prop-card reveal"><div class="prop-header"><div><div class="prop-id">No proposals</div></div><span class="prop-status ps-pending">⏳ Pending</span></div><div class="prop-title">No proposals available yet.</div><div class="prop-desc">Governance proposals will populate once the live feed is connected.</div></div>';
         }
       }
-      api.renderModuleMeta(".dao-hero", "governance", envelope);
+      api.renderModuleMeta(".page-header", "governance", envelope);
     }
     await load();
     global.setInterval(load, 30000);
@@ -1145,7 +1552,15 @@
     var data = payloads[0].data;
     var dashboard = payloads[1].data;
     var tokenomics = payloads[2].data || {};
-    global.__x3PresaleQuote = data.quoteRates || data.quotes || {};
+    global.__x3PresaleQuote = pickFirst(data, [
+      "quoteRates",
+      "quotes",
+      "quote_rates",
+      "presaleQuotes",
+      "rates",
+      "ratesBySymbol",
+    ]) || {};
+    addDebug("presale", "quoteRates", Object.keys(global.__x3PresaleQuote || {}).length ? "resolved" : "missing");
     var roundLabel = data.currentRoundLabel || data.currentRound || "Presale";
     if (byId("presale-round")) setText("#presale-round", roundLabel);
     if (byId("presale-stage")) setText("#presale-stage", "⬡ " + String(roundLabel).toUpperCase());
@@ -1164,11 +1579,12 @@
     var remaining = Math.max(0, Number(data.hardCapUsd || 0) - Number(data.raisedUsd || 0));
     setText("#raise-pct", pct + "% filled — " + fmtCompactMoney(remaining) + " remaining");
     setText("#pf-price", "$" + Number(data.tokenPriceUsd || 0).toFixed(3));
-    setText("#pf-bonus", data.bonusPct ? "+" + data.bonusPct + "%" : "--");
+    var bonusMeta = normalizeBonus(data);
+    setText("#pf-bonus", bonusMeta.pct != null ? "+" + bonusMeta.pct + "%" : bonusMeta.label || "--");
     setText("#pf-vesting", data.vesting || data.vestingSchedule || "--");
-    var bonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--";
+    var bonusLabel = bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--";
     setText("#bonus-pct", bonusLabel);
-    if (byId("bonus-text") && !data.bonusPct) {
+    if (byId("bonus-text") && bonusMeta.pct == null && !bonusMeta.label) {
       byId("bonus-text").textContent = "Round III Bonus: pending";
     }
     setText("#stat-raised", fmtCompactMoney(data.raisedUsd));
@@ -1214,7 +1630,7 @@
     if (byId("tko-bar-ecosystem")) byId("tko-bar-ecosystem").style.width = ecosystemPct + "%";
     if (byId("tko-bar-team")) byId("tko-bar-team").style.width = teamPct + "%";
     if (byId("tko-bar-staking")) byId("tko-bar-staking").style.width = stakingPct + "%";
-    api.renderModuleMeta(".round-card", "presale", envelope);
+    api.renderModuleMeta(".presale-card", "presale", envelope);
     if (global.calcTokens) global.calcTokens();
   }
 
@@ -1243,7 +1659,7 @@
       setText("#r-price", "$" + Number(presale.tokenPriceUsd || 0).toFixed(3));
       setText("#r-genesis", fmtNumber(presale.tiers[0].slotsLeft));
       setText("#r-closes", presale.daysRemaining + "d");
-      setText("#r-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD");
+      setText("#r-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "--");
       setHtml(
         "#wall-count",
         "Showing <strong>" +
@@ -1264,7 +1680,7 @@
           nextRound.textContent =
             "$" + Number(presale.nextRoundPriceUsd).toFixed(2) + " (" + (premium >= 0 ? "+" : "") + premium + "%)";
         } else {
-          nextRound.textContent = "TBD";
+          nextRound.textContent = "--";
         }
       }
       var ticker = byId("sh-ticker");
@@ -1279,7 +1695,7 @@
           "% FILLED · " +
           fmtNumber(presale.tiers[0].slotsLeft) +
           " GENESIS SLOTS LEFT · NEXT ROUND: " +
-          (presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD") +
+          (presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "--") +
           " (" +
           (premiumPct >= 0 ? "+" : "") +
           premiumPct +
@@ -1382,14 +1798,18 @@
       setText("#tier-genesis-apy", genesis.apy ? "✓ " + genesis.apy + " APY" : "✓ -- APY");
       setText("#tier-star-apy", star.apy ? "✓ " + star.apy + " APY" : "✓ -- APY");
       setText("#tier-lite-apy", lite.apy ? "✓ " + lite.apy + " APY" : "✓ -- APY");
+      var feeShareMeta = normalizeFeeShare(data);
       var feeShare =
-        data.feeSharePct != null
-          ? data.feeSharePct + "%"
-          : data.feeShareLabel || data.feeShare || "--";
-      global.__x3PresaleBonusLabel = data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--";
+        feeShareMeta.pct != null ? feeShareMeta.pct + "%" : feeShareMeta.label || "--";
+      var bonusMeta = normalizeBonus(data);
+      global.__x3PresaleBonusLabel =
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--";
       setText("#benefit-apy", genesis.apy ? genesis.apy + " APY" : "--");
       setText("#benefit-fee-share", feeShare);
-      setText("#benefit-bonus", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
+      setText(
+        "#benefit-bonus",
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--",
+      );
       setText("#ct-min-genesis", genesis.priceUsd ? "$" + genesis.priceUsd.toLocaleString("en-US") : "--");
       setText("#ct-min-star", star.priceUsd ? "$" + star.priceUsd.toLocaleString("en-US") : "--");
       setText("#ct-min-lite", lite.priceUsd ? "$" + lite.priceUsd.toLocaleString("en-US") : "--");
@@ -1397,9 +1817,18 @@
       setText("#ct-apy-star", star.apy || "--");
       setText("#ct-apy-lite", lite.apy || "--");
       setText("#ct-fee-genesis", feeShare);
-      setText("#ct-bonus-genesis", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
-      setText("#ct-bonus-star", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
-      setText("#ct-bonus-lite", data.bonusPct ? "+" + data.bonusPct + "% X3S" : "--");
+      setText(
+        "#ct-bonus-genesis",
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--",
+      );
+      setText(
+        "#ct-bonus-star",
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--",
+      );
+      setText(
+        "#ct-bonus-lite",
+        bonusMeta.pct != null ? "+" + bonusMeta.pct + "% X3S" : bonusMeta.label || "--",
+      );
       setText("#ct-genesis", genesis.slotsLeft != null ? genesis.slotsLeft : "--");
       setText("#ct-star", star.slotsLeft != null ? star.slotsLeft : "--");
       setText("#ct-lite", lite.slotsLeft != null ? lite.slotsLeft : "--");
@@ -1456,6 +1885,59 @@
       setText("#app-id", result.data.id);
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
+    var envelope = await api.getPresaleEnvelope({ refresh: true });
+    var policy = envelope.data || {};
+    var tiers = pickFirst(policy, [
+      "bonusTiers",
+      "investorTiers",
+      "kycTiers",
+      "presaleTiers",
+      "tiers",
+      "policy.bonusTiers",
+      "policy.investorTiers",
+      "policy.kycTiers",
+      "presale.bonusTiers",
+      "presale.investorTiers",
+    ]) || [];
+    tiers = tiers.filter(function (tier) {
+      return (
+        tier &&
+        (tier.bonusPct != null ||
+          tier.bonusLabel ||
+          tier.minUsd != null ||
+          tier.maxUsd != null ||
+          tier.rangeLabel)
+      );
+    });
+    function formatTierAmount(tier) {
+      if (!tier) return "--";
+      if (tier.rangeLabel) return tier.rangeLabel;
+      var min = tier.minUsd != null ? tier.minUsd : tier.min;
+      var max = tier.maxUsd != null ? tier.maxUsd : tier.max;
+      if (min != null && max != null) {
+        return fmtCompactMoney(min) + "–" + fmtCompactMoney(max);
+      }
+      if (min != null) return fmtCompactMoney(min) + "+";
+      if (tier.amountUsd != null) return fmtCompactMoney(tier.amountUsd);
+      return "--";
+    }
+    function formatTierBonus(tier) {
+      if (!tier) return "--";
+      if (tier.bonusPct != null) return "+" + tier.bonusPct + "% X3S";
+      if (tier.bonusLabel) return tier.bonusLabel;
+      return "--";
+    }
+    var tierTargets = [
+      { amount: "#kyc-tier-1-amount", bonus: "#kyc-tier-1-bonus" },
+      { amount: "#kyc-tier-2-amount", bonus: "#kyc-tier-2-bonus" },
+      { amount: "#kyc-tier-3-amount", bonus: "#kyc-tier-3-bonus" },
+    ];
+    addDebug("presale", "kycTiers", tiers.length ? "resolved" : "missing");
+    tierTargets.forEach(function (target, index) {
+      var tier = tiers[index] || {};
+      setText(target.amount, formatTierAmount(tier));
+      setText(target.bonus, formatTierBonus(tier));
+    });
   }
 
   async function initAffiliate(api) {
@@ -1506,10 +1988,14 @@
     setText("#ir-filled", pct + "%");
     if (byId("ir-prog")) byId("ir-prog").style.width = pct + "%";
     setText("#ir-price", "$" + Number(presale.tokenPriceUsd || 0).toFixed(3));
-    setText("#ir-bonus", presale.bonusPct ? "+" + presale.bonusPct + "%" : "TBD");
-    setText("#ir-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "TBD");
+    var bonusMeta = normalizeBonus(presale);
+    setText(
+      "#ir-bonus",
+      bonusMeta.pct != null ? "+" + bonusMeta.pct + "%" : bonusMeta.label || "--",
+    );
+    setText("#ir-next", presale.nextRoundPriceUsd ? "$" + Number(presale.nextRoundPriceUsd).toFixed(2) : "--");
     var minTicket = Math.min.apply(null, presale.tiers.map(function (tier) { return tier.priceUsd; }));
-    setText("#ir-min", isFinite(minTicket) ? "$" + Math.round(minTicket / 1000) + "K" : "TBD");
+    setText("#ir-min", isFinite(minTicket) ? "$" + Math.round(minTicket / 1000) + "K" : "--");
     setText("#ir-m-raised", fmtCompactMoney(presale.raisedUsd));
     setText("#ir-m-investors", fmtNumber(presale.investors));
     setText("#ir-m-price", "$" + Number(dashboard.token.priceUsd || 0).toFixed(4));
@@ -2018,7 +2504,7 @@
           : 0;
         setText("#next-premium", (premiumPct >= 0 ? "+" : "") + premiumPct + "%");
       } else {
-        setText("#next-price", "TBD");
+        setText("#next-price", "--");
         setText("#next-premium", "n/a");
       }
       setText("#raised-num", fmtMoney(presale.raisedUsd));
@@ -2451,7 +2937,7 @@
         byId("r3-bar").style.width = pct2 + "%";
         setText("#r3-pct", pct2 + "%");
       }
-      setText("#mainnet-pct", "TBD");
+      setText("#mainnet-pct", "--");
       if (byId("mainnet-prog")) byId("mainnet-prog").style.width = "0%";
       var sysVals = queryAll(".sys-item .si-val");
       if (sysVals[0]) setText(sysVals[0], "● " + String(health.status).toUpperCase());
@@ -2792,10 +3278,443 @@
     global.setInterval(load, 20000);
   }
 
+  async function initGrantHub(api) {
+    async function load() {
+      var envelope = await api.getGrantsEnvelope({ refresh: true });
+      var data = envelope.data || {};
+      var summary = data.summary || {};
+      setText("#grant-total-pool", fmtCompactMoney(summary.totalPoolUsd));
+      setText("#grant-total-programs", fmtNumber(summary.totalPrograms || 0));
+      setText("#grant-largest", fmtCompactMoney(summary.largestGrantUsd));
+      setText("#grant-ready", fmtNumber((summary.statusCounts && summary.statusCounts.ready) || 0));
+      setText("#grant-preparing", fmtNumber((summary.statusCounts && summary.statusCounts.preparing) || 0));
+      setText("#grant-review", fmtNumber((summary.statusCounts && summary.statusCounts.review) || 0));
+      setText("#grant-programs-count", fmtNumber(summary.totalPrograms || 0));
+      var grid = byId("grant-grid");
+      if (grid) {
+        grid.innerHTML = "";
+        (data.programs || []).forEach(function (program) {
+          var card = document.createElement("div");
+          card.className = "grant-card";
+          var statusClass =
+            program.status === "ready"
+              ? "sb-open"
+              : program.status === "review"
+                ? "sb-apply"
+                : program.status === "preparing"
+                  ? "sb-prep"
+                  : "sb-done";
+          card.innerHTML =
+            '<div class="gc-top"><div class="gc-org-icon">⬡</div><div class="gc-org"><div class="gc-org-name">' +
+            escapeHtml(program.organization || "Grant Program") +
+            '</div><div class="gc-grant-name">' +
+            escapeHtml(program.name || "Grant Track") +
+            '</div></div><div class="gc-status"><span class="status-badge ' +
+            statusClass +
+            '">' +
+            String(program.status || "open").toUpperCase() +
+            "</span></div></div><div class=\"gc-amount\">" +
+            fmtCompactMoney(program.amountUsd) +
+            '</div><div class="gc-type">' +
+            escapeHtml(program.category || "program") +
+            '</div><div class="gc-desc">' +
+            escapeHtml(program.summary || "Details available in grant records.") +
+            '</div><div class="gc-fit">' +
+            (program.tags || [])
+              .map(function (tag) {
+                return '<span class="fit-tag">' + escapeHtml(tag) + "</span>";
+              })
+              .join("") +
+            '</div><button class="gc-cta">View Program</button>';
+          grid.appendChild(card);
+        });
+        if (!grid.children.length) {
+          grid.innerHTML = '<div style="padding:24px;color:var(--ink3);font-size:12px;">No grant programs available.</div>';
+        }
+      }
+      api.renderModuleMeta(".hero", "grant hub", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initGrantMissionControl(api) {
+    async function load() {
+      var envelope = await api.getGrantsEnvelope({ refresh: true });
+      var data = envelope.data || {};
+      var apps = data.applications || [];
+      var poolUsd = (data.summary && data.summary.totalPoolUsd) || 0;
+      var distributedUsd = apps
+        .filter(function (app) { return app.status === "approved" || app.status === "complete"; })
+        .reduce(function (sum, app) { return sum + Number(app.requestedUsd || app.amountUsd || 0); }, 0);
+      var activeCount = apps.filter(function (app) { return app.status !== "complete"; }).length;
+      setText("#gm-pool", fmtCompactMoney(poolUsd));
+      setText("#gm-active", fmtNumber(activeCount));
+      setText("#gm-distributed", fmtCompactMoney(distributedUsd));
+
+      var columns = {
+        review: byId("gm-col-review"),
+        building: byId("gm-col-building"),
+        milestone: byId("gm-col-milestone"),
+        payout: byId("gm-col-payout"),
+        complete: byId("gm-col-complete"),
+      };
+      Object.keys(columns).forEach(function (key) {
+        if (columns[key]) columns[key].innerHTML = "";
+      });
+      var counts = { review: 0, building: 0, milestone: 0, payout: 0, complete: 0 };
+      apps.forEach(function (app) {
+        var status = String(app.status || "review").toLowerCase();
+        var bucket =
+          status.indexOf("review") !== -1
+            ? "review"
+            : status.indexOf("build") !== -1
+              ? "building"
+              : status.indexOf("milestone") !== -1
+                ? "milestone"
+                : status.indexOf("payout") !== -1
+                  ? "payout"
+                  : status.indexOf("complete") !== -1
+                    ? "complete"
+                    : status.indexOf("approved") !== -1
+                      ? "payout"
+                      : "review";
+        counts[bucket] += 1;
+        var card = document.createElement("div");
+        card.className = "grant-card";
+        var progress = Number(app.progressPct || 0);
+        card.innerHTML =
+          '<div class="gc-top"><span class="gc-icon">⬡</span><span class="gc-cat" style="background:rgba(255,255,255,0.06);color:var(--teal);border:1px solid rgba(255,255,255,0.1)">' +
+          escapeHtml(app.category || "Grant") +
+          '</span></div><div class="gc-title">' +
+          escapeHtml(app.projectName || app.name || "Grant Application") +
+          '</div><div class="gc-team">by ' +
+          escapeHtml(app.organization || "Applicant") +
+          '</div><div class="gc-progress"><div class="gcp-labels"><span>Progress</span><span>' +
+          (progress ? progress + "%" : "--") +
+          '</span></div><div class="gcp-bar-wrap"><div class="gcp-fill" style="width:' +
+          progress +
+          '%;background:var(--teal)"></div></div></div><div class="gc-meta">' +
+          '<span class="gc-tag">' +
+          escapeHtml(app.status || "review") +
+          "</span></div><div class=\"gc-amount\" style=\"color:var(--gold)\">" +
+          fmtCompactMoney(app.requestedUsd || app.amountUsd || 0) +
+          "</div>";
+        if (columns[bucket]) columns[bucket].appendChild(card);
+      });
+      setText("#gm-review", fmtNumber(counts.review));
+      setText("#gm-building", fmtNumber(counts.building));
+      setText("#gm-milestone", fmtNumber(counts.milestone));
+      setText("#gm-payout", fmtNumber(counts.payout));
+      setText("#gm-complete", fmtNumber(counts.complete));
+      setText("#gm-review-count", fmtNumber(counts.review));
+      setText("#gm-building-count", fmtNumber(counts.building));
+      setText("#gm-milestone-count", fmtNumber(counts.milestone));
+      setText("#gm-payout-count", fmtNumber(counts.payout));
+      setText("#gm-complete-count", fmtNumber(counts.complete));
+      api.renderModuleMeta(".page-head", "grant mission control", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initBountyBoard(api) {
+    async function load() {
+      var envelope = await api.getBountiesEnvelope({ refresh: true });
+      var data = envelope.data || {};
+      var summary = data.summary || {};
+      setText("#bounty-pool", fmtCompactMoney(summary.totalPoolUsd) + " in open bounties");
+      setText("#bounty-open", fmtNumber(summary.openCount || 0));
+      setText("#bounty-total-pool", fmtCompactMoney(summary.totalPoolUsd));
+      var claimedTotal = (data.bounties || [])
+        .filter(function (bounty) { return bounty.status === "claimed"; })
+        .reduce(function (sum, bounty) { return sum + Number(bounty.rewardUsd || 0); }, 0);
+      setText("#bounty-claimed", fmtCompactMoney(claimedTotal));
+      setText("#bounty-builders", fmtNumber(summary.totalCount || 0));
+      setText("#bounty-closing", fmtNumber(summary.openCount || 0));
+      var grid = byId("bounty-grid");
+      if (grid) {
+        grid.innerHTML = "";
+        (data.bounties || []).forEach(function (bounty) {
+          var statusClass =
+            bounty.status === "hot" ? "bs-hot" : bounty.status === "claimed" ? "bs-claimed" : "bs-open";
+          var statusLabel =
+            bounty.status === "hot" ? "HOT" : bounty.status === "claimed" ? "IN PROGRESS" : "OPEN";
+          var card = document.createElement("div");
+          card.className = "b-card";
+          var rewardUsd = Number(bounty.rewardUsd || 0);
+          var rewardX3S = Number(bounty.rewardX3S || 0);
+          var progress = bounty.progress || null;
+          card.innerHTML =
+            '<div class="bc-top"><span class="bc-cat" style="background:rgba(255,183,0,0.06);color:var(--amber);border:1px solid rgba(255,183,0,0.12)">' +
+            escapeHtml(bounty.category || "Bounty") +
+            '</span><span class="bc-status ' +
+            statusClass +
+            '">' +
+            statusLabel +
+            "</span></div><div class=\"bc-title\">" +
+            escapeHtml(bounty.title) +
+            '</div><div class="bc-desc">' +
+            escapeHtml(bounty.description || "") +
+            '</div><div class="bc-tags">' +
+            (bounty.tags || []).map(function (tag) {
+              return '<span class="bc-tag">' + escapeHtml(tag) + "</span>";
+            }).join("") +
+            "</div>" +
+            (progress
+              ? '<div class="bc-progress"><div class="bcp-label"><span>' +
+                escapeHtml(progress.label || "Progress") +
+                "</span><span>" +
+                Number(progress.pct || 0) +
+                '%</span></div><div class="bcp-bar"><div class="bcp-fill" style="width:' +
+                Number(progress.pct || 0) +
+                '%;background:var(--amber)"></div></div></div>'
+              : "") +
+            '<div class="bc-footer"><div><div class="bc-reward">$' +
+            fmtNumber(rewardUsd) +
+            '</div><div class="bc-reward-sub">' +
+            fmtNumber(rewardX3S) +
+            ' X3S</div><div class="bc-deadline">' +
+            escapeHtml(bounty.deadlineLabel || "Rolling") +
+            "</div></div><button class=\"bc-claim-btn " +
+            (bounty.status === "claimed" ? "taken" : "") +
+            "\">" +
+            (bounty.status === "claimed" ? "View Progress" : "Claim Bounty") +
+            "</button></div>";
+          grid.appendChild(card);
+        });
+        if (!grid.children.length) {
+          grid.innerHTML = '<div style="color:var(--muted);font-size:12px;">No bounties available.</div>';
+        }
+      }
+      api.renderModuleMeta(".page", "bounty board", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initHallOfFame(api) {
+    async function load() {
+      var envelope = await api.getLeaderboardEnvelope({ refresh: true });
+      var data = envelope.data || {};
+      var validators = data.validators || [];
+      var podium = byId("podium");
+      if (podium) {
+        podium.innerHTML = "";
+        validators.slice(0, 3).forEach(function (validator, index) {
+          var slot = document.createElement("div");
+          slot.className = "podium-slot slot-" + (index + 1);
+          var score = validator.score || 0;
+          slot.innerHTML =
+            '<div class="ps-card"><div class="ps-rank">#' +
+            (index + 1) +
+            '</div><div class="ps-avatar">' +
+            String(validator.name || "?").slice(0, 2).toUpperCase() +
+            '</div><div class="ps-name">' +
+            escapeHtml(validator.name || "Validator") +
+            '</div><div class="ps-node">' +
+            escapeHtml(validator.id || "") +
+            '</div><div class="ps-stats"><div class="pss-row"><span class="pss-key">Uptime</span><span class="pss-val">' +
+            fmtPct(validator.uptimePct || 0) +
+            '</span></div><div class="pss-row"><span class="pss-key">Stake</span><span class="pss-val">' +
+            fmtNumber(validator.stakeX3S || 0) +
+            '</span></div><div class="pss-row"><span class="pss-key">TPS</span><span class="pss-val">' +
+            fmtNumber(validator.tps || 0) +
+            '</span></div></div><div class="ps-score-label">Score</div><div class="ps-score">' +
+            fmtNumber(score) +
+            "</div></div>";
+          podium.appendChild(slot);
+        });
+      }
+      var body = byId("lb-body");
+      if (body) {
+        body.innerHTML = "";
+        if (!validators.length) {
+          body.innerHTML =
+            '<tr class="lb-row"><td colspan="7" style="color:var(--muted);">Awaiting live validator leaderboard feed.</td></tr>';
+        } else {
+          validators.slice(0, 12).forEach(function (validator, index) {
+            var tr = document.createElement("tr");
+            tr.className = "lb-row";
+            tr.innerHTML =
+              '<td><div class="rank-col"><div class="rank-num">' +
+              (index + 1) +
+              '</div><div class="rank-flag">' +
+              escapeHtml(validator.flag || "⬡") +
+              '</div><div><div class="rank-name">' +
+              escapeHtml(validator.name || "Validator") +
+              '</div><div class="rank-node">' +
+              escapeHtml(validator.id || "") +
+              '</div></div></div></td><td>' +
+              escapeHtml(String(validator.tier || "node").toUpperCase()) +
+              '</td><td>' +
+              fmtPct(validator.uptimePct || 0) +
+              '</td><td>' +
+              fmtNumber(validator.stakeX3S || 0) +
+              '</td><td>' +
+              fmtNumber(validator.tps || 0) +
+              '</td><td><div class="merit-badges"><span class="merit">ACTIVE</span></div></td><td>' +
+              fmtNumber(validator.score || 0) +
+              "</td>";
+            body.appendChild(tr);
+          });
+        }
+      }
+      api.renderModuleMeta(".hero", "hall of fame", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initLeaderboardArena(api) {
+    async function load() {
+      var payloads = await Promise.all([
+        api.getLeaderboardEnvelope({ refresh: true }),
+        api.getStakingEnvelope({ refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var data = payloads[0].data || {};
+      var staking = payloads[1].data || {};
+      function buildBoard(containerId, rows, color) {
+        var cont = byId(containerId);
+        if (!cont) return;
+        cont.innerHTML = "";
+        rows.forEach(function (row, index) {
+          var div = document.createElement("div");
+          div.className = "lb-row " + (index < 3 ? "rank-" + (index + 1) : "");
+          div.innerHTML =
+            '<div class="lb-rank ' +
+            (index === 0 ? "r1" : index === 1 ? "r2" : index === 2 ? "r3" : "rn") +
+            '">' +
+            (index < 3 ? ["🥇", "🥈", "🥉"][index] : index + 1) +
+            '</div><div class="lb-avatar" style="background:rgba(255,255,255,0.08)">' +
+            escapeHtml(row.flag || "⬡") +
+            '</div><div style="flex:1;min-width:0;"><div class="lb-name">' +
+            escapeHtml(row.name || "Participant") +
+            '</div><div class="lb-bar"><div class="lb-bar-fill" style="width:' +
+            (row.score || 0) +
+            '%;background:' +
+            color +
+            '"></div></div></div><div style="text-align:right;flex-shrink:0;"><div class="lb-val">' +
+            escapeHtml(row.value || "--") +
+            "</div></div>";
+          cont.appendChild(div);
+        });
+      }
+      var investorRows = (data.investors || []).map(function (entry) {
+        return {
+          name: entry.name,
+          flag: entry.flag,
+          value: fmtCompactMoney(entry.amountUsd),
+          score: Math.min(100, Math.round((entry.amountUsd / (data.investors[0]?.amountUsd || 1)) * 100)),
+        };
+      });
+      var validatorRows = (data.validators || []).slice(0, 8).map(function (entry) {
+        return {
+          name: entry.name,
+          flag: entry.flag,
+          value: fmtPct(entry.uptimePct || 0) + " / " + fmtNumber(entry.tps || 0) + " TPS",
+          score: Math.min(100, Math.round(entry.score || 0)),
+        };
+      });
+      var delegateRows = (data.delegates || []).map(function (entry) {
+        return {
+          name: entry.name,
+          flag: "🗳",
+          value: fmtNumber(entry.power || 0),
+          score: Math.min(100, Math.round((entry.power || 0) / ((data.delegates[0]?.power || 1)) * 100)),
+        };
+      });
+      var stakingRows = (staking.pools || []).map(function (pool) {
+        return {
+          name: pool.name,
+          flag: "⬡",
+          value: fmtCompactMoney(pool.tvlUsd),
+          score: Math.min(100, Math.round((pool.tvlUsd || 0) / ((staking.pools[0]?.tvlUsd || 1)) * 100)),
+        };
+      });
+      buildBoard("ref-board", investorRows, "var(--neon)");
+      buildBoard("stake-board", stakingRows, "var(--green)");
+      buildBoard("gov-board", delegateRows, "var(--cyan)");
+      buildBoard("val-board", validatorRows, "var(--gold)");
+      setText("#arena-participants", fmtNumber((data.summary && data.summary.investorsCount) || 0));
+      api.renderModuleMeta(".scoreboard-header", "leaderboard arena", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initDealRoom(api) {
+    async function load() {
+      var payloads = await Promise.all([
+        api.getDealsEnvelope({ refresh: true }),
+        api.getPresaleEnvelope({ refresh: true }),
+        api.getBenchmarkEnvelope("overview", { refresh: true }),
+      ]);
+      var envelope = payloads[0];
+      var deals = payloads[0].data || {};
+      var presale = payloads[1].data || {};
+      var overview = payloads[2].data || {};
+      if (byId("deal-presale-price")) {
+        setText("#deal-presale-price", presale.tokenPriceUsd ? "$" + Number(presale.tokenPriceUsd).toFixed(3) : "--");
+      }
+      if (byId("deal-benchmark-tps")) {
+        var tps = overview.live && overview.live.summary ? overview.live.summary.combined_tps : null;
+        setText("#deal-benchmark-tps", tps ? fmtNumber(tps) + " TPS" : "unavailable");
+      }
+      var grid = byId("deal-grid");
+      if (grid) {
+        grid.innerHTML = "";
+        (deals.deals || []).forEach(function (deal) {
+          var card = document.createElement("div");
+          card.className = "deal-card";
+          card.innerHTML =
+            '<div class="dc-cat">' +
+            escapeHtml(deal.category || "Deal") +
+            '</div><div class="dc-title">' +
+            escapeHtml(deal.title || "Deal") +
+            '</div><div class="dc-desc">' +
+            escapeHtml(deal.description || "") +
+            '</div><div class="dc-exchange"><div class="dce-side"><div class="dce-label">You provide</div><div class="dce-val">' +
+            escapeHtml(deal.provide || "") +
+            '</div></div><div class="dce-arrow">⇄</div><div class="dce-side"><div class="dce-label">You receive</div><div class="dce-val" style="color:var(--gold)">' +
+            escapeHtml(deal.receive || "") +
+            '</div></div></div><div class="dc-terms">' +
+            escapeHtml(deal.terms || "") +
+            '</div><button class="dc-cta">Start This Deal →</button>';
+          grid.appendChild(card);
+        });
+      }
+      api.renderModuleMeta(".masthead", "deal room", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initBenchmarkHub(api) {
+    async function load() {
+      var envelope = await api.getBenchmarkEnvelope("overview", { refresh: true });
+      var data = envelope.data || {};
+      setText("#bench-hub-status", String(envelope.status || "unavailable").toUpperCase());
+      setText("#bench-hub-updated", new Date(envelope.lastUpdated).toLocaleString());
+      setText("#bench-hub-tps", data.live && data.live.summary ? fmtNumber(data.live.summary.combined_tps) : "--");
+      api.renderModuleMeta(".shell", "benchmark hub", envelope);
+    }
+    await load();
+    global.setInterval(load, 30000);
+  }
+
+  async function initStaticMeta(api) {
+    var envelope = await api.getHealthEnvelope({ refresh: true });
+    api.renderModuleMeta(".page-head", "site", envelope);
+  }
+
   async function start() {
     mountTopNav();
     if (!global.X3API) return;
+    initDebugMode();
     var api = await global.X3API.init();
+    wrapApiForDebug(api);
     var page = (global.location.pathname.split("/").pop() || "x3star-landing.html").toLowerCase();
     var adapters = {
       "x3star-dashboard.html": initDashboard,
@@ -2821,6 +3740,23 @@
       "x3star-slot-tracker.html": initSlotTracker,
       "x3star-whale-tracker.html": initWhales,
       "x3star-tokenomics-warroom.html": initTokenomics,
+      "x3star-grant-hub.html": initGrantHub,
+      "x3star-grant-mission-control.html": initGrantMissionControl,
+      "x3star-bounty-board.html": initBountyBoard,
+      "x3star-hall-of-fame.html": initHallOfFame,
+      "x3star-leaderboard-arena.html": initLeaderboardArena,
+      "x3star-barter-exchange.html": initDealRoom,
+      "x3star-benchmark-page.html": initBenchmarkHub,
+      "x3star-portfolio.html": initStaticMeta,
+      "x3star-roi-calculator.html": initStaticMeta,
+      "x3star-if-you-invested.html": initStaticMeta,
+      "x3star-if-you-had.html": initStaticMeta,
+      "x3star-competitor-annihilation.html": initStaticMeta,
+      "x3star-competitor-graveyard.html": initStaticMeta,
+      "x3star-compute-marketplace.html": initStaticMeta,
+      "x3star-spine.html": initStaticMeta,
+      "x3star-tech-deep-dive.html": initStaticMeta,
+      "x3star-whitepaper.html": initStaticMeta,
       "blockchain-stress-test.html": initBenchmarkConsole,
       "blockchain-stress-test(1).html": initBenchmarkConsole,
       "chainbench-pro.html": initBenchmarkConsole,
@@ -2830,6 +3766,7 @@
     if (adapters[page]) {
       await adapters[page](api);
     }
+    renderDebugFooter();
   }
 
   global.X3PageAdapters = {

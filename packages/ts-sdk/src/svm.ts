@@ -6,6 +6,7 @@
 
 import type { HexString } from '@polkadot/util/types';
 import { hexToU8a, u8aToHex, isHex } from '@polkadot/util';
+import { sha256AsU8a } from '@polkadot/util-crypto';
 
 import type { AccountId } from './types';
 import { ValidationError } from './errors';
@@ -142,8 +143,6 @@ export function findProgramAddress(
   seeds: Uint8Array[],
   programId: Pubkey
 ): { address: Pubkey; bump: number } {
-  // In production, implement proper PDA derivation
-  // For now, just hash the inputs together
   const programBytes = pubkeyToBytes(programId);
 
   for (let bump = 255; bump >= 0; bump--) {
@@ -468,9 +467,8 @@ export function createTransferAccounts(
  * Discriminator is first 8 bytes of SHA256("global:<instruction_name>")
  */
 export function anchorDiscriminator(instructionName: string): Uint8Array {
-  // In production, use proper SHA256
   const input = `global:${instructionName}`;
-  const hash = simpleHash256(input);
+  const hash = sha256AsU8a(new TextEncoder().encode(input));
   return hash.slice(0, 8);
 }
 
@@ -480,7 +478,7 @@ export function anchorDiscriminator(instructionName: string): Uint8Array {
  */
 export function anchorAccountDiscriminator(accountName: string): Uint8Array {
   const input = `account:${accountName}`;
-  const hash = simpleHash256(input);
+  const hash = sha256AsU8a(new TextEncoder().encode(input));
   return hash.slice(0, 8);
 }
 
@@ -489,7 +487,7 @@ export function anchorAccountDiscriminator(accountName: string): Uint8Array {
 // =============================================================================
 
 /**
- * Simple hash function (placeholder for proper implementation)
+ * Hash seeds + programId with SHA256 for PDA derivation
  */
 function simpleHash(programId: Uint8Array, seeds: Uint8Array[]): Uint8Array {
   const combined = new Uint8Array(
@@ -505,28 +503,7 @@ function simpleHash(programId: Uint8Array, seeds: Uint8Array[]): Uint8Array {
     offset += seed.length;
   }
 
-  // Simple hash - in production use SHA256
-  const result = new Uint8Array(32);
-  for (let i = 0; i < combined.length; i++) {
-    result[i % 32] ^= combined[i];
-  }
-
-  return result;
+  return sha256AsU8a(combined);
 }
 
-/**
- * Simple SHA256-like hash (placeholder)
- */
-function simpleHash256(input: string): Uint8Array {
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(input);
 
-  const result = new Uint8Array(32);
-  for (let i = 0; i < bytes.length; i++) {
-    result[i % 32] = (result[i % 32] + bytes[i]) % 256;
-    // Mix
-    result[(i + 13) % 32] ^= result[i % 32];
-  }
-
-  return result;
-}

@@ -141,10 +141,10 @@ nav{height:60px;display:flex;align-items:center;padding:0 40px;
 <!-- HERO -->
 <div class="hero">
   <div class="h-kicker">X3STAR Grant Strategy · Active Applications</div>
-  <h1 class="h-title">$2.8M in<br><span>non-dilutive</span><br>grants available.</h1>
-  <p class="h-sub">We qualify for government, Web3, and AI research grants that require <strong>zero equity, zero token dilution.</strong> We're applying to all of them. Here's every one, why we qualify, and how you can help us win.</p>
+  <h1 class="h-title"><span id="grant-total-pool">--</span> in<br><span>active</span><br>grant programs.</h1>
+  <p class="h-sub">We qualify for government, Web3, and AI research grants. Here's the live list, where we stand, and how you can help us win.</p>
   <div class="h-total">
-    <div><div class="ht-num">$2.8M+</div><div class="ht-label"><strong>Total grant pool</strong>available across 18 programs</div></div>
+    <div><div class="ht-num" id="grant-total-pool">--</div><div class="ht-label"><strong>Total grant pool</strong>available across <span id="grant-total-programs">--</span> programs</div></div>
     <div style="width:1px;height:48px;background:rgba(255,255,255,0.1)"></div>
     <div><div class="ht-num">0%</div><div class="ht-label"><strong>Equity required</strong>for all grants listed</div></div>
   </div>
@@ -152,17 +152,17 @@ nav{height:60px;display:flex;align-items:center;padding:0 40px;
 
 <!-- SUMMARY BAR -->
 <div class="summary">
-  <div class="sum-cell"><div class="sc-val" style="color:var(--forest)">6</div><div class="sc-key">Ready to Apply</div></div>
-  <div class="sum-cell"><div class="sc-val" style="color:var(--amber)">8</div><div class="sc-key">Preparing</div></div>
-  <div class="sum-cell"><div class="sc-val" style="color:var(--blue)">4</div><div class="sc-key">In Review</div></div>
-  <div class="sum-cell"><div class="sc-val">$275K</div><div class="sc-key">Largest Single Grant</div></div>
-  <div class="sum-cell"><div class="sc-val" style="color:var(--forest)">18</div><div class="sc-key">Total Programs</div></div>
+  <div class="sum-cell"><div class="sc-val" style="color:var(--forest)" id="grant-ready">--</div><div class="sc-key">Ready to Apply</div></div>
+  <div class="sum-cell"><div class="sc-val" style="color:var(--amber)" id="grant-preparing">--</div><div class="sc-key">Preparing</div></div>
+  <div class="sum-cell"><div class="sc-val" style="color:var(--blue)" id="grant-review">--</div><div class="sc-key">In Review</div></div>
+  <div class="sum-cell"><div class="sc-val" id="grant-largest">--</div><div class="sc-key">Largest Single Grant</div></div>
+  <div class="sum-cell"><div class="sc-val" style="color:var(--forest)" id="grant-total-programs">--</div><div class="sc-key">Total Programs</div></div>
 </div>
 
 <!-- GRANTS -->
 <div class="categories">
   <div class="cat-tabs">
-    <div class="ctab active" onclick="filterGrants(this,'all')">All Grants (18)</div>
+    <div class="ctab active" onclick="filterGrants(this,'all')">All Grants (<span id="grant-programs-count">--</span>)</div>
     <div class="ctab" onclick="filterGrants(this,'gov')">🏛 Government</div>
     <div class="ctab" onclick="filterGrants(this,'web3')">⛓ Web3</div>
     <div class="ctab" onclick="filterGrants(this,'ai')">🧠 AI/Compute</div>
@@ -274,62 +274,12 @@ nav{height:60px;display:flex;align-items:center;padding:0 40px;
   </div>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-const grants=[
-  {cat:'gov',icon:'🏛',org:'NSF SBIR/STTR',name:'Phase I Small Business Innovation Research',amount:'Up to $275K',type:'Non-dilutive · No equity',status:'apply',desc:'NSF Phase I is specifically designed for novel compute architectures. Our kernel, X3VM, and GPU routing layer constitute original research. Quantum-AI intersection is a priority topic.',tags:['Novel Architecture','GPU Compute','AI Research','Quantum'],link:'https://seedfund.nsf.gov'},
-  {cat:'gov',icon:'🛡',org:'DARPA SBIR',name:'Distributed AI Compute Architecture',amount:'Up to $250K',type:'Non-dilutive · Defense focus',status:'prep',desc:"DARPA actively funds novel compute architectures. The AI spine + GPU routing + post-quantum security hits three of DARPA's current priority areas simultaneously.",tags:['Defense','AI','Quantum-Safe','Novel Compute'],link:'https://www.darpa.mil/work-with-us/small-business-programs'},
-  {cat:'gov',icon:'⚡',org:'DOE Office of Science',name:'Advanced Scientific Computing Research',amount:'Up to $200K',type:'Non-dilutive · Research',status:'prep',desc:'DOE funds distributed GPU compute research. Our contributor swarm model is directly applicable. The AI-guided routing layer has direct scientific compute applications.',tags:['GPU Compute','Distributed Systems','Scientific Computing'],link:'https://science.osti.gov'},
-  {cat:'web3',icon:'⟠',org:'Ethereum Foundation',name:'Ecosystem Support Program',amount:'Up to $500K',type:'Non-dilutive · EF grant',status:'open',desc:"EF specifically funds novel VM research and alternative execution environments. X3VM + multi-chain atomic execution is exactly what they're looking for. Strong fit.",tags:['Novel VM','Multi-Chain','EVM Compatible','Open Source'],link:'https://esp.ethereum.foundation'},
-  {cat:'web3',icon:'◎',org:'Solana Foundation',name:'Infrastructure Grant Program',amount:'Up to $100K',type:'Non-dilutive · Token grant',status:'open',desc:'We can already validate on Solana. The SVM support in our atomic execution layer makes this a natural fit. Testnet results on commodity hardware are compelling.',tags:['SVM Compatible','Validator','Infrastructure','TPS'],link:'https://solana.org/grants'},
-  {cat:'web3',icon:'🔷',org:'Polkadot / Web3 Foundation',name:'Grants Program W3F',amount:'Up to $100K',type:'Non-dilutive · Milestone-based',status:'open',desc:'W3F heavily funds alternative VM and runtime research. X3VM and the custom kernel are directly fundable. Multi-chain execution is a core Web3 Foundation priority.',tags:['Alternative VM','Runtime Research','Multi-Chain','Substrate'],link:'https://grants.web3.foundation'},
-  {cat:'web3',icon:'🍃',org:'Filecoin Foundation',name:'Developer Grants',amount:'Up to $50K',type:'Non-dilutive · FIL grant',status:'apply',desc:'GPU compute + storage intersection. Our contributor swarm model aligns with Filecoin\'s distributed storage mining economy. Strong narrative fit.',tags:['Distributed Compute','Storage','GPU','DeFi'],link:'https://fil.org/grants'},
-  {cat:'web3',icon:'🔺',org:'Arbitrum Foundation',name:'Research & Development Grants',amount:'Up to $150K',type:'Non-dilutive · ARB grant',status:'prep',desc:'Layer 2 compute research and novel execution environments. X3VM as an L2 execution layer on Arbitrum is a compelling application narrative.',tags:['L2 Execution','Novel VM','Compute','EVM Compatible'],link:'https://arbitrum.foundation/grants'},
-  {cat:'ai',icon:'🤗',org:'Hugging Face',name:'ZeroGPU & Compute Grants',amount:'GPU credits',type:'Compute grant · No cash',status:'open',desc:'Hugging Face grants GPU compute to open source AI projects. Our AI swarm training infrastructure and on-chain inference verification are strong fits.',tags:['Open Source AI','GPU Compute','Inference','Training'],link:'https://huggingface.co/docs/hub/spaces-zerogpu'},
-  {cat:'ai',icon:'⚡',org:'Together.ai',name:'Research Compute Program',amount:'GPU credits',type:'Compute grant · No cash',status:'apply',desc:'Together.ai funds distributed AI compute research. Our GPU routing layer and contributor swarm model are exactly the distributed compute architecture they support.',tags:['Distributed GPU','AI Research','Compute','Open Source'],link:'https://www.together.ai'},
-  {cat:'ai',icon:'🦊',org:'Mozilla Foundation',name:'Responsible AI Infrastructure',amount:'Up to $75K',type:'Non-dilutive · Mission grant',status:'prep',desc:'Mozilla funds transparent, auditable AI infrastructure. Our on-chain AI model versioning and DAO governance of the swarm is exactly the responsible AI narrative they fund.',tags:['Responsible AI','Auditable','Open Source','Governance'],link:'https://foundation.mozilla.org/en/what-we-fund/grants'},
-  {cat:'ai',icon:'🧬',org:'EleutherAI',name:'Open Source AI Research',amount:'Compute + mentorship',type:'Research grant',status:'prep',desc:'EleutherAI funds open source distributed AI. Contributing our swarm architecture to their ecosystem would unlock compute grants and research collaboration.',tags:['Open Source','Distributed AI','Research','GPU'],link:'https://www.eleuther.ai'},
-  {cat:'research',icon:'⚛️',org:'NIST',name:'Post-Quantum Cryptography Implementation',amount:'Up to $100K',type:'Standards body grant',status:'prep',desc:'NIST just finalized PQC standards. Every production implementation of lattice-based cryptography is now fundable. We\'re building the blockchain implementation.',tags:['Post-Quantum','Cryptography','Standards','Security'],link:'https://www.nist.gov/programs-projects/post-quantum-cryptography'},
-  {cat:'research',icon:'🏫',org:'Protocol Labs',name:'Research Acceleration Program',amount:'Up to $150K',type:'Non-dilutive · Research',status:'open',desc:'Protocol Labs funds fundamental distributed systems research. Our consensus mechanism and GPU routing layer are novel contributions to the field.',tags:['Distributed Systems','Consensus','Research','Open Source'],link:'https://protocol.ai/research'},
-  {cat:'web3',icon:'🌿',org:'Near Protocol',name:'NEAR Foundation Grants',amount:'Up to $75K',type:'Non-dilutive · NEAR grant',status:'apply',desc:'NEAR funds novel consensus and compute work. Our AI-guided consensus mechanism and self-improving architecture are strong fits for their research grants.',tags:['Novel Consensus','AI','Compute','Infrastructure'],link:'https://near.foundation'},
-  {cat:'gov',icon:'🇪🇺',org:'EU Horizon Europe',name:'Quantum & Blockchain Research',amount:'€200K+',type:'Non-dilutive · EU grant',status:'prep',desc:'The EU specifically funds quantum-blockchain intersection research under Horizon Europe. Requires an EU research partner — worth finding one for this grant size.',tags:['Quantum','Blockchain','EU','Research'],link:'https://ec.europa.eu/info/funding-tenders/opportunities'},
-  {cat:'ai',icon:'🔬',org:'OpenMined',name:'Privacy-Preserving AI Grants',amount:'Research access',type:'Research collaboration',status:'prep',desc:'OpenMined funds privacy-preserving compute research. Our on-chain AI verification and DAO governance model aligns with their privacy-first AI mission.',tags:['Privacy AI','On-Chain','Governance','Research'],link:'https://openmined.org'},
-  {cat:'web3',icon:'🦄',org:'Uniswap Foundation',name:'Research Program',amount:'Up to $250K',type:'Non-dilutive · UNI',status:'apply',desc:'Uniswap funds DeFi infrastructure research. Our atomic cross-chain execution and GPU-routed arbitrage are directly applicable to DEX infrastructure.',tags:['DeFi','Cross-Chain','Arbitrage','Infrastructure'],link:'https://uniswapfoundation.mirror.xyz'},
-];
-
-const statusLabel={open:'READY TO APPLY',apply:'APPLYING NOW',prep:'PREPARING',done:'SUBMITTED'};
-const statusCls={open:'sb-open',apply:'sb-apply',prep:'sb-prep',done:'sb-done'};
-
-function renderGrants(filter){
-  const grid=document.getElementById('grant-grid');
-  grid.innerHTML='';
-  grants.filter(g=>filter==='all'||g.cat===filter).forEach(g=>{
-    const card=document.createElement('div');
-    card.className='grant-card';
-    card.innerHTML=`
-      <div class="gc-top">
-        <div class="gc-org-icon">${g.icon}</div>
-        <div class="gc-org">
-          <div class="gc-org-name">${g.org}</div>
-          <div class="gc-grant-name">${g.name}</div>
-        </div>
-        <div class="gc-status"><span class="status-badge ${statusCls[g.status]}">${statusLabel[g.status]}</span></div>
-      </div>
-      <div class="gc-amount">${g.amount}</div>
-      <div class="gc-type">${g.type}</div>
-      <div class="gc-desc">${g.desc}</div>
-      <div class="gc-fit">${g.tags.map(t=>`<span class="fit-tag">${t}</span>`).join('')}</div>
-      <button class="gc-cta" onclick="window.open('${g.link}','_blank')">View Grant Program →</button>
-    `;
-    grid.appendChild(card);
-  });
+if (window.X3PageAdapters) {
+  window.X3PageAdapters.start();
 }
-
-function filterGrants(el,cat){
-  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderGrants(cat);
-}
-renderGrants('all');
 </script>
 </body>
 </html>

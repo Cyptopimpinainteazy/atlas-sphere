@@ -77,6 +77,20 @@ This PRD focuses on the **critical path** to get X3 Chain's core functionality w
 
 ---
 
+### Critical Task 2.4: Production Bridge Adapters
+
+- [x] Replace `InMemoryBalanceAdapter`/`InMemoryEscrowAdapter` simulation with real Substrate-backed adapters
+- [x] Implement `SubstrateClientBalanceAdapter<C,Block>` using `AtlasKernelRuntimeApi` overlay pattern
+- [x] Implement `PalletEscrowAdapter<C,Block,P>` with SHA-256 ticket generation and overflow-safe arithmetic
+- [x] Implement `OffchainEscrowPersistence<O>` backed by `sp_core::offchain::OffchainStorage`
+- [x] Re-export `pallet_x3_kernel::StateChange` for bundle receipt use
+- [x] Write 21 unit tests (overlay, deltas, round-trips, double-spend, atomicity)
+- [x] Run `cargo test -p x3-bridge-adapters` — 21/21 pass
+- [x] Fix `.cargo/config.toml` linker to `clang-14` (LLVM 20.1 SIGSEGV workaround)
+- [x] Commit: "feat(bridge-adapters): replace simulation with Substrate-backed adapters"
+
+---
+
 ## Week 3: SDK & Frontend Essentials
 
 ### Critical Task 3.1: Complete TypeScript SDK

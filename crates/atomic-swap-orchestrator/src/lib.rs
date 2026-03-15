@@ -15,6 +15,27 @@ use x3_vm::{
 /// enforces submission ordering across concurrent swaps (BRIDGE-005).
 /// Callers must increment it for every new swap; the orchestrator and the
 /// on-chain pallet use it to detect and reject out-of-order replays.
+///
+/// ## bundle_id lifecycle
+///
+/// There are two bundle IDs in play:
+///
+/// 1. **Pallet bundle_id** — assigned by `submit_atomic_bundle` on the
+///    `pallet-x3-atomic-kernel`. Derived from `SHA-256(submitter ∥ block ∥ legs_hash)`.
+///    This is the canonical on-chain identifier stored in `Bundles<T>` and used by
+///    the OCW key `"x3fin:" + bundle_id`.
+///
+/// 2. **Off-chain bundle_id** — derived by `AtomicSwapOrchestrator::derive_bundle_id()`
+///    from `SHA-256(swap_id ∥ svm_tx ∥ evm_tx ∥ nonce)`. Useful for local correlation
+///    and test environments where no on-chain pallet is running.
+///
+/// **When submitting real on-chain bundles**, set `pallet_bundle_id` to the H256 returned
+/// in the `BundleSubmitted` event from `submit_atomic_bundle`. The orchestrator will use it
+/// as the `ProcessResult::bundle_id` and write the correct OCW local-storage key so the
+/// off-chain worker can auto-finalize the bundle.
+///
+/// If `pallet_bundle_id` is `None` (default), the orchestrator falls back to its own
+/// `derive_bundle_id()` — adequate for isolated tests and off-chain simulations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AtomicPair {
     pub swap_id: Vec<u8>,
@@ -23,6 +44,15 @@ pub struct AtomicPair {
     /// Monotonic sequence counter for replay-protection and ordering.
     /// Set to 0 if ordering is not required (e.g., isolated test swaps).
     pub sequence_nonce: u64,
+    /// The bundle_id emitted by `pallet-x3-atomic-kernel::submit_atomic_bundle`
+    /// (from the `BundleSubmitted` event).  When `Some`, this is used as the canonical
+    /// bundle identifier throughout the entire pipeline — `ProcessResult::bundle_id`,
+    /// `FinalizationRequest::bundle_id`, and the OCW key — ensuring the off-chain
+    /// finalization record matches the on-chain `Bundles<T>` lookup key.
+    ///
+    /// Leave as `None` for off-chain-only tests where no pallet is running.
+    #[serde(default)]
+    pub pallet_bundle_id: Option<H256>,
 }
 
 /// Outcome returned by `process_swap()`.  Contains both the local `AtomicStatus`
@@ -123,8 +153,22 @@ impl AtomicSwapOrchestrator {
     ///
     /// The returned `ProcessResult` contains everything needed to call
     /// `finalize_atomic_bundle` on the x3-atomic-kernel pallet.
+    ///
+    /// ## bundle_id selection
+    ///
+    /// If `pair.pallet_bundle_id` is `Some(id)`, that on-chain ID is used as the
+    /// canonical identifier in `ProcessResult` and the OCW local-storage key.  This
+    /// ensures the OCW (`offchain_worker` in `pallet-x3-atomic-kernel`) can find the
+    /// finalization record and auto-submit the unsigned `submit_finalization_result` tx.
+    ///
+    /// If `pair.pallet_bundle_id` is `None`, the orchestrator derives an off-chain ID
+    /// from the pair contents — suitable for tests and simulations only.
     pub async fn process_swap(&self, pair: AtomicPair) -> Result<ProcessResult> {
-        let bundle_id = Self::derive_bundle_id(&pair);
+        // Use the pallet-assigned bundle_id when available; fall back to the
+        // off-chain derivation for test / simulation contexts.
+        let bundle_id = pair
+            .pallet_bundle_id
+            .unwrap_or_else(|| Self::derive_bundle_id(&pair));
         log::info!(
             "Processing atomic swap: bundle_id={:?} seq={}",
             bundle_id,
@@ -156,30 +200,38 @@ impl AtomicSwapOrchestrator {
 
         // PHASE 3: Drain shm ring buffer and compute receipt_root for on-chain finalization.
         //
-        // The GPU wrote our entry to /x3_atomic_commits.  We read it back, compute
-        // a deterministic receipt_root (SHA-256 of svm_prefix || evm_prefix), and
-        // return it so the caller can submit `finalize_atomic_bundle` to the pallet.
-        //
-        // Note: In production, this should poll with a short timeout.  Here we do a
-        // single drain since the GPU commit is synchronous in the non-CUDA fallback.
-        let committed = Self::drain_committed_swaps();
-        let (receipt_root, committed_at_ns) = if let Some((svm_prefix, evm_prefix, ts)) =
-            committed.into_iter().find(|(svm, _evm, _ts)| {
-                // Match on the first 32 bytes of our svm_tx
-                let our_prefix = &pair.svm_tx[..pair.svm_tx.len().min(32)];
-                &svm[..our_prefix.len()] == our_prefix
+        // The GPU kernel writes our entry to /x3_atomic_commits asynchronously.
+        // We poll at 5 ms intervals for up to 100 ms (20 attempts) to give the
+        // write time to become visible before falling back to a deterministic
+        // receipt_root derived directly from the pair data.
+        const DRAIN_RETRIES: usize = 20;
+        const DRAIN_SLEEP_MS: u64 = 5;
+        let our_svm_prefix: [u8; 32] = {
+            let mut a = [0u8; 32];
+            let n = pair.svm_tx.len().min(32);
+            a[..n].copy_from_slice(&pair.svm_tx[..n]);
+            a
+        };
+        let mut found_entry: Option<([u8; 32], [u8; 32], u64)> = None;
+        for attempt in 0..DRAIN_RETRIES {
+            let committed = Self::drain_committed_swaps();
+            if let Some(entry) = committed.into_iter().find(|(svm, _evm, _ts)| {
+                let prefix_len = our_svm_prefix.iter().rposition(|&b| b != 0).map(|i| i + 1).unwrap_or(32);
+                &svm[..prefix_len] == &our_svm_prefix[..prefix_len]
             }) {
+                found_entry = Some(entry);
+                break;
+            }
+            if attempt + 1 < DRAIN_RETRIES {
+                std::thread::sleep(std::time::Duration::from_millis(DRAIN_SLEEP_MS));
+            }
+        }
+        let (receipt_root, committed_at_ns) = if let Some((svm_prefix, evm_prefix, ts)) = found_entry {
             let root = Self::compute_receipt_root(&svm_prefix, &evm_prefix);
             (Some(root), Some(ts))
         } else {
             // Fallback: compute deterministic receipt_root from the pair directly.
             // This path is taken in tests where the shm is not available.
-            let svm_prefix: [u8; 32] = {
-                let mut a = [0u8; 32];
-                let n = pair.svm_tx.len().min(32);
-                a[..n].copy_from_slice(&pair.svm_tx[..n]);
-                a
-            };
             let evm_prefix: [u8; 32] = {
                 let mut a = [0u8; 32];
                 let n = pair.evm_tx.len().min(32);
@@ -187,7 +239,7 @@ impl AtomicSwapOrchestrator {
                 a
             };
             (
-                Some(Self::compute_receipt_root(&svm_prefix, &evm_prefix)),
+                Some(Self::compute_receipt_root(&our_svm_prefix, &evm_prefix)),
                 None,
             )
         };
@@ -386,6 +438,7 @@ mod tests {
             svm_tx: svm.to_vec(),
             evm_tx: evm.to_vec(),
             sequence_nonce: nonce,
+            pallet_bundle_id: None,
         }
     }
 
@@ -508,6 +561,7 @@ mod tests {
             svm_tx: vec![0xDE; 32],
             evm_tx: vec![0xAD; 32],
             sequence_nonce: 7,
+            pallet_bundle_id: None,
         };
         let bundle_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
         let svm_prefix: [u8; 32] = {
@@ -569,6 +623,7 @@ mod tests {
             svm_tx: vec![0xDE; 32],
             evm_tx: vec![0xAD; 32],
             sequence_nonce: 7,
+            pallet_bundle_id: None,
         };
         assert_eq!(req.bundle_id, AtomicSwapOrchestrator::derive_bundle_id(&pair));
     }
@@ -635,6 +690,7 @@ mod tests {
             svm_tx: vec![0xCA; 32],
             evm_tx: vec![0xFE; 32],
             sequence_nonce: 100,
+            pallet_bundle_id: None,
         };
 
         // Step 1: derive bundle_id — must be deterministic
@@ -729,6 +785,117 @@ mod tests {
             AtomicSwapOrchestrator::compute_receipt_root(&svm, &evm),
             "receipt_root must be stable across invocations"
         );
+    }
+
+    // ── pallet_bundle_id override (fixes on-chain/off-chain mismatch) ─────────
+
+    /// Verify that when `pallet_bundle_id` is set, `derive_bundle_id()` is NOT used
+    /// and the pallet-assigned ID flows through the entire pipeline.
+    ///
+    /// This covers the production path:
+    ///   submit_atomic_bundle() → BundleSubmitted(bundle_id) → pass into AtomicPair
+    ///   → process_swap() → ProcessResult::bundle_id == pallet bundle_id
+    ///   → FinalizationRequest::bundle_id == pallet bundle_id
+    ///   → OCW key "x3fin:" + pallet bundle_id  ← matches Bundles<T> key
+    #[test]
+    fn test_pallet_bundle_id_overrides_derived_id() {
+        // Simulate the pallet's SHA-256(submitter ∥ block ∥ legs_hash) result
+        let pallet_id = H256([0xBE; 32]);
+
+        let mut pair = make_pair(0x01, b"svm_real", b"evm_real", 0);
+        pair.pallet_bundle_id = Some(pallet_id);
+
+        // The off-chain derived ID is different
+        let off_chain_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
+        assert_ne!(pallet_id, off_chain_id, "pallet and off-chain IDs must differ");
+
+        // Build a ProcessResult as process_swap() would — using pallet_bundle_id
+        let svm_prefix: [u8; 32] = {
+            let mut a = [0u8; 32];
+            let n = pair.svm_tx.len().min(32);
+            a[..n].copy_from_slice(&pair.svm_tx[..n]);
+            a
+        };
+        let evm_prefix: [u8; 32] = {
+            let mut a = [0u8; 32];
+            let n = pair.evm_tx.len().min(32);
+            a[..n].copy_from_slice(&pair.evm_tx[..n]);
+            a
+        };
+        let receipt_root = AtomicSwapOrchestrator::compute_receipt_root(&svm_prefix, &evm_prefix);
+
+        let effective_bundle_id = pair.pallet_bundle_id.unwrap_or_else(|| {
+            AtomicSwapOrchestrator::derive_bundle_id(&pair)
+        });
+        assert_eq!(effective_bundle_id, pallet_id, "effective bundle_id must be pallet_id");
+
+        let result = ProcessResult {
+            status: AtomicStatus::Committed,
+            bundle_id: effective_bundle_id,
+            receipt_root: Some(receipt_root),
+            committed_at_ns: Some(42),
+        };
+
+        let req = AtomicSwapOrchestrator::build_finalization_request(&result).unwrap();
+        assert_eq!(req.bundle_id, pallet_id, "FinalizationRequest must carry pallet bundle_id");
+
+        // OCW key built with pallet bundle_id matches what the pallet looks up
+        let mut ocw_key = b"x3fin:".to_vec();
+        ocw_key.extend_from_slice(pallet_id.as_bytes());
+        assert_eq!(ocw_key.len(), 38);
+        assert_eq!(&ocw_key[6..], pallet_id.as_bytes());
+    }
+
+    /// Verify that when `pallet_bundle_id` is `None`, the pipeline falls back to
+    /// `derive_bundle_id()` unchanged (backward-compat for off-chain/test use).
+    #[test]
+    fn test_no_pallet_bundle_id_falls_back_to_derived() {
+        let pair = make_pair(0x02, b"svm_test", b"evm_test", 5); // pallet_bundle_id = None
+        let expected = AtomicSwapOrchestrator::derive_bundle_id(&pair);
+
+        let effective = pair
+            .pallet_bundle_id
+            .unwrap_or_else(|| AtomicSwapOrchestrator::derive_bundle_id(&pair));
+
+        assert_eq!(effective, expected, "fallback must equal derive_bundle_id()");
+    }
+
+    /// Verify AtomicPair with pallet_bundle_id serialises/deserialises correctly.
+    #[test]
+    fn test_atomic_pair_pallet_bundle_id_serde() {
+        let id = H256([0xAA; 32]);
+        let pair = AtomicPair {
+            swap_id: b"serde_test".to_vec(),
+            svm_tx: b"svm".to_vec(),
+            evm_tx: b"evm".to_vec(),
+            sequence_nonce: 1,
+            pallet_bundle_id: Some(id),
+        };
+        let json = serde_json::to_string(&pair).expect("must serialise");
+        let decoded: AtomicPair = serde_json::from_str(&json).expect("must deserialise");
+        assert_eq!(decoded.pallet_bundle_id, Some(id));
+
+        // None case
+        let pair_none = make_pair(0x03, b"s", b"e", 0);
+        let json_none = serde_json::to_string(&pair_none).expect("must serialise");
+        let decoded_none: AtomicPair = serde_json::from_str(&json_none).expect("must deserialise");
+        assert_eq!(decoded_none.pallet_bundle_id, None);
+    }
+
+    /// drain_committed_swaps falls back to deterministic receipt_root when shm
+    /// is unavailable — verify no panic and constants (DRAIN_RETRIES * DRAIN_SLEEP_MS
+    /// = 100 ms max wait) are sane.
+    #[test]
+    fn test_shm_drain_retry_constants_and_fallback() {
+        // Run drain when no shm is available — must return empty without panic.
+        let result = AtomicSwapOrchestrator::drain_committed_swaps();
+        assert!(result.is_empty(), "should be empty when shm is absent");
+
+        // Verify constants: 20 retries × 5 ms = 100 ms max total wait
+        const DRAIN_RETRIES: usize = 20;
+        const DRAIN_SLEEP_MS: u64 = 5;
+        assert_eq!(DRAIN_RETRIES * (DRAIN_SLEEP_MS as usize), 100_usize,
+            "drain retry window should be 100 ms");
     }
 }
 

@@ -3,7 +3,7 @@
  */
 
 import { X3SubscriptionManager } from '../src/subscriptions';
-import type { BlockNotification, ComitNotification } from '../src/subscriptions';
+import type { BlockNotification } from '../src/subscriptions';
 
 // Mock WsProvider
 const mockSubscribe = jest.fn();

@@ -538,10 +538,6 @@ mod tests {
             })
         }
 
-        fn balance(&self, addr: &[u8]) -> u128 {
-            self.overlay.read().unwrap().get(addr).map(|e| e.current).unwrap_or(0)
-        }
-
         fn state_changes(&self) -> Vec<StateChange> {
             self.overlay
                 .read()

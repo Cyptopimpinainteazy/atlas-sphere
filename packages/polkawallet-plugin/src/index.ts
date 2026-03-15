@@ -40,8 +40,10 @@ function send(path: string, data: any) {
   }
 }
 
-send('log', 'x3chain js_api loaded');
-(window as any).send = send;
+if (typeof window !== 'undefined') {
+  send('log', 'x3chain js_api loaded');
+  (window as any).send = send;
+}
 
 let api: ApiPromise;
 
@@ -97,26 +99,50 @@ const settings = {
   getNetworkProperties,
 };
 
-(window as any).settings = settings;
-(window as any).x3chain = {
-  ...kernel,
-  ...atomicTrade,
-  ...x3vm,
-  ...x3domains,
-  ...governance,
-  ...evolution,
-  ...settlement,
-  ...agents,
-  ...flashloan,
-};
-(window as any).kernel = kernel;
-(window as any).atomicTrade = atomicTrade;
-(window as any).x3vm = x3vm;
-(window as any).x3domains = x3domains;
-(window as any).governance = governance;
-(window as any).evolution = evolution;
-(window as any).settlement = settlement;
-(window as any).agents = agents;
-(window as any).flashloan = flashloan;
+if (typeof window !== 'undefined') {
+  (window as any).settings = settings;
+  (window as any).x3chain = {
+    ...kernel,
+    ...atomicTrade,
+    ...x3vm,
+    ...x3domains,
+    ...governance,
+    ...evolution,
+    ...settlement,
+    ...agents,
+    ...flashloan,
+  };
+  (window as any).kernel = kernel;
+  (window as any).atomicTrade = atomicTrade;
+  (window as any).x3vm = x3vm;
+  (window as any).x3domains = x3domains;
+  (window as any).governance = governance;
+  (window as any).evolution = evolution;
+  (window as any).settlement = settlement;
+  (window as any).agents = agents;
+  (window as any).flashloan = flashloan;
+}
 
 export default settings;
+
+export {
+  AtlasX3Plugin,
+  createLocalPlugin,
+  createTestnetPlugin,
+  createMainnetPlugin,
+} from './plugin';
+export { createX3Api } from './core/api';
+export { KernelService } from './services/kernel';
+export { SettlementService } from './services/settlement';
+export { AtomicTradeService } from './services/trades';
+export { DomainService } from './services/domains';
+export { VerifierService } from './services/verifier';
+export { GovernanceService } from './services/governance';
+export { TreasuryService } from './services/treasury';
+export { SvmService } from './services/svm';
+export { X3VmClient } from './x3vm/client';
+export {
+  X3ChainCustomTypes,
+  X3ChainRpc,
+  X3ChainSignedExtensions,
+} from './types/runtime-types';

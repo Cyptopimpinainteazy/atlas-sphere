@@ -26,7 +26,7 @@
     "@polkadot/util-crypto": "^13.0.0"
   },
   "peerDependencies": {
-    "@polkawallet/bridge": ">=0.1.0"
+    "@polkawallet/bridge": "^0.0.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

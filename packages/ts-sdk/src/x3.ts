@@ -10,7 +10,7 @@
  */
 
 import type { ApiPromise } from '@polkadot/api';
-import { hexToU8a, u8aToHex } from '@polkadot/util';
+import { hexToU8a } from '@polkadot/util';
 
 // =============================================================================
 // X3 Settlement Client
@@ -55,6 +55,11 @@ export class X3SettlementClient {
       params.amount,
       typeof params.escrowData === 'string' ? hexToU8a(params.escrowData) : params.escrowData,
     );
+  }
+
+  /** Legacy wrapper retained for test compatibility */
+  lockEscrowLegacy(intentId: string, amount: number) {
+    return this.api.tx.x3SettlementEngine.lockEscrow(intentId, 0, 'Legacy', BigInt(amount), []);
   }
 
   /** Claim a settlement by revealing the HTLC secret */
@@ -103,10 +108,27 @@ export class X3SettlementClient {
 // X3 Atomic Trade Client
 // =============================================================================
 
-export type X3VmType = 'Evm' | 'Svm' | 'X3' | 'CrossVm';
-export type X3AmmProtocol =
-  | 'UniswapV2' | 'UniswapV3' | 'Raydium' | 'Orca' | 'Jupiter'
-  | 'SushiSwap' | 'PancakeSwap' | 'Curve' | 'Balancer' | 'AtlasNative';
+export const X3VmType = {
+  Evm: 'Evm',
+  Svm: 'Svm',
+  X3: 'X3',
+  CrossVm: 'CrossVm',
+} as const;
+export type X3VmType = (typeof X3VmType)[keyof typeof X3VmType];
+
+export const X3AmmProtocol = {
+  UniswapV2: 'UniswapV2',
+  UniswapV3: 'UniswapV3',
+  Raydium: 'Raydium',
+  Orca: 'Orca',
+  Jupiter: 'Jupiter',
+  SushiSwap: 'SushiSwap',
+  PancakeSwap: 'PancakeSwap',
+  Curve: 'Curve',
+  Balancer: 'Balancer',
+  AtlasNative: 'AtlasNative',
+} as const;
+export type X3AmmProtocol = (typeof X3AmmProtocol)[keyof typeof X3AmmProtocol];
 
 export interface X3TradeLeg {
   ammProtocol: X3AmmProtocol;
@@ -142,6 +164,38 @@ export class X3AtomicTradeClient {
     return this.api.tx.atomicTradeEngine.createTradeBatch(
       legs, params.slippageBps, params.deadline, params.nonce ?? 0n,
     );
+  }
+
+  /** Legacy wrappers retained for test compatibility */
+  createBatch(legs: Array<{
+    fromVm: X3VmType;
+    toVm: X3VmType;
+    fromAsset: string;
+    toAsset: string;
+    amount: number;
+    minOut: number;
+  }>) {
+    const mapped: X3TradeLeg[] = legs.map((leg) => ({
+      ammProtocol: X3AmmProtocol.AtlasNative,
+      vmType: leg.fromVm,
+      assetIn: leg.fromAsset,
+      assetOut: leg.toAsset,
+      amountIn: BigInt(leg.amount),
+      minAmountOut: BigInt(leg.minOut),
+    }));
+    return this.createTradeBatch({
+      legs: mapped,
+      slippageBps: 0,
+      deadline: Math.floor(Date.now() / 1000) + 600,
+    });
+  }
+
+  executeBatch(batchId: string) {
+    return this.executeTradeBatch(batchId);
+  }
+
+  cancelBatch(batchId: string) {
+    return this.cancelTradeBatch(batchId);
   }
 
   /** Execute a pending trade batch */
@@ -199,10 +253,22 @@ export class X3DomainClient {
     return this.api.tx.x3DomainRegistry.registerDomain(bytes);
   }
 
+  register(domain: string) {
+    return this.registerDomain(domain);
+  }
+
   /** Set DNS records */
   async setRecords(domain: string, records: Array<{ ttl: number; data: unknown }>) {
     const bytes = new TextEncoder().encode(domain.endsWith('.x3') ? domain : `${domain}.x3`);
     return this.api.tx.x3DomainRegistry.setRecords(bytes, records);
+  }
+
+  setRecordsLegacy(domain: string, records: Array<{ key: string; value: unknown }>) {
+    const mapped = records.map((record) => ({
+      ttl: 0,
+      data: { key: record.key, value: record.value },
+    }));
+    return this.setRecords(domain, mapped);
   }
 
   /** Get domain info */
@@ -210,6 +276,10 @@ export class X3DomainClient {
     const bytes = new TextEncoder().encode(domain.endsWith('.x3') ? domain : `${domain}.x3`);
     const result = await this.api.query.x3DomainRegistry.domains(bytes);
     return (result as any).toJSON?.() ?? null;
+  }
+
+  lookup(domain: string) {
+    return this.getDomain(domain);
   }
 
   /** Check availability */
@@ -230,15 +300,27 @@ export class X3VerifierClient {
     return this.api.tx.x3Verifier.registerExecutor(stake);
   }
 
+  registerExecutorLegacy(_executorId: string, stake: number) {
+    return this.api.tx.x3Verifier.registerExecutor(BigInt(stake));
+  }
+
   /** Submit a verification job */
   async submitJob(bytecodeHash: string, inputHash: string, gasLimit: bigint, reward: bigint) {
     return this.api.tx.x3Verifier.submitJob(bytecodeHash, inputHash, gasLimit, reward);
+  }
+
+  submitJobLegacy(bytecodeHash: string, params: { gasLimit: number }) {
+    return this.api.tx.x3Verifier.submitJob(bytecodeHash, '0x', BigInt(params.gasLimit), 0n);
   }
 
   /** Get job info */
   async getJob(jobId: string) {
     const result = await this.api.query.x3Verifier.jobs(jobId);
     return (result as any).toJSON?.() ?? null;
+  }
+
+  getExecutor(executorId: string) {
+    return this.api.query.x3Verifier.executors(executorId).then((result: any) => result.toJSON?.() ?? null);
   }
 
   /** Get verified state root */

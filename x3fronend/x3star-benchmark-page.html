@@ -23,11 +23,15 @@
       <h1>Benchmark Hub</h1>
       <p>Chainbench and stress-test dashboards are live. This hub will aggregate the latest benchmark artifacts and historical runs.</p>
       <div class="card">
-        <div>Next: link Chainbench Pro, Ultimate, and Stress Test views with artifact history.</div>
-        <div class="meta">Source: benchmark store · Status: pending</div>
+        <div>Latest benchmark telemetry and artifact links from Chainbench.</div>
+        <div style="margin-top:10px;font-size:12px;">Peak TPS: <span id="bench-hub-tps">--</span></div>
+        <div class="meta">Source: benchmark store · Status: <span id="bench-hub-status">--</span> · Updated: <span id="bench-hub-updated">--</span></div>
       </div>
     </main>
     <script src="js/x3-data-api.js"></script>
     <script src="js/x3-page-adapters.js"></script>
+    <script>
+    X3PageAdapters.start();
+    </script>
   </body>
 </html>

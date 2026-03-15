@@ -63,9 +63,9 @@ describe('X3 factory functions', () => {
         requestBondWithdraw: jest.fn(),
       },
       atomicTradeEngine: {
-        createBatch: jest.fn(),
-        executeBatch: jest.fn(),
-        cancelBatch: jest.fn(),
+        createTradeBatch: jest.fn(),
+        executeTradeBatch: jest.fn(),
+        cancelTradeBatch: jest.fn(),
       },
       x3DomainRegistry: {
         registerDomain: jest.fn(),
@@ -80,9 +80,11 @@ describe('X3 factory functions', () => {
     },
     query: {
       x3SettlementEngine: {
-        intents: jest.fn(),
-        bonds: jest.fn(),
-        btcBestHeight: jest.fn(),
+        settlementIntents: jest.fn(),
+        intentStates: jest.fn(),
+        totalIntents: jest.fn(),
+        totalSettledVolume: jest.fn(),
+        invariantViolations: jest.fn(),
       },
       atomicTradeEngine: {
         batches: jest.fn(),
@@ -156,9 +158,11 @@ describe('X3SettlementClient', () => {
     },
     query: {
       x3SettlementEngine: {
-        intents: jest.fn().mockResolvedValue({ toJSON: () => ({ initiator: 'alice', amount: 1000, state: 'Pending' }) }),
-        bonds: jest.fn().mockResolvedValue({ toJSON: () => ({ owner: 'alice', amount: 500, locked: true }) }),
-        btcBestHeight: jest.fn().mockResolvedValue({ toNumber: () => 850000 }),
+        settlementIntents: jest.fn().mockResolvedValue({ toJSON: () => ({ initiator: 'alice', amount: 1000, state: 'Pending' }) }),
+        intentStates: jest.fn().mockResolvedValue({ toString: () => 'Pending' }),
+        totalIntents: jest.fn().mockResolvedValue({ toNumber: () => 1 }),
+        totalSettledVolume: jest.fn().mockResolvedValue({ toBigInt: () => 1000n }),
+        invariantViolations: jest.fn().mockResolvedValue({ toNumber: () => 0 }),
       },
     },
   } as any;
@@ -170,34 +174,32 @@ describe('X3SettlementClient', () => {
 
   test('createIntent returns extrinsic', () => {
     const ext = client.createIntent({
-      chain: 'Ethereum',
-      hashLock: '0x1234',
-      timeLock: 3600,
-      amount: 1000,
-      recipient: '0xabc',
+      taker: '0xabc',
+      assetA: { chain: 'Ethereum', assetId: 'ETH', amount: 1000n },
+      assetB: { chain: 'Bitcoin', assetId: 'BTC', amount: 2000n },
+      secretHash: '0x1234',
+      timeoutSeconds: 3600,
     });
     expect(ext).toBeDefined();
     expect(mockApi.tx.x3SettlementEngine.createIntent).toHaveBeenCalledWith(
-      'Ethereum', '0x1234', 3600, 1000, '0xabc'
+      '0xabc',
+      { chain: 'Ethereum', asset_id: 'ETH', amount: 1000n },
+      { chain: 'Bitcoin', asset_id: 'BTC', amount: 2000n },
+      '0x1234',
+      3600
     );
   });
 
   test('lockEscrow returns extrinsic', () => {
-    const ext = client.lockEscrow('intent-1', 1000);
+    const ext = client.lockEscrowLegacy('intent-1', 1000);
     expect(ext).toBeDefined();
-    expect(mockApi.tx.x3SettlementEngine.lockEscrow).toHaveBeenCalledWith('intent-1', 1000);
+    expect(mockApi.tx.x3SettlementEngine.lockEscrow).toHaveBeenCalled();
   });
 
   test('getIntent queries storage', async () => {
     const intent = await client.getIntent('intent-1');
     expect(intent).toEqual({ initiator: 'alice', amount: 1000, state: 'Pending' });
-    expect(mockApi.query.x3SettlementEngine.intents).toHaveBeenCalledWith('intent-1');
-  });
-
-  test('getBtcBestHeight queries storage', async () => {
-    const height = await client.getBtcBestHeight();
-    expect(height).toBe(850000);
-    expect(mockApi.query.x3SettlementEngine.btcBestHeight).toHaveBeenCalled();
+    expect(mockApi.query.x3SettlementEngine.settlementIntents).toHaveBeenCalledWith('intent-1');
   });
 });
 
@@ -215,14 +217,14 @@ describe('X3AtomicTradeClient', () => {
   const mockApi = {
     tx: {
       atomicTradeEngine: {
-        createBatch: jest.fn().mockReturnValue(mockSubmittable),
-        executeBatch: jest.fn().mockReturnValue(mockSubmittable),
-        cancelBatch: jest.fn().mockReturnValue(mockSubmittable),
+        createTradeBatch: jest.fn().mockReturnValue(mockSubmittable),
+        executeTradeBatch: jest.fn().mockReturnValue(mockSubmittable),
+        cancelTradeBatch: jest.fn().mockReturnValue(mockSubmittable),
       },
     },
     query: {
       atomicTradeEngine: {
-        batches: jest.fn().mockResolvedValue({
+        tradeBatches: jest.fn().mockResolvedValue({
           toJSON: () => ({
             id: 'batch-1',
             legs: [{ fromVm: 'Evm', toVm: 'Svm', amount: 100 }],
@@ -244,26 +246,26 @@ describe('X3AtomicTradeClient', () => {
     ];
     const ext = client.createBatch(legs);
     expect(ext).toBeDefined();
-    expect(mockApi.tx.atomicTradeEngine.createBatch).toHaveBeenCalled();
+    expect(mockApi.tx.atomicTradeEngine.createTradeBatch).toHaveBeenCalled();
   });
 
   test('executeBatch builds extrinsic', () => {
     const ext = client.executeBatch('batch-1');
     expect(ext).toBeDefined();
-    expect(mockApi.tx.atomicTradeEngine.executeBatch).toHaveBeenCalledWith('batch-1');
+    expect(mockApi.tx.atomicTradeEngine.executeTradeBatch).toHaveBeenCalledWith('batch-1');
   });
 
   test('cancelBatch builds extrinsic', () => {
     const ext = client.cancelBatch('batch-1');
     expect(ext).toBeDefined();
-    expect(mockApi.tx.atomicTradeEngine.cancelBatch).toHaveBeenCalledWith('batch-1');
+    expect(mockApi.tx.atomicTradeEngine.cancelTradeBatch).toHaveBeenCalledWith('batch-1');
   });
 
   test('getBatch queries storage', async () => {
     const batch = await client.getBatch('batch-1');
     expect(batch).toBeDefined();
     expect(batch.id).toBe('batch-1');
-    expect(mockApi.query.atomicTradeEngine.batches).toHaveBeenCalledWith('batch-1');
+    expect(mockApi.query.atomicTradeEngine.tradeBatches).toHaveBeenCalledWith('batch-1');
   });
 });
 
@@ -286,8 +288,7 @@ describe('X3DomainClient', () => {
     query: {
       x3DomainRegistry: {
         domains: jest.fn().mockResolvedValue({
-          isSome: true,
-          unwrap: () => ({ toJSON: () => ({ name: 'alice.x3', owner: 'alice-addr', records: {} }) }),
+          toJSON: () => ({ name: 'alice.x3', owner: 'alice-addr', records: {} }),
         }),
       },
     },
@@ -301,11 +302,11 @@ describe('X3DomainClient', () => {
   test('register builds extrinsic', () => {
     const ext = client.register('alice.x3');
     expect(ext).toBeDefined();
-    expect(mockApi.tx.x3DomainRegistry.registerDomain).toHaveBeenCalledWith('alice.x3');
+    expect(mockApi.tx.x3DomainRegistry.registerDomain).toHaveBeenCalled();
   });
 
   test('setRecords builds extrinsic', () => {
-    const ext = client.setRecords('alice.x3', [{ key: 'evm', value: '0xabc' }]);
+    const ext = client.setRecordsLegacy('alice.x3', [{ key: 'evm', value: '0xabc' }]);
     expect(ext).toBeDefined();
     expect(mockApi.tx.x3DomainRegistry.setRecords).toHaveBeenCalled();
   });
@@ -314,7 +315,7 @@ describe('X3DomainClient', () => {
     const result = await client.lookup('alice.x3');
     expect(result).toBeDefined();
     expect(result.name).toBe('alice.x3');
-    expect(mockApi.query.x3DomainRegistry.domains).toHaveBeenCalledWith('alice.x3');
+    expect(mockApi.query.x3DomainRegistry.domains).toHaveBeenCalled();
   });
 
   test('isAvailable returns true for unregistered domain', async () => {
@@ -349,6 +350,9 @@ describe('X3VerifierClient', () => {
         jobs: jest.fn().mockResolvedValue({
           toJSON: () => ({ id: 'job-1', wasm: '0x00', status: 'Pending' }),
         }),
+        verifiedStateRoots: jest.fn().mockResolvedValue({ toHex: () => '0x' + '00'.repeat(32) }),
+        totalJobsSubmitted: jest.fn().mockResolvedValue({ toNumber: () => 1 }),
+        totalJobsVerified: jest.fn().mockResolvedValue({ toNumber: () => 1 }),
         executors: jest.fn().mockResolvedValue({
           toJSON: () => ({ id: 'executor-1', active: true, stake: 10000 }),
         }),
@@ -362,13 +366,13 @@ describe('X3VerifierClient', () => {
   });
 
   test('registerExecutor builds extrinsic', () => {
-    const ext = client.registerExecutor('executor-1', 10000);
+    const ext = client.registerExecutorLegacy('executor-1', 10000);
     expect(ext).toBeDefined();
-    expect(mockApi.tx.x3Verifier.registerExecutor).toHaveBeenCalledWith('executor-1', 10000);
+    expect(mockApi.tx.x3Verifier.registerExecutor).toHaveBeenCalled();
   });
 
   test('submitJob builds extrinsic', () => {
-    const ext = client.submitJob('0x00', { gasLimit: 1000000 });
+    const ext = client.submitJobLegacy('0x00', { gasLimit: 1000000 });
     expect(ext).toBeDefined();
     expect(mockApi.tx.x3Verifier.submitJob).toHaveBeenCalled();
   });

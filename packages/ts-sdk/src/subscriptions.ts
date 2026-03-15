@@ -6,7 +6,6 @@
  */
 
 import { WsProvider } from '@polkadot/api';
-import type { Hash } from './types';
 
 // =============================================================================
 // Types

@@ -444,6 +444,27 @@ function createSiteServices(options) {
       finality: rpcState.ok ? 0.4 : null,
       blockNumber,
     };
+    const grants = (store.grantApplications || []).map((grant) => ({
+      id: grant.id,
+      name:
+        grant.projectName ||
+        grant.name ||
+        grant.teamName ||
+        grant.organization ||
+        grant.company ||
+        grant.title ||
+        "Grant",
+      amountUsd:
+        grant.amountUsd ||
+        grant.requestedUsd ||
+        grant.requestedAmountUsd ||
+        grant.budgetUsd ||
+        grant.fundingRequestedUsd ||
+        0,
+      progressPct: grant.progressPct || grant.progress || grant.completionPct || null,
+      status: grant.status || grant.stage || "submitted",
+      createdAt: grant.createdAt,
+    }));
     return envelope(
       {
         blockNumber,
@@ -457,6 +478,7 @@ function createSiteServices(options) {
           activeGrants: store.grantApplications.length,
           investorCount: store.presale.investors,
         },
+        grants,
       },
       {
         source: rpcState.ok ? "rpc,business-store,benchmarks" : "business-store,benchmarks",
@@ -595,6 +617,8 @@ function createSiteServices(options) {
         ).length,
         voters: store.governance.voters,
         treasury: store.governance.treasuryUsd,
+        delegates: store.governance.delegates || [],
+        treasuryAllocations: store.governance.treasuryAllocations || [],
       },
       {
         source: "business-store",
@@ -699,6 +723,124 @@ function createSiteServices(options) {
       {
         ...store.presale,
         tiers,
+      },
+      {
+        source: "business-store",
+        status: "live",
+        lastUpdated: fileTimeToIso(await statOrNull(storePath)),
+      },
+    );
+  }
+
+  async function getGrants() {
+    const store = await readStore(storePath, seedPath);
+    const programs = store.grantPrograms || [];
+    const applications = store.grantApplications || [];
+    const totalPoolUsd = programs.reduce((sum, program) => sum + Number(program.amountUsd || 0), 0);
+    const largestGrantUsd = programs.reduce(
+      (max, program) => Math.max(max, Number(program.amountUsd || 0)),
+      0,
+    );
+    const byStatus = programs.reduce((acc, program) => {
+      const key = String(program.status || "unknown").toLowerCase();
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return envelope(
+      {
+        programs,
+        applications,
+        summary: {
+          totalPoolUsd,
+          largestGrantUsd,
+          totalPrograms: programs.length,
+          statusCounts: byStatus,
+        },
+      },
+      {
+        source: "business-store",
+        status: "live",
+        lastUpdated: fileTimeToIso(await statOrNull(storePath)),
+      },
+    );
+  }
+
+  async function getBounties() {
+    const store = await readStore(storePath, seedPath);
+    const bounties = store.bounties || [];
+    const totalPoolUsd = bounties.reduce((sum, bounty) => sum + Number(bounty.rewardUsd || 0), 0);
+    const openCount = bounties.filter((bounty) => bounty.status === "open" || bounty.status === "hot").length;
+    const claimedCount = bounties.filter((bounty) => bounty.status === "claimed").length;
+    return envelope(
+      {
+        bounties,
+        summary: {
+          totalPoolUsd,
+          openCount,
+          claimedCount,
+          totalCount: bounties.length,
+        },
+      },
+      {
+        source: "business-store",
+        status: "live",
+        lastUpdated: fileTimeToIso(await statOrNull(storePath)),
+      },
+    );
+  }
+
+  async function getDeals() {
+    const store = await readStore(storePath, seedPath);
+    return envelope(
+      {
+        deals: store.deals || [],
+        intakeCount: store.dealIntakes ? store.dealIntakes.length : 0,
+      },
+      {
+        source: "business-store",
+        status: "live",
+        lastUpdated: fileTimeToIso(await statOrNull(storePath)),
+      },
+    );
+  }
+
+  async function getLeaderboard() {
+    const store = await readStore(storePath, seedPath);
+    const validatorsRaw = store.networkTelemetry?.validators || [];
+    const validators = validatorsRaw
+      .map((validator) => {
+        const uptime = Number(validator.uptimePct || 0);
+        const tps = Number(validator.tps || 0);
+        const stake = Number(validator.stakeX3S || 0);
+        const score = Math.round(uptime * 60 + tps * 5 + Math.min(100, stake / 10000));
+        return {
+          id: validator.id,
+          name: validator.id,
+          flag: countryFlag(validator.countryCode),
+          uptimePct: uptime,
+          tps,
+          stakeX3S: stake,
+          tier: validator.tier,
+          score,
+          status: validator.status,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+    const investors = aggregateTopInvestors(store.reservations || []);
+    const delegates = (store.governance.delegates || []).map((delegate) => ({
+      name: delegate.name,
+      power: delegate.power || delegate.votingPower || 0,
+    }));
+    return envelope(
+      {
+        validators,
+        investors,
+        delegates,
+        summary: {
+          validatorsCount: validators.length,
+          investorsCount: investors.length,
+          delegatesCount: delegates.length,
+        },
       },
       {
         source: "business-store",
@@ -817,6 +959,7 @@ function createSiteServices(options) {
       grant: store.grantApplications,
       investor: store.investorInquiries,
       kyc: store.kycApplications,
+      deal: store.dealIntakes,
     };
     return envelope(
       {
@@ -837,12 +980,14 @@ function createSiteServices(options) {
       grant: "grantApplications",
       investor: "investorInquiries",
       kyc: "kycApplications",
+      deal: "dealIntakes",
     };
     const counterMap = {
       affiliate: "affiliate",
       grant: "grant",
       investor: "investorInquiry",
       kyc: "kyc",
+      deal: "deal",
     };
     const collectionName = collectionMap[formType];
     const counterName = counterMap[formType];

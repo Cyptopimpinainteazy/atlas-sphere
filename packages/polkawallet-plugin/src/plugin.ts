@@ -156,7 +156,7 @@ export class AtlasX3Plugin {
     event: K,
     handler: import('./core/api').ApiEvents[K],
   ): this {
-    this._x3Api.on(event, handler);
+    this._x3Api.on(event, handler as any);
     return this;
   }
 
@@ -164,7 +164,7 @@ export class AtlasX3Plugin {
     event: K,
     handler: import('./core/api').ApiEvents[K],
   ): this {
-    this._x3Api.off(event, handler);
+    this._x3Api.off(event, handler as any);
     return this;
   }
 

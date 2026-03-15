@@ -47,7 +47,7 @@ export class CollateralManagerClient {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as { result?: T };
       return result.result as T;
     } catch {
       // Fallback for demo/testing - remove in production

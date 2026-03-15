@@ -140,6 +140,22 @@ async function routeApi(request, response, requestUrl) {
       json(response, 200, await services.getPresale());
       return true;
     }
+    if (request.method === "GET" && pathname === "/api/site/grants") {
+      json(response, 200, await services.getGrants());
+      return true;
+    }
+    if (request.method === "GET" && pathname === "/api/site/bounties") {
+      json(response, 200, await services.getBounties());
+      return true;
+    }
+    if (request.method === "GET" && pathname === "/api/site/deals") {
+      json(response, 200, await services.getDeals());
+      return true;
+    }
+    if (request.method === "GET" && pathname === "/api/site/leaderboard") {
+      json(response, 200, await services.getLeaderboard());
+      return true;
+    }
     if (request.method === "GET" && pathname === "/api/site/reservations") {
       json(response, 200, await services.getReservations());
       return true;

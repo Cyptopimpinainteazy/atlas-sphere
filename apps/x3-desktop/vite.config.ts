@@ -17,6 +17,11 @@ export default defineConfig({
       }
     })
   ],
+  optimizeDeps: {
+    // Avoid dependency discovery to reduce Rolldown pre-bundle issues in Vite 8.
+    noDiscovery: true,
+    include: [],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

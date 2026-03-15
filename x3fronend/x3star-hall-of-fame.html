@@ -141,7 +141,7 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
 </div>
 
 <!-- PODIUM -->
-<div class="podium">
+<div class="podium" id="podium">
   <div class="podium-slot slot-2" style="margin-bottom:32px;">
     <div class="ps-card">
       <div class="ps-rank">#2</div>
@@ -222,64 +222,9 @@ nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:cente
   <button class="sb-cta" onclick="location.href='x3star-validator-presale.html'">Claim Your Slot →</button>
 </div>
 
+<script src="js/x3-data-api.js"></script>
+<script src="js/x3-page-adapters.js"></script>
 <script>
-const ops=[];
-
-const meritColors={'Perfect':'background:rgba(255,215,0,0.15);color:var(--gold);border:1px solid rgba(255,215,0,0.25)',
-  'Veteran':'background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.2)',
-  'Gov Lead':'background:rgba(228,64,251,0.1);color:var(--purple);border:1px solid rgba(228,64,251,0.18)',
-  'Reliable':'background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.18)',
-  'Whale':'background:rgba(255,215,0,0.08);color:var(--gold2);border:1px solid rgba(255,149,0,0.2)',
-  'Dev':'background:rgba(0,230,118,0.08);color:var(--green);border:1px solid rgba(0,230,118,0.15)',
-  'Active':'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)',
-  'Consistent':'background:rgba(68,138,255,0.08);color:var(--blue);border:1px solid rgba(68,138,255,0.15)',
-  'Newcomer':'background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.07)',
-};
-
-const tierColor={Genesis:'background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.2)',
-  Star:'background:rgba(68,138,255,0.1);color:var(--blue);border:1px solid rgba(68,138,255,0.2)',
-  Lite:'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1)'};
-
-function renderLB(data){
-  const body=document.getElementById('lb-body');
-  if(!body)return;
-  if(!data||data.length===0){
-    body.innerHTML='<tr class="lb-row"><td colspan="7" style="color:var(--muted);">Awaiting live validator leaderboard feed.</td></tr>';
-    return;
-  }
-  body.innerHTML='';
-  data.forEach((op)=>{
-    const tr=document.createElement('tr');tr.className='lb-row';
-    const rankColor=op.rank===1?'var(--gold)':op.rank===2?'var(--silver)':op.rank===3?'var(--bronze)':'var(--muted)';
-    const merits=op.merits.map(m=>`<span class="merit" style="${meritColors[m]||''}">${m}</span>`).join('');
-    const scorePct=(op.score/10000*100).toFixed(0);
-    const scoreColor=op.score>9000?'var(--gold)':op.score>8000?'var(--silver)':op.score>7000?'var(--bronze)':'var(--text)';
-    tr.innerHTML=`
-      <td><div class="rank-col">
-        <div class="rank-num" style="color:${rankColor}">${op.rank}</div>
-        <div class="rank-flag">${op.flag}</div>
-        <div><div class="rank-name">${op.name}</div><div class="rank-node">${op.node}</div></div>
-      </div></td>
-      <td><span class="merit" style="${tierColor[op.tier]}">${op.tier}</span></td>
-      <td style="font-family:var(--mono);color:var(--green)">${op.uptime}</td>
-      <td style="font-family:var(--mono);font-weight:600">${op.earned}</td>
-      <td style="font-family:var(--mono)">${op.govScore}/100</td>
-      <td><div class="merit-badges">${merits}</div></td>
-      <td><div class="score-cell">
-        <div class="score-val" style="color:${scoreColor}">${op.score.toLocaleString()}</div>
-        <div class="score-bar"><div class="score-fill" style="width:${scorePct}%;background:${scoreColor}"></div></div>
-      </div></td>
-    `;
-    body.appendChild(tr);
-  });
-}
-
-function showTab(el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  renderLB(ops);
-}
-renderLB(ops);
 if (window.X3PageAdapters) {
   window.X3PageAdapters.start();
 }

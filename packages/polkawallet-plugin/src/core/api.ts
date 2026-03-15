@@ -140,7 +140,7 @@ export class X3ChainApi extends EventEmitter<ApiEvents> {
       const { web3Accounts, web3Enable } = await import('@polkadot/extension-dapp');
       await web3Enable('X3 Chain x3chain');
       const accounts = await web3Accounts();
-      return accounts.map((a) => a.address);
+      return accounts.map((a: { address: string }) => a.address);
     } catch {
       return [];
     }

@@ -46,7 +46,7 @@ class TestCategory:
 # TEST 1: Signature Verification
 # ==============================================================================
 
-class TestSigantureVerification:
+class TestSignatureVerification:
     """Test Ed25519 signature verification on GPU"""
     
     @pytest.mark.asyncio
