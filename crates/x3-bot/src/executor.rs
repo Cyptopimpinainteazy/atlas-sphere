@@ -60,6 +60,7 @@ pub async fn run(cfg: BotConfig, pool_evm: Arc<RpcPool>, pool_svm: Arc<RpcPool>)
                 swap_id: uuid::Uuid::new_v4().as_bytes().to_vec(),
                 svm_tx: vec![0xDE, 0xAD, 0xBE, 0xEF], // Mocked SVM Intent
                 evm_tx: vec![0xCA, 0xFE, 0xBA, 0xBE], // Mocked EVM Intent
+                sequence_nonce: 0,
             };
 
             use crate::telemetry::{

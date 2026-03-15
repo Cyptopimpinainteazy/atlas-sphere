@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 x3-vm = { path = "../x3-vm", optional = true }
 x3-compiler = { path = "../x3-compiler", optional = true }
 x3-backend = { path = "../x3-backend", optional = true }
-x3-common = { path = "../x3-common" }
+x3-common = { path = "../x3-common", default-features = false }
 x3-verifier = { path = "../x3-verifier", optional = true }
 
 # Cross-VM executor traits (real backends are provided by the caller)
@@ -53,6 +53,7 @@ std = [
     "serde",
     "thiserror",
     "log/std",
+    "x3-common/std",
     "x3-evm-integration/std",
     "x3-svm-integration/std",
     "x3-vm",

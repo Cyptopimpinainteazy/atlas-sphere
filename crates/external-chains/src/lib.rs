@@ -23,6 +23,7 @@ pub mod env_config;
 pub mod error;
 pub mod router;
 pub mod rpc;
+pub mod rpc_http;
 pub mod settlement;
 
 pub use adapter::{ChainAdapter, ChainConfig, ChainMessage, CrossChainTransfer, TransferStatus};

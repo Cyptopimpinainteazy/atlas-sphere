@@ -120,6 +120,9 @@ impl core::fmt::Display for ExternalChainError {
             Self::InternalError(msg) => {
                 write!(f, "Internal error: {}", String::from_utf8_lossy(msg))
             }
+            Self::ParseError(msg) => {
+                write!(f, "Parse error: {}", String::from_utf8_lossy(msg))
+            }
         }
     }
 }

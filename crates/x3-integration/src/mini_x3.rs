@@ -93,7 +93,7 @@ impl MiniValue {
         }
     }
     #[allow(dead_code)]
-    fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         match self {
             MiniValue::I64(v) => v.to_le_bytes().to_vec(),
             MiniValue::F64(v) => v.to_bits().to_le_bytes().to_vec(),
