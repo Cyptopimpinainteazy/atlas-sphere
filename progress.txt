@@ -751,3 +751,27 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 ## Test Status
 - `cargo check --workspace` → EXIT 0 (zero compile errors across all crates)
 - All crates compile cleanly on both native (x86_64-unknown-linux-gnu) and wasm32-unknown-unknown targets
+
+---
+
+# Session: Fix GCC 11 ICE — 5 crates now compile (commit pending)
+
+## Root Cause
+- System GCC 11.4 has an internal compiler error (segfault in RTL reload pass) when
+  compiling ring v0.17.14's `gfp_p384.c` (P-384 ECC) and blake3 v1.8.3's AVX512 asm
+- Affected all crates that transitively depend on ring or blake3 (x3-gpu-validator-swarm,
+  x3-fees, x3-constitution, svm_counter, x3-dns-server — and potentially the whole workspace)
+
+## Fix
+- `.cargo/config.toml` [env]: added `CC = "gcc-12"` — switches C compilation to gcc-12
+  which does not have the P384 ICE, without affecting Rust-only crates or WASM builds
+
+## ✅ Crates Now Compile
+- `x3-gpu-validator-swarm` — clean (7 warnings)
+- `x3-fees` — clean (1 warning)
+- `x3-constitution` — clean (1 warning)
+- `svm_counter` — clean (4 warnings, cfg macros from solana_program_entrypoint)
+- `x3-dns-server` — clean (9 warnings)
+
+## Test Status
+- `cargo check -p x3-gpu-validator-swarm -p x3-fees -p x3-constitution -p svm_counter -p x3-dns-server` → EXIT 0
