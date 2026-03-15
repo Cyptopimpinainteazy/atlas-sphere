@@ -17,9 +17,9 @@ use sp_core::H256;
 #[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo)]
 pub struct DeclaredAccess {
     /// Storage keys / account identifiers this leg will read.  
-    pub reads: sp_std::BoundedVec<H256, sp_runtime::traits::ConstU32<64>>,
+    pub reads: frame_support::BoundedVec<H256, sp_runtime::traits::ConstU32<64>>,
     /// Storage keys / account identifiers this leg will write.
-    pub writes: sp_std::BoundedVec<H256, sp_runtime::traits::ConstU32<64>>,
+    pub writes: frame_support::BoundedVec<H256, sp_runtime::traits::ConstU32<64>>,
 }
 
 /// VM type for a bundle leg.

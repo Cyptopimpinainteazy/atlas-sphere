@@ -256,18 +256,17 @@ __device__ void ge_scalarmult_vartime(ge_p3 *R, const unsigned char scalar[32], 
 
     for (int i = top; i >= 0; i--) {
         ge_p1p1 t;
+        /* Always double first: R = 2*R */
         ge_p3_dbl(&t, R);
+        ge_p1p1_to_p3(R, &t);
 
         int byte_idx = i >> 3;
         int bit_idx = i & 7;
         int bit = (scalar[byte_idx] >> bit_idx) & 1;
 
         if (bit) {
-            ge_p3 doubled;
-            ge_p1p1_to_p3(&doubled, &t);
-            ge_add(&t, &doubled, &Pcached);
-            ge_p1p1_to_p3(R, &t);
-        } else {
+            /* R was just set to 2*oldR; now add P: R = 2*oldR + P */
+            ge_add(&t, R, &Pcached);
             ge_p1p1_to_p3(R, &t);
         }
     }
