@@ -1193,12 +1193,7 @@ impl<C, B: BlockT> X3SubscriptionRpc<C, B> {
 
 impl<C> X3SubscriptionApiServer for X3SubscriptionRpc<C, Block>
 where
-    C: Send
-        + Sync
-        + 'static
-        + HeaderBackend<Block>
-        + BlockBackend<Block>
-        + BlockchainEvents<Block>,
+    C: Send + Sync + 'static + HeaderBackend<Block> + BlockBackend<Block> + BlockchainEvents<Block>,
 {
     fn subscribe_new_blocks(
         &self,
@@ -1222,10 +1217,7 @@ where
                         state_root: format!("{:?}", header.state_root),
                         extrinsics_root: format!("{:?}", header.extrinsics_root),
                     };
-                    if sink
-                        .send(&block_notification)
-                        .is_err()
-                    {
+                    if sink.send(&block_notification).is_err() {
                         break;
                     }
                 }
@@ -1257,10 +1249,7 @@ where
                         state_root: format!("{:?}", header.state_root),
                         extrinsics_root: format!("{:?}", header.extrinsics_root),
                     };
-                    if sink
-                        .send(&block_notification)
-                        .is_err()
-                    {
+                    if sink.send(&block_notification).is_err() {
                         break;
                     }
                 }

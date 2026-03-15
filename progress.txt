@@ -878,3 +878,15 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - `cargo test --lib -p x3-cross-vm-bridge` → **50/50 passed**
 - `cargo test --lib -p pallet-x3-atomic-kernel` → **14/14 passed**
 - `cd packages/ts-sdk && npx jest --no-coverage` → **185/187 passed** (2 skipped - live integration)
+
+## Session — SEC-009 Emergency Pause (commit 35548a47)
+- **SEC-009 FIXED**: Added `ProtocolPaused` storage + `emergency_pause`/`emergency_unpause` governance extrinsics (call_index 40/41) to x3-kernel pallet
+- Pause guards added to `submit_comit`, `submit_comit_v2`, `prepare_cross_vm_operation`, `commit_cross_vm_operation`
+- 5 new unit tests: governance gate, pause blocks extrinsic, double-pause rejected, unpause noop → **103/103 kernel tests pass**
+- **VM-002 CONFIRMED FIXED**: All production VM code unwrap/expect-free (only test helpers)
+- **RPC-001/002 CONFIRMED FIXED**: WebSocket subscriptions already in node/src/rpc.rs
+- **SDK-004 CONFIRMED FIXED**: sha256AsU8a wired in three places in svm.ts
+- **x3-coin manifest fixed**: Removed unused sp-traits dep and invalid feature flags that blocked workspace from loading
+- `cargo fmt --all` → CLEAN
+- `SKIP_WASM_BUILD=1 cargo check -p pallet-x3-kernel` → **EXIT 0**
+- X3_GAPS_REPORT.md updated: SEC-009, VM-002, RPC-001, RPC-002, SDK-004 → ✅ FIXED

@@ -77,7 +77,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_core::{hashing::sha2_256, H256};
     use sp_runtime::offchain::StorageKind;
-    use sp_runtime::traits::{Saturating, SaturatedConversion};
+    use sp_runtime::traits::{SaturatedConversion, Saturating};
     use sp_runtime::transaction_validity::{
         InvalidTransaction, TransactionPriority, TransactionSource, TransactionValidity,
         ValidTransaction,
@@ -86,12 +86,12 @@ pub mod pallet {
     // ── Config ────────────────────────────────────────────────────────────────
 
     /// Convenience alias for the pallet's currency balance type.
-    pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+    pub type BalanceOf<T> =
+        <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     #[pallet::config]
     pub trait Config:
-        frame_system::Config
-        + frame_system::offchain::SendTransactionTypes<Call<Self>>
+        frame_system::Config + frame_system::offchain::SendTransactionTypes<Call<Self>>
     {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
@@ -154,8 +154,7 @@ pub mod pallet {
     /// a valid certificate in off-chain local storage.  `do_finalize_bundle`
     /// checks this map when the caller supplies a non-zero `finality_cert`.
     #[pallet::storage]
-    pub type FinalityCertAnchors<T: Config> =
-        StorageMap<_, Twox64Concat, u64, H256, OptionQuery>;
+    pub type FinalityCertAnchors<T: Config> = StorageMap<_, Twox64Concat, u64, H256, OptionQuery>;
 
     // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -336,9 +335,8 @@ pub mod pallet {
 
                 // Parse receipt_root and committed_at_ns from the 40-byte payload.
                 let receipt_root = H256::from_slice(&data[..32]);
-                let committed_at_ns = u64::from_le_bytes(
-                    data[32..40].try_into().unwrap_or([0u8; 8]),
-                );
+                let committed_at_ns =
+                    u64::from_le_bytes(data[32..40].try_into().unwrap_or([0u8; 8]));
 
                 if receipt_root == H256::zero() {
                     log::warn!(
@@ -601,10 +599,7 @@ pub mod pallet {
         /// `AtomicSwapOrchestrator`; the result is submitted via `finalize_atomic_bundle`.
         #[pallet::call_index(3)]
         #[pallet::weight(Weight::from_parts(5_000, 0))]
-        pub fn assign_bundle_executor(
-            origin: OriginFor<T>,
-            bundle_id: H256,
-        ) -> DispatchResult {
+        pub fn assign_bundle_executor(origin: OriginFor<T>, bundle_id: H256) -> DispatchResult {
             let executor = ensure_signed(origin)?;
 
             let mut record = Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
@@ -620,7 +615,10 @@ pub mod pallet {
             record.status = BundleStatus::Executing;
             Bundles::<T>::insert(bundle_id, &record);
 
-            Self::deposit_event(Event::BundleAssigned { bundle_id, executor });
+            Self::deposit_event(Event::BundleAssigned {
+                bundle_id,
+                executor,
+            });
 
             log::info!(
                 target: "x3-atomic-kernel",
@@ -709,10 +707,7 @@ pub mod pallet {
     impl<T: Config> ValidateUnsigned for Pallet<T> {
         type Call = Call<T>;
 
-        fn validate_unsigned(
-            _source: TransactionSource,
-            call: &Self::Call,
-        ) -> TransactionValidity {
+        fn validate_unsigned(_source: TransactionSource, call: &Self::Call) -> TransactionValidity {
             if let Call::submit_finalization_result {
                 bundle_id,
                 receipt_root,
@@ -781,25 +776,18 @@ pub mod pallet {
             // anchor that the OCW has previously stored.  Accepting H256::zero()
             // is intentional for environments where Flash Finality is not running.
             if finality_cert != H256::zero() {
-                let block_num: u64 = finalized_block
-                    .try_into()
-                    .unwrap_or(0u64);
+                let block_num: u64 = finalized_block.try_into().unwrap_or(0u64);
                 if let Some(anchored) = FinalityCertAnchors::<T>::get(block_num) {
-                    ensure!(
-                        finality_cert == anchored,
-                        Error::<T>::InvalidFinalityCert
-                    );
+                    ensure!(finality_cert == anchored, Error::<T>::InvalidFinalityCert);
                 }
                 // If no anchor found yet (OCW hasn't stored one), accept the cert
                 // tentatively — external verifiers will catch mismatch.
             }
 
-            let mut record =
-                Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
+            let mut record = Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;
 
             ensure!(
-                record.status == BundleStatus::Pending
-                    || record.status == BundleStatus::Executing,
+                record.status == BundleStatus::Pending || record.status == BundleStatus::Executing,
                 Error::<T>::InvalidBundleState
             );
 

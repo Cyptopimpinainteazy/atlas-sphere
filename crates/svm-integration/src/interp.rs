@@ -26,64 +26,64 @@ use sp_std::vec::Vec;
 // ---------------------------------------------------------------------------
 
 // Class (low 3 bits)
-const _CLS_LD: u8   = 0x00;
-const CLS_LDX: u8   = 0x01;
-const CLS_ST: u8    = 0x02;
-const CLS_STX: u8   = 0x03;
+const _CLS_LD: u8 = 0x00;
+const CLS_LDX: u8 = 0x01;
+const CLS_ST: u8 = 0x02;
+const CLS_STX: u8 = 0x03;
 const CLS_ALU32: u8 = 0x04;
-const CLS_JMP: u8   = 0x05;
+const CLS_JMP: u8 = 0x05;
 const CLS_JMP32: u8 = 0x06;
 const CLS_ALU64: u8 = 0x07;
 
 // Source mode (bit 3)
 const _SRC_IMM: u8 = 0x00;
-const SRC_REG: u8  = 0x08;
+const SRC_REG: u8 = 0x08;
 
 // ALU operation (high nibble >> 4)
-const ALU_ADD:  u8 = 0x0;
-const ALU_SUB:  u8 = 0x1;
-const ALU_MUL:  u8 = 0x2;
-const ALU_DIV:  u8 = 0x3;
-const ALU_OR:   u8 = 0x4;
-const ALU_AND:  u8 = 0x5;
-const ALU_LSH:  u8 = 0x6;
-const ALU_RSH:  u8 = 0x7;
-const ALU_NEG:  u8 = 0x8;
-const ALU_MOD:  u8 = 0x9;
-const ALU_XOR:  u8 = 0xa;
-const ALU_MOV:  u8 = 0xb;
+const ALU_ADD: u8 = 0x0;
+const ALU_SUB: u8 = 0x1;
+const ALU_MUL: u8 = 0x2;
+const ALU_DIV: u8 = 0x3;
+const ALU_OR: u8 = 0x4;
+const ALU_AND: u8 = 0x5;
+const ALU_LSH: u8 = 0x6;
+const ALU_RSH: u8 = 0x7;
+const ALU_NEG: u8 = 0x8;
+const ALU_MOD: u8 = 0x9;
+const ALU_XOR: u8 = 0xa;
+const ALU_MOV: u8 = 0xb;
 const ALU_ARSH: u8 = 0xc;
 
 // JMP operation (high nibble >> 4)
-const JMP_JA:   u8 = 0x0;
-const JMP_JEQ:  u8 = 0x1;
-const JMP_JGT:  u8 = 0x2;
-const JMP_JGE:  u8 = 0x3;
+const JMP_JA: u8 = 0x0;
+const JMP_JEQ: u8 = 0x1;
+const JMP_JGT: u8 = 0x2;
+const JMP_JGE: u8 = 0x3;
 const JMP_JSET: u8 = 0x4;
-const JMP_JNE:  u8 = 0x5;
+const JMP_JNE: u8 = 0x5;
 const JMP_JSGT: u8 = 0x6;
 const JMP_JSGE: u8 = 0x7;
 const JMP_CALL: u8 = 0x8;
 const JMP_EXIT: u8 = 0x9;
-const JMP_JLT:  u8 = 0xa;
-const JMP_JLE:  u8 = 0xb;
+const JMP_JLT: u8 = 0xa;
+const JMP_JLE: u8 = 0xb;
 const JMP_JSLT: u8 = 0xc;
 const JMP_JSLE: u8 = 0xd;
 
 // Load size (bits 3-4)
-const SZ_W:  u8 = 0x00;
-const SZ_H:  u8 = 0x08;
-const SZ_B:  u8 = 0x10;
+const SZ_W: u8 = 0x00;
+const SZ_H: u8 = 0x08;
+const SZ_B: u8 = 0x10;
 const SZ_DW: u8 = 0x18;
 
 // Special opcodes
 const OP_LD_DW: u8 = 0x18; // 64-bit immediate load (two-insn)
-const OP_CALL:  u8 = 0x85;
-const OP_EXIT:  u8 = 0x95;
+const OP_CALL: u8 = 0x85;
+const OP_EXIT: u8 = 0x95;
 
 // Number of registers
 const NREG: usize = 11; // r0..r10
-// Stack size in bytes
+                        // Stack size in bytes
 const STACK_SIZE: usize = 4096;
 // Maximum instruction count before aborting (compute limit)
 const MAX_INSN_FUEL: u64 = 1_000_000;
@@ -95,19 +95,19 @@ const MAX_INSN_FUEL: u64 = 1_000_000;
 #[derive(Clone, Copy)]
 struct Insn {
     opcode: u8,
-    dst:    u8, // destination register (0-10)
-    src:    u8, // source register (0-10)
-    off:    i16,
-    imm:    i32,
+    dst: u8, // destination register (0-10)
+    src: u8, // source register (0-10)
+    off: i16,
+    imm: i32,
 }
 
 fn decode(raw: &[u8; 8]) -> Insn {
     Insn {
         opcode: raw[0],
-        dst:    raw[1] & 0x0f,
-        src:    (raw[1] >> 4) & 0x0f,
-        off:    i16::from_le_bytes([raw[2], raw[3]]),
-        imm:    i32::from_le_bytes([raw[4], raw[5], raw[6], raw[7]]),
+        dst: raw[1] & 0x0f,
+        src: (raw[1] >> 4) & 0x0f,
+        off: i16::from_le_bytes([raw[2], raw[3]]),
+        imm: i32::from_le_bytes([raw[4], raw[5], raw[6], raw[7]]),
     }
 }
 
@@ -117,23 +117,31 @@ fn decode(raw: &[u8; 8]) -> Insn {
 
 fn elf_find_text(data: &[u8]) -> Option<&[u8]> {
     // Check ELF magic + class=64-bit
-    if data.len() < 64 { return None; }
-    if &data[0..4] != b"\x7fELF" { return None; }
-    if data[4] != 2 { return None; } // ELF64
+    if data.len() < 64 {
+        return None;
+    }
+    if &data[0..4] != b"\x7fELF" {
+        return None;
+    }
+    if data[4] != 2 {
+        return None;
+    } // ELF64
 
-    let e_shoff     = u64::from_le_bytes(data.get(40..48)?.try_into().ok()?) as usize;
+    let e_shoff = u64::from_le_bytes(data.get(40..48)?.try_into().ok()?) as usize;
     let e_shentsize = u16::from_le_bytes(data.get(58..60)?.try_into().ok()?) as usize;
-    let e_shnum     = u16::from_le_bytes(data.get(60..62)?.try_into().ok()?) as usize;
-    let e_shstrndx  = u16::from_le_bytes(data.get(62..64)?.try_into().ok()?) as usize;
+    let e_shnum = u16::from_le_bytes(data.get(60..62)?.try_into().ok()?) as usize;
+    let e_shstrndx = u16::from_le_bytes(data.get(62..64)?.try_into().ok()?) as usize;
 
-    if e_shentsize == 0 || e_shnum == 0 { return None; }
+    if e_shentsize == 0 || e_shnum == 0 {
+        return None;
+    }
 
     // Locate string table section header
     let shstr_off = e_shoff.checked_add(e_shstrndx.checked_mul(e_shentsize)?)?;
-    let shstr_sh  = data.get(shstr_off..shstr_off + e_shentsize)?;
+    let shstr_sh = data.get(shstr_off..shstr_off + e_shentsize)?;
     let str_offset = u64::from_le_bytes(shstr_sh.get(24..32)?.try_into().ok()?) as usize;
-    let str_size   = u64::from_le_bytes(shstr_sh.get(32..40)?.try_into().ok()?) as usize;
-    let strtab     = data.get(str_offset..str_offset + str_size)?;
+    let str_size = u64::from_le_bytes(shstr_sh.get(32..40)?.try_into().ok()?) as usize;
+    let strtab = data.get(str_offset..str_offset + str_size)?;
 
     // Scan all section headers looking for ".text"
     for i in 0..e_shnum {
@@ -142,10 +150,13 @@ fn elf_find_text(data: &[u8]) -> Option<&[u8]> {
         let name_idx = u32::from_le_bytes(sh.get(0..4)?.try_into().ok()?) as usize;
         // Find null-terminated name in strtab
         let name_bytes = strtab.get(name_idx..)?;
-        let name_end = name_bytes.iter().position(|&b| b == 0).unwrap_or(name_bytes.len());
+        let name_end = name_bytes
+            .iter()
+            .position(|&b| b == 0)
+            .unwrap_or(name_bytes.len());
         let name = &name_bytes[..name_end];
         if name == b".text" {
-            let sec_off  = u64::from_le_bytes(sh.get(24..32)?.try_into().ok()?) as usize;
+            let sec_off = u64::from_le_bytes(sh.get(24..32)?.try_into().ok()?) as usize;
             let sec_size = u64::from_le_bytes(sh.get(32..40)?.try_into().ok()?) as usize;
             return data.get(sec_off..sec_off + sec_size);
         }
@@ -158,11 +169,11 @@ fn elf_find_text(data: &[u8]) -> Option<&[u8]> {
 // ---------------------------------------------------------------------------
 
 struct Vm<'a> {
-    regs:  [u64; NREG],
+    regs: [u64; NREG],
     stack: [u8; STACK_SIZE],
-    fuel:  u64,
+    fuel: u64,
     insns: &'a [u8], // raw instruction bytes
-    pc:    usize,    // instruction index
+    pc: usize,       // instruction index
 }
 
 impl<'a> Vm<'a> {
@@ -176,7 +187,13 @@ impl<'a> Vm<'a> {
         // We store the pointer as the offset from the stack base.
         // For bounds-check purposes we return the offset, not a real pointer.
         regs[10] = STACK_SIZE as u64;
-        Vm { regs, stack: [0u8; STACK_SIZE], fuel, insns, pc: 0 }
+        Vm {
+            regs,
+            stack: [0u8; STACK_SIZE],
+            fuel,
+            insns,
+            pc: 0,
+        }
     }
 
     #[inline(always)]
@@ -201,7 +218,9 @@ impl<'a> Vm<'a> {
             let _end = off.saturating_add(n);
             let n = n.min(buf.len().saturating_sub(off));
             let mut out = [0u8; 8];
-            if n > 0 { out[..n].copy_from_slice(&buf[off..off + n]); }
+            if n > 0 {
+                out[..n].copy_from_slice(&buf[off..off + n]);
+            }
             u64::from_le_bytes(out)
         };
         if addr < STACK_SIZE {
@@ -253,7 +272,9 @@ impl<'a> Vm<'a> {
                             .map_err(|_| SvmError::InvalidPayload)?;
                         i32::from_le_bytes([next_raw[4], next_raw[5], next_raw[6], next_raw[7]])
                             as u64
-                    } else { 0 };
+                    } else {
+                        0
+                    };
                     self.set_reg(i.dst, (hi << 32) | (lo & 0xffff_ffff));
                     self.pc += 2; // skip extension word
                     continue;
@@ -277,7 +298,11 @@ impl<'a> Vm<'a> {
                 // ALU64
                 // --------------------------------------------------------
                 op if (op & 0x07) == CLS_ALU64 => {
-                    let src_val = if (op & SRC_REG) != 0 { self.reg(i.src) } else { i.imm as i64 as u64 };
+                    let src_val = if (op & SRC_REG) != 0 {
+                        self.reg(i.src)
+                    } else {
+                        i.imm as i64 as u64
+                    };
                     let dst_val = self.reg(i.dst);
                     let result = alu64(op >> 4, dst_val, src_val)?;
                     self.set_reg(i.dst, result);
@@ -287,7 +312,11 @@ impl<'a> Vm<'a> {
                 // ALU32 – result truncated to 32 bits, zero-extended
                 // --------------------------------------------------------
                 op if (op & 0x07) == CLS_ALU32 => {
-                    let src_val = if (op & SRC_REG) != 0 { self.reg(i.src) } else { i.imm as u64 };
+                    let src_val = if (op & SRC_REG) != 0 {
+                        self.reg(i.src)
+                    } else {
+                        i.imm as u64
+                    };
                     let dst_val = self.reg(i.dst) & 0xffff_ffff;
                     let result32 = alu32(op >> 4, dst_val as u32, src_val as u32)? as u64;
                     self.set_reg(i.dst, result32); // zero-extended to 64
@@ -297,22 +326,28 @@ impl<'a> Vm<'a> {
                 // JMP (64-bit comparisons)
                 // --------------------------------------------------------
                 op if (op & 0x07) == CLS_JMP => {
-                    let src_val = if (op & SRC_REG) != 0 { self.reg(i.src) } else { i.imm as i64 as u64 };
+                    let src_val = if (op & SRC_REG) != 0 {
+                        self.reg(i.src)
+                    } else {
+                        i.imm as i64 as u64
+                    };
                     let dst_val = self.reg(i.dst);
                     let take = match op >> 4 {
-                        JMP_JA   => true,
-                        JMP_JEQ  => dst_val == src_val,
-                        JMP_JGT  => dst_val >  src_val,
-                        JMP_JGE  => dst_val >= src_val,
+                        JMP_JA => true,
+                        JMP_JEQ => dst_val == src_val,
+                        JMP_JGT => dst_val > src_val,
+                        JMP_JGE => dst_val >= src_val,
                         JMP_JSET => (dst_val & src_val) != 0,
-                        JMP_JNE  => dst_val != src_val,
-                        JMP_JSGT => (dst_val as i64) >  (src_val as i64),
+                        JMP_JNE => dst_val != src_val,
+                        JMP_JSGT => (dst_val as i64) > (src_val as i64),
                         JMP_JSGE => (dst_val as i64) >= (src_val as i64),
-                        JMP_JLT  => dst_val <  src_val,
-                        JMP_JLE  => dst_val <= src_val,
-                        JMP_JSLT => (dst_val as i64) <  (src_val as i64),
+                        JMP_JLT => dst_val < src_val,
+                        JMP_JLE => dst_val <= src_val,
+                        JMP_JSLT => (dst_val as i64) < (src_val as i64),
                         JMP_JSLE => (dst_val as i64) <= (src_val as i64),
-                        JMP_EXIT => { return Ok(self.regs[0]); }
+                        JMP_EXIT => {
+                            return Ok(self.regs[0]);
+                        }
                         JMP_CALL => {
                             let retval = dispatch_syscall(i.imm as u32, &self.regs, input);
                             self.regs[0] = retval;
@@ -334,20 +369,24 @@ impl<'a> Vm<'a> {
                 // JMP32 (32-bit comparisons)
                 // --------------------------------------------------------
                 op if (op & 0x07) == CLS_JMP32 => {
-                    let src_val = (if (op & SRC_REG) != 0 { self.reg(i.src) } else { i.imm as i64 as u64 }) as u32;
+                    let src_val = (if (op & SRC_REG) != 0 {
+                        self.reg(i.src)
+                    } else {
+                        i.imm as i64 as u64
+                    }) as u32;
                     let dst_val = self.reg(i.dst) as u32;
                     let take = match op >> 4 {
-                        JMP_JA   => true,
-                        JMP_JEQ  => dst_val == src_val,
-                        JMP_JGT  => dst_val >  src_val,
-                        JMP_JGE  => dst_val >= src_val,
+                        JMP_JA => true,
+                        JMP_JEQ => dst_val == src_val,
+                        JMP_JGT => dst_val > src_val,
+                        JMP_JGE => dst_val >= src_val,
                         JMP_JSET => (dst_val & src_val) != 0,
-                        JMP_JNE  => dst_val != src_val,
-                        JMP_JSGT => (dst_val as i32) >  (src_val as i32),
+                        JMP_JNE => dst_val != src_val,
+                        JMP_JSGT => (dst_val as i32) > (src_val as i32),
                         JMP_JSGE => (dst_val as i32) >= (src_val as i32),
-                        JMP_JLT  => dst_val <  src_val,
-                        JMP_JLE  => dst_val <= src_val,
-                        JMP_JSLT => (dst_val as i32) <  (src_val as i32),
+                        JMP_JLT => dst_val < src_val,
+                        JMP_JLE => dst_val <= src_val,
+                        JMP_JSLT => (dst_val as i32) < (src_val as i32),
                         JMP_JSLE => (dst_val as i32) <= (src_val as i32),
                         _ => false,
                     };
@@ -408,50 +447,70 @@ impl<'a> Vm<'a> {
 
 fn alu64(op: u8, dst: u64, src: u64) -> Result<u64, SvmError> {
     Ok(match op {
-        ALU_ADD  => dst.wrapping_add(src),
-        ALU_SUB  => dst.wrapping_sub(src),
-        ALU_MUL  => dst.wrapping_mul(src),
-        ALU_DIV  => { if src == 0 { return Err(SvmError::ExecutionFailed); } dst / src }
-        ALU_OR   => dst | src,
-        ALU_AND  => dst & src,
-        ALU_LSH  => dst.wrapping_shl((src & 63) as u32),
-        ALU_RSH  => dst.wrapping_shr((src & 63) as u32),
-        ALU_NEG  => (dst as i64).wrapping_neg() as u64,
-        ALU_MOD  => { if src == 0 { return Err(SvmError::ExecutionFailed); } dst % src }
-        ALU_XOR  => dst ^ src,
-        ALU_MOV  => src,
+        ALU_ADD => dst.wrapping_add(src),
+        ALU_SUB => dst.wrapping_sub(src),
+        ALU_MUL => dst.wrapping_mul(src),
+        ALU_DIV => {
+            if src == 0 {
+                return Err(SvmError::ExecutionFailed);
+            }
+            dst / src
+        }
+        ALU_OR => dst | src,
+        ALU_AND => dst & src,
+        ALU_LSH => dst.wrapping_shl((src & 63) as u32),
+        ALU_RSH => dst.wrapping_shr((src & 63) as u32),
+        ALU_NEG => (dst as i64).wrapping_neg() as u64,
+        ALU_MOD => {
+            if src == 0 {
+                return Err(SvmError::ExecutionFailed);
+            }
+            dst % src
+        }
+        ALU_XOR => dst ^ src,
+        ALU_MOV => src,
         ALU_ARSH => ((dst as i64).wrapping_shr((src & 63) as u32)) as u64,
-        _        => dst, // reserved
+        _ => dst, // reserved
     })
 }
 
 fn alu32(op: u8, dst: u32, src: u32) -> Result<u32, SvmError> {
     Ok(match op {
-        ALU_ADD  => dst.wrapping_add(src),
-        ALU_SUB  => dst.wrapping_sub(src),
-        ALU_MUL  => dst.wrapping_mul(src),
-        ALU_DIV  => { if src == 0 { return Err(SvmError::ExecutionFailed); } dst / src }
-        ALU_OR   => dst | src,
-        ALU_AND  => dst & src,
-        ALU_LSH  => dst.wrapping_shl(src & 31),
-        ALU_RSH  => dst.wrapping_shr(src & 31),
-        ALU_NEG  => (dst as i32).wrapping_neg() as u32,
-        ALU_MOD  => { if src == 0 { return Err(SvmError::ExecutionFailed); } dst % src }
-        ALU_XOR  => dst ^ src,
-        ALU_MOV  => src,
+        ALU_ADD => dst.wrapping_add(src),
+        ALU_SUB => dst.wrapping_sub(src),
+        ALU_MUL => dst.wrapping_mul(src),
+        ALU_DIV => {
+            if src == 0 {
+                return Err(SvmError::ExecutionFailed);
+            }
+            dst / src
+        }
+        ALU_OR => dst | src,
+        ALU_AND => dst & src,
+        ALU_LSH => dst.wrapping_shl(src & 31),
+        ALU_RSH => dst.wrapping_shr(src & 31),
+        ALU_NEG => (dst as i32).wrapping_neg() as u32,
+        ALU_MOD => {
+            if src == 0 {
+                return Err(SvmError::ExecutionFailed);
+            }
+            dst % src
+        }
+        ALU_XOR => dst ^ src,
+        ALU_MOV => src,
         ALU_ARSH => ((dst as i32).wrapping_shr(src & 31)) as u32,
-        _        => dst,
+        _ => dst,
     })
 }
 
 #[inline]
 fn size_of_op(opcode: u8) -> usize {
     match opcode & SZ_DW {
-        SZ_B  => 1,
-        SZ_H  => 2,
-        SZ_W  => 4,
+        SZ_B => 1,
+        SZ_H => 2,
+        SZ_W => 4,
         SZ_DW => 8,
-        _     => 4,
+        _ => 4,
     }
 }
 
@@ -550,7 +609,9 @@ pub fn validate_program(payload: &[u8]) -> SvmResult<()> {
     // Walk instructions and check opcode classes are valid
     let num_insns = payload.len() / 8;
     for idx in 0..num_insns {
-        let raw: &[u8; 8] = payload[idx * 8..(idx + 1) * 8].try_into().map_err(|_| SvmError::InvalidPayload)?;
+        let raw: &[u8; 8] = payload[idx * 8..(idx + 1) * 8]
+            .try_into()
+            .map_err(|_| SvmError::InvalidPayload)?;
         let ins = decode(raw);
         let class = ins.opcode & 0x07;
         if class > CLS_ALU64 {
@@ -640,6 +701,9 @@ mod tests {
 
     #[test]
     fn test_validate_odd_size_fails() {
-        assert_eq!(validate_program(&[0x95, 0x00, 0x00]), Err(SvmError::InvalidPayload));
+        assert_eq!(
+            validate_program(&[0x95, 0x00, 0x00]),
+            Err(SvmError::InvalidPayload)
+        );
     }
 }

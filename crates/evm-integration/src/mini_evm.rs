@@ -34,17 +34,17 @@ pub fn execute_evm(payload: &[u8], gas_limit: u64) -> EvmResult<EvmExecutionResu
     let config = Config::istanbul();
 
     let vicinity = MemoryVicinity {
-        gas_price:             U256::from(1u64),
-        origin:                H160::zero(),
-        block_hashes:          vec![],
-        block_number:          U256::zero(),
-        block_coinbase:        H160::zero(),
-        block_timestamp:       U256::zero(),
-        block_difficulty:      U256::zero(),
-        block_gas_limit:       U256::from(u64::MAX),
-        chain_id:              U256::from(3375u64), // X3 chain ID placeholder
+        gas_price: U256::from(1u64),
+        origin: H160::zero(),
+        block_hashes: vec![],
+        block_number: U256::zero(),
+        block_coinbase: H160::zero(),
+        block_timestamp: U256::zero(),
+        block_difficulty: U256::zero(),
+        block_gas_limit: U256::from(u64::MAX),
+        chain_id: U256::from(3375u64), // X3 chain ID placeholder
         block_base_fee_per_gas: U256::from(1u64),
-        block_randomness:      None,
+        block_randomness: None,
     };
 
     // Derive a deterministic contract address from the payload hash
@@ -52,35 +52,40 @@ pub fn execute_evm(payload: &[u8], gas_limit: u64) -> EvmResult<EvmExecutionResu
 
     let mut state_map: BTreeMap<H160, MemoryAccount> = BTreeMap::new();
     // Caller has enough balance to cover any gas cost
-    state_map.insert(H160::zero(), MemoryAccount {
-        nonce:   U256::zero(),
-        balance: U256::from(u128::MAX),
-        storage: BTreeMap::new(),
-        code:    vec![],
-    });
+    state_map.insert(
+        H160::zero(),
+        MemoryAccount {
+            nonce: U256::zero(),
+            balance: U256::from(u128::MAX),
+            storage: BTreeMap::new(),
+            code: vec![],
+        },
+    );
     // Contract: code = payload, already deployed
-    state_map.insert(target_addr, MemoryAccount {
-        nonce:   U256::one(),
-        balance: U256::zero(),
-        storage: BTreeMap::new(),
-        code:    payload.to_vec(),
-    });
+    state_map.insert(
+        target_addr,
+        MemoryAccount {
+            nonce: U256::one(),
+            balance: U256::zero(),
+            storage: BTreeMap::new(),
+            code: payload.to_vec(),
+        },
+    );
 
     let mut backend = MemoryBackend::new(&vicinity, state_map);
-    let metadata  = StackSubstateMetadata::new(gas_limit, &config);
+    let metadata = StackSubstateMetadata::new(gas_limit, &config);
     let stack_state = MemoryStackState::new(metadata, &mut backend);
     // No precompiles in the no-std path
     let precompiles: BTreeMap<H160, PrecompileFn> = BTreeMap::new();
-    let mut executor =
-        StackExecutor::new_with_precompiles(stack_state, &config, &precompiles);
+    let mut executor = StackExecutor::new_with_precompiles(stack_state, &config, &precompiles);
 
     let (exit_reason, return_data) = executor.transact_call(
-        H160::zero(),      // caller
-        target_addr,       // target
-        U256::zero(),      // value
-        payload.to_vec(),  // call data
+        H160::zero(),     // caller
+        target_addr,      // target
+        U256::zero(),     // value
+        payload.to_vec(), // call data
         gas_limit,
-        vec![],            // access_list
+        vec![], // access_list
     );
 
     let gas_used = executor.used_gas();
@@ -134,10 +139,10 @@ fn derive_target(payload: &[u8]) -> H160 {
 
 fn map_exit_reason(reason: &ExitReason, gas_used: u64) -> EvmError {
     match reason {
-        ExitReason::Revert(_)  => EvmError::ExecutionReverted,
-        ExitReason::Error(evm::ExitError::OutOfGas)        => EvmError::OutOfGas,
-        ExitReason::Error(evm::ExitError::StackOverflow)   => EvmError::StackOverflow,
-        ExitReason::Error(evm::ExitError::StackUnderflow)  => EvmError::StackUnderflow,
+        ExitReason::Revert(_) => EvmError::ExecutionReverted,
+        ExitReason::Error(evm::ExitError::OutOfGas) => EvmError::OutOfGas,
+        ExitReason::Error(evm::ExitError::StackOverflow) => EvmError::StackOverflow,
+        ExitReason::Error(evm::ExitError::StackUnderflow) => EvmError::StackUnderflow,
         ExitReason::Error(evm::ExitError::CreateCollision) => EvmError::CreateCollision,
         ExitReason::Error(evm::ExitError::InvalidCode(op)) => EvmError::InvalidOpcode(op.as_u8()),
         _ => EvmError::ExecutionFailed(gas_used as u32),

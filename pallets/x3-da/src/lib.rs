@@ -31,11 +31,7 @@ mod mock;
 mod tests;
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{
-        dispatch::DispatchResult,
-        pallet_prelude::*,
-        traits::ReservableCurrency,
-    };
+    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::ReservableCurrency};
     use frame_system::pallet_prelude::*;
     use sp_core::H256;
     use sp_runtime::SaturatedConversion;

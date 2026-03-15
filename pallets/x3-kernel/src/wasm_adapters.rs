@@ -8,8 +8,8 @@
 //! integration crates choose their fast (native) or mini (WASM) path
 //! based on their own feature flags.
 
-use crate::ExecutionReceipt;
 use crate::adapters::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
+use crate::ExecutionReceipt;
 use frame_support::pallet_prelude::DispatchError;
 #[allow(unused_imports)]
 use parity_scale_codec::Encode as _;
@@ -152,7 +152,10 @@ impl X3ExecutorAdapter for WasmX3Adapter {
         if payload.is_empty() {
             return Err(DispatchError::Other("Empty X3 payload"));
         }
-        let config = x3_x3_integration::X3ExecutorConfig { gas_limit, ..Default::default() };
+        let config = x3_x3_integration::X3ExecutorConfig {
+            gas_limit,
+            ..Default::default()
+        };
         x3_x3_integration::X3Executor::execute(payload, &[], config)
             .map(|rec| ExecutionReceipt {
                 success: rec.success,

@@ -1,0 +1,913 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+#![allow(clippy::too_many_arguments)]
+
+//! # X3 Coin Pallet
+//!
+//! The X3 Coin pallet manages the canonical X3 token on the X3 Chain.
+//! It provides:
+//! - Genesis issuance and treasury allocation
+//! - Runtime API for canonical balance and total supply
+//! - Bonus pool claim ledger and vesting hooks
+//! - Integration with X3 Kernel for cross-VM operations
+
+pub use pallet::*;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+pub mod weights;
+pub mod cross_chain;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+mod mock;
+
+use frame_support::pallet_prelude::*;
+use frame_support::traits::{Currency, ReservableCurrency, UnixTime};
+use frame_system::pallet_prelude::*;
+use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
+use sp_core::H256;
+use sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, SaturatedConversion, Hash};
+use sp_std::vec::Vec;
+
+pub use weights::WeightInfo;
+
+/// X3 token identifier (canonical asset ID)
+pub const X3_ASSET_ID: u32 = 0;
+
+/// X3 token symbol
+pub const X3_SYMBOL: &[u8] = b"X3";
+
+/// X3 token decimals
+pub const X3_DECIMALS: u8 = 12;
+
+/// Total X3 supply (2 billion tokens with 12 decimals)
+pub const X3_TOTAL_SUPPLY: u128 = 2_000_000_000 * 1_000_000_000_000; // 2B * 10^12
+
+/// Treasury allocation (20% of total supply)
+pub const X3_TREASURY_ALLOCATION: u128 = X3_TOTAL_SUPPLY / 5;
+
+/// Community bonus pool (10% of total supply)
+pub const X3_BONUS_POOL_ALLOCATION: u128 = X3_TOTAL_SUPPLY / 10;
+
+/// Genesis allocation for team and advisors (15% of total supply)
+pub const X3_TEAM_ALLOCATION: u128 = X3_TOTAL_SUPPLY * 15 / 100;
+
+/// Genesis allocation for ecosystem development (25% of total supply)
+pub const X3_ECOSYSTEM_ALLOCATION: u128 = X3_TOTAL_SUPPLY * 25 / 100;
+
+/// Genesis allocation for liquidity and exchanges (30% of total supply)
+pub const X3_LIQUIDITY_ALLOCATION: u128 = X3_TOTAL_SUPPLY * 30 / 100;
+
+/// Vesting period for team allocation (in blocks, ~1 year at 200ms blocks)
+pub const TEAM_VESTING_BLOCKS: u64 = 15_768_000; // 15,768,000 blocks ≈ 1 year
+
+/// Vesting cliff for team allocation (in blocks, ~6 months)
+pub const TEAM_VESTING_CLIFF: u64 = 7_884_000; // 7,884,000 blocks ≈ 6 months
+
+/// Bonus pool claim period (in blocks, ~3 months)
+pub const BONUS_CLAIM_PERIOD: u64 = 3_942_000; // 3,942,000 blocks ≈ 3 months
+
+/// Maximum number of bonus claims per account
+pub const MAX_BONUS_CLAIMS: u32 = 10;
+
+/// Vesting schedule for team allocation
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct VestingSchedule {
+    /// Total amount to be vested
+    pub total_amount: u128,
+    /// Amount already claimed
+    pub claimed: u128,
+    /// Block when vesting starts
+    pub start_block: u64,
+    /// Cliff period before first claim
+    pub cliff_blocks: u64,
+    /// Total vesting period
+    pub vesting_blocks: u64,
+}
+
+/// Bonus pool claim record
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct BonusClaim {
+    /// Amount claimed
+    pub amount: u128,
+    /// Block when claim was made
+    pub claimed_at: u64,
+    /// Whether claim is locked (for vesting)
+    pub locked: bool,
+}
+
+/// Proof types for cross-chain operations
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub enum X3Proof {
+    /// No proof
+    None,
+    /// EVM transaction proof
+    EvmProof {
+        tx_hash: H256,
+        block_number: u64,
+        proof_data: Vec<u8>,
+    },
+    /// SVM transaction proof
+    SvmProof {
+        signature: Vec<u8>,
+        block_number: u64,
+        proof_data: Vec<u8>,
+    },
+    /// BTC transaction proof
+    BtcProof {
+        txid: H256,
+        block_height: u64,
+        merkle_proof: Vec<u8>,
+    },
+}
+
+/// Cross-chain operation types
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub enum CrossChainOperation {
+    /// Mint X3 tokens from external chain
+    Mint {
+        target_account: Vec<u8>,
+        amount: u128,
+        proof: X3Proof,
+    },
+    /// Burn X3 tokens for external chain
+    Burn {
+        source_account: Vec<u8>,
+        amount: u128,
+        proof: X3Proof,
+    },
+    /// Transfer between chains
+    Transfer {
+        source_account: Vec<u8>,
+        target_account: Vec<u8>,
+        amount: u128,
+        proof: X3Proof,
+    },
+}
+
+#[frame_support::pallet]
+pub mod pallet {
+    use super::*;
+    use frame_support::traits::Get;
+
+    #[pallet::config]
+    pub trait Config: frame_system::Config + pallet_x3_kernel::Config {
+        /// Aggregated runtime event type
+        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+        /// Currency trait for balance operations
+        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+        /// Balance type
+        type Balance: Parameter
+            + Member
+            + AtLeast32BitUnsigned
+            + Default
+            + Copy
+            + MaxEncodedLen
+            + CheckedAdd
+            + From<<Self::Currency as Currency<Self::AccountId>>::Balance>
+            + Into<<Self::Currency as Currency<Self::AccountId>>::Balance>;
+
+        /// Unix time for vesting calculations
+        type UnixTime: UnixTime;
+
+        /// Weight information provider
+        type WeightInfo: WeightInfo;
+
+        /// Treasury account for X3 allocations
+        #[pallet::constant]
+        type TreasuryAccount: Get<Self::AccountId>;
+
+        /// Maximum number of bonus claims per account
+        #[pallet::constant]
+        type MaxBonusClaims: Get<u32>;
+
+        /// Vesting period for team allocation (blocks)
+        #[pallet::constant]
+        type TeamVestingBlocks: Get<u64>;
+
+        /// Vesting cliff for team allocation (blocks)
+        #[pallet::constant]
+        type TeamVestingCliff: Get<u64>;
+
+        /// Bonus claim period (blocks)
+        #[pallet::constant]
+        type BonusClaimPeriod: Get<u64>;
+    }
+
+    #[pallet::pallet]
+    #[pallet::generate_store(pub(super) trait Store)]
+    pub struct Pallet<T>(_);
+
+    /// Total X3 supply
+    #[pallet::storage]
+    #[pallet::getter(fn total_supply)]
+    pub type TotalSupply<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+
+    /// Treasury allocation balance
+    #[pallet::storage]
+    #[pallet::getter(fn treasury_balance)]
+    pub type TreasuryBalance<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+
+    /// Community bonus pool balance
+    #[pallet::storage]
+    #[pallet::getter(fn bonus_pool_balance)]
+    pub type BonusPoolBalance<T: Config> = StorageValue<_, T::Balance, ValueQuery>;
+
+    /// Team vesting schedules
+    #[pallet::storage]
+    #[pallet::getter(fn team_vesting)]
+    pub type TeamVesting<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        VestingSchedule,
+        OptionQuery,
+    >;
+
+    /// Bonus claims per account
+    #[pallet::storage]
+    #[pallet::getter(fn bonus_claims)]
+    pub type BonusClaims<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::AccountId,
+        BoundedVec<BonusClaim, T::MaxBonusClaims>,
+        ValueQuery,
+    >;
+
+    /// Cross-chain operation registry
+    #[pallet::storage]
+    #[pallet::getter(fn cross_chain_operations)]
+    pub type CrossChainOperations<T: Config> =
+        StorageMap<_, Blake2_128Concat, H256, CrossChainOperation, OptionQuery>;
+
+    /// Proof hash registry for replay protection
+    #[pallet::storage]
+    #[pallet::getter(fn proof_registry)]
+    pub type ProofRegistry<T: Config> = StorageMap<_, Blake2_128Concat, H256, u64, OptionQuery>;
+
+    /// Nonce for cross-chain operations
+    #[pallet::storage]
+    #[pallet::getter(fn cross_chain_nonce)]
+    pub type CrossChainNonce<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+
+    #[pallet::genesis_config]
+    #[derive(frame_support::DefaultNoBound)]
+    pub struct GenesisConfig<T: Config> {
+        /// Treasury account
+        pub treasury_account: T::AccountId,
+        /// Team allocation accounts and amounts
+        pub team_allocations: Vec<(T::AccountId, T::Balance)>,
+        /// Ecosystem allocation accounts and amounts
+        pub ecosystem_allocations: Vec<(T::AccountId, T::Balance)>,
+        /// Liquidity allocation accounts and amounts
+        pub liquidity_allocations: Vec<(T::AccountId, T::Balance)>,
+    }
+
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
+            // Set total supply
+            TotalSupply::<T>::put(T::Balance::from(X3_TOTAL_SUPPLY));
+
+            // Set treasury balance
+            TreasuryBalance::<T>::put(T::Balance::from(X3_TREASURY_ALLOCATION));
+
+            // Set bonus pool balance
+            BonusPoolBalance::<T>::put(T::Balance::from(X3_BONUS_POOL_ALLOCATION));
+
+            // Distribute team allocations with vesting
+            for (account, amount) in &self.team_allocations {
+                let schedule = VestingSchedule {
+                    total_amount: *amount,
+                    claimed: T::Balance::zero(),
+                    start_block: 0,
+                    cliff_blocks: T::TeamVestingCliff::get(),
+                    vesting_blocks: T::TeamVestingBlocks::get(),
+                };
+                TeamVesting::<T>::insert(account, schedule);
+            }
+
+            // Distribute ecosystem allocations (no vesting)
+            for (account, amount) in &self.ecosystem_allocations {
+                // Use X3 Kernel to update canonical balance
+                pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                    T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                    account.clone(),
+                    X3_ASSET_ID,
+                    *amount,
+                    None,
+                ).unwrap_or_default();
+            }
+
+            // Distribute liquidity allocations (no vesting)
+            for (account, amount) in &self.liquidity_allocations {
+                pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                    T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                    account.clone(),
+                    X3_ASSET_ID,
+                    *amount,
+                    None,
+                ).unwrap_or_default();
+            }
+        }
+    }
+
+    #[pallet::event]
+    #[pallet::generate_deposit(pub(super) fn deposit_event)]
+    pub enum Event<T: Config> {
+        /// X3 tokens minted
+        Minted {
+            account: T::AccountId,
+            amount: T::Balance,
+            operation_id: H256,
+        },
+        /// X3 tokens burned
+        Burned {
+            account: T::AccountId,
+            amount: T::Balance,
+            operation_id: H256,
+        },
+        /// Team vesting claim
+        TeamVestingClaimed {
+            account: T::AccountId,
+            amount: T::Balance,
+        },
+        /// Bonus pool claim
+        BonusClaimed {
+            account: T::AccountId,
+            amount: T::Balance,
+            claim_id: u32,
+        },
+        /// Cross-chain operation submitted
+        CrossChainOperationSubmitted {
+            operation_id: H256,
+            operation_type: u8, // 0: Mint, 1: Burn, 2: Transfer
+            source_account: Vec<u8>,
+            target_account: Vec<u8>,
+            amount: T::Balance,
+        },
+        /// Cross-chain operation finalized
+        CrossChainOperationFinalized {
+            operation_id: H256,
+            success: bool,
+        },
+        /// Treasury allocation updated
+        TreasuryAllocationUpdated {
+            new_balance: T::Balance,
+        },
+    }
+
+    #[pallet::error]
+    pub enum Error<T> {
+        /// Insufficient treasury balance
+        InsufficientTreasuryBalance,
+        /// Insufficient bonus pool balance
+        InsufficientBonusPoolBalance,
+        /// Invalid proof
+        InvalidProof,
+        /// Proof already used (replay attack)
+        ProofAlreadyUsed,
+        /// No vesting schedule found
+        NoVestingSchedule,
+        /// Vesting period not started
+        VestingNotStarted,
+        /// Vesting cliff not reached
+        VestingCliffNotReached,
+        /// No vested amount available
+        NoVestedAmount,
+        /// Maximum bonus claims reached
+        MaxBonusClaimsReached,
+        /// Bonus claim period expired
+        BonusClaimPeriodExpired,
+        /// Invalid cross-chain operation
+        InvalidCrossChainOperation,
+        /// Cross-chain operation already exists
+        CrossChainOperationExists,
+        /// Cross-chain operation not found
+        CrossChainOperationNotFound,
+        /// Insufficient balance for burn
+        InsufficientBalance,
+        /// Invalid target account
+        InvalidTargetAccount,
+    }
+
+    #[pallet::call]
+    impl<T: Config> Pallet<T> {
+        /// Mint X3 tokens from cross-chain operation
+        #[pallet::call_index(0)]
+        #[pallet::weight(<T as Config>::WeightInfo::mint())]
+        pub fn mint(
+            origin: OriginFor<T>,
+            target_account: Vec<u8>,
+            amount: T::Balance,
+            proof: X3Proof,
+        ) -> DispatchResult {
+            ensure_signed(origin)?;
+
+            // Validate proof
+            Self::validate_proof(&proof)?;
+
+            // Check treasury balance
+            let treasury_balance = TreasuryBalance::<T>::get();
+            ensure!(treasury_balance >= amount, Error::<T>::InsufficientTreasuryBalance);
+
+            // Generate operation ID
+            let operation_id = Self::generate_operation_id(&target_account, amount, &proof);
+
+            // Check for replay attacks
+            ensure!(
+                !ProofRegistry::<T>::contains_key(operation_id),
+                Error::<T>::ProofAlreadyUsed
+            );
+
+            // Register proof
+            ProofRegistry::<T>::insert(operation_id, frame_system::Pallet::<T>::block_number());
+
+            // Update treasury balance
+            TreasuryBalance::<T>::mutate(|balance| *balance = balance.saturating_sub(amount));
+
+            // Update canonical balance via X3 Kernel
+            let account_id = Self::decode_account_id(&target_account)?;
+            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                account_id.clone(),
+                X3_ASSET_ID,
+                amount,
+                Some(operation_id),
+            )?;
+
+            // Emit event
+            Self::deposit_event(Event::Minted {
+                account: account_id,
+                amount,
+                operation_id,
+            });
+
+            Ok(())
+        }
+
+        /// Burn X3 tokens for cross-chain operation
+        #[pallet::call_index(1)]
+        #[pallet::weight(<T as Config>::WeightInfo::burn())]
+        pub fn burn(
+            origin: OriginFor<T>,
+            source_account: Vec<u8>,
+            amount: T::Balance,
+            proof: X3Proof,
+        ) -> DispatchResult {
+            ensure_signed(origin)?;
+
+            // Validate proof
+            Self::validate_proof(&proof)?;
+
+            // Generate operation ID
+            let operation_id = Self::generate_operation_id(&source_account, amount, &proof);
+
+            // Check for replay attacks
+            ensure!(
+                !ProofRegistry::<T>::contains_key(operation_id),
+                Error::<T>::ProofAlreadyUsed
+            );
+
+            // Register proof
+            ProofRegistry::<T>::insert(operation_id, frame_system::Pallet::<T>::block_number());
+
+            // Check canonical balance
+            let account_id = Self::decode_account_id(&source_account)?;
+            let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
+                account_id.clone(),
+                X3_ASSET_ID,
+            );
+
+            ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
+
+            // Update canonical balance via X3 Kernel
+            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                account_id.clone(),
+                X3_ASSET_ID,
+                current_balance.saturating_sub(amount),
+                Some(operation_id),
+            )?;
+
+            // Update treasury balance
+            TreasuryBalance::<T>::mutate(|balance| *balance = balance.saturating_add(amount));
+
+            // Emit event
+            Self::deposit_event(Event::Burned {
+                account: account_id,
+                amount,
+                operation_id,
+            });
+
+            Ok(())
+        }
+
+        /// Claim team vesting tokens
+        #[pallet::call_index(2)]
+        #[pallet::weight(<T as Config>::WeightInfo::claim_team_vesting())]
+        pub fn claim_team_vesting(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let mut schedule = TeamVesting::<T>::get(&who).ok_or(Error::<T>::NoVestingSchedule)?;
+
+            // Check if vesting period has started
+            let current_block = frame_system::Pallet::<T>::block_number();
+            ensure!(
+                current_block >= schedule.start_block,
+                Error::<T>::VestingNotStarted
+            );
+
+            // Check if cliff period has passed
+            ensure!(
+                current_block >= schedule.start_block + schedule.cliff_blocks,
+                Error::<T>::VestingCliffNotReached
+            );
+
+            // Calculate vested amount
+            let elapsed_blocks = current_block.saturating_sub(schedule.start_block);
+            let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
+                schedule.total_amount
+            } else {
+                schedule.total_amount
+                    .saturating_mul(elapsed_blocks.into())
+                    .saturating_div(schedule.vesting_blocks.into())
+            };
+
+            let available = total_vested.saturating_sub(schedule.claimed);
+            ensure!(available > T::Balance::zero(), Error::<T>::NoVestedAmount);
+
+            // Update schedule
+            schedule.claimed = schedule.claimed.saturating_add(available);
+            TeamVesting::<T>::insert(&who, schedule);
+
+            // Update canonical balance via X3 Kernel
+            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                who.clone(),
+                X3_ASSET_ID,
+                available,
+                None,
+            )?;
+
+            // Emit event
+            Self::deposit_event(Event::TeamVestingClaimed {
+                account: who,
+                amount: available,
+            });
+
+            Ok(())
+        }
+
+        /// Claim bonus pool tokens
+        #[pallet::call_index(3)]
+        #[pallet::weight(<T as Config>::WeightInfo::claim_bonus())]
+        pub fn claim_bonus(origin: OriginFor<T>) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            // Check bonus pool balance
+            let bonus_balance = BonusPoolBalance::<T>::get();
+            ensure!(
+                bonus_balance > T::Balance::zero(),
+                Error::<T>::InsufficientBonusPoolBalance
+            );
+
+            // Check claim period
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let last_claim = BonusClaims::<T>::get(&who)
+                .last()
+                .map(|claim| claim.claimed_at)
+                .unwrap_or(0);
+
+            ensure!(
+                current_block.saturating_sub(last_claim) >= T::BonusClaimPeriod::get(),
+                Error::<T>::BonusClaimPeriodExpired
+            );
+
+            // Check maximum claims
+            let mut claims = BonusClaims::<T>::get(&who);
+            ensure!(
+                claims.len() < T::MaxBonusClaims::get() as usize,
+                Error::<T>::MaxBonusClaimsReached
+            );
+
+            // Calculate claim amount (10% of remaining bonus pool)
+            let claim_amount = bonus_balance / 10;
+
+            // Update bonus pool balance
+            BonusPoolBalance::<T>::mutate(|balance| *balance = balance.saturating_sub(claim_amount));
+
+            // Add claim record
+            let claim = BonusClaim {
+                amount: claim_amount,
+                claimed_at: current_block,
+                locked: false,
+            };
+            claims.try_push(claim).map_err(|_| Error::<T>::MaxBonusClaimsReached)?;
+            BonusClaims::<T>::insert(&who, claims);
+
+            // Update canonical balance via X3 Kernel
+            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                who.clone(),
+                X3_ASSET_ID,
+                claim_amount,
+                None,
+            )?;
+
+            // Emit event
+            Self::deposit_event(Event::BonusClaimed {
+                account: who,
+                amount: claim_amount,
+                claim_id: claims.len() as u32,
+            });
+
+            Ok(())
+        }
+
+        /// Submit cross-chain operation
+        #[pallet::call_index(4)]
+        #[pallet::weight(<T as Config>::WeightInfo::submit_cross_chain_operation())]
+        pub fn submit_cross_chain_operation(
+            origin: OriginFor<T>,
+            operation: CrossChainOperation,
+        ) -> DispatchResult {
+            ensure_signed(origin)?;
+
+            let operation_id = Self::generate_cross_chain_operation_id(&operation);
+
+            // Check for duplicate operations
+            ensure!(
+                !CrossChainOperations::<T>::contains_key(operation_id),
+                Error::<T>::CrossChainOperationExists
+            );
+
+            // Validate operation
+            Self::validate_cross_chain_operation(&operation)?;
+
+            // Store operation
+            CrossChainOperations::<T>::insert(operation_id, operation.clone());
+
+            // Emit event
+            let (operation_type, source_account, target_account, amount) = match &operation {
+                CrossChainOperation::Mint { target_account, amount, .. } => (
+                    0u8,
+                    vec![],
+                    target_account.clone(),
+                    *amount,
+                ),
+                CrossChainOperation::Burn { source_account, amount, .. } => (
+                    1u8,
+                    source_account.clone(),
+                    vec![],
+                    *amount,
+                ),
+                CrossChainOperation::Transfer {
+                    source_account,
+                    target_account,
+                    amount,
+                    ..
+                } => (2u8, source_account.clone(), target_account.clone(), *amount),
+            };
+
+            Self::deposit_event(Event::CrossChainOperationSubmitted {
+                operation_id,
+                operation_type,
+                source_account,
+                target_account,
+                amount,
+            });
+
+            Ok(())
+        }
+
+        /// Finalize cross-chain operation
+        #[pallet::call_index(5)]
+        #[pallet::weight(<T as Config>::WeightInfo::finalize_cross_chain_operation())]
+        pub fn finalize_cross_chain_operation(
+            origin: OriginFor<T>,
+            operation_id: H256,
+            success: bool,
+        ) -> DispatchResult {
+            ensure_signed(origin)?;
+
+            let operation = CrossChainOperations::<T>::get(operation_id)
+                .ok_or(Error::<T>::CrossChainOperationNotFound)?;
+
+            if success {
+                match operation {
+                    CrossChainOperation::Mint {
+                        target_account,
+                        amount,
+                        proof,
+                    } => {
+                        // Execute mint
+                        let account_id = Self::decode_account_id(&target_account)?;
+                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                            account_id,
+                            X3_ASSET_ID,
+                            amount,
+                            Some(operation_id),
+                        )?;
+                    }
+                    CrossChainOperation::Burn {
+                        source_account,
+                        amount,
+                        proof,
+                    } => {
+                        // Execute burn
+                        let account_id = Self::decode_account_id(&source_account)?;
+                        let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
+                            account_id.clone(),
+                            X3_ASSET_ID,
+                        );
+                        ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
+
+                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                            account_id,
+                            X3_ASSET_ID,
+                            current_balance.saturating_sub(amount),
+                            Some(operation_id),
+                        )?;
+                    }
+                    CrossChainOperation::Transfer {
+                        source_account,
+                        target_account,
+                        amount,
+                        proof,
+                    } => {
+                        // Execute transfer
+                        let source_id = Self::decode_account_id(&source_account)?;
+                        let target_id = Self::decode_account_id(&target_account)?;
+
+                        let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
+                            source_id.clone(),
+                            X3_ASSET_ID,
+                        );
+                        ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
+
+                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                            source_id,
+                            X3_ASSET_ID,
+                            current_balance.saturating_sub(amount),
+                            Some(operation_id),
+                        )?;
+
+                        let target_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
+                            target_id.clone(),
+                            X3_ASSET_ID,
+                        );
+                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
+                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
+                            target_id,
+                            X3_ASSET_ID,
+                            target_balance.saturating_add(amount),
+                            Some(operation_id),
+                        )?;
+                    }
+                }
+            }
+
+            // Remove operation
+            CrossChainOperations::<T>::remove(operation_id);
+
+            // Emit event
+            Self::deposit_event(Event::CrossChainOperationFinalized {
+                operation_id,
+                success,
+            });
+
+            Ok(())
+        }
+    }
+
+    impl<T: Config> Pallet<T> {
+        /// Validate proof for cross-chain operations
+        fn validate_proof(proof: &X3Proof) -> Result<(), Error<T>> {
+            match proof {
+                X3Proof::None => Err(Error::<T>::InvalidProof),
+                X3Proof::EvmProof { .. } => Ok(()), // TODO: Implement EVM proof validation
+                X3Proof::SvmProof { .. } => Ok(()), // TODO: Implement SVM proof validation
+                X3Proof::BtcProof { .. } => Ok(()), // TODO: Implement BTC proof validation
+            }
+        }
+
+        /// Generate operation ID for mint/burn operations
+        fn generate_operation_id(
+            target_account: &[u8],
+            amount: T::Balance,
+            proof: &X3Proof,
+        ) -> H256 {
+            let mut data = Vec::new();
+            data.extend_from_slice(target_account);
+            data.extend_from_slice(&amount.encode());
+            data.extend_from_slice(&proof.encode());
+            H256::from(sp_io::hashing::blake2_256(&data))
+        }
+
+        /// Generate cross-chain operation ID
+        fn generate_cross_chain_operation_id(operation: &CrossChainOperation) -> H256 {
+            let mut data = Vec::new();
+            data.extend_from_slice(&operation.encode());
+            H256::from(sp_io::hashing::blake2_256(&data))
+        }
+
+        /// Validate cross-chain operation
+        fn validate_cross_chain_operation(operation: &CrossChainOperation) -> Result<(), Error<T>> {
+            match operation {
+                CrossChainOperation::Mint { target_account, .. } => {
+                    ensure!(!target_account.is_empty(), Error::<T>::InvalidTargetAccount);
+                    Ok(())
+                }
+                CrossChainOperation::Burn { source_account, .. } => {
+                    ensure!(!source_account.is_empty(), Error::<T>::InvalidTargetAccount);
+                    Ok(())
+                }
+                CrossChainOperation::Transfer {
+                    source_account,
+                    target_account,
+                    ..
+                } => {
+                    ensure!(!source_account.is_empty(), Error::<T>::InvalidTargetAccount);
+                    ensure!(!target_account.is_empty(), Error::<T>::InvalidTargetAccount);
+                    Ok(())
+                }
+            }
+        }
+
+        /// Decode account ID from bytes
+        fn decode_account_id(account_bytes: &[u8]) -> Result<T::AccountId, Error<T>> {
+            T::AccountId::decode(&mut &account_bytes[..]).map_err(|_| Error::<T>::InvalidTargetAccount)
+        }
+
+        /// Get current vested amount for an account
+        pub fn get_vested_amount(account: &T::AccountId) -> T::Balance {
+            if let Some(schedule) = TeamVesting::<T>::get(account) {
+                let current_block = frame_system::Pallet::<T>::block_number();
+                if current_block < schedule.start_block {
+                    return T::Balance::zero();
+                }
+
+                let elapsed_blocks = current_block.saturating_sub(schedule.start_block);
+                let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
+                    schedule.total_amount
+                } else {
+                    schedule.total_amount
+                        .saturating_mul(elapsed_blocks.into())
+                        .saturating_div(schedule.vesting_blocks.into())
+                };
+
+                total_vested.saturating_sub(schedule.claimed)
+            } else {
+                T::Balance::zero()
+            }
+        }
+
+        /// Get total bonus claims for an account
+        pub fn get_total_bonus_claims(account: &T::AccountId) -> T::Balance {
+            BonusClaims::<T>::get(account)
+                .iter()
+                .map(|claim| claim.amount)
+                .fold(T::Balance::zero(), |acc, amount| acc.saturating_add(amount))
+        }
+    }
+}
+
+// Runtime API definitions for querying X3 Coin state
+sp_api::decl_runtime_apis! {
+    /// Runtime API for querying X3 Coin pallet state
+    pub trait X3CoinRuntimeApi<AccountId, Balance> where
+        AccountId: Codec,
+        Balance: Codec,
+    {
+        /// Get the total X3 supply
+        fn get_total_supply() -> Balance;
+
+        /// Get the treasury balance
+        fn get_treasury_balance() -> Balance;
+
+        /// Get the bonus pool balance
+        fn get_bonus_pool_balance() -> Balance;
+
+        /// Get vested amount for an account
+        fn get_vested_amount(account: AccountId) -> Balance;
+
+        /// Get total bonus claims for an account
+        fn get_total_bonus_claims(account: AccountId) -> Balance;
+
+        /// Get team vesting schedule for an account
+        fn get_team_vesting(account: AccountId) -> Option<(Balance, Balance, u64, u64, u64)>;
+
+        /// Get bonus claims for an account
+        fn get_bonus_claims(account: AccountId) -> Vec<(Balance, u64, bool)>;
+    }
+}

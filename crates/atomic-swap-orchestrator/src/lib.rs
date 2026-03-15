@@ -178,7 +178,10 @@ impl AtomicSwapOrchestrator {
         // PHASE 1: GPU-accelerated verification (0xD8)
         let is_valid = self.verify_gpu(&pair).await?;
         if !is_valid {
-            log::warn!("Atomic swap failed GPU verification: bundle_id={:?}", bundle_id);
+            log::warn!(
+                "Atomic swap failed GPU verification: bundle_id={:?}",
+                bundle_id
+            );
             return Ok(ProcessResult {
                 status: AtomicStatus::RolledBack,
                 bundle_id,
@@ -189,7 +192,11 @@ impl AtomicSwapOrchestrator {
 
         // PHASE 2: GPU-accelerated commit (0xD9 → shm ring buffer)
         if let Err(e) = self.commit_gpu(&pair).await {
-            log::error!("Atomic swap commit failed, rolling back {:?}: {:?}", bundle_id, e);
+            log::error!(
+                "Atomic swap commit failed, rolling back {:?}: {:?}",
+                bundle_id,
+                e
+            );
             return Ok(ProcessResult {
                 status: AtomicStatus::RolledBack,
                 bundle_id,
@@ -216,7 +223,11 @@ impl AtomicSwapOrchestrator {
         for attempt in 0..DRAIN_RETRIES {
             let committed = Self::drain_committed_swaps();
             if let Some(entry) = committed.into_iter().find(|(svm, _evm, _ts)| {
-                let prefix_len = our_svm_prefix.iter().rposition(|&b| b != 0).map(|i| i + 1).unwrap_or(32);
+                let prefix_len = our_svm_prefix
+                    .iter()
+                    .rposition(|&b| b != 0)
+                    .map(|i| i + 1)
+                    .unwrap_or(32);
                 &svm[..prefix_len] == &our_svm_prefix[..prefix_len]
             }) {
                 found_entry = Some(entry);
@@ -226,23 +237,24 @@ impl AtomicSwapOrchestrator {
                 std::thread::sleep(std::time::Duration::from_millis(DRAIN_SLEEP_MS));
             }
         }
-        let (receipt_root, committed_at_ns) = if let Some((svm_prefix, evm_prefix, ts)) = found_entry {
-            let root = Self::compute_receipt_root(&svm_prefix, &evm_prefix);
-            (Some(root), Some(ts))
-        } else {
-            // Fallback: compute deterministic receipt_root from the pair directly.
-            // This path is taken in tests where the shm is not available.
-            let evm_prefix: [u8; 32] = {
-                let mut a = [0u8; 32];
-                let n = pair.evm_tx.len().min(32);
-                a[..n].copy_from_slice(&pair.evm_tx[..n]);
-                a
+        let (receipt_root, committed_at_ns) =
+            if let Some((svm_prefix, evm_prefix, ts)) = found_entry {
+                let root = Self::compute_receipt_root(&svm_prefix, &evm_prefix);
+                (Some(root), Some(ts))
+            } else {
+                // Fallback: compute deterministic receipt_root from the pair directly.
+                // This path is taken in tests where the shm is not available.
+                let evm_prefix: [u8; 32] = {
+                    let mut a = [0u8; 32];
+                    let n = pair.evm_tx.len().min(32);
+                    a[..n].copy_from_slice(&pair.evm_tx[..n]);
+                    a
+                };
+                (
+                    Some(Self::compute_receipt_root(&our_svm_prefix, &evm_prefix)),
+                    None,
+                )
             };
-            (
-                Some(Self::compute_receipt_root(&our_svm_prefix, &evm_prefix)),
-                None,
-            )
-        };
 
         log::info!("Atomic swap committed: bundle_id={:?}", bundle_id);
         Ok(ProcessResult {
@@ -360,29 +372,24 @@ impl AtomicSwapOrchestrator {
 
         #[repr(C)]
         struct AtomicCommitEntry {
-            svm_prefix:     [u8; 32],
-            evm_prefix:     [u8; 32],
+            svm_prefix: [u8; 32],
+            evm_prefix: [u8; 32],
             committed_at_ns: u64,
-            valid:          u8,
-            _pad:           [u8; 7],
+            valid: u8,
+            _pad: [u8; 7],
         }
 
         #[repr(C)]
         struct AtomicCommitRing {
             write_idx: u32,
-            _pad:      [u32; 7],
-            entries:   [AtomicCommitEntry; RING_SIZE],
+            _pad: [u32; 7],
+            entries: [AtomicCommitEntry; RING_SIZE],
         }
 
         let shm_size = std::mem::size_of::<AtomicCommitRing>();
 
-        let fd = unsafe {
-            libc::shm_open(
-                SHM_NAME.as_ptr() as *const libc::c_char,
-                libc::O_RDWR,
-                0,
-            )
-        };
+        let fd =
+            unsafe { libc::shm_open(SHM_NAME.as_ptr() as *const libc::c_char, libc::O_RDWR, 0) };
         if fd < 0 {
             return Vec::new(); // shm not yet created — nothing committed
         }
@@ -504,7 +511,11 @@ mod tests {
         let s = [0xABu8; 32];
         let e = [0xCDu8; 32];
         let root = AtomicSwapOrchestrator::compute_receipt_root(&s, &e);
-        assert_ne!(root, H256::zero(), "SHA-256 of non-zero input is never zero");
+        assert_ne!(
+            root,
+            H256::zero(),
+            "SHA-256 of non-zero input is never zero"
+        );
     }
 
     // ── sequence_nonce ordering ───────────────────────────────────────────────
@@ -587,7 +598,10 @@ mod tests {
     fn test_build_finalization_request_on_commit() {
         let result = make_committed_result();
         let req = AtomicSwapOrchestrator::build_finalization_request(&result);
-        assert!(req.is_some(), "committed swap must produce a FinalizationRequest");
+        assert!(
+            req.is_some(),
+            "committed swap must produce a FinalizationRequest"
+        );
         let req = req.unwrap();
         assert_eq!(req.bundle_id, result.bundle_id);
         assert_ne!(req.receipt_root, H256::zero());
@@ -602,7 +616,10 @@ mod tests {
         result.status = AtomicStatus::RolledBack;
         result.receipt_root = None;
         let req = AtomicSwapOrchestrator::build_finalization_request(&result);
-        assert!(req.is_none(), "rolled-back swap must NOT produce a FinalizationRequest");
+        assert!(
+            req.is_none(),
+            "rolled-back swap must NOT produce a FinalizationRequest"
+        );
     }
 
     #[test]
@@ -625,7 +642,10 @@ mod tests {
             sequence_nonce: 7,
             pallet_bundle_id: None,
         };
-        assert_eq!(req.bundle_id, AtomicSwapOrchestrator::derive_bundle_id(&pair));
+        assert_eq!(
+            req.bundle_id,
+            AtomicSwapOrchestrator::derive_bundle_id(&pair)
+        );
     }
 
     // ── E2E pipeline data-flow tests ─────────────────────────────────────────
@@ -649,7 +669,11 @@ mod tests {
         // Key must be exactly 38 bytes (6 prefix + 32 bundle_id)
         assert_eq!(key.len(), 38, "OCW key must be 38 bytes");
         assert_eq!(&key[..6], b"x3fin:", "OCW key must start with 'x3fin:'");
-        assert_eq!(&key[6..], bundle_id.as_bytes(), "OCW key suffix must be the bundle_id");
+        assert_eq!(
+            &key[6..],
+            bundle_id.as_bytes(),
+            "OCW key suffix must be the bundle_id"
+        );
     }
 
     /// Verify the OCW local-storage payload format:
@@ -669,13 +693,21 @@ mod tests {
 
         // Decode (as the pallet OCW would read from local storage)
         let decoded_root = H256::from_slice(&payload[..32]);
-        let decoded_ns = u64::from_le_bytes(
-            payload[32..40].try_into().expect("slice is 8 bytes"),
-        );
+        let decoded_ns = u64::from_le_bytes(payload[32..40].try_into().expect("slice is 8 bytes"));
 
-        assert_eq!(decoded_root, receipt_root, "decoded receipt_root must match");
-        assert_eq!(decoded_ns, committed_at_ns, "decoded committed_at_ns must match");
-        assert_ne!(decoded_root, H256::zero(), "receipt_root of real data must not be zero");
+        assert_eq!(
+            decoded_root, receipt_root,
+            "decoded receipt_root must match"
+        );
+        assert_eq!(
+            decoded_ns, committed_at_ns,
+            "decoded committed_at_ns must match"
+        );
+        assert_ne!(
+            decoded_root,
+            H256::zero(),
+            "receipt_root of real data must not be zero"
+        );
     }
 
     /// Full data-flow E2E test:
@@ -721,9 +753,18 @@ mod tests {
         // Step 4: build FinalizationRequest — must carry same bundle_id + receipt_root
         let req = AtomicSwapOrchestrator::build_finalization_request(&result)
             .expect("committed result with non-zero root must produce request");
-        assert_eq!(req.bundle_id, bundle_id, "bundle_id must propagate to FinalizationRequest");
-        assert_eq!(req.receipt_root, receipt_root, "receipt_root must propagate");
-        assert_eq!(req.committed_at_ns, committed_at_ns, "committed_at_ns must propagate");
+        assert_eq!(
+            req.bundle_id, bundle_id,
+            "bundle_id must propagate to FinalizationRequest"
+        );
+        assert_eq!(
+            req.receipt_root, receipt_root,
+            "receipt_root must propagate"
+        );
+        assert_eq!(
+            req.committed_at_ns, committed_at_ns,
+            "committed_at_ns must propagate"
+        );
 
         // Step 5: encode OCW payload and verify it decodes back to the same values
         let mut payload = req.receipt_root.as_bytes().to_vec();
@@ -743,8 +784,7 @@ mod tests {
         let req = AtomicSwapOrchestrator::build_finalization_request(&result).unwrap();
 
         let json = serde_json::to_string(&req).expect("must serialise");
-        let decoded: FinalizationRequest =
-            serde_json::from_str(&json).expect("must deserialise");
+        let decoded: FinalizationRequest = serde_json::from_str(&json).expect("must deserialise");
 
         assert_eq!(decoded.bundle_id, req.bundle_id);
         assert_eq!(decoded.receipt_root, req.receipt_root);
@@ -807,7 +847,10 @@ mod tests {
 
         // The off-chain derived ID is different
         let off_chain_id = AtomicSwapOrchestrator::derive_bundle_id(&pair);
-        assert_ne!(pallet_id, off_chain_id, "pallet and off-chain IDs must differ");
+        assert_ne!(
+            pallet_id, off_chain_id,
+            "pallet and off-chain IDs must differ"
+        );
 
         // Build a ProcessResult as process_swap() would — using pallet_bundle_id
         let svm_prefix: [u8; 32] = {
@@ -824,10 +867,13 @@ mod tests {
         };
         let receipt_root = AtomicSwapOrchestrator::compute_receipt_root(&svm_prefix, &evm_prefix);
 
-        let effective_bundle_id = pair.pallet_bundle_id.unwrap_or_else(|| {
-            AtomicSwapOrchestrator::derive_bundle_id(&pair)
-        });
-        assert_eq!(effective_bundle_id, pallet_id, "effective bundle_id must be pallet_id");
+        let effective_bundle_id = pair
+            .pallet_bundle_id
+            .unwrap_or_else(|| AtomicSwapOrchestrator::derive_bundle_id(&pair));
+        assert_eq!(
+            effective_bundle_id, pallet_id,
+            "effective bundle_id must be pallet_id"
+        );
 
         let result = ProcessResult {
             status: AtomicStatus::Committed,
@@ -837,7 +883,10 @@ mod tests {
         };
 
         let req = AtomicSwapOrchestrator::build_finalization_request(&result).unwrap();
-        assert_eq!(req.bundle_id, pallet_id, "FinalizationRequest must carry pallet bundle_id");
+        assert_eq!(
+            req.bundle_id, pallet_id,
+            "FinalizationRequest must carry pallet bundle_id"
+        );
 
         // OCW key built with pallet bundle_id matches what the pallet looks up
         let mut ocw_key = b"x3fin:".to_vec();
@@ -857,7 +906,10 @@ mod tests {
             .pallet_bundle_id
             .unwrap_or_else(|| AtomicSwapOrchestrator::derive_bundle_id(&pair));
 
-        assert_eq!(effective, expected, "fallback must equal derive_bundle_id()");
+        assert_eq!(
+            effective, expected,
+            "fallback must equal derive_bundle_id()"
+        );
     }
 
     /// Verify AtomicPair with pallet_bundle_id serialises/deserialises correctly.
@@ -894,8 +946,10 @@ mod tests {
         // Verify constants: 20 retries × 5 ms = 100 ms max total wait
         const DRAIN_RETRIES: usize = 20;
         const DRAIN_SLEEP_MS: u64 = 5;
-        assert_eq!(DRAIN_RETRIES * (DRAIN_SLEEP_MS as usize), 100_usize,
-            "drain retry window should be 100 ms");
+        assert_eq!(
+            DRAIN_RETRIES * (DRAIN_SLEEP_MS as usize),
+            100_usize,
+            "drain retry window should be 100 ms"
+        );
     }
 }
-

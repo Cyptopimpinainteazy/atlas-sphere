@@ -360,11 +360,7 @@ pub fn compute_evm_prepare_root(
 }
 
 /// Compute CREATE2 address for deterministic contract deployment
-pub fn compute_create2_address(
-    deployer: &H160,
-    salt: &H256,
-    init_code_hash: &H256,
-) -> H160 {
+pub fn compute_create2_address(deployer: &H160, salt: &H256, init_code_hash: &H256) -> H160 {
     use sp_io::hashing::keccak_256;
     let mut data = Vec::with_capacity(1 + 20 + 32 + 32);
     data.push(0xff);
@@ -545,7 +541,10 @@ mod tests {
     #[test]
     fn test_frontier_executor_validate_bytecode_empty() {
         let exec = MockEvmExecutor;
-        assert_eq!(exec.validate_bytecode(&[]).unwrap_err(), EvmError::InvalidPayload);
+        assert_eq!(
+            exec.validate_bytecode(&[]).unwrap_err(),
+            EvmError::InvalidPayload
+        );
     }
 
     #[test]
@@ -592,7 +591,10 @@ mod tests {
         };
         let root1 = compute_evm_prepare_root(&comit_id, payload1, &result);
         let root2 = compute_evm_prepare_root(&comit_id, payload2, &result);
-        assert_ne!(root1, root2, "different payloads must produce different roots");
+        assert_ne!(
+            root1, root2,
+            "different payloads must produce different roots"
+        );
     }
 
     #[test]

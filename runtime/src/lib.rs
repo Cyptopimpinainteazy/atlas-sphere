@@ -249,6 +249,7 @@ construct_runtime!(
         Preimage: pallet_preimage,
         EVM: pallet_evm,
         AtlasKernel: pallet_x3_kernel,
+        X3Coin: pallet_x3_coin,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Sudo: pallet_sudo,
@@ -282,6 +283,7 @@ construct_runtime!(
         Preimage: pallet_preimage,
         EVM: pallet_evm,
         AtlasKernel: pallet_x3_kernel,
+        X3Coin: pallet_x3_coin,
         AtomicTradeEngine: pallet_atomic_trade_engine,
         Council: pallet_collective::<Instance1>,
         Governance: pallet_governance,
@@ -538,6 +540,19 @@ impl pallet_x3_kernel::Config for Runtime {
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
 }
 
+impl pallet_x3_coin::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type Balance = Balance;
+    type UnixTime = Timestamp;
+    type WeightInfo = pallet_x3_coin::weights::SubstrateWeight<Runtime>;
+    type TreasuryAccount = TreasuryPalletId;
+    type MaxBonusClaims = ConstU32<10>;
+    type TeamVestingBlocks = ConstU64<15768000>;
+    type TeamVestingCliff = ConstU64<7884000>;
+    type BonusClaimPeriod = ConstU64<3942000>;
+}
+
 // ===== AtomicTradeEngine Configuration =====
 
 parameter_types! {
@@ -673,7 +688,12 @@ mod native_vm_adapters {
             );
 
             match call_res {
-                Ok(info) => Ok(map_call_info_to_receipt(info, source, Some(target), &pre_balances)),
+                Ok(info) => Ok(map_call_info_to_receipt(
+                    info,
+                    source,
+                    Some(target),
+                    &pre_balances,
+                )),
                 Err(_) => {
                     // As a safe fallback in tests or non-fully-initialized environments,
                     // delegate to the Kernel's mock adapter for deterministic behavior.
@@ -727,8 +747,7 @@ mod native_vm_adapters {
         pre_balances: &HashMap<H160, Balance>,
     ) -> ExecutionReceipt {
         let success = matches!(info.exit_reason, ExitReason::Succeed(_));
-        let state_changes =
-            collect_evm_balance_changes(source, target, &info.logs, pre_balances);
+        let state_changes = collect_evm_balance_changes(source, target, &info.logs, pre_balances);
         ExecutionReceipt {
             success,
             gas_used: info.used_gas.standard.unique_saturated_into(),
@@ -802,7 +821,9 @@ mod native_vm_adapters {
                 if !update.data.is_empty() {
                     if let Ok(bounded) = frame_support::BoundedVec::<
                         u8,
-                        frame_support::traits::ConstU32<{ pallet_x3_kernel::MAX_SVM_ACCOUNT_DATA_BYTES }>,
+                        frame_support::traits::ConstU32<
+                            { pallet_x3_kernel::MAX_SVM_ACCOUNT_DATA_BYTES },
+                        >,
                     >::try_from(update.data.clone())
                     {
                         pallet_x3_kernel::SvmAccountData::<super::Runtime>::insert(
@@ -898,8 +919,7 @@ mod native_vm_adapters {
                 > as pallet_evm::AddressMapping<AccountId>>::into_account_id(
                     addr
                 );
-                let balance =
-                    pallet_balances::Pallet::<super::Runtime>::free_balance(&account_id);
+                let balance = pallet_balances::Pallet::<super::Runtime>::free_balance(&account_id);
                 (addr, balance)
             })
             .collect()

@@ -1698,7 +1698,7 @@ mod tests {
         code_f0.push(0u8); // dst
         code_f0.extend_from_slice(&1u32.to_le_bytes()); // func idx 1
         code_f0.extend_from_slice(&0u16.to_le_bytes()); // argc = 0
-        // LoadGlobal r2, idx=0
+                                                        // LoadGlobal r2, idx=0
         code_f0.push(Opcode::LoadGlobal as u8);
         code_f0.push(2u8);
         code_f0.extend_from_slice(&0u32.to_le_bytes());
@@ -1801,7 +1801,9 @@ mod tests {
         out.push(0u8); // metadata
 
         let mut vm = VM::from_bytes(&out).expect("module should load");
-        let result = vm.call_function(0, &[]).expect("nested call should succeed");
+        let result = vm
+            .call_function(0, &[])
+            .expect("nested call should succeed");
 
         // Caller returns global0 value after callee wrote 99 into it
         assert_eq!(

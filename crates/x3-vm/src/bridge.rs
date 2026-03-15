@@ -121,12 +121,7 @@ pub trait CrossVmEscrow: Send + Sync {
     fn lock_evm(&self, from: &[u8; 20], amount: u128) -> Result<[u8; 32], &'static str>;
 
     /// Release `amount` of native tokens on the SVM side given a valid ticket.
-    fn release_svm(
-        &self,
-        to: &[u8],
-        ticket: &[u8; 32],
-        amount: u128,
-    ) -> Result<(), &'static str>;
+    fn release_svm(&self, to: &[u8], ticket: &[u8; 32], amount: u128) -> Result<(), &'static str>;
 }
 
 /// X3VM Bridge for cross-VM execution
@@ -316,14 +311,12 @@ impl X3VMBridge {
                             compute_unit_limit: compute_units,
                             ..SvmConfig::default()
                         };
-                        let result = executor
-                            .execute_bpf(&program, &input, &cfg)
-                            .map_err(|e| {
-                                VMError::without_ip(VMErrorKind::HostcallError(format!(
-                                    "svm_invoke failed: {:?}",
-                                    e
-                                )))
-                            })?;
+                        let result = executor.execute_bpf(&program, &input, &cfg).map_err(|e| {
+                            VMError::without_ip(VMErrorKind::HostcallError(format!(
+                                "svm_invoke failed: {:?}",
+                                e
+                            )))
+                        })?;
                         Ok(Some(Value::Bytes(result.output)))
                     }
                 });
@@ -385,9 +378,7 @@ impl X3VMBridge {
                             _ => 21_000,
                         };
                         let addr_bytes = match args.get(1) {
-                            Some(Value::Bytes(b)) if b.len() == 20 => {
-                                sp_core::H160::from_slice(b)
-                            }
+                            Some(Value::Bytes(b)) if b.len() == 20 => sp_core::H160::from_slice(b),
                             _ => sp_core::H160::zero(),
                         };
                         let value_u256 = match args.get(2) {
@@ -403,13 +394,7 @@ impl X3VMBridge {
                             ..EvmConfig::default()
                         };
                         let result = executor
-                            .call(
-                                &data,
-                                sp_core::H160::zero(),
-                                addr_bytes,
-                                value_u256,
-                                &cfg,
-                            )
+                            .call(&data, sp_core::H160::zero(), addr_bytes, value_u256, &cfg)
                             .map_err(|e| {
                                 VMError::without_ip(VMErrorKind::HostcallError(format!(
                                     "evm_call failed: {:?}",
@@ -429,9 +414,7 @@ impl X3VMBridge {
                             ))
                         })?;
                         let addr_bytes = match args.first() {
-                            Some(Value::Bytes(b)) if b.len() == 20 => {
-                                sp_core::H160::from_slice(b)
-                            }
+                            Some(Value::Bytes(b)) if b.len() == 20 => sp_core::H160::from_slice(b),
                             _ => sp_core::H160::zero(),
                         };
                         let gas = match args.get(1) {
@@ -471,9 +454,11 @@ impl X3VMBridge {
                         if let Some(ref provider) = bp {
                             let addr = match args.first() {
                                 Some(Value::Bytes(b)) => b.clone(),
-                                _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                                    "evm_balance: arg[0] (address) must be Bytes".into(),
-                                ))),
+                                _ => {
+                                    return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                                        "evm_balance: arg[0] (address) must be Bytes".into(),
+                                    )))
+                                }
                             };
                             let bal = provider.get_balance(&addr);
                             Ok(Some(Value::I64(bal.min(i64::MAX as u128) as i64)))
@@ -514,9 +499,11 @@ impl X3VMBridge {
                 };
                 let from = match args.first() {
                     Some(Value::Bytes(b)) => b.clone(),
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_svm_to_evm: arg[0] (from_svm_pubkey) must be Bytes".into(),
-                    ))),
+                    _ => {
+                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_svm_to_evm: arg[0] (from_svm_pubkey) must be Bytes".into(),
+                        )))
+                    }
                 };
                 let to_bytes = match args.get(1) {
                     Some(Value::Bytes(b)) if b.len() == 20 => {
@@ -524,26 +511,35 @@ impl X3VMBridge {
                         arr.copy_from_slice(b);
                         arr
                     }
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_svm_to_evm: arg[1] (to_evm_address) must be 20-byte Bytes".into(),
-                    ))),
+                    _ => {
+                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_svm_to_evm: arg[1] (to_evm_address) must be 20-byte Bytes"
+                                .into(),
+                        )))
+                    }
                 };
                 let amount = match args.get(2) {
                     Some(Value::I64(v)) => (*v).max(0) as u128,
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_svm_to_evm: arg[2] (amount) must be I64".into(),
-                    ))),
+                    _ => {
+                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_svm_to_evm: arg[2] (amount) must be I64".into(),
+                        )))
+                    }
                 };
                 let ticket = provider.lock_svm(&from, amount).map_err(|e| {
                     VMError::without_ip(VMErrorKind::HostcallError(format!(
-                        "bridge_svm_to_evm lock_svm: {}", e
+                        "bridge_svm_to_evm lock_svm: {}",
+                        e
                     )))
                 })?;
-                provider.release_evm(&to_bytes, &ticket, amount).map_err(|e| {
-                    VMError::without_ip(VMErrorKind::HostcallError(format!(
-                        "bridge_svm_to_evm release_evm: {}", e
-                    )))
-                })?;
+                provider
+                    .release_evm(&to_bytes, &ticket, amount)
+                    .map_err(|e| {
+                        VMError::without_ip(VMErrorKind::HostcallError(format!(
+                            "bridge_svm_to_evm release_evm: {}",
+                            e
+                        )))
+                    })?;
                 Ok(Some(Value::Bytes(ticket.to_vec())))
             }
         });
@@ -557,37 +553,44 @@ impl X3VMBridge {
                             .into(),
                     )));
                 };
-                let from_bytes = match args.first() {
-                    Some(Value::Bytes(b)) if b.len() == 20 => {
-                        let mut arr = [0u8; 20];
-                        arr.copy_from_slice(b);
-                        arr
-                    }
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_evm_to_svm: arg[0] (from_evm_address) must be 20-byte Bytes"
-                            .into(),
-                    ))),
-                };
+                let from_bytes =
+                    match args.first() {
+                        Some(Value::Bytes(b)) if b.len() == 20 => {
+                            let mut arr = [0u8; 20];
+                            arr.copy_from_slice(b);
+                            arr
+                        }
+                        _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_evm_to_svm: arg[0] (from_evm_address) must be 20-byte Bytes"
+                                .into(),
+                        ))),
+                    };
                 let to = match args.get(1) {
                     Some(Value::Bytes(b)) => b.clone(),
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_evm_to_svm: arg[1] (to_svm_pubkey) must be Bytes".into(),
-                    ))),
+                    _ => {
+                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_evm_to_svm: arg[1] (to_svm_pubkey) must be Bytes".into(),
+                        )))
+                    }
                 };
                 let amount = match args.get(2) {
                     Some(Value::I64(v)) => (*v).max(0) as u128,
-                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                        "bridge_evm_to_svm: arg[2] (amount) must be I64".into(),
-                    ))),
+                    _ => {
+                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                            "bridge_evm_to_svm: arg[2] (amount) must be I64".into(),
+                        )))
+                    }
                 };
                 let ticket = provider.lock_evm(&from_bytes, amount).map_err(|e| {
                     VMError::without_ip(VMErrorKind::HostcallError(format!(
-                        "bridge_evm_to_svm lock_evm: {}", e
+                        "bridge_evm_to_svm lock_evm: {}",
+                        e
                     )))
                 })?;
                 provider.release_svm(&to, &ticket, amount).map_err(|e| {
                     VMError::without_ip(VMErrorKind::HostcallError(format!(
-                        "bridge_evm_to_svm release_svm: {}", e
+                        "bridge_evm_to_svm release_svm: {}",
+                        e
                     )))
                 })?;
                 Ok(Some(Value::Bytes(ticket.to_vec())))
@@ -689,7 +692,9 @@ mod tests {
             for (addr, bal) in initial {
                 m.insert(addr.to_vec(), *bal);
             }
-            Self { ledger: StdMutex::new(m) }
+            Self {
+                ledger: StdMutex::new(m),
+            }
         }
     }
 
@@ -742,8 +747,7 @@ mod tests {
 
     #[test]
     fn test_with_balances_builder_sets_provider() {
-        let provider: Arc<dyn BalanceProvider> =
-            Arc::new(MockBalanceProvider::new(&[(b"x", 999)]));
+        let provider: Arc<dyn BalanceProvider> = Arc::new(MockBalanceProvider::new(&[(b"x", 999)]));
         let bridge = X3VMBridge::new().with_balances(provider);
         assert!(bridge.balance_provider.is_some());
     }
@@ -792,11 +796,7 @@ mod tests {
             }
         }
 
-        fn lock_evm(
-            &self,
-            from: &[u8; 20],
-            amount: u128,
-        ) -> Result<[u8; 32], &'static str> {
+        fn lock_evm(&self, from: &[u8; 20], amount: u128) -> Result<[u8; 32], &'static str> {
             let mut ticket = [0u8; 32];
             ticket[..20].copy_from_slice(from);
             ticket[20..28].copy_from_slice(&amount.to_le_bytes()[..8]);

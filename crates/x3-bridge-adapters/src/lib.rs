@@ -47,9 +47,9 @@
 use codec::{Decode, Encode};
 use pallet_x3_kernel::AtlasKernelRuntimeApi;
 use sha2::{Digest, Sha256};
-use sp_core::offchain::OffchainStorage;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
+use sp_core::offchain::OffchainStorage;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::traits::Block as BlockT;
 use std::collections::HashMap;
@@ -135,8 +135,7 @@ where
             }
             32 => {
                 // SVM pubkey — lamports in CanonicalLedger[AccountId][0].
-                api.get_svm_balance(at, address.to_vec())
-                    .unwrap_or(0) as u128
+                api.get_svm_balance(at, address.to_vec()).unwrap_or(0) as u128
             }
             _ => {
                 log::warn!(
@@ -176,8 +175,10 @@ where
     pub(crate) fn credit(&self, address: &[u8], amount: u128) {
         let current = self.ensure_loaded(address);
         let mut guard = self.overlay.write().expect("overlay write");
-        guard.get_mut(address).expect("credit: address must be loaded").current =
-            current.saturating_add(amount);
+        guard
+            .get_mut(address)
+            .expect("credit: address must be loaded")
+            .current = current.saturating_add(amount);
     }
 
     /// Drain the overlay and return a [`StateChange`] record for every address
@@ -238,8 +239,7 @@ where
 
         let mut guard = self.overlay.write().expect("overlay write");
         guard.get_mut(from).expect("from must be loaded").current -= amount;
-        guard.get_mut(to).expect("to must be loaded").current =
-            to_bal.saturating_add(amount);
+        guard.get_mut(to).expect("to must be loaded").current = to_bal.saturating_add(amount);
 
         log::debug!(
             "[BalanceAdapter] transfer {} from=0x{} to=0x{}",
@@ -304,10 +304,11 @@ impl<O: OffchainStorage + Send + 'static> EscrowPersistence for OffchainEscrowPe
         key[..6].copy_from_slice(b"x3esc:");
         key[6..].copy_from_slice(ticket);
         let value = entry.encode();
-        self.storage
-            .lock()
-            .expect("offchain storage lock")
-            .set(sp_core::offchain::STORAGE_PREFIX, &key, &value);
+        self.storage.lock().expect("offchain storage lock").set(
+            sp_core::offchain::STORAGE_PREFIX,
+            &key,
+            &value,
+        );
     }
 
     fn load_ticket(&self, ticket: &[u8; 32]) -> Option<EscrowPersistedEntry> {
@@ -357,7 +358,10 @@ where
     C::Api: AtlasKernelRuntimeApi<Block, AccountId32, u128, u32>,
 {
     /// Create escrow adapter with a durable persistence backend.
-    pub fn with_persistence(balances: Arc<SubstrateClientBalanceAdapter<C, Block>>, persistence: P) -> Self {
+    pub fn with_persistence(
+        balances: Arc<SubstrateClientBalanceAdapter<C, Block>>,
+        persistence: P,
+    ) -> Self {
         Self {
             balances,
             tickets: RwLock::new(HashMap::new()),
@@ -387,7 +391,9 @@ where
             }
         }
         // Not in overlay — try the persistent store.
-        self.persistence.load_ticket(ticket).map(|e| (e.amount, e.spent, e.from))
+        self.persistence
+            .load_ticket(ticket)
+            .map(|e| (e.amount, e.spent, e.from))
     }
 
     fn lock_internal(&self, from: &[u8], amount: u128) -> Result<[u8; 32], &'static str> {
@@ -397,18 +403,28 @@ where
         self.balances.transfer(from, &[], amount)?;
 
         let ticket = Self::make_ticket(from, amount);
-        let entry = InMemoryEscrowEntry { from: from.to_vec(), amount, spent: false };
+        let entry = InMemoryEscrowEntry {
+            from: from.to_vec(),
+            amount,
+            spent: false,
+        };
 
         // Persist before inserting to overlay so a crash between the two is safe
         // (worst case: ticket is in offchain DB but overlay is empty — the caller
         // will re-validate against the persistent store).
-        self.persistence.save_ticket(&ticket, &EscrowPersistedEntry {
-            from: from.to_vec(),
-            amount,
-            spent: false,
-        });
+        self.persistence.save_ticket(
+            &ticket,
+            &EscrowPersistedEntry {
+                from: from.to_vec(),
+                amount,
+                spent: false,
+            },
+        );
 
-        self.tickets.write().expect("ticket write").insert(ticket, entry);
+        self.tickets
+            .write()
+            .expect("ticket write")
+            .insert(ticket, entry);
 
         log::debug!(
             "[EscrowAdapter] lock from=0x{} amount={} ticket=0x{}",
@@ -419,10 +435,14 @@ where
         Ok(ticket)
     }
 
-    fn release_internal(&self, ticket: &[u8; 32], to: &[u8], amount: u128) -> Result<(), &'static str> {
-        let (locked_amount, spent, from) = self
-            .find_ticket(ticket)
-            .ok_or("unknown escrow ticket")?;
+    fn release_internal(
+        &self,
+        ticket: &[u8; 32],
+        to: &[u8],
+        amount: u128,
+    ) -> Result<(), &'static str> {
+        let (locked_amount, spent, from) =
+            self.find_ticket(ticket).ok_or("unknown escrow ticket")?;
 
         if spent {
             return Err("escrow ticket already spent");
@@ -438,14 +458,24 @@ where
                 e.spent = true;
             } else {
                 // Ticket came from persistence — insert a spent record.
-                guard.insert(*ticket, InMemoryEscrowEntry { from: from.clone(), amount: locked_amount, spent: true });
+                guard.insert(
+                    *ticket,
+                    InMemoryEscrowEntry {
+                        from: from.clone(),
+                        amount: locked_amount,
+                        spent: true,
+                    },
+                );
             }
         }
-        self.persistence.save_ticket(ticket, &EscrowPersistedEntry {
-            from,
-            amount: locked_amount,
-            spent: true,
-        });
+        self.persistence.save_ticket(
+            ticket,
+            &EscrowPersistedEntry {
+                from,
+                amount: locked_amount,
+                spent: true,
+            },
+        );
 
         // Credit `to` in the balance overlay.
         self.balances.credit(to, amount);
@@ -470,7 +500,12 @@ where
         self.lock_internal(from, amount)
     }
 
-    fn release_evm(&self, to: &[u8; 20], ticket: &[u8; 32], amount: u128) -> Result<(), &'static str> {
+    fn release_evm(
+        &self,
+        to: &[u8; 20],
+        ticket: &[u8; 32],
+        amount: u128,
+    ) -> Result<(), &'static str> {
         self.release_internal(ticket, to.as_slice(), amount)
     }
 
@@ -500,11 +535,20 @@ where
 // ── Hex helpers ───────────────────────────────────────────────────────────────
 
 fn hex_prefix(bytes: &[u8]) -> String {
-    bytes.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>() + "…"
+    bytes
+        .iter()
+        .take(8)
+        .map(|b| format!("{:02x}", b))
+        .collect::<String>()
+        + "…"
 }
 
 fn hex_ticket(ticket: &[u8; 32]) -> String {
-    ticket.iter().take(8).map(|b| format!("{:02x}", b)).collect()
+    ticket
+        .iter()
+        .take(8)
+        .map(|b| format!("{:02x}", b))
+        .collect()
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -530,7 +574,10 @@ mod tests {
             for (addr, bal) in initial {
                 map.insert(
                     addr.to_vec(),
-                    OverlayEntry { current: *bal, chain_snapshot: *bal },
+                    OverlayEntry {
+                        current: *bal,
+                        chain_snapshot: *bal,
+                    },
                 );
             }
             Arc::new(Self {
@@ -561,14 +608,22 @@ mod tests {
         fn credit(&self, address: &[u8], amount: u128) {
             let current = self.get_balance(address);
             let mut guard = self.overlay.write().unwrap();
-            guard.entry(address.to_vec()).or_insert(OverlayEntry { current: 0, chain_snapshot: 0 });
+            guard.entry(address.to_vec()).or_insert(OverlayEntry {
+                current: 0,
+                chain_snapshot: 0,
+            });
             guard.get_mut(address).unwrap().current = current.saturating_add(amount);
         }
     }
 
     impl BalanceProvider for MockBalanceAdapter {
         fn get_balance(&self, address: &[u8]) -> u128 {
-            self.overlay.read().unwrap().get(address).map(|e| e.current).unwrap_or(0)
+            self.overlay
+                .read()
+                .unwrap()
+                .get(address)
+                .map(|e| e.current)
+                .unwrap_or(0)
         }
 
         fn transfer(&self, from: &[u8], to: &[u8], amount: u128) -> Result<(), &'static str> {
@@ -579,8 +634,14 @@ mod tests {
             let to_bal = self.get_balance(to);
             let mut guard = self.overlay.write().unwrap();
             // Ensure entries exist (with zero chain snapshot for newly seen addresses)
-            guard.entry(from.to_vec()).or_insert(OverlayEntry { current: 0, chain_snapshot: 0 });
-            guard.entry(to.to_vec()).or_insert(OverlayEntry { current: 0, chain_snapshot: 0 });
+            guard.entry(from.to_vec()).or_insert(OverlayEntry {
+                current: 0,
+                chain_snapshot: 0,
+            });
+            guard.entry(to.to_vec()).or_insert(OverlayEntry {
+                current: 0,
+                chain_snapshot: 0,
+            });
             guard.get_mut(from).unwrap().current -= amount;
             guard.get_mut(to).unwrap().current = to_bal.saturating_add(amount);
             Ok(())
@@ -597,7 +658,10 @@ mod tests {
 
     impl MockEscrowAdapter {
         fn new(balances: Arc<MockBalanceAdapter>) -> Self {
-            Self { balances, tickets: RwLock::new(HashMap::new()) }
+            Self {
+                balances,
+                tickets: RwLock::new(HashMap::new()),
+            }
         }
 
         fn make_ticket(from: &[u8], amount: u128) -> [u8; 32] {
@@ -614,7 +678,14 @@ mod tests {
         fn lock(&self, from: &[u8], amount: u128) -> Result<[u8; 32], &'static str> {
             self.balances.transfer(from, &[], amount)?;
             let t = Self::make_ticket(from, amount);
-            self.tickets.write().unwrap().insert(t, InMemoryEscrowEntry { from: from.to_vec(), amount, spent: false });
+            self.tickets.write().unwrap().insert(
+                t,
+                InMemoryEscrowEntry {
+                    from: from.to_vec(),
+                    amount,
+                    spent: false,
+                },
+            );
             Ok(t)
         }
 
@@ -624,8 +695,12 @@ mod tests {
                 let e = g.get(ticket).ok_or("unknown escrow ticket")?;
                 (e.amount, e.spent)
             };
-            if spent { return Err("escrow ticket already spent"); }
-            if locked < amount { return Err("escrow release amount exceeds locked amount"); }
+            if spent {
+                return Err("escrow ticket already spent");
+            }
+            if locked < amount {
+                return Err("escrow release amount exceeds locked amount");
+            }
             self.tickets.write().unwrap().get_mut(ticket).unwrap().spent = true;
             // Credit to
             self.balances.credit(to, amount);
@@ -660,7 +735,11 @@ mod tests {
         let b = MockBalanceAdapter::seeded(&[(b"alice", 50)]);
         let result = b.transfer(b"alice", b"bob", 100);
         assert_eq!(result, Err("insufficient balance"));
-        assert_eq!(b.get_balance(b"alice"), 50, "balance must not change on failure");
+        assert_eq!(
+            b.get_balance(b"alice"),
+            50,
+            "balance must not change on failure"
+        );
     }
 
     #[test]
@@ -681,11 +760,8 @@ mod tests {
 
     #[test]
     fn test_with_initial_seeds_multiple_accounts() {
-        let b = MockBalanceAdapter::seeded(&[
-            (b"alice", 1_000),
-            (b"bob", 2_000),
-            (b"carol", 3_000),
-        ]);
+        let b =
+            MockBalanceAdapter::seeded(&[(b"alice", 1_000), (b"bob", 2_000), (b"carol", 3_000)]);
         assert_eq!(b.get_balance(b"alice"), 1_000);
         assert_eq!(b.get_balance(b"bob"), 2_000);
         assert_eq!(b.get_balance(b"carol"), 3_000);
@@ -696,7 +772,10 @@ mod tests {
     #[test]
     fn test_state_changes_empty_when_no_transfers() {
         let b = MockBalanceAdapter::seeded(&[(b"alice", 1_000)]);
-        assert!(b.state_changes().is_empty(), "no transfers => no dirty state");
+        assert!(
+            b.state_changes().is_empty(),
+            "no transfers => no dirty state"
+        );
     }
 
     #[test]
@@ -737,10 +816,8 @@ mod tests {
         evm_bal: u128,
     ) -> (Arc<MockBalanceAdapter>, MockEscrowAdapter) {
         let evm_alice = [0xAAu8; 20];
-        let bal = MockBalanceAdapter::seeded(&[
-            (b"svm_alice", svm_bal),
-            (evm_alice.as_slice(), evm_bal),
-        ]);
+        let bal =
+            MockBalanceAdapter::seeded(&[(b"svm_alice", svm_bal), (evm_alice.as_slice(), evm_bal)]);
         let escrow = MockEscrowAdapter::new(bal.clone());
         (bal, escrow)
     }
@@ -750,7 +827,11 @@ mod tests {
         let (bal, escrow) = make_escrow_pair(1_000, 0);
         let ticket = escrow.lock(b"svm_alice", 400).unwrap();
         assert_eq!(ticket.len(), 32, "ticket must be 32 bytes");
-        assert_eq!(bal.get_balance(b"svm_alice"), 600, "balance must be debited");
+        assert_eq!(
+            bal.get_balance(b"svm_alice"),
+            600,
+            "balance must be debited"
+        );
     }
 
     #[test]
@@ -759,7 +840,11 @@ mod tests {
         let ticket = escrow.lock(b"svm_alice", 500).unwrap();
         let evm_bob = [0xBBu8; 20];
         escrow.release(&ticket, evm_bob.as_slice(), 500).unwrap();
-        assert_eq!(bal.get_balance(evm_bob.as_slice()), 500, "evm_bob must receive funds");
+        assert_eq!(
+            bal.get_balance(evm_bob.as_slice()),
+            500,
+            "evm_bob must receive funds"
+        );
     }
 
     #[test]
@@ -793,7 +878,11 @@ mod tests {
         let (bal, escrow) = make_escrow_pair(0, 1_000);
         let evm_alice = [0xAAu8; 20];
         let ticket = escrow.lock(evm_alice.as_slice(), 300).unwrap();
-        assert_eq!(bal.get_balance(evm_alice.as_slice()), 700, "evm_alice debited");
+        assert_eq!(
+            bal.get_balance(evm_alice.as_slice()),
+            700,
+            "evm_alice debited"
+        );
         escrow.release(&ticket, b"svm_bob", 300).unwrap();
         assert_eq!(bal.get_balance(b"svm_bob"), 300, "svm_bob credited");
     }
@@ -821,7 +910,11 @@ mod tests {
     fn test_noop_persistence_save_and_load() {
         let p = ();
         let ticket = [0x42u8; 32];
-        let entry = EscrowPersistedEntry { from: b"alice".to_vec(), amount: 100, spent: false };
+        let entry = EscrowPersistedEntry {
+            from: b"alice".to_vec(),
+            amount: 100,
+            spent: false,
+        };
         p.save_ticket(&ticket, &entry);
         // No-op: load returns None
         assert!(p.load_ticket(&ticket).is_none());
@@ -853,4 +946,3 @@ mod tests {
         assert!(!decoded.spent);
     }
 }
-

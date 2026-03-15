@@ -21,7 +21,9 @@ fn decode_address(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
     let bytes = hex::decode(stripped)
         .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid address: {}", e)))?;
     if bytes.len() != 20 {
-        return Err(jsonrpsee::core::Error::Custom("Address must be 20 bytes".into()));
+        return Err(jsonrpsee::core::Error::Custom(
+            "Address must be 20 bytes".into(),
+        ));
     }
     Ok(bytes)
 }
@@ -82,13 +84,17 @@ where
     let c = client.clone();
     module.register_method("eth_getStorageAt", move |params, _| {
         let (address_hex, slot_hex, _block): (String, String, serde_json::Value) =
-            params.parse().map_err(|e| jsonrpsee::core::Error::Custom(e.to_string()))?;
+            params
+                .parse()
+                .map_err(|e| jsonrpsee::core::Error::Custom(e.to_string()))?;
         let addr_bytes = decode_address(&address_hex)?;
         let slot_stripped = slot_hex.strip_prefix("0x").unwrap_or(&slot_hex);
         let slot_bytes = hex::decode(slot_stripped)
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid slot: {}", e)))?;
         if slot_bytes.len() > 32 {
-            return Err(jsonrpsee::core::Error::Custom("Slot must be ≤32 bytes".into()));
+            return Err(jsonrpsee::core::Error::Custom(
+                "Slot must be ≤32 bytes".into(),
+            ));
         }
         let mut key = [0u8; 32];
         let offset = 32 - slot_bytes.len();
@@ -99,7 +105,10 @@ where
         let val: Option<sp_core::H256> = api
             .get_evm_storage(at, addr_bytes, storage_key)
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
-        Ok(format!("0x{}", hex::encode(val.unwrap_or_default().as_bytes())))
+        Ok(format!(
+            "0x{}",
+            hex::encode(val.unwrap_or_default().as_bytes())
+        ))
     })?;
 
     // eth_getTransactionCount — returns account nonce as hex
@@ -123,9 +132,11 @@ where
     // Full simulation requires a stateful runner; this safe approximation avoids
     // the sp-io duplicate panic_impl issue that blocks wasm32 compilation.
     module.register_method("eth_estimateGas", move |params, _| {
-        let tx_obj: serde_json::Value =
-            params.one().unwrap_or(serde_json::Value::Object(Default::default()));
-        let data_len = tx_obj.get("data")
+        let tx_obj: serde_json::Value = params
+            .one()
+            .unwrap_or(serde_json::Value::Object(Default::default()));
+        let data_len = tx_obj
+            .get("data")
             .and_then(|v| v.as_str())
             .map(|s| s.strip_prefix("0x").unwrap_or(s).len() / 2)
             .unwrap_or(0);
@@ -149,9 +160,10 @@ where
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
         match result {
             Ok(tx_hash) => Ok(format!("0x{}", hex::encode(tx_hash))),
-            Err(err_bytes) => Err(jsonrpsee::core::Error::Custom(
-                format!("EVM execution failed: {}", String::from_utf8_lossy(&err_bytes))
-            )),
+            Err(err_bytes) => Err(jsonrpsee::core::Error::Custom(format!(
+                "EVM execution failed: {}",
+                String::from_utf8_lossy(&err_bytes)
+            ))),
         }
     })?;
 
@@ -210,7 +222,9 @@ fn decode_svm_pubkey(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
         let bytes = hex::decode(hex_str)
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid hex pubkey: {}", e)))?;
         if bytes.len() != 32 {
-            return Err(jsonrpsee::core::Error::Custom("SVM pubkey must be 32 bytes".into()));
+            return Err(jsonrpsee::core::Error::Custom(
+                "SVM pubkey must be 32 bytes".into(),
+            ));
         }
         return Ok(bytes);
     }
@@ -219,7 +233,9 @@ fn decode_svm_pubkey(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
         .into_vec()
         .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid base58 pubkey: {}", e)))?;
     if bytes.len() != 32 {
-        return Err(jsonrpsee::core::Error::Custom("SVM pubkey must be 32 bytes".into()));
+        return Err(jsonrpsee::core::Error::Custom(
+            "SVM pubkey must be 32 bytes".into(),
+        ));
     }
     Ok(bytes)
 }

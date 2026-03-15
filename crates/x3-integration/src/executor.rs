@@ -198,9 +198,7 @@ impl X3Executor {
                 function_index: 0,
                 instructions_executed: config.gas_limit,
             }),
-            Err(e) => Err(X3IntegrationError::ExecutionFailed(
-                format!("{:?}", e),
-            )),
+            Err(e) => Err(X3IntegrationError::ExecutionFailed(format!("{:?}", e))),
         }
     }
 

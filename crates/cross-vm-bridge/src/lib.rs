@@ -146,15 +146,9 @@ pub enum CrossVmEvent {
         amount: u128,
     },
     /// Transfer completed
-    TransferCompleted {
-        operation_id: u64,
-        gas_used: u64,
-    },
+    TransferCompleted { operation_id: u64, gas_used: u64 },
     /// Transfer failed
-    TransferFailed {
-        operation_id: u64,
-        reason: Vec<u8>,
-    },
+    TransferFailed { operation_id: u64, reason: Vec<u8> },
     /// Atomic swap executed
     AtomicSwapExecuted {
         evm_amount: u128,
@@ -168,15 +162,9 @@ pub enum CrossVmEvent {
         svm_compute_reserved: u64,
     },
     /// 2PC commit phase completed — state finalized on both VMs
-    CommitCompleted {
-        nonce: u64,
-        total_gas_used: u64,
-    },
+    CommitCompleted { nonce: u64, total_gas_used: u64 },
     /// 2PC abort — reservations released, no state changes
-    Aborted {
-        nonce: u64,
-        reason: Vec<u8>,
-    },
+    Aborted { nonce: u64, reason: Vec<u8> },
     /// Circuit breaker tripped
     CircuitBreakerTripped {
         epoch_volume: u128,
@@ -382,7 +370,9 @@ impl CrossVmBridge {
     pub fn queue_operation(&mut self, operation: CrossVmOperation) -> Result<u64, DispatchError> {
         // Circuit breaker check
         if self.config.paused {
-            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+            return Err(DispatchError::Other(
+                "Bridge is paused (circuit breaker active)",
+            ));
         }
 
         // Batch size limit
@@ -403,7 +393,9 @@ impl CrossVmBridge {
         let new_volume = self.config.epoch_volume.saturating_add(amount);
         if new_volume > self.config.max_epoch_volume {
             self.config.paused = true;
-            return Err(DispatchError::Other("Epoch volume limit exceeded — bridge paused"));
+            return Err(DispatchError::Other(
+                "Epoch volume limit exceeded — bridge paused",
+            ));
         }
         self.config.epoch_volume = new_volume;
 
@@ -427,9 +419,11 @@ impl CrossVmBridge {
             CrossVmOperation::TransferToEvm { amount, .. } => *amount,
             CrossVmOperation::TransferToSvm { amount, .. } => *amount,
             CrossVmOperation::CallEvm { value, .. } => *value,
-            CrossVmOperation::AtomicSwap { evm_amount, svm_amount, .. } => {
-                (*evm_amount).max(*svm_amount)
-            }
+            CrossVmOperation::AtomicSwap {
+                evm_amount,
+                svm_amount,
+                ..
+            } => (*evm_amount).max(*svm_amount),
             _ => 0,
         }
     }
@@ -536,16 +530,24 @@ impl CrossVmBridge {
                 ..
             } => {
                 if sender.len() != 32 {
-                    return Err(DispatchError::Other("MessageToEvm: sender must be 32-byte SVM pubkey"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: sender must be 32-byte SVM pubkey",
+                    ));
                 }
                 if target_contract.len() != 20 {
-                    return Err(DispatchError::Other("MessageToEvm: target_contract must be 20-byte EVM address"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: target_contract must be 20-byte EVM address",
+                    ));
                 }
                 if message.is_empty() {
-                    return Err(DispatchError::Other("MessageToEvm: message must not be empty"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: message must not be empty",
+                    ));
                 }
                 if message.len() > 1024 {
-                    return Err(DispatchError::Other("MessageToEvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 Ok(())
             }
@@ -556,16 +558,24 @@ impl CrossVmBridge {
                 ..
             } => {
                 if sender.len() != 20 {
-                    return Err(DispatchError::Other("MessageToSvm: sender must be 20-byte EVM address"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: sender must be 20-byte EVM address",
+                    ));
                 }
                 if target_program.len() != 32 {
-                    return Err(DispatchError::Other("MessageToSvm: target_program must be 32-byte SVM pubkey"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: target_program must be 32-byte SVM pubkey",
+                    ));
                 }
                 if message.is_empty() {
-                    return Err(DispatchError::Other("MessageToSvm: message must not be empty"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: message must not be empty",
+                    ));
                 }
                 if message.len() > 1024 {
-                    return Err(DispatchError::Other("MessageToSvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 Ok(())
             }
@@ -575,7 +585,9 @@ impl CrossVmBridge {
     /// Execute pending operations
     pub fn execute_pending(&mut self) -> Result<Vec<CrossVmResult>, DispatchError> {
         if self.config.paused {
-            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+            return Err(DispatchError::Other(
+                "Bridge is paused (circuit breaker active)",
+            ));
         }
         let mut results = Vec::new();
         let mut completed_updates: Vec<(CrossVmOperation, CrossVmResult)> = Vec::new();
@@ -755,7 +767,9 @@ impl CrossVmBridge {
                 // Enforce a 1024-byte payload cap to prevent unbounded gas consumption
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
-                    return Err(DispatchError::Other("MessageToEvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 let mut output: Vec<u8> = Vec::new();
                 output.extend_from_slice(b"SVM:msg:");
@@ -777,7 +791,9 @@ impl CrossVmBridge {
                 // BRIDGE-003: EVM → SVM arbitrary message passing
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
-                    return Err(DispatchError::Other("MessageToSvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 let mut output: Vec<u8> = Vec::new();
                 output.extend_from_slice(b"EVM:msg:");
@@ -809,7 +825,9 @@ impl CrossVmBridge {
         dispatcher: &D,
     ) -> Result<(Vec<u64>, Vec<CrossVmEvent>), DispatchError> {
         if self.config.paused {
-            return Err(DispatchError::Other("Bridge is paused (circuit breaker active)"));
+            return Err(DispatchError::Other(
+                "Bridge is paused (circuit breaker active)",
+            ));
         }
 
         let mut nonces = Vec::new();
@@ -925,7 +943,8 @@ impl CrossVmBridge {
                         nonce: prep.nonce,
                         total_gas_used: result.gas_used,
                     });
-                    self.completed_ops.push((prep.operation.clone(), result.clone()));
+                    self.completed_ops
+                        .push((prep.operation.clone(), result.clone()));
                     results.push(result);
                 }
                 Err(e) => {
@@ -1035,7 +1054,13 @@ impl CrossVmBridge {
                 receipt.extend_from_slice(&amount.to_le_bytes());
                 Ok(receipt)
             }
-            CrossVmOperation::AtomicSwap { evm_party, svm_party, evm_amount, svm_amount, .. } => {
+            CrossVmOperation::AtomicSwap {
+                evm_party,
+                svm_party,
+                evm_amount,
+                svm_amount,
+                ..
+            } => {
                 let evm_bal = dispatcher.get_evm_balance(evm_party);
                 if evm_bal < *evm_amount {
                     return Err(DispatchError::Other("Insufficient EVM balance for swap"));
@@ -1173,7 +1198,11 @@ impl CrossVmBridge {
                 match Self::dispatch_operation(dispatcher, &operation) {
                     Ok(result) => {
                         match &operation {
-                            CrossVmOperation::AtomicSwap { evm_amount, svm_amount, .. } => {
+                            CrossVmOperation::AtomicSwap {
+                                evm_amount,
+                                svm_amount,
+                                ..
+                            } => {
                                 events.push(CrossVmEvent::AtomicSwapExecuted {
                                     evm_amount: *evm_amount,
                                     svm_amount: *svm_amount,
@@ -1260,7 +1289,11 @@ impl CrossVmBridge {
                 encoded_input.extend_from_slice(input);
                 dispatcher.execute_svm_tx(&caller_svm, &program_id, &encoded_input)
             }
-            CrossVmOperation::TransferToEvm { source, destination, amount } => {
+            CrossVmOperation::TransferToEvm {
+                source,
+                destination,
+                amount,
+            } => {
                 // Lock on source (SVM) then deposit on destination (EVM)
                 let mut source_pubkey = [0u8; 32];
                 let len = source.len().min(32);
@@ -1274,9 +1307,18 @@ impl CrossVmBridge {
                 }
 
                 // Execute as EVM deposit to destination
-                dispatcher.execute_evm_tx(&bridge_caller, destination, &amount.to_le_bytes(), *amount)
+                dispatcher.execute_evm_tx(
+                    &bridge_caller,
+                    destination,
+                    &amount.to_le_bytes(),
+                    *amount,
+                )
             }
-            CrossVmOperation::TransferToSvm { source, destination, amount } => {
+            CrossVmOperation::TransferToSvm {
+                source,
+                destination,
+                amount,
+            } => {
                 // Lock on source (EVM) then deposit on destination (SVM)
                 let mut dest_pubkey = [0u8; 32];
                 let len = destination.len().min(32);
@@ -1327,7 +1369,9 @@ impl CrossVmBridge {
                 // BRIDGE-002: relay SVM message to EVM contract
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
-                    return Err(DispatchError::Other("MessageToEvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 let mut caller_evm = [0u8; 20];
                 if sender.len() >= 20 {
@@ -1345,7 +1389,9 @@ impl CrossVmBridge {
                 // BRIDGE-003: relay EVM message to SVM program
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
-                    return Err(DispatchError::Other("MessageToSvm: payload exceeds 1024 bytes"));
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: payload exceeds 1024 bytes",
+                    ));
                 }
                 let mut caller_svm = [0u8; 32];
                 caller_svm[12..32].copy_from_slice(sender);
@@ -1358,11 +1404,7 @@ impl CrossVmBridge {
     }
 
     /// Emit an event for a completed atomic swap
-    pub fn emit_swap_event(
-        evm_amount: u128,
-        svm_amount: u128,
-        gas_used: u64,
-    ) -> CrossVmEvent {
+    pub fn emit_swap_event(evm_amount: u128, svm_amount: u128, gas_used: u64) -> CrossVmEvent {
         CrossVmEvent::AtomicSwapExecuted {
             evm_amount,
             svm_amount,
@@ -1372,7 +1414,10 @@ impl CrossVmBridge {
 
     /// Get a snapshot of all events from the most recent execution
     pub fn get_operation_states(&self) -> Vec<(&CrossVmOperation, &OperationState)> {
-        self.pending_ops.iter().map(|(op, state)| (op, state)).collect()
+        self.pending_ops
+            .iter()
+            .map(|(op, state)| (op, state))
+            .collect()
     }
 }
 
@@ -1529,7 +1574,10 @@ mod tests {
         assert_eq!(decoded, event);
 
         let swap_event = CrossVmBridge::emit_swap_event(100, 200, 50_000);
-        assert!(matches!(swap_event, CrossVmEvent::AtomicSwapExecuted { .. }));
+        assert!(matches!(
+            swap_event,
+            CrossVmEvent::AtomicSwapExecuted { .. }
+        ));
     }
 
     #[test]
@@ -1575,24 +1623,30 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [2u8; 20],
-            amount: 100,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 100,
+            })
+            .unwrap();
 
-        bridge.queue_operation(CrossVmOperation::TransferToSvm {
-            source: [3u8; 20],
-            destination: vec![4; 32],
-            amount: 200,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToSvm {
+                source: [3u8; 20],
+                destination: vec![4; 32],
+                amount: 200,
+            })
+            .unwrap();
 
-        bridge.queue_operation(CrossVmOperation::CallEvm {
-            caller: vec![5; 32],
-            contract: [6u8; 20],
-            input: vec![0xAB],
-            value: 0,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::CallEvm {
+                caller: vec![5; 32],
+                contract: [6u8; 20],
+                input: vec![0xAB],
+                value: 0,
+            })
+            .unwrap();
 
         assert_eq!(bridge.pending_count(), 3);
 
@@ -1608,11 +1662,13 @@ mod tests {
     fn test_get_operation_states() {
         let mut bridge = CrossVmBridge::new();
 
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [2u8; 20],
-            amount: 500,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 500,
+            })
+            .unwrap();
 
         let states = bridge.get_operation_states();
         assert_eq!(states.len(), 1);
@@ -1627,17 +1683,21 @@ mod tests {
     fn test_nonces_are_monotonically_increasing() {
         let mut bridge = CrossVmBridge::new();
 
-        let n1 = bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 100,
-        }).unwrap();
+        let n1 = bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 100,
+            })
+            .unwrap();
 
-        let n2 = bridge.queue_operation(CrossVmOperation::TransferToSvm {
-            source: [0u8; 20],
-            destination: vec![1; 32],
-            amount: 200,
-        }).unwrap();
+        let n2 = bridge
+            .queue_operation(CrossVmOperation::TransferToSvm {
+                source: [0u8; 20],
+                destination: vec![1; 32],
+                amount: 200,
+            })
+            .unwrap();
 
         assert_eq!(n1, 1);
         assert_eq!(n2, 2);
@@ -1650,20 +1710,24 @@ mod tests {
     fn test_nonces_survive_clear() {
         let mut bridge = CrossVmBridge::new();
 
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 100,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 100,
+            })
+            .unwrap();
 
         bridge.clear();
 
         // Nonce counter should continue from where it left off
-        let n = bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 100,
-        }).unwrap();
+        let n = bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 100,
+            })
+            .unwrap();
         assert_eq!(n, 2); // Not 1 — no replay
     }
 
@@ -1734,11 +1798,13 @@ mod tests {
         let mut bridge = CrossVmBridge::with_config(config);
 
         // First 300 — OK
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 300,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 300,
+            })
+            .unwrap();
 
         // Next 201 — exceeds 500 epoch limit, auto-pauses
         let result = bridge.queue_operation(CrossVmOperation::TransferToEvm {
@@ -1785,17 +1851,21 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [2u8; 20],
-            amount: 100,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 100,
+            })
+            .unwrap();
 
         // Phase 1: Prepare
         let (nonces, prepare_events) = bridge.prepare(&dispatcher).unwrap();
         assert_eq!(nonces.len(), 1);
         assert_eq!(bridge.prepared_count(), 1);
-        assert!(prepare_events.iter().any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
+        assert!(prepare_events
+            .iter()
+            .any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
 
         // Phase 2: Commit
         let (results, commit_events) = bridge.commit(&dispatcher).unwrap();
@@ -1803,7 +1873,9 @@ mod tests {
         assert!(results[0].success);
         assert_eq!(bridge.prepared_count(), 0);
         assert_eq!(bridge.completed_count(), 1);
-        assert!(commit_events.iter().any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
+        assert!(commit_events
+            .iter()
+            .any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
     }
 
     #[test]
@@ -1811,11 +1883,13 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::TransferToSvm {
-            source: [1u8; 20],
-            destination: vec![2; 32],
-            amount: 500,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToSvm {
+                source: [1u8; 20],
+                destination: vec![2; 32],
+                amount: 500,
+            })
+            .unwrap();
 
         let (nonces, _) = bridge.prepare(&dispatcher).unwrap();
         assert_eq!(nonces.len(), 1);
@@ -1824,7 +1898,9 @@ mod tests {
         // Abort
         let abort_events = bridge.abort();
         assert_eq!(bridge.prepared_count(), 0);
-        assert!(abort_events.iter().any(|e| matches!(e, CrossVmEvent::Aborted { .. })));
+        assert!(abort_events
+            .iter()
+            .any(|e| matches!(e, CrossVmEvent::Aborted { .. })));
     }
 
     #[test]
@@ -1832,27 +1908,35 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::CallEvm {
-            caller: vec![0xAA; 32],
-            contract: [0xBB; 20],
-            input: vec![1, 2, 3],
-            value: 0,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::CallEvm {
+                caller: vec![0xAA; 32],
+                contract: [0xBB; 20],
+                input: vec![1, 2, 3],
+                value: 0,
+            })
+            .unwrap();
 
-        bridge.queue_operation(CrossVmOperation::CallSvm {
-            caller: [0xCC; 20],
-            pallet_index: 1,
-            call_index: 0,
-            input: vec![4, 5, 6],
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::CallSvm {
+                caller: [0xCC; 20],
+                pallet_index: 1,
+                call_index: 0,
+                input: vec![4, 5, 6],
+            })
+            .unwrap();
 
         let (results, events) = bridge.atomic_execute(&dispatcher).unwrap();
         assert_eq!(results.len(), 2);
         assert!(results.iter().all(|r| r.success));
         assert_eq!(bridge.completed_count(), 2);
         // Should have PrepareCompleted + CommitCompleted for each
-        assert!(events.iter().any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
-        assert!(events.iter().any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, CrossVmEvent::CommitCompleted { .. })));
     }
 
     #[test]
@@ -1881,17 +1965,20 @@ mod tests {
 
         // Queue 3 operations — NoOp dispatcher succeeds for all
         for i in 1u8..=3 {
-            bridge.queue_operation(CrossVmOperation::TransferToEvm {
-                source: vec![i; 32],
-                destination: [i; 20],
-                amount: 100,
-            }).unwrap();
+            bridge
+                .queue_operation(CrossVmOperation::TransferToEvm {
+                    source: vec![i; 32],
+                    destination: [i; 20],
+                    amount: 100,
+                })
+                .unwrap();
         }
 
         let (nonces, events) = bridge.prepare(&dispatcher).unwrap();
         assert_eq!(nonces.len(), 3);
         assert_eq!(bridge.prepared_count(), 3);
-        let prepare_count = events.iter()
+        let prepare_count = events
+            .iter()
             .filter(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. }))
             .count();
         assert_eq!(prepare_count, 3);
@@ -1913,12 +2000,14 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::CallEvm {
-            caller,
-            contract: [0xFF; 20],
-            input: vec![],
-            value: 0,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::CallEvm {
+                caller,
+                contract: [0xFF; 20],
+                input: vec![],
+                value: 0,
+            })
+            .unwrap();
 
         // Should execute without error — the address derivation is internal
         let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
@@ -1933,12 +2022,14 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::CallSvm {
-            caller,
-            pallet_index: 0,
-            call_index: 0,
-            input: vec![],
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::CallSvm {
+                caller,
+                pallet_index: 0,
+                call_index: 0,
+                input: vec![],
+            })
+            .unwrap();
 
         let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
         assert!(results[0].success);
@@ -1953,11 +2044,13 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [2u8; 20],
-            amount: 1000,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 1000,
+            })
+            .unwrap();
 
         let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
         assert_eq!(results.len(), 1);
@@ -1971,11 +2064,13 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::TransferToSvm {
-            source: [1u8; 20],
-            destination: vec![2; 32],
-            amount: 500,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToSvm {
+                source: [1u8; 20],
+                destination: vec![2; 32],
+                amount: 500,
+            })
+            .unwrap();
 
         let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
         assert_eq!(results.len(), 1);
@@ -1989,14 +2084,16 @@ mod tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::AtomicSwap {
-            evm_party: [0xAA; 20],
-            svm_party: vec![0xBB; 32],
-            evm_asset: [0u8; 20],
-            svm_asset: vec![0u8; 32],
-            evm_amount: 1000,
-            svm_amount: 2000,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::AtomicSwap {
+                evm_party: [0xAA; 20],
+                svm_party: vec![0xBB; 32],
+                evm_asset: [0u8; 20],
+                svm_asset: vec![0u8; 32],
+                evm_amount: 1000,
+                svm_amount: 2000,
+            })
+            .unwrap();
 
         let (results, _) = bridge.execute_with_dispatcher(&dispatcher).unwrap();
         assert_eq!(results.len(), 1);
@@ -2123,27 +2220,33 @@ mod integration_tests {
         let dispatcher = NoOpDispatcher;
 
         // Queue a mixed batch
-        let n1 = bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [2u8; 20],
-            amount: 100,
-        }).unwrap();
+        let n1 = bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [2u8; 20],
+                amount: 100,
+            })
+            .unwrap();
 
-        let n2 = bridge.queue_operation(CrossVmOperation::CallEvm {
-            caller: vec![3; 32],
-            contract: [4u8; 20],
-            input: vec![0xAB, 0xCD],
-            value: 0,
-        }).unwrap();
+        let n2 = bridge
+            .queue_operation(CrossVmOperation::CallEvm {
+                caller: vec![3; 32],
+                contract: [4u8; 20],
+                input: vec![0xAB, 0xCD],
+                value: 0,
+            })
+            .unwrap();
 
-        let n3 = bridge.queue_operation(CrossVmOperation::AtomicSwap {
-            evm_party: [5u8; 20],
-            svm_party: vec![6; 32],
-            evm_asset: [0u8; 20],
-            svm_asset: vec![0u8; 32],
-            evm_amount: 500,
-            svm_amount: 1000,
-        }).unwrap();
+        let n3 = bridge
+            .queue_operation(CrossVmOperation::AtomicSwap {
+                evm_party: [5u8; 20],
+                svm_party: vec![6; 32],
+                evm_asset: [0u8; 20],
+                svm_asset: vec![0u8; 32],
+                evm_amount: 500,
+                svm_amount: 1000,
+            })
+            .unwrap();
 
         assert_eq!((n1, n2, n3), (1, 2, 3));
 
@@ -2156,10 +2259,12 @@ mod integration_tests {
         assert_eq!(bridge.prepared_count(), 0);
 
         // Should have 3 PrepareCompleted + 3 CommitCompleted
-        let prepare_count = events.iter()
+        let prepare_count = events
+            .iter()
             .filter(|e| matches!(e, CrossVmEvent::PrepareCompleted { .. }))
             .count();
-        let commit_count = events.iter()
+        let commit_count = events
+            .iter()
             .filter(|e| matches!(e, CrossVmEvent::CommitCompleted { .. }))
             .count();
         assert_eq!(prepare_count, 3);
@@ -2175,11 +2280,13 @@ mod integration_tests {
         let mut bridge = CrossVmBridge::with_config(config);
 
         // Transfer 600 — OK
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 600,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 600,
+            })
+            .unwrap();
 
         // Transfer 500 — exceeds 1000 epoch limit
         let result = bridge.queue_operation(CrossVmOperation::TransferToEvm {
@@ -2195,11 +2302,13 @@ mod integration_tests {
         bridge.resume();
 
         // Should work again
-        bridge.queue_operation(CrossVmOperation::TransferToEvm {
-            source: vec![1; 32],
-            destination: [0u8; 20],
-            amount: 100,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::TransferToEvm {
+                source: vec![1; 32],
+                destination: [0u8; 20],
+                amount: 100,
+            })
+            .unwrap();
         assert!(!bridge.is_paused());
     }
 }
@@ -2236,10 +2345,14 @@ mod message_passing_tests {
         assert_eq!(results[0].gas_used, 50_000);
         // Output must encode both sender and target
         let out = &results[0].output;
-        assert!(out.windows(8).any(|w| w == b"SVM:msg:"),
-            "Output should contain SVM:msg: prefix");
-        assert!(out.windows(6).any(|w| w == b"->EVM:"),
-            "Output should contain ->EVM: hop marker");
+        assert!(
+            out.windows(8).any(|w| w == b"SVM:msg:"),
+            "Output should contain SVM:msg: prefix"
+        );
+        assert!(
+            out.windows(6).any(|w| w == b"->EVM:"),
+            "Output should contain ->EVM: hop marker"
+        );
         let _ = queued_nonce; // consumed above
     }
 
@@ -2262,10 +2375,14 @@ mod message_passing_tests {
         assert!(results[0].success);
         assert_eq!(results[0].gas_used, 50_000);
         let out = &results[0].output;
-        assert!(out.windows(8).any(|w| w == b"EVM:msg:"),
-            "Output should contain EVM:msg: prefix");
-        assert!(out.windows(6).any(|w| w == b"->SVM:"),
-            "Output should contain ->SVM: hop marker");
+        assert!(
+            out.windows(8).any(|w| w == b"EVM:msg:"),
+            "Output should contain EVM:msg: prefix"
+        );
+        assert!(
+            out.windows(6).any(|w| w == b"->SVM:"),
+            "Output should contain ->SVM: hop marker"
+        );
     }
 
     /// BRIDGE-004: Payload size limit is enforced at validation time (max 1024 bytes)
@@ -2283,7 +2400,10 @@ mod message_passing_tests {
 
         // Oversized payload must be rejected at queue time (validate_operation)
         let result = bridge.queue_operation(op);
-        assert!(result.is_err(), "Oversized MessageToEvm must be rejected at queue time");
+        assert!(
+            result.is_err(),
+            "Oversized MessageToEvm must be rejected at queue time"
+        );
         assert_eq!(bridge.pending_count(), 0);
     }
 
@@ -2301,7 +2421,10 @@ mod message_passing_tests {
 
         // Oversized payload must be rejected at queue time (validate_operation)
         let result = bridge.queue_operation(op);
-        assert!(result.is_err(), "Oversized MessageToSvm must be rejected at queue time");
+        assert!(
+            result.is_err(),
+            "Oversized MessageToSvm must be rejected at queue time"
+        );
         assert_eq!(bridge.pending_count(), 0);
     }
 
@@ -2327,26 +2450,32 @@ mod message_passing_tests {
         let mut bridge = CrossVmBridge::new();
 
         // Queue three messages in order
-        let n1 = bridge.queue_operation(CrossVmOperation::MessageToEvm {
-            sender: vec![1u8; 32],
-            target_contract: [2u8; 20],
-            message: b"first".to_vec(),
-            nonce: 1,
-        }).unwrap();
+        let n1 = bridge
+            .queue_operation(CrossVmOperation::MessageToEvm {
+                sender: vec![1u8; 32],
+                target_contract: [2u8; 20],
+                message: b"first".to_vec(),
+                nonce: 1,
+            })
+            .unwrap();
 
-        let n2 = bridge.queue_operation(CrossVmOperation::MessageToSvm {
-            sender: [3u8; 20],
-            target_program: vec![4u8; 32],
-            message: b"second".to_vec(),
-            nonce: 2,
-        }).unwrap();
+        let n2 = bridge
+            .queue_operation(CrossVmOperation::MessageToSvm {
+                sender: [3u8; 20],
+                target_program: vec![4u8; 32],
+                message: b"second".to_vec(),
+                nonce: 2,
+            })
+            .unwrap();
 
-        let n3 = bridge.queue_operation(CrossVmOperation::MessageToEvm {
-            sender: vec![5u8; 32],
-            target_contract: [6u8; 20],
-            message: b"third".to_vec(),
-            nonce: 3,
-        }).unwrap();
+        let n3 = bridge
+            .queue_operation(CrossVmOperation::MessageToEvm {
+                sender: vec![5u8; 32],
+                target_contract: [6u8; 20],
+                message: b"third".to_vec(),
+                nonce: 3,
+            })
+            .unwrap();
 
         // Bridge assigns monotonically increasing nonces
         assert!(n1 < n2, "nonce ordering violated: n1={n1} n2={n2}");
@@ -2364,19 +2493,23 @@ mod message_passing_tests {
         let mut bridge = CrossVmBridge::new();
 
         // Use nonce 1
-        bridge.queue_operation(CrossVmOperation::MessageToEvm {
-            sender: vec![1u8; 32],
-            target_contract: [2u8; 20],
-            message: b"original".to_vec(),
-            nonce: 1,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::MessageToEvm {
+                sender: vec![1u8; 32],
+                target_contract: [2u8; 20],
+                message: b"original".to_vec(),
+                nonce: 1,
+            })
+            .unwrap();
         bridge.execute_pending().unwrap();
 
         // Internal nonces tracked: trying to queue with a *bridge-assigned* nonce
         // that was already used should be rejected by the nonce deduplication.
         // The bridge auto-assigns nonces so we verify the used_nonces set is non-empty.
-        assert!(!bridge.used_nonces_snapshot().is_empty(),
-            "Used nonces must be tracked for replay protection");
+        assert!(
+            !bridge.used_nonces_snapshot().is_empty(),
+            "Used nonces must be tracked for replay protection"
+        );
     }
 
     /// BRIDGE-002/003 + 2PC: message passing goes through atomic_execute
@@ -2385,29 +2518,36 @@ mod message_passing_tests {
         let mut bridge = CrossVmBridge::new();
         let dispatcher = NoOpDispatcher;
 
-        bridge.queue_operation(CrossVmOperation::MessageToEvm {
-            sender: vec![0x11; 32],
-            target_contract: [0x22; 20],
-            message: b"2pc evm msg".to_vec(),
-            nonce: 10,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::MessageToEvm {
+                sender: vec![0x11; 32],
+                target_contract: [0x22; 20],
+                message: b"2pc evm msg".to_vec(),
+                nonce: 10,
+            })
+            .unwrap();
 
-        bridge.queue_operation(CrossVmOperation::MessageToSvm {
-            sender: [0x33; 20],
-            target_program: vec![0x44; 32],
-            message: b"2pc svm msg".to_vec(),
-            nonce: 11,
-        }).unwrap();
+        bridge
+            .queue_operation(CrossVmOperation::MessageToSvm {
+                sender: [0x33; 20],
+                target_program: vec![0x44; 32],
+                message: b"2pc svm msg".to_vec(),
+                nonce: 11,
+            })
+            .unwrap();
 
         let (results, events) = bridge.atomic_execute(&dispatcher).unwrap();
         assert_eq!(results.len(), 2);
         assert!(results.iter().all(|r| r.success));
 
-        let commit_count = events.iter()
+        let commit_count = events
+            .iter()
             .filter(|e| matches!(e, CrossVmEvent::CommitCompleted { .. }))
             .count();
-        assert_eq!(commit_count, 2,
-            "Both messages should emit CommitCompleted events");
+        assert_eq!(
+            commit_count, 2,
+            "Both messages should emit CommitCompleted events"
+        );
     }
 }
 
@@ -2510,7 +2650,10 @@ mod kernel_dispatcher_integration_tests {
             .expect("execute_with_dispatcher must not fail");
 
         assert_eq!(results.len(), 1, "one result per queued op");
-        assert!(results[0].success, "transfer must succeed with funded source");
+        assert!(
+            results[0].success,
+            "transfer must succeed with funded source"
+        );
 
         let completed_events = events
             .iter()
@@ -2542,7 +2685,11 @@ mod kernel_dispatcher_integration_tests {
         assert!(results[0].success);
         // Gas = 21_000 + 3 bytes * 16 = 21_048
         assert_eq!(results[0].gas_used, 21_048, "gas must reflect input size");
-        assert_eq!(dispatcher.evm_calls.get(), 1, "exactly one EVM dispatch call");
+        assert_eq!(
+            dispatcher.evm_calls.get(),
+            1,
+            "exactly one EVM dispatch call"
+        );
         assert_eq!(dispatcher.svm_calls.get(), 0, "no SVM dispatch calls");
     }
 
@@ -2570,7 +2717,11 @@ mod kernel_dispatcher_integration_tests {
         // Compute = 5_000 + 4 bytes * 2 = 5_008
         // (pallet_index + call_index prepended to input = 2 + 2 bytes)
         assert_eq!(results[0].gas_used, 5_008, "compute reflects input size");
-        assert_eq!(dispatcher.svm_calls.get(), 1, "exactly one SVM dispatch call");
+        assert_eq!(
+            dispatcher.svm_calls.get(),
+            1,
+            "exactly one SVM dispatch call"
+        );
         assert_eq!(dispatcher.evm_calls.get(), 0, "no EVM dispatch calls");
     }
 
@@ -2602,12 +2753,19 @@ mod kernel_dispatcher_integration_tests {
             .expect("execute must succeed");
 
         assert_eq!(results.len(), 1);
-        assert!(results[0].success, "atomic-swap must succeed with funded parties");
+        assert!(
+            results[0].success,
+            "atomic-swap must succeed with funded parties"
+        );
 
         let swap_events: Vec<_> = events
             .iter()
             .filter(|e| matches!(e, CrossVmEvent::AtomicSwapExecuted { .. }))
             .collect();
-        assert_eq!(swap_events.len(), 1, "one AtomicSwapExecuted event expected");
+        assert_eq!(
+            swap_events.len(),
+            1,
+            "one AtomicSwapExecuted event expected"
+        );
     }
 }

@@ -18,7 +18,9 @@ use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use x3_bridge_adapters::{OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter};
+use x3_bridge_adapters::{
+    OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter,
+};
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -660,8 +662,7 @@ pub fn new_full(
     // with durable escrow persistence backed by the node's off-chain storage,
     // so in-flight cross-VM swaps survive node restarts.
     {
-        let balance_adapter =
-            Arc::new(SubstrateClientBalanceAdapter::new(client.clone()));
+        let balance_adapter = Arc::new(SubstrateClientBalanceAdapter::new(client.clone()));
 
         match backend.offchain_storage() {
             Some(offchain_storage) => {

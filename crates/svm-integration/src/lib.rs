@@ -305,11 +305,7 @@ impl SvmAccountDb {
         to: &[u8; 32],
         lamports: u64,
     ) -> Result<(), &'static str> {
-        let from_balance = self
-            .accounts
-            .get(from)
-            .map(|a| a.lamports)
-            .unwrap_or(0);
+        let from_balance = self.accounts.get(from).map(|a| a.lamports).unwrap_or(0);
         if from_balance < lamports {
             return Err("insufficient lamports");
         }
@@ -365,10 +361,7 @@ pub struct ComputeMeter {
 impl ComputeMeter {
     /// Create new meter with limit
     pub fn new(limit: u64) -> Self {
-        Self {
-            limit,
-            consumed: 0,
-        }
+        Self { limit, consumed: 0 }
     }
 
     /// Consume compute units; returns Err if over limit
@@ -475,11 +468,14 @@ mod tests {
         let from = [1u8; 32];
         let to = [2u8; 32];
 
-        db.set_account(from, AccountUpdate {
-            pubkey: from,
-            lamports: 1000,
-            ..Default::default()
-        });
+        db.set_account(
+            from,
+            AccountUpdate {
+                pubkey: from,
+                lamports: 1000,
+                ..Default::default()
+            },
+        );
 
         assert!(db.transfer(&from, &to, 500).is_ok());
         assert_eq!(db.get_account(&from).unwrap().lamports, 500);
@@ -492,11 +488,14 @@ mod tests {
         let from = [1u8; 32];
         let to = [2u8; 32];
 
-        db.set_account(from, AccountUpdate {
-            pubkey: from,
-            lamports: 100,
-            ..Default::default()
-        });
+        db.set_account(
+            from,
+            AccountUpdate {
+                pubkey: from,
+                lamports: 100,
+                ..Default::default()
+            },
+        );
 
         assert!(db.transfer(&from, &to, 200).is_err());
     }
@@ -505,14 +504,17 @@ mod tests {
     fn test_account_db_state_root() {
         let mut db = SvmAccountDb::new();
         let key = [0xAA; 32];
-        db.set_account(key, AccountUpdate {
-            pubkey: key,
-            lamports: 1000,
-            data: vec![1, 2, 3],
-            executable: false,
-            owner: [0u8; 32],
-            rent_epoch: 0,
-        });
+        db.set_account(
+            key,
+            AccountUpdate {
+                pubkey: key,
+                lamports: 1000,
+                data: vec![1, 2, 3],
+                executable: false,
+                owner: [0u8; 32],
+                rent_epoch: 0,
+            },
+        );
 
         let root1 = db.compute_state_root();
         let root2 = db.compute_state_root();

@@ -82,6 +82,7 @@ venv/
 env/
 **/.venv/
 **/venv/
+.venv-p4/
 **/env/
 
 # IDE

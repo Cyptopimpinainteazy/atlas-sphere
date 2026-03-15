@@ -113,7 +113,11 @@ fn test_ocw_key_is_38_bytes_with_correct_prefix() {
     let mut key = b"x3fin:".to_vec();
     key.extend_from_slice(bundle_id.as_bytes());
 
-    assert_eq!(key.len(), 38, "key must be 38 bytes (6 prefix + 32 bundle_id)");
+    assert_eq!(
+        key.len(),
+        38,
+        "key must be 38 bytes (6 prefix + 32 bundle_id)"
+    );
     assert_eq!(&key[..6], b"x3fin:", "key must start with 'x3fin:'");
     assert_eq!(&key[6..38], bundle_id.as_bytes());
 }
@@ -135,12 +139,18 @@ fn test_ocw_payload_decode_matches_encode() {
     // Decode (pallet OCW reader side — mirrors offchain_worker() code)
     let decoded_root = H256::from_slice(&payload[..32]);
     let decoded_ns = u64::from_le_bytes(
-        payload[32..40].try_into().expect("slice is exactly 8 bytes"),
+        payload[32..40]
+            .try_into()
+            .expect("slice is exactly 8 bytes"),
     );
 
     assert_eq!(decoded_root, receipt_root);
     assert_eq!(decoded_ns, committed_at_ns);
-    assert_ne!(decoded_root, H256::zero(), "SHA-256 of real data cannot be zero");
+    assert_ne!(
+        decoded_root,
+        H256::zero(),
+        "SHA-256 of real data cannot be zero"
+    );
 }
 
 /// Verify `H256::zero()` guard: the OCW skips bundles with zero receipt_root.
@@ -154,7 +164,11 @@ fn test_ocw_zero_receipt_root_is_rejected() {
     );
 
     let non_zero = H256::repeat_byte(0x01);
-    assert_ne!(non_zero, H256::zero(), "non-zero receipt_root must pass OCW guard");
+    assert_ne!(
+        non_zero,
+        H256::zero(),
+        "non-zero receipt_root must pass OCW guard"
+    );
 }
 
 /// Verify that different bundle IDs produce non-colliding OCW keys.
@@ -172,7 +186,10 @@ fn test_ocw_keys_are_unique_per_bundle() {
     let mut key_b = b"x3fin:".to_vec();
     key_b.extend_from_slice(id_b.as_bytes());
 
-    assert_ne!(key_a, key_b, "distinct bundle IDs must produce distinct OCW keys");
+    assert_ne!(
+        key_a, key_b,
+        "distinct bundle IDs must produce distinct OCW keys"
+    );
 }
 
 // ── Flash Finality cert key protocol tests ────────────────────────────────
@@ -186,10 +203,17 @@ fn test_flash_cert_key_is_13_bytes_with_correct_prefix() {
     let mut key = b"x3ff:".to_vec();
     key.extend_from_slice(&block_number.to_le_bytes());
 
-    assert_eq!(key.len(), 13, "Flash cert key must be 13 bytes (5 prefix + 8 LE u64)");
+    assert_eq!(
+        key.len(),
+        13,
+        "Flash cert key must be 13 bytes (5 prefix + 8 LE u64)"
+    );
     assert_eq!(&key[..5], b"x3ff:", "key must start with 'x3ff:'");
     let decoded_block = u64::from_le_bytes(key[5..13].try_into().unwrap());
-    assert_eq!(decoded_block, block_number, "block_number must roundtrip through LE-u64");
+    assert_eq!(
+        decoded_block, block_number,
+        "block_number must roundtrip through LE-u64"
+    );
 }
 
 /// Flash Finality cert keys must be unique per block number.
@@ -205,14 +229,20 @@ fn test_flash_cert_keys_are_unique_per_block() {
         k.extend_from_slice(&101u64.to_le_bytes());
         k
     };
-    assert_ne!(key_100, key_101, "distinct block numbers must produce distinct cert keys");
+    assert_ne!(
+        key_100, key_101,
+        "distinct block numbers must produce distinct cert keys"
+    );
     // Also verify x3ff and x3fin prefixes never collide (sanity check)
     let bundle_key: Vec<u8> = {
         let mut k = b"x3fin:".to_vec();
         k.extend_from_slice(&H256::repeat_byte(0x01).as_bytes()[..8]);
         k
     };
-    assert_ne!(key_100, bundle_key, "'x3ff:' keys must not collide with 'x3fin:' keys");
+    assert_ne!(
+        key_100, bundle_key,
+        "'x3ff:' keys must not collide with 'x3fin:' keys"
+    );
 }
 
 /// Verify that a real cert_hash (32 bytes) roundtrips through the key-value protocol.
@@ -229,7 +259,10 @@ fn test_flash_cert_value_is_32_bytes() {
 
     // Mirrors the OCW read: `H256::from_slice(&v)` where v is 32 bytes
     let decoded = H256::from_slice(&as_h256.as_bytes()[..32]);
-    assert_eq!(decoded, as_h256, "cert_hash must roundtrip through H256::from_slice");
+    assert_eq!(
+        decoded, as_h256,
+        "cert_hash must roundtrip through H256::from_slice"
+    );
 }
 
 /// When Flash Finality cert is zero, the PoAE proof is stored but flagged as incomplete

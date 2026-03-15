@@ -19,10 +19,7 @@ pub async fn post_json(url: &str, body: &[u8]) -> Result<Vec<u8>, String> {
             .send()
             .await
             .map_err(|e| e.to_string())?;
-        let bytes = resp
-            .bytes()
-            .await
-            .map_err(|e| e.to_string())?;
+        let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
         Ok(bytes.to_vec())
     }
 
