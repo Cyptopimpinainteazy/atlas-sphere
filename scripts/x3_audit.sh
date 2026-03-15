@@ -99,7 +99,10 @@ if require_cmd cargo; then
 fi
 
 # Rust edition check
-edition_bad=$(grep -rL 'edition = "2021"' "$ROOT"/crates/*/Cargo.toml "$ROOT"/pallets/*/Cargo.toml 2>/dev/null | wc -l)
+# `grep -rL` returns exit code 1 when no matches are found, which would
+# cause `set -euo pipefail` to abort the script. Allow this case by
+# forcing the pipeline to succeed.
+edition_bad=$(grep -rL 'edition = "2021"' "$ROOT"/crates/*/Cargo.toml "$ROOT"/pallets/*/Cargo.toml 2>/dev/null || true | wc -l)
 if [ "$edition_bad" -gt 0 ]; then
   warn "$edition_bad crate(s) not on Rust edition 2021"
 else
