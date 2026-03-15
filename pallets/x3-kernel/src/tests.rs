@@ -2118,3 +2118,74 @@ fn compute_prepare_root_matches_pallet_implementation() {
         assert_ne!(pallet_root, different_root);
     });
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SEC-009: Emergency Pause tests
+// ──────────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn emergency_pause_requires_governance_origin() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::emergency_pause(RuntimeOrigin::signed(ALICE)),
+            frame_support::error::BadOrigin,
+        );
+    });
+}
+
+#[test]
+fn emergency_pause_and_unpause_by_root_works() {
+    new_test_ext().execute_with(|| {
+        // Initially not paused
+        assert!(!crate::ProtocolPaused::<mock::Test>::get());
+
+        // Root can pause
+        assert_ok!(AtlasKernel::emergency_pause(RuntimeOrigin::root()));
+        assert!(crate::ProtocolPaused::<mock::Test>::get());
+
+        // Root can unpause
+        assert_ok!(AtlasKernel::emergency_unpause(RuntimeOrigin::root()));
+        assert!(!crate::ProtocolPaused::<mock::Test>::get());
+    });
+}
+
+#[test]
+fn emergency_pause_blocks_submit_comit() {
+    ExtBuilder::default().build().execute_with(|| {
+        assert_ok!(AtlasKernel::emergency_pause(RuntimeOrigin::root()));
+
+        let comit_id = H256::from_low_u64_be(1);
+        assert_noop!(
+            AtlasKernel::submit_comit(
+                RuntimeOrigin::signed(ALICE),
+                comit_id,
+                vec![1, 2],
+                vec![3, 4],
+                1u64,
+                100u128,
+                H256::zero(),
+            ),
+            crate::Error::<mock::Test>::ProtocolIsPaused,
+        );
+    });
+}
+
+#[test]
+fn double_pause_is_rejected() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(AtlasKernel::emergency_pause(RuntimeOrigin::root()));
+        assert_noop!(
+            AtlasKernel::emergency_pause(RuntimeOrigin::root()),
+            crate::Error::<mock::Test>::ProtocolIsPaused,
+        );
+    });
+}
+
+#[test]
+fn unpause_when_not_paused_is_noop() {
+    new_test_ext().execute_with(|| {
+        // Not currently paused — unpause should succeed as a no-op
+        assert_ok!(AtlasKernel::emergency_unpause(RuntimeOrigin::root()));
+        assert!(!crate::ProtocolPaused::<mock::Test>::get());
+    });
+}

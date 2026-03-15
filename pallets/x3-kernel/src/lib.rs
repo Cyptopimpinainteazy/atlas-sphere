@@ -597,6 +597,11 @@ pub mod pallet {
     #[pallet::storage]
     pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
 
+    /// Emergency pause flag. When `true`, all user-facing extrinsics are disabled.
+    /// Only governance (root/council) can toggle this.
+    #[pallet::storage]
+    pub type ProtocolPaused<T: Config> = StorageValue<_, bool, ValueQuery>;
+
     /// Maximum size in bytes of SVM account data stored per 32-byte pubkey.
     /// 64 KiB is sufficient for most programs; programs requiring more storage
     /// should use on-chain accounts managed by the native pallet assets pallet.
@@ -740,6 +745,10 @@ pub mod pallet {
             amount: T::Balance,
             comit_id: H256,
         },
+        /// The protocol has been emergency-paused by governance.
+        ProtocolPaused,
+        /// The protocol has been unpaused and resumed normal operation.
+        ProtocolUnpaused,
     }
 
     #[pallet::error]
@@ -818,6 +827,8 @@ pub mod pallet {
         CrossVmFeeExceeded,
         /// Cross-VM prepared queue full.
         CrossVmPreparedQueueFull,
+        /// The protocol is currently paused by governance. No user operations permitted.
+        ProtocolIsPaused,
     }
 
     use frame_support::traits::StorageVersion;
@@ -852,6 +863,32 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        /// Activate emergency pause — halts all user-facing extrinsics.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(40)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_pause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
+            ProtocolPaused::<T>::put(true);
+            Self::deposit_event(Event::ProtocolPaused);
+            Ok(())
+        }
+
+        /// Deactivate emergency pause — resumes normal operation.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(41)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_unpause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            // Only unpause if currently paused (nothing to do otherwise)
+            if ProtocolPaused::<T>::get() {
+                ProtocolPaused::<T>::put(false);
+                Self::deposit_event(Event::ProtocolUnpaused);
+            }
+            Ok(())
+        }
+
         /// Submit a Comit transaction describing dual-VM execution intents.
         #[pallet::call_index(0)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit())]
@@ -865,6 +902,9 @@ pub mod pallet {
             prepare_root: H256,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
 
             // Check for duplicate comit_id (M-4: Comit ID uniqueness)
             ensure!(
@@ -1126,6 +1166,9 @@ pub mod pallet {
             prepare_root: H256,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
 
             ensure!(
                 !SubmittedComits::<T>::contains_key(comit_id),
@@ -1399,6 +1442,8 @@ pub mod pallet {
             proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             let _ = Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
             Ok(())
         }
@@ -1408,6 +1453,8 @@ pub mod pallet {
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
         pub fn commit_cross_vm_operation(origin: OriginFor<T>, comit_id: H256) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             Self::commit_cross_vm_operation_inner(&who, comit_id)
         }
 
