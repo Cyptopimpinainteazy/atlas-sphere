@@ -13,10 +13,10 @@
 #### Environment Setup
 - [x] Create virtual environment: `python3 -m venv .venv-p4`
 - [x] Activate venv: `source .venv-p4/bin/activate`
-- [ ] Install dependencies:
-  - Installed: numpy, pytest, cupy-cuda11x, solders, pytest-asyncio
-  - Missing: ed25519-donna (no PyPI distribution)
-- [ ] Verify CUDA toolkit: `nvcc --version` (missing)
+- [x] Install dependencies:
+  - Installed: numpy, pytest, cupy-cuda11x, solders, pytest-asyncio, pytest-benchmark, pynacl
+  - Note: ed25519-donna is not on PyPI; PyNaCl used as interim CPU verification backend.
+- [x] Verify CUDA toolkit: `/usr/local/cuda-12.2/bin/nvcc --version`
 - [x] Verify GPU: `nvidia-smi`
 
 #### Repository Setup
@@ -38,7 +38,7 @@
 - [x] Scaffold ed25519_verify_batch_kernel function (present in solana_gpu_kernels.cu)
 - [x] Set up host wrapper function (solana_gpu_kernels.cu)
 - [x] Define thread/block layout (128 threads/block)
-- [ ] Test empty kernel compilation (nvcc missing)
+- [x] Test empty kernel compilation (nvcc compile succeeded with warnings)
 
 #### Unit Testing
 - [x] Run single signature test
@@ -61,22 +61,22 @@
 ### Evening Standup (5:00 PM)
 
 #### Status Report
-- [ ] Tests passed: 9 / 30 (sig verification subset only)
+- [x] Tests passed: 26 / 26 in tests/p4_gpu_integration_tests.py
 - [x] CPU baseline measured: ✓
-- [ ] CUDA environment verified: ✗ (nvcc missing)
-- [ ] Day 2 ready: ✗ (CUDA toolkit + ed25519-donna needed)
-- [ ] Blockers: nvcc missing; ed25519-donna not found on PyPI
+- [x] CUDA environment verified: ✓
+- [x] Day 2 ready: ✓ (PyNaCl interim)
+- [ ] Blockers: ed25519-donna not found on PyPI (optional upgrade)
 
 #### Documentation
-- [ ] Update PROGRESS.md with Day 1 completion (PROGRESS.md not found)
+- [x] Update PROGRESS.md with Day 1 completion
 - [ ] Commit code: `git commit -m "P4 Day 1: SigVerifier scaffolding"`
 - [ ] Push branch: `git push origin feat/p4-gpu-accelerator`
 
 ## 🎯 Day 1 Success Criteria
 
-- [x] Dependencies mostly installed (ed25519-donna pending)
-- [ ] CUDA environment working
+- [x] Dependencies installed (PyNaCl interim)
+- [x] CUDA environment working
 - [x] SigVerifier scaffolding complete
 - [x] Signature verification tests runnable
 - [x] CPU baseline captured
-- [ ] Ready for Day 2 kernel development
+- [x] Ready for Day 2 kernel development (PyNaCl interim)

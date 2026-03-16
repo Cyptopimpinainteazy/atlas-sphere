@@ -95,6 +95,22 @@ The complete **four-pillar production enforcement system** for X3:
 
 ---
 
+## ✅ PHASE 3 GATE CHECKLIST (v1.1)
+
+**Minimal gate command set:**
+
+```bash
+bash scripts/x3_audit.sh
+bash scripts/x3_audit.sh --ci
+cargo check --workspace
+cargo fmt --all -- --check
+npm run build:all-packages --if-present
+```
+
+**Phase 4+ deferrals:** release build, full tests, clippy, launch-validator, WASM/runtime checks.
+
+---
+
 ## 🚀 HOW TO DEPLOY (3 STEPS)
 
 ### Step 1: Verify Delivery (2 minutes)

@@ -109,8 +109,6 @@ impl pallet_x3_kernel::Config for Test {
 
 impl Config for Test {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type Balance = u64;
     type UnixTime = ();
     type WeightInfo = ();
     type TreasuryAccount = TreasuryAccount;
@@ -145,7 +143,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     .unwrap();
 
     pallet_x3_coin::GenesisConfig::<Test> {
-        treasury_account: 1,
         team_allocations: vec![(2, 300_000_000_000_000_000_000)],
         ecosystem_allocations: vec![(3, 500_000_000_000_000_000_000)],
         liquidity_allocations: vec![(4, 600_000_000_000_000_000_000)],

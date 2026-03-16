@@ -344,10 +344,7 @@ pub mod pallet {
 
                 Self::deposit_event(Event::JobFailed {
                     job_id,
-                    provider: job.assigned_provider.unwrap_or(
-                        T::AccountId::decode(&mut sp_runtime::traits::TrailingZeroInput::zeroes())
-                            .expect("infinite"),
-                    ),
+                    provider: job.assigned_provider.unwrap_or_else(Self::account_id),
                     reason: JobFailureReason::Timeout,
                 });
             }

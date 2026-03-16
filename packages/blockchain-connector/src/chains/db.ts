@@ -1,6 +1,5 @@
 import type { ChainDescriptor } from '../types';
 import { GENERATED_CHAIN_REGISTRY } from './generated';
-import LRU from 'lru-cache';
 
 interface ChainIndex {
   byId: Map<string, ChainDescriptor>;
@@ -89,7 +88,7 @@ export class ChainDB {
 
     const endpoint = rotation.endpoints[rotation.index];
     rotation.index = (rotation.index + 1) % rotation.endpoints.length;
-    return endpoint;
+    return endpoint!;
   }
 
   getAllEvmChains(network?: 'mainnet' | 'testnet' | 'devnet'): ChainDescriptor[] {

@@ -542,8 +542,6 @@ impl pallet_x3_kernel::Config for Runtime {
 
 impl pallet_x3_coin::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type Currency = Balances;
-    type Balance = Balance;
     type UnixTime = Timestamp;
     type WeightInfo = pallet_x3_coin::weights::SubstrateWeight<Runtime>;
     type TreasuryAccount = TreasuryPalletId;

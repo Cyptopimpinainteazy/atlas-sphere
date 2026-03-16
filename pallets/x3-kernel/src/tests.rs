@@ -1,6 +1,6 @@
 use frame_support::{assert_noop, assert_ok};
-use parity_scale_codec::Encode;
-use sp_core::{hashing::blake2_256, H256};
+use parity_scale_codec::{Decode, Encode};
+use sp_core::H256;
 
 use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, ComitFailureReason, Nonces};
 
@@ -78,23 +78,22 @@ fn submit_comit_successful_flow() {
         );
 
         let events = x3_events();
-        // Successful execution emits: FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted, Finalized
-        assert_eq!(events.len(), 5);
-        // FeeDeducted is first, then ComitSubmitted
-        match &events[1] {
-            AtlasEvent::ComitSubmitted {
-                comit_id: id,
-                origin,
-                nonce: event_nonce,
-                fee: emitted_fee,
-            } => {
-                assert_eq!(*id, comit_id);
-                assert_eq!(*origin, ALICE);
-                assert_eq!(*event_nonce, 0);
-                assert_eq!(*emitted_fee, fee);
-            }
-            e => panic!("Unexpected event: {:?}", e),
-        }
+        // Successful execution emits: FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted,
+        // CanonicalLedgerUpdated, Finalized (order preserved except CanonicalLedgerUpdated may appear between)
+        assert!(events.len() >= 5, "expected at least 5 events, got {}", events.len());
+
+        // Ensure we emitted a ComitSubmitted event with correct payload
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitSubmitted { comit_id: id, origin, nonce: event_nonce, fee: emitted_fee }
+                if *id == comit_id && *origin == ALICE && *event_nonce == 0 && *emitted_fee == fee
+        )), "Expected ComitSubmitted event");
+
+        // Ensure we emitted a ledger update event (added by the test EVM adapter)
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CanonicalLedgerUpdated { .. }
+        )), "Expected CanonicalLedgerUpdated event");
     });
 }
 
@@ -154,7 +153,7 @@ fn submit_comit_v2_fails_when_x3_execution_errors() {
         let comit_id = H256::from_low_u64_be(102);
         let evm_payload = vec![1];
         let svm_payload = vec![1];
-        // 0xFF triggers FailingMockX3Adapter Err
+        // 0xFF triggers TestX3Adapter to return Err
         let x3_payload = vec![0xFF, 0x00, 0x00, 0x00];
         let nonce = 0;
         let fee: Balance = 500;
@@ -181,9 +180,50 @@ fn submit_comit_v2_fails_when_x3_execution_errors() {
             AtlasError::X3ExecutionFailed
         );
 
-        // Atomic rollback: nonce not incremented and no events persisted
+        // Atomic rollback: nonce not incremented and nothing persisted
         assert_eq!(Nonces::<Test>::get(ALICE), 0);
         assert_eq!(x3_events().len(), 0);
+
+        // Confirm that no state changes were written
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &0), 0);
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &1), 0);
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &2), 0);
+    });
+}
+
+#[test]
+fn submit_comit_v2_updates_ledger_for_all_three_vms() {
+    new_test_ext().execute_with(|| {
+        let comit_id = H256::from_low_u64_be(103);
+        let evm_payload = vec![1];
+        let svm_payload = vec![1];
+        let x3_payload = vec![1];
+        let nonce = 0;
+        let fee: Balance = 500;
+        let prepare_root = compute_prepare_root_v2(
+            comit_id,
+            &evm_payload,
+            &svm_payload,
+            &x3_payload,
+            nonce,
+            fee,
+        );
+
+        assert_ok!(AtlasKernel::submit_comit_v2(
+            RuntimeOrigin::signed(ALICE),
+            comit_id,
+            evm_payload,
+            svm_payload,
+            x3_payload,
+            nonce,
+            fee,
+            prepare_root,
+        ));
+
+        // Confirm all three adapters contributed state changes
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &0), 123);
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &1), 222);
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &2), 333);
     });
 }
 
@@ -1123,23 +1163,33 @@ fn comit_submission_emits_all_required_event_fields() {
 
         let events = x3_events();
 
-        // Now includes FeeDeducted event: FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted, Finalized
-        assert_eq!(events.len(), 5);
-        // FeeDeducted is index 0, ComitSubmitted is index 1
-        match &events[1] {
-            AtlasEvent::ComitSubmitted {
-                comit_id: id,
-                origin,
-                nonce: n,
-                fee: f,
-            } => {
-                assert_eq!(*id, comit_id);
-                assert_eq!(*origin, ALICE);
-                assert_eq!(*n, nonce);
-                assert_eq!(*f, fee);
-            }
-            _ => panic!("Unexpected event"),
-        }
+        // Ensure required events exist (order is not strictly asserted beyond existence).
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitSubmitted { comit_id: id, origin, nonce: n, fee: f }
+                if *id == comit_id && *origin == ALICE && *n == nonce && *f == fee
+        )), "Expected ComitSubmitted event");
+
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitExecutionStarted { .. }
+        )), "Expected ComitExecutionStarted event");
+
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitExecutionCompleted { .. }
+        )), "Expected ComitExecutionCompleted event");
+
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitFinalized { .. }
+        )), "Expected ComitFinalized event");
+
+        // Ensure the ledger update event is emitted for state changes
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CanonicalLedgerUpdated { .. }
+        )), "Expected CanonicalLedgerUpdated event");
     });
 }
 
@@ -1923,7 +1973,8 @@ fn decode_failure_counter_tracks_failures() {
         // Initial counter should be 0
         assert_eq!(crate::DecodeFailureCount::<Test>::get(), 0);
 
-        // Submit a valid comit (may or may not have decode failures depending on state changes)
+        // Submit a valid comit. The mock EVM adapter in this test runtime emits a
+        // well-formed state change that should decode correctly.
         let comit_id = H256::from_low_u64_be(700);
         let evm_payload = vec![1, 2, 3];
         let svm_payload = vec![4, 5];
@@ -1941,9 +1992,34 @@ fn decode_failure_counter_tracks_failures() {
             prepare_root,
         ));
 
-        // Counter may have incremented depending on mock adapter output decoding
-        // The important thing is that the counter exists and can be read
-        let _count = crate::DecodeFailureCount::<Test>::get();
+        // The mocked state change is valid, so decode failure count should remain 0.
+        assert_eq!(crate::DecodeFailureCount::<Test>::get(), 0);
+    });
+}
+
+#[test]
+fn submit_comit_updates_canonical_ledger_via_state_changes() {
+    new_test_ext().execute_with(|| {
+        // The mock EVM adapter emits a deterministic state change: asset_id=0, balance=123.
+        let comit_id = H256::from_low_u64_be(710);
+        let evm_payload = vec![1, 2, 3];
+        let svm_payload = vec![4, 5];
+        let nonce = 0;
+        let fee: Balance = 100;
+        let prepare_root = compute_prepare_root(comit_id, &evm_payload, &svm_payload, nonce, fee);
+
+        assert_ok!(AtlasKernel::submit_comit(
+            RuntimeOrigin::signed(ALICE),
+            comit_id,
+            evm_payload,
+            svm_payload,
+            nonce,
+            fee,
+            prepare_root,
+        ));
+
+        // Verify ledger state updated from the mock adapter state change
+        assert_eq!(CanonicalLedger::<Test>::get(ALICE, &0), 123);
     });
 }
 

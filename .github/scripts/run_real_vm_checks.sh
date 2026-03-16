@@ -9,6 +9,11 @@ rustc --version || true
 echo "-- Add wasm target --"
 rustup target add wasm32-unknown-unknown || true
 
+echo "-- Check wasm-opt --"
+if ! command -v wasm-opt &>/dev/null; then
+  echo "wasm-opt not found (install binaryen)"; exit 1
+fi
+
 echo "-- Cargo check (selected crates with std) --"
 cargo check -p pallet-x3-kernel -p evm-integration -p runtime --features std
 

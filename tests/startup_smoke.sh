@@ -3,7 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-. "$ROOT/run-everything.sh" >/dev/null 2>&1 || true
+# Run bootstrap in a separate process so an `exit` inside doesn't kill this smoke test.
+# Use --detach so we don't hang waiting on foreground services.
+bash "$ROOT/run-everything.sh" --detach >/dev/null 2>&1 || true
 
 echo "Running startup smoke checks..."
 

@@ -8,6 +8,10 @@ export interface AlerterOptions {
   wideFailureWindowSec?: number;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export class Alerter {
   private monitor: HealthMonitor;
   private opts: AlerterOptions;
@@ -34,8 +38,8 @@ export class Alerter {
     if (!this.opts.slackWebhook) return;
     try {
       await fetch(this.opts.slackWebhook, { method: 'POST', body: JSON.stringify({ text }), headers: { 'Content-Type': 'application/json' } });
-    } catch (e) {
-      console.warn('Alerter: slack post failed', e?.message || e);
+    } catch (error) {
+      console.warn('Alerter: slack post failed', getErrorMessage(error));
     }
   }
 
@@ -43,8 +47,8 @@ export class Alerter {
     if (!this.opts.webhookUrl) return;
     try {
       await fetch(this.opts.webhookUrl, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } });
-    } catch (e) {
-      console.warn('Alerter: webhook post failed', e?.message || e);
+    } catch (error) {
+      console.warn('Alerter: webhook post failed', getErrorMessage(error));
     }
   }
 

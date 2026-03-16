@@ -10,7 +10,7 @@ use crate::{
     articles::ConstitutionManifest,
     error::ConstitutionError,
     invariants::{CoreInvariant, InvariantSet, InvariantViolation},
-    types::{ConstitutionHash, InvariantBounds},
+    types::ConstitutionHash,
 };
 
 /// The live constitution engine.

@@ -4,8 +4,7 @@ import client from 'prom-client';
 
 export function startServer({ monitor, port = 9464 } : { monitor?: HealthMonitor; port?: number }) {
   // expose Prometheus metrics
-  const collectDefault = client.collectDefaultMetrics;
-  collectDefault({ timeout: 5000 });
+  client.collectDefaultMetrics();
 
   const server = http.createServer(async (req, res) => {
     if (!req.url) return res.end('');

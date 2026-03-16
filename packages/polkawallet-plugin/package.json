@@ -5,9 +5,9 @@
   "main": "dist/main.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "build:dev": "webpack --config webpack.config.js --mode development",
-    "dev": "webpack --config webpack.config.js --watch",
+    "build": "tsup --config tsup.config.ts",
+    "build:dev": "tsup --config tsup.config.ts --env.NODE_ENV development",
+    "dev": "tsup --config tsup.config.ts --watch",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src/ --ext .ts",

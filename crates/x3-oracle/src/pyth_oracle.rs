@@ -153,7 +153,7 @@ impl PythOracle {
         let avg = prices.iter().sum::<i64>() / prices.len() as i64;
 
         // Check if current price deviates > threshold from average
-        let current = prices.last().unwrap();
+        let current = prices.last().ok_or("No current price available")?;
         let deviation = ((current - avg).abs() as f64 / avg as f64) * 100.0;
 
         Ok(deviation > threshold_pct)

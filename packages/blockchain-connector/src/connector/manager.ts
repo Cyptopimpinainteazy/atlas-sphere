@@ -13,7 +13,7 @@ import type {
   Transaction,
   ChainDescriptor,
 } from "../types";
-import { getChain } from "../chains/registry";
+import { CHAIN_REGISTRY, getChain } from "../chains/registry";
 import { createAdapter, type IChainAdapter } from "../adapters";
 import { HealthMonitor } from "./health-monitor";
 import { chainDB } from "../chains/db";
@@ -109,7 +109,7 @@ export class ConnectorManager {
   async createConnector(options: ConnectorOptions): Promise<ConnectorInstance> {
     const chain = getChain(options.chain) ?? chainDB.searchChains(options.chain)[0];
     if (!chain) {
-      throw new Error(`Unknown chain: ${options.chain}. Available: ${CHAIN_REGISTRY.map(c => c.id).join(", ")}`);
+      throw new Error(`Unknown chain: ${options.chain}. Available: ${CHAIN_REGISTRY.map((chain) => chain.id).join(", ")}`);
     }
 
     const id = `conn_${crypto.randomUUID().split("-")[0]}`;

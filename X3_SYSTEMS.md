@@ -96,6 +96,33 @@ bash scripts/x3_audit.sh --ci
 bash scripts/x3_audit.sh --fix
 ```
 
+**Phase 3 minimal gate command set (v1.1):**
+```bash
+bash scripts/x3_audit.sh
+bash scripts/x3_audit.sh --ci
+cargo check --workspace
+cargo fmt --all -- --check
+npm run build:all-packages --if-present
+```
+
+**Note:** Toolchain pinning is documented in `rust-toolchain.toml`. Phase 3 does not add extra pin enforcement beyond that file.
+
+**Phase 4 gate command set (v1.1):**
+```bash
+bash scripts/x3_audit.sh
+bash scripts/x3_audit.sh --ci
+cargo build --release --locked --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --release --locked
+cd runtime && cargo build --release --target wasm32-unknown-unknown --no-default-features
+cargo run -p x3-launch-validator -- --check pre-launch
+cargo run -p x3-launch-validator -- --check failure-conditions
+```
+
+**Phase 4 CI toolchain:** pinned nightly `nightly-2024-12-01` with `rustfmt`, `clippy`, `rust-src`, and target `wasm32-unknown-unknown`. `wasm-opt` required in CI.
+**Phase 4 CI policy:** warnings are errors (`-D warnings`), flaky tests fail immediately (no retries).
+**Launch-validator defaults:** `target/release/x3-chain-node`, `testnet/genesis.json`, and `prometheus.yml` must exist or the gate fails.
+
 **Exit Codes:**
 - `0` — All checks passed
 - `1` — Hard failure (build, tests, lock file)
@@ -129,32 +156,11 @@ bash scripts/x3_audit.sh --fix
 
 **Trigger:** Every PR + push to `main` / `master`
 
-**Jobs (5 stages):**
+**Phase 4 CI gate:**
 
-1. **Structural Audit**
-   - Runs `scripts/x3_audit.sh`
-   - Fails if directories missing or `⬜` found in checklist
-   - Time: ~30 seconds
-
-2. **Build Integrity**
-   - `cargo build --release --locked`
-   - `cargo clippy` (warnings as errors)
-   - Time: ~3 minutes (cached)
-
-3. **Test Suite**
-   - `cargo test --all --locked`
-   - Must pass 100%
-   - Time: ~5 minutes (cached)
-
-4. **Dependency Audit**
-   - `cargo-deny check advisories`
-   - Blocks CVE-affected crate versions
-   - Time: ~30 seconds
-
-5. **Completion Checklist**
-   - Final gate: fail if any `⬜` remain in `X3_COMPLETION.md`
-   - Forces explicit acknowledgment of incomplete work
-   - Time: ~5 seconds
+- Runs `bash scripts/x3_audit.sh --ci`
+- Enforces Phase 4 build/test/WASM/launch-validator gates
+- CI fails on warnings; local runs require `--strict` to fail on warnings
 
 **Result:**
 - ✅ All jobs pass → **Merge allowed**

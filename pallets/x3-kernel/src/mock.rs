@@ -100,6 +100,125 @@ impl pallet_balances::Config for Test {
     type MaxFreezes = ConstU32<0>;
 }
 
+// A minimal adapter used by tests to emit a deterministic state change so
+// canonical ledger updates can be verified via submit_comit.
+pub struct TestEvmAdapter;
+
+impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
+    fn execute(payload: &[u8], _gas_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+        // Use a fixed asset/balance so tests can assert on canonical ledger.
+        let account: AccountId = ALICE;
+        let asset_id: AssetId = 0;
+        let balance: Balance = 123;
+
+        // SCALE-encode asset_id and balance into 32-byte keys/values.
+        let mut key_bytes = [0u8; 32];
+        let asset_bytes = asset_id.encode();
+        key_bytes[..asset_bytes.len()].copy_from_slice(&asset_bytes);
+
+        let mut value_bytes = [0u8; 32];
+        let balance_bytes = balance.encode();
+        value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
+
+        Ok(crate::ExecutionReceipt {
+            success: true,
+            gas_used: 21000,
+            return_data: Vec::new(),
+            logs: Vec::new(),
+            state_changes: vec![crate::StateChange {
+                address: account.encode(),
+                key: H256::from(key_bytes),
+                value: H256::from(value_bytes),
+            }],
+        })
+    }
+
+    fn estimate_gas(_payload: &[u8]) -> Result<u64, frame_support::dispatch::DispatchError> {
+        Ok(21000)
+    }
+
+    fn validate(_payload: &[u8]) -> Result<(), frame_support::dispatch::DispatchError> {
+        Ok(())
+    }
+}
+
+pub struct TestSvmAdapter;
+
+impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
+    fn execute(payload: &[u8], _compute_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+        let account: AccountId = ALICE;
+        let asset_id: AssetId = 1;
+        let balance: Balance = 222;
+
+        let mut key_bytes = [0u8; 32];
+        let asset_bytes = asset_id.encode();
+        key_bytes[..asset_bytes.len()].copy_from_slice(&asset_bytes);
+
+        let mut value_bytes = [0u8; 32];
+        let balance_bytes = balance.encode();
+        value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
+
+        Ok(crate::ExecutionReceipt {
+            success: true,
+            gas_used: 5000,
+            return_data: Vec::new(),
+            logs: Vec::new(),
+            state_changes: vec![crate::StateChange {
+                address: account.encode(),
+                key: H256::from(key_bytes),
+                value: H256::from(value_bytes),
+            }],
+        })
+    }
+
+    fn validate(_payload: &[u8]) -> Result<(), frame_support::dispatch::DispatchError> {
+        Ok(())
+    }
+}
+
+pub struct TestX3Adapter;
+
+impl pallet_x3_kernel::X3ExecutorAdapter for TestX3Adapter {
+    fn execute(payload: &[u8], _gas_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+        // Simulate an execution failure when payload starts with 0xFF.
+        if payload.first() == Some(&0xFF) {
+            return Err(frame_support::dispatch::DispatchError::Other("X3 execution failed"));
+        }
+
+        let account: AccountId = ALICE;
+        let asset_id: AssetId = 2;
+        let balance: Balance = 333;
+
+        let mut key_bytes = [0u8; 32];
+        let asset_bytes = asset_id.encode();
+        key_bytes[..asset_bytes.len()].copy_from_slice(&asset_bytes);
+
+        let mut value_bytes = [0u8; 32];
+        let balance_bytes = balance.encode();
+        value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
+
+        Ok(crate::ExecutionReceipt {
+            success: true,
+            gas_used: 1000,
+            return_data: Vec::new(),
+            logs: Vec::new(),
+            state_changes: vec![crate::StateChange {
+                address: account.encode(),
+                key: H256::from(key_bytes),
+                value: H256::from(value_bytes),
+            }],
+        })
+    }
+
+    fn validate(_payload: &[u8]) -> Result<(), frame_support::dispatch::DispatchError> {
+        Ok(())
+    }
+
+    fn estimate_gas(_payload: &[u8]) -> Result<u64, frame_support::dispatch::DispatchError> {
+        Ok(1000)
+    }
+}
+
 impl pallet_x3_kernel::Config for Test {
     type RuntimeEvent = RuntimeEvent;
     type Currency = Balances;
@@ -119,9 +238,9 @@ impl pallet_x3_kernel::Config for Test {
     type DefaultSvmComputeLimit = ConstU64<200_000>;
     type DefaultX3GasLimit = ConstU64<5_000_000>;
     type WeightInfo = ();
-    type EvmAdapter = ();
-    type SvmAdapter = ();
-    type X3Adapter = crate::FailingMockX3Adapter;
+    type EvmAdapter = TestEvmAdapter;
+    type SvmAdapter = TestSvmAdapter;
+    type X3Adapter = TestX3Adapter;
     type GovernanceOrigin = frame_system::EnsureRoot<AccountId>;
     type CrossVmPrepareTtl = ConstU64<10>;
     type MaxPreparedCrossVmOps = ConstU32<16>;

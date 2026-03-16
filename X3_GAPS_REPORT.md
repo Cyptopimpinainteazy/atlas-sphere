@@ -40,6 +40,27 @@
 
 ---
 
+## PHASE 3 GATE STABILIZATION (REQ-101)
+
+**Active gaps (Phase 3 scope):**
+- `scripts/x3_audit.sh` must fail CI on warnings and missing tools
+- `.github/workflows/x3-audit.yml` must match the Phase 3 minimal gate set
+- Checklist scope must reflect Phase 3 gates with explicit deferrals
+- TypeScript package build gate must run: `npm run build:all-packages --if-present`
+
+### Deferred (Phase 4+)
+- Release build (`cargo build --release --workspace`)
+- Full test suite (`cargo test --workspace`)
+- Clippy warnings as errors
+- Launch validator checks
+- WASM/runtime build checks
+
+### Infra/Toolchain Exceptions
+
+Infra-caused failures (toolchain install, CI image issues, transient network) may be marked **non-blocking** only if explicitly labeled in the report and tracked as a follow-up item. Silent bypass is not allowed.
+
+---
+
 ---
 
 ## EXECUTIVE SUMMARY

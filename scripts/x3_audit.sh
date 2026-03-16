@@ -25,7 +25,7 @@ FAILED_CHECKS=()
 
 for arg in "$@"; do
   case "$arg" in
-    --ci)     CI_MODE=1 ;;
+    --ci)     CI_MODE=1; STRICT=1 ;;
     --strict) STRICT=1 ;;
     --fix)    FIX_MODE=1 ;;
   esac
@@ -35,14 +35,51 @@ done
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 BOLD='\033[1m'
 
-pass()  { ((PASS++));  echo -e "${GREEN}  [PASS]${NC} $1"; }
-warn()  { ((WARN++));  echo -e "${YELLOW}  [WARN]${NC} $1"; }
-fail()  { ((FAIL++));  FAILED_CHECKS+=("$1"); echo -e "${RED}  [FAIL]${NC} $1"; }
+pass()  { PASS=$((PASS + 1));  echo -e "${GREEN}  [PASS]${NC} $1"; }
+warn()  { WARN=$((WARN + 1));  echo -e "${YELLOW}  [WARN]${NC} $1"; }
+fail()  { FAIL=$((FAIL + 1));  FAILED_CHECKS+=("$1"); echo -e "${RED}  [FAIL]${NC} $1"; }
 header(){ echo -e "\n${BOLD}=== $1 ===${NC}"; }
 
 require_cmd() {
-  command -v "$1" &>/dev/null || { echo "  [SKIP] '$1' not installed — skipping this check"; return 1; }
-  return 0
+  if command -v "$1" &>/dev/null; then
+    return 0
+  fi
+  if [ "$CI_MODE" -eq 1 ]; then
+    fail "Missing required tool: $1"
+  else
+    warn "Missing required tool: $1"
+  fi
+  return 1
+}
+
+preflight_tool() {
+  if command -v "$1" &>/dev/null; then
+    pass "Tool available: $1"
+    return 0
+  fi
+  if [ "$CI_MODE" -eq 1 ]; then
+    fail "Missing required tool: $1"
+  else
+    warn "Missing required tool: $1"
+  fi
+  return 1
+}
+
+preflight_rustfmt() {
+  if command -v rustfmt &>/dev/null; then
+    pass "Tool available: rustfmt"
+    return 0
+  fi
+  if command -v cargo &>/dev/null && cargo fmt --version &>/dev/null 2>&1; then
+    pass "Tool available: rustfmt (via cargo fmt)"
+    return 0
+  fi
+  if [ "$CI_MODE" -eq 1 ]; then
+    fail "Missing required tool: rustfmt"
+  else
+    warn "Missing required tool: rustfmt"
+  fi
+  return 1
 }
 
 cd "$ROOT"
@@ -50,6 +87,14 @@ cd "$ROOT"
 echo -e "\n${BOLD}╔══════════════════════════════════════════════════╗${NC}"
 echo -e "${BOLD}║   X3 SELF-AUDIT RUNNER — $(date +%Y-%m-%d)           ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════════════════╝${NC}"
+
+# ── SECTION 0: Preflight ──────────────────────────────────────────────────────
+header "0. PREFLIGHT"
+preflight_tool cargo
+preflight_tool rg
+preflight_tool npm
+preflight_rustfmt
+preflight_tool wasm-opt
 
 # ── SECTION 1: Repo Structure ─────────────────────────────────────────────────
 header "1. REPO STRUCTURE"
@@ -95,6 +140,146 @@ if require_cmd cargo; then
     pass "cargo check --workspace"
   else
     fail "cargo check --workspace failed"
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: cargo fmt --all -- --check..."
+  if cargo fmt --all -- --check 2>/dev/null; then
+    pass "cargo fmt --all -- --check"
+  else
+    fail "cargo fmt --all -- --check failed"
+  fi
+fi
+
+if require_cmd npm; then
+  echo "  Running: npm run build:all-packages --if-present..."
+  if npm run build:all-packages --if-present 2>/dev/null; then
+    pass "npm run build:all-packages --if-present"
+  else
+    fail "npm run build:all-packages --if-present failed"
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: cargo build --release --locked --workspace..."
+  if [ "$STRICT" -eq 1 ]; then
+    if RUSTFLAGS="-D warnings" cargo build --release --locked --workspace 2>/dev/null; then
+      pass "cargo build --release --locked --workspace"
+    else
+      fail "cargo build --release --locked --workspace failed"
+    fi
+  else
+    if cargo build --release --locked --workspace 2>/dev/null; then
+      pass "cargo build --release --locked --workspace"
+    else
+      fail "cargo build --release --locked --workspace failed"
+    fi
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: cargo clippy --workspace --all-targets --all-features..."
+  if [ "$STRICT" -eq 1 ]; then
+    if cargo clippy --workspace --all-targets --all-features -- -D warnings 2>/dev/null; then
+      pass "cargo clippy --workspace --all-targets --all-features"
+    else
+      fail "cargo clippy --workspace --all-targets --all-features failed"
+    fi
+  else
+    if cargo clippy --workspace --all-targets --all-features 2>/dev/null; then
+      pass "cargo clippy --workspace --all-targets --all-features"
+    else
+      fail "cargo clippy --workspace --all-targets --all-features failed"
+    fi
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: cargo test --workspace --release --locked..."
+  if [ "$STRICT" -eq 1 ]; then
+    if RUSTFLAGS="-D warnings" cargo test --workspace --release --locked 2>/dev/null; then
+      pass "cargo test --workspace --release --locked"
+    else
+      fail "cargo test --workspace --release --locked failed"
+    fi
+  else
+    if cargo test --workspace --release --locked 2>/dev/null; then
+      pass "cargo test --workspace --release --locked"
+    else
+      fail "cargo test --workspace --release --locked failed"
+    fi
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: cargo test -p runtime --features std --no-fail-fast..."
+  if cargo test -p runtime --features std --no-fail-fast 2>/dev/null; then
+    pass "cargo test -p runtime --features std --no-fail-fast"
+  else
+    fail "cargo test -p runtime --features std --no-fail-fast failed"
+  fi
+
+  echo "  Running: cargo test -p pallet-x3-kernel --features std --no-fail-fast..."
+  if cargo test -p pallet-x3-kernel --features std --no-fail-fast 2>/dev/null; then
+    pass "cargo test -p pallet-x3-kernel --features std --no-fail-fast"
+  else
+    fail "cargo test -p pallet-x3-kernel --features std --no-fail-fast failed"
+  fi
+
+  echo "  Running: cargo test -p evm-integration --features std --no-fail-fast..."
+  if cargo test -p evm-integration --features std --no-fail-fast 2>/dev/null; then
+    pass "cargo test -p evm-integration --features std --no-fail-fast"
+  else
+    fail "cargo test -p evm-integration --features std --no-fail-fast failed"
+  fi
+
+  echo "  Running: cargo test -p svm-integration --features std --no-fail-fast..."
+  if cargo test -p svm-integration --features std --no-fail-fast 2>/dev/null; then
+    pass "cargo test -p svm-integration --features std --no-fail-fast"
+  else
+    fail "cargo test -p svm-integration --features std --no-fail-fast failed"
+  fi
+
+  echo "  Running: cargo test -p x3-integration --features std --no-fail-fast..."
+  if cargo test -p x3-integration --features std --no-fail-fast 2>/dev/null; then
+    pass "cargo test -p x3-integration --features std --no-fail-fast"
+  else
+    fail "cargo test -p x3-integration --features std --no-fail-fast failed"
+  fi
+fi
+
+if require_cmd cargo; then
+  echo "  Running: runtime WASM build (no_std)..."
+  if (cd runtime && cargo build --release --target wasm32-unknown-unknown --no-default-features 2>/dev/null); then
+    pass "runtime WASM build (no_std)"
+  else
+    fail "runtime WASM build (no_std) failed"
+  fi
+fi
+
+launch_defaults=("target/release/x3-chain-node" "testnet/genesis.json" "prometheus.yml")
+missing_defaults=0
+for path in "${launch_defaults[@]}"; do
+  if [ ! -f "$ROOT/$path" ]; then
+    fail "Launch-validator default path missing: $path"
+    missing_defaults=1
+  fi
+done
+
+if [ "$missing_defaults" -eq 0 ] && require_cmd cargo; then
+  echo "  Running: x3-launch-validator (pre-launch)..."
+  if cargo run -p x3-launch-validator -- --check pre-launch 2>/dev/null; then
+    pass "x3-launch-validator --check pre-launch"
+  else
+    fail "x3-launch-validator --check pre-launch failed"
+  fi
+
+  echo "  Running: x3-launch-validator (failure-conditions)..."
+  if cargo run -p x3-launch-validator -- --check failure-conditions 2>/dev/null; then
+    pass "x3-launch-validator --check failure-conditions"
+  else
+    fail "x3-launch-validator --check failure-conditions failed"
   fi
 fi
 

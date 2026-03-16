@@ -2,30 +2,80 @@
 
 ## Overview
 
-X3 Chain is a modular blockchain execution platform focused on high throughput, multi-VM support (EVM + SVM), and secure validator coordination. This roadmap captures the phased work needed to build, ship, and iterate the core blockchain node.
+X3 Chain is a modular blockchain execution platform focused on high throughput, multi-VM support (EVM + SVM), and secure validator coordination. The next milestone is focused on turning the current monorepo into a release candidate by driving the real build, validation, security, and testnet gates to green.
 
-## Milestone: v1.0 Foundation (In progress)
+## Milestone: v1.1 Release Readiness (In progress)
 
-- 🚧 **v1.0 Foundation** — Phases 1-3 (in progress)
+- 🚧 **v1.1 Release Readiness** — Phases 3-8 (planned)
+
+## Archived Milestones
+
+- ✅ **v1.0 Foundation** — Phases 1-2 (shipped 2026-03-15)
 
 ## Phases
 
-### Phase 1: Project setup
-**Goal:** Establish planning infrastructure and baseline documentation for the X3 Chain repository.
-**Depends on:** None
-**Requirements:** [REQ-01]
-**Plans:** 1 plan
+### Phase 3: Delivery gate stabilization
+**Goal:** Make the local release gates truthful and repeatable so the repo can be evaluated from a clean baseline.
+**Depends on:** Phase 2
+**Requirements:** [REQ-101]
+**Plans:** 3 plans
 
 Plans:
-- [x] 01-01: Bootstrap planning (create roadmap, requirements, state, phase structure)
+- [x] 03-01: Repair local audit and packaging scripts
+- [x] 03-02: Align checklists and gap reports with current repo reality
+- [x] 03-03: Define the minimal release gate command set for contributors
 
-
-### Phase 2: Gap closure placeholder
-
-**Goal:** Provide a dedicated phase to track and resolve gaps identified by milestone audits.
-**Requirements**: TBD (depends on audit findings)
-**Depends on:** Phase 1
-**Plans:** 1 plan
+### Phase 4: Rust build and launch gates
+**Goal:** Get the core Rust build, test, WASM, and launch-validator checks to pass on the intended release path.
+**Depends on:** Phase 3
+**Requirements:** [REQ-101, REQ-102]
+**Plans:** 3 plans
 
 Plans:
-- [x] 02-01: Create gap closure phase scaffold (placeholder)
+- [x] 04-01: Green `cargo check` / `cargo build` / `cargo fmt` on the release workspace
+- [x] 04-02: Green targeted and workspace test suites for node, runtime, and critical crates
+- [x] 04-03: Green `x3-launch-validator` and release-critical offline checks
+
+### Phase 5: Dual-VM completion
+**Goal:** Close the remaining production-critical EVM, SVM, and cross-VM bridge gaps.
+**Depends on:** Phase 4
+**Requirements:** [REQ-103, REQ-104, REQ-105]
+**Plans:** 3 plans
+
+Plans:
+- [ ] 05-01: Complete EVM deployment and integration coverage
+- [ ] 05-02: Complete SVM execution, deployment, and ledger sync coverage
+- [ ] 05-03: Prove cross-VM atomic flow end to end
+
+### Phase 6: Security and runtime hardening
+**Goal:** Remove known production-safety hazards across node, runtime, pallets, and RPC surfaces.
+**Depends on:** Phase 5
+**Requirements:** [REQ-106]
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06-01: Eliminate critical `unwrap()` / `expect()` / `panic!()` paths in production code
+- [ ] 06-02: Harden RPC, rate limiting, and abuse controls
+- [ ] 06-03: Audit pallet permissions, events, and runtime safety invariants
+
+### Phase 7: SDK and app packaging
+**Goal:** Ensure the TypeScript packages and supported app surfaces build cleanly and match the release contract.
+**Depends on:** Phase 4
+**Requirements:** [REQ-101, REQ-107]
+**Plans:** 3 plans
+
+Plans:
+- [ ] 07-01: Green package builds for SDK, connector, and Polkawallet workspaces
+- [ ] 07-02: Close remaining SDK/API surface gaps required for release
+- [ ] 07-03: Produce release-ready package artifacts and usage docs
+
+### Phase 8: Testnet proving and go/no-go
+**Goal:** Validate X3 Chain under realistic startup and testnet conditions, then assemble the final ship decision package.
+**Depends on:** Phase 5, Phase 6, Phase 7
+**Requirements:** [REQ-102, REQ-107]
+**Plans:** 3 plans
+
+Plans:
+- [ ] 08-01: Run startup smoke and local multi-validator verification
+- [ ] 08-02: Validate deployment SOP, rollback, and operator runbooks
+- [ ] 08-03: Produce the final go/no-go checklist with signed release artifacts

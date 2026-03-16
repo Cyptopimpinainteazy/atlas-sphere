@@ -102,13 +102,45 @@ git push origin feature-branch
 gh run list --workflow x3-audit.yml --limit 1
 ```
 
+**Phase 3 minimal gate set (v1.1):**
+```bash
+bash scripts/x3_audit.sh
+bash scripts/x3_audit.sh --ci
+cargo check --workspace
+cargo fmt --all -- --check
+npm run build:all-packages --if-present
+```
+
+**Phase 4+ gates (deferred):** release build, full tests, clippy, launch-validator, WASM checks.
+
+**Phase 4 gate set (v1.1):**
+```bash
+bash scripts/x3_audit.sh
+bash scripts/x3_audit.sh --ci
+cargo build --release --locked --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --release --locked
+cd runtime && cargo build --release --target wasm32-unknown-unknown --no-default-features
+cargo run -p x3-launch-validator -- --check pre-launch
+cargo run -p x3-launch-validator -- --check failure-conditions
+```
+
+**CI toolchain for Phase 4:** pinned nightly `nightly-2024-12-01` with `rustfmt`, `clippy`, `rust-src`, and target `wasm32-unknown-unknown`. `wasm-opt` required in CI.
+**Phase 4 CI policy:** warnings are errors (`-D warnings`), flaky tests fail immediately (no retries).
+**Launch-validator defaults:** `target/release/x3-chain-node`, `testnet/genesis.json`, and `prometheus.yml` must exist or the gate fails.
+
 ### I See a CI Failure
 
 ```bash
 # View what failed
 gh run view <run-id> --log
 
-# Common failures:
+# Common failures (Phase 3):
+# ❌ Audit failed → re-run bash scripts/x3_audit.sh --ci
+# ❌ Format failed → cargo fmt --all -- --check
+# ❌ Package build failed → npm run build:all-packages --if-present
+
+# Phase 4+ failures (deferred in Phase 3):
 # ❌ Build failed → cargo build --release locally
 # ❌ Tests failed → cargo test --all locally
 # ❌ Unwrap found → Replace with Result handling

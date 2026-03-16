@@ -4,7 +4,7 @@ Date: 2026-03-15
 
 ## Technical Bottlenecks
 - CUDA toolkit (`nvcc`) missing, so kernels cannot compile locally yet.
-- `ed25519-donna` is not available on PyPI, so GPU signature path needs a different packaging approach (vendored library, pip wheel, or build step).
+- `ed25519-donna` is not available on PyPI; using PyNaCl as interim CPU verification backend until a vendored C build or binding is added.
 - Current `solana_accelerators.py` uses Python hashing per-transaction and NumPy arrays; CPU-side preprocessing may dominate until batch sizes are large and GPU transfer is fully optimized.
 - Data transfer overhead (host → GPU → host) will be significant for small batches; minimum batch size needs to be enforced.
 - Kernel in `solana_gpu_kernels.cu` is pseudo-code; real ed25519 verification requires constant-time field arithmetic and careful memory layout.

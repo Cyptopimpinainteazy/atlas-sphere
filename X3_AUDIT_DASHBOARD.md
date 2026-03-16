@@ -17,6 +17,21 @@ Last Audit: [Auto-run by CI]
 
 ---
 
+## PHASE 3 GATE STATUS (v1.1)
+
+**Status Legend:** `✅ DONE` | `⬜ IN-SCOPE (Phase 3)` | `🕒 DEFERRED (Phase 4+)` | `🟡 PENDING-LIVE`
+
+| Gate Item | Status | Notes |
+|----------|--------|-------|
+| Repo structure present | ⬜ | Top-level directories exist |
+| `cargo check --workspace` | ⬜ | Minimal Rust gate |
+| `cargo fmt --all -- --check` | ⬜ | Formatting gate |
+| `npm run build:all-packages --if-present` | ⬜ | TypeScript package build |
+| `scripts/x3_audit.sh --ci` strict warnings | ⬜ | CI strictness |
+| `.github/workflows/x3-audit.yml` minimal gate | ⬜ | Phase 3 CI alignment |
+
+---
+
 ## COMPLETION BY CATEGORY
 
 ### 1. REPO STRUCTURE & HYGIENE 🧱
@@ -428,4 +443,3 @@ bash scripts/x3_audit.sh
 **Last Auto-Refresh:** [CI job timestamp]  
 **Next Auto-Refresh:** Every CI run on main  
 **Manual Refresh:** `bash scripts/x3_audit.sh`
-

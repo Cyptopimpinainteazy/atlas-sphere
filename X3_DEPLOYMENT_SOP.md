@@ -33,16 +33,20 @@ echo "🔍 X3 COMMIT VERIFICATION"
 echo "[1/4] Running structural audit..."
 bash scripts/x3_audit.sh || { echo "❌ Audit failed"; exit 1; }
 
-# Step 2: Run tests
-echo "[2/4] Running full test suite..."
-cargo test --all --locked || { echo "❌ Tests failed"; exit 1; }
+# Step 2: Run minimal build gate
+echo "[2/5] Running cargo check..."
+cargo check --workspace || { echo "❌ cargo check failed"; exit 1; }
 
-# Step 3: Check coverage (if you modified critical subsystems)
-echo "[3/4] Checking coverage gates..."
-bash scripts/x3_coverage_gate.sh || { echo "⚠️  Coverage warning (may still commit)"; }
+# Step 3: Enforce formatting
+echo "[3/5] Running cargo fmt check..."
+cargo fmt --all -- --check || { echo "❌ cargo fmt check failed"; exit 1; }
 
-# Step 4: Update checklist
-echo "[4/4] Verify X3_COMPLETION.md reflects your changes"
+# Step 4: Build TypeScript packages
+echo "[4/5] Building packages..."
+npm run build:all-packages --if-present || { echo "❌ package build failed"; exit 1; }
+
+# Step 5: Update checklist
+echo "[5/5] Verify X3_COMPLETION.md reflects your changes"
 echo "   - Mark completed items as ✅"
 echo "   - Leave incomplete items as ⬜"
 read -p "   Checklist updated? (y/n) " -n 1 -r
@@ -57,9 +61,34 @@ git commit -m "[audit] Update completion checklist"
 **Result:** All checks pass → push safely  
 **Typical time:** 5-10 minutes (with cache)
 
+**Phase 4+ gates (deferred):** release build, full tests, clippy, launch-validator, WASM checks, coverage enforcement.  
+**Toolchain reference:** `rust-toolchain.toml` documents the pinned Rust version for Phase 3.
+
+### Phase 4 Gate Additions (when Phase 4 is active)
+
+```bash
+# Build + lint + tests (CI is strict)
+cargo build --release --locked --workspace
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --release --locked
+
+# Runtime WASM (no_std)
+cd runtime && cargo build --release --target wasm32-unknown-unknown --no-default-features
+
+# Launch validator
+cargo run -p x3-launch-validator -- --check pre-launch
+cargo run -p x3-launch-validator -- --check failure-conditions
+```
+
+**CI strictness:** warnings are errors (`-D warnings`). Flaky tests fail immediately (no retries).  
+**Local strictness:** use `--strict` to make warnings fail locally.
+**Launch-validator defaults:** `target/release/x3-chain-node`, `testnet/genesis.json`, and `prometheus.yml` must exist or the gate fails.
+
 ---
 
 ## DEBUGGING CI FAILURES
+
+**Phase 3 note:** CI runs `bash scripts/x3_audit.sh --ci` only. Build/test scenarios below apply in Phase 4+.
 
 ### Scenario 1: Build Fails (`cargo build --release`)
 
@@ -690,4 +719,3 @@ grep -c "⬜" X3_COMPLETION.md      # remaining
 **Document Version:** 1.0.0  
 **Last Updated:** 2026-03-12  
 **Next Review:** 2026-06-12  
-

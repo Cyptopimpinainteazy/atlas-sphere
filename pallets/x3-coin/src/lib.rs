@@ -15,7 +15,6 @@ pub use pallet::*;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 pub mod weights;
-pub mod cross_chain;
 
 #[cfg(test)]
 mod tests;
@@ -24,13 +23,13 @@ mod tests;
 mod mock;
 
 use frame_support::pallet_prelude::*;
-use frame_support::traits::{Currency, ReservableCurrency, UnixTime};
+use frame_support::traits::UnixTime;
 use frame_system::pallet_prelude::*;
-use parity_scale_codec::{Decode, Encode};
+use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_core::H256;
-use sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, SaturatedConversion, Hash};
-use sp_std::vec::Vec;
+use sp_runtime::traits::{SaturatedConversion, Zero};
+use sp_std::{vec, vec::Vec};
 
 pub use weights::WeightInfo;
 
@@ -74,7 +73,7 @@ pub const BONUS_CLAIM_PERIOD: u64 = 3_942_000; // 3,942,000 blocks ≈ 3 months
 pub const MAX_BONUS_CLAIMS: u32 = 10;
 
 /// Vesting schedule for team allocation
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct VestingSchedule {
     /// Total amount to be vested
     pub total_amount: u128,
@@ -89,7 +88,7 @@ pub struct VestingSchedule {
 }
 
 /// Bonus pool claim record
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 pub struct BonusClaim {
     /// Amount claimed
     pub amount: u128,
@@ -152,25 +151,12 @@ pub enum CrossChainOperation {
 pub mod pallet {
     use super::*;
     use frame_support::traits::Get;
+    use sp_runtime::traits::Saturating;
 
     #[pallet::config]
     pub trait Config: frame_system::Config + pallet_x3_kernel::Config {
         /// Aggregated runtime event type
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-
-        /// Currency trait for balance operations
-        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
-
-        /// Balance type
-        type Balance: Parameter
-            + Member
-            + AtLeast32BitUnsigned
-            + Default
-            + Copy
-            + MaxEncodedLen
-            + CheckedAdd
-            + From<<Self::Currency as Currency<Self::AccountId>>::Balance>
-            + Into<<Self::Currency as Currency<Self::AccountId>>::Balance>;
 
         /// Unix time for vesting calculations
         type UnixTime: UnixTime;
@@ -200,6 +186,7 @@ pub mod pallet {
     }
 
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
@@ -249,7 +236,8 @@ pub mod pallet {
     /// Proof hash registry for replay protection
     #[pallet::storage]
     #[pallet::getter(fn proof_registry)]
-    pub type ProofRegistry<T: Config> = StorageMap<_, Blake2_128Concat, H256, u64, OptionQuery>;
+    pub type ProofRegistry<T: Config> =
+        StorageMap<_, Blake2_128Concat, H256, BlockNumberFor<T>, OptionQuery>;
 
     /// Nonce for cross-chain operations
     #[pallet::storage]
@@ -259,33 +247,34 @@ pub mod pallet {
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
     pub struct GenesisConfig<T: Config> {
-        /// Treasury account
-        pub treasury_account: T::AccountId,
         /// Team allocation accounts and amounts
-        pub team_allocations: Vec<(T::AccountId, T::Balance)>,
+        pub team_allocations: Vec<(T::AccountId, u128)>,
         /// Ecosystem allocation accounts and amounts
-        pub ecosystem_allocations: Vec<(T::AccountId, T::Balance)>,
+        pub ecosystem_allocations: Vec<(T::AccountId, u128)>,
         /// Liquidity allocation accounts and amounts
-        pub liquidity_allocations: Vec<(T::AccountId, T::Balance)>,
+        pub liquidity_allocations: Vec<(T::AccountId, u128)>,
     }
 
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
             // Set total supply
-            TotalSupply::<T>::put(T::Balance::from(X3_TOTAL_SUPPLY));
+            let total_supply: T::Balance = X3_TOTAL_SUPPLY.saturated_into();
+            TotalSupply::<T>::put(total_supply);
 
             // Set treasury balance
-            TreasuryBalance::<T>::put(T::Balance::from(X3_TREASURY_ALLOCATION));
+            let treasury_balance: T::Balance = X3_TREASURY_ALLOCATION.saturated_into();
+            TreasuryBalance::<T>::put(treasury_balance);
 
             // Set bonus pool balance
-            BonusPoolBalance::<T>::put(T::Balance::from(X3_BONUS_POOL_ALLOCATION));
+            let bonus_pool_balance: T::Balance = X3_BONUS_POOL_ALLOCATION.saturated_into();
+            BonusPoolBalance::<T>::put(bonus_pool_balance);
 
             // Distribute team allocations with vesting
             for (account, amount) in &self.team_allocations {
                 let schedule = VestingSchedule {
                     total_amount: *amount,
-                    claimed: T::Balance::zero(),
+                    claimed: 0,
                     start_block: 0,
                     cliff_blocks: T::TeamVestingCliff::get(),
                     vesting_blocks: T::TeamVestingBlocks::get(),
@@ -295,25 +284,12 @@ pub mod pallet {
 
             // Distribute ecosystem allocations (no vesting)
             for (account, amount) in &self.ecosystem_allocations {
-                // Use X3 Kernel to update canonical balance
-                pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                    T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                    account.clone(),
-                    X3_ASSET_ID,
-                    *amount,
-                    None,
-                ).unwrap_or_default();
+                Pallet::<T>::increase_canonical_balance(account, (*amount).saturated_into());
             }
 
             // Distribute liquidity allocations (no vesting)
             for (account, amount) in &self.liquidity_allocations {
-                pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                    T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                    account.clone(),
-                    X3_ASSET_ID,
-                    *amount,
-                    None,
-                ).unwrap_or_default();
+                Pallet::<T>::increase_canonical_balance(account, (*amount).saturated_into());
             }
         }
     }
@@ -434,13 +410,7 @@ pub mod pallet {
 
             // Update canonical balance via X3 Kernel
             let account_id = Self::decode_account_id(&target_account)?;
-            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                account_id.clone(),
-                X3_ASSET_ID,
-                amount,
-                Some(operation_id),
-            )?;
+            Self::increase_canonical_balance(&account_id, amount);
 
             // Emit event
             Self::deposit_event(Event::Minted {
@@ -480,21 +450,11 @@ pub mod pallet {
 
             // Check canonical balance
             let account_id = Self::decode_account_id(&source_account)?;
-            let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
-                account_id.clone(),
-                X3_ASSET_ID,
-            );
+            let current_balance = Self::canonical_balance(&account_id);
 
             ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
 
-            // Update canonical balance via X3 Kernel
-            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                account_id.clone(),
-                X3_ASSET_ID,
-                current_balance.saturating_sub(amount),
-                Some(operation_id),
-            )?;
+            Self::decrease_canonical_balance(&account_id, amount)?;
 
             // Update treasury balance
             TreasuryBalance::<T>::mutate(|balance| *balance = balance.saturating_add(amount));
@@ -519,19 +479,20 @@ pub mod pallet {
 
             // Check if vesting period has started
             let current_block = frame_system::Pallet::<T>::block_number();
+            let current_block_u64: u64 = current_block.saturated_into();
             ensure!(
-                current_block >= schedule.start_block,
+                current_block_u64 >= schedule.start_block,
                 Error::<T>::VestingNotStarted
             );
 
             // Check if cliff period has passed
             ensure!(
-                current_block >= schedule.start_block + schedule.cliff_blocks,
+                current_block_u64 >= schedule.start_block + schedule.cliff_blocks,
                 Error::<T>::VestingCliffNotReached
             );
 
             // Calculate vested amount
-            let elapsed_blocks = current_block.saturating_sub(schedule.start_block);
+            let elapsed_blocks = current_block_u64.saturating_sub(schedule.start_block);
             let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
                 schedule.total_amount
             } else {
@@ -540,21 +501,16 @@ pub mod pallet {
                     .saturating_div(schedule.vesting_blocks.into())
             };
 
-            let available = total_vested.saturating_sub(schedule.claimed);
-            ensure!(available > T::Balance::zero(), Error::<T>::NoVestedAmount);
+            let available_u128 = total_vested.saturating_sub(schedule.claimed);
+            ensure!(available_u128 > 0, Error::<T>::NoVestedAmount);
+            let available: T::Balance = available_u128.saturated_into();
 
             // Update schedule
-            schedule.claimed = schedule.claimed.saturating_add(available);
+            schedule.claimed = schedule.claimed.saturating_add(available_u128);
             TeamVesting::<T>::insert(&who, schedule);
 
             // Update canonical balance via X3 Kernel
-            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                who.clone(),
-                X3_ASSET_ID,
-                available,
-                None,
-            )?;
+            Self::increase_canonical_balance(&who, available);
 
             // Emit event
             Self::deposit_event(Event::TeamVestingClaimed {
@@ -580,13 +536,14 @@ pub mod pallet {
 
             // Check claim period
             let current_block = frame_system::Pallet::<T>::block_number();
+            let current_block_u64: u64 = current_block.saturated_into();
             let last_claim = BonusClaims::<T>::get(&who)
                 .last()
                 .map(|claim| claim.claimed_at)
                 .unwrap_or(0);
 
             ensure!(
-                current_block.saturating_sub(last_claim) >= T::BonusClaimPeriod::get(),
+                current_block_u64.saturating_sub(last_claim) >= T::BonusClaimPeriod::get(),
                 Error::<T>::BonusClaimPeriodExpired
             );
 
@@ -598,34 +555,30 @@ pub mod pallet {
             );
 
             // Calculate claim amount (10% of remaining bonus pool)
-            let claim_amount = bonus_balance / 10;
+            let divisor: T::Balance = 10u32.saturated_into();
+            let claim_amount = bonus_balance / divisor;
 
             // Update bonus pool balance
             BonusPoolBalance::<T>::mutate(|balance| *balance = balance.saturating_sub(claim_amount));
 
             // Add claim record
             let claim = BonusClaim {
-                amount: claim_amount,
-                claimed_at: current_block,
+                amount: claim_amount.saturated_into(),
+                claimed_at: current_block_u64,
                 locked: false,
             };
             claims.try_push(claim).map_err(|_| Error::<T>::MaxBonusClaimsReached)?;
+            let claim_id = claims.len() as u32;
             BonusClaims::<T>::insert(&who, claims);
 
             // Update canonical balance via X3 Kernel
-            pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                who.clone(),
-                X3_ASSET_ID,
-                claim_amount,
-                None,
-            )?;
+            Self::increase_canonical_balance(&who, claim_amount);
 
             // Emit event
             Self::deposit_event(Event::BonusClaimed {
                 account: who,
                 amount: claim_amount,
-                claim_id: claims.len() as u32,
+                claim_id,
             });
 
             Ok(())
@@ -655,7 +608,7 @@ pub mod pallet {
             CrossChainOperations::<T>::insert(operation_id, operation.clone());
 
             // Emit event
-            let (operation_type, source_account, target_account, amount) = match &operation {
+            let (operation_type, source_account, target_account, amount_u128) = match &operation {
                 CrossChainOperation::Mint { target_account, amount, .. } => (
                     0u8,
                     vec![],
@@ -675,6 +628,7 @@ pub mod pallet {
                     ..
                 } => (2u8, source_account.clone(), target_account.clone(), *amount),
             };
+            let amount: T::Balance = amount_u128.saturated_into();
 
             Self::deposit_event(Event::CrossChainOperationSubmitted {
                 operation_id,
@@ -705,74 +659,41 @@ pub mod pallet {
                     CrossChainOperation::Mint {
                         target_account,
                         amount,
-                        proof,
+                        proof: _,
                     } => {
                         // Execute mint
                         let account_id = Self::decode_account_id(&target_account)?;
-                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                            account_id,
-                            X3_ASSET_ID,
-                            amount,
-                            Some(operation_id),
-                        )?;
+                        Self::increase_canonical_balance(&account_id, amount.saturated_into());
                     }
                     CrossChainOperation::Burn {
                         source_account,
                         amount,
-                        proof,
+                        proof: _,
                     } => {
                         // Execute burn
                         let account_id = Self::decode_account_id(&source_account)?;
-                        let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
-                            account_id.clone(),
-                            X3_ASSET_ID,
-                        );
+                        let amount: T::Balance = amount.saturated_into();
+                        let current_balance = Self::canonical_balance(&account_id);
                         ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
 
-                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                            account_id,
-                            X3_ASSET_ID,
-                            current_balance.saturating_sub(amount),
-                            Some(operation_id),
-                        )?;
+                        Self::decrease_canonical_balance(&account_id, amount)?;
                     }
                     CrossChainOperation::Transfer {
                         source_account,
                         target_account,
                         amount,
-                        proof,
+                        proof: _,
                     } => {
                         // Execute transfer
                         let source_id = Self::decode_account_id(&source_account)?;
                         let target_id = Self::decode_account_id(&target_account)?;
+                        let amount: T::Balance = amount.saturated_into();
 
-                        let current_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
-                            source_id.clone(),
-                            X3_ASSET_ID,
-                        );
+                        let current_balance = Self::canonical_balance(&source_id);
                         ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
 
-                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                            source_id,
-                            X3_ASSET_ID,
-                            current_balance.saturating_sub(amount),
-                            Some(operation_id),
-                        )?;
-
-                        let target_balance = pallet_x3_kernel::Pallet::<T>::get_canonical_balance(
-                            target_id.clone(),
-                            X3_ASSET_ID,
-                        );
-                        pallet_x3_kernel::Pallet::<T>::update_canonical_balance(
-                            T::RuntimeOrigin::from(Some(T::TreasuryAccount::get()).into()),
-                            target_id,
-                            X3_ASSET_ID,
-                            target_balance.saturating_add(amount),
-                            Some(operation_id),
-                        )?;
+                        Self::decrease_canonical_balance(&source_id, amount)?;
+                        Self::increase_canonical_balance(&target_id, amount);
                     }
                 }
             }
@@ -791,6 +712,35 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
+        fn x3_asset_id() -> T::AssetId {
+            T::AssetId::default()
+        }
+
+        fn canonical_balance(account: &T::AccountId) -> T::Balance {
+            pallet_x3_kernel::CanonicalLedger::<T>::get(account, Self::x3_asset_id())
+        }
+
+        fn increase_canonical_balance(account: &T::AccountId, amount: T::Balance) {
+            let next_balance = Self::canonical_balance(account).saturating_add(amount);
+            pallet_x3_kernel::CanonicalLedger::<T>::insert(account, Self::x3_asset_id(), next_balance);
+        }
+
+        fn decrease_canonical_balance(
+            account: &T::AccountId,
+            amount: T::Balance,
+        ) -> Result<(), Error<T>> {
+            let current_balance = Self::canonical_balance(account);
+            ensure!(current_balance >= amount, Error::<T>::InsufficientBalance);
+
+            pallet_x3_kernel::CanonicalLedger::<T>::insert(
+                account,
+                Self::x3_asset_id(),
+                current_balance.saturating_sub(amount),
+            );
+
+            Ok(())
+        }
+
         /// Validate proof for cross-chain operations
         fn validate_proof(proof: &X3Proof) -> Result<(), Error<T>> {
             match proof {
@@ -853,11 +803,12 @@ pub mod pallet {
         pub fn get_vested_amount(account: &T::AccountId) -> T::Balance {
             if let Some(schedule) = TeamVesting::<T>::get(account) {
                 let current_block = frame_system::Pallet::<T>::block_number();
-                if current_block < schedule.start_block {
+                let current_block_u64: u64 = current_block.saturated_into();
+                if current_block_u64 < schedule.start_block {
                     return T::Balance::zero();
                 }
 
-                let elapsed_blocks = current_block.saturating_sub(schedule.start_block);
+                let elapsed_blocks = current_block_u64.saturating_sub(schedule.start_block);
                 let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
                     schedule.total_amount
                 } else {
@@ -866,7 +817,7 @@ pub mod pallet {
                         .saturating_div(schedule.vesting_blocks.into())
                 };
 
-                total_vested.saturating_sub(schedule.claimed)
+                total_vested.saturating_sub(schedule.claimed).saturated_into()
             } else {
                 T::Balance::zero()
             }
@@ -877,7 +828,41 @@ pub mod pallet {
             BonusClaims::<T>::get(account)
                 .iter()
                 .map(|claim| claim.amount)
-                .fold(T::Balance::zero(), |acc, amount| acc.saturating_add(amount))
+                .fold(0u128, |acc, amount| acc.saturating_add(amount))
+                .saturated_into()
+        }
+
+        pub fn get_total_supply() -> T::Balance {
+            Self::total_supply()
+        }
+
+        pub fn get_treasury_balance() -> T::Balance {
+            Self::treasury_balance()
+        }
+
+        pub fn get_bonus_pool_balance() -> T::Balance {
+            Self::bonus_pool_balance()
+        }
+
+        pub fn get_team_vesting(
+            account: &T::AccountId,
+        ) -> Option<(T::Balance, T::Balance, u64, u64, u64)> {
+            TeamVesting::<T>::get(account).map(|schedule| {
+                (
+                    schedule.total_amount.saturated_into(),
+                    schedule.claimed.saturated_into(),
+                    schedule.start_block,
+                    schedule.cliff_blocks,
+                    schedule.vesting_blocks,
+                )
+            })
+        }
+
+        pub fn get_bonus_claims(account: &T::AccountId) -> Vec<(T::Balance, u64, bool)> {
+            BonusClaims::<T>::get(account)
+                .into_iter()
+                .map(|claim| (claim.amount.saturated_into(), claim.claimed_at, claim.locked))
+                .collect()
         }
     }
 }

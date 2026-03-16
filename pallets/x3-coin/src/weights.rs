@@ -8,8 +8,16 @@
 //! Block time: 200ms
 //! Extrinsics: 1000
 
-use super::*;
 use frame_support::weights::{constants::RocksDbWeight as DbWeight, Weight};
+
+pub trait WeightInfo {
+    fn mint() -> Weight;
+    fn burn() -> Weight;
+    fn claim_team_vesting() -> Weight;
+    fn claim_bonus() -> Weight;
+    fn submit_cross_chain_operation() -> Weight;
+    fn finalize_cross_chain_operation() -> Weight;
+}
 
 impl WeightInfo for () {
     /// Storage: X3Coin TotalSupply (r:0 w:1)
