@@ -72,9 +72,14 @@ mod benchmarking;
 // Re-export proof type for use in RPC and external verifiers
 pub mod proof;
 
+// Re-export weights for runtime integration
+pub mod weights;
+pub use weights::WeightInfo;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::proof::{BundleLeg, PoaeProof};
+    use crate::weights::WeightInfo;
     use frame_support::{
         dispatch::DispatchResult,
         pallet_prelude::*,
@@ -106,6 +111,10 @@ pub mod pallet {
         /// Must implement `ReservableCurrency` so bonds are properly locked at submission
         /// and released (or slashed) at finalization/rollback.
         type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+        /// Weight functions for extrinsic calls.
+        /// Use `weights::SubstrateWeight<T>` for production, `()` for tests.
+        type WeightInfo: crate::weights::WeightInfo;
 
         /// Minimum bond required to submit a bundle.
         /// Denominated in the smallest currency unit.
@@ -460,7 +469,7 @@ pub mod pallet {
         /// - Deadline enforced by `BundleDeadlineBlocks`.
         /// - Bond reserved on submission, slashed on rollback.
         #[pallet::call_index(0)]
-        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        #[pallet::weight(T::WeightInfo::submit_atomic_bundle(legs.len() as u32))]
         pub fn submit_atomic_bundle(
             origin: OriginFor<T>,
             legs: BoundedVec<BundleLeg, T::MaxLegsPerBundle>,
@@ -542,7 +551,7 @@ pub mod pallet {
         /// 2. `finality_cert` is a valid justification for `finalized_block`.
         /// 3. Bundle inclusion proof links `bundle_id` to that block.
         #[pallet::call_index(1)]
-        #[pallet::weight(Weight::from_parts(15_000, 0))]
+        #[pallet::weight(T::WeightInfo::finalize_atomic_bundle())]
         pub fn finalize_atomic_bundle(
             origin: OriginFor<T>,
             bundle_id: H256,
@@ -569,7 +578,7 @@ pub mod pallet {
         /// `committed_at_ns` is the GPU commit timestamp for auditing only — it is
         /// not stored on-chain but is included for `ValidateUnsigned` deduplication.
         #[pallet::call_index(4)]
-        #[pallet::weight(Weight::from_parts(12_000, 0))]
+        #[pallet::weight(T::WeightInfo::submit_finalization_result())]
         pub fn submit_finalization_result(
             origin: OriginFor<T>,
             bundle_id: H256,
@@ -590,7 +599,7 @@ pub mod pallet {
         /// `finality_cert` supplied via the signed `finalize_atomic_bundle`
         /// extrinsic, preventing submission of fabricated cert hashes.
         #[pallet::call_index(5)]
-        #[pallet::weight(Weight::from_parts(3_000, 0))]
+        #[pallet::weight(T::WeightInfo::record_flash_finality_anchor())]
         pub fn record_flash_finality_anchor(
             origin: OriginFor<T>,
             block_num: u64,
@@ -619,7 +628,7 @@ pub mod pallet {
         /// is actively being processed.  Execution itself happens off-chain via the
         /// `AtomicSwapOrchestrator`; the result is submitted via `finalize_atomic_bundle`.
         #[pallet::call_index(3)]
-        #[pallet::weight(Weight::from_parts(5_000, 0))]
+        #[pallet::weight(T::WeightInfo::assign_bundle_executor())]
         pub fn assign_bundle_executor(origin: OriginFor<T>, bundle_id: H256) -> DispatchResult {
             let executor = ensure_signed(origin)?;
 
@@ -656,7 +665,7 @@ pub mod pallet {
         /// In a production system, slash a portion of the bond if called due to
         /// `ExecutionFailed` or `AccessSetViolation`.
         #[pallet::call_index(2)]
-        #[pallet::weight(Weight::from_parts(8_000, 0))]
+        #[pallet::weight(T::WeightInfo::rollback_atomic_bundle())]
         pub fn rollback_atomic_bundle(
             origin: OriginFor<T>,
             bundle_id: H256,
@@ -796,16 +805,15 @@ pub mod pallet {
         ) -> DispatchResult {
             ensure!(receipt_root != H256::zero(), Error::<T>::InvalidReceiptRoot);
 
-            // If a finality cert is supplied, cross-check it against any on-chain
-            // anchor that the OCW has previously stored.  Accepting H256::zero()
-            // is intentional for environments where Flash Finality is not running.
+            // STRICT finality cert validation for production:
+            // - If finality_cert is zero, Flash Finality is not running — allowed.
+            // - If finality_cert is non-zero, it MUST match an on-chain anchor
+            //   written by the OCW. No tentative acceptance — reject unknown certs.
             if finality_cert != H256::zero() {
                 let block_num: u64 = finalized_block.try_into().unwrap_or(0u64);
-                if let Some(anchored) = FinalityCertAnchors::<T>::get(block_num) {
-                    ensure!(finality_cert == anchored, Error::<T>::InvalidFinalityCert);
-                }
-                // If no anchor found yet (OCW hasn't stored one), accept the cert
-                // tentatively — external verifiers will catch mismatch.
+                let anchored = FinalityCertAnchors::<T>::get(block_num)
+                    .ok_or(Error::<T>::InvalidFinalityCert)?;
+                ensure!(finality_cert == anchored, Error::<T>::InvalidFinalityCert);
             }
 
             let mut record = Bundles::<T>::get(bundle_id).ok_or(Error::<T>::BundleNotFound)?;

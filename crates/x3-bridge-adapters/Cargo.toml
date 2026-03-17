@@ -8,6 +8,7 @@ authors = ["X3 Labs"]
 
 [dependencies]
 x3-vm = { path = "../x3-vm" }
+x3-cross-vm-bridge = { path = "../cross-vm-bridge" }
 pallet-x3-kernel = { path = "../../pallets/x3-kernel" }
 
 # Substrate node-side
