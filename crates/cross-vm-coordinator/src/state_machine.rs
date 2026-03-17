@@ -10,15 +10,21 @@
 //! the machine transitions to Aborting → Refunded.
 
 use crate::config::CoordinatorConfig;
+use crate::persistence::{InMemoryPersistence, SessionPersistence};
 use crate::types::*;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use tracing::{error, info, warn};
 
 /// The Cross-VM Swap Coordinator.
 ///
 /// Manages the lifecycle of atomic swap sessions across EVM, SVM, and X3VM.
-pub struct SwapCoordinator {
+/// Sessions are persisted via the `P: SessionPersistence` trait, allowing
+/// the coordinator state to survive node restarts.
+pub struct SwapCoordinator<P: SessionPersistence = InMemoryPersistence> {
     config: CoordinatorConfig,
+    /// In-memory working copy of sessions (authoritative). Mutations are
+    /// mirrored to persistence.
     sessions: HashMap<String, SwapSession>,
     /// Global set of HTLC secrets that have already been claimed.
     ///
@@ -28,19 +34,48 @@ pub struct SwapCoordinator {
     /// This prevents cross-session replay attacks where an adversary reuses a
     /// leaked secret to claim HTLCs in multiple sessions.
     used_secrets: HashSet<[u8; 32]>,
+    /// Persistence backend for sessions.
+    persistence: Arc<P>,
 }
 
-impl SwapCoordinator {
+impl SwapCoordinator<InMemoryPersistence> {
+    /// Create a coordinator with in-memory persistence (non-durable).
     pub fn new(config: CoordinatorConfig) -> Self {
-        Self {
-            config,
-            sessions: HashMap::new(),
-            used_secrets: HashSet::new(),
-        }
+        Self::with_persistence(config, Arc::new(InMemoryPersistence::new()))
     }
 
     pub fn with_default_config() -> Self {
         Self::new(CoordinatorConfig::default())
+    }
+}
+
+impl<P: SessionPersistence> SwapCoordinator<P> {
+    /// Create a coordinator with custom persistence backend.
+    ///
+    /// On construction, loads all existing sessions from the persistence layer.
+    pub fn with_persistence(config: CoordinatorConfig, persistence: Arc<P>) -> Self {
+        // Load sessions from persistence to recover state after restart
+        let sessions = persistence.load_all();
+        let session_count = sessions.len();
+
+        if session_count > 0 {
+            info!(sessions = session_count, "Restored sessions from persistence");
+        }
+
+        Self {
+            config,
+            sessions,
+            used_secrets: HashSet::new(),
+            persistence,
+        }
+    }
+
+    /// Persist a session after mutation by session_id.
+    /// Must be called AFTER the mutable borrow is released.
+    fn persist_by_id(&self, session_id: &str) {
+        if let Some(session) = self.sessions.get(session_id) {
+            self.persistence.save(session);
+        }
     }
 
     /// Get a session by ID.
@@ -77,15 +112,24 @@ impl SwapCoordinator {
     /// long-running nodes. Returns the number of sessions purged.
     pub fn purge_terminated_sessions(&mut self, now_unix: u64, max_age_secs: u64) -> usize {
         let before = self.sessions.len();
-        self.sessions.retain(|_, s| {
+        let mut to_remove = Vec::new();
+
+        for (id, s) in self.sessions.iter() {
             let is_terminal = matches!(
                 s.phase,
                 SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed
             );
             let is_stale = now_unix.saturating_sub(s.updated_at) > max_age_secs;
-            // Keep sessions that are NOT (terminal AND stale)
-            !(is_terminal && is_stale)
-        });
+            if is_terminal && is_stale {
+                to_remove.push(id.clone());
+            }
+        }
+
+        for id in &to_remove {
+            self.sessions.remove(id);
+            self.persistence.remove(id);
+        }
+
         before - self.sessions.len()
     }
 
@@ -151,6 +195,7 @@ impl SwapCoordinator {
             updated_at: now_unix,
         };
 
+        self.persistence.save(&session);
         self.sessions.insert(session_id.clone(), session);
 
         info!(
@@ -186,18 +231,22 @@ impl SwapCoordinator {
 
         Self::validate_phase_transition(current_phase, SwapPhase::LockingHtlcs)?;
 
-        let session = self.sessions.get_mut(session_id).unwrap();
+        {
+            let session = self.sessions.get_mut(session_id).unwrap();
 
-        info!(
-            session = %session_id,
-            htlc_id = %record.id.to_hex(),
-            vm = ?record.params.vm,
-            "Fast chain HTLC recorded"
-        );
+            info!(
+                session = %session_id,
+                htlc_id = %record.id.to_hex(),
+                vm = ?record.params.vm,
+                "Fast chain HTLC recorded"
+            );
 
-        session.htlc_fast = Some(record);
-        session.phase = SwapPhase::LockingHtlcs;
-        session.updated_at = now_unix;
+            session.htlc_fast = Some(record);
+            session.phase = SwapPhase::LockingHtlcs;
+            session.updated_at = now_unix;
+        }
+
+        self.persist_by_id(session_id);
         Ok(())
     }
 
@@ -208,29 +257,32 @@ impl SwapCoordinator {
         record: HtlcRecord,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        info!(
-            session = %session_id,
-            htlc_id = %record.id.to_hex(),
-            vm = ?record.params.vm,
-            "Slow chain HTLC recorded"
-        );
+            info!(
+                session = %session_id,
+                htlc_id = %record.id.to_hex(),
+                vm = ?record.params.vm,
+                "Slow chain HTLC recorded"
+            );
 
-        session.htlc_slow = Some(record);
-        session.updated_at = now_unix;
+            session.htlc_slow = Some(record);
+            session.updated_at = now_unix;
 
-        // If both HTLCs are now recorded, advance phase
-        if session.htlc_fast.is_some() && session.htlc_slow.is_some() {
-            session.phase = SwapPhase::HtlcsLocked;
-            info!(session = %session_id, "Both HTLCs locked — ready for flash legs");
+            // If both HTLCs are now recorded, advance phase
+            if session.htlc_fast.is_some() && session.htlc_slow.is_some() {
+                session.phase = SwapPhase::HtlcsLocked;
+                info!(session = %session_id, "Both HTLCs locked — ready for flash legs");
+            }
         }
 
+        self.persist_by_id(session_id);
         Ok(())
     }
 
@@ -242,42 +294,47 @@ impl SwapCoordinator {
         confirmations: u32,
         now_unix: u64,
     ) -> Result<bool, CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        let result = {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        let htlc = if is_fast {
-            session.htlc_fast.as_mut()
-        } else {
-            session.htlc_slow.as_mut()
+            let htlc = if is_fast {
+                session.htlc_fast.as_mut()
+            } else {
+                session.htlc_slow.as_mut()
+            };
+
+            let htlc = htlc.ok_or_else(|| {
+                CoordinatorError::Internal(format!(
+                    "HTLC not found for {} chain",
+                    if is_fast { "fast" } else { "slow" }
+                ))
+            })?;
+
+            htlc.confirmations = confirmations;
+            session.updated_at = now_unix;
+
+            // Check if both HTLCs have enough confirmations
+            let fast_ok = session
+                .htlc_fast
+                .as_ref()
+                .map(|h| h.confirmations >= h.confirmations_required)
+                .unwrap_or(false);
+            let slow_ok = session
+                .htlc_slow
+                .as_ref()
+                .map(|h| h.confirmations >= h.confirmations_required)
+                .unwrap_or(false);
+
+            fast_ok && slow_ok
         };
 
-        let htlc = htlc.ok_or_else(|| {
-            CoordinatorError::Internal(format!(
-                "HTLC not found for {} chain",
-                if is_fast { "fast" } else { "slow" }
-            ))
-        })?;
-
-        htlc.confirmations = confirmations;
-        session.updated_at = now_unix;
-
-        // Check if both HTLCs have enough confirmations
-        let fast_ok = session
-            .htlc_fast
-            .as_ref()
-            .map(|h| h.confirmations >= h.confirmations_required)
-            .unwrap_or(false);
-        let slow_ok = session
-            .htlc_slow
-            .as_ref()
-            .map(|h| h.confirmations >= h.confirmations_required)
-            .unwrap_or(false);
-
-        Ok(fast_ok && slow_ok)
+        self.persist_by_id(session_id);
+        Ok(result)
     }
 
     // ── Phase 3: Execute Flash Legs ───────────────────────────────────────
@@ -298,35 +355,41 @@ impl SwapCoordinator {
 
         Self::validate_phase_transition(current_phase, SwapPhase::ExecutingFlashLegs)?;
 
-        let session = self.sessions.get_mut(session_id).unwrap();
+        let mut abort_error = None;
+        {
+            let session = self.sessions.get_mut(session_id).unwrap();
 
-        // Safety check: ensure we're not too close to timelock
-        if self.config.is_near_expiry(session.timelock_fast, now_unix) {
-            warn!(
-                session = %session_id,
-                timelock = session.timelock_fast,
-                now = now_unix,
-                "Near timelock expiry — aborting flash execution"
-            );
-            session.phase = SwapPhase::Aborting;
-            return Err(CoordinatorError::TimelockExpired {
-                htlc_id: session_id.to_string(),
-            });
+            // Safety check: ensure we're not too close to timelock
+            if self.config.is_near_expiry(session.timelock_fast, now_unix) {
+                warn!(
+                    session = %session_id,
+                    timelock = session.timelock_fast,
+                    now = now_unix,
+                    "Near timelock expiry — aborting flash execution"
+                );
+                session.phase = SwapPhase::Aborting;
+                abort_error = Some(CoordinatorError::TimelockExpired {
+                    htlc_id: session_id.to_string(),
+                });
+            } else if session.flash_legs.is_empty() {
+                session.phase = SwapPhase::LegsComplete;
+                info!(session = %session_id, "No flash legs to execute — skipping to LegsComplete");
+            } else {
+                session.phase = SwapPhase::ExecutingFlashLegs;
+                info!(
+                    session = %session_id,
+                    legs = session.flash_legs.len(),
+                    "Beginning flash leg execution"
+                );
+            }
+            session.updated_at = now_unix;
         }
-        if session.flash_legs.is_empty() {
-            session.phase = SwapPhase::LegsComplete;
-            info!(session = %session_id, "No flash legs to execute — skipping to LegsComplete");
-        } else {
-            session.phase = SwapPhase::ExecutingFlashLegs;
-            info!(
-                session = %session_id,
-                legs = session.flash_legs.len(),
-                "Beginning flash leg execution"
-            );
+
+        self.persist_by_id(session_id);
+
+        if let Some(err) = abort_error {
+            return Err(err);
         }
-
-        session.updated_at = now_unix;
-
         Ok(())
     }
 
@@ -337,68 +400,78 @@ impl SwapCoordinator {
         outcome: FlashLegOutcome,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        let mut abort_error = None;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        let leg_index = session.leg_outcomes.len();
+            let leg_index = session.leg_outcomes.len();
 
-        match outcome {
-            FlashLegOutcome::Success {
-                tx_hash: _,
-                gas_used,
-                output_amount,
-                premium_paid,
-            } => {
-                info!(
-                    session = %session_id,
-                    leg = leg_index,
+            match outcome {
+                FlashLegOutcome::Success {
+                    tx_hash: _,
                     gas_used,
                     output_amount,
                     premium_paid,
-                    "Flash leg succeeded"
-                );
-                session.leg_outcomes.push(outcome);
+                } => {
+                    info!(
+                        session = %session_id,
+                        leg = leg_index,
+                        gas_used,
+                        output_amount,
+                        premium_paid,
+                        "Flash leg succeeded"
+                    );
+                    session.leg_outcomes.push(outcome);
+                }
+                FlashLegOutcome::Reverted { ref reason } => {
+                    let reason_clone = reason.clone();
+                    error!(
+                        session = %session_id,
+                        leg = leg_index,
+                        reason = %reason_clone,
+                        "Flash leg REVERTED — aborting swap"
+                    );
+                    session.phase = SwapPhase::Aborting;
+                    session.updated_at = now_unix;
+                    session.leg_outcomes.push(outcome);
+                    abort_error = Some(CoordinatorError::FlashLegReverted {
+                        vm: format!("leg-{}", leg_index),
+                        reason: reason_clone,
+                    });
+                }
             }
-            FlashLegOutcome::Reverted { ref reason } => {
-                let reason_clone = reason.clone();
-                error!(
-                    session = %session_id,
-                    leg = leg_index,
-                    reason = %reason_clone,
-                    "Flash leg REVERTED — aborting swap"
-                );
-                session.phase = SwapPhase::Aborting;
+
+            if abort_error.is_none() {
                 session.updated_at = now_unix;
-                session.leg_outcomes.push(outcome);
-                return Err(CoordinatorError::FlashLegReverted {
-                    vm: format!("leg-{}", leg_index),
-                    reason: reason_clone,
-                });
+
+                // Check if all legs are complete
+                if session.leg_outcomes.len() == session.flash_legs.len() {
+                    let all_success = session
+                        .leg_outcomes
+                        .iter()
+                        .all(|o| matches!(o, FlashLegOutcome::Success { .. }));
+
+                    if all_success {
+                        session.phase = SwapPhase::LegsComplete;
+                        info!(session = %session_id, "All flash legs complete — ready for settlement");
+                    } else {
+                        session.phase = SwapPhase::Aborting;
+                        warn!(session = %session_id, "Not all legs succeeded — aborting");
+                    }
+                }
             }
         }
 
-        session.updated_at = now_unix;
+        self.persist_by_id(session_id);
 
-        // Check if all legs are complete
-        if session.leg_outcomes.len() == session.flash_legs.len() {
-            let all_success = session
-                .leg_outcomes
-                .iter()
-                .all(|o| matches!(o, FlashLegOutcome::Success { .. }));
-
-            if all_success {
-                session.phase = SwapPhase::LegsComplete;
-                info!(session = %session_id, "All flash legs complete — ready for settlement");
-            } else {
-                session.phase = SwapPhase::Aborting;
-                warn!(session = %session_id, "Not all legs succeeded — aborting");
-            }
+        if let Some(err) = abort_error {
+            return Err(err);
         }
-
         Ok(())
     }
 
@@ -420,22 +493,31 @@ impl SwapCoordinator {
 
         Self::validate_phase_transition(current_phase, SwapPhase::ClaimingFast)?;
 
-        let session = self.sessions.get_mut(session_id).unwrap();
+        let hash_lock;
+        let mut abort_error = None;
+        {
+            let session = self.sessions.get_mut(session_id).unwrap();
 
-        // Safety: don't reveal if near fast chain timelock
-        if self.config.is_near_expiry(session.timelock_fast, now_unix) {
-            session.phase = SwapPhase::Aborting;
-            return Err(CoordinatorError::TimelockExpired {
-                htlc_id: session_id.to_string(),
-            });
+            // Safety: don't reveal if near fast chain timelock
+            if self.config.is_near_expiry(session.timelock_fast, now_unix) {
+                session.phase = SwapPhase::Aborting;
+                abort_error = Some(CoordinatorError::TimelockExpired {
+                    htlc_id: session_id.to_string(),
+                });
+            } else {
+                session.phase = SwapPhase::ClaimingFast;
+                info!(session = %session_id, "Settlement: claiming on fast chain");
+            }
+            session.updated_at = now_unix;
+            hash_lock = session.hash_lock;
         }
 
-        session.phase = SwapPhase::ClaimingFast;
-        session.updated_at = now_unix;
+        self.persist_by_id(session_id);
 
-        info!(session = %session_id, "Settlement: claiming on fast chain");
-
-        Ok(session.hash_lock)
+        if let Some(err) = abort_error {
+            return Err(err);
+        }
+        Ok(hash_lock)
     }
 
     /// Record that the fast chain claim succeeded (secret revealed on-chain).
@@ -462,34 +544,37 @@ impl SwapCoordinator {
             ));
         }
 
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        // Verify the preimage hashes to the lock
-        let provided_hash = secret.hash();
-        if provided_hash != session.hash_lock {
-            return Err(CoordinatorError::Internal(format!(
-                "Secret hash mismatch for session '{}': provided {:?} does not match lock {:?}",
-                session_id, provided_hash, session.hash_lock
-            )));
+            // Verify the preimage hashes to the lock
+            let provided_hash = secret.hash();
+            if provided_hash != session.hash_lock {
+                return Err(CoordinatorError::Internal(format!(
+                    "Secret hash mismatch for session '{}': provided {:?} does not match lock {:?}",
+                    session_id, provided_hash, session.hash_lock
+                )));
+            }
+
+            // Register the secret globally BEFORE mutating session state
+            // (fail-safe: if we crash after insert but before state update, the
+            //  duplicate will be caught on retry, which is the safe outcome).
+            self.used_secrets.insert(secret.0);
+
+            if let Some(ref mut htlc) = session.htlc_fast {
+                htlc.status = HtlcStatus::Claimed;
+            }
+
+            session.phase = SwapPhase::ClaimingSlow;
+            session.updated_at = now_unix;
         }
 
-        // Register the secret globally BEFORE mutating session state
-        // (fail-safe: if we crash after insert but before state update, the
-        //  duplicate will be caught on retry, which is the safe outcome).
-        self.used_secrets.insert(secret.0);
-
-        if let Some(ref mut htlc) = session.htlc_fast {
-            htlc.status = HtlcStatus::Claimed;
-        }
-
-        session.phase = SwapPhase::ClaimingSlow;
-        session.updated_at = now_unix;
-
+        self.persist_by_id(session_id);
         info!(session = %session_id, "Fast chain claimed — now claiming slow chain");
         Ok(())
     }
@@ -500,20 +585,23 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        if let Some(ref mut htlc) = session.htlc_slow {
-            htlc.status = HtlcStatus::Claimed;
+            if let Some(ref mut htlc) = session.htlc_slow {
+                htlc.status = HtlcStatus::Claimed;
+            }
+
+            session.phase = SwapPhase::Complete;
+            session.updated_at = now_unix;
         }
 
-        session.phase = SwapPhase::Complete;
-        session.updated_at = now_unix;
-
+        self.persist_by_id(session_id);
         info!(session = %session_id, "🎉 Atomic swap COMPLETE — both sides claimed");
         Ok(())
     }
@@ -527,17 +615,21 @@ impl SwapCoordinator {
         reason: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        warn!(session = %session_id, reason, "Aborting swap — will refund after timelocks");
+            warn!(session = %session_id, reason, "Aborting swap — will refund after timelocks");
 
-        session.phase = SwapPhase::Aborting;
-        session.updated_at = now_unix;
+            session.phase = SwapPhase::Aborting;
+            session.updated_at = now_unix;
+        }
+
+        self.persist_by_id(session_id);
         Ok(())
     }
 
@@ -547,23 +639,26 @@ impl SwapCoordinator {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        let session =
-            self.sessions
-                .get_mut(session_id)
-                .ok_or_else(|| CoordinatorError::SessionNotFound {
-                    session_id: session_id.to_string(),
-                })?;
+        {
+            let session =
+                self.sessions
+                    .get_mut(session_id)
+                    .ok_or_else(|| CoordinatorError::SessionNotFound {
+                        session_id: session_id.to_string(),
+                    })?;
 
-        if let Some(ref mut htlc) = session.htlc_fast {
-            htlc.status = HtlcStatus::Refunded;
+            if let Some(ref mut htlc) = session.htlc_fast {
+                htlc.status = HtlcStatus::Refunded;
+            }
+            if let Some(ref mut htlc) = session.htlc_slow {
+                htlc.status = HtlcStatus::Refunded;
+            }
+
+            session.phase = SwapPhase::Refunded;
+            session.updated_at = now_unix;
         }
-        if let Some(ref mut htlc) = session.htlc_slow {
-            htlc.status = HtlcStatus::Refunded;
-        }
 
-        session.phase = SwapPhase::Refunded;
-        session.updated_at = now_unix;
-
+        self.persist_by_id(session_id);
         info!(session = %session_id, "Both HTLCs refunded — swap cancelled cleanly");
         Ok(())
     }

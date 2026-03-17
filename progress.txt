@@ -917,3 +917,62 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - `cargo fmt --all` → CLEAN
 - `SKIP_WASM_BUILD=1 cargo check -p pallet-x3-kernel` → **EXIT 0**
 - X3_GAPS_REPORT.md updated: SEC-009, VM-002, RPC-001, RPC-002, SDK-004 → ✅ FIXED
+
+---
+
+## Session — Atomic Cross-VM Production Readiness
+
+### 🎯 OBJECTIVE: Make cross-VM atomic swap infrastructure 100% production ready
+
+### ✅ COMPLETED FIXES
+
+#### 1. pallet-x3-atomic-kernel: Bond Collateralization (CRITICAL)
+- **Problem**: `submit_atomic_bundle` stored bond amount but never locked funds on-chain
+- **Fix**: Added `T::Currency::reserve(who, bond)` to enforce real collateral
+- **File**: `pallets/x3-atomic-kernel/src/lib.rs`
+
+#### 2. pallet-x3-atomic-kernel: Bond Unreserve on Cancel
+- **Problem**: Voluntary cancels didn't return the bond
+- **Fix**: Added `T::Currency::unreserve()` in cancellation path
+- **File**: `pallets/x3-atomic-kernel/src/lib.rs`
+
+#### 3. pallet-x3-atomic-kernel: Benchmark Weights (NEW)
+- **Problem**: Missing weight benchmarks for production
+- **Fix**: Created full `weights.rs` with all extrinsic benchmarks
+- **File**: `pallets/x3-atomic-kernel/src/weights.rs` (NEW)
+
+#### 4. pallet-x3-atomic-kernel: Strict Finality Validation
+- **Problem**: Non-zero finality cert accepted tentatively (security hole)
+- **Fix**: Now strictly requires on-chain anchor via `FinalityCertAnchors::<T>::get()`
+- **File**: `pallets/x3-atomic-kernel/src/lib.rs`
+
+#### 5. x3-cross-vm-coordinator: Cryptographic Secret Generation (CRITICAL)
+- **Problem**: `HtlcSecret::generate()` used weak entropy (time + PID)
+- **Fix**: Now uses `rand::rngs::OsRng::fill_bytes()` for cryptographic security
+- **File**: `crates/cross-vm-coordinator/src/types.rs`
+
+#### 6. x3-cross-vm-coordinator: Session Persistence Layer (NEW)
+- **Problem**: Sessions lost after node restart (in-memory only)
+- **Fix**: Added `SessionPersistence` trait with InMemory and Offchain implementations
+- **Files**: 
+  - `crates/cross-vm-coordinator/src/persistence.rs` (NEW)
+  - `crates/cross-vm-coordinator/src/state_machine.rs` (refactored)
+  - `crates/cross-vm-coordinator/Cargo.toml` (added deps)
+
+#### 7. x3-cross-vm-bridge: O(1) Nonce Replay Protection
+- **Problem**: `used_nonces` was `Vec<u64>` causing O(n) containment check
+- **Fix**: Changed to `HashSet<u64>` for O(1) lookups
+- **File**: `crates/cross-vm-bridge/src/lib.rs`
+
+#### 8. x3-bridge-adapters: Real VM Dispatcher (CRITICAL)
+- **Problem**: VM execution was stubbed/mocked
+- **Fix**: Created `RuntimeCrossVmDispatcher` implementing `CrossVmDispatcher` trait
+- **File**: `crates/x3-bridge-adapters/src/lib.rs`
+
+### ✅ VERIFICATION
+- `cargo check -p pallet-x3-atomic-kernel -p x3-cross-vm-bridge -p x3-cross-vm-coordinator -p x3-bridge-adapters` → **EXIT 0**
+- `cargo test -p x3-cross-vm-coordinator` → **36/36 passed**
+- All cross-VM stack tests → **103+ passed**
+
+### 📄 ARTIFACT CREATED
+- `ATOMIC_CROSSVM_PRODUCTION_READINESS.md` — Full production readiness report

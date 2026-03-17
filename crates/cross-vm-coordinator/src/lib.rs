@@ -35,12 +35,14 @@ pub mod abi;
 pub mod config;
 pub mod flashloan_adapter;
 pub mod htlc;
+pub mod persistence;
 pub mod relayer;
 pub mod rpc_client;
 pub mod state_machine;
 pub mod types;
 
 pub use config::*;
+pub use persistence::*;
 pub use state_machine::*;
 pub use types::*;
 
