@@ -1,4 +1,31 @@
 
+# Session: March 16, 2026 — Smart Contract Security Audit Fixes
+
+## ✅ COMPLETED: Three Critical Security Vulnerabilities Fixed
+
+### 1. FeeManager.sol — distributeAllFees() Role Bypass (FIXED)
+- **Problem:** `distributeAllFees()` called `this.distributeFees(token)` which triggered an external call where `msg.sender` became the contract itself (not the DISTRIBUTOR_ROLE holder), causing revert
+- **Fix:** Split into public `distributeFees()` (keeps role check) + internal `_distributeFees()`. Bulk function now calls `_distributeFees()` directly
+- **File:** `contracts/core/src/FeeManager.sol`
+
+### 2. FeeManager.sol — Referral Balance Token Confusion (FIXED)
+- **Problem:** `referralBalances` was `mapping(address => uint256)` storing all token rewards in one bucket. Referrers could claim any token regardless of what they actually earned
+- **Fix:** Changed to `mapping(address => mapping(address => uint256))` — balances now keyed by `[referrer][token]`
+- **Added:** `getReferralBalance(referrer, token)` view function
+- **File:** `contracts/core/src/FeeManager.sol`
+
+### 3. CrossVMBridge.sol — Operator Pulls Wrong Funds (FIXED)
+- **Problem:** `_executeCrossVMTransfer()` called `IERC20.safeTransferFrom(msg.sender, ...)` but `msg.sender` was the OPERATOR executing the bundle, not the bundle submitter who owns the tokens
+- **Fix:** Threaded `bundle.submitter` through `_executeLeg(leg, submitter)` → `_executeCrossVMLeg(leg, submitter)` → `_executeCrossVMTransfer(..., submitter)`
+- **File:** `contracts/cross-vm/src/CrossVMBridge.sol`
+
+## Technical Summary
+- All fixes preserve external API compatibility
+- No new roles or permissions required
+- Proper fund flow: submitter approves → operator triggers → bridge pulls from submitter
+
+---
+
 # Session: Current — Fix sp-io / WASM panic_impl + x3-external-chains + x3-bot
 
 ## ✅ ROOT CAUSES IDENTIFIED & FIXED

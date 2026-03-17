@@ -2,6 +2,11 @@
 
 extern crate alloc;
 
+#[cfg(not(feature = "std"))]
+use alloc::collections::BTreeSet;
+#[cfg(feature = "std")]
+use std::collections::HashSet;
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::DispatchError;
@@ -307,8 +312,13 @@ pub struct CrossVmBridge {
     failed_ops: Vec<(CrossVmOperation, Vec<u8>)>,
     /// Monotonically increasing nonce for replay protection
     next_nonce: u64,
-    /// Set of already-used nonces (prevents replay within session)
-    used_nonces: Vec<u64>,
+    /// Set of already-used nonces — O(1) lookup for replay protection.
+    /// Uses HashSet on std targets (average O(1) insert/contains).
+    /// Uses BTreeSet on no_std targets (O(log n), but no_std-safe).
+    #[cfg(feature = "std")]
+    used_nonces: HashSet<u64>,
+    #[cfg(not(feature = "std"))]
+    used_nonces: BTreeSet<u64>,
     /// Bridge configuration (limits, circuit breaker)
     pub config: BridgeConfig,
 }
@@ -328,7 +338,10 @@ impl CrossVmBridge {
             completed_ops: Vec::new(),
             failed_ops: Vec::new(),
             next_nonce: 1,
-            used_nonces: Vec::new(),
+            #[cfg(feature = "std")]
+            used_nonces: HashSet::new(),
+            #[cfg(not(feature = "std"))]
+            used_nonces: BTreeSet::new(),
             config: BridgeConfig::default(),
         }
     }
@@ -402,16 +415,18 @@ impl CrossVmBridge {
         // Assign nonce for replay protection
         let nonce = self.next_nonce;
         self.next_nonce = self.next_nonce.saturating_add(1);
-        self.used_nonces.push(nonce);
+        // O(1) insert into the nonce set
+        self.used_nonces.insert(nonce);
 
         self.pending_ops.push((operation, OperationState::Pending));
         Ok(nonce)
     }
 
-    /// Check if a nonce has already been used (replay protection)
+    /// Check if a nonce has already been used — O(1) on std, O(log n) on no_std.
     pub fn is_nonce_used(&self, nonce: u64) -> bool {
         self.used_nonces.contains(&nonce)
     }
+
 
     /// Extract the transfer amount from an operation (0 for non-transfer ops)
     fn extract_transfer_amount(operation: &CrossVmOperation) -> u128 {
@@ -582,8 +597,20 @@ impl CrossVmBridge {
         }
     }
 
-    /// Execute pending operations
+    /// Execute pending operations (Legacy stub for tests. Do NOT use in production.)
+    /// Delegates to `execute_pending_with_dispatcher(&NoOpDispatcher)`.
     pub fn execute_pending(&mut self) -> Result<Vec<CrossVmResult>, DispatchError> {
+        self.execute_pending_with_dispatcher(&NoOpDispatcher)
+    }
+
+    /// Execute pending operations using the provided VM dispatcher.
+    ///
+    /// This is the production entry point that actually executes operations
+    /// against the underlying EVM/SVM networks.
+    pub fn execute_pending_with_dispatcher<D: CrossVmDispatcher>(
+        &mut self,
+        dispatcher: &D,
+    ) -> Result<Vec<CrossVmResult>, DispatchError> {
         if self.config.paused {
             return Err(DispatchError::Other(
                 "Bridge is paused (circuit breaker active)",
@@ -612,7 +639,7 @@ impl CrossVmBridge {
             if let Some((_, state)) = self.pending_ops.get_mut(idx) {
                 *state = OperationState::Executing;
 
-                match self.execute_operation(&operation) {
+                match self.execute_operation_with_dispatcher(&operation, dispatcher) {
                     Ok(result) => {
                         results.push(result.clone());
                         completed_updates.push((operation, result));
@@ -648,13 +675,19 @@ impl CrossVmBridge {
         Ok(results)
     }
 
-    /// Execute a single cross-VM operation
+    /// Execute a single cross-VM operation using the supplied dispatcher.
     ///
-    /// This method orchestrates cross-VM execution and persists results to the canonical ledger.
-    /// State changes are only recorded after BOTH VMs complete successfully (atomic semantics).
-    fn execute_operation(
+    /// # Production vs. Test
+    /// Callers should pass a real `CrossVmDispatcher` implementation that
+    /// routes EVM/SVM calls to the actual VM adapters.  For unit tests,
+    /// pass `&NoOpDispatcher` to get synthetic (but structurally valid) results.
+    ///
+    /// Transfer and message operations are handled directly here; contract
+    /// calls (`CallEvm` / `CallSvm`) are forwarded to the dispatcher.
+    fn execute_operation_with_dispatcher<D: CrossVmDispatcher>(
         &self,
         operation: &CrossVmOperation,
+        dispatcher: &D,
     ) -> Result<CrossVmResult, DispatchError> {
         match operation {
             CrossVmOperation::TransferToEvm {
@@ -662,11 +695,7 @@ impl CrossVmBridge {
                 destination,
                 amount,
             } => {
-                // Prepare SVM withdrawal and EVM deposit as atomic transaction pair
-                // On success: Debit source on SVM canonical ledger, credit destination on EVM canonical ledger
-                // On failure: Rollback both sides
-
-                // Return result with state changes that should be applied atomically
+                // SVM withdrawal + EVM deposit — canonical ledger update.
                 let mut output: Vec<u8> = Vec::new();
                 output.extend_from_slice(b"SVM:withdraw:");
                 output.extend_from_slice(source);
@@ -676,7 +705,6 @@ impl CrossVmBridge {
                 output.extend_from_slice(destination);
                 output.extend_from_slice(b":");
                 output.extend_from_slice(&amount.to_le_bytes());
-
                 Ok(CrossVmResult::success(output, 25_000))
             }
             CrossVmOperation::TransferToSvm {
@@ -684,10 +712,7 @@ impl CrossVmBridge {
                 destination,
                 amount,
             } => {
-                // Prepare EVM withdrawal and SVM deposit as atomic transaction pair
-                // On success: Debit source on EVM canonical ledger, credit destination on SVM canonical ledger
-                // On failure: Rollback both sides
-
+                // EVM withdrawal + SVM deposit — canonical ledger update.
                 let mut output: Vec<u8> = Vec::new();
                 output.extend_from_slice(b"EVM:withdraw:");
                 output.extend_from_slice(source);
@@ -697,34 +722,51 @@ impl CrossVmBridge {
                 output.extend_from_slice(destination);
                 output.extend_from_slice(b":");
                 output.extend_from_slice(&amount.to_le_bytes());
-
                 Ok(CrossVmResult::success(output, 25_000))
             }
             CrossVmOperation::CallEvm {
-                caller: _,
-                contract: _,
-                input: _,
-                value: _,
+                caller,
+                contract,
+                input,
+                value,
             } => {
-                // Execute EVM contract call from SVM caller
-                // The dispatcher trait implementation will handle:
-                // 1. Encoding the call for EVM execution
-                // 2. Calling execute_evm_tx on dispatcher
-                // 3. Recording state changes only if execution succeeds
-                Ok(CrossVmResult::success(Vec::new(), 100_000))
+                // Route to the real EVM adapter via the dispatcher.
+                // The dispatcher is responsible for:
+                //   1. Encoding the calldata for the EVM
+                //   2. Deducting gas and reverting on failure
+                //   3. Returning receipt bytes on success
+                let mut caller_arr = [0u8; 32];
+                let len = caller.len().min(32);
+                caller_arr[..len].copy_from_slice(&caller[..len]);
+                // Derive a 20-byte EVM caller address from the 32-byte SVM pubkey
+                let mut evm_caller = [0u8; 20];
+                evm_caller.copy_from_slice(&caller_arr[12..]);
+
+                let mut contract_arr = [0u8; 20];
+                let clen = contract.len().min(20);
+                contract_arr[..clen].copy_from_slice(&contract[..clen]);
+
+                dispatcher.execute_evm_tx(&evm_caller, &contract_arr, input, *value)
             }
             CrossVmOperation::CallSvm {
-                caller: _,
-                pallet_index: _,
-                call_index: _,
-                input: _,
+                caller,
+                pallet_index,
+                call_index,
+                input,
             } => {
-                // Execute SVM pallet call from EVM caller
-                // The dispatcher trait implementation will handle:
-                // 1. Encoding the call for SVM execution
-                // 2. Calling execute_svm_tx on dispatcher
-                // 3. Recording state changes only if execution succeeds
-                Ok(CrossVmResult::success(Vec::new(), 100_000))
+                // Route to the real SVM adapter via the dispatcher.
+                // Encodes a cross-program invocation (CPI) instruction:
+                //   pallet_index (1B) || call_index (1B) || input bytes
+                let mut program_id = [0u8; 32];
+                program_id[0] = *pallet_index;
+                program_id[1] = *call_index;
+
+                let mut caller_arr = [0u8; 32];
+                let len = caller.len().min(20);
+                // Pad EVM address into 32-byte SVM pubkey slot (left-pad with zeros)
+                caller_arr[12..12 + len].copy_from_slice(&caller[..len]);
+
+                dispatcher.execute_svm_tx(&caller_arr, &program_id, input)
             }
             CrossVmOperation::AtomicSwap {
                 evm_party,
@@ -734,9 +776,7 @@ impl CrossVmBridge {
                 evm_amount,
                 svm_amount,
             } => {
-                // Execute atomic asset swap with dual-VM guarantees
-                // Both transfers succeed or both rollback (no partial state)
-
+                // Dual-VM atomic swap — both legs must succeed or neither is committed.
                 let mut output: Vec<u8> = Vec::new();
                 output.extend_from_slice(b"EVM:withdraw:");
                 output.extend_from_slice(evm_party);
@@ -754,7 +794,6 @@ impl CrossVmBridge {
                 output.extend_from_slice(evm_party);
                 output.extend_from_slice(b":");
                 output.extend_from_slice(&evm_amount.to_le_bytes());
-
                 Ok(CrossVmResult::success(output, 200_000))
             }
             CrossVmOperation::MessageToEvm {
@@ -763,8 +802,6 @@ impl CrossVmBridge {
                 message,
                 nonce,
             } => {
-                // BRIDGE-002: SVM → EVM arbitrary message passing
-                // Enforce a 1024-byte payload cap to prevent unbounded gas consumption
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
                     return Err(DispatchError::Other(
@@ -788,7 +825,6 @@ impl CrossVmBridge {
                 message,
                 nonce,
             } => {
-                // BRIDGE-003: EVM → SVM arbitrary message passing
                 const MAX_MSG: usize = 1024;
                 if message.len() > MAX_MSG {
                     return Err(DispatchError::Other(
@@ -807,6 +843,20 @@ impl CrossVmBridge {
                 Ok(CrossVmResult::success(output, 50_000))
             }
         }
+    }
+
+    /// Legacy stub kept for backwards compat with existing tests.
+    /// Delegates to `execute_pending_with_dispatcher(&NoOpDispatcher)`.
+    ///
+    /// # Production
+    /// **Do NOT call this in production.** `CallEvm` and `CallSvm` operations
+    /// will be dispatched to the `NoOpDispatcher` which returns synthetic results.
+    /// Use `execute_pending_with_dispatcher(your_real_dispatcher)` instead.
+    fn execute_operation(
+        &self,
+        operation: &CrossVmOperation,
+    ) -> Result<CrossVmResult, DispatchError> {
+        self.execute_operation_with_dispatcher(operation, &NoOpDispatcher)
     }
 
     // =========================================================================
@@ -900,7 +950,7 @@ impl CrossVmBridge {
         self.prepared_ops.extend(prepared);
         self.next_nonce = nonce_counter;
         for n in &nonces {
-            self.used_nonces.push(*n);
+            self.used_nonces.insert(*n);
         }
 
         // Move matched pending ops to Executing state
@@ -1131,9 +1181,12 @@ impl CrossVmBridge {
         self.failed_ops.len()
     }
 
-    /// Return a snapshot of all used nonces (for replay-protection verification)
-    pub fn used_nonces_snapshot(&self) -> &[u64] {
-        &self.used_nonces
+    /// Return a sorted snapshot of all used nonces (for replay-protection verification).
+    /// Returns a sorted Vec since HashSet does not guarantee ordering.
+    pub fn used_nonces_snapshot(&self) -> Vec<u64> {
+        let mut v: Vec<u64> = self.used_nonces.iter().copied().collect();
+        v.sort_unstable();
+        v
     }
 
     /// Clear all operations (does NOT reset nonces — those are permanent)

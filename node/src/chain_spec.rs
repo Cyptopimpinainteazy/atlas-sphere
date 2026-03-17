@@ -8,7 +8,7 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 use x3_chain_runtime::{
     x3_kernel_default_assets, AccountId, AtlasKernelConfig, AuraConfig, BalancesConfig,
-    GrandpaConfig, RuntimeGenesisConfig, Signature, SystemConfig, WASM_BINARY,
+    GrandpaConfig, RuntimeGenesisConfig, Signature, SystemConfig, X3CoinConfig, WASM_BINARY,
 };
 
 /// Chain specification specialized to this runtime's genesis configuration.
@@ -322,6 +322,11 @@ fn x3_chain_genesis(
         evm: Default::default(),
         governance: Default::default(),
         treasury: Default::default(),
+        x3_coin: X3CoinConfig {
+            team_allocations: Vec::new(),
+            ecosystem_allocations: Vec::new(),
+            liquidity_allocations: Vec::new(),
+        },
         evolution_core: Default::default(),
         x3_verifier: Default::default(),
         depin_marketplace: Default::default(),

@@ -1164,32 +1164,43 @@ fn comit_submission_emits_all_required_event_fields() {
         let events = x3_events();
 
         // Ensure required events exist (order is not strictly asserted beyond existence).
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitSubmitted { comit_id: id, origin, nonce: n, fee: f }
-                if *id == comit_id && *origin == ALICE && *n == nonce && *f == fee
-        )), "Expected ComitSubmitted event");
+        assert!(
+            events.iter().any(|e| matches!(
+                e,
+                AtlasEvent::ComitSubmitted { comit_id: id, origin, nonce: n, fee: f }
+                    if *id == comit_id && *origin == ALICE && *n == nonce && *f == fee
+            )),
+            "Expected ComitSubmitted event"
+        );
 
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitExecutionStarted { .. }
-        )), "Expected ComitExecutionStarted event");
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, AtlasEvent::ComitExecutionStarted { .. })),
+            "Expected ComitExecutionStarted event"
+        );
 
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitExecutionCompleted { .. }
-        )), "Expected ComitExecutionCompleted event");
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, AtlasEvent::ComitExecutionCompleted { .. })),
+            "Expected ComitExecutionCompleted event"
+        );
 
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitFinalized { .. }
-        )), "Expected ComitFinalized event");
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, AtlasEvent::ComitFinalized { .. })),
+            "Expected ComitFinalized event"
+        );
 
         // Ensure the ledger update event is emitted for state changes
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CanonicalLedgerUpdated { .. }
-        )), "Expected CanonicalLedgerUpdated event");
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, AtlasEvent::CanonicalLedgerUpdated { .. })),
+            "Expected CanonicalLedgerUpdated event"
+        );
     });
 }
 

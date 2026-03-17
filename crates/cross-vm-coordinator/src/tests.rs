@@ -52,7 +52,7 @@ fn test_phase_transitions_happy_path() {
     let mut coordinator = SwapCoordinator::with_default_config();
     let now = 1700000000u64;
 
-    let (session_id, _secret, hash) = coordinator
+    let (session_id, secret, hash) = coordinator
         .setup_swap(
             VmTarget::Svm,
             VmTarget::Evm { chain_id: 1 },
@@ -140,7 +140,7 @@ fn test_phase_transitions_happy_path() {
     let session = coordinator.get_session(&session_id).unwrap();
     assert_eq!(session.phase, SwapPhase::ClaimingFast);
 
-    coordinator.record_fast_claim(&session_id, now).unwrap();
+    coordinator.record_fast_claim(&session_id, secret, now).unwrap();
     let session = coordinator.get_session(&session_id).unwrap();
     assert_eq!(session.phase, SwapPhase::ClaimingSlow);
 
@@ -431,4 +431,210 @@ fn test_config_near_expiry() {
     assert!(config.is_near_expiry(timelock, timelock - 200));
     // Well before: should NOT be near
     assert!(!config.is_near_expiry(timelock, timelock - 500));
+}
+
+// ── Production-readiness tests added for 100% production push ────────────────
+
+#[test]
+fn test_session_count_tracks_all_sessions() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    assert_eq!(coordinator.session_count(), 0);
+    assert_eq!(coordinator.active_sessions(), 0);
+
+    let (id1, _, _) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+    let (_id2, _, _) = coordinator
+        .setup_swap(VmTarget::X3Vm, VmTarget::Evm { chain_id: 137 }, vec![], now)
+        .unwrap();
+
+    assert_eq!(coordinator.session_count(), 2);
+    assert_eq!(coordinator.active_sessions(), 2);
+
+    // Refund id1 — session_count stays 2 (not purged yet), active drops to 1
+    coordinator.abort(&id1, "test", now).unwrap();
+    coordinator.record_refunds(&id1, now).unwrap();
+    assert_eq!(coordinator.session_count(), 2);
+    assert_eq!(coordinator.active_sessions(), 1);
+}
+
+#[test]
+fn test_purge_terminated_sessions_removes_stale_terminals() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    let (id1, _, _) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+    let (_id2, _, _) = coordinator
+        .setup_swap(VmTarget::X3Vm, VmTarget::Evm { chain_id: 137 }, vec![], now)
+        .unwrap();
+
+    // Terminate id1 at `now`
+    coordinator.abort(&id1, "done", now).unwrap();
+    coordinator.record_refunds(&id1, now).unwrap();
+
+    // Purge with max_age = 3600s, advance time by 7200s
+    let future = now + 7200;
+    let purged = coordinator.purge_terminated_sessions(future, 3600);
+    assert_eq!(purged, 1, "only id1 should be purged (it's terminal and stale)");
+    assert_eq!(coordinator.session_count(), 1, "id2 still active — must survive purge");
+}
+
+#[test]
+fn test_purge_does_not_remove_active_sessions() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    let (_id, _, _) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    // Advance time far past any reasonable TTL — but session is still active (Setup phase)
+    let purged = coordinator.purge_terminated_sessions(now + 86400, 0);
+    assert_eq!(purged, 0, "active sessions must never be purged");
+    assert_eq!(coordinator.session_count(), 1);
+}
+
+#[test]
+fn test_purge_with_zero_age_removes_all_terminals() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    let (id1, _, _) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    coordinator.abort(&id1, "test", now).unwrap();
+    coordinator.record_refunds(&id1, now).unwrap();
+
+    // max_age = 0: any terminal session updated at or before `now` is stale
+    let purged = coordinator.purge_terminated_sessions(now + 1, 0);
+    assert_eq!(purged, 1);
+    assert_eq!(coordinator.session_count(), 0);
+}
+
+#[test]
+fn test_secret_generated_by_osrng_is_nonzero() {
+    // Basic sanity check for the OsRng entropy source.
+    // The chance of generating all-zero bytes with a real CSPRNG is 2^-256.
+    let secret = HtlcSecret::generate();
+    assert_ne!(secret.0, [0u8; 32], "OsRng must never produce all-zero bytes");
+    // Hash must also be non-zero
+    let hash = secret.hash();
+    assert_ne!(hash.0, [0u8; 32]);
+}
+
+#[test]
+fn test_secret_generated_by_osrng_is_unique() {
+    // Generate 10 secrets without sleeping — OsRng is not time-based,
+    // so uniqueness depends only on OS entropy.
+    let secrets: Vec<HtlcSecret> = (0..10).map(|_| HtlcSecret::generate()).collect();
+    for i in 0..secrets.len() {
+        for j in (i + 1)..secrets.len() {
+            assert_ne!(
+                secrets[i].0, secrets[j].0,
+                "OsRng-generated secrets at indices {} and {} are identical — entropy failure",
+                i, j
+            );
+        }
+    }
+}
+
+// ── HTLC Replay Protection (cross-session) ───────────────────────────────────
+
+#[test]
+fn test_htlc_wrong_secret_is_rejected() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    let (session_id, _correct_secret, _hash) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    let session_hash = coordinator.get_session(&session_id).unwrap().hash_lock;
+    let fast_htlc = HtlcRecord {
+        id: HtlcId(b"f1".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Svm, recipient: vec![], hash_lock: session_hash,
+            timelock: now + 3600, asset: vec![0u8; 32], amount: 1_000,
+        },
+        status: HtlcStatus::Funded, created_at_block: 100,
+        confirmations_required: 1, confirmations: 1,
+    };
+    coordinator.record_htlc_fast(&session_id, fast_htlc, now).unwrap();
+    let slow_htlc = HtlcRecord {
+        id: HtlcId(b"s1".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Evm { chain_id: 1 }, recipient: vec![], hash_lock: session_hash,
+            timelock: now + 7200, asset: vec![0u8; 20], amount: 1_000,
+        },
+        status: HtlcStatus::Funded, created_at_block: 100,
+        confirmations_required: 1, confirmations: 1,
+    };
+    coordinator.record_htlc_slow(&session_id, slow_htlc, now).unwrap();
+    coordinator.begin_flash_execution(&session_id, now).unwrap();
+    if coordinator.get_session(&session_id).unwrap().phase == SwapPhase::ExecutingFlashLegs {
+        coordinator.record_leg_outcome(&session_id, FlashLegOutcome::Success {
+            tx_hash: vec![0xAB; 32], gas_used: 1_000,
+            output_amount: 1_000, premium_paid: 0,
+        }, now).ok();
+    }
+    coordinator.begin_settlement(&session_id, now).unwrap();
+
+    // Present a completely different (wrong) secret
+    let wrong_secret = HtlcSecret::generate();
+    let result = coordinator.record_fast_claim(&session_id, wrong_secret, now);
+    assert!(result.is_err(), "Wrong secret must be rejected");
+}
+
+#[test]
+fn test_htlc_secret_replay_same_session_is_rejected() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1700000000u64;
+
+    let (session_id, secret, _hash) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    let session_hash = coordinator.get_session(&session_id).unwrap().hash_lock;
+    let fast_htlc = HtlcRecord {
+        id: HtlcId(b"f2".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Svm, recipient: vec![], hash_lock: session_hash,
+            timelock: now + 3600, asset: vec![0u8; 32], amount: 1_000,
+        },
+        status: HtlcStatus::Funded, created_at_block: 100,
+        confirmations_required: 1, confirmations: 1,
+    };
+    coordinator.record_htlc_fast(&session_id, fast_htlc, now).unwrap();
+    let slow_htlc = HtlcRecord {
+        id: HtlcId(b"s2".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Evm { chain_id: 1 }, recipient: vec![], hash_lock: session_hash,
+            timelock: now + 7200, asset: vec![0u8; 20], amount: 1_000,
+        },
+        status: HtlcStatus::Funded, created_at_block: 100,
+        confirmations_required: 1, confirmations: 1,
+    };
+    coordinator.record_htlc_slow(&session_id, slow_htlc, now).unwrap();
+    coordinator.begin_flash_execution(&session_id, now).unwrap();
+    if coordinator.get_session(&session_id).unwrap().phase == SwapPhase::ExecutingFlashLegs {
+        coordinator.record_leg_outcome(&session_id, FlashLegOutcome::Success {
+            tx_hash: vec![0xBC; 32], gas_used: 1_000,
+            output_amount: 1_000, premium_paid: 0,
+        }, now).ok();
+    }
+    coordinator.begin_settlement(&session_id, now).unwrap();
+
+    // First claim succeeds
+    coordinator
+        .record_fast_claim(&session_id, secret.clone(), now)
+        .expect("First claim with correct secret must succeed");
+
+    // Replay of the same secret must be rejected
+    let replay = coordinator.record_fast_claim(&session_id, secret, now);
+    assert!(replay.is_err(), "Replay of own secret must be rejected");
 }

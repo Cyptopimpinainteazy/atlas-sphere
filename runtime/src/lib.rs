@@ -48,7 +48,9 @@ use sp_api::impl_runtime_apis;
 use sp_core::{OpaqueMetadata, H256, U256};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
-    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+    traits::{
+        AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify,
+    },
     MultiAddress, MultiSignature, Perbill,
 };
 use sp_session::{GetSessionNumber, GetValidatorCount};
@@ -544,7 +546,7 @@ impl pallet_x3_coin::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type UnixTime = Timestamp;
     type WeightInfo = pallet_x3_coin::weights::SubstrateWeight<Runtime>;
-    type TreasuryAccount = TreasuryPalletId;
+    type TreasuryAccount = TreasuryAccountId;
     type MaxBonusClaims = ConstU32<10>;
     type TeamVestingBlocks = ConstU64<15768000>;
     type TeamVestingCliff = ConstU64<7884000>;
@@ -1064,6 +1066,7 @@ impl pallet_governance::Config for Runtime {
 // ===== Treasury Pallet Configuration =====
 parameter_types! {
     pub const TreasuryPalletId: frame_support::PalletId = frame_support::PalletId(*b"py/trsry");
+    pub TreasuryAccountId: AccountId = TreasuryPalletId::get().into_account_truncating();
     pub const ProposalBond: sp_runtime::Percent = sp_runtime::Percent::from_percent(5);
     pub const MaxSigners: u32 = 7;
     pub const SmallSpendThreshold: Balance = 1_000 * X3;

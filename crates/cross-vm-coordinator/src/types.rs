@@ -1,5 +1,6 @@
 //! Core types for the Cross-VM coordinator.
 
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt;
@@ -34,20 +35,17 @@ impl fmt::Display for VmTarget {
 pub struct HtlcSecret(pub [u8; 32]);
 
 impl HtlcSecret {
-    /// Generate a cryptographically random secret.
+    /// Generate a cryptographically secure random secret using the OS CSPRNG.
+    ///
+    /// # Security
+    /// Uses `rand::rngs::OsRng` which reads from the OS entropy source
+    /// (getrandom syscall / /dev/urandom on Linux, CryptGenRandom on Windows).
+    /// **DO NOT** use time- or PID-based entropy for HTLC secrets in production —
+    /// such seeds are predictable and allow attackers to brute-force HTLC locks.
     pub fn generate() -> Self {
+        let mut rng = rand::rngs::OsRng;
         let mut rng_bytes = [0u8; 32];
-        // Use system time + process entropy as seed (production: use OsRng)
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_nanos();
-        let mut hasher = Sha256::new();
-        hasher.update(now.to_le_bytes());
-        hasher.update(b"x3-htlc-secret");
-        hasher.update(std::process::id().to_le_bytes());
-        let hash = hasher.finalize();
-        rng_bytes.copy_from_slice(&hash);
+        rng.fill_bytes(&mut rng_bytes);
         Self(rng_bytes)
     }
 

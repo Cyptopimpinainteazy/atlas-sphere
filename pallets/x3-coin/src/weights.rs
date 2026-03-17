@@ -8,7 +8,11 @@
 //! Block time: 200ms
 //! Extrinsics: 1000
 
-use frame_support::weights::{constants::RocksDbWeight as DbWeight, Weight};
+use core::marker::PhantomData;
+use frame_support::{
+    traits::Get,
+    weights::{constants::RocksDbWeight as DbWeight, Weight},
+};
 
 pub trait WeightInfo {
     fn mint() -> Weight;
@@ -17,6 +21,102 @@ pub trait WeightInfo {
     fn claim_bonus() -> Weight;
     fn submit_cross_chain_operation() -> Weight;
     fn finalize_cross_chain_operation() -> Weight;
+}
+
+/// Weights for `pallet_x3_coin` using the Substrate node and recommended hardware.
+pub struct SubstrateWeight<T>(PhantomData<T>);
+
+impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn mint() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn burn() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn claim_team_vesting() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn claim_bonus() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn submit_cross_chain_operation() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
+    /// Storage: X3Coin TotalSupply (r:0 w:1)
+    /// Proof: X3Coin TotalSupply (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TreasuryBalance (r:0 w:1)
+    /// Proof: X3Coin TreasuryBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusPoolBalance (r:0 w:1)
+    /// Proof: X3Coin BonusPoolBalance (max_values: Some(1), max_size: Some(16), added: 511, mode: MaxEncodedLen)
+    /// Storage: X3Coin TeamVesting (r:0 w:1)
+    /// Proof: X3Coin TeamVesting (max_values: None, max_size: Some(112), added: 2587, mode: MaxEncodedLen)
+    /// Storage: X3Coin BonusClaims (r:0 w:1)
+    /// Proof: X3Coin BonusClaims (max_values: None, max_size: Some(108), added: 2583, mode: MaxEncodedLen)
+    fn finalize_cross_chain_operation() -> Weight {
+        Weight::from_parts(0, 0)
+            .saturating_add(Weight::from_parts(0, 0))
+            .saturating_add(T::DbWeight::get().writes(5_u64))
+    }
 }
 
 impl WeightInfo for () {

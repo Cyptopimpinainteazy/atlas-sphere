@@ -11,7 +11,7 @@
 
 use crate::config::CoordinatorConfig;
 use crate::types::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use tracing::{error, info, warn};
 
 /// The Cross-VM Swap Coordinator.
@@ -20,6 +20,14 @@ use tracing::{error, info, warn};
 pub struct SwapCoordinator {
     config: CoordinatorConfig,
     sessions: HashMap<String, SwapSession>,
+    /// Global set of HTLC secrets that have already been claimed.
+    ///
+    /// Once a secret is revealed (in `claim_fast` or `claim_slow`), its raw
+    /// 32-byte value is inserted here. Any future claim attempt using the same
+    /// secret — even in a different session — is immediately rejected.
+    /// This prevents cross-session replay attacks where an adversary reuses a
+    /// leaked secret to claim HTLCs in multiple sessions.
+    used_secrets: HashSet<[u8; 32]>,
 }
 
 impl SwapCoordinator {
@@ -27,6 +35,7 @@ impl SwapCoordinator {
         Self {
             config,
             sessions: HashMap::new(),
+            used_secrets: HashSet::new(),
         }
     }
 
@@ -57,6 +66,29 @@ impl SwapCoordinator {
             .count()
     }
 
+    /// Total sessions (active + terminated). Useful for monitoring.
+    pub fn session_count(&self) -> usize {
+        self.sessions.len()
+    }
+
+    /// Purge terminated sessions (Complete, Refunded, Failed) older than `max_age_secs`.
+    ///
+    /// Call periodically (e.g., every epoch) to prevent unbounded memory growth on
+    /// long-running nodes. Returns the number of sessions purged.
+    pub fn purge_terminated_sessions(&mut self, now_unix: u64, max_age_secs: u64) -> usize {
+        let before = self.sessions.len();
+        self.sessions.retain(|_, s| {
+            let is_terminal = matches!(
+                s.phase,
+                SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed
+            );
+            let is_stale = now_unix.saturating_sub(s.updated_at) > max_age_secs;
+            // Keep sessions that are NOT (terminal AND stale)
+            !(is_terminal && is_stale)
+        });
+        before - self.sessions.len()
+    }
+
     // ── Phase 1: Setup ────────────────────────────────────────────────────
 
     /// Initialize a new atomic swap session.
@@ -64,6 +96,11 @@ impl SwapCoordinator {
     /// Generates the secret/hash pair, computes timelocks, and returns
     /// the session ID. The secret is returned separately so the caller
     /// can hold it securely until Phase 4.
+    ///
+    /// # DoS Protection
+    /// Rejects new sessions when the total session count
+    /// exceeds `MAX_TOTAL_SESSIONS` (active + not yet purged).
+    /// Operators must call `purge_terminated_sessions()` periodically.
     pub fn setup_swap(
         &mut self,
         fast_vm: VmTarget,
@@ -71,6 +108,15 @@ impl SwapCoordinator {
         flash_legs: Vec<FlashLeg>,
         now_unix: u64,
     ) -> Result<(String, HtlcSecret, HtlcHash), CoordinatorError> {
+        // DoS guard: cap total live sessions to prevent unbounded memory growth.
+        const MAX_TOTAL_SESSIONS: usize = 10_000;
+        if self.sessions.len() >= MAX_TOTAL_SESSIONS {
+            return Err(CoordinatorError::Internal(
+                "Session limit reached — call purge_terminated_sessions() to free space"
+                    .to_string(),
+            ));
+        }
+
         // Generate cryptographic secret and hash
         let secret = HtlcSecret::generate();
         let hash = secret.hash();
@@ -267,15 +313,19 @@ impl SwapCoordinator {
                 htlc_id: session_id.to_string(),
             });
         }
+        if session.flash_legs.is_empty() {
+            session.phase = SwapPhase::LegsComplete;
+            info!(session = %session_id, "No flash legs to execute — skipping to LegsComplete");
+        } else {
+            session.phase = SwapPhase::ExecutingFlashLegs;
+            info!(
+                session = %session_id,
+                legs = session.flash_legs.len(),
+                "Beginning flash leg execution"
+            );
+        }
 
-        session.phase = SwapPhase::ExecutingFlashLegs;
         session.updated_at = now_unix;
-
-        info!(
-            session = %session_id,
-            legs = session.flash_legs.len(),
-            "Beginning flash leg execution"
-        );
 
         Ok(())
     }
@@ -389,17 +439,49 @@ impl SwapCoordinator {
     }
 
     /// Record that the fast chain claim succeeded (secret revealed on-chain).
+    ///
+    /// # Parameters
+    /// - `secret`: The preimage that was revealed to claim the HTLC. This is
+    ///   hashed and compared against the session's `hash_lock` to prevent
+    ///   accepting a wrong or forged preimage.
+    ///
+    /// # Replay Protection
+    /// The secret bytes are inserted into `used_secrets`. Any subsequent call
+    /// with the same secret — for this session or any other — will be rejected
+    /// with `CoordinatorError::SecretAlreadyUsed`.
     pub fn record_fast_claim(
         &mut self,
         session_id: &str,
+        secret: HtlcSecret,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
+        // Global replay guard: reject any previously-seen secret immediately.
+        if self.used_secrets.contains(&secret.0) {
+            return Err(CoordinatorError::Internal(
+                format!("HTLC secret replay detected for session '{}' — secret already used in a previous claim", session_id)
+            ));
+        }
+
         let session =
             self.sessions
                 .get_mut(session_id)
                 .ok_or_else(|| CoordinatorError::SessionNotFound {
                     session_id: session_id.to_string(),
                 })?;
+
+        // Verify the preimage hashes to the lock
+        let provided_hash = secret.hash();
+        if provided_hash != session.hash_lock {
+            return Err(CoordinatorError::Internal(format!(
+                "Secret hash mismatch for session '{}': provided {:?} does not match lock {:?}",
+                session_id, provided_hash, session.hash_lock
+            )));
+        }
+
+        // Register the secret globally BEFORE mutating session state
+        // (fail-safe: if we crash after insert but before state update, the
+        //  duplicate will be caught on retry, which is the safe outcome).
+        self.used_secrets.insert(secret.0);
 
         if let Some(ref mut htlc) = session.htlc_fast {
             htlc.status = HtlcStatus::Claimed;

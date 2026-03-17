@@ -105,7 +105,10 @@ impl pallet_balances::Config for Test {
 pub struct TestEvmAdapter;
 
 impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
-    fn execute(payload: &[u8], _gas_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+    fn execute(
+        payload: &[u8],
+        _gas_limit: u64,
+    ) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         // Use a fixed asset/balance so tests can assert on canonical ledger.
         let account: AccountId = ALICE;
         let asset_id: AssetId = 0;
@@ -145,7 +148,10 @@ impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
 pub struct TestSvmAdapter;
 
 impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
-    fn execute(payload: &[u8], _compute_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+    fn execute(
+        payload: &[u8],
+        _compute_limit: u64,
+    ) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         let account: AccountId = ALICE;
         let asset_id: AssetId = 1;
         let balance: Balance = 222;
@@ -179,10 +185,15 @@ impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
 pub struct TestX3Adapter;
 
 impl pallet_x3_kernel::X3ExecutorAdapter for TestX3Adapter {
-    fn execute(payload: &[u8], _gas_limit: u64) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
+    fn execute(
+        payload: &[u8],
+        _gas_limit: u64,
+    ) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         // Simulate an execution failure when payload starts with 0xFF.
         if payload.first() == Some(&0xFF) {
-            return Err(frame_support::dispatch::DispatchError::Other("X3 execution failed"));
+            return Err(frame_support::dispatch::DispatchError::Other(
+                "X3 execution failed",
+            ));
         }
 
         let account: AccountId = ALICE;

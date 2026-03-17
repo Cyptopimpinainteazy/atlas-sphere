@@ -66,13 +66,20 @@ pub use pallet::*;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 // Re-export proof type for use in RPC and external verifiers
 pub mod proof;
 
 #[frame_support::pallet]
 pub mod pallet {
     use super::proof::{BundleLeg, PoaeProof};
-    use frame_support::{dispatch::DispatchResult, pallet_prelude::*, traits::Currency};
+    use frame_support::{
+        dispatch::DispatchResult,
+        pallet_prelude::*,
+        traits::{Currency, ReservableCurrency},
+    };
     use frame_system::offchain::SubmitTransaction;
     use frame_system::pallet_prelude::*;
     use sp_core::{hashing::sha2_256, H256};
@@ -96,7 +103,9 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// The currency used for executor bonds.
-        type Currency: Currency<Self::AccountId>;
+        /// Must implement `ReservableCurrency` so bonds are properly locked at submission
+        /// and released (or slashed) at finalization/rollback.
+        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
         /// Minimum bond required to submit a bundle.
         /// Denominated in the smallest currency unit.
@@ -440,6 +449,12 @@ pub mod pallet {
         /// The bundle is assigned a deterministic `bundle_id` derived from
         /// the submitter, block number, and legs hash.
         ///
+        /// # Bond Lifecycle
+        /// - **Reserved** here at submission (submitter cannot spend bonded funds).
+        /// - **Unreserved** on `SubmitterCancelled` rollback (voluntary cancel, no slash).
+        /// - **Slashed** (via `Currency::slash` on reserved funds) on execution failure
+        ///   or deadline expiry.
+        ///
         /// # Security
         /// - Max legs enforced by `MaxLegsPerBundle`.
         /// - Deadline enforced by `BundleDeadlineBlocks`.
@@ -472,6 +487,12 @@ pub mod pallet {
                 Error::<T>::BundleAlreadyExists
             );
 
+            // Reserve the bond — this locks funds in the submitter's account.
+            // Slashing (Currency::slash) consumes reserved funds first.
+            let bond: BalanceOf<T> = T::MinBond::get().saturated_into();
+            T::Currency::reserve(&submitter, bond)
+                .map_err(|_| Error::<T>::InsufficientBond)?;
+
             let record = BundleRecord::<T> {
                 submitter: submitter.clone(),
                 legs_hash,
@@ -497,7 +518,7 @@ pub mod pallet {
 
             log::info!(
                 target: "x3-atomic-kernel",
-                "Bundle {:?} submitted with {} legs, deadline block {:?}",
+                "Bundle {:?} submitted with {} legs, deadline block {:?}, bond reserved",
                 bundle_id, legs.len(), deadline
             );
 
@@ -674,13 +695,16 @@ pub mod pallet {
                     bond.saturating_div(20)
                 }
                 BundleRollbackReason::SubmitterCancelled => {
-                    // Return full bond for voluntary cancellation
+                    // Unreserve full bond for voluntary cancellation (no slash)
+                    let bond: BalanceOf<T> = T::MinBond::get().saturated_into();
+                    T::Currency::unreserve(&record.submitter, bond);
                     0
                 }
             };
 
             if slash_amount > 0 {
                 let slash: BalanceOf<T> = slash_amount.saturated_into();
+                // slash() targets reserved balance first, then free balance
                 let _ = T::Currency::slash(&record.submitter, slash);
                 log::info!(
                     target: "x3-atomic-kernel",

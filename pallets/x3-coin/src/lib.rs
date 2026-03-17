@@ -22,10 +22,10 @@ mod tests;
 #[cfg(test)]
 mod mock;
 
+use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use frame_support::pallet_prelude::*;
 use frame_support::traits::UnixTime;
 use frame_system::pallet_prelude::*;
-use codec::{Codec, Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::traits::{SaturatedConversion, Zero};
@@ -208,13 +208,8 @@ pub mod pallet {
     /// Team vesting schedules
     #[pallet::storage]
     #[pallet::getter(fn team_vesting)]
-    pub type TeamVesting<T: Config> = StorageMap<
-        _,
-        Blake2_128Concat,
-        T::AccountId,
-        VestingSchedule,
-        OptionQuery,
-    >;
+    pub type TeamVesting<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, VestingSchedule, OptionQuery>;
 
     /// Bonus claims per account
     #[pallet::storage]
@@ -242,7 +237,8 @@ pub mod pallet {
     /// Nonce for cross-chain operations
     #[pallet::storage]
     #[pallet::getter(fn cross_chain_nonce)]
-    pub type CrossChainNonce<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+    pub type CrossChainNonce<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
@@ -329,14 +325,9 @@ pub mod pallet {
             amount: T::Balance,
         },
         /// Cross-chain operation finalized
-        CrossChainOperationFinalized {
-            operation_id: H256,
-            success: bool,
-        },
+        CrossChainOperationFinalized { operation_id: H256, success: bool },
         /// Treasury allocation updated
-        TreasuryAllocationUpdated {
-            new_balance: T::Balance,
-        },
+        TreasuryAllocationUpdated { new_balance: T::Balance },
     }
 
     #[pallet::error]
@@ -391,7 +382,10 @@ pub mod pallet {
 
             // Check treasury balance
             let treasury_balance = TreasuryBalance::<T>::get();
-            ensure!(treasury_balance >= amount, Error::<T>::InsufficientTreasuryBalance);
+            ensure!(
+                treasury_balance >= amount,
+                Error::<T>::InsufficientTreasuryBalance
+            );
 
             // Generate operation ID
             let operation_id = Self::generate_operation_id(&target_account, amount, &proof);
@@ -496,7 +490,8 @@ pub mod pallet {
             let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
                 schedule.total_amount
             } else {
-                schedule.total_amount
+                schedule
+                    .total_amount
                     .saturating_mul(elapsed_blocks.into())
                     .saturating_div(schedule.vesting_blocks.into())
             };
@@ -559,7 +554,9 @@ pub mod pallet {
             let claim_amount = bonus_balance / divisor;
 
             // Update bonus pool balance
-            BonusPoolBalance::<T>::mutate(|balance| *balance = balance.saturating_sub(claim_amount));
+            BonusPoolBalance::<T>::mutate(|balance| {
+                *balance = balance.saturating_sub(claim_amount)
+            });
 
             // Add claim record
             let claim = BonusClaim {
@@ -567,7 +564,9 @@ pub mod pallet {
                 claimed_at: current_block_u64,
                 locked: false,
             };
-            claims.try_push(claim).map_err(|_| Error::<T>::MaxBonusClaimsReached)?;
+            claims
+                .try_push(claim)
+                .map_err(|_| Error::<T>::MaxBonusClaimsReached)?;
             let claim_id = claims.len() as u32;
             BonusClaims::<T>::insert(&who, claims);
 
@@ -609,18 +608,16 @@ pub mod pallet {
 
             // Emit event
             let (operation_type, source_account, target_account, amount_u128) = match &operation {
-                CrossChainOperation::Mint { target_account, amount, .. } => (
-                    0u8,
-                    vec![],
-                    target_account.clone(),
-                    *amount,
-                ),
-                CrossChainOperation::Burn { source_account, amount, .. } => (
-                    1u8,
-                    source_account.clone(),
-                    vec![],
-                    *amount,
-                ),
+                CrossChainOperation::Mint {
+                    target_account,
+                    amount,
+                    ..
+                } => (0u8, vec![], target_account.clone(), *amount),
+                CrossChainOperation::Burn {
+                    source_account,
+                    amount,
+                    ..
+                } => (1u8, source_account.clone(), vec![], *amount),
                 CrossChainOperation::Transfer {
                     source_account,
                     target_account,
@@ -722,7 +719,11 @@ pub mod pallet {
 
         fn increase_canonical_balance(account: &T::AccountId, amount: T::Balance) {
             let next_balance = Self::canonical_balance(account).saturating_add(amount);
-            pallet_x3_kernel::CanonicalLedger::<T>::insert(account, Self::x3_asset_id(), next_balance);
+            pallet_x3_kernel::CanonicalLedger::<T>::insert(
+                account,
+                Self::x3_asset_id(),
+                next_balance,
+            );
         }
 
         fn decrease_canonical_balance(
@@ -796,7 +797,8 @@ pub mod pallet {
 
         /// Decode account ID from bytes
         fn decode_account_id(account_bytes: &[u8]) -> Result<T::AccountId, Error<T>> {
-            T::AccountId::decode(&mut &account_bytes[..]).map_err(|_| Error::<T>::InvalidTargetAccount)
+            T::AccountId::decode(&mut &account_bytes[..])
+                .map_err(|_| Error::<T>::InvalidTargetAccount)
         }
 
         /// Get current vested amount for an account
@@ -812,12 +814,15 @@ pub mod pallet {
                 let total_vested = if elapsed_blocks >= schedule.vesting_blocks {
                     schedule.total_amount
                 } else {
-                    schedule.total_amount
+                    schedule
+                        .total_amount
                         .saturating_mul(elapsed_blocks.into())
                         .saturating_div(schedule.vesting_blocks.into())
                 };
 
-                total_vested.saturating_sub(schedule.claimed).saturated_into()
+                total_vested
+                    .saturating_sub(schedule.claimed)
+                    .saturated_into()
             } else {
                 T::Balance::zero()
             }
@@ -861,7 +866,13 @@ pub mod pallet {
         pub fn get_bonus_claims(account: &T::AccountId) -> Vec<(T::Balance, u64, bool)> {
             BonusClaims::<T>::get(account)
                 .into_iter()
-                .map(|claim| (claim.amount.saturated_into(), claim.claimed_at, claim.locked))
+                .map(|claim| {
+                    (
+                        claim.amount.saturated_into(),
+                        claim.claimed_at,
+                        claim.locked,
+                    )
+                })
                 .collect()
         }
     }
