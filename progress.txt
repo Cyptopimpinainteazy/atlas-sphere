@@ -1146,3 +1146,30 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - .planning/phases/06-security-and-runtime-hardening/06-CONTEXT.md: Created with full audit docs
 - .planning/ROADMAP.md: Phases 05-01 through 06-03 marked [x] complete
 - .planning/STATE.md: Updated to Phase 7, 67% complete (12/18 plans done)
+
+## Session: Phase 7 Kickoff (2026-03-20)
+
+### ✅ 07-01: Green Package Builds
+- Ran `npm run build:all-packages --if-present` from repo root
+- PASS: `@x3-chain/ts-sdk`
+- PASS: `@x3-chain/atomic-swap-sdk`
+- PASS: `@x3-chain/blockchain-adapter`
+- PASS: `@x3-chain/blockchain-connector`
+- PASS: `@x3-chain/x3-wallet` (Polkawallet plugin)
+- PASS: `@x3-chain/polkawallet-bridge-adapter`
+
+### ℹ️ Build Notes
+- Polkawallet plugin emitted non-blocking bundler warnings (unused imports + mixed default/named export warning), build still succeeded.
+
+### Planning Updates
+- `.planning/phases/07-sdk-and-app-packaging/07-CONTEXT.md` created
+- `.planning/ROADMAP.md`: 07-01 marked complete
+- `.planning/STATE.md`: progress advanced to 72% (13/18 plans), now working 07-02
+
+### ✅ 07-02 Delta (Current Pass)
+- Corrected stale SDK gap tracking in `X3_GAPS_REPORT.md`:
+  - `SDK-003` collateral RPC calls → marked fixed at `packages/ts-sdk/src/collateral.ts`
+  - `SDK-004` SHA256 implementation → marked fixed at `packages/ts-sdk/src/svm.ts`
+- Updated `packages/ts-sdk/src/svm.ts` PDA comment to match current SHA256-based behavior.
+- Revalidated with `npm run build --workspace packages/ts-sdk` (PASS).
+- Remaining SDK release gaps: live-node integration tests (`SDK-006`) and npm publish step (`SDK-007`).

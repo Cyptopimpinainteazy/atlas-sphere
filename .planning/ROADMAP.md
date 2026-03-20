@@ -65,7 +65,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01: Green package builds for SDK, connector, and Polkawallet workspaces
+- [x] 07-01: Green package builds for SDK, connector, and Polkawallet workspaces
 - [ ] 07-02: Close remaining SDK/API surface gaps required for release
 - [ ] 07-03: Produce release-ready package artifacts and usage docs
 

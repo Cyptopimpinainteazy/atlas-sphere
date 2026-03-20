@@ -137,7 +137,7 @@ export function pubkeyToAccountId(pubkey: Pubkey): AccountId {
 
 /**
  * Derive program address (PDA)
- * Note: This is a simplified version - real implementation needs SHA256
+ * Uses SHA256 seed hashing; curve validation is intentionally simplified.
  */
 export function findProgramAddress(
   seeds: Uint8Array[],

@@ -5,13 +5,13 @@ milestone_name: Release Readiness
 status: in_progress
 stopped_at: Phase 6 complete
 last_updated: "2026-03-20T00:00:00Z"
-last_activity: 2026-03-20 — Phase 5 (Dual-VM) and Phase 6 (Security hardening) complete
+last_activity: 2026-03-20 — 07-02 SDK/API gap reconciliation in progress after green package builds
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 18
-  completed_plans: 12
-  percent: 67
+  completed_plans: 13
+  percent: 72
 ---
 
 # Project State
@@ -26,16 +26,16 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 ## Current Position
 
 Phase: 7 of 8 (SDK and app packaging)
-Plan: 0 of 3 in current phase
-Status: Ready to execute
-Last activity: 2026-03-20 — Phase 5 (Dual-VM) and Phase 6 (Security hardening) complete
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-03-20 — 07-02 reconciled stale SDK gap entries; ts-sdk build revalidated
 
-Progress: [██████░░░░] 67%
+Progress: [███████░░░] 72%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed in current milestone: 12
+- Total plans completed in current milestone: 13
 - Average duration: N/A
 - Total execution time: 0 hours
 
@@ -47,7 +47,7 @@ Progress: [██████░░░░] 67%
 | 4 | 3 | 3 | ✅ Complete |
 | 5 | 3 | 3 | ✅ Complete (EVM, SVM, Cross-VM) |
 | 6 | 3 | 3 | ✅ Complete (Panic fix, RPC hardening, Pallet audit) |
-| 7 | 0 | 3 | ⏳ Next |
+| 7 | 1 | 3 | ⏳ In progress |
 | 8 | 0 | 3 | ⏳ Pending |
 
 ## Accumulated Context
@@ -73,10 +73,13 @@ Progress: [██████░░░░] 67%
 
 ### Pending Todos
 
-- Start Phase 7: SDK and app packaging (07-01, 07-02, 07-03).
-- 07-01: Green package builds for SDK, connector, and Polkawallet workspaces.
 - 07-02: Close remaining SDK/API surface gaps required for release.
 - 07-03: Produce release-ready package artifacts and usage docs.
+
+### Phase 7 Open Gap Details
+
+- SDK-006: Integration tests for `packages/ts-sdk` against a live node are still pending environment execution.
+- SDK-007: npm publication/release packaging for TypeScript SDK remains pending.
 
 ### Blockers/Concerns
 
@@ -90,4 +93,4 @@ Progress: [██████░░░░] 67%
 
 Last session: 2026-03-20T00:00:00Z
 Stopped at: Phase 6 complete
-Resume file: .planning/phases/07-sdk-packaging/
+Resume file: .planning/phases/07-sdk-and-app-packaging/

@@ -193,16 +193,16 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 
 ### 2.1 TypeScript SDK
 
-**Status:** ⚠️ PARTIAL
+**Status:** ✅ MOSTLY COMPLETE
 
 | Gap ID | Description | File | Priority | Status |
 |--------|-------------|------|----------|--------|
 | SDK-001 | Implement full SS58 address decoding | packages/ts-sdk/src/evm.ts | HIGH | ✅ FIXED |
 | SDK-002 | Add Base58 validation/decoding | packages/ts-sdk/src/svm.ts | HIGH | ✅ FIXED |
-| SDK-003 | Implement collateral RPC/REST calls | packages/sdk/collateral.ts | HIGH | ⬜ TODO |
-| SDK-004 | Complete SHA256 implementation | packages/sdk/svm.ts line 134 | HIGH | ⬜ TODO |
-| SDK-005 | Add comprehensive unit tests for SDK | packages/sdk | HIGH | ✅ 185 tests passing |
-| SDK-006 | Add integration tests for SDK with live node | packages/sdk | HIGH | ⬜ TODO (requires live node) |
+| SDK-003 | Implement collateral RPC/REST calls | packages/ts-sdk/src/collateral.ts | HIGH | ✅ FIXED |
+| SDK-004 | Complete SHA256 implementation | packages/ts-sdk/src/svm.ts | HIGH | ✅ FIXED |
+| SDK-005 | Add comprehensive unit tests for SDK | packages/ts-sdk | HIGH | ✅ 185 tests passing |
+| SDK-006 | Add integration tests for SDK with live node | packages/ts-sdk | HIGH | ⬜ TODO (requires live node) |
 | SDK-007 | Publish TypeScript SDK to npm registry | - | MEDIUM | ⬜ TODO |
 
 ### 2.2 Python SDK
