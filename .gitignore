@@ -122,3 +122,10 @@ patches/environmental/
 
 *storybook.log
 storybook-static
+.cargo-chat/
+.serena/
+target-chat/
+target_corrupt_20260319/
+contracts/core/.vscode_hardhat_config_*.ts
+idea-IU-253.32098.37/
+botchain-tri-vm-genesis/hardhat/generated-contracts/
