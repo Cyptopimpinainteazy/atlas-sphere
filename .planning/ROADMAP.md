@@ -67,7 +67,7 @@ Plans:
 Plans:
 - [x] 07-01: Green package builds for SDK, connector, and Polkawallet workspaces
 - [ ] 07-02: Close remaining SDK/API surface gaps required for release
-- [ ] 07-03: Produce release-ready package artifacts and usage docs
+- [x] 07-03: Produce release-ready package artifacts and usage docs
 
 ### Phase 8: Testnet proving and go/no-go
 **Goal:** Validate X3 Chain under realistic startup and testnet conditions, then assemble the final ship decision package.

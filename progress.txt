@@ -1173,3 +1173,33 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 - Updated `packages/ts-sdk/src/svm.ts` PDA comment to match current SHA256-based behavior.
 - Revalidated with `npm run build --workspace packages/ts-sdk` (PASS).
 - Remaining SDK release gaps: live-node integration tests (`SDK-006`) and npm publish step (`SDK-007`).
+
+### ⚠️ SDK-006 Live Integration Attempt (2026-03-20)
+- Located and executed gated suite: `packages/ts-sdk/tests/live.integration.test.ts`
+- Attempt 1 (local node): `./run-dev-node.sh` blocked by Substrate compile error in `sc-network`
+  - `E0080` duplicate variant index (`Consensus` and `RemoteCallResponse` both index `6`)
+- Attempt 2 (public endpoint): `X3_WS_ENDPOINT=wss://testnet.atlassphere.io` → connection failure
+- Attempt 3 (public endpoint): `X3_WS_ENDPOINT=wss://rpc.atlassphere.io` → connection failure
+- Test behavior verified:
+  - connect/query test fails due endpoint connectivity
+  - transfer test is correctly gated and skips without `TESTNET_SIGNER_URI`
+- Outcome: `SDK-006` remains open pending environment unblock (working local node or reachable WS endpoint).
+
+### ✅ 07-03: Release Artifacts + Usage Docs
+- Generated release tarballs in `.artifacts/phase7-packages/`:
+  - `x3-chain-ts-sdk-0.1.0.tgz`
+  - `x3-chain-blockchain-connector-0.1.0.tgz`
+  - `x3-chain-x3-wallet-0.1.0.tgz`
+  - `x3-chain-polkawallet-bridge-adapter-0.1.0.tgz`
+- Added package-local usage docs:
+  - `packages/ts-sdk/docs/root/README.md`
+  - `packages/blockchain-connector/docs/root/README.md`
+  - `packages/polkawallet-plugin/docs/root/README.md`
+  - `packages/polkawallet-bridge-adapter/docs/root/README.md`
+- Updated packaging manifest inclusion:
+  - `packages/polkawallet-plugin/package.json` now includes `docs/root/README.md`
+  - `packages/polkawallet-bridge-adapter/package.json` now includes `docs/root/README.md`
+- Verified with package checks:
+  - `npm pack --dry-run` PASS (all target packages)
+  - `npm pack` PASS (all target packages)
+- Phase 7 status: 07-01 ✅, 07-03 ✅, 07-02 ⏳ (SDK-006 blocker)

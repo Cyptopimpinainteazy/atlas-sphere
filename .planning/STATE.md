@@ -5,13 +5,13 @@ milestone_name: Release Readiness
 status: in_progress
 stopped_at: Phase 6 complete
 last_updated: "2026-03-20T00:00:00Z"
-last_activity: 2026-03-20 — 07-02 SDK/API gap reconciliation in progress after green package builds
+last_activity: 2026-03-20 — 07-03 artifacts/docs complete; 07-02 remains blocked by SDK live integration environment
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 18
-  completed_plans: 13
-  percent: 72
+  completed_plans: 14
+  percent: 78
 ---
 
 # Project State
@@ -26,16 +26,16 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 ## Current Position
 
 Phase: 7 of 8 (SDK and app packaging)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-20 — 07-02 reconciled stale SDK gap entries; ts-sdk build revalidated
+Last activity: 2026-03-20 — 07-03 packaging/docs complete; awaiting SDK-006 environment unblock
 
-Progress: [███████░░░] 72%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed in current milestone: 13
+- Total plans completed in current milestone: 14
 - Average duration: N/A
 - Total execution time: 0 hours
 
@@ -47,7 +47,7 @@ Progress: [███████░░░] 72%
 | 4 | 3 | 3 | ✅ Complete |
 | 5 | 3 | 3 | ✅ Complete (EVM, SVM, Cross-VM) |
 | 6 | 3 | 3 | ✅ Complete (Panic fix, RPC hardening, Pallet audit) |
-| 7 | 1 | 3 | ⏳ In progress |
+| 7 | 2 | 3 | ⏳ In progress |
 | 8 | 0 | 3 | ⏳ Pending |
 
 ## Accumulated Context
@@ -87,6 +87,9 @@ Progress: [███████░░░] 72%
   that blocks full `cargo check -p x3-chain-runtime`. Isolated to that pallet; unrelated to Phase 6 work.
 - `crates/x3-rpc/` is standalone source without a Cargo.toml — not yet wired into the Cargo workspace.
   Phase 6 RPC hardening changes are logically complete but cannot be compile-checked until wired in.
+- `SDK-006` unblock needed:
+  - local node build fails in Substrate `sc-network` (`E0080` duplicate variant index in upstream protocol message enum)
+  - public WS endpoints (`wss://testnet.atlassphere.io`, `wss://rpc.atlassphere.io`) currently fail connection from this environment
 - Phase 8 requires testnet smoke testing; deferred until Phase 7 packaging is done.
 
 ## Session Continuity
