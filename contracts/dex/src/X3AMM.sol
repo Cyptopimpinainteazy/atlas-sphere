@@ -284,6 +284,11 @@ contract X3AMM is
         uint128 amount1
     );
 
+    event FeeCollectorUpdated(
+        address indexed oldCollector,
+        address indexed newCollector
+    );
+
     // ═══════════════════════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════════════════════
@@ -321,6 +326,10 @@ contract X3AMM is
         __Pausable_init();
         __UUPSUpgradeable_init();
 
+        // Validate addresses
+        require(_admin != address(0), "X3AMM: admin cannot be zero address");
+        require(_feeCollector != address(0), "X3AMM: feeCollector cannot be zero address");
+
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(OPERATOR_ROLE, _admin);
         _grantRole(FEE_MANAGER_ROLE, _admin);
@@ -328,6 +337,8 @@ contract X3AMM is
         _grantRole(UPGRADER_ROLE, _admin);
 
         feeCollector = _feeCollector;
+
+        emit FeeCollectorUpdated(address(0), _feeCollector);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
@@ -910,13 +921,23 @@ contract X3AMM is
         uint128 amount0 = pool.protocolFees0;
         uint128 amount1 = pool.protocolFees1;
 
+        require(amount0 > 0 || amount1 > 0, "X3AMM: no fees to collect");
+
         pool.protocolFees0 = 0;
         pool.protocolFees1 = 0;
 
         if (amount0 > 0) {
+            require(
+                IERC20(pool.token0).balanceOf(address(this)) >= amount0,
+                "X3AMM: insufficient token0 balance"
+            );
             IERC20(pool.token0).safeTransfer(feeCollector, amount0);
         }
         if (amount1 > 0) {
+            require(
+                IERC20(pool.token1).balanceOf(address(this)) >= amount1,
+                "X3AMM: insufficient token1 balance"
+            );
             IERC20(pool.token1).safeTransfer(feeCollector, amount1);
         }
 
@@ -924,7 +945,10 @@ contract X3AMM is
     }
 
     function setFeeCollector(address _feeCollector) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_feeCollector != address(0), "X3AMM: feeCollector cannot be zero address");
+        address oldCollector = feeCollector;
         feeCollector = _feeCollector;
+        emit FeeCollectorUpdated(oldCollector, _feeCollector);
     }
 
     function pause() external onlyRole(OPERATOR_ROLE) {

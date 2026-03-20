@@ -10,7 +10,7 @@ describe("BOT Token", function () {
   beforeEach(async function () {
     [owner, alice, bob] = await ethers.getSigners();
 
-    const BOT = await ethers.getContractFactory("BOT");
+    const BOT = await ethers.getContractFactory("contracts/BOT.sol:BOT");
     bot = await BOT.deploy();
     await bot.waitForDeployment();
   });
@@ -44,6 +44,16 @@ describe("BOT Token", function () {
       await expect(bot.faucet(alice.address, amount))
         .to.emit(bot, "FaucetMint")
         .withArgs(alice.address, amount);
+    });
+
+    it("Should reject faucet mint exceeding max supply", async function () {
+      const maxSupply = await bot.MAX_SUPPLY();
+      const currentSupply = await bot.totalSupply();
+      const exceedAmount = maxSupply - currentSupply + 1n;
+
+      await expect(bot.faucet(alice.address, exceedAmount)).to.be.revertedWith(
+        "BOT: max supply exceeded"
+      );
     });
 
     it("Should reject faucet to zero address", async function () {

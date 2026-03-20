@@ -390,6 +390,7 @@ contract CrossVMBridge is ReentrancyGuard, AccessControl, Pausable {
      * @param submitter The original bundle submitter (for fund transfers)
      */
     function _executeLeg(AtomicLeg storage leg, address submitter, bytes32 bundleId) internal returns (bool success, bytes memory returnData) {
+        require(leg.target != address(0), "CrossVMBridge: invalid leg target");
         if (_crossVMCallActive) revert CrossVMCallActive();
         _crossVMCallActive = true;
 

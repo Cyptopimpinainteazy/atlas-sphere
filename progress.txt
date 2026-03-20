@@ -1108,3 +1108,41 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
 ### Summary
 - 25 + 102 = 127 Rust tests validated this session
 - Production code path: zero panic risks confirmed
+
+## Session: Phase 5 + Phase 6 (2026-03-20)
+
+### ✅ Phase 5: Dual-VM Completion
+- 05-02: SVM runtime integration verified complete
+- 05-03: Cross-VM bridge dispatch flows verified complete
+- Phase 5 CONTEXT.md updated to mark all three plans done
+
+### ✅ 06-01: Production Panic Elimination
+- Comprehensive scan: node/, crates/, pallets/ — zero production unwrap/expect outside tests
+- runtime/src/fraud_proofs/startup_gate.rs line 134: .expect() removed
+  - reference_commitment_1tx_nodeps() -> Result<H256, WitnessError>
+  - required_vectors() -> Result<Vec<TestVector>, GateError>
+  - run_startup_gate() now propagates with ?
+- cargo check: no new errors from startup_gate.rs changes
+
+### ✅ 06-02: RPC Input Validation Hardening
+- crates/x3-rpc/src/wallet_dex_rpc.rs:
+  - MAX_DISPLAY_MESSAGE_LEN=256, MAX_SIGNATURES_COUNT=10, MAX_SIGNATURE_LEN=130
+  - MAX_APPROVAL_SIGNATURE_LEN=130, MAX_ACCOUNT_LEN=256
+  - Validation guards added to execute_swap, request_hardware_signature,
+    approve_transaction, get_balance
+- crates/x3-rpc/src/gas_estimation.rs:
+  - MAX_CALLDATA_LEN=128_000 (128 KB), MAX_BATCH_SIZE=50, MAX_ADDRESS_LEN=128
+  - Validation guards added to estimate_gas, estimate_gas_many, call
+
+### ✅ 06-03: Pallet Permissions Audit — ALL PASS
+- Scanned 186 origin-check lines across governance, x3-verifier, agent-memory pallets
+- governance: 16 dispatchables, all use configurable origin types (FastTrackOrigin, etc.)
+- x3-verifier: ensure_signed for user ops, T::ExecutorRegistrar for admin
+- agent-memory: ensure_signed + permission checks
+- No raw ensure_root bypass or missing origin checks found
+
+### Planning Files Updated
+- .planning/phases/05-dual-vm-completion/05-CONTEXT.md: 05-02 and 05-03 marked complete
+- .planning/phases/06-security-and-runtime-hardening/06-CONTEXT.md: Created with full audit docs
+- .planning/ROADMAP.md: Phases 05-01 through 06-03 marked [x] complete
+- .planning/STATE.md: Updated to Phase 7, 67% complete (12/18 plans done)

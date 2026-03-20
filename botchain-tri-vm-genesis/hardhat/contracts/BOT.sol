@@ -71,6 +71,7 @@ contract BOT is ERC20, ERC20Burnable, Ownable, ReentrancyGuard {
     function faucet(address to, uint256 amount) external nonReentrant {
         require(faucetEnabled, "BOT: faucet disabled");
         require(to != address(0), "BOT: zero address");
+        require(totalSupply() + amount <= MAX_SUPPLY, "BOT: max supply exceeded");
 
         // In test mode, allow custom amounts without cooldown
         if (block.chainid == 31337) {

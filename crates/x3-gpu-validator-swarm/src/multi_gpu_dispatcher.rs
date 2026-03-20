@@ -28,7 +28,7 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 /// GPU device information
 #[derive(Debug, Clone, Serialize, Deserialize)]

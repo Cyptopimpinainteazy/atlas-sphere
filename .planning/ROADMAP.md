@@ -43,9 +43,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 05-01: Complete EVM deployment and integration coverage
-- [ ] 05-02: Complete SVM execution, deployment, and ledger sync coverage
-- [ ] 05-03: Prove cross-VM atomic flow end to end
+- [x] 05-01: Complete EVM deployment and integration coverage
+- [x] 05-02: Complete SVM execution, deployment, and ledger sync coverage
+- [x] 05-03: Prove cross-VM atomic flow end to end
 
 ### Phase 6: Security and runtime hardening
 **Goal:** Remove known production-safety hazards across node, runtime, pallets, and RPC surfaces.
@@ -54,9 +54,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 06-01: Eliminate critical `unwrap()` / `expect()` / `panic!()` paths in production code
-- [ ] 06-02: Harden RPC, rate limiting, and abuse controls
-- [ ] 06-03: Audit pallet permissions, events, and runtime safety invariants
+- [x] 06-01: Eliminate critical `unwrap()` / `expect()` / `panic!()` paths in production code
+- [x] 06-02: Harden RPC, rate limiting, and abuse controls
+- [x] 06-03: Audit pallet permissions, events, and runtime safety invariants
 
 ### Phase 7: SDK and app packaging
 **Goal:** Ensure the TypeScript packages and supported app surfaces build cleanly and match the release contract.

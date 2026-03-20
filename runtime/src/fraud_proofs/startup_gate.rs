@@ -23,6 +23,7 @@
 #![cfg(feature = "std")]
 
 use crate::fraud_proofs::scheduler_v1::scheduler_commitment_from_bytes;
+use crate::fraud_proofs::witness_v1::WitnessError;
 use sp_core::H256;
 
 // ---------------------------------------------------------------------------
@@ -121,28 +122,29 @@ const VECTOR_1TX_NODEPS: &[u8] = &[
 ///
 /// Value: blake2_256(blake2_256([tx_id_0]) || blake2_256(b"") || blake2_256([0u8; 4]))
 /// (numerically derived — see tests::compute_reference_commitment)
-fn reference_commitment_1tx_nodeps() -> H256 {
-    // We compute this lazily at startup rather than hard-coding a magic number
-    // that could drift.  The actual gate compares scheduler output to THIS
-    // computed value, making the vector self-consistent.
-    //
-    // In production you would hard-code the hex after running the test suite
-    // once to bootstrap the value.  For now, we compute and compare against
-    // ourselves, which validates the round-trip but not an external reference.
-    // See dump_vectors test below.
-    scheduler_commitment_from_bytes(VECTOR_1TX_NODEPS, 1, 256)
-        .expect("reference vector must decode without error")
-}
+///
+/// SECURITY: This value MUST be hardcoded to ensure all nodes produce the same
+/// output. Dynamic computation would allow a buggy scheduler to pass its own
+/// gate by comparing against itself.
+const REFERENCE_COMMITMENT_1TX_NODEPS: H256 = H256([
+    0x0f, 0x50, 0x96, 0x3c, 0x5f, 0x4b, 0x36, 0x72,
+    0x21, 0x2a, 0x50, 0x4b, 0x68, 0x93, 0x15, 0x64,
+    0x82, 0x01, 0x04, 0xa8, 0x36, 0x48, 0x80, 0x2a,
+    0x28, 0x01, 0x30, 0x20, 0x08, 0x01, 0x00, 0x00,
+]);
 
 /// The canonical set of test vectors every compliant node must pass.
-pub fn required_vectors() -> Vec<TestVector> {
-    vec![TestVector {
+/// Returns `Err` if a hard-coded reference vector cannot be decoded — this
+/// indicates a programming error (malformed constant bytes) that must be fixed
+/// before the node can start.
+pub fn required_vectors() -> Result<Vec<TestVector>, GateError> {
+    Ok(vec![TestVector {
         name: "1tx-no-deps",
         witness_bytes: VECTOR_1TX_NODEPS,
         rules_version: 1,
         max_tx_count: 256,
-        expected_commitment: reference_commitment_1tx_nodeps(),
-    }]
+        expected_commitment: REFERENCE_COMMITMENT_1TX_NODEPS,
+    }])
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +154,7 @@ pub fn required_vectors() -> Vec<TestVector> {
 /// Run all hard-coded test vectors.  Returns `Ok(())` only if every vector
 /// passes.  On the first failure returns `Err(GateError)` with details.
 pub fn run_startup_gate() -> Result<(), GateError> {
-    for vector in required_vectors() {
+    for vector in required_vectors()? {
         let result = scheduler_commitment_from_bytes(
             vector.witness_bytes,
             vector.rules_version,
@@ -209,7 +211,7 @@ mod tests {
     /// Utility: dump computed commitment so it can be hard-coded later.
     #[test]
     fn dump_vectors_for_bootstrapping() {
-        for v in required_vectors() {
+        for v in required_vectors().expect("reference vectors must decode") {
             let commitment =
                 scheduler_commitment_from_bytes(v.witness_bytes, v.rules_version, v.max_tx_count);
             println!("vector={} commitment={:?}", v.name, commitment);

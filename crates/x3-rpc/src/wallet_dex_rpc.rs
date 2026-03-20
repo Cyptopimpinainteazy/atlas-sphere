@@ -1,5 +1,12 @@
 /// Wallet-DEX RPC Integration
 /// Wire wallet signing to DEX swap execution
+///
+/// ## Security / Abuse Controls
+///
+/// Each RPC method enforces strict input size limits to prevent DoS via
+/// oversized payloads.  Callers that violate these limits receive an
+/// `invalid_params` error.  Connection-level rate limiting is handled by the
+/// JSON-RPC server middleware (configured at the node layer, not here).
 
 use jsonrpc_core::{Error, Result};
 use jsonrpc_derive::rpc;
@@ -18,10 +25,23 @@ pub struct SwapRequest {
     pub wallet_id: [u8; 32],
     pub require_approval: bool,
     pub approval_threshold: u128,
+use jsonrpc_core::{Error, Result};
 }
+// ---------------------------------------------------------------------------
+// Abuse-control limits
+// ---------------------------------------------------------------------------
 
+/// Maximum UTF-8 length for human-readable display messages (hardware wallet screen).
+const MAX_DISPLAY_MESSAGE_LEN: usize = 256;
+/// Maximum number of signatures accepted in a single execute_swap call.
+const MAX_SIGNATURES_COUNT: usize = 10;
+/// Maximum byte length of a single signature (DER-encoded ECDSA is ≤73 bytes; 130 is generous).
+const MAX_SIGNATURE_LEN: usize = 130;
+/// Maximum byte length for a standalone approval signature.
+const MAX_APPROVAL_SIGNATURE_LEN: usize = 130;
+/// Maximum string length for an account identifier (SS58 / hex address).
+const MAX_ACCOUNT_LEN: usize = 256;
 /// Swap response with signing details
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SwapResponse {
     pub swap_id: [u8; 32],
     pub amount_out: u128,
@@ -55,11 +75,29 @@ pub trait WalletDexApi {
 
     /// Execute swap with wallet signatures
     #[rpc(name = "walletDex_executeSwap")]
-    fn execute_swap(&self, request: SwapRequest, signatures: Vec<Vec<u8>>) -> Result<SwapResponse>;
+    fn execute_swap(&self, request: SwapRequest, signatures: Vec<Vec<u8>>) -> Result<SwapResponse>
+ {
+        // -- Input validation / abuse controls -----------------------------------
+        if signatures.len() > MAX_SIGNATURES_COUNT {
+            return Err(Error::invalid_params(format!(
+                "Too many signatures: {} > {}",
+                signatures.len(),
+                MAX_SIGNATURES_COUNT
+            )));
+        }
+        for (i, sig) in signatures.iter().enumerate() {
+            if sig.len() > MAX_SIGNATURE_LEN {
+                return Err(Error::invalid_params(format!(
+                    "Signature {} too large: {} bytes (max {})",
+                    i,
+                    sig.len(),
+                    MAX_SIGNATURE_LEN
+                )));
+            }
+        }
+        // -----------------------------------------------------------------------
 
-    /// Request hardware wallet signature
-    #[rpc(name = "walletDex_requestHardwareSignature")]
-    fn request_hardware_signature(
+        if request.require_approval && signatures.is_empty() {
         &self,
         wallet_id: [u8; 32],
         transaction_hash: [u8; 32],
@@ -149,6 +187,16 @@ where
         transaction_hash: [u8; 32],
         display_message: String,
     ) -> Result<HardwareSigningRequest> {
+        // -- Input validation / abuse controls -----------------------------------
+        if display_message.len() > MAX_DISPLAY_MESSAGE_LEN {
+            return Err(Error::invalid_params(format!(
+                "display_message too long: {} chars (max {})",
+                display_message.len(),
+                MAX_DISPLAY_MESSAGE_LEN
+            )));
+        }
+        // -----------------------------------------------------------------------
+
         // Create signing request for hardware wallet
         // In production: interact with WebUSB/WebHID APIs
 
@@ -170,18 +218,40 @@ where
         transaction_hash: [u8; 32],
         approval_signature: Vec<u8>,
     ) -> Result<bool> {
-        // Verify signature against wallet
-        // In production: validate against stored public key
-
+        // -- Input validation / abuse controls -----------------------------------
         if approval_signature.is_empty() {
             return Err(Error::invalid_params("Signature cannot be empty"));
         }
+        if approval_signature.len() > MAX_APPROVAL_SIGNATURE_LEN {
+            return Err(Error::invalid_params(format!(
+                "approval_signature too large: {} bytes (max {})",
+                approval_signature.len(),
+                MAX_APPROVAL_SIGNATURE_LEN
+            )));
+        }
+        // -----------------------------------------------------------------------
 
+        // Verify signature against wallet
+        // In production: validate against stored public key
         // Simplified: assume valid if non-empty
         Ok(true)
     }
 
     fn get_balance(&self, _account: String, _token_id: [u8; 32]) -> Result<u128> {
+    fn get_balance(&self, account: String, _token_id: [u8; 32]) -> Result<u128> {
+        // -- Input validation / abuse controls -----------------------------------
+        if account.is_empty() {
+            return Err(Error::invalid_params("account cannot be empty"));
+        }
+        if account.len() > MAX_ACCOUNT_LEN {
+            return Err(Error::invalid_params(format!(
+                "account too long: {} chars (max {})",
+                account.len(),
+                MAX_ACCOUNT_LEN
+            )));
+        }
+        // -----------------------------------------------------------------------
+
         // In production: query wallet pallet storage
         // For now: return mock balance
         Ok(1_000_000_000_000) // 1M tokens

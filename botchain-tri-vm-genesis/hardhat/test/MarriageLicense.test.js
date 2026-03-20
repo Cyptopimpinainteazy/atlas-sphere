@@ -17,12 +17,14 @@ describe("MarriageLicense", function () {
       await ethers.getSigners();
 
     // Deploy BOT token
-    const BOT = await ethers.getContractFactory("BOT");
+    const BOT = await ethers.getContractFactory("contracts/BOT.sol:BOT");
     bot = await BOT.deploy();
     await bot.waitForDeployment();
 
     // Deploy MarriageLicense
-    const MarriageLicense = await ethers.getContractFactory("MarriageLicense");
+    const MarriageLicense = await ethers.getContractFactory(
+      "contracts/MarriageLicense.sol:MarriageLicense"
+    );
     marriageLicense = await MarriageLicense.deploy(
       await bot.getAddress(),
       compilerSigner.address,
@@ -40,12 +42,30 @@ describe("MarriageLicense", function () {
       .approve(await marriageLicense.getAddress(), ethers.parseEther("10000"));
   });
 
-  async function signArtifact(artifactCID, signer) {
-    // The contract takes artifactCID directly and calls toEthSignedMessageHash on it
-    // signMessage automatically adds the Ethereum signed message prefix
-    // So we just sign the raw artifactCID bytes
-    const signature = await signer.signMessage(ethers.getBytes(artifactCID));
-    return signature;
+  async function signCreateChild(
+    artifactCID,
+    parentA,
+    parentB,
+    creator,
+    signer,
+    contractInstance = marriageLicense
+  ) {
+    const network = await ethers.provider.getNetwork();
+    const messageHash = ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ["bytes32", "uint256", "uint256", "address", "uint256", "address"],
+        [
+          artifactCID,
+          parentA,
+          parentB,
+          creator,
+          network.chainId,
+          await contractInstance.getAddress(),
+        ]
+      )
+    );
+
+    return signer.signMessage(ethers.getBytes(messageHash));
   }
 
   describe("Deployment", function () {
@@ -77,8 +97,20 @@ describe("MarriageLicense", function () {
         ethers.toUtf8Bytes("test-artifact-1")
       );
 
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       await expect(
         marriageLicense.connect(alice).createChild(
@@ -103,8 +135,20 @@ describe("MarriageLicense", function () {
       const artifactCID = ethers.keccak256(
         ethers.toUtf8Bytes("test-artifact-2")
       );
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       const aliceBalanceBefore = await bot.balanceOf(alice.address);
 
@@ -122,8 +166,20 @@ describe("MarriageLicense", function () {
       );
 
       // Sign with wrong signer
-      const badCompilerSig = await signArtifact(artifactCID, bob);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const badCompilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        bob
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       await expect(
         marriageLicense
@@ -136,8 +192,20 @@ describe("MarriageLicense", function () {
       const artifactCID = ethers.keccak256(
         ethers.toUtf8Bytes("test-artifact-4")
       );
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       // First creation succeeds
       await marriageLicense
@@ -152,12 +220,50 @@ describe("MarriageLicense", function () {
       ).to.be.revertedWith("Manifest already used");
     });
 
+    it("Should reject replaying signatures for a different creator", async function () {
+      const artifactCID = ethers.keccak256(
+        ethers.toUtf8Bytes("test-artifact-replay")
+      );
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
+
+      await expect(
+        marriageLicense
+          .connect(bob)
+          .createChild(artifactCID, compilerSig, checkerSig, 0, 0)
+      ).to.be.revertedWith("Invalid compiler signature");
+    });
+
     it("Should mint NFT to creator", async function () {
       const artifactCID = ethers.keccak256(
         ethers.toUtf8Bytes("test-artifact-5")
       );
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       await marriageLicense
         .connect(alice)
@@ -173,8 +279,20 @@ describe("MarriageLicense", function () {
 
     beforeEach(async function () {
       artifactCID = ethers.keccak256(ethers.toUtf8Bytes("training-test"));
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       const tx = await marriageLicense
         .connect(alice)
@@ -236,8 +354,20 @@ describe("MarriageLicense", function () {
       const artifactCID = ethers.keccak256(
         ethers.toUtf8Bytes("quarantine-test")
       );
-      const compilerSig = await signArtifact(artifactCID, compilerSigner);
-      const checkerSig = await signArtifact(artifactCID, checkerSigner);
+      const compilerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        compilerSigner
+      );
+      const checkerSig = await signCreateChild(
+        artifactCID,
+        0,
+        0,
+        alice.address,
+        checkerSigner
+      );
 
       await marriageLicense
         .connect(alice)

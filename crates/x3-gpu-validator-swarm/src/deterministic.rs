@@ -335,7 +335,7 @@ impl DeterministicEngine {
     }
 
     /// Check if two hash outputs are within tolerance
-    fn within_tolerance(a: &HashOutput, b: &HashOutput, tolerance: f64) -> bool {
+    fn within_tolerance(a: &HashOutput, b: &HashOutput, _tolerance: f64) -> bool {
         // For hash outputs, we do exact comparison
         // For numerical computations, tolerance would be applied to decoded values
         a == b

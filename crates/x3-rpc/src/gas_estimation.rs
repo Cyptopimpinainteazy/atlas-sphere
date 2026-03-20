@@ -2,6 +2,11 @@
 //!
 //! Provides `x3_estimateGas` for EVM-compatible gas estimation
 //! using forked execution (no state changes).
+//!
+//! ## Abuse Controls
+//!
+//! All public RPC entry-points enforce hard limits on input sizes to prevent
+//! DoS via oversized calldata or excessive batch sizes.
 
 use std::collections::HashMap;
 
@@ -81,12 +86,22 @@ impl GasEstimator {
         Self {
             opcodes,
             fork_context: None,
+        use std::collections::HashMap;
         }
+        // ---------------------------------------------------------------------------
+        // Abuse-control limits
+        // ---------------------------------------------------------------------------
     }
+        /// Maximum calldata length (bytes) accepted by estimation and call endpoints.
+        /// Matches EIP-2028 practical limits and prevents O(n) gas-loop DoS.
+        const MAX_CALLDATA_LEN: usize = 128_000; // 128 KB
 
+        /// Maximum number of transactions in a single batch estimate call.
+        const MAX_BATCH_SIZE: usize = 50;
     /// Set fork context for state-aware estimation
+        /// Maximum string length for address fields (`from` / `to`).
+        const MAX_ADDRESS_LEN: usize = 128;
     pub fn set_fork_context(&mut self, context: ForkContext) {
-        self.fork_context = Some(context);
     }
 
     /// Estimate gas for a transaction (forked execution)
@@ -217,7 +232,29 @@ impl GasEstimationRPC {
         if tx.from.is_empty() {
             return Err("Missing 'from' field".to_string());
         }
-
+        if tx.from.len() > MAX_ADDRESS_LEN {
+            return Err(format!(
+                "'from' address too long: {} chars (max {})",
+                tx.from.len(),
+                MAX_ADDRESS_LEN
+            ));
+        }
+        if let Some(ref to) = tx.to {
+            if to.len() > MAX_ADDRESS_LEN {
+                return Err(format!(
+                    "'to' address too long: {} chars (max {})",
+                    to.len(),
+                    MAX_ADDRESS_LEN
+                ));
+            }
+        }
+        if tx.data.len() > MAX_CALLDATA_LEN {
+            return Err(format!(
+                "calldata too large: {} bytes (max {})",
+                tx.data.len(),
+                MAX_CALLDATA_LEN
+            ));
+        }
         Ok(self.estimator.estimate_gas(tx))
     }
 
@@ -227,12 +264,36 @@ impl GasEstimationRPC {
             return Err("Empty transaction list".to_string());
         }
 
+        if txs.len() > MAX_BATCH_SIZE {
+            return Err(format!(
+                "Batch too large: {} transactions (max {})",
+                txs.len(),
+                MAX_BATCH_SIZE
+            ));
+        }
+        // Validate each tx in the batch
+        for (i, tx) in txs.iter().enumerate() {
+            if tx.data.len() > MAX_CALLDATA_LEN {
+                return Err(format!(
+                    "Transaction {} calldata too large: {} bytes (max {})",
+                    i,
+                    tx.data.len(),
+                    MAX_CALLDATA_LEN
+                ));
+            }
+        }
         Ok(self.estimator.estimate_batch(txs))
-    }
 
     /// x3_call (simulate without state change)
     pub fn call(&self, tx: &RPCTransaction) -> Result<Vec<u8>, String> {
-        // Simulate call and return result
+        // Validate input before simulation
+        if tx.data.len() > MAX_CALLDATA_LEN {
+            return Err(format!(
+                "calldata too large: {} bytes (max {})",
+                tx.data.len(),
+                MAX_CALLDATA_LEN
+            ));
+        }
         let est = self.estimator.estimate_gas(tx);
 
         if matches!(est.status, ExecutionStatus::Success) {

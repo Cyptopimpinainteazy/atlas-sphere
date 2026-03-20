@@ -13,7 +13,7 @@ describe("SimpleDEX", function () {
     [owner, alice, bob] = await ethers.getSigners();
 
     // Deploy tokens
-    const BOT = await ethers.getContractFactory("BOT");
+    const BOT = await ethers.getContractFactory("contracts/BOT.sol:BOT");
     tokenA = await BOT.deploy();
     await tokenA.waitForDeployment();
 
@@ -21,7 +21,9 @@ describe("SimpleDEX", function () {
     await tokenB.waitForDeployment();
 
     // Deploy DEX
-    const SimpleDEX = await ethers.getContractFactory("SimpleDEX");
+    const SimpleDEX = await ethers.getContractFactory(
+      "contracts/SimpleDEX.sol:SimpleDEX"
+    );
     dex = await SimpleDEX.deploy(
       await tokenA.getAddress(),
       await tokenB.getAddress()
@@ -86,6 +88,46 @@ describe("SimpleDEX", function () {
       await expect(
         dex.addLiquidity(0, ethers.parseEther("100"), 0)
       ).to.be.revertedWith("Amounts must be positive");
+    });
+
+    it("Should support very large initial liquidity without overflow", async function () {
+      const largeAmount = 2n ** 128n;
+      const HighSupplyToken = await ethers.getContractFactory(
+        "contracts/HighSupplyToken.sol:HighSupplyToken"
+      );
+      const largeTokenA = await HighSupplyToken.deploy(
+        "Large Token A",
+        "LTA",
+        largeAmount
+      );
+      await largeTokenA.waitForDeployment();
+
+      const largeTokenB = await HighSupplyToken.deploy(
+        "Large Token B",
+        "LTB",
+        largeAmount
+      );
+      await largeTokenB.waitForDeployment();
+
+      const LargeDex = await ethers.getContractFactory(
+        "contracts/SimpleDEX.sol:SimpleDEX"
+      );
+      const largeDex = await LargeDex.deploy(
+        await largeTokenA.getAddress(),
+        await largeTokenB.getAddress()
+      );
+      await largeDex.waitForDeployment();
+
+      await largeTokenA.approve(await largeDex.getAddress(), largeAmount);
+      await largeTokenB.approve(await largeDex.getAddress(), largeAmount);
+
+      await expect(largeDex.addLiquidity(largeAmount, largeAmount, 0)).to.emit(
+        largeDex,
+        "LiquidityAdded"
+      );
+
+      expect(await largeDex.reserveA()).to.equal(largeAmount);
+      expect(await largeDex.reserveB()).to.equal(largeAmount);
     });
   });
 

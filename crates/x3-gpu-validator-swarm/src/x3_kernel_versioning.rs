@@ -141,7 +141,7 @@ impl X3KernelRegistry {
     pub fn register_kernel(
         &mut self,
         manifest: X3KernelManifest,
-        block_height: u32,
+        _block_height: u32,
     ) -> Result<(), String> {
         if manifest.version.is_empty() {
             return Err("Version cannot be empty".to_string());
@@ -354,7 +354,7 @@ impl X3KernelRuntime {
     }
 
     /// Execute a kernel
-    pub fn execute_kernel(&mut self, kernel_name: &str, args: &[u8]) -> Result<Vec<u8>, String> {
+    pub fn execute_kernel(&mut self, kernel_name: &str, _args: &[u8]) -> Result<Vec<u8>, String> {
         let _binary = self.load_kernel(kernel_name)?;
 
         self.total_executions += 1;

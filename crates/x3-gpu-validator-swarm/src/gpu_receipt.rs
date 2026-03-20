@@ -33,7 +33,7 @@ pub struct GpuReceipt {
 pub struct GpuReceiptValidator;
 
 impl GpuReceiptValidator {
-    pub fn verify_signature(receipt: &GpuReceipt, signature: &[u8]) -> bool {
+    pub fn verify_signature(receipt: &GpuReceipt, _signature: &[u8]) -> bool {
         // GPU executor signature validation stub
         debug!(
             "Verifying GPU Executor signature for receipt {:?}",

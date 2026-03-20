@@ -164,14 +164,26 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
 
         // Verify compiler signature
         require(
-            _verifyCompilerSignature(artifactCID, compilerSig),
+            _verifyCompilerSignature(
+                artifactCID,
+                parentA,
+                parentB,
+                msg.sender,
+                compilerSig
+            ),
             "Invalid compiler signature"
         );
 
         // Verify checker signature (if checker is set)
         if (checkerVerifier != address(0)) {
             require(
-                _verifyCheckerSignature(artifactCID, checkerSig),
+                _verifyCheckerSignature(
+                    artifactCID,
+                    parentA,
+                    parentB,
+                    msg.sender,
+                    checkerSig
+                ),
                 "Invalid checker signature"
             );
         }
@@ -295,9 +307,22 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
      */
     function _verifyCompilerSignature(
         bytes32 artifactCID,
+        uint256 parentA,
+        uint256 parentB,
+        address creator,
         bytes memory signature
     ) internal view returns (bool) {
-        return _verifySignature(artifactCID, signature, compilerVerifier);
+        return
+            _verifySignature(
+                _getCreateChildMessageHash(
+                    artifactCID,
+                    parentA,
+                    parentB,
+                    creator
+                ),
+                signature,
+                compilerVerifier
+            );
     }
 
     /**
@@ -308,9 +333,45 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
      */
     function _verifyCheckerSignature(
         bytes32 artifactCID,
+        uint256 parentA,
+        uint256 parentB,
+        address creator,
         bytes memory signature
     ) internal view returns (bool) {
-        return _verifySignature(artifactCID, signature, checkerVerifier);
+        return
+            _verifySignature(
+                _getCreateChildMessageHash(
+                    artifactCID,
+                    parentA,
+                    parentB,
+                    creator
+                ),
+                signature,
+                checkerVerifier
+            );
+    }
+
+    /**
+     * @notice Build the signed message hash for child creation
+     * @dev Binds signatures to the parents, creator, contract, and chain
+     */
+    function _getCreateChildMessageHash(
+        bytes32 artifactCID,
+        uint256 parentA,
+        uint256 parentB,
+        address creator
+    ) internal view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    artifactCID,
+                    parentA,
+                    parentB,
+                    creator,
+                    block.chainid,
+                    address(this)
+                )
+            );
     }
 
     /**

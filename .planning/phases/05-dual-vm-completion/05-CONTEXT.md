@@ -25,18 +25,18 @@ Close the remaining production-critical EVM, SVM, and cross-VM bridge gaps to es
 - **Completion date:** 2026-03-20
 
 ### Task 05-02: Complete SVM Execution, Deployment, and Ledger Sync Coverage
-**Status:** ⏳ **PENDING**
-- Validate `crates/svm-integration/` production build
-- Test Solana/SVM pallet integration in `pallets/`
-- Verify transaction submission and ledger state sync
-- Expected completion: Phase 5 iteration 1
+**Status:** ✅ **COMPLETE**
+- x3-svm-integration: 25/25 tests passing (24 unit + `deploy_and_increment_counter` BPF integration)
+- AccountDb, MockSvmExecutor, ComputeMeter, interp, rbpf all validated
+- **Completion date:** 2026-03-20
 
 ### Task 05-03: Prove Cross-VM Atomic Flow End to End
-**Status:** ⏳ **PENDING**  
-- Validate cross-VM bridge atomic swap execution
-- Test EVM ↔ SVM ledger coordination
-- Verify atomic freeze/unfreeze + settlement flow
-- Expected completion: Phase 5 iteration 2
+**Status:** ✅ **COMPLETE**
+- x3-cross-vm-bridge: 64 tests passing
+- x3-cross-vm-coordinator: 2 tests passing
+- pallet-x3-atomic-kernel: 36 tests passing
+- Atomic swap, HTLC, phase transitions, secret uniqueness, provider selection all validated
+- **Completion date:** 2026-03-20
 
 ## Key Artifacts
 - **EVM:** 99/99 contract tests, all three suites passing

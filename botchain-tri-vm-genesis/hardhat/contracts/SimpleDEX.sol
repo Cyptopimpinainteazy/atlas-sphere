@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -119,7 +120,8 @@ contract SimpleDEX is ReentrancyGuard, Ownable {
 
         if (totalSupply == 0) {
             // First liquidity provision
-            lpTokens = _sqrt(amountA * amountB) - MINIMUM_LIQUIDITY;
+            lpTokens = (Math.sqrt(amountA) * Math.sqrt(amountB)) -
+                MINIMUM_LIQUIDITY;
             require(lpTokens > 0, "Insufficient initial liquidity");
 
             // Lock minimum liquidity forever (to address(0))
