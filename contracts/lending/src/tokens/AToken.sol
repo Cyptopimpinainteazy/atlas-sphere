@@ -72,8 +72,6 @@ contract AToken is ERC20 {
         uint256 index
     );
 
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
     event BalanceTransfer(
         address indexed from,
         address indexed to,
@@ -205,7 +203,7 @@ contract AToken is ERC20 {
         address to,
         uint256 amount
     ) public override returns (bool) {
-        _transfer(msg.sender, to, amount);
+        _transferScaled(msg.sender, to, amount);
         return true;
     }
 
@@ -218,18 +216,18 @@ contract AToken is ERC20 {
         uint256 amount
     ) public override returns (bool) {
         _spendAllowance(from, msg.sender, amount);
-        _transfer(from, to, amount);
+        _transferScaled(from, to, amount);
         return true;
     }
 
     /**
      * @notice Internal transfer with scaled balance handling
      */
-    function _transfer(
+    function _transferScaled(
         address from,
         address to,
         uint256 amount
-    ) internal override {
+    ) internal {
         require(from != address(0), "AToken: transfer from zero");
         require(to != address(0), "AToken: transfer to zero");
         require(from != to, "AToken: self transfer");

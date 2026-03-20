@@ -52,10 +52,13 @@ contract DeployLendingProtocol is Script {
         // 2. Deploy Interest Rate Model
         // Base: 2%, Slope1: 8%, Slope2: 100%, Optimal: 80%
         irm = new InterestRateModel(
+            0.80e27, // optimalUtilization
             0.02e27, // baseRate
             0.08e27, // slope1
             1.00e27, // slope2
-            0.80e27 // optimalUtilization
+            0.01e27, // stableOffset
+            0.10e27, // stableSlope1
+            1.20e27 // stableSlope2
         );
         console.log("InterestRateModel deployed:", address(irm));
 

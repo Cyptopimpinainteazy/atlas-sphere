@@ -267,7 +267,7 @@ contract PredictionMarketTest is Test {
 
         assertEq(yesVotes, 2);
         assertEq(noVotes, 1);
-        assertEq(avgConfidence, (800 + 900 + 600) / 3);
+        assertEq(avgConfidence, 766);
     }
 
     function testQuoteBuy() public {

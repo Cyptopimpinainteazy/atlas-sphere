@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -25,7 +25,7 @@ contract AISwarmCoordinator is
     Initializable,
     UUPSUpgradeable,
     AccessControlUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuard
 {
     using SafeERC20 for IERC20;
 
@@ -250,9 +250,7 @@ contract AISwarmCoordinator is
         address _rewardToken,
         address _treasury
     ) external initializer {
-        __UUPSUpgradeable_init();
         __AccessControl_init();
-        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(COORDINATOR_ROLE, _admin);
@@ -675,38 +673,32 @@ contract AISwarmCoordinator is
     ) external view returns (uint256[] memory) {
         Agent storage agent = agents[agentAddr];
         if (agent.owner == address(0)) return new uint256[](0);
+        uint256 matchCount = 0;
 
-        uint256[] memory available = new uint256[](limit);
-        uint256 count = 0;
-
-        // Check all priorities from high to low
-        for (
-            uint256 p = uint256(TaskPriority.CRITICAL);
-            p >= 0 && count < limit;
-            p--
-        ) {
+        for (uint256 p = uint256(TaskPriority.CRITICAL); ; p--) {
             uint256[] storage queue = taskQueues[TaskPriority(p)];
-
-            for (uint256 i = 0; i < queue.length && count < limit; i++) {
-                Task storage task = tasks[queue[i]];
-
-                if (
-                    task.status == TaskStatus.CREATED &&
-                    block.timestamp <= task.deadline &&
-                    (task.requiredType == agent.agentType ||
-                        task.requiredType == AgentType.GENERAL) &&
-                    agent.reputation >= minReputationForPriority[task.priority]
-                ) {
-                    available[count++] = queue[i];
+            for (uint256 i = 0; i < queue.length; i++) {
+                if (_isTaskAvailableForAgent(queue[i], agent)) {
+                    matchCount++;
+                    if (matchCount == limit) break;
                 }
             }
-
-            if (p == 0) break;
+            if (matchCount == limit || p == 0) break;
         }
 
-        // Resize array
-        assembly {
-            mstore(available, count)
+        uint256[] memory available = new uint256[](matchCount);
+        uint256 index = 0;
+
+        for (uint256 p = uint256(TaskPriority.CRITICAL); ; p--) {
+            uint256[] storage queue = taskQueues[TaskPriority(p)];
+            for (uint256 i = 0; i < queue.length; i++) {
+                uint256 taskId = queue[i];
+                if (_isTaskAvailableForAgent(taskId, agent)) {
+                    available[index++] = taskId;
+                    if (index == matchCount) break;
+                }
+            }
+            if (index == matchCount || p == 0) break;
         }
 
         return available;
@@ -729,6 +721,19 @@ contract AISwarmCoordinator is
     }
 
     // ============ Internal Functions ============
+
+    function _isTaskAvailableForAgent(
+        uint256 taskId,
+        Agent storage agent
+    ) internal view returns (bool) {
+        Task storage task = tasks[taskId];
+        return
+            task.status == TaskStatus.CREATED &&
+            block.timestamp <= task.deadline &&
+            (task.requiredType == agent.agentType ||
+                task.requiredType == AgentType.GENERAL) &&
+            agent.reputation >= minReputationForPriority[task.priority];
+    }
 
     function _calculateReward(
         Task storage task

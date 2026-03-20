@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -27,7 +27,7 @@ contract GPUMarketplace is
     Initializable,
     UUPSUpgradeable,
     AccessControlUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuard
 {
     using SafeERC20 for IERC20;
 
@@ -144,14 +144,14 @@ contract GPUMarketplace is
     // ============ State Variables ============
 
     // Providers
-    mapping(address => Provider) public providers;
+    mapping(address => Provider) internal providers;
     address[] public providerList;
     mapping(GPUTier => address[]) public providersByTier;
 
     // Jobs
-    mapping(uint256 => Job) public jobs;
+    mapping(uint256 => Job) internal jobs;
     uint256 public jobCount;
-    mapping(uint256 => Bid[]) public jobBids;
+    mapping(uint256 => Bid[]) internal jobBids;
 
     // Escrow
     mapping(uint256 => uint256) public jobEscrow;
@@ -247,9 +247,7 @@ contract GPUMarketplace is
         address _treasury,
         uint256 _platformFee
     ) external initializer {
-        __UUPSUpgradeable_init();
         __AccessControl_init();
-        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(OPERATOR_ROLE, _admin);

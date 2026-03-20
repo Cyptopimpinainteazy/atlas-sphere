@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -24,7 +24,7 @@ contract PredictionMarket is
     Initializable,
     UUPSUpgradeable,
     AccessControlUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuard
 {
     using SafeERC20 for IERC20;
 
@@ -220,9 +220,7 @@ contract PredictionMarket is
         address _treasury,
         uint256 _platformFee
     ) external initializer {
-        __UUPSUpgradeable_init();
         __AccessControl_init();
-        __ReentrancyGuard_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ORACLE_ROLE, _admin);
@@ -254,7 +252,7 @@ contract PredictionMarket is
             "Resolution too soon"
         );
         require(
-            resolutionTime < block.timestamp + maxDuration,
+            resolutionTime <= block.timestamp + maxDuration,
             "Resolution too far"
         );
         require(fee <= 500, "Fee too high"); // Max 5%

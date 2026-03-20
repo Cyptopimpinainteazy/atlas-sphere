@@ -808,7 +808,7 @@ contract Pool is IPool, ReentrancyGuard {
             reserve.currentVariableBorrowRate + 0.01e27
         ); // +1%
         reserve.currentLiquidityRate = uint128(
-            reserve.currentVariableBorrowRate.rayMul(utilization)
+            uint256(reserve.currentVariableBorrowRate).rayMul(utilization)
         );
 
         emit ReserveDataUpdated(

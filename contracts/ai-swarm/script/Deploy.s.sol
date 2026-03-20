@@ -24,7 +24,7 @@ contract DeployAISwarm is Script {
     address public paymentToken;
     address public treasury;
 
-    function setUp() public {
+    function setUp() public virtual {
         // Load from environment
         admin = vm.envOr("ADMIN", address(this));
         stakingToken = vm.envOr("STAKING_TOKEN", address(0));
@@ -33,7 +33,7 @@ contract DeployAISwarm is Script {
         treasury = vm.envOr("TREASURY", address(this));
     }
 
-    function run() public {
+    function run() public virtual {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 

@@ -85,7 +85,7 @@ abstract contract FlashLoanReceiverBase is IFlashLoanReceiver, ReentrancyGuard {
         // Approve repayment
         for (uint256 i = 0; i < assets.length; i++) {
             uint256 amountOwed = amounts[i] + premiums[i];
-            IERC20(assets[i]).safeApprove(POOL, amountOwed);
+            IERC20(assets[i]).forceApprove(POOL, amountOwed);
         }
 
         return true;
@@ -145,13 +145,13 @@ contract ArbitrageFlashLoan is FlashLoanReceiverBase {
         uint256 initialBalance = IERC20(arb.tokenIn).balanceOf(address(this));
 
         // Step 1: Swap on DEX A (buy tokenOut)
-        IERC20(arb.tokenIn).safeApprove(arb.dexA, amounts[0]);
+        IERC20(arb.tokenIn).forceApprove(arb.dexA, amounts[0]);
         (bool successA, ) = arb.dexA.call(arb.swapDataA);
         require(successA, "Arb: DEX A swap failed");
 
         // Step 2: Swap on DEX B (sell tokenOut for tokenIn)
         uint256 tokenOutBalance = IERC20(arb.tokenOut).balanceOf(address(this));
-        IERC20(arb.tokenOut).safeApprove(arb.dexB, tokenOutBalance);
+        IERC20(arb.tokenOut).forceApprove(arb.dexB, tokenOutBalance);
         (bool successB, ) = arb.dexB.call(arb.swapDataB);
         require(successB, "Arb: DEX B swap failed");
 
@@ -222,7 +222,7 @@ contract LiquidationFlashLoan is FlashLoanReceiverBase {
         require(assets[0] == liq.debtAsset, "Liq: wrong asset");
 
         // Step 1: Approve pool to spend debt asset
-        IERC20(liq.debtAsset).safeApprove(POOL, amounts[0]);
+        IERC20(liq.debtAsset).forceApprove(POOL, amounts[0]);
 
         // Step 2: Execute liquidation
         // In production: IPool(POOL).liquidationCall(...)
@@ -235,7 +235,7 @@ contract LiquidationFlashLoan is FlashLoanReceiverBase {
         );
 
         if (liq.collateralAsset != liq.debtAsset && collateralReceived > 0) {
-            IERC20(liq.collateralAsset).safeApprove(
+            IERC20(liq.collateralAsset).forceApprove(
                 liq.dex,
                 collateralReceived
             );
@@ -326,7 +326,7 @@ contract CollateralSwapFlashLoan is FlashLoanReceiverBase {
         // IPool(POOL).withdraw(swap.fromCollateral, swap.amountToSwap, address(this));
 
         // 2. Swap collateral
-        IERC20(swap.fromCollateral).safeApprove(swap.dex, swap.amountToSwap);
+        IERC20(swap.fromCollateral).forceApprove(swap.dex, swap.amountToSwap);
         (bool success, ) = swap.dex.call(swap.swapData);
         require(success, "Swap: DEX failed");
 
@@ -335,7 +335,7 @@ contract CollateralSwapFlashLoan is FlashLoanReceiverBase {
         require(received >= swap.minReceived, "Swap: slippage too high");
 
         // 4. Deposit new collateral
-        IERC20(swap.toCollateral).safeApprove(POOL, received);
+        IERC20(swap.toCollateral).forceApprove(POOL, received);
         // IPool(POOL).deposit(swap.toCollateral, received, initiator, 0);
 
         return true;
