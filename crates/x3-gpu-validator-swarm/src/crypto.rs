@@ -3,6 +3,7 @@
 //! Provides deterministic hash and signature operations with CPU verification.
 
 use crate::error::{SwarmError, SwarmResult};
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
 /// Hash output (256-bit)
@@ -165,16 +166,47 @@ pub struct SigningKey {
 }
 
 impl SigningKey {
-    /// Generate a new signing key from seed
-    pub fn from_seed(seed: &[u8]) -> Self {
+    /// Check if seed has sufficient entropy
+    fn is_weak_seed(seed: &[u8]) -> bool {
+        // Check for all zeros, all ones, or sequential patterns
+        seed.iter().all(|&b| b == 0) ||
+        seed.iter().all(|&b| b == 0xFF) ||
+        seed.windows(2).all(|w| w[0] + 1 == w[1])
+    }
+
+    /// Generate a new signing key from seed (with validation and entropy mixing)
+    pub fn from_seed(seed: &[u8]) -> Result<Self, SwarmError> {
+        // Validate seed length (minimum 32 bytes for 256-bit security)
+        if seed.len() < 32 {
+            return Err(SwarmError::CryptoError(
+                "Seed must be at least 32 bytes for sufficient entropy".to_string()
+            ));
+        }
+
+        // Check for obviously weak seeds
+        if Self::is_weak_seed(seed) {
+            return Err(SwarmError::CryptoError(
+                "Seed appears to have insufficient entropy".to_string()
+            ));
+        }
+
         use blake2::{Blake2b512, Digest};
+
+        // Add additional entropy mixing
         let mut hasher = Blake2b512::new();
-        hasher.update(b"x3-validator-signing-key");
+        hasher.update(b"x3-validator-signing-key-v2");
         hasher.update(seed);
+
+        // Mix in system randomness for defense in depth
+        let mut extra_entropy = [0u8; 32];
+        rand::thread_rng().fill_bytes(&mut extra_entropy);
+        hasher.update(&extra_entropy);
+
         let result = hasher.finalize();
         let mut secret = [0u8; 32];
         secret.copy_from_slice(&result[..32]);
-        Self { secret }
+
+        Ok(Self { secret })
     }
 
     /// Sign a message

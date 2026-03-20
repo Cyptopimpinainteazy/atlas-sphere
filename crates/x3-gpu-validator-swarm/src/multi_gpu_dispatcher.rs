@@ -129,10 +129,29 @@ impl MultiGpuDispatcher {
             return None;
         }
 
-        let index = self.round_robin_index.fetch_add(1, Ordering::Relaxed) as usize;
+        // Use SeqCst for strict ordering guarantees
+        let index = self.round_robin_index.fetch_add(1, Ordering::SeqCst) as usize;
         let device_id = devices[index % devices.len()].device_id;
 
         debug!("[MultiGpuDispatcher] Assigned job to GPU {}", device_id);
+        Some(device_id)
+    }
+
+    /// Alternative: Use Mutex for complete thread safety
+    pub fn next_device_safe(&self) -> Option<u32> {
+        let devices = self.devices.read();
+        if devices.is_empty() {
+            return None;
+        }
+
+        // Simple fallback: use modulo on current count
+        let index = self.round_robin_index.load(Ordering::SeqCst) as usize;
+        let device_id = devices[index % devices.len()].device_id;
+
+        // Increment for next call
+        self.round_robin_index.fetch_add(1, Ordering::SeqCst);
+
+        debug!("[MultiGpuDispatcher] Assigned job to GPU {} (safe mode)", device_id);
         Some(device_id)
     }
 

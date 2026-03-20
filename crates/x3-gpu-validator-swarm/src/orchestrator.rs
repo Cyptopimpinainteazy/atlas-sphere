@@ -377,8 +377,8 @@ impl SwarmOrchestrator {
     }
 
     /// Release a validator from quarantine
-    pub fn release_validator(&self, validator_id: &str) -> bool {
-        self.quarantine.release(validator_id)
+    pub fn release_validator(&self, validator_id: &str, caller: &str, auth_token: &crate::quarantine::AuthToken) -> SwarmResult<bool> {
+        self.quarantine.release(validator_id, caller, auth_token)
     }
 }
 

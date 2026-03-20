@@ -37,6 +37,10 @@ pub enum SwarmError {
     #[error("Validator is quarantined: {0}")]
     Quarantined(String),
 
+    /// Unauthorized operation
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
+
     /// Task timeout
     #[error("Task timeout: {0}")]
     Timeout(String),

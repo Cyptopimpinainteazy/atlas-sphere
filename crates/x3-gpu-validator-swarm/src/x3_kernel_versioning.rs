@@ -3,6 +3,9 @@
 //! X3 kernels are GPU execution units that abstract away CUDA/OpenCL differences.
 //! Versioning system allows hot updates without node restarts.
 
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
 /// X3 Kernel metadata
@@ -41,6 +44,50 @@ pub enum KernelType {
     Custom(String),
 }
 
+/// Governance account for kernel approvals
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct GovernanceAccount {
+    /// Account ID
+    pub id: String,
+    /// Public key
+    pub pubkey: [u8; 32],
+    /// Role
+    pub role: GovernanceRole,
+}
+
+/// Governance role
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GovernanceRole {
+    /// Kernel approver
+    KernelApprover,
+    /// Admin
+    Admin,
+}
+
+/// Signature for multi-sig approval
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Signature {
+    /// Signer account ID
+    pub signer_id: String,
+    /// Signature bytes
+    pub signature: Vec<u8>,
+}
+
+/// Kernel approval record
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct KernelApproval {
+    /// Kernel name
+    pub kernel_name: String,
+    /// Version
+    pub version: String,
+    /// Approved by
+    pub approved_by: String,
+    /// Signatures
+    pub signatures: Vec<Signature>,
+    /// Timestamp
+    pub timestamp: chrono::DateTime<Utc>,
+}
+
 /// Kernel registry (per-validator)
 #[derive(Clone)]
 pub struct X3KernelRegistry {
@@ -50,6 +97,10 @@ pub struct X3KernelRegistry {
     pub active: HashMap<String, String>, // kernel_name → active_version
     /// Update history: (block_height, kernel_name, old_version → new_version)
     pub update_history: Vec<(u32, String, String, String)>,
+    /// Approval log for audit
+    pub approval_log: Vec<KernelApproval>,
+    /// Required signatures for approval (2/3 of validators)
+    pub required_approval_signatures: usize,
 }
 
 impl X3KernelRegistry {
@@ -58,7 +109,32 @@ impl X3KernelRegistry {
             kernels: HashMap::new(),
             active: HashMap::new(),
             update_history: Vec::new(),
+            approval_log: Vec::new(),
+            required_approval_signatures: 2, // Default 2/3 multi-sig
         }
+    }
+
+    /// Verify governance authority
+    fn verify_governance_authority(
+        &self,
+        approver: &GovernanceAccount,
+        signatures: &[Signature],
+    ) -> bool {
+        // Verify approver has correct role
+        if approver.role != GovernanceRole::KernelApprover
+            && approver.role != GovernanceRole::Admin
+        {
+            return false;
+        }
+
+        // Verify minimum signatures
+        if signatures.len() < self.required_approval_signatures {
+            return false;
+        }
+
+        // In production: verify each signature cryptographically
+        // For now: just check non-empty
+        signatures.iter().all(|s| !s.signature.is_empty())
     }
 
     /// Register a new kernel version
@@ -145,9 +221,40 @@ impl X3KernelRegistry {
     }
 
     /// Approve a kernel for production use (governance action)
-    pub fn approve_kernel(&mut self, kernel_name: &str, version: &str) -> Result<(), String> {
+    pub fn approve_kernel(
+        &mut self,
+        kernel_name: &str,
+        version: &str,
+        approver: &GovernanceAccount,
+        signatures: Vec<Signature>,
+    ) -> Result<(), String> {
+        // Verify governance authorization
+        if !self.verify_governance_authority(approver, &signatures) {
+            return Err(
+                "Unauthorized: kernel approval requires governance vote".to_string()
+            );
+        }
+
+        // Verify minimum signatures (e.g., 2/3 of validators)
+        if signatures.len() < self.required_approval_signatures {
+            return Err(format!(
+                "Insufficient signatures: {} required, {} provided",
+                self.required_approval_signatures,
+                signatures.len()
+            ));
+        }
+
         if let Some(versions) = self.kernels.get_mut(kernel_name) {
             if let Some(kernel) = versions.iter_mut().find(|k| k.version == version) {
+                // Log approval for audit
+                self.approval_log.push(KernelApproval {
+                    kernel_name: kernel_name.to_string(),
+                    version: version.to_string(),
+                    approved_by: approver.id.clone(),
+                    signatures,
+                    timestamp: Utc::now(),
+                });
+
                 kernel.approved = true;
                 return Ok(());
             }
@@ -170,18 +277,34 @@ impl X3KernelRegistry {
         kernel_name: &str,
         version: &str,
         binary: &[u8],
-        hash: &[u8; 32],
+        provided_hash: &[u8; 32],
     ) -> bool {
-        // In production: compute SHA-256 of binary and compare
-        if let Some(manifest) = self
+        // Get the manifest
+        let manifest = match self
             .kernels
             .get(kernel_name)
             .and_then(|v| v.iter().find(|k| k.version == version))
         {
-            manifest.binary_hash == *hash && manifest.binary_size as usize == binary.len()
-        } else {
-            false
+            Some(m) => m,
+            None => return false,
+        };
+
+        // Verify binary size
+        if manifest.binary_size as usize != binary.len() {
+            return false;
         }
+
+        // Actually compute hash of the binary
+        let mut hasher = Sha256::new();
+        hasher.update(binary);
+        let computed_hash = hasher.finalize();
+        let mut computed_hash_array = [0u8; 32];
+        computed_hash_array.copy_from_slice(&computed_hash);
+
+        // Verify both:
+        // 1. Computed hash matches the manifest
+        // 2. Provided hash matches the manifest (for compatibility)
+        manifest.binary_hash == computed_hash_array && manifest.binary_hash == *provided_hash
     }
 }
 

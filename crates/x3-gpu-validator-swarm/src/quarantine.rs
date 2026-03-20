@@ -6,6 +6,7 @@ use chrono::{DateTime, Utc};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tracing::warn;
 use uuid::Uuid;
 
 /// Reasons for quarantine
@@ -135,6 +136,28 @@ impl QuarantineEntry {
     }
 }
 
+/// Audit entry for quarantine actions
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuditEntry {
+    /// Action performed
+    pub action: String,
+    /// Validator ID affected
+    pub validator_id: String,
+    /// Who authorized the action
+    pub authorized_by: String,
+    /// Timestamp
+    pub timestamp: DateTime<Utc>,
+}
+
+/// Authorized orchestrator for quarantine management
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthToken {
+    /// Token value
+    pub token: String,
+    /// Expiration time
+    pub expires_at: DateTime<Utc>,
+}
+
 /// Quarantine manager
 pub struct QuarantineManager {
     /// Quarantined validators
@@ -147,6 +170,10 @@ pub struct QuarantineManager {
     quarantine_duration_secs: u64,
     /// Enable automatic CPU fallback
     auto_fallback_cpu: bool,
+    /// Audit log for security events
+    audit_log: RwLock<Vec<AuditEntry>>,
+    /// Authorized orchestrator IDs
+    authorized_orchestrators: RwLock<HashMap<String, AuthToken>>,
 }
 
 impl QuarantineManager {
@@ -162,6 +189,25 @@ impl QuarantineManager {
             max_divergence_count,
             quarantine_duration_secs,
             auto_fallback_cpu,
+            audit_log: RwLock::new(Vec::new()),
+            authorized_orchestrators: RwLock::new(HashMap::new()),
+        }
+    }
+
+    /// Register an authorized orchestrator
+    pub fn register_orchestrator(&self, orchestrator_id: String, token: AuthToken) {
+        let mut orchestrators = self.authorized_orchestrators.write();
+        orchestrators.insert(orchestrator_id, token);
+    }
+
+    /// Check if an orchestrator is authorized
+    fn is_authorized_orchestrator(&self, caller: &str, auth_token: &AuthToken) -> bool {
+        let orchestrators = self.authorized_orchestrators.read();
+        if let Some(stored_token) = orchestrators.get(caller) {
+            // Check if token matches and hasn't expired
+            stored_token.token == auth_token.token && Utc::now() < stored_token.expires_at
+        } else {
+            false
         }
     }
 
@@ -192,19 +238,40 @@ impl QuarantineManager {
     ///
     /// Non-permanently quarantined validators can be released manually immediately.
     /// Permanently banned validators cannot be released through this API.
-    pub fn release(&self, validator_id: &str) -> bool {
+    /// Requires authorization from an authorized orchestrator.
+    pub fn release(
+        &self,
+        validator_id: &str,
+        caller: &str,
+        auth_token: &AuthToken,
+    ) -> Result<bool, crate::error::SwarmError> {
+        // Verify caller authorization
+        if !self.is_authorized_orchestrator(caller, auth_token) {
+            return Err(crate::error::SwarmError::Unauthorized(
+                "Only authorized orchestrators can release validators".to_string(),
+            ));
+        }
+
         let mut quarantined = self.quarantined.write();
 
         if let Some(entry) = quarantined.get(validator_id) {
             if entry.permanent {
-                return false;
+                return Ok(false);
             }
 
+            // Log the release action for audit
+            self.audit_log.write().push(AuditEntry {
+                action: "validator_release".to_string(),
+                validator_id: validator_id.to_string(),
+                authorized_by: caller.to_string(),
+                timestamp: Utc::now(),
+            });
+
             quarantined.remove(validator_id);
-            return true;
+            return Ok(true);
         }
 
-        false
+        Ok(false)
     }
 
     /// Check if a validator is quarantined
@@ -223,12 +290,41 @@ impl QuarantineManager {
     /// Record a divergence event
     pub fn record_divergence(&self, record: DivergenceRecord) {
         let mut records = self.divergence_records.write();
-        records.push(record);
 
-        // Trim old records (keep last 1000)
-        if records.len() > 1000 {
-            records.drain(0..100);
+        // Implement rate limiting per validator
+        let validator_id = &record.validator_id;
+        let recent_count = records
+            .iter()
+            .filter(|r| r.validator_id == *validator_id)
+            .filter(|r| {
+                let age = Utc::now().signed_duration_since(r.timestamp);
+                age.num_seconds() < 60 // Last minute
+            })
+            .count();
+
+        // Reject if too many recent divergences from same validator
+        if recent_count >= 10 {
+            warn!("Rate limit exceeded for validator {}", validator_id);
+            return;
         }
+
+        // More aggressive pruning strategy
+        const MAX_RECORDS: usize = 500;
+        const PRUNE_TO: usize = 250;
+
+        if records.len() >= MAX_RECORDS {
+            // Sort by timestamp and keep only recent ones
+            records.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+            records.truncate(PRUNE_TO);
+        }
+
+        // Limit size of stored outputs
+        let mut limited_record = record;
+        const MAX_OUTPUT_SIZE: usize = 1024; // 1KB max
+        limited_record.gpu_output.truncate(MAX_OUTPUT_SIZE);
+        limited_record.cpu_output.truncate(MAX_OUTPUT_SIZE);
+
+        records.push(limited_record);
     }
 
     /// Get divergence records for a validator

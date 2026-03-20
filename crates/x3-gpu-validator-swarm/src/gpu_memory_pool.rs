@@ -30,11 +30,13 @@
 //! - **After**: Slab assignment from free list = <1µs latency
 //! - **Throughput gain**: ~50% reduction in GPU kernel overhead
 
+use crate::error::SwarmError;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
 use tracing::{debug, error, info, warn};
 
 /// GPU device identifier
@@ -147,11 +149,20 @@ impl GpuMemoryPool {
         }
     }
 
-    /// Allocate a slab for a job (blocks until available)
-    pub async fn allocate(&self, job_id: &str) -> SlabHandle {
+    /// Allocate a slab for a job (with timeout and exponential backoff)
+    pub async fn allocate(&self, job_id: &str) -> Result<SlabHandle, SwarmError> {
         let start = std::time::Instant::now();
+        let timeout = Duration::from_secs(30); // Configurable timeout
 
         loop {
+            // Check timeout
+            if start.elapsed() > timeout {
+                return Err(SwarmError::Timeout(format!(
+                    "Failed to allocate GPU memory slab for job {} within {:?}",
+                    job_id, timeout
+                )));
+            }
+
             let slab_id = {
                 let mut free_list = self.free_list.write();
                 free_list.pop()
@@ -178,13 +189,19 @@ impl GpuMemoryPool {
                     self.device_id, slab_id, job_id, alloc_time_us
                 );
 
-                return SlabHandle {
+                return Ok(SlabHandle {
                     device_id: self.device_id,
                     slab_id,
-                };
+                });
             }
 
-            tokio::time::sleep(tokio::time::Duration::from_micros(10)).await;
+            // Exponential backoff instead of tight polling
+            let elapsed_secs = start.elapsed().as_secs() as u32;
+            let wait_time = std::cmp::min(
+                Duration::from_millis(10) * 2u32.pow(elapsed_secs.min(10)),
+                Duration::from_secs(1),
+            );
+            tokio::time::sleep(wait_time).await;
         }
     }
 

@@ -7,6 +7,7 @@ use crate::error::{SwarmError, SwarmResult};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::TryInto;
 use std::time::{Duration, Instant};
 
 /// Payment unit (lamports-like)
@@ -200,6 +201,16 @@ impl PaymentSystem {
         }
     }
 
+    /// Validate provider ID format
+    fn is_valid_provider_id(id: &str) -> bool {
+        !id.is_empty() && id.len() <= 64 && id.len() >= 3 && id.chars().all(|c| c.is_alphanumeric() || c == '_')
+    }
+
+    /// Validate wallet address format (Ethereum-style)
+    fn is_valid_wallet_address(addr: &str) -> bool {
+        addr.starts_with("0x") && addr.len() == 42 && addr[2..].chars().all(|c| c.is_ascii_hexdigit())
+    }
+
     /// Register a provider
     pub fn register_provider(
         &self,
@@ -207,6 +218,20 @@ impl PaymentSystem {
         wallet_address: String,
         stake: PaymentAmount,
     ) -> SwarmResult<ProviderAccount> {
+        // Validate provider ID format
+        if !Self::is_valid_provider_id(&provider_id) {
+            return Err(SwarmError::InvalidInput(
+                "Invalid provider ID format. Must be alphanumeric with underscores, 3-64 chars".to_string()
+            ));
+        }
+
+        // Validate wallet address format
+        if !Self::is_valid_wallet_address(&wallet_address) {
+            return Err(SwarmError::InvalidInput(
+                "Invalid wallet address format".to_string()
+            ));
+        }
+
         let mut providers = self.providers.write();
 
         if providers.contains_key(&provider_id) {
@@ -288,21 +313,45 @@ impl PaymentSystem {
         Ok(())
     }
 
-    /// Calculate reward for work
+    /// Calculate reward for work (with overflow protection)
     fn calculate_reward(&self, record: &WorkRecord) -> SwarmResult<PaymentAmount> {
         let rate = self.reward_rate.read();
 
-        // Base reward
-        let mut reward = rate.base_rate * record.work_units;
+        // Use checked arithmetic for base reward
+        let mut reward = rate
+            .base_rate
+            .checked_mul(record.work_units)
+            .ok_or_else(|| {
+                SwarmError::InvalidInput("Reward calculation overflow".to_string())
+            })?;
 
-        // Verification bonus
+        // Apply verification bonus with overflow protection
         if record.verified {
-            reward = (reward as f64 * rate.verification_bonus) as PaymentAmount;
+            let bonus_reward = (reward as u128)
+                .checked_mul((rate.verification_bonus * 1000.0) as u128)
+                .and_then(|r| (r / 1000).try_into().ok())
+                .ok_or_else(|| {
+                    SwarmError::InvalidInput("Reward bonus calculation overflow".to_string())
+                })?;
+            reward = bonus_reward;
         }
 
-        // Divergence penalty
+        // Apply divergence penalty with underflow protection
         if record.divergent {
-            reward = (reward as f64 * rate.divergence_penalty) as PaymentAmount;
+            let penalty_reward = (reward as u128)
+                .checked_mul((rate.divergence_penalty * 1000.0) as u128)
+                .and_then(|r| (r / 1000).try_into().ok())
+                .unwrap_or(0); // Penalty can reduce to 0
+            reward = penalty_reward;
+        }
+
+        // Sanity check: cap maximum reward per task
+        const MAX_REWARD_PER_TASK: PaymentAmount = 1_000_000_000; // 1000 X3
+        if reward > MAX_REWARD_PER_TASK {
+            return Err(SwarmError::InvalidInput(format!(
+                "Reward {} exceeds maximum per-task limit",
+                reward
+            )));
         }
 
         Ok(reward)

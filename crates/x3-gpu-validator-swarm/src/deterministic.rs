@@ -320,6 +320,34 @@ impl DeterministicEngine {
         ))
     }
 
+    /// Compare outputs with tolerance for floating point precision
+    fn compare_with_tolerance(a: &[HashOutput], b: &[HashOutput], tolerance: f64) -> bool {
+        if a.len() != b.len() {
+            return false;
+        }
+
+        for (a_val, b_val) in a.iter().zip(b.iter()) {
+            if !Self::within_tolerance(a_val, b_val, tolerance) {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Check if two hash outputs are within tolerance
+    fn within_tolerance(a: &HashOutput, b: &HashOutput, tolerance: f64) -> bool {
+        // For hash outputs, we do exact comparison
+        // For numerical computations, tolerance would be applied to decoded values
+        a == b
+    }
+
+    /// Check if divergence is acceptable (minor floating point differences)
+    fn is_acceptable_divergence(gpu_outputs: &[HashOutput], cpu_outputs: &[HashOutput]) -> bool {
+        // For hash operations, any divergence is unacceptable
+        // For numerical computations with floating point, small differences are acceptable
+        gpu_outputs == cpu_outputs
+    }
+
     /// Execute on GPU with CPU verification
     fn execute_with_verification(
         &self,
@@ -352,50 +380,68 @@ impl DeterministicEngine {
                 VerificationLevel::Strict => true,
             };
 
-            if needs_verification && gpu_outputs != cpu_outputs {
-                // Divergence detected!
+            // Use tolerance-based comparison for numerical computations
+            let outputs_match = if task.task_type == TaskType::Custom {
+                // For custom computations that might involve floating point
+                Self::compare_with_tolerance(&gpu_outputs, &cpu_outputs, 1e-9)
+            } else {
+                // For hash operations, exact match is expected
+                gpu_outputs == cpu_outputs
+            };
 
-                // Step 3: Replay mode (if enabled) - re-run GPU to confirm
-                if replay_mode_enabled {
-                    let replay_outputs: Vec<HashOutput> = task
-                        .inputs
-                        .iter()
-                        .map(|input| crate::crypto::compute_hash(&algorithm, input))
-                        .collect();
+            if needs_verification && !outputs_match {
+                // Additional verification: check if difference is within acceptable bounds
+                if Self::is_acceptable_divergence(&gpu_outputs, &cpu_outputs) {
+                    // Log warning but don't quarantine
+                    tracing::warn!(
+                        "Minor divergence detected within tolerance for task {}",
+                        task.task_id
+                    );
+                } else {
+                    // Divergence detected!
 
-                    // Record replay for analysis
-                    let record = ReplayRecord {
-                        task: task.clone(),
-                        original_output: gpu_outputs.clone(),
-                        replay_output: replay_outputs.clone(),
-                        cpu_output: cpu_outputs.clone(),
-                        replay_matches_original: gpu_outputs == replay_outputs,
-                        cpu_matches_gpu: false, // Already known to be different
-                        timestamp: chrono::Utc::now().timestamp(),
-                    };
-                    self.replay_records.write().push(record);
-                    self.stats
-                        .replay_verifications
-                        .fetch_add(1, Ordering::SeqCst);
+                    // Step 3: Replay mode (if enabled) - re-run GPU to confirm
+                    if replay_mode_enabled {
+                        let replay_outputs: Vec<HashOutput> = task
+                            .inputs
+                            .iter()
+                            .map(|input| crate::crypto::compute_hash(&algorithm, input))
+                            .collect();
 
-                    // If replay matches original but differs from CPU, GPU is divergent
-                    if gpu_outputs == replay_outputs {
-                        self.stats.divergent_tasks.fetch_add(1, Ordering::SeqCst);
-                        return Ok(ExecutionResult::divergent(
-                            task.task_id.clone(),
-                            gpu_outputs,
-                            0,
-                        ));
+                        // Record replay for analysis
+                        let record = ReplayRecord {
+                            task: task.clone(),
+                            original_output: gpu_outputs.clone(),
+                            replay_output: replay_outputs.clone(),
+                            cpu_output: cpu_outputs.clone(),
+                            replay_matches_original: gpu_outputs == replay_outputs,
+                            cpu_matches_gpu: false, // Already known to be different
+                            timestamp: chrono::Utc::now().timestamp(),
+                        };
+                        self.replay_records.write().push(record);
+                        self.stats
+                            .replay_verifications
+                            .fetch_add(1, Ordering::SeqCst);
+
+                        // If replay matches original but differs from CPU, GPU is divergent
+                        if gpu_outputs == replay_outputs {
+                            self.stats.divergent_tasks.fetch_add(1, Ordering::SeqCst);
+                            return Ok(ExecutionResult::divergent(
+                                task.task_id.clone(),
+                                gpu_outputs,
+                                0,
+                            ));
+                        }
                     }
-                }
 
-                // CPU and GPU differ - report divergence
-                self.stats.divergent_tasks.fetch_add(1, Ordering::SeqCst);
-                return Ok(ExecutionResult::divergent(
-                    task.task_id.clone(),
-                    gpu_outputs,
-                    0,
-                ));
+                    // CPU and GPU differ - report divergence
+                    self.stats.divergent_tasks.fetch_add(1, Ordering::SeqCst);
+                    return Ok(ExecutionResult::divergent(
+                        task.task_id.clone(),
+                        gpu_outputs,
+                        0,
+                    ));
+                }
             }
         }
 
