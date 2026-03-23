@@ -756,6 +756,39 @@ class AgentRegistry:
             'children': [self._serialize_lineage_tree(child) for child in node.children]
         }
 
+class _UnavailableAgentRegistry:
+    """Degraded-mode registry used when AgentRegistry construction fails."""
+
+    def __init__(self, cause: Exception):
+        self._cause = cause
+        self.agents: Dict[str, Any] = {}
+        self.tribes: Dict[str, Any] = {}
+
+    @property
+    def construction_error(self) -> str:
+        return str(self._cause)
+
+    def get_swarm_metrics(self) -> SwarmMetrics:
+        return SwarmMetrics()
+
+    def get_agent_details(self, agent_id: str) -> Optional[Dict[str, Any]]:
+        return None
+
+    def search_agents(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
+        return []
+
+    def list_contributors(self):
+        return []
+
+    def list_tasks(self, limit: int = 100):
+        return []
+
+    def create_jury_session(self, *args, **kwargs):
+        raise RuntimeError(
+            f"AgentRegistry is unavailable: {self._cause}"
+        )
+
+
 # Global registry instance - lazily initialized to avoid importing SQLite at module import time
 class _LazyAgentRegistry:
     """Proxy that lazily constructs the real AgentRegistry on first access."""
@@ -768,21 +801,10 @@ class _LazyAgentRegistry:
         try:
             self._real = AgentRegistry()
         except Exception as e:
-            logger.warning(f"AgentRegistry construction failed: {e}; falling back to in-memory stub")
-            # Provide a minimal in-memory stub with the same public methods used by the API.
-            class _Stub:
-                def __init__(self):
-                    self.agents = {}
-                    self.tribes = {}
-                def list_contributors(self):
-                    return []
-                def list_tasks(self, limit=100):
-                    return []
-                def get_agent_details(self, agent_id):
-                    return None
-                def create_jury_session(self, *a, **k):
-                    raise NotImplementedError
-            self._real = _Stub()
+            logger.warning(
+                f"AgentRegistry construction failed: {e}; entering degraded mode"
+            )
+            self._real = _UnavailableAgentRegistry(e)
 
     def __getattr__(self, name):
         self._ensure()

@@ -1,6 +1,5 @@
 //! Selection operators for evolutionary algorithms
 
-use crate::chromosome::Chromosome;
 use crate::error::{EvolutionError, Result};
 use crate::population::Individual;
 use crate::Population;

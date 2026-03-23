@@ -121,8 +121,7 @@ impl X3KernelRegistry {
         signatures: &[Signature],
     ) -> bool {
         // Verify approver has correct role
-        if approver.role != GovernanceRole::KernelApprover
-            && approver.role != GovernanceRole::Admin
+        if approver.role != GovernanceRole::KernelApprover && approver.role != GovernanceRole::Admin
         {
             return false;
         }
@@ -230,9 +229,7 @@ impl X3KernelRegistry {
     ) -> Result<(), String> {
         // Verify governance authorization
         if !self.verify_governance_authority(approver, &signatures) {
-            return Err(
-                "Unauthorized: kernel approval requires governance vote".to_string()
-            );
+            return Err("Unauthorized: kernel approval requires governance vote".to_string());
         }
 
         // Verify minimum signatures (e.g., 2/3 of validators)

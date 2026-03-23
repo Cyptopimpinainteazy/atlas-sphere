@@ -104,7 +104,7 @@ impl CommitRevealProof {
 
 /// SHA-256 helper (mock implementation)
 fn sha256(data: &[u8]) -> [u8; 32] {
-    let mut hasher = sp_core::hashing::blake2_256(data);
+    let hasher = sp_core::hashing::blake2_256(data);
     let mut result = [0u8; 32];
     result.copy_from_slice(&hasher[..32.min(hasher.len())]);
     result

@@ -167,36 +167,40 @@ class SqliteStorage(StorageBackend):
 
 
 class PostgresStorage(StorageBackend):
-    """PostgreSQL-backed storage (stub — delegates to SQLite for now)."""
+    """Placeholder for a PostgreSQL-backed storage adapter.
+
+    This class intentionally fails fast instead of silently using in-memory
+    SQLite, which would discard data and mask production misconfiguration.
+    Use `swarm.storage.pg_store` for the concrete Postgres integration.
+    """
 
     def __init__(self, dsn: str = "") -> None:
-        logger.warning(
-            "PostgresStorage is running in SQLite-fallback mode. "
-            "Set a real DSN for production."
+        raise NotImplementedError(
+            "PostgresStorage in swarm.storage.backend is not implemented. "
+            "Use swarm.storage.pg_store or a concrete StorageBackend instead."
         )
-        self._delegate = SqliteStorage(":memory:")
 
     def save(self, namespace: str, key: str, data: Dict[str, Any]) -> None:
-        self._delegate.save(namespace, key, data)
+        raise NotImplementedError
 
     def load(self, namespace: str, key: str) -> Optional[Dict[str, Any]]:
-        return self._delegate.load(namespace, key)
+        raise NotImplementedError
 
     def delete(self, namespace: str, key: str) -> bool:
-        return self._delegate.delete(namespace, key)
+        raise NotImplementedError
 
     def list_keys(self, namespace: str) -> List[str]:
-        return self._delegate.list_keys(namespace)
+        raise NotImplementedError
 
     def save_many(
         self, namespace: str, items: List[Tuple[str, Dict[str, Any]]]
     ) -> None:
-        self._delegate.save_many(namespace, items)
+        raise NotImplementedError
 
     def load_many(
         self, namespace: str, keys: List[str]
     ) -> List[Optional[Dict[str, Any]]]:
-        return self._delegate.load_many(namespace, keys)
+        raise NotImplementedError
 
     def query(
         self,
@@ -205,7 +209,7 @@ class PostgresStorage(StorageBackend):
         order_by: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        return self._delegate.query(namespace, filters, order_by, limit)
+        raise NotImplementedError
 
 
 # ---------------------------------------------------------------------------

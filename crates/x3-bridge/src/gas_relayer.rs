@@ -1,6 +1,5 @@
 /// Gas Relayer — Multi-token fee payment abstraction enabling users to pay transaction fees in any token
 /// Implements relayer netting, fee routing, and sponsor mechanisms
-
 use parity_scale_codec::{Decode, Encode};
 use sp_std::vec::Vec;
 
@@ -8,7 +7,7 @@ use sp_std::vec::Vec;
 pub struct RelayerConfig {
     pub relayer_id: [u8; 32],
     pub accepted_tokens: Vec<[u8; 32]>,
-    pub fee_share_bps: u32,              // Basis points (0-10000)
+    pub fee_share_bps: u32, // Basis points (0-10000)
     pub min_fee_liquidity: u128,
     pub is_active: bool,
 }
@@ -137,11 +136,13 @@ impl GasRelayer {
         }
 
         // Calculate equivalent native amount at current rate
-        let equivalent = (fee_req.fee_amount as f64) * (exchange_rate.native_per_token as f64) / 1e18;
+        let equivalent =
+            (fee_req.fee_amount as f64) * (exchange_rate.native_per_token as f64) / 1e18;
         let equivalent_native = equivalent as u128;
 
         // Check slippage
-        let max_acceptable = fee_req.native_fee_equivalent
+        let max_acceptable = fee_req
+            .native_fee_equivalent
             .saturating_add((fee_req.native_fee_equivalent * max_slippage_bps as u128) / 10000);
 
         if equivalent_native > max_acceptable {
@@ -247,7 +248,10 @@ impl GasRelayer {
         }
 
         // Find token in pool
-        let token_index = pool.tokens.iter().position(|&t| t == fee_token)
+        let token_index = pool
+            .tokens
+            .iter()
+            .position(|&t| t == fee_token)
             .ok_or("Token not in pool")?;
 
         if pool.balances[token_index] < fee_amount {
@@ -278,7 +282,8 @@ impl GasRelayer {
 
             // Find exchange rate for this fee token
             if let Some(rate) = exchange_rates.iter().find(|r| r.token == fee_req.fee_token) {
-                let native_equiv = (fee_req.fee_amount as f64) * (rate.native_per_token as f64) / 1e18;
+                let native_equiv =
+                    (fee_req.fee_amount as f64) * (rate.native_per_token as f64) / 1e18;
                 total_collected = total_collected.saturating_add(native_equiv as u128);
             }
         }
@@ -287,7 +292,10 @@ impl GasRelayer {
     }
 
     /// Add tokens to relayer's accepted list
-    pub fn add_accepted_token(config: &mut RelayerConfig, token: [u8; 32]) -> Result<(), &'static str> {
+    pub fn add_accepted_token(
+        config: &mut RelayerConfig,
+        token: [u8; 32],
+    ) -> Result<(), &'static str> {
         if config.accepted_tokens.contains(&token) {
             return Err("Token already accepted");
         }
@@ -297,7 +305,10 @@ impl GasRelayer {
     }
 
     /// Remove token from relayer's accepted list
-    pub fn remove_accepted_token(config: &mut RelayerConfig, token: [u8; 32]) -> Result<(), &'static str> {
+    pub fn remove_accepted_token(
+        config: &mut RelayerConfig,
+        token: [u8; 32],
+    ) -> Result<(), &'static str> {
         if !config.accepted_tokens.contains(&token) {
             return Err("Token not in list");
         }
@@ -319,11 +330,10 @@ impl GasRelayer {
     }
 
     /// Dispute fee settlement (fraud/slippage claim)
-    pub fn dispute_fee(
-        fee_req: &mut FeeRequest,
-        reason: &str,
-    ) -> Result<(), &'static str> {
-        if fee_req.status == FeeRequestStatus::Disputed || fee_req.status == FeeRequestStatus::Refunded {
+    pub fn dispute_fee(fee_req: &mut FeeRequest, reason: &str) -> Result<(), &'static str> {
+        if fee_req.status == FeeRequestStatus::Disputed
+            || fee_req.status == FeeRequestStatus::Refunded
+        {
             return Err("Fee already disputed or refunded");
         }
 
@@ -391,13 +401,8 @@ mod tests {
 
     #[test]
     fn test_create_fee_request() {
-        let req = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            1000000,
-            950000,
-            [3; 32],
-        ).unwrap();
+        let req =
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 950000, [3; 32]).unwrap();
 
         assert_eq!(req.payer, [1; 32]);
         assert_eq!(req.fee_token, [2; 32]);
@@ -406,25 +411,14 @@ mod tests {
 
     #[test]
     fn test_create_fee_request_zero_amount() {
-        let result = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            0,
-            100,
-            [3; 32],
-        );
+        let result = GasRelayer::create_fee_request([1; 32], [2; 32], 0, 100, [3; 32]);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_settle_fee() {
-        let mut req = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            1000000,
-            950000,
-            [3; 32],
-        ).unwrap();
+        let mut req =
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 950000, [3; 32]).unwrap();
 
         let rate = TokenExchangeRate {
             token: [2; 32],
@@ -438,11 +432,7 @@ mod tests {
 
     #[test]
     fn test_update_exchange_rate() {
-        let rate = GasRelayer::update_exchange_rate(
-            [1; 32],
-            500000000000000000,
-            1000,
-        ).unwrap();
+        let rate = GasRelayer::update_exchange_rate([1; 32], 500000000000000000, 1000).unwrap();
 
         assert_eq!(rate.token, [1; 32]);
         assert_eq!(rate.native_per_token, 500000000000000000);
@@ -450,18 +440,14 @@ mod tests {
 
     #[test]
     fn test_process_relayer_payout() {
-        let mut req = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            1000000,
-            1000000,
-            [3; 32],
-        ).unwrap();
+        let mut req =
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 1000000, [3; 32]).unwrap();
         req.status = FeeRequestStatus::Settled;
 
         let config = GasRelayer::register_relayer([3; 32], vec![[2; 32]], 500).unwrap();
 
-        let (relayer_share, protocol_share) = GasRelayer::process_relayer_payout(&req, &config).unwrap();
+        let (relayer_share, protocol_share) =
+            GasRelayer::process_relayer_payout(&req, &config).unwrap();
 
         assert_eq!(relayer_share, 50000); // 5% of 1000000
         assert_eq!(protocol_share, 950000);
@@ -474,7 +460,8 @@ mod tests {
             vec![[2; 32]],
             vec![10000000],
             vec![[3; 32], [4; 32]],
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(pool.sponsor, [1; 32]);
         assert!(pool.is_active);
@@ -482,12 +469,9 @@ mod tests {
 
     #[test]
     fn test_is_sponsored_beneficiary() {
-        let pool = GasRelayer::create_sponsor_pool(
-            [1; 32],
-            vec![[2; 32]],
-            vec![10000000],
-            vec![[3; 32]],
-        ).unwrap();
+        let pool =
+            GasRelayer::create_sponsor_pool([1; 32], vec![[2; 32]], vec![10000000], vec![[3; 32]])
+                .unwrap();
 
         assert!(GasRelayer::is_sponsored_beneficiary(&pool, &[3; 32]).unwrap());
         assert!(!GasRelayer::is_sponsored_beneficiary(&pool, &[4; 32]).unwrap());
@@ -495,12 +479,9 @@ mod tests {
 
     #[test]
     fn test_deduct_sponsored_fee() {
-        let mut pool = GasRelayer::create_sponsor_pool(
-            [1; 32],
-            vec![[2; 32]],
-            vec![10000000],
-            vec![[3; 32]],
-        ).unwrap();
+        let mut pool =
+            GasRelayer::create_sponsor_pool([1; 32], vec![[2; 32]], vec![10000000], vec![[3; 32]])
+                .unwrap();
 
         GasRelayer::deduct_sponsored_fee(&mut pool, [2; 32], 1000000).unwrap();
         assert_eq!(pool.balances[0], 9000000);
@@ -528,13 +509,8 @@ mod tests {
 
     #[test]
     fn test_dispute_fee() {
-        let mut req = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            1000000,
-            950000,
-            [3; 32],
-        ).unwrap();
+        let mut req =
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 950000, [3; 32]).unwrap();
 
         GasRelayer::dispute_fee(&mut req, "slippage").unwrap();
         assert_eq!(req.status, FeeRequestStatus::Disputed);
@@ -542,13 +518,8 @@ mod tests {
 
     #[test]
     fn test_batch_settle_fees() {
-        let req = GasRelayer::create_fee_request(
-            [1; 32],
-            [2; 32],
-            1000000,
-            1000000,
-            [3; 32],
-        ).unwrap();
+        let req =
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 1000000, [3; 32]).unwrap();
 
         let rate = TokenExchangeRate {
             token: [2; 32],
@@ -562,11 +533,8 @@ mod tests {
 
     #[test]
     fn test_remove_accepted_token() {
-        let mut config = GasRelayer::register_relayer(
-            [1; 32],
-            vec![[2; 32], [3; 32]],
-            500,
-        ).unwrap();
+        let mut config =
+            GasRelayer::register_relayer([1; 32], vec![[2; 32], [3; 32]], 500).unwrap();
 
         GasRelayer::remove_accepted_token(&mut config, [2; 32]).unwrap();
         assert_eq!(config.accepted_tokens.len(), 1);

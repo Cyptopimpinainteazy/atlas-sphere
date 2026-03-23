@@ -32,13 +32,13 @@ pub struct Proposal {
 
 #[derive(Clone, Debug)]
 pub enum ProposalType {
-    PauseBridge,           // Emergency pause
-    ResumeBridge,          // Resume after pause
-    UpdateFeeStructure,    // Adjust bridge fees
-    AddValidator,          // Add bridge validator
-    RemoveValidator,       // Remove bridge validator
-    UpdateOracle,          // Update price oracle address
-    UpdateMaxTransfer,     // Change max transfer limits
+    PauseBridge,        // Emergency pause
+    ResumeBridge,       // Resume after pause
+    UpdateFeeStructure, // Adjust bridge fees
+    AddValidator,       // Add bridge validator
+    RemoveValidator,    // Remove bridge validator
+    UpdateOracle,       // Update price oracle address
+    UpdateMaxTransfer,  // Change max transfer limits
     Custom(String),
 }
 
@@ -129,10 +129,7 @@ impl BridgeSecurityCouncil {
     /// Cast vote on proposal
     pub fn vote(&mut self, proposal_id: u32, member_id: u32, vote_yes: bool) -> Result<(), String> {
         // Verify member exists and is active
-        let member = self
-            .members
-            .get(&member_id)
-            .ok_or("Member not found")?;
+        let member = self.members.get(&member_id).ok_or("Member not found")?;
 
         if !member.active {
             return Err("Member is inactive".to_string());
@@ -201,14 +198,23 @@ impl BridgeSecurityCouncil {
         match proposal.proposal_type {
             ProposalType::PauseBridge => {
                 self.bridge_paused = true;
-                eprintln!("[Security Council] Bridge paused by proposal {}", proposal_id);
+                eprintln!(
+                    "[Security Council] Bridge paused by proposal {}",
+                    proposal_id
+                );
             }
             ProposalType::ResumeBridge => {
                 self.bridge_paused = false;
-                eprintln!("[Security Council] Bridge resumed by proposal {}", proposal_id);
+                eprintln!(
+                    "[Security Council] Bridge resumed by proposal {}",
+                    proposal_id
+                );
             }
             ProposalType::UpdateFeeStructure => {
-                eprintln!("[Security Council] Fee structure updated by proposal {}", proposal_id);
+                eprintln!(
+                    "[Security Council] Fee structure updated by proposal {}",
+                    proposal_id
+                );
             }
             _ => {
                 eprintln!("[Security Council] Executed proposal {}", proposal_id);
@@ -230,7 +236,10 @@ impl BridgeSecurityCouncil {
         }
 
         self.bridge_paused = true;
-        eprintln!("[Security Council] Emergency pause triggered by member {}", member_id);
+        eprintln!(
+            "[Security Council] Emergency pause triggered by member {}",
+            member_id
+        );
 
         Ok(())
     }
@@ -244,7 +253,9 @@ impl BridgeSecurityCouncil {
             .clone();
 
         // Only proposer or any active member can cancel
-        if proposal.proposer != canceller_id && !self.members.get(&canceller_id).map_or(false, |m| m.active) {
+        if proposal.proposer != canceller_id
+            && !self.members.get(&canceller_id).map_or(false, |m| m.active)
+        {
             return Err("Only proposer or council member can cancel".to_string());
         }
 
@@ -262,10 +273,7 @@ impl BridgeSecurityCouncil {
 
     /// Remove member (retire)
     pub fn remove_member(&mut self, member_id: u32) -> Result<(), String> {
-        let member = self
-            .members
-            .get_mut(&member_id)
-            .ok_or("Member not found")?;
+        let member = self.members.get_mut(&member_id).ok_or("Member not found")?;
 
         member.active = false;
 

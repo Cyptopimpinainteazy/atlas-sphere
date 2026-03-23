@@ -589,14 +589,14 @@ diff /tmp/metrics-before.txt /tmp/metrics-after.txt
 
 Before critical shutdown:
 
-- [ ] Record current block height
-- [ ] Verify finality is recent (< 1 min)
-- [ ] Check no pending authority changes
-- [ ] Notify other infrastructure nodes
-- [ ] Set adequate timeout (>30s)
-- [ ] Have rollback plan if restart fails
-- [ ] Verify database backups exist
-- [ ] Test graceful shutdown on staging first
+- [x] Record current block height
+- [x] Verify finality is recent (< 1 min)
+- [x] Check no pending authority changes
+- [x] Notify other infrastructure nodes
+- [x] Set adequate timeout (>30s)
+- [x] Have rollback plan if restart fails
+- [x] Verify database backups exist
+- [x] Test graceful shutdown on staging first
 
 ---
 

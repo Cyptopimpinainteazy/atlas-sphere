@@ -18,8 +18,8 @@ pub struct ERC20Token {
 #[derive(Clone, Debug)]
 pub struct BridgeDeposit {
     pub id: String,
-    pub depositor: String,        // Ethereum address
-    pub token: String,            // ERC-20 address
+    pub depositor: String, // Ethereum address
+    pub token: String,     // ERC-20 address
     pub amount: u128,
     pub eth_block: u64,
     pub eth_tx_hash: String,
@@ -60,14 +60,14 @@ pub enum MessageStatus {
 /// Ethereum Bridge
 pub struct EthereumBridge {
     // Ethereum side (locked funds)
-    pub eth_locked: HashMap<String, u128>,  // deposit_id → amount locked
+    pub eth_locked: HashMap<String, u128>, // deposit_id → amount locked
     pub token_registry: HashMap<String, ERC20Token>,
-    
+
     // X3 side (minted tokens)
     pub wrapped_tokens: HashMap<String, u128>, // (token_addr, x3_account) → balance
     pub deposits: HashMap<String, BridgeDeposit>,
     pub messages: HashMap<String, BridgeMessage>,
-    
+
     // Bridge validators (multisig)
     pub validators: Vec<String>,  // 7 validators
     pub signature_threshold: u32, // 5-of-7
@@ -132,7 +132,11 @@ impl EthereumBridge {
 
     /// Confirm deposit after 12 Ethereum blocks (~3 mins)
     pub fn confirm_deposit(&mut self, deposit_id: &str, current_block: u64) -> Result<(), String> {
-        let mut deposit = self.deposits.get(deposit_id).ok_or("Deposit not found")?.clone();
+        let mut deposit = self
+            .deposits
+            .get(deposit_id)
+            .ok_or("Deposit not found")?
+            .clone();
 
         let confirmations = (current_block - deposit.eth_block) as u32;
         if confirmations < 12 {
@@ -175,8 +179,17 @@ impl EthereumBridge {
     }
 
     /// Validator signs bridge message
-    pub fn sign_message(&mut self, message_id: &str, validator_id: u32, signature: Vec<u8>) -> Result<(), String> {
-        let mut message = self.messages.get(message_id).ok_or("Message not found")?.clone();
+    pub fn sign_message(
+        &mut self,
+        message_id: &str,
+        validator_id: u32,
+        signature: Vec<u8>,
+    ) -> Result<(), String> {
+        let mut message = self
+            .messages
+            .get(message_id)
+            .ok_or("Message not found")?
+            .clone();
 
         // Verify validator exists
         if validator_id as usize >= self.validators.len() {
@@ -184,18 +197,27 @@ impl EthereumBridge {
         }
 
         // Prevent double-signing
-        if message.signatures.iter().any(|s| s.validator_id == validator_id) {
+        if message
+            .signatures
+            .iter()
+            .any(|s| s.validator_id == validator_id)
+        {
             return Err("Validator already signed this message".to_string());
         }
 
-        message.signatures.push(ValidatorSignature { validator_id, signature });
+        message.signatures.push(ValidatorSignature {
+            validator_id,
+            signature,
+        });
 
         let collected = message.signatures.len() as u32;
         message.status = MessageStatus::Pending { collected };
 
         // Check if threshold met
         if collected >= self.signature_threshold {
-            message.status = MessageStatus::Signed { threshold_met: true };
+            message.status = MessageStatus::Signed {
+                threshold_met: true,
+            };
         }
 
         self.messages.insert(message_id.to_string(), message);
@@ -203,8 +225,17 @@ impl EthereumBridge {
     }
 
     /// Execute minting on X3 side
-    pub fn execute_mint(&mut self, message_id: &str, x3_recipient: String, x3_block: u32) -> Result<(), String> {
-        let mut message = self.messages.get(message_id).ok_or("Message not found")?.clone();
+    pub fn execute_mint(
+        &mut self,
+        message_id: &str,
+        x3_recipient: String,
+        x3_block: u32,
+    ) -> Result<(), String> {
+        let mut message = self
+            .messages
+            .get(message_id)
+            .ok_or("Message not found")?
+            .clone();
 
         // Verify signatures threshold met
         if message.signatures.len() < self.signature_threshold as usize {
@@ -216,12 +247,15 @@ impl EthereumBridge {
             return Err("Invalid signature count".to_string());
         }
 
-        let deposit = self.deposits.get(&message.deposit_id).ok_or("Deposit not found")?.clone();
+        let deposit = self
+            .deposits
+            .get(&message.deposit_id)
+            .ok_or("Deposit not found")?
+            .clone();
 
         // Mint wrapped token on X3
         let wrapped_key = format!("{}_{}", deposit.token, x3_recipient);
-        self.wrapped_tokens
-            .insert(wrapped_key, deposit.amount);
+        self.wrapped_tokens.insert(wrapped_key, deposit.amount);
 
         // Update deposit status
         if let Some(deposit_mut) = self.deposits.get_mut(&message.deposit_id) {
@@ -239,10 +273,18 @@ impl EthereumBridge {
     }
 
     /// Burn wrapped token on X3 to unlock on Ethereum
-    pub fn burn_wrapped(&mut self, x3_account: String, token_addr: String, amount: u128) -> Result<(), String> {
+    pub fn burn_wrapped(
+        &mut self,
+        x3_account: String,
+        token_addr: String,
+        amount: u128,
+    ) -> Result<(), String> {
         let key = format!("{}_{}", token_addr, x3_account);
 
-        let balance = self.wrapped_tokens.get(&key).ok_or("Token balance not found")?;
+        let balance = self
+            .wrapped_tokens
+            .get(&key)
+            .ok_or("Token balance not found")?;
         if amount > *balance {
             return Err("Insufficient balance".to_string());
         }
@@ -268,7 +310,11 @@ impl EthereumBridge {
 
     /// Refund if deposit expires
     pub fn refund_deposit(&mut self, deposit_id: &str, reason: String) -> Result<(), String> {
-        let mut deposit = self.deposits.get(deposit_id).ok_or("Deposit not found")?.clone();
+        let mut deposit = self
+            .deposits
+            .get(deposit_id)
+            .ok_or("Deposit not found")?
+            .clone();
 
         self.eth_locked.remove(deposit_id);
         deposit.status = DepositStatus::Refunded { reason };
@@ -413,7 +459,9 @@ mod tests {
         let msg = bridge.create_bridge_message(deposit.id).unwrap();
 
         for i in 0..5 {
-            assert!(bridge.sign_message(&msg.id, i as u32, vec![i as u8]).is_ok());
+            assert!(bridge
+                .sign_message(&msg.id, i as u32, vec![i as u8])
+                .is_ok());
         }
     }
 
@@ -483,10 +531,13 @@ mod tests {
             bridge.sign_message(&msg.id, i as u32, vec![i as u8]).ok();
         }
 
-        bridge.execute_mint(&msg.id, "0xAlice_X3".to_string(), 1000).ok();
+        bridge
+            .execute_mint(&msg.id, "0xAlice_X3".to_string(), 1000)
+            .ok();
 
         // Now burn
-        let burn_result = bridge.burn_wrapped("0xAlice_X3".to_string(), "0xUSDC".to_string(), 500_000u128);
+        let burn_result =
+            bridge.burn_wrapped("0xAlice_X3".to_string(), "0xUSDC".to_string(), 500_000u128);
         assert!(burn_result.is_ok());
     }
 

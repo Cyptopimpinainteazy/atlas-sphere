@@ -42,6 +42,8 @@ fn main() {
     // This will generate wasm_binary.rs in OUT_DIR automatically
     substrate_wasm_builder::WasmBuilder::new()
         .with_current_project()
+        .append_to_rust_flags("-C target-cpu=mvp")
+        .append_to_rust_flags("-C target-feature=-sign-ext,-reference-types,-bulk-memory")
         .export_heap_base()
         // Leave the output shim file name as the default (`wasm_binary.rs`).
         .build();

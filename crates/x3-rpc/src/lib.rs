@@ -5,5 +5,7 @@
 pub mod gas_estimation;
 pub mod wallet_dex_rpc;
 
-pub use gas_estimation::{GasEstimationRPC, GasEstimation, RPCTransaction, ExecutionStatus};
-pub use wallet_dex_rpc::{WalletDexApi, WalletDexRpc, SwapRequest, SwapResponse, HardwareSigningRequest};
+pub use gas_estimation::{ExecutionStatus, GasEstimation, GasEstimationRPC, RPCTransaction};
+pub use wallet_dex_rpc::{
+    HardwareSigningRequest, SwapRequest, SwapResponse, WalletDexApi, WalletDexRpc,
+};

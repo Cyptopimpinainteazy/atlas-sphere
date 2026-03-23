@@ -17,7 +17,7 @@ import logging
 import time
 import os
 from typing import Dict, Any, Optional, List, Set
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import aiohttp
 from aiohttp import web, WSMsgType
 import aiohttp_cors
@@ -127,7 +127,7 @@ class ChainEvent:
     block_hash: Optional[str] = None
     block_number: Optional[int] = None
     extrinsic_hash: Optional[str] = None
-    timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
 
 @dataclass
 class SwarmEvent:
@@ -135,7 +135,7 @@ class SwarmEvent:
     agent_id: Optional[str] = None
     mutation_details: Optional[Dict[str, Any]] = None
     pnl_change: Optional[float] = None
-    timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
 
 @dataclass
 class AgentEvent:
@@ -144,7 +144,7 @@ class AgentEvent:
     task_id: Optional[str] = None
     slashing_amount: Optional[float] = None
     quarantine_reason: Optional[str] = None
-    timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
 
 @dataclass
 class GovernanceEvent:
@@ -152,7 +152,7 @@ class GovernanceEvent:
     target: str  # what is being frozen/thawed
     proposer: Optional[str] = None
     dispute_id: Optional[str] = None
-    timestamp: float = time.time()
+    timestamp: float = field(default_factory=time.time)
 
 # ============================================
 # WebSocket Connection Manager
@@ -1050,8 +1050,8 @@ class SwarmAPIServer:
         try:
             data = await request.json()
 
-            workload_type = GPUWorkloadType(data.get('workload_type', 'general_compute'))
-            priority = TaskPriority[data.get('priority', 'NORMAL').upper()]
+            workload_type = str(data.get('workload_type', 'general_compute'))
+            priority = str(data.get('priority', 'normal')).lower()
             payload = data.get('payload', {})
             openspec_change_id = data.get('openspec_change_id')
             severity = (data.get('severity') or 'minor').lower()
@@ -1083,7 +1083,7 @@ class SwarmAPIServer:
             await self.ws_manager.broadcast('gpu-tasks', {
                 'event': 'task_submitted',
                 'task_id': task_id,
-                'workload_type': workload_type.value
+                'workload_type': workload_type
             })
 
             return web.json_response({
@@ -1110,8 +1110,8 @@ class SwarmAPIServer:
 
         return web.json_response({
             'task_id': task.task_id,
-            'workload_type': task.workload_type.value,
-            'status': task.status.value,
+            'workload_type': str(task.workload_type),
+            'status': str(task.status),
             'created_at': task.created_at,
             'assigned_to': task.assigned_to,
             'assigned_at': task.assigned_at,
@@ -1119,6 +1119,7 @@ class SwarmAPIServer:
             'finished_at': task.finished_at,
             'result': task.result,
             'error': task.error,
+            'priority': getattr(task, 'priority', 'normal'),
             'openspec_change_id': (task.payload or {}).get('openspec_change_id'),
             'severity': (task.payload or {}).get('severity', 'minor'),
         })
@@ -1133,7 +1134,7 @@ class SwarmAPIServer:
         if not task:
             return web.json_response({'error': 'Task not found'}, status=404)
 
-        return web.json_response({'task_id': task_id, 'status': task.status.value})
+        return web.json_response({'task_id': task_id, 'status': str(task.status)})
 
     async def cancel_task(self, request: web.Request) -> web.Response:
         """Cancel a task"""
@@ -1168,7 +1169,7 @@ class SwarmAPIServer:
                     'success': True,
                     'task': {
                         'task_id': result.task.task_id,
-                        'workload_type': result.task.workload_type.value,
+                        'workload_type': str(result.task.workload_type),
                         'payload': result.task.payload,
                         'required_vram_mb': result.task.required_vram_mb,
                         'max_runtime_s': result.task.max_runtime_s

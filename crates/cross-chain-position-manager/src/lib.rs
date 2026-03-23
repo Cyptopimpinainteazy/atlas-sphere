@@ -55,26 +55,26 @@ pub mod utils;
 
 // Core exports
 pub use accounting::{AccountingEngine, PositionSnapshot, UsdNormalizer};
-pub use adapters::{UniversalChainAdapter, ChainRegistryAdapter, CrossChainAdapter};
+pub use adapters::{ChainRegistryAdapter, CrossChainAdapter, UniversalChainAdapter};
 pub use arbitrage::{ArbitrageDetector, ArbitrageExecutor, Opportunity};
-pub use config::{PositionManagerConfig, ChainConfig, RiskConfig};
+pub use config::{ChainConfig, PositionManagerConfig, RiskConfig};
 pub use error::{PositionManagerError, Result};
-pub use events::{EventBus, Event, PositionEvent, ChainEvent, RiskEvent};
-pub use migration::{MigrationEngine, MigrationPlan, AtomicBundle};
-pub use position::{CrossChainPosition, PositionId, PositionType, PositionState};
-pub use rebalancing::{RebalancingEngine, RebalancePlan, AllocationTarget};
-pub use risk::{RiskManager, RiskAssessment, KillSwitch};
-pub use router::{RouteOptimizer, SwapRoute, ExecutionPlan};
-pub use state::{PositionStateManager, StateSnapshot, PersistenceLayer};
-pub use tracking::{PositionTracker, BalanceTracker, StrategyTracker};
+pub use events::{ChainEvent, Event, EventBus, PositionEvent, RiskEvent};
+pub use migration::{AtomicBundle, MigrationEngine, MigrationPlan};
+pub use position::{CrossChainPosition, PositionId, PositionState, PositionType};
+pub use rebalancing::{AllocationTarget, RebalancePlan, RebalancingEngine};
+pub use risk::{KillSwitch, RiskAssessment, RiskManager};
+pub use router::{ExecutionPlan, RouteOptimizer, SwapRoute};
+pub use state::{PersistenceLayer, PositionStateManager, StateSnapshot};
+pub use tracking::{
+    BalanceTracker, PositionTracker, PositionTrackerConfig, StrategyTracker, TrackingStats,
+};
 pub use types::*;
 
 // Re-export common types from external dependencies
-pub use x3_external_chains::{
-    ChainType, ChainAdapter, AtomicSwapBundle, SwapRoute, QuoteResult,
-};
 pub use sp_core::{H160, H256, U256};
 pub use sp_std::vec::Vec;
+pub use x3_external_chains::{AtomicSwapBundle, ChainAdapter, ChainType, QuoteResult, SwapRoute};
 
 /// Main entry point for the Cross-Chain Position Manager
 pub struct CrossChainPositionManager {
@@ -191,7 +191,9 @@ impl CrossChainPositionManager {
         chain_id: u64,
         position_id: &PositionId,
     ) -> Result<UnwindResult> {
-        self.migration_engine.unwind_position(chain_id, position_id).await
+        self.migration_engine
+            .unwind_position(chain_id, position_id)
+            .await
     }
 
     /// Simulate a cross-chain position move
@@ -213,10 +215,7 @@ impl CrossChainPositionManager {
     }
 
     /// Execute an atomic bundle
-    pub async fn execute_atomic_bundle(
-        &self,
-        bundle: &AtomicBundle,
-    ) -> Result<ExecutionResult> {
+    pub async fn execute_atomic_bundle(&self, bundle: &AtomicBundle) -> Result<ExecutionResult> {
         self.migration_engine.execute_bundle(bundle).await
     }
 
@@ -398,7 +397,7 @@ mod tests {
             rebalance_needed: false,
             active_arbitrage_ops: 0,
         };
-        
+
         assert_eq!(summary.total_value_usd, U256::from(1000000));
         assert!(summary.risk_score >= 0.0 && summary.risk_score <= 1.0);
     }

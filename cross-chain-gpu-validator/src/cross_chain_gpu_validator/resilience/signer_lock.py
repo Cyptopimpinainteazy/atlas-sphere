@@ -18,6 +18,7 @@ Lock Protocol
 
 from __future__ import annotations
 
+import json
 import os
 import threading
 import time
@@ -139,7 +140,8 @@ class SignerLock:
                 self._authority = SignerAuthority.HOLDER
                 self._acquired_at = time.time()
                 self._renewals = 0
-                self._start_renewal()
+                if self._redis is not None:
+                    self._start_renewal()
                 if self._on_acquired:
                     try:
                         self._on_acquired()
@@ -287,19 +289,30 @@ class SignerLock:
                 os.O_CREAT | os.O_EXCL | os.O_WRONLY,
                 0o600,
             )
-            os.write(fd, self._node_id.encode())
+            payload = json.dumps(
+                {
+                    "holder_id": self._node_id,
+                    "acquired_at": time.time(),
+                    "ttl_seconds": self._ttl,
+                }
+            ).encode()
+            os.write(fd, payload)
             os.close(fd)
             with self._lock:
                 self._fencing_token += 1
             return True
         except FileExistsError:
-            # Check if lock is stale
+            # Check if lock is stale using the original holder's lease data.
             try:
-                mtime = os.path.getmtime(self._local_lock_path)
-                if time.time() - mtime > self._ttl:
+                with open(self._local_lock_path, "r", encoding="utf-8") as handle:
+                    raw = handle.read().strip()
+                lock_data = json.loads(raw) if raw.startswith("{") else {"holder_id": raw}
+                acquired_at = float(lock_data.get("acquired_at", 0.0))
+                ttl_seconds = float(lock_data.get("ttl_seconds", self._ttl))
+                if acquired_at and time.time() > acquired_at + ttl_seconds:
                     os.unlink(self._local_lock_path)
                     return self._acquire_local()
-            except OSError:
+            except (OSError, ValueError, json.JSONDecodeError):
                 pass
             return False
         except OSError:
@@ -307,26 +320,37 @@ class SignerLock:
 
     def _release_local(self) -> None:
         try:
-            with open(self._local_lock_path, "r") as f:
-                holder = f.read().strip()
-            if holder == self._node_id:
+            with open(self._local_lock_path, "r", encoding="utf-8") as handle:
+                raw = handle.read().strip()
+            lock_data = json.loads(raw) if raw.startswith("{") else {"holder_id": raw}
+            if lock_data.get("holder_id") == self._node_id:
                 os.unlink(self._local_lock_path)
-        except OSError:
+        except (OSError, json.JSONDecodeError):
             pass
 
     def _renew_local(self) -> bool:
         try:
-            with open(self._local_lock_path, "r") as f:
-                holder = f.read().strip()
-            if holder == self._node_id:
-                os.utime(self._local_lock_path, None)
+            with open(self._local_lock_path, "r", encoding="utf-8") as handle:
+                raw = handle.read().strip()
+            lock_data = json.loads(raw) if raw.startswith("{") else {"holder_id": raw}
+            if lock_data.get("holder_id") == self._node_id:
+                with open(self._local_lock_path, "w", encoding="utf-8") as handle:
+                    handle.write(
+                        json.dumps(
+                            {
+                                "holder_id": self._node_id,
+                                "acquired_at": time.time(),
+                                "ttl_seconds": self._ttl,
+                            }
+                        )
+                    )
                 with self._lock:
                     self._renewals += 1
                 return True
             with self._lock:
                 self._authority = SignerAuthority.STANDBY
             return False
-        except OSError:
+        except (OSError, json.JSONDecodeError):
             return False
 
     # ── Auto-Renewal Thread ──────────────────────────────────

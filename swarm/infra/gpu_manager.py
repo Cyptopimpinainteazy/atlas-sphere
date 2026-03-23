@@ -37,9 +37,17 @@ class GPUManager:
         return list(self.contributors.values())
 
     # Task management
-    def enqueue_task(self, workload_type: str, payload: dict, required_vram_mb: int = 0, min_compute_score: float = 0.0, max_runtime_s: Optional[int] = None) -> str:
+    def enqueue_task(self, workload_type: str, payload: dict, required_vram_mb: int = 0, min_compute_score: float = 0.0, max_runtime_s: Optional[int] = None, priority: str = "normal") -> str:
         tid = str(uuid.uuid4())
-        t = Task(task_id=tid, workload_type=workload_type, payload=payload, required_vram_mb=required_vram_mb, min_compute_score=min_compute_score, max_runtime_s=max_runtime_s)
+        t = Task(
+            task_id=tid,
+            workload_type=str(workload_type),
+            payload=payload,
+            required_vram_mb=required_vram_mb,
+            min_compute_score=min_compute_score,
+            max_runtime_s=max_runtime_s,
+            priority=priority,
+        )
         self.tasks[tid] = t
         self.queue.append(t)
         return tid
@@ -48,17 +56,25 @@ class GPUManager:
         c = self.contributors.get(contributor_id)
         if not c or not c.online:
             return type('R', (), {'task': None, 'reason': 'contributor offline or unknown'})()
-        # Simple FIFO: pop first queued task
+        if c.active_task_id:
+            return type('R', (), {'task': None, 'reason': 'contributor already has an active task'})()
         if not self.queue:
             return type('R', (), {'task': None, 'reason': 'no tasks queued'})()
-        t = self.queue.pop(0)
+
+        task_index = None
+        for index, task in enumerate(self.queue):
+            if self._can_accept_task(c, task):
+                task_index = index
+                break
+
+        if task_index is None:
+            return type('R', (), {'task': None, 'reason': 'no queued tasks match contributor capabilities'})()
+
+        t = self.queue.pop(task_index)
         t.status = 'assigned'
         t.assigned_to = contributor_id
-        # record assignment time for timeout handling
-        try:
-            t.assigned_at = time.time()
-        except Exception:
-            pass
+        t.assigned_at = time.time()
+        t.started_at = t.assigned_at
         c.active_task_id = t.task_id
         return type('R', (), {'task': t, 'reason': None})()
 
@@ -88,7 +104,12 @@ class GPUManager:
         c = self.contributors.get(contributor_id)
         if not t or not c:
             return False
+        if t.assigned_to != contributor_id or t.status != 'assigned':
+            return False
         t.status = 'completed' if success else 'failed'
+        t.result = result if success else None
+        t.error = None if success else (error or 'task execution failed')
+        t.finished_at = time.time()
         c.active_task_id = None
         if success:
             c.tasks_completed += 1
@@ -101,10 +122,11 @@ class GPUManager:
         if not t:
             return False
         t.status = 'cancelled'
-        try:
-            self.queue = [q for q in self.queue if q.task_id != task_id]
-        except Exception:
-            pass
+        t.finished_at = time.time()
+        self.queue = [q for q in self.queue if q.task_id != task_id]
+        if t.assigned_to and t.assigned_to in self.contributors:
+            self.contributors[t.assigned_to].active_task_id = None
+        t.assigned_to = None
         return True
 
     def list_tasks(self, limit: int = 100):
@@ -114,7 +136,32 @@ class GPUManager:
         return len(self.queue)
 
     def get_queue_stats(self):
-        return {'queued': len(self.queue)}
+        return {
+            'queued': len(self.queue),
+            'assigned': sum(1 for task in self.tasks.values() if task.status == 'assigned'),
+            'completed': sum(1 for task in self.tasks.values() if task.status == 'completed'),
+            'failed': sum(1 for task in self.tasks.values() if task.status == 'failed'),
+            'cancelled': sum(1 for task in self.tasks.values() if task.status == 'cancelled'),
+        }
 
     def get_task(self, task_id: str) -> Optional[Task]:
         return self.tasks.get(task_id)
+
+    def snapshot(self) -> dict:
+        contributors = self.list_contributors()
+        return {
+            'total_gpus': self.total_gpus,
+            'contributors_total': len(contributors),
+            'contributors_online': sum(1 for contributor in contributors if contributor.online),
+            'queue_depth': self.queue_depth(),
+            'queue_stats': self.get_queue_stats(),
+        }
+
+    @staticmethod
+    def _can_accept_task(contributor: Contributor, task: Task) -> bool:
+        capabilities = contributor.capabilities
+        if capabilities.vram_mb < task.required_vram_mb:
+            return False
+        if capabilities.compute_score < task.min_compute_score:
+            return False
+        return True

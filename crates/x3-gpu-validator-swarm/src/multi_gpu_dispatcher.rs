@@ -151,7 +151,10 @@ impl MultiGpuDispatcher {
         // Increment for next call
         self.round_robin_index.fetch_add(1, Ordering::SeqCst);
 
-        debug!("[MultiGpuDispatcher] Assigned job to GPU {} (safe mode)", device_id);
+        debug!(
+            "[MultiGpuDispatcher] Assigned job to GPU {} (safe mode)",
+            device_id
+        );
         Some(device_id)
     }
 

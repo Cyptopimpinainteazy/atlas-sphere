@@ -4,7 +4,6 @@ use tiny_http::{Header, Method, Response, Server};
 use tokio::sync::Mutex;
 
 use rand::RngCore;
-use std::time::UNIX_EPOCH;
 
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Nonce}; // AES-GCM
@@ -14,7 +13,6 @@ use dashmap::DashMap;
 use dirs::config_dir;
 use once_cell::sync::Lazy;
 use sha2::Digest;
-use std::time::Duration;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -291,7 +289,7 @@ pub async fn run_admin(state: SharedState, listen_addr: SocketAddr) {
             // API: POST /api/login  { token }
             if url == "/api/login" && method == Method::Post {
                 let mut content = String::new();
-                let mut reader = request.as_reader();
+                let reader = request.as_reader();
                 let _ = reader.read_to_string(&mut content);
                 if let Ok(v) = serde_json::from_str::<serde_json::Value>(&content) {
                     if let Some(t) = v.get("token").and_then(|t| t.as_str()) {
@@ -391,7 +389,7 @@ pub async fn run_admin(state: SharedState, listen_addr: SocketAddr) {
                 }
 
                 let mut content = String::new();
-                let mut reader = request.as_reader();
+                let reader = request.as_reader();
                 let _ = reader.read_to_string(&mut content);
                 if let Ok(payload) = serde_json::from_str::<AdminState>(&content) {
                     // clone for safe reuse

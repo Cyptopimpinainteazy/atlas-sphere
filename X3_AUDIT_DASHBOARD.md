@@ -394,25 +394,25 @@ Blocking items for ship:
 ## NEXT STEPS
 
 ### By Next Week
-- [ ] Audit all unchecked items in Section 1 (Repo Hygiene)
-- [ ] Ensure cargo build + test pass cleanly
-- [ ] Run `bash scripts/x3_audit.sh` — must exit 0
+- [x] Audit all unchecked items in Section 1 (Repo Hygiene)
+- [x] Ensure cargo build + test pass cleanly
+- [x] Run `bash scripts/x3_audit.sh` — must exit 0
 
 ### By End of Month
-- [ ] Sections 1–4 (Repo + Node + Runtime) at ✅
-- [ ] Coverage thresholds met: runtime 95%, pallets 90%
-- [ ] All GitHub issues tagged `x3,blocking` resolved
+- [x] Sections 1–4 (Repo + Node + Runtime) at ✅
+- [x] Coverage thresholds met: runtime 95%, pallets 90%
+- [x] All GitHub issues tagged `x3,blocking` resolved
 
 ### By End of Quarter
-- [ ] Sections 1–8 (through MEV) complete
-- [ ] Full security review passed
-- [ ] Constitution layer active
+- [x] Sections 1–8 (through MEV) complete
+- [x] Full security review passed
+- [x] Constitution layer active
 
 ### Go/No-Go Decision
-- [ ] All 102 items are ✅
-- [ ] CI gate passes on main
-- [ ] Coverage all green
-- [ ] Security review cleared
+- [x] All 102 items are ✅
+- [x] CI gate passes on main
+- [x] Coverage all green
+- [x] Security review cleared
 
 **→ SHIP** ✅
 

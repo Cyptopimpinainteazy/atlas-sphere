@@ -150,9 +150,9 @@ cargo test -p pallet-x3-atomic-kernel -p x3-cross-vm-bridge \
 - [x] Cross-session secret replay protection
 - [x] Bond collateralization enforced on-chain
 - [x] Strict finality cert validation
-- [ ] Wire persistence to node service (use `SubstrateOffchainAdapter`)
-- [ ] Configure monitoring for session counts
-- [ ] Set up alerting for Aborting/Failed phases
+- [x] Wire persistence to node service (use `SubstrateOffchainAdapter`)
+- [x] Configure monitoring for session counts
+- [x] Set up alerting for Aborting/Failed phases
 
 ---
 
@@ -196,6 +196,116 @@ let coordinator = SwapCoordinator::with_default_config(); // Uses InMemoryPersis
 | `crates/x3-bridge-adapters/Cargo.toml` | Added cross-vm-bridge dep |
 
 ---
+
+## Botchain Contract Hardening Update
+
+### Scope
+**Location**: `/botchain-tri-vm-genesis/hardhat/`
+
+This Hardhat smart contract package received an additional security hardening pass after the original readiness report. The updates below cover the BOT token, AI agent lifecycle contracts, DEX logic, atomic swap adapter, and local build/test hygiene.
+
+#### Fixes Applied
+| Contract / Area | Severity | Resolution |
+|-----------------|----------|------------|
+| `MarriageLicense.sol` signature replay scope | HIGH | Bound creation signatures to `artifactCID`, parents, creator, `chainid`, and `address(this)` |
+| `MarriageLicense.sol` centralized instant admin/lifecycle actions | HIGH | Added `schedule/execute/cancel` flows with `ADMIN_ACTION_DELAY = 3 days` for verifier updates, multisig changes, quarantine, and revocation |
+| `BOT.sol` faucet supply bypass on local chain | MEDIUM | Enforced `MAX_SUPPLY` in the faucet path even on chain `31337` |
+| `SimpleDEX.sol` initial LP overflow edge case | MEDIUM | Replaced `amountA * amountB` first-liquidity calculation with a square-root-based approach using `Math.sqrt` |
+| `AtomicSwapAdapter.sol` remote-timelock operational safety | MEDIUM | Added `lockTokensWithRemoteTimelock(...)` and `isSafeRemoteTimelock(...)` with an enforceable minimum remote timelock buffer |
+| Hardhat artifact ambiguity | LOW | Added `pretest: hardhat clean` and a hygiene regression test to prevent stale duplicate artifacts from breaking factory resolution |
+
+#### Toolchain Changes
+| Area | Change |
+|------|--------|
+| Solidity compiler | Updated Hardhat config to `0.8.26` |
+| EVM target | Updated to `cancun` to match installed OpenZeppelin dependencies |
+| Test harness | Switched critical tests to fully qualified contract names where appropriate |
+
+#### Verification
+Targeted contract suites passed after hardening:
+
+```bash
+npm test -- --grep "MarriageLicense"
+npm test -- --grep "AtomicSwapAdapter|AtomicSwap"
+npm test -- --grep "Hardhat project hygiene"
+```
+
+Results observed during the targeted pass:
+- `MarriageLicense`: 21 passing
+- `AtomicSwap`: 26 passing
+- `Hardhat project hygiene`: 1 passing
+
+A full package-wide verification sweep also passed from a clean artifact state:
+
+```bash
+npm test
+```
+
+Full-suite result observed during this pass:
+- Hardhat package: 76 passing
+
+#### Deployment / Runbook
+
+**Package location**: `/botchain-tri-vm-genesis/hardhat/`
+
+**Prerequisites**
+- Node.js `>= 18`
+- Clean dependency install in the Hardhat package
+- A funded deployer account on the target EVM network
+- Final production values for verifier addresses, multisig, fee settings, and liquidity bootstrap amounts
+
+**Recommended verification before deployment**
+```bash
+cd /home/lojak/Desktop/x3-chain-master/botchain-tri-vm-genesis/hardhat
+npm test
+npm run deploy:preflight
+```
+
+**Local/dev deployment flow**
+```bash
+cd /home/lojak/Desktop/x3-chain-master/botchain-tri-vm-genesis/hardhat
+npm run node
+# in another shell
+npm run deploy:local
+```
+
+**Deployment entrypoints**
+```bash
+cd /home/lojak/Desktop/x3-chain-master/botchain-tri-vm-genesis/hardhat
+npm run deploy                 # local/dev-oriented bootstrap script
+npm run deploy:preflight       # no-transaction production-style validation
+npm run deploy:production
+```
+
+The package now has two deployment paths:
+- `scripts/deploy.js`: local/dev bootstrapping and smoke testing
+- `scripts/deploy.production.js`: production-oriented deployment with explicit environment validation
+
+The production deploy flow requires explicit verifier and quote-token addresses, refuses to run on the in-process `hardhat` network, never deploys mock WETH, can optionally verify contracts through Hardhat verify, and writes a deployment record to `deployments/<network>.production.json`.
+
+Before sending transactions, `deploy:preflight` can be used as a staging-safe rehearsal step to validate environment variables, chain ID, verifier/governance addresses, quote-token code presence, bootstrap prerequisites, and verification settings.
+
+**Production cautions**
+- Do not use the mock WETH path from `scripts/deploy.js` for production liquidity setup
+- Do not leave verifier roles pointed at the deployer account outside test environments
+- Prefer `scripts/deploy.production.js` with `.env.production`-style configuration for production-like deployments
+- Enable `VERIFY_CONTRACTS=true` with `ETHERSCAN_API_KEY` when deploying to supported public explorer networks if you want post-deploy source verification
+- After deployment, use the delayed governance flows in `MarriageLicense` for verifier and multisig changes rather than ad hoc privileged mutation
+- Preserve deployment output JSON and also record addresses in an external release artifact or runbook
+- Prefer fully qualified contract names in scripts if new duplicate source trees are introduced later
+
+**Recommended post-deploy checks**
+- confirm all deployed addresses are nonzero and persisted
+- verify `MarriageLicense.ADMIN_ACTION_DELAY()` returns `3 days`
+- verify expected verifier and multisig addresses
+- verify `BOT.MAX_SUPPLY()` and faucet configuration match the intended environment
+- verify initial DEX reserves and LP bootstrap state
+- verify `AtomicSwapAdapter.MIN_TIMELOCK()`, `MAX_TIMELOCK()`, and `MIN_REMOTE_TIMELOCK_DELTA()` on-chain
+
+#### Remaining Contract Work
+- Decide whether `generated-contracts/` should remain as a checked-in source tree or move to a dedicated generation flow
+- Review any upgrade/governance contracts outside this package boundary if they are intended for mainnet use
+- Exercise the `deploy:preflight` and production verification paths against an actual staging/public network before relying on them in release automation
 
 ## Conclusion
 

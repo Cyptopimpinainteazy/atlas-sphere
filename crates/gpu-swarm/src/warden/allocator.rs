@@ -2,7 +2,7 @@
 //!
 //! Dynamic GPU allocation engine that distributes resources across compute lanes.
 
-use crate::warden::policy::{AllocationPolicy, ComputeLane, LaneConstraints};
+use crate::warden::policy::{AllocationPolicy, ComputeLane};
 use crate::warden::signals::{LaneMetrics, SignalAggregator};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

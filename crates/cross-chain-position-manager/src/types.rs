@@ -5,9 +5,9 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
-use serde::{Deserialize, Serialize};
 
 /// Unique identifier for a cross-chain position
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
@@ -170,7 +170,11 @@ pub enum PriceSource {
     /// Price from a specific oracle
     Oracle(H160),
     /// Price from DEX pool
-    DexPool { pool_address: H160, token0: H160, token1: H160 },
+    DexPool {
+        pool_address: H160,
+        token0: H160,
+        token1: H160,
+    },
     /// Price from external API
     ExternalApi(String),
     /// Static price (for stablecoins)

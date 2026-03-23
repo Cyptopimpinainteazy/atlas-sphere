@@ -14,6 +14,8 @@ fn sample_params() -> SwapParams {
         recipient: H160::from_low_u64_be(3),
         slippage_tolerance_bps: 50,
         gas_price_limit: Some(U256::from(2_000_000_000u64)),
+        source_vm: VmType::Evm,
+        destination_vm: VmType::Evm,
     }
 }
 
@@ -122,15 +124,58 @@ async fn slippage_controller_rejects_zero_tolerance() {
 #[tokio::test]
 async fn fee_calculator_sums_total() {
     let calc = FeeCalculator::new().unwrap();
+    let mut params = sample_params();
+    params.chain_in = 8453;
+    params.chain_out = 42161;
     let route = SwapRoute {
         hops: vec![hop(100)],
         amount_in: U256::from(1_000_000u64),
         estimated_output: U256::from(1_000_000u64),
         gas_estimate: U256::from(10_000u64),
     };
-    let fees = calc.calculate_swap_fees(&route).await.unwrap();
+    let fees = calc.calculate_swap_fees(&route, &params).await.unwrap();
     assert!(fees.protocol_fee > U256::zero());
     assert_eq!(fees.total_fee, fees.protocol_fee + fees.gas_fee);
+}
+
+#[tokio::test]
+async fn fee_calculator_applies_four_percent_for_cross_vm() {
+    let calc = FeeCalculator::new().unwrap();
+    let mut params = sample_params();
+    params.source_vm = VmType::Evm;
+    params.destination_vm = VmType::Svm;
+
+    let route = SwapRoute {
+        hops: vec![hop(250)],
+        amount_in: U256::from(1_000_000u64),
+        estimated_output: U256::from(1_000_000u64),
+        gas_estimate: U256::from(5_000u64),
+    };
+
+    let fees = calc.calculate_swap_fees(&route, &params).await.unwrap();
+    assert_eq!(fees.protocol_fee, U256::from(40_000u64));
+    assert_eq!(fees.total_fee, U256::from(45_000u64));
+}
+
+#[tokio::test]
+async fn fee_calculator_applies_two_percent_for_same_vm_cross_chain() {
+    let calc = FeeCalculator::new().unwrap();
+    let mut params = sample_params();
+    params.chain_in = 8453;
+    params.chain_out = 42161;
+    params.source_vm = VmType::Evm;
+    params.destination_vm = VmType::Evm;
+
+    let route = SwapRoute {
+        hops: vec![hop(150)],
+        amount_in: U256::from(1_000_000u64),
+        estimated_output: U256::from(1_000_000u64),
+        gas_estimate: U256::from(7_000u64),
+    };
+
+    let fees = calc.calculate_swap_fees(&route, &params).await.unwrap();
+    assert_eq!(fees.protocol_fee, U256::from(20_000u64));
+    assert_eq!(fees.total_fee, U256::from(27_000u64));
 }
 
 #[tokio::test]

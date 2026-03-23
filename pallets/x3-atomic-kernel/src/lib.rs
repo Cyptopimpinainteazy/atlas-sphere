@@ -499,8 +499,7 @@ pub mod pallet {
             // Reserve the bond — this locks funds in the submitter's account.
             // Slashing (Currency::slash) consumes reserved funds first.
             let bond: BalanceOf<T> = T::MinBond::get().saturated_into();
-            T::Currency::reserve(&submitter, bond)
-                .map_err(|_| Error::<T>::InsufficientBond)?;
+            T::Currency::reserve(&submitter, bond).map_err(|_| Error::<T>::InsufficientBond)?;
 
             let record = BundleRecord::<T> {
                 submitter: submitter.clone(),

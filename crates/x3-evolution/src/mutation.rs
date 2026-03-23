@@ -1,6 +1,6 @@
 //! Mutation operators for X3 bytecode evolution
 
-use crate::chromosome::{Chromosome, Gene, GeneType};
+use crate::chromosome::{Chromosome, GeneType};
 use crate::error::Result;
 use rand::Rng;
 use rand_chacha::ChaCha20Rng;

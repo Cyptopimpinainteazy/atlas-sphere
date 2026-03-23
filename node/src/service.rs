@@ -28,6 +28,7 @@ use x3_bridge_adapters::{
 /// - GRANDPA finality gadget
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
+/// - Startup gate for determinism validation before joining consensus
 use x3_chain_runtime::{opaque::Block, RuntimeApi};
 
 /// Key type for Aura block authoring

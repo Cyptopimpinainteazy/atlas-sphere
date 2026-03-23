@@ -5,7 +5,7 @@
 use crate::config::{DnsConfig, ZoneConfig};
 use crate::domain::{DomainName, DomainRecord};
 use crate::error::{DnsError, DnsResult};
-use log::{error, info, warn};
+use log::info;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

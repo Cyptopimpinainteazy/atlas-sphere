@@ -528,8 +528,10 @@ fn dispatch_syscall(id: u32, regs: &[u64; NREG], _input: &[u8]) -> u64 {
         0x686093bb /* sol_panic_ */ => 1,
         // sol_memcpy_ / sol_memmove_ / sol_memcmp_ / sol_memset_
         0x717cc4a3 | 0x434371f8 | 0x5fdcde31 | 0x3770fb22 => 0,
-        // sol_invoke_signed_c / sol_invoke_signed_rust – CPI stub → success
-        0xcb228b32 | 0xd7449092 => 0,
+        // sol_invoke_signed_c / sol_invoke_signed_rust
+        // CPI is not implemented in this interpreter path; return non-zero to
+        // prevent false-positive execution success.
+        0xcb228b32 | 0xd7449092 => 1,
         // sol_get_clock_sysvar – return zeros (clock at epoch 0)
         0xe8a04f5a => {
             // r1 points to a Sysvar buffer – we don't write anything, just succeed
@@ -705,5 +707,14 @@ mod tests {
             validate_program(&[0x95, 0x00, 0x00]),
             Err(SvmError::InvalidPayload)
         );
+    }
+
+    #[test]
+    fn test_cpi_syscall_not_implemented_returns_error_code() {
+        let regs = [0u64; NREG];
+        let cpi_c = dispatch_syscall(0xcb228b32, &regs, &[]);
+        let cpi_rust = dispatch_syscall(0xd7449092, &regs, &[]);
+        assert_ne!(cpi_c, 0);
+        assert_ne!(cpi_rust, 0);
     }
 }

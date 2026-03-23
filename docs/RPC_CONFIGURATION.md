@@ -226,6 +226,14 @@ let custom_polygon = ChainRpcConfig::new(137, "Polygon PoS")
     .with_finality(128);
 ```
 
+### Easy Partner Onboarding (Validated)
+
+For partner chains that need a fast, safe onboarding path, use
+`ChainConfig::onboard_external_chain(...)` and `validate()` from
+`crates/external-chains/src/adapter.rs`.
+
+See `docs/EXTERNAL_CHAIN_PARTNER_ONBOARDING.md` for the complete integration checklist and fee policy.
+
 ### Multi-Network Arbitrage Configuration
 
 ```rust

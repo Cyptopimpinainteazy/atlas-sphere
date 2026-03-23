@@ -316,7 +316,7 @@ pub struct DnsConfig {
 impl DnsConfig {
     /// Load configuration from environment variables and files
     pub fn load_from_env() -> DnsResult<Self> {
-        let mut config = Config::builder()
+        let config = Config::builder()
             // Add default configuration
             .add_source(config::Environment::with_prefix("X3_DNS"))
             .add_source(config::File::with_name("config/dns-server"))

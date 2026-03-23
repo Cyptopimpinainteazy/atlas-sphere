@@ -47,14 +47,13 @@
 use crate::gpu_backends::{GpuBackendType, GpuDeviceInfo};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc,
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 
 // ─── Attestation ──────────────────────────────────────────────────────────────
 

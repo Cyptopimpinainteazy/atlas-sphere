@@ -28,7 +28,7 @@
 //! - **SOCIAL_CAMPAIGN**: NovaFlux AI influencer content burst
 //! - **COMMUNITY_GROWTH**: Targeted community building
 
-use crate::error::{SwarmError, SwarmResult};
+use crate::error::SwarmResult;
 use crate::jobs::{JobOutput, JobType, SwarmJob};
 use crate::task::TaskPriority;
 use serde::{Deserialize, Serialize};
@@ -549,7 +549,7 @@ impl FundingCampaignJob {
     fn execute_campaign(&self) -> SwarmResult<FundingCampaignResult> {
         let start = std::time::Instant::now();
         let mut content_samples = vec![];
-        let mut errors = vec![];
+        let errors = vec![];
         let mut webhooks_dispatched = 0;
         let mut messages_sent = 0;
 

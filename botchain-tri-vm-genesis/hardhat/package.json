@@ -4,10 +4,13 @@
   "description": "Hardhat environment for Botchain Tri-VM Genesis",
   "scripts": {
     "compile": "hardhat compile",
+    "pretest": "hardhat clean",
     "test": "hardhat test",
     "test:coverage": "hardhat coverage",
     "deploy": "hardhat run scripts/deploy.js",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:preflight": "hardhat run scripts/preflight.production.js --network production",
+    "deploy:production": "hardhat run scripts/deploy.production.js --network production",
     "node": "hardhat node",
     "clean": "hardhat clean",
     "lint": "solhint 'contracts/**/*.sol'"

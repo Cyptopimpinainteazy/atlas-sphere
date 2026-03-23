@@ -19,6 +19,8 @@ members = [
     "crates/svm-counter",
     "crates/cross-vm-bridge",
     "crates/external-chains",
+    "crates/x3-bridge",
+    "crates/x3-atomic-trade",
     "crates/x3-sdk",
     "crates/x3-cli",
     "crates/x3-wallet",
@@ -90,6 +92,8 @@ members = [
     "pallets/x3-invariants",
     # Concrete implementations of x3-vm BalanceProvider + CrossVmEscrow for node use
     "crates/x3-bridge-adapters",
+    "crates/cross-chain-position-manager",
+    "crates/x3-rpc",
     # Note: crates/dylint-determinism is intentionally NOT listed here.
     # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)
     # compiled by `cargo dylint` with nightly+rustc-dev via workspace.metadata.dylint.
@@ -253,7 +257,7 @@ lto = false
 opt-level = 2
 
 [profile.release.build-override]
-opt-level = 3
+opt-level = 1
 codegen-units = 1
 
 # [package.metadata.tarpaulin]
@@ -345,6 +349,7 @@ sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 # Patch Substrate git sources for prometheus fix and executor bulk-memory support
 [patch."https://github.com/paritytech/substrate"]
 substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint" }
+sc-executor = { path = "patches/sc-executor" }
 
 # Patch Frontier (polkadot-evm) sp-io to match workspace version and avoid duplicate panic_impl
 [patch."https://github.com/polkadot-evm/frontier"]

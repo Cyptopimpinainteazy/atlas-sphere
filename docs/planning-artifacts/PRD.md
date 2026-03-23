@@ -280,6 +280,23 @@ Track progress by marking tasks complete in this PRD. Ralph will automatically:
 
 ---
 
+## Cross-VM / Cross-Chain Hardening Backlog (2026-03-22)
+
+- [x] Audit and locate runtime placeholders/stubs in atomic cross-VM + cross-chain path
+- [ ] P0-1: Replace proof-validation stubs with real EVM/SVM/BTC proof verification
+- [ ] P0-2: Replace fake keccak/hash placeholders in bridge light-client path
+- [ ] P0-3: Replace mirror execution placeholders (EVM/SVM/BTC bridge actions)
+- [ ] P1-1: Remove external-chain payload amount placeholders and encode real values
+- [ ] P1-2: Replace adapter/Arbitrum placeholder defaults with production behavior
+- [ ] P1-3: Remove SVM execution stub-success paths and propagate real execution results
+- [ ] P2-1: Replace rollback fixed refund placeholder with executed-leg accounting
+- [ ] P2-2: Implement relayer registry/path discovery/event processing in cross-chain pallet
+
+Detailed tracking and resume checkpoint:
+- `docs/reports/CROSS_VM_CROSS_CHAIN_100_TRACKER.md`
+
+---
+
 ## Use Ralph With This PRD
 
 To use this PRD with Ralph:

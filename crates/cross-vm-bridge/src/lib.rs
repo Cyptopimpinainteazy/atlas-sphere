@@ -427,7 +427,6 @@ impl CrossVmBridge {
         self.used_nonces.contains(&nonce)
     }
 
-
     /// Extract the transfer amount from an operation (0 for non-transfer ops)
     fn extract_transfer_amount(operation: &CrossVmOperation) -> u128 {
         match operation {

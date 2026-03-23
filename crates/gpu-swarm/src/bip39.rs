@@ -2,11 +2,10 @@
 // NOTE: This file embeds the BIP39 English wordlist (2048 words) and provides
 // two helpers used by the admin server: `generate_mnemonic_12()` and `mnemonic_to_seed()`.
 
-use hmac::{Hmac, Mac};
+use hmac::Hmac;
 use pbkdf2::pbkdf2;
 use rand::RngCore;
 use sha2::{Digest, Sha256, Sha512};
-use std::convert::TryInto;
 
 type HmacSha512 = Hmac<Sha512>;
 

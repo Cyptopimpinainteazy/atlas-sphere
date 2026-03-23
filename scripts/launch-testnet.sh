@@ -19,9 +19,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BINARY="${SCRIPT_DIR}/target/release/x3-chain-node"
-BASE_PATH="${SCRIPT_DIR}/testnet-data"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BINARY="${ROOT_DIR}/target/release/x3-chain-node"
+BASE_PATH="${ROOT_DIR}/testnet-data"
 CHAIN="testnet"
+CHAIN_ID="x3_chain_testnet"
 
 # Colors
 RED='\033[0;31m'
@@ -50,15 +52,64 @@ declare -A VALIDATORS=(
     [validator4]="TestnetDelta:30336:9947"
 )
 
+# Insert aura (sr25519) and grandpa (ed25519) keys into a validator's keystore.
+# Keys are seeded from the derivation paths used in testnet_config() in chain_spec.rs.
+insert_keys() {
+    local name="$1"
+    local seed="$2"
+    local keystore_path="${BASE_PATH}/${name}/chains/${CHAIN_ID}/keystore"
+    local aura_pub_hex=""
+    local gran_pub_hex=""
+
+    case "$seed" in
+        TestnetAlpha)
+            aura_pub_hex="787046590a67ef11eef127784f72d74e8e2693f330e481dd45db2f15ec05a83a"
+            gran_pub_hex="2b981ee8cffd21b55441e715b993e2c45c0156c1c0e6b6aaf32cf0449089e749"
+            ;;
+        TestnetBeta)
+            aura_pub_hex="94038d1ccc0a360e8e7d106203dc588fdaa068cb590a625b7a3fa93f05fe7e50"
+            gran_pub_hex="b2eefabe8a9021eb68c5b9eb73c70e54696ddb4a000ebc78ce7f09cf0f6f1d4c"
+            ;;
+        TestnetGamma)
+            aura_pub_hex="28e766946f5f500671ebb04f8d5dd2c14010deffe11e3450acff5c1f4f4be962"
+            gran_pub_hex="464d82bf9dd86503a9e9494f087e65babaac9a6259765e4a1f7196bbc5a9dbae"
+            ;;
+        TestnetDelta)
+            aura_pub_hex="58cd0afc7cab708ba8802c3197f26f5957f1b2c99483284d0619d9874855ee06"
+            gran_pub_hex="cb7c3b745e2bc95bd89cadc30bafdb374527681fe9f99eca64d7a12c28ec9c2c"
+            ;;
+        *)
+            log_error "Unknown validator seed '${seed}' for ${name}"
+            return 1
+            ;;
+    esac
+
+    mkdir -p "$keystore_path"
+
+    # Substrate file keystore format: <keytype_hex><pubkey_hex> => "//Seed"
+    # keytype "aura" => 61757261, "gran" => 6772616e
+    printf '"//%s"' "$seed" > "${keystore_path}/61757261${aura_pub_hex}"
+    printf '"//%s"' "$seed" > "${keystore_path}/6772616e${gran_pub_hex}"
+
+    log_info "Keys seeded for ${name} (///${seed}) → ${keystore_path}"
+}
+
 launch_validator() {
     local name="$1"
+    local bootnode="${2:-}"
     local config="${VALIDATORS[$name]}"
     IFS=':' read -r seed p2p_port rpc_port <<< "$config"
+    local prometheus_port=$((9615 + rpc_port - 9944))
 
     local data_dir="${BASE_PATH}/${name}"
     mkdir -p "$data_dir"
 
     log_info "Launching $seed (P2P: $p2p_port, RPC: $rpc_port)..."
+
+    local boot_args=()
+    if [ -n "$bootnode" ]; then
+        boot_args=(--bootnodes "$bootnode")
+    fi
 
     "$BINARY" \
         --chain="$CHAIN" \
@@ -70,12 +121,36 @@ launch_validator() {
         --rpc-cors=all \
         --rpc-methods=Unsafe \
         --unsafe-rpc-external \
+        --prometheus-port="$prometheus_port" \
+        --allow-private-ip \
+        --force-authoring \
         --log="info" \
         --telemetry-url="wss://telemetry.polkadot.io/submit/ 0" \
-        2>&1 | tee "${data_dir}/${name}.log" &
+        "${boot_args[@]}" \
+        > "${data_dir}/${name}.log" 2>&1 &
 
     echo $! > "${data_dir}/${name}.pid"
     log_info "$seed started (PID: $(cat "${data_dir}/${name}.pid"))"
+}
+
+wait_for_rpc() {
+    local rpc_port="$1"
+    for _ in $(seq 1 40); do
+        if curl -s -H "Content-Type: application/json" \
+            -d '{"jsonrpc":"2.0","id":1,"method":"system_health","params":[]}' \
+            "http://127.0.0.1:${rpc_port}" | grep -q '"result"'; then
+            return 0
+        fi
+        sleep 1
+    done
+    return 1
+}
+
+fetch_local_peer_id() {
+    local rpc_port="$1"
+    curl -s -H "Content-Type: application/json" \
+        -d '{"jsonrpc":"2.0","id":1,"method":"system_localPeerId","params":[]}' \
+        "http://127.0.0.1:${rpc_port}" | python -c 'import json,sys; print(json.load(sys.stdin).get("result", ""))' 2>/dev/null || true
 }
 
 stop_all() {
@@ -118,10 +193,37 @@ case "${1:-all}" in
     all)
         check_binary
         log_info "Launching X3 Chain testnet with 4 validators..."
-        for name in validator1 validator2 validator3 validator4; do
-            launch_validator "$name"
+
+        # Seed keystores so each validator can author/finalize blocks.
+        # Keys must match the genesis authorities in testnet_config() (chain_spec.rs).
+        log_info "Seeding validator keystores..."
+        insert_keys "validator1" "TestnetAlpha"
+        insert_keys "validator2" "TestnetBeta"
+        insert_keys "validator3" "TestnetGamma"
+        insert_keys "validator4" "TestnetDelta"
+        log_info "All validator keystores seeded."
+
+        launch_validator "validator1"
+
+        if ! wait_for_rpc 9944; then
+            log_error "validator1 RPC did not become ready on port 9944"
+            exit 1
+        fi
+
+        peer_id="$(fetch_local_peer_id 9944)"
+        if [ -z "$peer_id" ]; then
+            log_error "Failed to obtain validator1 peer ID from RPC"
+            exit 1
+        fi
+
+        bootnode="/ip4/127.0.0.1/tcp/30333/p2p/${peer_id}"
+        log_info "Using bootnode: $bootnode"
+
+        for name in validator2 validator3 validator4; do
+            launch_validator "$name" "$bootnode"
             sleep 1 # Stagger launches
         done
+
         log_info "All validators launched!"
         log_info "RPC endpoints: ws://localhost:9944 - ws://localhost:9947"
         ;;

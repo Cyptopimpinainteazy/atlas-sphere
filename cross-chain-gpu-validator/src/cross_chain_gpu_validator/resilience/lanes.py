@@ -237,6 +237,28 @@ class LaneOrchestrator:
                 )
                 continue
 
+        tertiary = self._lanes[LaneTier.TERTIARY]
+        if tertiary.available:
+            start = time.monotonic()
+            try:
+                result = fn(*args, **kwargs)
+                elapsed_ms = (time.monotonic() - start) * 1000
+                tertiary.record_latency(elapsed_ms)
+                if tertiary.breaker:
+                    tertiary.breaker.record_success()
+                return result
+            except Exception as exc:
+                elapsed_ms = (time.monotonic() - start) * 1000
+                tertiary.record_latency(elapsed_ms)
+                if tertiary.breaker:
+                    tertiary.breaker.record_failure()
+                logger.warning(
+                    "Lane %s final retry failed (%.1fms): %s",
+                    LaneTier.TERTIARY.name,
+                    elapsed_ms,
+                    exc,
+                )
+
         raise RuntimeError("All execution lanes exhausted — no lane could serve the request")
 
     # ── Health-Driven Failover ───────────────────────────────

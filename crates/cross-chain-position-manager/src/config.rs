@@ -4,13 +4,13 @@
 //! providing flexibility for different deployment scenarios while maintaining
 //! sensible defaults.
 
+use serde::{Deserialize, Serialize};
 use sp_core::{H160, U256};
 use sp_std::vec::Vec;
-use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    ChainSpecifics, AssetInfo, RiskThreshold, AutomationConfig,
-    KillSwitchConfig, RouteOptimizationParams, ExecutionParams
+    AssetInfo, AutomationConfig, ChainSpecifics, ExecutionParams, KillSwitchConfig, RiskThreshold,
+    RouteOptimizationParams,
 };
 
 /// Main configuration for the Cross-Chain Position Manager
@@ -69,7 +69,7 @@ impl PositionManagerConfig {
                     gas_price_multiplier: 1.0,
                     min_gas_price: U256::from(20_000_000_000u64), // 20 gwei
                     max_gas_price: U256::from(500_000_000_000u64), // 500 gwei
-                    bridge_timeout_ms: 300_000, // 5 minutes
+                    bridge_timeout_ms: 300_000,                   // 5 minutes
                     confirmations_required: 12,
                     native_token_decimals: 18,
                     supports_eip1559: true,
@@ -163,7 +163,8 @@ impl PositionManagerConfig {
 
     /// Get enabled chains
     pub fn enabled_chains(&self) -> Vec<u64> {
-        self.chains.iter()
+        self.chains
+            .iter()
             .filter(|c| c.enabled)
             .map(|c| c.chain_id)
             .collect()
@@ -171,7 +172,8 @@ impl PositionManagerConfig {
 
     /// Get priority chains (Tier 1)
     pub fn priority_chains(&self) -> Vec<u64> {
-        self.chains.iter()
+        self.chains
+            .iter()
             .filter(|c| c.enabled && c.priority == 1)
             .map(|c| c.chain_id)
             .collect()
@@ -255,8 +257,8 @@ impl Default for RiskConfig {
     fn default() -> Self {
         Self {
             max_position_size_usd: U256::from(1_000_000_000_000u64), // $1M
-            max_exposure_per_chain: 0.3, // 30%
-            max_global_exposure: 0.8, // 80%
+            max_exposure_per_chain: 0.3,                             // 30%
+            max_global_exposure: 0.8,                                // 80%
             thresholds: RiskThresholdsConfig::default(),
             kill_switches: KillSwitchConfig::default(),
             liquidation_thresholds: LiquidationConfig::default(),
@@ -280,10 +282,10 @@ pub struct RiskThresholdsConfig {
 impl Default for RiskThresholdsConfig {
     fn default() -> Self {
         Self {
-            volatility_threshold: 0.05, // 5%
+            volatility_threshold: 0.05,                        // 5%
             min_liquidity_usd: U256::from(100_000_000_000u64), // $100M
-            gas_spike_threshold: 5.0, // 5x normal
-            chain_latency_threshold_ms: 10_000, // 10 seconds
+            gas_spike_threshold: 5.0,                          // 5x normal
+            chain_latency_threshold_ms: 10_000,                // 10 seconds
         }
     }
 }
@@ -370,7 +372,7 @@ impl Default for StrategyTrackingConfig {
         Self {
             enabled: true,
             min_strategy_value_usd: U256::from(1_000_000_000u64), // $1K
-            performance_interval_secs: 300, // 5 minutes
+            performance_interval_secs: 300,                       // 5 minutes
         }
     }
 }
@@ -396,7 +398,7 @@ impl Default for MigrationConfig {
             auto_migrate: false,
             migration_timeout_secs: 1800, // 30 minutes
             max_gas_price: U256::from(1_000_000_000_000u64), // 1000 gwei
-            slippage_tolerance: 0.01, // 1%
+            slippage_tolerance: 0.01,     // 1%
             atomic_only: true,
         }
     }
@@ -421,9 +423,9 @@ impl Default for RebalancingConfig {
     fn default() -> Self {
         Self {
             auto_rebalance: false,
-            rebalance_threshold: 0.05, // 5% deviation
+            rebalance_threshold: 0.05,                     // 5% deviation
             min_rebalance_usd: U256::from(100_000_000u64), // $100
-            min_rebalance_interval_secs: 3600, // 1 hour
+            min_rebalance_interval_secs: 3600,             // 1 hour
             batch_rebalance: true,
         }
     }
@@ -452,8 +454,8 @@ impl Default for ArbitrageConfig {
             enabled: true,
             min_profit_usd: U256::from(10_000_000u64), // $10
             max_profit_usd: U256::from(1_000_000_000_000u64), // $1M
-            confidence_threshold: 0.8, // 80%
-            max_execution_time_secs: 300, // 5 minutes
+            confidence_threshold: 0.8,                 // 80%
+            max_execution_time_secs: 300,              // 5 minutes
             mev_protection: true,
         }
     }
@@ -562,3 +564,124 @@ impl Default for EvolutionCoreConfig {
 }
 
 /// GPU Swarm integration configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GpuSwarmConfig {
+    /// Enable GPU Swarm integration
+    pub enabled: bool,
+    /// GPU Swarm endpoint
+    pub endpoint: String,
+    /// API key for authentication
+    pub api_key: Option<String>,
+    /// Request timeout (seconds)
+    pub timeout_secs: u64,
+    /// Maximum concurrent GPU tasks
+    pub max_concurrent_tasks: usize,
+}
+
+impl Default for GpuSwarmConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            endpoint: "http://localhost:8082".to_string(),
+            api_key: None,
+            timeout_secs: 60,
+            max_concurrent_tasks: 10,
+        }
+    }
+}
+
+/// External API configurations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiConfigs {
+    /// CoinGecko API configuration
+    pub coingecko: ApiConfig,
+    /// DeFiLlama API configuration
+    pub defillama: ApiConfig,
+    /// 1inch API configuration
+    pub oneinch: ApiConfig,
+}
+
+impl Default for ApiConfigs {
+    fn default() -> Self {
+        Self {
+            coingecko: ApiConfig::default(),
+            defillama: ApiConfig::default(),
+            oneinch: ApiConfig::default(),
+        }
+    }
+}
+
+/// Generic API configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiConfig {
+    /// Enable this API
+    pub enabled: bool,
+    /// API endpoint URL
+    pub endpoint: String,
+    /// API key for authentication
+    pub api_key: Option<String>,
+    /// Request timeout (seconds)
+    pub timeout_secs: u64,
+    /// Rate limit (requests per minute)
+    pub rate_limit: u32,
+}
+
+impl Default for ApiConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            endpoint: String::new(),
+            api_key: None,
+            timeout_secs: 30,
+            rate_limit: 60,
+        }
+    }
+}
+
+/// Oracle configurations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OracleConfigs {
+    /// Chainlink oracle configuration
+    pub chainlink: OracleConfig,
+    /// Pyth oracle configuration
+    pub pyth: OracleConfig,
+    /// TWAP oracle configuration
+    pub twap: OracleConfig,
+}
+
+impl Default for OracleConfigs {
+    fn default() -> Self {
+        Self {
+            chainlink: OracleConfig::default(),
+            pyth: OracleConfig::default(),
+            twap: OracleConfig::default(),
+        }
+    }
+}
+
+/// Generic oracle configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OracleConfig {
+    /// Enable this oracle
+    pub enabled: bool,
+    /// Oracle endpoint URL
+    pub endpoint: String,
+    /// Request timeout (seconds)
+    pub timeout_secs: u64,
+    /// Minimum confidence threshold
+    pub min_confidence: f64,
+    /// Maximum staleness (seconds)
+    pub max_staleness_secs: u64,
+}
+
+impl Default for OracleConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            endpoint: String::new(),
+            timeout_secs: 10,
+            min_confidence: 0.95,
+            max_staleness_secs: 60,
+        }
+    }
+}

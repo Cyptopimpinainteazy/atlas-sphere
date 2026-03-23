@@ -43,11 +43,11 @@ _TIER_RPS: dict[AccessTier, float] = {
     AccessTier.ENTERPRISE: float('inf'),
 }
 
-# Tier limits: max batch size (uncapped)
+# Tier limits: max batch size
 _TIER_BATCH: dict[AccessTier, int] = {
-    AccessTier.BASE: 2**31 - 1,
-    AccessTier.PRO: 2**31 - 1,
-    AccessTier.ENTERPRISE: 2**31 - 1,
+    AccessTier.BASE: 1024,
+    AccessTier.PRO: 4096,
+    AccessTier.ENTERPRISE: 16384,
 }
 
 # SLA: max latency (ms) per tier

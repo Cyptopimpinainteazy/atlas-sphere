@@ -55,7 +55,7 @@ pub use simulator::{
 
 use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// Evolution engine configuration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

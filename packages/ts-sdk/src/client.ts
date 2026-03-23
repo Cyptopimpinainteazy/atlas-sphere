@@ -359,8 +359,22 @@ export class AtlasSphereClient {
     this.ensureConnected();
 
     try {
-      const nonce = await this.api!.query.atlasKernel.comitNonces(account);
-      return BigInt(nonce.toString());
+      const apiAny = this.api! as any;
+
+      const kernelQuery = apiAny.query?.atlasKernel?.comitNonces;
+      if (typeof kernelQuery === 'function') {
+        const nonce = await kernelQuery(account);
+        return BigInt(nonce.toString());
+      }
+
+      const systemAccount = await this.api!.query.system.account(account);
+      const accountNonce = (systemAccount as any).nonce;
+      if (accountNonce !== undefined && accountNonce !== null) {
+        return BigInt(accountNonce.toString());
+      }
+
+      const nextIndex = await this.api!.rpc.system.accountNextIndex(account as any);
+      return BigInt(nextIndex.toString());
     } catch (error) {
       throw new RpcError(
         'getNonce',

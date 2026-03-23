@@ -13,7 +13,7 @@ pub struct VAA {
     pub signatures: Vec<GuardianSignature>,
     pub timestamp: u64,
     pub nonce: u32,
-    pub emitter_chain: u16,  // 1 = Solana
+    pub emitter_chain: u16, // 1 = Solana
     pub emitter_address: Vec<u8>,
     pub sequence: u64,
     pub consistency_level: u8,
@@ -85,8 +85,7 @@ impl WormholeBridge {
             canonical,
         };
 
-        self.wrapped_tokens
-            .insert(wrapped.mint_x3.clone(), wrapped);
+        self.wrapped_tokens.insert(wrapped.mint_x3.clone(), wrapped);
 
         Ok(())
     }
@@ -127,7 +126,7 @@ impl WormholeBridge {
         // Simplified: extract key fields
         let token_chain = u16::from_be_bytes([payload[0], payload[1]]);
         let token_address = payload[2..34].to_vec();
-        let amount = u128::from_be_bytes(payload[34..50].clone().try_into().unwrap_or([0; 16]));
+        let amount = u128::from_be_bytes(payload[34..50].try_into().unwrap_or([0; 16]));
 
         Ok(TransferPayload {
             token_chain,

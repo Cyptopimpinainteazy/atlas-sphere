@@ -1,6 +1,5 @@
 /// Cosmos IBC Light Client — Enables native IBC connections between X3 and any Cosmos chain
 /// Implements light client verification, header validation, and consensus state management
-
 use parity_scale_codec::{Decode, Encode};
 use sp_std::vec::Vec;
 
@@ -158,10 +157,12 @@ impl IBCLightClient {
         key.push(b'/');
         key.extend_from_slice(packet.sequence.to_le_bytes().as_ref());
 
-        // Verify Merkle proof path through app state tree
-        let computed_root = Self::compute_merkle_root(&packet.data, &proof.proofs);
-
-        Ok(computed_root == consensus_state.root)
+        Ok(Self::verify_merkle_membership(
+            &key,
+            &packet.data,
+            proof,
+            consensus_state.root,
+        ))
     }
 
     /// Process IBC token transfer (fungible token standard - FT module)
@@ -177,7 +178,7 @@ impl IBCLightClient {
 
         let amount_str = std::str::from_utf8(parts[0]).map_err(|_| "Invalid amount encoding")?;
         let denom = parts[1].to_vec();
-        
+
         let amount: u128 = amount_str.parse().map_err(|_| "Invalid amount value")?;
 
         if amount == 0 {
@@ -226,10 +227,12 @@ impl IBCLightClient {
         full_key.push(b'/');
         full_key.extend_from_slice(&key);
 
-        // Verify merkle path
-        let computed_root = Self::compute_merkle_root(&value, &proof.proofs);
-
-        Ok(computed_root == consensus_state.root)
+        Ok(Self::verify_merkle_membership(
+            &full_key,
+            &value,
+            proof,
+            consensus_state.root,
+        ))
     }
 
     /// Freeze client if evidence of misbehavior detected
@@ -254,10 +257,7 @@ impl IBCLightClient {
     }
 
     /// Update client with new header
-    pub fn update_client(
-        header: Header,
-        client: &mut CosmosChainInfo,
-    ) -> Result<(), &'static str> {
+    pub fn update_client(header: Header, client: &mut CosmosChainInfo) -> Result<(), &'static str> {
         if header.height <= client.latest_height {
             return Err("Header height must be greater than existing height");
         }
@@ -271,22 +271,50 @@ impl IBCLightClient {
         (client.latest_height, client.is_frozen)
     }
 
-    /// Compute merkle root from leaf and proof path
-    fn compute_merkle_root(leaf: &[u8], proofs: &[[u8; 32]]) -> [u8; 32] {
-        let mut hash = Self::keccak256(leaf);
+    /// Verify key-bound merkle membership against an expected root.
+    fn verify_merkle_membership(
+        expected_key: &[u8],
+        expected_value: &[u8],
+        proof: &MerkleProof,
+        expected_root: [u8; 32],
+    ) -> bool {
+        if proof.key != expected_key {
+            return false;
+        }
+
+        let computed_root = Self::compute_merkle_root(expected_key, expected_value, &proof.proofs);
+        computed_root == expected_root
+    }
+
+    /// Compute merkle root from key-bound leaf and proof path using deterministic domain separation.
+    fn compute_merkle_root(key: &[u8], value: &[u8], proofs: &[[u8; 32]]) -> [u8; 32] {
+        let mut hash = Self::hash_leaf(key, value);
         for proof_node in proofs {
-            hash = Self::keccak256(&[&hash[..], &proof_node[..]].concat());
+            hash = Self::hash_inner(&hash, proof_node);
         }
         hash
     }
 
+    fn hash_leaf(key: &[u8], value: &[u8]) -> [u8; 32] {
+        let mut payload = Vec::with_capacity(1 + key.len() + value.len());
+        payload.push(0x00);
+        payload.extend_from_slice(key);
+        payload.extend_from_slice(value);
+        Self::keccak256(&payload)
+    }
+
+    fn hash_inner(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+        let (left, right) = if a <= b { (a, b) } else { (b, a) };
+        let mut payload = Vec::with_capacity(1 + 32 + 32);
+        payload.push(0x01);
+        payload.extend_from_slice(left);
+        payload.extend_from_slice(right);
+        Self::keccak256(&payload)
+    }
+
     /// Simple Keccak256 hash (for proof verification)
     fn keccak256(data: &[u8]) -> [u8; 32] {
-        let mut hash = [0u8; 32];
-        // Placeholder: in production, use sp_io::hashing::keccak_256
-        let sum: u32 = data.iter().map(|b| *b as u32).sum();
-        hash[0..4].copy_from_slice(&sum.to_le_bytes());
-        hash
+        sp_io::hashing::keccak_256(data)
     }
 
     /// Generate deterministic client ID from chain ID
@@ -305,7 +333,7 @@ mod tests {
     fn test_register_client() {
         let chain_id = b"cosmoshub-4".to_vec();
         let client_id = IBCLightClient::register_client(chain_id.clone(), 604800, 2592000).unwrap();
-        
+
         assert!(!client_id.is_empty());
         assert!(client_id.starts_with(b"07-tendermint-"));
     }
@@ -355,7 +383,7 @@ mod tests {
 
         let validators = vec![(vec![0; 20], 70u64), (vec![1; 20], 30u64)];
         let result = IBCLightClient::verify_header(&header, &prev, &validators, 1000000, 2000);
-        
+
         assert!(result.is_ok());
     }
 
@@ -395,19 +423,90 @@ mod tests {
             timeout_timestamp: 2000,
         };
 
+        let mut packet_key = Vec::new();
+        packet_key.extend_from_slice(&packet.source_port);
+        packet_key.push(b'/');
+        packet_key.extend_from_slice(&packet.source_channel);
+        packet_key.push(b'/');
+        packet_key.extend_from_slice(packet.sequence.to_le_bytes().as_ref());
+
         let proof = MerkleProof {
             proofs: vec![[0; 32], [1; 32]],
-            key: b"key".to_vec(),
+            key: packet_key.clone(),
         };
 
         let consensus = ConsensusState {
             timestamp: 1000,
-            root: IBCLightClient::compute_merkle_root(b"test", &[[0; 32], [1; 32]]),
+            root: IBCLightClient::compute_merkle_root(&packet_key, b"test", &[[0; 32], [1; 32]]),
             next_validators_hash: [0; 32],
         };
 
         let result = IBCLightClient::verify_packet_data(&packet, &proof, &consensus).unwrap();
         assert!(result);
+    }
+
+    #[test]
+    fn test_verify_packet_data_rejects_key_mismatch() {
+        let packet = IBCPacket {
+            sequence: 7,
+            source_port: b"transfer".to_vec(),
+            source_channel: b"channel-9".to_vec(),
+            destination_port: b"transfer".to_vec(),
+            destination_channel: b"channel-1".to_vec(),
+            data: b"payload".to_vec(),
+            timeout_height: 1000,
+            timeout_timestamp: 2000,
+        };
+
+        let mut expected_key = Vec::new();
+        expected_key.extend_from_slice(&packet.source_port);
+        expected_key.push(b'/');
+        expected_key.extend_from_slice(&packet.source_channel);
+        expected_key.push(b'/');
+        expected_key.extend_from_slice(packet.sequence.to_le_bytes().as_ref());
+
+        let proof = MerkleProof {
+            proofs: vec![[3; 32], [4; 32]],
+            key: b"wrong/key".to_vec(),
+        };
+
+        let consensus = ConsensusState {
+            timestamp: 1000,
+            root: IBCLightClient::compute_merkle_root(&expected_key, &packet.data, &proof.proofs),
+            next_validators_hash: [0; 32],
+        };
+
+        let result = IBCLightClient::verify_packet_data(&packet, &proof, &consensus).unwrap();
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_verify_state_proof_rejects_key_mismatch() {
+        let contract_address = b"contract-1".to_vec();
+        let key = b"balance:user1".to_vec();
+        let value = b"100".to_vec();
+
+        let mut full_key = Vec::new();
+        full_key.extend_from_slice(&contract_address);
+        full_key.push(b'/');
+        full_key.extend_from_slice(&key);
+
+        let proof = MerkleProof {
+            proofs: vec![[7; 32], [8; 32]],
+            key: b"contract-1/wrong".to_vec(),
+        };
+
+        let consensus = ConsensusState {
+            timestamp: 1000,
+            root: IBCLightClient::compute_merkle_root(&full_key, &value, &proof.proofs),
+            next_validators_hash: [0; 32],
+        };
+
+        let result =
+            IBCLightClient::verify_state_proof(contract_address, key, value, &proof, &consensus)
+                .unwrap();
+
+        assert!(!result);
     }
 
     #[test]
@@ -424,7 +523,7 @@ mod tests {
         };
 
         let (amount, denom) = IBCLightClient::process_ft_transfer(&packet, [0; 32]).unwrap();
-        
+
         assert_eq!(amount, 1000000);
         assert_eq!(denom, b"uatom".to_vec());
     }
@@ -471,7 +570,8 @@ mod tests {
             signatures: vec![],
         };
 
-        let is_misbehavior = IBCLightClient::freeze_client_on_misbehavior(&header1, &header2).unwrap();
+        let is_misbehavior =
+            IBCLightClient::freeze_client_on_misbehavior(&header1, &header2).unwrap();
         assert!(is_misbehavior);
     }
 
@@ -499,7 +599,8 @@ mod tests {
             signatures: vec![],
         };
 
-        let is_misbehavior = IBCLightClient::freeze_client_on_misbehavior(&header1, &header2).unwrap();
+        let is_misbehavior =
+            IBCLightClient::freeze_client_on_misbehavior(&header1, &header2).unwrap();
         assert!(!is_misbehavior);
     }
 

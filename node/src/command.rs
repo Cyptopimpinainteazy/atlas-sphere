@@ -1,5 +1,7 @@
 use crate::{
-    cli::{AtomicSwapSubcommand, Cli, Commands},
+    cli::{
+        AtomicSwapSubcommand, Cli, ComitSubcommand, Commands, InspectSubcommand, KeysSubcommand,
+    },
     service,
 };
 use clap::Parser;
@@ -425,6 +427,404 @@ pub fn run() -> CliResult<()> {
                         "Est. EVM Cost:   ${:.4} (at 20 gwei, $3000/ETH)",
                         evm_cost_usd
                     );
+
+                    Ok(())
+                }
+            }
+        }
+        Some(Commands::Comit(cmd)) => {
+            match &cmd.command {
+                ComitSubcommand::Query { comit_id, rpc_url } => {
+                    info!("Querying Comit transaction...");
+                    info!("  Comit ID: {:?}", comit_id);
+                    info!("  RPC URL:  {}", rpc_url);
+
+                    println!("\n=== Comit Transaction Query ===");
+                    println!("Comit ID:  0x{}", hex::encode(comit_id.as_bytes()));
+                    println!("RPC URL:   {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getCanonicalBalance as a proxy query
+                    // In production, this would query a dedicated Comit status endpoint
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getCanonicalBalance",
+                        serde_json::json!(["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 0]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Comit Status ---");
+                            println!("Note: Full Comit query endpoint not yet implemented.");
+                            println!("Showing canonical balance query as example:");
+                            println!("Balance: {}", result);
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Comit Query Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+                ComitSubcommand::Balance {
+                    account,
+                    asset_id,
+                    rpc_url,
+                } => {
+                    info!("Querying canonical balance...");
+                    info!("  Account:  {}", account);
+                    info!("  Asset ID: {}", asset_id);
+                    info!("  RPC URL:  {}", rpc_url);
+
+                    println!("\n=== Canonical Balance Query ===");
+                    println!("Account:   {}", account);
+                    println!("Asset ID:  {}", asset_id);
+                    println!("RPC URL:   {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getCanonicalBalance
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getCanonicalBalance",
+                        serde_json::json!([account, asset_id]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Balance ---");
+                            println!("Balance: {}", result);
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Balance Query Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+                ComitSubcommand::Authorized { rpc_url } => {
+                    info!("Querying authorized accounts...");
+                    info!("  RPC URL: {}", rpc_url);
+
+                    println!("\n=== Authorized Accounts ===");
+                    println!("RPC URL:  {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getAuthorizedAccounts
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getAuthorizedAccounts",
+                        serde_json::json!([]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Authorized Accounts ---");
+                            if let Some(arr) = result.as_array() {
+                                if arr.is_empty() {
+                                    println!("No authorized accounts found.");
+                                } else {
+                                    for (i, account) in arr.iter().enumerate() {
+                                        println!("{}. {}", i + 1, account);
+                                    }
+                                }
+                            } else {
+                                println!("Result: {}", result);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Authorized Query Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+            }
+        }
+        Some(Commands::Keys(cmd)) => {
+            match &cmd.command {
+                KeysSubcommand::Generate {
+                    key_type,
+                    seed,
+                    output,
+                } => {
+                    info!("Generating keypair...");
+                    info!("  Key Type: {}", key_type);
+                    info!("  Output:   {}", output);
+
+                    println!("\n=== Key Generation ===");
+                    println!("Key Type:  {}", key_type);
+                    println!("Output:    {}", output);
+                    println!();
+
+                    // In a full implementation, this would use sp_core crypto
+                    // For now, show a placeholder
+                    println!("--- Generated Keypair ---");
+                    println!("Note: Full key generation requires sp_core integration.");
+                    println!("Use `subkey` tool for production key generation:");
+                    println!("  subkey generate --scheme sr25519");
+                    println!();
+                    println!("Key type mapping:");
+                    println!("  aura    -> sr25519 (block authoring)");
+                    println!("  grandpa -> ed25519 (finality)");
+                    println!("  imonline -> sr25519 (heartbeat)");
+
+                    Ok(())
+                }
+                KeysSubcommand::Insert {
+                    key_type,
+                    seed,
+                    keystore_path,
+                } => {
+                    info!("Inserting key into keystore...");
+                    info!("  Key Type: {}", key_type);
+                    if let Some(path) = keystore_path {
+                        info!("  Keystore: {:?}", path);
+                    }
+
+                    println!("\n=== Key Insertion ===");
+                    println!("Key Type:  {}", key_type);
+                    if let Some(path) = keystore_path {
+                        println!("Keystore:  {:?}", path);
+                    } else {
+                        println!("Keystore:  (default)");
+                    }
+                    println!();
+
+                    // In a full implementation, this would insert into the keystore
+                    println!("--- Key Insertion ---");
+                    println!("Note: Full keystore insertion requires node integration.");
+                    println!("Use the node's keystore directly or `subkey` for testing.");
+
+                    Ok(())
+                }
+                KeysSubcommand::List { keystore_path } => {
+                    info!("Listing keystore contents...");
+                    if let Some(path) = keystore_path {
+                        info!("  Keystore: {:?}", path);
+                    }
+
+                    println!("\n=== Keystore Contents ===");
+                    if let Some(path) = keystore_path {
+                        println!("Keystore:  {:?}", path);
+                    } else {
+                        println!("Keystore:  (default)");
+                    }
+                    println!();
+
+                    // In a full implementation, this would list keys from the keystore
+                    println!("--- Keys ---");
+                    println!("Note: Full keystore listing requires node integration.");
+
+                    Ok(())
+                }
+                KeysSubcommand::Verify {
+                    key_type,
+                    public,
+                    seed,
+                } => {
+                    info!("Verifying keypair...");
+                    info!("  Key Type: {}", key_type);
+                    info!("  Public:   {}", public);
+
+                    println!("\n=== Keypair Verification ===");
+                    println!("Key Type:  {}", key_type);
+                    println!("Public:    {}", public);
+                    println!();
+
+                    // In a full implementation, this would verify the keypair
+                    println!("--- Verification ---");
+                    println!("Note: Full key verification requires sp_core integration.");
+
+                    Ok(())
+                }
+            }
+        }
+        Some(Commands::Inspect(cmd)) => {
+            match &cmd.command {
+                InspectSubcommand::Account {
+                    account,
+                    rpc_url,
+                    output,
+                } => {
+                    info!("Inspecting account...");
+                    info!("  Account: {}", account);
+                    info!("  RPC URL: {}", rpc_url);
+                    info!("  Output:  {}", output);
+
+                    println!("\n=== Account Inspection ===");
+                    println!("Account:   {}", account);
+                    println!("RPC URL:   {}", rpc_url);
+                    println!("Output:    {}", output);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getCanonicalBalance for native asset
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getCanonicalBalance",
+                        serde_json::json!([account, 0]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Account Balances ---");
+                            println!("Native X3 (Asset 0): {}", result);
+
+                            // In a full implementation, this would iterate through all assets
+                            println!();
+                            println!("Note: Full account inspection requires asset enumeration.");
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Account Inspection Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+                InspectSubcommand::Asset { asset_id, rpc_url } => {
+                    info!("Inspecting asset...");
+                    info!("  Asset ID: {}", asset_id);
+                    info!("  RPC URL:  {}", rpc_url);
+
+                    println!("\n=== Asset Inspection ===");
+                    println!("Asset ID:  {}", asset_id);
+                    println!("RPC URL:   {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getAssetMetadata
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getAssetMetadata",
+                        serde_json::json!([asset_id]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Asset Metadata ---");
+                            if let Some(obj) = result.as_object() {
+                                println!(
+                                    "Symbol:   {}",
+                                    obj.get("symbol").and_then(|v| v.as_str()).unwrap_or("N/A")
+                                );
+                                println!(
+                                    "Decimals: {}",
+                                    obj.get("decimals").and_then(|v| v.as_u64()).unwrap_or(0)
+                                );
+                            } else {
+                                println!("Result: {}", result);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Asset Inspection Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+                InspectSubcommand::Assets { rpc_url, output } => {
+                    info!("Listing all assets...");
+                    info!("  RPC URL: {}", rpc_url);
+                    info!("  Output:  {}", output);
+
+                    println!("\n=== Asset Registry ===");
+                    println!("RPC URL:  {}", rpc_url);
+                    println!("Output:   {}", output);
+                    println!();
+
+                    // In a full implementation, this would enumerate all assets
+                    println!("--- Registered Assets ---");
+                    println!("Note: Full asset enumeration requires runtime API support.");
+                    println!("Known assets:");
+                    println!("  0: X3 (native token, 12 decimals)");
+                    println!("  1: ETH (18 decimals)");
+                    println!("  2: SOL (9 decimals)");
+                    println!("  3: USDC (6 decimals)");
+
+                    Ok(())
+                }
+                InspectSubcommand::Authorities { rpc_url } => {
+                    info!("Querying authority set...");
+                    info!("  RPC URL: {}", rpc_url);
+
+                    println!("\n=== Authority Set ===");
+                    println!("RPC URL:  {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to atlasKernel_getAuthorities
+                    match make_rpc_call(
+                        rpc_url,
+                        "atlasKernel_getAuthorities",
+                        serde_json::json!([]),
+                    ) {
+                        Ok(result) => {
+                            println!("--- Current Authorities ---");
+                            if let Some(arr) = result.as_array() {
+                                if arr.is_empty() {
+                                    println!("No authorities found.");
+                                } else {
+                                    for (i, authority) in arr.iter().enumerate() {
+                                        println!("{}. {}", i + 1, authority);
+                                    }
+                                    println!();
+                                    println!("Total: {} authorities", arr.len());
+                                }
+                            } else {
+                                println!("Result: {}", result);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Authorities Query Failed ---");
+                            println!("Error: {}", e);
+                            println!();
+                            println!("Note: Ensure a node is running on {}", rpc_url);
+                        }
+                    }
+
+                    Ok(())
+                }
+                InspectSubcommand::ChainInfo { rpc_url } => {
+                    info!("Querying chain information...");
+                    info!("  RPC URL: {}", rpc_url);
+
+                    println!("\n=== Chain Information ===");
+                    println!("RPC URL:  {}", rpc_url);
+                    println!();
+
+                    // Make RPC call to get block number
+                    match make_rpc_call(rpc_url, "eth_blockNumber", serde_json::json!([])) {
+                        Ok(block_number) => {
+                            println!("--- Chain Status ---");
+                            println!("Block Number: {}", block_number);
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                            println!("--- Chain Info Failed ---");
+                            println!("Error: {}", e);
+                        }
+                    }
+
+                    // Make RPC call to get chain ID
+                    match make_rpc_call(rpc_url, "eth_chainId", serde_json::json!([])) {
+                        Ok(chain_id) => {
+                            println!("Chain ID:     {}", chain_id);
+                        }
+                        Err(e) => {
+                            warn!("RPC call failed: {}", e);
+                        }
+                    }
+
+                    println!();
+                    println!("Note: Ensure a node is running on {}", rpc_url);
 
                     Ok(())
                 }

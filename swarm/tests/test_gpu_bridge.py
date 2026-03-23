@@ -15,6 +15,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
+import aiohttp
 import pytest
 import pytest_asyncio
 
@@ -346,24 +347,93 @@ class TestGpuTaskClient:
 
 
 # =====================================================================
-# RustGpuProvider stub test
+# RustGpuProvider HTTP test
 # =====================================================================
 
 
 class TestRustGpuProvider:
-    """Verify the stub raises NotImplementedError."""
+    """Verify the Rust provider speaks the expected HTTP contract."""
+
+    @pytest_asyncio.fixture
+    async def rust_provider_server(self, aiohttp_server):
+        pending = ["pending-1", "pending-2"]
+        submitted = {}
+
+        async def submit(request):
+            payload = await request.json()
+            submitted[payload['task_id']] = payload
+            return aiohttp.web.json_response({'task_id': payload['task_id']})
+
+        async def poll(request):
+            task_id = request.match_info['task_id']
+            if task_id == 'pending-task':
+                return aiohttp.web.json_response({'task_id': task_id, 'status': GpuTaskStatus.PENDING.value})
+            if task_id not in submitted:
+                return aiohttp.web.Response(status=404)
+            return aiohttp.web.json_response({
+                'task_id': task_id,
+                'agent_id': submitted[task_id]['agent_id'],
+                'status': GpuTaskStatus.COMPLETED.value,
+                'result_data': {'ok': True},
+                'result_hash': 'abc123',
+                'compute_units_used': 1,
+            })
+
+        async def cancel(request):
+            task_id = request.match_info['task_id']
+            return aiohttp.web.json_response({'cancelled': task_id in submitted})
+
+        async def list_pending(request):
+            return aiohttp.web.json_response({'task_ids': pending})
+
+        app = aiohttp.web.Application()
+        app.router.add_post('/api/v1/tasks', submit)
+        app.router.add_get('/api/v1/tasks/pending', list_pending)
+        app.router.add_get('/api/v1/tasks/{task_id}', poll)
+        app.router.add_post('/api/v1/tasks/{task_id}/cancel', cancel)
+        server = await aiohttp_server(app)
+        return server, submitted, pending
 
     @pytest.mark.asyncio
-    async def test_submit_not_implemented(self):
-        provider = RustGpuProvider()
-        with pytest.raises(NotImplementedError):
-            await provider.submit(_make_task())
+    async def test_submit_and_poll(self, rust_provider_server):
+        server, submitted, _ = rust_provider_server
+        provider = RustGpuProvider(coordinator_url=str(server.make_url('')).rstrip('/'))
+        try:
+            task = _make_task()
+            task_id = await provider.submit(task)
+            assert task_id == task.task_id
+            assert task_id in submitted
+
+            result = await provider.poll(task_id)
+            assert result is not None
+            assert result.succeeded
+            assert result.result_data['ok'] is True
+        finally:
+            await provider.close()
 
     @pytest.mark.asyncio
-    async def test_poll_not_implemented(self):
-        provider = RustGpuProvider()
-        with pytest.raises(NotImplementedError):
-            await provider.poll("some-task-id")
+    async def test_poll_pending_returns_none(self, rust_provider_server):
+        server, _, _ = rust_provider_server
+        provider = RustGpuProvider(coordinator_url=str(server.make_url('')).rstrip('/'))
+        try:
+            result = await provider.poll('pending-task')
+            assert result is None
+        finally:
+            await provider.close()
+
+    @pytest.mark.asyncio
+    async def test_cancel_and_list_pending(self, rust_provider_server):
+        server, submitted, pending = rust_provider_server
+        provider = RustGpuProvider(coordinator_url=str(server.make_url('')).rstrip('/'))
+        try:
+            task = _make_task(agent_id='a-cancel')
+            await provider.submit(task)
+
+            assert await provider.cancel(task.task_id) is True
+            assert await provider.list_pending() == pending
+            assert submitted[task.task_id]['agent_id'] == 'a-cancel'
+        finally:
+            await provider.close()
 
 
 # =====================================================================

@@ -1,21 +1,50 @@
-// Runtime API trait is defined in this pallet's lib.rs using sp_api::decl_runtime_apis!
-// The macro automatically adds Block as the first generic parameter.
-// 
-// Declaration: AtlasKernelRuntimeApi<AccountId, Balance, AssetId>
-// Expands to: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
-// 
-// Implementation Location:
-//   - File: runtime/src/lib.rs
-//   - Block: impl_runtime_apis! { impl pallet_x3_kernel::AtlasKernelRuntimeApi<Block, ...> for Runtime { ... } }
-//   - Lines: ~395-420
-//   - Methods: get_canonical_balance, get_asset_metadata, is_authorized, get_authorized_accounts, get_authorities
-//
-// RPC Consumption Location:
-//   - File: node/src/rpc.rs
-//   - Struct: AtlasKernelRpc<C, B>
-//   - Trait Bound: C::Api: AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>
-//   - Lines: ~71, ~141
-//   - Exposed Methods: atlasKernel_getCanonicalBalance, atlasKernel_getAssetMetadata, atlasKernel_isAuthorized, atlasKernel_getAuthorizedAccounts, atlasKernel_getAuthorities
-//
-// For easy discovery, re-export the trait from this module:
-pub use crate::AtlasKernelRuntimeApi;
+//! Runtime API for X3 Kernel pallet
+
+use parity_scale_codec::Codec;
+use sp_api::decl_runtime_apis;
+use sp_core::H256;
+use sp_std::vec::Vec;
+
+sp_api::decl_runtime_apis! {
+    pub trait AtlasKernelApi<AccountId, Balance, AssetId>
+    where
+        AccountId: Codec,
+        Balance: Codec,
+        AssetId: Codec,
+    {
+        /// Query canonical ledger balance for an EVM address
+        fn get_evm_balance(
+            account: Vec<u8>,
+            asset_id: AssetId,
+        ) -> Option<Balance>;
+
+        /// Query contract bytecode
+        fn get_evm_code(address: Vec<u8>) -> Vec<u8>;
+
+        /// Query contract storage
+        fn get_evm_storage(
+            address: Vec<u8>,
+            storage_key: H256,
+        ) -> Option<H256>;
+
+        /// Get asset metadata (symbol and decimals)
+        fn get_asset_metadata(asset_id: AssetId) -> Option<(Vec<u8>, u8)>;
+
+        /// Check if account is authorized for Comits
+        fn is_authorized(account: Vec<u8>) -> bool;
+
+        /// Get all authorized accounts
+        fn get_authorized_accounts() -> Vec<Vec<u8>>;
+
+        /// Get current authority set
+        fn get_authorities() -> Vec<Vec<u8>>;
+
+        /// Deploy a new EVM contract dynamically
+        /// Returns the deployed contract address on success
+        fn deploy_evm_contract(
+            bytecode: Vec<u8>,
+            salt: Option<Vec<u8>>,
+            init_code_hash: Option<Vec<u8>>,
+        ) -> Result<Vec<u8>, sp_runtime::DispatchError>;
+    }
+}

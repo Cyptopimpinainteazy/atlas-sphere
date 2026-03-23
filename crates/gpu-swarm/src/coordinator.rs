@@ -1,10 +1,9 @@
 //! Swarm coordinator - central task management and orchestration
 
-use crate::config::SwarmConfig;
 use crate::error::{SwarmError, SwarmResult};
-use crate::node::{GpuCapabilities, NodeId, NodeRegistry, NodeStatus, SwarmNode};
+use crate::node::{NodeId, NodeRegistry, NodeStatus, SwarmNode};
 use crate::protocol::*;
-use crate::scheduler::{SchedulerConfig, SchedulerStats, SchedulingStrategy, TaskScheduler};
+use crate::scheduler::{SchedulerConfig, SchedulerStats, TaskScheduler};
 use crate::task::{Task, TaskId, TaskStatus};
 use crate::verification::{ExecutionVerifier, Verdict, VerificationConfig, VerificationSummary};
 use std::collections::HashMap;

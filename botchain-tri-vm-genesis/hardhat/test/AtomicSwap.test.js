@@ -17,13 +17,13 @@ describe("AtomicSwapAdapter (SHA-256 Bitcoin Compatible)", function () {
     [owner, alice, bob] = await ethers.getSigners();
 
     // Deploy BOT token
-    const BOT = await ethers.getContractFactory("BOT");
+    const BOT = await ethers.getContractFactory("contracts/BOT.sol:BOT");
     bot = await BOT.deploy();
     await bot.waitForDeployment();
 
     // Deploy AtomicSwapAdapter
     const AtomicSwapAdapter = await ethers.getContractFactory(
-      "AtomicSwapAdapter"
+      "contracts/AtomicSwapAdapter.sol:AtomicSwapAdapter"
     );
     atomicSwap = await AtomicSwapAdapter.deploy();
     await atomicSwap.waitForDeployment();
@@ -194,6 +194,56 @@ describe("AtomicSwapAdapter (SHA-256 Bitcoin Compatible)", function () {
             timelock
           )
       ).to.be.revertedWithCustomError(atomicSwap, "TimelockTooLong");
+    });
+
+    it("Should enforce remote timelock safety margin when provided", async function () {
+      const amount = ethers.parseEther("100");
+      const preimage = generateSecret();
+      const hashlock = computeSha256Hashlock(preimage);
+      const currentTime = await time.latest();
+      const timelock = currentTime + 2 * ONE_HOUR;
+
+      await expect(
+        atomicSwap
+          .connect(alice)
+          .lockTokensWithRemoteTimelock(
+            bob.address,
+            await bot.getAddress(),
+            amount,
+            hashlock,
+            timelock,
+            timelock
+          )
+      ).to.be.revertedWithCustomError(atomicSwap, "RemoteTimelockNotLonger");
+
+      await expect(
+        atomicSwap
+          .connect(alice)
+          .lockTokensWithRemoteTimelock(
+            bob.address,
+            await bot.getAddress(),
+            amount,
+            hashlock,
+            timelock,
+            timelock + 30 * 60
+          )
+      ).to.be.revertedWithCustomError(
+        atomicSwap,
+        "RemoteTimelockDeltaTooSmall"
+      );
+
+      await expect(
+        atomicSwap
+          .connect(alice)
+          .lockTokensWithRemoteTimelock(
+            bob.address,
+            await bot.getAddress(),
+            amount,
+            hashlock,
+            timelock,
+            timelock + 2 * ONE_HOUR
+          )
+      ).to.emit(atomicSwap, "TokensLocked");
     });
 
     it("Should reject zero amount", async function () {
@@ -482,6 +532,13 @@ describe("AtomicSwapAdapter (SHA-256 Bitcoin Compatible)", function () {
       await time.increase(3 * ONE_HOUR);
       const remainingAfter = await atomicSwap.timeUntilRefund(swapId);
       expect(remainingAfter).to.equal(0);
+    });
+
+    it("Should expose remote timelock safety checks", async function () {
+      const local = 1000;
+      expect(await atomicSwap.isSafeRemoteTimelock(local, local)).to.equal(false);
+      expect(await atomicSwap.isSafeRemoteTimelock(local, local + 1800)).to.equal(false);
+      expect(await atomicSwap.isSafeRemoteTimelock(local, local + 3600)).to.equal(true);
     });
   });
 

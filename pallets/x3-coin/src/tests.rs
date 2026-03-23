@@ -29,6 +29,49 @@ const LIQUIDITY_PROVIDER: u64 = 4;
 const BONUS_CLAIMER: u64 = 5;
 const CROSS_CHAIN_USER: u64 = 6;
 
+fn finality_envelope(chain: u8, confirmations: u32, tail: &[u8]) -> Vec<u8> {
+    let receipt_root = [0x11; 32];
+    let header_hash = [0x22; 32];
+    let light_client_root = [0x33; 32];
+
+    let mut inclusion_preimage = Vec::with_capacity(1 + 32 + 32);
+    inclusion_preimage.push(chain);
+    inclusion_preimage.extend_from_slice(&receipt_root);
+    inclusion_preimage.extend_from_slice(&light_client_root);
+    let inclusion_commitment = sp_io::hashing::blake2_256(&inclusion_preimage);
+
+    let mut header_preimage = Vec::with_capacity(1 + 32 + 32);
+    header_preimage.push(chain);
+    header_preimage.extend_from_slice(&header_hash);
+    header_preimage.extend_from_slice(&light_client_root);
+    let header_commitment = sp_io::hashing::blake2_256(&header_preimage);
+
+    let mut proof = Vec::with_capacity(74 + 96 + tail.len());
+    proof.extend_from_slice(b"X3PF");
+    proof.push(chain);
+    proof.push(1); // envelope version
+    proof.extend_from_slice(&confirmations.to_le_bytes());
+    proof.extend_from_slice(&inclusion_commitment);
+    proof.extend_from_slice(&header_commitment);
+    proof.extend_from_slice(&receipt_root);
+    proof.extend_from_slice(&header_hash);
+    proof.extend_from_slice(&light_client_root);
+    proof.extend_from_slice(tail);
+    proof
+}
+
+fn evm_finality_proof_data(confirmations: u32) -> Vec<u8> {
+    finality_envelope(1, confirmations, &[0xAA; 32])
+}
+
+fn svm_finality_proof_data(confirmations: u32) -> Vec<u8> {
+    finality_envelope(2, confirmations, &[0xBB; 32])
+}
+
+fn btc_finality_merkle_proof(confirmations: u32) -> Vec<u8> {
+    finality_envelope(3, confirmations, &[0xCC; 32])
+}
+
 #[test]
 fn genesis_config_works() {
     new_test_ext().execute_with(|| {
@@ -174,7 +217,7 @@ fn cross_chain_mint_works() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -205,7 +248,7 @@ fn cross_chain_burn_works() {
         let mint_proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -219,7 +262,7 @@ fn cross_chain_burn_works() {
         let burn_proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(67890),
             block_number: 2000,
-            proof_data: vec![5, 6, 7, 8],
+            proof_data: evm_finality_proof_data(12),
         };
 
         assert_ok!(X3Coin::burn(
@@ -249,7 +292,7 @@ fn cross_chain_replay_protection_works() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // First mint should succeed
@@ -274,6 +317,150 @@ fn cross_chain_replay_protection_works() {
 }
 
 #[test]
+fn cross_chain_rejects_evm_zero_hash_proof() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::EvmProof {
+            tx_hash: H256::zero(),
+            block_number: 1000,
+            proof_data: evm_finality_proof_data(12),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_svm_invalid_signature_proof() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::SvmProof {
+            signature: vec![0u8; 32],
+            block_number: 1000,
+            proof_data: svm_finality_proof_data(32),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_btc_invalid_merkle_branch() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::BtcProof {
+            txid: H256::from_low_u64_be(777),
+            block_height: 120_000,
+            merkle_proof: vec![1, 2, 3],
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_evm_low_confirmations() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::EvmProof {
+            tx_hash: H256::from_low_u64_be(42),
+            block_number: 1000,
+            proof_data: evm_finality_proof_data(2),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_svm_low_confirmations() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::SvmProof {
+            signature: vec![1u8; 64],
+            block_number: 1000,
+            proof_data: svm_finality_proof_data(3),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_btc_low_confirmations() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let proof = X3Proof::BtcProof {
+            txid: H256::from_low_u64_be(777),
+            block_height: 120_000,
+            merkle_proof: btc_finality_merkle_proof(1),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
 fn cross_chain_insufficient_treasury_balance() {
     new_test_ext().execute_with(|| {
         let target_account = CROSS_CHAIN_USER.encode();
@@ -282,7 +469,7 @@ fn cross_chain_insufficient_treasury_balance() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         assert_noop!(
@@ -306,7 +493,7 @@ fn cross_chain_insufficient_balance_for_burn() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // Try to burn without having any tokens
@@ -330,7 +517,7 @@ fn deterministic_operation_id_generation() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // Generate operation ID
@@ -357,7 +544,7 @@ fn cross_chain_operation_serialization() {
             proof: X3Proof::EvmProof {
                 tx_hash: H256::from_low_u64_be(12345),
                 block_number: 1000,
-                proof_data: vec![1, 2, 3, 4],
+                proof_data: evm_finality_proof_data(12),
             },
         };
 
@@ -378,7 +565,7 @@ fn proof_serialization() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // Test encoding/decoding
@@ -428,7 +615,7 @@ fn invariants_hold() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -487,7 +674,7 @@ fn stress_test_multiple_operations() {
             let proof = X3Proof::EvmProof {
                 tx_hash: H256::from_low_u64_be(i as u64),
                 block_number: 1000 + i as u64,
-                proof_data: vec![i as u8],
+                proof_data: evm_finality_proof_data(12),
             };
 
             assert_ok!(X3Coin::mint(
@@ -519,7 +706,7 @@ fn edge_cases() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // Minting zero should succeed but not change balances
@@ -540,7 +727,7 @@ fn edge_cases() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: vec![1, 2, 3, 4],
+            proof_data: evm_finality_proof_data(12),
         };
 
         // This should fail due to insufficient treasury balance

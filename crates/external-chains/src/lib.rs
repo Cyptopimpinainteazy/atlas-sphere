@@ -28,7 +28,9 @@ pub mod settlement;
 
 pub use adapter::{ChainAdapter, ChainConfig, ChainMessage, CrossChainTransfer, TransferStatus};
 pub use assets::{AssetMetadata, AssetRegistry, MirroredAsset, TokenMapping};
-pub use chains::{create_adapter, create_all_adapters};
+pub use chains::{
+    create_adapter, create_all_adapters, onboard_external_adapter, ExternalEvmOnboarding,
+};
 pub use env_config::{
     BotConfig, EnvConfig, FlashLoanConfig, FlashloanRouteConfig, NetworkEnv, ProviderCredentials,
     WalletConfig,

@@ -5,7 +5,6 @@ use crate::error::{SwarmError, SwarmResult};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Unique identifier for a node (public key)
 pub type NodeId = [u8; 32];

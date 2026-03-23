@@ -1,6 +1,5 @@
 /// L2 Bridge — Base/Optimism settlement bridge enabling Ethereum L2 ↔ X3 token transfers
 /// Implements canonical bridge with sequencer messaging and exit proofs
-
 use parity_scale_codec::{Decode, Encode};
 use sp_std::vec::Vec;
 
@@ -185,7 +184,11 @@ impl L2Bridge {
         let computed_root = Self::compute_merkle_root(&withdrawal_root, &proof.withdrawal_proof);
 
         // Check if computed root matches output root
-        if Self::verify_output_root(&computed_root, &proof.output_root_proof, &output_root.output_root) {
+        if Self::verify_output_root(
+            &computed_root,
+            &proof.output_root_proof,
+            &output_root.output_root,
+        ) {
             withdrawal.status = WithdrawalStatus::Proven;
             Ok(())
         } else {
@@ -253,17 +256,26 @@ impl L2Bridge {
 
     /// Get withdrawal state
     pub fn get_withdrawal(withdrawal: &L2Withdrawal) -> (u64, u128, WithdrawalStatus) {
-        (withdrawal.withdrawal_id, withdrawal.amount, withdrawal.status.clone())
+        (
+            withdrawal.withdrawal_id,
+            withdrawal.amount,
+            withdrawal.status.clone(),
+        )
     }
 
     /// Validate output root commitment from sequencer
-    pub fn validate_output_root(output_root: &OutputRoot, parent_output_root: &OutputRoot) -> Result<bool, &'static str> {
+    pub fn validate_output_root(
+        output_root: &OutputRoot,
+        parent_output_root: &OutputRoot,
+    ) -> Result<bool, &'static str> {
         if output_root.l2_output_index <= parent_output_root.l2_output_index {
             return Err("Output index must increase");
         }
 
         // Output roots should be submitted within reasonable time (e.g., 1 day)
-        let time_diff = output_root.timestamp.saturating_sub(parent_output_root.timestamp);
+        let time_diff = output_root
+            .timestamp
+            .saturating_sub(parent_output_root.timestamp);
         if time_diff > 86400 {
             return Err("Output root submission took too long");
         }
@@ -408,7 +420,8 @@ mod tests {
 
     #[test]
     fn test_initiate_withdrawal() {
-        let withdrawal_id = L2Bridge::initiate_withdrawal([1; 32], [2; 20], 500000, [3; 20]).unwrap();
+        let withdrawal_id =
+            L2Bridge::initiate_withdrawal([1; 32], [2; 20], 500000, [3; 20]).unwrap();
         assert!(withdrawal_id > 0);
     }
 
@@ -431,7 +444,7 @@ mod tests {
     #[test]
     fn test_submit_output_root() {
         let output = L2Bridge::submit_output_root(0, [1; 32], 1000, 2000).unwrap();
-        
+
         assert_eq!(output.l2_output_index, 0);
         assert_eq!(output.output_root, [1; 32]);
         assert_eq!(output.block_number, 1000);
@@ -518,7 +531,7 @@ mod tests {
     #[test]
     fn test_register_token_pair() {
         let config = L2Bridge::register_token_pair([1; 20], [2; 20], 18).unwrap();
-        
+
         assert_eq!(config.l1_address, [1; 20]);
         assert_eq!(config.l2_address, [2; 20]);
         assert_eq!(config.decimals, 18);

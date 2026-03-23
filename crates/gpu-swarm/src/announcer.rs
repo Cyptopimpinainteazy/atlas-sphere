@@ -28,10 +28,10 @@
 //! ```
 
 use crate::crown::{
-    AuditReport, CrownEvaluation, CrownVerdict, MarketCycle, MarketForecast, QuarantineReason,
+    AuditReport, CrownEvaluation, CrownVerdict, MarketForecast, QuarantineReason,
     ScrapyardVerdict, VolatilityRegime,
 };
-use crate::warden::{ComputeLane, PillarScores, SwarmState, ThreatLevel, WardenDecision};
+use crate::warden::{SwarmState, ThreatLevel, WardenDecision};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

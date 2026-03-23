@@ -113,7 +113,32 @@ Updated package manifests to include docs for Polkawallet packages:
 - `packages/polkawallet-plugin/package.json`
 - `packages/polkawallet-bridge-adapter/package.json`
 
-## Next Steps (remaining 07-02)
+## SDK-006 Resolution (2026-03-21)
 
-1. Resolve `SDK-006` environment blocker (local node compile issue or reachable endpoint) and rerun live integration suite.
-2. Finalize `SDK-007` publish step when credentials/registry policy are available (dry-run + artifacts are complete).
+### Root blockers resolved
+
+- Local node startup failure (`bulk memory support is not enabled`) was resolved by activating the local `sc-executor` patch path in workspace `Cargo.toml`:
+   - `[patch."https://github.com/paritytech/substrate"] sc-executor = { path = "patches/sc-executor" }`
+- Runtime wasm generation was hardened in `runtime/build.rs` with explicit no-reference-types/no-bulk-memory flags via `WasmBuilder::append_to_rust_flags(...)`.
+
+### SDK fix required for live chain metadata
+
+- `packages/ts-sdk/src/client.ts#getNonce` previously assumed `query.atlasKernel.comitNonces` exists.
+- Updated to resilient fallback order:
+   1. `atlasKernel.comitNonces` when available,
+   2. `query.system.account(account).nonce`,
+   3. `rpc.system.accountNextIndex(account)`.
+
+### Verification evidence
+
+- Local node build/regeneration: `FORCE_WASM_BUILD=1 cargo build -p x3-chain-node --release -j 2` — PASS.
+- Local node startup: `START_DESKTOP=false ./run-dev-node.sh` — PASS (block production/finality observed).
+- Live SDK suite:
+   - `RUN_LIVE_INTEGRATION_TESTS=1 X3_WS_ENDPOINT=ws://127.0.0.1:9944 npm test --workspace packages/ts-sdk -- tests/live.integration.test.ts --runInBand`
+   - Result: **PASS** (`2 passed, 0 failed`), with expected gated transfer behavior when signer is absent.
+
+Decision: `07-02` is complete; `SDK-006` is no longer blocked.
+
+## Next Steps
+
+1. Finalize `SDK-007` publish step when credentials/registry policy are available (dry-run + artifacts are complete).

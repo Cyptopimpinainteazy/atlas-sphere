@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from "path";
 
 const host = process.env.TAURI_DEV_HOST;
@@ -9,22 +8,21 @@ const domain = process.env.VITE_DOMAIN || "x3star.net";
 export default defineConfig({
   plugins: [
     react(),
-    nodePolyfills({
-      include: ['buffer', 'process'],
-      globals: {
-        Buffer: true,
-        process: true,
-      }
-    })
   ],
   optimizeDeps: {
     // Avoid dependency discovery to reduce Rolldown pre-bundle issues in Vite 8.
     noDiscovery: true,
-    include: [],
+    include: ["buffer", "process"],
+  },
+  define: {
+    global: "globalThis",
+    "process.env": {},
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: "buffer",
+      process: "process/browser",
     },
   },
   clearScreen: false,

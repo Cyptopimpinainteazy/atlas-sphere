@@ -15,10 +15,11 @@ class TestGpuAtomicSwapKernel(unittest.TestCase):
         self.kernel_build_dir = os.path.join(self.repo_root, "kernels", "build")
         self.lib_path = os.path.join(self.kernel_build_dir, "libatomic_swap.so")
 
+        nvcc = shutil.which("nvcc")
+        if nvcc is None:
+            self.skipTest("nvcc is not available; cannot validate GPU atomic-swap kernels")
+
         if not os.path.exists(self.lib_path):
-            nvcc = shutil.which("nvcc")
-            if nvcc is None:
-                self.skipTest("nvcc is not available; cannot build GPU kernels")
             # build kernels (may take a minute)
             subprocess.run(["bash", os.path.join(self.repo_root, "kernels", "build.sh")], check=True)
 

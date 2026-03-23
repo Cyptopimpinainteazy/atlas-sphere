@@ -1,22 +1,22 @@
 """GPU provider implementations.
 
 MockGpuProvider  — in-memory, immediate completion (for tests)
-RustGpuProvider  — stub for future HTTP/FFI to real Rust coordinator
+RustGpuProvider  — HTTP bridge to a Rust coordinator API
 """
 
 from __future__ import annotations
 
 import hashlib
-import uuid
-from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
+from urllib.parse import quote
+
+import aiohttp
 
 from swarm.gpu_bridge.schema import (
     GpuExecutionProof,
     GpuTask,
     GpuTaskResult,
     GpuTaskStatus,
-    GpuTaskType,
 )
 
 
@@ -44,8 +44,6 @@ class MockGpuProvider:
         self._latency_ticks: int = 0  # poll ticks before result
         self._tick_counts: Dict[str, int] = {}
 
-    # ------ Configuration helpers ------
-
     def register_executor(
         self,
         task_type: str,
@@ -65,8 +63,6 @@ class MockGpuProvider:
     def inject_task_failure(self, task_id: str) -> None:
         """Force a specific task to fail on poll."""
         self._fail_task_ids.add(task_id)
-
-    # ------ GpuProvider protocol ------
 
     async def submit(self, task: GpuTask) -> str:
         tid = task.task_id
@@ -93,11 +89,9 @@ class MockGpuProvider:
         return tid
 
     async def poll(self, task_id: str) -> Optional[GpuTaskResult]:
-        # Immediate results (no latency or failed)
         if task_id in self._results:
             return self._results[task_id]
 
-        # Latency simulation
         if task_id in self._pending:
             self._tick_counts[task_id] = self._tick_counts.get(task_id, 0) + 1
             if self._tick_counts[task_id] >= self._latency_ticks:
@@ -123,10 +117,7 @@ class MockGpuProvider:
     async def list_pending(self) -> List[str]:
         return list(self._pending.keys())
 
-    # ------ Internal ------
-
     def _execute(self, task: GpuTask) -> GpuTaskResult:
-        """Run a task through the appropriate executor."""
         executor = self._executors.get(task.task_type)
         if executor is not None:
             result_data = executor(task)
@@ -159,7 +150,6 @@ class MockGpuProvider:
 
     @staticmethod
     def _default_execute(task: GpuTask) -> Dict[str, Any]:
-        """Default mock execution — echoes the payload with metadata."""
         return {
             "echo": task.payload,
             "task_type": task.task_type,
@@ -167,17 +157,13 @@ class MockGpuProvider:
             "mock": True,
         }
 
-    # ------ Introspection ------
-
     @property
     def completed(self) -> Dict[str, GpuTaskResult]:
-        return {k: v for k, v in self._results.items()
-                if v.status == GpuTaskStatus.COMPLETED.value}
+        return {k: v for k, v in self._results.items() if v.status == GpuTaskStatus.COMPLETED.value}
 
     @property
     def failed(self) -> Dict[str, GpuTaskResult]:
-        return {k: v for k, v in self._results.items()
-                if v.status == GpuTaskStatus.FAILED.value}
+        return {k: v for k, v in self._results.items() if v.status == GpuTaskStatus.FAILED.value}
 
     @property
     def cancelled_tasks(self) -> Dict[str, GpuTask]:
@@ -185,35 +171,94 @@ class MockGpuProvider:
 
 
 # ──────────────────────────────────────────────────────────────────
-# Rust coordinator provider (stub — future FFI/HTTP bridge)
+# Rust coordinator provider (HTTP bridge)
 # ──────────────────────────────────────────────────────────────────
 
 class RustGpuProvider:
-    """Future: talks to the Rust SwarmCoordinator via HTTP or FFI.
+    """Talk to a Rust swarm coordinator over HTTP.
 
-    The Rust coordinator runs on axum (port configurable), exposing
-    REST endpoints for task submission, polling, and cancellation.
-
-    Not yet implemented — placeholder for Phase 3b wiring.
+    Expected endpoints:
+    - POST `/api/v1/tasks` -> `{ "task_id": "..." }`
+    - GET `/api/v1/tasks/{task_id}` -> task result JSON or pending status
+    - POST `/api/v1/tasks/{task_id}/cancel` -> `{ "cancelled": true }`
+    - GET `/api/v1/tasks/pending` -> `{ "task_ids": ["..."] }`
     """
 
     def __init__(
         self,
         coordinator_url: str = "http://127.0.0.1:9955",
+        session: Optional[aiohttp.ClientSession] = None,
+        timeout_seconds: float = 10.0,
     ) -> None:
-        self._url = coordinator_url
+        self._url = coordinator_url.rstrip("/")
+        self._session = session
+        self._owns_session = session is None
+        self._timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
     async def submit(self, task: GpuTask) -> str:
-        raise NotImplementedError(
-            "RustGpuProvider requires a running Rust coordinator. "
-            f"Expected at {self._url}/api/v1/tasks"
-        )
+        session = await self._get_session()
+        payload = task.model_dump(mode="json")
+        async with session.post(f"{self._url}/api/v1/tasks", json=payload) as response:
+            response.raise_for_status()
+            data = await response.json()
+
+        if isinstance(data, dict) and data.get("task_id"):
+            return str(data["task_id"])
+        if isinstance(data, str):
+            return data
+        raise RuntimeError("Rust coordinator submit response did not include task_id")
 
     async def poll(self, task_id: str) -> Optional[GpuTaskResult]:
-        raise NotImplementedError("RustGpuProvider.poll not yet wired")
+        session = await self._get_session()
+        encoded_task_id = quote(task_id, safe="")
+        async with session.get(f"{self._url}/api/v1/tasks/{encoded_task_id}") as response:
+            if response.status in (204, 404):
+                return None
+            response.raise_for_status()
+            data = await response.json()
+
+        status = str(data.get("status", "")) if isinstance(data, dict) else ""
+        if status in {
+            GpuTaskStatus.PENDING.value,
+            GpuTaskStatus.ASSIGNED.value,
+            GpuTaskStatus.EXECUTING.value,
+            GpuTaskStatus.VERIFYING.value,
+        }:
+            return None
+
+        return GpuTaskResult.model_validate(data)
 
     async def cancel(self, task_id: str) -> bool:
-        raise NotImplementedError("RustGpuProvider.cancel not yet wired")
+        session = await self._get_session()
+        encoded_task_id = quote(task_id, safe="")
+        async with session.post(f"{self._url}/api/v1/tasks/{encoded_task_id}/cancel") as response:
+            if response.status == 404:
+                return False
+            response.raise_for_status()
+            data = await response.json()
+
+        if isinstance(data, dict) and "cancelled" in data:
+            return bool(data["cancelled"])
+        return True
 
     async def list_pending(self) -> List[str]:
-        raise NotImplementedError("RustGpuProvider.list_pending not yet wired")
+        session = await self._get_session()
+        async with session.get(f"{self._url}/api/v1/tasks/pending") as response:
+            response.raise_for_status()
+            data = await response.json()
+
+        if isinstance(data, dict) and "task_ids" in data:
+            return [str(task_id) for task_id in data["task_ids"]]
+        if isinstance(data, list):
+            return [str(task_id) for task_id in data]
+        raise RuntimeError("Rust coordinator pending response did not include task ids")
+
+    async def close(self) -> None:
+        if self._owns_session and self._session is not None:
+            await self._session.close()
+            self._session = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        if self._session is None:
+            self._session = aiohttp.ClientSession(timeout=self._timeout)
+        return self._session

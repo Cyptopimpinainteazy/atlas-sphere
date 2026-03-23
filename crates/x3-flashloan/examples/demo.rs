@@ -1,9 +1,8 @@
 use x3_court::{Court, CourtConfig, DisputeType, Verdict};
-use x3_flashloan::types::{AssetId, BorrowReceipt, ChainKind};
+use x3_flashloan::types::{AssetId, ChainKind};
 use x3_flashloan::{BorrowPurpose, BorrowRequest, FlashloanPool, SettlementEngine};
 use x3_proof::chain::ProofChain;
 use x3_proof::hasher::DeterministicHasher;
-use x3_proof::types::ExecutionProof;
 use x3_proof::{AgentIdentity, ProofEngine, ProofEngineConfig};
 
 fn main() {

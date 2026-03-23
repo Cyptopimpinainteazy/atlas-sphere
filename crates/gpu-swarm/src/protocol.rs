@@ -1,7 +1,7 @@
 //! P2P protocol definitions for the GPU swarm
 
 use crate::node::{GpuCapabilities, NodeId, NodeMetrics};
-use crate::task::{Task, TaskExecution, TaskId, TaskStatus};
+use crate::task::{Task, TaskId};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 

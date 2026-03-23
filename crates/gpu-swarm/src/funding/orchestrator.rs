@@ -4,9 +4,9 @@
 //! Ensures campaigns launch at optimal times and tracks results.
 
 use super::novaflux::NovaFlux;
-use super::webhook::{WebhookBridge, WebhookPayload};
+use super::webhook::WebhookBridge;
 use crate::crown::{MarketCycle, MarketForecast, VolatilityRegime};
-use crate::jobs::funding_campaign::{CampaignType, FundingCampaignConfig, Prospect};
+use crate::jobs::funding_campaign::{CampaignType, FundingCampaignConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

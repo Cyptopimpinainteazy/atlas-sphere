@@ -28,7 +28,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::mpsc;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 #[derive(NetworkBehaviour)]
 #[behaviour(to_swarm = "BehaviourEvent", prelude = "libp2p::swarm::derive_prelude")]

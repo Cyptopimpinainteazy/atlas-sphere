@@ -14,16 +14,32 @@ pub enum ProofType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProofPayload {
     StateCommitment(Hash),
-    ReceiptInclusion { receipt_hash: Hash, merkle_proof: Vec<Hash> },
-    IntentLock { intent_hash: Hash, resources: Hash },
-    SlashEvent { offender: [u8; 32], amount: u128 },
+    ReceiptInclusion {
+        receipt_hash: Hash,
+        merkle_proof: Vec<Hash>,
+    },
+    IntentLock {
+        intent_hash: Hash,
+        resources: Hash,
+    },
+    SlashEvent {
+        offender: [u8; 32],
+        amount: u128,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FinalityProof {
-    HotStuffQC { validator_set_hash: Hash, signatures: Vec<Vec<u8>> },
-    TendermintCommit { precommits: Vec<Vec<u8>> },
-    ZKProof { proof_data: Vec<u8> },
+    HotStuffQC {
+        validator_set_hash: Hash,
+        signatures: Vec<Vec<u8>>,
+    },
+    TendermintCommit {
+        precommits: Vec<Vec<u8>>,
+    },
+    ZKProof {
+        proof_data: Vec<u8>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

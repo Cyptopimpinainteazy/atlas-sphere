@@ -5,7 +5,6 @@ use prometheus::{
     Counter, CounterVec, Encoder, Gauge, GaugeVec, Histogram, HistogramOpts, HistogramVec, Opts,
     Registry,
 };
-use std::sync::Arc;
 
 pub struct MetricsCollector {
     registry: Registry,

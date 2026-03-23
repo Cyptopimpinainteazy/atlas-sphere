@@ -5,9 +5,9 @@ use super::*;
 #[allow(unused)]
 use crate::Pallet as X3AtomicKernel;
 use frame_benchmarking::{benchmarks, whitelisted_caller};
+use frame_system::pallet_prelude::BlockNumberFor;
 use frame_system::RawOrigin;
 use sp_core::H256;
-use frame_system::pallet_prelude::BlockNumberFor;
 
 benchmarks! {
     submit_atomic_bundle {
@@ -29,7 +29,7 @@ benchmarks! {
                 },
             });
         }
-        
+
         let bond = T::MinBond::get();
         let _ = T::Currency::make_free_balance_be(&caller, bond.saturating_mul(10u32.into()));
 
@@ -68,6 +68,6 @@ benchmarks! {
         let bundle = Bundles::<T>::get(bundle_id).unwrap();
         assert_eq!(bundle.status, BundleStatus::Finalized);
     }
-    
+
     impl_benchmark_test_suite!(X3AtomicKernel, crate::tests::new_test_ext(), crate::tests::Test);
 }

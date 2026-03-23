@@ -9,9 +9,8 @@ pub use logging::setup_logging;
 pub use metrics::MetricsCollector;
 pub use tracing::setup_tracing;
 
-use prometheus::{Encoder, Registry, TextEncoder};
+use prometheus::{Encoder, TextEncoder};
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
 /// Global metrics registry
 pub static METRICS_REGISTRY: once_cell::sync::Lazy<prometheus::Registry> =

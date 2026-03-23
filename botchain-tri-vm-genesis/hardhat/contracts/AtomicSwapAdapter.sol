@@ -62,6 +62,9 @@ contract AtomicSwapAdapter is ReentrancyGuard, Ownable {
     /// @notice Maximum timelock duration (7 days)
     uint256 public constant MAX_TIMELOCK = 7 days;
 
+    /// @notice Minimum difference required between the EVM timelock and remote-chain refund timelock
+    uint256 public constant MIN_REMOTE_TIMELOCK_DELTA = 1 hours;
+
     /// @notice Nonce for swap ID generation
     uint256 private _swapNonce;
 
@@ -104,6 +107,8 @@ contract AtomicSwapAdapter is ReentrancyGuard, Ownable {
     error InvalidHashlock();
     error TimelockTooShort();
     error TimelockTooLong();
+    error RemoteTimelockNotLonger();
+    error RemoteTimelockDeltaTooSmall();
     error NotInitiator();
 
     // ============ Constructor ============
@@ -131,62 +136,32 @@ contract AtomicSwapAdapter is ReentrancyGuard, Ownable {
         bytes32 hashlock,
         uint256 timelock
     ) external nonReentrant returns (bytes32 swapId) {
-        // Input validation
-        if (participant == address(0)) revert InvalidParticipant();
-        if (address(token) == address(0)) revert InvalidToken();
-        if (amount == 0) revert InvalidAmount();
-        if (hashlock == bytes32(0)) revert InvalidHashlock();
+        return _lockTokens(participant, token, amount, hashlock, timelock);
+    }
 
-        // Timelock validation
-        if (timelock < block.timestamp + MIN_TIMELOCK)
-            revert TimelockTooShort();
-        if (timelock > block.timestamp + MAX_TIMELOCK) revert TimelockTooLong();
-
-        // Generate deterministic swap ID (prevents replay attacks)
-        unchecked {
-            _swapNonce++;
+    /**
+     * @notice Lock tokens with an explicit remote-chain timelock safety check
+     * @param participant Address that can claim with correct preimage
+     * @param token ERC20 token to lock
+     * @param amount Amount to lock
+     * @param hashlock SHA256(preimage)
+     * @param timelock EVM refund timelock
+     * @param remoteTimelock Expected remote-chain refund timelock
+     */
+    function lockTokensWithRemoteTimelock(
+        address participant,
+        IERC20 token,
+        uint256 amount,
+        bytes32 hashlock,
+        uint256 timelock,
+        uint256 remoteTimelock
+    ) external nonReentrant returns (bytes32 swapId) {
+        if (remoteTimelock <= timelock) revert RemoteTimelockNotLonger();
+        if (remoteTimelock - timelock < MIN_REMOTE_TIMELOCK_DELTA) {
+            revert RemoteTimelockDeltaTooSmall();
         }
-        swapId = keccak256(
-            abi.encodePacked(
-                msg.sender,
-                participant,
-                address(token),
-                amount,
-                hashlock,
-                timelock,
-                _swapNonce,
-                block.chainid
-            )
-        );
 
-        // Ensure swap ID hasn't been used
-        if (usedSwapIds[swapId]) revert SwapAlreadyExists();
-        usedSwapIds[swapId] = true;
-
-        // Transfer tokens to contract (checks-effects-interactions: state before transfer)
-        swaps[swapId] = Swap({
-            initiator: msg.sender,
-            participant: participant,
-            token: token,
-            amount: amount,
-            hashlock: hashlock,
-            timelock: timelock,
-            claimed: false,
-            refunded: false
-        });
-
-        // External call last
-        token.safeTransferFrom(msg.sender, address(this), amount);
-
-        emit TokensLocked(
-            swapId,
-            msg.sender,
-            participant,
-            address(token),
-            amount,
-            hashlock,
-            timelock
-        );
+        return _lockTokens(participant, token, amount, hashlock, timelock);
     }
 
     /**
@@ -292,6 +267,18 @@ contract AtomicSwapAdapter is ReentrancyGuard, Ownable {
     }
 
     /**
+     * @notice Check whether a local/remote timelock pair leaves the recommended safety margin
+     */
+    function isSafeRemoteTimelock(
+        uint256 localTimelock,
+        uint256 remoteTimelock
+    ) external pure returns (bool) {
+        return
+            remoteTimelock > localTimelock &&
+            remoteTimelock - localTimelock >= MIN_REMOTE_TIMELOCK_DELTA;
+    }
+
+    /**
      * @notice Get time remaining until timelock expires
      * @return seconds remaining, or 0 if expired
      */
@@ -345,5 +332,64 @@ contract AtomicSwapAdapter is ReentrancyGuard, Ownable {
      */
     function getSwapNonce() external view returns (uint256) {
         return _swapNonce;
+    }
+
+    function _lockTokens(
+        address participant,
+        IERC20 token,
+        uint256 amount,
+        bytes32 hashlock,
+        uint256 timelock
+    ) internal returns (bytes32 swapId) {
+        if (participant == address(0)) revert InvalidParticipant();
+        if (address(token) == address(0)) revert InvalidToken();
+        if (amount == 0) revert InvalidAmount();
+        if (hashlock == bytes32(0)) revert InvalidHashlock();
+
+        if (timelock < block.timestamp + MIN_TIMELOCK)
+            revert TimelockTooShort();
+        if (timelock > block.timestamp + MAX_TIMELOCK) revert TimelockTooLong();
+
+        unchecked {
+            _swapNonce++;
+        }
+        swapId = keccak256(
+            abi.encodePacked(
+                msg.sender,
+                participant,
+                address(token),
+                amount,
+                hashlock,
+                timelock,
+                _swapNonce,
+                block.chainid
+            )
+        );
+
+        if (usedSwapIds[swapId]) revert SwapAlreadyExists();
+        usedSwapIds[swapId] = true;
+
+        swaps[swapId] = Swap({
+            initiator: msg.sender,
+            participant: participant,
+            token: token,
+            amount: amount,
+            hashlock: hashlock,
+            timelock: timelock,
+            claimed: false,
+            refunded: false
+        });
+
+        token.safeTransferFrom(msg.sender, address(this), amount);
+
+        emit TokensLocked(
+            swapId,
+            msg.sender,
+            participant,
+            address(token),
+            amount,
+            hashlock,
+            timelock
+        );
     }
 }

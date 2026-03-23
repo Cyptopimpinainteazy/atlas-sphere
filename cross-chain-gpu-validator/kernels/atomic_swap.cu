@@ -128,8 +128,9 @@ int atomic_verify_host(
 
     int svm_rc = ed25519_verify_batch_host(svm_data, batch_size, svm_results);
     if (svm_rc != 0) {
+        memset(status, 0, (size_t)batch_size);
         free(svm_results);
-        return svm_rc;
+        return 0;
     }
 
     // 2) Prepare inputs for secp256k1 GPU verifier
@@ -178,14 +179,18 @@ int atomic_verify_host(
         u1_bytes, u2_bytes, pubkeys, batch_size, out_x
     );
 
-    for (int i = 0; i < batch_size; i++) {
-        bool svm_ok = svm_results[i] != 0;
-        bool evm_ok = true;
-        // Compare out_x to r
-        if (memcmp(out_x + (size_t)i * 32, r_bytes + (size_t)i * 32, 32) != 0) {
-            evm_ok = false;
+    if (evm_rc != 0) {
+        memset(status, 0, (size_t)batch_size);
+    } else {
+        for (int i = 0; i < batch_size; i++) {
+            bool svm_ok = svm_results[i] != 0;
+            bool evm_ok = true;
+            // Compare out_x to r
+            if (memcmp(out_x + (size_t)i * 32, r_bytes + (size_t)i * 32, 32) != 0) {
+                evm_ok = false;
+            }
+            status[i] = (svm_ok && evm_ok) ? 1 : 0;
         }
-        status[i] = (svm_ok && evm_ok) ? 1 : 0;
     }
 
     free(svm_results);
@@ -195,7 +200,7 @@ int atomic_verify_host(
     free(pubkeys);
     free(out_x);
 
-    return evm_rc;
+    return 0;
 }
 
 int atomic_commit_host(

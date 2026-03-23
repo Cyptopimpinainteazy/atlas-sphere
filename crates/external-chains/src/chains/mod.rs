@@ -25,7 +25,10 @@ pub use polygon::PolygonAdapter;
 
 // Re-export universal adapter and registry
 pub use registry::{all_chain_ids, chain_count, get_chain, ChainInfo, ALL_CHAINS};
-pub use universal::{adapter_for, create_all_universal_adapters, UniversalEvmAdapter};
+pub use universal::{
+    adapter_for, create_all_universal_adapters, onboard_external_adapter, ExternalEvmOnboarding,
+    UniversalEvmAdapter,
+};
 
 use crate::adapter::{ChainAdapter, ChainConfig};
 use crate::ChainType;

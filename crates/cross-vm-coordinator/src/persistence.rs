@@ -161,16 +161,12 @@ impl<O: OffchainStorageProvider> SessionPersistence for OffchainPersistence<O> {
 ///
 /// Use this in the node service to wire real offchain DB.
 #[cfg(feature = "offchain")]
-pub struct SubstrateOffchainAdapter<
-    Backend: sc_client_api::OffchainStorage,
-> {
+pub struct SubstrateOffchainAdapter<Backend: sc_client_api::OffchainStorage> {
     inner: Arc<std::sync::RwLock<Backend>>,
 }
 
 #[cfg(feature = "offchain")]
-impl<Backend: sc_client_api::OffchainStorage>
-    SubstrateOffchainAdapter<Backend>
-{
+impl<Backend: sc_client_api::OffchainStorage> SubstrateOffchainAdapter<Backend> {
     pub fn new(backend: Backend) -> Self {
         Self {
             inner: Arc::new(std::sync::RwLock::new(backend)),
@@ -179,17 +175,13 @@ impl<Backend: sc_client_api::OffchainStorage>
 }
 
 #[cfg(feature = "offchain")]
-impl<Backend: sc_client_api::OffchainStorage + Send + Sync + 'static>
-    OffchainStorageProvider for SubstrateOffchainAdapter<Backend>
+impl<Backend: sc_client_api::OffchainStorage + Send + Sync + 'static> OffchainStorageProvider
+    for SubstrateOffchainAdapter<Backend>
 {
     fn set(&self, key: &[u8], value: &[u8]) {
         // Use PERSISTENT storage so it survives reboots
         let mut guard = self.inner.write().unwrap();
-        guard.set(
-            sp_core::offchain::STORAGE_PREFIX,
-            key,
-            value,
-        );
+        guard.set(sp_core::offchain::STORAGE_PREFIX, key, value);
     }
 
     fn get(&self, key: &[u8]) -> Option<Vec<u8>> {

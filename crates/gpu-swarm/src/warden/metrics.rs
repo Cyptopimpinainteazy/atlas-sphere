@@ -4,7 +4,6 @@
 
 use crate::warden::policy::ComputeLane;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Profit metrics (P↑)
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -239,7 +238,7 @@ impl SwarmPillars {
         let e = self.ecosystem.score();
 
         // Infrastructure is weighted higher (it's foundational)
-        (p * 0.25 + i * 0.25 + s * 0.30 + e * 0.20)
+        p * 0.25 + i * 0.25 + s * 0.30 + e * 0.20
     }
 
     /// Get individual pillar scores

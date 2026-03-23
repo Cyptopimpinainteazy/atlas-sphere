@@ -64,6 +64,7 @@ pub mod weights;
 
 /// Runtime storage migrations.
 pub mod migrations;
+pub mod runtime_api;
 pub use weights::WeightInfo;
 
 use frame_support::pallet_prelude::*;

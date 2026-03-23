@@ -169,9 +169,9 @@ impl SigningKey {
     /// Check if seed has sufficient entropy
     fn is_weak_seed(seed: &[u8]) -> bool {
         // Check for all zeros, all ones, or sequential patterns
-        seed.iter().all(|&b| b == 0) ||
-        seed.iter().all(|&b| b == 0xFF) ||
-        seed.windows(2).all(|w| w[0] + 1 == w[1])
+        seed.iter().all(|&b| b == 0)
+            || seed.iter().all(|&b| b == 0xFF)
+            || seed.windows(2).all(|w| w[0] + 1 == w[1])
     }
 
     /// Generate a new signing key from seed (with validation and entropy mixing)
@@ -179,14 +179,14 @@ impl SigningKey {
         // Validate seed length (minimum 32 bytes for 256-bit security)
         if seed.len() < 32 {
             return Err(SwarmError::CryptoError(
-                "Seed must be at least 32 bytes for sufficient entropy".to_string()
+                "Seed must be at least 32 bytes for sufficient entropy".to_string(),
             ));
         }
 
         // Check for obviously weak seeds
         if Self::is_weak_seed(seed) {
             return Err(SwarmError::CryptoError(
-                "Seed appears to have insufficient entropy".to_string()
+                "Seed appears to have insufficient entropy".to_string(),
             ));
         }
 

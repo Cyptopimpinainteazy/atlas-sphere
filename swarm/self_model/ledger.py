@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from swarm.core.enums import Domain
 from swarm.event_bus.bus import AsyncEventBus
@@ -55,12 +55,14 @@ class SelfModelLedger:
         event_bus: Optional[AsyncEventBus] = None,
         decay_engine: Optional[DecayEngine] = None,
         projection_engine: Optional[ProjectionEngine] = None,
+        anchor_writer: Optional[Callable[[str, int, str], str]] = None,
     ) -> None:
         self.agent_id = agent_id
         self._storage = storage
         self._bus = event_bus
         self._decay = decay_engine or DecayEngine()
         self._projector = projection_engine or ProjectionEngine()
+        self._anchor_writer = anchor_writer
 
         # Load or create
         saved = self._storage.load(NAMESPACE, agent_id)
@@ -250,25 +252,35 @@ class SelfModelLedger:
         return json.dumps(data, sort_keys=True, default=str).encode("utf-8")
 
     def anchor_to_chain(self) -> str:
-        """Submit integrity hash to on-chain anchor.
+        """Submit integrity hash to an injected chain anchor backend.
 
-        Follows the pattern from ``swarm/jury/anchorer.py``.
-        Returns a placeholder tx hash until live chain integration.
+        This method now fails fast when no anchor writer has been configured,
+        instead of returning a fake transaction hash.
         """
         self._assert_alive()
         self._model.compute_integrity_hash()
-        tx_hash = hashlib.sha256(
-            f"{self.agent_id}:{self._model.version}:{self._model.integrity_hash}".encode()
-        ).hexdigest()
+
+        if self._anchor_writer is None:
+            raise RuntimeError(
+                "No chain anchor backend configured for SelfModelLedger.anchor_to_chain"
+            )
+
+        tx_hash = self._anchor_writer(
+            self.agent_id,
+            self._model.version,
+            self._model.integrity_hash,
+        )
+        if not tx_hash:
+            raise RuntimeError("Chain anchor backend returned an empty transaction hash")
 
         logger.info(
             "Anchoring self-model: agent=%s v=%d hash=%s tx=%s",
             self.agent_id,
             self._model.version,
             self._model.integrity_hash[:16],
-            tx_hash[:16],
+            str(tx_hash)[:16],
         )
-        return tx_hash
+        return str(tx_hash)
 
     # ------------------------------------------------------------------
     # Internals

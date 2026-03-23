@@ -102,6 +102,7 @@ def _load_configs_from_file(path: str) -> dict[str, ChainConfig]:
             hash_output_size=32,
             supports_gpu=bool(item.get("supports_gpu", True)),
         )
+
     return configs
 
 
@@ -116,11 +117,6 @@ def load_default_chain_configs() -> dict[str, ChainConfig]:
     - Layer 2s: Arbitrum, Optimism, zk-EVM, Starknet, etc.
     - Other L1s: TON, Aptos, Sui, etc.
     """
-
-    # Prefer resource file if present (auto-generated canonical list)
-    file_configs = _load_configs_from_file("chains.json")
-    if file_configs:
-        return file_configs
 
     configs = {}
 
@@ -261,5 +257,11 @@ def load_default_chain_configs() -> dict[str, ChainConfig]:
             hash_output_size=32,
             supports_gpu=True,
         )
+
+    # Merge in canonical resource-backed configs last so generated chain data
+    # can override built-ins without dropping non-EVM families that are not yet
+    # present in the generated export.
+    file_configs = _load_configs_from_file("chains.json")
+    configs.update(file_configs)
 
     return configs

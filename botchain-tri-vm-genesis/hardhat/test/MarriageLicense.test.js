@@ -68,7 +68,16 @@ describe("MarriageLicense", function () {
     return signer.signMessage(ethers.getBytes(messageHash));
   }
 
+  async function increaseTime(seconds) {
+    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await ethers.provider.send("evm_mine", []);
+  }
+
   describe("Deployment", function () {
+    it("Should set the admin action delay", async function () {
+      expect(await marriageLicense.ADMIN_ACTION_DELAY()).to.equal(3 * 24 * 60 * 60);
+    });
+
     it("Should set correct token address", async function () {
       expect(await marriageLicense.botToken()).to.equal(await bot.getAddress());
     });
@@ -375,8 +384,22 @@ describe("MarriageLicense", function () {
       childId = 1;
     });
 
-    it("Should quarantine child (owner only)", async function () {
-      await expect(marriageLicense.quarantineChild(childId, "Safety concern"))
+    it("Should schedule and execute quarantine after delay", async function () {
+      const delay = await marriageLicense.ADMIN_ACTION_DELAY();
+
+      await expect(
+        marriageLicense.scheduleQuarantineChild(childId, "Safety concern")
+      ).to.emit(marriageLicense, "QuarantineScheduled");
+
+      await expect(
+        marriageLicense.executeQuarantineChild(childId)
+      ).to.be.revertedWith("Action not ready");
+
+      await increaseTime(Number(delay));
+
+      await expect(
+        marriageLicense.executeQuarantineChild(childId)
+      )
         .to.emit(marriageLicense, "ChildQuarantined")
         .withArgs(childId, "Safety concern");
 
@@ -384,8 +407,36 @@ describe("MarriageLicense", function () {
       expect(child.isQuarantined).to.equal(true);
     });
 
-    it("Should revoke child (owner only)", async function () {
-      await expect(marriageLicense.revokeChild(childId))
+    it("Should allow cancelling a scheduled quarantine", async function () {
+      await marriageLicense.scheduleQuarantineChild(childId, "Safety concern");
+
+      await expect(
+        marriageLicense.cancelQuarantineChild(childId)
+      )
+        .to.emit(marriageLicense, "QuarantineCancelled")
+        .withArgs(childId);
+
+      await expect(
+        marriageLicense.executeQuarantineChild(childId)
+      ).to.be.revertedWith("Quarantine not scheduled");
+    });
+
+    it("Should schedule and execute revocation after delay", async function () {
+      const delay = await marriageLicense.ADMIN_ACTION_DELAY();
+
+      await expect(
+        marriageLicense.scheduleRevokeChild(childId, "Policy violation")
+      ).to.emit(marriageLicense, "RevocationScheduled");
+
+      await expect(
+        marriageLicense.executeRevokeChild(childId)
+      ).to.be.revertedWith("Action not ready");
+
+      await increaseTime(Number(delay));
+
+      await expect(
+        marriageLicense.executeRevokeChild(childId)
+      )
         .to.emit(marriageLicense, "ChildRevoked")
         .withArgs(childId);
 
@@ -393,9 +444,9 @@ describe("MarriageLicense", function () {
       expect(child.isActive).to.equal(false);
     });
 
-    it("Should reject non-owner quarantine", async function () {
+    it("Should reject non-owner quarantine scheduling", async function () {
       await expect(
-        marriageLicense.connect(bob).quarantineChild(childId, "test")
+        marriageLicense.connect(bob).scheduleQuarantineChild(childId, "test")
       ).to.be.revertedWith("Not authorized");
     });
   });
@@ -407,10 +458,47 @@ describe("MarriageLicense", function () {
       expect(await marriageLicense.marriageFee()).to.equal(newFee);
     });
 
-    it("Should update verifiers", async function () {
-      await marriageLicense.setVerifiers(alice.address, bob.address);
+    it("Should schedule and execute verifier updates after delay", async function () {
+      const delay = await marriageLicense.ADMIN_ACTION_DELAY();
+
+      await expect(
+        marriageLicense.scheduleVerifierUpdate(alice.address, bob.address)
+      ).to.emit(marriageLicense, "VerifierUpdateScheduled");
+
+      await expect(
+        marriageLicense.executeVerifierUpdate()
+      ).to.be.revertedWith("Action not ready");
+
+      await increaseTime(Number(delay));
+      await marriageLicense.executeVerifierUpdate();
+
       expect(await marriageLicense.compilerVerifier()).to.equal(alice.address);
       expect(await marriageLicense.checkerVerifier()).to.equal(bob.address);
+    });
+
+    it("Should allow cancelling a verifier update", async function () {
+      await marriageLicense.scheduleVerifierUpdate(alice.address, bob.address);
+      await expect(marriageLicense.cancelVerifierUpdate()).to.emit(
+        marriageLicense,
+        "VerifierUpdateCancelled"
+      );
+
+      await expect(
+        marriageLicense.executeVerifierUpdate()
+      ).to.be.revertedWith("Verifier update not scheduled");
+    });
+
+    it("Should schedule and execute multisig updates after delay", async function () {
+      const delay = await marriageLicense.ADMIN_ACTION_DELAY();
+
+      await expect(
+        marriageLicense.scheduleMultisigUpdate(alice.address)
+      ).to.emit(marriageLicense, "MultisigUpdateScheduled");
+
+      await increaseTime(Number(delay));
+      await marriageLicense.executeMultisigUpdate();
+
+      expect(await marriageLicense.multisig()).to.equal(alice.address);
     });
   });
 });

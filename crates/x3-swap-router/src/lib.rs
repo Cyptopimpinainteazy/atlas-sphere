@@ -106,7 +106,7 @@ impl AtomicSwapRouter {
         // Step 6: Calculate fees
         let fees = self
             .fee_calculator
-            .calculate_swap_fees(&protected_route.route)
+            .calculate_swap_fees(&protected_route.route, &params)
             .await?;
 
         // Step 7: Execute atomic bundle
@@ -148,6 +148,20 @@ pub struct SwapParams {
     pub recipient: H160,
     pub slippage_tolerance_bps: u16,
     pub gas_price_limit: Option<U256>,
+    #[serde(default)]
+    pub source_vm: VmType,
+    #[serde(default)]
+    pub destination_vm: VmType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum VmType {
+    Evm,
+    Svm,
+    X3Vm,
+    #[default]
+    Unknown,
 }
 
 /// Result of swap execution

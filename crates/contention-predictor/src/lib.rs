@@ -3,16 +3,13 @@
 //! Implements machine learning-based contention prediction for
 //! optimal transaction ordering and parallel processing.
 
-use anyhow::{anyhow, Result};
-use once_cell::sync::Lazy;
-use rand::Rng;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 use thiserror::Error;
-use tokio::sync::{mpsc, Mutex, RwLock};
-use tracing::{debug, info, warn};
+use tokio::sync::Mutex;
+use tracing::debug;
 
 pub const FEATURE_VECTOR_DIM: usize = 64;
 
@@ -194,7 +191,7 @@ impl ContentionPredictor {
             .await
             .extract_features(tx)
             .await?;
-        let mut model = self.model.lock().await;
+        let model = self.model.lock().await;
         let prediction = model.predict(&features).await?;
 
         // Update stats

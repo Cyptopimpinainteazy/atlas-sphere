@@ -14,6 +14,7 @@ pub use pallet::*;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
+pub mod cross_chain;
 pub mod weights;
 
 #[cfg(test)]
@@ -30,6 +31,17 @@ use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_runtime::traits::{SaturatedConversion, Zero};
 use sp_std::{vec, vec::Vec};
+
+const FINALITY_ENVELOPE_MAGIC: &[u8; 4] = b"X3PF";
+const FINALITY_ENVELOPE_VERSION: u8 = 1;
+const FINALITY_CHAIN_EVM: u8 = 1;
+const FINALITY_CHAIN_SVM: u8 = 2;
+const FINALITY_CHAIN_BTC: u8 = 3;
+const FINALITY_ENVELOPE_LEN: usize = 74;
+const FINALITY_WITNESS_LEN: usize = 96;
+const MIN_EVM_CONFIRMATIONS: u32 = 12;
+const MIN_SVM_CONFIRMATIONS: u32 = 32;
+const MIN_BTC_CONFIRMATIONS: u32 = 6;
 
 pub use weights::WeightInfo;
 
@@ -96,6 +108,25 @@ pub struct BonusClaim {
     pub claimed_at: u64,
     /// Whether claim is locked (for vesting)
     pub locked: bool,
+}
+
+/// Runtime relayer configuration entry
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct RelayerRuntimeConfig<AccountId, Balance> {
+    pub relayer: AccountId,
+    pub enabled_chains: Vec<u32>,
+    pub min_confirmations: u32,
+    pub max_gas_price: Balance,
+}
+
+/// Runtime cross-chain event record
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct CrossChainRuntimeEvent {
+    pub operation_id: H256,
+    pub chain_id: u32,
+    pub event_type: u8,
+    pub timestamp: u64,
+    pub data: Vec<u8>,
 }
 
 /// Proof types for cross-chain operations
@@ -239,6 +270,20 @@ pub mod pallet {
     #[pallet::getter(fn cross_chain_nonce)]
     pub type CrossChainNonce<T: Config> =
         StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+
+    /// Relayer configuration registry
+    /// Value tuple: (enabled_chains, min_confirmations, max_gas_price)
+    #[pallet::storage]
+    #[pallet::getter(fn relayer_registry_store)]
+    pub type RelayerRegistryStore<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, (Vec<u32>, u32, T::Balance), OptionQuery>;
+
+    /// Cross-chain event history by chain
+    /// Event tuple: (operation_id, event_type, timestamp, data)
+    #[pallet::storage]
+    #[pallet::getter(fn cross_chain_event_history_store)]
+    pub type CrossChainEventHistoryStore<T: Config> =
+        StorageMap<_, Blake2_128Concat, u32, Vec<(H256, u8, u64, Vec<u8>)>, ValueQuery>;
 
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
@@ -709,6 +754,102 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
+        fn parse_finality_envelope(
+            proof_bytes: &[u8],
+            expected_chain: u8,
+        ) -> Result<(u32, [u8; 32], [u8; 32], &[u8]), Error<T>> {
+            ensure!(
+                proof_bytes.len() >= FINALITY_ENVELOPE_LEN,
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                &proof_bytes[0..4] == FINALITY_ENVELOPE_MAGIC,
+                Error::<T>::InvalidProof
+            );
+            ensure!(proof_bytes[4] == expected_chain, Error::<T>::InvalidProof);
+            ensure!(
+                proof_bytes[5] == FINALITY_ENVELOPE_VERSION,
+                Error::<T>::InvalidProof
+            );
+
+            let mut confirmations_bytes = [0u8; 4];
+            confirmations_bytes.copy_from_slice(&proof_bytes[6..10]);
+            let confirmations = u32::from_le_bytes(confirmations_bytes);
+
+            let mut inclusion_commitment = [0u8; 32];
+            inclusion_commitment.copy_from_slice(&proof_bytes[10..42]);
+            let mut header_commitment = [0u8; 32];
+            header_commitment.copy_from_slice(&proof_bytes[42..74]);
+            ensure!(
+                inclusion_commitment.iter().any(|b| *b != 0),
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                header_commitment.iter().any(|b| *b != 0),
+                Error::<T>::InvalidProof
+            );
+
+            Ok((
+                confirmations,
+                inclusion_commitment,
+                header_commitment,
+                &proof_bytes[74..],
+            ))
+        }
+
+        fn validate_finality_witness<'a>(
+            expected_chain: u8,
+            inclusion_commitment: &[u8; 32],
+            header_commitment: &[u8; 32],
+            witness_and_tail: &'a [u8],
+        ) -> Result<&'a [u8], Error<T>> {
+            ensure!(
+                witness_and_tail.len() >= FINALITY_WITNESS_LEN,
+                Error::<T>::InvalidProof
+            );
+
+            let receipt_root = &witness_and_tail[0..32];
+            let header_hash = &witness_and_tail[32..64];
+            let light_client_root = &witness_and_tail[64..96];
+
+            ensure!(
+                receipt_root.iter().any(|b| *b != 0),
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                header_hash.iter().any(|b| *b != 0),
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                light_client_root.iter().any(|b| *b != 0),
+                Error::<T>::InvalidProof
+            );
+
+            let mut inclusion_preimage = Vec::with_capacity(1 + 32 + 32);
+            inclusion_preimage.push(expected_chain);
+            inclusion_preimage.extend_from_slice(receipt_root);
+            inclusion_preimage.extend_from_slice(light_client_root);
+
+            let mut header_preimage = Vec::with_capacity(1 + 32 + 32);
+            header_preimage.push(expected_chain);
+            header_preimage.extend_from_slice(header_hash);
+            header_preimage.extend_from_slice(light_client_root);
+
+            let expected_inclusion = sp_io::hashing::blake2_256(&inclusion_preimage);
+            let expected_header = sp_io::hashing::blake2_256(&header_preimage);
+
+            ensure!(
+                expected_inclusion == *inclusion_commitment,
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                expected_header == *header_commitment,
+                Error::<T>::InvalidProof
+            );
+
+            Ok(&witness_and_tail[FINALITY_WITNESS_LEN..])
+        }
+
         fn x3_asset_id() -> T::AssetId {
             T::AssetId::default()
         }
@@ -746,9 +887,95 @@ pub mod pallet {
         fn validate_proof(proof: &X3Proof) -> Result<(), Error<T>> {
             match proof {
                 X3Proof::None => Err(Error::<T>::InvalidProof),
-                X3Proof::EvmProof { .. } => Ok(()), // TODO: Implement EVM proof validation
-                X3Proof::SvmProof { .. } => Ok(()), // TODO: Implement SVM proof validation
-                X3Proof::BtcProof { .. } => Ok(()), // TODO: Implement BTC proof validation
+                X3Proof::EvmProof {
+                    tx_hash,
+                    block_number,
+                    proof_data,
+                } => {
+                    ensure!(*tx_hash != H256::zero(), Error::<T>::InvalidProof);
+                    ensure!(*block_number > 0, Error::<T>::InvalidProof);
+                    ensure!(proof_data.len() <= 8_192, Error::<T>::InvalidProof);
+                    let (confirmations, inclusion_commitment, header_commitment, witness_and_tail) =
+                        Self::parse_finality_envelope(proof_data, FINALITY_CHAIN_EVM)?;
+                    ensure!(
+                        confirmations >= MIN_EVM_CONFIRMATIONS,
+                        Error::<T>::InvalidProof
+                    );
+                    ensure!(
+                        *block_number >= confirmations as u64,
+                        Error::<T>::InvalidProof
+                    );
+                    let receipt_tail = Self::validate_finality_witness(
+                        FINALITY_CHAIN_EVM,
+                        &inclusion_commitment,
+                        &header_commitment,
+                        witness_and_tail,
+                    )?;
+                    ensure!(!receipt_tail.is_empty(), Error::<T>::InvalidProof);
+                    Ok(())
+                }
+                X3Proof::SvmProof {
+                    signature,
+                    block_number,
+                    proof_data,
+                } => {
+                    ensure!(*block_number > 0, Error::<T>::InvalidProof);
+                    ensure!(
+                        signature.len() == 64 || signature.len() == 65,
+                        Error::<T>::InvalidProof
+                    );
+                    ensure!(signature.iter().any(|b| *b != 0), Error::<T>::InvalidProof);
+                    ensure!(proof_data.len() <= 8_192, Error::<T>::InvalidProof);
+                    let (confirmations, inclusion_commitment, header_commitment, witness_and_tail) =
+                        Self::parse_finality_envelope(proof_data, FINALITY_CHAIN_SVM)?;
+                    ensure!(
+                        confirmations >= MIN_SVM_CONFIRMATIONS,
+                        Error::<T>::InvalidProof
+                    );
+                    ensure!(
+                        *block_number >= confirmations as u64,
+                        Error::<T>::InvalidProof
+                    );
+                    let receipt_tail = Self::validate_finality_witness(
+                        FINALITY_CHAIN_SVM,
+                        &inclusion_commitment,
+                        &header_commitment,
+                        witness_and_tail,
+                    )?;
+                    ensure!(!receipt_tail.is_empty(), Error::<T>::InvalidProof);
+                    Ok(())
+                }
+                X3Proof::BtcProof {
+                    txid,
+                    block_height,
+                    merkle_proof,
+                } => {
+                    ensure!(*txid != H256::zero(), Error::<T>::InvalidProof);
+                    ensure!(*block_height > 0, Error::<T>::InvalidProof);
+                    ensure!(
+                        merkle_proof.len() <= 4_096 + FINALITY_ENVELOPE_LEN,
+                        Error::<T>::InvalidProof
+                    );
+                    let (confirmations, inclusion_commitment, header_commitment, witness_and_tail) =
+                        Self::parse_finality_envelope(merkle_proof, FINALITY_CHAIN_BTC)?;
+                    ensure!(
+                        confirmations >= MIN_BTC_CONFIRMATIONS,
+                        Error::<T>::InvalidProof
+                    );
+                    ensure!(
+                        *block_height >= confirmations as u64,
+                        Error::<T>::InvalidProof
+                    );
+                    let branch_bytes = Self::validate_finality_witness(
+                        FINALITY_CHAIN_BTC,
+                        &inclusion_commitment,
+                        &header_commitment,
+                        witness_and_tail,
+                    )?;
+                    ensure!(!branch_bytes.is_empty(), Error::<T>::InvalidProof);
+                    ensure!(branch_bytes.len() % 32 == 0, Error::<T>::InvalidProof);
+                    Ok(())
+                }
             }
         }
 
@@ -799,6 +1026,132 @@ pub mod pallet {
         fn decode_account_id(account_bytes: &[u8]) -> Result<T::AccountId, Error<T>> {
             T::AccountId::decode(&mut &account_bytes[..])
                 .map_err(|_| Error::<T>::InvalidTargetAccount)
+        }
+
+        pub fn register_relayer_config(
+            relayer: T::AccountId,
+            enabled_chains: Vec<u32>,
+            min_confirmations: u32,
+            max_gas_price: T::Balance,
+        ) -> Result<(), Error<T>> {
+            ensure!(
+                !enabled_chains.is_empty(),
+                Error::<T>::InvalidCrossChainOperation
+            );
+            ensure!(
+                min_confirmations > 0,
+                Error::<T>::InvalidCrossChainOperation
+            );
+
+            let max_gas_price_u128: u128 = max_gas_price.saturated_into();
+            ensure!(
+                max_gas_price_u128 > 0,
+                Error::<T>::InvalidCrossChainOperation
+            );
+
+            let mut unique_chains = enabled_chains;
+            unique_chains.sort_unstable();
+            unique_chains.dedup();
+
+            RelayerRegistryStore::<T>::insert(
+                &relayer,
+                (unique_chains, min_confirmations, max_gas_price),
+            );
+            Ok(())
+        }
+
+        pub fn get_relayer_config_entry(
+            relayer: &T::AccountId,
+        ) -> Option<RelayerRuntimeConfig<T::AccountId, T::Balance>> {
+            RelayerRegistryStore::<T>::get(relayer).map(
+                |(enabled_chains, min_confirmations, max_gas_price)| RelayerRuntimeConfig {
+                    relayer: relayer.clone(),
+                    enabled_chains,
+                    min_confirmations,
+                    max_gas_price,
+                },
+            )
+        }
+
+        pub fn get_available_relayer_paths(
+            source_chain: u32,
+            target_chain: u32,
+            operation_type: u8,
+        ) -> Vec<(T::AccountId, u32, T::Balance)> {
+            if source_chain == 0 || target_chain == 0 || source_chain == target_chain {
+                return vec![];
+            }
+            if operation_type > 2 {
+                return vec![];
+            }
+
+            let fee_bps = if operation_type == 2 { 200 } else { 400 };
+
+            RelayerRegistryStore::<T>::iter()
+                .filter_map(
+                    |(relayer, (enabled_chains, _min_confirmations, max_gas_price))| {
+                        let source_supported =
+                            enabled_chains.iter().any(|chain| *chain == source_chain);
+                        let target_supported =
+                            enabled_chains.iter().any(|chain| *chain == target_chain);
+                        if source_supported && target_supported {
+                            Some((relayer, fee_bps, max_gas_price))
+                        } else {
+                            None
+                        }
+                    },
+                )
+                .collect()
+        }
+
+        pub fn process_cross_chain_event(
+            operation_id: H256,
+            chain_id: u32,
+            event_type: u8,
+            timestamp: u64,
+            data: Vec<u8>,
+        ) -> Result<(), Error<T>> {
+            ensure!(chain_id > 0, Error::<T>::InvalidCrossChainOperation);
+            ensure!(event_type <= 2, Error::<T>::InvalidCrossChainOperation);
+            ensure!(!data.is_empty(), Error::<T>::InvalidCrossChainOperation);
+
+            let mut history = CrossChainEventHistoryStore::<T>::get(chain_id);
+            history.push((operation_id, event_type, timestamp, data));
+
+            const MAX_EVENTS_PER_CHAIN: usize = 1024;
+            if history.len() > MAX_EVENTS_PER_CHAIN {
+                let overflow = history.len() - MAX_EVENTS_PER_CHAIN;
+                history.drain(0..overflow);
+            }
+
+            CrossChainEventHistoryStore::<T>::insert(chain_id, history);
+            Ok(())
+        }
+
+        pub fn get_cross_chain_event_history(
+            chain_id: u32,
+            limit: u32,
+        ) -> Vec<CrossChainRuntimeEvent> {
+            if chain_id == 0 || limit == 0 {
+                return vec![];
+            }
+
+            let history = CrossChainEventHistoryStore::<T>::get(chain_id);
+            let count = core::cmp::min(limit as usize, history.len());
+            let start = history.len().saturating_sub(count);
+
+            history[start..]
+                .iter()
+                .map(
+                    |(operation_id, event_type, timestamp, data)| CrossChainRuntimeEvent {
+                        operation_id: *operation_id,
+                        chain_id,
+                        event_type: *event_type,
+                        timestamp: *timestamp,
+                        data: data.clone(),
+                    },
+                )
+                .collect()
         }
 
         /// Get current vested amount for an account

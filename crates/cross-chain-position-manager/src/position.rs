@@ -1,10 +1,10 @@
 //! Core position management structures
-//! 
+//!
 //! This module defines the fundamental position structures and types
 //! used across the cross-chain position manager.
 
+use crate::error::{PositionManagerError, Result};
 use crate::types::*;
-use crate::error::{Result, PositionManagerError};
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
@@ -122,6 +122,7 @@ impl CrossChainPosition {
             strategy_id: None,
         };
 
+        let chain_holdings = vec![ChainHolding {
             chain_id,
             asset: asset.clone(),
             balance: initial_balance,
@@ -172,7 +173,12 @@ impl CrossChainPosition {
     }
 
     /// Add a new chain holding
-    pub fn add_chain_holding(&mut self, chain_id: u64, asset: AssetInfo, balance: U256) -> Result<()> {
+    pub fn add_chain_holding(
+        &mut self,
+        chain_id: u64,
+        asset: AssetInfo,
+        balance: U256,
+    ) -> Result<()> {
         self.chain_holdings.push(ChainHolding {
             chain_id,
             asset,
@@ -191,4 +197,3 @@ fn current_timestamp() -> u64 {
     // In a real implementation, this would get the actual current timestamp
     1704067200 // Example timestamp
 }
-

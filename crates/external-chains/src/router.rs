@@ -3,8 +3,8 @@
 //! Finds optimal routes and generates atomic Comit transactions
 //! across 103 EVM chains.
 
-use crate::chains::{adapter_for, get_chain};
-use sp_core::{keccak_256, H160, H256, U256};
+use crate::chains::get_chain;
+use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
 // === Well-known addresses ===
@@ -501,7 +501,9 @@ impl SwapRouter {
         // Encode: lockAndBridge(address recipient, uint256 amount, uint64 destChain)
         let mut calldata = vec![0xBB, 0xBB, 0xBB, 0xBB]; // X3 bridge selector
         calldata.extend_from_slice(recipient.as_bytes());
-        calldata.extend_from_slice(&[0u8; 32]); // amount
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
         calldata.extend_from_slice(&leg.to_chain.to_be_bytes());
 
         // X3 Kernel bridge contract (on source chain mirror)
@@ -533,7 +535,9 @@ impl SwapRouter {
     fn encode_unwrap_payload(&self, leg: &RouteLeg, amount: U256) -> ComitPayload {
         // WETH withdraw(uint256)
         let mut calldata = vec![0x2e, 0x1a, 0x7d, 0x4d]; // withdraw(uint256)
-        calldata.extend_from_slice(&[0u8; 32]); // amount placeholder
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
         let weth = self.get_weth(leg.from_chain);
 
         ComitPayload {
@@ -743,5 +747,52 @@ mod tests {
             let route = router.find_route(from, token, to, token, U256::from(1000));
             assert!(route.is_some(), "Failed route from {} to {}", from, to);
         }
+    }
+
+    #[test]
+    fn test_bridge_payload_includes_amount_word() {
+        let router = SwapRouter::new();
+        let leg = RouteLeg {
+            from_chain: 1,
+            to_chain: 42161,
+            from_token: USDC_ETH,
+            to_token: USDC_ARB,
+            action: RouteAction::Bridge,
+            estimated_gas: U256::from(50_000),
+            estimated_time_ms: 500,
+        };
+
+        let amount = U256::from(123_456_789u64);
+        let payload = router.encode_bridge_payload(
+            &leg,
+            H160::from_low_u64_be(0xDEAD),
+            H160::from_low_u64_be(0xBEEF),
+            amount,
+        );
+
+        let mut expected = [0u8; 32];
+        amount.to_big_endian(&mut expected);
+        assert!(payload.calldata.windows(32).any(|w| w == expected));
+    }
+
+    #[test]
+    fn test_unwrap_payload_includes_amount_word() {
+        let router = SwapRouter::new();
+        let leg = RouteLeg {
+            from_chain: 1,
+            to_chain: 1,
+            from_token: WETH_ETH,
+            to_token: WETH_ETH,
+            action: RouteAction::Unwrap,
+            estimated_gas: U256::from(50_000),
+            estimated_time_ms: 100,
+        };
+
+        let amount = U256::from(42_000_000u64);
+        let payload = router.encode_unwrap_payload(&leg, amount);
+
+        let mut expected = [0u8; 32];
+        amount.to_big_endian(&mut expected);
+        assert_eq!(&payload.calldata[4..36], &expected);
     }
 }

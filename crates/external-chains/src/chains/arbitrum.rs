@@ -5,6 +5,11 @@
 
 use crate::adapter::*;
 use crate::ChainType;
+use crate::ExternalChainError;
+use alloc::{
+    format,
+    string::{String, ToString},
+};
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
@@ -77,18 +82,27 @@ impl ArbitrumAdapter {
     /// Encode sendL2Message for cross-chain messaging
     pub fn encode_send_l2_message(target: H160, calldata: Vec<u8>) -> Vec<u8> {
         // sendL2Message(address _target, bytes _data)
-        let mut encoded = Vec::with_capacity(4 + 64 + calldata.len());
+        let mut encoded = Vec::with_capacity(4 + 32 + 32 + 32 + calldata.len() + 31);
 
         // Function selector
-        calldata.len(); // force usage
         encoded.extend_from_slice(&[0x67, 0x9a, 0xef, 0xce]);
 
         // Target address
         encoded.extend_from_slice(&[0u8; 12]);
         encoded.extend_from_slice(target.as_bytes());
 
-        // Add calldata (simplified)
-        encoded.extend_from_slice(&[0u8; 32]); // offset placeholder
+        // Dynamic bytes offset = 0x40 (after two static args)
+        encoded.extend_from_slice(&[0u8; 31]);
+        encoded.push(0x40);
+
+        // Dynamic bytes section: length + data + padding
+        let mut len_word = [0u8; 32];
+        let len = calldata.len() as u32;
+        len_word[28..32].copy_from_slice(&len.to_be_bytes());
+        encoded.extend_from_slice(&len_word);
+        encoded.extend_from_slice(&calldata);
+        let padding = (32 - calldata.len() % 32) % 32;
+        encoded.extend_from_slice(&vec![0u8; padding]);
 
         encoded
     }
@@ -96,8 +110,75 @@ impl ArbitrumAdapter {
     /// Arbitrum-specific: Get L1 block info from ArbSys
     #[allow(dead_code)]
     async fn get_l1_block_number(&self) -> AdapterResult<u64> {
-        // Call ArbSys.arbBlockNumber()
-        Ok(20_000_000) // Placeholder
+        // ArbSys.arbBlockNumber() selector = first 4 bytes of keccak256("arbBlockNumber()")
+        let selector = sp_io::hashing::keccak_256(b"arbBlockNumber()");
+        let call_data = &selector[0..4];
+
+        let params = format!(
+            r#"[{{"to":"0x{}","data":"0x{}"}},"latest"]"#,
+            hex::encode(Self::ARBSYS_ADDRESS.as_bytes()),
+            hex::encode(call_data)
+        );
+
+        let response = self.rpc_call("eth_call", &params).await?;
+        let result = Self::extract_result(&response)?;
+        Self::parse_hex_u64(&result)
+    }
+
+    fn rpc_url(&self) -> String {
+        String::from_utf8_lossy(&self.config.rpc_url).to_string()
+    }
+
+    fn build_rpc_request(method: &str, params: &str) -> Vec<u8> {
+        format!(
+            r#"{{"jsonrpc":"2.0","method":"{}","params":{},"id":1}}"#,
+            method, params
+        )
+        .into_bytes()
+    }
+
+    async fn rpc_call(&self, method: &str, params: &str) -> AdapterResult<Vec<u8>> {
+        let url = self.rpc_url();
+        let body = Self::build_rpc_request(method, params);
+        crate::rpc_http::post_json(&url, &body)
+            .await
+            .map_err(|e| ExternalChainError::rpc_error(&format!("HTTP error: {}", e)))
+    }
+
+    fn extract_result(response: &[u8]) -> AdapterResult<String> {
+        let text = String::from_utf8_lossy(response);
+
+        if text.contains("\"error\"") {
+            return Err(ExternalChainError::rpc_error(&format!(
+                "RPC error: {}",
+                text
+            )));
+        }
+
+        if let Some(idx) = text.find("\"result\"") {
+            let after = &text[idx + 9..];
+            let after = after.trim_start();
+
+            if after.starts_with("null") {
+                return Ok("null".to_string());
+            }
+
+            if after.starts_with('"') {
+                let end = after[1..].find('"').unwrap_or(after.len() - 1);
+                return Ok(after[1..=end].to_string());
+            }
+        }
+
+        Err(ExternalChainError::parse_error(
+            "Could not extract result from RPC response",
+        ))
+    }
+
+    fn parse_hex_u64(hex_str: &str) -> AdapterResult<u64> {
+        let trimmed = hex_str.trim().trim_matches('"');
+        let without_prefix = trimmed.strip_prefix("0x").unwrap_or(trimmed);
+        u64::from_str_radix(without_prefix, 16)
+            .map_err(|e| ExternalChainError::parse_error(&format!("hex parse: {}", e)))
     }
 }
 
@@ -198,5 +279,19 @@ mod tests {
         // Verify well-known addresses
         assert_ne!(ArbitrumAdapter::INBOX_ADDRESS, H160::zero());
         assert_ne!(ArbitrumAdapter::GATEWAY_ROUTER, H160::zero());
+    }
+
+    #[test]
+    fn test_encode_send_l2_message_dynamic_bytes_layout() {
+        let target = H160::from_low_u64_be(0xBEEF);
+        let payload = vec![1u8, 2, 3, 4, 5];
+        let encoded = ArbitrumAdapter::encode_send_l2_message(target, payload.clone());
+
+        // selector + address + offset + len + payload...
+        assert!(encoded.len() >= 4 + 32 + 32 + 32 + payload.len());
+        // offset word should end in 0x40
+        assert_eq!(encoded[4 + 32 + 31], 0x40);
+        // dynamic length word should match payload length
+        assert_eq!(encoded[4 + 64 + 31], payload.len() as u8);
     }
 }

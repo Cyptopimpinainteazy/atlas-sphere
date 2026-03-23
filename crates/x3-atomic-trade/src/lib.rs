@@ -2,8 +2,11 @@
 //!
 //! RPC endpoints for swaps, quotes, and DEX operations.
 
-pub mod swap_rpc;
 pub mod rollback_listener;
+pub mod swap_rpc;
 
-pub use swap_rpc::{SwapRPCServer, SwapQuote, SwapOrder, AMMPool};
-pub use rollback_listener::{RollbackEventListener, TradeBatchFailure, FailureReason, RollbackLog, FailureNotification, SeverityLevel};
+pub use rollback_listener::{
+    FailureNotification, FailureReason, RollbackEventListener, RollbackLog, SeverityLevel,
+    TradeBatchFailure,
+};
+pub use swap_rpc::{AMMPool, SwapOrder, SwapQuote, SwapRPCServer};

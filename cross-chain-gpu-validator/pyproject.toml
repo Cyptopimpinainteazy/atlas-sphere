@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cross-chain-gpu-validator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Cross-chain GPU validator stack for Solana and Ethereum testnets."
-readme = "docs/root/README.md"
+readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "X3 Chain" }]

@@ -144,6 +144,216 @@ pub enum Commands {
     TryRuntime,
     /// Atomic swap simulation and execution commands.
     AtomicSwap(AtomicSwapCmd),
+    /// Comit transaction commands for dual-VM execution.
+    Comit(ComitCmd),
+    /// Key management commands for validator and account keys.
+    Keys(KeysCmd),
+    /// Inspect canonical ledger and chain state.
+    Inspect(InspectCmd),
+}
+
+/// Comit transaction CLI commands for dual-VM execution.
+///
+/// These commands enable submitting and querying Comit transactions
+/// that execute atomically across EVM and SVM virtual machines.
+#[derive(Debug, Args)]
+pub struct ComitCmd {
+    /// The comit subcommand to execute.
+    #[command(subcommand)]
+    pub command: ComitSubcommand,
+}
+
+/// Comit subcommands
+#[derive(Debug, Subcommand)]
+pub enum ComitSubcommand {
+    /// Query a Comit transaction by its ID.
+    ///
+    /// Retrieves the status and details of a previously submitted Comit transaction.
+    Query {
+        /// Comit transaction ID (H256 hex string)
+        #[arg(long, value_parser = parse_h256)]
+        comit_id: H256,
+
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
+
+    /// Query the canonical balance for an account and asset.
+    ///
+    /// Retrieves the current balance from the canonical ledger.
+    Balance {
+        /// Account address (SS58 or hex format)
+        #[arg(long)]
+        account: String,
+
+        /// Asset ID to query (default: 0 for native X3)
+        #[arg(long, default_value = "0")]
+        asset_id: u32,
+
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
+
+    /// List authorized accounts that can submit Comit transactions.
+    Authorized {
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
+}
+
+/// Key management CLI commands for validator and account keys.
+///
+/// These commands provide utilities for managing cryptographic keys
+/// used by the X3 Chain node for block authoring, finality, and
+/// cross-VM operations.
+#[derive(Debug, Args)]
+pub struct KeysCmd {
+    /// The keys subcommand to execute.
+    #[command(subcommand)]
+    pub command: KeysSubcommand,
+}
+
+/// Keys subcommands
+#[derive(Debug, Subcommand)]
+pub enum KeysSubcommand {
+    /// Generate a new keypair for the specified key type.
+    ///
+    /// Supported key types: aura (sr25519), grandpa (ed25519), imonline (sr25519).
+    Generate {
+        /// Key type to generate (aura, grandpa, imonline)
+        #[arg(long, default_value = "aura")]
+        key_type: String,
+
+        /// Optional seed phrase (if not provided, a random keypair is generated)
+        #[arg(long)]
+        seed: Option<String>,
+
+        /// Output format (json, hex, ss58)
+        #[arg(long, default_value = "ss58")]
+        output: String,
+    },
+
+    /// Insert a key into the node's keystore.
+    ///
+    /// This is useful for setting up validator keys without exposing
+    /// the seed phrase in the node's command line arguments.
+    Insert {
+        /// Key type (aura, grandpa, imonline)
+        #[arg(long)]
+        key_type: String,
+
+        /// Seed phrase or hex-encoded private key
+        #[arg(long)]
+        seed: String,
+
+        /// Keystore path (defaults to node's default keystore)
+        #[arg(long)]
+        keystore_path: Option<PathBuf>,
+    },
+
+    /// List all keys in the node's keystore.
+    ///
+    /// Displays the public keys for each key type stored in the keystore.
+    List {
+        /// Keystore path (defaults to node's default keystore)
+        #[arg(long)]
+        keystore_path: Option<PathBuf>,
+    },
+
+    /// Verify a keypair by checking if the private key matches the public key.
+    Verify {
+        /// Key type (aura, grandpa, imonline)
+        #[arg(long)]
+        key_type: String,
+
+        /// Public key (SS58 or hex format)
+        #[arg(long)]
+        public: String,
+
+        /// Seed phrase or hex-encoded private key to verify
+        #[arg(long)]
+        seed: String,
+    },
+}
+
+/// Inspect CLI commands for querying canonical ledger and chain state.
+///
+/// These commands provide read-only access to the X3 Chain's canonical ledger,
+/// allowing users to query account balances, asset metadata, and other
+/// chain state without running a full node.
+#[derive(Debug, Args)]
+pub struct InspectCmd {
+    /// The inspect subcommand to execute.
+    #[command(subcommand)]
+    pub command: InspectSubcommand,
+}
+
+/// Inspect subcommands
+#[derive(Debug, Subcommand)]
+pub enum InspectSubcommand {
+    /// Query the canonical ledger for an account.
+    ///
+    /// Displays all asset balances held by the specified account.
+    Account {
+        /// Account address (SS58 or hex format)
+        #[arg(long)]
+        account: String,
+
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+
+        /// Output format (json, table)
+        #[arg(long, default_value = "table")]
+        output: String,
+    },
+
+    /// Query asset metadata by asset ID.
+    ///
+    /// Displays the symbol, decimals, and other metadata for a registered asset.
+    Asset {
+        /// Asset ID to query
+        #[arg(long)]
+        asset_id: u32,
+
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
+
+    /// List all registered assets.
+    ///
+    /// Displays all assets registered in the X3 Chain's asset registry.
+    Assets {
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+
+        /// Output format (json, table)
+        #[arg(long, default_value = "table")]
+        output: String,
+    },
+
+    /// Query the current authority set.
+    ///
+    /// Displays the list of authorities responsible for block production.
+    Authorities {
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
+
+    /// Query chain information and status.
+    ///
+    /// Displays general chain information including block height, finality, and node status.
+    ChainInfo {
+        /// RPC endpoint URL
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
+        rpc_url: String,
+    },
 }
 
 /// Atomic swap CLI commands for simulating and executing cross-VM trades.

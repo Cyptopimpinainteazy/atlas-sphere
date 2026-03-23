@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Token pair for swap
 #[derive(Clone, Debug)]
 pub struct TokenPair {
-    pub token_in: String,  // Contract address or symbol (X3, USDC, etc.)
+    pub token_in: String, // Contract address or symbol (X3, USDC, etc.)
     pub token_out: String,
     pub amount_in: u128,
 }
@@ -26,7 +26,7 @@ pub struct SwapQuote {
 #[derive(Clone, Debug)]
 pub struct SwapOrder {
     pub id: String,
-    pub from: String,        // User wallet
+    pub from: String, // User wallet
     pub pair: TokenPair,
     pub min_amount_out: u128, // Slippage protection
     pub deadline: u64,        // Block height deadline
@@ -63,7 +63,7 @@ pub struct SwapRPCServer {
 impl SwapRPCServer {
     pub fn new() -> Self {
         let mut price_feed = HashMap::new();
-        price_feed.insert("X3".to_string(), 10.0);    // Mock price
+        price_feed.insert("X3".to_string(), 10.0); // Mock price
         price_feed.insert("USDC".to_string(), 1.0);
         price_feed.insert("ETH".to_string(), 2500.0);
 
@@ -108,7 +108,13 @@ impl SwapRPCServer {
     }
 
     /// x3_createSwap: Create a pending swap order
-    pub fn create_swap(&mut self, from: String, pair: TokenPair, min_amount_out: u128, deadline: u64) -> Result<SwapOrder, String> {
+    pub fn create_swap(
+        &mut self,
+        from: String,
+        pair: TokenPair,
+        min_amount_out: u128,
+        deadline: u64,
+    ) -> Result<SwapOrder, String> {
         // Validate: min_amount_out <= estimated_out
         let quote = self.get_swap_quote(pair.clone())?;
         if min_amount_out > quote.amount_out {
@@ -133,14 +139,18 @@ impl SwapRPCServer {
         let mut order = self.orders.get(order_id).ok_or("Swap not found")?.clone();
 
         // Check deadline
-        if block_height > order.deadline {
+        if u64::from(block_height) > order.deadline {
             order.status = SwapStatus::Expired;
             self.orders.insert(order_id.to_string(), order.clone());
             return Err("Swap deadline exceeded".to_string());
         }
 
         // Execute swap
-        match self.calculate_output(&order.pair.token_in, &order.pair.token_out, order.pair.amount_in) {
+        match self.calculate_output(
+            &order.pair.token_in,
+            &order.pair.token_out,
+            order.pair.amount_in,
+        ) {
             Ok(amount_out) => {
                 if amount_out < order.min_amount_out {
                     order.status = SwapStatus::Failed {
@@ -151,7 +161,12 @@ impl SwapRPCServer {
                 }
 
                 // Update pool reserves (constant product)
-                self.update_pool_reserves(&order.pair.token_in, &order.pair.token_out, order.pair.amount_in, amount_out);
+                self.update_pool_reserves(
+                    &order.pair.token_in,
+                    &order.pair.token_out,
+                    order.pair.amount_in,
+                    amount_out,
+                );
 
                 order.status = SwapStatus::Executed {
                     amount_out,
@@ -169,7 +184,12 @@ impl SwapRPCServer {
     }
 
     /// x3_estimateSlippage: Estimate slippage for given amount
-    pub fn estimate_slippage(&self, token_in: &str, token_out: &str, amount_in: u128) -> Result<f64, String> {
+    pub fn estimate_slippage(
+        &self,
+        token_in: &str,
+        token_out: &str,
+        amount_in: u128,
+    ) -> Result<f64, String> {
         let quote = self.get_swap_quote(TokenPair {
             token_in: token_in.to_string(),
             token_out: token_out.to_string(),
@@ -180,12 +200,20 @@ impl SwapRPCServer {
     }
 
     /// Calculate output using constant-product formula: xy = k
-    fn calculate_output(&self, token_in: &str, token_out: &str, amount_in: u128) -> Result<u128, String> {
+    fn calculate_output(
+        &self,
+        token_in: &str,
+        token_out: &str,
+        amount_in: u128,
+    ) -> Result<u128, String> {
         // Find pool with both tokens
         let pool = self
             .pools
             .values()
-            .find(|p| (p.token_a == token_in && p.token_b == token_out) || (p.token_a == token_out && p.token_b == token_in))
+            .find(|p| {
+                (p.token_a == token_in && p.token_b == token_out)
+                    || (p.token_a == token_out && p.token_b == token_in)
+            })
             .ok_or("No pool found for token pair")?;
 
         let (reserve_in, reserve_out) = if pool.token_a == token_in {
@@ -206,7 +234,13 @@ impl SwapRPCServer {
     }
 
     /// Update pool reserves after swap
-    fn update_pool_reserves(&mut self, token_in: &str, token_out: &str, amount_in: u128, amount_out: u128) {
+    fn update_pool_reserves(
+        &mut self,
+        token_in: &str,
+        token_out: &str,
+        amount_in: u128,
+        amount_out: u128,
+    ) {
         for pool in self.pools.values_mut() {
             if (pool.token_a == token_in && pool.token_b == token_out) {
                 pool.reserve_a = pool.reserve_a.saturating_add(amount_in);
@@ -225,7 +259,10 @@ impl SwapRPCServer {
         let pool = self
             .pools
             .values()
-            .find(|p| (p.token_a == token_in && p.token_b == token_out) || (p.token_a == token_out && p.token_b == token_in))
+            .find(|p| {
+                (p.token_a == token_in && p.token_b == token_out)
+                    || (p.token_a == token_out && p.token_b == token_in)
+            })
             .ok_or("No route found")?;
 
         Ok(vec![pool.id.clone()])
@@ -233,8 +270,14 @@ impl SwapRPCServer {
 
     /// Get price in USD (from price feed)
     fn get_price(&self, token_in: &str, token_out: &str) -> Result<f64, String> {
-        let price_in = self.price_feed.get(token_in).ok_or("Token not in price feed")?;
-        let price_out = self.price_feed.get(token_out).ok_or("Token not in price feed")?;
+        let price_in = self
+            .price_feed
+            .get(token_in)
+            .ok_or("Token not in price feed")?;
+        let price_out = self
+            .price_feed
+            .get(token_out)
+            .ok_or("Token not in price feed")?;
 
         Ok(price_in / price_out)
     }

@@ -7,7 +7,6 @@
 /// oversized payloads.  Callers that violate these limits receive an
 /// `invalid_params` error.  Connection-level rate limiting is handled by the
 /// JSON-RPC server middleware (configured at the node layer, not here).
-
 use jsonrpc_core::{Error, Result};
 use jsonrpc_derive::rpc;
 use sp_api::ProvideRuntimeApi;
@@ -25,7 +24,6 @@ pub struct SwapRequest {
     pub wallet_id: [u8; 32],
     pub require_approval: bool,
     pub approval_threshold: u128,
-use jsonrpc_core::{Error, Result};
 }
 // ---------------------------------------------------------------------------
 // Abuse-control limits
@@ -41,7 +39,9 @@ const MAX_SIGNATURE_LEN: usize = 130;
 const MAX_APPROVAL_SIGNATURE_LEN: usize = 130;
 /// Maximum string length for an account identifier (SS58 / hex address).
 const MAX_ACCOUNT_LEN: usize = 256;
+
 /// Swap response with signing details
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SwapResponse {
     pub swap_id: [u8; 32],
     pub amount_out: u128,
@@ -75,29 +75,11 @@ pub trait WalletDexApi {
 
     /// Execute swap with wallet signatures
     #[rpc(name = "walletDex_executeSwap")]
-    fn execute_swap(&self, request: SwapRequest, signatures: Vec<Vec<u8>>) -> Result<SwapResponse>
- {
-        // -- Input validation / abuse controls -----------------------------------
-        if signatures.len() > MAX_SIGNATURES_COUNT {
-            return Err(Error::invalid_params(format!(
-                "Too many signatures: {} > {}",
-                signatures.len(),
-                MAX_SIGNATURES_COUNT
-            )));
-        }
-        for (i, sig) in signatures.iter().enumerate() {
-            if sig.len() > MAX_SIGNATURE_LEN {
-                return Err(Error::invalid_params(format!(
-                    "Signature {} too large: {} bytes (max {})",
-                    i,
-                    sig.len(),
-                    MAX_SIGNATURE_LEN
-                )));
-            }
-        }
-        // -----------------------------------------------------------------------
+    fn execute_swap(&self, request: SwapRequest, signatures: Vec<Vec<u8>>) -> Result<SwapResponse>;
 
-        if request.require_approval && signatures.is_empty() {
+    /// Request hardware signing for a transaction
+    #[rpc(name = "walletDex_requestHardwareSigning")]
+    fn request_hardware_signing(
         &self,
         wallet_id: [u8; 32],
         transaction_hash: [u8; 32],
@@ -119,7 +101,7 @@ pub trait WalletDexApi {
 
     /// Check approval status
     #[rpc(name = "walletDex_getApprovalStatus")]
-    fn get_approval_status(&self, approval_id: [u8; 32]) -> Result<(String, u32)>; // status, signatures_needed
+    fn get_approval_status(&self, approval_id: [u8; 32]) -> Result<(String, u32)>;
 }
 
 /// RPC implementation
@@ -147,7 +129,8 @@ where
         // In production: call DEX runtime api for actual prices
         let amount_out = (request.amount_in * 95) / 100; // simplified 5% fee
 
-        let approval_required = request.require_approval && request.amount_in > request.approval_threshold;
+        let approval_required =
+            request.require_approval && request.amount_in > request.approval_threshold;
 
         Ok(SwapResponse {
             swap_id: [0u8; 32],
@@ -181,7 +164,7 @@ where
         })
     }
 
-    fn request_hardware_signature(
+    fn request_hardware_signing(
         &self,
         wallet_id: [u8; 32],
         transaction_hash: [u8; 32],
@@ -214,8 +197,8 @@ where
 
     fn approve_transaction(
         &self,
-        wallet_id: [u8; 32],
-        transaction_hash: [u8; 32],
+        _wallet_id: [u8; 32],
+        _transaction_hash: [u8; 32],
         approval_signature: Vec<u8>,
     ) -> Result<bool> {
         // -- Input validation / abuse controls -----------------------------------
@@ -237,7 +220,6 @@ where
         Ok(true)
     }
 
-    fn get_balance(&self, _account: String, _token_id: [u8; 32]) -> Result<u128> {
     fn get_balance(&self, account: String, _token_id: [u8; 32]) -> Result<u128> {
         // -- Input validation / abuse controls -----------------------------------
         if account.is_empty() {

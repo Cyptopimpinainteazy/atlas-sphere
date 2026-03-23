@@ -10,6 +10,20 @@
 
 use std::collections::HashMap;
 
+// ---------------------------------------------------------------------------
+// Abuse-control limits (prevent DoS)
+// ---------------------------------------------------------------------------
+
+/// Maximum UTF-8 length for human-readable display messages (hardware wallet screen).
+pub const MAX_DISPLAY_MESSAGE_LEN: usize = 256;
+/// Maximum calldata length (bytes) accepted by estimation and call endpoints.
+/// Matches EIP-2028 practical limits and prevents O(n) gas-loop DoS.
+pub const MAX_CALLDATA_LEN: usize = 128_000; // 128 KB
+/// Maximum number of transactions in a single batch estimate call.
+pub const MAX_BATCH_SIZE: usize = 50;
+/// Maximum string length for address fields (`from` / `to`).
+pub const MAX_ADDRESS_LEN: usize = 128;
+
 /// Transaction representation for RPC
 #[derive(Clone, Debug)]
 pub struct RPCTransaction {
@@ -86,22 +100,12 @@ impl GasEstimator {
         Self {
             opcodes,
             fork_context: None,
-        use std::collections::HashMap;
         }
-        // ---------------------------------------------------------------------------
-        // Abuse-control limits
-        // ---------------------------------------------------------------------------
     }
-        /// Maximum calldata length (bytes) accepted by estimation and call endpoints.
-        /// Matches EIP-2028 practical limits and prevents O(n) gas-loop DoS.
-        const MAX_CALLDATA_LEN: usize = 128_000; // 128 KB
 
-        /// Maximum number of transactions in a single batch estimate call.
-        const MAX_BATCH_SIZE: usize = 50;
     /// Set fork context for state-aware estimation
-        /// Maximum string length for address fields (`from` / `to`).
-        const MAX_ADDRESS_LEN: usize = 128;
     pub fn set_fork_context(&mut self, context: ForkContext) {
+        self.fork_context = Some(context);
     }
 
     /// Estimate gas for a transaction (forked execution)
@@ -161,7 +165,11 @@ impl GasEstimator {
         let estimated_gas = (tx.data.len() as u64) * 200;
 
         if estimated_gas > 30_000_000 {
-            (0, ExecutionStatus::OutOfGas, Some("Gas limit exceeded".to_string()))
+            (
+                0,
+                ExecutionStatus::OutOfGas,
+                Some("Gas limit exceeded".to_string()),
+            )
         } else {
             (estimated_gas, ExecutionStatus::Success, None)
         }
@@ -194,11 +202,18 @@ impl GasEstimator {
     }
 
     /// Estimate with custom gas limit
-    pub fn estimate_with_limit(&self, tx: &RPCTransaction, limit: u64) -> Result<GasEstimation, String> {
+    pub fn estimate_with_limit(
+        &self,
+        tx: &RPCTransaction,
+        limit: u64,
+    ) -> Result<GasEstimation, String> {
         let est = self.estimate_gas(tx);
 
         if est.gas_used > limit {
-            return Err(format!("Estimated gas {} exceeds limit {}", est.gas_used, limit));
+            return Err(format!(
+                "Estimated gas {} exceeds limit {}",
+                est.gas_used, limit
+            ));
         }
 
         Ok(est)
@@ -283,6 +298,7 @@ impl GasEstimationRPC {
             }
         }
         Ok(self.estimator.estimate_batch(txs))
+    }
 
     /// x3_call (simulate without state change)
     pub fn call(&self, tx: &RPCTransaction) -> Result<Vec<u8>, String> {

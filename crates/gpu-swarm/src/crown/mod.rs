@@ -29,7 +29,7 @@ pub use scrapyard::{
 };
 
 use crate::warden::{
-    AllocationPlan, ComputeLane, GovernanceAction, SwarmPillars, SwarmState, ThreatLevel, Warden,
+    ComputeLane, GovernanceAction, SwarmPillars, SwarmState, ThreatLevel,
     WardenDecision,
 };
 use serde::{Deserialize, Serialize};

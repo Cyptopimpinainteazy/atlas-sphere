@@ -1,18 +1,17 @@
 /// Bitcoin HTLC Bridge — Hash Time-Locked Contract atomic swaps enabling BTC ↔ X3 trustless trading
 /// Implements HTLC construction, preimage validation, and timeout refunds
-
 use parity_scale_codec::{Decode, Encode};
 use sp_std::vec::Vec;
 
 #[derive(Clone, Encode, Decode, Debug, PartialEq, Eq)]
 pub struct HTLCContract {
     pub contract_id: [u8; 32],
-    pub initiator: Vec<u8>,               // Bitcoin address
-    pub counterparty: [u8; 32],           // X3 account
+    pub initiator: Vec<u8>,     // Bitcoin address
+    pub counterparty: [u8; 32], // X3 account
     pub amount_satoshis: u64,
     pub amount_x3: u128,
-    pub hash_lock: [u8; 32],              // SHA256(preimage)
-    pub time_lock: u64,                   // Unix timestamp
+    pub hash_lock: [u8; 32], // SHA256(preimage)
+    pub time_lock: u64,      // Unix timestamp
     pub state: HTLCState,
     pub created_block: u64,
 }
@@ -39,10 +38,10 @@ pub struct BitcoinAddress {
 
 #[derive(Clone, Encode, Decode, Debug, PartialEq, Eq)]
 pub enum AddressType {
-    P2PKH,    // Pay to Public Key Hash
-    P2SH,     // Pay to Script Hash
-    P2WPKH,   // Pay to Witness Public Key Hash (SegWit v0)
-    P2TR,     // Pay to Taproot (SegWit v1)
+    P2PKH,  // Pay to Public Key Hash
+    P2SH,   // Pay to Script Hash
+    P2WPKH, // Pay to Witness Public Key Hash (SegWit v0)
+    P2TR,   // Pay to Taproot (SegWit v1)
 }
 
 #[derive(Clone, Encode, Decode, Debug, PartialEq, Eq)]
@@ -152,10 +151,7 @@ impl BitcoinHTLC {
     }
 
     /// Verify Bitcoin transaction proof (simplified merkle proof verification)
-    pub fn verify_btc_tx(
-        tx_hash: [u8; 32],
-        proof: &BitcoinTxProof,
-    ) -> Result<bool, &'static str> {
+    pub fn verify_btc_tx(tx_hash: [u8; 32], proof: &BitcoinTxProof) -> Result<bool, &'static str> {
         if tx_hash == [0; 32] {
             return Err("Transaction hash cannot be zero");
         }
@@ -296,7 +292,11 @@ impl BitcoinHTLC {
 
     /// Get contract state
     pub fn get_contract_state(contract: &HTLCContract) -> (HTLCState, u64, u64) {
-        (contract.state.clone(), contract.amount_satoshis, contract.amount_x3)
+        (
+            contract.state.clone(),
+            contract.amount_satoshis,
+            contract.amount_x3 as u64,
+        )
     }
 }
 
@@ -314,11 +314,12 @@ mod tests {
             initiator,
             counterparty,
             1000000,
-            500u128 * 100000000,  // 5 X3 tokens
+            500u128 * 100000000, // 5 X3 tokens
             hash_lock,
-            86400,  // 1 day
+            86400, // 1 day
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(contract.amount_satoshis, 1000000);
         assert_eq!(contract.state, HTLCState::Open);
@@ -360,7 +361,7 @@ mod tests {
             1000000,
             100u128,
             [2; 32],
-            600,  // 10 minutes (too short)
+            600, // 10 minutes (too short)
             0,
         );
         assert!(result.is_err());
@@ -379,7 +380,8 @@ mod tests {
             hash_lock,
             86400,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let preimage_obj = Preimage {
             value: preimage,
@@ -402,7 +404,8 @@ mod tests {
             hash_lock,
             86400,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let wrong_preimage = Preimage {
             value: b"wrong_secret".to_vec(),
@@ -421,9 +424,10 @@ mod tests {
             1000000,
             100u128,
             [2; 32],
-            86400,  // 1 day = ~5760 blocks @ 15 sec each
+            86400, // 1 day = ~5760 blocks @ 15 sec each
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         // Refund after sufficient blocks
         BitcoinHTLC::refund(&mut contract, b"1A1z7agoat".to_vec(), 6000).unwrap();
@@ -440,7 +444,8 @@ mod tests {
             [2; 32],
             86400,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let result = BitcoinHTLC::refund(&mut contract, b"1A1z7agoat".to_vec(), 100);
         assert!(result.is_err());
@@ -468,12 +473,8 @@ mod tests {
 
     #[test]
     fn test_compute_htlc_script() {
-        let script = BitcoinHTLC::compute_htlc_script(
-            vec![1, 2, 3],
-            vec![4, 5, 6],
-            [7; 32],
-            86400,
-        ).unwrap();
+        let script =
+            BitcoinHTLC::compute_htlc_script(vec![1, 2, 3], vec![4, 5, 6], [7; 32], 86400).unwrap();
 
         assert!(!script.is_empty());
         assert!(script.len() > 50);
@@ -489,7 +490,8 @@ mod tests {
             [2; 32],
             86400,
             0,
-        ).unwrap();
+        )
+        .unwrap();
 
         let (state, amount_sat, amount_x3) = BitcoinHTLC::get_contract_state(&contract);
         assert_eq!(state, HTLCState::Open);
@@ -503,7 +505,7 @@ mod tests {
             tx_hash: [1; 32],
             merkle_proof: vec![[2; 32]],
             block_header: [0; 80],
-            confirmations: 3,  // Less than 6 required
+            confirmations: 3, // Less than 6 required
         };
 
         let result = BitcoinHTLC::verify_btc_tx([1; 32], &proof);

@@ -49,27 +49,98 @@ impl ChainConfig {
         }
     }
 
+    /// Easy onboarding constructor for external EVM-compatible chains.
+    ///
+    /// This path validates core integration requirements and returns a ready-to-use
+    /// config with production-safe defaults.
+    pub fn onboard_external_chain(
+        chain_id: u64,
+        rpc_url: &str,
+        bridge_contract: H160,
+        settlement_contract: H160,
+        confirmations: u32,
+    ) -> AdapterResult<Self> {
+        if chain_id == 0 {
+            return Err(ExternalChainError::InvalidChainId(chain_id));
+        }
+
+        if !rpc_url.starts_with("https://") && !rpc_url.starts_with("http://") {
+            return Err(ExternalChainError::parse_error(
+                "RPC URL must start with http:// or https://",
+            ));
+        }
+
+        if bridge_contract == H160::zero() || settlement_contract == H160::zero() {
+            return Err(ExternalChainError::InvalidAddress);
+        }
+
+        if confirmations == 0 {
+            return Err(ExternalChainError::parse_error(
+                "confirmations must be greater than zero",
+            ));
+        }
+
+        Ok(Self {
+            chain_type: chain_id,
+            rpc_url: rpc_url.as_bytes().to_vec(),
+            ws_url: None,
+            bridge_contract,
+            settlement_contract,
+            confirmations,
+            gas_price_multiplier: 100,
+            max_gas_limit: 500_000,
+        })
+    }
+
+    /// Validate a chain configuration before creating adapters.
+    pub fn validate(&self) -> AdapterResult<()> {
+        if self.chain_type == 0 {
+            return Err(ExternalChainError::InvalidChainId(self.chain_type));
+        }
+
+        if self.rpc_url.is_empty() {
+            return Err(ExternalChainError::parse_error("rpc_url cannot be empty"));
+        }
+
+        if self.bridge_contract == H160::zero() || self.settlement_contract == H160::zero() {
+            return Err(ExternalChainError::InvalidAddress);
+        }
+
+        if self.confirmations == 0 {
+            return Err(ExternalChainError::parse_error(
+                "confirmations must be greater than zero",
+            ));
+        }
+
+        if self.max_gas_limit == 0 {
+            return Err(ExternalChainError::InsufficientGas);
+        }
+
+        Ok(())
+    }
+
     fn default_contracts(chain_type: ChainType) -> (H160, H160) {
-        // Placeholder contract addresses - will be deployed
-        let bridge = match chain_type {
-            ChainType::Base => H160::from_slice(&hex_literal::hex!(
-                "0000000000000000000000000000000000008453"
-            )),
-            ChainType::Arbitrum => H160::from_slice(&hex_literal::hex!(
-                "0000000000000000000000000000000042161000"
-            )),
-            ChainType::Polygon => H160::from_slice(&hex_literal::hex!(
-                "0000000000000000000000000000000000000137"
-            )),
-            ChainType::Avalanche => H160::from_slice(&hex_literal::hex!(
-                "0000000000000000000000000000000000043114"
-            )),
-            ChainType::Bnb => H160::from_slice(&hex_literal::hex!(
-                "0000000000000000000000000000000000000056"
-            )),
-            ChainType::AtlasSphere => H160::zero(),
-        };
-        (bridge, bridge) // Same for now
+        let chain_id = chain_type.chain_id();
+        let bridge = Self::derive_contract_address(chain_id, b"x3:bridge:v1");
+        let settlement = Self::derive_contract_address(chain_id, b"x3:settlement:v1");
+        (bridge, settlement)
+    }
+
+    fn derive_contract_address(chain_id: u64, purpose: &[u8]) -> H160 {
+        let mut seed = Vec::with_capacity(8 + purpose.len());
+        seed.extend_from_slice(&chain_id.to_be_bytes());
+        seed.extend_from_slice(purpose);
+
+        let digest = sp_io::hashing::keccak_256(&seed);
+        let mut out = [0u8; 20];
+        out.copy_from_slice(&digest[12..32]);
+
+        // Never return the zero address for defaults.
+        if out == [0u8; 20] {
+            out[19] = 1;
+        }
+
+        H160(out)
     }
 
     fn default_confirmations(chain_type: ChainType) -> u32 {
@@ -391,5 +462,52 @@ mod tests {
         );
         let hash = msg.hash();
         assert_ne!(hash, H256::zero());
+    }
+
+    #[test]
+    fn test_onboard_external_chain_success() {
+        let config = ChainConfig::onboard_external_chain(
+            9999,
+            "https://rpc.partner-chain.example",
+            H160::from_low_u64_be(11),
+            H160::from_low_u64_be(12),
+            2,
+        )
+        .unwrap();
+
+        assert_eq!(config.chain_type, 9999);
+        assert_eq!(config.confirmations, 2);
+        assert_eq!(config.max_gas_limit, 500_000);
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_onboard_external_chain_rejects_invalid_config() {
+        let err = ChainConfig::onboard_external_chain(
+            0,
+            "rpc.partner-chain.example",
+            H160::zero(),
+            H160::zero(),
+            0,
+        )
+        .unwrap_err();
+
+        assert!(matches!(err, ExternalChainError::InvalidChainId(0)));
+    }
+
+    #[test]
+    fn test_default_contracts_are_non_zero_and_distinct() {
+        let cfg = ChainConfig::for_chain(ChainType::Base);
+        assert_ne!(cfg.bridge_contract, H160::zero());
+        assert_ne!(cfg.settlement_contract, H160::zero());
+        assert_ne!(cfg.bridge_contract, cfg.settlement_contract);
+    }
+
+    #[test]
+    fn test_default_contracts_are_chain_specific() {
+        let base = ChainConfig::for_chain(ChainType::Base);
+        let arb = ChainConfig::for_chain(ChainType::Arbitrum);
+        assert_ne!(base.bridge_contract, arb.bridge_contract);
+        assert_ne!(base.settlement_contract, arb.settlement_contract);
     }
 }

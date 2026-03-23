@@ -2,10 +2,9 @@
 
 use crate::error::{SwarmError, SwarmResult};
 use crate::node::{NodeId, NodeRegistry, NodeStatus, SwarmNode};
-use crate::task::{Task, TaskExecution, TaskId, TaskPriority, TaskStatus};
+use crate::task::{Task, TaskExecution, TaskId, TaskStatus};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
-use std::sync::{Arc, RwLock};
 
 /// Wrapper for priority queue ordering
 #[derive(Debug, Clone)]

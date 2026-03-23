@@ -28,8 +28,7 @@
 use crate::coordinator::SwarmCoordinator;
 use crate::error::{SwarmError, SwarmResult};
 use crate::node::NodeId;
-use crate::protocol::TaskResult;
-use crate::task::{Task, TaskId, TaskMetadata, TaskPriority, TaskStatus, TaskType};
+use crate::task::{Task, TaskId, TaskPriority, TaskStatus, TaskType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

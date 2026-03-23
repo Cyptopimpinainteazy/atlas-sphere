@@ -47,6 +47,22 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
         bool isActive; // Active status
     }
 
+    struct PendingVerifierUpdate {
+        address compilerVerifier;
+        address checkerVerifier;
+        uint256 executeAfter;
+    }
+
+    struct PendingMultisigUpdate {
+        address multisig;
+        uint256 executeAfter;
+    }
+
+    struct ScheduledChildAction {
+        uint256 executeAfter;
+        string reason;
+    }
+
     // ============ State Variables ============
 
     /// @notice BOT token used for fees
@@ -72,6 +88,21 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
 
     /// @notice Mapping to track used manifest CIDs (prevent replay)
     mapping(bytes32 => bool) public usedManifests;
+
+    /// @notice Delay for sensitive lifecycle and admin actions
+    uint256 public constant ADMIN_ACTION_DELAY = 3 days;
+
+    /// @notice Pending verifier update
+    PendingVerifierUpdate public pendingVerifierUpdate;
+
+    /// @notice Pending multisig update
+    PendingMultisigUpdate public pendingMultisigUpdate;
+
+    /// @notice Scheduled quarantines by child id
+    mapping(uint256 => ScheduledChildAction) public scheduledQuarantines;
+
+    /// @notice Scheduled revocations by child id
+    mapping(uint256 => ScheduledChildAction) public scheduledRevocations;
 
     // ============ Events ============
 
@@ -99,6 +130,42 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
 
     /// @notice Emitted when verifier addresses are updated
     event VerifiersUpdated(address compiler, address checker);
+
+    /// @notice Emitted when a verifier update is scheduled
+    event VerifierUpdateScheduled(
+        address compiler,
+        address checker,
+        uint256 executeAfter
+    );
+
+    /// @notice Emitted when a pending verifier update is cancelled
+    event VerifierUpdateCancelled();
+
+    /// @notice Emitted when a multisig update is scheduled
+    event MultisigUpdateScheduled(address multisig, uint256 executeAfter);
+
+    /// @notice Emitted when a pending multisig update is cancelled
+    event MultisigUpdateCancelled();
+
+    /// @notice Emitted when a scheduled quarantine is created
+    event QuarantineScheduled(
+        uint256 indexed childId,
+        string reason,
+        uint256 executeAfter
+    );
+
+    /// @notice Emitted when a scheduled quarantine is cancelled
+    event QuarantineCancelled(uint256 indexed childId);
+
+    /// @notice Emitted when a scheduled revocation is created
+    event RevocationScheduled(
+        uint256 indexed childId,
+        string reason,
+        uint256 executeAfter
+    );
+
+    /// @notice Emitted when a scheduled revocation is cancelled
+    event RevocationCancelled(uint256 indexed childId);
 
     /// @notice Emitted when marriage fee is updated
     event FeeUpdated(uint256 newFee);
@@ -266,11 +333,11 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Quarantine a child agent (multisig only)
+     * @notice Schedule a child quarantine after the admin delay
      * @param childId ID of the child to quarantine
      * @param reason Reason for quarantine
      */
-    function quarantineChild(
+    function scheduleQuarantineChild(
         uint256 childId,
         string calldata reason
     ) external onlyMultisig {
@@ -278,23 +345,102 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
         require(child.owner != address(0), "Child does not exist");
         require(!child.isQuarantined, "Already quarantined");
 
+        uint256 executeAfter = block.timestamp + ADMIN_ACTION_DELAY;
+        scheduledQuarantines[childId] = ScheduledChildAction({
+            executeAfter: executeAfter,
+            reason: reason
+        });
+
+        emit QuarantineScheduled(childId, reason, executeAfter);
+    }
+
+    /**
+     * @notice Execute a scheduled quarantine
+     * @param childId ID of the child to quarantine
+     */
+    function executeQuarantineChild(uint256 childId) external onlyMultisig {
+        ScheduledChildAction storage action = scheduledQuarantines[childId];
+        Child storage child = children[childId];
+
+        require(child.owner != address(0), "Child does not exist");
+        require(!child.isQuarantined, "Already quarantined");
+        require(action.executeAfter != 0, "Quarantine not scheduled");
+        require(block.timestamp >= action.executeAfter, "Action not ready");
+
+        string memory reason = action.reason;
+        delete scheduledQuarantines[childId];
         child.isQuarantined = true;
 
         emit ChildQuarantined(childId, reason);
     }
 
     /**
-     * @notice Revoke a child agent permanently (multisig only)
-     * @param childId ID of the child to revoke
+     * @notice Cancel a scheduled quarantine
+     * @param childId ID of the child
      */
-    function revokeChild(uint256 childId) external onlyMultisig {
+    function cancelQuarantineChild(uint256 childId) external onlyMultisig {
+        require(
+            scheduledQuarantines[childId].executeAfter != 0,
+            "Quarantine not scheduled"
+        );
+        delete scheduledQuarantines[childId];
+
+        emit QuarantineCancelled(childId);
+    }
+
+    /**
+     * @notice Schedule a child revocation after the admin delay
+     * @param childId ID of the child to revoke
+     * @param reason Reason for revocation
+     */
+    function scheduleRevokeChild(
+        uint256 childId,
+        string calldata reason
+    ) external onlyMultisig {
         Child storage child = children[childId];
         require(child.owner != address(0), "Child does not exist");
         require(child.isActive, "Already revoked");
 
+        uint256 executeAfter = block.timestamp + ADMIN_ACTION_DELAY;
+        scheduledRevocations[childId] = ScheduledChildAction({
+            executeAfter: executeAfter,
+            reason: reason
+        });
+
+        emit RevocationScheduled(childId, reason, executeAfter);
+    }
+
+    /**
+     * @notice Execute a scheduled revocation
+     * @param childId ID of the child to revoke
+     */
+    function executeRevokeChild(uint256 childId) external onlyMultisig {
+        ScheduledChildAction storage action = scheduledRevocations[childId];
+        Child storage child = children[childId];
+
+        require(child.owner != address(0), "Child does not exist");
+        require(child.isActive, "Already revoked");
+        require(action.executeAfter != 0, "Revocation not scheduled");
+        require(block.timestamp >= action.executeAfter, "Action not ready");
+
+        delete scheduledRevocations[childId];
         child.isActive = false;
 
         emit ChildRevoked(childId);
+    }
+
+    /**
+     * @notice Cancel a scheduled revocation
+     * @param childId ID of the child
+     */
+    function cancelRevokeChild(uint256 childId) external onlyMultisig {
+        require(
+            scheduledRevocations[childId].executeAfter != 0,
+            "Revocation not scheduled"
+        );
+        delete scheduledRevocations[childId];
+
+        emit RevocationCancelled(childId);
     }
 
     // ============ Signature Verification ============
@@ -394,18 +540,56 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
     // ============ Admin Functions ============
 
     /**
-     * @notice Update verifier addresses
+     * @notice Schedule verifier updates after the admin delay
      * @param _compilerVerifier New compiler verifier address
      * @param _checkerVerifier New checker verifier address
      */
-    function setVerifiers(
+    function scheduleVerifierUpdate(
         address _compilerVerifier,
         address _checkerVerifier
     ) external onlyOwner {
         require(_compilerVerifier != address(0), "Invalid compiler address");
-        compilerVerifier = _compilerVerifier;
-        checkerVerifier = _checkerVerifier;
-        emit VerifiersUpdated(_compilerVerifier, _checkerVerifier);
+
+        uint256 executeAfter = block.timestamp + ADMIN_ACTION_DELAY;
+        pendingVerifierUpdate = PendingVerifierUpdate({
+            compilerVerifier: _compilerVerifier,
+            checkerVerifier: _checkerVerifier,
+            executeAfter: executeAfter
+        });
+
+        emit VerifierUpdateScheduled(
+            _compilerVerifier,
+            _checkerVerifier,
+            executeAfter
+        );
+    }
+
+    /**
+     * @notice Execute a scheduled verifier update
+     */
+    function executeVerifierUpdate() external onlyOwner {
+        PendingVerifierUpdate memory pending = pendingVerifierUpdate;
+        require(pending.executeAfter != 0, "Verifier update not scheduled");
+        require(block.timestamp >= pending.executeAfter, "Action not ready");
+
+        compilerVerifier = pending.compilerVerifier;
+        checkerVerifier = pending.checkerVerifier;
+        delete pendingVerifierUpdate;
+
+        emit VerifiersUpdated(compilerVerifier, checkerVerifier);
+    }
+
+    /**
+     * @notice Cancel a pending verifier update
+     */
+    function cancelVerifierUpdate() external onlyOwner {
+        require(
+            pendingVerifierUpdate.executeAfter != 0,
+            "Verifier update not scheduled"
+        );
+        delete pendingVerifierUpdate;
+
+        emit VerifierUpdateCancelled();
     }
 
     /**
@@ -418,12 +602,44 @@ contract MarriageLicense is ERC721, ERC721URIStorage, ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Update multisig address
+     * @notice Schedule a multisig address update after the admin delay
      * @param _multisig New multisig address
      */
-    function setMultisig(address _multisig) external onlyOwner {
+    function scheduleMultisigUpdate(address _multisig) external onlyOwner {
         require(_multisig != address(0), "Invalid multisig address");
-        multisig = _multisig;
+
+        uint256 executeAfter = block.timestamp + ADMIN_ACTION_DELAY;
+        pendingMultisigUpdate = PendingMultisigUpdate({
+            multisig: _multisig,
+            executeAfter: executeAfter
+        });
+
+        emit MultisigUpdateScheduled(_multisig, executeAfter);
+    }
+
+    /**
+     * @notice Execute a scheduled multisig update
+     */
+    function executeMultisigUpdate() external onlyOwner {
+        PendingMultisigUpdate memory pending = pendingMultisigUpdate;
+        require(pending.executeAfter != 0, "Multisig update not scheduled");
+        require(block.timestamp >= pending.executeAfter, "Action not ready");
+
+        multisig = pending.multisig;
+        delete pendingMultisigUpdate;
+    }
+
+    /**
+     * @notice Cancel a pending multisig update
+     */
+    function cancelMultisigUpdate() external onlyOwner {
+        require(
+            pendingMultisigUpdate.executeAfter != 0,
+            "Multisig update not scheduled"
+        );
+        delete pendingMultisigUpdate;
+
+        emit MultisigUpdateCancelled();
     }
 
     /**

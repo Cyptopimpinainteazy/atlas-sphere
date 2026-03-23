@@ -1,6 +1,5 @@
 /// Cross-Chain Account Abstraction — Unified account control across EVM, SVM, IBC-compatible chains
 /// Implements unified key standard with threshold multisig support across multiple blockchains
-
 use parity_scale_codec::{Decode, Encode};
 use sp_std::vec::Vec;
 
@@ -96,10 +95,10 @@ impl CrossChainAccountManager {
     pub fn derive_evm_address(master_key: &[u8; 32]) -> Result<[u8; 20], &'static str> {
         // BIP32 derivation path: m/44'/60'/0'/0/0 (Ethereum standard)
         let mut address = [0u8; 20];
-        
+
         // Simplified: compute address from master key hash
         let pubkey_hash = Self::hash_key_with_path(master_key, b"ethereum");
-        
+
         address[0..20].copy_from_slice(&pubkey_hash[0..20]);
         Ok(address)
     }
@@ -107,7 +106,7 @@ impl CrossChainAccountManager {
     /// Derive deterministic Cosmos address from master key
     pub fn derive_cosmos_address(master_key: &[u8; 32]) -> Result<Vec<u8>, &'static str> {
         let pubkey_hash = Self::hash_key_with_path(master_key, b"cosmos");
-        
+
         // Cosmos addresses: bech32(pubkey_hash) with "cosmos" prefix
         let mut address = b"cosmos1".to_vec();
         address.extend_from_slice(&pubkey_hash[0..20]);
@@ -121,7 +120,10 @@ impl CrossChainAccountManager {
     }
 
     /// Add EVM address to account
-    pub fn add_evm_address(account: &mut CrossChainAccount, evm_address: [u8; 20]) -> Result<(), &'static str> {
+    pub fn add_evm_address(
+        account: &mut CrossChainAccount,
+        evm_address: [u8; 20],
+    ) -> Result<(), &'static str> {
         if evm_address == [0; 20] {
             return Err("EVM address cannot be zero");
         }
@@ -130,7 +132,10 @@ impl CrossChainAccountManager {
     }
 
     /// Add Cosmos address to account
-    pub fn add_cosmos_address(account: &mut CrossChainAccount, cosmos_address: Vec<u8>) -> Result<(), &'static str> {
+    pub fn add_cosmos_address(
+        account: &mut CrossChainAccount,
+        cosmos_address: Vec<u8>,
+    ) -> Result<(), &'static str> {
         if cosmos_address.is_empty() || cosmos_address.len() > 50 {
             return Err("Invalid Cosmos address length");
         }
@@ -139,7 +144,10 @@ impl CrossChainAccountManager {
     }
 
     /// Add Solana address to account
-    pub fn add_solana_address(account: &mut CrossChainAccount, solana_address: [u8; 32]) -> Result<(), &'static str> {
+    pub fn add_solana_address(
+        account: &mut CrossChainAccount,
+        solana_address: [u8; 32],
+    ) -> Result<(), &'static str> {
         if solana_address == [0; 32] {
             return Err("Solana address cannot be zero");
         }
@@ -303,11 +311,11 @@ impl CrossChainAccountManager {
     fn derive_account_id(master_key: &[u8; 32]) -> [u8; 32] {
         let mut id = [0u8; 32];
         let mut hash = 0u64;
-        
+
         for byte in master_key {
             hash = hash.wrapping_mul(31).wrapping_add(*byte as u64);
         }
-        
+
         id[0..8].copy_from_slice(&hash.to_le_bytes());
         id
     }
@@ -367,7 +375,7 @@ mod tests {
         let evm_addr = CrossChainAccountManager::derive_evm_address(&master_key).unwrap();
 
         assert_ne!(evm_addr, [0; 20]);
-        
+
         // Deterministic
         let evm_addr2 = CrossChainAccountManager::derive_evm_address(&master_key).unwrap();
         assert_eq!(evm_addr, evm_addr2);
@@ -412,13 +420,9 @@ mod tests {
         let account = CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
         let new_key = [3; 32];
 
-        let proposal = CrossChainAccountManager::propose_key_rotation(
-            &account,
-            new_key,
-            1,
-            3600,
-            1000,
-        ).unwrap();
+        let proposal =
+            CrossChainAccountManager::propose_key_rotation(&account, new_key, 1, 3600, 1000)
+                .unwrap();
 
         assert_eq!(proposal.status, ProposalStatus::Pending);
         assert_eq!(proposal.new_master_key, new_key);
@@ -429,11 +433,8 @@ mod tests {
         let account = CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
 
         let result = CrossChainAccountManager::propose_key_rotation(
-            &account,
-            [1; 32],  // Same as master_key
-            1,
-            3600,
-            1000,
+            &account, [1; 32], // Same as master_key
+            1, 3600, 1000,
         );
 
         assert!(result.is_err());
@@ -444,15 +445,12 @@ mod tests {
         let mut account = CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
         let new_key = [3; 32];
 
-        let mut proposal = CrossChainAccountManager::propose_key_rotation(
-            &account,
-            new_key,
-            1,
-            3600,
-            1000,
-        ).unwrap();
+        let mut proposal =
+            CrossChainAccountManager::propose_key_rotation(&account, new_key, 1, 3600, 1000)
+                .unwrap();
 
-        let threshold_reached = CrossChainAccountManager::vote_on_rotation(&mut proposal, [4; 32], true).unwrap();
+        let threshold_reached =
+            CrossChainAccountManager::vote_on_rotation(&mut proposal, [4; 32], true).unwrap();
         assert!(threshold_reached);
 
         CrossChainAccountManager::execute_rotation(&mut account, &mut proposal).unwrap();
@@ -469,7 +467,9 @@ mod tests {
 
         assert!(addresses.len() >= 2);
         assert!(addresses.iter().any(|a| a.chain_type == ChainType::X3));
-        assert!(addresses.iter().any(|a| a.chain_type == ChainType::Ethereum));
+        assert!(addresses
+            .iter()
+            .any(|a| a.chain_type == ChainType::Ethereum));
     }
 
     #[test]
@@ -508,7 +508,7 @@ mod tests {
             message_hash: [3; 32],
             signature: vec![1, 2, 3],
             chain_type: ChainType::X3,
-            nonce: 3,  // Less than current nonce
+            nonce: 3, // Less than current nonce
         };
 
         let result = CrossChainAccountManager::verify_signature(&account, &sig);

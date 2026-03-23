@@ -203,12 +203,17 @@ impl PaymentSystem {
 
     /// Validate provider ID format
     fn is_valid_provider_id(id: &str) -> bool {
-        !id.is_empty() && id.len() <= 64 && id.len() >= 3 && id.chars().all(|c| c.is_alphanumeric() || c == '_')
+        !id.is_empty()
+            && id.len() <= 64
+            && id.len() >= 3
+            && id.chars().all(|c| c.is_alphanumeric() || c == '_')
     }
 
     /// Validate wallet address format (Ethereum-style)
     fn is_valid_wallet_address(addr: &str) -> bool {
-        addr.starts_with("0x") && addr.len() == 42 && addr[2..].chars().all(|c| c.is_ascii_hexdigit())
+        addr.starts_with("0x")
+            && addr.len() == 42
+            && addr[2..].chars().all(|c| c.is_ascii_hexdigit())
     }
 
     /// Register a provider
@@ -221,14 +226,15 @@ impl PaymentSystem {
         // Validate provider ID format
         if !Self::is_valid_provider_id(&provider_id) {
             return Err(SwarmError::InvalidInput(
-                "Invalid provider ID format. Must be alphanumeric with underscores, 3-64 chars".to_string()
+                "Invalid provider ID format. Must be alphanumeric with underscores, 3-64 chars"
+                    .to_string(),
             ));
         }
 
         // Validate wallet address format
         if !Self::is_valid_wallet_address(&wallet_address) {
             return Err(SwarmError::InvalidInput(
-                "Invalid wallet address format".to_string()
+                "Invalid wallet address format".to_string(),
             ));
         }
 
@@ -321,9 +327,7 @@ impl PaymentSystem {
         let mut reward = rate
             .base_rate
             .checked_mul(record.work_units)
-            .ok_or_else(|| {
-                SwarmError::InvalidInput("Reward calculation overflow".to_string())
-            })?;
+            .ok_or_else(|| SwarmError::InvalidInput("Reward calculation overflow".to_string()))?;
 
         // Apply verification bonus with overflow protection
         if record.verified {

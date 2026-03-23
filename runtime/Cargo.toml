@@ -123,6 +123,7 @@ std = [
 	"pallet-x3-domain-registry/std",
 	"pallet-x3-settlement-engine/std",
 	"pallet-swarm/std",
+	"pallet-x3-coin/std",
 	"pallet-depin-marketplace/std",
 	"pallet-private-execution/std",
 	"pallet-x3-sequencer/std",

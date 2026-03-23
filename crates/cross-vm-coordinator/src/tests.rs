@@ -140,7 +140,9 @@ fn test_phase_transitions_happy_path() {
     let session = coordinator.get_session(&session_id).unwrap();
     assert_eq!(session.phase, SwapPhase::ClaimingFast);
 
-    coordinator.record_fast_claim(&session_id, secret, now).unwrap();
+    coordinator
+        .record_fast_claim(&session_id, secret, now)
+        .unwrap();
     let session = coordinator.get_session(&session_id).unwrap();
     assert_eq!(session.phase, SwapPhase::ClaimingSlow);
 
@@ -479,8 +481,15 @@ fn test_purge_terminated_sessions_removes_stale_terminals() {
     // Purge with max_age = 3600s, advance time by 7200s
     let future = now + 7200;
     let purged = coordinator.purge_terminated_sessions(future, 3600);
-    assert_eq!(purged, 1, "only id1 should be purged (it's terminal and stale)");
-    assert_eq!(coordinator.session_count(), 1, "id2 still active — must survive purge");
+    assert_eq!(
+        purged, 1,
+        "only id1 should be purged (it's terminal and stale)"
+    );
+    assert_eq!(
+        coordinator.session_count(),
+        1,
+        "id2 still active — must survive purge"
+    );
 }
 
 #[test]
@@ -521,7 +530,10 @@ fn test_secret_generated_by_osrng_is_nonzero() {
     // Basic sanity check for the OsRng entropy source.
     // The chance of generating all-zero bytes with a real CSPRNG is 2^-256.
     let secret = HtlcSecret::generate();
-    assert_ne!(secret.0, [0u8; 32], "OsRng must never produce all-zero bytes");
+    assert_ne!(
+        secret.0, [0u8; 32],
+        "OsRng must never produce all-zero bytes"
+    );
     // Hash must also be non-zero
     let hash = secret.hash();
     assert_ne!(hash.0, [0u8; 32]);
@@ -558,29 +570,53 @@ fn test_htlc_wrong_secret_is_rejected() {
     let fast_htlc = HtlcRecord {
         id: HtlcId(b"f1".to_vec()),
         params: HtlcCreateParams {
-            vm: VmTarget::Svm, recipient: vec![], hash_lock: session_hash,
-            timelock: now + 3600, asset: vec![0u8; 32], amount: 1_000,
+            vm: VmTarget::Svm,
+            recipient: vec![],
+            hash_lock: session_hash,
+            timelock: now + 3600,
+            asset: vec![0u8; 32],
+            amount: 1_000,
         },
-        status: HtlcStatus::Funded, created_at_block: 100,
-        confirmations_required: 1, confirmations: 1,
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
     };
-    coordinator.record_htlc_fast(&session_id, fast_htlc, now).unwrap();
+    coordinator
+        .record_htlc_fast(&session_id, fast_htlc, now)
+        .unwrap();
     let slow_htlc = HtlcRecord {
         id: HtlcId(b"s1".to_vec()),
         params: HtlcCreateParams {
-            vm: VmTarget::Evm { chain_id: 1 }, recipient: vec![], hash_lock: session_hash,
-            timelock: now + 7200, asset: vec![0u8; 20], amount: 1_000,
+            vm: VmTarget::Evm { chain_id: 1 },
+            recipient: vec![],
+            hash_lock: session_hash,
+            timelock: now + 7200,
+            asset: vec![0u8; 20],
+            amount: 1_000,
         },
-        status: HtlcStatus::Funded, created_at_block: 100,
-        confirmations_required: 1, confirmations: 1,
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
     };
-    coordinator.record_htlc_slow(&session_id, slow_htlc, now).unwrap();
+    coordinator
+        .record_htlc_slow(&session_id, slow_htlc, now)
+        .unwrap();
     coordinator.begin_flash_execution(&session_id, now).unwrap();
     if coordinator.get_session(&session_id).unwrap().phase == SwapPhase::ExecutingFlashLegs {
-        coordinator.record_leg_outcome(&session_id, FlashLegOutcome::Success {
-            tx_hash: vec![0xAB; 32], gas_used: 1_000,
-            output_amount: 1_000, premium_paid: 0,
-        }, now).ok();
+        coordinator
+            .record_leg_outcome(
+                &session_id,
+                FlashLegOutcome::Success {
+                    tx_hash: vec![0xAB; 32],
+                    gas_used: 1_000,
+                    output_amount: 1_000,
+                    premium_paid: 0,
+                },
+                now,
+            )
+            .ok();
     }
     coordinator.begin_settlement(&session_id, now).unwrap();
 
@@ -603,29 +639,53 @@ fn test_htlc_secret_replay_same_session_is_rejected() {
     let fast_htlc = HtlcRecord {
         id: HtlcId(b"f2".to_vec()),
         params: HtlcCreateParams {
-            vm: VmTarget::Svm, recipient: vec![], hash_lock: session_hash,
-            timelock: now + 3600, asset: vec![0u8; 32], amount: 1_000,
+            vm: VmTarget::Svm,
+            recipient: vec![],
+            hash_lock: session_hash,
+            timelock: now + 3600,
+            asset: vec![0u8; 32],
+            amount: 1_000,
         },
-        status: HtlcStatus::Funded, created_at_block: 100,
-        confirmations_required: 1, confirmations: 1,
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
     };
-    coordinator.record_htlc_fast(&session_id, fast_htlc, now).unwrap();
+    coordinator
+        .record_htlc_fast(&session_id, fast_htlc, now)
+        .unwrap();
     let slow_htlc = HtlcRecord {
         id: HtlcId(b"s2".to_vec()),
         params: HtlcCreateParams {
-            vm: VmTarget::Evm { chain_id: 1 }, recipient: vec![], hash_lock: session_hash,
-            timelock: now + 7200, asset: vec![0u8; 20], amount: 1_000,
+            vm: VmTarget::Evm { chain_id: 1 },
+            recipient: vec![],
+            hash_lock: session_hash,
+            timelock: now + 7200,
+            asset: vec![0u8; 20],
+            amount: 1_000,
         },
-        status: HtlcStatus::Funded, created_at_block: 100,
-        confirmations_required: 1, confirmations: 1,
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
     };
-    coordinator.record_htlc_slow(&session_id, slow_htlc, now).unwrap();
+    coordinator
+        .record_htlc_slow(&session_id, slow_htlc, now)
+        .unwrap();
     coordinator.begin_flash_execution(&session_id, now).unwrap();
     if coordinator.get_session(&session_id).unwrap().phase == SwapPhase::ExecutingFlashLegs {
-        coordinator.record_leg_outcome(&session_id, FlashLegOutcome::Success {
-            tx_hash: vec![0xBC; 32], gas_used: 1_000,
-            output_amount: 1_000, premium_paid: 0,
-        }, now).ok();
+        coordinator
+            .record_leg_outcome(
+                &session_id,
+                FlashLegOutcome::Success {
+                    tx_hash: vec![0xBC; 32],
+                    gas_used: 1_000,
+                    output_amount: 1_000,
+                    premium_paid: 0,
+                },
+                now,
+            )
+            .ok();
     }
     coordinator.begin_settlement(&session_id, now).unwrap();
 

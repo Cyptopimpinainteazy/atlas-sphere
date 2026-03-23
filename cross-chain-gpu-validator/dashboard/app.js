@@ -15,35 +15,55 @@ function setTxt(id, val) {
 function renderGpuBars(gpus) {
   const container = document.getElementById("gpu_bars");
   if (!container || !gpus) return;
-  container.innerHTML = gpus
-    .map(
-      (g, i) =>
-        `<div class="gpu-bar-row">
-          <span class="gpu-label">GPU ${i}</span>
-          <div class="gpu-bar-bg">
-            <div class="gpu-bar-fill" style="width:${g.util_pct}%"></div>
-          </div>
-          <span class="gpu-pct">${g.util_pct}%</span>
-        </div>`
-    )
-    .join("");
+  container.replaceChildren();
+
+  gpus.forEach((gpu, i) => {
+    const row = document.createElement("div");
+    row.className = "gpu-bar-row";
+
+    const label = document.createElement("span");
+    label.className = "gpu-label";
+    label.textContent = `GPU ${i}`;
+
+    const barBg = document.createElement("div");
+    barBg.className = "gpu-bar-bg";
+
+    const barFill = document.createElement("div");
+    barFill.className = "gpu-bar-fill";
+    const utilPct = Number(gpu.util_pct || 0);
+    barFill.style.width = `${Math.max(0, Math.min(100, utilPct))}%`;
+    barBg.appendChild(barFill);
+
+    const pct = document.createElement("span");
+    pct.className = "gpu-pct";
+    pct.textContent = `${utilPct}%`;
+
+    row.appendChild(label);
+    row.appendChild(barBg);
+    row.appendChild(pct);
+    container.appendChild(row);
+  });
 }
 
 function renderChainRows(chains) {
   const body = document.getElementById("chain_tps_rows");
   if (!body) return;
-  body.innerHTML = "";
+  body.replaceChildren();
   const top = (chains || []).slice(0, 50);
   for (let i = 0; i < top.length; i += 1) {
     const chain = top[i];
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${chain.chain_name || "-"}</td>
-      <td>${chain.chain_id || "-"}</td>
-      <td>${fmt(chain.max_tps || 0)}</td>
-      <td>${fmt(chain.best_level || 0)}</td>
-    `;
+    [
+      i + 1,
+      chain.chain_name || "-",
+      chain.chain_id || "-",
+      fmt(chain.max_tps || 0),
+      fmt(chain.best_level || 0),
+    ].forEach((value) => {
+      const td = document.createElement("td");
+      td.textContent = String(value);
+      tr.appendChild(td);
+    });
     body.appendChild(tr);
   }
 }

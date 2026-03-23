@@ -631,7 +631,11 @@ where
             Ok(Ok(tx_hash)) => {
                 log::info!(
                     "[RuntimeDispatcher] EVM tx executed, hash=0x{}",
-                    tx_hash.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>()
+                    tx_hash
+                        .iter()
+                        .take(8)
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<String>()
                 );
                 Ok(CrossVmResult::success(tx_hash, 21_000))
             }
@@ -665,24 +669,36 @@ where
         if !api.is_svm_program(at, program_id.to_vec()).unwrap_or(false) {
             log::warn!(
                 "[RuntimeDispatcher] SVM program not found: 0x{}",
-                program_id.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>()
+                program_id
+                    .iter()
+                    .take(8)
+                    .map(|b| format!("{:02x}", b))
+                    .collect::<String>()
             );
-            return Ok(CrossVmResult::failed(
-                b"program not found".to_vec(),
-                1_000,
-            ));
+            return Ok(CrossVmResult::failed(b"program not found".to_vec(), 1_000));
         }
 
         // For now, SVM execution happens via the kernel's internal pathway
-        // The actual execution is routed through pallet-x3-kernel's SvmAdapter
-        // This is a placeholder that will be wired to the full SVM execution path
+        // The runtime API currently exposes read-only SVM queries, but no
+        // submit/execute endpoint equivalent to submit_evm_transaction.
+        // Return explicit failure instead of fake success to avoid masking
+        // execution gaps in cross-VM flows.
         log::info!(
             "[RuntimeDispatcher] SVM instruction for program 0x{}",
-            program_id.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>()
+            program_id
+                .iter()
+                .take(8)
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
         );
 
-        // Return success with the input echoed back (real execution returns actual output)
-        Ok(CrossVmResult::success(input.to_vec(), 5_000))
+        let mut reason = b"svm execution unavailable: runtime submit API not wired".to_vec();
+        if !input.is_empty() {
+            reason.extend_from_slice(b"; payload_len=");
+            reason.extend_from_slice(input.len().to_string().as_bytes());
+        }
+
+        Ok(CrossVmResult::failed(reason, 5_000))
     }
 
     /// Get EVM balance for an address.

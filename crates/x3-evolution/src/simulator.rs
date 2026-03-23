@@ -1,7 +1,7 @@
 //! Strategy simulation using X3 VM
 
 use crate::chromosome::Chromosome;
-use crate::error::{EvolutionError, Result};
+use crate::error::Result;
 use crate::fitness::{FitnessEvaluator, FitnessScore};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

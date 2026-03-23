@@ -106,9 +106,9 @@ impl<T: Config> DualVmDispatcher for Pallet<T> {
 
 **Tasks**:
 - [x] Basic chain spec commands
-- [ ] Add `x3-chain-node comit` subcommand
-- [ ] Add `x3-chain-node keys` subcommand enhancements
-- [ ] Add `x3-chain-node inspect` for canonical ledger queries
+- [x] Add `x3-chain-node comit` subcommand
+- [x] Add `x3-chain-node keys` subcommand enhancements
+- [x] Add `x3-chain-node inspect` for canonical ledger queries
 
 **New Commands to Implement**:
 ```bash
@@ -122,12 +122,12 @@ x3-chain-node keys derive --path <derivation>
 **Files**: `packages/ts-sdk/src/`
 
 **Tasks**:
-- [ ] Create `src/client.ts` - Main AtlasSphereClient class
-- [ ] Create `src/comit.ts` - Comit builder and submission
-- [ ] Create `src/query.ts` - Canonical ledger queries
-- [ ] Create `src/evm.ts` - EVM-specific utilities
-- [ ] Create `src/svm.ts` - SVM-specific utilities
-- [ ] Create `src/types.ts` - TypeScript type definitions
+- [x] Create `src/client.ts` - Main AtlasSphereClient class
+- [x] Create `src/comit.ts` - Comit builder and submission
+- [x] Create `src/query.ts` - Canonical ledger queries
+- [x] Create `src/evm.ts` - EVM-specific utilities
+- [x] Create `src/svm.ts` - SVM-specific utilities
+- [x] Create `src/types.ts` - TypeScript type definitions
 - [ ] Write comprehensive tests
 - [ ] Build and publish to npm
 
@@ -135,13 +135,13 @@ x3-chain-node keys derive --path <derivation>
 **Files**: `packages/py-sdk/src/x3_chain_sdk/`
 
 **Tasks**:
-- [ ] Create `client.py` - Main AtlasSphereClient class
-- [ ] Create `comit.py` - Comit builder and submission
-- [ ] Create `query.py` - Canonical ledger queries
-- [ ] Create `evm.py` - EVM-specific utilities
-- [ ] Create `svm.py` - SVM-specific utilities
-- [ ] Create `cli.py` - CLI entrypoint (already configured)
-- [ ] Write comprehensive tests
+- [x] Create `client.py` - Main AtlasSphereClient class
+- [x] Create `comit.py` - Comit builder and submission
+- [x] Create `query.py` - Canonical ledger queries
+- [x] Create `evm.py` - EVM-specific utilities
+- [x] Create `svm.py` - SVM-specific utilities
+- [x] Create `cli.py` - CLI entrypoint (already configured)
+- [x] Write comprehensive tests
 - [ ] Build and publish to PyPI
 
 ---

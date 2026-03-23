@@ -59,7 +59,10 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         let session_count = sessions.len();
 
         if session_count > 0 {
-            info!(sessions = session_count, "Restored sessions from persistence");
+            info!(
+                sessions = session_count,
+                "Restored sessions from persistence"
+            );
         }
 
         Self {
@@ -258,12 +261,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             info!(
                 session = %session_id,
@@ -295,12 +297,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<bool, CoordinatorError> {
         let result = {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             let htlc = if is_fast {
                 session.htlc_fast.as_mut()
@@ -402,12 +403,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
     ) -> Result<(), CoordinatorError> {
         let mut abort_error = None;
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             let leg_index = session.leg_outcomes.len();
 
@@ -545,12 +545,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         }
 
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             // Verify the preimage hashes to the lock
             let provided_hash = secret.hash();
@@ -586,12 +585,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             if let Some(ref mut htlc) = session.htlc_slow {
                 htlc.status = HtlcStatus::Claimed;
@@ -616,12 +614,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             warn!(session = %session_id, reason, "Aborting swap — will refund after timelocks");
 
@@ -640,12 +637,11 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         {
-            let session =
-                self.sessions
-                    .get_mut(session_id)
-                    .ok_or_else(|| CoordinatorError::SessionNotFound {
-                        session_id: session_id.to_string(),
-                    })?;
+            let session = self.sessions.get_mut(session_id).ok_or_else(|| {
+                CoordinatorError::SessionNotFound {
+                    session_id: session_id.to_string(),
+                }
+            })?;
 
             if let Some(ref mut htlc) = session.htlc_fast {
                 htlc.status = HtlcStatus::Refunded;

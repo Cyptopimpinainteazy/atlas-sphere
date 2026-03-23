@@ -202,7 +202,7 @@ This report identifies **250+ gaps** across the X3 Chain monorepo that must be a
 | SDK-003 | Implement collateral RPC/REST calls | packages/ts-sdk/src/collateral.ts | HIGH | ✅ FIXED |
 | SDK-004 | Complete SHA256 implementation | packages/ts-sdk/src/svm.ts | HIGH | ✅ FIXED |
 | SDK-005 | Add comprehensive unit tests for SDK | packages/ts-sdk | HIGH | ✅ 185 tests passing |
-| SDK-006 | Add integration tests for SDK with live node | packages/ts-sdk | HIGH | ⬜ TODO (requires live node) |
+| SDK-006 | Add integration tests for SDK with live node | packages/ts-sdk | HIGH | ✅ FIXED (live integration suite passing against local node) |
 | SDK-007 | Publish TypeScript SDK to npm registry | - | MEDIUM | ⬜ TODO |
 
 ### 2.2 Python SDK

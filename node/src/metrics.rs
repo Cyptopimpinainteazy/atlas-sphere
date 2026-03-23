@@ -5,6 +5,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 /// Uses Substrate's prometheus registry when available.
 use std::sync::Arc;
 
+use substrate_prometheus_endpoint::prometheus;
+
 /// Prometheus registry type alias (use substrate_prometheus_endpoint's Registry)
 pub type PrometheusRegistry = substrate_prometheus_endpoint::Registry;
 
@@ -28,6 +30,128 @@ pub struct MetricsCollector {
     svm_executions: Arc<AtomicU64>,
     /// Cross-VM (dual) executions
     dual_vm_executions: Arc<AtomicU64>,
+    /// Canonical ledger updates
+    canonical_ledger_updates: Arc<AtomicU64>,
+    /// Cross-VM operations prepared
+    cross_vm_prepared: Arc<AtomicU64>,
+    /// Cross-VM operations committed
+    cross_vm_committed: Arc<AtomicU64>,
+    /// Cross-VM operations aborted
+    cross_vm_aborted: Arc<AtomicU64>,
+    /// Fee deductions
+    fee_deductions: Arc<AtomicU64>,
+}
+
+/// Prometheus metrics wrapper for proper registration
+pub struct X3PrometheusMetrics {
+    /// Blocks produced
+    pub blocks_produced: prometheus::Counter,
+    /// Transactions received
+    pub transactions_received: prometheus::Counter,
+    /// Comit transactions submitted
+    pub comits_submitted: prometheus::Counter,
+    /// Comit transactions confirmed
+    pub comits_confirmed: prometheus::Counter,
+    /// Comit transactions failed
+    pub comits_failed: prometheus::Counter,
+    /// EVM executions
+    pub evm_executions: prometheus::Counter,
+    /// SVM executions
+    pub svm_executions: prometheus::Counter,
+    /// Cross-VM executions
+    pub dual_vm_executions: prometheus::Counter,
+    /// Canonical ledger updates
+    pub canonical_ledger_updates: prometheus::Counter,
+    /// Cross-VM operations prepared
+    pub cross_vm_prepared: prometheus::Counter,
+    /// Cross-VM operations committed
+    pub cross_vm_committed: prometheus::Counter,
+    /// Cross-VM operations aborted
+    pub cross_vm_aborted: prometheus::Counter,
+    /// Fee deductions
+    pub fee_deductions: prometheus::Counter,
+}
+
+impl X3PrometheusMetrics {
+    /// Register metrics with the Prometheus registry
+    pub fn register(registry: &PrometheusRegistry) -> Result<Self, prometheus::Error> {
+        let blocks_produced = prometheus::Counter::new(
+            "x3_blocks_produced_total",
+            "Total number of blocks produced by this node",
+        )?;
+        let transactions_received = prometheus::Counter::new(
+            "x3_transactions_received_total",
+            "Total number of transactions received",
+        )?;
+        let comits_submitted = prometheus::Counter::new(
+            "x3_comits_submitted_total",
+            "Total number of Comit transactions submitted",
+        )?;
+        let comits_confirmed = prometheus::Counter::new(
+            "x3_comits_confirmed_total",
+            "Total number of Comit transactions confirmed",
+        )?;
+        let comits_failed = prometheus::Counter::new(
+            "x3_comits_failed_total",
+            "Total number of Comit transactions failed",
+        )?;
+        let evm_executions =
+            prometheus::Counter::new("x3_evm_executions_total", "Total number of EVM executions")?;
+        let svm_executions =
+            prometheus::Counter::new("x3_svm_executions_total", "Total number of SVM executions")?;
+        let dual_vm_executions = prometheus::Counter::new(
+            "x3_dual_vm_executions_total",
+            "Total number of cross-VM executions",
+        )?;
+        let canonical_ledger_updates = prometheus::Counter::new(
+            "x3_canonical_ledger_updates_total",
+            "Total number of canonical ledger updates",
+        )?;
+        let cross_vm_prepared = prometheus::Counter::new(
+            "x3_cross_vm_prepared_total",
+            "Total number of cross-VM operations prepared",
+        )?;
+        let cross_vm_committed = prometheus::Counter::new(
+            "x3_cross_vm_committed_total",
+            "Total number of cross-VM operations committed",
+        )?;
+        let cross_vm_aborted = prometheus::Counter::new(
+            "x3_cross_vm_aborted_total",
+            "Total number of cross-VM operations aborted",
+        )?;
+        let fee_deductions =
+            prometheus::Counter::new("x3_fee_deductions_total", "Total number of fee deductions")?;
+
+        registry.register(Box::new(blocks_produced.clone()))?;
+        registry.register(Box::new(transactions_received.clone()))?;
+        registry.register(Box::new(comits_submitted.clone()))?;
+        registry.register(Box::new(comits_confirmed.clone()))?;
+        registry.register(Box::new(comits_failed.clone()))?;
+        registry.register(Box::new(evm_executions.clone()))?;
+        registry.register(Box::new(svm_executions.clone()))?;
+        registry.register(Box::new(dual_vm_executions.clone()))?;
+        registry.register(Box::new(canonical_ledger_updates.clone()))?;
+        registry.register(Box::new(cross_vm_prepared.clone()))?;
+        registry.register(Box::new(cross_vm_committed.clone()))?;
+        registry.register(Box::new(cross_vm_aborted.clone()))?;
+        registry.register(Box::new(fee_deductions.clone()))?;
+
+        Ok(Self {
+            blocks_produced,
+            transactions_received,
+            comits_submitted,
+            comits_confirmed,
+            comits_failed,
+            evm_executions,
+            svm_executions,
+            dual_vm_executions,
+            canonical_ledger_updates,
+            cross_vm_prepared,
+            cross_vm_committed,
+            cross_vm_aborted,
+            fee_deductions,
+        })
+    }
 }
 
 impl Clone for MetricsCollector {
@@ -42,6 +166,11 @@ impl Clone for MetricsCollector {
             evm_executions: self.evm_executions.clone(),
             svm_executions: self.svm_executions.clone(),
             dual_vm_executions: self.dual_vm_executions.clone(),
+            canonical_ledger_updates: self.canonical_ledger_updates.clone(),
+            cross_vm_prepared: self.cross_vm_prepared.clone(),
+            cross_vm_committed: self.cross_vm_committed.clone(),
+            cross_vm_aborted: self.cross_vm_aborted.clone(),
+            fee_deductions: self.fee_deductions.clone(),
         }
     }
 }
@@ -59,6 +188,11 @@ impl MetricsCollector {
             evm_executions: Arc::new(AtomicU64::new(0)),
             svm_executions: Arc::new(AtomicU64::new(0)),
             dual_vm_executions: Arc::new(AtomicU64::new(0)),
+            canonical_ledger_updates: Arc::new(AtomicU64::new(0)),
+            cross_vm_prepared: Arc::new(AtomicU64::new(0)),
+            cross_vm_committed: Arc::new(AtomicU64::new(0)),
+            cross_vm_aborted: Arc::new(AtomicU64::new(0)),
+            fee_deductions: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -77,6 +211,11 @@ impl MetricsCollector {
             evm_executions: Arc::new(AtomicU64::new(0)),
             svm_executions: Arc::new(AtomicU64::new(0)),
             dual_vm_executions: Arc::new(AtomicU64::new(0)),
+            canonical_ledger_updates: Arc::new(AtomicU64::new(0)),
+            cross_vm_prepared: Arc::new(AtomicU64::new(0)),
+            cross_vm_committed: Arc::new(AtomicU64::new(0)),
+            cross_vm_aborted: Arc::new(AtomicU64::new(0)),
+            fee_deductions: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -118,6 +257,32 @@ impl MetricsCollector {
     /// Record dual-VM (cross-VM) execution
     pub fn dual_vm_execution(&self) {
         self.dual_vm_executions.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a canonical ledger update
+    pub fn canonical_ledger_update(&self) {
+        self.canonical_ledger_updates
+            .fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a cross-VM operation prepared
+    pub fn cross_vm_prepared(&self) {
+        self.cross_vm_prepared.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a cross-VM operation committed
+    pub fn cross_vm_committed(&self) {
+        self.cross_vm_committed.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a cross-VM operation aborted
+    pub fn cross_vm_aborted(&self) {
+        self.cross_vm_aborted.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Record a fee deduction
+    pub fn fee_deduction(&self) {
+        self.fee_deductions.fetch_add(1, Ordering::Relaxed);
     }
 
     /// Get current metrics snapshot
