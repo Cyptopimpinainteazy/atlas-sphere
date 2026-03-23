@@ -4,13 +4,129 @@ Complete guide for developing, testing, and deploying X3 Chain nodes with emphas
 
 ## Table of Contents
 
-1. [Deterministic Boot](#deterministic-boot)
-2. [CLI Flags Reference](#cli-flags-reference)
-3. [Configuration Separation](#configuration-separation)
-4. [Telemetry & Metrics](#telemetry--metrics)
-5. [Graceful Shutdown](#graceful-shutdown)
-6. [Testing Node Requirements](#testing-node-requirements)
-7. [Deployment Checklist](#deployment-checklist)
+1. [Node Startup Health Check](#node-startup-health-check)
+2. [Deterministic Boot](#deterministic-boot)
+3. [CLI Flags Reference](#cli-flags-reference)
+4. [Configuration Separation](#configuration-separation)
+5. [Telemetry & Metrics](#telemetry--metrics)
+6. [Graceful Shutdown](#graceful-shutdown)
+7. [Testing Node Requirements](#testing-node-requirements)
+8. [Deployment Checklist](#deployment-checklist)
+
+---
+
+## Node Startup Health Check
+
+### Overview
+
+Before launching a development or production node, run the preflight health check script to validate your environment is properly configured. This catches common issues like missing binaries, occupied ports, and misconfigured environment files.
+
+### Quick Start
+
+**Development mode** (default):
+```bash
+bash scripts/x3_node_healthcheck.sh
+```
+
+**Production mode**:
+```bash
+NODE_NAME=validator-1 bash scripts/x3_node_healthcheck.sh --mode prod
+```
+
+**Strict mode** (fail on warnings):
+```bash
+bash scripts/x3_node_healthcheck.sh --mode dev --strict
+```
+
+### What It Checks
+
+**Required Commands**:
+- `cargo` - Rust build tool
+- `bash` - Shell interpreter
+- `curl` - HTTP client
+
+**Optional Diagnostics**:
+- `lsof`, `netstat`, `ss` - Port checking tools
+- `nc` - Network connectivity
+
+**Node Binary**:
+- Verifies `target/release/x3-chain-node` exists
+- Recommends `cargo build --release` if missing
+
+**Development Mode**:
+- All port checks and app config validation
+
+**Production Mode**:
+- Enforces `NODE_NAME` environment variable (required for identity)
+- Verifies script is not running as root
+- Validates critical infrastructure ports
+
+**Environment Files**:
+- Checks for app integration `.env.local` files:
+  - `apps/explorer/.env.local`
+  - `apps/wallet/.env.local`
+  - `apps/dex/.env.local`
+  - `apps/x3-intelligence/.env.local`
+- Recommends running `./setup-app-env.sh` if missing
+
+**Ports**:
+- RPC: `9944` (or custom `$RPC_PORT`)
+- WebSocket: `9945` (dev mode only, or custom `$WS_PORT`)
+- P2P: `30333` (or custom `$P2P_PORT`)
+- Prometheus: `9615` (or custom `$PROMETHEUS_PORT`)
+- Reports which processes are occupying ports (if any)
+
+**Live Health** (if node already running):
+- Probes `/health` endpoint on RPC port (warning only)
+- Checks Prometheus metrics availability
+
+### Exit Codes
+
+- **0**: All checks passed
+- **1**: One or more required checks failed
+- **2**: Warnings present and `--strict` mode enabled
+
+### Troubleshooting
+
+**Port in use**:
+```bash
+# Development launcher will auto-kill processes; pass --keep-ports to skip
+./run-dev-node.sh --keep-ports
+
+# For production, manually free the port
+lsof -ti:9944 | xargs kill -9
+```
+
+**Missing binary**:
+```bash
+cargo build --release
+```
+
+**Missing app env files**:
+```bash
+./setup-app-env.sh
+```
+
+**Production NODE_NAME requirement**:
+```bash
+export NODE_NAME=my-validator-1
+bash scripts/x3_node_healthcheck.sh --mode prod
+```
+
+### Integration with Launch Scripts
+
+Run health check before launching:
+```bash
+# Verify environment first
+bash scripts/x3_node_healthcheck.sh --mode dev
+
+# Then launch node
+./run-dev-node.sh
+
+# Or for production
+NODE_NAME=validator-1 bash scripts/x3_node_healthcheck.sh --mode prod
+./run-production-node.sh
+```
 
 ---
 
