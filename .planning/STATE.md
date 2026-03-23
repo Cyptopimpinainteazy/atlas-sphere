@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Release Readiness
 status: in_progress
-stopped_at: Phase 6 complete
-last_updated: "2026-03-20T00:00:00Z"
-last_activity: 2026-03-20 — 07-03 artifacts/docs complete; 07-02 remains blocked by SDK live integration environment
+stopped_at: Phase 8 complete — all plans executed and validated
+last_updated: "2026-03-22T21:55:00Z"
+last_activity: 2026-03-22 — 08-03 complete; release tarball x3-chain-v1.1.0.tar.gz built + checksums verified; all Phase 8 plans done
 progress:
   total_phases: 6
-  completed_phases: 4
+  completed_phases: 6
   total_plans: 18
-  completed_plans: 14
-  percent: 78
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Deliver a reliable, extensible blockchain execution engine that can run both EVM and SVM workloads with predictable performance.
-**Current focus:** Phase 7: SDK and app packaging
+**Current focus:** Phase 8: Testnet proving and go/no-go
 
 ## Current Position
 
-Phase: 7 of 8 (SDK and app packaging)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-03-20 — 07-03 packaging/docs complete; awaiting SDK-006 environment unblock
+Phase: 8 of 8 (Testnet proving and go/no-go)
+Plan: 3 of 3 in current phase
+Status: Complete
+Last activity: 2026-03-22 — 08-03 signed artifacts complete; release tarball generated, checksums verified; ROADMAP 100% complete
 
-Progress: [████████░░] 78%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed in current milestone: 14
+- Total plans completed in current milestone: 15
 - Average duration: N/A
 - Total execution time: 0 hours
 
@@ -47,8 +47,8 @@ Progress: [████████░░] 78%
 | 4 | 3 | 3 | ✅ Complete |
 | 5 | 3 | 3 | ✅ Complete (EVM, SVM, Cross-VM) |
 | 6 | 3 | 3 | ✅ Complete (Panic fix, RPC hardening, Pallet audit) |
-| 7 | 2 | 3 | ⏳ In progress |
-| 8 | 0 | 3 | ⏳ Pending |
+| 7 | 3 | 3 | ✅ Complete (SDK/API closure + packaging artifacts/docs) |
+| 8 | 3 | 3 | ✅ Complete (Startup smoke, Operator SOP, Signed artifacts) |
 
 ## Accumulated Context
 
@@ -70,30 +70,25 @@ Progress: [████████░░] 78%
   - 06-01: startup_gate.rs production panic → Result propagation
   - 06-02: RPC input size limits (wallet_dex_rpc.rs + gas_estimation.rs)
   - 06-03: Pallet permissions audit — 186 origin checks, all PASS
+- Phase 7: SDK and app packaging — ✅ 2026-03-21
+  - 07-01: Workspace package builds green
+  - 07-02: SDK-006 live integration test executed and passing on local node
+  - 07-03: Release artifacts and usage docs produced
 
 ### Pending Todos
 
-- 07-02: Close remaining SDK/API surface gaps required for release.
-- 07-03: Produce release-ready package artifacts and usage docs.
-
-### Phase 7 Open Gap Details
-
-- SDK-006: Integration tests for `packages/ts-sdk` against a live node are still pending environment execution.
+- 08-03: Produce signed release artifacts and verify extraction/signature flow.
+- Deploy updated node to testnet and validate public RPC endpoints.
+- Announce testnet update / operator handoff.
 - SDK-007: npm publication/release packaging for TypeScript SDK remains pending.
 
 ### Blockers/Concerns
 
-- `pallet-x3-coin` has a pre-existing `std` module resolution error (sp_api::decl_runtime_apis!)
-  that blocks full `cargo check -p x3-chain-runtime`. Isolated to that pallet; unrelated to Phase 6 work.
-- `crates/x3-rpc/` is standalone source without a Cargo.toml — not yet wired into the Cargo workspace.
-  Phase 6 RPC hardening changes are logically complete but cannot be compile-checked until wired in.
-- `SDK-006` unblock needed:
-  - local node build fails in Substrate `sc-network` (`E0080` duplicate variant index in upstream protocol message enum)
-  - public WS endpoints (`wss://testnet.atlassphere.io`, `wss://rpc.atlassphere.io`) currently fail connection from this environment
-- Phase 8 requires testnet smoke testing; deferred until Phase 7 packaging is done.
+- Core Phase 8 runtime/operator validation is complete.
+- Remaining v1.1 risk is release execution: signed artifacts, testnet publication, and any must-have E2E coverage still treated as ship gates.
 
 ## Session Continuity
 
-Last session: 2026-03-20T00:00:00Z
-Stopped at: Phase 6 complete
-Resume file: .planning/phases/07-sdk-and-app-packaging/
+Last session: 2026-03-22T21:40:00Z
+Stopped at: Phase 8 validated, waiting on signed artifacts / release ops
+Resume file: .planning/phases/08-testnet-proving-and-go-no-go/

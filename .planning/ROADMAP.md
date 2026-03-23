@@ -6,7 +6,7 @@ X3 Chain is a modular blockchain execution platform focused on high throughput, 
 
 ## Milestone: v1.1 Release Readiness (In progress)
 
-- 🚧 **v1.1 Release Readiness** — Phases 3-8 (planned)
+- ✅ **v1.1 Release Readiness** — Phases 3-8 (complete 2026-03-22)
 
 ## Archived Milestones
 
@@ -66,7 +66,7 @@ Plans:
 
 Plans:
 - [x] 07-01: Green package builds for SDK, connector, and Polkawallet workspaces
-- [ ] 07-02: Close remaining SDK/API surface gaps required for release
+- [x] 07-02: Close remaining SDK/API surface gaps required for release
 - [x] 07-03: Produce release-ready package artifacts and usage docs
 
 ### Phase 8: Testnet proving and go/no-go
@@ -76,6 +76,6 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 08-01: Run startup smoke and local multi-validator verification
-- [ ] 08-02: Validate deployment SOP, rollback, and operator runbooks
-- [ ] 08-03: Produce the final go/no-go checklist with signed release artifacts
+- [x] 08-01: Run startup smoke and local multi-validator verification
+- [x] 08-02: Validate deployment SOP, rollback, and operator runbooks
+- [x] 08-03: Produce the final go/no-go checklist with signed release artifacts
