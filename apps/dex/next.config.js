@@ -14,10 +14,10 @@ const nextConfig = {
   // Environment variables exposed to browser
   env: {
     NEXT_PUBLIC_CHAIN_RPC:
-      process.env.NEXT_PUBLIC_CHAIN_RPC || "ws://localhost:9944",
+      process.env.NEXT_PUBLIC_CHAIN_RPC || "wss://ws.x3star.net/ws",
     NEXT_PUBLIC_EVM_RPC:
-      process.env.NEXT_PUBLIC_EVM_RPC || "http://localhost:8545",
-    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID || "42",
+      process.env.NEXT_PUBLIC_EVM_RPC || "https://rpc.x3star.net/rpc",
+    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID || "x3-mainnet",
   },
 };
 

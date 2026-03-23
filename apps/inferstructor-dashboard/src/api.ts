@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-const REGISTRY_URL = import.meta.env.VITE_REGISTRY_URL || 'http://localhost:7001';
-const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || 'http://localhost:9999';
-const RPC_PROXY_URL = import.meta.env.VITE_RPC_PROXY_URL || 'http://localhost:8899';
-const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:7777';
-const CHAIN_DB_URL = import.meta.env.VITE_CHAIN_DB_URL || 'http://localhost:7070';
+const API_BASE = import.meta.env.VITE_X3_API_URL || 'https://api.x3star.net';
+const REGISTRY_URL = import.meta.env.VITE_REGISTRY_URL || API_BASE;
+const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || API_BASE;
+const RPC_PROXY_URL = import.meta.env.VITE_RPC_PROXY_URL || API_BASE;
+const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || API_BASE;
+const CHAIN_DB_URL = import.meta.env.VITE_CHAIN_DB_URL || API_BASE;
 
 export interface ValidatorCredentials {
   validator_id: string;

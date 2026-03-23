@@ -13,7 +13,7 @@ export default defineConfig({
     port: 3004,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: process.env.VITE_X3_API_URL || 'https://api.x3star.net',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
@@ -22,12 +22,5 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-        },
-      },
-    },
   },
 })

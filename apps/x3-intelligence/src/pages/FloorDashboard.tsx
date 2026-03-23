@@ -231,7 +231,7 @@ export function FloorDashboard() {
   }, [autoRefresh]);
 
   // WebSocket live updates (optional backend push)
-  const WS_URL = import.meta.env.VITE_X3_WS || "ws://127.0.0.1:9945";
+  const WS_URL = import.meta.env.VITE_X3_WS || import.meta.env.VITE_RPC_WS || "wss://ws.x3star.net/ws";
   useWebSocket(WS_URL, (msg: any) => {
     if (!msg || !msg.type) return;
     if (msg.type === "intent:new") {

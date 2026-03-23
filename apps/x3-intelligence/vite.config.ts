@@ -13,7 +13,7 @@ export default defineConfig({
     port: 3005,
     proxy: {
       '/api': {
-        target: 'http://localhost:9944',
+        target: process.env.VITE_X3_RPC_HTTP || 'https://rpc.x3star.net/rpc',
         changeOrigin: true,
       },
     },

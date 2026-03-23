@@ -25,7 +25,7 @@ class AuthService {
   private expiresAtKey = 'tokenExpiresAt';
 
   constructor() {
-    this.apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+    this.apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_X3_API_URL || 'https://api.x3star.net';
   }
 
   /**
