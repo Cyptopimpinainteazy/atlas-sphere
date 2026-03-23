@@ -1881,3 +1881,29 @@ Fixed all npm security vulnerabilities across 30 package-lock.json files in the 
   - `npm pack --dry-run` PASS (all target packages)
   - `npm pack` PASS (all target packages)
 - Phase 7 status: 07-01 ✅, 07-03 ✅, 07-02 ⏳ (SDK-006 blocker)
+
+## 2026-03-22 — Warning Cleanup & Tauri Stabilization
+
+### Cargo Warning Cleanup
+- Ran `cargo fix --workspace --allow-dirty` — auto-fixed ~270 warnings
+- Cleared unused imports, dead code, redundant patterns across all workspace crates
+- Workspace now builds with 0 warnings and 0 errors
+- Commit: `3348358f8`
+
+### Tauri Desktop App Stabilization (apps/x3-desktop)
+- Fixed CC type mismatch: workspace `.cargo/config.toml` `CC = "gcc"` (string)
+  clashed with Tauri child `CC = { value = "clang", force = true }` (table) —
+  converted workspace CC to table form `{ value = "gcc-12", relative = false }`
+- Removed global `-A unused_imports -A dead_code` rustflags from workspace config
+  (they caused proc-macro ICE instability under rustc 1.88/LLVM 20.1)
+- Aligned `apps/x3-desktop/src-tauri/rust-toolchain.toml` to `1.88.0` (workspace)
+- Added `WASM_BUILD_USE_WASM_OPT=0` to disable wasm-opt post-processing (avoids
+  cxxbridge-macro ICE)
+- `tauri dev`: compiles and runs cleanly — "Finished dev profile in 0.54s"
+- Commit: `22de26371`
+
+### Release Status
+- v1.1.0 release artifacts: ✅ `x3-chain-v1.1.0.tar.gz` (22MB) in `.artifacts/`
+- CHECKSUMS.sha256: both entries verified OK
+- ROADMAP.md: 18/18 plans complete, v1.1 marked Complete (2026-03-22)
+- STATE.md: percent=100, status=Complete
