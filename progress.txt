@@ -3038,3 +3038,34 @@ Coverage impact (target modules):
 Validation:
   - Target suites: 172/172 passing
   - Full harness regression: 432/432 passing (13.95s)
+
+=== Final P4/P5 Coverage Snapshot + Top-10 Branch Gaps ===
+Date: 2026-03-25T00:00:00Z
+Coverage run:
+  - Command: pytest tests/p4_*.py tests/p4_p5_deep_stress.py --cov=tests --cov-branch
+  - Result: 432/432 passing (19.87s)
+  - Artifact: coverage-p4-final.xml
+
+P4/P5 modules ranked by branch coverage:
+  1) p4_determinism_validation.py       97.6% line / 86.1% branch
+  2) p4_gpu_integration_tests.py        95.7% line / 87.5% branch
+  3) p4_atomic_crossvm_testnet.py       99.1% line / 88.3% branch
+  4) p4_p5_production_release.py        98.5% line / 89.3% branch
+  5) p4_testnet_ship.py                 97.8% line / 89.5% branch
+  6) p4_gpu_kernel_integration.py       98.7% line / 95.3% branch
+  7) p4_p5_crosschain_gpu_validator.py 100.0% line / 95.5% branch
+  8) p4_p5_deep_stress.py              100.0% line / 95.5% branch
+
+Top-10 remaining branch gaps (prioritized):
+  01. p4_gpu_integration_tests.py:109  (0/2)
+  02. p4_gpu_kernel_integration.py:1227 (0/2)
+  03. p4_atomic_crossvm_testnet.py:59   (1/2)
+  04. p4_atomic_crossvm_testnet.py:233  (1/2)
+  05. p4_atomic_crossvm_testnet.py:468  (1/2)
+  06. p4_atomic_crossvm_testnet.py:477  (1/2)
+  07. p4_atomic_crossvm_testnet.py:487  (1/2)
+  08. p4_atomic_crossvm_testnet.py:495  (1/2)
+  09. p4_atomic_crossvm_testnet.py:897  (1/2)
+  10. p4_determinism_validation.py:95   (1/2)
+
+Total remaining branch-gap lines across P4/P5 modules: 39
