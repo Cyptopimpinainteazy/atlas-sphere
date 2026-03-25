@@ -2570,3 +2570,17 @@ TEST TOTALS: 101 (x3-bridge) + 24 (x3-atomic-trade) + 30 (pallet-x3-coin) + 14 (
 - `npm run docs:check:mdrefs` → FAIL (existing markdown reference issues across legacy/template docs)
 - `npm run docs:check:python-examples` → PASS (`No markdown files with python code blocks found.`)
 - `npm run docs:check:runmd` → PASS (`No runmd --run code blocks found in markdown files.`)
+
+## 2026-03-24 — Full-scope markdown validation restored
+
+- Reverted temporary docs-only scoping so validators run across full repository again:
+  - `package.json` scripts restored to `remark .` and `mdrefcheck .`
+  - `scripts/check_markdown_python_examples.py` restored to scan from repo root
+  - `scripts/check_runmd_examples.sh` restored to scan from repo root
+  - `.github/workflows/docs-markdown-validation.yml` restored to full `push`/`pull_request` coverage on `main`
+
+### Full-scope run result
+- `npm run docs:check` → FAIL at `docs:check:remark-links` (repo-wide baseline still ~377 warnings)
+- `npm run docs:check:mdrefs` → FAIL (repo-wide baseline includes many placeholder/template links and stale refs)
+- `npm run docs:check:python-examples` → PASS (`No markdown files with python code blocks found.`)
+- `npm run docs:check:runmd` → PASS (`No runmd --run code blocks found in markdown files.`)
