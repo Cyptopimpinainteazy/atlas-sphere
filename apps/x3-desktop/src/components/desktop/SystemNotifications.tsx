@@ -80,7 +80,7 @@ export const SystemNotifications: React.FC = () => {
 
   // Listen for notification events
   useEffect(() => {
-    let unlisteners: UnlistenFn[] = [];
+    const unlisteners: UnlistenFn[] = [];
 
     const setupListeners = async () => {
       // Listen to different notification events

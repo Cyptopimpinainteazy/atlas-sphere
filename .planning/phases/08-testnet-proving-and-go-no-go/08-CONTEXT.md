@@ -25,7 +25,7 @@ Observed results:
 
 Conclusion: startup smoke gate passes in current environment.
 
-### Multi-validator launch verification (PARTIAL PASS)
+### Multi-validator launch verification (PASS)
 
 Command sequence:
 
@@ -39,7 +39,7 @@ Observed results:
 - All 4 RPC endpoints respond.
 - `system_health.peers` reported `3` on each node, indicating local mesh connectivity.
 
-### Consensus progression check (BLOCKED)
+### Consensus progression check (PASS)
 
 Command:
 
@@ -47,14 +47,15 @@ Command:
 
 Observed results:
 
-- `best_block` stayed at `0` on all nodes.
-- `finalized_head` stayed at genesis on all nodes.
+- After relaunch and stabilization, all four validators stayed up (`validator1..validator4` all running).
+- Per-node RPC checks (`9944..9947`) showed healthy mesh and no syncing stalls (`peers: 3`, `isSyncing: false`).
+- Head numbers advanced across all nodes (sample: `0x10d`/`0x10e`) and finalized head hashes advanced over time.
 
 Assessment:
 
 - Network-level multi-validator connectivity is verified.
-- Block production/finality did not progress, so full `08-01` consensus verification remains blocked.
-- This points to local authority/key or chain-spec alignment issues for this testnet launch path.
+- Block production and finality progression are verified.
+- `08-01` consensus verification gate is satisfied.
 
 ## Fixes Applied During 08-01
 
@@ -65,8 +66,16 @@ Updated `scripts/launch-testnet.sh`:
 3. Added bootnode wiring for validator2..4 based on validator1 peer ID.
 4. Enabled `--allow-private-ip` and `--force-authoring` for local peering/testing.
 
-## Next Actions to close 08-01
+Updated `patches/environmental/src/lib.rs`:
 
-1. Align validator authority keys with testnet chain spec used by `scripts/launch-testnet.sh`.
-2. Re-run 4-validator launch and verify block/finality progression (`best_block > 0`, advancing finalized head).
-3. Once progression is confirmed, mark `08-01` complete and proceed to `08-02`.
+5. Restored std-thread-local behavior (`std::thread_local!`) to avoid cross-thread `RefCell` borrow conflicts in consensus/runtime paths.
+6. Kept no-std custom local-key behavior for wasm/no-std builds.
+
+Operational repair:
+
+7. Reinstalled corrupted Rust toolchain (`cargo`/`rustc` were zero-byte binaries) and revalidated release build output.
+
+## Next Actions after 08-01 closure
+
+1. Proceed with `08-02` operator SOP/release operations verification on refreshed binaries.
+2. Continue `08-03` signed artifact and go/no-go packaging gates.

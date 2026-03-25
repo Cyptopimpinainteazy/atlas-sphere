@@ -9,4 +9,4 @@ pub use rollback_listener::{
     FailureNotification, FailureReason, RollbackEventListener, RollbackLog, SeverityLevel,
     TradeBatchFailure,
 };
-pub use swap_rpc::{AMMPool, SwapOrder, SwapQuote, SwapRPCServer};
+pub use swap_rpc::{AMMPool, SwapOrder, SwapQuote, SwapRPCServer, SwapStatus, TokenPair};

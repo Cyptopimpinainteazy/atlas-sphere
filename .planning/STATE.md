@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Release Readiness
 status: in_progress
-stopped_at: Phase 8 complete — all plans executed and validated
-last_updated: "2026-03-22T21:55:00Z"
-last_activity: 2026-03-22 — 08-03 complete; release tarball x3-chain-v1.1.0.tar.gz built + checksums verified; all Phase 8 plans done
+stopped_at: Phase 8 resumed — 08-01 revalidated on 4-validator cluster with advancing finality
+last_updated: "2026-03-23T18:10:00Z"
+last_activity: 2026-03-23 — repaired corrupted Rust toolchain, fixed environmental thread-local behavior, and revalidated 4-validator consensus/finality progression
 progress:
   total_phases: 6
   completed_phases: 6
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 ## Current Position
 
 Phase: 8 of 8 (Testnet proving and go/no-go)
-Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-03-22 — 08-03 signed artifacts complete; release tarball generated, checksums verified; ROADMAP 100% complete
+Plan: 1 of 3 in current phase
+Status: In progress (08-01 revalidated)
+Last activity: 2026-03-23 — 4-validator local proving rerun passed (all validators running, heads advancing, finalized head advancing)
 
 Progress: [██████████] 100%
 
@@ -84,7 +84,7 @@ Progress: [██████████] 100%
 
 ### Blockers/Concerns
 
-- Core Phase 8 runtime/operator validation is complete.
+- Prior 08-01 blocker (stalled finality / validator panics) is resolved in current local rerun.
 - Remaining v1.1 risk is release execution: signed artifacts, testnet publication, and any must-have E2E coverage still treated as ship gates.
 
 ## Session Continuity

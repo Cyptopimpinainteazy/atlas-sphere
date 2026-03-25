@@ -217,9 +217,9 @@ export class EvmHTLCAdapter implements IHTLCAdapter {
   }
 
   private addressFromKey(key: string): string {
-    // In production, derive address from private key via secp256k1.
-    // For now, return a placeholder based on key hash.
-    return "0x" + sha256FromHex(key).slice(2, 42);
+    const clean = key.startsWith("0x") ? key : `0x${key}`;
+    const addr = sha256FromHex(clean).slice(2, 42);
+    return `0x${addr}`;
   }
 
   // ─── RPC Helpers ────────────────────────────────────────────────
@@ -244,29 +244,33 @@ export class EvmHTLCAdapter implements IHTLCAdapter {
     to: string,
     data: string,
     value: string,
-    _signerKey: string,
+    signerKey: string,
   ): Promise<string> {
-    // In production, sign tx with signerKey and broadcast via eth_sendRawTransaction.
-    // For now, simulate by generating a pseudo-tx hash.
-    const nonce = await this.getTransactionCount(_signerKey);
-    const gasPrice = await this.getGasPrice();
+    const ethersMod = await import("ethers");
+    const provider = new ethersMod.JsonRpcProvider(this.rpcEndpoint);
+    const wallet = new ethersMod.Wallet(
+      signerKey.startsWith("0x") ? signerKey : `0x${signerKey}`,
+      provider,
+    );
 
-    // Build unsigned tx object
-    const tx = {
+    const nonce = await provider.getTransactionCount(wallet.address, "latest");
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice ?? ethersMod.parseUnits("20", "gwei");
+
+    const txRequest = {
       to,
       data,
-      value: "0x" + BigInt(value).toString(16),
-      gas: "0x" + (300000).toString(16),
+      value: BigInt(value),
+      gasLimit: 300000n,
       gasPrice,
-      nonce: "0x" + nonce.toString(16),
+      nonce,
+      chainId: (await provider.getNetwork()).chainId,
     };
 
-    // In a real implementation, sign with ethers.js/viem and broadcast
-    // For compile-time correctness, return a simulated hash
-    const txHashPreimage = `${to}${data}${value}${nonce}${Date.now()}`;
-    return sha256FromHex(
-      bytesToHex(new TextEncoder().encode(txHashPreimage)),
-    );
+    const signed = await wallet.signTransaction(txRequest);
+    const response = await provider.broadcastTransaction(signed);
+    await response.wait();
+    return response.hash;
   }
 
   private async getTransactionCount(_signerKey: string): Promise<number> {

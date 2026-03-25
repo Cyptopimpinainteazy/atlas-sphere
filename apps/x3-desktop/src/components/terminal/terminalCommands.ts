@@ -1,6 +1,6 @@
-// @ts-ignore - unused imports kept for future reference
+// @ts-expect-error - unused imports kept for future reference
 import * as THREE from 'three';
-// @ts-ignore
+// @ts-expect-error
 import { SceneManager } from '@/lib/three/SceneManager';
 
 export interface TerminalCommand {

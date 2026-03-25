@@ -471,7 +471,10 @@ mod tests {
 
         let output_root = OutputRoot {
             l2_output_index: 0,
-            output_root: L2Bridge::compute_merkle_root(&withdrawal_root, &[]),
+            // output_root must be the merkle root obtained by applying both proof chains:
+            // compute_merkle_root(withdrawal_root=[5;32], withdrawal_proof=[[2;32]]) = [5^2;32]=[7;32]
+            // verify_output_root([7;32], output_root_proof=[[1;32]], ?) checks compute_merkle_root([7;32],[[1;32]])=[7^1;32]=[6;32]
+            output_root: [5u8 ^ 2u8 ^ 1u8; 32], // = [6; 32]
             timestamp: 1000,
             block_number: 100,
         };

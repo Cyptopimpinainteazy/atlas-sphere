@@ -199,6 +199,11 @@ impl SwapRPCServer {
         Ok(quote.slippage_pct)
     }
 
+    /// Read-only lookup of an order by id
+    pub fn get_order(&self, order_id: &str) -> Option<SwapOrder> {
+        self.orders.get(order_id).cloned()
+    }
+
     /// Calculate output using constant-product formula: xy = k
     fn calculate_output(
         &self,

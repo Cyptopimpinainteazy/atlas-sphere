@@ -230,7 +230,14 @@ impl OpcodeCost {
     }
 }
 
-/// RPC Server implementation
+/// RPC Server implementation (simulation-only).
+///
+/// This estimator is intended for off-chain tooling and developer simulation.
+/// Production node RPC serving should use the runtime-backed Frontier path in
+/// `node::rpc_frontier::create_frontier_stub`.
+#[deprecated(
+    note = "GasEstimationRPC is simulation-only; use node::rpc_frontier::create_frontier_stub for canonical runtime-backed RPC"
+)]
 pub struct GasEstimationRPC {
     estimator: GasEstimator,
 }
@@ -301,6 +308,9 @@ impl GasEstimationRPC {
     }
 
     /// x3_call (simulate without state change)
+    ///
+    /// NOTE: This method does not execute against live runtime state and must
+    /// not be used as a production RPC call path.
     pub fn call(&self, tx: &RPCTransaction) -> Result<Vec<u8>, String> {
         // Validate input before simulation
         if tx.data.len() > MAX_CALLDATA_LEN {
@@ -313,14 +323,17 @@ impl GasEstimationRPC {
         let est = self.estimator.estimate_gas(tx);
 
         if matches!(est.status, ExecutionStatus::Success) {
-            Ok(vec![1u8, 0u8, 0u8, 0u8]) // Mock return value
+            // Deterministic simulation output: echo calldata as the synthetic return.
+            Ok(tx.data.clone())
         } else {
             Err("Call reverted".to_string())
         }
     }
 
-    /// x3_gasPrice (current base fee)
-    pub fn gas_price(&self) -> u64 {
+    /// Internal simulation-only base fee hint.
+    ///
+    /// Kept private so it is not exposed as a public production-facing API.
+    fn gas_price(&self) -> u64 {
         100_000_000_000u64 // 100 Wei base fee (mock)
     }
 }

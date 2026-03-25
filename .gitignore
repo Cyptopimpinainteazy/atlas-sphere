@@ -13,6 +13,9 @@ build/
 
 # Temp
 /tmp/
+placeholders.json
+placeholders_new.json
+placeholders_report.txt
 
 # Logs
 *.log

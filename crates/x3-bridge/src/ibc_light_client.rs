@@ -118,8 +118,8 @@ impl IBCLightClient {
             return Err("Insufficient validator signatures (2/3 threshold not met)");
         }
 
-        // Check header height progression
-        if header.height <= prev_consensus.timestamp {
+        // Check header timestamp progression
+        if header.timestamp <= prev_consensus.timestamp {
             return Err("Header height must be strictly increasing");
         }
 

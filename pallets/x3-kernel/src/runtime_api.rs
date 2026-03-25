@@ -1,7 +1,6 @@
 //! Runtime API for X3 Kernel pallet
 
 use parity_scale_codec::Codec;
-use sp_api::decl_runtime_apis;
 use sp_core::H256;
 use sp_std::vec::Vec;
 

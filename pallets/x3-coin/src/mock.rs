@@ -1,39 +1,46 @@
 //! Mock runtime for testing X3 Coin pallet
 
-use super::*;
+use crate as pallet_x3_coin;
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::{ConstU32, ConstU64, GenesisBuild},
+    traits::{ConstBool, ConstU32},
 };
-use frame_system::EnsureSigned;
+use frame_system::EnsureRoot;
+use pallet_x3_kernel::{MockEvmAdapter, MockSvmAdapter, MockX3Adapter, NoopProofVerifier};
 use sp_core::H256;
 use sp_runtime::{
-    testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
     BuildStorage,
 };
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
-type Block = frame_system::mocking::MockBlock<Test>;
+// ─── Primitive aliases ───────────────────────────────────────────────────────
+pub type AccountId = u64;
+pub type Balance = u128;
+pub type AssetId = u32;
+pub type AtlasId = u32;
 
+// ─── Shared constants ────────────────────────────────────────────────────────
+parameter_types! {
+    pub const BlockHashCount: u64 = 250;
+    pub const ExistentialDeposit: Balance = 1;
+    pub const MinimumPeriod: u64 = 1;
+}
+
+// ─── construct_runtime! ──────────────────────────────────────────────────────
 construct_runtime!(
     pub enum Test
     {
         System: frame_system,
         Balances: pallet_balances,
-        X3Coin: pallet_x3_coin,
+        Timestamp: pallet_timestamp,
         X3Kernel: pallet_x3_kernel,
+        X3Coin: pallet_x3_coin,
     }
 );
 
-parameter_types! {
-    pub const BlockHashCount: u64 = 250;
-    pub BlockWeights: frame_system::limits::BlockWeights =
-        frame_system::limits::BlockWeights::simple_max(
-            frame_support::weights::Weight::from_parts(1024, 0)
-        );
-}
+pub type Block = frame_system::mocking::MockBlock<Test>;
 
+// ─── frame_system ────────────────────────────────────────────────────────────
 impl frame_system::Config for Test {
     type BaseCallFilter = frame_support::traits::Everything;
     type BlockWeights = ();
@@ -44,72 +51,108 @@ impl frame_system::Config for Test {
     type Nonce = u64;
     type Hash = H256;
     type Hashing = BlakeTwo256;
-    type AccountId = u64;
-    type Lookup = IdentityLookup<Self::AccountId>;
+    type AccountId = AccountId;
+    type Lookup = IdentityLookup<AccountId>;
     type Block = Block;
     type RuntimeEvent = RuntimeEvent;
     type BlockHashCount = BlockHashCount;
     type Version = ();
     type PalletInfo = PalletInfo;
-    type AccountData = pallet_balances::AccountData<u64>;
+    type AccountData = pallet_balances::AccountData<Balance>;
     type OnNewAccount = ();
     type OnKilledAccount = ();
     type SystemWeightInfo = ();
     type SS58Prefix = ();
     type OnSetCode = ();
-    type MaxConsumers = frame_support::traits::ConstU32<16>;
+    type MaxConsumers = ConstU32<16>;
 }
 
-parameter_types! {
-    pub const ExistentialDeposit: u64 = 1;
-}
-
+// ─── pallet_balances ─────────────────────────────────────────────────────────
 impl pallet_balances::Config for Test {
-    type Balance = u64;
     type RuntimeEvent = RuntimeEvent;
+    type Balance = Balance;
     type DustRemoval = ();
     type ExistentialDeposit = ExistentialDeposit;
     type AccountStore = System;
     type WeightInfo = ();
-    type MaxLocks = ();
-    type MaxReserves = ();
+    type MaxLocks = ConstU32<50>;
+    type MaxReserves = ConstU32<50>;
     type ReserveIdentifier = [u8; 8];
+    type RuntimeHoldReason = ();
+    type FreezeIdentifier = ();
+    type MaxHolds = ConstU32<0>;
+    type MaxFreezes = ConstU32<0>;
 }
 
+// ─── pallet_timestamp ────────────────────────────────────────────────────────
+impl pallet_timestamp::Config for Test {
+    type Moment = u64;
+    type OnTimestampSet = ();
+    type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = ();
+}
+
+// ─── pallet_x3_kernel ────────────────────────────────────────────────────────
 parameter_types! {
-    pub const TreasuryAccount: u64 = 1;
+    pub const MaxAssetsPerAccount: u32 = 100;
+    pub const MaxAssetSymbolLength: u32 = 8;
+    pub const MaxEvmPayloadLength: u32 = 65_536;
+    pub const MaxSvmPayloadLength: u32 = 65_536;
+    pub const MaxX3PayloadLength: u32 = 65_536;
+    pub const MaxCombinedPayloadLength: u32 = 131_072;
+    pub const MaxCombinedPayloadLengthV2: u32 = 196_608;
+    pub const MaxAuthorities: u32 = 100;
+    pub const MinAuthorities: u32 = 1;
+    pub const DefaultEvmGasLimit: u64 = 1_000_000;
+    pub const DefaultSvmComputeLimit: u64 = 1_000_000;
+    pub const DefaultX3GasLimit: u64 = 1_000_000;
+    pub const CrossVmPrepareTtl: u64 = 100;
+    pub const MaxPreparedCrossVmOps: u32 = 64;
+    pub const MaxPreparedOpsPerBlock: u32 = 16;
+}
+
+impl pallet_x3_kernel::Config for Test {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type Balance = Balance;
+    type AssetId = AssetId;
+    type AtlasId = AtlasId;
+    type MaxAssetsPerAccount = MaxAssetsPerAccount;
+    type MaxAssetSymbolLength = MaxAssetSymbolLength;
+    type MaxEvmPayloadLength = MaxEvmPayloadLength;
+    type MaxSvmPayloadLength = MaxSvmPayloadLength;
+    type MaxX3PayloadLength = MaxX3PayloadLength;
+    type MaxCombinedPayloadLength = MaxCombinedPayloadLength;
+    type MaxCombinedPayloadLengthV2 = MaxCombinedPayloadLengthV2;
+    type MaxAuthorities = MaxAuthorities;
+    type MinAuthorities = MinAuthorities;
+    type DefaultEvmGasLimit = DefaultEvmGasLimit;
+    type DefaultSvmComputeLimit = DefaultSvmComputeLimit;
+    type DefaultX3GasLimit = DefaultX3GasLimit;
+    type CrossVmPrepareTtl = CrossVmPrepareTtl;
+    type MaxPreparedCrossVmOps = MaxPreparedCrossVmOps;
+    type MaxPreparedOpsPerBlock = MaxPreparedOpsPerBlock;
+    type RequireCrossVmProof = ConstBool<false>;
+    type WeightInfo = ();
+    type EvmAdapter = MockEvmAdapter;
+    type SvmAdapter = MockSvmAdapter;
+    type X3Adapter = MockX3Adapter;
+    type CrossChainProofVerifier = NoopProofVerifier;
+    type GovernanceOrigin = EnsureRoot<AccountId>;
+}
+
+// ─── pallet_x3_coin ──────────────────────────────────────────────────────────
+parameter_types! {
+    pub const TreasuryAccount: AccountId = 1;
     pub const MaxBonusClaims: u32 = 10;
     pub const TeamVestingBlocks: u64 = 15_768_000;
     pub const TeamVestingCliff: u64 = 7_884_000;
     pub const BonusClaimPeriod: u64 = 3_942_000;
 }
 
-impl pallet_x3_kernel::Config for Test {
+impl pallet_x3_coin::Config for Test {
     type RuntimeEvent = RuntimeEvent;
-    type UnixTime = ();
-    type WeightInfo = ();
-    type MaxAssets = ConstU32<100>;
-    type MaxAccounts = ConstU32<1000>;
-    type MaxTransfers = ConstU32<1000>;
-    type MaxOperations = ConstU32<1000>;
-    type MaxProofs = ConstU32<100>;
-    type MaxCrossChainOperations = ConstU32<100>;
-    type MaxCrossChainProofs = ConstU32<100>;
-    type MaxCrossChainTransfers = ConstU32<100>;
-    type MaxCrossChainClaims = ConstU32<100>;
-    type MaxCrossChainVestingSchedules = ConstU32<100>;
-    type MaxCrossChainBonusClaims = ConstU32<100>;
-    type MaxCrossChainOperationsPerBlock = ConstU32<100>;
-    type MaxCrossChainProofsPerBlock = ConstU32<100>;
-    type MaxCrossChainTransfersPerBlock = ConstU32<100>;
-    type MaxCrossChainClaimsPerBlock = ConstU32<100>;
-    type MaxCrossChainVestingSchedulesPerBlock = ConstU32<100>;
-    type MaxCrossChainBonusClaimsPerBlock = ConstU32<100>;
-}
-
-impl Config for Test {
-    type RuntimeEvent = RuntimeEvent;
-    type UnixTime = ();
+    type UnixTime = Timestamp;
     type WeightInfo = ();
     type TreasuryAccount = TreasuryAccount;
     type MaxBonusClaims = MaxBonusClaims;
@@ -118,6 +161,7 @@ impl Config for Test {
     type BonusClaimPeriod = BonusClaimPeriod;
 }
 
+// ─── Test externalities builder ──────────────────────────────────────────────
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut t = frame_system::GenesisConfig::<Test>::default()
         .build_storage()
@@ -125,27 +169,20 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 
     pallet_balances::GenesisConfig::<Test> {
         balances: vec![
-            (1, 1000), // Treasury
-            (2, 0),    // Team member
-            (3, 0),    // Ecosystem partner
-            (4, 0),    // Liquidity provider
-            (5, 0),    // Bonus claimer
-            (6, 0),    // Cross chain user
+            (1, 1_000_000_000_000_u128), // Treasury — covers existential deposit
         ],
     }
     .assimilate_storage(&mut t)
     .unwrap();
 
-    pallet_x3_kernel::GenesisConfig::<Test> {
-        // Empty genesis config for X3 Kernel
-    }
-    .assimilate_storage(&mut t)
-    .unwrap();
+    pallet_x3_kernel::GenesisConfig::<Test>::default()
+        .assimilate_storage(&mut t)
+        .unwrap();
 
     pallet_x3_coin::GenesisConfig::<Test> {
-        team_allocations: vec![(2, 300_000_000_000_000_000_000)],
-        ecosystem_allocations: vec![(3, 500_000_000_000_000_000_000)],
-        liquidity_allocations: vec![(4, 600_000_000_000_000_000_000)],
+        team_allocations: vec![(2, 300_000_000_000_000_000_000_u128)],
+        ecosystem_allocations: vec![(3, 500_000_000_000_000_000_000_u128)],
+        liquidity_allocations: vec![(4, 600_000_000_000_000_000_000_u128)],
     }
     .assimilate_storage(&mut t)
     .unwrap();

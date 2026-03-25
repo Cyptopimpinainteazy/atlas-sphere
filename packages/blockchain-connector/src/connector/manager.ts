@@ -23,12 +23,27 @@ interface ManagedConnector {
   adapter: IChainAdapter;
 }
 
+interface ConnectorQuotaProvider {
+  acquireConnectorSlot(apiKey: string): Promise<{ remaining: number }>;
+  releaseConnectorSlot(apiKey: string): Promise<void>;
+}
+
 export class ConnectorManager {
   private connectors = new Map<string, ManagedConnector>();
   private monitor?: HealthMonitor;
   private endpointToConnectors = new Map<string, Set<string>>();
+  private connectorQuotaOwners = new Map<string, string>();
+  private connectorQuotaProvider?: ConnectorQuotaProvider;
 
-  constructor(opts?: { enableHealthMonitor?: boolean; intervalMs?: number; concurrency?: number; timeoutMs?: number }) {
+  constructor(opts?: {
+    enableHealthMonitor?: boolean;
+    intervalMs?: number;
+    concurrency?: number;
+    timeoutMs?: number;
+    connectorQuotaProvider?: ConnectorQuotaProvider;
+  }) {
+    this.connectorQuotaProvider = opts?.connectorQuotaProvider;
+
     if (opts?.enableHealthMonitor) {
       this.monitor = new HealthMonitor({ concurrency: opts.concurrency || 50, timeoutMs: opts.timeoutMs || 10000, intervalMs: opts.intervalMs || 60000 });
     }
@@ -120,6 +135,27 @@ export class ConnectorManager {
       throw new Error(`No RPC endpoint for ${chain.name}. Provide one in options.endpoint or add to chain.defaultRpcUrls.`);
     }
 
+    const apiKey = options.auth?.apiKey;
+    let connectorSlotAcquired = false;
+    if (this.connectorQuotaProvider) {
+      if (!apiKey) {
+        throw new Error('API key required for connector quota enforcement');
+      }
+
+      try {
+        await this.connectorQuotaProvider.acquireConnectorSlot(apiKey);
+        connectorSlotAcquired = true;
+      } catch (error: any) {
+        if (error?.message === 'CONNECTOR_QUOTA_EXCEEDED') {
+          throw new Error('Connector quota exceeded for API key tier');
+        }
+        if (error?.message === 'INVALID_API_KEY') {
+          throw new Error('Invalid API key');
+        }
+        throw error;
+      }
+    }
+
     const instance: ConnectorInstance = {
       id,
       options,
@@ -132,59 +168,75 @@ export class ConnectorManager {
 
     this.connectors.set(id, { instance, adapter });
 
-    // Choose a preferred endpoint (monitor-suggested) and fall back to sequential attempts
-    let connectedEndpoint: string | null = null;
-    const errors: string[] = [];
+    try {
+      // Choose a preferred endpoint (monitor-suggested) and fall back to sequential attempts
+      let connectedEndpoint: string | null = null;
+      const errors: string[] = [];
 
-    const preferred = await this.chooseHealthyEndpoint(chain, options);
-    const tryOrder = preferred ? [preferred, ...endpoints.filter((e) => e !== preferred)] : endpoints;
+      const preferred = await this.chooseHealthyEndpoint(chain, options);
+      const tryOrder = preferred ? [preferred, ...endpoints.filter((e) => e !== preferred)] : endpoints;
 
-    for (const ep of tryOrder) {
-      try {
-        await adapter.connect(ep);
+      for (const ep of tryOrder) {
         try {
-          await adapter.getLatestBlock(); // quick health check
-          connectedEndpoint = ep;
-          break;
+          await adapter.connect(ep);
+          try {
+            await adapter.getLatestBlock(); // quick health check
+            connectedEndpoint = ep;
+            break;
+          } catch (err: any) {
+            errors.push(`Health check failed for ${ep}: ${err.message}`);
+            await adapter.disconnect().catch(() => {});
+          }
         } catch (err: any) {
-          errors.push(`Health check failed for ${ep}: ${err.message}`);
-          await adapter.disconnect().catch(() => {});
+          errors.push(`Connect failed for ${ep}: ${err.message}`);
         }
-      } catch (err: any) {
-        errors.push(`Connect failed for ${ep}: ${err.message}`);
       }
-    }
 
-    if (connectedEndpoint) {
-      instance.status = "connected";
-      instance.updatedAt = new Date().toISOString();
-      instance.options.endpoint = connectedEndpoint;
+      if (connectedEndpoint) {
+        instance.status = "connected";
+        instance.updatedAt = new Date().toISOString();
+        instance.options.endpoint = connectedEndpoint;
 
-      // If a health monitor is enabled, probe and register endpoints for background checks
-      if (this.monitor) {
-        // probe chosen endpoint now and also schedule all chain endpoints for periodic checks
-        await this.monitor.probeEndpoint(connectedEndpoint).catch(() => {});
-        if (chain.defaultRpcUrls && chain.defaultRpcUrls.length > 0) {
-          this.monitor.startPeriodic(chain.defaultRpcUrls);
-          // register endpoint->connector mapping for failover handling
-          for (const ep of chain.defaultRpcUrls) {
-            const s = this.endpointToConnectors.get(ep) ?? new Set<string>();
-            s.add(id);
-            this.endpointToConnectors.set(ep, s);
+        // If a health monitor is enabled, probe and register endpoints for background checks
+        if (this.monitor) {
+          // probe chosen endpoint now and also schedule all chain endpoints for periodic checks
+          await this.monitor.probeEndpoint(connectedEndpoint).catch(() => {});
+          if (chain.defaultRpcUrls && chain.defaultRpcUrls.length > 0) {
+            this.monitor.startPeriodic(chain.defaultRpcUrls);
+            // register endpoint->connector mapping for failover handling
+            for (const ep of chain.defaultRpcUrls) {
+              const s = this.endpointToConnectors.get(ep) ?? new Set<string>();
+              s.add(id);
+              this.endpointToConnectors.set(ep, s);
+            }
           }
         }
+
+        // Fetch initial metrics
+        const metrics = await adapter.getMetrics().catch(() => this.emptyMetrics());
+        instance.metrics = metrics;
+
+        if (apiKey) {
+          this.connectorQuotaOwners.set(id, apiKey);
+        }
+      } else {
+        instance.status = "error";
+        instance.error = `All endpoints failed: ${errors.join("; ")}`;
+        instance.updatedAt = new Date().toISOString();
+
+        if (this.connectorQuotaProvider && apiKey && connectorSlotAcquired) {
+          await this.connectorQuotaProvider.releaseConnectorSlot(apiKey);
+          connectorSlotAcquired = false;
+        }
       }
 
-      // Fetch initial metrics
-      const metrics = await adapter.getMetrics().catch(() => this.emptyMetrics());
-      instance.metrics = metrics;
-    } else {
-      instance.status = "error";
-      instance.error = `All endpoints failed: ${errors.join("; ")}`;
-      instance.updatedAt = new Date().toISOString();
+      return instance;
+    } catch (error) {
+      if (this.connectorQuotaProvider && apiKey && connectorSlotAcquired) {
+        await this.connectorQuotaProvider.releaseConnectorSlot(apiKey);
+      }
+      throw error;
     }
-
-    return instance;
   }
 
   /**
@@ -282,8 +334,16 @@ export class ConnectorManager {
   async removeConnector(id: string): Promise<void> {
     const managed = this.connectors.get(id);
     if (managed) {
-      await managed.adapter.disconnect();
-      this.connectors.delete(id);
+      const apiKey = this.connectorQuotaOwners.get(id);
+      try {
+        await managed.adapter.disconnect();
+      } finally {
+        this.connectors.delete(id);
+        if (this.connectorQuotaProvider && apiKey) {
+          await this.connectorQuotaProvider.releaseConnectorSlot(apiKey);
+        }
+        this.connectorQuotaOwners.delete(id);
+      }
     }
   }
 

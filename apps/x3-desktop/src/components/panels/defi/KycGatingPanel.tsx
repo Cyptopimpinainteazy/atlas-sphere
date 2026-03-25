@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shield, ID, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Shield, FileText, CheckCircle, AlertCircle } from "lucide-react";
 import clsx from "clsx";
 
 interface KycLevel {

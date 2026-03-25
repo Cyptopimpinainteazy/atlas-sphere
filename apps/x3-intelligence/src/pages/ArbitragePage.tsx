@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { OrderBook, generateOrderBook, PriceSparkline, FlashloanPanel, PriceDifference } from "../components/ArbitrageComponents";
-import { Button } from "../components/UIComponents";
+import { Badge, Button } from "../components/UIComponents";
 import WalletConnect from "../components/WalletConnect";
 import { getProviders, estimateFlashloan } from "../services/flashloans";
 

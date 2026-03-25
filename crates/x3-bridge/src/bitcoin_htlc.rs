@@ -245,31 +245,16 @@ impl BitcoinHTLC {
 
     /// Hash preimage using SHA256
     fn sha256(data: &[u8]) -> [u8; 32] {
-        let mut hash = [0u8; 32];
-        let mut sum = 0u32;
-        for byte in data {
-            sum = sum.wrapping_mul(31).wrapping_add(*byte as u32);
-        }
-        hash[0..4].copy_from_slice(&sum.to_le_bytes());
-        // In production: use sp_io::hashing::sha2_256
-        hash
+        sp_io::hashing::sha2_256(data)
     }
 
     /// Generate deterministic contract ID
     fn generate_contract_id(initiator: &[u8], counterparty: &[u8; 32], amount: u64) -> [u8; 32] {
-        let mut id = [0u8; 32];
-        let mut hash = 0u64;
-        for byte in initiator {
-            hash = hash.wrapping_mul(31).wrapping_add(*byte as u64);
-        }
-        for (i, byte) in counterparty.iter().enumerate() {
-            if i < 8 {
-                hash = hash.wrapping_mul(31).wrapping_add(*byte as u64);
-            }
-        }
-        hash = hash.wrapping_mul(31).wrapping_add(amount);
-        id[0..8].copy_from_slice(&hash.to_le_bytes());
-        id
+        let mut data = Vec::with_capacity(initiator.len() + counterparty.len() + 8);
+        data.extend_from_slice(initiator);
+        data.extend_from_slice(counterparty);
+        data.extend_from_slice(&amount.to_le_bytes());
+        sp_io::hashing::sha2_256(&data)
     }
 
     /// Compute merkle root from leaf and proof path
@@ -281,13 +266,16 @@ impl BitcoinHTLC {
         hash
     }
 
-    /// Hash pair of 32-byte values
+    /// Hash pair of 32-byte values using Bitcoin merkle double-SHA256
     fn hash_pair(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
-        let mut result = [0u8; 32];
-        for i in 0..32 {
-            result[i] = a[i].wrapping_add(b[i]);
-        }
-        result
+        let (left, right) = if a <= b { (a, b) } else { (b, a) };
+
+        let mut combined = [0u8; 64];
+        combined[..32].copy_from_slice(left);
+        combined[32..].copy_from_slice(right);
+
+        let first = sp_io::hashing::sha2_256(&combined);
+        sp_io::hashing::sha2_256(&first)
     }
 
     /// Get contract state
@@ -371,6 +359,12 @@ mod tests {
     fn test_redeem_correct_preimage() {
         let preimage = b"secret".to_vec();
         let hash_lock = BitcoinHTLC::sha256(&preimage);
+        let expected_secret_sha256 = [
+            0x2b, 0xb8, 0x0d, 0x53, 0x7b, 0x1d, 0xa3, 0xe3, 0x8b, 0xd3, 0x03, 0x61, 0xaa, 0x85,
+            0x56, 0x86, 0xbd, 0xe0, 0xea, 0xcd, 0x71, 0x62, 0xfe, 0xf6, 0xa2, 0x5f, 0xe9, 0x7b,
+            0xf5, 0x27, 0xa2, 0x5b,
+        ];
+        assert_eq!(hash_lock, expected_secret_sha256);
 
         let mut contract = BitcoinHTLC::create_contract(
             b"1A1z7agoat".to_vec(),
@@ -388,7 +382,8 @@ mod tests {
             length: 6,
         };
 
-        BitcoinHTLC::redeem(&mut contract, &preimage_obj, 1).unwrap();
+        let redeemed_hash = BitcoinHTLC::redeem(&mut contract, &preimage_obj, 1).unwrap();
+        assert_eq!(redeemed_hash, expected_secret_sha256);
         assert_eq!(contract.state, HTLCState::Redeemed);
     }
 
@@ -514,12 +509,21 @@ mod tests {
 
     #[test]
     fn test_sha256() {
-        let hash1 = BitcoinHTLC::sha256(b"hello");
-        let hash2 = BitcoinHTLC::sha256(b"hello");
-        assert_eq!(hash1, hash2);
+        let hash_hello = BitcoinHTLC::sha256(b"hello");
+        let expected_hello = [
+            0x2c, 0xf2, 0x4d, 0xba, 0x5f, 0xb0, 0xa3, 0x0e, 0x26, 0xe8, 0x3b, 0x2a, 0xc5, 0xb9,
+            0xe2, 0x9e, 0x1b, 0x16, 0x1e, 0x5c, 0x1f, 0xa7, 0x42, 0x5e, 0x73, 0x04, 0x33, 0x62,
+            0x93, 0x8b, 0x98, 0x24,
+        ];
+        assert_eq!(hash_hello, expected_hello);
 
-        let hash3 = BitcoinHTLC::sha256(b"world");
-        assert_ne!(hash1, hash3);
+        let hash_abc = BitcoinHTLC::sha256(b"abc");
+        let expected_abc = [
+            0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea, 0x41, 0x41, 0x40, 0xde, 0x5d, 0xae,
+            0x22, 0x23, 0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c, 0xb4, 0x10, 0xff, 0x61,
+            0xf2, 0x00, 0x15, 0xad,
+        ];
+        assert_eq!(hash_abc, expected_abc);
     }
 
     #[test]

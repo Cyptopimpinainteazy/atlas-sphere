@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bridge, Send, TrendingUp, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Send, TrendingUp, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import clsx from "clsx";
 
 interface CrossChainTransfer {
@@ -93,7 +93,7 @@ export default function CrossChainBridgePanel() {
   return (
     <div className="w-full h-full bg-[#0a0a0f] text-white p-6 flex flex-col">
       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-        <Bridge size={20} className="text-cyan-400" /> Cross-Chain Bridge
+        <Send size={20} className="text-cyan-400" /> Cross-Chain Bridge
       </h2>
 
       <div className="flex-1 overflow-y-auto space-y-4 mb-4">

@@ -1531,6 +1531,97 @@ impl_runtime_apis! {
                 }
             }
         }
+
+        fn call_evm(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>> {
+            use fp_evm::ExitReason;
+            use pallet_evm::Runner;
+            use sp_core::{H160, U256};
+
+            if evm_address.len() != 20 {
+                return Err(b"Invalid EVM address length".to_vec());
+            }
+
+            let mut addr = [0u8; 20];
+            addr.copy_from_slice(&evm_address[..20]);
+            let target = H160::from(addr);
+            let source = H160::zero();
+            let effective_gas = if gas_limit == 0 { 10_000_000u64 } else { gas_limit };
+            let evm_config = fp_evm::Config::shanghai();
+
+            let result = <Runtime as pallet_evm::Config>::Runner::call(
+                source,
+                target,
+                input,
+                U256::zero(),
+                effective_gas,
+                Some(U256::from(NATIVE_GAS_PRICE)),
+                None,
+                None,
+                Vec::new(),
+                false,
+                false,
+                None,
+                None,
+                &evm_config,
+            );
+
+            match result {
+                Ok(info) => match info.exit_reason {
+                    ExitReason::Succeed(_) => Ok(info.value),
+                    ExitReason::Revert(_) => Err(info.value),
+                    ExitReason::Error(_) | ExitReason::Fatal(_) => {
+                        Err(b"EVM call execution failed".to_vec())
+                    }
+                },
+                Err(_) => Err(b"EVM runner call failed".to_vec()),
+            }
+        }
+
+        fn estimate_evm_gas(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>> {
+            use fp_evm::ExitReason;
+            use pallet_evm::Runner;
+            use sp_core::{H160, U256};
+            use sp_runtime::traits::UniqueSaturatedInto;
+
+            if evm_address.len() != 20 {
+                return Err(b"Invalid EVM address length".to_vec());
+            }
+
+            let mut addr = [0u8; 20];
+            addr.copy_from_slice(&evm_address[..20]);
+            let target = H160::from(addr);
+            let source = H160::zero();
+            let effective_gas = if gas_limit == 0 { 10_000_000u64 } else { gas_limit };
+            let evm_config = fp_evm::Config::shanghai();
+
+            let result = <Runtime as pallet_evm::Config>::Runner::call(
+                source,
+                target,
+                input,
+                U256::zero(),
+                effective_gas,
+                Some(U256::from(NATIVE_GAS_PRICE)),
+                None,
+                None,
+                Vec::new(),
+                false,
+                false,
+                None,
+                None,
+                &evm_config,
+            );
+
+            match result {
+                Ok(info) => match info.exit_reason {
+                    ExitReason::Succeed(_) => Ok(info.used_gas.standard.unique_saturated_into()),
+                    ExitReason::Revert(_) => Err(b"EVM call reverted during gas estimate".to_vec()),
+                    ExitReason::Error(_) | ExitReason::Fatal(_) => {
+                        Err(b"EVM call failed during gas estimate".to_vec())
+                    }
+                },
+                Err(_) => Err(b"EVM runner estimate failed".to_vec()),
+            }
+        }
     }
 
     impl pallet_atomic_trade_engine::AtomicTradeEngineApi<Block> for Runtime {

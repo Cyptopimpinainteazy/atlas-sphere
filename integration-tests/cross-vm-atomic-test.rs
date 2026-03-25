@@ -385,7 +385,7 @@ async fn test_multiple_cross_vm_operations() -> Result<()> {
 }
 
 #[tokio::test]
-async fn test_cross_</arg_key>vm_atomic_rollback() -> Result<()> {
+async fn test_cross_vm_atomic_rollback() -> Result<()> {
     info!("Starting cross-VM atomic rollback test");
 
     let config = CrossVmTestConfig::default();

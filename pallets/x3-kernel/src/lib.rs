@@ -3030,6 +3030,14 @@ sp_api::decl_runtime_apis! {
         /// Decodes the transaction, executes it via the EVM adapter, and returns
         /// the keccak256 transaction hash on success.
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Execute a read-only EVM call against target address with input data.
+        /// Returns raw EVM return bytes on success.
+        fn call_evm(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Estimate gas for an EVM call against target address with input data.
+        /// Returns used gas units on success.
+        fn estimate_evm_gas(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>>;
     }
 }
 

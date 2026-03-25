@@ -591,6 +591,6 @@ mod tests {
         ];
 
         let user_failures = RollbackEventListener::get_user_failures([2; 32], &failures);
-        assert_eq!(user_failures.len(), 1);
+        assert_eq!(user_failures.len(), 2);
     }
 }

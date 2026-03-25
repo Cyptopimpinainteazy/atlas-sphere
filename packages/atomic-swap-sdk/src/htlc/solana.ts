@@ -237,11 +237,47 @@ export class SolanaHTLCAdapter implements IHTLCAdapter {
     programId: string,
     instructionData: Uint8Array,
     signerKey: string,
-    _accounts: Array<{ pubkey: string; isSigner: boolean; isWritable: boolean }>,
+    accounts: Array<{ pubkey: string; isSigner: boolean; isWritable: boolean }>,
   ): Promise<string> {
-    // In production, build a Solana Transaction, sign with signerKey, and send via sendTransaction.
-    // For compile-time correctness, return a simulated signature.
-    const sigPreimage = `${programId}${bytesToHex(instructionData)}${signerKey}${Date.now()}`;
-    return sha256FromHex(bytesToHex(new TextEncoder().encode(sigPreimage)));
+    const web3 = await import("@solana/web3.js");
+    const bs58 = await import("bs58");
+
+    const connection = new web3.Connection(this.rpcEndpoint, "confirmed");
+
+    const raw = signerKey.startsWith("0x")
+      ? hexToBytes(signerKey)
+      : new Uint8Array(bs58.default.decode(signerKey));
+
+    const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(raw));
+    const ix = new web3.TransactionInstruction({
+      programId: new web3.PublicKey(programId),
+      keys: accounts.map((a) => ({
+        pubkey: new web3.PublicKey(a.pubkey),
+        isSigner: a.isSigner,
+        isWritable: a.isWritable,
+      })),
+      data: Buffer.from(instructionData),
+    });
+
+    const blockhash = await connection.getLatestBlockhash("confirmed");
+    const tx = new web3.Transaction({
+      feePayer: keypair.publicKey,
+      blockhash: blockhash.blockhash,
+      lastValidBlockHeight: blockhash.lastValidBlockHeight,
+    }).add(ix);
+
+    const signature = await connection.sendTransaction(tx, [keypair], {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
+    await connection.confirmTransaction(
+      {
+        signature,
+        blockhash: blockhash.blockhash,
+        lastValidBlockHeight: blockhash.lastValidBlockHeight,
+      },
+      "confirmed",
+    );
+    return signature;
   }
 }

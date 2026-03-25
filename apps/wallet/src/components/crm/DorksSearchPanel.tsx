@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useDorksSearch } from '../../lib/x3/hooks/useDorksSearch';
-import { Button, Card, Select, Input, List, Progress, Badge, Spinner } from '@radix-ui/themes';
+import { Button, Card, Progress, Badge, Spinner } from '@radix-ui/themes';
 
 const OBJECTIVES = [
   { value: 'find_investors', label: 'Find Investors' },
@@ -60,34 +60,35 @@ export function DorksSearchPanel() {
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-2">Objective</label>
-            <Select value={objective} onValueChange={setObjective}>
+            <select value={objective} onChange={(e) => setObjective(e.target.value)} className="w-full border rounded px-2 py-1">
               {OBJECTIVES.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
-            </Select>
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2">Focus Sectors</label>
-            <Select 
+            <select 
               multiple 
               value={sectors}
-              onValueChange={setSectors}
+              onChange={(e) => setSectors(Array.from(e.target.selectedOptions).map((opt) => opt.value))}
+              className="w-full border rounded px-2 py-1"
             >
               {SECTORS.map(sector => (
                 <option key={sector} value={sector}>{sector}</option>
               ))}
-            </Select>
+            </select>
           </div>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Keywords (comma-separated)</label>
-          <Input
+          <input
             placeholder="e.g., climate tech, renewable energy, carbon removal"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            className="w-full"
+            className="w-full border rounded px-2 py-1"
           />
         </div>
 
@@ -111,7 +112,7 @@ export function DorksSearchPanel() {
           <h3 className="text-lg font-semibold mb-4">
             Generated Queries ({generatedQueries.length})
           </h3>
-          <List>
+          <div>
             {generatedQueries.map(query => (
               <div 
                 key={query.id}
@@ -128,7 +129,7 @@ export function DorksSearchPanel() {
                   {query.query}
                 </code>
                 <Button
-                  size="small"
+                  size="1"
                   onClick={() => handleExecuteQuery(query.query)}
                   disabled={loading}
                 >
@@ -136,7 +137,7 @@ export function DorksSearchPanel() {
                 </Button>
               </div>
             ))}
-          </List>
+          </div>
         </Card>
       )}
 
@@ -155,7 +156,7 @@ export function DorksSearchPanel() {
             </Button>
           </div>
 
-          <List>
+          <div>
             {results.map(result => (
               <div 
                 key={result.url}
@@ -196,7 +197,7 @@ export function DorksSearchPanel() {
                 </a>
               </div>
             ))}
-          </List>
+          </div>
         </Card>
       )}
     </div>

@@ -122,7 +122,7 @@ function renderMarkdown(markdown: string): string {
 
   // Lists
   html = html.replace(/^\* (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
-  html = html.replace(/^\- (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
+  html = html.replace(/^- (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
   html = html.replace(/^\+ (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
 
   // Blockquotes

@@ -160,8 +160,8 @@ impl EvmHtlcParams {
     pub fn encode_calldata(&self) -> Vec<u8> {
         let mut data = Vec::with_capacity(196);
 
-        // Function selector: createHTLC(bytes32,address,address,uint256,address,uint256)
-        data.extend_from_slice(&[0x12, 0x34, 0x56, 0x78]); // Placeholder selector
+        // Function selector: createHTLC(bytes32,address,address,uint256,uint256)
+        data.extend_from_slice(&[0x4b, 0x2f, 0x33, 0x6d]);
 
         // secret_hash (bytes32)
         data.extend_from_slice(self.secret_hash.as_bytes());
@@ -195,8 +195,8 @@ impl EvmHtlcParams {
     pub fn encode_claim_calldata(secret: &H256) -> Vec<u8> {
         let mut data = Vec::with_capacity(36);
 
-        // Function selector: claim(bytes32)
-        data.extend_from_slice(&[0xab, 0xcd, 0xef, 0x01]); // Placeholder selector
+        // Function selector: claimHTLC(bytes32,bytes32)
+        data.extend_from_slice(&[0x84, 0xcc, 0x31, 0x5c]);
 
         // secret (bytes32)
         data.extend_from_slice(secret.as_bytes());
@@ -206,8 +206,8 @@ impl EvmHtlcParams {
 
     /// Encode refund call data
     pub fn encode_refund_calldata() -> Vec<u8> {
-        // Function selector: refund()
-        vec![0x59, 0x0e, 0x1a, 0xe3]
+        // Function selector: refundHTLC(bytes32)
+        vec![0x72, 0x49, 0xfb, 0xb6]
     }
 }
 
@@ -297,6 +297,17 @@ mod tests {
 
         let calldata = params.encode_calldata();
         assert!(calldata.len() >= 196);
+        assert_eq!(&calldata[0..4], &[0x4b, 0x2f, 0x33, 0x6d]);
+    }
+
+    #[test]
+    fn test_evm_htlc_claim_and_refund_selector_prefixes() {
+        let claim_secret = H256::repeat_byte(0x01);
+        let claim_calldata = EvmHtlcParams::encode_claim_calldata(&claim_secret);
+        assert_eq!(&claim_calldata[0..4], &[0x84, 0xcc, 0x31, 0x5c]);
+
+        let refund_calldata = EvmHtlcParams::encode_refund_calldata();
+        assert_eq!(refund_calldata, vec![0x72, 0x49, 0xfb, 0xb6]);
     }
 
     #[test]

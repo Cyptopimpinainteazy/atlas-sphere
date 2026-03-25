@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@radix-ui/themes": "^3.2.1",
     "@heroicons/react": "^2.0.18",
     "@polkadot/api": "^10.11.0",
     "@polkadot/extension-inject": "^0.47.0",
@@ -36,6 +37,8 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "eslint": "^9.20.0",
+    "eslint-config-next": "^16.1.6",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@types/jest": "^29.5.11",

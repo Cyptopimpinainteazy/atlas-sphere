@@ -71,7 +71,7 @@ router.get('/api/auth/status', (req: Request, res: Response) => {
     return res.json({ authenticated: false });
   }
 
-  const user = getSessionUser(token);
+  const user = getSessionUser(token!);
   return res.json({
     authenticated: true,
     username: user?.username

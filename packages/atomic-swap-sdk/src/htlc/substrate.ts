@@ -181,36 +181,105 @@ export class SubstrateHTLCAdapter implements IHTLCAdapter {
     storageItem: string,
     keys: string[],
   ): Promise<unknown> {
-    // Build storage key using xxhash
-    const storageKey = this.buildStorageKey(pallet, storageItem, keys);
-    return this.rpcCall("state_getStorage", [storageKey]);
-  }
+    const [{ ApiPromise, WsProvider }, utilCrypto, util, keyringMod] = await Promise.all([
+      import("@polkadot/api"),
+      import("@polkadot/util-crypto"),
+      import("@polkadot/util"),
+      import("@polkadot/keyring"),
+    ]);
 
-  private buildStorageKey(pallet: string, item: string, _keys: string[]): string {
-    // Simplified storage key construction
-    // In production, use @polkadot/api's xxhash128 for pallet + item prefix
-    const preimage = `${pallet}${item}${_keys.join("")}`;
-    return sha256FromHex(bytesToHex(new TextEncoder().encode(preimage)));
+    await utilCrypto.cryptoWaitReady();
+
+    const provider = new WsProvider(this.wsEndpoint);
+    const api = await ApiPromise.create({ provider });
+
+    try {
+      const storageFn = ((api.query as any)?.[pallet] as any)?.[storageItem];
+      if (!storageFn) {
+        throw new Error(`Storage item ${pallet}.${storageItem} is not available`);
+      }
+
+      const normalizedKeys = keys.map((key) => {
+        if (typeof key !== "string") {
+          return key;
+        }
+
+        if (key.startsWith("0x") && key.length === 66) {
+          // H256-style key
+          return key;
+        }
+
+        // If this looks like a mnemonic/URI, map to account address.
+        if (key.startsWith("//") || key.includes(" ")) {
+          const keyring = new keyringMod.Keyring({ type: "sr25519" });
+          return keyring.addFromUri(key).address;
+        }
+
+        // If already SS58/hex account style, pass through.
+        if (key.startsWith("5") || key.startsWith("0x")) {
+          return key;
+        }
+
+        // Fallback to bytes for raw strings.
+        return util.stringToU8a(key);
+      });
+
+      const result = await storageFn(...normalizedKeys);
+      return result?.toJSON?.() ?? result?.toHuman?.() ?? result;
+    } finally {
+      await api.disconnect();
+    }
   }
 
   private buildExtrinsic(
-    _pallet: string,
-    _call: string,
-    _args: unknown[],
-  ): string {
-    // In production, use @polkadot/api to construct and encode the extrinsic
-    // For now, return the encoded call as a hex string
-    return bytesToHex(
-      new TextEncoder().encode(JSON.stringify({ pallet: _pallet, call: _call, args: _args })),
-    );
+    pallet: string,
+    call: string,
+    args: unknown[],
+  ): { pallet: string; call: string; args: unknown[] } {
+    return { pallet, call, args };
   }
 
-  private async submitExtrinsic(encodedExtrinsic: string, _signerKey: string): Promise<string> {
-    // In production: sign with sr25519/ed25519 and submit via author_submitExtrinsic
-    // For now, simulate submission
-    const txHash = sha256FromHex(
-      bytesToHex(new TextEncoder().encode(`sub-tx:${encodedExtrinsic}:${Date.now()}`)),
-    );
+  private async submitExtrinsic(
+    encodedExtrinsic: { pallet: string; call: string; args: unknown[] },
+    signerKey: string,
+  ): Promise<string> {
+    const [{ ApiPromise, WsProvider, Keyring }, utilCrypto] = await Promise.all([
+      import("@polkadot/api"),
+      import("@polkadot/util-crypto"),
+    ]);
+
+    await utilCrypto.cryptoWaitReady();
+
+    const provider = new WsProvider(this.wsEndpoint);
+    const api = await ApiPromise.create({ provider });
+    const keyring = new Keyring({ type: "sr25519" });
+    const pair = keyring.addFromUri(signerKey);
+
+    const txBuilder = ((api.tx as any)?.[encodedExtrinsic.pallet] as any)?.[
+      encodedExtrinsic.call
+    ];
+    if (!txBuilder) {
+      await api.disconnect();
+      throw new Error(
+        `Extrinsic ${encodedExtrinsic.pallet}.${encodedExtrinsic.call} is not available`,
+      );
+    }
+
+    const tx = txBuilder(...encodedExtrinsic.args);
+    const txHash = await new Promise<string>((resolve, reject) => {
+      tx.signAndSend(pair, ({ status, dispatchError, txHash }: any) => {
+        if (dispatchError) {
+          reject(new Error(`Extrinsic failed: ${dispatchError.toString()}`));
+          return;
+        }
+
+        if (status?.isInBlock || status?.isFinalized) {
+          resolve(txHash.toHex());
+        }
+      }).catch(reject);
+    });
+
+    await api.disconnect();
     return txHash;
   }
 

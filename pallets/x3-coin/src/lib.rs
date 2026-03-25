@@ -39,6 +39,9 @@ const FINALITY_CHAIN_SVM: u8 = 2;
 const FINALITY_CHAIN_BTC: u8 = 3;
 const FINALITY_ENVELOPE_LEN: usize = 74;
 const FINALITY_WITNESS_LEN: usize = 96;
+const EVM_FINALITY_TAIL_LEN: usize = 52;
+const SVM_FINALITY_TAIL_LEN: usize = 41;
+const BTC_FINALITY_PREFIX_LEN: usize = 40;
 const MIN_EVM_CONFIRMATIONS: u32 = 12;
 const MIN_SVM_CONFIRMATIONS: u32 = 32;
 const MIN_BTC_CONFIRMATIONS: u32 = 6;
@@ -218,7 +221,6 @@ pub mod pallet {
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
-    #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
     /// Total X3 supply
@@ -850,6 +852,107 @@ pub mod pallet {
             Ok(&witness_and_tail[FINALITY_WITNESS_LEN..])
         }
 
+        fn verify_evm_finality_hook(
+            tx_hash: &H256,
+            block_number: u64,
+            receipt_tail: &[u8],
+        ) -> Result<(), Error<T>> {
+            ensure!(
+                receipt_tail.len() >= EVM_FINALITY_TAIL_LEN,
+                Error::<T>::InvalidProof
+            );
+
+            let tx_commitment = &receipt_tail[0..32];
+
+            let mut observed_block_bytes = [0u8; 8];
+            observed_block_bytes.copy_from_slice(&receipt_tail[32..40]);
+            let observed_block_number = u64::from_le_bytes(observed_block_bytes);
+
+            let mut header_block_bytes = [0u8; 8];
+            header_block_bytes.copy_from_slice(&receipt_tail[40..48]);
+            let header_block_number = u64::from_le_bytes(header_block_bytes);
+
+            let mut receipt_index_bytes = [0u8; 4];
+            receipt_index_bytes.copy_from_slice(&receipt_tail[48..52]);
+            let receipt_index = u32::from_le_bytes(receipt_index_bytes);
+
+            let mut expected_tx_preimage = Vec::with_capacity(5 + 32);
+            expected_tx_preimage.extend_from_slice(b"EVMTX");
+            expected_tx_preimage.extend_from_slice(tx_hash.as_bytes());
+            let expected_tx_commitment = sp_io::hashing::blake2_256(&expected_tx_preimage);
+
+            ensure!(tx_commitment == expected_tx_commitment, Error::<T>::InvalidProof);
+            ensure!(observed_block_number == block_number, Error::<T>::InvalidProof);
+            ensure!(header_block_number == block_number, Error::<T>::InvalidProof);
+            ensure!(receipt_index != u32::MAX, Error::<T>::InvalidProof);
+
+            Ok(())
+        }
+
+        fn verify_svm_finality_hook(
+            signature: &[u8],
+            block_number: u64,
+            receipt_tail: &[u8],
+        ) -> Result<(), Error<T>> {
+            ensure!(
+                receipt_tail.len() >= SVM_FINALITY_TAIL_LEN,
+                Error::<T>::InvalidProof
+            );
+
+            let signature_commitment = &receipt_tail[0..32];
+
+            let mut observed_slot_bytes = [0u8; 8];
+            observed_slot_bytes.copy_from_slice(&receipt_tail[32..40]);
+            let observed_slot = u64::from_le_bytes(observed_slot_bytes);
+
+            let confirmation_status = receipt_tail[40];
+
+            let mut expected_sig_preimage = Vec::with_capacity(6 + signature.len());
+            expected_sig_preimage.extend_from_slice(b"SVMSIG");
+            expected_sig_preimage.extend_from_slice(signature);
+            let expected_signature_commitment = sp_io::hashing::blake2_256(&expected_sig_preimage);
+
+            ensure!(
+                signature_commitment == expected_signature_commitment,
+                Error::<T>::InvalidProof
+            );
+            ensure!(observed_slot == block_number, Error::<T>::InvalidProof);
+            ensure!(confirmation_status == 1, Error::<T>::InvalidProof);
+
+            Ok(())
+        }
+
+        fn verify_btc_finality_hook(
+            txid: &H256,
+            block_height: u64,
+            branch_bytes: &[u8],
+        ) -> Result<(), Error<T>> {
+            ensure!(
+                branch_bytes.len() >= BTC_FINALITY_PREFIX_LEN + 32,
+                Error::<T>::InvalidProof
+            );
+
+            let tx_commitment = &branch_bytes[0..32];
+
+            let mut observed_height_bytes = [0u8; 8];
+            observed_height_bytes.copy_from_slice(&branch_bytes[32..40]);
+            let observed_height = u64::from_le_bytes(observed_height_bytes);
+
+            let merkle_branch = &branch_bytes[40..];
+
+            let mut expected_tx_preimage = Vec::with_capacity(5 + 32);
+            expected_tx_preimage.extend_from_slice(b"BTCTX");
+            expected_tx_preimage.extend_from_slice(txid.as_bytes());
+            let expected_tx_commitment = sp_io::hashing::blake2_256(&expected_tx_preimage);
+
+            ensure!(tx_commitment == expected_tx_commitment, Error::<T>::InvalidProof);
+            ensure!(observed_height == block_height, Error::<T>::InvalidProof);
+            ensure!(!merkle_branch.is_empty(), Error::<T>::InvalidProof);
+            ensure!(merkle_branch.len() % 32 == 0, Error::<T>::InvalidProof);
+
+            Ok(())
+        }
+
         fn x3_asset_id() -> T::AssetId {
             T::AssetId::default()
         }
@@ -911,7 +1014,7 @@ pub mod pallet {
                         &header_commitment,
                         witness_and_tail,
                     )?;
-                    ensure!(!receipt_tail.is_empty(), Error::<T>::InvalidProof);
+                    Self::verify_evm_finality_hook(tx_hash, *block_number, receipt_tail)?;
                     Ok(())
                 }
                 X3Proof::SvmProof {
@@ -942,7 +1045,7 @@ pub mod pallet {
                         &header_commitment,
                         witness_and_tail,
                     )?;
-                    ensure!(!receipt_tail.is_empty(), Error::<T>::InvalidProof);
+                    Self::verify_svm_finality_hook(signature, *block_number, receipt_tail)?;
                     Ok(())
                 }
                 X3Proof::BtcProof {
@@ -972,15 +1075,14 @@ pub mod pallet {
                         &header_commitment,
                         witness_and_tail,
                     )?;
-                    ensure!(!branch_bytes.is_empty(), Error::<T>::InvalidProof);
-                    ensure!(branch_bytes.len() % 32 == 0, Error::<T>::InvalidProof);
+                    Self::verify_btc_finality_hook(txid, *block_height, branch_bytes)?;
                     Ok(())
                 }
             }
         }
 
         /// Generate operation ID for mint/burn operations
-        fn generate_operation_id(
+        pub(crate) fn generate_operation_id(
             target_account: &[u8],
             amount: T::Balance,
             proof: &X3Proof,

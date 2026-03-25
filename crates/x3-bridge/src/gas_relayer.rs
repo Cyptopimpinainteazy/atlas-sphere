@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn test_settle_fee() {
         let mut req =
-            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 950000, [3; 32]).unwrap();
+            GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 1000000, [3; 32]).unwrap();
 
         let rate = TokenExchangeRate {
             token: [2; 32],
@@ -518,7 +518,7 @@ mod tests {
 
     #[test]
     fn test_batch_settle_fees() {
-        let req =
+        let mut req =
             GasRelayer::create_fee_request([1; 32], [2; 32], 1000000, 1000000, [3; 32]).unwrap();
 
         let rate = TokenExchangeRate {
@@ -526,6 +526,9 @@ mod tests {
             native_per_token: 1e18 as u128,
             updated_at: 1000,
         };
+
+        // settle the request first so batch_settle_fees can aggregate it
+        GasRelayer::settle_fee(&mut req, &rate, 100).unwrap();
 
         let result = GasRelayer::batch_settle_fees(&[req], &[rate]).unwrap();
         assert!(result.0 > 0);

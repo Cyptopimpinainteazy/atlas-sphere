@@ -21,6 +21,7 @@ use tokio::sync::Mutex;
 use x3_bridge_adapters::{
     OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter,
 };
+use crate::rpc_middleware::{RateLimitConfig, RateLimiter};
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -454,16 +455,35 @@ pub fn new_full(
     };
 
     // Spawn core Substrate tasks (RPC, network, telemetry, txpool, offchain, etc.)
+    let rate_limiter = Arc::new(RateLimiter::new(RateLimitConfig::default()));
+
+    {
+        let limiter = rate_limiter.clone();
+        task_manager.spawn_handle().spawn(
+            "rpc-rate-limiter-cleanup",
+            None,
+            async move {
+                let interval = Duration::from_secs(60);
+                loop {
+                    tokio::time::sleep(interval).await;
+                    limiter.cleanup_stale_connections(Duration::from_secs(5 * 60));
+                }
+            },
+        );
+    }
+
     let rpc_builder = {
         let client = client.clone();
         let transaction_pool = transaction_pool.clone();
         let gadget = flash_finality_gadget.clone();
+        let limiter = rate_limiter.clone();
         Box::new(move |deny_unsafe, _subscription_executor| {
             crate::rpc::create_full(
                 client.clone(),
                 transaction_pool.clone(),
                 deny_unsafe,
                 gadget.clone(),
+                limiter.clone(),
             )
             .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
         })
@@ -667,10 +687,25 @@ pub fn new_full(
 
         match backend.offchain_storage() {
             Some(offchain_storage) => {
-                let _escrow_adapter = Arc::new(PalletEscrowAdapter::with_persistence(
+                let escrow_adapter = Arc::new(PalletEscrowAdapter::with_persistence(
                     balance_adapter.clone(),
                     OffchainEscrowPersistence::new(offchain_storage),
                 ));
+
+                {
+                    let retained = escrow_adapter.clone();
+                    task_manager.spawn_handle().spawn(
+                        "cross-vm-escrow-retainer",
+                        None,
+                        async move {
+                            loop {
+                                tokio::time::sleep(Duration::from_secs(3600)).await;
+                                let _keep_alive = retained.clone();
+                            }
+                        },
+                    );
+                }
+
                 log::info!("🌉 Cross-VM bridge adapters wired (balance + escrow)");
             }
             None => {

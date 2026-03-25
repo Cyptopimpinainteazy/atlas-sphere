@@ -23,6 +23,8 @@ pallet-x3-domain-registry = { path = "../pallets/x3-domain-registry", features =
 flash-finality = { package = "x3-flash-finality", path = "../crates/flash-finality" }
 poh-generator = { package = "x3-poh-generator", path = "../crates/poh-generator" }
 x3-bridge-adapters = { path = "../crates/x3-bridge-adapters" }
+x3-rpc = { path = "../crates/x3-rpc" }
+x3-atomic-trade = { path = "../crates/x3-atomic-trade" }
 
 clap = { version = "4.4", features = ["derive"] }
 futures = "0.3"

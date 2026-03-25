@@ -28,6 +28,31 @@ fn decode_address(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
     Ok(bytes)
 }
 
+fn parse_gas_limit(tx_obj: &serde_json::Value) -> Result<u64, jsonrpsee::core::Error> {
+    let Some(raw_gas) = tx_obj.get("gas") else {
+        return Ok(10_000_000);
+    };
+
+    if let Some(gas_u64) = raw_gas.as_u64() {
+        return Ok(gas_u64);
+    }
+
+    if let Some(gas_str) = raw_gas.as_str() {
+        if let Some(stripped) = gas_str.strip_prefix("0x") {
+            return u64::from_str_radix(stripped, 16)
+                .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid gas: {}", e)));
+        }
+
+        return gas_str
+            .parse::<u64>()
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid gas: {}", e)));
+    }
+
+    Err(jsonrpsee::core::Error::Custom(
+        "Invalid gas value: expected integer or string".into(),
+    ))
+}
+
 /// Create a Frontier-compatible JSON-RPC module backed by runtime API calls.
 /// Provides eth_getBalance, eth_getCode, eth_getStorageAt,
 /// eth_getTransactionCount (nonce), eth_call, and eth_estimateGas.
@@ -128,21 +153,76 @@ where
         Ok(format!("0x{:x}", nonce))
     })?;
 
-    // eth_estimateGas — returns a fixed conservative estimate (21_000 base + data cost)
-    // Full simulation requires a stateful runner; this safe approximation avoids
-    // the sp-io duplicate panic_impl issue that blocks wasm32 compilation.
+    // eth_call — execute a read-only EVM call and return raw output bytes.
+    let c = client.clone();
+    module.register_method("eth_call", move |params, _| {
+        let (tx_obj, _block): (serde_json::Value, serde_json::Value) =
+            params.parse().unwrap_or_else(|_| {
+                let tx: serde_json::Value = params
+                    .one()
+                    .unwrap_or(serde_json::Value::Object(Default::default()));
+                (tx, serde_json::Value::Null)
+            });
+
+        let target = tx_obj
+            .get("to")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| jsonrpsee::core::Error::Custom("Missing to address".into()))?;
+        let target_bytes = decode_address(target)?;
+
+        let data_hex = tx_obj.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
+        let data_stripped = data_hex.strip_prefix("0x").unwrap_or(data_hex);
+        let input_data = hex::decode(data_stripped)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid data: {}", e)))?;
+        let gas_limit = parse_gas_limit(&tx_obj)?;
+
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+        let output = api
+            .call_evm(at, target_bytes, input_data, gas_limit)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
+
+        match output {
+            Ok(return_data) => Ok(format!("0x{}", hex::encode(return_data))),
+            Err(error_bytes) => Err(jsonrpsee::core::Error::Custom(format!(
+                "EVM call failed: {}",
+                String::from_utf8_lossy(&error_bytes)
+            ))),
+        }
+    })?;
+
+    // eth_estimateGas — estimate gas using runtime EVM dry-run logic.
+    let c = client.clone();
     module.register_method("eth_estimateGas", move |params, _| {
         let tx_obj: serde_json::Value = params
             .one()
-            .unwrap_or(serde_json::Value::Object(Default::default()));
-        let data_len = tx_obj
-            .get("data")
-            .and_then(|v| v.as_str())
-            .map(|s| s.strip_prefix("0x").unwrap_or(s).len() / 2)
-            .unwrap_or(0);
-        // 21_000 base + 68 gas per non-zero data byte (conservative)
-        let estimate: u64 = 21_000 + (data_len as u64) * 68;
-        Ok(format!("0x{:x}", estimate))
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid params: {}", e)))?;
+
+        let target_bytes = if let Some(target) = tx_obj.get("to").and_then(|v| v.as_str()) {
+            decode_address(target)?
+        } else {
+            vec![0u8; 20]
+        };
+
+        let data_hex = tx_obj.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
+        let data_stripped = data_hex.strip_prefix("0x").unwrap_or(data_hex);
+        let input_data = hex::decode(data_stripped)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Invalid data: {}", e)))?;
+        let gas_limit = parse_gas_limit(&tx_obj)?;
+
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+        let estimate = api
+            .estimate_evm_gas(at, target_bytes, input_data, gas_limit)
+            .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
+
+        match estimate {
+            Ok(gas) => Ok(format!("0x{:x}", gas)),
+            Err(error_bytes) => Err(jsonrpsee::core::Error::Custom(format!(
+                "Gas estimation failed: {}",
+                String::from_utf8_lossy(&error_bytes)
+            ))),
+        }
     })?;
 
     // eth_sendRawTransaction — submit a signed RLP-encoded Ethereum transaction
@@ -238,4 +318,61 @@ fn decode_svm_pubkey(s: &str) -> Result<Vec<u8>, jsonrpsee::core::Error> {
         ));
     }
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{decode_address, parse_gas_limit};
+
+    #[test]
+    fn decode_address_accepts_20_byte_hex() {
+        let addr = format!("0x{}", "11".repeat(20));
+        let decoded = decode_address(&addr).expect("address should decode");
+        assert_eq!(decoded.len(), 20);
+        assert!(decoded.iter().all(|b| *b == 0x11));
+    }
+
+    #[test]
+    fn decode_address_rejects_wrong_length() {
+        let addr = format!("0x{}", "aa".repeat(19));
+        let err = decode_address(&addr).expect_err("address must be rejected");
+        let text = format!("{err:?}");
+        assert!(text.contains("Address must be 20 bytes"));
+    }
+
+    #[test]
+    fn parse_gas_limit_accepts_hex_string() {
+        let tx = serde_json::json!({ "gas": "0x5208" });
+        let gas = parse_gas_limit(&tx).expect("hex gas should parse");
+        assert_eq!(gas, 21_000);
+    }
+
+    #[test]
+    fn parse_gas_limit_accepts_numeric_value() {
+        let tx = serde_json::json!({ "gas": 42000 });
+        let gas = parse_gas_limit(&tx).expect("numeric gas should parse");
+        assert_eq!(gas, 42_000);
+    }
+
+    #[test]
+    fn parse_gas_limit_accepts_decimal_string() {
+        let tx = serde_json::json!({ "gas": "42000" });
+        let gas = parse_gas_limit(&tx).expect("decimal string gas should parse");
+        assert_eq!(gas, 42_000);
+    }
+
+    #[test]
+    fn parse_gas_limit_rejects_invalid_type() {
+        let tx = serde_json::json!({ "gas": { "value": 1 } });
+        let err = parse_gas_limit(&tx).expect_err("object gas value must be rejected");
+        let text = format!("{err:?}");
+        assert!(text.contains("Invalid gas value"));
+    }
+
+    #[test]
+    fn parse_gas_limit_uses_default_when_missing() {
+        let tx = serde_json::json!({});
+        let gas = parse_gas_limit(&tx).expect("default gas should be used");
+        assert_eq!(gas, 10_000_000);
+    }
 }

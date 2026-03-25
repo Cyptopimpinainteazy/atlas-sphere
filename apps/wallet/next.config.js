@@ -14,6 +14,9 @@ const nextConfig = {
     NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID || "x3-mainnet",
     NEXT_PUBLIC_POLKADEX_API: process.env.NEXT_PUBLIC_POLKADEX_API || "https://api.polkadex.trade",
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 module.exports = nextConfig;

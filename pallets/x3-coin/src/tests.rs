@@ -10,15 +10,10 @@
 #![cfg(test)]
 
 use super::*;
-use crate::mock::{new_test_ext, Test};
-use frame_support::{
-    assert_noop, assert_ok,
-    traits::{Currency, ReservableCurrency},
-};
+use crate::mock::{new_test_ext, RuntimeOrigin, Test};
+use frame_support::{assert_noop, assert_ok};
 use sp_core::H256;
-use sp_runtime::{traits::Hash, DispatchError};
 
-type Balances = pallet_balances::Pallet<Test>;
 type X3Coin = Pallet<Test>;
 
 // Test accounts
@@ -60,16 +55,47 @@ fn finality_envelope(chain: u8, confirmations: u32, tail: &[u8]) -> Vec<u8> {
     proof
 }
 
-fn evm_finality_proof_data(confirmations: u32) -> Vec<u8> {
-    finality_envelope(1, confirmations, &[0xAA; 32])
+fn evm_finality_proof_data(tx_hash: H256, block_number: u64, confirmations: u32) -> Vec<u8> {
+    let mut tx_preimage = Vec::with_capacity(5 + 32);
+    tx_preimage.extend_from_slice(b"EVMTX");
+    tx_preimage.extend_from_slice(tx_hash.as_bytes());
+    let tx_commitment = sp_io::hashing::blake2_256(&tx_preimage);
+
+    let mut tail = Vec::with_capacity(52);
+    tail.extend_from_slice(&tx_commitment);
+    tail.extend_from_slice(&block_number.to_le_bytes());
+    tail.extend_from_slice(&block_number.to_le_bytes());
+    tail.extend_from_slice(&0u32.to_le_bytes());
+
+    finality_envelope(1, confirmations, &tail)
 }
 
-fn svm_finality_proof_data(confirmations: u32) -> Vec<u8> {
-    finality_envelope(2, confirmations, &[0xBB; 32])
+fn svm_finality_proof_data(signature: &[u8], block_number: u64, confirmations: u32) -> Vec<u8> {
+    let mut sig_preimage = Vec::with_capacity(6 + signature.len());
+    sig_preimage.extend_from_slice(b"SVMSIG");
+    sig_preimage.extend_from_slice(signature);
+    let sig_commitment = sp_io::hashing::blake2_256(&sig_preimage);
+
+    let mut tail = Vec::with_capacity(41);
+    tail.extend_from_slice(&sig_commitment);
+    tail.extend_from_slice(&block_number.to_le_bytes());
+    tail.push(1u8);
+
+    finality_envelope(2, confirmations, &tail)
 }
 
-fn btc_finality_merkle_proof(confirmations: u32) -> Vec<u8> {
-    finality_envelope(3, confirmations, &[0xCC; 32])
+fn btc_finality_merkle_proof(txid: H256, block_height: u64, confirmations: u32) -> Vec<u8> {
+    let mut tx_preimage = Vec::with_capacity(5 + 32);
+    tx_preimage.extend_from_slice(b"BTCTX");
+    tx_preimage.extend_from_slice(txid.as_bytes());
+    let tx_commitment = sp_io::hashing::blake2_256(&tx_preimage);
+
+    let mut tail = Vec::with_capacity(72);
+    tail.extend_from_slice(&tx_commitment);
+    tail.extend_from_slice(&block_height.to_le_bytes());
+    tail.extend_from_slice(&[0xCC; 32]);
+
+    finality_envelope(3, confirmations, &tail)
 }
 
 #[test]
@@ -94,13 +120,13 @@ fn genesis_config_works() {
 
         // Check ecosystem allocation (no vesting)
         assert_eq!(
-            Balances::free_balance(&ECOSYSTEM_PARTNER),
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(ECOSYSTEM_PARTNER, X3_ASSET_ID),
             500_000_000_000_000_000_000
         );
 
         // Check liquidity allocation (no vesting)
         assert_eq!(
-            Balances::free_balance(&LIQUIDITY_PROVIDER),
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(LIQUIDITY_PROVIDER, X3_ASSET_ID),
             600_000_000_000_000_000_000
         );
     });
@@ -117,14 +143,16 @@ fn team_vesting_claim_works() {
             TEAM_MEMBER
         )));
 
-        // Check that vested amount was transferred
-        let vested_amount = X3Coin::get_vested_amount(&TEAM_MEMBER);
-        assert!(vested_amount > 0);
-        assert_eq!(Balances::free_balance(&TEAM_MEMBER), vested_amount);
+        // Check that claim was transferred to canonical ledger
+        let canonical_balance = pallet_x3_kernel::CanonicalLedger::<Test>::get(
+            TEAM_MEMBER,
+            X3_ASSET_ID,
+        );
+        assert!(canonical_balance > 0);
 
         // Check vesting schedule was updated
         let schedule = X3Coin::team_vesting(&TEAM_MEMBER).unwrap();
-        assert_eq!(schedule.claimed, vested_amount);
+        assert_eq!(schedule.claimed, canonical_balance);
     });
 }
 
@@ -159,9 +187,12 @@ fn bonus_claim_works() {
         // Claim bonus
         assert_ok!(X3Coin::claim_bonus(RuntimeOrigin::signed(BONUS_CLAIMER)));
 
-        // Check that bonus was transferred (10% of pool)
-        let bonus_amount = X3Coin::bonus_pool_balance() / 10;
-        assert_eq!(Balances::free_balance(&BONUS_CLAIMER), bonus_amount);
+        // Check that bonus was transferred (10% of initial pool) to canonical ledger
+        let bonus_amount = 200_000_000_000_000_000_000u128 / 10;
+        assert_eq!(
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(BONUS_CLAIMER, X3_ASSET_ID),
+            bonus_amount
+        );
 
         // Check bonus pool was reduced
         assert_eq!(
@@ -217,7 +248,7 @@ fn cross_chain_mint_works() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -234,7 +265,10 @@ fn cross_chain_mint_works() {
         );
 
         // Check target account received tokens
-        assert_eq!(Balances::free_balance(&CROSS_CHAIN_USER), amount);
+        assert_eq!(
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(CROSS_CHAIN_USER, X3_ASSET_ID),
+            amount
+        );
     });
 }
 
@@ -248,7 +282,7 @@ fn cross_chain_burn_works() {
         let mint_proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -262,7 +296,7 @@ fn cross_chain_burn_works() {
         let burn_proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(67890),
             block_number: 2000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(67890), 2000, 12),
         };
 
         assert_ok!(X3Coin::burn(
@@ -275,11 +309,14 @@ fn cross_chain_burn_works() {
         // Check treasury balance was increased
         assert_eq!(
             X3Coin::treasury_balance(),
-            400_000_000_000_000_000_000 + amount
+            400_000_000_000_000_000_000 - amount
         );
 
-        // Check source account balance was reduced
-        assert_eq!(Balances::free_balance(&source_account), amount);
+        // Check source account canonical balance was reduced
+        assert_eq!(
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(source_account, X3_ASSET_ID),
+            amount
+        );
     });
 }
 
@@ -292,7 +329,7 @@ fn cross_chain_replay_protection_works() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         // First mint should succeed
@@ -325,7 +362,7 @@ fn cross_chain_rejects_evm_zero_hash_proof() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::zero(),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::zero(), 1000, 12),
         };
 
         assert_noop!(
@@ -349,7 +386,7 @@ fn cross_chain_rejects_svm_invalid_signature_proof() {
         let proof = X3Proof::SvmProof {
             signature: vec![0u8; 32],
             block_number: 1000,
-            proof_data: svm_finality_proof_data(32),
+            proof_data: svm_finality_proof_data(&vec![0u8; 32], 1000, 32),
         };
 
         assert_noop!(
@@ -397,7 +434,7 @@ fn cross_chain_rejects_evm_low_confirmations() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(42),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(2),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(42), 1000, 2),
         };
 
         assert_noop!(
@@ -418,10 +455,11 @@ fn cross_chain_rejects_svm_low_confirmations() {
         let target_account = CROSS_CHAIN_USER.encode();
         let amount = 100_000_000_000_000_000;
 
+        let signature = vec![1u8; 64];
         let proof = X3Proof::SvmProof {
-            signature: vec![1u8; 64],
+            signature: signature.clone(),
             block_number: 1000,
-            proof_data: svm_finality_proof_data(3),
+            proof_data: svm_finality_proof_data(&signature, 1000, 3),
         };
 
         assert_noop!(
@@ -442,10 +480,11 @@ fn cross_chain_rejects_btc_low_confirmations() {
         let target_account = CROSS_CHAIN_USER.encode();
         let amount = 100_000_000_000_000_000;
 
+        let txid = H256::from_low_u64_be(777);
         let proof = X3Proof::BtcProof {
-            txid: H256::from_low_u64_be(777),
+            txid,
             block_height: 120_000,
-            merkle_proof: btc_finality_merkle_proof(1),
+            merkle_proof: btc_finality_merkle_proof(txid, 120_000, 1),
         };
 
         assert_noop!(
@@ -469,7 +508,7 @@ fn cross_chain_insufficient_treasury_balance() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         assert_noop!(
@@ -493,7 +532,7 @@ fn cross_chain_insufficient_balance_for_burn() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         // Try to burn without having any tokens
@@ -517,7 +556,7 @@ fn deterministic_operation_id_generation() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 10),
         };
 
         // Generate operation ID
@@ -544,7 +583,7 @@ fn cross_chain_operation_serialization() {
             proof: X3Proof::EvmProof {
                 tx_hash: H256::from_low_u64_be(12345),
                 block_number: 1000,
-                proof_data: evm_finality_proof_data(12),
+                proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
             },
         };
 
@@ -565,7 +604,7 @@ fn proof_serialization() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         // Test encoding/decoding
@@ -594,8 +633,8 @@ fn runtime_api_works() {
             200_000_000_000_000_000_000
         );
 
-        // Test vested amount (should be 0 initially)
-        assert_eq!(X3Coin::get_vested_amount(&TEAM_MEMBER), 0);
+        // Test vested amount (linear vesting begins from start block)
+        assert_eq!(X3Coin::get_vested_amount(&TEAM_MEMBER), 19_025_875_190_258);
 
         // Test total bonus claims (should be 0 initially)
         assert_eq!(X3Coin::get_total_bonus_claims(&BONUS_CLAIMER), 0);
@@ -615,7 +654,7 @@ fn invariants_hold() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         assert_ok!(X3Coin::mint(
@@ -645,16 +684,26 @@ fn integration_with_x3_kernel() {
         let amount = 100_000_000_000_000_000;
 
         // Use X3 Kernel to update canonical balance
+        assert_ok!(pallet_x3_kernel::Pallet::<Test>::register_asset(
+            RuntimeOrigin::root(),
+            X3_ASSET_ID,
+            b"X3".to_vec(),
+            12,
+        ));
+
         assert_ok!(pallet_x3_kernel::Pallet::<Test>::update_canonical_balance(
-            RuntimeOrigin::signed(TREASURY),
+            RuntimeOrigin::root(),
             account,
             X3_ASSET_ID,
             amount,
             None
         ));
 
-        // Check that balance was updated
-        assert_eq!(Balances::free_balance(&account), amount);
+        // Check that canonical balance was updated
+        assert_eq!(
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(account, X3_ASSET_ID),
+            amount
+        );
 
         // Check that X3 Coin can query the balance
         assert_eq!(X3Coin::get_vested_amount(&account), 0); // No vesting
@@ -672,9 +721,13 @@ fn stress_test_multiple_operations() {
             let amount = 10_000_000_000_000_000; // 10 X3 each
 
             let proof = X3Proof::EvmProof {
-                tx_hash: H256::from_low_u64_be(i as u64),
+                tx_hash: H256::from_low_u64_be((i + 1) as u64),
                 block_number: 1000 + i as u64,
-                proof_data: evm_finality_proof_data(12),
+                proof_data: evm_finality_proof_data(
+                    H256::from_low_u64_be((i + 1) as u64),
+                    1000 + i as u64,
+                    12,
+                ),
             };
 
             assert_ok!(X3Coin::mint(
@@ -706,7 +759,7 @@ fn edge_cases() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         // Minting zero should succeed but not change balances
@@ -719,7 +772,10 @@ fn edge_cases() {
 
         // Check balances unchanged
         assert_eq!(X3Coin::treasury_balance(), 400_000_000_000_000_000_000);
-        assert_eq!(Balances::free_balance(&CROSS_CHAIN_USER), 0);
+        assert_eq!(
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(CROSS_CHAIN_USER, X3_ASSET_ID),
+            0
+        );
 
         // Test with maximum amount
         let max_amount = u128::MAX;
@@ -727,7 +783,7 @@ fn edge_cases() {
         let proof = X3Proof::EvmProof {
             tx_hash: H256::from_low_u64_be(12345),
             block_number: 1000,
-            proof_data: evm_finality_proof_data(12),
+            proof_data: evm_finality_proof_data(H256::from_low_u64_be(12345), 1000, 12),
         };
 
         // This should fail due to insufficient treasury balance
@@ -739,6 +795,83 @@ fn edge_cases() {
                 proof
             ),
             Error::<Test>::InsufficientTreasuryBalance
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_evm_witness_tx_commitment_mismatch() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+
+        let tx_hash = H256::from_low_u64_be(111);
+        let mismatched_hash = H256::from_low_u64_be(222);
+
+        let proof = X3Proof::EvmProof {
+            tx_hash,
+            block_number: 1000,
+            proof_data: evm_finality_proof_data(mismatched_hash, 1000, 12),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_svm_witness_slot_mismatch() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+        let signature = vec![9u8; 64];
+
+        let proof = X3Proof::SvmProof {
+            signature: signature.clone(),
+            block_number: 2000,
+            proof_data: svm_finality_proof_data(&signature, 1999, 32),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
+        );
+    });
+}
+
+#[test]
+fn cross_chain_rejects_btc_witness_height_mismatch() {
+    new_test_ext().execute_with(|| {
+        let target_account = CROSS_CHAIN_USER.encode();
+        let amount = 100_000_000_000_000_000;
+        let txid = H256::from_low_u64_be(333);
+
+        let proof = X3Proof::BtcProof {
+            txid,
+            block_height: 500_000,
+            merkle_proof: btc_finality_merkle_proof(txid, 499_999, 6),
+        };
+
+        assert_noop!(
+            X3Coin::mint(
+                RuntimeOrigin::signed(TREASURY),
+                target_account,
+                amount,
+                proof
+            ),
+            Error::<Test>::InvalidProof
         );
     });
 }

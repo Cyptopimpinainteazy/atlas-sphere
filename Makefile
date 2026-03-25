@@ -1,4 +1,4 @@
-.PHONY: bmad-generate-steps bmad-generate-workflows bmad-validate bmad-clean help testnet-verify
+.PHONY: bmad-generate-steps bmad-generate-workflows bmad-validate bmad-clean help testnet-verify frontier-rpc-smoke frontier-rpc-smoke-local
 
 # BMAD Build Automation - Phase 1 & 2
 # Purpose: Consolidation generation and validation for steps and workflows
@@ -26,6 +26,10 @@ help:
 	@echo "  Testnet:"
 	@echo "    make testnet-verify           - Run peer/finality (and optional telemetry/load) checks"
 	@echo "                                   Uses TESTNET_CONFIG or docs/testnet-config/testnet-config.json"
+	@echo ""
+	@echo "  Frontier RPC:"
+	@echo "    make frontier-rpc-smoke       - Run Frontier JSON-RPC smoke checks against NODE_URL"
+	@echo "    make frontier-rpc-smoke-local - Launch a fresh local dev node, run smoke checks, then stop it"
 
 # ============================================================================
 # PHASE 1: STEP CONSOLIDATION TARGETS
@@ -114,6 +118,24 @@ start:
 testnet-verify:
 	@echo "Running testnet verification..."
 	@scripts/testnet/verify-testnet.sh
+
+frontier-rpc-smoke:
+	@echo "Running Frontier RPC smoke against $${NODE_URL:-http://127.0.0.1:9944}..."
+	@NODE_URL="$${NODE_URL:-http://127.0.0.1:9944}" scripts/frontier_rpc_smoke.sh
+
+frontier-rpc-smoke-local:
+	@echo "Launching fresh local dev node for Frontier RPC smoke..."
+	@set -e; \
+	START_DESKTOP=false ./run-dev-node.sh --purge >/tmp/x3-frontier-smoke.log 2>&1 & \
+	NODE_PID=$$!; \
+	cleanup() { kill $$NODE_PID 2>/dev/null || true; wait $$NODE_PID 2>/dev/null || true; }; \
+	trap cleanup EXIT INT TERM; \
+	for i in $$(seq 1 45); do \
+		if curl -s http://127.0.0.1:9944 >/dev/null 2>&1; then break; fi; \
+		sleep 1; \
+		if [ $$i -eq 45 ]; then echo "Node did not become ready"; exit 1; fi; \
+	done; \
+	NODE_URL="http://127.0.0.1:9944" scripts/frontier_rpc_smoke.sh
 
 
 # ============================================================================

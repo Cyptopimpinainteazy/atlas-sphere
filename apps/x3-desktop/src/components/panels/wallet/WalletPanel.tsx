@@ -392,7 +392,7 @@ const SendView = () => {
                  const payload = { action: 'send', to: '0x...', amount: '0' };
                  try {
                    // Attempt Tauri invoke (desktop)
-                   // @ts-ignore
+                   // @ts-expect-error
                    await invoke('sign_transaction', { payload });
                    alert('Sign request sent to keystore (Tauri).');
                  } catch (err) {

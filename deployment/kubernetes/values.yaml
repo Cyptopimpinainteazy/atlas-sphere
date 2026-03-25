@@ -1,7 +1,23 @@
 # Helm values for GPU Swarm production deployment
 # Usage: helm install gpu-swarm ./charts/gpu-swarm -f values.yaml
 
-global:
+global:Ran terminal command:  /home/lojak/.cargo/bin/rustup --version; echo RUSTUP_EXIT:$?; /home/lojak/.cargo/bin/rustup show active-toolchain; echo TOOLCHAIN_EXIT:$?; env | grep -E 'RUST|CARGO'
+
+Summarized conversation historyContinuing from the last blocker: I’m first re-establishing terminal stability and verifying the Rust toolchain directly, since build commands were returning success without artifacts. I’ll run a minimal shell probe and then rebuild with verbose output to pinpoint where execution is being swallowed.
+
+Ran terminal command:  pwd && ls -la | head -n 20
+
+Ran terminal command:  set -x; command -v cargo; ls -l /home/lojak/.cargo/bin/cargo; /home/lojak/.cargo/bin/rustup --version; echo RUSTUP_EXIT:$?; /home/lojak/.cargo/bin/rustup show active-toolchain; echo TOOLCHAIN_EXIT:$?; cargo --version; echo CARGO_EXIT:$?
+
+I confirmed the terminal works, and found the key symptom: `rustup` is healthy, but `cargo --version` returns exit `0` with no output, which is abnormal and likely why builds look “successful” without artifacts. Next I’m checking whether the `cargo` shim invocation is broken in this shell and forcing a direct rustc/cargo path Ran terminal command:  /home/lojak/.cargo/bin/rustup --version; echo RUSTUP_EXIT:$?; /home/lojak/.cargo/bin/rustup show active-toolchain; echo TOOLCHAIN_EXIT:$?; env | grep -E 'RUST|CARGO'
+
+Summarized conversation historyContinuing from the last blocker: I’m first re-establishing terminal stability and verifying the Rust toolchain directly, since build commands were returning success without artifacts. I’ll run a minimal shell probe and then rebuild with verbose output to pinpoint where execution is being swallowed.
+
+Ran terminal command:  pwd && ls -la | head -n 20
+
+Ran terminal command:  set -x; command -v cargo; ls -l /home/lojak/.cargo/bin/cargo; /home/lojak/.cargo/bin/rustup --version; echo RUSTUP_EXIT:$?; /home/lojak/.cargo/bin/rustup show active-toolchain; echo TOOLCHAIN_EXIT:$?; cargo --version; echo CARGO_EXIT:$?
+
+I confirmed the terminal works, and found the key symptom: `rustup` is healthy, but `cargo --version` returns exit `0` with no output, which is abnormal and likely why builds look “successful” without artifacts. Next I’m checking whether the `cargo` shim invocation is broken in this shell and forcing a direct rustc/cargo path 
   environment: production
   domain: gpu-swarm.example.com
   imagePullPolicy: Always

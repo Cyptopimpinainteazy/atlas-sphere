@@ -851,6 +851,7 @@ impl CrossVmBridge {
     /// **Do NOT call this in production.** `CallEvm` and `CallSvm` operations
     /// will be dispatched to the `NoOpDispatcher` which returns synthetic results.
     /// Use `execute_pending_with_dispatcher(your_real_dispatcher)` instead.
+    #[allow(dead_code)]
     fn execute_operation(
         &self,
         operation: &CrossVmOperation,
@@ -1389,27 +1390,80 @@ impl CrossVmBridge {
                 svm_amount,
                 ..
             } => {
-                // Execute both legs — each must succeed for the swap to commit
+                // Two-phase style execution for atomic swap:
+                // 1) prepare/lock EVM funds in escrow (reversible)
+                // 2) prepare/lock SVM funds
+                // 3) commit both legs only if both prepares succeed
+                // 4) if SVM prepare or commit fails, compensate by refunding EVM escrow
                 let mut svm_key = [0u8; 32];
                 let len = svm_party.len().min(32);
                 svm_key[..len].copy_from_slice(&svm_party[..len]);
 
-                // Leg 1: EVM withdraw
-                let evm_result = dispatcher.execute_evm_tx(
+                let evm_escrow = [0u8; 20];
+                let svm_escrow_program = [0u8; 32];
+
+                let mut evm_lock_input = b"LOCK_EVM_SWAP:".to_vec();
+                evm_lock_input.extend_from_slice(&evm_amount.to_le_bytes());
+
+                // Prepare leg 1: lock EVM funds into escrow
+                let _evm_prepare = dispatcher.execute_evm_tx(
                     evm_party,
-                    &[0u8; 20], // Bridge escrow
-                    &evm_amount.to_le_bytes(),
+                    &evm_escrow,
+                    &evm_lock_input,
                     *evm_amount,
                 )?;
 
-                // Leg 2: SVM withdraw
-                let svm_result = dispatcher.execute_svm_tx(
+                let mut svm_lock_input = b"LOCK_SVM_SWAP:".to_vec();
+                svm_lock_input.extend_from_slice(&svm_amount.to_le_bytes());
+
+                // Prepare leg 2: lock SVM funds; on failure, refund EVM escrow immediately
+                let svm_prepare = dispatcher.execute_svm_tx(
                     &svm_key,
-                    &[0u8; 32], // Bridge program
-                    &svm_amount.to_le_bytes(),
+                    &svm_escrow_program,
+                    &svm_lock_input,
+                );
+
+                if let Err(err) = svm_prepare {
+                    let mut refund_input = b"REFUND_EVM_SWAP:".to_vec();
+                    refund_input.extend_from_slice(&evm_amount.to_le_bytes());
+                    let _ = dispatcher.execute_evm_tx(
+                        &evm_escrow,
+                        evm_party,
+                        &refund_input,
+                        *evm_amount,
+                    );
+                    return Err(err);
+                }
+
+                let mut evm_commit_input = b"COMMIT_EVM_SWAP:".to_vec();
+                evm_commit_input.extend_from_slice(&evm_amount.to_le_bytes());
+                let evm_commit = dispatcher.execute_evm_tx(
+                    &evm_escrow,
+                    evm_party,
+                    &evm_commit_input,
+                    *evm_amount,
                 )?;
 
-                let total_gas = evm_result.gas_used.saturating_add(svm_result.gas_used);
+                let mut svm_commit_input = b"COMMIT_SVM_SWAP:".to_vec();
+                svm_commit_input.extend_from_slice(&svm_amount.to_le_bytes());
+                let svm_commit = dispatcher.execute_svm_tx(&svm_key, &svm_escrow_program, &svm_commit_input);
+
+                if let Err(err) = svm_commit {
+                    let mut refund_input = b"REFUND_EVM_SWAP:".to_vec();
+                    refund_input.extend_from_slice(&evm_amount.to_le_bytes());
+                    let _ = dispatcher.execute_evm_tx(
+                        &evm_escrow,
+                        evm_party,
+                        &refund_input,
+                        *evm_amount,
+                    );
+                    return Err(err);
+                }
+
+                let svm_commit = svm_commit.expect("checked above");
+
+                // Report commit gas only (prepare/refund bookkeeping is not user-leg execution gas)
+                let total_gas = evm_commit.gas_used.saturating_add(svm_commit.gas_used);
                 Ok(CrossVmResult::success(Vec::new(), total_gas))
             }
             CrossVmOperation::MessageToEvm {
@@ -2619,40 +2673,82 @@ mod kernel_dispatcher_integration_tests {
     /// Used to validate that the bridge correctly checks balances before
     /// transfers and routes calls to the appropriate VM.
     struct StubKernelDispatcher {
-        evm_balances: BTreeMap<[u8; 20], u128>,
-        svm_balances: BTreeMap<[u8; 32], u64>,
+        evm_balances: core::cell::RefCell<BTreeMap<[u8; 20], u128>>,
+        svm_balances: core::cell::RefCell<BTreeMap<[u8; 32], u64>>,
         evm_calls: core::cell::Cell<u32>,
         svm_calls: core::cell::Cell<u32>,
+        fail_next_svm_prepare: core::cell::Cell<bool>,
     }
 
     impl StubKernelDispatcher {
         fn new() -> Self {
             Self {
-                evm_balances: BTreeMap::new(),
-                svm_balances: BTreeMap::new(),
+                evm_balances: core::cell::RefCell::new(BTreeMap::new()),
+                svm_balances: core::cell::RefCell::new(BTreeMap::new()),
                 evm_calls: core::cell::Cell::new(0),
                 svm_calls: core::cell::Cell::new(0),
+                fail_next_svm_prepare: core::cell::Cell::new(false),
             }
         }
 
         fn set_evm_balance(&mut self, address: [u8; 20], amount: u128) {
-            self.evm_balances.insert(address, amount);
+            self.evm_balances.borrow_mut().insert(address, amount);
         }
 
         fn set_svm_balance(&mut self, pubkey: [u8; 32], lamports: u64) {
-            self.svm_balances.insert(pubkey, lamports);
+            self.svm_balances.borrow_mut().insert(pubkey, lamports);
+        }
+
+        fn fail_next_svm_prepare(&self) {
+            self.fail_next_svm_prepare.set(true);
+        }
+
+        fn parse_amount_suffix(input: &[u8], prefix: &[u8]) -> Option<u128> {
+            if !input.starts_with(prefix) {
+                return None;
+            }
+            let amount_bytes = input.get(prefix.len()..prefix.len() + 16)?;
+            let mut amount_arr = [0u8; 16];
+            amount_arr.copy_from_slice(amount_bytes);
+            Some(u128::from_le_bytes(amount_arr))
+        }
+
+        fn evm_transfer(&self, from: &[u8; 20], to: &[u8; 20], amount: u128) -> Result<(), DispatchError> {
+            let mut balances = self.evm_balances.borrow_mut();
+            let from_bal = balances.get(from).copied().unwrap_or(0);
+            if from_bal < amount {
+                return Err(DispatchError::Other("Insufficient EVM balance"));
+            }
+            balances.insert(*from, from_bal.saturating_sub(amount));
+            let to_bal = balances.get(to).copied().unwrap_or(0);
+            balances.insert(*to, to_bal.saturating_add(amount));
+            Ok(())
         }
     }
 
     impl CrossVmDispatcher for StubKernelDispatcher {
         fn execute_evm_tx(
             &self,
-            _caller: &[u8; 20],
-            _target: &[u8; 20],
+            caller: &[u8; 20],
+            target: &[u8; 20],
             input: &[u8],
-            _value: u128,
+            value: u128,
         ) -> Result<CrossVmResult, DispatchError> {
             self.evm_calls.set(self.evm_calls.get() + 1);
+
+            if let Some(amount) = Self::parse_amount_suffix(input, b"LOCK_EVM_SWAP:") {
+                self.evm_transfer(caller, target, amount)?;
+            } else if let Some(amount) = Self::parse_amount_suffix(input, b"REFUND_EVM_SWAP:") {
+                self.evm_transfer(caller, target, amount)?;
+            } else if let Some(amount) = Self::parse_amount_suffix(input, b"COMMIT_EVM_SWAP:") {
+                self.evm_transfer(caller, target, amount)?;
+            } else if value > 0 {
+                // Generic value transfer path used by transfer operations
+                if self.evm_balances.borrow().contains_key(caller) {
+                    self.evm_transfer(caller, target, value)?;
+                }
+            }
+
             // Simulate a realistic gas cost based on input size
             let gas = 21_000u64 + (input.len() as u64) * 16;
             Ok(CrossVmResult::success(Vec::new(), gas))
@@ -2660,21 +2756,51 @@ mod kernel_dispatcher_integration_tests {
 
         fn execute_svm_tx(
             &self,
-            _caller: &[u8; 32],
+            caller: &[u8; 32],
             _program_id: &[u8; 32],
             input: &[u8],
         ) -> Result<CrossVmResult, DispatchError> {
             self.svm_calls.set(self.svm_calls.get() + 1);
+
+            if input.starts_with(b"LOCK_SVM_SWAP:") {
+                if self.fail_next_svm_prepare.replace(false) {
+                    return Err(DispatchError::Other("Injected SVM prepare failure"));
+                }
+                if let Some(amount_u128) = Self::parse_amount_suffix(input, b"LOCK_SVM_SWAP:") {
+                    let amount = amount_u128.min(u64::MAX as u128) as u64;
+                    let mut balances = self.svm_balances.borrow_mut();
+                    let current = balances.get(caller).copied().unwrap_or(0);
+                    if current < amount {
+                        return Err(DispatchError::Other("Insufficient SVM balance"));
+                    }
+                    balances.insert(*caller, current.saturating_sub(amount));
+                }
+            } else if let Some(amount_u128) = Self::parse_amount_suffix(input, b"COMMIT_SVM_SWAP:") {
+                // For deterministic tests we model commit as releasing to same account.
+                let amount = amount_u128.min(u64::MAX as u128) as u64;
+                let mut balances = self.svm_balances.borrow_mut();
+                let current = balances.get(caller).copied().unwrap_or(0);
+                balances.insert(*caller, current.saturating_add(amount));
+            }
+
             let compute = 5_000u64 + (input.len() as u64) * 2;
             Ok(CrossVmResult::success(Vec::new(), compute))
         }
 
         fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
-            self.evm_balances.get(address).copied().unwrap_or(0)
+            self.evm_balances
+                .borrow()
+                .get(address)
+                .copied()
+                .unwrap_or(0)
         }
 
         fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64 {
-            self.svm_balances.get(pubkey).copied().unwrap_or(0)
+            self.svm_balances
+                .borrow()
+                .get(pubkey)
+                .copied()
+                .unwrap_or(0)
         }
     }
 
@@ -2818,6 +2944,44 @@ mod kernel_dispatcher_integration_tests {
             swap_events.len(),
             1,
             "one AtomicSwapExecuted event expected"
+        );
+    }
+
+    /// AtomicSwap compensation path: if SVM prepare fails after EVM escrow lock,
+    /// EVM funds must be refunded to the original value.
+    #[test]
+    fn test_atomic_swap_restores_evm_balance_on_svm_prepare_failure() {
+        let mut dispatcher = StubKernelDispatcher::new();
+        let evm_party = [0x41; 20];
+        let svm_party = [0x42; 32];
+        let initial_evm_balance = 10_000u128;
+
+        dispatcher.set_evm_balance(evm_party, initial_evm_balance);
+        dispatcher.set_svm_balance(svm_party, 10_000);
+        dispatcher.fail_next_svm_prepare();
+
+        let mut bridge = CrossVmBridge::new();
+        bridge
+            .queue_operation(CrossVmOperation::AtomicSwap {
+                evm_party,
+                svm_party: svm_party.to_vec(),
+                evm_asset: [0u8; 20],
+                svm_asset: vec![0u8; 32],
+                evm_amount: 1_000,
+                svm_amount: 2_000,
+            })
+            .expect("queue should succeed");
+
+        let (results, _events) = bridge
+            .execute_with_dispatcher(&dispatcher)
+            .expect("execute_with_dispatcher should not panic");
+
+        assert_eq!(results.len(), 0, "atomic swap should fail and produce no success result");
+        assert_eq!(bridge.failed_count(), 1, "failed operation must be recorded");
+        assert_eq!(
+            dispatcher.get_evm_balance(&evm_party),
+            initial_evm_balance,
+            "EVM balance must be fully restored after compensation"
         );
     }
 }
