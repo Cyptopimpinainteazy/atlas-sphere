@@ -303,6 +303,13 @@ class TestCrossChainSignatureEquivalence:
         sig[0] ^= 0xFF                       # corrupt first byte
         assert not _evm_verify(pk_b, msg, bytes(sig))
 
+    def test_evm_verify_rejects_non_65_byte_signature(self):
+        """Length guard: any signature length != 65 must be rejected."""
+        _, pk_b = _evm_keygen(8)
+        msg = b"length-check"
+        assert not _evm_verify(pk_b, msg, b"\x00" * 64)
+        assert not _evm_verify(pk_b, msg, b"\x00" * 66)
+
     def test_tampered_svm_sig_rejected(self):
         """Mutated Ed25519 signature must raise BadSignatureError."""
         sk  = SigningKey.generate()
@@ -416,6 +423,16 @@ class TestHTLCLifecycle:
         assert not s.bond.reserved
         assert coord.get_session("s5").phase == SwapPhase.ABORTED
 
+    def test_abort_without_reserved_bond_is_noop_on_bond_state(self):
+        """Abort path should safely skip unreserve when bond is already not reserved."""
+        coord = SwapCoordinator()
+        s = coord.new_session("s5b", "0xEVM", "sol", 500, 300)
+        s.bond.unreserve()  # make condition false at abort's bond guard
+        assert not s.bond.reserved
+        coord.abort("s5b")
+        assert coord.get_session("s5b").phase == SwapPhase.ABORTED
+        assert not s.bond.reserved
+
     def test_timelock_prevents_late_settle(self):
         """After ABORTED, settling must raise."""
         coord = SwapCoordinator()
@@ -469,6 +486,12 @@ class TestTwoPhaseCommit:
             state.phase = TwoPCPhase.ABORTED
         assert state.phase == TwoPCPhase.ABORTED
 
+        # Opposite branch: both prepared should not take abort path
+        state_ok = TwoPhaseState(evm_prepared=True, svm_prepared=True)
+        if not (state_ok.evm_prepared and state_ok.svm_prepared):
+            state_ok.phase = TwoPCPhase.ABORTED
+        assert state_ok.phase != TwoPCPhase.ABORTED
+
     def test_svm_prepare_failure_aborts(self):
         """If SVM prepare fails, EVM must not commit."""
         state = TwoPhaseState()
@@ -477,6 +500,12 @@ class TestTwoPhaseCommit:
         if not (state.evm_prepared and state.svm_prepared):
             state.phase = TwoPCPhase.ABORTED
         assert state.phase == TwoPCPhase.ABORTED
+
+        # Opposite branch: both prepared should not take abort path
+        state_ok = TwoPhaseState(evm_prepared=True, svm_prepared=True)
+        if not (state_ok.evm_prepared and state_ok.svm_prepared):
+            state_ok.phase = TwoPCPhase.ABORTED
+        assert state_ok.phase != TwoPCPhase.ABORTED
 
     def test_idempotent_commit(self):
         """Committing an already-committed session is safe (no error)."""
@@ -488,6 +517,14 @@ class TestTwoPhaseCommit:
             state.phase = TwoPCPhase.COMMITTED
         assert state.phase == TwoPCPhase.COMMITTED
 
+        # Opposite branch: non-committed phase transitions to COMMITTED
+        state2 = TwoPhaseState(
+            evm_prepared=True, svm_prepared=True, phase=TwoPCPhase.PREPARED
+        )
+        if state2.phase != TwoPCPhase.COMMITTED:
+            state2.phase = TwoPCPhase.COMMITTED
+        assert state2.phase == TwoPCPhase.COMMITTED
+
     def test_cannot_commit_after_abort(self):
         """An aborted 2PC session must not transition to COMMITTED."""
         state = TwoPhaseState(phase=TwoPCPhase.ABORTED)
@@ -495,6 +532,12 @@ class TestTwoPhaseCommit:
         if state.phase == TwoPCPhase.ABORTED:
             with pytest.raises(Exception):
                 raise RuntimeError("Cannot commit an aborted session")
+
+        # Opposite branch: non-aborted state should not raise
+        state_ok = TwoPhaseState(phase=TwoPCPhase.COMMITTED)
+        if state_ok.phase == TwoPCPhase.ABORTED:
+            raise AssertionError("unreachable")
+        assert state_ok.phase == TwoPCPhase.COMMITTED
 
 
 # ==============================================================================

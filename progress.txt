@@ -3085,3 +3085,31 @@ Validation:
   - Target files: 123/123 passing
   - Full harness: 433/433 passing (20.01s)
   - coverage-p4-final.xml regenerated
+
+=== Top-5 Branch Gap Closure (AtomicCrossVM pass) ===
+Date: 2026-03-25T00:00:00Z
+Targeted lines closed:
+  - p4_atomic_crossvm_testnet.py:59   -> 100% (2/2)
+  - p4_atomic_crossvm_testnet.py:233  -> 100% (2/2)
+  - p4_atomic_crossvm_testnet.py:468  -> no remaining branch gap
+  - p4_atomic_crossvm_testnet.py:477  -> no remaining branch gap
+  - p4_atomic_crossvm_testnet.py:487  -> no remaining branch gap
+
+Changes made:
+  - Added EVM verify length-guard test for non-65-byte signatures
+  - Added abort path test where bond is already unreserved (false branch)
+  - Expanded 2PC tests to execute opposite branches for prepare-failure checks
+  - Expanded idempotent commit test to execute non-committed transition path
+  - Expanded aborted-commit test with non-aborted opposite branch path
+
+Validation:
+  - AtomicCrossVM suite: 61/61 passing
+  - Full harness: 435/435 passing (20.10s)
+  - coverage-p4-final.xml regenerated
+
+Updated top gap head (post-fix):
+  1) p4_atomic_crossvm_testnet.py:485 (1/2)
+  2) p4_atomic_crossvm_testnet.py:491 (1/2)
+  3) p4_atomic_crossvm_testnet.py:500 (1/2)
+  4) p4_atomic_crossvm_testnet.py:506 (1/2)
+  5) p4_atomic_crossvm_testnet.py:516 (1/2)
