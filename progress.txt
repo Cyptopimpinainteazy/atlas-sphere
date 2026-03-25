@@ -1,4 +1,61 @@
 2026-03-25 — GPU Test Harness Phase 1: Signature Verification Suite COMPLETE
+2026-03-25 — GPU Test Harness Phase 4: ATOMIC_CROSSVM Testnet Readiness Suite COMPLETE
+
+P4 GPU Integration Testing - Phase 4 (ATOMIC_CROSSVM) Implemented:
+
+✅ ACCOMPLISHMENT: 59 tests passing — full ATOMIC_CROSSVM testnet ship coverage
+  File: tests/p4_atomic_crossvm_testnet.py
+  Mirrors: ATOMIC_CROSSVM_PRODUCTION_READINESS.md + cross-vm-coordinator Rust crate
+
+TestCrossChainSignatureEquivalence (10 tests):
+  EVM secp256k1 ↔ SVM Ed25519 relay, tamper rejection, wrong-key rejection,
+  batch 10/100/1000 cross-chain sig-pair verification
+
+TestHTLCLifecycle (8 tests):
+  OsRng secret randomness (1000-collision check), deterministic hash, 32-byte size,
+  reveal→settle, wrong secret rejection, secret replay guard, bond release, timelock
+
+TestTwoPhaseCommit (6 tests):
+  Happy path COMMITTED, abort-after-prepare, EVM/SVM prepare failure→abort,
+  idempotent commit, cannot-commit-after-abort
+
+TestAtomicSwapStateMachine (6 tests):
+  Full PROPOSED→LOCKED→PROVING→SETTLED, state-skip guards, bond lifecycle,
+  20 concurrent swaps all settled
+
+TestReplayAndDoSProtection (6 tests):
+  Nonce accepted once, replay rejected, O(1) speed (<5ms for 1k checks),
+  session cap enforced (max_sessions constructor arg), secret cross-session replay
+
+TestSessionPersistence (3 tests):
+  dump/restore single session, 5 pending sessions survive restart,
+  settled sessions remain SETTLED after restore (cannot lock again)
+
+TestFinalityCertValidation (4 tests):
+  No anchor → InvalidFinalityCert, wrong block → fail, correct → pass,
+  multiple anchors any valid
+
+TestBondCollateralization (6 tests):
+  Reserved on creation (10% of amount), released on settle/abort,
+  slash zeroes amount, double-reserve/early-unreserve raise
+
+TestSettlementProofs (5 tests):
+  No settle without lock, settle is terminal, abort is terminal,
+  secret revealed on settle, unknown session KeyError
+
+TestTestnetReadiness (5 tests):
+  100 swaps < 5s, 1000 nonce checks < 10ms, 1000 cross-chain sig pairs < 60s,
+  10k finality anchor lookups < 50ms, 50-session dump/restore < 200ms
+
+📊 CUMULATIVE TOTALS:
+  Phase 1 (Signature Verification): 9/9
+  Phase 2 (PoH + TX + Integration): 11/11
+  Phase 3 (Determinism Validation): 22/22
+  Phase 4 (ATOMIC_CROSSVM Testnet): 59/59
+  GRAND TOTAL: 101/101 PASSED
+
+---
+
 2026-03-25 — GPU Test Harness Phase 3: Determinism Validation Suite COMPLETE
 
 P4 GPU Integration Testing - Phase 3 (Determinism) Implemented:
