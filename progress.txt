@@ -2986,3 +2986,29 @@ Deep suites:
   - TestDeepMainnetGoNoGoResilience (4) — blocker matrix for soak/validators/critical findings/approvals
 Harness size: 6,560 LOC across p4/p5 test suites
 Cumulative: 412/412 tests passing (including deep stress coverage)
+
+=== Deep Coverage Pass: P4/P5 Harness ===
+Date: 2026-03-25T00:00:00Z
+Scope: tests/p4_*.py + tests/p4_p5_deep_stress.py with branch coverage
+Coverage tooling:
+  - Configured .venv-p4 Python env
+  - Installed pytest-cov
+
+Stability validation:
+  - Full instrumented run: 414/414 passed (21.22s)
+  - PoH 400k perf gate stabilized for coverage instrumentation overhead
+  - Benchmark tests converted from placeholders to executable benchmark paths
+  - Security correctness tests implemented (invalid sig rejection, tamper detection, batch bypass checks)
+
+P4/P5-focused coverage summary (post-deepening):
+  - p4_gpu_integration_tests.py        95.7% line / 87.5% branch  (was 91.4% / 77.5%)
+  - p4_gpu_kernel_integration.py       97.4% line / 84.4% branch
+  - p4_determinism_validation.py       97.6% line / 86.1% branch
+  - p4_testnet_ship.py                 97.8% line / 89.5% branch
+  - p4_p5_production_release.py        98.5% line / 89.3% branch
+  - p4_p5_crosschain_gpu_validator.py  98.5% line / 81.8% branch
+  - p4_atomic_crossvm_testnet.py       99.1% line / 88.3% branch
+  - p4_p5_deep_stress.py              100.0% line / 95.5% branch
+
+Artifacts:
+  - coverage-p4.xml (full XML coverage report)
