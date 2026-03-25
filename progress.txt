@@ -2907,3 +2907,18 @@ TEST TOTALS: 101 (x3-bridge) + 24 (x3-atomic-trade) + 30 (pallet-x3-coin) + 14 (
   - removed stale `docs/integration-tests/svm-counter-test/README.md`
 - Pushed to `Cyptopimpinainteazy/atlas-sphere` main
 - mdrefcheck baseline before fix: 1326 findings; re-measure pending (use external terminal only)
+
+=== Phase 5: GPU Kernel Integration ===
+Date: 2026-03-25T08:24:27Z
+File: tests/p4_gpu_kernel_integration.py
+Tests: 82/82 passing (0.19s)
+Suites:
+  - TestGpuHostcallIds          (11) — hostcall ID 0xD0-0xD9 constants
+  - TestGpuHostcallDispatch     (13) — opcode routing, call log, canonicaliser
+  - TestGpuFallbackChain        (11) — Cascading/Strict/CPUOnly strategies
+  - TestGpuMemoryPool           (9)  — alloc/free/reuse/concurrent lifecycle
+  - TestGpuReceiptGeneration    (8)  — HMAC receipt gen, verify, tamper detect
+  - TestGpuLaneService          (8)  — batch processing, determinism, throughput
+  - TestGpuGuardSentinel        (11) — health, temp thresholds, device recovery
+  - TestCPUCanonicaliser        (11) — non-determinism routing, bitmap decode
+Cumulative: 183/183 tests across Phases 1-5
