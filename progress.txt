@@ -2952,3 +2952,18 @@ Suites:
   - TestUnifiedMonitoring          (9)  — cross-chain metrics, invariant alerts, dashboard lifecycle
   - TestP5GoNoGo                   (9)  — all 7 P5 success gates: TPS, violations, latency, fallback
 Cumulative: 318/318 tests across Phases 1-7
+
+=== Phase 8: P5 Production Release & Mainnet Readiness ===
+Date: 2026-03-25T00:00:00Z
+File: tests/p4_p5_production_release.py
+Tests: 72/72 passing (0.20s)
+Suites:
+  - TestCrossChainTestnetDeploy  (9)  — dual validator boot, health+RPC endpoints live, sync
+  - TestTwentyFourHourStability  (9)  — 10k synthetic swaps: 0 violations, <0.1% timeout, >99% success
+  - TestGpuHealthLive            (9)  — VRAM <2 GB, util 70-90%, temp <75°C, crash+recovery
+  - TestRpcHardening             (9)  — token-bucket rate limit 100/s, SecretsVault, constant-time compare
+  - TestOperatorRunbooks         (9)  — all 6 sections + 4 emergency procedures, GPG-signed
+  - TestMainnetReadinessGates    (9)  — 7-day soak, 0 critical findings, governance, validator count ≥3
+  - TestProductionReleaseBundle  (9)  — 10-file manifest, SHA256 checksums, GPG sign+verify, tamper detect
+  - TestP5MainnetGoNoGo          (9)  — all 7 mainnet_readiness gates pass → MAINNET GO
+Cumulative: 390/390 tests across Phases 1-8
