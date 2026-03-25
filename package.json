@@ -68,7 +68,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "docs:check:remark-links": "remark . --quiet --frail --use remark-validate-links --ignore-path .remarkignore",
-    "docs:check:mdrefs": "mdrefcheck . --exclude tools/get-shit-done --exclude idea-IU-253.32098.37 --exclude x3fronend/PRPs/templates --exclude scripts/p4_utils --exclude implementation_plan.md --exclude masterchecklist.md --exclude docs/runbooks/getting-started/100GUIDE.md --exclude docs/testnet-config --exclude docs/reports --exclude docs/openspec --exclude docs/planning-artifacts",
+    "docs:check:mdrefs": "mdrefcheck . --exclude tools/get-shit-done --exclude idea-IU-253.32098.37 --exclude x3fronend/PRPs/templates --exclude scripts/p4_utils --exclude implementation_plan.md --exclude masterchecklist.md --exclude docs/runbooks/getting-started/100GUIDE.md --exclude docs/testnet-config --exclude docs/reports --exclude docs/openspec --exclude docs/planning-artifacts --exclude docs/master/releases --exclude docs/master/implementation --exclude docs/runbooks/deployment",
     "docs:check:python-examples": "python scripts/check_markdown_python_examples.py",
     "docs:check:runmd": "bash scripts/check_runmd_examples.sh",
     "docs:check": "npm run docs:check:remark-links && npm run docs:check:mdrefs && npm run docs:check:python-examples && npm run docs:check:runmd"

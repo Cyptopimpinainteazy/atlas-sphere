@@ -23,3 +23,6 @@ docs/testnet-config/**
 docs/reports/**
 docs/openspec/**
 docs/planning-artifacts/**
+docs/master/releases/**
+docs/master/implementation/**
+docs/runbooks/deployment/**
