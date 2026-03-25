@@ -100,7 +100,7 @@ Metrics Dashboard (Real-time monitoring) → Port 8080
    - Production best practices
    - Troubleshooting
 
-3. **[/docs/root/README.md](/docs/root/README.md)**
+3. **[README.md](../../../root/README.md)**
    - Technical deep dive
    - Testing methodology
    - Configuration details

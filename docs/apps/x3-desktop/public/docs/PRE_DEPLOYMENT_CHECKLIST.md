@@ -480,6 +480,6 @@ When you can answer YES to all of these, you're ready:
 
 **Status**: Ready when all checks are ✅
 
-**Next**: Follow [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) for step-by-step deployment
+**Next**: Follow [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) for step-by-step deployment
 
 **Questions**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) for help

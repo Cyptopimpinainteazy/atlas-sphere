@@ -333,7 +333,7 @@ npx http-server dist     # Then run Lighthouse
 **Week 1**:
 1. Read [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 2. Local setup: `npm install && npm run dev`
-3. Read [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+3. Read [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 4. Run tests: `npm test`
 5. Write first Jest test
 
@@ -373,8 +373,8 @@ npx http-server dist     # Then run Lighthouse
 
 **Now**:
 1. Read [BUILD_REPORT.md](BUILD_REPORT.md)
-2. Review [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
-3. Check timeline in [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+2. Review [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
+3. Check timeline in [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 
 **Next**:
 1. Monitor GitHub Actions runs
@@ -454,10 +454,10 @@ git push origin main       # Deploy to production automatically
 | Document | Purpose | Read Time |
 |----------|---------|-----------|
 | [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) | **START HERE** - Navigation guide | 5 min |
-| [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) | Step-by-step deployment | 30 min |
+| [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) | Step-by-step deployment | 30 min |
 | [SECRETS_SETUP.md](SECRETS_SETUP.md) | GitHub secrets configuration | 20 min |
 | [CI_CD_GUIDE.md](CI_CD_GUIDE.md) | Pipeline documentation | 15 min |
-| [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) | Architecture overview | 015 min |
+| [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) | Architecture overview | 015 min |
 | [MAKEFILE_REFERENCE.md](MAKEFILE_REFERENCE.md) | Build command reference | 10 min |
 
 ### Getting Help
@@ -536,7 +536,7 @@ Once dashboard is in production:
 ### TODAY (Right Now)
 
 - [ ] Read [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
-- [ ] Read [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+- [ ] Read [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 - [ ] Run `npm install && npm run dev` locally
 
 ### THIS WEEK

@@ -31,8 +31,8 @@ Password: x3-chain-2026
 
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
-| [/docs/runbooks/getting-started/BOOT_AND_AUTH_SETUP.md](/docs/runbooks/getting-started/BOOT_AND_AUTH_SETUP.md) | Start services, setup auto-start, manage authentication | 10 min |
-| [/docs/runbooks/testing/E2E_SECURITY_TESTING.md](/docs/runbooks/testing/E2E_SECURITY_TESTING.md) | Run tests, understand coverage, debug failures | 15 min |
+| [BOOT_AND_AUTH_SETUP.md](./BOOT_AND_AUTH_SETUP.md) | Start services, setup auto-start, manage authentication | 10 min |
+| [E2E_SECURITY_TESTING.md](../testing/E2E_SECURITY_TESTING.md) | Run tests, understand coverage, debug failures | 15 min |
 | This document | Component overview and next steps | 5 min |
 
 ---
@@ -497,8 +497,8 @@ sudo bash scripts/setup-autostart.sh
 
 ## 📖 Further Reading
 
-- **Boot & Auth**: See [/docs/runbooks/getting-started/BOOT_AND_AUTH_SETUP.md](/docs/runbooks/getting-started/BOOT_AND_AUTH_SETUP.md) for detailed service management
-- **Testing**: See [/docs/runbooks/testing/E2E_SECURITY_TESTING.md](/docs/runbooks/testing/E2E_SECURITY_TESTING.md) for test execution and debugging
+- **Boot & Auth**: See [BOOT_AND_AUTH_SETUP.md](./BOOT_AND_AUTH_SETUP.md) for detailed service management
+- **Testing**: See [E2E_SECURITY_TESTING.md](../testing/E2E_SECURITY_TESTING.md) for test execution and debugging
 - **Security**: Review test files for specific security properties: `cross-chain-gpu-validator/tests/`
 
 ---

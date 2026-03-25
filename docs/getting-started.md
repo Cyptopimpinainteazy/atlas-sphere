@@ -411,14 +411,14 @@ anchor test
 ## Next Steps
 
 ### Explore Examples
-- **[Cross-VM Atomic Operations](/docs/tutorials/cross-vm-atomic.md)** - Build apps that use both VMs
-- **[DeFi Integration](/docs/examples/evm/defi-integration.js)** - Connect to popular protocols
-- **[Gaming Examples](/docs/examples/svm/simple-game.rs)** - Build real-time games
+- **[Cross-VM Atomic Operations](./tutorials/cross-vm-atomic.md)** - Build apps that use both VMs
+- **[RPC Integration Example](./examples/rpc_integration.rs)** - Connect to chain endpoints and flows
+- **[Arbitrage Bot Example](./examples/arbitrage_bot_config.rs)** - Explore advanced strategy configuration
 
 ### Advanced Features
-- **[RPC API Reference](/docs/rpc.md)** - Detailed API documentation
-- **[Cross-VM SDK](/docs/sdk/cross-vm-guide.md)** - Type-safe cross-VM development
-- **[Gas Optimization](/docs/gas-optimization.md)** - Minimize transaction costs
+- **[RPC API Reference](./rpc.md)** - Detailed API documentation
+- **[Cross-VM Tutorial](./tutorials/cross-vm-atomic.md)** - End-to-end cross-VM development flow
+- **[Gas Model](./x3-lang/spec/gas-model.md)** - Understand execution and fee model
 
 ### Join the Community
 - **[Discord](https://discord.gg/x3-chain)** - Get help and share projects
@@ -467,4 +467,4 @@ curl -X POST http://localhost:9933 \
 
 ---
 
-*Ready to build something amazing? Check out our [tutorials](/docs/tutorials/) for step-by-step guides to common patterns and use cases.*
+*Ready to build something amazing? Check out our [tutorials](./tutorials/) for step-by-step guides to common patterns and use cases.*

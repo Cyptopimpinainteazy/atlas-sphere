@@ -375,8 +375,8 @@ if (response.result_hash !== expectedHash) {
 ## 🎓 Learn More
 
 - **Full Test Plan:** [INFERSTRUCTOR_300X_TEST_PLAN.md](../../docs/INFERSTRUCTOR_300X_TEST_PLAN.md)
-- **Architecture:** [/docs/root/README.md](/docs/root/README.md)
-- **Authentication:** [docs/runbooks/getting-started/AUTHENTICATION_SETUP.md](../../../docs/runbooks/getting-started/AUTHENTICATION_SETUP.md)
+- **Architecture:** [README.md](../../../root/README.md)
+- **Authentication:** [AUTHENTICATION_SETUP.md](../../../runbooks/getting-started/AUTHENTICATION_SETUP.md)
 - **Quick Reference:** [QUICKREF.md](QUICKREF.md)
 
 ## 💬 Support

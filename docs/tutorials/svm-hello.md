@@ -6,7 +6,7 @@ This tutorial will guide you through deploying your first Solana program (SVM) o
 
 - Rust 1.70+ installed
 - Solana CLI tools installed (`solana-keygen`, `solana`)
-- X3 Chain local node running (see [Getting Started](/docs/getting-started.md))
+- X3 Chain local node running (see [Getting Started](../getting-started.md))
 - Basic understanding of Rust and Solana development
 
 **Why this matters**: This tutorial demonstrates that you can deploy existing Solana programs on X3 Chain with minimal modifications, leveraging the full SVM compatibility.

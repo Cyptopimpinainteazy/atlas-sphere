@@ -3,15 +3,15 @@
 ## Quick Navigation
 
 ### ⚡ **START HERE** (5 minutes)
-👉 **[/docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md)** - One-page guide to get running
+👉 **[QUICK_START.md](./QUICK_START.md)** - One-page guide to get running
 
 ### 📚 **Full Guides**
-- **[/docs/runbooks/getting-started/AUTHENTICATION_SETUP.md](/docs/runbooks/getting-started/AUTHENTICATION_SETUP.md)** - Complete authentication documentation
-- **[/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)** - Pre-production checklist
-- **[/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)** - What was built and how
+- **[AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md)** - Complete authentication documentation
+- **[DEPLOYMENT_CHECKLIST.md](../deployment/DEPLOYMENT_CHECKLIST.md)** - Pre-production checklist
+- **[IMPLEMENTATION_SUMMARY.md](../../reports/IMPLEMENTATION_SUMMARY.md)** - What was built and how
 
 ### 📋 **Reference**
-- **[/docs/reports/FILES_CREATED_MODIFIED.md](/docs/reports/FILES_CREATED_MODIFIED.md)** - All new/modified files tracking
+- **[FILES_CREATED_MODIFIED.md](../../reports/FILES_CREATED_MODIFIED.md)** - All new/modified files tracking
 
 ---
 
@@ -293,7 +293,7 @@ Before going live:
 - [ ] Test auto-start (reboot)
 - [ ] Document credentials securely
 
-See [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) for full checklist.
+See [DEPLOYMENT_CHECKLIST.md](../deployment/DEPLOYMENT_CHECKLIST.md) for full checklist.
 
 ---
 
@@ -316,19 +316,19 @@ Run tests with: `bash scripts/run-local-tests.sh`
 ### By Level of Detail
 
 **5-minute summary:**
-→ [/docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md)
+→ [QUICK_START.md](./QUICK_START.md)
 
 **10-minute setup:**
-→ [/docs/runbooks/getting-started/AUTHENTICATION_SETUP.md](/docs/runbooks/getting-started/AUTHENTICATION_SETUP.md)
+→ [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md)
 
 **30-minute deep dive:**
-→ [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+→ [IMPLEMENTATION_SUMMARY.md](../../reports/IMPLEMENTATION_SUMMARY.md)
 
 **Pre-deployment:**
-→ [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+→ [DEPLOYMENT_CHECKLIST.md](../deployment/DEPLOYMENT_CHECKLIST.md)
 
 **File tracking:**
-→ [/docs/reports/FILES_CREATED_MODIFIED.md](/docs/reports/FILES_CREATED_MODIFIED.md)
+→ [FILES_CREATED_MODIFIED.md](../../reports/FILES_CREATED_MODIFIED.md)
 
 ---
 
@@ -423,7 +423,7 @@ After reboot: **http://localhost:5173** ready to use!
 ## Questions?
 
 📖 Check the appropriate guide above
-📋 Review [/docs/reports/FILES_CREATED_MODIFIED.md](/docs/reports/FILES_CREATED_MODIFIED.md)
+📋 Review [FILES_CREATED_MODIFIED.md](../../reports/FILES_CREATED_MODIFIED.md)
 🔍 Search logs: `sudo journalctl -u x3-intelligence -f`
 🚀 Try manual startup: `bash deployment/scripts/startup.sh`
 

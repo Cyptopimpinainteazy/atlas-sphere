@@ -186,12 +186,12 @@ Phase 7: (Next) CLI/RPC integration & E2E testing
 ## 🔗 Related Documentation
 
 **Phase 4 (Baseline)**:
-- [/docs/reports/PHASE4_DOCUMENTATION_INDEX.md](/docs/reports/PHASE4_DOCUMENTATION_INDEX.md)
+- [PHASE4_DOCUMENTATION_INDEX.md](./PHASE4_DOCUMENTATION_INDEX.md)
 - [archive/reports/SESSION_SUMMARY_PHASE4.md](archive/reports/SESSION_SUMMARY_PHASE4.md)
 
 **Project Structure**:
-- [/docs/root/README.md](/docs/root/README.md) - Project overview
-- [/docs/reports/ACCOMPLISHMENTS.md](/docs/reports/ACCOMPLISHMENTS.md) - Historical context
+- [README.md](../root/README.md) - Project overview
+- [ACCOMPLISHMENTS.md](./ACCOMPLISHMENTS.md) - Historical context
 
 ---
 

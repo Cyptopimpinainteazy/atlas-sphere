@@ -18,7 +18,7 @@ This directory contains the complete GPU Swarm Dashboard implementation with pro
    ```
 
 2. **Understand the Architecture**:
-   - Read: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+   - Read: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
    - Time: 10 minutes
 
 3. **Run Tests**:
@@ -29,7 +29,7 @@ This directory contains the complete GPU Swarm Dashboard implementation with pro
    ```
 
 4. **Deploy to Staging**:
-   - Follow: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+   - Follow: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
    - Requires: GitHub secrets configuration
 
 ---
@@ -40,7 +40,7 @@ This directory contains the complete GPU Swarm Dashboard implementation with pro
 
 | Document | Purpose | Time |
 |----------|---------|------|
-| [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) | Step-by-step deployment guide with SSH, Docker, Kubernetes options | 30 min read |
+| [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) | Step-by-step deployment guide with SSH, Docker, Kubernetes options | 30 min read |
 | [SECRETS_SETUP.md](SECRETS_SETUP.md) | Configure GitHub Actions, Docker, and deployment secrets | 20 min setup |
 | [CI_CD_GUIDE.md](CI_CD_GUIDE.md) | Complete CI/CD pipeline documentation and commands | 15 min read |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Server setup, environment config, troubleshooting | 20 min read |
@@ -49,9 +49,9 @@ This directory contains the complete GPU Swarm Dashboard implementation with pro
 
 | Document | Purpose | Time |
 |----------|---------|------|
-| [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) | Architecture, components, API integration overview | 15 min read |
+| [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) | Architecture, components, API integration overview | 15 min read |
 | [BUILD_REPORT.md](BUILD_REPORT.md) | Build metrics, bundle analysis, performance data | 10 min read |
-| [/docs/root/README.md](/docs/root/README.md) | Project overview and quick start | 5 min read |
+| [README.md](../../../../root/README.md) | Project overview and quick start | 5 min read |
 
 ---
 
@@ -206,7 +206,7 @@ apps/swarm-dashboard/
 - [ ] Verify dashboard loads on http://localhost:5173
 - [ ] Test each page loads without errors
 - [ ] Run tests: `npm test`
-- [ ] Read [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+- [ ] Read [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 
 ### Day 2: Local Testing
 
@@ -228,7 +228,7 @@ apps/swarm-dashboard/
 
 ### Day 4: Deploy to Staging
 
-- [ ] Follow [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+- [ ] Follow [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 - [ ] Ensure staging server is prepared
 - [ ] Push to `develop` branch
 - [ ] Monitor GitHub Actions workflow
@@ -321,23 +321,23 @@ apps/swarm-dashboard/
 ### For Different Roles
 
 **👨‍💻 Developers**:
-1. Start: [/docs/root/README.md](/docs/root/README.md) + run locally
-2. Then: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+1. Start: [README.md](../../../../root/README.md) + run locally
+2. Then: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 3. Daily: Refer to `src/` code and inline comments
 
 **🚀 DevOps/SRE**:
 1. Start: [CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 2. Setup: [SECRETS_SETUP.md](SECRETS_SETUP.md)
-3. Deploy: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+3. Deploy: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 4. Monitor: [DEPLOYMENT.md](DEPLOYMENT.md#monitoring)
 
 **📊 Project Managers**:
-1. Overview: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+1. Overview: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 2. Status: [BUILD_REPORT.md](BUILD_REPORT.md)
 3. Progress: Check GitHub Actions runs
 
 **🏗️ Architects**:
-1. Architecture: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+1. Architecture: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 2. Deployment: [CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 3. Security: Read `kubernetes-manifest.yml` + `Dockerfile`
 
@@ -502,8 +502,8 @@ swarm-dashboard/
 
 ## 📌 Quick Links
 
-🚀 **Deploy Now**: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+🚀 **Deploy Now**: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 🔐 **Setup Secrets**: [SECRETS_SETUP.md](SECRETS_SETUP.md)
 📖 **CI/CD Details**: [CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 📊 **Build Info**: [BUILD_REPORT.md](BUILD_REPORT.md)
-🏗️ **Architecture**: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+🏗️ **Architecture**: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)

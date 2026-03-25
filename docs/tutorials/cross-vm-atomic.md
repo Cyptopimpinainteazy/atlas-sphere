@@ -5,8 +5,8 @@ This tutorial demonstrates X3 Chain's unique cross-VM capabilities by building a
 ## Prerequisites
 
 - X3 Chain local node running
-- Completed [EVM Hello World](/docs/tutorials/evm-hello.md) tutorial
-- Completed [SVM Hello World](/docs/tutorials/svm-hello.md) tutorial
+- Completed [EVM Hello World](./evm-hello.md) tutorial
+- Completed [SVM Hello World](./svm-hello.md) tutorial
 - Understanding of both EVM and SVM development patterns
 
 **Why this matters**: Cross-VM atomic operations are the core innovation of X3 Chain, enabling use cases impossible on traditional blockchains like trustless arbitrage, unified liquidity, and cross-chain DeFi strategies.

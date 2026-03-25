@@ -460,7 +460,7 @@ curl https://dashboard.x3-chain.com/health
 
 - **Build Report**: [BUILD_REPORT.md](BUILD_REPORT.md)
 - **Deployment Guide**: [DEPLOYMENT.md](DEPLOYMENT.md)
-- **Implementation**: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+- **Implementation**: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 - **API Docs**: See backend documentation
 - **GitHub Issues**: Report bugs and feature requests
 

@@ -148,13 +148,13 @@ Transaction Flow:
 
 Ready to build on X3 Chain? Here are your next steps:
 
-1. **[Run a Local Node](/docs/getting-started.md)** - Set up development environment
-2. **[Choose Your VM](/docs/getting-started.md#choose-your-vm)** - EVM, SVM, or cross-VM
-3. **[Deploy Your First Contract](/docs/tutorials/evm-hello.md)** - Start with Solidity or Anchor
-4. **[Build Cross-VM Features](/docs/tutorials/cross-vm-atomic.md)** - Leverage both VMs
+1. **[Run a Local Node](./getting-started.md)** - Set up development environment
+2. **[Choose Your VM](./getting-started.md#choose-your-vm)** - EVM, SVM, or cross-VM
+3. **[Deploy Your First Contract](./tutorials/evm-hello.md)** - Start with Solidity or Anchor
+4. **[Build Cross-VM Features](./tutorials/cross-vm-atomic.md)** - Leverage both VMs
 
 **Why this matters**: X3 Chain's dual-VM architecture gives you the flexibility to build applications that were impossible before - atomic cross-chain DeFi, unified gaming economies, and truly interoperable protocols.
 
 ---
 
-*This overview covers the fundamentals of X3 Chain's dual-VM architecture. For detailed implementation guides, see our [Getting Started](/docs/getting-started.md) documentation.*
+*This overview covers the fundamentals of X3 Chain's dual-VM architecture. For detailed implementation guides, see our [Getting Started](./getting-started.md) documentation.*

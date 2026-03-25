@@ -5,7 +5,7 @@ This tutorial will guide you through deploying your first Solidity contract on X
 ## Prerequisites
 
 - Node.js 18+ installed
-- X3 Chain local node running (see [Getting Started](/docs/getting-started.md))
+- X3 Chain local node running (see [Getting Started](../getting-started.md))
 - Basic understanding of Solidity and Ethereum development
 
 **Why this matters**: This tutorial demonstrates that you can deploy existing Ethereum contracts on X3 Chain with zero modifications, leveraging the full EVM compatibility.
@@ -442,9 +442,9 @@ npx hardhat verify --network x3 CONTRACT_ADDRESS
 ## Next Steps
 
 ### Explore Further
-- **[Cross-VM Operations](/docs/tutorials/cross-vm-atomic.md)** - Learn to call SVM programs from your EVM contract
-- **[DeFi Integration](/docs/examples/evm/defi-integration.js)** - Connect to AMMs and lending protocols
-- **[Gas Optimization](/docs/gas-optimization.md)** - Learn to minimize transaction costs
+- **[Cross-VM Operations](./cross-vm-atomic.md)** - Learn to call SVM programs from your EVM contract
+- **[RPC Integration Example](../examples/rpc_integration.rs)** - Explore endpoint integrations and request flows
+- **[Gas Model](../x3-lang/spec/gas-model.md)** - Learn execution and fee mechanics
 
 ### Common Patterns
 ```solidity
@@ -494,4 +494,4 @@ curl -X POST http://localhost:9933 \
 
 ---
 
-*This tutorial demonstrates X3 Chain's full EVM compatibility. For advanced features like cross-VM calls, see our [Cross-VM Atomic Operations](/docs/tutorials/cross-vm-atomic.md) guide.*
+*This tutorial demonstrates X3 Chain's full EVM compatibility. For advanced features like cross-VM calls, see our [Cross-VM Atomic Operations](./cross-vm-atomic.md) guide.*

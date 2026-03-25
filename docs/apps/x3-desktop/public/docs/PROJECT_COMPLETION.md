@@ -289,17 +289,17 @@
 ## 🎓 Documentation Provided
 
 ### Quick Starts
-✅ [/docs/root/README.md](/docs/root/README.md) - 5 min read  
+✅ [README.md](../../../../root/README.md) - 5 min read  
 ✅ [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) - 10 min read  
 
 ### Learning Paths (by role)
-✅ Developers: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) + code  
-✅ DevOps: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) + [CI_CD_GUIDE.md](CI_CD_GUIDE.md)  
-✅ Architects: [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) + source code  
+✅ Developers: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) + code  
+✅ DevOps: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) + [CI_CD_GUIDE.md](CI_CD_GUIDE.md)  
+✅ Architects: [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) + source code  
 ✅ Security: [SECRETS_SETUP.md](SECRETS_SETUP.md) + workflow files  
 
 ### Deployment Guides
-✅ [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Step-by-step (30 min read)  
+✅ [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Step-by-step (30 min read)  
 ✅ [SECRETS_SETUP.md](SECRETS_SETUP.md) - GitHub config (20 min read)  
 ✅ [PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Verification (30 min read)  
 ✅ [CI_CD_GUIDE.md](CI_CD_GUIDE.md) - Pipeline details (20 min read)  
@@ -322,7 +322,7 @@
 2. [ ] Verify with [PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 
 ### This Week (2-4 hours)
-1. [ ] Deploy to staging ([/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md))
+1. [ ] Deploy to staging ([DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md))
 2. [ ] Validate CI/CD pipeline works
 3. [ ] Test dashboard in staging
 
@@ -357,7 +357,7 @@
 
 1. **Check Documentation**: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 2. **Pre-deployment Issues**: [PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
-3. **Deployment Help**: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+3. **Deployment Help**: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 4. **CI/CD Questions**: [CI_CD_GUIDE.md](CI_CD_GUIDE.md)
 5. **GitHub Secrets**: [SECRETS_SETUP.md](SECRETS_SETUP.md)
 6. **Build Commands**: [MAKEFILE_REFERENCE.md](MAKEFILE_REFERENCE.md)
@@ -438,7 +438,7 @@ GPU Swarm Dashboard v2.0 - Production Ready Build
 Everything is in place. Pick your next action:
 
 ### Option 1: Deploy This Week 🚀
-→ Follow [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+→ Follow [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 
 ### Option 2: Add Tests First 🧪
 → Write Jest & Cypress tests

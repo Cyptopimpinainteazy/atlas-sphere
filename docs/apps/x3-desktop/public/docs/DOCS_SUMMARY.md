@@ -97,9 +97,9 @@
 
 ### 👨‍💻 **Developers**
 Start here (in order):
-1. [/docs/root/README.md](/docs/root/README.md) - Quick start (5 min)
+1. [README.md](../../../../root/README.md) - Quick start (5 min)
 2. [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) - Navigation (10 min)
-3. [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) - Architecture (15 min)
+3. [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) - Architecture (15 min)
 4. [MAKEFILE_REFERENCE.md](MAKEFILE_REFERENCE.md) - Build commands (15 min)
 5. Code & inline comments
 
@@ -112,7 +112,7 @@ Start here (in order):
 1. [STATUS_AND_NEXT_STEPS.md](STATUS_AND_NEXT_STEPS.md) - Overview (15 min)
 2. [SECRETS_SETUP.md](SECRETS_SETUP.md) - GitHub config (20 min)
 3. [PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Verification (30 min)
-4. [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Step-by-step (30 min)
+4. [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) - Step-by-step (30 min)
 5. [CI_CD_GUIDE.md](CI_CD_GUIDE.md) - Pipeline details (20 min)
 6. [DEPLOYMENT.md](DEPLOYMENT.md) - Server setup (20 min)
 
@@ -124,7 +124,7 @@ Start here (in order):
 Start here (in order):
 1. [STATUS_AND_NEXT_STEPS.md](STATUS_AND_NEXT_STEPS.md) - Current status (15 min)
 2. [BUILD_REPORT.md](BUILD_REPORT.md) - Metrics (10 min)
-3. [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) - Features (15 min)
+3. [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) - Features (15 min)
 4. Track progress in GitHub Actions
 
 **Key Link**: Check GitHub Actions runs for deployment status
@@ -133,7 +133,7 @@ Start here (in order):
 
 ### 🏗️ **Architects**
 Start here (in order):
-1. [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md) - Architecture (15 min)
+1. [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md) - Architecture (15 min)
 2. [CI_CD_GUIDE.md](CI_CD_GUIDE.md) - Deployment architecture (20 min)
 3. Review workflow YAML files
 4. Review Kubernetes manifests
@@ -321,7 +321,7 @@ kubectl apply -f kubernetes-manifest.yml
 4. Reference GitHub Actions logs
 
 ### For Team Training
-1. Start with [/docs/root/README.md](/docs/root/README.md)
+1. Start with [README.md](../../../../root/README.md)
 2. Follow [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) learning path
 3. Have each team member read role-specific docs
 4. Practice deployment on staging first
@@ -339,7 +339,7 @@ kubectl apply -f kubernetes-manifest.yml
 
 1. **[PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)** - 100+ verification steps
 2. **[SECRETS_SETUP.md](SECRETS_SETUP.md)** - GitHub secrets configuration
-3. **[/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)** - Step-by-step deployment
+3. **[DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)** - Step-by-step deployment
 4. **[CI_CD_GUIDE.md](CI_CD_GUIDE.md)** - Pipeline explanation
 
 **Reading Time**: 1.5 hours
@@ -391,10 +391,10 @@ kubectl apply -f kubernetes-manifest.yml
 ## 📞 How to Find What You Need
 
 ### "How do I start developing?"
-→ [/docs/root/README.md](/docs/root/README.md) + [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
+→ [README.md](../../../../root/README.md) + [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 
 ### "How do I deploy?"
-→ [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
+→ [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md)
 
 ### "How do I set up GitHub secrets?"
 → [SECRETS_SETUP.md](SECRETS_SETUP.md)
@@ -415,7 +415,7 @@ kubectl apply -f kubernetes-manifest.yml
 → [STATUS_AND_NEXT_STEPS.md](STATUS_AND_NEXT_STEPS.md)
 
 ### "How do I understand the architecture?"
-→ [/docs/reports/IMPLEMENTATION_SUMMARY.md](/docs/reports/IMPLEMENTATION_SUMMARY.md)
+→ [IMPLEMENTATION_SUMMARY.md](../../../../reports/IMPLEMENTATION_SUMMARY.md)
 
 ### "What about performance?"
 → [BUILD_REPORT.md](BUILD_REPORT.md)
@@ -481,7 +481,7 @@ You now have **comprehensive, production-grade documentation** that covers:
 1. **Read**: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) (10 minutes)
 2. **Configure**: [SECRETS_SETUP.md](SECRETS_SETUP.md) (10 minutes)
 3. **Verify**: [PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) (30 minutes)
-4. **Deploy**: [/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md](/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md) (1 hour)
+4. **Deploy**: [DEPLOYMENT_CHECKLIST.md](../../../../runbooks/deployment/DEPLOYMENT_CHECKLIST.md) (1 hour)
 
 ---
 

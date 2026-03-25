@@ -566,7 +566,7 @@ Acceleration took >100ms (rare). Your code should:
 - **Quick Start:** [VALIDATOR_QUICKSTART.md](VALIDATOR_QUICKSTART.md)
 - **Full Test Plan:** [INFERSTRUCTOR_300X_TEST_PLAN.md](../../docs/INFERSTRUCTOR_300X_TEST_PLAN.md)
 - **Quick Reference:** [QUICKREF.md](QUICKREF.md)
-- **Authentication Setup:** [docs/runbooks/getting-started/AUTHENTICATION_SETUP.md](../../../docs/runbooks/getting-started/AUTHENTICATION_SETUP.md)
+- **Authentication Setup:** [AUTHENTICATION_SETUP.md](../../../../runbooks/getting-started/AUTHENTICATION_SETUP.md)
 
 ## 🤝 Support
 
