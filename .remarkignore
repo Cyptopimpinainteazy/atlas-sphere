@@ -21,3 +21,5 @@ docs/runbooks/getting-started/100GUIDE.md
 docs/runbooks/deployment/TIER5_*.md
 docs/testnet-config/**
 docs/reports/**
+docs/openspec/**
+docs/planning-artifacts/**

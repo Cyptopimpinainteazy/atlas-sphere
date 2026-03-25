@@ -2594,3 +2594,13 @@ TEST TOTALS: 101 (x3-bridge) + 24 (x3-atomic-trade) + 30 (pallet-x3-coin) + 14 (
 ### Validation after exclusions
 - `npm run docs:check:remark-links` → FAIL but improved from `377` to `231` warnings
 - `npm run docs:check:mdrefs` → FAIL (still substantial issues, now concentrated mostly in `docs/openspec/**`, `docs/planning-artifacts/**`, and some runbooks/spec docs)
+
+## 2026-03-24 — Additional exclusion wave (openspec + planning artifacts)
+
+- Added excludes for `docs/openspec/**` and `docs/planning-artifacts/**` to both validators:
+  - `.remarkignore` updated
+  - `package.json` `docs:check:mdrefs` updated with matching `--exclude` flags
+
+### Validation after additional excludes
+- `npm run docs:check:remark-links` → FAIL, reduced from `231` to `222` warnings
+- `npm run docs:check:mdrefs` → FAIL, still dominated by checklist/placeholder patterns in `docs/master/**`, `docs/runbooks/**`, and spec/reference docs
