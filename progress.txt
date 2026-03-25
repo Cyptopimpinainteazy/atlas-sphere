@@ -2616,3 +2616,31 @@ TEST TOTALS: 101 (x3-bridge) + 24 (x3-atomic-trade) + 30 (pallet-x3-coin) + 14 (
 - `npm run docs:check:mdrefs` → FAIL, reduced to `1326` findings (`Broken link` / `File not found`)
 - `npm run docs:check:python-examples` → PASS (`No markdown files with python code blocks found.`)
 - `npm run docs:check:runmd` → PASS (`No runmd --run code blocks found in markdown files.`)
+
+2026-03-24 — Real broken-link fix wave (commit 1bb9c62ae)
+
+- Fixed absolute `/docs/...` paths → relative paths across 22 doc files:
+  - `docs/apps/x3-desktop/public/docs/CI_CD_GUIDE.md`
+  - `docs/apps/x3-desktop/public/docs/DOCS_SUMMARY.md`
+  - `docs/apps/x3-desktop/public/docs/DOCUMENTATION_INDEX.md`
+  - `docs/apps/x3-desktop/public/docs/PRE_DEPLOYMENT_CHECKLIST.md`
+  - `docs/apps/x3-desktop/public/docs/PROJECT_COMPLETION.md`
+  - `docs/apps/x3-desktop/public/docs/STATUS_AND_NEXT_STEPS.md`
+  - `docs/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md`
+  - `docs/cross-chain-gpu-validator/tests/inferstructor/ONBOARDING_COMPLETE.md`
+  - `docs/cross-chain-gpu-validator/tests/inferstructor/VALIDATOR_QUICKSTART.md`
+  - `docs/infra-structure/validator/tests/inferstructor/INTEGRATION_GUIDE.md`
+  - `docs/infra-structure/validator/tests/inferstructor/ONBOARDING_COMPLETE.md`
+  - `docs/infra-structure/validator/tests/inferstructor/VALIDATOR_QUICKSTART.md`
+  - `docs/getting-started.md`
+  - `docs/overview.md`
+  - `docs/reports/CROSS_VM_CROSS_CHAIN_100_TRACKER.md`
+  - `docs/reports/PHASE6_DOCUMENTATION_INDEX.md`
+  - `docs/runbooks/getting-started/README_SETUP.md`
+  - `docs/runbooks/getting-started/SETUP_SUMMARY.md`
+  - `docs/tutorials/cross-vm-atomic.md`
+  - `docs/tutorials/evm-hello.md`
+  - `docs/tutorials/svm-hello.md`
+  - removed stale `docs/integration-tests/svm-counter-test/README.md`
+- Pushed to `Cyptopimpinainteazy/atlas-sphere` main
+- mdrefcheck baseline before fix: 1326 findings; re-measure pending (use external terminal only)
