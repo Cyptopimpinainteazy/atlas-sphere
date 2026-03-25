@@ -2937,3 +2937,18 @@ Suites:
   - TestSecurityReadiness       (7)  — Day 11.3 constant-time compare, rate limiter, SecretsVault
   - TestGoNoGoShipDecision      (8)  — Day 12 all 7 VICTORY_CONDITIONS gate + full simulation
 Cumulative: 246/246 tests across Phases 1-6
+
+=== Phase 7: P5 Cross-Chain GPU Validator ===
+Date: 2026-03-25T00:00:00Z
+File: tests/p4_p5_crosschain_gpu_validator.py
+Tests: 72/72 passing (0.12s)
+Suites:
+  - TestEvmSecp256k1Kernel         (9)  — 0xD0 kernel, batch throughput ≥600k/s, 512-bit mem align
+  - TestEvmKeccak256Kernel         (9)  — 0xD1 kernel, keccak throughput ≥200k/s, state roots
+  - TestAtomicSwapStateMachine     (9)  — 3PAC: PREPARE→VALIDATE→COMMIT/ROLLBACK state transitions
+  - TestAtomicInvariantCheck       (9)  — INV-ATM-001 conservation, violation detection & rollback
+  - TestDualValidatorOrchestrator  (9)  — SVM+EVM start/stop/sync, <50ms coordination latency
+  - TestCrossChainFallback         (9)  — CPU-only mode, 30s timeout, emergency shutdown, override
+  - TestUnifiedMonitoring          (9)  — cross-chain metrics, invariant alerts, dashboard lifecycle
+  - TestP5GoNoGo                   (9)  — all 7 P5 success gates: TPS, violations, latency, fallback
+Cumulative: 318/318 tests across Phases 1-7
