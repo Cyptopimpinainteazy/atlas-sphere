@@ -474,6 +474,13 @@ class TestEvmSecp256k1Kernel:
         assert REGISTER_BUDGET_PER_THREAD <= 32
         assert TARGET_OCCUPANCY_PCT >= 94
 
+    def test_free_pinned_resets_vram_and_returns_freed_bytes(self):
+        size = 3 * TX_BUFFER_STRIDE_BYTES
+        self.kernel.alloc_pinned(size)
+        freed = self.kernel.free_pinned()
+        assert freed == size
+        assert self.kernel.vram_used == 0
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  Suite 2 — TestEvmKeccak256Kernel
@@ -617,6 +624,33 @@ class TestAtomicSwapStateMachine:
         self.orch.validate_gpu(intent.swap_id)
         assert GPU_ATOMIC_VERIFY in self.kernel.call_log
 
+    def test_commit_fails_if_not_in_validate_state(self):
+        """commit() should fail when state is not VALIDATE."""
+        intent = self._intent(6)
+        self.orch.prepare(intent)
+        ok = self.orch.commit(intent.swap_id)
+        assert ok is False
+        assert intent.swap_id in self.orch.active_swaps
+
+    def test_full_3pac_returns_prepare_failed_after_emergency_shutdown(self):
+        """full_3pac should return prepare_failed when emergency shutdown is active."""
+        self.orch.emergency_shutdown()
+        success, outcome = self.orch.full_3pac(self._intent(7))
+        assert success is False
+        assert outcome == "prepare_failed"
+
+    def test_operator_override_force_commit_path(self):
+        """operator_override(force_commit=...) commits an active swap."""
+        intent = self._intent(8)
+        self.orch.prepare(intent)
+        self.orch.operator_override(force_commit=intent.swap_id)
+        assert intent.swap_id in self.orch.committed
+        assert intent.swap_id not in self.orch.active_swaps
+
+    def test_check_timeout_unknown_swap_returns_false(self):
+        """check_timeout should return False for unknown swap IDs."""
+        assert self.orch.check_timeout("missing_swap", elapsed_sec=999.0) is False
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  Suite 4 — TestAtomicInvariantCheck
@@ -756,6 +790,13 @@ class TestDualValidatorOrchestrator:
         """Validator chain IDs are 'solana' and 'ethereum'."""
         assert self.duo.svm.chain_id == CHAIN_SVM
         assert self.duo.evm.chain_id == CHAIN_EVM
+
+    def test_advance_does_not_change_head_when_stopped(self):
+        """advance() should be a no-op when validator is not running."""
+        self.duo.svm.advance(5)
+        self.duo.evm.advance(7)
+        assert self.duo.svm.head == 0
+        assert self.duo.evm.head == 0
 
 
 # ═════════════════════════════════════════════════════════════════════════════

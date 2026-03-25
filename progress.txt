@@ -3012,3 +3012,29 @@ P4/P5-focused coverage summary (post-deepening):
 
 Artifacts:
   - coverage-p4.xml (full XML coverage report)
+
+=== Deep Branch Pass: Targeted Gap Closure (Phase 9) ===
+Date: 2026-03-25T00:00:00Z
+Files:
+  - tests/p4_gpu_kernel_integration.py
+  - tests/p4_p5_crosschain_gpu_validator.py
+
+What was added:
+  - CPU fallback edge paths: hash/verify operations + add/mul argument validation errors
+  - Recovery edge paths: record_recovery CPU→GPU and GPU no-op branch
+  - GPU lane accelerator branch: gpu_available=True path and GPU/CPU result divergence
+  - Guard sentinel edge paths: temperature "ok" path, warning on failed device, memory_used_pct property
+  - Canonicaliser edge path: short verify bitmap zero-fill branch
+  - Hostcall dispatch alias path: SHA256_STREAMED == SHA256_BATCH
+  - Thread edge paths: no-buffer branch + exception capture branch in worker pattern
+  - Cross-chain validator edges: free_pinned() reset path, commit precondition fail,
+    full_3pac prepare_failed path under emergency shutdown, operator force_commit branch,
+    timeout check for unknown swap_id, stopped validator advance no-op
+
+Coverage impact (target modules):
+  - p4_gpu_kernel_integration.py       98.7% line / 95.3% branch
+  - p4_p5_crosschain_gpu_validator.py 100.0% line / 95.5% branch
+
+Validation:
+  - Target suites: 172/172 passing
+  - Full harness regression: 432/432 passing (13.95s)

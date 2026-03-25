@@ -763,6 +763,30 @@ class TestGpuFallbackChain:
             fc.execute("add", [i, i])
         assert len(fc.fallback_history) <= 100
 
+    def test_cpu_engine_hash_and_verify_ops(self):
+        fc = FallbackChain(DegradationStrategy.CPU_ONLY)
+        assert fc.execute("hash", [], block_height=1) == [0xDEADBEEF]
+        assert fc.execute("verify", [], block_height=1) == [1]
+
+    def test_cpu_engine_add_mul_argument_validation(self):
+        fc = FallbackChain(DegradationStrategy.CPU_ONLY)
+        with pytest.raises(ValueError, match="ADD requires 2 arguments"):
+            fc.execute("add", [1])
+        with pytest.raises(ValueError, match="MUL requires 2 arguments"):
+            fc.execute("mul", [2])
+
+    def test_record_recovery_switches_back_to_gpu(self):
+        fc = FallbackChain(DegradationStrategy.CASCADING)
+        fc.current_target = ExecutionTarget.CPU
+        fc.record_recovery(block_height=123)
+        assert fc.current_target == ExecutionTarget.GPU
+
+    def test_record_recovery_noop_when_already_gpu(self):
+        fc = FallbackChain(DegradationStrategy.CASCADING)
+        fc.current_target = ExecutionTarget.GPU
+        fc.record_recovery(block_height=123)
+        assert fc.current_target == ExecutionTarget.GPU
+
 
 class TestGpuMemoryPool:
     """Suite 4 — Memory pool alloc/free/reuse lifecycle."""
@@ -986,6 +1010,18 @@ class TestGpuLaneService:
         assert elapsed < 5.0
         assert resp["count"] == n
 
+    def test_gpu_sim_branch_used_when_available(self):
+        hashes, datas = self._make_batch(8)
+        self.lane.accelerator.gpu_available = True
+        gpu_resp = self.lane.process_batch(hashes, datas, "SVM")
+
+        self.lane.accelerator.gpu_available = False
+        cpu_resp = self.lane.process_batch(hashes, datas, "SVM")
+
+        assert gpu_resp["count"] == 8
+        assert cpu_resp["count"] == 8
+        assert gpu_resp["results"] != cpu_resp["results"]
+
 
 class TestGpuGuardSentinel:
     """Suite 7 — GPU Guard sentinel health monitoring."""
@@ -1046,6 +1082,24 @@ class TestGpuGuardSentinel:
         self.sentinel.report_error(0, "OOM")
         assert any("OOM" in a for a in self.sentinel.alerts)
 
+    def test_temperature_ok_path(self):
+        level = self.sentinel.check_temperature(0, 70)
+        assert level == "ok"
+
+    def test_warning_does_not_downgrade_failed_device(self):
+        for _ in range(3):
+            self.sentinel.report_error(0, "err")
+        assert self.sentinel.devices[0].status == GpuHealthStatus.FAILED
+        level = self.sentinel.check_temperature(0, 82)
+        assert level == "warning"
+        assert self.sentinel.devices[0].status == GpuHealthStatus.FAILED
+
+    def test_memory_used_pct_property(self):
+        dev = self.sentinel.devices[0]
+        dev.memory_used_mb = 4096
+        dev.memory_total_mb = 8192
+        assert dev.memory_used_pct == 50.0
+
 
 class TestCPUCanonicaliser:
     """Suite 8 — CPU canonicaliser routing for non-determinism elimination."""
@@ -1080,6 +1134,11 @@ class TestCPUCanonicaliser:
         # 0b1010_1010 = 0xAA → bits 1,3,5,7 set
         bools = CPUCanonicaliser.canonicalise_verify_bitmap(b"\xAA", 8)
         assert bools == [False, True, False, True, False, True, False, True]
+
+    def test_verify_bitmap_short_input_fills_false(self):
+        bools = CPUCanonicaliser.canonicalise_verify_bitmap(b"\x01", 10)
+        assert bools[:8] == [True, False, False, False, False, False, False, False]
+        assert bools[8:] == [False, False]
 
     def test_poh_chain_returns_32_bytes(self):
         chain = [secrets.token_bytes(32) for _ in range(10)]
@@ -1117,3 +1176,63 @@ class TestCPUCanonicaliser:
             chunk = inputs[i*32:(i+1)*32]
             expected = hashlib.sha256(hashlib.sha256(chunk).digest()).digest()
             assert result[i*32:(i+1)*32] == expected
+
+    def test_streamed_sha256_path_aliases_batch(self):
+        disp = GpuHostcallDispatcher()
+        inputs = secrets.token_bytes(32 * 2)
+        batch = disp.invoke(GpuHostcallId.GPU_SHA256_BATCH, inputs)
+        streamed = disp.invoke(GpuHostcallId.GPU_SHA256_STREAMED, inputs)
+        assert batch == streamed
+
+
+class TestGpuMemoryPoolThreadEdgeCases:
+    def test_concurrent_worker_handles_no_buffer_path(self):
+        pool = GpuMemoryPool(capacity=0, buffer_size=64)
+        errors = []
+
+        def worker():
+            try:
+                buf = pool.alloc()
+                if buf:
+                    time.sleep(0.001)
+                    pool.free(buf)
+            except Exception as e:
+                errors.append(e)
+
+        threads = [threading.Thread(target=worker) for _ in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors == []
+        assert pool.available == 0
+
+    def test_concurrent_worker_captures_exception(self):
+        class BrokenPool:
+            @staticmethod
+            def alloc():
+                raise RuntimeError("alloc failed")
+
+            @staticmethod
+            def free(_):
+                return False
+
+        pool = BrokenPool()
+        errors = []
+
+        def worker():
+            try:
+                buf = pool.alloc()
+                if buf:
+                    time.sleep(0.001)
+                    pool.free(buf)
+            except Exception as e:
+                errors.append(e)
+
+        t = threading.Thread(target=worker)
+        t.start()
+        t.join()
+
+        assert len(errors) == 1
+        assert "alloc failed" in str(errors[0])
