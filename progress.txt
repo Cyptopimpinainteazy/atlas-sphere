@@ -2967,3 +2967,22 @@ Suites:
   - TestProductionReleaseBundle  (9)  — 10-file manifest, SHA256 checksums, GPG sign+verify, tamper detect
   - TestP5MainnetGoNoGo          (9)  — all 7 mainnet_readiness gates pass → MAINNET GO
 Cumulative: 390/390 tests across Phases 1-8
+
+=== Deep Testing Expansion: P4/P5 Stress Validation ===
+Date: 2026-03-25T00:00:00Z
+File: tests/p4_p5_deep_stress.py
+Tests: 16/16 passing (0.51s)
+Deeper validation runs:
+  - Full harness regression: 396/396 passing (10.05s)
+  - Flakiness stress loop: 20/20 repeated passes on P5 suites
+  - Atomic soak simulation: 100,000 swaps (1,958 adversarial)
+      * violations counter exact-match: 1,958
+      * commits: 98,042 | rollbacks: 1,958 | active leaks: 0
+  - Combined final regression: 412/412 passing (10.11s)
+Deep suites:
+  - TestDeepAtomicSoak              (4) — 100k soak, opcode frequency, determinism, commit ratio
+  - TestDeepMonitoringAndTestnet    (4) — long sync progression, 24h 100k stability, recovery
+  - TestDeepReleaseBundleIntegrity  (4) — tamper matrix, checksum uniqueness, repeated verify
+  - TestDeepMainnetGoNoGoResilience (4) — blocker matrix for soak/validators/critical findings/approvals
+Harness size: 6,560 LOC across p4/p5 test suites
+Cumulative: 412/412 tests passing (including deep stress coverage)
