@@ -326,10 +326,15 @@ class TestPoHComputation:
         assert len(hashes) == 400_001  # initial + 400k
         
         # Performance target: <10ms for 400k hashes (GPU would achieve this)
-        # CPU mock will be slower, but should achieve at least 2M hash/sec
+        # CPU-bound baseline should stay above 1M hash/sec on typical dev hardware.
+        # Stretch target for stronger machines is 1.5M+ hash/sec.
+        cpu_baseline_min = 1_000_000
+        cpu_stretch_target = 1_500_000
         throughput = 400_000 / elapsed  # hash/sec
         print(f"\nPoH 400k hashes: {elapsed*1000:.2f}ms ({throughput/1e6:.2f}M hash/sec)")
-        assert throughput > 1_000_000, f"Only {throughput:.0f} hash/sec, CPU min >1M"
+        assert throughput > cpu_baseline_min, f"Only {throughput:.0f} hash/sec, CPU min >1M"
+        if throughput < cpu_stretch_target:
+            print(f"Stretch target not met yet: {throughput/1e6:.2f}M < 1.50M hash/sec")
     
     def test_poh_verify_chain_correctness(self):
         """Verify computed chain produces correct hashes"""
