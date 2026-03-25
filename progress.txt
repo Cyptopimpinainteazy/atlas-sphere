@@ -2922,3 +2922,18 @@ Suites:
   - TestGpuGuardSentinel        (11) — health, temp thresholds, device recovery
   - TestCPUCanonicaliser        (11) — non-determinism routing, bitmap decode
 Cumulative: 183/183 tests across Phases 1-5
+
+=== Phase 6: Testnet Ship Validation ===
+Date: 2026-03-25T00:00:00Z
+File: tests/p4_testnet_ship.py
+Tests: 63/63 passing (0.33s)
+Suites:
+  - TestValidatorSetup          (8)  — Day 9 validator config, topology, monitoring
+  - TestCorrectnessValidation   (9)  — Day 10.1 CPU↔GPU parity, zero discrepancies over 10k
+  - TestMemoryStability         (8)  — Day 10.2 VRAM leak detection, 1000-cycle context safety
+  - TestConsensusStability      (8)  — Day 10.3 fork distance, vote success ≥99%, state root
+  - TestPerformanceRegression   (8)  — Day 10.4 TPS floor, latency p99, GPU speedup math
+  - TestDeploymentPackage       (7)  — Day 11.1 manifest completeness, checksums, GPG sig
+  - TestSecurityReadiness       (7)  — Day 11.3 constant-time compare, rate limiter, SecretsVault
+  - TestGoNoGoShipDecision      (8)  — Day 12 all 7 VICTORY_CONDITIONS gate + full simulation
+Cumulative: 246/246 tests across Phases 1-6
