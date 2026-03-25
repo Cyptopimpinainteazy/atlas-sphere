@@ -66,7 +66,12 @@
     "finisher:chaos": "make finish-chaos",
     "finisher:audit": "make finish-audit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "docs:check:remark-links": "remark . --quiet --frail --use remark-validate-links --ignore-path .remarkignore",
+    "docs:check:mdrefs": "mdrefcheck .",
+    "docs:check:python-examples": "python scripts/check_markdown_python_examples.py",
+    "docs:check:runmd": "bash scripts/check_runmd_examples.sh",
+    "docs:check": "npm run docs:check:remark-links && npm run docs:check:mdrefs && npm run docs:check:python-examples && npm run docs:check:runmd"
   },
   "name": "x3-chain-master",
   "version": "1.0.0",
