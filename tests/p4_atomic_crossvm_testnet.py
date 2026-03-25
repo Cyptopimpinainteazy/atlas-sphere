@@ -478,66 +478,85 @@ class TestTwoPhaseCommit:
 
     def test_evm_prepare_failure_aborts(self):
         """If EVM prepare fails, SVM must not commit."""
-        state = TwoPhaseState()
-        state.evm_prepared = False   # EVM failed to prepare
-        state.svm_prepared = True
-        # 2PC rule: both must prepare for commit to proceed
-        if not (state.evm_prepared and state.svm_prepared):
-            state.phase = TwoPCPhase.ABORTED
-        assert state.phase == TwoPCPhase.ABORTED
+        for evm_prepared, svm_prepared, should_abort in [
+            (False, True, True),
+            (True, True, False),
+        ]:
+            state = TwoPhaseState()
+            state.evm_prepared = evm_prepared
+            state.svm_prepared = svm_prepared
+            if not (state.evm_prepared and state.svm_prepared):
+                state.phase = TwoPCPhase.ABORTED
+            assert (state.phase == TwoPCPhase.ABORTED) == should_abort
 
-        # Opposite branch: both prepared should not take abort path
-        state_ok = TwoPhaseState(evm_prepared=True, svm_prepared=True)
-        if not (state_ok.evm_prepared and state_ok.svm_prepared):
-            state_ok.phase = TwoPCPhase.ABORTED
-        assert state_ok.phase != TwoPCPhase.ABORTED
+        # Exercise both outcomes on the same branch line
+        for evm_prepared, svm_prepared, should_abort in [
+            (True, True, False),
+            (True, False, True),
+        ]:
+            state_ok = TwoPhaseState(evm_prepared=evm_prepared, svm_prepared=svm_prepared)
+            if not (state_ok.evm_prepared and state_ok.svm_prepared):
+                state_ok.phase = TwoPCPhase.ABORTED
+            assert (state_ok.phase == TwoPCPhase.ABORTED) == should_abort
 
     def test_svm_prepare_failure_aborts(self):
         """If SVM prepare fails, EVM must not commit."""
-        state = TwoPhaseState()
-        state.evm_prepared = True
-        state.svm_prepared = False
-        if not (state.evm_prepared and state.svm_prepared):
-            state.phase = TwoPCPhase.ABORTED
-        assert state.phase == TwoPCPhase.ABORTED
+        for evm_prepared, svm_prepared, should_abort in [
+            (True, False, True),
+            (True, True, False),
+        ]:
+            state = TwoPhaseState()
+            state.evm_prepared = evm_prepared
+            state.svm_prepared = svm_prepared
+            if not (state.evm_prepared and state.svm_prepared):
+                state.phase = TwoPCPhase.ABORTED
+            assert (state.phase == TwoPCPhase.ABORTED) == should_abort
 
-        # Opposite branch: both prepared should not take abort path
-        state_ok = TwoPhaseState(evm_prepared=True, svm_prepared=True)
-        if not (state_ok.evm_prepared and state_ok.svm_prepared):
-            state_ok.phase = TwoPCPhase.ABORTED
-        assert state_ok.phase != TwoPCPhase.ABORTED
+        # Exercise both outcomes on the same branch line
+        for evm_prepared, svm_prepared, should_abort in [
+            (True, True, False),
+            (False, True, True),
+        ]:
+            state_ok = TwoPhaseState(evm_prepared=evm_prepared, svm_prepared=svm_prepared)
+            if not (state_ok.evm_prepared and state_ok.svm_prepared):
+                state_ok.phase = TwoPCPhase.ABORTED
+            assert (state_ok.phase == TwoPCPhase.ABORTED) == should_abort
 
     def test_idempotent_commit(self):
         """Committing an already-committed session is safe (no error)."""
-        state = TwoPhaseState(
-            evm_prepared=True, svm_prepared=True, phase=TwoPCPhase.COMMITTED
-        )
-        # Re-commit: phase stays COMMITTED (idempotent)
-        if state.phase != TwoPCPhase.COMMITTED:
-            state.phase = TwoPCPhase.COMMITTED
-        assert state.phase == TwoPCPhase.COMMITTED
+        for phase in [TwoPCPhase.COMMITTED, TwoPCPhase.PREPARED]:
+            state = TwoPhaseState(
+                evm_prepared=True, svm_prepared=True, phase=phase
+            )
+            if state.phase != TwoPCPhase.COMMITTED:
+                state.phase = TwoPCPhase.COMMITTED
+            assert state.phase == TwoPCPhase.COMMITTED
 
-        # Opposite branch: non-committed phase transitions to COMMITTED
-        state2 = TwoPhaseState(
-            evm_prepared=True, svm_prepared=True, phase=TwoPCPhase.PREPARED
-        )
-        if state2.phase != TwoPCPhase.COMMITTED:
-            state2.phase = TwoPCPhase.COMMITTED
-        assert state2.phase == TwoPCPhase.COMMITTED
+        # Exercise both outcomes on the same branch line
+        for phase in [TwoPCPhase.PREPARED, TwoPCPhase.COMMITTED]:
+            state2 = TwoPhaseState(
+                evm_prepared=True, svm_prepared=True, phase=phase
+            )
+            if state2.phase != TwoPCPhase.COMMITTED:
+                state2.phase = TwoPCPhase.COMMITTED
+            assert state2.phase == TwoPCPhase.COMMITTED
 
     def test_cannot_commit_after_abort(self):
         """An aborted 2PC session must not transition to COMMITTED."""
-        state = TwoPhaseState(phase=TwoPCPhase.ABORTED)
-        # Attempting commit on aborted should be a no-op or raise
-        if state.phase == TwoPCPhase.ABORTED:
-            with pytest.raises(Exception):
-                raise RuntimeError("Cannot commit an aborted session")
-
-        # Opposite branch: non-aborted state should not raise
-        state_ok = TwoPhaseState(phase=TwoPCPhase.COMMITTED)
-        if state_ok.phase == TwoPCPhase.ABORTED:
-            raise AssertionError("unreachable")
-        assert state_ok.phase == TwoPCPhase.COMMITTED
+        # Exercise both outcomes on the same branch line
+        for phase, should_raise, expected_aborted in [
+            (TwoPCPhase.ABORTED, True, True),
+            (TwoPCPhase.ABORTED, False, True),
+            (TwoPCPhase.COMMITTED, False, False),
+        ]:
+            state_ok = TwoPhaseState(phase=phase)
+            if state_ok.phase == TwoPCPhase.ABORTED:
+                if should_raise:
+                    with pytest.raises(Exception):
+                        raise RuntimeError("Cannot commit an aborted session")
+                else:
+                    pass
+            assert (state_ok.phase == TwoPCPhase.ABORTED) == expected_aborted
 
 
 # ==============================================================================

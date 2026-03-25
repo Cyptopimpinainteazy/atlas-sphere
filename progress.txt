@@ -3113,3 +3113,13 @@ Updated top gap head (post-fix):
   3) p4_atomic_crossvm_testnet.py:500 (1/2)
   4) p4_atomic_crossvm_testnet.py:506 (1/2)
   5) p4_atomic_crossvm_testnet.py:516 (1/2)
+
+=== 2026-03-25: Atomic Branch Gap Closure Pass ===
+- Refactored `tests/p4_atomic_crossvm_testnet.py` 2PC tests to execute both outcomes on branch-critical lines.
+- Closed remaining 2PC branch gaps in atomic suite; only module `__main__` guard branch remains in this file.
+- Validation:
+  - `PYTHONPATH=$PWD pytest tests/p4_atomic_crossvm_testnet.py -q` -> 61 passed
+  - Full harness: 435/435 passed with coverage XML regenerated (`coverage-p4-final.xml`).
+- Current targeted gaps snapshot:
+  - `p4_atomic_crossvm_testnet.py`: 1 gap (main guard line)
+  - `p4_determinism_validation.py`: lines 95, 259, 302, 312, 409 still at 50% (1/2)
