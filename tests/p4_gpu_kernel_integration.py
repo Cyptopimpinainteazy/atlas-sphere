@@ -1223,10 +1223,7 @@ class TestGpuMemoryPoolThreadEdgeCases:
 
         def worker():
             try:
-                buf = pool.alloc()
-                if buf:
-                    time.sleep(0.001)
-                    pool.free(buf)
+                pool.alloc()
             except Exception as e:
                 errors.append(e)
 

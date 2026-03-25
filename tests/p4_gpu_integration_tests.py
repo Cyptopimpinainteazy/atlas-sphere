@@ -500,6 +500,32 @@ class TestGPUAcceleratorIntegration:
         assert len(results) == 100
         print(f"Memory test passed: processed 50 blocks, 5000 total txs")
 
+    def test_invalid_signature_preserves_existing_error_message(self):
+        """Cover both branches of error-message assignment under invalid signatures."""
+        accelerator = SolanaGPUAccelerator()
+
+        tx1 = MockSolanaTransaction(1)
+        tx2 = MockSolanaTransaction(2)
+
+        async def fake_verify(_transactions):
+            return [False, False]
+
+        def fake_validate(_transactions):
+            return [
+                TransactionValidationResult(tx1.tx_id, True, None),
+                TransactionValidationResult(tx2.tx_id, True, "Low balance"),
+            ]
+
+        accelerator.sig_verifier.verify_signatures = fake_verify
+        accelerator.tx_validator.validate_transactions = fake_validate
+
+        results = accelerator.process_block([tx1, tx2], slot_num=1)
+
+        assert results[0].is_valid is False
+        assert results[0].error_message == "Invalid signature"
+        assert results[1].is_valid is False
+        assert results[1].error_message == "Low balance"
+
 # ==============================================================================
 # TEST 5: Performance & Benchmarking
 # ==============================================================================

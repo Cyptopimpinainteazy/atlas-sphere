@@ -3069,3 +3069,19 @@ Top-10 remaining branch gaps (prioritized):
   10. p4_determinism_validation.py:95   (1/2)
 
 Total remaining branch-gap lines across P4/P5 modules: 39
+
+=== Top-2 Branch Gap Closure (Follow-up) ===
+Date: 2026-03-25T00:00:00Z
+Changes:
+  - tests/p4_gpu_integration_tests.py:
+      * Added invalid-signature integration test hitting both outcomes of
+        `if not validation_results[i].error_message`
+      * Former gap p4_gpu_integration_tests.py:109 now 100% (2/2)
+  - tests/p4_gpu_kernel_integration.py:
+      * Removed dead conditional inside exception-only worker path
+      * Former gap at line 1227 no longer a branch gap
+
+Validation:
+  - Target files: 123/123 passing
+  - Full harness: 433/433 passing (20.01s)
+  - coverage-p4-final.xml regenerated
