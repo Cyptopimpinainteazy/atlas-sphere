@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+
 import websockets
 from websockets.exceptions import ConnectionClosed
 
@@ -16,7 +17,7 @@ except ImportError:
 # Set of connected WS clients
 connected_clients = set()
 
-async def nats_consumer():
+async def nats_consumer() -> None:
     """Subscribe to NATS events and broadcast to WS clients."""
     if not use_nats:
         print("NATS not available, skipping NATS consumer")
@@ -24,7 +25,7 @@ async def nats_consumer():
     nc = await nats.connect(servers=[os.environ.get('NATS_URL', 'nats://127.0.0.1:4222')])
     print("Connected to NATS")
 
-    async def message_handler(msg):
+    async def message_handler(msg) -> None:
         try:
             data = json.loads(msg.data.decode('utf-8'))
             # Broadcast to all connected WS clients
@@ -40,7 +41,7 @@ async def nats_consumer():
     await nc.subscribe("events", cb=message_handler)
     print("Subscribed to NATS events topic")
 
-async def ws_handler(websocket, path):
+async def ws_handler(websocket, path) -> None:
     """Handle WS connections."""
     connected_clients.add(websocket)
     print(f"WS client connected: {len(connected_clients)} total")
@@ -52,7 +53,7 @@ async def ws_handler(websocket, path):
         connected_clients.remove(websocket)
         print(f"WS client disconnected: {len(connected_clients)} remaining")
 
-async def main():
+async def main() -> None:
     """Start WS server and NATS consumer."""
     ws_port = int(os.environ.get('WS_PORT', 8787))
     ws_server = await websockets.serve(ws_handler, "0.0.0.0", ws_port)

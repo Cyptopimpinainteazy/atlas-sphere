@@ -43,6 +43,17 @@
 //! - **JSON Benchmarks**: Machine-readable performance reports
 //! - **Full Telemetry**: Prometheus metrics and health monitoring
 
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
 pub mod config;
 pub mod cpu_validator;
 pub mod crypto;

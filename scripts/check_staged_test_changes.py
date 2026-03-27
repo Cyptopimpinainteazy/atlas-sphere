@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Pre-commit hook: prevent commits that only change tests without any code changes."""
-import sys
 import subprocess
+import sys
+
 
 def staged_files():
     out = subprocess.check_output(["git", "diff", "--cached", "--name-only"]).decode().strip()
-    return [l for l in out.splitlines() if l]
+    return [line for line in out.splitlines() if line]
 
 def is_test_file(path: str) -> bool:
     p = path.replace('\\\\', '/').lower()
@@ -21,7 +22,7 @@ def is_test_file(path: str) -> bool:
     return any(patterns)
 
 
-def main():
+def main() -> int:
     files = staged_files()
     if not files:
         return 0

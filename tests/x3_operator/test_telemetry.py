@@ -1,8 +1,11 @@
 """Tests for x3_operator.telemetry"""
 
 from x3_operator.telemetry import (
-    MetricsRegistry, MetricType, Metric,
-    setup_structured_logging, create_operator_metrics,
+    Metric,
+    MetricsRegistry,
+    MetricType,
+    create_operator_metrics,
+    setup_structured_logging,
 )
 
 

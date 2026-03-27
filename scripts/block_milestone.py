@@ -13,9 +13,9 @@ GOLD = "\033[38;5;220m"
 DIAMOND = "\033[38;5;51m"
 FLAME = "\033[38;5;208m"
 
-def display_one_million():
+def display_one_million() -> None:
     """Epic display for block 1,000,000 (1M milestone)."""
-    
+
     print(f"\n{BOLD}{GOLD}")
     print("""
     ╔═══════════════════════════════════════════════════════════════╗
@@ -38,7 +38,7 @@ def display_one_million():
     """)
     print(RESET)
 
-def display_ten_million():
+def display_ten_million() -> None:
     """Epic display for block 10,000,000 (10M milestone)."""
     print(f"\n{BOLD}{DIAMOND}")
     print("""
@@ -59,7 +59,7 @@ def display_ten_million():
     """)
     print(RESET)
 
-def display_hundred_million():
+def display_hundred_million() -> None:
     """Epic display for block 100,000,000 (100M milestone)."""
     print(f"\n{BOLD}{FLAME}")
     print("""
@@ -104,11 +104,11 @@ def display_milestone(block_num: int) -> None:
         print(f"✦ Milestone Block #{block_num:,} Finalized ✦")
         print(RESET)
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         display_one_million()
         return
-    
+
     try:
         block_num = int(sys.argv[1])
         if is_milestone(block_num):

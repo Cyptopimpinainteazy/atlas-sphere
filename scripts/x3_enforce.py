@@ -7,9 +7,9 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -64,7 +64,7 @@ class Finding:
     level: str  # "BLOCK" or "WARN"
     msg: str
 
-def run(cmd: List[str]) -> str:
+def run(cmd: list[str]) -> str:
     out = subprocess.check_output(cmd, cwd=REPO, stderr=subprocess.STDOUT)
     return out.decode("utf-8", errors="replace")
 
@@ -72,11 +72,11 @@ def is_ignored(path: str) -> bool:
     p = path.replace("\\", "/")
     return any(s in p for s in IGNORE_SUBSTRINGS)
 
-def load_globs(path: Path) -> List[str]:
+def load_globs(path: Path) -> list[str]:
     fp = REPO / path
     if not fp.exists():
         return []
-    globs: List[str] = []
+    globs: list[str] = []
     for line in fp.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -84,9 +84,9 @@ def load_globs(path: Path) -> List[str]:
         globs.append(line)
     return globs
 
-def load_coverage_rules(path: Path) -> List[Tuple[str, str, str]]:
+def load_coverage_rules(path: Path) -> list[tuple[str, str, str]]:
     """Load coverage enforcement rules formatted as glob|spec_id|report_path."""
-    rules: List[Tuple[str, str, str]] = []
+    rules: list[tuple[str, str, str]] = []
     fp = REPO / path
     if not fp.exists():
         return rules
@@ -104,16 +104,13 @@ def load_coverage_rules(path: Path) -> List[Tuple[str, str, str]]:
 
 def is_match_any(path: str, globs: Iterable[str]) -> bool:
     p = path.replace("\\", "/")
-    for g in globs:
-        if fnmatch.fnmatch(p, g):
-            return True
-    return False
+    return any(fnmatch.fnmatch(p, g) for g in globs)
 
-def staged_files() -> List[str]:
+def staged_files() -> list[str]:
     out = run(["git", "diff", "--cached", "--name-only"])
     return [f.strip() for f in out.splitlines() if f.strip() and not is_ignored(f.strip())]
 
-def diff_files(base: str, head: str) -> List[str]:
+def diff_files(base: str, head: str) -> list[str]:
     out = run(["git", "diff", "--name-only", f"{base}..{head}"])
     return [f.strip() for f in out.splitlines() if f.strip() and not is_ignored(f.strip())]
 
@@ -134,7 +131,7 @@ def has_allow_test_edit() -> bool:
         return True
     return (ALLOW_TEST_EDIT_TOKEN in last_commit_message())
 
-def extract_added_removed(diff: str) -> Tuple[str, str]:
+def extract_added_removed(diff: str) -> tuple[str, str]:
     removed, added = [], []
     for ln in diff.splitlines():
         if ln.startswith("---") or ln.startswith("+++"):
@@ -145,15 +142,15 @@ def extract_added_removed(diff: str) -> Tuple[str, str]:
             added.append(ln[1:])
     return ("\n".join(removed), "\n".join(added))
 
-def detect_skips(added_text: str) -> List[str]:
-    hits: List[str] = []
+def detect_skips(added_text: str) -> list[str]:
+    hits: list[str] = []
     for pat in SKIP_PATTERNS:
         if re.search(pat, added_text):
             hits.append(pat)
     return hits
 
-def detect_weakening(removed: str, added: str) -> List[str]:
-    hits: List[str] = []
+def detect_weakening(removed: str, added: str) -> list[str]:
+    hits: list[str] = []
 
     for strict, loose, desc in JS_WEAKEN_REPLACEMENTS:
         if strict in removed and loose in added and strict not in added:
@@ -170,7 +167,7 @@ def detect_weakening(removed: str, added: str) -> List[str]:
 
     return hits
 
-def artifacts_missing() -> List[Path]:
+def artifacts_missing() -> list[Path]:
     missing = []
     for p in REQUIRED_ARTIFACTS:
         fp = REPO / p
@@ -178,8 +175,8 @@ def artifacts_missing() -> List[Path]:
             missing.append(p)
     return missing
 
-def enforce(files: List[str], diff_fn) -> List[Finding]:
-    findings: List[Finding] = []
+def enforce(files: list[str], diff_fn) -> list[Finding]:
+    findings: list[Finding] = []
 
     consensus_globs = load_globs(CONSENSUS_MAP_FILE)
     touched_consensus = [f for f in files if is_match_any(f, consensus_globs)] if consensus_globs else []
@@ -228,7 +225,7 @@ def enforce(files: List[str], diff_fn) -> List[Finding]:
 
     # Enforce coverage artifacts for critical paths when enabled
     if os.getenv("X3_ENFORCE_COVERAGE", "").strip() == "1" and coverage_rules:
-        touched_specs: List[Tuple[str, str]] = []
+        touched_specs: list[tuple[str, str]] = []
         for f in files:
             for glob, spec_id, report in coverage_rules:
                 if fnmatch.fnmatch(f.replace("\\", "/"), glob):

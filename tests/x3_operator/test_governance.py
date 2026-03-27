@@ -1,7 +1,9 @@
 """Tests for x3_operator.governance"""
 
 from x3_operator.governance import (
-    GovernanceSimulator, AttackType, SimulationResult,
+    AttackType,
+    GovernanceSimulator,
+    SimulationResult,
 )
 
 
@@ -50,7 +52,7 @@ def test_deterministic():
     sim2 = GovernanceSimulator(seed=42)
     r2 = sim2.run_full_suite()
 
-    for a, b in zip(r1, r2):
+    for a, b in zip(r1, r2, strict=False):
         assert a.result == b.result
         assert a.proposal.aye_power == b.proposal.aye_power
         assert a.proposal.nay_power == b.proposal.nay_power

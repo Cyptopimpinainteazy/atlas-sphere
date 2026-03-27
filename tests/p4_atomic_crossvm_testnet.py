@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """P4 Phase 4: ATOMIC_CROSSVM Testnet Readiness Suite
 ======================================================
 
@@ -22,19 +23,16 @@ Run:
     pytest tests/p4_atomic_crossvm_testnet.py -v
 """
 
-import asyncio
 import hashlib
-import os
 import secrets
 import time
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Optional
 
 import pytest
-from nacl.signing import SigningKey, VerifyKey
 from nacl.exceptions import BadSignatureError
+from nacl.signing import SigningKey
 
 # ── EVM-side secp256k1 stub (real impl uses eth_account / coincurve) ──────────
 # We produce a deterministic 65-byte "signature" keyed to the message via SHA256.
@@ -58,16 +56,16 @@ def _evm_verify(pk_bytes: bytes, message: bytes, sig: bytes) -> bool:
     """Verify stub secp256k1 signature."""
     if len(sig) != 65:
         return False
-    sk_bytes = hashlib.sha256(
+    hashlib.sha256(
         b"evm-privkey-" + b"\xff"  # won't match unless we derive another way
     ).digest()
     # Derive expected hash from pubkey and message
-    expected = hashlib.sha256(
+    hashlib.sha256(
         pk_bytes[1:] + message  # strip 0x02 prefix, hash with message
     ).digest()
     # The first 32 bytes of sig encode sha256(sk + message); verify via pubkey
     # Simpler check: re-derive from known pubkey material
-    reconstructed = hashlib.sha256(pk_bytes + message).digest()  # consistent stub
+    hashlib.sha256(pk_bytes + message).digest()  # consistent stub
     return sig[:32] == hashlib.sha256(pk_bytes + message).digest()
 
 def _evm_sign_v2(sk_bytes: bytes, pk_bytes: bytes, message: bytes) -> bytes:
@@ -134,8 +132,8 @@ class SwapSession:
     secret_hash: bytes
     timelock:    int           # block height deadline
     phase:       SwapPhase = SwapPhase.PROPOSED
-    secret:      Optional[bytes] = None
-    bond:        Optional[BondRecord] = None
+    secret:      bytes | None = None
+    bond:        BondRecord | None = None
 
 @dataclass
 class FinalityCert:
@@ -246,7 +244,7 @@ class SwapCoordinator:
 
     def dump_sessions(self) -> dict:
         """Persist: serialise all sessions for restart recovery."""
-        return deepcopy({k: v for k, v in self._sessions.items()})
+        return deepcopy(dict(self._sessions.items()))
 
     def restore_sessions(self, dump: dict):
         """Restore coordinator state from persisted dump."""
@@ -440,7 +438,7 @@ class TestHTLCLifecycle:
         s = coord.new_session("s6", "0xEVM", "sol", 200, 50)
         coord.lock("s6"); coord.prove("s6")
         coord.abort("s6")   # simulate timelock expiry → abort
-        with pytest.raises(Exception):
+        with pytest.raises(RuntimeError):
             coord.settle("s6", s.secret, finality_block=99)
 
 
@@ -451,7 +449,7 @@ class TestHTLCLifecycle:
 class TestTwoPhaseCommit:
     """2PC across EVM and SVM: prepare → commit or prepare → abort."""
 
-    def _run_2pc(self, abort_at: Optional[str] = None) -> TwoPhaseState:
+    def _run_2pc(self, abort_at: str | None = None) -> TwoPhaseState:
         state = TwoPhaseState()
 
         # Phase 1: prepare both VMs
@@ -552,7 +550,7 @@ class TestTwoPhaseCommit:
             state_ok = TwoPhaseState(phase=phase)
             if state_ok.phase == TwoPCPhase.ABORTED:
                 if should_raise:
-                    with pytest.raises(Exception):
+                    with pytest.raises(RuntimeError):
                         raise RuntimeError("Cannot commit an aborted session")
                 else:
                     pass
@@ -623,7 +621,7 @@ class TestAtomicSwapStateMachine:
             coord.settle(sid, secret, 200)
             assert coord.get_session(sid).phase == SwapPhase.SETTLED
 
-        print(f"\n20 concurrent swaps all SETTLED")
+        print("\n20 concurrent swaps all SETTLED")
 
 
 # ==============================================================================
@@ -692,7 +690,7 @@ class TestSessionPersistence:
     def test_dump_and_restore(self):
         coord = SwapCoordinator()
         coord.anchor_finality(50, b"\xbb" * 32)
-        s = coord.new_session("persist1", "0xA", "SVM1", 500, 300)
+        coord.new_session("persist1", "0xA", "SVM1", 500, 300)
         coord.lock("persist1")
 
         # Simulate restart: dump → wipe → restore
@@ -855,7 +853,7 @@ class TestSettlementProofs:
     def test_abort_is_terminal(self):
         """A ABORTED session cannot be locked."""
         coord = SwapCoordinator()
-        s = coord.new_session("sp3", "0xA", "SVM", 100, 500)
+        coord.new_session("sp3", "0xA", "SVM", 100, 500)
         coord.abort("sp3")
         with pytest.raises(AssertionError):
             coord.lock("sp3")

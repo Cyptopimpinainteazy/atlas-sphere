@@ -29,8 +29,7 @@ pub use scrapyard::{
 };
 
 use crate::warden::{
-    ComputeLane, GovernanceAction, SwarmPillars, SwarmState, ThreatLevel,
-    WardenDecision,
+    ComputeLane, GovernanceAction, SwarmPillars, SwarmState, ThreatLevel, WardenDecision,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

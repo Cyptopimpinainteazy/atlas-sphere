@@ -2,16 +2,16 @@
 Integration tests for jury blockchain anchoring.
 """
 
-import asyncio
 import hashlib
 import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from swarm.jury.anchorer import (
+    AnchorResult,
     JuryAnchorer,
     JuryAnchoringService,
-    AnchorResult,
 )
 
 
@@ -35,7 +35,7 @@ class TestJuryAnchorer:
             mock_rpc.return_value = {
                 "tx_hash": "0xabcd1234",
             }
-            
+
             with patch.object(anchorer, '_wait_for_finalization') as mock_wait:
                 mock_wait.return_value = 12345
 
@@ -67,7 +67,7 @@ class TestJuryAnchorer:
     async def test_verify_decision_match(self, anchorer):
         """Test verification succeeds for matching hash."""
         expected_hash = "0x" + hashlib.sha256(b"decision").hexdigest()
-        
+
         with patch.object(anchorer, '_rpc_call') as mock_rpc:
             mock_rpc.return_value = {
                 "status": "anchored",
@@ -188,7 +188,7 @@ class TestJuryAnchoringService:
                 status="anchored",
             )
         )
-        
+
         service.anchorer.verify_decision = AsyncMock(return_value=True)
 
         votes = {"INF-1": True, "OPS-1": True, "SEC-1": False}
@@ -215,7 +215,7 @@ class TestJuryAnchoringService:
                 status="anchored",
             )
         )
-        
+
         service.anchorer.verify_decision = AsyncMock(return_value=False)
 
         votes = {"INF-1": True, "OPS-1": False}
@@ -263,13 +263,13 @@ class TestJuryAnchoringEndToEnd:
             "OPS-2": True,
             "SEC-1": False,
         }
-        
+
         # Compute decision
         yes_votes = sum(1 for v in votes.values() if v)
         total = len(votes)
         threshold = 0.66
         decision = yes_votes / total > threshold  # True (4/5 = 80%)
-        
+
         # Compute hash
         decision_data = {
             "votes": votes,
@@ -278,7 +278,7 @@ class TestJuryAnchoringEndToEnd:
         decision_hash = hashlib.sha256(
             json.dumps(decision_data, sort_keys=True).encode()
         ).hexdigest()
-        
+
         # Mock anchorer
         anchorer = AsyncMock()
         anchorer.anchor_decision = AsyncMock(
@@ -291,13 +291,13 @@ class TestJuryAnchoringEndToEnd:
             )
         )
         anchorer.verify_decision = AsyncMock(return_value=True)
-        
+
         # Run flow
         result = await anchorer.anchor_decision("sess-e2e", "0x" + decision_hash)
-        
+
         assert result.status == "anchored"
         assert result.block_number == 6666
-        
+
         verified = await anchorer.verify_decision("sess-e2e", "0x" + decision_hash)
         assert verified is True
 

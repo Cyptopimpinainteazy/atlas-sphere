@@ -138,7 +138,12 @@ impl EthereumBridge {
             .ok_or("Deposit not found")?
             .clone();
 
-        let confirmations = (current_block - deposit.eth_block) as u32;
+        if current_block < deposit.eth_block {
+            return Err("block number regression detected".to_string());
+        }
+
+        let confirmations_u64 = current_block.saturating_sub(deposit.eth_block);
+        let confirmations = confirmations_u64.try_into().unwrap_or(u32::MAX);
         if confirmations < 12 {
             return Err(format!("Need 12 confirmations, have {}", confirmations));
         }

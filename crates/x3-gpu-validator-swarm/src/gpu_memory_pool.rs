@@ -331,8 +331,8 @@ mod tests {
     async fn test_pool_allocation() {
         let pool = GpuMemoryPool::new(0, 4, 512);
 
-        let h1 = pool.allocate("job1").await;
-        let h2 = pool.allocate("job2").await;
+        let h1 = pool.allocate("job1").await.unwrap();
+        let h2 = pool.allocate("job2").await.unwrap();
 
         let (free, in_use, _, allocs) = pool.stats();
         assert_eq!(free, 2);
@@ -349,8 +349,8 @@ mod tests {
     async fn test_pool_exhaustion() {
         let pool = Arc::new(GpuMemoryPool::new(0, 2, 512));
 
-        let h1 = pool.allocate("job1").await;
-        let h2 = pool.allocate("job2").await;
+        let h1 = pool.allocate("job1").await.unwrap();
+        let h2 = pool.allocate("job2").await.unwrap();
 
         let (free, _, _, _) = pool.stats();
         assert_eq!(free, 0);
@@ -362,7 +362,7 @@ mod tests {
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
         pool.deallocate(h1);
 
-        let h3 = alloc_task.await.unwrap();
+        let h3 = alloc_task.await.unwrap().unwrap();
         let (free, in_use, _, _) = pool.stats();
         assert_eq!(free, 0);
         assert_eq!(in_use, 2);
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn test_quarantine() {
         let pool = GpuMemoryPool::new(0, 4, 512);
-        let handle = futures::executor::block_on(pool.allocate("job1"));
+        let handle = futures::executor::block_on(pool.allocate("job1")).unwrap();
 
         pool.quarantine(handle);
         let (_, in_use, quarantined, _) = pool.stats();

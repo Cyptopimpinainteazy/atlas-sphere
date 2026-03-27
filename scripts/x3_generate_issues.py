@@ -16,10 +16,10 @@ Effect:
     skipped (idempotent).
 """
 
+import json
 import re
 import subprocess
 import sys
-import json
 
 CHECKLIST = "X3_COMPLETION.md"
 LABELS = "x3,audit,blocking"
@@ -154,7 +154,7 @@ def create_issue(item: dict, existing_titles: set[str]) -> bool:
             return False
 
 
-def ensure_labels():
+def ensure_labels() -> None:
     """Ensure required labels exist in the repo."""
     label_configs = [
         ("x3",      "0075ca", "X3 Chain item"),
@@ -169,7 +169,7 @@ def ensure_labels():
         )
 
 
-def main():
+def main() -> None:
     print("=== X3 GitHub Issue Generator ===")
     if DRY_RUN:
         print("(DRY-RUN MODE — no issues will be created)\n")

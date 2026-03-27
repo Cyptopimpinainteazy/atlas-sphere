@@ -92,7 +92,7 @@ members = [
     "pallets/x3-invariants",
     # Concrete implementations of x3-vm BalanceProvider + CrossVmEscrow for node use
     "crates/x3-bridge-adapters",
-    "crates/cross-chain-position-manager",
+        "crates/cross-chain-position-manager",
     "crates/x3-rpc",
     # Note: crates/dylint-determinism is intentionally NOT listed here.
     # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)

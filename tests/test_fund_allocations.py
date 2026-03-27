@@ -1,5 +1,6 @@
-from tools.fund_allocations import fund_allocations, load_allocations
 from swarm.db import SessionLocal, models
+
+from tools.fund_allocations import fund_allocations, load_allocations
 
 
 def test_fund_allocations(tmp_path, monkeypatch):
@@ -11,7 +12,7 @@ def test_fund_allocations(tmp_path, monkeypatch):
         session.commit()
     finally:
         session.close()
-    
+
     # call fund_allocations with eth-tester (rpc=None)
     fund_allocations()
     # no exceptions means allocations were applied (we can't directly inspect ephemeral eth-tester state here)

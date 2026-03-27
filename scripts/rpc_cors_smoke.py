@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import http.client
 import json
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 
 def rpc_post(
@@ -20,7 +20,7 @@ def rpc_post(
     port: int,
     origin: str,
     method: str = "system_chain",
-) -> Tuple[int, Optional[str], str]:
+) -> tuple[int, str | None, str]:
     conn = http.client.HTTPConnection(host, port, timeout=10)
     try:
         body = json.dumps(
@@ -54,7 +54,7 @@ def run(host: str, port: int, allowed_origin: str, blocked_origin: str) -> int:
         host, port, blocked_origin
     )
 
-    summary: Dict[str, Any] = {
+    summary: dict[str, Any] = {
         "allowed_origin": {
             "origin": allowed_origin,
             "status": allowed_status,
@@ -85,7 +85,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9944)
-    parser.add_argument("--allowed-origin", default="http://localhost:3000")
+    parser.add_argument("--allowed-origin", default="http://localhost:3000")  # nosemgrep: py-no-localhost-endpoints
     parser.add_argument("--blocked-origin", default="http://evil.com")
     args = parser.parse_args()
     return run(args.host, args.port, args.allowed_origin, args.blocked_origin)

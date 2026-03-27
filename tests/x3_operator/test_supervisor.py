@@ -2,10 +2,13 @@
 
 import pytest
 
-from x3_operator.supervisor import (
-    AgentSupervisor, AgentState, PolicyManifest, RateLimiter,
-)
 from x3_operator.config import X3Config
+from x3_operator.supervisor import (
+    AgentState,
+    AgentSupervisor,
+    PolicyManifest,
+    RateLimiter,
+)
 
 
 @pytest.fixture

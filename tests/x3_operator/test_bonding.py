@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from x3_operator.bonding import BondLedger, BondStatus, BondRecord
-from x3_operator.config import X3Config, OperatorRole
+from x3_operator.bonding import BondLedger, BondStatus
+from x3_operator.config import OperatorRole, X3Config
 
 
 @pytest.fixture

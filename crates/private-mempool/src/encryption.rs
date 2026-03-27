@@ -181,16 +181,20 @@ mod tests {
     #[test]
     fn encrypt_decrypt_roundtrip() {
         let plaintext = b"Hello, private world!";
-        let committee_pk = [0x42; 32];
+
+        // Committee keypair for this test (in production, generated via DKG)
+        let committee_sk = generate_ephemeral_key();
+        let committee_pk = derive_public_key(&committee_sk);
+
         let sender_pk = [0xAA; 32];
         let fee_commitment = [0xBB; 32];
 
         let tx = encrypt_for_committee(plaintext, &committee_pk, &sender_pk, &fee_commitment, 1)
             .unwrap();
 
-        // Simulate share reconstruction using ECDH directly
-        let ephemeral_sk = generate_ephemeral_key();
-        let shared_secret = ecdh(&ephemeral_sk, &committee_pk);
+        // In realistic decryption, validators reconstruct shared secret from
+        // committee secret key and ephemeral public key.
+        let shared_secret = ecdh(&committee_sk, &tx.ephemeral_pk);
 
         let decrypted = decrypt_transaction(&tx, &shared_secret).unwrap();
 

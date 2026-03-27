@@ -202,6 +202,7 @@ impl HirLowerer {
     }
 
     /// Infer type from expression (simple inference for globals).
+    #[allow(clippy::only_used_in_recursion)]
     fn infer_expr_type(&self, expr: &Expression) -> Type {
         match expr {
             Expression::Literal(lit) => match &lit.literal {

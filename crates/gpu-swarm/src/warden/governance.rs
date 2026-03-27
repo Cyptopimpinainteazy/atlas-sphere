@@ -332,10 +332,7 @@ impl GovernanceEngine {
     }
 
     /// Submit an emergency override
-    pub fn submit_override(
-        &mut self,
-        override_req: EmergencyOverride,
-    ) -> Result<String, String> {
+    pub fn submit_override(&mut self, override_req: EmergencyOverride) -> Result<String, String> {
         // Validate initiator
         let is_admin = self.admin_keys.contains(&override_req.initiated_by);
         let is_guard = self.guards.contains_key(&override_req.initiated_by);

@@ -21,9 +21,9 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 
 # External chains integration
-x3-external-chains = { path = "../external-chains", default-features = false }
-x3-evolution = { path = "../x3-evolution", default-features = false }
-gpu-swarm = { path = "../gpu-swarm", default-features = false }
+x3-external-chains = { path = "../external-chains" }
+x3-evolution = { path = "../x3-evolution" }
+gpu-swarm = { path = "../gpu-swarm" }
 
 # Async and networking
 tokio = { workspace = true, features = ["full"], optional = true }

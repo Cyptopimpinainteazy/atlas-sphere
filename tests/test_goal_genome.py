@@ -125,7 +125,7 @@ class TestGoalGenome:
     """INV-GOALGENOME-004: Full goal lifecycle."""
 
     def test_add_and_retrieve_goals(self, genome):
-        goal = genome.add_goal(mandate="earn revenue", domain=Domain.MARKET)
+        genome.add_goal(mandate="earn revenue", domain=Domain.MARKET)
 
         active = genome.get_active_goals()
         assert len(active) == 1

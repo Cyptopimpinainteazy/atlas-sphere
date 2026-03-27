@@ -16,12 +16,12 @@ This script will:
 This is a convenience helper for testnet/dev usage. Use with care on mainnet.
 """
 import argparse
-import json
 import os
-from web3 import Web3
-from web3.middleware import ExtraDataToPOAMiddleware
+
 import solcx
 from swarm.db import SessionLocal, models
+from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 
 
 def load_allocations():
@@ -37,7 +37,7 @@ def load_allocations():
 
 
 def compile_contract(source_path, contract_name):
-    with open(source_path, 'r') as fh:
+    with open(source_path) as fh:
         src = fh.read()
     solcx.install_solc('0.8.17')
     compiled = solcx.compile_standard({
@@ -66,7 +66,7 @@ def deploy_token_and_distributor(w3: Web3, abi_rd, bc_rd, acct=None):
             balanceOf[to] += amount;
             return true;
         }
-        function transferFrom(address from, address to, uint256 amount) external returns (bool) { 
+        function transferFrom(address from, address to, uint256 amount) external returns (bool) {
             require(balanceOf[from] >= amount, "insufficient");
             balanceOf[from] -= amount;
             balanceOf[to] += amount;
@@ -99,10 +99,10 @@ def deploy_token_and_distributor(w3: Web3, abi_rd, bc_rd, acct=None):
     return acct, w3.eth.contract(address=token_addr, abi=abi_token), w3.eth.contract(address=rd_addr, abi=abi_rd)
 
 
-def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, threshold=None):
+def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, threshold=None) -> None:
     # Compile RewardDistributor once at the start to avoid repeated compilation
     abi_rd, bc_rd = compile_contract('swarm/ref_app/solidity/RewardDistributor.sol', 'RewardDistributor')
-    
+
     # support eth-tester when rpc is None
     if rpc:
         w3 = Web3(Web3.HTTPProvider(rpc))
@@ -124,7 +124,7 @@ def fund_allocations(rpc=None, private_key=None, distributor=None, token=None, t
     amounts_wei = [int(a) for a in amounts]
 
     if not distributor or not token:
-        acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, abi_rd, bc_rd)
+        _acct_addr, token_contract, rd_contract = deploy_token_and_distributor(w3, abi_rd, bc_rd)
         distributor = rd_contract.address
         token = token_contract.address
     else:

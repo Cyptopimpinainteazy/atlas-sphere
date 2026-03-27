@@ -1417,11 +1417,8 @@ impl CrossVmBridge {
                 svm_lock_input.extend_from_slice(&svm_amount.to_le_bytes());
 
                 // Prepare leg 2: lock SVM funds; on failure, refund EVM escrow immediately
-                let svm_prepare = dispatcher.execute_svm_tx(
-                    &svm_key,
-                    &svm_escrow_program,
-                    &svm_lock_input,
-                );
+                let svm_prepare =
+                    dispatcher.execute_svm_tx(&svm_key, &svm_escrow_program, &svm_lock_input);
 
                 if let Err(err) = svm_prepare {
                     let mut refund_input = b"REFUND_EVM_SWAP:".to_vec();
@@ -1446,7 +1443,8 @@ impl CrossVmBridge {
 
                 let mut svm_commit_input = b"COMMIT_SVM_SWAP:".to_vec();
                 svm_commit_input.extend_from_slice(&svm_amount.to_le_bytes());
-                let svm_commit = dispatcher.execute_svm_tx(&svm_key, &svm_escrow_program, &svm_commit_input);
+                let svm_commit =
+                    dispatcher.execute_svm_tx(&svm_key, &svm_escrow_program, &svm_commit_input);
 
                 if let Err(err) = svm_commit {
                     let mut refund_input = b"REFUND_EVM_SWAP:".to_vec();
@@ -2713,7 +2711,12 @@ mod kernel_dispatcher_integration_tests {
             Some(u128::from_le_bytes(amount_arr))
         }
 
-        fn evm_transfer(&self, from: &[u8; 20], to: &[u8; 20], amount: u128) -> Result<(), DispatchError> {
+        fn evm_transfer(
+            &self,
+            from: &[u8; 20],
+            to: &[u8; 20],
+            amount: u128,
+        ) -> Result<(), DispatchError> {
             let mut balances = self.evm_balances.borrow_mut();
             let from_bal = balances.get(from).copied().unwrap_or(0);
             if from_bal < amount {
@@ -2775,7 +2778,8 @@ mod kernel_dispatcher_integration_tests {
                     }
                     balances.insert(*caller, current.saturating_sub(amount));
                 }
-            } else if let Some(amount_u128) = Self::parse_amount_suffix(input, b"COMMIT_SVM_SWAP:") {
+            } else if let Some(amount_u128) = Self::parse_amount_suffix(input, b"COMMIT_SVM_SWAP:")
+            {
                 // For deterministic tests we model commit as releasing to same account.
                 let amount = amount_u128.min(u64::MAX as u128) as u64;
                 let mut balances = self.svm_balances.borrow_mut();
@@ -2796,11 +2800,7 @@ mod kernel_dispatcher_integration_tests {
         }
 
         fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64 {
-            self.svm_balances
-                .borrow()
-                .get(pubkey)
-                .copied()
-                .unwrap_or(0)
+            self.svm_balances.borrow().get(pubkey).copied().unwrap_or(0)
         }
     }
 
@@ -2976,8 +2976,16 @@ mod kernel_dispatcher_integration_tests {
             .execute_with_dispatcher(&dispatcher)
             .expect("execute_with_dispatcher should not panic");
 
-        assert_eq!(results.len(), 0, "atomic swap should fail and produce no success result");
-        assert_eq!(bridge.failed_count(), 1, "failed operation must be recorded");
+        assert_eq!(
+            results.len(),
+            0,
+            "atomic swap should fail and produce no success result"
+        );
+        assert_eq!(
+            bridge.failed_count(),
+            1,
+            "failed operation must be recorded"
+        );
         assert_eq!(
             dispatcher.get_evm_balance(&evm_party),
             initial_evm_balance,

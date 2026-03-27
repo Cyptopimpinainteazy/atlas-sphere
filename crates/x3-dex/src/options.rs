@@ -16,7 +16,7 @@ pub struct Option {
     pub premium_paid: u64,
     pub status: u8, // 0=open, 1=exercised, 2=expired, 3=sold
     pub open_block: u64,
-    pub Greeks: OptionGreeks,
+    pub greeks: OptionGreeks,
 }
 
 #[derive(Clone, Encode, Decode, Debug, PartialEq, Eq)]
@@ -39,7 +39,7 @@ pub struct OptionQuote {
     pub underlying_price: u64,
     pub implied_volatility: u32, // bps
     pub option_price: u64,
-    pub Greeks: OptionGreeks,
+    pub greeks: OptionGreeks,
     pub quote_block: u64,
 }
 
@@ -206,7 +206,7 @@ impl OptionsEngine {
             underlying_price,
             implied_volatility: implied_vol,
             option_price: price,
-            Greeks: greeks,
+            greeks,
             quote_block: current_block,
         })
     }
@@ -243,7 +243,7 @@ impl OptionsEngine {
             premium_paid: total_premium,
             status: 0, // open
             open_block: current_block,
-            Greeks: OptionGreeks {
+            greeks: OptionGreeks {
                 delta: 5_000,
                 gamma: 50,
                 theta: -100,
@@ -319,7 +319,7 @@ impl OptionsEngine {
         option: &mut Option,
         new_greeks: OptionGreeks,
     ) -> Result<(), &'static str> {
-        option.Greeks = new_greeks;
+        option.greeks = new_greeks;
         Ok(())
     }
 

@@ -13,8 +13,7 @@ import argparse
 import http.client
 import json
 import sys
-from typing import Any, Dict, Optional, Tuple
-
+from typing import Any
 
 RATE_LIMIT_ERROR_CODE = -32098
 
@@ -24,7 +23,7 @@ def rpc_call(
     method: str,
     params: Any,
     request_id: int,
-) -> Tuple[bool, Optional[int], Optional[str], Any]:
+) -> tuple[bool, int | None, str | None, Any]:
     body = json.dumps(
         {
             "jsonrpc": "2.0",
@@ -66,7 +65,7 @@ def run(host: str, port: int, method: str, params: Any, burst_requests: int) -> 
 
     try:
         for i in range(burst_requests):
-            ok, code, message, _ = rpc_call(conn_a, method, params, i + 1)
+            ok, code, _message, _ = rpc_call(conn_a, method, params, i + 1)
             if not ok:
                 if code == RATE_LIMIT_ERROR_CODE:
                     rate_limited_a += 1
@@ -80,7 +79,7 @@ def run(host: str, port: int, method: str, params: Any, burst_requests: int) -> 
 
         ok_b, code_b, message_b, _ = rpc_call(conn_b, method, params, 999_001)
 
-        summary: Dict[str, Any] = {
+        summary: dict[str, Any] = {
             "connection_a": {
                 "burst_requests": burst_requests,
                 "rate_limited_count": rate_limited_a,

@@ -11,10 +11,10 @@ from swarm.core.enums import Domain, Outcome
 from swarm.event_bus.bus import AsyncEventBus
 from swarm.event_bus.events import BusEvent, EventType
 from swarm.goal_genome.genome import GoalGenome
-from swarm.goal_genome.schema import Goal, MutationTrigger
+from swarm.goal_genome.schema import MutationTrigger
 from swarm.self_improve.engine import SelfImprovementEngine
-from swarm.self_improve.schema import ImprovementProposal, ImprovementType
 from swarm.self_improve.scars import ScarRegistry
+from swarm.self_improve.schema import ImprovementProposal, ImprovementType
 from swarm.self_model.ledger import SelfModelLedger
 from swarm.self_model.schema import CausalEvent
 from swarm.storage.backend import SqliteStorage

@@ -38,7 +38,8 @@ impl PrivacyMixer {
         }
 
         let mut id = [0u8; 32];
-        id[0..8].copy_from_slice(&denomination.to_le_bytes());
+        // Use lower 8 bytes of denomination (u128 → 16 bytes)
+        id[0..8].copy_from_slice(&denomination.to_le_bytes()[0..8]);
         id[8..16].copy_from_slice(&current_block.to_le_bytes());
 
         Ok(MixingPool {

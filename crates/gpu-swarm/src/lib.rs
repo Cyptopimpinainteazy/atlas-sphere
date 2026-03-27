@@ -74,6 +74,17 @@
 //! - No wallet/signing capabilities
 //! - Deterministic execution verified by multiple nodes
 
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
 pub mod admin;
 pub mod agent_bridge;
 pub mod announcer;

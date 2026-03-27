@@ -248,13 +248,13 @@ impl AMMPool {
             .wrapping_add((token_a.chain_id as u64));
         hash = hash
             .wrapping_mul(31)
-            .wrapping_add((token_a.asset_id as u64) >> 64);
+            .wrapping_add((token_a.asset_id >> 64) as u64);
         hash = hash
             .wrapping_mul(31)
             .wrapping_add((token_b.chain_id as u64));
         hash = hash
             .wrapping_mul(31)
-            .wrapping_add((token_b.asset_id as u64) >> 64);
+            .wrapping_add((token_b.asset_id >> 64) as u64);
         hash
     }
 }

@@ -1,17 +1,14 @@
 """Tests for x3_operator.identity"""
 
-import json
 import tempfile
 from pathlib import Path
 
+from x3_operator.config import OperatorRole
 from x3_operator.identity import (
-    HardwareAttestation,
-    OperatorIdentity,
     collect_hardware_attestation,
     generate_operator_identity,
     load_operator_identity,
 )
-from x3_operator.config import OperatorRole
 
 
 def test_hardware_attestation():

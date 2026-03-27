@@ -176,10 +176,12 @@ impl ConcentratedLiquidityEngine {
         let uncollected_fee0_growth = current_fee_growth0.saturating_sub(last_fee_growth0);
         let uncollected_fee1_growth = current_fee_growth1.saturating_sub(last_fee_growth1);
 
-        let fee0 =
-            (uncollected_fee0_growth.saturating_mul(position.liquidity) / (1u128 << 128)) as u64;
-        let fee1 =
-            (uncollected_fee1_growth.saturating_mul(position.liquidity) / (1u128 << 128)) as u64;
+        // Q128.128 fixed-point: approximate (growth * liquidity) / 2^128 using u128 bit-split.
+        // Exact calc needs 256-bit arithmetic; (a >> 64) * (b >> 64) gives (a*b) >> 128 approximation.
+        let fee0 = ((uncollected_fee0_growth >> 64) as u64)
+            .saturating_mul((position.liquidity >> 64) as u64);
+        let fee1 = ((uncollected_fee1_growth >> 64) as u64)
+            .saturating_mul((position.liquidity >> 64) as u64);
 
         Ok((fee0, fee1))
     }

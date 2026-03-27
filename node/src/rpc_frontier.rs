@@ -169,6 +169,11 @@ where
             .and_then(|v| v.as_str())
             .ok_or_else(|| jsonrpsee::core::Error::Custom("Missing to address".into()))?;
         let target_bytes = decode_address(target)?;
+        let caller = tx_obj
+            .get("from")
+            .and_then(|v| v.as_str())
+            .map(decode_address)
+            .transpose()?;
 
         let data_hex = tx_obj.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
         let data_stripped = data_hex.strip_prefix("0x").unwrap_or(data_hex);
@@ -179,7 +184,7 @@ where
         let api = c.runtime_api();
         let at = c.info().best_hash;
         let output = api
-            .call_evm(at, target_bytes, input_data, gas_limit)
+            .call_evm(at, caller, target_bytes, input_data, gas_limit)
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
 
         match output {
@@ -203,6 +208,11 @@ where
         } else {
             vec![0u8; 20]
         };
+        let caller = tx_obj
+            .get("from")
+            .and_then(|v| v.as_str())
+            .map(decode_address)
+            .transpose()?;
 
         let data_hex = tx_obj.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
         let data_stripped = data_hex.strip_prefix("0x").unwrap_or(data_hex);
@@ -213,7 +223,7 @@ where
         let api = c.runtime_api();
         let at = c.info().best_hash;
         let estimate = api
-            .estimate_evm_gas(at, target_bytes, input_data, gas_limit)
+            .estimate_evm_gas(at, caller, target_bytes, input_data, gas_limit)
             .map_err(|e| jsonrpsee::core::Error::Custom(format!("Runtime error: {:?}", e)))?;
 
         match estimate {

@@ -2,8 +2,8 @@
 
 import pytest
 
-from x3_operator.slashing import SlashingEngine, SlashEvidence, FaultType, SlashVerdict
 from x3_operator.config import X3Config
+from x3_operator.slashing import FaultType, SlashEvidence, SlashingEngine
 
 
 @pytest.fixture

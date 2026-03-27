@@ -6,11 +6,11 @@ Run as: pytest tests/test_jury_anchoring_load.py -v --tb=short
 """
 
 import asyncio
-import time
 import statistics
-from typing import List, Dict, Tuple
-import pytest
+import time
 from dataclasses import dataclass
+
+import pytest
 
 
 @dataclass
@@ -30,7 +30,7 @@ class JuryLoadTester:
 
     def __init__(self, num_concurrent_sessions: int = 100):
         self.num_concurrent_sessions = num_concurrent_sessions
-        self.latencies: Dict[str, List[float]] = {
+        self.latencies: dict[str, list[float]] = {
             "create_session": [],
             "submit_vote": [],
             "finalize": [],
@@ -39,7 +39,7 @@ class JuryLoadTester:
             "total": [],
         }
 
-    async def simulate_jury_session(self, session_id: int) -> Tuple[str, float]:
+    async def simulate_jury_session(self, session_id: int) -> tuple[str, float]:
         """Simulate a complete jury session with timing."""
         start_time = time.time()
 
@@ -75,7 +75,7 @@ class JuryLoadTester:
 
             return f"session-{session_id}", total_ms
 
-        except Exception as e:
+        except Exception:
             return f"session-{session_id}-ERROR", -1.0
 
     async def _create_session(self, session_id: int) -> str:
@@ -102,7 +102,7 @@ class JuryLoadTester:
         await asyncio.sleep(0.05)  # Simulate RPC query
         return True
 
-    async def run_concurrent_load_test(self) -> Dict[str, LatencyMetrics]:
+    async def run_concurrent_load_test(self) -> dict[str, LatencyMetrics]:
         """Run concurrent jury sessions and measure latencies."""
         tasks = [
             self.simulate_jury_session(i)
@@ -111,7 +111,7 @@ class JuryLoadTester:
         await asyncio.gather(*tasks)
         return self._compute_metrics()
 
-    def _compute_metrics(self) -> Dict[str, LatencyMetrics]:
+    def _compute_metrics(self) -> dict[str, LatencyMetrics]:
         """Compute latency statistics for each operation."""
         metrics = {}
 
@@ -134,7 +134,7 @@ class JuryLoadTester:
 
         return metrics
 
-    def print_report(self, metrics: Dict[str, LatencyMetrics]) -> None:
+    def print_report(self, metrics: dict[str, LatencyMetrics]) -> None:
         """Print human-readable latency report."""
         print("\n" + "=" * 80)
         print(f"LOAD TEST REPORT: {self.num_concurrent_sessions} Concurrent Sessions")
@@ -175,7 +175,7 @@ class TestJuryLoadScenarios:
         tester.print_report(metrics)
 
         # Identify breaking points
-        print(f"\n⚠️  STRESS TEST RESULTS (500 concurrent):")
+        print("\n⚠️  STRESS TEST RESULTS (500 concurrent):")
         print(f"   Total session time (mean): {metrics['total'].mean_ms:.0f}ms")
         print(f"   This indicates system can handle ~{500 / (metrics['total'].mean_ms / 1000 / 60):.0f} sessions/min")
 
@@ -187,8 +187,8 @@ class TestJuryLoadScenarios:
         tester.print_report(metrics)
 
         # Identify maximum capacity
-        print(f"\n🔴 MAXIMUM LOAD RESULTS (1000 concurrent):")
-        print(f"   If P99 latency >10s, system needs optimization")
+        print("\n🔴 MAXIMUM LOAD RESULTS (1000 concurrent):")
+        print("   If P99 latency >10s, system needs optimization")
         print(f"   Current P99 anchor time: {metrics['anchor'].p99_ms:.0f}ms")
 
     @pytest.mark.asyncio
@@ -209,7 +209,7 @@ class TestJuryLoadScenarios:
         capacity_per_second = 1 / avg_time_per_decision
         capacity_per_day = capacity_per_second * 86400
 
-        print(f"\n✅ CAPACITY ANALYSIS:")
+        print("\n✅ CAPACITY ANALYSIS:")
         print(f"   Avg time per decision: {avg_time_per_decision:.2f}s")
         print(f"   Capacity: {capacity_per_second:.1f} decisions/sec")
         print(f"   Capacity: {capacity_per_day:,.0f} decisions/day")

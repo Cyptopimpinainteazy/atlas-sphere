@@ -265,6 +265,11 @@ impl pallet_x3_kernel::Config for Test {
     type SvmAdapter = TradeEngineSvmAdapter;
     type X3Adapter = TradeEngineX3Adapter;
     type GovernanceOrigin = frame_system::EnsureRoot<u64>;
+    type CrossVmPrepareTtl = ConstU64<10>;
+    type MaxPreparedCrossVmOps = ConstU32<16>;
+    type MaxPreparedOpsPerBlock = ConstU32<8>;
+    type RequireCrossVmProof = frame_support::traits::ConstBool<false>;
+    type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
 }
 
 parameter_types! {

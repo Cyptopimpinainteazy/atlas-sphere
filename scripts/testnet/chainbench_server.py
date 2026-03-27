@@ -10,16 +10,17 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import contextlib
 import json
 import os
 import random
 import re
 import subprocess
 import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
-import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -44,7 +45,7 @@ def rpc_call(url: str, method: str, params: list[Any]) -> dict[str, Any]:
         data=payload,
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=2.5) as resp:  # noqa: S310
+    with urllib.request.urlopen(req, timeout=2.5) as resp:
         body = resp.read().decode("utf-8")
     return json.loads(body)
 
@@ -65,7 +66,7 @@ def timed_rpc_call(url: str, method: str, params: list[Any], timeout_s: float = 
             data=payload,
             headers={"Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
             body = json.loads(resp.read().decode("utf-8"))
         return {
             "ok": "result" in body and "error" not in body,
@@ -73,7 +74,7 @@ def timed_rpc_call(url: str, method: str, params: list[Any], timeout_s: float = 
             "result": body.get("result"),
             "error": body.get("error"),
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return {
             "ok": False,
             "latency_ms": int((time.time() - started) * 1000),
@@ -83,7 +84,7 @@ def timed_rpc_call(url: str, method: str, params: list[Any], timeout_s: float = 
 
 def http_get_json(url: str, timeout_s: float = 2.5) -> dict[str, Any]:
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         body = resp.read().decode("utf-8")
     return json.loads(body)
 
@@ -94,7 +95,7 @@ def http_post_json(url: str, payload: dict[str, Any], timeout_s: float = 3.0, he
     if headers:
         hdrs.update(headers)
     req = urllib.request.Request(url, data=data, headers=hdrs)
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # noqa: S310
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         body = resp.read().decode("utf-8")
     return json.loads(body)
 
@@ -112,7 +113,7 @@ class ChainbenchState:
         tps_url: str,
         default_chain_id: str,
         chain_db_admin_key: str,
-    ):
+    ) -> None:
         self.state_dir = state_dir
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.state_file = self.state_dir / "state.json"
@@ -426,7 +427,7 @@ class ChainbenchState:
         for method, params in methods:
             try:
                 out["results"][method] = rpc_call(rpc, method, params)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["ok"] = False
                 out["results"][method] = {"error": str(exc)}
 
@@ -554,7 +555,7 @@ class ChainbenchState:
             started = time.time()
             _ = http_get_json(url)
             return {"ok": True, "latency_ms": int((time.time() - started) * 1000), "result": "http_ok"}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"ok": False, "latency_ms": int((time.time() - started) * 1000), "error": str(exc)}
 
     def refresh_connectors_health(self) -> dict[str, Any]:
@@ -621,7 +622,7 @@ class ChainbenchState:
                         "block_hash": block_hash.get("result"),
                     }
                 )
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 node["error"] = str(exc)
             nodes.append(node)
 
@@ -630,10 +631,8 @@ class ChainbenchState:
         for n in nodes:
             number = n.get("header", {}).get("number")
             if isinstance(number, str) and number.startswith("0x"):
-                try:
+                with contextlib.suppress(Exception):
                     best_block = max(best_block, int(number, 16))
-                except Exception:
-                    pass
 
         finalized_block = None
         for n in nodes:
@@ -738,7 +737,7 @@ class ChainbenchState:
                     "rpc_stats": stats,
                     "latency_ms": int((time.time() - started) * 1000),
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["chain_db"] = {"ok": False, "error": str(exc)}
 
         if self.tps_url:
@@ -750,7 +749,7 @@ class ChainbenchState:
                     "health": health,
                     "latency_ms": int((time.time() - started) * 1000),
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["blockchain_tps"] = {"ok": False, "error": str(exc)}
 
         out["checked_at"] = int(time.time())
@@ -769,7 +768,7 @@ class ChainbenchState:
                 "peers": health.get("result", {}).get("peers", 0),
                 "best_block": header.get("result", {}).get("number", "0x0"),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             out["x3vm"] = {"ok": False, "error": str(exc)}
 
         # EVM mempool
@@ -820,7 +819,7 @@ class ChainbenchState:
                     "txpool": txpool.get("result") if isinstance(txpool, dict) else None,
                     "gas": gas_tiers,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["evm"] = {"ok": False, "rpc": evm_rpc, "error": str(exc)}
         else:
             out["evm"] = {"ok": False, "error": "no evm rpc configured"}
@@ -846,7 +845,7 @@ class ChainbenchState:
                     "base_fee": 0,
                     "priority_fee": priority_fee,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["svm"] = {"ok": False, "rpc": svm_rpc, "error": str(exc)}
         else:
             out["svm"] = {"ok": False, "error": "no svm rpc configured"}
@@ -863,7 +862,7 @@ class ChainbenchState:
                     "mempool": info.get("result"),
                     "chain": chain.get("result"),
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["btc"] = {"ok": False, "rpc": btc_rpc, "error": str(exc)}
         else:
             # fallback to public mempool API
@@ -878,7 +877,7 @@ class ChainbenchState:
                     "tip_height": tip,
                     "fees": fees if isinstance(fees, dict) else None,
                 }
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["btc"] = {"ok": False, "error": str(exc)}
 
         return out
@@ -950,7 +949,7 @@ class ChainbenchState:
                 "price_token1": price,
                 "tvl_usd": tvl_usd,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             out["evm"] = {"ok": False, "rpc": evm_rpc, "error": str(exc)}
         return out
 
@@ -962,7 +961,7 @@ class ChainbenchState:
             code = rpc_call(evm_rpc, "eth_getCode", [self.fuzzer_target, "latest"])
             has_code = code.get("result", "0x") not in {"0x", "0x0"}
             return {"ok": True, "rpc": evm_rpc, "target": self.fuzzer_target, "has_code": has_code}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"ok": False, "rpc": evm_rpc, "error": str(exc)}
 
     def fuzzer_run(self) -> dict[str, Any]:
@@ -980,7 +979,7 @@ class ChainbenchState:
             try:
                 resp = rpc_call(evm_rpc, "eth_call", [{"to": self.fuzzer_target, "data": sig}, "latest"])
                 results[label] = resp.get("result")
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 results[label] = {"error": str(exc)}
         return {"ok": True, "rpc": evm_rpc, "target": self.fuzzer_target, "results": results}
 
@@ -990,7 +989,7 @@ class ChainbenchState:
             health = rpc_call(self.mode_map[self.state.get("mode", "testnet")]["rpc"], "system_health", [])
             header = rpc_call(self.mode_map[self.state.get("mode", "testnet")]["rpc"], "chain_getHeader", [])
             out["x3vm"] = {"ok": True, "peers": health.get("result", {}).get("peers", 0), "block": header.get("result", {}).get("number", "0x0")}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             out["x3vm"] = {"ok": False, "error": str(exc)}
 
         evm_rpc = self._pick_evm_rpc()
@@ -998,7 +997,7 @@ class ChainbenchState:
             try:
                 block = rpc_call(evm_rpc, "eth_blockNumber", [])
                 out["evm"] = {"ok": True, "rpc": evm_rpc, "block": block.get("result")}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["evm"] = {"ok": False, "rpc": evm_rpc, "error": str(exc)}
         else:
             out["evm"] = {"ok": False, "error": "no evm rpc configured"}
@@ -1008,7 +1007,7 @@ class ChainbenchState:
             try:
                 slot = rpc_call(svm_rpc, "getSlot", [])
                 out["svm"] = {"ok": True, "rpc": svm_rpc, "slot": slot.get("result")}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["svm"] = {"ok": False, "rpc": svm_rpc, "error": str(exc)}
         else:
             out["svm"] = {"ok": False, "error": "no svm rpc configured"}
@@ -1018,13 +1017,13 @@ class ChainbenchState:
             try:
                 tip = rpc_call(btc_rpc, "getblockcount", [])
                 out["btc"] = {"ok": True, "rpc": btc_rpc, "height": tip.get("result")}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["btc"] = {"ok": False, "rpc": btc_rpc, "error": str(exc)}
         else:
             try:
                 tip = http_get_json(f"{self.btc_mempool_api}/blocks/tip/height")
                 out["btc"] = {"ok": True, "rpc": self.btc_mempool_api, "height": tip}
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 out["btc"] = {"ok": False, "error": str(exc)}
         return out
 
@@ -1158,7 +1157,7 @@ class ChainbenchState:
                 ).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
             )
-            with urllib.request.urlopen(req, timeout=2.5) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
             out["nodecore"] = {
                 "query_url": self.nodecore_query_url,
@@ -1167,7 +1166,7 @@ class ChainbenchState:
                 "result": body.get("result"),
                 "error": body.get("error"),
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             out["nodecore"]["error"] = str(exc)
 
         # Dshackle proxy path (default /eth)
@@ -1185,7 +1184,7 @@ class ChainbenchState:
                 ).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
             )
-            with urllib.request.urlopen(req, timeout=2.5) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=2.5) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
             ok = "result" in body and "error" not in body
             warning = None
@@ -1203,7 +1202,7 @@ class ChainbenchState:
                 "error": body.get("error"),
                 "warning": warning,
             }
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             out["dshackle"]["error"] = str(exc)
 
         return out
@@ -1357,14 +1356,14 @@ class Handler(BaseHTTPRequestHandler):
             "updated_at": int(time.time()),
         }
 
-    def do_OPTIONS(self) -> None:  # noqa: N802
+    def do_OPTIONS(self) -> None:
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "Content-Type,X-Admin-Key")
         self.send_header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
         self.end_headers()
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if self.path in {"/", "/chainbench", "/chainbench/"}:
             return self._serve_dashboard()
 
@@ -1415,14 +1414,14 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/api/crossvm/protocols"):
             try:
-                from urllib.parse import urlparse, parse_qs
+                from urllib.parse import parse_qs, urlparse
 
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
                 source = (params.get("source") or params.get("src") or ["X3VM"])[0]
                 dest = (params.get("dest") or params.get("dst") or ["EVM"])[0]
                 return self._send_json(self.state.crossvm_protocols(source, dest))
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 return self._send_json({"error": str(exc)}, status=400)
 
         if self.path == "/api/crossvm/status":
@@ -1441,10 +1440,10 @@ class Handler(BaseHTTPRequestHandler):
 
         return self._send_json({"error": "not found", "path": self.path}, status=404)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         try:
             body = self._read_json()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return self._send_json({"error": f"invalid json: {exc}"}, status=400)
 
         try:
@@ -1510,7 +1509,7 @@ class Handler(BaseHTTPRequestHandler):
 
         except ValueError as exc:
             return self._send_json({"error": str(exc)}, status=400)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return self._send_json({"error": str(exc)}, status=500)
 
 
@@ -1577,10 +1576,8 @@ def main() -> int:
 
     def connector_loop() -> None:
         while True:
-            try:
+            with contextlib.suppress(Exception):
                 state.refresh_connectors_health()
-            except Exception:
-                pass
             time.sleep(max(30, scan_interval))
 
     threading.Thread(target=connector_loop, daemon=True).start()

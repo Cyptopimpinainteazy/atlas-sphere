@@ -16,9 +16,9 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{System, SystemApiServer};
+use x3_atomic_trade::{AMMPool, SwapRPCServer, TokenPair};
 use x3_chain_runtime::{opaque::Block, AccountId, AssetId, Balance, Nonce};
 use x3_rpc::{SwapRequest, WalletDexApi, WalletDexRpc};
-use x3_atomic_trade::{AMMPool, SwapRPCServer, TokenPair};
 
 use crate::rpc_middleware::RateLimiter;
 
@@ -54,7 +54,10 @@ fn decode_hex_32(value: &str, label: &str) -> Result<[u8; 32], JsonRpseeError> {
     Ok(out)
 }
 
-fn parse_u128_value(value: Option<&serde_json::Value>, label: &str) -> Result<u128, JsonRpseeError> {
+fn parse_u128_value(
+    value: Option<&serde_json::Value>,
+    label: &str,
+) -> Result<u128, JsonRpseeError> {
     let raw = value.ok_or_else(|| custom_error(format!("Missing {label}")))?;
     if let Some(as_str) = raw.as_str() {
         return as_str
@@ -64,7 +67,9 @@ fn parse_u128_value(value: Option<&serde_json::Value>, label: &str) -> Result<u1
     if let Some(as_u64) = raw.as_u64() {
         return Ok(as_u64 as u128);
     }
-    Err(custom_error(format!("Invalid {label}: expected string or integer")))
+    Err(custom_error(format!(
+        "Invalid {label}: expected string or integer"
+    )))
 }
 
 /// Build the full RPC module exposed by the node.
@@ -205,8 +210,14 @@ where
             .get("evm_payload")
             .and_then(|v| v.as_str())
             .ok_or_else(|| custom_error("Missing evm_payload"))?;
-        let _svm_payload_hex = body.get("svm_payload").and_then(|v| v.as_str()).unwrap_or("0x");
-        let _atomic = body.get("atomic").and_then(|v| v.as_bool()).unwrap_or(true);
+        let svm_payload_hex = body.get("svm_payload").and_then(|v| v.as_str()).unwrap_or("0x");
+        let atomic = body.get("atomic").and_then(|v| v.as_bool()).unwrap_or(true);
+
+        if atomic || svm_payload_hex != "0x" {
+            return Err(custom_error(
+                "x3_submitCrossVmTransaction cross-VM mode is not implemented yet; svm_payload is currently unsupported",
+            ));
+        }
 
         let evm_payload = decode_hex_param(evm_payload_hex, "evm_payload")?;
 
@@ -239,10 +250,7 @@ where
                 "token_out",
             )?,
             amount_in: parse_u128_value(req.get("amount_in"), "amount_in")?,
-            min_amount_out: parse_u128_value(
-                req.get("min_amount_out"),
-                "min_amount_out",
-            )?,
+            min_amount_out: parse_u128_value(req.get("min_amount_out"), "min_amount_out")?,
             wallet_id: decode_hex_32(
                 req.get("wallet_id")
                     .and_then(|v| v.as_str())
@@ -283,10 +291,7 @@ where
                 "token_out",
             )?,
             amount_in: parse_u128_value(req.get("amount_in"), "amount_in")?,
-            min_amount_out: parse_u128_value(
-                req.get("min_amount_out"),
-                "min_amount_out",
-            )?,
+            min_amount_out: parse_u128_value(req.get("min_amount_out"), "min_amount_out")?,
             wallet_id: decode_hex_32(
                 req.get("wallet_id")
                     .and_then(|v| v.as_str())
@@ -340,10 +345,7 @@ where
             Some(v) => parse_u128_value(Some(v), "min_amount_out")?,
             None => 0,
         };
-        let deadline = req
-            .get("deadline")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0);
+        let deadline = req.get("deadline").and_then(|v| v.as_u64()).unwrap_or(0);
         let from = req
             .get("from")
             .and_then(|v| v.as_str())

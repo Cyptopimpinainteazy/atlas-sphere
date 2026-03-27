@@ -5,87 +5,85 @@ PoH + TX Validator + Full Orchestration (Days 6-8)
 Target: 5-50M TPS comprehensive GPU acceleration
 """
 
-import time
 import hashlib
-from typing import List, Dict, Tuple
-import multiprocessing as mp
+import time
 
 
 class PoHGPUAccelerator:
     """Day 6: PoH GPU Hash Acceleration"""
-    
+
     @staticmethod
-    def compute_hash_chain_gpu(initial: bytes, count: int) -> Tuple[bytes, float]:
+    def compute_hash_chain_gpu(initial: bytes, count: int) -> tuple[bytes, float]:
         """GPU-optimized PoH hash chain"""
         start = time.perf_counter()
-        
+
         current = initial
         for _ in range(count):
             current = hashlib.sha256(current).digest()
-        
+
         elapsed = (time.perf_counter() - start) * 1000
         throughput = count / (elapsed / 1000) if elapsed > 0 else 0
-        
+
         return current, throughput
 
 
 class TxValidatorGPU:
     """Day 7: TX Validator GPU Acceleration"""
-    
+
     @staticmethod
-    def validate_batch_gpu(txs: List[Tuple]) -> Tuple[List[bool], float]:
+    def validate_batch_gpu(txs: list[tuple]) -> tuple[list[bool], float]:
         """GPU-optimized transaction validation"""
         start = time.perf_counter()
-        
+
         results = []
         seen_writes = set()
-        
-        for tx_id, from_acc, to_acc, amount in txs:
+
+        for _tx_id, from_acc, to_acc, amount in txs:
             valid = from_acc != to_acc and amount > 0 and from_acc not in seen_writes
             results.append(valid)
             seen_writes.add(from_acc)
-        
+
         elapsed = (time.perf_counter() - start) * 1000
         throughput = len(txs) / (elapsed / 1000) if elapsed > 0 else 0
-        
+
         return results, throughput
 
 
 class SolanaFullGPUOrchestrator:
     """Day 8: Complete GPU-Accelerated Orchestrator"""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.total_blocks = 0
         self.total_txs = 0
         self.total_time_ms = 0
-    
-    def process_block_full_gpu(self, block_num: int, txs_per_block: int) -> Dict:
+
+    def process_block_full_gpu(self, block_num: int, txs_per_block: int) -> dict:
         """Process complete block through all GPU accelerators"""
         start = time.perf_counter()
-        
+
         # Stage 1: PoH GPU
         poh_start = time.perf_counter()
         initial_poh = hashlib.sha256(f"block_{block_num}".encode()).digest()
-        poh_hash, poh_tp = PoHGPUAccelerator.compute_hash_chain_gpu(initial_poh, 100)
+        _poh_hash, poh_tp = PoHGPUAccelerator.compute_hash_chain_gpu(initial_poh, 100)
         poh_time_ms = (time.perf_counter() - poh_start) * 1000
-        
+
         # Stage 2: SigVerify GPU (simulated)
         sig_time_ms = txs_per_block / (825_000 / 1000)  # 825k sig/sec from Day 5
-        
+
         # Stage 3: TX Validator GPU
         tx_start = time.perf_counter()
         tx_data = [(i, f"acc_{i}", f"acc_{i+1}", 1.0) for i in range(txs_per_block)]
-        tx_results, tx_tp = TxValidatorGPU.validate_batch_gpu(tx_data)
+        _tx_results, tx_tp = TxValidatorGPU.validate_batch_gpu(tx_data)
         tx_time_ms = (time.perf_counter() - tx_start) * 1000
-        
+
         total_time_ms = (time.perf_counter() - start) * 1000
-        
+
         self.total_blocks += 1
         self.total_txs += txs_per_block
         self.total_time_ms += total_time_ms
-        
+
         tps = txs_per_block / (total_time_ms / 1000) if total_time_ms > 0 else 0
-        
+
         return {
             "block": block_num,
             "txs": txs_per_block,
@@ -97,8 +95,8 @@ class SolanaFullGPUOrchestrator:
             "poh_tp": poh_tp,
             "tx_tp": tx_tp
         }
-    
-    def get_full_metrics(self) -> Dict:
+
+    def get_full_metrics(self) -> dict:
         """Get full orchestrator metrics"""
         overall_tps = self.total_txs / (self.total_time_ms / 1000) if self.total_time_ms > 0 else 0
         return {
@@ -109,19 +107,19 @@ class SolanaFullGPUOrchestrator:
         }
 
 
-def run_day6_poh_benchmark():
+def run_day6_poh_benchmark() -> None:
     """Day 6: PoH GPU benchmark"""
     print("\n" + "="*70)
     print(" 🔥 DAY 6: POH GPU ACCELERATION BENCHMARK")
     print("="*70)
-    
+
     test_cases = [100_000, 400_000, 1_000_000]
-    
+
     for count in test_cases:
         initial = hashlib.sha256(b"test").digest()
         _, tp = PoHGPUAccelerator.compute_hash_chain_gpu(initial, count)
         print(f"  {count:>7,} hashes: {tp:>12.0f} hash/sec")
-    
+
     print("="*70 + "\n")
 
 
@@ -130,40 +128,40 @@ def run_day7_full_integration():
     print("\n" + "="*70)
     print(" 🔥 DAY 7-8: FULL GPU ORCHESTRATOR BENCHMARK")
     print("="*70)
-    
+
     orch = SolanaFullGPUOrchestrator()
-    
+
     # Process 10 blocks
     for block_slot in range(10):
         metrics = orch.process_block_full_gpu(block_slot, 1000)
-        
+
         if (block_slot + 1) % 3 == 0 or block_slot == 0:
             print(f"Block {block_slot:2d} ({metrics['txs']:,} tx): "
                   f"PoH {metrics['poh_tp']:>8.0f} h/s | "
                   f"TX {metrics['tx_tp']:>8.0f} tx/s | "
                   f"Total {metrics['tps']:>8.0f} TPS")
-    
+
     # Final metrics
     final = orch.get_full_metrics()
-    
+
     print("\n" + "="*70)
-    print(f"📊 FULL GPU INTEGRATION RESULTS:")
+    print("📊 FULL GPU INTEGRATION RESULTS:")
     print(f"   Blocks processed:     {final['total_blocks']}")
     print(f"   Transactions:         {final['total_txs']:,}")
     print(f"   Overall TPS:          {final['overall_tps']:>10.0f}")
     print(f"   Speedup vs baseline:  {final['speedup_vs_baseline']:.1f}x")
     print("="*70 + "\n")
-    
+
     return final
 
 
 if __name__ == "__main__":
     # Day 6: PoH GPU
     run_day6_poh_benchmark()
-    
+
     # Days 7-8: Full integration
     result = run_day7_full_integration()
-    
+
     print(f"""
 ╔════════════════════════════════════════════════════════════════════╗
 ║              DAYS 6-8: GPU ACCELERATION COMPLETE ✅                ║

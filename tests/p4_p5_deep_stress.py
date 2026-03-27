@@ -9,16 +9,16 @@ and production-readiness logic, intended to catch flakiness and state drift.
 import random
 
 from tests.p4_p5_crosschain_gpu_validator import (
-    EvmGpuKernel,
-    AtomicSwapOrchestrator,
     AtomicSwapIntent,
+    AtomicSwapOrchestrator,
     CrossChainMonitor,
+    EvmGpuKernel,
 )
 from tests.p4_p5_production_release import (
+    REQUIRED_BUNDLE_FILES,
     CrossChainTestnet,
     MainnetReadinessReport,
     ReleaseBundleManifest,
-    REQUIRED_BUNDLE_FILES,
 )
 
 
@@ -42,7 +42,7 @@ class TestDeepAtomicSoak:
             else:
                 left, right = 100.0, 100.0
 
-            ok, result = orchestrator.full_3pac(
+            _ok, result = orchestrator.full_3pac(
                 AtomicSwapIntent(f"id_{i}", left, right)
             )
             if result == "committed":

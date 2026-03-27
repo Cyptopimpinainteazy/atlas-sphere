@@ -7,13 +7,14 @@ Usage:
   python tools/process_finalized_payouts.py --distributor 0x... --token 0x... --private-key 0x... --rpc https://...
   python tools/process_finalized_payouts.py  # dev eth-tester flow
 """
+import argparse
 import json
 import os
-import argparse
-from web3 import Web3
-from web3.middleware import ExtraDataToPOAMiddleware
+
 import solcx
 from swarm.db import SessionLocal, models
+from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 
 
 def load_finalized():
@@ -36,7 +37,7 @@ def load_finalized():
 
 
 def compile_rd():
-    with open('swarm/ref_app/solidity/RewardDistributor.sol', 'r') as fh:
+    with open('swarm/ref_app/solidity/RewardDistributor.sol') as fh:
         src = fh.read()
     solcx.install_solc('0.8.17')
     compiled = solcx.compile_standard({
@@ -48,7 +49,7 @@ def compile_rd():
     return cont['abi'], cont['evm']['bytecode']['object']
 
 
-def process(rpc=None, private_key=None, distributor=None, token=None):
+def process(rpc=None, private_key=None, distributor=None, token=None) -> None:
     # support eth-tester
     if rpc:
         w3 = Web3(Web3.HTTPProvider(rpc))
@@ -71,7 +72,7 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
         # reuse fund_allocations' deploy helper (simple approach: call it)
         print('No distributor/token provided - deploying fresh contracts')
         from tools.fund_allocations import deploy_token_and_distributor
-        deployer, token_contract, rd_contract = deploy_token_and_distributor(w3, acct if rpc else None)
+        _deployer, token_contract, rd_contract = deploy_token_and_distributor(w3, acct if rpc else None)
         distributor = rd_contract.address
         token = token_contract.address
     else:
@@ -155,7 +156,7 @@ def process(rpc=None, private_key=None, distributor=None, token=None):
     # notify local WS server if available
     try:
         import requests
-        ws_url = os.environ.get('SWARM_WS_EVENTS_URL', 'http://127.0.0.1:8787/events')
+        ws_url = os.environ.get('SWARM_WS_EVENTS_URL', 'http://127.0.0.1:8787/events')  # nosemgrep: py-no-localhost-endpoints
         requests.post(ws_url, json={'type': 'payouts_processed', 'count': len(finalized)})
     except Exception:
         pass

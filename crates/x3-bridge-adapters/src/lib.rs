@@ -185,6 +185,21 @@ where
             .current = current.saturating_add(amount);
     }
 
+    /// Debit `amount` from `address` in the overlay without crediting another account.
+    pub(crate) fn debit(&self, address: &[u8], amount: u128) -> Result<(), &'static str> {
+        let current = self.ensure_loaded(address);
+        if current < amount {
+            return Err("insufficient balance");
+        }
+
+        let mut guard = self.overlay.write().expect("overlay write");
+        guard
+            .get_mut(address)
+            .expect("debit: address must be loaded")
+            .current = current - amount;
+        Ok(())
+    }
+
     /// Drain the overlay and return a [`StateChange`] record for every address
     /// whose final balance differs from its chain snapshot at load time.
     ///
@@ -401,10 +416,8 @@ where
     }
 
     fn lock_internal(&self, from: &[u8], amount: u128) -> Result<[u8; 32], &'static str> {
-        // Debit the balance overlay — validates against live chain state.
-        // Transfer to zero-length "escrow sink" (not an on-chain address; merely
-        // removes the amount from `from`'s overlay balance).
-        self.balances.transfer(from, &[], amount)?;
+        // Debit the balance overlay directly without creating a phantom escrow account.
+        self.balances.debit(from, amount)?;
 
         let ticket = Self::make_ticket(from, amount);
         let entry = InMemoryEscrowEntry {
@@ -611,7 +624,7 @@ where
     /// `pallet_evm::Runner`.
     fn execute_evm_tx(
         &self,
-        _caller: &[u8; 20],
+        caller: &[u8; 20],
         target: &[u8; 20],
         input: &[u8],
         value: u128,
@@ -619,9 +632,10 @@ where
         let at = self.best_hash();
         let api = self.client.runtime_api();
 
-        // Construct RLP-like EVM call payload:
-        // [target (20)] [value (16 LE)] [input_len (4 LE)] [input...]
-        let mut payload = Vec::with_capacity(20 + 16 + 4 + input.len());
+        // Construct runtime payload:
+        // [caller (20)] [target (20)] [value (16 LE)] [input_len (4 LE)] [input...]
+        let mut payload = Vec::with_capacity(20 + 20 + 16 + 4 + input.len());
+        payload.extend_from_slice(caller);
         payload.extend_from_slice(target);
         payload.extend_from_slice(&value.to_le_bytes());
         payload.extend_from_slice(&(input.len() as u32).to_le_bytes());
@@ -678,27 +692,14 @@ where
             return Ok(CrossVmResult::failed(b"program not found".to_vec(), 1_000));
         }
 
-        // For now, SVM execution happens via the kernel's internal pathway
-        // The runtime API currently exposes read-only SVM queries, but no
-        // submit/execute endpoint equivalent to submit_evm_transaction.
-        // Return explicit failure instead of fake success to avoid masking
-        // execution gaps in cross-VM flows.
-        log::info!(
-            "[RuntimeDispatcher] SVM instruction for program 0x{}",
-            program_id
-                .iter()
-                .take(8)
-                .map(|b| format!("{:02x}", b))
-                .collect::<String>()
-        );
-
-        let mut reason = b"svm execution unavailable: runtime submit API not wired".to_vec();
-        if !input.is_empty() {
-            reason.extend_from_slice(b"; payload_len=");
-            reason.extend_from_slice(input.len().to_string().as_bytes());
+        match api.submit_svm_instruction(at, *program_id, input.to_vec()) {
+            Ok(Ok(output)) => Ok(CrossVmResult::success(output, 5_000)),
+            Ok(Err(err)) => Ok(CrossVmResult::failed(err, 5_000)),
+            Err(e) => {
+                log::error!("[RuntimeDispatcher] SVM runtime API error: {:?}", e);
+                Err(sp_runtime::DispatchError::Other("SVM runtime API error"))
+            }
         }
-
-        Ok(CrossVmResult::failed(reason, 5_000))
     }
 
     /// Get EVM balance for an address.

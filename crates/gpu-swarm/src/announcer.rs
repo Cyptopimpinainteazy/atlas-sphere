@@ -28,8 +28,8 @@
 //! ```
 
 use crate::crown::{
-    AuditReport, CrownEvaluation, CrownVerdict, MarketForecast, QuarantineReason,
-    ScrapyardVerdict, VolatilityRegime,
+    AuditReport, CrownEvaluation, CrownVerdict, MarketForecast, QuarantineReason, ScrapyardVerdict,
+    VolatilityRegime,
 };
 use crate::warden::{SwarmState, ThreatLevel, WardenDecision};
 use serde::{Deserialize, Serialize};

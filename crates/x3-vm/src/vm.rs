@@ -1717,8 +1717,8 @@ mod tests {
         code_f1.push(Opcode::LoadImm as u8);
         code_f1.push(2u8);
         code_f1.push(99i8 as u8);
-        // Add r1, r1, r2  (asserts callee sees 42 from global; r1 = 141)
-        code_f1.push(Opcode::Add as u8);
+        // AddI r1, r1, r2  (asserts callee sees 42 from global; r1 = 141)
+        code_f1.push(Opcode::AddI as u8);
         code_f1.push(1u8);
         code_f1.push(1u8);
         code_f1.push(2u8);

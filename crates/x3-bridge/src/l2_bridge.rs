@@ -102,6 +102,10 @@ impl L2Bridge {
             return Err("Deposit is not in Pending state");
         }
 
+        if finalization_timestamp < deposit.timestamp {
+            return Err("block number regression detected");
+        }
+
         // Require ~2 minutes of L1 block confirmations (12 blocks * 12 seconds)
         let block_age = finalization_timestamp.saturating_sub(deposit.timestamp);
         if block_age < 120 {
@@ -330,13 +334,14 @@ impl L2Bridge {
         hash
     }
 
-    /// Hash two 32-byte values
+    /// Hash two 32-byte values using Bitcoin-style double-SHA256.
     fn hash_pair(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
-        let mut result = [0u8; 32];
-        for i in 0..32 {
-            result[i] = a[i] ^ b[i];
-        }
-        result
+        let mut combined = [0u8; 64];
+        combined[..32].copy_from_slice(a);
+        combined[32..].copy_from_slice(b);
+
+        let first = sp_io::hashing::sha2_256(&combined);
+        sp_io::hashing::sha2_256(&first)
     }
 
     /// Verify output root against proof chain

@@ -26,12 +26,9 @@ import hashlib
 import hmac
 import math
 import secrets
-import struct
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
-
 
 # ============================================================================
 # §1 Validator Configuration Model (Day 9 artifacts)
@@ -46,7 +43,7 @@ class ValidatorIdentity:
     gpu_device_id: int  # -1 = CPU-only
 
     @classmethod
-    def generate(cls, validator_id: int, rpc_base: int = 9944, gpu_id: int = 0) -> "ValidatorIdentity":
+    def generate(cls, validator_id: int, rpc_base: int = 9944, gpu_id: int = 0) -> ValidatorIdentity:
         return cls(
             validator_id=validator_id,
             pubkey=secrets.token_bytes(32),
@@ -58,7 +55,7 @@ class ValidatorIdentity:
 
 @dataclass
 class NetworkTopology:
-    validators: List[ValidatorIdentity]
+    validators: list[ValidatorIdentity]
     genesis_hash: bytes
     cluster: str = "testnet"
 
@@ -74,7 +71,7 @@ class NetworkTopology:
 class MonitoringConfig:
     prometheus_port: int = 9090
     grafana_port: int = 3000
-    alert_rules: List[str] = field(default_factory=list)
+    alert_rules: list[str] = field(default_factory=list)
     enabled: bool = True
 
     def has_required_dashboards(self) -> bool:
@@ -91,21 +88,21 @@ class CPUReferenceImplementation:
     """Canonical CPU implementations for parity comparison."""
 
     @staticmethod
-    def sha256_batch(inputs: List[bytes]) -> List[bytes]:
+    def sha256_batch(inputs: list[bytes]) -> list[bytes]:
         return [hashlib.sha256(b).digest() for b in inputs]
 
     @staticmethod
-    def keccak256_batch(inputs: List[bytes]) -> List[bytes]:
+    def keccak256_batch(inputs: list[bytes]) -> list[bytes]:
         # Stand-in: sha256 keyed with "keccak:" prefix
         return [hashlib.sha256(b"keccak:" + b).digest() for b in inputs]
 
     @staticmethod
-    def ed25519_verify_batch(signatures: List[bytes], messages: List[bytes], pubkeys: List[bytes]) -> List[bool]:
+    def ed25519_verify_batch(signatures: list[bytes], messages: list[bytes], pubkeys: list[bytes]) -> list[bool]:
         # Stub: always valid (real test would use PyNaCl)
         return [True] * len(signatures)
 
     @staticmethod
-    def poh_chain(seed: bytes, length: int) -> List[bytes]:
+    def poh_chain(seed: bytes, length: int) -> list[bytes]:
         chain = [seed]
         for _ in range(length - 1):
             chain.append(hashlib.sha256(chain[-1]).digest())
@@ -116,20 +113,20 @@ class GPUStubImplementation:
     """GPU stub that should produce identical results to CPU for deterministic ops."""
 
     @staticmethod
-    def sha256_batch(inputs: List[bytes]) -> List[bytes]:
+    def sha256_batch(inputs: list[bytes]) -> list[bytes]:
         # Identical deterministic path: same as CPU
         return [hashlib.sha256(b).digest() for b in inputs]
 
     @staticmethod
-    def keccak256_batch(inputs: List[bytes]) -> List[bytes]:
+    def keccak256_batch(inputs: list[bytes]) -> list[bytes]:
         return [hashlib.sha256(b"keccak:" + b).digest() for b in inputs]
 
     @staticmethod
-    def ed25519_verify_batch(signatures: List[bytes], messages: List[bytes], pubkeys: List[bytes]) -> List[bool]:
+    def ed25519_verify_batch(signatures: list[bytes], messages: list[bytes], pubkeys: list[bytes]) -> list[bool]:
         return [True] * len(signatures)
 
     @staticmethod
-    def poh_chain(seed: bytes, length: int) -> List[bytes]:
+    def poh_chain(seed: bytes, length: int) -> list[bytes]:
         chain = [seed]
         for _ in range(length - 1):
             chain.append(hashlib.sha256(chain[-1]).digest())
@@ -154,8 +151,8 @@ class VRAMTracker:
     LEAK_THRESHOLD_MB = 100.0
 
     def __init__(self):
-        self._samples: List[VRAMSample] = []
-        self._baseline_mb: Optional[float] = None
+        self._samples: list[VRAMSample] = []
+        self._baseline_mb: float | None = None
 
     def record(self, used_mb: float) -> None:
         ts = int(time.monotonic() * 1000)
@@ -179,7 +176,7 @@ class GPUContextManager:
     """Tracks CUDA context alloc/free to detect orphaned contexts."""
 
     def __init__(self):
-        self._active: Set[int] = set()
+        self._active: set[int] = set()
         self._next_id = 0
         self._lock = threading.Lock()
 
@@ -245,10 +242,10 @@ class ConsensusSimulator:
     def __init__(self, validator_count: int):
         self.validator_count = validator_count
         self.metrics = ConsensusMetrics()
-        self._slot_hashes: Dict[int, bytes] = {}  # canonical slot → hash
-        self._heads: Dict[int, int] = {i: 0 for i in range(validator_count)}
+        self._slot_hashes: dict[int, bytes] = {}  # canonical slot → hash
+        self._heads: dict[int, int] = dict.fromkeys(range(validator_count), 0)
 
-    def produce_block(self, slot: int, canonical_hash: Optional[bytes] = None) -> bytes:
+    def produce_block(self, slot: int, canonical_hash: bytes | None = None) -> bytes:
         h = canonical_hash or hashlib.sha256(slot.to_bytes(8, "big")).digest()
         self._slot_hashes[slot] = h
         return h
@@ -299,7 +296,7 @@ class PerformanceSampler:
     """
 
     @staticmethod
-    def measure(fn, n_ops: int) -> Tuple[float, float]:
+    def measure(fn, n_ops: int) -> tuple[float, float]:
         t0 = time.monotonic()
         fn(n_ops)
         elapsed = time.monotonic() - t0
@@ -354,9 +351,9 @@ REQUIRED_DOCS = [
 @dataclass
 class ReleaseManifest:
     version: str
-    components: List[str]
-    checksums: Dict[str, str]   # component → sha256 hex
-    gpg_signature: Optional[str] = None
+    components: list[str]
+    checksums: dict[str, str]   # component → sha256 hex
+    gpg_signature: str | None = None
 
     def is_complete(self) -> bool:
         return all(c in self.components for c in REQUIRED_PACKAGE_COMPONENTS)
@@ -393,7 +390,7 @@ class RateLimiter:
     def __init__(self, max_requests: int, window_seconds: float):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self._timestamps: List[float] = []
+        self._timestamps: list[float] = []
         self._lock = threading.Lock()
 
     def allow(self) -> bool:
@@ -446,13 +443,13 @@ VICTORY_CONDITIONS = [
 
 @dataclass
 class ShipReadinessReport:
-    conditions_met: Dict[str, bool] = field(default_factory=dict)
+    conditions_met: dict[str, bool] = field(default_factory=dict)
     rollback_available: bool = True
 
     def go(self) -> bool:
         return all(self.conditions_met.get(c, False) for c in VICTORY_CONDITIONS)
 
-    def missing_conditions(self) -> List[str]:
+    def missing_conditions(self) -> list[str]:
         return [c for c in VICTORY_CONDITIONS if not self.conditions_met.get(c, False)]
 
 
@@ -471,7 +468,6 @@ class GoNoGoEngine:
 # TESTS
 # ============================================================================
 
-import pytest
 
 
 class TestValidatorSetup:
@@ -570,7 +566,7 @@ class TestCorrectnessValidation:
         inputs = [secrets.token_bytes(32) for _ in range(10_000)]
         cpu_res = self.cpu.sha256_batch(inputs)
         gpu_res = self.gpu.sha256_batch(inputs)
-        discrepancies = sum(1 for c, g in zip(cpu_res, gpu_res) if c != g)
+        discrepancies = sum(1 for c, g in zip(cpu_res, gpu_res, strict=False) if c != g)
         assert discrepancies == 0
 
     def test_all_checksums_identical(self):
@@ -663,7 +659,7 @@ class TestConsensusStability:
     def setup_method(self):
         self.sim = ConsensusSimulator(validator_count=4)
 
-    def _run_n_slots(self, n: int, miss_vote_at: Optional[Set[int]] = None) -> None:
+    def _run_n_slots(self, n: int, miss_vote_at: set[int] | None = None) -> None:
         miss_vote_at = miss_vote_at or set()
         for slot in range(n):
             block_hash = self.sim.produce_block(slot)
@@ -724,15 +720,15 @@ class TestPerformanceRegression:
     CPU_SIG_MIN_PER_SEC    = 50_000
 
     def test_sha256_batch_throughput_above_floor(self):
-        ops, elapsed = PerformanceSampler.measure(_stub_sha256_batch, 10_000)
+        ops, _elapsed = PerformanceSampler.measure(_stub_sha256_batch, 10_000)
         assert ops >= self.CPU_SHA256_MIN_PER_SEC, f"SHA256 {ops:.0f} ops/s below floor"
 
     def test_poh_chain_throughput_above_floor(self):
-        ops, elapsed = PerformanceSampler.measure(_stub_poh_chain, 10_000)
+        ops, _elapsed = PerformanceSampler.measure(_stub_poh_chain, 10_000)
         assert ops >= self.CPU_POH_MIN_PER_SEC, f"PoH {ops:.0f} ops/s below floor"
 
     def test_sig_verify_throughput_above_floor(self):
-        ops, elapsed = PerformanceSampler.measure(_stub_sig_verify, 5_000)
+        ops, _elapsed = PerformanceSampler.measure(_stub_sig_verify, 5_000)
         assert ops >= self.CPU_SIG_MIN_PER_SEC, f"SigVerify {ops:.0f} ops/s below floor"
 
     def test_100_tx_batch_completes_under_1ms_cpu(self):
@@ -762,8 +758,8 @@ class TestPerformanceRegression:
         assert estimated_gpu >= PerformanceBaseline.tps_target_min
 
     def test_performance_sampler_monotonic(self):
-        ops1, e1 = PerformanceSampler.measure(_stub_sha256_batch, 1_000)
-        ops2, e2 = PerformanceSampler.measure(_stub_sha256_batch, 2_000)
+        _ops1, e1 = PerformanceSampler.measure(_stub_sha256_batch, 1_000)
+        _ops2, e2 = PerformanceSampler.measure(_stub_sha256_batch, 2_000)
         # More work → more time (elapsed is monotonic with scale)
         assert e2 >= e1 * 0.5  # allow 2× variance for scheduler jitter
 

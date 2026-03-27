@@ -1,9 +1,6 @@
 """Tests for the async event bus."""
 
-import asyncio
 import json
-import os
-import tempfile
 
 import pytest
 

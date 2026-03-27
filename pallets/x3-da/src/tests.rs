@@ -1,6 +1,7 @@
 //! Tests for the x3-da pallet.
 
 use crate::{mock::*, pallet::*};
+use frame_support::traits::Currency;
 use frame_support::{assert_noop, assert_ok};
 use sp_core::H256;
 

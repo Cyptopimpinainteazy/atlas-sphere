@@ -12,15 +12,12 @@ Usage:
     python scripts/finisher_daemon.py [--watch-dir ./drop] [--work-dir ./workspace]
 """
 
-import subprocess
-import time
+import argparse
+import json
 import pathlib
 import shutil
-import sys
-import json
-import argparse
+import time
 from datetime import datetime
-
 
 # ──────────────────────────────────────────
 # AGENT STACK (Nuclear Execution Order)
@@ -57,7 +54,7 @@ AGENT_PROMPTS = {
 MAX_LOOPS = 10  # Safety valve — prevent infinite loops
 
 
-def log(msg: str, level: str = "INFO"):
+def log(msg: str, level: str = "INFO") -> None:
     """Structured logging."""
     timestamp = datetime.utcnow().isoformat() + "Z"
     print(f"[{timestamp}] [{level}] {msg}", flush=True)
@@ -125,7 +122,7 @@ def check_completion_score(repo_path: pathlib.Path) -> int:
     return 0
 
 
-def process_repo(repo: pathlib.Path, work_dir: pathlib.Path, prompts_dir: pathlib.Path):
+def process_repo(repo: pathlib.Path, work_dir: pathlib.Path, prompts_dir: pathlib.Path) -> None:
     """Process a single repository through the full agent stack."""
     repo_name = repo.stem
     repo_path = work_dir / repo_name
@@ -168,7 +165,7 @@ def process_repo(repo: pathlib.Path, work_dir: pathlib.Path, prompts_dir: pathli
     log(f"⚠️  Max loops ({MAX_LOOPS}) reached for {repo_name}", "WARN")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="☢️ YOLO FINISHER v5.0 — Drop-Folder Daemon")
     parser.add_argument("--watch-dir", default="./drop", help="Directory to watch for repos")
     parser.add_argument("--work-dir", default="./workspace", help="Working directory for processing")

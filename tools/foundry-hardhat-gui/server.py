@@ -201,7 +201,7 @@ class Task:
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=2)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.push_log(f"[stop-error] {exc}")
             return False
 
@@ -275,7 +275,7 @@ class TaskManager:
                 bufsize=1,
                 env=env,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             task.push_log(f"[spawn-error] {exc}")
             task.complete(return_code=1, status_override="failed")
             with self._lock:
@@ -414,7 +414,7 @@ def parse_int(value: Any, field_name: str, min_value: int, max_value: int) -> in
         raise ValueError(f"'{field_name}' must be a number")
     try:
         parsed = int(value)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise ValueError(f"'{field_name}' must be a number") from exc
     if parsed < min_value or parsed > max_value:
         raise ValueError(f"'{field_name}' must be between {min_value} and {max_value}")
@@ -478,7 +478,7 @@ class GanacheProfileStore:
                 return GanacheProfile()
             try:
                 raw = json.loads(self._profile_path.read_text(encoding="utf-8"))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 return GanacheProfile()
             if not isinstance(raw, dict):
                 return GanacheProfile()
@@ -739,7 +739,7 @@ class GuiHandler(BaseHTTPRequestHandler):
             },
         }
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         if self.path == "/" or self.path == "/index.html":
             self._send_file(self.static_dir / "index.html")
             return
@@ -781,7 +781,7 @@ class GuiHandler(BaseHTTPRequestHandler):
 
         self._send_text("Not found", status=HTTPStatus.NOT_FOUND)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length) if length else b""
 

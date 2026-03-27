@@ -2,11 +2,15 @@
 
 import pytest
 
-from x3_operator.storage import (
-    StorageRegistry, ContentID, StorageDeal, StorageProof,
-    StorageProofType, DealStatus,
-)
 from x3_operator.config import X3Config
+from x3_operator.storage import (
+    ContentID,
+    DealStatus,
+    StorageDeal,
+    StorageProof,
+    StorageProofType,
+    StorageRegistry,
+)
 
 
 @pytest.fixture

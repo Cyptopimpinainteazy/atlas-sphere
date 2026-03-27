@@ -1,4 +1,5 @@
 use crate::flash_finality::FlashFinalityBridge;
+use crate::rpc_middleware::{RateLimitConfig, RateLimiter};
 use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
 use futures_util::StreamExt;
 use poh_generator::PoHState;
@@ -21,7 +22,6 @@ use tokio::sync::Mutex;
 use x3_bridge_adapters::{
     OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter,
 };
-use crate::rpc_middleware::{RateLimitConfig, RateLimiter};
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -238,15 +238,8 @@ pub fn new_partial(
     // Select chain implementation (longest chain rule)
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
-    // Create transaction pool with tuned limits to reduce rejection under heavy load
-    let mut txpool_config = config.transaction_pool.clone();
-    txpool_config.ready.count = 1_000_000;
-    txpool_config.ready.total_bytes = 256 * 1024 * 1024; // 256MB
-    txpool_config.future.count = 100_000;
-    txpool_config.future.total_bytes = 64 * 1024 * 1024; // 64MB
-
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
-        txpool_config,
+        config.transaction_pool.clone(),
         config.role.is_authority().into(),
         config.prometheus_registry(),
         task_manager.spawn_essential_handle(),
@@ -389,14 +382,6 @@ pub fn new_full(
     let backoff_authoring_blocks: Option<()> = None;
     let name = config.network.node_name.clone();
     let chain_name = config.chain_spec.name().to_string();
-    // retain previous computed value if we set it earlier; otherwise fall back
-    // to the original disable flag. (`enable_grandpa` may already be in scope
-    // from the network config section, but Rust doesn't allow redeclaration in
-    // the same block. we intentionally shadow with `mut` here so we can modify.)
-    let mut enable_grandpa = !config.disable_grandpa;
-    if feature_flags.enable_flash_finality {
-        enable_grandpa = false;
-    }
     let prometheus_registry = config.prometheus_registry().cloned();
     let role_for_grandpa = role.clone();
 
@@ -407,7 +392,7 @@ pub fn new_full(
         );
     }
     if feature_flags.enable_flash_finality {
-        if compute_enable_grandpa(&config, feature_flags) {
+        if enable_grandpa {
             // still running grandpa due to some configuration oddity
             log::warn!(
                 "⚠️ --enable-flash-finality is set but GRANDPA will still run due to configuration."
@@ -442,14 +427,20 @@ pub fn new_full(
         let my_id = keystore
             .sr25519_public_keys(KeyTypeId(*b"flsh"))
             .get(0)
-            .map(|k| k.0)
-            .unwrap_or([0xAA; 32]); // Fallback to mock if no key found
+            .map(|k| k.0);
 
-        Some(Arc::new(FlashFinalityGadget::new(
-            FlashFinalityConfig::default(),
-            my_id,
-            Some(Box::new(keystore) as Box<dyn std::any::Any + Send + Sync>),
-        )))
+        if let Some(my_id) = my_id {
+            Some(Arc::new(FlashFinalityGadget::new(
+                FlashFinalityConfig::default(),
+                my_id,
+                Some(Box::new(keystore) as Box<dyn std::any::Any + Send + Sync>),
+            )))
+        } else {
+            log::warn!(
+                "⚠️ Flash Finality enabled but no flsh key found in keystore; disabling Flash Finality gadget"
+            );
+            None
+        }
     } else {
         None
     };
@@ -459,17 +450,15 @@ pub fn new_full(
 
     {
         let limiter = rate_limiter.clone();
-        task_manager.spawn_handle().spawn(
-            "rpc-rate-limiter-cleanup",
-            None,
-            async move {
+        task_manager
+            .spawn_handle()
+            .spawn("rpc-rate-limiter-cleanup", None, async move {
                 let interval = Duration::from_secs(60);
                 loop {
                     tokio::time::sleep(interval).await;
                     limiter.cleanup_stale_connections(Duration::from_secs(5 * 60));
                 }
-            },
-        );
+            });
     }
 
     let rpc_builder = {

@@ -16,17 +16,14 @@ Tests: 48 total across 8 suites
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import struct
-import time
 import secrets
+import struct
 import threading
+import time
 from collections import deque
 from dataclasses import dataclass, field
-from enum import IntEnum, auto
-from typing import Callable, Dict, List, Optional, Tuple
-
+from enum import IntEnum
 
 # ---------------------------------------------------------------------------
 # § Hostcall ID constants (mirrors gpu_hostcalls.rs)
@@ -76,7 +73,7 @@ class X3KernelInstance:
     name: str
     version: str
     is_operational: bool = True
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
 
 @dataclass
@@ -84,7 +81,7 @@ class CPUFallbackEngine:
     name: str = "scalar-cpu-executor"
     supports_double_precision: bool = True
 
-    def execute_scalar(self, op: str, args: List[int]) -> List[int]:
+    def execute_scalar(self, op: str, args: list[int]) -> list[int]:
         if op == "add":
             if len(args) != 2:
                 raise ValueError("ADD requires 2 arguments")
@@ -105,7 +102,7 @@ class FallbackChain:
 
     def __init__(self, strategy: str):
         self.strategy = strategy
-        self.primary: Optional[X3KernelInstance] = None
+        self.primary: X3KernelInstance | None = None
         self.cpu_engine = CPUFallbackEngine()
         self.current_target = ExecutionTarget.GPU
         self.fallback_history: deque[FallbackEvent] = deque(maxlen=100)
@@ -113,7 +110,7 @@ class FallbackChain:
     def attach_gpu_kernel(self, kernel: X3KernelInstance) -> None:
         self.primary = kernel
 
-    def execute(self, op: str, args: List[int], block_height: int = 0) -> List[int]:
+    def execute(self, op: str, args: list[int], block_height: int = 0) -> list[int]:
         if self.strategy == DegradationStrategy.STRICT:
             return self._execute_on_gpu(op, args, block_height)
 
@@ -142,9 +139,9 @@ class FallbackChain:
                 self.current_target = ExecutionTarget.CPU
                 return result
             except Exception as cpu_err:
-                raise RuntimeError(f"GPU: {gpu_err}, CPU: {cpu_err}")
+                raise RuntimeError(f"GPU: {gpu_err}, CPU: {cpu_err}") from cpu_err
 
-    def _execute_on_gpu(self, op: str, args: List[int], _block_height: int) -> List[int]:
+    def _execute_on_gpu(self, op: str, args: list[int], _block_height: int) -> list[int]:
         if self.primary is None:
             raise RuntimeError("GPU kernel not attached")
         if not self.primary.is_operational:
@@ -155,7 +152,7 @@ class FallbackChain:
             return gpu_ops[op]
         raise RuntimeError(f"GPU kernel doesn't support operation: {op}")
 
-    def _execute_on_cpu(self, op: str, args: List[int]) -> List[int]:
+    def _execute_on_cpu(self, op: str, args: list[int]) -> list[int]:
         return self.cpu_engine.execute_scalar(op, args)
 
     def record_recovery(self, block_height: int) -> None:
@@ -189,8 +186,8 @@ class GpuMemoryPool:
         self.capacity = capacity
         self.buffer_size = buffer_size
         self._next_id = 0
-        self._free: List[GpuBuffer] = []
-        self._allocated: Dict[int, GpuBuffer] = {}
+        self._free: list[GpuBuffer] = []
+        self._allocated: dict[int, GpuBuffer] = {}
         self._lock = threading.Lock()
 
         for _ in range(capacity):
@@ -198,7 +195,7 @@ class GpuMemoryPool:
             self._next_id += 1
             self._free.append(buf)
 
-    def alloc(self) -> Optional[GpuBuffer]:
+    def alloc(self) -> GpuBuffer | None:
         with self._lock:
             if not self._free:
                 return None
@@ -250,7 +247,7 @@ class GpuReceipt:
         gpu_device_id: int,
         node_secret: bytes,
         execution_time_us: int = 0,
-    ) -> "GpuReceipt":
+    ) -> GpuReceipt:
         input_hash  = hashlib.sha256(inputs).digest()
         output_hash = hashlib.sha256(outputs).digest()
         payload = (
@@ -297,27 +294,27 @@ class CUDABatchAcceleratorStub:
         self.gpu_available = False  # no CUDA in test env
 
     def accelerate_batch_cpu(
-        self, tx_hashes: List[str], tx_datas: List[bytes], chain: str
-    ) -> List[str]:
+        self, tx_hashes: list[str], tx_datas: list[bytes], chain: str
+    ) -> list[str]:
         results = []
-        for h, d in zip(tx_hashes, tx_datas):
+        for h, d in zip(tx_hashes, tx_datas, strict=False):
             data = f"{h}_{d.hex()}_{chain}_cpu".encode()
             results.append(hashlib.sha256(data).hexdigest())
         return results
 
     def accelerate_batch_gpu_sim(
-        self, tx_hashes: List[str], tx_datas: List[bytes], chain: str
-    ) -> List[str]:
+        self, tx_hashes: list[str], tx_datas: list[bytes], chain: str
+    ) -> list[str]:
         """Simulate GPU batch: deterministic per-input hash."""
         results = []
-        for h, d in zip(tx_hashes, tx_datas):
+        for h, d in zip(tx_hashes, tx_datas, strict=False):
             data = f"{h}_{d.hex()}_{chain}_gpu".encode()
             results.append(hashlib.sha256(data).hexdigest())
         return results
 
     def accelerate_batch(
-        self, tx_hashes: List[str], tx_datas: List[bytes], chain: str
-    ) -> List[str]:
+        self, tx_hashes: list[str], tx_datas: list[bytes], chain: str
+    ) -> list[str]:
         if self.gpu_available:
             return self.accelerate_batch_gpu_sim(tx_hashes, tx_datas, chain)
         return self.accelerate_batch_cpu(tx_hashes, tx_datas, chain)
@@ -332,7 +329,7 @@ class GPULaneServiceStub:
         self.total_txns = 0
         self.total_success = 0
 
-    def process_batch(self, tx_hashes: List[str], tx_datas: List[bytes], chain: str) -> Dict:
+    def process_batch(self, tx_hashes: list[str], tx_datas: list[bytes], chain: str) -> dict:
         t0 = time.monotonic()
         results = self.accelerator.accelerate_batch(tx_hashes, tx_datas, chain)
         elapsed = time.monotonic() - t0
@@ -365,7 +362,7 @@ class GpuDeviceHealth:
     utilization_pct: int = 50
     memory_used_mb: int = 2048
     memory_total_mb: int = 8192
-    last_error: Optional[str] = None
+    last_error: str | None = None
     consecutive_failures: int = 0
 
     @property
@@ -379,11 +376,11 @@ class GpuGuardSentinel:
     MEM_WARN_PCT   = 80.0
     FAIL_THRESHOLD = 3
 
-    def __init__(self, device_ids: List[int]):
-        self.devices: Dict[int, GpuDeviceHealth] = {
+    def __init__(self, device_ids: list[int]):
+        self.devices: dict[int, GpuDeviceHealth] = {
             d: GpuDeviceHealth(device_id=d) for d in device_ids
         }
-        self.alerts: List[str] = []
+        self.alerts: list[str] = []
 
     def report_error(self, device_id: int, error: str) -> None:
         dev = self.devices[device_id]
@@ -413,7 +410,7 @@ class GpuGuardSentinel:
             return "warning"
         return "ok"
 
-    def healthy_device_ids(self) -> List[int]:
+    def healthy_device_ids(self) -> list[int]:
         return [d for d, h in self.devices.items() if h.status == GpuHealthStatus.OK]
 
     def overall_status(self) -> str:
@@ -438,12 +435,12 @@ class CPUCanonicaliser:
     """
 
     @staticmethod
-    def canonicalise_hash_batch(raw_outputs: List[bytes]) -> List[bytes]:
+    def canonicalise_hash_batch(raw_outputs: list[bytes]) -> list[bytes]:
         """Re-hash each raw GPU output through SHA-256 on CPU."""
         return [hashlib.sha256(o).digest() for o in raw_outputs]
 
     @staticmethod
-    def canonicalise_verify_bitmap(bitmap: bytes, count: int) -> List[bool]:
+    def canonicalise_verify_bitmap(bitmap: bytes, count: int) -> list[bool]:
         """Unpack a GPU result bitmap to a canonical bool list."""
         result = []
         for i in range(count):
@@ -456,7 +453,7 @@ class CPUCanonicaliser:
         return result
 
     @staticmethod
-    def canonicalise_poh_chain(chain: List[bytes]) -> bytes:
+    def canonicalise_poh_chain(chain: list[bytes]) -> bytes:
         """Fold a PoH chain to a canonical digest."""
         acc = b"\x00" * 32
         for h in chain:
@@ -477,7 +474,7 @@ class GpuHostcallDispatcher:
     """
 
     def __init__(self):
-        self.call_log: List[Tuple[int, str]] = []   # (hostcall_id, status)
+        self.call_log: list[tuple[int, str]] = []   # (hostcall_id, status)
         self._canonicaliser = CPUCanonicaliser()
 
     def invoke(self, hostcall_id: int, args: bytes) -> bytes:
@@ -832,7 +829,7 @@ class TestGpuMemoryPool:
     def test_in_use_count_tracks_allocated(self):
         pool = GpuMemoryPool(capacity=4, buffer_size=64)
         b1 = pool.alloc()
-        b2 = pool.alloc()
+        pool.alloc()
         assert pool.in_use_count == 2
         pool.free(b1)
         assert pool.in_use_count == 1
@@ -953,7 +950,7 @@ class TestGpuLaneService:
     def setup_method(self):
         self.lane = GPULaneServiceStub(lane_id="lane-0")
 
-    def _make_batch(self, n: int) -> Tuple[List[str], List[bytes]]:
+    def _make_batch(self, n: int) -> tuple[list[str], list[bytes]]:
         hashes = [secrets.token_hex(16) for _ in range(n)]
         datas  = [secrets.token_bytes(32) for _ in range(n)]
         return hashes, datas

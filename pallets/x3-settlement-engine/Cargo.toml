@@ -22,6 +22,7 @@ sp-core = { git = "https://github.com/paritytech/substrate", default-features = 
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, rev = "948fbd2" }
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false, rev = "948fbd2" }
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false, rev = "948fbd2" }
+ripemd = { version = "0.1", default-features = false }
 
 # Internal dependencies
 pallet-x3-kernel = { path = "../x3-kernel", default-features = false }
@@ -43,6 +44,7 @@ std = [
     "sp-std/std",
     "sp-runtime/std",
     "sp-io/std",
+    "ripemd/std",
     "pallet-x3-kernel/std",
     "pallet-atomic-trade-engine/std",
 ]

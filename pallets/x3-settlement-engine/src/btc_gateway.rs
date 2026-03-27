@@ -13,8 +13,9 @@
 
 use crate::types::{BtcBlockHeader, BtcUtxoState};
 use codec::{Decode, Encode};
+use ripemd::{Digest, Ripemd160};
 use scale_info::TypeInfo;
-use sp_core::H256;
+use sp_core::{H256, U256};
 use sp_runtime::RuntimeDebug;
 use sp_std::vec::Vec;
 
@@ -112,10 +113,17 @@ impl BtcHtlcParams {
         address
     }
 
+    /// Compute RIPEMD-160 of `data`.
+    ///
+    /// We use the `ripemd` crate (supports `no_std`) because `sp_io::hashing`
+    /// does not expose RIPEMD-160.  This is the same path used by Bitcoin Core
+    /// for P2PKH/P2SH address derivation: RIPEMD160(SHA256(redeemScript)).
     fn ripemd160(data: &[u8]) -> [u8; 20] {
-        // Simplified - in production use proper RIPEMD160
+        let mut hasher = Ripemd160::new();
+        hasher.update(data);
+        let digest = hasher.finalize();
         let mut result = [0u8; 20];
-        result.copy_from_slice(&sp_io::hashing::sha2_256(data)[..20]);
+        result.copy_from_slice(&digest[..]);
         result
     }
 
@@ -253,16 +261,37 @@ impl BtcAdaptorSignature {
     pub fn extract_secret(&self, completed_sig: &[u8; 64]) -> Option<[u8; 32]> {
         // s_complete = s_pre + secret
         // secret = s_complete - s_pre
-        let mut secret = [0u8; 32];
-
         // Get s values (last 32 bytes of signature)
         let s_complete = &completed_sig[32..64];
         let s_pre = &self.pre_signature[32..64];
 
-        // Subtract (mod curve order) - simplified
-        for i in 0..32 {
-            secret[i] = s_complete[i].wrapping_sub(s_pre[i]);
-        }
+        // Perform modular subtraction in secp256k1 scalar field:
+        // secret = (s_complete - s_pre) mod n
+        // where n = FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+        let mut s_complete_u256 = U256::zero();
+        s_complete_u256 = U256::from_big_endian(s_complete);
+
+        let mut s_pre_u256 = U256::zero();
+        s_pre_u256 = U256::from_big_endian(s_pre);
+
+        let secp256k1_n = {
+            let mut order = U256::zero();
+            order = U256::from_big_endian(&[
+                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0xFF, 0xFE, 0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E, 0x8C,
+                0xD0, 0x36, 0x41, 0x41,
+            ]);
+            order
+        };
+
+        let secret_u256 = if s_complete_u256 >= s_pre_u256 {
+            s_complete_u256 - s_pre_u256
+        } else {
+            secp256k1_n - (s_pre_u256 - s_complete_u256)
+        };
+
+        let mut secret = [0u8; 32];
+        secret_u256.to_big_endian(&mut secret);
 
         Some(secret)
     }

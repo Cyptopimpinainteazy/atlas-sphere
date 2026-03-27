@@ -483,7 +483,24 @@ mod tests {
         assert!(result.is_err());
 
         // Approve it
-        registry.approve_kernel("fft", "1.0.0").ok();
+        let approver = GovernanceAccount {
+            id: "gov-1".to_string(),
+            pubkey: [7u8; 32],
+            role: GovernanceRole::KernelApprover,
+        };
+        let signatures = vec![
+            Signature {
+                signer_id: "sig-1".to_string(),
+                signature: vec![1, 2, 3],
+            },
+            Signature {
+                signer_id: "sig-2".to_string(),
+                signature: vec![4, 5, 6],
+            },
+        ];
+        registry
+            .approve_kernel("fft", "1.0.0", &approver, signatures)
+            .ok();
 
         // Now can activate
         let result = registry.activate_kernel("fft".to_string(), "1.0.0".to_string(), 160);

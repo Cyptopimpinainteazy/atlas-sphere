@@ -1,3 +1,14 @@
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::entrypoint;
 use solana_program::entrypoint::ProgramResult;

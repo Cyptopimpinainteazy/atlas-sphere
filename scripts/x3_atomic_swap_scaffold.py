@@ -7,12 +7,11 @@ It does not connect to external chains.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import hmac
 import struct
 import time
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
 
 
 def sha256(data: bytes) -> bytes:
@@ -89,7 +88,7 @@ class ProofCodec:
 class ThresholdSigner:
     """Scaffold signer (HMAC), stands in for threshold aggregation."""
 
-    def __init__(self, key: bytes):
+    def __init__(self, key: bytes) -> None:
         self.key = key
 
     def sign(self, proof_hash: bytes) -> bytes:
@@ -102,7 +101,7 @@ class ThresholdSigner:
 class ProofRegistry:
     def __init__(self) -> None:
         self.seen: set[bytes] = set()
-        self.nonces: Dict[bytes, int] = {}
+        self.nonces: dict[bytes, int] = {}
 
     def next_nonce(self, chain_id: bytes) -> int:
         n = self.nonces.get(chain_id, 0) + 1
@@ -126,8 +125,8 @@ class SwapLeg:
 
 class CanonicalLedger:
     def __init__(self) -> None:
-        self.balances: Dict[bytes, int] = {}
-        self.locked: Dict[bytes, int] = {}
+        self.balances: dict[bytes, int] = {}
+        self.locked: dict[bytes, int] = {}
 
     def credit(self, account: bytes, amount: int) -> None:
         self.balances[account] = self.balances.get(account, 0) + amount
@@ -150,8 +149,8 @@ class MirrorChain:
         self.chain_id = chain_id
         self.signer = signer
         self.registry = registry
-        self.balances: Dict[bytes, int] = {}
-        self.escrow: Dict[bytes, Tuple[int, bytes, float, bytes]] = {}
+        self.balances: dict[bytes, int] = {}
+        self.escrow: dict[bytes, tuple[int, bytes, float, bytes]] = {}
 
     def _verify_proof(self, proof: Proof) -> None:
         proof_hash = ProofCodec.proof_hash(
@@ -187,7 +186,7 @@ class MirrorChain:
     def refund(self, trade_id: bytes) -> None:
         if trade_id not in self.escrow:
             return
-        amount, _hashlock, deadline, _recipient = self.escrow[trade_id]
+        _amount, _hashlock, deadline, _recipient = self.escrow[trade_id]
         if time.time() <= deadline:
             raise ValueError("not expired")
         del self.escrow[trade_id]
@@ -233,7 +232,7 @@ class SwapCoordinator:
         sig = self.signer.sign(proof_hash)
         return Proof(trade_id, chain_id, "BURN", amount, recipient, preimage_hash, nonce, sig)
 
-    def create_swap(self, owner: bytes, trade_id: bytes, legs: List[SwapLeg], preimage: bytes) -> bytes:
+    def create_swap(self, owner: bytes, trade_id: bytes, legs: list[SwapLeg], preimage: bytes) -> bytes:
         total = sum(leg.amount for leg in legs)
         self.ledger.lock(owner, total)
         hashlock = sha256(preimage)
@@ -282,7 +281,7 @@ def deposit_and_mint(
 
 
 def execute_atomic_swap(
-    chains: List[MirrorChain],
+    chains: list[MirrorChain],
     trade_id: bytes,
     preimage: bytes,
 ) -> None:
@@ -304,12 +303,12 @@ def burn_and_exit(
     coordinator.ledger.unlock(owner, amount)
 
 
-def batch_execute(actions: List[callable]) -> None:
+def batch_execute(actions: list[callable]) -> None:
     for action in actions:
         action()
 
 
-def stress_test_loop(iterations: int, actions: List[callable]) -> None:
+def stress_test_loop(iterations: int, actions: list[callable]) -> None:
     for _ in range(iterations):
         batch_execute(actions)
         time.sleep(PROOF_EMIT_INTERVAL_MS / 1000.0)

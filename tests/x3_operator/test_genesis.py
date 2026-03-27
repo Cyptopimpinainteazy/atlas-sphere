@@ -6,11 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from x3_operator.genesis import (
-    GenesisCeremony, GenesisConfig, GenesisParticipant,
-)
 from x3_operator.config import X3Config
-
+from x3_operator.genesis import (
+    GenesisCeremony,
+    GenesisConfig,
+    GenesisParticipant,
+)
 
 VALIDATORS = [
     "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
@@ -29,7 +30,7 @@ def test_configure_genesis(ceremony):
         chain_id="test-chain",
         chain_name="Test Chain",
         initial_validators=VALIDATORS,
-        initial_balances={v: 1_000_000 for v in VALIDATORS},
+        initial_balances=dict.fromkeys(VALIDATORS, 1000000),
     )
     assert genesis.chain_id == "test-chain"
     assert len(genesis.initial_validators) == 3
@@ -38,17 +39,17 @@ def test_configure_genesis(ceremony):
 def test_genesis_hash_deterministic():
     g1 = GenesisConfig(chain_id="test", chain_name="Test",
                        initial_validators=VALIDATORS,
-                       initial_balances={v: 1000 for v in VALIDATORS})
+                       initial_balances=dict.fromkeys(VALIDATORS, 1000))
     g2 = GenesisConfig(chain_id="test", chain_name="Test",
                        initial_validators=VALIDATORS,
-                       initial_balances={v: 1000 for v in VALIDATORS})
+                       initial_balances=dict.fromkeys(VALIDATORS, 1000))
     assert g1.compute_hash() == g2.compute_hash()
 
 
 def test_freeze():
     g = GenesisConfig(chain_id="test", chain_name="Test",
                       initial_validators=VALIDATORS,
-                      initial_balances={v: 1000 for v in VALIDATORS})
+                      initial_balances=dict.fromkeys(VALIDATORS, 1000))
     h = g.freeze()
     assert g.frozen is True
     assert h == g.frozen_hash
@@ -65,7 +66,7 @@ def test_double_freeze():
 def test_verify_frozen():
     g = GenesisConfig(chain_id="test", chain_name="Test",
                       initial_validators=VALIDATORS,
-                      initial_balances={v: 1000 for v in VALIDATORS})
+                      initial_balances=dict.fromkeys(VALIDATORS, 1000))
     g.freeze()
     assert g.verify() is True
 
@@ -78,7 +79,7 @@ def test_participant_sign():
 
 
 def test_full_ceremony(ceremony):
-    balances = {v: 1_000_000 for v in VALIDATORS}
+    balances = dict.fromkeys(VALIDATORS, 1000000)
     ceremony.configure_genesis("test", "Test", VALIDATORS, balances, VALIDATORS[0])
 
     for i, v in enumerate(VALIDATORS):
@@ -98,7 +99,7 @@ def test_full_ceremony(ceremony):
 
 
 def test_generate_chain_spec(ceremony):
-    balances = {v: 1_000_000 for v in VALIDATORS}
+    balances = dict.fromkeys(VALIDATORS, 1000000)
     ceremony.configure_genesis("test", "Test", VALIDATORS, balances, VALIDATORS[0])
 
     for i, v in enumerate(VALIDATORS):
@@ -121,9 +122,9 @@ def test_generate_chain_spec(ceremony):
 
 
 def test_dry_run_passes(ceremony):
-    balances = {v: 1_000_000 for v in VALIDATORS}
+    balances = dict.fromkeys(VALIDATORS, 1000000)
     ceremony.configure_genesis("test", "Test", VALIDATORS, balances, VALIDATORS[0])
-    passed, issues = ceremony.dry_run()
+    passed, _issues = ceremony.dry_run()
     assert passed
 
 

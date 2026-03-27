@@ -31,18 +31,12 @@ Suites:
 Total: 72 tests
 """
 
-import time
-import math
 import hashlib
 import hmac
-import struct
-import secrets
-import re
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Dict, List, Optional, Tuple
-
 
 # ─────────────────────────────────────────────────────────────────────────── #
 #  Constants from P5 proposal and X3 deployment plan
@@ -220,8 +214,8 @@ class RpcRateLimiter:
 
     def __init__(self, limit: int = RPC_RATE_LIMIT_REQ_PER_SEC):
         self.limit = limit
-        self._window: Dict[str, int] = defaultdict(int)
-        self._blocked: List[str] = []
+        self._window: dict[str, int] = defaultdict(int)
+        self._blocked: list[str] = []
 
     def request(self, ip: str) -> bool:
         """Return True if request is allowed, False if rate-limited."""
@@ -247,13 +241,13 @@ class SecretsVault:
     """Minimal secrets management stub."""
 
     def __init__(self):
-        self._secrets: Dict[str, dict] = {}
+        self._secrets: dict[str, dict] = {}
 
-    def store(self, key: str, value: str, created_epoch: float = None):
+    def store(self, key: str, value: str, created_epoch: float | None = None):
         epoch = created_epoch or time.time()
         self._secrets[key] = {"value": value, "created": epoch}
 
-    def retrieve(self, key: str) -> Optional[str]:
+    def retrieve(self, key: str) -> str | None:
         entry = self._secrets.get(key)
         return entry["value"] if entry else None
 
@@ -278,8 +272,8 @@ class SecretsVault:
 @dataclass
 class OperatorRunbook:
     """Tracks required runbook sections and emergency procedure availability."""
-    sections: List[str] = field(default_factory=list)
-    emergency_procedures: List[str] = field(default_factory=list)
+    sections: list[str] = field(default_factory=list)
+    emergency_procedures: list[str] = field(default_factory=list)
     reviewed: bool = False
     gpg_signed: bool = False
 
@@ -303,15 +297,12 @@ class OperatorRunbook:
         for req in self.REQUIRED_SECTIONS:
             if req not in self.sections:
                 return False
-        for proc in self.REQUIRED_EMERGENCY_PROCS:
-            if proc not in self.emergency_procedures:
-                return False
-        return True
+        return all(proc in self.emergency_procedures for proc in self.REQUIRED_EMERGENCY_PROCS)
 
-    def missing_sections(self) -> List[str]:
+    def missing_sections(self) -> list[str]:
         return [s for s in self.REQUIRED_SECTIONS if s not in self.sections]
 
-    def missing_procedures(self) -> List[str]:
+    def missing_procedures(self) -> list[str]:
         return [p for p in self.REQUIRED_EMERGENCY_PROCS if p not in self.emergency_procedures]
 
 
@@ -323,9 +314,9 @@ class OperatorRunbook:
 class ReleaseBundleManifest:
     """Simulates a signed release bundle manifest."""
     version: str
-    files: List[str] = field(default_factory=list)
-    checksums: Dict[str, str] = field(default_factory=dict)
-    gpg_signature: Optional[str] = None
+    files: list[str] = field(default_factory=list)
+    checksums: dict[str, str] = field(default_factory=dict)
+    gpg_signature: str | None = None
     release_notes_present: bool = False
 
     def add_file(self, name: str, content: bytes = b"stub"):
@@ -352,7 +343,7 @@ class ReleaseBundleManifest:
         ).hexdigest()
         return hmac.compare_digest(self.gpg_signature, expected)
 
-    def missing_files(self) -> List[str]:
+    def missing_files(self) -> list[str]:
         return [f for f in REQUIRED_BUNDLE_FILES if f not in self.files]
 
     @property
@@ -403,7 +394,7 @@ class MainnetReadinessReport:
             self.key_management_complete,
         ])
 
-    def go_decision(self) -> Tuple[bool, List[str]]:
+    def go_decision(self) -> tuple[bool, list[str]]:
         """Returns (go, list_of_blockers)."""
         blockers = []
         if not self.soak_passed():
@@ -514,7 +505,6 @@ class TestTwentyFourHourStability:
         self.net.simulate_24h(100)
         committed = self.net._swaps_committed
         timed_out = self.net._swaps_timed_out
-        violated = self.net._atomic_violations
         # Note: violations are counted separately (rollbacks counted in neither)
         assert committed + timed_out <= self.net._swaps_total
 
@@ -607,7 +597,7 @@ class TestRpcHardening:
 
     def test_rate_limit_allows_up_to_limit(self):
         """100 consecutive requests from one IP are all allowed."""
-        for i in range(RPC_RATE_LIMIT_REQ_PER_SEC):
+        for _i in range(RPC_RATE_LIMIT_REQ_PER_SEC):
             assert self.limiter.request("10.0.0.1") is True
 
     def test_rate_limit_blocks_over_limit(self):

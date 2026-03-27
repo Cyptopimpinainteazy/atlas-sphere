@@ -385,12 +385,12 @@ mod tests {
         assert!(AddressBookManager::has_address(
             &book,
             [2u8; 32],
-            &[contact]
+            &[contact.clone()]
         ));
         assert!(!AddressBookManager::has_address(
             &book,
             [99u8; 32],
-            &[contact.clone()]
+            &[contact]
         ));
     }
 

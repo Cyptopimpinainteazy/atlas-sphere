@@ -443,7 +443,8 @@ mod tests {
         )
         .unwrap();
 
-        LPPositionNFTEngine::burn_nft(&mut nft, nft.owner).unwrap();
+        let owner = nft.owner;
+        LPPositionNFTEngine::burn_nft(&mut nft, owner).unwrap();
         assert!(!nft.is_active);
     }
 
@@ -454,8 +455,8 @@ mod tests {
         )
         .unwrap();
 
-        let transfer =
-            LPPositionNFTEngine::transfer_nft(&mut nft, nft.owner, [3; 32], 200).unwrap();
+        let owner = nft.owner;
+        let transfer = LPPositionNFTEngine::transfer_nft(&mut nft, owner, [3; 32], 200).unwrap();
 
         assert_eq!(nft.owner, [3; 32]);
         assert_eq!(transfer.to, [3; 32]);
@@ -531,7 +532,8 @@ mod tests {
         .unwrap();
 
         LPPositionNFTEngine::update_accumulated_fees(&mut nft, 2_000).unwrap();
-        let claimed = LPPositionNFTEngine::claim_nft_fees(&mut nft, nft.owner).unwrap();
+        let owner = nft.owner;
+        let claimed = LPPositionNFTEngine::claim_nft_fees(&mut nft, owner).unwrap();
 
         assert_eq!(claimed, 2_000);
         assert_eq!(nft.accumulated_fees, 0);

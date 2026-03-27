@@ -17,7 +17,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import struct
 import sys
 import time
 from pathlib import Path
@@ -96,7 +95,7 @@ def bench_poh(num_chains: int = 64, chain_length: int = 50_000, iterations: int 
 def bench_ed25519(count: int = 10_000, iterations: int = 5) -> dict:
     """Benchmark Ed25519 signature verification."""
     try:
-        from nacl.signing import SigningKey, VerifyKey
+        from nacl.signing import SigningKey
     except ImportError:
         # Fallback: use ed25519 from cryptography or hashlib-based stub
         return _bench_ed25519_hashlib_stub(count, iterations)
@@ -140,13 +139,13 @@ def _bench_ed25519_hashlib_stub(count: int, iterations: int) -> dict:
         sigs = [sk.sign(m) for m in msgs]
 
         # Warmup
-        for m, s in zip(msgs[:100], sigs[:100]):
+        for m, s in zip(msgs[:100], sigs[:100], strict=False):
             pk.verify(s, m)
 
         times = []
         for _ in range(iterations):
             t0 = time.perf_counter()
-            for m, s in zip(msgs, sigs):
+            for m, s in zip(msgs, sigs, strict=False):
                 pk.verify(s, m)
             times.append(time.perf_counter() - t0)
 
@@ -206,8 +205,8 @@ def bench_keccak(count: int = 200_000, iterations: int = 5) -> dict:
 def bench_secp256k1(count: int = 5_000, iterations: int = 3) -> dict:
     """Benchmark secp256k1 ECDSA signature verification."""
     try:
-        from cryptography.hazmat.primitives.asymmetric import ec
         from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.asymmetric import ec
 
         sk = ec.generate_private_key(ec.SECP256K1())
         pk = sk.public_key()
@@ -215,13 +214,13 @@ def bench_secp256k1(count: int = 5_000, iterations: int = 3) -> dict:
         sigs = [sk.sign(m, ec.ECDSA(hashes.SHA256())) for m in msgs]
 
         # Warmup
-        for m, s in zip(msgs[:100], sigs[:100]):
+        for m, s in zip(msgs[:100], sigs[:100], strict=False):
             pk.verify(s, m, ec.ECDSA(hashes.SHA256()))
 
         times = []
         for _ in range(iterations):
             t0 = time.perf_counter()
-            for m, s in zip(msgs, sigs):
+            for m, s in zip(msgs, sigs, strict=False):
                 pk.verify(s, m, ec.ECDSA(hashes.SHA256()))
             times.append(time.perf_counter() - t0)
 

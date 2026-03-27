@@ -144,10 +144,8 @@ fn team_vesting_claim_works() {
         )));
 
         // Check that claim was transferred to canonical ledger
-        let canonical_balance = pallet_x3_kernel::CanonicalLedger::<Test>::get(
-            TEAM_MEMBER,
-            X3_ASSET_ID,
-        );
+        let canonical_balance =
+            pallet_x3_kernel::CanonicalLedger::<Test>::get(TEAM_MEMBER, X3_ASSET_ID);
         assert!(canonical_balance > 0);
 
         // Check vesting schedule was updated

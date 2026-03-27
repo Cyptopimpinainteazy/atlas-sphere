@@ -250,7 +250,7 @@ mod tests {
 
     #[test]
     fn test_signature() {
-        let key = SigningKey::from_seed(b"test seed");
+        let key = SigningKey::from_seed(b"test seed").unwrap();
         let msg = b"test message";
         let sig = key.sign(msg);
 

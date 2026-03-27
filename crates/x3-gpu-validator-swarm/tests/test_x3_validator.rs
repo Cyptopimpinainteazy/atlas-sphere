@@ -7,7 +7,7 @@ use x3_gpu_validator_swarm::{
     crypto::{HashAlgorithm, VerificationResult},
     deterministic::{DeterministicEngine, DeterministicTask, ExecutionMode, TaskType},
     metrics::HealthStatus,
-    quarantine::{DivergenceRecord, QuarantineManager, QuarantineReason},
+    quarantine::{AuthToken, DivergenceRecord, QuarantineManager, QuarantineReason},
     validator::Validator,
 };
 
@@ -126,7 +126,14 @@ fn test_quarantine_manager() {
     assert_eq!(status.divergence_count, 1);
 
     // Release
-    assert!(manager.release("validator1"));
+    let token = AuthToken {
+        token: "test-token".to_string(),
+        expires_at: chrono::Utc::now() + chrono::Duration::minutes(10),
+    };
+    manager.register_orchestrator("orchestrator-1".to_string(), token.clone());
+    assert!(manager
+        .release("validator1", "orchestrator-1", &token)
+        .unwrap());
 }
 
 /// Test divergence recording

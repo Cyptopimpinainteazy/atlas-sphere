@@ -1,8 +1,10 @@
 use parity_scale_codec::Encode;
 use sc_service::GenericChainSpec;
 use sc_service::{ChainSpec as ServiceChainSpec, ChainType};
+use serde::Deserialize;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
+use sp_core::crypto::Ss58Codec;
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
@@ -19,6 +21,84 @@ const X3: u128 = 1_000_000_000_000;
 const ENDOWMENT: u128 = 1_000_000 * X3;
 
 type AccountPublic = <Signature as Verify>::Signer;
+
+#[derive(Debug, Deserialize)]
+struct ExternalAuthority {
+    aura: String,
+    grandpa: String,
+}
+
+fn parse_authorities_from_env(var: &str) -> Result<Vec<(AuraId, GrandpaId)>, String> {
+    let raw = std::env::var(var).map_err(|_| {
+        format!(
+            "Missing {}. Expected JSON array of {{aura,grandpa}} SS58 keys",
+            var
+        )
+    })?;
+
+    let decoded: Vec<ExternalAuthority> =
+        serde_json::from_str(&raw).map_err(|e| format!("Invalid {} JSON: {}", var, e))?;
+    if decoded.is_empty() {
+        return Err(format!("{} cannot be empty", var));
+    }
+
+    decoded
+        .into_iter()
+        .map(|entry| {
+            let aura = AuraId::from_ss58check(&entry.aura)
+                .map_err(|e| format!("Invalid Aura SS58 in {}: {}", var, e))?;
+            let grandpa = GrandpaId::from_ss58check(&entry.grandpa)
+                .map_err(|e| format!("Invalid Grandpa SS58 in {}: {}", var, e))?;
+            Ok((aura, grandpa))
+        })
+        .collect()
+}
+
+fn load_bootnodes() -> Vec<sc_network::config::MultiaddrWithPeerId> {
+    if let Ok(raw) = std::env::var("TESTNET_BOOTNODES") {
+        return raw
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .filter_map(|s| s.parse::<sc_network::config::MultiaddrWithPeerId>().ok())
+            .collect();
+    }
+
+    let info_path = PathBuf::from("deployment/keys/bootnode-info.txt");
+    let Ok(contents) = std::fs::read_to_string(info_path) else {
+        return Vec::new();
+    };
+
+    contents
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("/ip4/") || line.starts_with("/dns"))
+        .filter_map(|line| line.parse::<sc_network::config::MultiaddrWithPeerId>().ok())
+        .collect()
+}
+
+fn assert_no_forbidden_live_seed() -> Result<(), String> {
+    const FORBIDDEN: &[&str] = &[
+        "Alice",
+        "Bob",
+        "TestnetAlpha",
+        "TestnetBeta",
+        "TestnetGamma",
+        "TestnetDelta",
+        "ValidatorAlpha",
+        "ValidatorBeta",
+        "ValidatorGamma",
+        "ValidatorDelta",
+        "ValidatorEpsilon",
+    ];
+
+    if let Ok(seed_hint) = std::env::var("X3_DEV_SEED") {
+        if FORBIDDEN.iter().any(|s| seed_hint.contains(s)) {
+            return Err("Refusing Live chain config with known development seed".to_string());
+        }
+    }
+    Ok(())
+}
 
 /// Load the named `ChainSpec` via the supplied identifier string.
 ///
@@ -136,6 +216,7 @@ pub fn staging_config() -> Result<ChainSpec, String> {
         authority_keys_from_seed("AtlasBeta")?,
         authority_keys_from_seed("AtlasGamma")?,
     ];
+    let bootnodes = load_bootnodes();
     let endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("AtlasFoundation")?,
         get_account_id_from_seed::<sr25519::Public>("AtlasEcosystem")?,
@@ -153,7 +234,7 @@ pub fn staging_config() -> Result<ChainSpec, String> {
                 endowed_accounts.clone(),
             )
         },
-        vec![],
+        bootnodes,
         None,
         Some(DEFAULT_PROTOCOL_ID),
         None,
@@ -177,15 +258,12 @@ pub fn staging_config() -> Result<ChainSpec, String> {
 /// x3-chain-node --chain=testnet --validator --name=TestnetDelta
 /// ```
 pub fn testnet_config() -> Result<ChainSpec, String> {
+    assert_no_forbidden_live_seed()?;
     let wasm_binary =
         WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available for testnet".to_string())?;
 
-    let initial_authorities = vec![
-        authority_keys_from_seed("TestnetAlpha")?,
-        authority_keys_from_seed("TestnetBeta")?,
-        authority_keys_from_seed("TestnetGamma")?,
-        authority_keys_from_seed("TestnetDelta")?,
-    ];
+    let initial_authorities = parse_authorities_from_env("X3_TESTNET_AUTHORITIES")?;
+    let bootnodes = load_bootnodes();
 
     let endowed_accounts = vec![
         // Validator accounts (auto-endowed in genesis fn)
@@ -208,8 +286,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
                 endowed_accounts.clone(),
             )
         },
-        // Bootnodes (empty for initial launch, populate after first validator starts)
-        vec![],
+        bootnodes,
         None,
         Some(DEFAULT_PROTOCOL_ID),
         None,
@@ -230,18 +307,12 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
 /// This function will fail if WASM binary is not available, ensuring
 /// only properly built binaries can boot the network.
 pub fn production_config() -> Result<ChainSpec, String> {
+    assert_no_forbidden_live_seed()?;
     let wasm_binary = WASM_BINARY
         .ok_or_else(|| "X3 Chain WASM binary not available for production".to_string())?;
 
-    // Production uses distinct, high-security authority identities.
-    // These should be replaced with actual validator keys during mainnet launch.
-    let initial_authorities = vec![
-        authority_keys_from_seed("ValidatorAlpha")?,
-        authority_keys_from_seed("ValidatorBeta")?,
-        authority_keys_from_seed("ValidatorGamma")?,
-        authority_keys_from_seed("ValidatorDelta")?,
-        authority_keys_from_seed("ValidatorEpsilon")?,
-    ];
+    let initial_authorities = parse_authorities_from_env("X3_PRODUCTION_AUTHORITIES")?;
+    let bootnodes = load_bootnodes();
 
     let endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("TreasuryFoundation")?,
@@ -260,7 +331,7 @@ pub fn production_config() -> Result<ChainSpec, String> {
                 endowed_accounts.clone(),
             )
         },
-        vec![],
+        bootnodes,
         None,
         Some(DEFAULT_PROTOCOL_ID),
         None,

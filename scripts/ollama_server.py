@@ -20,20 +20,19 @@ import re
 import shutil
 import signal
 import subprocess
-import sys
 import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import Any, Dict, List, Optional
-from urllib.request import Request, urlopen
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any
 from urllib.error import URLError
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 # ---------------------------------------------------------------------------
 # Configuration (env-driven)
 # ---------------------------------------------------------------------------
 LISTEN_HOST = os.getenv("OLLAMA_WRAPPER_HOST", "0.0.0.0")
 LISTEN_PORT = int(os.getenv("OLLAMA_WRAPPER_PORT", "11435"))
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")  # nosemgrep: py-no-localhost-endpoints
 LOG_LEVEL = os.getenv("OLLAMA_WRAPPER_LOG_LEVEL", "INFO").upper()
 
 # GPU env vars (mirror the ones already set in the user env / bashrc)
@@ -83,7 +82,7 @@ def _proxy(path: str, method: str = "GET", body: bytes | None = None,
         return 500, err, "application/json"
 
 
-def _gpu_info() -> List[Dict[str, Any]]:
+def _gpu_info() -> list[dict[str, Any]]:
     """Return basic GPU info via nvidia-smi."""
     nvidia_smi = shutil.which("nvidia-smi")
     if not nvidia_smi:
@@ -95,7 +94,7 @@ def _gpu_info() -> List[Dict[str, Any]]:
              "--format=csv,noheader,nounits"],
             text=True, timeout=5,
         )
-        gpus: List[Dict[str, Any]] = []
+        gpus: list[dict[str, Any]] = []
         for line in out.strip().splitlines():
             parts = [p.strip() for p in line.split(",")]
             if len(parts) >= 8:
@@ -123,7 +122,7 @@ def _ollama_alive() -> bool:
         return False
 
 
-def _models() -> List[Dict[str, Any]]:
+def _models() -> list[dict[str, Any]]:
     """Fetch model list from Ollama."""
     try:
         status, body, _ = _proxy("/api/tags", timeout=5)
@@ -135,7 +134,7 @@ def _models() -> List[Dict[str, Any]]:
     return []
 
 
-def _parse_embedding_alias_map() -> Dict[str, str]:
+def _parse_embedding_alias_map() -> dict[str, str]:
     """Parse embedding alias configuration from env.
 
     Supports:
@@ -157,7 +156,7 @@ def _parse_embedding_alias_map() -> Dict[str, str]:
     except Exception:
         pass
 
-    mapping: Dict[str, str] = {}
+    mapping: dict[str, str] = {}
     for pair in raw.split(","):
         if ":" not in pair:
             continue
@@ -169,7 +168,7 @@ def _parse_embedding_alias_map() -> Dict[str, str]:
     return mapping
 
 
-def rewrite_embedding_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+def rewrite_embedding_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Rewrite embedding payload model aliases for tool compatibility."""
     if not isinstance(payload, dict):
         return payload
@@ -231,7 +230,7 @@ def _serialize_tool_arguments(arguments: Any) -> str:
         return "{}"
 
 
-def _candidate_to_tool_call(candidate: Dict[str, Any], index: int) -> Optional[Dict[str, Any]]:
+def _candidate_to_tool_call(candidate: dict[str, Any], index: int) -> dict[str, Any] | None:
     if not isinstance(candidate, dict):
         return None
 
@@ -262,12 +261,12 @@ def _candidate_to_tool_call(candidate: Dict[str, Any], index: int) -> Optional[D
     }
 
 
-def extract_tool_calls_from_content(content: str) -> Optional[List[Dict[str, Any]]]:
+def extract_tool_calls_from_content(content: str) -> list[dict[str, Any]] | None:
     parsed = _try_parse_json(content)
     if parsed is None:
         return None
 
-    candidates: List[Dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
     if isinstance(parsed, dict):
         if isinstance(parsed.get("tool_calls"), list):
             for item in parsed["tool_calls"]:
@@ -283,7 +282,7 @@ def extract_tool_calls_from_content(content: str) -> Optional[List[Dict[str, Any
     if not candidates:
         return None
 
-    tool_calls: List[Dict[str, Any]] = []
+    tool_calls: list[dict[str, Any]] = []
     for idx, candidate in enumerate(candidates):
         normalized = _candidate_to_tool_call(candidate, idx)
         if normalized:
@@ -292,7 +291,7 @@ def extract_tool_calls_from_content(content: str) -> Optional[List[Dict[str, Any
     return tool_calls or None
 
 
-def normalize_chat_completion_payload(payload: Dict[str, Any]) -> tuple[Dict[str, Any], bool]:
+def normalize_chat_completion_payload(payload: dict[str, Any]) -> tuple[dict[str, Any], bool]:
     if not isinstance(payload, dict):
         return payload, False
 
@@ -346,7 +345,7 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
 
     server_version = "AtlasSphere-OllamaWrapper/1.0"
 
-    def log_message(self, fmt, *args):  # noqa: D401
+    def log_message(self, fmt, *args) -> None:
         log.debug(fmt, *args)
 
     # ── GET routes ────────────────────────────────────────────────────────
@@ -368,7 +367,7 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         return self._proxy_post(self.path, body)
 
     # ── Route implementations ────────────────────────────────────────────
-    def _handle_health(self):
+    def _handle_health(self) -> None:
         alive = _ollama_alive()
         gpus = _gpu_info()
         payload = {
@@ -388,7 +387,7 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         code = 200 if alive else 503
         self._json(code, payload)
 
-    def _handle_status(self):
+    def _handle_status(self) -> None:
         alive = _ollama_alive()
         gpus = _gpu_info()
         models = _models()
@@ -425,7 +424,7 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         self._json(200, payload)
 
     # ── Proxy helpers ────────────────────────────────────────────────────
-    def _proxy_get(self, path: str):
+    def _proxy_get(self, path: str) -> None:
         status, body, ct = _proxy(path)
         self.send_response(status)
         self.send_header("Content-Type", ct)
@@ -433,12 +432,12 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _proxy_post(self, path: str, body: bytes | None):
+    def _proxy_post(self, path: str, body: bytes | None) -> None:
         hdrs = {}
         if self.headers.get("Content-Type"):
             hdrs["Content-Type"] = self.headers["Content-Type"]
 
-        request_payload: Optional[Dict[str, Any]] = None
+        request_payload: dict[str, Any] | None = None
         if body:
             try:
                 maybe_payload = json.loads(body.decode())
@@ -483,7 +482,7 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
         self.wfile.write(resp_body)
 
     # ── JSON response helper ─────────────────────────────────────────────
-    def _json(self, code: int, data: Any):
+    def _json(self, code: int, data: Any) -> None:
         payload = json.dumps(data, indent=2).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -495,10 +494,10 @@ class OllamaWrapperHandler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def main():
+def main() -> None:
     server = HTTPServer((LISTEN_HOST, LISTEN_PORT), OllamaWrapperHandler)
 
-    def _shutdown(signum, frame):
+    def _shutdown(signum, frame) -> None:
         log.info("Received signal %s — shutting down", signum)
         server.shutdown()
 

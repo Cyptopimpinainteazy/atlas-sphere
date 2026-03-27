@@ -369,8 +369,8 @@ mod tests {
         let mut pool = FlashLoanEngine::create_flash_loan_pool(1, 100_000_000).unwrap();
         FlashLoanEngine::execute_flash_loan(&mut loan, &mut pool, 100).unwrap();
 
-        FlashLoanEngine::repay_flash_loan(&mut loan, &mut pool, loan.repayment_required, 100)
-            .unwrap();
+        let repayment_required = loan.repayment_required;
+        FlashLoanEngine::repay_flash_loan(&mut loan, &mut pool, repayment_required, 100).unwrap();
 
         assert_eq!(loan.status, 2);
         assert_eq!(pool.total_fees_collected, 9_000);

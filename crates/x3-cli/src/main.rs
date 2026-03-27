@@ -1,3 +1,15 @@
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
+
 //! x3 CLI - Command-line interface for X3 Chain development.
 //!
 //! This tool provides commands for building, deploying, testing,

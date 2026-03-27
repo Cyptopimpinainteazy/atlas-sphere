@@ -1,6 +1,8 @@
 import threading
 import time
+
 import requests
+
 from swarm.api_server import SwarmAPIServer
 
 
@@ -21,12 +23,12 @@ def start_server_in_thread():
 
 def test_ralph_register_and_request_task(tmp_path):
     # Start server
-    server, t, loop = start_server_in_thread()
+    _server, _t, loop = start_server_in_thread()
 
     # Submit a task to queue
     r = requests.post('http://127.0.0.1:8081/api/tasks/submit', json={'workload_type': 'general_compute', 'payload': {'cmd': 'echo hi'}})
     assert r.status_code == 200 and r.json().get('success') is True
-    task_id = r.json().get('task_id')
+    r.json().get('task_id')
 
     # Register ralph
     r = requests.post('http://127.0.0.1:8081/api/gpu/register', json={'contributor_id': 'ralph-test', 'gpuInfo': {'vendor': 'none', 'model': 'cpu', 'vram': 0}})

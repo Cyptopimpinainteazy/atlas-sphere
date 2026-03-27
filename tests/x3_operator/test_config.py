@@ -1,13 +1,12 @@
 """Tests for x3_operator.config"""
 
-import json
 import tempfile
 from pathlib import Path
 
 from x3_operator.config import (
-    X3Config, OperatorRole, NetworkPhase,
-    ChainConfig, BondingConfig, SlashingConfig,
-    HealthConfig, AgentConfig, StorageConfig, TelemetryConfig,
+    NetworkPhase,
+    OperatorRole,
+    X3Config,
 )
 
 

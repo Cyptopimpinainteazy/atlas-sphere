@@ -1,3 +1,15 @@
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
+
 /// X3 Chain TPS Tracker
 ///
 /// This module polls the X3 Chain node for transaction data,

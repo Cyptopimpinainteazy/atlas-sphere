@@ -1,7 +1,6 @@
-import json
-from pathlib import Path
-from tools.process_finalized_payouts import process
 from swarm.db import SessionLocal, models
+
+from tools.process_finalized_payouts import process
 
 
 def test_process_finalized(tmp_path, monkeypatch):
@@ -12,7 +11,7 @@ def test_process_finalized(tmp_path, monkeypatch):
         session.commit()
     finally:
         session.close()
-    
+
     # run process (eth-tester)
     process()
     # check that event was added to DB

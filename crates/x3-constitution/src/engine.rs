@@ -214,6 +214,7 @@ pub struct EnforcementAction {
 mod tests {
     use super::*;
     use crate::amendment::AmendmentProof;
+    use crate::InvariantBounds;
 
     fn make_engine() -> ConstitutionEngine {
         ConstitutionEngine::new()

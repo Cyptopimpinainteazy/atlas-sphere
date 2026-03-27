@@ -122,4 +122,12 @@ ignore = [
     "RUSTSEC-2025-0141",
     # wasmtime (additional) — pinned by Substrate executor
     "RUSTSEC-2026-0020",
+    # rustls-webpki CRL matching — pinned by Substrate/Polkadot TLS deps;
+    # no independent upgrade path without upstream SDK bump.
+    "RUSTSEC-2026-0049",
+    # tar unpack_in symlink chmod — pulled in by Solana/cargo tooling;
+    # not invoked on untrusted archives in x3-chain node.
+    "RUSTSEC-2026-0067",
+    # tar PAX size headers — same dep as above; same rationale.
+    "RUSTSEC-2026-0068",
 ]

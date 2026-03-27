@@ -1504,35 +1504,98 @@ impl_runtime_apis! {
             use codec::Decode;
             if svm_pubkey.len() != 32 { return false; }
             let Ok(account_id) = AccountId::decode(&mut &svm_pubkey[..]) else { return false; };
-            // A program account holds code in pallet_evm AccountCodes keyed by
-            // EVM-mapped address. For native SVM programs we check if the
-            // canonical balance is non-zero as a proxy for account existence.
+            // pallet-svm is not instantiated in this runtime; use the canonical
+            // ledger balance as a proxy for account existence.  A deployed SVM
+            // program always has a non-zero canonical balance (rent-exempt deposit).
             let balance = pallet_x3_kernel::CanonicalLedger::<Runtime>::get(&account_id, &0u32);
             balance > 0
         }
 
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
-            // Decode and execute a raw (RLP-encoded) EVM transaction via the configured EVM adapter.
-            // Returns keccak256 hash of the raw_tx bytes on success, or SCALE-encoded error on failure.
+            // Payload contract:
+            // [caller(20)] [to(20)] [value(16 LE)] [data_len(4 LE)] [data...]
             use sp_io::hashing::keccak_256;
-            use pallet_x3_kernel::EvmExecutorAdapter;
-            use codec::Encode;
-            let result = <Runtime as pallet_x3_kernel::Config>::EvmAdapter::execute(&raw_tx, 10_000_000);
+            use fp_evm::ExitReason;
+            use pallet_evm::Runner;
+            use sp_core::{H160, U256};
+
+            if raw_tx.len() < (20 + 20 + 16 + 4) {
+                return Err(b"invalid payload: too short".to_vec());
+            }
+
+            let caller = {
+                let mut bytes = [0u8; 20];
+                bytes.copy_from_slice(&raw_tx[0..20]);
+                H160::from(bytes)
+            };
+            let to = {
+                let mut bytes = [0u8; 20];
+                bytes.copy_from_slice(&raw_tx[20..40]);
+                H160::from(bytes)
+            };
+            let value = U256::from_little_endian(&raw_tx[40..56]);
+            let data_len = u32::from_le_bytes(raw_tx[56..60].try_into().unwrap_or([0u8; 4])) as usize;
+            if raw_tx.len() < 60 + data_len {
+                return Err(b"invalid payload: data_len out of bounds".to_vec());
+            }
+            let data = raw_tx[60..60 + data_len].to_vec();
+
+            frame_support::log::info!(
+                target: "runtime::evm",
+                "submit_evm_transaction caller=0x{:?} to=0x{:?} value={} data_len={}",
+                caller,
+                to,
+                value,
+                data_len,
+            );
+
+            let evm_config = fp_evm::Config::shanghai();
+            let result = <Runtime as pallet_evm::Config>::Runner::call(
+                caller,
+                to,
+                data,
+                value,
+                10_000_000u64,
+                Some(U256::from(NATIVE_GAS_PRICE)),
+                None,
+                None,
+                Vec::new(),
+                false,
+                false,
+                None,
+                None,
+                &evm_config,
+            );
+
             match result {
-                Ok(receipt) if receipt.success => {
+                Ok(info) => match info.exit_reason {
+                    ExitReason::Succeed(_) => {
                     let tx_hash = keccak_256(&raw_tx).to_vec();
                     Ok(tx_hash)
                 }
-                Ok(receipt) => {
-                    Err(receipt.return_data)
-                }
-                Err(e) => {
-                    Err(e.encode())
-                }
+                    ExitReason::Revert(_) => Err(info.value),
+                    ExitReason::Error(_) | ExitReason::Fatal(_) => {
+                        Err(b"EVM execution failed".to_vec())
+                    }
+                },
+                Err(_) => Err(b"EVM runner call failed".to_vec()),
             }
         }
 
-        fn call_evm(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>> {
+        fn submit_svm_instruction(program_id: [u8; 32], instruction_data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+            use pallet_x3_kernel::SvmExecutorAdapter;
+            let mut payload = Vec::with_capacity(32 + instruction_data.len());
+            payload.extend_from_slice(&program_id);
+            payload.extend_from_slice(&instruction_data);
+
+            match <Runtime as pallet_x3_kernel::Config>::SvmAdapter::execute(&payload, 1_400_000) {
+                Ok(receipt) if receipt.success => Ok(receipt.return_data),
+                Ok(receipt) => Err(receipt.return_data),
+                Err(_) => Err(b"SVM execution failed".to_vec()),
+            }
+        }
+
+        fn call_evm(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>> {
             use fp_evm::ExitReason;
             use pallet_evm::Runner;
             use sp_core::{H160, U256};
@@ -1544,7 +1607,17 @@ impl_runtime_apis! {
             let mut addr = [0u8; 20];
             addr.copy_from_slice(&evm_address[..20]);
             let target = H160::from(addr);
-            let source = H160::zero();
+            let source = caller
+                .and_then(|c| {
+                    if c.len() == 20 {
+                        let mut bytes = [0u8; 20];
+                        bytes.copy_from_slice(&c[..20]);
+                        Some(H160::from(bytes))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(H160::zero);
             let effective_gas = if gas_limit == 0 { 10_000_000u64 } else { gas_limit };
             let evm_config = fp_evm::Config::shanghai();
 
@@ -1577,7 +1650,7 @@ impl_runtime_apis! {
             }
         }
 
-        fn estimate_evm_gas(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>> {
+        fn estimate_evm_gas(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>> {
             use fp_evm::ExitReason;
             use pallet_evm::Runner;
             use sp_core::{H160, U256};
@@ -1590,7 +1663,17 @@ impl_runtime_apis! {
             let mut addr = [0u8; 20];
             addr.copy_from_slice(&evm_address[..20]);
             let target = H160::from(addr);
-            let source = H160::zero();
+            let source = caller
+                .and_then(|c| {
+                    if c.len() == 20 {
+                        let mut bytes = [0u8; 20];
+                        bytes.copy_from_slice(&c[..20]);
+                        Some(H160::from(bytes))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_else(H160::zero);
             let effective_gas = if gas_limit == 0 { 10_000_000u64 } else { gas_limit };
             let evm_config = fp_evm::Config::shanghai();
 

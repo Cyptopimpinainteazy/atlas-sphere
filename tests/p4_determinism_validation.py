@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """P4 Phase 3: Determinism Validation Suite
 ===========================================
 
@@ -23,7 +24,6 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-from typing import Optional
 
 import pytest
 
@@ -242,7 +242,7 @@ class TestBlockReplay:
             assert root == recorded[slot - 1], (
                 f"Replay mismatch at slot {slot}: {root.hex()} ≠ {recorded[slot-1].hex()}"
             )
-        print(f"\n100-block replay consistent (100/100 roots match)")
+        print("\n100-block replay consistent (100/100 roots match)")
 
     def test_1000_block_replay_consistent(self):
         """1000-block replay: every state root must match across two full passes."""
@@ -258,7 +258,7 @@ class TestBlockReplay:
             assert root == recorded[slot - 1], (
                 f"Replay mismatch at slot {slot}: {root.hex()} ≠ {recorded[slot-1].hex()}"
             )
-        print(f"\n1000-block replay: 0 mismatches (all roots consistent)")
+        print("\n1000-block replay: 0 mismatches (all roots consistent)")
 
     def test_replay_timing_budget(self):
         """100-block replay (50 tx each) must complete within 30 seconds CPU."""
@@ -315,7 +315,6 @@ class TestParallelSerialEquivalence:
         """Cover the `if not ok:` true-branch in _parallel_state_root (line ~312).
         The main tests always pass valid sigs so this branch body is never reached.
         """
-        import asyncio
 
         txs = _make_transactions(seed=300, count=8)
 
@@ -385,7 +384,7 @@ class TestCrossVMMemoryIsolation:
         txs_a = _make_transactions(seed=500, count=10)
         txs_b = _make_transactions(seed=501, count=10)
 
-        results_a = validator.validate_transactions(txs_a)
+        validator.validate_transactions(txs_a)
         results_b = validator.validate_transactions(txs_b)
 
         # Second batch should not be influenced by first batch's account set
@@ -431,7 +430,6 @@ class TestBranchCoverageGaps:
         The main suite always sends valid sigs so the body (marking tx invalid)
         is never reached.
         """
-        import asyncio
 
         txs = [MockSolanaTransaction(9001), MockSolanaTransaction(9002)]
 

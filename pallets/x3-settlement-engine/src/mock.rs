@@ -3,7 +3,7 @@
 use crate as pallet_x3_settlement_engine;
 use frame_support::{
     derive_impl, parameter_types,
-    traits::{ConstU32, ConstU64},
+    traits::{ConstBool, ConstU32, ConstU64},
 };
 use frame_system::EnsureRoot;
 use sp_core::H256;
@@ -101,6 +101,11 @@ impl pallet_x3_kernel::Config for Test {
     type SvmAdapter = ();
     type X3Adapter = ();
     type GovernanceOrigin = frame_system::EnsureRoot<u64>;
+    type CrossVmPrepareTtl = ConstU64<10>;
+    type MaxPreparedCrossVmOps = ConstU32<16>;
+    type MaxPreparedOpsPerBlock = ConstU32<8>;
+    type RequireCrossVmProof = ConstBool<false>;
+    type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
 }
 
 impl pallet_x3_settlement_engine::Config for Test {

@@ -366,11 +366,11 @@ mod tests {
     #[test]
     fn identity_add_zero() {
         // v1 = v0 + 0 should become v1 = v0
-        let mut copies = BTreeMap::new();
+        let mut copies: BTreeMap<MirValue, MirValue> = BTreeMap::new();
 
         let pass = CopyPropagationPass::new();
         let result = pass.is_identity(BinaryOp::Add, MirValue(0), MirValue(1), &{
-            let mut lit = BTreeMap::new();
+            let mut lit: BTreeMap<MirValue, Literal> = BTreeMap::new();
             lit.insert(MirValue(1), Literal::Integer(0));
             lit
         });

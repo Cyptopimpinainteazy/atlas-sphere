@@ -9,10 +9,9 @@ These tests validate:
 4. Full pipeline: log → extraction → display
 """
 
+import re
 import subprocess
 import sys
-import os
-import re
 from pathlib import Path
 
 # Test fixtures with various x3-chain log formats
@@ -68,7 +67,7 @@ def test_log_parsing_with_regex():
         (r"Validated block\s+#(\d+)", "Validated block #1271", "1271"),
         (r"Consensus reached at block\s+#(\d+)", "Consensus reached at block #1272", "1272"),
     ]
-    
+
     for pattern, log_line, expected_block in patterns:
         match = re.search(pattern, log_line)
         assert match is not None, f"Pattern failed to match: {pattern} against {log_line}"
@@ -80,7 +79,7 @@ def test_log_format_coverage():
     """Test all x3-chain log formats are covered."""
     for format_name, log_line in LOG_FORMATS.items():
         expected = EXPECTED_BLOCKS[format_name]
-        
+
         # Try to extract block using multiple patterns
         patterns = [
             r"Block imported:\s+#(\d+)",
@@ -91,13 +90,13 @@ def test_log_format_coverage():
             r"Validated block\s+#(\d+)",
             r"Consensus reached at block\s+#(\d+)",
         ]
-        
+
         match = None
         for pattern in patterns:
             match = re.search(pattern, log_line)
             if match:
                 break
-        
+
         assert match is not None, f"No pattern matched {format_name}: {log_line}"
         block_num = int(match.group(1))
         assert block_num == expected, f"Block mismatch: got {block_num}, expected {expected}"
@@ -107,30 +106,30 @@ def test_log_format_coverage():
 def test_block_display_basic():
     """Test that block_display.py runs successfully."""
     display_script = get_project_root() / "scripts" / "block_display.py"
-    
+
     result = subprocess.run(
         ["python3", str(display_script), "42"],
         capture_output=True,
         text=True,
         timeout=5
     )
-    
+
     assert result.returncode == 0, f"Display script failed: {result.stderr}"
     assert "Block #42" in result.stdout, "Output missing block header"
     assert "┌──┐" in result.stdout, "Output missing box drawing characters"
-    print(f"✅ block_display.py runs successfully with block #42")
+    print("✅ block_display.py runs successfully with block #42")
 
 
 def test_block_display_milestones():
     """Test that milestones display correctly."""
     display_script = get_project_root() / "scripts" / "block_display.py"
-    
+
     test_cases = [
         (1000, "1k blocks finalized"),
         (100000, "MAJOR MILESTONE"),
         (1000000, "ONE MILLION"),
     ]
-    
+
     for block_num, expected_text in test_cases:
         result = subprocess.run(
             ["python3", str(display_script), str(block_num)],
@@ -138,7 +137,7 @@ def test_block_display_milestones():
             text=True,
             timeout=5
         )
-        
+
         assert result.returncode == 0, f"Failed for block {block_num}"
         assert expected_text in result.stdout, f"Expected '{expected_text}' not in output for block {block_num}"
         print(f"✅ Milestone display for block #{block_num}")
@@ -147,16 +146,16 @@ def test_block_display_milestones():
 def test_monitor_with_simulated_logs():
     """Test monitor script with simulated log output."""
     monitor_script = get_project_root() / "scripts" / "monitor_blocks.sh"
-    
+
     # Create a test log with multiple formats
     test_logs = [
         "Block imported: #1268",
         "Imported #1269 (0xd924…1cde)",
         "Block finalized: #1270",
     ]
-    
+
     test_input = "\n".join(test_logs)
-    
+
     # Run monitor with simulated input
     result = subprocess.run(
         ["bash", str(monitor_script)],
@@ -165,18 +164,18 @@ def test_monitor_with_simulated_logs():
         text=True,
         timeout=10
     )
-    
+
     # Monitor should process the input without errors
     assert result.returncode == 0, f"Monitor script returned error: {result.stderr}"
-    print(f"✅ Monitor processes simulated logs successfully")
+    print("✅ Monitor processes simulated logs successfully")
 
 
 def test_large_block_numbers():
     """Test handling of large block numbers."""
     display_script = get_project_root() / "scripts" / "block_display.py"
-    
+
     large_blocks = [999999, 10000000, 432000000]  # ~1 day of blocks
-    
+
     for block_num in large_blocks:
         result = subprocess.run(
             ["python3", str(display_script), str(block_num)],
@@ -184,7 +183,7 @@ def test_large_block_numbers():
             text=True,
             timeout=5
         )
-        
+
         assert result.returncode == 0, f"Failed for large block {block_num}"
         assert f"Block #{block_num}" in result.stdout, f"Output missing block {block_num}"
         print(f"✅ Large block number #{block_num} handled correctly")
@@ -200,13 +199,13 @@ def test_block_extraction_accuracy():
         ("Prepared block for proposing at 1", 1),
         ("Prepared block for proposing at 999999", 999999),
     ]
-    
+
     pattern = r"Block imported:\s+#(\d+)|Prepared block for proposing at (\d+)"
-    
+
     for log_line, expected_block in test_cases:
         match = re.search(pattern, log_line)
         assert match is not None, f"Failed to match: {log_line}"
-        
+
         # Extract block from either group (1 or 2)
         block_num = int(match.group(1) or match.group(2))
         assert block_num == expected_block, f"Got {block_num}, expected {expected_block}"
@@ -221,15 +220,15 @@ def test_consecutive_blocks():
         "Block imported: #1002",
         "Block imported: #1003",
     ]
-    
+
     pattern = r"Block imported:\s+#(\d+)"
     blocks = []
-    
+
     for log_line in consecutive_logs:
         match = re.search(pattern, log_line)
         assert match is not None, f"Failed to match: {log_line}"
         blocks.append(int(match.group(1)))
-    
+
     assert blocks == [1000, 1001, 1002, 1003], f"Block sequence incorrect: {blocks}"
     print(f"✅ Consecutive blocks extracted correctly: {blocks}")
 
@@ -237,7 +236,7 @@ def test_consecutive_blocks():
 def test_performance_rapid_blocks():
     """Test handling rapid block production (5 blocks/sec)."""
     display_script = get_project_root() / "scripts" / "block_display.py"
-    
+
     # Simulate 5 blocks in rapid succession
     base_block = 10000
     for i in range(5):
@@ -249,8 +248,8 @@ def test_performance_rapid_blocks():
             timeout=5
         )
         assert result.returncode == 0, f"Failed for block {block_num}"
-    
-    print(f"✅ Rapid block sequence handled (5 blocks in succession)")
+
+    print("✅ Rapid block sequence handled (5 blocks in succession)")
 
 
 def run_all_tests():
@@ -268,14 +267,14 @@ def run_all_tests():
         test_consecutive_blocks,
         test_performance_rapid_blocks,
     ]
-    
+
     print("\n" + "="*70)
     print("INTEGRATION TESTS: monitor_blocks.sh + block_display.py")
     print("="*70 + "\n")
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             test()
@@ -286,11 +285,11 @@ def run_all_tests():
         except Exception as e:
             print(f"❌ ERROR: {test.__name__}: {type(e).__name__}: {e}")
             failed += 1
-    
+
     print("\n" + "="*70)
     print(f"RESULTS: {passed} passed, {failed} failed")
     print("="*70 + "\n")
-    
+
     return failed == 0
 
 

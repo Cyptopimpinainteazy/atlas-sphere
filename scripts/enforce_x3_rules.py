@@ -2,9 +2,7 @@
 import os
 import re
 import subprocess
-import sys
 from pathlib import Path
-from typing import List, Tuple
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -21,7 +19,7 @@ TEST_PATH_HINTS = ["test", "tests", "__tests__", "spec", "specs"]
 CODE_EXTS = {".rs", ".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".sol"}
 
 # Simple “weakening” heuristics (intentionally conservative)
-WEAKEN_PATTERNS: List[Tuple[re.Pattern, str]] = [
+WEAKEN_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"\bassert(?:_eq|Eq)?\b"), "assert* changed (manual review)"),
     (re.compile(r"\bexpect\("), "expect() changed (manual review)"),
     (re.compile(r"\brequire\("), "require() changed (manual review)"),
@@ -32,11 +30,11 @@ WEAKEN_PATTERNS: List[Tuple[re.Pattern, str]] = [
     (re.compile(r"\btoMatchSnapshot\("), "snapshot changed (manual review)"),
 ]
 
-def run(cmd: List[str]) -> str:
+def run(cmd: list[str]) -> str:
     out = subprocess.check_output(cmd, cwd=REPO, stderr=subprocess.STDOUT)
     return out.decode("utf-8", errors="replace")
 
-def staged_files() -> List[str]:
+def staged_files() -> list[str]:
     out = run(["git", "diff", "--cached", "--name-only"])
     return [f.strip() for f in out.splitlines() if f.strip()]
 
@@ -67,7 +65,7 @@ def has_override_token() -> bool:
     env = os.getenv("X3_ALLOW_TEST_EDIT", "")
     return ("[ALLOW_TEST_EDIT]" in msg) or (env.strip() == "1")
 
-def require_file_exists(relpath: str, err: str) -> List[str]:
+def require_file_exists(relpath: str, err: str) -> list[str]:
     p = REPO / relpath
     if not p.exists():
         return [err]
@@ -80,8 +78,8 @@ def main() -> int:
     if not files:
         return 0
 
-    errors: List[str] = []
-    warnings: List[str] = []
+    errors: list[str] = []
+    warnings: list[str] = []
 
     touched_tests = [f for f in files if is_test_path(f)]
     touched_consensus = [f for f in files if is_consensus_path(f)]

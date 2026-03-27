@@ -18,15 +18,10 @@ from __future__ import annotations
 
 import ctypes
 import hashlib
-import json
-import os
 import sys
-import time
 import unittest
 from collections import Counter
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 # ── Path setup ───────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -198,7 +193,7 @@ class TestChainFamilyClassification(unittest.TestCase):
     def setUpClass(cls):
         cls.configs = load_default_chain_configs()
         # Classify by sig + hash algo combination
-        cls.families: Dict[str, List[str]] = {
+        cls.families: dict[str, list[str]] = {
             "evm": [],       # secp256k1 + keccak256
             "svm": [],       # ed25519 + sha256 (Solana-named)
             "cosmos": [],    # secp256k1 + sha256
@@ -268,8 +263,8 @@ class TestChainFamilyClassification(unittest.TestCase):
     def test_family_distribution_summary(self):
         """Print family distribution (informational, always passes)."""
         total = sum(len(v) for v in self.families.values())
-        for fam, chains in self.families.items():
-            pct = len(chains) / max(total, 1) * 100
+        for _fam, chains in self.families.items():
+            len(chains) / max(total, 1) * 100
             # informational — printed during -v runs
         self.assertTrue(True)
 
@@ -396,8 +391,8 @@ class TestCryptoPrimitiveSecp256k1(unittest.TestCase):
 
     def test_sign_and_verify(self):
         try:
-            from cryptography.hazmat.primitives.asymmetric import ec
             from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.asymmetric import ec
 
             key = ec.generate_private_key(ec.SECP256K1())
             data = b"x3-chain-secp256k1-test"
@@ -409,9 +404,9 @@ class TestCryptoPrimitiveSecp256k1(unittest.TestCase):
 
     def test_wrong_key_fails(self):
         try:
-            from cryptography.hazmat.primitives.asymmetric import ec
-            from cryptography.hazmat.primitives import hashes
             from cryptography.exceptions import InvalidSignature
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.asymmetric import ec
 
             key1 = ec.generate_private_key(ec.SECP256K1())
             key2 = ec.generate_private_key(ec.SECP256K1())
@@ -438,8 +433,8 @@ class TestCryptoPrimitiveEd25519(unittest.TestCase):
 
     def test_wrong_key_fails(self):
         try:
-            import nacl.signing
             import nacl.exceptions
+            import nacl.signing
             sk1 = nacl.signing.SigningKey.generate()
             sk2 = nacl.signing.SigningKey.generate()
             signed = sk1.sign(b"msg")

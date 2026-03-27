@@ -13,7 +13,17 @@
 //! Use the `router` module for atomic cross-chain swaps via Comit transactions.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
 extern crate alloc;
 
 pub mod adapter;

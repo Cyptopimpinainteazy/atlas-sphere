@@ -17,12 +17,10 @@ import argparse
 import json
 import os
 import re
-import sys
 import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Optional
 
 import httpx
 
@@ -82,14 +80,14 @@ FOFA_DORKS = [
 class OllamaEndpoint:
     ip: str
     port: int = OLLAMA_DEFAULT_PORT
-    version: Optional[str] = None
+    version: str | None = None
     models: list = field(default_factory=list)
     running_models: list = field(default_factory=list)
     response_time_ms: float = 0.0
     source: str = "unknown"
 
 
-def print_section(title: str):
+def print_section(title: str) -> None:
     print(f"\n{'─'*60}")
     print(f"  {title}")
     print(f"{'─'*60}")
@@ -100,13 +98,13 @@ def shodan_free_search() -> list[str]:
     """Scrape Shodan free search for Ollama endpoints."""
     print_section("Shodan Free Search")
     ips = set()
-    
+
     queries = SHODAN_DORKS
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
     }
-    
+
     for query in queries:
         url = f"https://www.shodan.io/search?query={urllib.parse.quote(query)}"
         print(f"  [*] Query: {query}")
@@ -125,7 +123,7 @@ def shodan_free_search() -> list[str]:
         except Exception as e:
             print(f"      Error: {e}")
         time.sleep(1)
-    
+
     print(f"  [+] Total unique IPs from Shodan Free: {len(ips)}")
     return list(ips)
 
@@ -134,15 +132,15 @@ def shodan_api_search(api_key: str) -> list[str]:
     """Use Shodan API for searching Ollama endpoints."""
     print_section("Shodan API Search")
     ips = set()
-    
+
     if not HAS_SHODAN:
         print("  [!] Shodan library not installed: pip install shodan")
         return []
-    
+
     api = shodan.Shodan(api_key)
-    
+
     queries = SHODAN_DORKS
-    
+
     for query in queries:
         print(f"  [*] Query: {query}")
         try:
@@ -156,7 +154,7 @@ def shodan_api_search(api_key: str) -> list[str]:
         except shodan.APIError as e:
             print(f"      API Error: {e}")
         time.sleep(1)  # rate-limit
-    
+
     print(f"  [+] Total unique IPs from Shodan API: {len(ips)}")
     return list(ips)
 
@@ -166,16 +164,16 @@ def censys_free_search() -> list[str]:
     """Scrape Censys free search for Ollama endpoints."""
     print_section("Censys Free Search")
     ips = set()
-    
+
     queries = [
         "Ollama port:11434",
         '"Ollama is running"',
     ]
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
     }
-    
+
     for query in queries:
         url = f"https://search.censys.io/search?resource=hosts&q={urllib.parse.quote(query)}"
         print(f"  [*] Query: {query}")
@@ -195,7 +193,7 @@ def censys_free_search() -> list[str]:
         except Exception as e:
             print(f"      Error: {e}")
         time.sleep(1)
-    
+
     print(f"  [+] Total unique IPs from Censys: {len(ips)}")
     return list(ips)
 
@@ -205,7 +203,7 @@ def fofa_free_search() -> list[str]:
     """Scrape FOFA free search for Ollama endpoints."""
     print_section("FOFA Free Search")
     ips = set()
-    
+
     import base64
     for query in FOFA_DORKS:
         encoded = base64.b64encode(query.encode()).decode()
@@ -229,24 +227,24 @@ def fofa_free_search() -> list[str]:
         except Exception as e:
             print(f"      Error: {e}")
         time.sleep(1)
-    
+
     print(f"  [+] Total unique IPs from FOFA: {len(ips)}")
     return list(ips)
 
 
 # ── Validate a single Ollama endpoint ─────────────────────────────────
-def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT, 
-                       timeout: float = 5.0, source: str = "scan") -> Optional[OllamaEndpoint]:
+def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT,
+                       timeout: float = 5.0, source: str = "scan") -> OllamaEndpoint | None:
     """Check if an IP:port is a live, unauthenticated Ollama instance."""
     base_url = f"http://{ip}:{port}"
     endpoint = OllamaEndpoint(ip=ip, port=port, source=source)
-    
+
     try:
         # 1. Check /api/tags (most reliable)
         start = time.time()
         resp = httpx.get(f"{base_url}/api/tags", timeout=timeout)
         endpoint.response_time_ms = (time.time() - start) * 1000
-        
+
         if resp.status_code == 200:
             data = resp.json()
             if "models" in data:
@@ -261,7 +259,7 @@ def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT,
                 ]
         else:
             return None
-        
+
         # 2. Check version
         try:
             vresp = httpx.get(f"{base_url}/api/version", timeout=timeout)
@@ -269,7 +267,7 @@ def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT,
                 endpoint.version = vresp.json().get("version", "?")
         except Exception:
             pass
-        
+
         # 3. Check running models
         try:
             presp = httpx.get(f"{base_url}/api/ps", timeout=timeout)
@@ -280,9 +278,9 @@ def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT,
                 ]
         except Exception:
             pass
-        
+
         return endpoint
-    
+
     except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout):
         return None
     except Exception:
@@ -290,7 +288,7 @@ def validate_endpoint(ip: str, port: int = OLLAMA_DEFAULT_PORT,
 
 
 # ── Print results ─────────────────────────────────────────────────────
-def print_endpoint(ep: OllamaEndpoint, idx: int):
+def print_endpoint(ep: OllamaEndpoint, idx: int) -> None:
     print(f"\n  ┌─ Endpoint #{idx} {'─'*45}")
     print(f"  │ Host:          {ep.ip}:{ep.port}")
     print(f"  │ Version:       {ep.version or 'unknown'}")
@@ -305,7 +303,7 @@ def print_endpoint(ep: OllamaEndpoint, idx: int):
     print(f"  └{'─'*55}")
 
 
-def print_google_dorks():
+def print_google_dorks() -> None:
     print_section("Google Dorks (open in browser)")
     for i, dork in enumerate(GOOGLE_DORKS, 1):
         url = f"https://www.google.com/search?q={urllib.parse.quote(dork)}"
@@ -314,7 +312,7 @@ def print_google_dorks():
     print()
 
 
-def print_shodan_dorks():
+def print_shodan_dorks() -> None:
     print_section("Shodan Dorks (open in browser)")
     for i, dork in enumerate(SHODAN_DORKS, 1):
         url = f"https://www.shodan.io/search?query={urllib.parse.quote(dork)}"
@@ -324,7 +322,7 @@ def print_shodan_dorks():
 
 
 # ── Main ──────────────────────────────────────────────────────────────
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="White-hat Ollama endpoint recon")
     parser.add_argument("--validate-only", type=str, default="",
                         help="Comma-separated IPs to validate directly")
@@ -337,21 +335,21 @@ def main():
     parser.add_argument("--port", type=int, default=OLLAMA_DEFAULT_PORT,
                         help=f"Port to check (default: {OLLAMA_DEFAULT_PORT})")
     args = parser.parse_args()
-    
+
     print(BANNER)
-    
+
     all_ips = set()
-    
+
     # If user passes specific IPs, validate those
     if args.validate_only:
         manual_ips = [ip.strip() for ip in args.validate_only.split(",") if ip.strip()]
         all_ips.update(manual_ips)
         print(f"  [*] Manual targets: {len(manual_ips)} IPs")
-    
+
     # Print dork URLs for manual browser use
     print_google_dorks()
     print_shodan_dorks()
-    
+
     if not args.skip_search and not args.validate_only:
         # Run automated searches
         try:
@@ -359,29 +357,29 @@ def main():
             all_ips.update(shodan_ips)
         except Exception as e:
             print(f"  [!] Shodan API search failed: {e}")
-        
+
         try:
             shodan_free = shodan_free_search()
             all_ips.update(shodan_free)
         except Exception as e:
             print(f"  [!] Shodan free search failed: {e}")
-        
+
         try:
             censys_ips = censys_free_search()
             all_ips.update(censys_ips)
         except Exception as e:
             print(f"  [!] Censys search failed: {e}")
-        
+
         try:
             fofa_ips = fofa_free_search()
             all_ips.update(fofa_ips)
         except Exception as e:
             print(f"  [!] FOFA search failed: {e}")
-    
+
     # Validate all discovered IPs
     if all_ips:
         print_section(f"Validating {len(all_ips)} candidate endpoints (timeout={args.timeout}s)")
-        
+
         confirmed = []
         with ThreadPoolExecutor(max_workers=args.threads) as pool:
             futures = {
@@ -399,7 +397,7 @@ def main():
                         print(f"  [✗] Not Ollama: {ip}:{args.port}")
                 except Exception as e:
                     print(f"  [✗] Error {ip}: {e}")
-        
+
         # Summary
         print_section(f"RESULTS — {len(confirmed)} Open Ollama Endpoints Found")
         if confirmed:
@@ -407,9 +405,9 @@ def main():
             for i, ep in enumerate(confirmed, 1):
                 print_endpoint(ep, i)
                 total_models += len(ep.models)
-            
+
             print(f"\n  Summary: {len(confirmed)} endpoints, {total_models} total models exposed")
-            
+
             # Export to JSON
             outfile = "/home/lojak/Desktop/x3-chain-master/ollama_recon_results.json"
             export = [
@@ -434,7 +432,7 @@ def main():
         print_section("No IPs to validate")
         print("  Use the dork URLs above in your browser to find candidates,")
         print("  then run: python scripts/ollama_recon.py --validate-only IP1,IP2,IP3")
-    
+
     print(f"\n{'═'*60}")
     print("  Scan complete. Stay ethical. 🛡️")
     print(f"{'═'*60}\n")

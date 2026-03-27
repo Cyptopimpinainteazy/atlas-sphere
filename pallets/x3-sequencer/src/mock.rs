@@ -93,9 +93,16 @@ impl pallet_x3_sequencer::Config for Test {
 
 /// Build genesis storage.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    let t = system::GenesisConfig::<Test>::default()
+    let mut t = system::GenesisConfig::<Test>::default()
         .build_storage()
         .unwrap();
+
+    pallet_balances::GenesisConfig::<Test> {
+        balances: vec![(1, 10_000_000), (2, 10_000_000), (3, 10_000_000)],
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
+
     let mut ext = sp_io::TestExternalities::new(t);
     ext.execute_with(|| System::set_block_number(1));
     ext

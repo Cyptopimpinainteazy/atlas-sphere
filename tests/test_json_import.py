@@ -1,7 +1,9 @@
-import pytest
 import json
+
+import pytest
 from swarm.db import SessionLocal
 from tools.json_to_db import import_json_to_db
+
 
 @pytest.fixture
 def sample_json_files(tmp_path):

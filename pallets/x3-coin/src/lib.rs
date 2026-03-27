@@ -881,9 +881,18 @@ pub mod pallet {
             expected_tx_preimage.extend_from_slice(tx_hash.as_bytes());
             let expected_tx_commitment = sp_io::hashing::blake2_256(&expected_tx_preimage);
 
-            ensure!(tx_commitment == expected_tx_commitment, Error::<T>::InvalidProof);
-            ensure!(observed_block_number == block_number, Error::<T>::InvalidProof);
-            ensure!(header_block_number == block_number, Error::<T>::InvalidProof);
+            ensure!(
+                tx_commitment == expected_tx_commitment,
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                observed_block_number == block_number,
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                header_block_number == block_number,
+                Error::<T>::InvalidProof
+            );
             ensure!(receipt_index != u32::MAX, Error::<T>::InvalidProof);
 
             Ok(())
@@ -945,7 +954,10 @@ pub mod pallet {
             expected_tx_preimage.extend_from_slice(txid.as_bytes());
             let expected_tx_commitment = sp_io::hashing::blake2_256(&expected_tx_preimage);
 
-            ensure!(tx_commitment == expected_tx_commitment, Error::<T>::InvalidProof);
+            ensure!(
+                tx_commitment == expected_tx_commitment,
+                Error::<T>::InvalidProof
+            );
             ensure!(observed_height == block_height, Error::<T>::InvalidProof);
             ensure!(!merkle_branch.is_empty(), Error::<T>::InvalidProof);
             ensure!(merkle_branch.len() % 32 == 0, Error::<T>::InvalidProof);

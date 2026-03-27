@@ -58,7 +58,7 @@ def main() -> int:
         try:
             check_md_file(fpath=file_path, lang="python", memory=True)
             print(f"PASS {file_path}")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             failures.append((file_path, exc))
             print(f"FAIL {file_path}: {exc}")
 

@@ -4,8 +4,8 @@ Atomic swaps commit only when both sides validate.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
 
 from cross_chain_gpu_validator.metrics import MetricsStore
 from cross_chain_gpu_validator.orchestrator.orchestrator import (

@@ -1,9 +1,10 @@
-import pytest
 import os
-from alembic.config import Config
+
+import pytest
 from alembic import command
-from swarm.db import init_db, SessionLocal
-from swarm.db.models import Base
+from alembic.config import Config
+from swarm.db import SessionLocal, init_db
+
 
 @pytest.fixture(scope="module")
 def test_db():
@@ -25,7 +26,7 @@ def test_migrations(test_db):
     command.upgrade(alembic_cfg, "head")
 
     # Check that tables exist
-    with SessionLocal() as session:
+    with SessionLocal():
         # Use SQLAlchemy inspector to check tables
         from sqlalchemy import inspect
         inspector = inspect(test_db)
@@ -38,7 +39,7 @@ def test_migrations(test_db):
     command.downgrade(alembic_cfg, "base")
 
     # Check that tables are gone
-    with SessionLocal() as session:
+    with SessionLocal():
         inspector = inspect(test_db)
         table_names = inspector.get_table_names()
         for table in expected_tables:

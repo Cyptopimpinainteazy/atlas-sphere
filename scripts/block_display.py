@@ -43,9 +43,7 @@ def is_milestone(block_num: int) -> bool:
     if block_num % 100000 == 0:
         return True
     # 1k milestones (1k, 2k, 3k, etc.)
-    if block_num % 1000 == 0:
-        return True
-    return False
+    return block_num % 1000 == 0
 
 def get_milestone_level(block_num: int) -> str:
     """Determine milestone level: tiny (1k), big (100k), or explosive (1M)."""
@@ -66,16 +64,16 @@ def display_tiny_milestone(block_num: int) -> None:
 
 def display_big_milestone(block_num: int) -> None:
     """Display large celebration for 100k, 200k, 300k milestones."""
-    k_val = block_num // 1000
+    block_num // 1000
     hundred_k = block_num // 100000
     formatted_blocks = f"{block_num:,}"
-    
+
     print(f"\n{BOLD}\033[38;5;226m")  # Bright yellow
     print("""
   ╔════════════════════════════════════╗
   ║                                    ║
   ║   ◆  MAJOR MILESTONE  ◆           ║""")
-    print(f"  ║                                    ║")
+    print("  ║                                    ║")
     print(f"  ║   {formatted_blocks} Blocks Finalized    ║")
     print(f"  ║   ({hundred_k} × 100,000 Threshold)    ║")
     print("""  ║                                    ║
@@ -88,7 +86,7 @@ def display_big_milestone(block_num: int) -> None:
 def display_milestone(block_num: int) -> None:
     """Display milestone based on level."""
     level = get_milestone_level(block_num)
-    
+
     if level == "tiny":
         display_tiny_milestone(block_num)
     elif level == "big":
@@ -172,27 +170,27 @@ def display_block_number(block_num: int) -> None:
     if is_milestone(block_num):
         display_milestone(block_num)
         return
-    
+
     # Get digits
     digits = str(block_num)
-    
+
     # Header
     print(f"\n{BOLD}Block #{block_num}{RESET}\n")
-    
+
     # Top line: ┌──┐ ┌──┐ ┌──┐ ...
     top_line = ""
     for i in range(len(digits)):
         color = get_color(i)
         top_line += f"{color}┌──┐{RESET} "
     print(top_line)
-    
+
     # Middle line: │5 │ │7 │ │8 │ ...
     mid_line = ""
     for i, digit in enumerate(digits):
         color = get_color(i)
         mid_line += f"{color}│{digit} │{RESET} "
     print(mid_line)
-    
+
     # Bottom line: └──┘ └──┘ └──┘ ...
     bot_line = ""
     for i in range(len(digits)):
@@ -201,12 +199,12 @@ def display_block_number(block_num: int) -> None:
     print(bot_line)
     print()
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python3 block_display.py <BLOCK_NUMBER>")
         print("Example: python3 block_display.py 5787")
         sys.exit(1)
-    
+
     try:
         block_num = int(sys.argv[1])
         if block_num < 1:

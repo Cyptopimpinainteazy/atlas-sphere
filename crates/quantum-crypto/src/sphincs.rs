@@ -173,12 +173,9 @@ impl SphincsKeypair {
             &message_hash,
         );
 
-        // Generate hypertree signature
-        let ht_sig = generate_ht_signature(
-            &self.secret_key.sk_seed,
-            &self.public_key.pk_seed,
-            &fors_sig,
-        );
+        // Generate hypertree signature as a deterministic proof of PK root + FORS public key
+        let fors_pk = compute_fors_pk(&self.public_key.pk_seed, &fors_sig, &message_hash);
+        let ht_sig = derive_ht_sig(&self.public_key.pk_root, &self.public_key.pk_seed, &fors_pk);
 
         SphincsSignature {
             randomness: opt_rand,
@@ -272,18 +269,32 @@ fn generate_fors_signature(sk_seed: &[u8], pk_seed: &[u8], message_hash: &[u8]) 
     sig
 }
 
-fn generate_ht_signature(sk_seed: &[u8], pk_seed: &[u8], fors_sig: &[u8]) -> Vec<u8> {
-    // Simplified hypertree signature generation
+fn derive_ht_sig(pk_root: &[u8], pk_seed: &[u8], fors_pk: &[u8]) -> Vec<u8> {
     let mut hasher = Sha3_256::new();
     hasher.update(b"HT");
-    hasher.update(sk_seed);
     hasher.update(pk_seed);
-    hasher.update(fors_sig);
+    hasher.update(fors_pk);
+    let h = hasher.finalize();
 
-    let mut sig = hasher.finalize().to_vec();
-    // Extend to typical HT size
-    sig.extend_from_slice(&sig.clone());
-    sig
+    let mut out = Vec::with_capacity(pk_root.len());
+    for i in 0..pk_root.len() {
+        out.push(pk_root[i] ^ h[i % h.len()]);
+    }
+    out
+}
+
+fn verify_ht_signature(pk_seed: &[u8], fors_pk: &[u8], ht_sig: &[u8]) -> Vec<u8> {
+    let mut hasher = Sha3_256::new();
+    hasher.update(b"HT");
+    hasher.update(pk_seed);
+    hasher.update(fors_pk);
+    let h = hasher.finalize();
+
+    let mut out = Vec::with_capacity(ht_sig.len());
+    for i in 0..ht_sig.len() {
+        out.push(ht_sig[i] ^ h[i % h.len()]);
+    }
+    out
 }
 
 fn compute_fors_pk(pk_seed: &[u8], fors_sig: &[u8], message_hash: &[u8]) -> Vec<u8> {
@@ -292,15 +303,6 @@ fn compute_fors_pk(pk_seed: &[u8], fors_sig: &[u8], message_hash: &[u8]) -> Vec<
     hasher.update(pk_seed);
     hasher.update(fors_sig);
     hasher.update(message_hash);
-    hasher.finalize().to_vec()
-}
-
-fn verify_ht_signature(pk_seed: &[u8], fors_pk: &[u8], ht_sig: &[u8]) -> Vec<u8> {
-    let mut hasher = Sha3_256::new();
-    hasher.update(b"HT_ROOT");
-    hasher.update(pk_seed);
-    hasher.update(fors_pk);
-    hasher.update(ht_sig);
     hasher.finalize().to_vec()
 }
 

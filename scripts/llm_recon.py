@@ -26,16 +26,12 @@ import base64
 import json
 import os
 import re
-import sys
 import time
 import urllib.parse
-import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Optional
 
 import httpx
-import base64
 
 # Suppress browser-opening behavior
 os.environ["BROWSER"] = "none"
@@ -347,7 +343,7 @@ class LLMEndpoint:
     ip: str
     port: int
     platform: str
-    version: Optional[str] = None
+    version: str | None = None
     models: list = field(default_factory=list)
     extra_info: dict = field(default_factory=dict)
     response_time_ms: float = 0.0
@@ -367,7 +363,7 @@ BANNER = """
 """
 
 
-def print_section(title: str):
+def print_section(title: str) -> None:
     print(f"\n{'─'*60}")
     print(f"  {title}")
     print(f"{'─'*60}")
@@ -397,11 +393,11 @@ def fofa_search(platforms: list[LLMPlatform]) -> dict[str, set[str]]:
                     if found:
                         print(f"      → {len(found)} IPs")
                     else:
-                        print(f"      → 0 IPs")
+                        print("      → 0 IPs")
                 else:
                     print(f"      → HTTP {resp.status_code}")
             except httpx.ReadTimeout:
-                print(f"      → timeout")
+                print("      → timeout")
             except Exception as e:
                 print(f"      → error: {e}")
             time.sleep(0.8)
@@ -434,11 +430,11 @@ def shodan_free_search(platforms: list[LLMPlatform]) -> dict[str, set[str]]:
                     if found:
                         print(f"      → {len(found)} IPs")
                     else:
-                        print(f"      → 0 IPs")
+                        print("      → 0 IPs")
                 else:
                     print(f"      → HTTP {resp.status_code}")
             except httpx.ReadTimeout:
-                print(f"      → timeout")
+                print("      → timeout")
             except Exception as e:
                 print(f"      → error: {e}")
             time.sleep(0.8)
@@ -474,10 +470,10 @@ def shodan_api_search(api_key: str, platforms: list[LLMPlatform]) -> dict[str, s
                             results[plat.name].add(ip)
                     print(f"      → {data.get('total', 0)} total, {len(matches)} returned")
                 elif resp.status_code == 401:
-                    print(f"      → Invalid API key")
+                    print("      → Invalid API key")
                     return results
                 elif resp.status_code == 403:
-                    print(f"      → Needs paid plan for filters")
+                    print("      → Needs paid plan for filters")
                 else:
                     print(f"      → HTTP {resp.status_code}")
             except Exception as e:
@@ -491,7 +487,7 @@ def shodan_api_search(api_key: str, platforms: list[LLMPlatform]) -> dict[str, s
 
 # ── Validate endpoint against a specific platform ─────────────────────
 def validate_platform(ip: str, platform: LLMPlatform, timeout: float = 5.0,
-                       source: str = "recon") -> Optional[LLMEndpoint]:
+                       source: str = "recon") -> LLMEndpoint | None:
     """Check if ip:port matches a specific LLM platform fingerprint."""
     port = platform.default_port
     base_url = f"http://{ip}:{port}"
@@ -511,12 +507,10 @@ def validate_platform(ip: str, platform: LLMPlatform, timeout: float = 5.0,
             except Exception:
                 data = None
 
-            body = resp.text
 
             # Check for expected key in JSON
-            if expected_key and data and isinstance(data, dict):
-                if expected_key not in data:
-                    continue
+            if expected_key and data and isinstance(data, dict) and expected_key not in data:
+                continue
 
             ep = LLMEndpoint(
                 ip=ip, port=port, platform=platform.name,
@@ -692,7 +686,7 @@ def _enrich_openwebui(ep: LLMEndpoint, base_url: str, data: dict, timeout: float
 
 # ── Print helpers ─────────────────────────────────────────────────────
 
-def print_endpoint(ep: LLMEndpoint, idx: int):
+def print_endpoint(ep: LLMEndpoint, idx: int) -> None:
     print(f"\n  ┌─ {ep.icon} #{idx} {'─'*50}")
     print(f"  │ Platform:      {ep.platform}")
     print(f"  │ Host:          {ep.ip}:{ep.port}")
@@ -708,14 +702,14 @@ def print_endpoint(ep: LLMEndpoint, idx: int):
         if len(ep.models) > 25:
             print(f"  │   ... and {len(ep.models) - 25} more")
     if ep.extra_info:
-        print(f"  │ Extra:")
+        print("  │ Extra:")
         for k, v in ep.extra_info.items():
             print(f"  │   {k}: {v}")
     print(f"  │ URL:           http://{ep.ip}:{ep.port}")
     print(f"  └{'─'*55}")
 
 
-def print_all_dorks(platforms: list[LLMPlatform]):
+def print_all_dorks(platforms: list[LLMPlatform]) -> None:
     print_section("Google Dorks — All Platforms")
     for plat in platforms:
         if plat.google_dorks:
@@ -728,7 +722,7 @@ def print_all_dorks(platforms: list[LLMPlatform]):
 
 # ── Main ──────────────────────────────────────────────────────────────
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-platform LLM endpoint recon")
     parser.add_argument("--platforms", type=str, default="all",
                         help="Comma-separated platform names to scan (default: all)")
@@ -763,7 +757,7 @@ def main():
         active_platforms = [p for p in PLATFORMS if p.name.lower() in names
                             or any(n in p.name.lower() for n in names)]
         if not active_platforms:
-            print(f"  [!] No matching platforms. Available:")
+            print("  [!] No matching platforms. Available:")
             for p in PLATFORMS:
                 print(f"      {p.icon} {p.name}")
             return
@@ -797,7 +791,7 @@ def main():
                 platform_ips[pname].update(ips)
         except Exception as e:
             print(f"  [!] FOFA search failed: {e}")
-        
+
         try:
             # Shodan Free
             shodan_free_results = shodan_free_search(active_platforms)

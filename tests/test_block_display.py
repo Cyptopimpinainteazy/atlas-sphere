@@ -11,29 +11,27 @@ Comprehensive test suite covering:
 - CLI behavior
 """
 
-import sys
 import os
+import sys
+
 import pytest
-from io import StringIO
-from unittest.mock import patch
 
 # Add scripts directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 # Import functions to test
 from block_display import (
-    is_milestone,
-    get_milestone_level,
-    get_color,
-    display_block_number,
-    display_tiny_milestone,
-    display_big_milestone,
-    display_explosive_milestone,
+    BOLD,
     COLORS,
     RESET,
-    BOLD,
+    display_big_milestone,
+    display_block_number,
+    display_explosive_milestone,
+    display_tiny_milestone,
+    get_color,
+    get_milestone_level,
+    is_milestone,
 )
-
 
 # ============================================================================
 # MILESTONE DETECTION TESTS
@@ -44,49 +42,49 @@ class TestMilestoneDetection:
 
     def test_is_milestone_1k_blocks(self):
         """Test 1k milestone detection."""
-        assert is_milestone(1000) == True
-        assert is_milestone(2000) == True
-        assert is_milestone(3000) == True
-        assert is_milestone(10000) == True
+        assert is_milestone(1000)
+        assert is_milestone(2000)
+        assert is_milestone(3000)
+        assert is_milestone(10000)
 
     def test_is_milestone_100k_blocks(self):
         """Test 100k milestone detection."""
-        assert is_milestone(100000) == True
-        assert is_milestone(200000) == True
-        assert is_milestone(500000) == True
-        assert is_milestone(900000) == True
+        assert is_milestone(100000)
+        assert is_milestone(200000)
+        assert is_milestone(500000)
+        assert is_milestone(900000)
 
     def test_is_milestone_1m_blocks(self):
         """Test 1M milestone detection."""
-        assert is_milestone(1000000) == True
-        assert is_milestone(2000000) == True
-        assert is_milestone(10000000) == True
-        assert is_milestone(100000000) == True
+        assert is_milestone(1000000)
+        assert is_milestone(2000000)
+        assert is_milestone(10000000)
+        assert is_milestone(100000000)
 
     def test_non_milestone_blocks(self):
         """Test non-milestone blocks return False."""
-        assert is_milestone(1) == False
-        assert is_milestone(42) == False
-        assert is_milestone(999) == False
-        assert is_milestone(1001) == False
-        assert is_milestone(5787) == False
-        assert is_milestone(99999) == False
-        assert is_milestone(100001) == False
-        assert is_milestone(999999) == False
+        assert not is_milestone(1)
+        assert not is_milestone(42)
+        assert not is_milestone(999)
+        assert not is_milestone(1001)
+        assert not is_milestone(5787)
+        assert not is_milestone(99999)
+        assert not is_milestone(100001)
+        assert not is_milestone(999999)
 
     def test_milestone_boundary_conditions(self):
         """Test blocks just before and after milestones."""
-        assert is_milestone(999) == False
-        assert is_milestone(1000) == True
-        assert is_milestone(1001) == False
+        assert not is_milestone(999)
+        assert is_milestone(1000)
+        assert not is_milestone(1001)
 
-        assert is_milestone(99999) == False
-        assert is_milestone(100000) == True
-        assert is_milestone(100001) == False
+        assert not is_milestone(99999)
+        assert is_milestone(100000)
+        assert not is_milestone(100001)
 
-        assert is_milestone(999999) == False
-        assert is_milestone(1000000) == True
-        assert is_milestone(1000001) == False
+        assert not is_milestone(999999)
+        assert is_milestone(1000000)
+        assert not is_milestone(1000001)
 
 
 # ============================================================================
@@ -221,7 +219,7 @@ class TestBlockDisplay:
         captured = capsys.readouterr()
         lines = captured.out.split('\n')
         # Find the box lines (should have multiple lines with boxes)
-        box_lines = [l for l in lines if "┌──┐" in l or "│" in l or "└──┘" in l]
+        box_lines = [line for line in lines if "┌──┐" in line or "│" in line or "└──┘" in line]
         assert len(box_lines) >= 3  # At least top, middle, bottom
 
 
@@ -314,7 +312,7 @@ class TestIntegration:
 
     def test_milestone_1k_display(self, capsys):
         """Integration: Detect and display 1k milestone."""
-        assert is_milestone(1000) == True
+        assert is_milestone(1000)
         assert get_milestone_level(1000) == "tiny"
         display_block_number(1000)
         captured = capsys.readouterr()
@@ -323,7 +321,7 @@ class TestIntegration:
 
     def test_milestone_100k_display(self, capsys):
         """Integration: Detect and display 100k milestone."""
-        assert is_milestone(100000) == True
+        assert is_milestone(100000)
         assert get_milestone_level(100000) == "big"
         display_block_number(100000)
         captured = capsys.readouterr()
@@ -331,7 +329,7 @@ class TestIntegration:
 
     def test_milestone_1m_display(self, capsys):
         """Integration: Detect and display 1M milestone."""
-        assert is_milestone(1000000) == True
+        assert is_milestone(1000000)
         assert get_milestone_level(1000000) == "explosive"
         display_block_number(1000000)
         captured = capsys.readouterr()
@@ -339,7 +337,7 @@ class TestIntegration:
 
     def test_non_milestone_display(self, capsys):
         """Integration: Display non-milestone block with boxes."""
-        assert is_milestone(5787) == False
+        assert not is_milestone(5787)
         display_block_number(5787)
         captured = capsys.readouterr()
         assert "Block #5787" in captured.out
@@ -365,7 +363,7 @@ class TestEdgeCases:
 
     def test_block_zero_not_milestone(self):
         """Test that block 0 is not a milestone."""
-        assert is_milestone(0) == False
+        assert not is_milestone(0)
 
     def test_very_large_block_number(self, capsys):
         """Test display of very large block number."""
@@ -437,9 +435,9 @@ class TestFunctionParameters:
     def test_is_milestone_with_negative(self):
         """Test is_milestone with negative numbers."""
         # Negative blocks are not valid milestones
-        assert is_milestone(-1000) == False
-        assert is_milestone(-100000) == False
-        assert is_milestone(-42) == False
+        assert not is_milestone(-1000)
+        assert not is_milestone(-100000)
+        assert not is_milestone(-42)
 
     def test_get_color_with_zero(self):
         """Test get_color with index 0."""

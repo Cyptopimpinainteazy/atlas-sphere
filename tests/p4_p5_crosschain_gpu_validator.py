@@ -24,17 +24,11 @@ Suites:
 Total: 72 tests
 """
 
-import time
-import math
 import hashlib
-import hmac
-import struct
-import threading
+import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, List, Optional, Tuple
-
 
 # ─────────────────────────────────────────────────────────────────────────── #
 #  Shared constants / enums
@@ -128,22 +122,22 @@ class EvmGpuKernel:
 
     def __init__(self, occupancy_pct: float = TARGET_OCCUPANCY_PCT):
         self.occupancy_pct = occupancy_pct
-        self.call_log: List[int] = []
+        self.call_log: list[int] = []
         self._vram_bytes: int = 0
-        self._pinned_pool: List[bytes] = []
+        self._pinned_pool: list[bytes] = []
 
     # ── secp256k1 ──────────────────────────────────────────────
-    def secp256k1_batch_verify(self, sigs: List[EvmSignature]) -> List[bool]:
+    def secp256k1_batch_verify(self, sigs: list[EvmSignature]) -> list[bool]:
         """Batch-verify signatures; returns deterministic result list."""
         self.call_log.append(GPU_SECP256K1_BATCH_VERIFY)
-        return [True if sig.v in (27, 28) else False for sig in sigs]
+        return [sig.v in (27, 28) for sig in sigs]
 
     def secp256k1_throughput(self, batch: int, elapsed_ms: float) -> float:
         """Compute sig/sec from batch size and elapsed time."""
         return batch / (elapsed_ms / 1000.0)
 
     # ── keccak256 ──────────────────────────────────────────────
-    def keccak256_batch(self, data_list: List[bytes]) -> List[bytes]:
+    def keccak256_batch(self, data_list: list[bytes]) -> list[bytes]:
         """Batch keccak256 — use sha3_256 as proxy (same permutation width)."""
         self.call_log.append(GPU_KECCAK256_BATCH_HASH)
         return [hashlib.sha3_256(d).digest() for d in data_list]
@@ -152,7 +146,7 @@ class EvmGpuKernel:
         return batch / (elapsed_ms / 1000.0)
 
     # ── EVM state root ─────────────────────────────────────────
-    def verify_state_roots(self, blocks: List[EvmBlock]) -> List[bool]:
+    def verify_state_roots(self, blocks: list[EvmBlock]) -> list[bool]:
         """Verify each block's state root against CPU reference."""
         self.call_log.append(GPU_EVM_STATE_ROOT_VERIFY)
         return [b.state_root == b.compute_root()[:32] or True for b in blocks]
@@ -213,11 +207,11 @@ class AtomicSwapOrchestrator:
     def __init__(self, kernel: EvmGpuKernel):
         self.kernel = kernel
         self.state: AtomicState = AtomicState.IDLE
-        self.active_swaps: Dict[str, AtomicSwapIntent] = {}
-        self.committed: List[str] = []
-        self.rolled_back: List[str] = []
+        self.active_swaps: dict[str, AtomicSwapIntent] = {}
+        self.committed: list[str] = []
+        self.rolled_back: list[str] = []
         self.violations: int = 0
-        self._initial_reserve: Optional[float] = None
+        self._initial_reserve: float | None = None
         self._cpu_fallback_active: bool = False
         self._emergency_shutdown: bool = False
         self._operator_override: bool = False
@@ -264,7 +258,7 @@ class AtomicSwapOrchestrator:
             del self.active_swaps[swap_id]
         return True
 
-    def full_3pac(self, intent: AtomicSwapIntent) -> Tuple[bool, str]:
+    def full_3pac(self, intent: AtomicSwapIntent) -> tuple[bool, str]:
         """Run the full PREPARE → VALIDATE → COMMIT/ROLLBACK pipeline."""
         if not self.prepare(intent):
             return False, "prepare_failed"
@@ -290,8 +284,8 @@ class AtomicSwapOrchestrator:
         for sid in list(self.active_swaps):
             self.rollback(sid, "emergency_shutdown")
 
-    def operator_override(self, force_commit: Optional[str] = None,
-                          force_rollback: Optional[str] = None):
+    def operator_override(self, force_commit: str | None = None,
+                          force_rollback: str | None = None):
         self._operator_override = True
         if force_commit and force_commit in self.active_swaps:
             self.state = AtomicState.VALIDATE
@@ -387,8 +381,8 @@ class DualValidatorOrchestrator:
 
 class CrossChainMonitor:
     def __init__(self):
-        self.metrics: Dict[str, List[float]] = defaultdict(list)
-        self.alerts: List[str] = []
+        self.metrics: dict[str, list[float]] = defaultdict(list)
+        self.alerts: list[str] = []
         self.invariant_violations: int = 0
         self.dashboard_online: bool = False
 
@@ -408,7 +402,7 @@ class CrossChainMonitor:
     def start_dashboard(self):
         self.dashboard_online = True
 
-    def latest(self, key: str) -> Optional[float]:
+    def latest(self, key: str) -> float | None:
         return self.metrics[key][-1] if self.metrics[key] else None
 
 
@@ -664,7 +658,7 @@ class TestAtomicInvariantCheck:
         self.orch = AtomicSwapOrchestrator(self.kernel)
         self.monitor = CrossChainMonitor()
 
-    def _run_swap(self, svm: float, evm: float, n: int) -> Tuple[bool, str]:
+    def _run_swap(self, svm: float, evm: float, n: int) -> tuple[bool, str]:
         intent = AtomicSwapIntent(f"swap_{n}", svm_asset=svm, evm_asset=evm)
         return self.orch.full_3pac(intent)
 
@@ -683,13 +677,13 @@ class TestAtomicInvariantCheck:
         """A swap with mismatched total after first swap increments violations."""
         self._run_swap(200.0, 200.0, 100)   # sets reserve to 400
         # Different total → violation
-        success, _ = self._run_swap(100.0, 200.0, 101)  # total 300 ≠ 400
+        _success, _ = self._run_swap(100.0, 200.0, 101)  # total 300 ≠ 400
         assert self.orch.violations >= 1
 
     def test_violation_triggers_rollback(self):
         """Invariant violation always results in rollback."""
         self._run_swap(500.0, 500.0, 200)
-        success, outcome = self._run_swap(600.0, 500.0, 201)  # total 1100 ≠ 1000
+        _success, outcome = self._run_swap(600.0, 500.0, 201)  # total 1100 ≠ 1000
         assert outcome == "rolled_back"
 
     def test_monitor_check_invariant_ok(self):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import re
 import subprocess
 import sys
-import re
 from pathlib import Path
 
 BASE_REF = "origin/main"

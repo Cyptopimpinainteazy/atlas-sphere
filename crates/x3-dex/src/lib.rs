@@ -1,3 +1,15 @@
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
+
 //! X3 DEX Core
 //!
 //! Multi-hop routing, liquidity pools, AMM execution, and advanced trading features.

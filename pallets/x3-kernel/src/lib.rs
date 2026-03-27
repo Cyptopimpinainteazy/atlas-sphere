@@ -3027,17 +3027,24 @@ sp_api::decl_runtime_apis! {
         fn is_svm_program(svm_pubkey: Vec<u8>) -> bool;
 
         /// Submit a signed raw EVM transaction (RLP-encoded).
-        /// Decodes the transaction, executes it via the EVM adapter, and returns
-        /// the keccak256 transaction hash on success.
+        /// Payload contract: [caller(20)] [to(20)] [value(16,LE)] [data_len(4,LE)] [data].
+        /// Executes via Frontier runner and returns keccak256(payload) on success.
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
 
+        /// Submit an SVM instruction for execution.
+        /// Payload is instruction bytes interpreted by the configured SVM adapter.
+        /// Returns the execution receipt return bytes on success.
+        fn submit_svm_instruction(program_id: [u8; 32], instruction_data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
         /// Execute a read-only EVM call against target address with input data.
+        /// `caller` may be omitted/zero for static simulation paths.
         /// Returns raw EVM return bytes on success.
-        fn call_evm(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;
+        fn call_evm(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;
 
         /// Estimate gas for an EVM call against target address with input data.
+        /// For `eth_estimateGas`, a zero caller is acceptable because this path is simulation-only.
         /// Returns used gas units on success.
-        fn estimate_evm_gas(evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>>;
+        fn estimate_evm_gas(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>>;
     }
 }
 

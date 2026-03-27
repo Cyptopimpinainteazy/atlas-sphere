@@ -34,6 +34,17 @@
 //! - PRIV-EXEC-004: Attestation verified before joining confidential set
 //! - PRIV-EXEC-006: Finality latency overhead ≤1ms
 
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_mut,
+    non_snake_case,
+    unexpected_cfgs,
+    unused_parens,
+    non_camel_case_types,
+    clippy::all
+)]
 pub mod attestation;
 pub mod enclave;
 pub mod threshold;

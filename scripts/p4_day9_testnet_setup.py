@@ -12,9 +12,8 @@ TARGET: Get 3 validators running on testnet with GPU acceleration active
 """
 
 import json
-import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # ============================================================================
 # TASK 9.1: SOLANA TESTNET CONFIGURATION
@@ -22,12 +21,12 @@ from datetime import datetime
 
 class TestnetConfiguration:
     """Generate Solana testnet validator configuration"""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.timestamp = datetime.now().isoformat()
         self.testnet_genesis_hash = "EtWTRABZaM94jYoKoi6yGiYJARSZwRhANgqJ7phuCFT"  # Solana testnet
         self.num_validators = 3
-        
+
     def create_validator_config(self, validator_id: int) -> dict:
         """Create configuration for a single validator"""
         return {
@@ -44,7 +43,7 @@ class TestnetConfiguration:
             "snapshot_interval_slots": 100,
             "maximum_memory_cache_slots": 100,
         }
-    
+
     def create_network_topology(self) -> dict:
         """Create P2P gossip network topology"""
         topology = {
@@ -52,7 +51,7 @@ class TestnetConfiguration:
             "mesh_connection_style": "full",
             "intended_node_size": "gpu_accelerated",
         }
-        
+
         for i in range(self.num_validators):
             topology["validators"].append({
                 "id": i,
@@ -63,9 +62,9 @@ class TestnetConfiguration:
                 "gpu_accelerated": True,
                 "gpu_devices": list(range(3)),  # 3x GTX 1070
             })
-        
+
         return topology
-    
+
     def generate_configs(self) -> dict:
         """Generate all testnet configuration files"""
         return {
@@ -93,10 +92,10 @@ class TestnetConfiguration:
 
 class GPUNodeRuntime:
     """Configure Solana validator with GPU accelerators"""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.timestamp = datetime.now().isoformat()
-        
+
     def create_runtime_config(self) -> dict:
         """Create GPU accelerator binding configuration"""
         return {
@@ -137,7 +136,7 @@ class GPUNodeRuntime:
                 "max_vram_per_process": "2.5GB",
             },
         }
-    
+
     def create_kernel_loader(self) -> dict:
         """Configuration for loading CUDA kernels"""
         return {
@@ -178,10 +177,10 @@ class GPUNodeRuntime:
 
 class MonitoringStack:
     """Setup Prometheus, Grafana, and observability"""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.timestamp = datetime.now().isoformat()
-    
+
     def create_prometheus_config(self) -> dict:
         """Prometheus configuration for metric collection"""
         return {
@@ -221,11 +220,11 @@ class MonitoringStack:
                 ]
             },
         }
-    
+
     def create_grafana_dashboards(self) -> dict:
         """Create Grafana dashboard definitions"""
         dashboards = {}
-        
+
         # Dashboard 1: TPS & Throughput
         dashboards["tps_throughput"] = {
             "title": "TPS & Throughput",
@@ -248,7 +247,7 @@ class MonitoringStack:
                 },
             ]
         }
-        
+
         # Dashboard 2: GPU Utilization
         dashboards["gpu_utilization"] = {
             "title": "GPU Utilization",
@@ -271,7 +270,7 @@ class MonitoringStack:
                 },
             ]
         }
-        
+
         # Dashboard 3: Latency
         dashboards["latency"] = {
             "title": "Latency Analysis",
@@ -290,7 +289,7 @@ class MonitoringStack:
                 },
             ]
         }
-        
+
         # Dashboard 4: Consensus
         dashboards["consensus"] = {
             "title": "Consensus Health",
@@ -313,7 +312,7 @@ class MonitoringStack:
                 },
             ]
         }
-        
+
         # Dashboard 5: System Health
         dashboards["system_health"] = {
             "title": "System Health",
@@ -336,9 +335,9 @@ class MonitoringStack:
                 },
             ]
         }
-        
+
         return dashboards
-    
+
     def create_alert_rules(self) -> dict:
         """Create alerting rules"""
         return {
@@ -375,79 +374,79 @@ class MonitoringStack:
 # EXECUTION REPORT
 # ============================================================================
 
-def main():
+def main() -> None:
     print("=" * 80)
     print("P4 DAY 9 EXECUTION: TESTNET VALIDATOR SETUP")
     print("=" * 80)
     print()
-    
+
     # Task 9.1: Testnet Configuration
     print("📋 TASK 9.1: SOLANA TESTNET CONFIGURATION")
     print("-" * 80)
     testnet_config = TestnetConfiguration()
     configs = testnet_config.generate_configs()
-    
+
     print(f"✓ Network: {configs['network']}")
     print(f"✓ Genesis Hash: {configs['genesis_hash']}")
     print(f"✓ Validators: {len(configs['validators'])}")
     for i, val in enumerate(configs['validators']):
         print(f"  - Validator {i}: RPC {val['rpc_port']}, Gossip {val['gossip_port']}")
-    print(f"✓ Topology: Full mesh network, GPU-accelerated")
+    print("✓ Topology: Full mesh network, GPU-accelerated")
     print()
-    
+
     # Task 9.2: GPU Runtime
     print("🚀 TASK 9.2: GPU-ACCELERATED NODE RUNTIME")
     print("-" * 80)
     gpu_runtime = GPUNodeRuntime()
     runtime_config = gpu_runtime.create_runtime_config()
-    
+
     print(f"✓ GPUs: {runtime_config['gpu_config']['num_gpus']}x")
     for gpu in runtime_config['gpu_config']['gpu_devices']:
         print(f"  - {gpu} (VRAM: {runtime_config['gpu_config']['vram_per_gpu']})")
     print(f"✓ SigVerifier: GPU backend, {runtime_config['signature_verify']['expected_throughput']}")
     print(f"✓ PoH: GPU backend, {runtime_config['poh']['expected_throughput']}")
     print(f"✓ TX Validator: GPU backend, {runtime_config['tx_validator']['expected_throughput']}")
-    
+
     kernel_config = gpu_runtime.create_kernel_loader()
     print(f"✓ CUDA Kernels: {len(kernel_config['kernels'])} kernels to load")
     for kernel in kernel_config['kernels']:
         print(f"  - {kernel['name']}: {kernel['grid_size']} × {kernel['block_size']}")
     print()
-    
+
     # Task 9.3: Monitoring
     print("📊 TASK 9.3: MONITORING & OBSERVABILITY STACK")
     print("-" * 80)
     monitoring = MonitoringStack()
-    
+
     prometheus_config = monitoring.create_prometheus_config()
     print(f"✓ Prometheus: Scrape interval {prometheus_config['global']['scrape_interval']}")
     print(f"  - Validator targets: {len(prometheus_config['scrape_configs'][0]['static_configs'][0]['targets'])}")
-    print(f"✓ Grafana: 5 monitoring dashboards")
+    print("✓ Grafana: 5 monitoring dashboards")
     dashboards = monitoring.create_grafana_dashboards()
-    for name, dashboard in dashboards.items():
+    for _name, dashboard in dashboards.items():
         print(f"  - {dashboard['title']}: {len(dashboard['panels'])} panels")
-    
+
     alerts = monitoring.create_alert_rules()
     print(f"✓ Alerting: {len(alerts['alerts'])} alert rules configured")
     print()
-    
+
     # Summary
     print("=" * 80)
     print("🎯 END OF DAY 9 STATE (PROJECTED)")
     print("=" * 80)
-    print(f"✅ Validators running: 3")
-    print(f"✅ Testnet connection: LIVE")
-    print(f"✅ GPU status: ACTIVE")
-    print(f"✅ Monitoring: OPERATIONAL")
-    print(f"✅ Expected network baseline TPS: ~5k (Solana testnet standard)")
+    print("✅ Validators running: 3")
+    print("✅ Testnet connection: LIVE")
+    print("✅ GPU status: ACTIVE")
+    print("✅ Monitoring: OPERATIONAL")
+    print("✅ Expected network baseline TPS: ~5k (Solana testnet standard)")
     print()
     print("🚀 READY FOR DAY 10: VALIDATION & STRESS TESTING")
     print()
-    
+
     # Save configurations as JSON for actual deployment
     output_dir = Path("/home/lojak/Desktop/x3-chain-master/testnet-config")
     output_dir.mkdir(exist_ok=True)
-    
+
     # Save each configuration
     config_files = {
         "testnet-config.json": configs,
@@ -456,13 +455,13 @@ def main():
         "grafana-dashboards.json": dashboards,
         "alert-rules.json": alerts,
     }
-    
+
     for filename, config in config_files.items():
         filepath = output_dir / filename
         with open(filepath, "w") as f:
             json.dump(config, f, indent=2)
         print(f"✓ Saved: {filepath}")
-    
+
     print()
     print("✅ DAY 9 EXECUTION COMPLETE")
     print("Next: BEGIN DAY 10 VALIDATION & STRESS TESTING")

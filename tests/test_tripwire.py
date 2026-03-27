@@ -5,7 +5,7 @@ import pytest
 from swarm.event_bus.events import EventType
 from swarm.storage.backend import SqliteStorage
 from swarm.tripwire.detector import TripwireDetector
-from swarm.tripwire.schema import TripwireConfig, TripwireSeverity, TripwireSignal
+from swarm.tripwire.schema import TripwireSeverity, TripwireSignal
 
 
 @pytest.fixture
