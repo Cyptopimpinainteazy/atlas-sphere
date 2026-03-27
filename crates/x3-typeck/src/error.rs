@@ -169,10 +169,10 @@ impl fmt::Display for TypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.kind)?;
         if let Some(hint) = &self.hint {
-            write!(f, "\n  hint: {}", hint)?;
+            write!(f, "\n  hint: {hint}")?;
         }
         if let Some(note) = &self.note {
-            write!(f, "\n  note: {}", note)?;
+            write!(f, "\n  note: {note}")?;
         }
         Ok(())
     }

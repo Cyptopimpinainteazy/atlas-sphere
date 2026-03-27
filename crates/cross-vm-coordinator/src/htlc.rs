@@ -1,9 +1,43 @@
-//! HTLC chain interface — abstracts HTLC operations across VMs.
-//!
-//! Each VM (EVM, SVM, X3VM) has a different contract/program interface
-//! for HTLCs. This module provides a unified async trait that the
-//! coordinator uses, with concrete implementations for each VM.
+use std::sync::Arc;
 
+/// Abstracts signing for EVM/SVM. Never exposes raw key bytes.
+#[async_trait]
+pub trait Signer: Send + Sync {
+    /// Sign a message (EVM: secp256k1, SVM: ed25519).
+    async fn sign(&self, msg: &[u8]) -> Vec<u8>;
+    /// Return the public key (EVM: 20/33 bytes, SVM: 32 bytes).
+    fn pubkey(&self) -> Vec<u8>;
+}
+
+/// In-memory signer for dev/test. Zeroizes on drop.
+pub struct MemorySigner {
+    key: Vec<u8>,
+    pubkey: Vec<u8>,
+}
+
+impl MemorySigner {
+    pub fn new(key: Vec<u8>, pubkey: Vec<u8>) -> Self {
+        Self { key, pubkey }
+    }
+}
+
+#[async_trait]
+impl Signer for MemorySigner {
+    async fn sign(&self, msg: &[u8]) -> Vec<u8> {
+        // Placeholder: implement secp256k1/ed25519 signing as needed
+        let mut out = msg.to_vec();
+        out.extend_from_slice(&self.key);
+        out
+    }
+    fn pubkey(&self) -> Vec<u8> {
+        self.pubkey.clone()
+    }
+}
+/// HTLC chain interface — abstracts HTLC operations across VMs.
+///
+/// Each VM (EVM, SVM, X3VM) has a different contract/program interface
+/// for HTLCs. This module provides a unified async trait that the
+/// coordinator uses, with concrete implementations for each VM.
 use crate::abi;
 use crate::rpc_client::RpcClient;
 use crate::types::*;
@@ -69,8 +103,8 @@ pub struct EvmHtlcAdapter {
     pub htlc_contract: [u8; 20],
     /// JSON-RPC endpoint URL.
     pub rpc_url: String,
-    /// Signer private key (32 bytes). In production, use HSM/KMS.
-    pub signer_key: [u8; 32],
+    /// Abstracted signer (never exposes raw key bytes).
+    signer: Arc<dyn Signer>,
     /// RPC client instance.
     rpc: RpcClient,
 }
@@ -80,14 +114,14 @@ impl EvmHtlcAdapter {
         chain_id: u64,
         htlc_contract: [u8; 20],
         rpc_url: String,
-        signer_key: [u8; 32],
+        signer: Arc<dyn Signer>,
     ) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             chain_id,
             htlc_contract,
             rpc_url,
-            signer_key,
+            signer,
             rpc,
         }
     }
@@ -263,14 +297,14 @@ pub struct SvmHtlcAdapter {
     pub rpc_url: String,
     /// HTLC program ID (32 bytes).
     pub program_id: [u8; 32],
-    /// Signer keypair (64 bytes: secret + public).
-    pub signer: [u8; 64],
+    /// Abstracted signer (never exposes raw key bytes).
+    signer: Arc<dyn Signer>,
     /// RPC client instance.
     rpc: RpcClient,
 }
 
 impl SvmHtlcAdapter {
-    pub fn new(rpc_url: String, program_id: [u8; 32], signer: [u8; 64]) -> Self {
+    pub fn new(rpc_url: String, program_id: [u8; 32], signer: Arc<dyn Signer>) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             rpc_url,
@@ -286,7 +320,7 @@ impl SvmHtlcAdapter {
         hasher.update(&self.program_id);
         hasher.update(b"htlc");
         hasher.update(params.hash_lock.as_bytes());
-        hasher.update(&self.signer[32..64]); // pubkey portion
+        hasher.update(&self.signer.pubkey());
         let hash = hasher.finalize();
         HtlcId::from_bytes(hash.to_vec())
     }

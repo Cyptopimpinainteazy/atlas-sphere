@@ -79,7 +79,7 @@ impl From<Error> for prometheus::Error {
     fn from(e: Error) -> Self {
         match e {
             Error::Prometheus(p) => p,
-            Error::PortInUse(io) => prometheus::Error::Msg(format!("Port in use: {}", io)),
+            Error::PortInUse(io) => prometheus::Error::Msg(format!("Port in use: {io}")),
             Error::Internal => prometheus::Error::Msg("Internal prometheus endpoint error".into()),
         }
     }

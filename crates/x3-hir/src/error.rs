@@ -156,53 +156,47 @@ impl fmt::Display for HirErrorKind {
         match self {
             // Symbol resolution
             HirErrorKind::DuplicateSymbol(name) => {
-                write!(f, "duplicate symbol `{}`", name)
+                write!(f, "duplicate symbol `{name}`")
             }
             HirErrorKind::UnknownSymbol(name) => {
-                write!(f, "unknown symbol `{}`", name)
+                write!(f, "unknown symbol `{name}`")
             }
             HirErrorKind::SymbolNotVisible { name, defined_in } => {
                 write!(
                     f,
-                    "symbol `{}` is not visible (defined in {})",
-                    name, defined_in
+                    "symbol `{name}` is not visible (defined in {defined_in})",
                 )
             }
 
             // Type errors
             HirErrorKind::TypeMismatch { expected, found } => {
-                write!(
-                    f,
-                    "type mismatch: expected `{}`, found `{}`",
-                    expected, found
-                )
+                write!(f, "type mismatch: expected `{expected}`, found `{found}`")
             }
             HirErrorKind::NotCallable(ty) => {
-                write!(f, "type `{}` is not callable", ty)
+                write!(f, "type `{ty}` is not callable")
             }
             HirErrorKind::ArgumentCountMismatch { expected, found } => {
                 write!(
                     f,
-                    "wrong number of arguments: expected {}, found {}",
-                    expected, found
+                    "wrong number of arguments: expected {expected}, found {found}",
                 )
             }
             HirErrorKind::CannotInferType => {
                 write!(f, "cannot infer type")
             }
             HirErrorKind::InvalidTypeAnnotation(msg) => {
-                write!(f, "invalid type annotation: {}", msg)
+                write!(f, "invalid type annotation: {msg}")
             }
 
             // Assignment errors
             HirErrorKind::ImmutableAssign(name) => {
-                write!(f, "cannot assign to immutable binding `{}`", name)
+                write!(f, "cannot assign to immutable binding `{name}`")
             }
             HirErrorKind::InvalidAssignTarget => {
                 write!(f, "invalid assignment target")
             }
             HirErrorKind::FieldNotFound { ty, field } => {
-                write!(f, "field `{}` not found on type `{}`", field, ty)
+                write!(f, "field `{field}` not found on type `{ty}`")
             }
 
             // Control flow
@@ -213,13 +207,13 @@ impl fmt::Display for HirErrorKind {
                 write!(f, "`continue` outside of loop")
             }
             HirErrorKind::InvalidLabel(label) => {
-                write!(f, "invalid loop label `{}`", label)
+                write!(f, "invalid loop label `{label}`")
             }
             HirErrorKind::ReturnWithValueInVoid => {
                 write!(f, "return with value in function returning ()")
             }
             HirErrorKind::MissingReturnValue(ty) => {
-                write!(f, "missing return value of type `{}`", ty)
+                write!(f, "missing return value of type `{ty}`")
             }
 
             // X3-specific
@@ -233,10 +227,10 @@ impl fmt::Display for HirErrorKind {
                 write!(f, "emit statement outside of agent context")
             }
             HirErrorKind::AgentInitError(msg) => {
-                write!(f, "agent initialization error: {}", msg)
+                write!(f, "agent initialization error: {msg}")
             }
             HirErrorKind::InvalidContextAccess(field) => {
-                write!(f, "invalid context access: `{}`", field)
+                write!(f, "invalid context access: `{field}`")
             }
             HirErrorKind::VmIntrinsicMismatch {
                 intrinsic,
@@ -244,28 +238,27 @@ impl fmt::Display for HirErrorKind {
             } => {
                 write!(
                     f,
-                    "VM intrinsic `{}` requires {} target",
-                    intrinsic, expected_vm
+                    "VM intrinsic `{intrinsic}` requires {expected_vm} target",
                 )
             }
 
             // Structural
             HirErrorKind::DuplicateParam(name) => {
-                write!(f, "duplicate parameter `{}`", name)
+                write!(f, "duplicate parameter `{name}`")
             }
             HirErrorKind::DuplicateField(name) => {
-                write!(f, "duplicate field `{}`", name)
+                write!(f, "duplicate field `{name}`")
             }
             HirErrorKind::InvalidGlobalInit(msg) => {
-                write!(f, "invalid global initializer: {}", msg)
+                write!(f, "invalid global initializer: {msg}")
             }
 
             // General
             HirErrorKind::NotImplemented(feature) => {
-                write!(f, "{} not yet implemented", feature)
+                write!(f, "{feature} not yet implemented")
             }
             HirErrorKind::Internal(msg) => {
-                write!(f, "internal error: {}", msg)
+                write!(f, "internal error: {msg}")
             }
         }
     }

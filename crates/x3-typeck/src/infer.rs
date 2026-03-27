@@ -169,7 +169,7 @@ impl<'env> TypeInference<'env> {
                 // Occurs check to prevent infinite types
                 if self.env.occurs_in(*id, &t2) {
                     return Err(TypeError::new(
-                        TypeErrorKind::RecursiveType(format!("?T{}", id)),
+                        TypeErrorKind::RecursiveType(format!("?T{id}")),
                         span,
                     ));
                 }
@@ -181,7 +181,7 @@ impl<'env> TypeInference<'env> {
             (_, TypeKind::TypeVar(id)) => {
                 if self.env.occurs_in(*id, &t1) {
                     return Err(TypeError::new(
-                        TypeErrorKind::RecursiveType(format!("?T{}", id)),
+                        TypeErrorKind::RecursiveType(format!("?T{id}")),
                         span,
                     ));
                 }

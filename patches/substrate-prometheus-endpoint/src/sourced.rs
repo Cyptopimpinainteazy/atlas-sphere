@@ -77,7 +77,7 @@ impl<T: SourcedType, S: MetricSource> Collector for SourcedMetric<T, S> {
                     m.set_gauge(g);
                 }
                 t => {
-                    log::error!("Unsupported sourced metric type: {:?}", t);
+                    log::error!("Unsupported sourced metric type: {t:?}");
                 }
             }
 

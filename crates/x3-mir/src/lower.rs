@@ -90,8 +90,7 @@ impl MirFunctionBuilder {
                     AssignTarget::Variable(symbol) => {
                         if !self.value_map.contains_key(symbol) {
                             return Err(MirError::new(format!(
-                                "assignment target not found for symbol {:?}",
-                                symbol
+                                "assignment target not found for symbol {symbol:?}"
                             )));
                         }
                         let evaluated = self.lower_expr(value)?;
@@ -195,7 +194,7 @@ impl MirFunctionBuilder {
                 .value_map
                 .get(symbol)
                 .copied()
-                .ok_or_else(|| MirError::new(format!("value for symbol {:?} missing", symbol))),
+                .ok_or_else(|| MirError::new(format!("value for symbol {symbol:?} missing"))),
             HirExprKind::Binary { op, left, right } => {
                 let left_val = self.lower_expr(left)?;
                 let right_val = self.lower_expr(right)?;

@@ -49,7 +49,7 @@ impl fmt::Display for ParseError {
             self.message, self.span.start, self.span.end
         )?;
         if let Some(hint) = &self.hint {
-            write!(f, " (hint: {})", hint)?;
+            write!(f, " (hint: {hint})")?;
         }
         Ok(())
     }

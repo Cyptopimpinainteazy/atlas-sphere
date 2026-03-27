@@ -45,7 +45,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Let) => self.parse_global_let(),
             TokenKind::Eof => Err(ParseError::new("unexpected end of input", self.peek().span)),
             token => Err(ParseError::new(
-                format!("unexpected token {:?} at top-level", token),
+                format!("unexpected token {token:?} at top-level"),
                 self.peek().span,
             )),
         }
@@ -470,7 +470,7 @@ impl Parser {
             let span = self.peek().span;
             self.nesting_depth -= 1;
             return Err(ParseError::new(
-                format!("maximum nesting depth ({}) exceeded", MAX_NESTING_DEPTH),
+                format!("maximum nesting depth ({MAX_NESTING_DEPTH}) exceeded"),
                 span,
             ));
         }
@@ -589,7 +589,7 @@ impl Parser {
                 Ok(self.finish_postfix(expr)?)
             }
             other => Err(ParseError::new(
-                format!("unexpected token {:?} in expression", other),
+                format!("unexpected token {other:?} in expression"),
                 self.peek().span,
             )),
         }
@@ -653,7 +653,7 @@ impl Parser {
                 span: self.previous_span(),
             }),
             other => Err(ParseError::new(
-                format!("expected identifier but found {:?}", other),
+                format!("expected identifier but found {other:?}"),
                 self.peek().span,
             )),
         }
@@ -680,14 +680,14 @@ impl Parser {
     }
 
     fn expect_symbol(&mut self, symbol: Symbol) -> ParseResult<Token> {
-        self.cursor.consume_symbol(symbol).ok_or_else(|| {
-            ParseError::new(format!("expected symbol {:?}", symbol), self.peek().span)
-        })
+        self.cursor
+            .consume_symbol(symbol)
+            .ok_or_else(|| ParseError::new(format!("expected symbol {symbol:?}"), self.peek().span))
     }
 
     fn expect_keyword(&mut self, keyword: Keyword) -> ParseResult<Token> {
         self.cursor.consume_keyword(keyword).ok_or_else(|| {
-            ParseError::new(format!("expected keyword {:?}", keyword), self.peek().span)
+            ParseError::new(format!("expected keyword {keyword:?}"), self.peek().span)
         })
     }
 

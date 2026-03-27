@@ -87,7 +87,7 @@ impl std::fmt::Display for SemanticError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.kind)?;
         if let Some(hint) = &self.hint {
-            write!(f, " (hint: {})", hint)?;
+            write!(f, " (hint: {hint})")?;
         }
         Ok(())
     }
@@ -135,19 +135,19 @@ pub enum SemanticErrorKind {
 impl std::fmt::Display for SemanticErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::UndefinedVariable(name) => write!(f, "undefined variable '{}'", name),
-            Self::UndefinedFunction(name) => write!(f, "undefined function '{}'", name),
+            Self::UndefinedVariable(name) => write!(f, "undefined variable '{name}'"),
+            Self::UndefinedFunction(name) => write!(f, "undefined function '{name}'"),
             Self::DuplicateName { name, .. } => {
-                write!(f, "duplicate definition of '{}'", name)
+                write!(f, "duplicate definition of '{name}'")
             }
             Self::InvalidShadowing { name, .. } => {
-                write!(f, "invalid shadowing of '{}'", name)
+                write!(f, "invalid shadowing of '{name}'")
             }
             Self::InvalidBreak => write!(f, "break outside of loop"),
             Self::InvalidContinue => write!(f, "continue outside of loop"),
             Self::InvalidReturn => write!(f, "return outside of function"),
             Self::AssignmentToImmutable(name) => {
-                write!(f, "cannot assign to immutable variable '{}'", name)
+                write!(f, "cannot assign to immutable variable '{name}'")
             }
             Self::NotCallable => write!(f, "expression is not callable"),
             Self::NestedAgent => write!(f, "agents cannot be nested"),

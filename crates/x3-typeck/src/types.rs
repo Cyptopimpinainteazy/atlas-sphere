@@ -550,40 +550,40 @@ impl Type {
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.kind {
-            TypeKind::Primitive(p) => write!(f, "{}", p),
+            TypeKind::Primitive(p) => write!(f, "{p}"),
             TypeKind::Unit => write!(f, "()"),
             TypeKind::Never => write!(f, "!"),
             TypeKind::Any => write!(f, "any"),
             TypeKind::Error => write!(f, "<error>"),
-            TypeKind::TypeVar(id) => write!(f, "?T{}", id),
+            TypeKind::TypeVar(id) => write!(f, "?T{id}"),
             TypeKind::Function(sig) => {
                 write!(f, "fn(")?;
                 for (i, param) in sig.params.iter().enumerate() {
                     if i > 0 {
                         write!(f, ", ")?;
                     }
-                    write!(f, "{}", param)?;
+                    write!(f, "{param}")?;
                 }
                 write!(f, ") -> {}", sig.return_type)
             }
             TypeKind::Agent(agent) => write!(f, "agent {}", agent.name),
-            TypeKind::Array { element, size } => write!(f, "[{}; {}]", element, size),
-            TypeKind::Vector(elem) => write!(f, "vec<{}>", elem),
+            TypeKind::Array { element, size } => write!(f, "[{element}; {size}]"),
+            TypeKind::Vector(elem) => write!(f, "vec<{elem}>"),
             TypeKind::Bytes => write!(f, "bytes"),
             TypeKind::String => write!(f, "string"),
-            TypeKind::Option(inner) => write!(f, "Option<{}>", inner),
-            TypeKind::Result { ok, err } => write!(f, "Result<{}, {}>", ok, err),
+            TypeKind::Option(inner) => write!(f, "Option<{inner}>"),
+            TypeKind::Result { ok, err } => write!(f, "Result<{ok}, {err}>"),
             TypeKind::Tuple(elems) => {
                 write!(f, "(")?;
                 for (i, elem) in elems.iter().enumerate() {
                     if i > 0 {
                         write!(f, ", ")?;
                     }
-                    write!(f, "{}", elem)?;
+                    write!(f, "{elem}")?;
                 }
                 write!(f, ")")
             }
-            TypeKind::Named(name) => write!(f, "{}", name),
+            TypeKind::Named(name) => write!(f, "{name}"),
             TypeKind::Vm(vm) => match vm {
                 VmType::Evm(evm) => match evm {
                     EvmType::Asset => write!(f, "evm::asset"),
@@ -601,8 +601,8 @@ impl fmt::Display for Type {
                     X3Type::BridgeHandle => write!(f, "x3::bridge_handle"),
                 },
             },
-            TypeKind::Atomic(inner) => write!(f, "atomic<{}>", inner),
-            TypeKind::Context(inner) => write!(f, "context<{}>", inner),
+            TypeKind::Atomic(inner) => write!(f, "atomic<{inner}>"),
+            TypeKind::Context(inner) => write!(f, "context<{inner}>"),
         }
     }
 }
