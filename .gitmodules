@@ -41,3 +41,9 @@
 [submodule "tools/openspec"]
 	path = tools/openspec
 	url = https://github.com/Fission-AI/OpenSpec
+[submodule "ralph-o-matic"]
+	path = ralph-o-matic
+	url = https://github.com/dbinky/ralph-o-matic.git
+[submodule "forge-std"]
+	path = tests/security/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std.git
