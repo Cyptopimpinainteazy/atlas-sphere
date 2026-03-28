@@ -110,6 +110,11 @@ fn assert_no_forbidden_live_seed() -> Result<(), String> {
 /// Environment variables:
 /// - `CHAIN_SPEC`: Override default chain spec (e.g., "dev", "staging", "production")
 /// - `X3_ENVIRONMENT`: Set environment tier for auto-config selection
+/// - `X3_STAGING_AUTHORITIES`: JSON array of staging validator keys (format: [{"aura":"SS58","grandpa":"SS58"},...])
+/// - `X3_TESTNET_AUTHORITIES`: JSON array of testnet validator keys
+/// - `X3_PRODUCTION_AUTHORITIES`: JSON array of production validator keys
+/// - `TESTNET_BOOTNODES`: Comma-separated list of bootnode multiaddrs
+/// - `X3_DEV_SEED`: Development seed hint (must not contain forbidden seeds like "Alice", "Bob")
 pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     let effective_id = if id.is_empty() {
         // Check environment for chain spec override
@@ -206,16 +211,13 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 /// Build the staging `ChainSpec` matching the release network parameters.
 pub fn staging_config() -> Result<ChainSpec, String> {
+    assert_no_forbidden_live_seed()?;
     // Staging networks are expected to have a proper WASM runtime embedded.
     // Keep the strict check here so that any missing or invalid blob fails
     // fast during chain spec construction.
     let wasm_binary =
         WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available".to_string())?;
-    let initial_authorities = vec![
-        authority_keys_from_seed("AtlasAlpha")?,
-        authority_keys_from_seed("AtlasBeta")?,
-        authority_keys_from_seed("AtlasGamma")?,
-    ];
+    let initial_authorities = parse_authorities_from_env("X3_STAGING_AUTHORITIES")?;
     let bootnodes = load_bootnodes();
     let endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("AtlasFoundation")?,

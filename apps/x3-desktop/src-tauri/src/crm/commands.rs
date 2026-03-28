@@ -77,8 +77,11 @@ pub fn crm_update_contact(db: State<'_, CrmDb>, contact_id: String, user_id: Str
     p.push(Box::new(user_id));
 
     let params_ref: Vec<&dyn rusqlite::types::ToSql> = p.iter().map(|b| b.as_ref()).collect();
-    conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
-    get_contact_by_id(&conn, &contact_id)
+    let affected_rows = conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
+    if affected_rows == 0 {
+        return Err("Contact not found or access denied".to_string());
+    }
+    get_contact_by_id_scoped(&conn, &contact_id, &user_id)
 }
 
 #[tauri::command]
@@ -195,10 +198,13 @@ pub fn crm_update_event(db: State<'_, CrmDb>, event_id: String, user_id: String,
     if let Some(v) = input.completed { p.push(Box::new(v as i32)); }
     p.push(Box::new(event_id.clone()));
     p.push(Box::new(user_id));
-
+    
     let params_ref: Vec<&dyn rusqlite::types::ToSql> = p.iter().map(|b| b.as_ref()).collect();
-    conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
-    get_event_by_id(&conn, &event_id)
+    let affected_rows = conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
+    if affected_rows == 0 {
+        return Err("Event not found or access denied".to_string());
+    }
+    get_event_by_id_scoped(&conn, &event_id, &user_id)
 }
 
 #[tauri::command]
@@ -306,8 +312,11 @@ pub fn crm_update_deal(db: State<'_, CrmDb>, deal_id: String, user_id: String, i
     p.push(Box::new(user_id));
 
     let params_ref: Vec<&dyn rusqlite::types::ToSql> = p.iter().map(|b| b.as_ref()).collect();
-    conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
-    get_deal_by_id(&conn, &deal_id)
+    let affected_rows = conn.execute(&sql, params_ref.as_slice()).map_err(e)?;
+    if affected_rows == 0 {
+        return Err("Deal not found or access denied".to_string());
+    }
+    get_deal_by_id_scoped(&conn, &deal_id, &user_id)
 }
 
 #[tauri::command]
@@ -345,6 +354,32 @@ fn row_to_deal(row: &rusqlite::Row) -> rusqlite::Result<Deal> {
         notes: row.get(9)?, won: row.get::<_, i32>(10)? != 0, lost: row.get::<_, i32>(11)? != 0,
         created_at: row.get(12)?, updated_at: row.get(13)?,
     })
+}
+
+fn get_contact_by_id_scoped(conn: &rusqlite::Connection, id: &str, owner_user_id: &str) -> CmdResult<Contact> {
+    conn.query_row(
+        "SELECT id, owner_user_id, first_name, last_name, email, phone, company, job_title,
+         avatar_url, address, city, state, zip, country, website, notes, tags, source, stage,
+         priority, last_contacted, created_at, updated_at FROM crm_contacts WHERE id = ?1 AND owner_user_id = ?2",
+        params![id, owner_user_id], row_to_contact,
+    ).map_err(e)
+}
+
+fn get_event_by_id_scoped(conn: &rusqlite::Connection, id: &str, owner_user_id: &str) -> CmdResult<CalendarEvent> {
+    conn.query_row(
+        "SELECT id, owner_user_id, title, description, location, event_type, start_at, end_at,
+         all_day, color, recurrence, reminder_mins, contact_id, deal_id, completed, created_at, updated_at
+         FROM crm_events WHERE id = ?1 AND owner_user_id = ?2",
+        params![id, owner_user_id], row_to_event,
+    ).map_err(e)
+}
+
+fn get_deal_by_id_scoped(conn: &rusqlite::Connection, id: &str, owner_user_id: &str) -> CmdResult<Deal> {
+    conn.query_row(
+        "SELECT id, owner_user_id, contact_id, title, value, currency, stage, probability,
+         expected_close, notes, won, lost, created_at, updated_at FROM crm_deals WHERE id = ?1 AND owner_user_id = ?2",
+        params![id, owner_user_id], row_to_deal,
+    ).map_err(e)
 }
 
 /* ══════════════════════════════════════════════════════
@@ -553,9 +588,9 @@ pub async fn crm_send_email(db: State<'_, CrmDb>, user_id: String, input: SendEm
             ],
         ).map_err(e)?;
 
-        // Update contact last_contacted
+        // Update contact last_contacted (only if user owns the contact)
         if !contact_id_val.is_empty() {
-            conn.execute("UPDATE crm_contacts SET last_contacted = ?1 WHERE id = ?2", params![ts, &contact_id_val]).ok();
+            conn.execute("UPDATE crm_contacts SET last_contacted = ?1 WHERE id = ?2 AND owner_user_id = ?3", params![ts, &contact_id_val, &user_id]).ok();
         }
     }
 
@@ -769,26 +804,43 @@ pub fn crm_find_duplicates(db: State<'_, CrmDb>, user_id: String) -> CmdResult<V
 }
 
 #[tauri::command]
-pub fn crm_merge_contacts(db: State<'_, CrmDb>, _contact_id: String, _user_id: String, input: MergeContactsInput) -> CmdResult<Contact> {
+pub fn crm_merge_contacts(db: State<'_, CrmDb>, _contact_id: String, user_id: String, input: MergeContactsInput) -> CmdResult<Contact> {
     let conn = db.conn.lock().map_err(e)?;
+
+    // Verify ownership of both contacts
+    let primary_owner: String = conn.query_row(
+        "SELECT owner_user_id FROM crm_contacts WHERE id = ?1",
+        params![&input.primary_id],
+        |r| r.get(0),
+    ).map_err(|_| "Primary contact not found".to_string())?;
+
+    let secondary_owner: String = conn.query_row(
+        "SELECT owner_user_id FROM crm_contacts WHERE id = ?1",
+        params![&input.secondary_id],
+        |r| r.get(0),
+    ).map_err(|_| "Secondary contact not found".to_string())?;
+
+    if primary_owner != user_id || secondary_owner != user_id {
+        return Err("Access denied: cannot merge contacts you don't own".to_string());
+    }
 
     // Merge all activities from secondary to primary
     conn.execute(
-        "UPDATE crm_activities SET contact_id=?1 WHERE contact_id=?2",
-        params![&input.primary_id, &input.secondary_id],
+        "UPDATE crm_activities SET contact_id=?1 WHERE contact_id=?2 AND owner_user_id=?3",
+        params![&input.primary_id, &input.secondary_id, &user_id],
     ).map_err(e)?;
 
     // Merge all deals from secondary to primary
     conn.execute(
-        "UPDATE crm_deals SET contact_id=?1 WHERE contact_id=?2",
-        params![&input.primary_id, &input.secondary_id],
+        "UPDATE crm_deals SET contact_id=?1 WHERE contact_id=?2 AND owner_user_id=?3",
+        params![&input.primary_id, &input.secondary_id, &user_id],
     ).map_err(e)?;
 
     // Delete secondary contact
-    conn.execute("DELETE FROM crm_contacts WHERE id=?1", params![&input.secondary_id]).map_err(e)?;
+    conn.execute("DELETE FROM crm_contacts WHERE id=?1 AND owner_user_id=?2", params![&input.secondary_id, &user_id]).map_err(e)?;
 
     // Return updated primary contact
-    get_contact_by_id(&conn, &input.primary_id)
+    get_contact_by_id_scoped(&conn, &input.primary_id, &user_id)
 }
 
 /* ══════════════════════════════════════════════════════

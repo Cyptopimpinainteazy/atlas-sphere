@@ -334,8 +334,9 @@ impl L2Bridge {
         hash
     }
 
-    /// Hash two 32-byte values using Bitcoin-style double-SHA256.
-    fn hash_pair(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
+    /// Hash two 32-byte values using double-SHA256 for Merkle tree construction.
+    /// Combines the two inputs and applies SHA256 twice for security.
+    pub(crate) fn hash_pair(a: &[u8; 32], b: &[u8; 32]) -> [u8; 32] {
         let mut combined = [0u8; 64];
         combined[..32].copy_from_slice(a);
         combined[32..].copy_from_slice(b);
@@ -474,12 +475,13 @@ mod tests {
             output_index: 0,
         };
 
+        // Compute expected output_root using SHA256-based hash_pair function
+        let intermediate = L2Bridge::hash_pair(&withdrawal_root, &proof.withdrawal_proof[0]);
+        let expected_root = L2Bridge::hash_pair(&intermediate, &proof.output_root_proof[0]);
+
         let output_root = OutputRoot {
             l2_output_index: 0,
-            // output_root must be the merkle root obtained by applying both proof chains:
-            // compute_merkle_root(withdrawal_root=[5;32], withdrawal_proof=[[2;32]]) = [5^2;32]=[7;32]
-            // verify_output_root([7;32], output_root_proof=[[1;32]], ?) checks compute_merkle_root([7;32],[[1;32]])=[7^1;32]=[6;32]
-            output_root: [5u8 ^ 2u8 ^ 1u8; 32], // = [6; 32]
+            output_root: expected_root,
             timestamp: 1000,
             block_number: 100,
         };

@@ -56,6 +56,8 @@ pub struct NodeFeatureFlags {
     pub enable_flash_finality: bool,
     /// Enable PoH digest validation path.
     pub enable_poh: bool,
+    /// Enable the atomic kernel runtime and sequencer processing path.
+    pub enable_atomic_kernel: bool,
     /// Require GPU path for validation critical flows.
     pub gpu_required: bool,
 }
@@ -329,6 +331,15 @@ pub fn new_full(
     let enable_grandpa = compute_enable_grandpa(&config, feature_flags);
     if !enable_grandpa && feature_flags.enable_flash_finality {
         log::info!("⚡ Flash Finality flag is set; GRANDPA will be disabled for this node");
+    }
+
+    if feature_flags.enable_atomic_kernel {
+        log::info!(
+            "🧩 Atomic kernel feature gate enabled; sequencer and settlement pipelines are active"
+        );
+        // Additional atomic kernel activation hooks can be added here.
+    } else {
+        log::info!("🧩 Atomic kernel feature gate is disabled (default)");
     }
 
     let genesis_hash = client

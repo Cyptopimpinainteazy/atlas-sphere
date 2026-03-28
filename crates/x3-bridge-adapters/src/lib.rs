@@ -717,6 +717,18 @@ where
         let api = self.client.runtime_api();
         api.get_svm_balance(at, pubkey.to_vec()).unwrap_or(0)
     }
+
+    /// Get the EVM bridge escrow address
+    fn get_evm_bridge_escrow(&self) -> [u8; 20] {
+        // TODO: replace with real escrow contract address when deployed
+        [0u8; 20]
+    }
+
+    /// Get the SVM bridge escrow program address
+    fn get_svm_bridge_escrow(&self) -> [u8; 32] {
+        // TODO: replace with real escrow program address when deployed
+        [0u8; 32]
+    }
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

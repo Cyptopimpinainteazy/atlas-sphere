@@ -230,7 +230,7 @@ impl fmt::Display for BackendErrors {
             if i > 0 {
                 writeln!(f)?;
             }
-            write!(f, "{}", err)?;
+            write!(f, "{err}")?;
         }
         Ok(())
     }

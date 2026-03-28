@@ -74,7 +74,7 @@ use frame_support::traits::BuildGenesisConfig;
 use frame_support::traits::{Currency, UnixTime};
 use frame_system::pallet_prelude::*;
 use parity_scale_codec::Codec;
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_io::hashing::blake2_256;
 use sp_runtime::traits::MaybeSerializeDeserialize;
 use sp_std::convert::TryInto;
@@ -478,6 +478,14 @@ pub mod pallet {
         /// Origin that can execute privileged governance functions.
         /// Typically EnsureRoot or a council-based origin.
         type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
+        /// Bridge escrow contract address for EVM atomic swaps.
+        #[pallet::constant]
+        type BridgeEvmEscrow: Get<H160>;
+
+        /// Bridge escrow program address for SVM atomic swaps.
+        #[pallet::constant]
+        type BridgeSvmEscrow: Get<[u8; 32]>;
     }
 
     type AssetSymbolOf<T> = BoundedVec<u8, <T as Config>::MaxAssetSymbolLength>;

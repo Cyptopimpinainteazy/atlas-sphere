@@ -28,6 +28,9 @@ frame-executive = { workspace = true, default-features = false }
 
 pallet-aura = { workspace = true, default-features = false }
 pallet-grandpa = { workspace = true, default-features = false }
+pallet-session = { workspace = true, default-features = false, features = ["historical"] }
+pallet-staking = { workspace = true, default-features = false }
+pallet-offences = { workspace = true, default-features = false }
 pallet-timestamp = { workspace = true, default-features = false }
 pallet-balances = { workspace = true, default-features = false }
 pallet-transaction-payment = { workspace = true, default-features = false }
@@ -98,6 +101,9 @@ std = [
 	"frame-system-rpc-runtime-api/std",
 	"pallet-aura/std",
 	"pallet-grandpa/std",
+	"pallet-session/std",
+	"pallet-staking/std",
+	"pallet-offences/std",
 	"pallet-timestamp/std",
 	"pallet-balances/std",
 	"pallet-transaction-payment/std",

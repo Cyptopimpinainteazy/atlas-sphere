@@ -120,7 +120,7 @@ impl MirBytecodeCompiler {
             .map(|(i, v)| {
                 let reg = self.allocate_reg();
                 self.value_regs.insert(*v, reg);
-                (SymbolId(i), format!("param_{}", i))
+                (SymbolId(i), format!("param_{i}"))
             })
             .collect();
 
@@ -200,7 +200,7 @@ impl MirBytecodeCompiler {
                 let func_idx = self.function_indices.get(target).copied().ok_or_else(|| {
                     BackendError::new(
                         BackendErrorKind::UnknownFunction {
-                            name: format!("{:?}", target),
+                            name: format!("{target:?}"),
                         },
                         self.current_span,
                     )
@@ -390,10 +390,7 @@ impl MirBytecodeCompiler {
     fn get_reg(&self, val: MirValue) -> BackendResult<Register> {
         self.value_regs.get(&val).copied().ok_or_else(|| {
             BackendError::new(
-                BackendErrorKind::Internal(format!(
-                    "MIR value {:?} not found in register map",
-                    val
-                )),
+                BackendErrorKind::Internal(format!("MIR value {val:?} not found in register map")),
                 self.current_span,
             )
         })

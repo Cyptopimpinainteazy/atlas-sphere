@@ -839,6 +839,7 @@ pub fn run() -> CliResult<()> {
                 enable_parallel_proposer: cli.features.enable_parallel_proposer,
                 enable_flash_finality: cli.features.enable_flash_finality,
                 enable_poh: cli.features.enable_poh,
+                enable_atomic_kernel: cli.features.enable_atomic_kernel,
                 gpu_required: cli.features.gpu_required,
             };
 

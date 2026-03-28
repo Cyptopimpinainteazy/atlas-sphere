@@ -977,20 +977,33 @@ pub fn agents_create_lead(
 pub fn agents_update_lead(
     db: State<'_, CrmDb>,
     lead_id: String,
+    user_id: String,
     funnel_stage: Option<String>,
     score: Option<i32>,
     notes: Option<String>,
 ) -> CmdResult<()> {
     let conn = db.conn.lock().map_err(e)?;
     let ts = now();
+    
+    // Verify ownership before updating
+    let owner: String = conn.query_row(
+        "SELECT owner_user_id FROM crm_lead_funnel WHERE id = ?1",
+        params![lead_id],
+        |r| r.get(0),
+    ).map_err(|_| "Lead not found".to_string())?;
+    
+    if owner != user_id {
+        return Err("Access denied: cannot update lead you don't own".to_string());
+    }
+    
     if let Some(stage) = funnel_stage {
-        conn.execute("UPDATE crm_lead_funnel SET funnel_stage=?1, updated_at=?2 WHERE id=?3", params![stage, ts, lead_id]).map_err(e)?;
+        conn.execute("UPDATE crm_lead_funnel SET funnel_stage=?1, updated_at=?2 WHERE id=?3 AND owner_user_id=?4", params![stage, ts, lead_id, user_id]).map_err(e)?;
     }
     if let Some(s) = score {
-        conn.execute("UPDATE crm_lead_funnel SET score=?1, updated_at=?2 WHERE id=?3", params![s, ts, lead_id]).map_err(e)?;
+        conn.execute("UPDATE crm_lead_funnel SET score=?1, updated_at=?2 WHERE id=?3 AND owner_user_id=?4", params![s, ts, lead_id, user_id]).map_err(e)?;
     }
     if let Some(n) = notes {
-        conn.execute("UPDATE crm_lead_funnel SET notes=?1, updated_at=?2 WHERE id=?3", params![n, ts, lead_id]).map_err(e)?;
+        conn.execute("UPDATE crm_lead_funnel SET notes=?1, updated_at=?2 WHERE id=?3 AND owner_user_id=?4", params![n, ts, lead_id, user_id]).map_err(e)?;
     }
     Ok(())
 }
@@ -1150,7 +1163,14 @@ pub fn agents_get_proxy(
 #[tauri::command]
 pub fn agents_get_all_proxies(
     db: State<'_, CrmDb>,
+    user_id: String,
+    is_king: bool,
 ) -> CmdResult<Vec<UserProxy>> {
+    // Server-side authorization: only king can see all proxies
+    if !is_king {
+        return Err("Access denied: only admins can view all proxies".to_string());
+    }
+    
     let conn = db.conn.lock().map_err(e)?;
     let mut stmt = conn.prepare(
         "SELECT id,user_id,proxy_host,proxy_port,proxy_type,username,password,active,created_at FROM crm_user_proxies WHERE active=1"
@@ -1167,7 +1187,14 @@ pub fn agents_get_all_proxies(
 #[tauri::command]
 pub fn agents_get_funnel_stats(
     db: State<'_, CrmDb>,
+    user_id: String,
+    is_king: bool,
 ) -> CmdResult<serde_json::Value> {
+    // Server-side authorization: only king can see all funnel stats
+    if !is_king {
+        return Err("Access denied: only admins can view funnel stats".to_string());
+    }
+    
     let conn = db.conn.lock().map_err(e)?;
     let total: i32 = conn.query_row("SELECT COUNT(*) FROM crm_lead_funnel", [], |r| r.get(0)).unwrap_or(0);
     let discovered: i32 = conn.query_row("SELECT COUNT(*) FROM crm_lead_funnel WHERE funnel_stage='discovered'", [], |r| r.get(0)).unwrap_or(0);
@@ -1769,6 +1796,7 @@ pub fn agents_get_media(
 pub async fn agents_personalized_message(
     db: State<'_, CrmDb>,
     contact_id: String,
+    user_id: String,
     agent_id: String,
     message_type: String,
 ) -> CmdResult<serde_json::Value> {
@@ -1776,12 +1804,12 @@ pub async fn agents_personalized_message(
     let agent = roster.iter().find(|a| a.id == agent_id)
         .ok_or_else(|| format!("Agent '{}' not found", agent_id))?;
 
-    // Fetch contact info
+    // Fetch contact info (only if user owns the contact)
     let contact: serde_json::Value = {
         let conn = db.conn.lock().map_err(e)?;
         conn.query_row(
-            "SELECT first_name, last_name, email, company, job_title, country, COALESCE(network,'') as network, website, notes FROM crm_contacts WHERE id=?1",
-            params![contact_id],
+            "SELECT first_name, last_name, email, company, job_title, country, COALESCE(network,'') as network, website, notes FROM crm_contacts WHERE id=?1 AND owner_user_id=?2",
+            params![contact_id, user_id],
             |r| Ok(serde_json::json!({
                 "first_name": r.get::<_, String>(0)?,
                 "last_name": r.get::<_, String>(1)?,
@@ -1793,7 +1821,7 @@ pub async fn agents_personalized_message(
                 "website": r.get::<_, String>(7)?,
                 "notes": r.get::<_, String>(8)?,
             })),
-        ).map_err(e)?
+        ).map_err(|_| "Contact not found or access denied".to_string())?
     };
 
     // Try to fetch their website for extra context
