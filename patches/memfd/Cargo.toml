@@ -29,7 +29,7 @@ autotests = false
 autobenches = false
 description = "A pure-Rust library to work with Linux memfd and sealing"
 documentation = "https://docs.rs/memfd"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "Linux",
     "memfd",

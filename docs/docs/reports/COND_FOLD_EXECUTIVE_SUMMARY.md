@@ -50,7 +50,7 @@ Confirmed `crates/x3-opt/src/optimizer.rs`:
 
 - [COND_FOLD_INTEGRATION_COMPLETE.md](COND_FOLD_INTEGRATION_COMPLETE.md) — Full technical report
 - [COND_FOLD_BEFORE_AFTER.md](COND_FOLD_BEFORE_AFTER.md) — Transformation examples
-- [COND_FOLD_QUICK_REFERENCE.md](COND_FOLD_QUICK_REFERENCE.md) — Qfrontend/uick start gfrontend/uide
+- [COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md) — Qfrontend/uick start gfrontend/uide
 
 ---
 
@@ -306,7 +306,7 @@ println!("Branches reduced: {} → {}", before, after);
 | ---------------------------------------------------------------------- | --------------------------------------------------- |
 | [COND_FOLD_INTEGRATION_COMPLETE.md](COND_FOLD_INTEGRATION_COMPLETE.md) | Full technical integration report with architecture |
 | [COND_FOLD_BEFORE_AFTER.md](COND_FOLD_BEFORE_AFTER.md)                 | Detailed transformation examples and gas impact     |
-| [COND_FOLD_QUICK_REFERENCE.md](COND_FOLD_QUICK_REFERENCE.md)           | Qfrontend/uick test commands and debugging tips              |
+| [COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md)           | Qfrontend/uick test commands and debugging tips              |
 | This File                                                              | Executive summary and integration status            |
 
 ---
@@ -401,7 +401,7 @@ cargo run -p x3-bench --release
 ## 📞 Support
 
 **Questions about the implementation?**  
-See [COND_FOLD_QUICK_REFERENCE.md](COND_FOLD_QUICK_REFERENCE.md#-qfrontend/uick-faq)
+See [COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md#-qfrontend/uick-faq)
 
 **Want to understand the algorithm?**  
 See [COND_FOLD_BEFORE_AFTER.md](COND_FOLD_BEFORE_AFTER.md#-algorithm-walkthrough)

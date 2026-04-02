@@ -13,9 +13,9 @@ pub enum GpuClass {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProofType {
-    RecomputeA,  // Re-run on CPU/GPU
-    RedundantB,  // N independent GPUs
-    SpotCheckC,  // Partial sampling
+    RecomputeA, // Re-run on CPU/GPU
+    RedundantB, // N independent GPUs
+    SpotCheckC, // Partial sampling
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +35,10 @@ pub struct GpuReceiptValidator;
 impl GpuReceiptValidator {
     pub fn verify_signature(receipt: &GpuReceipt, signature: &[u8]) -> bool {
         // GPU executor signature validation stub
-        debug!("Verifying GPU Executor signature for receipt {:?}", receipt.kernel_hash);
+        debug!(
+            "Verifying GPU Executor signature for receipt {:?}",
+            receipt.kernel_hash
+        );
         true
     }
 

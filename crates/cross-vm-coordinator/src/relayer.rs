@@ -48,9 +48,9 @@ pub struct RelayerConfig {
 impl Default for RelayerConfig {
     fn default() -> Self {
         Self {
-            poll_interval_ms: 500,       // 500ms polling
-            max_relay_wait_ms: 30_000,   // 30s max relay time
-            fee_bump_factor: 1.25,       // 25% fee bump
+            poll_interval_ms: 500,     // 500ms polling
+            max_relay_wait_ms: 30_000, // 30s max relay time
+            fee_bump_factor: 1.25,     // 25% fee bump
             max_retries: 5,
         }
     }
@@ -96,16 +96,16 @@ impl CrossChainRelayer {
         loop {
             match self.slow_adapter.claim_htlc(slow_htlc_id, secret).await {
                 Ok(tx_hash) => {
-                    info!("Secret relayed to slow chain — tx: 0x{}", hex::encode(&tx_hash));
+                    info!(
+                        "Secret relayed to slow chain — tx: 0x{}",
+                        hex::encode(&tx_hash)
+                    );
                     return Ok(tx_hash);
                 }
                 Err(e) => {
                     retries += 1;
                     if retries >= self.config.max_retries {
-                        error!(
-                            "Failed to relay secret after {} retries: {}",
-                            retries, e
-                        );
+                        error!("Failed to relay secret after {} retries: {}", retries, e);
                         return Err(e);
                     }
                     warn!("Relay attempt {} failed: {} — retrying", retries, e);

@@ -3,14 +3,12 @@ use futures::{future, prelude::*};
 use log::{debug, info, warn};
 use parity_scale_codec::{Decode, Encode};
 use sc_client_api::BlockchainEvents;
-use sc_network::NetworkService;
-use sc_network_gossip::{GossipEngine, MessageIntent, Validator, ValidatorContext};
+use sc_network_gossip::{GossipEngine, MessageIntent, Network, Syncing, ValidationResult, Validator, ValidatorContext};
+use sc_network::PeerId;
 use sp_core::crypto::KeyTypeId;
 use sp_keystore::KeystorePtr;
-use sp_runtime::{
-    traits::{Block as BlockT, Header as HeaderT},
-    SaturatedConversion,
-};
+use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
+use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -20,6 +18,7 @@ pub struct FlashFinalityGossipValidator<Block: BlockT> {
 }
 
 impl<Block: BlockT> FlashFinalityGossipValidator<Block> {
+    /// Create a new gossip validator for Flash Finality messages.
     pub fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -33,11 +32,11 @@ impl<Block: BlockT> Validator<Block> for FlashFinalityGossipValidator<Block> {
         _context: &mut dyn ValidatorContext<Block>,
         _sender: &PeerId,
         data: &[u8],
-    ) -> MessageIntent {
+    ) -> ValidationResult<Block::Hash> {
         if let Ok(_msg) = GossipMessage::decode(&mut &data[..]) {
-            MessageIntent::Gossip
+            ValidationResult::ProcessAndKeep(Default::default())
         } else {
-            MessageIntent::Discard
+            ValidationResult::Discard
         }
     }
 
@@ -45,20 +44,13 @@ impl<Block: BlockT> Validator<Block> for FlashFinalityGossipValidator<Block> {
         Box::new(move |_hash, _data| false)
     }
 
-    fn message_allowed(
-        &self,
-        _ra: &Block::Hash,
-        _message: &[u8],
-        _intent: MessageIntent,
-        _who: &PeerId,
-        _rewarding: bool,
-    ) -> bool {
-        true
+    fn message_allowed<'a>(
+        &'a self,
+    ) -> Box<dyn FnMut(&PeerId, MessageIntent, &Block::Hash, &[u8]) -> bool + 'a> {
+        Box::new(move |_who, _intent, _topic, _data| true)
     }
 }
 
-// Re-export PeerId from sc_network
-use sc_network::PeerId;
 
 /// A bridge between the Flash Finality gadget and the network.
 pub struct FlashFinalityBridge<Block: BlockT, Client> {
@@ -72,15 +64,22 @@ impl<Block: BlockT, Client> FlashFinalityBridge<Block, Client>
 where
     Client: BlockchainEvents<Block> + Send + Sync + 'static,
 {
-    pub fn new(
+    /// Create a new Flash Finality network bridge.
+    pub fn new<N, S>(
         gadget: Arc<FlashFinalityGadget>,
         client: Arc<Client>,
-        network: Arc<NetworkService<Block, Block::Hash>>,
+        network: N,
+        sync_service: S,
         keystore: KeystorePtr,
-    ) -> Self {
+    ) -> Self
+    where
+        N: Network<Block> + Send + Clone + 'static,
+        S: Syncing<Block> + Send + Clone + 'static,
+    {
         let validator = Arc::new(FlashFinalityGossipValidator::new());
         let gossip_engine = Arc::new(Mutex::new(GossipEngine::new(
             network,
+            sync_service,
             FLASH_FINALITY_PROTOCOL_ID,
             validator,
             None,
@@ -94,13 +93,15 @@ where
         }
     }
 
+    /// Run the network bridge event loop.
     pub async fn run(self) {
         let mut import_notifications = self.client.import_notification_stream();
         let mut finality_notifications = self.client.finality_notification_stream();
 
         let mut incoming_messages = {
             let mut engine = self.gossip_engine.lock().await;
-            engine.messages_for(FLASH_FINALITY_PROTOCOL_ID.into())
+            let topic: Block::Hash = Default::default();
+            engine.messages_for(topic)
         };
 
         info!(
@@ -180,7 +181,7 @@ where
     }
 
     async fn broadcast(&self, msg: GossipMessage) {
-        let topic = sp_core::H256::repeat_byte(0x42);
+        let topic: Block::Hash = Default::default();
         let mut engine = self.gossip_engine.lock().await;
         engine.gossip_message(topic, msg.encode(), true);
     }

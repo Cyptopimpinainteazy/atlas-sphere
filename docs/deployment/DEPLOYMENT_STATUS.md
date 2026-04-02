@@ -14,21 +14,21 @@
 - ✅ `deployment/infrastructure-setup.sh` - Main setup script
 - ✅ `deployment/inventory.yaml` - Infrastructure inventory template
 - ✅ `deployment/provision-digitalocean.sh` - DigitalOcean automation
-- ✅ `deployment/provision-aws.md` - AWS EC2 guide
-- ✅ `deployment/provision-manual.md` - Manual/VPS provider guide
-- ✅ `deployment/dns-config.md` - DNS configuration guide
+- ✅ `docs/docs/deployment/provision-aws.md` - AWS EC2 guide
+- ✅ `docs/docs/deployment/provision-manual.md` - Manual/VPS provider guide
+- ✅ `docs/docs/deployment/dns-config.md` - DNS configuration guide
 - ✅ `deployment/configure-firewall.sh` - Firewall setup script
 - ✅ `~/.ssh/x3-testnet-deploy` - SSH key generated
 
 **What You Need to Do Next:**
 1. Choose your infrastructure provider:
    - **DigitalOcean**: Run `./deployment/provision-digitalocean.sh`
-   - **AWS EC2**: Follow `deployment/provision-aws.md`
-   - **Manual/VPS**: Follow `deployment/provision-manual.md`
+   - **AWS EC2**: Follow `docs/docs/deployment/provision-aws.md`
+   - **Manual/VPS**: Follow `docs/docs/deployment/provision-manual.md`
 
 2. Update `deployment/inventory.yaml` with actual IPs after provisioning
 
-3. Configure DNS records using `deployment/dns-config.md`
+3. Configure DNS records using `docs/docs/deployment/dns-config.md`
 
 4. Run firewall setup on each node:
    ```bash
@@ -110,7 +110,7 @@
 vim deployment/inventory.yaml
 
 # Configure DNS
-# Follow deployment/dns-config.md
+# Follow docs/docs/deployment/dns-config.md
 
 # Day -1: Build and generate keys (CURRENTLY RUNNING)
 # Wait for cargo build --release to finish...
@@ -254,8 +254,8 @@ deployment/
 1. ✅ Wait for `cargo build --release` to complete (check with: `tail -f deployment/build.log`)
 2. Provision VMs using your preferred method:
    - DigitalOcean: `./deployment/provision-digitalocean.sh`
-   - AWS: Follow `deployment/provision-aws.md`
-   - Manual: Follow `deployment/provision-manual.md`
+   - AWS: Follow `docs/docs/deployment/provision-aws.md`
+   - Manual: Follow `docs/docs/deployment/provision-manual.md`
 
 ### After Build Completes
 3. Run `./deployment/build-and-keygen.sh`
@@ -317,7 +317,7 @@ ssh x3@VM_IP 'sudo ufw enable'
 ## 📞 Support Channels
 
 **During Deployment:**
-- **Technical Issues**: Check docs/reports/TESTNET_DEPLOYMENT_GUIDE.md troubleshooting section
+- **Technical Issues**: Check docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md troubleshooting section
 - **Script Errors**: Review script output, check prerequisites
 - **Infrastructure**: Consult your cloud provider docs
 

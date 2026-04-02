@@ -22,12 +22,12 @@ authors = [
 include = [
     "src/**/*",
     "LICENSE-*",
-    "README.md",
+    "docs/root/README.md",
 ]
 description = "WebAssembly low-level format library"
 homepage = "https://github.com/paritytech/parity-wasm"
 documentation = "https://docs.rs/parity-wasm"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "wasm",
     "webassembly",

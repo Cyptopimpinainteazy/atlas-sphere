@@ -1,6 +1,6 @@
 #![allow(rustdoc::bare_urls)]
 #![warn(unreachable_pub)]
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../docs/root/README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;

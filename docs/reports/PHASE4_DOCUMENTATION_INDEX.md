@@ -223,7 +223,7 @@ OptLevel::Default       ← Recommended setting
 ## 🎓 Learning Resources
 
 ### To Understand the Optimizer
-- File: crates/x3-opt/README.md
+- File: crates/x3-opt/docs/root/README.md
 - Concepts: 14-pass YOLO, Loop-Pack v1
 - Performance: 20-50% gas reduction
 

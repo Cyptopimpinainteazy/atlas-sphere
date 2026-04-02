@@ -292,7 +292,7 @@ This document provides a detailed analysis of each feature branch to understand 
    - Multiple alembic-related branches
    - Resolution: Ensure migration sequence numbers don't conflict
 
-6. **`README.md` files**
+6. **`docs/root/README.md` files**
    - Documentation updates across branches
    - Resolution: Combine sections, avoid duplicates
 

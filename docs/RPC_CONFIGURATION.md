@@ -361,8 +361,8 @@ grep PRIVATE_KEY .env
 
 ## Related Documentation
 
-- [X3 Settlement Engine](/pallets/x3-settlement-engine/README.md)
-- [External Chain Adapters](/crates/external-chains/README.md)
+- [X3 Settlement Engine](/pallets/x3-settlement-engine/docs/root/README.md)
+- [External Chain Adapters](/crates/external-chains/docs/root/README.md)
 - [Arbitrage Bot Setup](/docs/arbitrage-bot-setup.md)
 - [Environment Configuration Reference](#environment-reference)
 

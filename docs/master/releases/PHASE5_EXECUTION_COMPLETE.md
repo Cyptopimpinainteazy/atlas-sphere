@@ -56,7 +56,7 @@
 | **proposal.md** | Problem statement + solution design | ✅ |
 | **design.md** | Technical architecture + code | ✅ |
 | **GUIDE.md** | 10-section operations manual | ✅ |
-| **DEPLOYMENT_GUIDE.md** | Ship-ready procedures | ✅ |
+| **docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** | Ship-ready procedures | ✅ |
 | **COMPLETE_DELIVERY.md** | Executive summary | ✅ |
 
 ### Implementation Code (5 files, 3,000+ lines)
@@ -73,8 +73,8 @@
 
 | File | Sections | Status |
 |------|----------|--------|
-| **FILE_MANIFEST.md** | Complete inventory | ✅ |
-| **QUICK_REFERENCE.md** | 1-minute overview | ✅ |
+| **docs/reports/FILE_MANIFEST.md** | Complete inventory | ✅ |
+| **docs/runbooks/getting-started/QUICK_REFERENCE.md** | 1-minute overview | ✅ |
 
 ---
 
@@ -262,7 +262,7 @@
 **Examples:** 3+ working code samples  
 
 ### Operations Teams
-**Read:** DEPLOYMENT_GUIDE.md  
+**Read:** docs/runbooks/deployment/DEPLOYMENT_GUIDE.md  
 **Execute:** Step-by-step procedures  
 **Monitor:** Automated health checks  
 **Rollback:** 5-minute procedure if needed  
@@ -289,10 +289,10 @@ openspec/changes/jury-blockchain-anchoring/
 ├── proposal.md (800 lines)
 ├── design.md (800+ lines)
 ├── GUIDE.md (2,500+ lines)
-├── DEPLOYMENT_GUIDE.md (600 lines)
+├── docs/runbooks/deployment/DEPLOYMENT_GUIDE.md (600 lines)
 ├── COMPLETE_DELIVERY.md (400 lines)
-├── FILE_MANIFEST.md (500 lines)
-└── QUICK_REFERENCE.md (300 lines)
+├── docs/reports/FILE_MANIFEST.md (500 lines)
+└── docs/runbooks/getting-started/QUICK_REFERENCE.md (300 lines)
 ```
 
 **Runtime Pallet (Rust):**
@@ -331,8 +331,8 @@ tests/
 - **3:00** → Completed: TypeScript React adapter (600+ lines)
 - **3:30** → Completed: Test suite (350+ lines, 13 tests)
 - **4:00** → Completed: GUIDE.md (2,500+ lines)
-- **4:15** → Completed: DEPLOYMENT_GUIDE.md
-- **4:30** → Completed: FILE_MANIFEST.md + QUICK_REFERENCE.md
+- **4:15** → Completed: docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
+- **4:30** → Completed: docs/reports/FILE_MANIFEST.md + docs/runbooks/getting-started/QUICK_REFERENCE.md
 
 **Total Build Time: ~4.5 hours** ✅  
 **Status: All deliverables complete** ✅  
@@ -344,10 +344,10 @@ tests/
 
 ### For Immediate Deployment (Next 24 Hours)
 
-1. **Read QUICK_REFERENCE.md** (5 min)
+1. **Read docs/runbooks/getting-started/QUICK_REFERENCE.md** (5 min)
    - Know what exists and where
 
-2. **Read DEPLOYMENT_GUIDE.md Part 1-2** (20 min)
+2. **Read docs/runbooks/deployment/DEPLOYMENT_GUIDE.md Part 1-2** (20 min)
    - Understand the checklist
    - Review pre-deployment tasks
 
@@ -421,8 +421,8 @@ tests/
 ## Next Steps
 
 **TODAY:**
-- ✅ Review QUICK_REFERENCE.md (this takes 5 min)
-- ✅ Read DEPLOYMENT_GUIDE.md Part 1-2
+- ✅ Review docs/runbooks/getting-started/QUICK_REFERENCE.md (this takes 5 min)
+- ✅ Read docs/runbooks/deployment/DEPLOYMENT_GUIDE.md Part 1-2
 - ✅ Get stakeholder approval
 
 **TOMORROW MORNING:**

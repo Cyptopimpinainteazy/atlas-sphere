@@ -1,6 +1,6 @@
-use crate::{SwapRouterError, SwapParams};
 use crate::quote_engine::QuoteResult;
 use crate::routing::SwapRoute;
+use crate::{SwapParams, SwapRouterError};
 use sp_core::U256;
 
 /// Basic route optimizer: pick best output, break ties on lowest gas, then earliest deadline.
@@ -19,7 +19,9 @@ pub struct RouteScore {
 }
 
 impl RouteOptimizer {
-    pub fn new() -> Result<Self, SwapRouterError> { Ok(Self) }
+    pub fn new() -> Result<Self, SwapRouterError> {
+        Ok(Self)
+    }
 
     pub async fn optimize_route(
         &self,
@@ -32,12 +34,16 @@ impl RouteOptimizer {
             if q.estimated_output < params.min_amount_out {
                 continue;
             }
-            let score = RouteScore { estimated_output: q.estimated_output, gas_cost: q.gas_cost };
+            let score = RouteScore {
+                estimated_output: q.estimated_output,
+                gas_cost: q.gas_cost,
+            };
             best = match best {
                 None => Some((score, q.route.clone())),
                 Some((cur_score, cur_route)) => {
                     if score.estimated_output > cur_score.estimated_output
-                        || (score.estimated_output == cur_score.estimated_output && score.gas_cost < cur_score.gas_cost)
+                        || (score.estimated_output == cur_score.estimated_output
+                            && score.gas_cost < cur_score.gas_cost)
                     {
                         Some((score, q.route.clone()))
                     } else {
@@ -47,8 +53,7 @@ impl RouteOptimizer {
             };
         }
 
-        best
-            .map(|(_, route)| route)
+        best.map(|(_, route)| route)
             .ok_or(SwapRouterError::RouteNotFound)
     }
 }

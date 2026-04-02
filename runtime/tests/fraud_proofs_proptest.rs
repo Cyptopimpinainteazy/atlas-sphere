@@ -38,11 +38,9 @@ fn minimal_witness() -> Vec<u8> {
         0x04, // rules_version = 1 (compact)
         0x04, // tx_count = 1 (compact)
         // tx_ids[0]: 32 zero bytes
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, // access_list[0].access_count = 0
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, // access_list[0].access_count = 0
         0x00, // dep_edges = 0
         0x00, // reserved = 0
     ]
@@ -58,11 +56,7 @@ fn make_disputed(commitment: H256) -> DisputedBlockMeta<u64> {
     }
 }
 
-fn make_proof(
-    witness: Vec<u8>,
-    observed: H256,
-    expected: H256,
-) -> FraudProofV1<u64> {
+fn make_proof(witness: Vec<u8>, observed: H256, expected: H256) -> FraudProofV1<u64> {
     FraudProofV1 {
         proof_type: PROOF_TYPE_SCHED_MISMATCH_V1,
         header_ref: HeaderRef {
@@ -170,10 +164,8 @@ fn prop_committee_members_are_eligible() {
 fn prop_commitment_deterministic() {
     let witness = minimal_witness();
     for _ in 0..20 {
-        let c1 = scheduler_commitment_from_bytes(&witness, 1, 256)
-            .expect("valid witness");
-        let c2 = scheduler_commitment_from_bytes(&witness, 1, 256)
-            .expect("valid witness");
+        let c1 = scheduler_commitment_from_bytes(&witness, 1, 256).expect("valid witness");
+        let c2 = scheduler_commitment_from_bytes(&witness, 1, 256).expect("valid witness");
         assert_eq!(
             c1, c2,
             "WITNESS-CANON-001: commitment not deterministic across calls"
@@ -186,8 +178,7 @@ fn prop_commitment_deterministic() {
 #[test]
 fn prop_proof_id_stable() {
     let witness = minimal_witness();
-    let commitment = scheduler_commitment_from_bytes(&witness, 1, 256)
-        .expect("valid witness");
+    let commitment = scheduler_commitment_from_bytes(&witness, 1, 256).expect("valid witness");
     let forged = H256::from([0xFEu8; 32]);
     let proof = make_proof(witness, forged, commitment);
 
@@ -205,8 +196,7 @@ fn prop_proof_id_stable() {
 #[test]
 fn prop_proof_id_depends_on_block_hash() {
     let witness = minimal_witness();
-    let commitment = scheduler_commitment_from_bytes(&witness, 1, 256)
-        .expect("valid witness");
+    let commitment = scheduler_commitment_from_bytes(&witness, 1, 256).expect("valid witness");
     let forged = H256::from([0xFEu8; 32]);
     let proof = make_proof(witness, forged, commitment);
 
@@ -229,8 +219,7 @@ fn prop_proof_id_depends_on_block_hash() {
 #[test]
 fn prop_non_fraudulent_always_rejected() {
     let witness = minimal_witness();
-    let real_commitment = scheduler_commitment_from_bytes(&witness, 1, 256)
-        .expect("valid witness");
+    let real_commitment = scheduler_commitment_from_bytes(&witness, 1, 256).expect("valid witness");
 
     // Disputed block has the CORRECT commitment → not fraudulent.
     let disputed = make_disputed(real_commitment);

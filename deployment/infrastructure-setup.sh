@@ -221,7 +221,7 @@ chmod +x "deployment/provision-digitalocean.sh"
 echo "✅ Created: deployment/provision-digitalocean.sh"
 
 # AWS guide
-cat > "deployment/provision-aws.md" << 'EOF'
+cat > "docs/docs/deployment/provision-aws.md" << 'EOF'
 # AWS EC2 VM Provisioning for X3 Chain Testnet
 
 ## Prerequisites
@@ -298,10 +298,10 @@ aws ec2 describe-instances \
 
 ### 4. Update inventory.yaml with IPs
 EOF
-echo "✅ Created: deployment/provision-aws.md"
+echo "✅ Created: docs/docs/deployment/provision-aws.md"
 
 # Local/Manual guide
-cat > "deployment/provision-manual.md" << 'EOF'
+cat > "docs/docs/deployment/provision-manual.md" << 'EOF'
 # Manual VM Provisioning for X3 Chain Testnet
 
 ## If using VPS provider (Hetzner, Linode, Vultr, etc.)
@@ -401,13 +401,13 @@ services:
 - Set up host-only or bridged networking
 - Configure port forwarding as needed
 EOF
-echo "✅ Created: deployment/provision-manual.md"
+echo "✅ Created: docs/docs/deployment/provision-manual.md"
 
 # Step 5: Create DNS configuration template
 echo ""
 echo "🌐 Step 5/5: Creating DNS configuration..."
 
-cat > "deployment/dns-config.md" << 'EOF'
+cat > "docs/docs/deployment/dns-config.md" << 'EOF'
 # DNS Configuration for X3 Chain Testnet
 
 ## Required DNS Records
@@ -480,7 +480,7 @@ dig bootnode.testnet.x3-chain.io
 # Should return the IPs you configured
 ```
 EOF
-echo "✅ Created: deployment/dns-config.md"
+echo "✅ Created: docs/docs/deployment/dns-config.md"
 
 # Create firewall configuration script
 cat > "deployment/configure-firewall.sh" << 'EOF'
@@ -552,21 +552,21 @@ echo ""
 echo "📁 Created files:"
 echo "  • deployment/inventory.yaml (UPDATE WITH ACTUAL IPs)"
 echo "  • deployment/provision-digitalocean.sh"
-echo "  • deployment/provision-aws.md"
-echo "  • deployment/provision-manual.md"
-echo "  • deployment/dns-config.md"
+echo "  • docs/docs/deployment/provision-aws.md"
+echo "  • docs/docs/deployment/provision-manual.md"
+echo "  • docs/docs/deployment/dns-config.md"
 echo "  • deployment/configure-firewall.sh"
 echo ""
 echo "🚀 Next steps:"
 echo ""
 echo "1. Provision VMs using your preferred method:"
 echo "   • DigitalOcean: ./deployment/provision-digitalocean.sh"
-echo "   • AWS: Follow deployment/provision-aws.md"
-echo "   • Manual: Follow deployment/provision-manual.md"
+echo "   • AWS: Follow docs/docs/deployment/provision-aws.md"
+echo "   • Manual: Follow docs/docs/deployment/provision-manual.md"
 echo ""
 echo "2. Update deployment/inventory.yaml with actual IPs"
 echo ""
-echo "3. Configure DNS records using deployment/dns-config.md"
+echo "3. Configure DNS records using docs/docs/deployment/dns-config.md"
 echo ""
 echo "4. Run firewall setup on each node:"
 echo "   ssh x3@NODE_IP 'bash -s' < deployment/configure-firewall.sh validator"

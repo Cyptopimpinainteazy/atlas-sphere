@@ -95,7 +95,7 @@ cargo test -p x3-opt --test optimizer_yolo_smoke
 **Documentation:**
 - `archive/reports/LOOP_PACK_V1_INTEGRATION_REPORT.md` (detailed analysis)
 - `archive/reports/YOLO_LOOP_PACK_V1_SESSION_COMPLETE.md` (session summary)
-- `docs/reports/QUICK_REFERENCE.md` (this file)
+- `docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md` (this file)
 
 ---
 

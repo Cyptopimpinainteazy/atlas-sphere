@@ -68,7 +68,7 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 
 ---
 
-### 3. docs/reports/TESTNET_DEPLOYMENT_GUIDE.md
+### 3. docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
 **🎯 Purpose**: Complete operator manual for deploying testnet infrastructure  
 **👥 Audience**: DevOps engineers, infrastructure teams, validator operators  
 **📄 Length**: 30 minutes read (comprehensive)  
@@ -123,7 +123,7 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 
 ---
 
-### 4. docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md
+### 4. docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md
 **🎯 Purpose**: Interactive deployment tracker with step-by-step checkboxes  
 **👥 Audience**: Deployment team, project managers, coordinators  
 **📄 Length**: Interactive (check boxes as you progress)  
@@ -350,10 +350,10 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 → **docs/reports/TESTNET_QUICKSTART.md** (5 min to first RPC call)
 
 ### "I need to deploy the infrastructure"
-→ **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** (complete setup manual)
+→ **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** (complete setup manual)
 
 ### "I'm coordinating the deployment"
-→ **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** (interactive tracker)
+→ **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** (interactive tracker)
 
 ### "I need executive summary for approval"
 → **archive/reports/TESTNET_DEPLOYMENT_SUMMARY.md** (10 min overview)
@@ -371,17 +371,17 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 3. Get stakeholder sign-off
 
 ### Step 2: Infrastructure Preparation (Days -5 to -1)
-1. Use **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** as master tracker
-2. Reference **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** for detailed steps
+1. Use **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** as master tracker
+2. Reference **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** for detailed steps
 3. Complete pre-deployment checklist items
 
 ### Step 3: Deployment (Days 1-3)
-1. Follow **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** deployment section
-2. Check off items in **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md**
+1. Follow **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** deployment section
+2. Check off items in **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md**
 3. Deploy bootnode → validators → RPC nodes → faucet
 
 ### Step 4: Verification (Day 4)
-1. Run all health checks from **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md**
+1. Run all health checks from **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md**
 2. Test all RPC methods from **docs/reports/TESTNET_QUICKSTART.md**
 3. Verify faucet working
 4. Confirm monitoring operational
@@ -393,7 +393,7 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 4. Monitor intensively for first 24 hours
 
 ### Step 6: Post-Launch (Days 6-30)
-1. Follow **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** Week 1 tasks
+1. Follow **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** Week 1 tasks
 2. Track success metrics daily
 3. Provide developer support in Discord
 4. Collect feedback for Phase 2 planning
@@ -405,13 +405,13 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 ### Core Deployment Documents
 - ✅ **docs/reports/TESTNET_ANNOUNCEMENT.md** - Public launch communication (100% complete)
 - ✅ **docs/reports/TESTNET_QUICKSTART.md** - Developer onboarding guide (100% complete)
-- ✅ **docs/reports/TESTNET_DEPLOYMENT_GUIDE.md** - Operator manual (100% complete)
-- ✅ **docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md** - Deployment tracker (100% complete)
+- ✅ **docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** - Operator manual (100% complete)
+- ✅ **docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md** - Deployment tracker (100% complete)
 - ✅ **archive/reports/TESTNET_DEPLOYMENT_SUMMARY.md** - Executive summary (100% complete)
 - ✅ **docs/reports/TESTNET_ROADMAP.md** - Long-term roadmap (100% complete)
 
 ### Supporting Documents (Already Updated)
-- ✅ **README.md** - Current Status updated to reflect testnet launch
+- ✅ **docs/root/README.md** - Current Status updated to reflect testnet launch
 - ✅ **DOCUMENTATION_INDEX.md** - Testnet resources section added
 - ✅ **FINAL_COMPLETION_REPORT.md** - Already accurate ("Developer Preview")
 
@@ -445,15 +445,15 @@ This is the **complete testnet deployment package** for X3 Chain Testnet v1. All
 ### What's Included:
 ✅ Public announcement (docs/reports/TESTNET_ANNOUNCEMENT.md)  
 ✅ Developer quickstart (docs/reports/TESTNET_QUICKSTART.md)  
-✅ Operator manual (docs/reports/TESTNET_DEPLOYMENT_GUIDE.md)  
-✅ Deployment tracker (docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md)  
+✅ Operator manual (docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md)  
+✅ Deployment tracker (docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md)  
 ✅ Executive summary (archive/reports/TESTNET_DEPLOYMENT_SUMMARY.md)  
 ✅ Long-term roadmap (docs/reports/TESTNET_ROADMAP.md)
 
 ### Next Actions:
 1. **Review** all documents (spot-check for accuracy)
 2. **Update** actual endpoints when infrastructure deployed (find/replace placeholder URLs)
-3. **Execute** deployment using docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md
+3. **Execute** deployment using docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md
 4. **Launch** publicly using docs/reports/TESTNET_ANNOUNCEMENT.md
 5. **Support** developers using docs/reports/TESTNET_QUICKSTART.md
 

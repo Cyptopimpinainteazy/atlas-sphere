@@ -1,8 +1,8 @@
-use crate::{SwapRouterError, SwapParams};
 use crate::routing::SwapRoute;
+use crate::{SwapParams, SwapRouterError};
 use alloc::vec::Vec;
+use serde::{Deserialize, Serialize};
 use sp_core::U256;
-use serde::{Serialize, Deserialize};
 
 pub struct QuoteEngine;
 
@@ -17,9 +17,14 @@ pub struct PriceOracle;
 pub struct PriceSource;
 
 impl QuoteEngine {
-    pub fn new() -> Result<Self, SwapRouterError> { Ok(Self) }
+    pub fn new() -> Result<Self, SwapRouterError> {
+        Ok(Self)
+    }
 
-    pub async fn get_comprehensive_quotes(&self, params: &SwapParams) -> Result<Vec<QuoteResult>, SwapRouterError> {
+    pub async fn get_comprehensive_quotes(
+        &self,
+        params: &SwapParams,
+    ) -> Result<Vec<QuoteResult>, SwapRouterError> {
         Ok(alloc::vec![QuoteResult {
             route: SwapRoute {
                 hops: Vec::new(),

@@ -295,7 +295,7 @@ x3/
 ├── go.mod
 ├── go.sum
 ├── Makefile
-└── README.md
+└── docs/root/README.md
 ```
 
 ---

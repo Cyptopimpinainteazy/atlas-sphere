@@ -151,7 +151,7 @@ Dry-run mode (`--dry-run 1`) reports matches without modifying.
 **In Progress/Pending:**
 - CI validation: Push main to test branch, trigger GitHub Actions triple-run
 - Performance baseline: Measure expected runtime, detect regressions
-- Documentation: Update README.md with local test instructions
+- Documentation: Update docs/root/README.md with local test instructions
 - Metrics telemetry: Log retry counts, wait times, hash comparison results
 
 ## Related ADRs & Issues
@@ -162,6 +162,6 @@ Dry-run mode (`--dry-run 1`) reports matches without modifying.
 
 ## References
 
-- Test Infrastructure: [tests/e2e/README.md](../../tests/e2e/README.md) (to be created)
+- Test Infrastructure: [docs/tests/e2e/README.md](../../docs/tests/e2e/README.md) (to be created)
 - Spec: `.github/copilot-instructions.md` (CI/test conventions)
 - Workflow: `.github/workflows/e2e-state-root.yml`

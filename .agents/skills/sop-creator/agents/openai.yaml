@@ -1,4 +1,0 @@
-interface:
-  display_name: "SOP Creator"
-  short_description: "Write scannable SOPs and runbooks"
-  default_prompt: "Create a concise SOP for this process with prerequisites, steps, checks, and troubleshooting."

@@ -82,19 +82,19 @@ impl Default for CoordinatorConfig {
                 x3_gas: 100_000,
             },
             evm_providers: vec![
-                FlashloanProvider::BalancerV2,  // 0% fee first
-                FlashloanProvider::AaveV3,      // 0.05% fallback
-                FlashloanProvider::Euler,       // 0% alternative
+                FlashloanProvider::BalancerV2, // 0% fee first
+                FlashloanProvider::AaveV3,     // 0.05% fallback
+                FlashloanProvider::Euler,      // 0% alternative
             ],
             svm_providers: vec![
-                FlashloanProvider::MarginFi,    // 0% fee first
-                FlashloanProvider::Kamino,      // 0% fee
-                FlashloanProvider::Solend,      // 0.3% fallback
+                FlashloanProvider::MarginFi, // 0% fee first
+                FlashloanProvider::Kamino,   // 0% fee
+                FlashloanProvider::Solend,   // 0.3% fallback
             ],
             x3_providers: vec![
-                FlashloanProvider::X3Native,    // X3's own pool
+                FlashloanProvider::X3Native, // X3's own pool
             ],
-            max_slippage_bps: 50,  // 0.5% max slippage
+            max_slippage_bps: 50, // 0.5% max slippage
             max_retries: 3,
             retry_delay_ms: 1000,
         }

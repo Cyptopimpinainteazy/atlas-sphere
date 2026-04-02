@@ -116,7 +116,7 @@ Build "Sphere Explorer":
 x3-chain/
 │
 ├── Cargo.toml                  # Root workspace manifest
-├── README.md
+├── docs/root/README.md
 ├── LICENSE
 ├── .gitignore
 │

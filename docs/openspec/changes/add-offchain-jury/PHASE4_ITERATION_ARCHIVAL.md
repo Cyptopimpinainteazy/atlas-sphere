@@ -450,7 +450,7 @@ Create `LESSONS_LEARNED.md`:
 
 ```bash
 # Create README for archive
-cat > changes/archive/2026-02-08-add-offchain-jury/README.md << 'EOF'
+cat > changes/archive/2026-02-08-add-offchain-jury/docs/root/README.md << 'EOF'
 # Off-Chain Jury Service - Archived Change
 
 **Status**: Production ✅  
@@ -578,7 +578,7 @@ When archiving, ensure these files are included:
 
 ```
 changes/archive/YYYY-MM-DD-add-offchain-jury/
-├── README.md                          # Archive summary
+├── docs/root/README.md                          # Archive summary
 ├── RUNBOOK.md                         # Operations guide
 ├── LESSONS_LEARNED.md                 # What we learned
 │

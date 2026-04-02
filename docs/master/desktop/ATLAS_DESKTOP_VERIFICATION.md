@@ -126,7 +126,7 @@
    - Per-app setup instructions
    - Real data wiring details
    
-✅ X3_DESKTOP_QUICK_REFERENCE.md
+✅ X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md
    - One-page quick reference
    - Keyboard shortcuts
    - Health check commands

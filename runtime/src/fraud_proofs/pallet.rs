@@ -132,17 +132,11 @@ pub mod pallet {
             disputed_block: H256,
         },
         /// The parallel scheduler was frozen due to confirmed divergence.
-        ConsensusFrozen {
-            reason: FreezeReason,
-            at_block: u32,
-        },
+        ConsensusFrozen { reason: FreezeReason, at_block: u32 },
         /// Governance unfroze the scheduler.
         ConsensusUnfrozen,
         /// A fraud proof was rejected (not actually fraudulent or invalid).
-        FraudProofRejected {
-            proof_id: H256,
-            reason: Vec<u8>,
-        },
+        FraudProofRejected { proof_id: H256, reason: Vec<u8> },
     }
 
     // -----------------------------------------------------------------------
@@ -200,8 +194,9 @@ pub mod pallet {
             );
 
             // 2. Dispute window: disputed block must be recent.
-            let current_block: u32 =
-                UniqueSaturatedInto::unique_saturated_into(<frame_system::Pallet<T>>::block_number());
+            let current_block: u32 = UniqueSaturatedInto::unique_saturated_into(
+                <frame_system::Pallet<T>>::block_number(),
+            );
             let dispute_window = T::DisputeWindowBlocks::get();
             let disputed_at = disputed.block_number;
             ensure!(
@@ -324,9 +319,9 @@ mod tests {
     use super::pallet::*;
     use crate::fraud_proofs::{
         freeze::{FreezeReason, FreezeState},
+        scheduler_v1::scheduler_commitment_from_bytes,
         types::{DisputedBlockMeta, FraudProofV1, HeaderRef, PROOF_TYPE_SCHED_MISMATCH_V1},
         verifier::compute_proof_id,
-        scheduler_v1::scheduler_commitment_from_bytes,
     };
     use sp_core::H256;
 
@@ -343,25 +338,22 @@ mod tests {
         // Minimal 1-tx no-deps witness bytes — must match SCALE encoding of
         // SchedulerWitnessV1 exactly (rules_version is u32, NOT Compact).
         let witness_bytes: Vec<u8> = vec![
-            0x01,                   // version: u8 = 1
+            0x01, // version: u8 = 1
             0x01, 0x00, 0x00, 0x00, // rules_version: u32 = 1 (4-byte LE)
-            0x04,                   // tx_count: Compact<u32> = 1
-            0x04,                   // tx_ids Vec length: Compact(1)
+            0x04, // tx_count: Compact<u32> = 1
+            0x04, // tx_ids Vec length: Compact(1)
             // tx_ids[0]: H256::zero() (32 bytes)
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x04,                   // access_lists Vec length: Compact(1)
-            0x00,                   // access_lists[0].access_count Compact(0)
-            0x00,                   // access_lists[0].accesses Vec length Compact(0)
-            0x00,                   // seed: Option<H256> = None
-            0x00,                   // reserved: Vec<u8> = []
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x04, // access_lists Vec length: Compact(1)
+            0x00, // access_lists[0].access_count Compact(0)
+            0x00, // access_lists[0].accesses Vec length Compact(0)
+            0x00, // seed: Option<H256> = None
+            0x00, // reserved: Vec<u8> = []
         ];
 
         let scheduler_commitment =
-            scheduler_commitment_from_bytes(&witness_bytes, 1, 256)
-                .expect("valid witness");
+            scheduler_commitment_from_bytes(&witness_bytes, 1, 256).expect("valid witness");
 
         let disputed = DisputedBlockMeta {
             block_hash: zero_hash(),
@@ -392,7 +384,8 @@ mod tests {
     /// FRAUD-PROOF-PALLET-001: compute_proof_id is stable
     #[test]
     fn proof_id_is_stable() {
-        let (proof, disputed) = make_valid_proof(1u64, H256::from([1u8; 32]), H256::from([2u8; 32]));
+        let (proof, disputed) =
+            make_valid_proof(1u64, H256::from([1u8; 32]), H256::from([2u8; 32]));
         let id1 = compute_proof_id(&proof, disputed.block_hash);
         let id2 = compute_proof_id(&proof, disputed.block_hash);
         assert_eq!(id1, id2);

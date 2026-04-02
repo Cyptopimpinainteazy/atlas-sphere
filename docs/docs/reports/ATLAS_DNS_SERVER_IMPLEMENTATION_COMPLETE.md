@@ -275,7 +275,7 @@ crates/x3-dns-server/
 │   ├── cache.rs              # DNS caching
 │   ├── blockchain.rs         # Blockchain integration
 │   └── api.rs                # Management API
-└── README.md                 # Documentation (to be created)
+└── docs/root/README.md                 # Documentation (to be created)
 ```
 
 ## 🔧 Dependencies

@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Link Trail"
-  short_description: "List URLs fetched during SpecStory sessions"
-  default_prompt: "Show the URLs fetched during recent SpecStory sessions and summarize the external sources that were consulted."

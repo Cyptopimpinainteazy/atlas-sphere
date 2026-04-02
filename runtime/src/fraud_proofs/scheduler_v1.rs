@@ -51,8 +51,6 @@ pub fn scheduler_commitment_from_bytes(
 /// Returns `edges[i]` = sorted vec of `j > i` that conflict with `i`.
 /// Used internally and in tests to assert graph structure.
 pub fn build_conflict_edges(witness: &SchedulerWitnessV1) -> Vec<Vec<u32>> {
-    use super::witness_v1::AccessKeyV1;
-
     let n = witness.tx_ids.len();
     let mut edges: Vec<Vec<u32>> = vec![Vec::new(); n];
 
@@ -100,7 +98,9 @@ pub fn canonical_order(witness: &SchedulerWitnessV1) -> Result<Vec<u32>, Witness
     }
 
     // Ready set: sorted by tx_id (== sorted by index, since tx_ids are pre-sorted ascending)
-    let mut ready: Vec<u32> = (0..n as u32).filter(|&i| in_degree[i as usize] == 0).collect();
+    let mut ready: Vec<u32> = (0..n as u32)
+        .filter(|&i| in_degree[i as usize] == 0)
+        .collect();
     ready.sort_unstable_by(|&a, &b| witness.tx_ids[a as usize].cmp(&witness.tx_ids[b as usize]));
 
     let mut order = Vec::with_capacity(n);

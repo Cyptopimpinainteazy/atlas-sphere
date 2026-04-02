@@ -91,10 +91,13 @@ Running a geographically diverse testnet is the only practical way to uncover la
 - `scripts/testnet/run-7-validators-local.sh`
 - `scripts/testnet/status-7-validators.sh`
 - `scripts/testnet/load-remarks-tps.js`
+- `scripts/testnet/verify-testnet.sh`
 - `scripts/testnet/run-chainbench-stack.sh`
 - `deployment/manage-testnet.sh`
 - `docker-compose.monitoring.yml`
 - `prometheus.yml`
+- `docs/testnet-config/testnet-config.json`
+- `docs/testnet-config/TESTNET-VERIFICATION.md`
 
 # Invariants
 Add the following to `tests/invariants/registry.toml`:

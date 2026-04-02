@@ -2,7 +2,7 @@
 
 ## 📍 Start Here
 
-**New to Phase 6?** → Read [docs/reports/PHASE6_QUICK_START.md](docs/reports/PHASE6_QUICK_START.md) (5 min)
+**New to Phase 6?** → Read [/docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md) (5 min)
 
 **Want full details?** → Read [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md) (20 min)
 
@@ -14,7 +14,7 @@
 
 | File                                               | Purpose                          | Read Time |
 | -------------------------------------------------- | -------------------------------- | --------- |
-| [docs/reports/PHASE6_QUICK_START.md](docs/reports/PHASE6_QUICK_START.md)     | Overview + quick reference       | 5 min     |
+| [/docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md)     | Overview + quick reference       | 5 min     |
 | [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md)           | Comprehensive architecture guide | 20 min    |
 | [PHASE6_BUILD_REPORT.txt](PHASE6_BUILD_REPORT.txt) | Build metrics + status           | 2 min     |
 | This file                                          | Navigation guide                 | 2 min     |
@@ -24,14 +24,14 @@
 ## 🔧 Code Locations
 
 ### Register Allocator (B)
-- **File**: [crates/x3-opt/src/regalloc.rs](crates/x3-opt/src/regalloc.rs#L24)
+- **File**: [crates/x3-opt/src/regalloc.rs](/crates/x3-opt/src/regalloc.rs#L24)
 - **Key Type**: `ChaitinAllocator`
 - **Key Method**: `allocate(interference_edges, live_ranges)`
 - **Tests**: Lines starting with `#[test]` (chaitin_simple_triangle, etc.)
 - **Lines**: ~150 enhanced from linear scan base
 
 ### Peephole Autogen (C)
-- **File**: [crates/x3-opt/src/peephole_autogen.rs](crates/x3-opt/src/peephole_autogen.rs)
+- **File**: [/crates/x3-opt/src/peephole_autogen.rs](/crates/x3-opt/src/peephole_autogen.rs)
 - **Key Type**: `PeepholeAutogen`
 - **Key Method**: `auto_generate()`
 - **Helper Types**: `ExecutionTelemetry`, `MutationExplorer`, `SwarmOptimizer`, `PeepholePattern`
@@ -39,7 +39,7 @@
 - **Lines**: ~350 entirely new module
 
 ### Superoptimizer (D)
-- **File**: [crates/x3-opt/src/superoptimizer.rs](crates/x3-opt/src/superoptimizer.rs)
+- **File**: [/crates/x3-opt/src/superoptimizer.rs](/crates/x3-opt/src/superoptimizer.rs)
 - **Key Type**: `Superoptimizer`
 - **Key Method**: `search()`
 - **Helper Types**: `SymbolicValue`, `SmtSolver`, `InstructionSequence`, `Cost`
@@ -47,7 +47,7 @@
 - **Lines**: ~400 entirely new module
 
 ### Integration
-- **Module Exports**: [crates/x3-opt/src/lib.rs](crates/x3-opt/src/lib.rs#L55) (+20 lines)
+- **Module Exports**: [crates/x3-opt/src/lib.rs](/crates/x3-opt/src/lib.rs#L55) (+20 lines)
 
 ---
 
@@ -169,14 +169,14 @@ Phase 7: (Next) CLI/RPC integration & E2E testing
 - Superoptimizer: [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md#-d-superoptimizer-core-smt--brute-force)
 
 **If you want to use them in code:**
-- [docs/reports/PHASE6_QUICK_START.md](docs/reports/PHASE6_QUICK_START.md#-quick-api-reference)
+- [docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md#-quick-api-reference)
 
 **If you want to extend them:**
 - Look at the source code + comments
 - See "Future Enhancements" in [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md#-future-enhancements)
 
 **If you want to test them:**
-- [docs/reports/PHASE6_QUICK_START.md](docs/reports/PHASE6_QUICK_START.md#-run-tests)
+- [docs/runbooks/getting-started/QUICK_START.md](/docs/runbooks/getting-started/QUICK_START.md#-run-tests)
 
 **If you want integration roadmap:**
 - [archive/reports/PHASE6_COMPLETE.md](archive/reports/PHASE6_COMPLETE.md#--integration--metrics)
@@ -186,12 +186,12 @@ Phase 7: (Next) CLI/RPC integration & E2E testing
 ## 🔗 Related Documentation
 
 **Phase 4 (Baseline)**:
-- [docs/reports/PHASE4_DOCUMENTATION_INDEX.md](docs/reports/PHASE4_DOCUMENTATION_INDEX.md)
+- [/docs/reports/PHASE4_DOCUMENTATION_INDEX.md](/docs/reports/PHASE4_DOCUMENTATION_INDEX.md)
 - [archive/reports/SESSION_SUMMARY_PHASE4.md](archive/reports/SESSION_SUMMARY_PHASE4.md)
 
 **Project Structure**:
-- [README.md](README.md) - Project overview
-- [docs/reports/ACCOMPLISHMENTS.md](docs/reports/ACCOMPLISHMENTS.md) - Historical context
+- [/docs/root/README.md](/docs/root/README.md) - Project overview
+- [/docs/reports/ACCOMPLISHMENTS.md](/docs/reports/ACCOMPLISHMENTS.md) - Historical context
 
 ---
 

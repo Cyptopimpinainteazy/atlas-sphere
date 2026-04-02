@@ -107,7 +107,7 @@ export OLLAMA_HOST=http://localhost:11434
 
 ## Next Steps
 
-1. Review [README.md](md_supervisor/README.md) for full documentation
+1. Review [docs/root/README.md](md_supervisor/docs/root/README.md) for full documentation
 2. Check [ADVANCED_FEATURES.md](md_supervisor/ADVANCED_FEATURES.md) for PnL + agent cortroom details
 3. Integrate trader bridge for PnL feedback
 4. Set up GitHub Actions CI via `.github/workflows/md-supervisor-gate.yml`

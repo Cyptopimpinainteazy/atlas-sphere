@@ -107,10 +107,10 @@ If you haven't provisioned VMs yet, do this first:
    ./deployment/provision-digitalocean.sh
    
    # AWS (manual guide)
-   # Follow: deployment/provision-aws.md
+   # Follow: docs/docs/deployment/provision-aws.md
    
    # Other VPS (manual guide)
-   # Follow: deployment/provision-manual.md
+   # Follow: docs/docs/deployment/provision-manual.md
    ```
 
 2. **Update inventory with actual IPs:**
@@ -120,7 +120,7 @@ If you haven't provisioned VMs yet, do this first:
    ```
 
 3. **Configure DNS records:**
-   - Follow: `deployment/dns-config.md`
+   - Follow: `docs/docs/deployment/dns-config.md`
    - Point domains to your servers:
      - `rpc.testnet.x3-chain.io` → RPC load balancer
      - `bootnode.testnet.x3-chain.io` → Bootnode IP
@@ -238,8 +238,8 @@ If you already have VMs provisioned and configured:
 
 # Provisioning (choose one)
 ./deployment/provision-digitalocean.sh    # DigitalOcean automation
-./deployment/provision-aws.md             # AWS guide
-./deployment/provision-manual.md          # Manual/VPS guide
+./docs/docs/deployment/provision-aws.md             # AWS guide
+./docs/docs/deployment/provision-manual.md          # Manual/VPS guide
 
 # Node deployment
 ./deployment/deploy-nodes-day1.sh         # Day 1: Bootnode + validators
@@ -298,7 +298,7 @@ cat deployment/keys/validator-01-summary.txt
 
 ## 📞 Support
 
-- **Deployment Guide**: `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
+- **Deployment Guide**: `docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 - **Architecture**: `docs/ARCHITECTURE.md`
 - **RPC Integration**: `docs/RPC_INTEGRATION_GUIDE.md`
 - **Security Issues**: Backup your keys NOW!

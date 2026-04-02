@@ -87,14 +87,14 @@ openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md
 ├─ Purpose: Deployment day procedures & verification checklist
 └─ Status: ✅ Ready for use tomorrow
 
-openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md
+openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
 ├─ Format: Markdown
 ├─ Lines: 600+
 ├─ Purpose: Complete deployment procedures
 ├─ Covers: Setup, configuration, deployment steps, verification
 └─ Status: ✅ Complete reference guide
 
-openspec/changes/jury-blockchain-anchoring/QUICK_REFERENCE.md
+openspec/changes/jury-blockchain-anchoring/docs/runbooks/getting-started/QUICK_REFERENCE.md
 ├─ Format: Markdown (quick ref)
 ├─ Lines: Quick reference
 ├─ Purpose: Fast lookup for common commands
@@ -241,8 +241,8 @@ PHASE5_QUICK_SHIPPING_GUIDE.md
 ├── openspec/changes/jury-blockchain-anchoring/
 │   ├── proposal.md                          ✅ (Session 1)
 │   ├── design.md                            ✅ (Session 1)
-│   ├── DEPLOYMENT_GUIDE.md                  ✅ (Session 1)
-│   ├── QUICK_REFERENCE.md                   ✅ (Session 1)
+│   ├── docs/runbooks/deployment/DEPLOYMENT_GUIDE.md                  ✅ (Session 1)
+│   ├── docs/runbooks/getting-started/QUICK_REFERENCE.md                   ✅ (Session 1)
 │   ├── OPERATIONS_RUNBOOK.md                ✅ (NEW - Session 2)
 │   ├── TEAM_COMMUNICATIONS.md               ✅ (NEW - Session 2)
 │   └── PRE_FLIGHT_CHECKLIST.md             ✅ (NEW - Session 2)
@@ -345,7 +345,7 @@ echo "✅ ALL VERIFICATIONS PASSED - READY TO SHIP TOMORROW"
 All support information is in:
 
 **For Operations:** `openspec/changes/jury-blockchain-anchoring/OPERATIONS_RUNBOOK.md`
-**For Deployment:** `openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md`
+**For Deployment:** `openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 **For Procedures:** `openspec/changes/jury-blockchain-anchoring/PRE_FLIGHT_CHECKLIST.md`
 **For Communications:** `openspec/changes/jury-blockchain-anchoring/TEAM_COMMUNICATIONS.md`
 

@@ -30,7 +30,7 @@ pub use signals::{
     AlertSeverity, LaneAlert, LaneMetrics, LaneSignal, SignalAggregator, SignalType,
 };
 
-use crate::error::{SwarmResult, SwarmError};
+use crate::error::{SwarmError, SwarmResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

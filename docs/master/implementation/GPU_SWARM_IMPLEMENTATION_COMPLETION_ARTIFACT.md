@@ -358,10 +358,10 @@ helm install gpu-swarm deployment/helm/gpu-swarm/ \
 
 ### Quick Links
 - **Central Index**: [GPU_SWARM_IMPLEMENTATION_INDEX.md](GPU_SWARM_IMPLEMENTATION_INDEX.md)
-- **Code**: [crates/gpu-swarm/src/](crates/gpu-swarm/src/)
-- **Tests**: [crates/gpu-swarm/tests/](crates/gpu-swarm/tests/)
-- **Deployment**: [deployment/kubernetes/DEPLOYMENT.md](deployment/kubernetes/DEPLOYMENT.md)
-- **Roadmap**: [crates/gpu-swarm/ADVANCED_FEATURES.md](crates/gpu-swarm/ADVANCED_FEATURES.md)
+- **Code**: [/crates/gpu-swarm/src/](/crates/gpu-swarm/src/)
+- **Tests**: [/crates/gpu-swarm/tests/](/crates/gpu-swarm/tests/)
+- **Deployment**: [/deployment/kubernetes/DEPLOYMENT.md](/deployment/kubernetes/DEPLOYMENT.md)
+- **Roadmap**: [/crates/gpu-swarm/ADVANCED_FEATURES.md](/crates/gpu-swarm/ADVANCED_FEATURES.md)
 
 ---
 

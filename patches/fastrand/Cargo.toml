@@ -23,7 +23,7 @@ autoexamples = false
 autotests = false
 autobenches = false
 description = "A simple and fast random number generator"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "simple",
     "fast",

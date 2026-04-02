@@ -474,7 +474,58 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
   <div style="font-size:11px;color:var(--muted);opacity:0.5;">© 2025 X3STAR Protocol</div>
 </footer>
 
+<script src="js/x3-data-api.js"></script>
 <script>
+// Real data integration
+let x3api = null;
+let stakingData = null;
+
+async function loadStakingData() {
+  if (!x3api) return;
+  
+  try {
+    stakingData = await x3api.getStakingStats();
+    
+    // Update protocol stats
+    const tvlEl = document.querySelector('.ps-item:nth-child(1) .ps-val');
+    const apyEl = document.querySelector('.ps-item:nth-child(2) .ps-val');
+    const stakersEl = document.querySelector('.ps-item:nth-child(3) .ps-val');
+    const rewardsEl = document.querySelector('.ps-item:nth-child(4) .ps-val');
+    const stakedEl = document.querySelector('.ps-item:nth-child(5) .ps-val');
+    
+    if (tvlEl) tvlEl.textContent = '$' + (stakingData.totalValueLocked / 1000000).toFixed(1) + 'M';
+    if (apyEl) apyEl.textContent = stakingData.avgApy.toFixed(1) + '%';
+    if (stakersEl) stakersEl.textContent = stakingData.totalStakers.toLocaleString();
+    if (rewardsEl) rewardsEl.textContent = '$' + (stakingData.dailyRewards / 1000).toFixed(0) + 'K';
+    if (stakedEl) stakedEl.textContent = (stakingData.totalStaked / 1000000).toFixed(0) + 'M';
+    
+    // Update pool cards with real data
+    updatePoolCards();
+    
+  } catch (err) {
+    console.warn('Staking data load error:', err);
+  }
+}
+
+function updatePoolCards() {
+  if (!stakingData || !stakingData.pools) return;
+  
+  // Update pool TVLs and APYs dynamically
+  const poolCards = document.querySelectorAll('.pool-card');
+  stakingData.pools.forEach((pool, idx) => {
+    if (poolCards[idx]) {
+      const tvlEl = poolCards[idx].querySelector('.pstat-val');
+      if (tvlEl) {
+        tvlEl.textContent = '$' + (pool.tvl / 1000000).toFixed(1) + 'M';
+      }
+      const apyEl = poolCards[idx].querySelector('.pool-apy-val');
+      if (apyEl) {
+        apyEl.innerHTML = pool.apy + '% <span style="font-size:14px;opacity:0.5">APY</span>';
+      }
+    }
+  });
+}
+
 // Calc rewards
 function calcRewards() {
   const amount = parseFloat(document.getElementById('calc-amount').value) || 0;
@@ -518,16 +569,31 @@ function confirmStake() {
 function filterPools(el, type) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  
+  // Filter pool cards
+  const cards = document.querySelectorAll('.pool-card');
+  cards.forEach(card => {
+    if (type === 'all' || card.dataset.type.includes(type)) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
 }
 
 // Reveal
 const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.05});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// Update TVL live
-setInterval(() => {
-  const tvls = document.querySelectorAll('.pstat-val, .ms-val, .ps-val');
-}, 10000);
+// Initialize X3API
+X3API.init().then(api => {
+  x3api = api;
+  console.log('Staking page: X3API initialized');
+  loadStakingData();
+  
+  // Refresh data every 30 seconds
+  setInterval(loadStakingData, 30000);
+});
 </script>
 </body>
 </html>

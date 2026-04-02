@@ -1,4 +1,0 @@
-interface:
-  display_name: "Remotion Video Creator"
-  short_description: "Create programmatic videos with React and Remotion"
-  default_prompt: "Plan and structure this video as Remotion compositions with scenes, timing, transitions, and asset notes."

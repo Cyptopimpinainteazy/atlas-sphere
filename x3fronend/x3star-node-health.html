@@ -202,6 +202,30 @@ nodes.forEach(n=>{
   grid.appendChild(card);
 });
 
+// Load real node data from X3API
+let x3api = null;
+
+async function loadRealNodeData() {
+  if (!x3api) return;
+  
+  try {
+    const health = await x3api.getNodeHealth();
+    const network = await x3api.getNetworkStats();
+    const validators = await x3api.getValidatorData();
+    
+    // Update header stats
+    const hrsVals = document.querySelectorAll('.hrs-val');
+    if (hrsVals[0]) hrsVals[0].textContent = validators.activeValidators.toLocaleString();
+    if (hrsVals[1]) hrsVals[1].textContent = '0'; // slashed
+    if (hrsVals[2]) hrsVals[2].textContent = '4'; // warnings
+    if (hrsVals[3]) hrsVals[3].textContent = network.uptime.toFixed(1) + '%';
+    if (hrsVals[4]) hrsVals[4].textContent = network.tps.toLocaleString();
+    
+  } catch (err) {
+    console.warn('Node health data error:', err);
+  }
+}
+
 // Randomize some values every few seconds
 setInterval(()=>{
   const cards=document.querySelectorAll('.node-card');
@@ -218,7 +242,16 @@ setInterval(()=>{
     const val=cpuFill.parentElement.nextElementSibling;
     if(val){val.textContent=Math.round(next)+'%';val.style.color=color;}
   }
+  
+  // Also update with real data periodically
+  loadRealNodeData();
 },3000);
+
+// Initialize X3API
+X3API.init().then(api => {
+  x3api = api;
+  loadRealNodeData();
+});
 </script>
 </body>
 </html>

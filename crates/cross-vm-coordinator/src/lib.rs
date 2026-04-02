@@ -31,18 +31,18 @@
 //! 3. **Secret management**: Secret `S` is generated off-chain, hash `H` is
 //!    committed on-chain in both HTLCs. `S` is only revealed when ALL legs succeed.
 
-pub mod types;
-pub mod state_machine;
-pub mod relayer;
-pub mod htlc;
-pub mod flashloan_adapter;
-pub mod config;
 pub mod abi;
+pub mod config;
+pub mod flashloan_adapter;
+pub mod htlc;
+pub mod relayer;
 pub mod rpc_client;
+pub mod state_machine;
+pub mod types;
 
-pub use types::*;
-pub use state_machine::*;
 pub use config::*;
+pub use state_machine::*;
+pub use types::*;
 
 #[cfg(test)]
 mod tests;

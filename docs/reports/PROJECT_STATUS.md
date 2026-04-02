@@ -192,7 +192,7 @@ chain_getBlockHash()
 ## 📚 Documentation Status
 
 ### Complete & Updated
-- ✅ Main README.md
+- ✅ Main docs/root/README.md
 - ✅ TypeScript SDK documentation
 - ✅ API specifications
 - ✅ Deployment guides

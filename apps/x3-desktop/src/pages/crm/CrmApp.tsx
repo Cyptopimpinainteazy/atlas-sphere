@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSocialStore } from "@/stores/socialStore";
 import { useNavigate } from "react-router-dom";
 import CrmShell from "./CrmShell";
@@ -7,18 +7,20 @@ import "@/styles/crm.css";
 const CrmApp: React.FC = () => {
   const { isLoggedIn, restoreSession } = useSocialStore();
   const navigate = useNavigate();
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     restoreSession();
+    setSessionChecked(true);
   }, []);
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/social");
+    if (sessionChecked && !isLoggedIn) {
+      navigate("/social", { replace: true });
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, sessionChecked]);
 
-  if (!isLoggedIn) return null;
+  if (!sessionChecked || !isLoggedIn) return null;
   return <CrmShell />;
 };
 

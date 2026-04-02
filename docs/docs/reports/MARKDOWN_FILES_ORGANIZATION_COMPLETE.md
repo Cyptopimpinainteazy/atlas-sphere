@@ -122,7 +122,7 @@
 
 ### Phase 6: Final Structure
 - [ ] Create main documentation index
-- [ ] Update README.md with proper structure
+- [ ] Update docs/root/README.md with proper structure
 - [ ] Standardize formatting and metadata
 - [ ] Verify all links work
 

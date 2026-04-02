@@ -520,7 +520,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 <style>
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 </style>
+<script src="js/x3-data-api.js"></script>
 <script>
+let x3api = null;
+let governanceData = null;
+
+async function loadGovernanceData() {
+  if (!x3api) return;
+  
+  try {
+    governanceData = await x3api.getGovernanceData();
+    
+    // Update DAO stats
+    const propEl = document.querySelector('.dao-stat:nth-child(1) .ds-val');
+    const passedEl = document.querySelector('.dao-stat:nth-child(2) .ds-val');
+    const votersEl = document.querySelector('.dao-stat:nth-child(3) .ds-val');
+    const treasuryEl = document.querySelector('.dao-stat:nth-child(4) .ds-val');
+    
+    if (propEl) propEl.textContent = governanceData.proposalsCount;
+    if (passedEl) passedEl.textContent = governanceData.proposalsCount - governanceData.activeProposals;
+    if (votersEl) votersEl.textContent = '2,841';
+    if (treasuryEl) {
+      const treasury = governanceData.treasury / 1000000;
+      treasuryEl.textContent = '$' + treasury.toFixed(1) + 'M';
+    }
+    
+    // Update treasury panel
+    const tcVal = document.querySelector('.tc-val');
+    if (tcVal) {
+      tcVal.textContent = '$' + (governanceData.treasury / 1000000).toFixed(1) + 'M';
+    }
+    
+  } catch (err) {
+    console.warn('Governance data load error:', err);
+  }
+}
+
 function castVote(id, vote) {
   const toast = document.getElementById('vote-toast');
   const color = vote === 'YES' ? '#00ff88' : vote === 'NO' ? '#ff3366' : '#664488';
@@ -530,6 +565,17 @@ function castVote(id, vote) {
   toast.style.display = 'block';
   setTimeout(() => toast.style.display = 'none', 4000);
 }
+
+// Initialize X3API
+X3API.init().then(api => {
+  x3api = api;
+  console.log('Governance page: X3API initialized');
+  loadGovernanceData();
+  
+  // Refresh data every 30 seconds
+  setInterval(loadGovernanceData, 30000);
+});
+
 // Reveal
 const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.05});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));

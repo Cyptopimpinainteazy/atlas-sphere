@@ -53,7 +53,7 @@ Starting tomorrow, **all jury decisions will be immutably anchored to the blockc
 
 ### How to Prepare
 
-- [ ] Read: `QUICK_REFERENCE.md`
+- [ ] Read: `docs/runbooks/getting-started/QUICK_REFERENCE.md`
 - [ ] Review: `design.md` architecture
 - [ ] Update: Any custom integrations
 - [ ] Test: Run examples in your environment

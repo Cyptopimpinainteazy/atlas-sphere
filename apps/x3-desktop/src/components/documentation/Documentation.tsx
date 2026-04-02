@@ -32,9 +32,9 @@ const DOCUMENTATION_FILES: DocFile[] = [
   },
   {
     id: "quick-start",
-    name: "README.md",
+    name: "docs/root/README.md",
     title: "Quick Start",
-    path: "/docs/README.md",
+    path: "/docs/docs/root/README.md",
     description: "Quick start guide and project overview",
     category: "getting-started",
   },
@@ -50,17 +50,17 @@ const DOCUMENTATION_FILES: DocFile[] = [
   // Deployment
   {
     id: "deployment-checklist",
-    name: "DEPLOYMENT_CHECKLIST.md",
+    name: "docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md",
     title: "Deployment Checklist",
-    path: "/docs/DEPLOYMENT_CHECKLIST.md",
+    path: "/docs/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md",
     description: "Step-by-step deployment guide with SSH, Docker, and K8s options",
     category: "deployment",
   },
   {
     id: "pre-deployment",
-    name: "PRE_DEPLOYMENT_CHECKLIST.md",
+    name: "PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md",
     title: "Pre-Deployment Verification",
-    path: "/docs/PRE_DEPLOYMENT_CHECKLIST.md",
+    path: "/docs/PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md",
     description: "Comprehensive verification checklist before deployment",
     category: "deployment",
   },
@@ -120,9 +120,9 @@ const DOCUMENTATION_FILES: DocFile[] = [
   // Architecture
   {
     id: "implementation",
-    name: "IMPLEMENTATION_SUMMARY.md",
+    name: "docs/reports/IMPLEMENTATION_SUMMARY.md",
     title: "Implementation Summary",
-    path: "/docs/IMPLEMENTATION_SUMMARY.md",
+    path: "/docs/docs/reports/IMPLEMENTATION_SUMMARY.md",
     description: "Architecture overview and component details",
     category: "architecture",
   },

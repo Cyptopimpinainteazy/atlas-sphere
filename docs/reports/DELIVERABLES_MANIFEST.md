@@ -135,7 +135,7 @@
 ✅ Audience: All stakeholders
 ```
 
-### 5. docs/reports/QUICK_REFERENCE.md (6 KB)
+### 5. docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md (6 KB)
 ```
 ✅ Status: Complete
 ✅ Content: One-page quick lookup guide
@@ -219,7 +219,7 @@ Documentation Coverage:     100%
 - ✅ docs/reports/IMPLEMENTATION_VERIFICATION.md (9 KB, CREATED)
 - ✅ docs/reports/INTEGRATION_COMPILATION_GUIDE.md (12 KB, CREATED)
 - ✅ PHASES_1_TO_7_COMPLETE.md (14 KB, CREATED)
-- ✅ docs/reports/QUICK_REFERENCE.md (6 KB, CREATED)
+- ✅ docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md (6 KB, CREATED)
 - ✅ DOCUMENTATION_INDEX.md (12 KB, CREATED)
 - ✅ FINAL_COMPLETION_REPORT.md (14 KB, CREATED)
 
@@ -246,7 +246,7 @@ ls -lh *.md | grep -E "PHASE|QUICK|INTEGRATION|DOCUMENTATION|FINAL"
 
 # View specific documentation
 cat PHASES_1_TO_7_COMPLETE.md      # Executive summary
-cat docs/reports/QUICK_REFERENCE.md              # Quick lookup
+cat docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md              # Quick lookup
 cat docs/reports/INTEGRATION_COMPILATION_GUIDE.md # Integration steps
 ```
 

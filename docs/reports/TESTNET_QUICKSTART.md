@@ -264,7 +264,7 @@ cargo build --release
 ### Node Won't Sync
 - Check bootnodes are reachable
 - Ensure firewall allows port 30333
-- Try different bootnode from list in `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
+- Try different bootnode from list in `docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 
 ### RPC Returns "Method not found"
 - Verify method name spelling (case-sensitive)
@@ -285,9 +285,9 @@ cargo build --release
 
 ## 📖 Additional Resources
 
-- **Full Deployment Guide**: `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
+- **Full Deployment Guide**: `docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 - **Technical Architecture**: `docs/ARCHITECTURE.md`
-- **API Documentation**: `README.md` (sections 10-13)
+- **API Documentation**: `docs/root/README.md` (sections 10-13)
 - **Testnet Announcement**: `docs/reports/TESTNET_ANNOUNCEMENT.md`
 
 ---

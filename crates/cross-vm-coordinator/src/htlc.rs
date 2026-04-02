@@ -25,16 +25,10 @@ pub trait HtlcChainAdapter: Send + Sync {
     /// Create an HTLC on the target chain.
     ///
     /// Returns the on-chain HTLC ID and initial record.
-    async fn create_htlc(
-        &self,
-        params: &HtlcCreateParams,
-    ) -> Result<HtlcRecord, CoordinatorError>;
+    async fn create_htlc(&self, params: &HtlcCreateParams) -> Result<HtlcRecord, CoordinatorError>;
 
     /// Query current HTLC status and confirmations.
-    async fn query_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<(HtlcStatus, u32), CoordinatorError>;
+    async fn query_htlc(&self, htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError>;
 
     /// Claim an HTLC by revealing the secret.
     ///
@@ -48,19 +42,13 @@ pub trait HtlcChainAdapter: Send + Sync {
     ) -> Result<Vec<u8>, CoordinatorError>; // returns tx hash
 
     /// Refund an expired HTLC.
-    async fn refund_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<Vec<u8>, CoordinatorError>;
+    async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError>;
 
     /// Get the current block timestamp (seconds since epoch).
     async fn current_time(&self) -> Result<u64, CoordinatorError>;
 
     /// Estimate gas/compute for an HTLC claim transaction.
-    async fn estimate_claim_cost(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<u64, CoordinatorError>;
+    async fn estimate_claim_cost(&self, htlc_id: &HtlcId) -> Result<u64, CoordinatorError>;
 }
 
 // ─── EVM Adapter ──────────────────────────────────────────────────────────────
@@ -129,10 +117,7 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
         }
     }
 
-    async fn create_htlc(
-        &self,
-        params: &HtlcCreateParams,
-    ) -> Result<HtlcRecord, CoordinatorError> {
+    async fn create_htlc(&self, params: &HtlcCreateParams) -> Result<HtlcRecord, CoordinatorError> {
         // Encode ABI calldata
         let calldata = abi::encode_create_htlc(
             &params.recipient,
@@ -169,20 +154,13 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
             id: htlc_id,
             params: params.clone(),
             status: HtlcStatus::Funded,
-            created_at_block: self
-                .rpc
-                .eth_block_number()
-                .await
-                .unwrap_or(0),
+            created_at_block: self.rpc.eth_block_number().await.unwrap_or(0),
             confirmations_required: 12,
             confirmations: 0,
         })
     }
 
-    async fn query_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<(HtlcStatus, u32), CoordinatorError> {
+    async fn query_htlc(&self, htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError> {
         let calldata = abi::encode_get_htlc(&htlc_id.0);
         let calldata_hex = format!("0x{}", hex::encode(&calldata));
 
@@ -234,10 +212,7 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
         }
     }
 
-    async fn refund_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<Vec<u8>, CoordinatorError> {
+    async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError> {
         let calldata = abi::encode_refund_htlc(&htlc_id.0);
 
         tracing::info!(
@@ -272,10 +247,7 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
         }
     }
 
-    async fn estimate_claim_cost(
-        &self,
-        _htlc_id: &HtlcId,
-    ) -> Result<u64, CoordinatorError> {
+    async fn estimate_claim_cost(&self, _htlc_id: &HtlcId) -> Result<u64, CoordinatorError> {
         // claimHTLC typically costs ~30k-50k gas
         Ok(50_000)
     }
@@ -298,11 +270,7 @@ pub struct SvmHtlcAdapter {
 }
 
 impl SvmHtlcAdapter {
-    pub fn new(
-        rpc_url: String,
-        program_id: [u8; 32],
-        signer: [u8; 64],
-    ) -> Self {
+    pub fn new(rpc_url: String, program_id: [u8; 32], signer: [u8; 64]) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             rpc_url,
@@ -330,10 +298,7 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         VmTarget::Svm
     }
 
-    async fn create_htlc(
-        &self,
-        params: &HtlcCreateParams,
-    ) -> Result<HtlcRecord, CoordinatorError> {
+    async fn create_htlc(&self, params: &HtlcCreateParams) -> Result<HtlcRecord, CoordinatorError> {
         // Encode Anchor instruction
         let instruction_data = abi::encode_svm_create_htlc(
             params.hash_lock.as_bytes(),
@@ -362,10 +327,7 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         })
     }
 
-    async fn query_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<(HtlcStatus, u32), CoordinatorError> {
+    async fn query_htlc(&self, htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError> {
         let pubkey = bs58_encode(&htlc_id.0);
 
         match self.rpc.solana_get_account_info(&pubkey).await {
@@ -414,10 +376,7 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         Ok(hasher.finalize().to_vec())
     }
 
-    async fn refund_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<Vec<u8>, CoordinatorError> {
+    async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError> {
         let instruction_data = abi::encode_svm_refund_htlc();
 
         tracing::info!(
@@ -449,10 +408,7 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
         }
     }
 
-    async fn estimate_claim_cost(
-        &self,
-        _htlc_id: &HtlcId,
-    ) -> Result<u64, CoordinatorError> {
+    async fn estimate_claim_cost(&self, _htlc_id: &HtlcId) -> Result<u64, CoordinatorError> {
         // ~5000 compute units on Solana
         Ok(5_000)
     }
@@ -475,11 +431,7 @@ pub struct X3VmHtlcAdapter {
 }
 
 impl X3VmHtlcAdapter {
-    pub fn new(
-        rpc_url: String,
-        contract_address: [u8; 32],
-        signer_seed: [u8; 32],
-    ) -> Self {
+    pub fn new(rpc_url: String, contract_address: [u8; 32], signer_seed: [u8; 32]) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             rpc_url,
@@ -507,10 +459,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
         VmTarget::X3Vm
     }
 
-    async fn create_htlc(
-        &self,
-        params: &HtlcCreateParams,
-    ) -> Result<HtlcRecord, CoordinatorError> {
+    async fn create_htlc(&self, params: &HtlcCreateParams) -> Result<HtlcRecord, CoordinatorError> {
         // Encode X3-lang ABI calldata
         let mut recipient_32 = [0u8; 32];
         let len = params.recipient.len().min(32);
@@ -544,10 +493,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
         })
     }
 
-    async fn query_htlc(
-        &self,
-        _htlc_id: &HtlcId,
-    ) -> Result<(HtlcStatus, u32), CoordinatorError> {
+    async fn query_htlc(&self, _htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError> {
         // In production: query X3 state via author_submitAndWatchExtrinsic
         // or state_getStorage with specific storage key
         Ok((HtlcStatus::Funded, 1)) // X3 Flash Finality = 1 conf immediately
@@ -578,10 +524,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
         Ok(hasher.finalize().to_vec())
     }
 
-    async fn refund_htlc(
-        &self,
-        htlc_id: &HtlcId,
-    ) -> Result<Vec<u8>, CoordinatorError> {
+    async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError> {
         let mut htlc_id_32 = [0u8; 32];
         let len = htlc_id.0.len().min(32);
         htlc_id_32[..len].copy_from_slice(&htlc_id.0[..len]);
@@ -608,10 +551,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             .as_secs())
     }
 
-    async fn estimate_claim_cost(
-        &self,
-        _htlc_id: &HtlcId,
-    ) -> Result<u64, CoordinatorError> {
+    async fn estimate_claim_cost(&self, _htlc_id: &HtlcId) -> Result<u64, CoordinatorError> {
         // X3 weight-based, very low cost for claim_htlc
         Ok(10_000)
     }
@@ -621,8 +561,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
 
 /// Base58 encode bytes (for Solana public keys).
 fn bs58_encode(data: &[u8]) -> String {
-    const ALPHABET: &[u8; 58] =
-        b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    const ALPHABET: &[u8; 58] = b"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
     if data.is_empty() {
         return String::new();

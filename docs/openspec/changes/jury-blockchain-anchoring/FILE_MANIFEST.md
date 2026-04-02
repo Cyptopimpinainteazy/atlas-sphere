@@ -16,7 +16,7 @@
 | **design.md** | `/openspec/changes/jury-blockchain-anchoring/design.md` | Technical architecture + code examples | ✅ Complete | 800+ |
 | **GUIDE.md** | `/openspec/changes/jury-blockchain-anchoring/GUIDE.md` | Complete operations guide (10 sections) | ✅ Complete | 2,500+ |
 | **COMPLETE_DELIVERY.md** | `/openspec/changes/jury-blockchain-anchoring/COMPLETE_DELIVERY.md` | Master delivery report | ✅ Complete | 400 |
-| **DEPLOYMENT_GUIDE.md** | `/openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md` | Ship-ready deployment procedures | ✅ Complete | 600 |
+| **docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** | `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` | Ship-ready deployment procedures | ✅ Complete | 600 |
 
 **Total Specification:** 5,100+ lines of production documentation
 
@@ -142,7 +142,7 @@
 | **proposal.md** | OpenSpec | Problem + solution specs | ✅ | 8 |
 | **design.md** | OpenSpec | Architecture + code samples | ✅ | 10 |
 | **GUIDE.md** | OpenSpec | Complete operations manual | ✅ | 25 |
-| **DEPLOYMENT_GUIDE.md** | OpenSpec | Ship-ready procedures | ✅ | 7 |
+| **docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** | OpenSpec | Ship-ready procedures | ✅ | 7 |
 | **COMPLETE_DELIVERY.md** | OpenSpec | Master delivery report | ✅ | 5 |
 
 **Documentation Sections in GUIDE.md:**
@@ -205,7 +205,7 @@ Layers:
 ✅ pallets/x3-jury-anchor/
    ├── src/lib.rs (500+ lines, 8 tests passing)
    ├── Cargo.toml (dependencies configured)
-   └── README.md (instructions)
+   └── docs/root/README.md (instructions)
 
 Status: Ready to `cargo build --release`
 WASM Size: ~50KB
@@ -421,11 +421,11 @@ Coverage: 100% of critical paths
 
 ### For Developers
 **Read:** `design.md` + relevant code files  
-**Setup:** `DEPLOYMENT_GUIDE.md` → Staging Deployment section  
+**Setup:** `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` → Staging Deployment section  
 **Integration:** See API Reference in `GUIDE.md`
 
 ### For DevOps
-**Read:** `DEPLOYMENT_GUIDE.md` (full)  
+**Read:** `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` (full)  
 **Checklist:** Part 1 & 2 of deployment guide  
 **Scripts:** Health checks, monitoring, rollback commands provided
 
@@ -446,7 +446,7 @@ Coverage: 100% of critical paths
 | Role | Start Here |
 |------|-----------|
 | **Developer** | `design.md` → Code files → Examples |
-| **DevOps** | `DEPLOYMENT_GUIDE.md` part 2-3 |
+| **DevOps** | `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` part 2-3 |
 | **Product Manager** | `proposal.md` + `COMPLETE_DELIVERY.md` |
 | **Security** | `GUIDE.md` security section + `design.md` |
 | **Operations** | `GUIDE.md` operations section + health checks |

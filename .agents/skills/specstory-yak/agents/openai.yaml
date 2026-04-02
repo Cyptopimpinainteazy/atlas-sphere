@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Yak"
-  short_description: "Analyze yak shaving and rabbit holes in session history"
-  default_prompt: "Analyze recent SpecStory sessions for yak shaving, rabbit holes, and where effort drifted from the original goal."

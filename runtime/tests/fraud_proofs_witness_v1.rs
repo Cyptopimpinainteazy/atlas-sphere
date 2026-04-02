@@ -37,7 +37,10 @@ fn build_valid_witness(n: usize, accesses_per_tx: u32) -> SchedulerWitnessV1 {
                     let mut b = [0u8; 32];
                     let combined = ((tx_i as u64) << 32) | (ak_j as u64);
                     b[..8].copy_from_slice(&combined.to_be_bytes());
-                    AccessKeyV1 { domain: 0u8, key: H256(b) }
+                    AccessKeyV1 {
+                        domain: 0u8,
+                        key: H256(b),
+                    }
                 })
                 .collect();
             AccessListV1 {
@@ -72,7 +75,10 @@ fn build_conflicting_witness(n: usize) -> SchedulerWitnessV1 {
     let access_lists: Vec<AccessListV1> = (0..n)
         .map(|_| AccessListV1 {
             access_count: Compact(1),
-            accesses: vec![AccessKeyV1 { domain: 0, key: shared_key }],
+            accesses: vec![AccessKeyV1 {
+                domain: 0,
+                key: shared_key,
+            }],
         })
         .collect();
 
@@ -264,7 +270,10 @@ fn graph_001_no_conflicts_produces_empty_graph() {
     let w_conflict = build_conflicting_witness(3);
     let comms_conflict = w_conflict.compute_commitments().unwrap();
 
-    assert_ne!(commitments.graph_commitment, comms_conflict.graph_commitment);
+    assert_ne!(
+        commitments.graph_commitment,
+        comms_conflict.graph_commitment
+    );
 }
 
 // ── WITNESS-ORDER-001: topological sort determinism ───────────────────────────
@@ -293,7 +302,7 @@ fn order_001_no_conflict_witness_order_is_deterministic() {
 
 #[test]
 fn order_001_different_conflict_pattern_different_order() {
-    let w_no_conflict   = build_valid_witness(3, 2);
+    let w_no_conflict = build_valid_witness(3, 2);
     let w_full_conflict = build_conflicting_witness(3);
 
     let c1 = w_no_conflict.compute_commitments().unwrap();

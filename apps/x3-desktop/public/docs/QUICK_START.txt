@@ -28,7 +28,7 @@
       → Opens http://localhost:5173
 
   3️⃣  DEPLOY (1-2 hours)
-      Guide: apps/swarm-dashboard/DEPLOYMENT_CHECKLIST.md
+      Guide: apps/swarm-dashboard/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md
 
 ═══════════════════════════════════════════════════════════════════════════
 
@@ -40,15 +40,15 @@
     📄 STATUS_AND_NEXT_STEPS.md     ← Current status & priorities
 
   Deployment Guides:
-    📄 DEPLOYMENT_CHECKLIST.md      ← Step-by-step deployment (30 min)
+    📄 docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md      ← Step-by-step deployment (30 min)
     📄 SECRETS_SETUP.md             ← GitHub secrets config (20 min)
-    📄 PRE_DEPLOYMENT_CHECKLIST.md  ← Verification checklist (30 min)
+    📄 PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md  ← Verification checklist (30 min)
     📄 CI_CD_GUIDE.md               ← Pipeline documentation (20 min)
 
   Development:
-    📄 README.md                    ← Quick start (5 min)
+    📄 docs/root/README.md                    ← Quick start (5 min)
     📄 MAKEFILE_REFERENCE.md        ← Build commands
-    📄 IMPLEMENTATION_SUMMARY.md    ← Architecture details
+    📄 docs/reports/IMPLEMENTATION_SUMMARY.md    ← Architecture details
 
   Infrastructure:
     🐳 Dockerfile                   - Production container
@@ -110,7 +110,7 @@
   ─────────────────────────────────────────────
   1. Read: SECRETS_SETUP.md (20 min)
   2. Configure GitHub secrets (10 min)
-  3. Read: DEPLOYMENT_CHECKLIST.md (30 min)
+  3. Read: docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md (30 min)
   4. Deploy: git push origin develop (auto deployment)
   Time: ~1.5 hours
 
@@ -125,7 +125,7 @@
 
   OPTION C: Understand Architecture
   ──────────────────────────────────
-  1. Read: IMPLEMENTATION_SUMMARY.md (15 min)
+  1. Read: docs/reports/IMPLEMENTATION_SUMMARY.md (15 min)
   2. Explore: src/ directory
   3. Review: Component implementations
   Time: 1-2 hours
@@ -138,12 +138,12 @@
 
   By Topic:
     Getting Started     → DOCUMENTATION_INDEX.md
-    Deployment          → DEPLOYMENT_CHECKLIST.md
+    Deployment          → docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md
     CI/CD Setup         → CI_CD_GUIDE.md
     GitHub Secrets      → SECRETS_SETUP.md
-    Verification        → PRE_DEPLOYMENT_CHECKLIST.md
+    Verification        → PRE_docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md
     Build Commands      → MAKEFILE_REFERENCE.md
-    Architecture        → IMPLEMENTATION_SUMMARY.md
+    Architecture        → docs/reports/IMPLEMENTATION_SUMMARY.md
     Status              → STATUS_AND_NEXT_STEPS.md
     Current Status      → PROJECT_COMPLETION.md
 

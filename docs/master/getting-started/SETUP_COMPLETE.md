@@ -87,7 +87,7 @@
 - Real data wiring guide
 - Environment variables
 
-✅ **X3_DESKTOP_QUICK_REFERENCE.md**
+✅ **X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md**
 - One-page quick reference
 - Status checklist
 - Keyboard shortcuts
@@ -177,7 +177,7 @@ Created:
 - `setup-app-env.sh` - Environment setup
 - `X3_DESKTOP_COMPLETE_GUIDE.md` - Full documentation
 - `DESKTOP_APPS_STARTUP.md` - Startup guide
-- `X3_DESKTOP_QUICK_REFERENCE.md` - Quick reference
+- `X3_DESKTOP_docs/runbooks/getting-started/QUICK_REFERENCE.md` - Quick reference
 - `.env.apps.template` - Environment template
 - `.env.local` (in explorer, wallet, dex, x3-intelligence)
 

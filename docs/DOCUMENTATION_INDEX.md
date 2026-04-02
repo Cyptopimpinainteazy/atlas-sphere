@@ -181,11 +181,11 @@ This index provides unified access to all canonical documentation for the X3 Cha
 
 ## 8. Developer Templates
 
-**File:** [`docs/templates/X3_DEVELOPER_TEMPLATES.md`](./templates/X3_DEVELOPER_TEMPLATES.md)
+**File:** [`docs/docs/docs/templates/X3_DEVELOPER_TEMPLATES.md`](./docs/docs/templates/X3_DEVELOPER_TEMPLATES.md)
 
 **Purpose:** Curated upstream template sources and adoption order for X3 Chain.
 
-**Local Starter Matrix:** [`templates/x3-chain/README.md`](../templates/x3-chain/README.md)
+**Local Starter Matrix:** [`docs/templates/x3-chain/README.md`](../docs/templates/x3-chain/README.md)
 
 **Key Topics:**
 - Polkadot SDK templates for L1/L2

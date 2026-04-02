@@ -41,7 +41,7 @@ solana-gpu-validator-v1.0.tar.gz (269 MB)
 ├── scripts/                       # Installation automation
 ├── configs/                       # Testnet/mainnet configurations
 ├── docs/                          # Comprehensive runbooks
-└── README.md                      # Quick start guide
+└── docs/root/README.md                      # Quick start guide
 ```
 
 ## Installation
@@ -84,10 +84,10 @@ cd solana-gpu-validator-v1.0
 
 ## Documentation
 
-- **[VALIDATOR-RUNBOOK.md](docs/VALIDATOR-RUNBOOK.md)** - Step-by-step deployment
-- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues & solutions
-- **[GPU-REQUIREMENTS.md](docs/GPU-REQUIREMENTS.md)** - Hardware details
-- **[OPERATIONS-MANUAL.md](docs/OPERATIONS-MANUAL.md)** - Day-to-day operations
+- **[VALIDATOR-RUNBOOK.md](/docs/VALIDATOR-RUNBOOK.md)** - Step-by-step deployment
+- **[TROUBLESHOOTING.md](/docs/TROUBLESHOOTING.md)** - Common issues & solutions
+- **[GPU-REQUIREMENTS.md](/docs/GPU-REQUIREMENTS.md)** - Hardware details
+- **[OPERATIONS-MANUAL.md](/docs/OPERATIONS-MANUAL.md)** - Day-to-day operations
 
 ## Support
 

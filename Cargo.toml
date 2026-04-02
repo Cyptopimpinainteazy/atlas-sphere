@@ -259,12 +259,6 @@ codegen-units = 1
 # Patches for Substrate dependencies - using consistent git rev
 [patch.crates-io]
 environmental = { path = "patches/environmental" }
-# Force a single `curve25519-dalek` version (3.2.1) workspace-wide to
-# resolve conflicts between `solana-program` (requires ^3.2.1) and
-# Substrate's `sp-io`/`ed25519-dalek` dependency chain.
-# We point at the upstream git tag to ensure consistent resolution for
-# both crates.io and git-backed dependencies.
-curve25519-dalek = { git = "https://github.com/dalek-cryptography/curve25519-dalek", tag = "3.2.1" }
 # Pin home to a rustc 1.85 compatible release (local patch).
 home = { path = "patches/home" }
 # Enable bulk-memory opcode parsing (0xFC prefix) so Substrate can deserialize rustc-generated WASM.
@@ -277,8 +271,6 @@ substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint"
 errno = { path = "patches/errno" }
 # Pin ar_archive_writer to a rustc 1.85 compatible implementation.
 ar_archive_writer = { path = "patches/ar_archive_writer" }
-# Provide a minimal rfs crate implementation used by `which` on some platforms
-rfs = { path = "patches/rfs" }
 # Fix getrandom for wasm32-unknown-unknown (Substrate WASM runtime)
 getrandom = { path = "patches/getrandom" }
 # Patch native crates that pulled getrandom 0.3/0.4 back down to 0.2.17
@@ -324,8 +316,8 @@ sp-debug-derive = { git = "https://github.com/paritytech/substrate", rev = "948f
 
 # Patch polkadot-sdk sources to use our substrate rev - comprehensive list
 [patch."https://github.com/paritytech/polkadot-sdk"]
-# Enable disable_target_static_assertions to prevent host builds (pointer width 64) from tripping WASM-only size checks during native coverage runs.
-sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false, features = ["std", "disable_target_static_assertions"] }
+# Patch polkadot-sdk to the workspace Substrate rev. Feature flags are set on direct deps.
+sp-runtime-interface = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-externalities = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-application-crypto = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
@@ -337,7 +329,15 @@ sp-arithmetic = { git = "https://github.com/paritytech/substrate", rev = "948fbd
 sp-weights = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 frame-support = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 frame-system = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 
 # Patch Substrate git sources for prometheus fix and executor bulk-memory support
 [patch."https://github.com/paritytech/substrate"]
 substrate-prometheus-endpoint = { path = "patches/substrate-prometheus-endpoint" }
+
+# Patch Frontier (polkadot-evm) sp-io to match workspace version and avoid duplicate panic_impl
+[patch."https://github.com/polkadot-evm/frontier"]
+sp-io = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
+sp-std = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }

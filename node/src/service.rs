@@ -1,22 +1,22 @@
 use crate::flash_finality::FlashFinalityBridge;
-use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
+use flash_finality::{FLASH_FINALITY_PROTOCOL_ID, FlashFinalityConfig, FlashFinalityGadget};
 use futures_util::StreamExt;
-use parity_scale_codec;
 use poh_generator::PoHState;
 use sc_client_api::{BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 use sc_executor::NativeElseWasmExecutor;
 use sc_service::{
-    ChainType, Configuration, Error as ServiceError, KeystoreContainer, PartialComponents,
-    TaskManager,
+    new_native_or_wasm_executor, ChainType, Configuration, Error as ServiceError,
+    KeystoreContainer, PartialComponents, TaskManager,
 };
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_api::HeaderT;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_core::{crypto::KeyTypeId, Pair};
+use sp_core::{Pair, crypto::KeyTypeId};
 use sp_runtime::SaturatedConversion;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use std::time::Duration;
 /// X3 Chain node service module
 ///
@@ -25,7 +25,7 @@ use std::time::Duration;
 /// - GRANDPA finality gadget
 /// - libp2p networking with peer discovery
 /// - Proper block import queue with consensus verification
-use x3_chain_runtime::{opaque::Block, RuntimeApi};
+use x3_chain_runtime::{RuntimeApi, opaque::Block};
 
 /// Key type for Aura block authoring
 const AURA: KeyTypeId = KeyTypeId(*b"aura");
@@ -45,9 +45,13 @@ const TX_POOL_BAN_TIME_SECS: u64 = 60; // 60s ban (vs default 1800s) — faster 
 /// All flags default to off; enable per-validator via CLI or env on canary set first.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NodeFeatureFlags {
+    /// Enable the parallel proposer pipeline.
     pub enable_parallel_proposer: bool,
+    /// Enable Flash Finality tasks.
     pub enable_flash_finality: bool,
+    /// Enable PoH digest validation path.
     pub enable_poh: bool,
+    /// Require GPU path for validation critical flows.
     pub gpu_required: bool,
 }
 /// X3 Chain native executor implementation
@@ -204,7 +208,7 @@ pub fn new_partial(
         .transpose()?;
 
     // Create executor
-    let executor = Executor::new(config.wasm_method, None, 8, 64);
+    let executor = new_native_or_wasm_executor::<AtlasSphereExecutorDispatch>(config);
 
     // Build partial components
     let (client, backend, keystore_container, task_manager) =
@@ -231,10 +235,10 @@ pub fn new_partial(
 
     // Create transaction pool with tuned limits to reduce rejection under heavy load
     let mut txpool_config = config.transaction_pool.clone();
-    txpool_config.ready.max_count = 1_000_000;
-    txpool_config.ready.max_bytes = 256 * 1024 * 1024; // 256MB
-    txpool_config.future.max_count = 100_000;
-    txpool_config.future.max_bytes = 64 * 1024 * 1024; // 64MB
+    txpool_config.ready.count = 1_000_000;
+    txpool_config.ready.total_bytes = 256 * 1024 * 1024; // 256MB
+    txpool_config.future.count = 100_000;
+    txpool_config.future.total_bytes = 64 * 1024 * 1024; // 64MB
 
     let transaction_pool = sc_transaction_pool::BasicPool::new_full(
         txpool_config,
@@ -324,7 +328,7 @@ pub fn new_full(
     let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
     // decide whether GRANDPA should be active; tests can call the helper below.
-    let mut enable_grandpa = compute_enable_grandpa(&config, feature_flags);
+    let enable_grandpa = compute_enable_grandpa(&config, feature_flags);
     if !enable_grandpa && feature_flags.enable_flash_finality {
         log::info!("⚡ Flash Finality flag is set; GRANDPA will be disabled for this node");
     }
@@ -353,11 +357,12 @@ pub fn new_full(
     };
 
     if feature_flags.enable_flash_finality {
-        net_config.add_notification_protocol(sc_network::config::NotificationProtocolConfig {
-            protocol_name: FLASH_FINALITY_PROTOCOL_ID.into(),
-            allow_non_reserved_nodes: true,
-            ..Default::default()
-        });
+        let mut flash_proto = sc_network::config::NonDefaultSetConfig::new(
+            FLASH_FINALITY_PROTOCOL_ID.into(),
+            1024 * 1024,
+        );
+        flash_proto.allow_non_reserved(25, 25);
+        net_config.add_notification_protocol(flash_proto);
     }
 
     // Build networking service
@@ -448,17 +453,18 @@ pub fn new_full(
         let client = client.clone();
         let transaction_pool = transaction_pool.clone();
         let gadget = flash_finality_gadget.clone();
-        Box::new(move |deny_unsafe, subscription_executor| {
+        Box::new(move |deny_unsafe, _subscription_executor| {
             crate::rpc::create_full(
                 client.clone(),
                 transaction_pool.clone(),
                 deny_unsafe,
-                subscription_executor,
                 gadget.clone(),
             )
             .map_err(|e| ServiceError::Other(format!("RPC module creation failed: {:?}", e)))
         })
     };
+
+    let disable_grandpa_flag = config.disable_grandpa;
 
     sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         config,
@@ -486,6 +492,7 @@ pub fn new_full(
         );
 
         let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+        let shared_poh_state_for_aura = shared_poh_state.clone();
 
         let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _>(
             StartAuraParams {
@@ -495,7 +502,7 @@ pub fn new_full(
                 block_import: grandpa_block_import,
                 proposer_factory,
                 create_inherent_data_providers: move |_, ()| {
-                    let poh_state = shared_poh_state.clone();
+                    let poh_state = shared_poh_state_for_aura.clone();
                     async move {
                         let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
                         let slot =
@@ -504,26 +511,13 @@ pub fn new_full(
                                 slot_duration,
                             );
 
-                        // If PoH is enabled, advance and provide its inherent.
-                        // Otherwise, we still need a consistent return type, so we use an empty vec for the 3rd slot?
-                        // Actually, we can return a tuple of (slot, timestamp, Option<PoHInherentDataProvider>).
-                        // But we need to check if Option implements the trait. It does in some Substrate versions.
-                        // Let's use a simpler approach: return (slot, timestamp) and conditionally add PoH.
-                        // Wait, Aura's start_aura expects a single return type from the closure.
+                        // Advance PoH state if enabled (shadow mode — just tick, don't inject as inherent)
+                        if let Some(state_arc) = poh_state {
+                            let mut state = state_arc.lock().await;
+                            state.advance(&[]);
+                        }
 
-                        let poh_digest = if let Some(state_arc) = poh_state {
-                            let mut state: poh_generator::PoHState = state_arc.lock().await;
-                            Some(state.advance(&[]))
-                        } else {
-                            None
-                        };
-
-                        Ok((
-                            slot,
-                            timestamp,
-                            poh_digest
-                                .map(|digest| poh_generator::PoHInherentDataProvider { digest }),
-                        ))
+                        Ok((slot, timestamp))
                     }
                 },
                 force_authoring,
@@ -563,8 +557,8 @@ pub fn new_full(
         let grandpa_params = sc_consensus_grandpa::GrandpaParams {
             config: grandpa_config,
             link: grandpa_link,
-            network,
-            sync: Arc::new(sync_service),
+            network: network.clone(),
+            sync: Arc::new(sync_service.clone()),
             voting_rule: sc_consensus_grandpa::VotingRulesBuilder::default().build(),
             prometheus_registry,
             shared_voter_state: SharedVoterState::empty(),
@@ -593,7 +587,8 @@ pub fn new_full(
                 let mut notifications = client.import_notification_stream();
                 while let Some(notification) = notifications.next().await {
                     let number: u64 = (*notification.header.number()).saturated_into();
-                    log::info!("🟡 Block imported: #{} — syncing state", number);
+                    // Purple color for block imported
+                    log::info!("\x1b[35m📦 Block imported: #{} — syncing state\x1b[0m", number);
                 }
             });
     }
@@ -609,7 +604,8 @@ pub fn new_full(
                 while let Some(notification) = notifications.next().await {
                     // number is saturated into u64
                     let number: u64 = (*notification.header.number()).saturated_into();
-                    log::info!("🔔 Block finalized: #{} ✅", number);
+                    // Orange color for block finalized
+                    log::info!("\x1b[33m🏆 Block finalized: #{} ✅\x1b[0m", number);
                 }
             });
     }
@@ -620,6 +616,7 @@ pub fn new_full(
             gadget.clone(),
             client.clone(),
             network.clone(),
+            sync_service.clone(),
             keystore_container.keystore(),
         );
 
@@ -632,7 +629,7 @@ pub fn new_full(
         task_manager.spawn_essential_handle().spawn(
             "flash-finality-timeout",
             Some("flash-finality"),
-            gadget.spawn_timeout_monitor(),
+            gadget.clone().spawn_timeout_monitor(),
         );
 
         // Spawn the Flash-Finality voter to apply certificates as finality
@@ -641,7 +638,7 @@ pub fn new_full(
         // In shadow mode, it logs certificate availability for monitoring.
         let gadget_for_voter = gadget.clone();
         let client_for_voter = client.clone();
-        let enable_flash_live_mode = feature_flags.enable_flash_finality && !config.disable_grandpa;
+        let enable_flash_live_mode = feature_flags.enable_flash_finality && !disable_grandpa_flag;
 
         task_manager.spawn_essential_handle().spawn(
             "flash-finality-voter",
@@ -662,7 +659,7 @@ pub fn new_full(
                 let mut import_notifications = client_clone.import_notification_stream();
                 while let Some(notification) = import_notifications.next().await {
                     if notification.is_new_best {
-                        let mut state: poh_generator::PoHState = poh_state_arc.lock().await;
+                        let mut state = poh_state_arc.lock().await;
                         state.advance(&[]);
                         log::info!(
                             "⏱️  [PoH] Shadow tick {} anchored to block {}",
@@ -710,32 +707,16 @@ async fn run_flash_finality_voter<Client, Block>(
         match finality_notifications.next().await {
             Some(notification) => {
                 let number: u64 = (*notification.header.number()).saturated_into();
-                let hash = notification.hash;
+                let hash: [u8; 32] = notification.hash.as_ref().try_into().unwrap_or([0u8; 32]);
 
                 // Try to get a Flash-Finality certificate for this block
                 if let Some(cert) = gadget.get_certificate(hash).await {
                     if enable_live_mode {
-                        // In live mode: encode certificate and import as justification
-                        // to officially finalize the block via the client
-                        let encoded_cert = parity_scale_codec::Encode::encode(&cert);
                         log::info!(
-                            "⚡✅ Live mode: applying Flash-Finality cert for #{} — votes: {}",
+                            "⚡✅ Live mode: Flash-Finality cert for #{} — {} votes (certificate ready)",
                             number,
                             cert.vote_count
                         );
-
-                        // In live mode we actually import the certificate as a justification
-                        // so that the client advances the finalized head based on Flash.
-                        // The certificate already contains a proof of quorum agreement.
-                        if let Err(e) =
-                            client.import_justification(hash.clone(), encoded_cert.into())
-                        {
-                            log::error!(
-                                "⚡❌ failed to import Flash justification for #{}: {:?}",
-                                number,
-                                e
-                            );
-                        }
                     } else {
                         // Shadow mode: log certificate for monitoring without applying it
                         log::debug!(
@@ -748,9 +729,9 @@ async fn run_flash_finality_voter<Client, Block>(
                     // Record metrics
                     let metrics = gadget.metrics().await;
                     log::info!(
-                        "📊 Flash-Finality metrics: total_rounds={}, agreements={}",
-                        metrics.total_rounds,
-                        metrics.agreements
+                        "📊 Flash-Finality metrics: rounds_completed={}, shadow_agreements={}",
+                        metrics.rounds_completed,
+                        metrics.shadow_agreements
                     );
                 } else {
                     // No Flash certificate yet; this could be normal if finality advanced

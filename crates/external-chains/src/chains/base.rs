@@ -4,8 +4,8 @@
 //! Chain ID: 8453
 
 use crate::adapter::*;
-use crate::ChainType;
 use crate::error::ExternalChainError;
+use crate::ChainType;
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
@@ -118,9 +118,8 @@ impl BaseAdapter {
         let without_prefix = trimmed.strip_prefix("0x").unwrap_or(trimmed);
         // Pad to 64 chars for U256
         let padded = format!("{:0>64}", without_prefix);
-        let bytes = hex::decode(&padded).map_err(|e| {
-            ExternalChainError::parse_error(&format!("hex decode: {}", e))
-        })?;
+        let bytes = hex::decode(&padded)
+            .map_err(|e| ExternalChainError::parse_error(&format!("hex decode: {}", e)))?;
         Ok(U256::from_big_endian(&bytes))
     }
 

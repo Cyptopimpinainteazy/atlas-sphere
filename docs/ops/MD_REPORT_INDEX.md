@@ -27,7 +27,7 @@ Total docs/ops: 7
 - `docs/reports/COND_FOLD_ENHANCED.md`
 - `docs/reports/COND_FOLD_IMPLEMENTATION.md`
 - `docs/reports/COND_FOLD_INDEX.md`
-- `docs/reports/COND_FOLD_QUICK_REFERENCE.md`
+- `docs/reports/COND_FOLD_docs/runbooks/getting-started/QUICK_REFERENCE.md`
 - `docs/reports/CROSS_CHAIN_POSITION_MANAGER_IMPLEMENTATION_STATUS.md`
 - `docs/reports/CROSS_CHAIN_POSITION_MANAGER_TASKS.md`
 - `docs/reports/DELIVERABLES_MANIFEST.md`
@@ -61,7 +61,7 @@ Total docs/ops: 7
 - `docs/reports/LOOP_PACK_V1_FRAMEWORK.md`
 - `docs/reports/MD_SUPERVISOR_DELIVERY.md`
 - `docs/reports/MERGE_CHECKLIST.md`
-- `docs/reports/MERGE_PROJECT_README.md`
+- `docs/reports/MERGE_PROJECT_docs/root/README.md`
 - `docs/reports/OPTIMIZATION_PASS_A_STATUS.md`
 - `docs/reports/PASS_B_ROADMAP.md`
 - `docs/reports/PHASE2_ROADMAP_VALUE_NUMBERING.md`
@@ -69,22 +69,22 @@ Total docs/ops: 7
 - `docs/reports/PHASE4_DOCUMENTATION_INDEX.md`
 - `docs/reports/PHASE5_ROADMAP.md`
 - `docs/reports/PHASE6_DOCUMENTATION_INDEX.md`
-- `docs/reports/PHASE6_QUICK_START.md`
+- `docs/runbooks/getting-started/QUICK_START.md`
 - `docs/reports/PHASE7_CLI_INTEGRATION.md`
 - `docs/reports/PHASE_2_TEST_VERIFICATION.md`
 - `docs/reports/PRE_STRATEGIC_ROADMAP.md`
 - `docs/reports/PRODUCTION_READINESS_STATUS.md`
 - `docs/reports/PRODUCTION_READINESS_TODO.md`
 - `docs/reports/PROJECT_STATUS.md`
-- `docs/reports/QUICK_REFERENCE.md`
+- `docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md`
 - `docs/reports/QUICK_REFERENCE_LOOP_PACK.md`
 - `docs/reports/QUICK_REFERENCE_LOOP_PACK_V1.md`
 - `docs/reports/RXJS_IMPORT_FIX_TODO.md`
 - `docs/reports/TASK_PROGRESS.md`
 - `docs/reports/TESTNET_ANNOUNCEMENT.md`
-- `docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md`
+- `docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md`
 - `docs/reports/TESTNET_DEPLOYMENT_CHECKLIST_OPENSPEC.md`
-- `docs/reports/TESTNET_DEPLOYMENT_GUIDE.md`
+- `docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md`
 - `docs/reports/TESTNET_DOCS_PACKAGE.md`
 - `docs/reports/TESTNET_QUICKSTART.md`
 - `docs/reports/TESTNET_ROADMAP.md`
@@ -98,7 +98,7 @@ Total docs/ops: 7
 - `docs/reports/X3_DEPLOYMENT_INDEX.md`
 - `docs/reports/X3_EXECUTION_ROADMAP.md`
 - `docs/reports/X3_MILESTONE_TRACKING.md`
-- `docs/reports/X3_QUICK_START.md`
+- `docs/reports/X3_docs/runbooks/getting-started/QUICK_START.md`
 - `docs/reports/XCHECKLIST.md`
 - `docs/reports/codebase-analysis-plan.md`
 - `docs/reports/codebase-analysis-todo.md`
@@ -106,7 +106,7 @@ Total docs/ops: 7
 - `docs/reports/validation-results-high-priority.md`
 
 ## archive/reports
-- `archive/reports/X3_DNS_SERVER_IMPLEMENTATION_COMPLETE.md`
+- `archive/reports/X3_DNS_SERVER_docs/reports/IMPLEMENTATION_COMPLETE.md`
 - `archive/reports/X3_SPHERE_100_PERCENT_COMPLETE.md`
 - `archive/reports/X3_SPHERE_BOTCHAIN_FINAL_STATUS.md`
 - `archive/reports/X3_SPHERE_FINAL_PHASE_PLAN.md`
@@ -159,7 +159,7 @@ Total docs/ops: 7
 - `archive/reports/VISUAL_SUMMARY.md`
 - `archive/reports/X3_COMPLETION.md`
 - `archive/reports/X3_GOVERNANCE_STACK_SUMMARY.md`
-- `archive/reports/X3_REAPER_IMPLEMENTATION_COMPLETE.md`
+- `archive/reports/X3_REAPER_docs/reports/IMPLEMENTATION_COMPLETE.md`
 - `archive/reports/X3_SYSTEM_WIDE_INTEGRATION_COMPLETE.md`
 - `archive/reports/YOLO_FEATURES_COMPLETE.md`
 - `archive/reports/YOLO_INFRASTRUCTURE_COMPLETE.md`

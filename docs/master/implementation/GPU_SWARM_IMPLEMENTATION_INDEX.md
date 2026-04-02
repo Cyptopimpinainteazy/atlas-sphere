@@ -5,29 +5,29 @@ Welcome! This document serves as the central reference point for all GPU Swarm M
 ## Quick Navigation
 
 ### 📋 For Project Managers
-1. **[COMPLETION_REPORT.md](crates/gpu-swarm/COMPLETION_REPORT.md)** - Executive summary, metrics, and status
+1. **[COMPLETION_REPORT.md](/crates/gpu-swarm/COMPLETION_REPORT.md)** - Executive summary, metrics, and status
 2. **[IMPLEMENTATION_ARTIFACTS.md](IMPLEMENTATION_ARTIFACTS.md)** - Complete file inventory and statistics
 
 ### 👨‍💻 For Developers
-1. **[crates/gpu-swarm/src/network.rs](crates/gpu-swarm/src/network.rs)** - P2P networking implementation
-2. **[crates/gpu-swarm/src/gpu_backends/](crates/gpu-swarm/src/gpu_backends/)** - GPU backend implementations
-3. **[crates/gpu-swarm/src/monitoring.rs](crates/gpu-swarm/src/monitoring.rs)** - Observability implementation
-4. **[crates/gpu-swarm/src/x3_vm.rs](crates/gpu-swarm/src/x3_vm.rs)** - X3-VM integration
-5. **[crates/gpu-swarm/src/blockchain.rs](crates/gpu-swarm/src/blockchain.rs)** - Blockchain integration
-6. **[tests/](tests/)** - Test suites
+1. **[/crates/gpu-swarm/src/network.rs](/crates/gpu-swarm/src/network.rs)** - P2P networking implementation
+2. **[/crates/gpu-swarm/src/gpu_backends/](/crates/gpu-swarm/src/gpu_backends/)** - GPU backend implementations
+3. **[/crates/gpu-swarm/src/monitoring.rs](/crates/gpu-swarm/src/monitoring.rs)** - Observability implementation
+4. **[/crates/gpu-swarm/src/x3_vm.rs](/crates/gpu-swarm/src/x3_vm.rs)** - X3-VM integration
+5. **[/crates/gpu-swarm/src/blockchain.rs](/crates/gpu-swarm/src/blockchain.rs)** - Blockchain integration
+6. **[/tests/](/tests/)** - Test suites
 
 ### 🚀 For DevOps/Site Reliability Engineers
-1. **[deployment/kubernetes/DEPLOYMENT.md](deployment/kubernetes/DEPLOYMENT.md)** - Kubernetes operations guide
-2. **[deployment/kubernetes/swarm-deployment.yaml](deployment/kubernetes/swarm-deployment.yaml)** - Deployment manifests
-3. **[deployment/helm/gpu-swarm/](deployment/helm/gpu-swarm/)** - Helm charts for templated deployment
+1. **[/deployment/kubernetes/DEPLOYMENT.md](/deployment/kubernetes/DEPLOYMENT.md)** - Kubernetes operations guide
+2. **[/deployment/kubernetes/swarm-deployment.yaml](/deployment/kubernetes/swarm-deployment.yaml)** - Deployment manifests
+3. **[/deployment/helm/gpu-swarm/](/deployment/helm/gpu-swarm/)** - Helm charts for templated deployment
 
 ### 🎨 For Frontend/Product Teams
-1. **[DASHBOARD_UI_SPEC.md](crates/gpu-swarm/DASHBOARD_UI_SPEC.md)** - Dashboard design and implementation
-2. **[ADVANCED_FEATURES.md](crates/gpu-swarm/ADVANCED_FEATURES.md)** - Future features roadmap
+1. **[DASHBOARD_UI_SPEC.md](/crates/gpu-swarm/DASHBOARD_UI_SPEC.md)** - Dashboard design and implementation
+2. **[ADVANCED_FEATURES.md](/crates/gpu-swarm/ADVANCED_FEATURES.md)** - Future features roadmap
 
 ### 📚 For Architecture/Design Review
-1. **[ADVANCED_FEATURES.md](crates/gpu-swarm/ADVANCED_FEATURES.md)** - Design patterns and architecture
-2. **[COMPLETION_REPORT.md](crates/gpu-swarm/COMPLETION_REPORT.md)** - Technical details and decisions
+1. **[ADVANCED_FEATURES.md](/crates/gpu-swarm/ADVANCED_FEATURES.md)** - Design patterns and architecture
+2. **[COMPLETION_REPORT.md](/crates/gpu-swarm/COMPLETION_REPORT.md)** - Technical details and decisions
 
 ---
 
@@ -385,7 +385,7 @@ All specifications complete and ready for implementation:
 5. **Dashboard UI** - React TypeScript dashboard with WebSocket real-time updates
 6. **CLI Tooling** - SwarmCLI and SwarmInspect diagnostic tools
 
-See **[ADVANCED_FEATURES.md](crates/gpu-swarm/ADVANCED_FEATURES.md)** and **[DASHBOARD_UI_SPEC.md](crates/gpu-swarm/DASHBOARD_UI_SPEC.md)** for details.
+See **[ADVANCED_FEATURES.md](/crates/gpu-swarm/ADVANCED_FEATURES.md)** and **[DASHBOARD_UI_SPEC.md](/crates/gpu-swarm/DASHBOARD_UI_SPEC.md)** for details.
 
 ---
 
@@ -429,7 +429,7 @@ kubectl describe nodes
 kubectl scale statefulset swarm-coordinator --replicas=1 -n swarm-network
 ```
 
-See **[DEPLOYMENT.md](deployment/kubernetes/DEPLOYMENT.md)** for comprehensive troubleshooting.
+See **[DEPLOYMENT.md](/deployment/kubernetes/DEPLOYMENT.md)** for comprehensive troubleshooting.
 
 ---
 
@@ -464,26 +464,26 @@ See **[DEPLOYMENT.md](deployment/kubernetes/DEPLOYMENT.md)** for comprehensive t
 ## Reference Documents
 
 ### Core Implementation
-- [network.rs](crates/gpu-swarm/src/network.rs) - P2P networking (700 lines)
-- [gpu_backends/](crates/gpu-swarm/src/gpu_backends/) - GPU execution (1100 lines)
-- [monitoring.rs](crates/gpu-swarm/src/monitoring.rs) - Observability (450 lines)
-- [x3_vm.rs](crates/gpu-swarm/src/x3_vm.rs) - X3 integration (450 lines)
-- [blockchain.rs](crates/gpu-swarm/src/blockchain.rs) - On-chain (650 lines)
+- [network.rs](/crates/gpu-swarm/src/network.rs) - P2P networking (700 lines)
+- [gpu_backends/](/crates/gpu-swarm/src/gpu_backends/) - GPU execution (1100 lines)
+- [monitoring.rs](/crates/gpu-swarm/src/monitoring.rs) - Observability (450 lines)
+- [x3_vm.rs](/crates/gpu-swarm/src/x3_vm.rs) - X3 integration (450 lines)
+- [blockchain.rs](/crates/gpu-swarm/src/blockchain.rs) - On-chain (650 lines)
 
 ### Testing
-- [tests/integration_tests.rs](tests/integration_tests.rs) - Core tests (350 lines)
-- [tests/network_tests.rs](tests/network_tests.rs) - Network tests (250 lines)
-- [tests/blockchain_tests.rs](tests/blockchain_tests.rs) - Blockchain tests (350 lines)
+- [/tests/integration_tests.rs](/tests/integration_tests.rs) - Core tests (350 lines)
+- [/tests/network_tests.rs](/tests/network_tests.rs) - Network tests (250 lines)
+- [/tests/blockchain_tests.rs](/tests/blockchain_tests.rs) - Blockchain tests (350 lines)
 
 ### Deployment
-- [deployment/kubernetes/swarm-deployment.yaml](deployment/kubernetes/swarm-deployment.yaml) - K8s manifests
-- [deployment/kubernetes/DEPLOYMENT.md](deployment/kubernetes/DEPLOYMENT.md) - Operations guide
-- [deployment/helm/gpu-swarm/](deployment/helm/gpu-swarm/) - Helm charts
+- [/deployment/kubernetes/swarm-deployment.yaml](/deployment/kubernetes/swarm-deployment.yaml) - K8s manifests
+- [/deployment/kubernetes/DEPLOYMENT.md](/deployment/kubernetes/DEPLOYMENT.md) - Operations guide
+- [/deployment/helm/gpu-swarm/](/deployment/helm/gpu-swarm/) - Helm charts
 
 ### Documentation
-- [COMPLETION_REPORT.md](crates/gpu-swarm/COMPLETION_REPORT.md) - Executive summary
-- [ADVANCED_FEATURES.md](crates/gpu-swarm/ADVANCED_FEATURES.md) - Future roadmap
-- [DASHBOARD_UI_SPEC.md](crates/gpu-swarm/DASHBOARD_UI_SPEC.md) - UI specification
+- [COMPLETION_REPORT.md](/crates/gpu-swarm/COMPLETION_REPORT.md) - Executive summary
+- [ADVANCED_FEATURES.md](/crates/gpu-swarm/ADVANCED_FEATURES.md) - Future roadmap
+- [DASHBOARD_UI_SPEC.md](/crates/gpu-swarm/DASHBOARD_UI_SPEC.md) - UI specification
 - [IMPLEMENTATION_ARTIFACTS.md](IMPLEMENTATION_ARTIFACTS.md) - File inventory
 
 ---

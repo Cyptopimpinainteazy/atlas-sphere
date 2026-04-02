@@ -155,7 +155,9 @@ impl GasMeteringTable {
 }
 
 impl Default for GasMeteringTable {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Real-world gas audit benchmarks

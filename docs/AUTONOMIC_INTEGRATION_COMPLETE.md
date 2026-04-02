@@ -337,7 +337,7 @@ curl -X POST http://127.0.0.1:8080/api/autonomic/override/state \
 ### Documentation
 - `docs/X3_ENTERPRISE_READINESS.md` - Complete production checklist
 - `docs/X3_AUTONOMIC_DEPLOYMENT.md` - Deployment guide & troubleshooting
-- `swarm/autonomic/README.md` - Architecture & API reference
+- `docs/swarm/autonomic/README.md` - Architecture & API reference
 
 ### Monitoring
 - `swarm/autonomic/dashboard.html` - Visual monitoring interface

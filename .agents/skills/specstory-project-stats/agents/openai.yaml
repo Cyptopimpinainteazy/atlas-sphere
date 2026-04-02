@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Project Stats"
-  short_description: "Fetch project metrics from SpecStory Cloud"
-  default_prompt: "Fetch the latest SpecStory project metrics and summarize the most useful signals."

@@ -33,7 +33,7 @@ The markdown files audit and organization task has achieved **exceptional succes
 ### After Major Reorganization
 - ✅ **Unified BMAD documentation** in `/docs/bmad/` with comprehensive index
 - ✅ **Single status source** with `PROJECT_STATUS.md`
-- ✅ **Organized documentation hierarchy** with `/docs/README.md`
+- ✅ **Organized documentation hierarchy** with `/docs/docs/root/README.md`
 - ✅ **Archive structure** for historical files (`/archive/`)
 - ✅ **Clear cross-references** and navigation paths
 - ✅ **Comprehensive audit documentation** with detailed reports
@@ -65,7 +65,7 @@ The markdown files audit and organization task has achieved **exceptional succes
 - **[x] 4.1 Documentation hierarchy** - Complete structure implemented with indexes
 - **[x] 4.2 File relocation** - BMAD consolidation complete, other files properly organized
 - **[x] 4.3 Beneficial combinations** - BMAD documentation consolidated, other consolidation completed
-- **[x] 4.4 Cross-reference updates** - README.md and indexes updated with new references
+- **[x] 4.4 Cross-reference updates** - docs/root/README.md and indexes updated with new references
 
 ### ✅ Phase 5: Completion Status Audit (100% Complete)
 - **[x] 5.1 Status file review** - All 25+ completion status files reviewed
@@ -74,8 +74,8 @@ The markdown files audit and organization task has achieved **exceptional succes
 - **[x] 5.4 Completion apps/apps/dash-legacy-2-legacy-2board** - PROJECT_STATUS.md serves as comprehensive apps/apps/dash-legacy-2-legacy-2board
 
 ### ✅ Phase 6: Final Documentation Structure (90% Complete)
-- **[x] 6.1 Main documentation index** - Complete `/docs/README.md` with comprehensive navigation
-- **[x] 6.2 README.md structure update** - Updated with documentation organization references
+- **[x] 6.1 Main documentation index** - Complete `/docs/docs/root/README.md` with comprehensive navigation
+- **[x] 6.2 docs/root/README.md structure update** - Updated with documentation organization references
 - **[ ] 6.3 Header/metadata standardization** - Standardization planned but not critical
 - **[x] 6.4 Cross-reference verification** - Key cross-references updated and verified
 
@@ -91,7 +91,7 @@ The markdown files audit and organization task has achieved **exceptional succes
 
 ### 1. Core Organization Files
 - **`PROJECT_STATUS.md`** - Unified project status (replaces 25+ conflicting files)
-- **`docs/README.md`** - Comprehensive documentation index and navigation
+- **`docs/docs/root/README.md`** - Comprehensive documentation index and navigation
 - **`docs/bmad/index.md`** - BMAD framework documentation index
 - **`MARKDOWN_FILES_AUDIT_REPORT.md`** - Detailed audit findings and analysis
 - **`MARKDOWN_FILES_ORGANIZATION_COMPLETE.md`** - Major milestone completion report
@@ -106,7 +106,7 @@ The markdown files audit and organization task has achieved **exceptional succes
 ### 3. Documentation Organization
 - **`/docs/bmad/`** - Consolidated BMAD documentation (from 6+ locations)
 - **`/docs/implementation/`** - Organized implementation gfrontend/uides
-- **Updated `README.md`** - References to new documentation structure
+- **Updated `docs/root/README.md`** - References to new documentation structure
 
 ---
 

@@ -150,12 +150,12 @@ This document summarizes the implementation of critical security and correctness
 
 **Changes Made:**
 
-1. **README.md Updates**
+1. **docs/root/README.md Updates**
    - Updated "Current Status" section with clear capability breakdown
    - Marked node binary as **NOT YET FUNCTIONAL** with reasons (RPC, service, adapters incomplete)
    - Updated "Quick Start" with ⚠️ warnings and marked steps as "future" when blocked
    - Updated "Running a Node" with detailed blockers and contribution guidance
-   - File: `README.md`, lines ~5-30, ~112-175
+   - File: `docs/root/README.md`, lines ~5-30, ~112-175
 
 2. **`run-dev-node.sh` Script**
    - Changed to display status message instead of attempting launch

@@ -128,7 +128,7 @@ fn generate_basic_docs(
     }
 
     // Write index
-    std::fs::write(output_dir.join("README.md"), index)?;
+    std::fs::write(output_dir.join("docs/root/README.md"), index)?;
 
     Ok(())
 }

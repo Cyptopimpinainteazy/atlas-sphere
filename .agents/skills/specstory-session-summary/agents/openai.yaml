@@ -1,4 +1,0 @@
-interface:
-  display_name: "SpecStory Session Summary"
-  short_description: "Summarize recent sessions in standup format"
-  default_prompt: "Summarize recent SpecStory sessions in standup format with completed work, blockers, and likely next steps."

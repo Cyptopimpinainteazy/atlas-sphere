@@ -295,5 +295,5 @@ Watch: Real-time TPS graph
 ---
 
 **Dashboard:** http://localhost:8501  
-**Documentation:** `/tests/perf/TPS_TESTING_README.md`  
-**Integration Guide:** `/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md`
+**Documentation:** `/docs/docs/tests/perf/docs/TPS TESTING/README.md`  
+**Integration Guide:** `/docs/docs/cross-chain-gpu-validator/tests/inferstructor/INTEGRATION_GUIDE.md`

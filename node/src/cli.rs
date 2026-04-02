@@ -40,6 +40,7 @@ pub struct Cli {
 }
 
 #[derive(Debug, Clone, Args, Default)]
+/// Feature flags controlling optional node behavior.
 pub struct NodeFeatureFlags {
     /// Enable the parallel proposer pipeline (currently staged and off by default).
     #[arg(long, default_value_t = false)]
@@ -128,7 +129,7 @@ pub enum AtomicSwapSubcommand {
         slippage_bps: u32,
 
         /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
         rpc_url: String,
     },
 
@@ -143,7 +144,7 @@ pub enum AtomicSwapSubcommand {
         token_b: H256,
 
         /// RPC endpoint URL
-        #[arg(long, default_value = "http://127.0.0.1:9944")]
+        #[arg(long, default_value = "http://127.0.0.1:9933")]
         rpc_url: String,
     },
 

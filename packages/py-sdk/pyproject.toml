@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "x3-chain-sdk"
 version = "0.1.0"
 description = "Python SDK for X3 Chain"
-readme = "README.md"
+readme = "docs/root/README.md"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "X3 Chain Team"},

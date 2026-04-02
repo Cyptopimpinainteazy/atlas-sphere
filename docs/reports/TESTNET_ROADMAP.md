@@ -53,8 +53,8 @@
 ### Deliverables
 ✅ docs/reports/TESTNET_ANNOUNCEMENT.md  
 ✅ docs/reports/TESTNET_QUICKSTART.md  
-✅ docs/reports/TESTNET_DEPLOYMENT_GUIDE.md  
-✅ docs/reports/TESTNET_DEPLOYMENT_CHECKLIST.md  
+✅ docs/reports/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md  
+✅ docs/reports/docs/runbooks/deployment/DEPLOYMENT_CHECKLIST.md  
 ✅ Public RPC endpoints live  
 ✅ Faucet operational  
 

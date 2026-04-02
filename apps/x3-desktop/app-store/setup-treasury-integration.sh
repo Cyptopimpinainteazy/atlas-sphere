@@ -102,7 +102,7 @@ for app_dir in "$APP_STORE_DIR"/*/; do
     app_name=$(basename "$app_dir")
 
     # Skip helper files
-    if [[ "$app_name" == "COMPLETION_REPORT_12APPS.md" || "$app_name" == "INTEGRATION_COMPLETE.md" || "$app_name" == "README.md" ]]; then
+    if [[ "$app_name" == "COMPLETION_REPORT_12APPS.md" || "$app_name" == "INTEGRATION_COMPLETE.md" || "$app_name" == "docs/root/README.md" ]]; then
         continue
     fi
 

@@ -1,4 +1,4 @@
-.PHONY: bmad-generate-steps bmad-generate-workflows bmad-validate bmad-clean help
+.PHONY: bmad-generate-steps bmad-generate-workflows bmad-validate bmad-clean help testnet-verify
 
 # BMAD Build Automation - Phase 1 & 2
 # Purpose: Consolidation generation and validation for steps and workflows
@@ -22,6 +22,10 @@ help:
 	@echo "    make bmad-generate            - Generate both steps and workflows"
 	@echo "    make bmad-validate            - Validate both steps and workflows"
 	@echo "    make bmad-clean               - Clean both steps and workflows"
+	@echo ""
+	@echo "  Testnet:"
+	@echo "    make testnet-verify           - Run peer/finality (and optional telemetry/load) checks"
+	@echo "                                   Uses TESTNET_CONFIG or docs/testnet-config/testnet-config.json"
 
 # ============================================================================
 # PHASE 1: STEP CONSOLIDATION TARGETS
@@ -102,6 +106,14 @@ bmad-clean-workflows:
 start:
 	@echo "Delegating to x3-swarm-orchestra..."
 	@$(MAKE) -C x3-swarm-orchestra start
+
+# ============================================================================
+# TESTNET VERIFICATION
+# ============================================================================
+
+testnet-verify:
+	@echo "Running testnet verification..."
+	@scripts/testnet/verify-testnet.sh
 
 
 # ============================================================================

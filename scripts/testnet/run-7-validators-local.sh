@@ -10,6 +10,7 @@ CHAIN_SPEC_DEFAULT="$ROOT_DIR/deployment/chain-specs/x3-testnet-raw.json"
 CHAIN_SPEC_PLAIN_DEFAULT="$ROOT_DIR/deployment/chain-specs/x3-testnet-plain.json"
 BASE_DIR_DEFAULT="$HOME/.local/share/x3/testnet-local"
 LOG_DIR_DEFAULT="$ROOT_DIR/logs/testnet"
+SUBKEY_BIN_DEFAULT="${SUBKEY_BIN_DEFAULT:-/home/lojak/.cargo/bin/subkey}"
 
 NODE_BIN="${NODE_BIN:-$NODE_BIN_DEFAULT}"
 CHAIN_SPEC="${CHAIN_SPEC:-$CHAIN_SPEC_DEFAULT}"
@@ -27,6 +28,7 @@ NO_TELEMETRY="${NO_TELEMETRY:-1}"
 DISABLE_LOG_COLOR="${DISABLE_LOG_COLOR:-1}"
 NODE_NICE="${NODE_NICE:-}"
 NODE_DB_CACHE_MIB="${NODE_DB_CACHE_MIB:-}"
+SUBKEY_BIN="${SUBKEY_BIN:-$SUBKEY_BIN_DEFAULT}"
 
 WIPE_BASE_DIR=0
 
@@ -125,6 +127,15 @@ mkdir -p "$BASE_DIR" "$LOG_DIR" "$PID_DIR"
 if [[ ! -x "$NODE_BIN" ]]; then
   echo "Node binary not found: $NODE_BIN"
   exit 1
+fi
+
+if ! command -v "$SUBKEY_BIN" >/dev/null 2>&1; then
+  if command -v subkey >/dev/null 2>&1; then
+    SUBKEY_BIN="$(command -v subkey)"
+  else
+    echo "subkey not found in PATH and SUBKEY_BIN is not executable: $SUBKEY_BIN"
+    exit 1
+  fi
 fi
 
 if [[ ! -f "$CHAIN_SPEC" ]]; then
@@ -240,8 +251,8 @@ insert_keys() {
 
   local aura_pub
   local gran_pub
-  aura_pub=$(subkey inspect --scheme sr25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
-  gran_pub=$(subkey inspect --scheme ed25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
+  aura_pub=$("$SUBKEY_BIN" inspect --scheme sr25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
+  gran_pub=$("$SUBKEY_BIN" inspect --scheme ed25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
 
   if [[ -z "$aura_pub" || -z "$gran_pub" ]]; then
     echo "Failed to derive public keys for ${suri}"
@@ -279,8 +290,8 @@ validate_keys() {
 
   local aura_pub
   local gran_pub
-  aura_pub=$(subkey inspect --scheme sr25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
-  gran_pub=$(subkey inspect --scheme ed25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
+  aura_pub=$("$SUBKEY_BIN" inspect --scheme sr25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
+  gran_pub=$("$SUBKEY_BIN" inspect --scheme ed25519 "$suri" | awk '/Public key \(hex\):/ {print $4}')
 
   local aura_file="${keystore_dir}/61757261${aura_pub#0x}"
   local gran_file="${keystore_dir}/6772616e${gran_pub#0x}"

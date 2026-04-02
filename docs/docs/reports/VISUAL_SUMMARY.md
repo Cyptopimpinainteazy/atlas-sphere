@@ -17,7 +17,7 @@ Priority Phases:     7
 
 📁 DELIVERABLES
 ═══════════════════════════════════════════════════════════════════════════════
-✓ MERGE_PROJECT_README.md     (7.4 KB)  - Start here!
+✓ MERGE_PROJECT_docs/root/README.md     (7.4 KB)  - Start here!
 ✓ BRANCH_MERGE_GUIDE.md        (8.5 KB)  - Complete instructions
 ✓ FEATURE_ANALYSIS.md          (13 KB)   - Branch details & conflicts
 ✓ MERGE_CHECKLIST.md           (6.8 KB)  - Interactive checklist
@@ -171,7 +171,7 @@ Approach 3: INTEGRATION BRANCH 🔄
 🎓 GETTING STARTED
 ═══════════════════════════════════════════════════════════════════════════════
 
-1️⃣  START HERE: Read MERGE_PROJECT_README.md
+1️⃣  START HERE: Read MERGE_PROJECT_docs/root/README.md
     └─ Qfrontend/uick overview and execution options
 
 2️⃣  UNDERSTAND BRANCHES: Read FEATURE_ANALYSIS.md

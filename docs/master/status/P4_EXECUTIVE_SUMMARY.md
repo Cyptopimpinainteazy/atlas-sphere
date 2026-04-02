@@ -52,7 +52,7 @@
    - Security & correctness validation
    - Ready to run: `pytest tests/p4_gpu_integration_tests.py -v`
 
-5. **`P4_IMPLEMENTATION_SUMMARY.md`** (This document)
+5. **`P4_docs/reports/IMPLEMENTATION_SUMMARY.md`** (This document)
    - Quick reference guide
    - Hardware requirements
 

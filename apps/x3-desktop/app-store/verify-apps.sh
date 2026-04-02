@@ -15,7 +15,7 @@ for d in "$ROOT_DIR"/*/; do
   app_name="$(basename "$d")"
   # skip non-app files
   case "$app_name" in
-    COMPLETION_REPORT_*|INTEGRATION_COMPLETE.md|README.md) continue ;;
+    COMPLETION_REPORT_*|INTEGRATION_COMPLETE.md|docs/root/README.md) continue ;;
   esac
 
   notes=()

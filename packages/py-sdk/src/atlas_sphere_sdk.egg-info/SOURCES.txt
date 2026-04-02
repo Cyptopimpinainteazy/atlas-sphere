@@ -1,4 +1,4 @@
-README.md
+docs/root/README.md
 pyproject.toml
 src/atlas_sphere_sdk/__init__.py
 src/atlas_sphere_sdk/cli.py

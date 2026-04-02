@@ -86,7 +86,7 @@ impl Proposal {
         let public = sr25519::Public(self.leader_id);
         let signature = sr25519::Signature(self.leader_sig);
         let message = self.message_hash();
-        
+
         signature.verify(&message[..], &public)
     }
 }
@@ -120,7 +120,7 @@ impl Vote {
         let public = sr25519::Public(self.voter_id);
         let signature = sr25519::Signature(self.voter_sig);
         let message = self.message_hash();
-        
+
         signature.verify(&message[..], &public)
     }
 }
@@ -128,7 +128,7 @@ impl Vote {
 /// Flash Finality certificate.
 /// Produced when ≥ 2/3 + 1 validators vote for the same block in the same round.
 /// This is the artifact that becomes a PoAE proof anchor.
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Encode, Decode, serde::Serialize, serde::Deserialize)]
 pub struct FinalityCertificate {
     pub block_hash: BlockHash,
     pub block_number: BlockNumber,
@@ -590,9 +590,9 @@ impl FlashFinalityGadget {
             h.update(self.my_id);
             h.finalize()
         };
-        
+
         let message_array: [u8; 32] = message.into();
-        
+
         let leader_sig = if let Some(_keystore) = &self.keystore {
             // Try to sign with the keystore if available
             if let Some(sig) = self.sign_with_keystore(&message_array) {

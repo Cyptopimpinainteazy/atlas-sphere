@@ -27,9 +27,7 @@ use sp_std::vec::Vec;
 // ---------------------------------------------------------------------------
 
 /// Reason the consensus freeze was engaged.
-#[derive(
-    Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub enum FreezeReason {
     /// A fraud proof was accepted and divergence was confirmed.
@@ -43,9 +41,7 @@ pub enum FreezeReason {
 }
 
 /// The full freeze state stored in FRAME storage.
-#[derive(
-    Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen,
-)]
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo, MaxEncodedLen)]
 #[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
 pub struct FreezeState {
     /// AI/GPU scheduler syscalls are disabled when this is true.

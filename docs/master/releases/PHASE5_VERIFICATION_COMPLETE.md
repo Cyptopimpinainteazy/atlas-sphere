@@ -49,10 +49,10 @@
 | `proposal.md` | Problem + solution specification | 800 | ✅ |
 | `design.md` | Technical architecture + code | 800+ | ✅ |
 | `GUIDE.md` | Operations manual (10 sections) | 2,500+ | ✅ |
-| `DEPLOYMENT_GUIDE.md` | Ship procedures (7 sections) | 600 | ✅ |
+| `docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` | Ship procedures (7 sections) | 600 | ✅ |
 | `COMPLETE_DELIVERY.md` | Executive summary | 400 | ✅ |
-| `FILE_MANIFEST.md` | Complete inventory | 500 | ✅ |
-| `QUICK_REFERENCE.md` | 1-minute overview | 300 | ✅ |
+| `docs/reports/FILE_MANIFEST.md` | Complete inventory | 500 | ✅ |
+| `docs/runbooks/getting-started/QUICK_REFERENCE.md` | 1-minute overview | 300 | ✅ |
 
 ### Root Documentation (1 file)
 
@@ -220,7 +220,7 @@ Status: ✅ PRODUCTION-READY
 ## 📍 Quick Access Paths
 
 **To Understand What This Is:**
-→ Read `/openspec/changes/jury-blockchain-anchoring/QUICK_REFERENCE.md` (5 min)
+→ Read `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/getting-started/QUICK_REFERENCE.md` (5 min)
 
 **To Review the Design:**
 → Read `/openspec/changes/jury-blockchain-anchoring/design.md` (30 min)
@@ -233,7 +233,7 @@ Status: ✅ PRODUCTION-READY
 - `/tests/test_jury_anchoring.py` (tests)
 
 **To Deploy Tomorrow:**
-→ Read `/openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md` (60 min)
+→ Read `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` (60 min)
 
 **To Get Operations Info:**
 → Read `/openspec/changes/jury-blockchain-anchoring/GUIDE.md` (reference)
@@ -249,12 +249,12 @@ Status: ✅ PRODUCTION-READY
 
 ### DevOps / SRE
 **Time:** 1 hour  
-**Read:** DEPLOYMENT_GUIDE.md  
+**Read:** docs/runbooks/deployment/DEPLOYMENT_GUIDE.md  
 **Then:** Prepare and execute deployment  
 
 ### Product Managers
 **Time:** 15 min  
-**Read:** QUICK_REFERENCE.md + proposal.md  
+**Read:** docs/runbooks/getting-started/QUICK_REFERENCE.md + proposal.md  
 **Then:** Understand business impact  
 
 ### Security Teams
@@ -279,9 +279,9 @@ Session Start (2026-02-08 00:00):
 ├─ 02:15-03:00: TypeScript React adapter  
 ├─ 03:00-03:30: Test suite (13 tests)
 ├─ 03:30-04:00: GUIDE.md (2,500 lines)
-├─ 04:00-04:15: DEPLOYMENT_GUIDE.md
-├─ 04:15-04:30: FILE_MANIFEST.md
-├─ 04:30-04:45: QUICK_REFERENCE.md
+├─ 04:00-04:15: docs/runbooks/deployment/DEPLOYMENT_GUIDE.md
+├─ 04:15-04:30: docs/reports/FILE_MANIFEST.md
+├─ 04:30-04:45: docs/runbooks/getting-started/QUICK_REFERENCE.md
 ├─ 04:45-05:00: COMPLETE_DELIVERY.md
 └─ 05:00-05:15: PHASE5_EXECUTION_COMPLETE.md
 
@@ -298,7 +298,7 @@ Ship Status: READY FOR TOMORROW ✅
 - [x] proposal.md (800 lines)
 - [x] design.md (800+ lines)  
 - [x] GUIDE.md (2,500+ lines)
-- [x] DEPLOYMENT_GUIDE.md (600 lines)
+- [x] docs/runbooks/deployment/DEPLOYMENT_GUIDE.md (600 lines)
 - [x] pallet/lib.rs (500+ lines)
 - [x] anchorer.py (450+ lines)
 - [x] jury-anchoring.ts (600+ lines)
@@ -342,8 +342,8 @@ Ship Status: READY FOR TOMORROW ✅
 
 **Read this in this order tomorrow morning:**
 
-1. `/openspec/changes/jury-blockchain-anchoring/QUICK_REFERENCE.md` (5 min)
-2. `/openspec/changes/jury-blockchain-anchoring/DEPLOYMENT_GUIDE.md` Part 1-2 (20 min)
+1. `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/getting-started/QUICK_REFERENCE.md` (5 min)
+2. `/openspec/changes/jury-blockchain-anchoring/docs/runbooks/deployment/DEPLOYMENT_GUIDE.md` Part 1-2 (20 min)
 3. Execute Part 3 (afternoon, follow checklist)
 4. Monitor Part 4 (evening, watch metrics)
 

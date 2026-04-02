@@ -71,7 +71,7 @@
 
 #### Documentation (4 guides, 1,500+ LOC)
 
-1. **DEPLOYMENT_GUIDE.md** ✅ - Step-by-step deployment instructions
+1. **docs/runbooks/deployment/DEPLOYMENT_GUIDE.md** ✅ - Step-by-step deployment instructions
 2. **ARCHITECTURE.md** ✅ - Complete system architecture
 3. **RUNBOOKS.md** ✅ - Operational procedures & troubleshooting
 4. **PRODUCTION_CHECKLIST.md** ✅ - Pre-deployment validation
@@ -146,7 +146,7 @@
    - Ready to run: `pytest tests/p4_gpu_integration_tests.py -v`
 
 5. **Documentation** ✅
-   - `P4_IMPLEMENTATION_SUMMARY.md` (Timeline, architecture, metrics)
+   - `P4_docs/reports/IMPLEMENTATION_SUMMARY.md` (Timeline, architecture, metrics)
    - `P4_EXECUTIVE_SUMMARY.md` (Business case, approval checklist)
    - Complete hardware requirements
    - Integration guidelines
@@ -160,7 +160,7 @@
 | Implementation Guide | P4_IMPLEMENTATION_GUIDE.md | ✅ Ready | 2,000+ |
 | Integration Tests | p4_gpu_integration_tests.py | ✅ Ready | 600+ |
 | Executive Summary | P4_EXECUTIVE_SUMMARY.md | ✅ Ready | 500+ |
-| Implementation Summary | P4_IMPLEMENTATION_SUMMARY.md | ✅ Ready | 1,000+ |
+| Implementation Summary | P4_docs/reports/IMPLEMENTATION_SUMMARY.md | ✅ Ready | 1,000+ |
 
 **Total P4 Package**: 5,700+ lines of code & documentation
 
@@ -248,7 +248,7 @@ deployment/
 └── grafana-dashboards.json    (500 LOC) - 6 dashboards
 
 docs/
-├── DEPLOYMENT_GUIDE.md        (400 LOC)
+├── docs/runbooks/deployment/DEPLOYMENT_GUIDE.md        (400 LOC)
 ├── ARCHITECTURE.md            (300 LOC)
 ├── RUNBOOKS.md                (300+ LOC)
 └── PRODUCTION_CHECKLIST.md    (200+ LOC)
@@ -265,7 +265,7 @@ crates/gpu-swarm/src/
 openspec/changes/p4-solana-gpu-acceleration/
 ├── P4_IMPLEMENTATION_GUIDE.md (2,000+ LOC) ✅ CREATED
 ├── proposal.py                (400+ LOC) ✅ CREATED
-└── P4_QUICK_REFERENCE.md      (500+ LOC) ✅ CREATED
+└── P4_docs/runbooks/getting-started/QUICK_REFERENCE.md      (500+ LOC) ✅ CREATED
 
 tests/
 ├── p4_gpu_integration_tests.py (600+ LOC) ✅ CREATED
@@ -277,7 +277,7 @@ scripts/
 └── validate_deployment.sh     (450+ LOC) ✅ CREATED
 
 Root:
-├── P4_IMPLEMENTATION_SUMMARY.md (1,000+ LOC) ✅ CREATED
+├── P4_docs/reports/IMPLEMENTATION_SUMMARY.md (1,000+ LOC) ✅ CREATED
 ├── P4_EXECUTIVE_SUMMARY.md     (500+ LOC) ✅ CREATED
 └── PROJECT_STATUS.md           (This file)
 ```
@@ -289,7 +289,7 @@ Root:
 ### For Approval (Immediate)
 
 - [ ] Review P4_EXECUTIVE_SUMMARY.md
-- [ ] Review P4_IMPLEMENTATION_SUMMARY.md
+- [ ] Review P4_docs/reports/IMPLEMENTATION_SUMMARY.md
 - [ ] Approve P4 implementation
 - [ ] Allocate GPU hardware (A100 or RTX 6000)
 
@@ -374,7 +374,7 @@ Follow the 14-day roadmap in P4_IMPLEMENTATION_GUIDE.md:
 ### Documentation Available
 
 1. **P4_EXECUTIVE_SUMMARY.md** - Business case & approval
-2. **P4_IMPLEMENTATION_SUMMARY.md** - Technical overview
+2. **P4_docs/reports/IMPLEMENTATION_SUMMARY.md** - Technical overview
 3. **P4_IMPLEMENTATION_GUIDE.md** - Detailed 14-day plan
 4. **solana_accelerators.py** - Implementation code
 5. **solana_gpu_kernels.cu** - CUDA kernels
@@ -384,7 +384,7 @@ Follow the 14-day roadmap in P4_IMPLEMENTATION_GUIDE.md:
 All necessary information is in the documentation. Key resources:
 
 - **For Managers**: Read P4_EXECUTIVE_SUMMARY.md (15 min)
-- **For Engineers**: Read P4_IMPLEMENTATION_SUMMARY.md (30 min)
+- **For Engineers**: Read P4_docs/reports/IMPLEMENTATION_SUMMARY.md (30 min)
 - **For Implementers**: Follow P4_IMPLEMENTATION_GUIDE.md (detailed)
 
 ---

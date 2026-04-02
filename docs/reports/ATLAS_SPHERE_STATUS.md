@@ -126,7 +126,7 @@
 
 | Document              | Status          |
 | --------------------- | --------------- |
-| README.md             | ✅ Comprehensive |
+| docs/root/README.md             | ✅ Comprehensive |
 | ARCHITECTURE.md       | ✅               |
 | COMIT_SPEC.md         | ✅               |
 | DEPLOYMENT.md         | ✅               |

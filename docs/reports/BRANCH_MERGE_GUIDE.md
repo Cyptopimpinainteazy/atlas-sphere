@@ -204,7 +204,7 @@ Common conflict areas to watch for:
 1. **Package files**: `package.json`, `package-lock.json`, `Cargo.toml`
 2. **CI workflows**: `.github/workflows/*.yml`
 3. **Configuration**: `alembic.ini`, `tsconfig.json`
-4. **Documentation**: `README.md` files
+4. **Documentation**: `docs/root/README.md` files
 
 ### Resolving Conflicts
 

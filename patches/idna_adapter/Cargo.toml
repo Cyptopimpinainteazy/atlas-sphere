@@ -24,7 +24,7 @@ autobenches = false
 description = "Back end adapter for idna"
 homepage = "https://docs.rs/crate/idna_adapter/latest"
 documentation = "https://docs.rs/idna_adapter/latest/idna_adapter/"
-readme = "README.md"
+readme = "docs/root/README.md"
 keywords = [
     "unicode",
     "dns",

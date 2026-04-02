@@ -140,7 +140,7 @@ CREATED:
 
 DOCUMENTATION:
   ✅ archive/reports/PHASE6_COMPLETE.md                (3000+ words, comprehensive)
-  ✅ docs/reports/PHASE6_QUICK_START.md             (Quick reference guide)
+  ✅ docs/runbooks/getting-started/QUICK_START.md             (Quick reference guide)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎓 CODE QUALITY METRICS
@@ -222,7 +222,7 @@ Memory             5-15% ↓    0-5% ↓       0-2% ↓       0-1% ↓       5-2
    - Integration diagrams
    - Future enhancement roadmap
 
-2. docs/reports/PHASE6_QUICK_START.md
+2. docs/runbooks/getting-started/QUICK_START.md
    - 500+ word quick reference
    - File locations and line counts
    - Key concepts simplified

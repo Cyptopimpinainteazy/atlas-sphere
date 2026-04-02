@@ -29,7 +29,7 @@ The two layers are **not connected**. X3 programs cannot currently drive GPU exe
 
 **Status**: ❌ **Does not exist**
 
-The `x3-codegen` crate is listed in the workspace manifest at [x3-lang/Cargo.toml](x3-lang/Cargo.toml) line:
+The `x3-codegen` crate is listed in the workspace manifest at [/x3-lang/Cargo.toml](/x3-lang/Cargo.toml) line:
 
 ```toml
 members = [
@@ -39,7 +39,7 @@ members = [
 ]
 ```
 
-And the [x3-lang/README.md](x3-lang/README.md) describes it as:
+And the [/docs/x3-lang/README.md](/docs/x3-lang/README.md) describes it as:
 
 ```
 │   ├── x3-codegen/     # LLVM code generation
@@ -93,11 +93,11 @@ To enable `X3 → CUDA PTX`:
 
 Listed in workspace members as `crates/x3-ir` (described as "Intermediate representation" / "DAG Optimization" in the README). **The directory does not exist on disk.**
 
-The current compiler pipeline (in `x3-lang/compiler/`) has a rudimentary IR — `LoweredInstr` in [x3-lang/compiler/lowering.rs](x3-lang/compiler/lowering.rs) — which is a flat list of `(opcode: u8, flags: u8, operand: u16)` tuples. This is a bytecode-level IR, not a graph IR suitable for optimization or GPU lowering.
+The current compiler pipeline (in `x3-lang/compiler/`) has a rudimentary IR — `LoweredInstr` in [/x3-lang/compiler/lowering.rs](/x3-lang/compiler/lowering.rs) — which is a flat list of `(opcode: u8, flags: u8, operand: u16)` tuples. This is a bytecode-level IR, not a graph IR suitable for optimization or GPU lowering.
 
 ### GPU IR Nodes
 
-**None exist.** The lowering pass at [x3-lang/compiler/lowering.rs](x3-lang/compiler/lowering.rs) only handles:
+**None exist.** The lowering pass at [/x3-lang/compiler/lowering.rs](/x3-lang/compiler/lowering.rs) only handles:
 - Integer literal loads (opcode `0x20`)
 - HALT instruction (opcode `0xFF`)
 
@@ -129,7 +129,7 @@ The closest runtime implementation is:
 
 Listed in workspace members as `crates/x3-stdlib` ("Standard library"). **The directory does not exist on disk.**
 
-The X3 Language Specification ([docs/X3_LANGUAGE_SPECIFICATION.md](docs/X3_LANGUAGE_SPECIFICATION.md)) Appendix B describes a planned standard library with modules:
+The X3 Language Specification ([/docs/X3_LANGUAGE_SPECIFICATION.md](/docs/X3_LANGUAGE_SPECIFICATION.md)) Appendix B describes a planned standard library with modules:
 - `std::math` — arithmetic, sqrt, pow, log
 - `std::memory` — alloc, free, copy, compare
 - `std::crypto` — keccak256, sha256, ecrecover, ed25519_verify
@@ -146,7 +146,7 @@ The X3 Language Specification ([docs/X3_LANGUAGE_SPECIFICATION.md](docs/X3_LANGU
 
 **Status**: 🟡 **Entirely mock implementation**
 
-**File**: [crates/gpu-swarm/src/x3_vm.rs](crates/gpu-swarm/src/x3_vm.rs)
+**File**: [/crates/gpu-swarm/src/x3_vm.rs](/crates/gpu-swarm/src/x3_vm.rs)
 
 Key struct: `X3VmExecutor` with fields:
 - `gpu_manager: Arc<GpuExecutorManager>` — multi-backend GPU manager
@@ -177,10 +177,10 @@ These represent the *intended* GPU task categories but are not functionally conn
 **Status**: ✅ **Working, real implementation — but CPU-only**
 
 **Key files**:
-- [crates/x3-vm/src/vm.rs](crates/x3-vm/src/vm.rs) — Main VM interpreter (~700 lines)
-- [crates/x3-vm/src/verifier.rs](crates/x3-vm/src/verifier.rs) — Bytecode verifier (~650 lines)
-- [crates/x3-vm/src/bridge.rs](crates/x3-vm/src/bridge.rs) — Cross-VM bridge (SVM/EVM)
-- [crates/x3-vm/src/hostcall.rs](crates/x3-vm/src/hostcall.rs) — Extensible hostcall interface
+- [/crates/x3-vm/src/vm.rs](/crates/x3-vm/src/vm.rs) — Main VM interpreter (~700 lines)
+- [/crates/x3-vm/src/verifier.rs](/crates/x3-vm/src/verifier.rs) — Bytecode verifier (~650 lines)
+- [/crates/x3-vm/src/bridge.rs](/crates/x3-vm/src/bridge.rs) — Cross-VM bridge (SVM/EVM)
+- [/crates/x3-vm/src/hostcall.rs](/crates/x3-vm/src/hostcall.rs) — Extensible hostcall interface
 
 **Architecture**:
 ```
@@ -233,7 +233,7 @@ Standard hostcall IDs (0-22): logging, assertions, panic, timestamp, random, pri
 
 **Status**: 🟡 **Framework exists, all 5 backends are mock**
 
-**Location**: [crates/gpu-swarm/src/gpu_backends/](crates/gpu-swarm/src/gpu_backends/)
+**Location**: [/crates/gpu-swarm/src/gpu_backends/](/crates/gpu-swarm/src/gpu_backends/)
 
 ### Trait Definition (`mod.rs`)
 
@@ -277,7 +277,7 @@ pub trait GpuExecutor: Send + Sync {
 X3 Source → Parser → AST → lower_program() → regalloc::allocate() → emit() → verify() → X3BC bytes
 ```
 
-**Entry point** — [x3-lang/compiler/src/lib.rs](x3-lang/compiler/src/lib.rs):
+**Entry point** — [/x3-lang/compiler/src/lib.rs](/x3-lang/compiler/src/lib.rs):
 ```rust
 pub fn compile_program(ast: &Program) -> Result<Vec<u8>, CompileError> {
     let lowered = lower_program(ast)?;
@@ -303,7 +303,7 @@ pub fn compile_program(ast: &Program) -> Result<Vec<u8>, CompileError> {
 
 ## Area 8: Language Specification (Sections 7-8)
 
-**Source**: [docs/X3_LANGUAGE_SPECIFICATION.md](docs/X3_LANGUAGE_SPECIFICATION.md)
+**Source**: [/docs/X3_LANGUAGE_SPECIFICATION.md](/docs/X3_LANGUAGE_SPECIFICATION.md)
 
 ### Section 7 — Built-in Operations
 
@@ -387,7 +387,7 @@ Located at `crates/gpu-swarm/src/cu_kernels/`:
 
 ### Build System
 
-[crates/gpu-swarm/src/cu_kernels/build.sh](crates/gpu-swarm/src/cu_kernels/build.sh):
+[/crates/gpu-swarm/src/cu_kernels/build.sh](/crates/gpu-swarm/src/cu_kernels/build.sh):
 ```bash
 nvcc -arch=sm_61 -O2 -shared -Xcompiler -fPIC --use_fast_math -maxrregcount=64 \
     -o libed25519_batch.so ed25519_batch.cu

@@ -340,10 +340,10 @@ watch -n 2 'for port in 3001 3002 3003 3007; do echo "Port $port: $(curl -s -o /
 ## Support
 
 For detailed app documentation:
-- Explorer: See `apps/explorer/README.md`
-- Wallet: See `apps/wallet/README.md`
-- DEX: See `apps/dex/README.md`
-- X3 Intelligence: See `apps/x3-intelligence/README.md`
+- Explorer: See `apps/explorer/docs/root/README.md`
+- Wallet: See `apps/wallet/docs/root/README.md`
+- DEX: See `apps/dex/docs/root/README.md`
+- X3 Intelligence: See `apps/x3-intelligence/docs/root/README.md`
 
 ---
 

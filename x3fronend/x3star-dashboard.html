@@ -970,6 +970,7 @@
 </div><!-- /app -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="js/x3-data-api.js"></script>
 <script>
 // ── STARS ──
 const canvas = document.getElementById('stars-canvas');
@@ -998,15 +999,107 @@ function drawStars() {
 resizeStars(); drawStars();
 window.addEventListener('resize', resizeStars);
 
-// ── BLOCK + GAS LIVE ──
-let block = 19847221;
-setInterval(() => {
-  block += Math.floor(Math.random()*3);
-  document.getElementById('block-num').textContent = block.toLocaleString();
-  const gas = Math.floor(18 + Math.random()*20);
-  document.getElementById('gas').textContent = gas + ' gwei';
-  document.getElementById('gas').style.color = gas > 30 ? 'var(--red)' : 'var(--green)';
-}, 4000);
+// ── REAL DATA INTEGRATION ──
+let x3api = null;
+
+async function updateRealTimeData() {
+  if (!x3api) return;
+  
+  try {
+    // Get block number
+    const block = await x3api.getBlockNumber();
+    document.getElementById('block-num').textContent = block.toLocaleString();
+    
+    // Get gas price
+    const gasPrice = await x3api.getGasPrice();
+    const gasGwei = Math.floor(gasPrice / 1e9);
+    document.getElementById('gas').textContent = gasGwei + ' gwei';
+    document.getElementById('gas').style.color = gasGwei > 30 ? 'var(--red)' : 'var(--green)';
+    
+    // Get network stats
+    const stats = await x3api.getNetworkStats();
+    
+    // Update token price
+    const token = await x3api.getTokenData();
+    const priceEl = document.querySelector('.kpi-card.purple .kpi-value');
+    if (priceEl) {
+      priceEl.textContent = '$' + token.price.toFixed(4);
+      const badge = document.querySelector('.kpi-card.purple .badge-up');
+      if (badge) {
+        const change = token.priceChange24h;
+        badge.textContent = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
+        badge.className = change >= 0 ? 'badge-up' : 'badge-dn';
+      }
+    }
+    
+    // Update token chart
+    updateTokenChart(token);
+    
+    // Update funding data
+    const funding = await x3api.getFundingData();
+    updateFundingData(funding);
+    
+  } catch (err) {
+    console.warn('Data update error:', err);
+  }
+}
+
+function updateTokenChart(token) {
+  // Update token analytics cards
+  const mcapEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(1) .metric-val');
+  const circEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(2) .metric-val');
+  const volEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(3) .metric-val');
+  const holdEl = document.querySelector('.chart-card:nth-child(2) .metric-list > div:nth-child(4) .metric-val');
+  
+  if (mcapEl) mcapEl.textContent = '$' + (token.marketCap / 1000000).toFixed(1) + 'M';
+  if (circEl) circEl.textContent = (token.circulatingSupply / 1000000).toFixed(0) + 'M';
+  if (volEl) volEl.textContent = '$' + (token.volume24h / 1000000).toFixed(1) + 'M';
+  if (holdEl) holdEl.textContent = token.holders.toLocaleString();
+}
+
+function updateFundingData(funding) {
+  // Update total raised
+  const raisedEl = document.querySelector('.kpi-card.gold .kpi-value');
+  if (raisedEl) {
+    raisedEl.textContent = '$' + (funding.raised / 1000000).toFixed(1) + 'M';
+  }
+  
+  // Update active grants
+  const grantsEl = document.querySelector('.kpi-card.cyan .kpi-value');
+  if (grantsEl) {
+    grantsEl.textContent = funding.activeGrants;
+  }
+  
+  // Update investors
+  const investorsEl = document.querySelector('.kpi-card.green .kpi-value');
+  if (investorsEl) {
+    investorsEl.textContent = funding.investorCount;
+  }
+  
+  // Update round progress
+  const progressBar = document.querySelector('.chart-card .metric-list > div > div > div');
+  const progressText = document.querySelector('.chart-card .metric-list > div > div:last-child');
+  if (progressBar) {
+    const pct = (funding.raised / funding.hardCap) * 100;
+    progressBar.style.width = pct + '%';
+  }
+  if (progressText) {
+    const pct = ((funding.raised / funding.hardCap) * 100).toFixed(1);
+    progressText.textContent = pct + '% filled • $' + (funding.raised/1000000).toFixed(1) + 'M raised';
+  }
+}
+
+// Initialize X3API and start updates
+X3API.init().then(api => {
+  x3api = api;
+  console.log('X3API initialized, connected:', api.isConnected());
+  
+  // Initial data load
+  updateRealTimeData();
+  
+  // Update every 10 seconds
+  setInterval(updateRealTimeData, 10000);
+});
 
 // ── FUNDING CHART ──
 const fundingCtx = document.getElementById('fundingChart').getContext('2d');

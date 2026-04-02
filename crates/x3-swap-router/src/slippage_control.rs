@@ -1,5 +1,5 @@
-use crate::{SwapParams, SwapRouterError};
 use crate::routing::SwapRoute;
+use crate::{SwapParams, SwapRouterError};
 
 #[derive(Debug, Clone, Default)]
 pub struct SlippageController;
@@ -14,7 +14,7 @@ pub enum ProtectionLevel {
 impl ProtectionLevel {
     pub fn to_bps(self) -> u16 {
         match self {
-            ProtectionLevel::Strict => 25,    // 0.25%
+            ProtectionLevel::Strict => 25,   // 0.25%
             ProtectionLevel::Balanced => 75, // 0.75%
             ProtectionLevel::Loose => 150,   // 1.5%
         }
@@ -33,7 +33,9 @@ pub struct SlippageProtectedParams {
 }
 
 impl SlippageController {
-    pub fn new() -> Result<Self, SwapRouterError> { Ok(Self) }
+    pub fn new() -> Result<Self, SwapRouterError> {
+        Ok(Self)
+    }
 
     pub async fn apply_protection(
         &self,
@@ -44,6 +46,9 @@ impl SlippageController {
         if limit == 0 {
             return Err(SwapRouterError::HighSlippage);
         }
-        Ok(SlippageProtectedParams { params: params.clone(), slippage_bps: limit })
+        Ok(SlippageProtectedParams {
+            params: params.clone(),
+            slippage_bps: limit,
+        })
     }
 }

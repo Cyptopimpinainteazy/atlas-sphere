@@ -15,7 +15,7 @@
 | No orphaned experimental folders | ⬜ | @X3Core | root scan |
 | No duplicate logic across subsystems | ⬜ | @X3Core | `/runtime/*` vs `/daemon/*` |
 | Clear ownership per directory | ⬜ | @X3Core | `ARCHITECTURE.md` |
-| README governance structure | ⬜ | @X3Core | root `README.md` |
+| README governance structure | ⬜ | @X3Core | root `docs/root/README.md` |
 
 ---
 
@@ -186,7 +186,7 @@
 | 149/149 tests passing | ⬜ | @QAEngineer | `/sdk` `npm test` |
 | API surface frozen | ⬜ | @APIArchitect | `/sdk/src/index.ts` version lock |
 | Typed errors (no silent fails) | ⬜ | @SDKEngineer | `/sdk/src/errors.ts` |
-| Documentation complete | ⬜ | @DocEngineer | `/sdk/README.md` + inline docs |
+| Documentation complete | ⬜ | @DocEngineer | `/sdk/docs/root/README.md` + inline docs |
 
 ### CLI
 

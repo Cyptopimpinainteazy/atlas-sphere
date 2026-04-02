@@ -800,12 +800,54 @@ const revObs = new IntersectionObserver(entries=>{
 },{threshold:0.08});
 document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el=>revObs.observe(el));
 
-// Live counter update
+// Live data from X3API
+let x3api = null;
+
+async function updateLiveMetrics() {
+  if (!x3api) return;
+  
+  try {
+    const funding = await x3api.getFundingData();
+    const token = await x3api.getTokenData();
+    const network = await x3api.getNetworkStats();
+    
+    // Update hero metrics
+    const hm1 = document.getElementById('hm1');
+    if (hm1) hm1.textContent = '$' + (funding.raised / 1000000).toFixed(1) + 'M';
+    
+    // Update traction bar
+    const trItems = document.querySelectorAll('.tr-num');
+    if (trItems[0]) trItems[0].textContent = '$' + (funding.raised / 1000000).toFixed(1) + 'M';
+    if (trItems[2]) trItems[2].textContent = network.validators.toLocaleString();
+    if (trItems[3]) trItems[3].textContent = token.holders.toLocaleString();
+    
+    // Update token price in hero
+    const heroTicker = document.querySelector('.hero-badge');
+    if (heroTicker) {
+      heroTicker.innerHTML = '<div class="hb-pulse"></div>Round III Prefunding — $' + (funding.raised/1000000).toFixed(1) + 'M Raised — ' + funding.daysRemaining + ' Days Remaining';
+    }
+    
+  } catch (err) {
+    console.warn('Live metrics update error:', err);
+  }
+}
+
+// Live counter fallback
 let raised = 14700000;
-setInterval(()=>{
+setInterval(async ()=>{
   raised += Math.floor(Math.random()*1200+200);
-  document.getElementById('hm1').textContent='$'+( raised/1e6).toFixed(2)+'M';
+  const el = document.getElementById('hm1');
+  if (el) el.textContent='$'+( raised/1e6).toFixed(2)+'M';
+  
+  // Also try X3API
+  if (x3api) updateLiveMetrics();
 },7000);
+
+// Initialize X3API
+X3API.init().then(api => {
+  x3api = api;
+  updateLiveMetrics();
+});
 </script>
 </body>
 </html>

@@ -19,7 +19,7 @@ Phase 4.3 formalizes the jury governance system as a production-ready feature of
 
 ```
 archive/jury-governance-v1.0/
-├── README.md                          (Quick reference for operators)
+├── docs/root/README.md                          (Quick reference for operators)
 ├── RUNBOOK.md                         (Operations procedures)
 ├── LESSONS_LEARNED.md                 (Knowledge capture)
 ├── IMPLEMENTATION_SUMMARY.txt         (What was built)
@@ -534,7 +534,7 @@ mkdir -p archive/jury-governance-v1.0/{spec,impl,deploy,infra,ci-cd,docs,ops}
 # Copy files (using commands from Step sections above)
 
 # Create archive metadata
-cat > archive/jury-governance-v1.0/README.md << 'EOF'
+cat > archive/jury-governance-v1.0/docs/root/README.md << 'EOF'
 # Jury Governance System v1.0
 
 Production-ready jury voting system for X3 Chain governance.

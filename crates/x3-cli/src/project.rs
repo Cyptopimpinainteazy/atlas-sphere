@@ -124,7 +124,7 @@ Cargo.lock
             "# {}\n\nAn X3 Chain project.\n\n## Getting Started\n\n```bash\nx3 build\nx3 test\nx3 deploy --network testnet\n```\n",
             root.file_name().unwrap_or_default().to_string_lossy()
         );
-        std::fs::write(root.join("README.md"), readme)?;
+        std::fs::write(root.join("docs/root/README.md"), readme)?;
 
         Ok(())
     }

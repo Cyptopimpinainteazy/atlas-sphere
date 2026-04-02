@@ -325,10 +325,10 @@ curl -X POST http://127.0.0.1:8080/api/autonomic/override/playbook \
 ---
 
 ## 📚 Related Documentation
-- Architecture: `swarm/autonomic/README.md`
+- Architecture: `docs/swarm/autonomic/README.md`
 - API Reference: `swarm/autonomic/api_routes.py`
 - Configuration: `swarm/config/autonomic_config.json`
-- Chaos Testing: `tests/chaos/README.md` (TODO)
+- Chaos Testing: `tests/chaos/docs/root/README.md` (TODO)
 
 ---
 

@@ -16,7 +16,7 @@
 - Ready for production? YES ✅
 
 ### For Developers Implementing Features
-👉 **Start here**: [COND_FOLD_docs/reports/QUICK_REFERENCE.md](COND_FOLD_docs/reports/QUICK_REFERENCE.md)
+👉 **Start here**: [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md)
 - How to test the pass
 - How to use the pass
 - Common integration patterns
@@ -32,7 +32,7 @@
 - Code quality metrics
 
 ### For Understanding Transformations
-👉 **Start here**: [docs/reports/COND_FOLD_BEFORE_AFTER.md](docs/reports/COND_FOLD_BEFORE_AFTER.md)
+👉 **Start here**: [/docs/reports/COND_FOLD_BEFORE_AFTER.md](/docs/reports/COND_FOLD_BEFORE_AFTER.md)
 - Before/after MIR examples
 - Gas/bytecode impact
 - Real-world optimization scenarios
@@ -47,9 +47,9 @@
 |----------|------|----------|-------------|
 | [archive/reports/COND_FOLD_EXECUTIVE_SUMMARY.md](archive/reports/COND_FOLD_EXECUTIVE_SUMMARY.md) | 6KB | Managers, Decision Makers | Status, test results, next steps |
 | [archive/reports/COND_FOLD_INTEGRATION_COMPLETE.md](archive/reports/COND_FOLD_INTEGRATION_COMPLETE.md) | 7.4KB | Architects, Code Reviewers | Full technical report |
-| [docs/reports/COND_FOLD_BEFORE_AFTER.md](docs/reports/COND_FOLD_BEFORE_AFTER.md) | 6.8KB | Developers, Optimizers | Transformation examples |
-| [COND_FOLD_docs/reports/QUICK_REFERENCE.md](COND_FOLD_docs/reports/QUICK_REFERENCE.md) | 8.4KB | Developers, Debuggers | Test commands, debugging |
-| [docs/reports/COND_FOLD_INDEX.md](docs/reports/COND_FOLD_INDEX.md) | This file | Everyone | Navigation & overview |
+| [/docs/reports/COND_FOLD_BEFORE_AFTER.md](/docs/reports/COND_FOLD_BEFORE_AFTER.md) | 6.8KB | Developers, Optimizers | Transformation examples |
+| [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md) | 8.4KB | Developers, Debuggers | Test commands, debugging |
+| [/docs/reports/COND_FOLD_INDEX.md](/docs/reports/COND_FOLD_INDEX.md) | This file | Everyone | Navigation & overview |
 
 ---
 
@@ -178,13 +178,13 @@ cargo run -p x3-bench --release
 ✅ Determinism: Guaranteed via BTree* and sorted iteration  
 
 ### Optimization Developer
-→ Read [COND_FOLD_docs/reports/QUICK_REFERENCE.md](COND_FOLD_docs/reports/QUICK_REFERENCE.md)  
+→ Read [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md)  
 ✅ How to test: `cargo test -p x3-opt --lib passes::cond_fold`  
 ✅ How to use: Already in default pipeline  
 ✅ How to debug: See debugging section  
 
 ### Code Reviewer
-→ Read [docs/reports/COND_FOLD_BEFORE_AFTER.md](docs/reports/COND_FOLD_BEFORE_AFTER.md)  
+→ Read [/docs/reports/COND_FOLD_BEFORE_AFTER.md](/docs/reports/COND_FOLD_BEFORE_AFTER.md)  
 ✅ See: Transformation examples with MIR  
 ✅ See: Algorithm walkthrough  
 ✅ See: Determinism guarantees  
@@ -225,23 +225,23 @@ cargo run -p x3-bench --release
 
 **Q: Is it deterministic?**  
 A: Yes, absolutely. Uses BTreeMap and sorted iteration.  
-→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#determinism-guarantees](docs/reports/COND_FOLD_BEFORE_AFTER.md#-determinism-guarantees)
+→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#determinism-guarantees](/docs/reports/COND_FOLD_BEFORE_AFTER.md#-determinism-guarantees)
 
 **Q: What's the performance impact?**  
 A: Positive. Removes branches = fewer bytecode = better gas.  
-→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#-gas/bytecode-impact](docs/reports/COND_FOLD_BEFORE_AFTER.md#-gasembytecode-impact)
+→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#-gas/bytecode-impact](/docs/reports/COND_FOLD_BEFORE_AFTER.md#-gasembytecode-impact)
 
 **Q: How do I run the tests?**  
 A: `cargo test -p x3-opt --lib passes::cond_fold`  
-→ See [COND_FOLD_docs/reports/QUICK_REFERENCE.md#-quick-test](COND_FOLD_docs/reports/QUICK_REFERENCE.md#-quick-test)
+→ See [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-quick-test](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-quick-test)
 
 **Q: Can I disable it?**  
 A: Yes, build a custom optimizer pass list.  
-→ See [COND_FOLD_docs/reports/QUICK_REFERENCE.md#-quick-faq](COND_FOLD_docs/reports/QUICK_REFERENCE.md#-quick-faq)
+→ See [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-quick-faq](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-quick-faq)
 
 **Q: What about side effects?**  
 A: Handled conservatively. Calls set vars to Overdefined.  
-→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#what-gets-folded](docs/reports/COND_FOLD_BEFORE_AFTER.md#-what-gets-folded)
+→ See [docs/reports/COND_FOLD_BEFORE_AFTER.md#what-gets-folded](/docs/reports/COND_FOLD_BEFORE_AFTER.md#-what-gets-folded)
 
 ---
 
@@ -269,13 +269,13 @@ A: Handled conservatively. Calls set vars to Overdefined.
 → See [archive/reports/COND_FOLD_INTEGRATION_COMPLETE.md#-implementation-details](archive/reports/COND_FOLD_INTEGRATION_COMPLETE.md#-implementation-details)
 
 **For debugging issues:**  
-→ See [COND_FOLD_docs/reports/QUICK_REFERENCE.md#-debugging](COND_FOLD_docs/reports/QUICK_REFERENCE.md#-debugging)
+→ See [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-debugging](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-debugging)
 
 **For extending the pass:**  
-→ See [COND_FOLD_docs/reports/QUICK_REFERENCE.md#-how-to-add-more-tests](COND_FOLD_docs/reports/QUICK_REFERENCE.md#-how-to-add-more-tests)
+→ See [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-how-to-add-more-tests](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-how-to-add-more-tests)
 
 **For integration patterns:**  
-→ See [COND_FOLD_docs/reports/QUICK_REFERENCE.md#-common-integration-patterns](COND_FOLD_docs/reports/QUICK_REFERENCE.md#-common-integration-patterns)
+→ See [COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-common-integration-patterns](COND_FOLD_docs/reports/docs/runbooks/getting-started/QUICK_REFERENCE.md#-common-integration-patterns)
 
 ---
 

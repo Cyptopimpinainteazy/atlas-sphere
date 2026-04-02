@@ -272,7 +272,7 @@ root/
 ## 📖 Documentation Files
 
 - This file: `docs/reports/BLOCKCHAIN_INTEGRATION_PHASE4.md`
-- Optimizer guide: `x3-opt/README.md` (existing)
+- Optimizer guide: `x3-opt/docs/root/README.md` (existing)
 - Benchmark results: `BENCHMARK_RESULTS_PHASE3.md` (existing)
 
 ## 🎯 Success Criteria Met

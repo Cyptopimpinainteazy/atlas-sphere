@@ -280,7 +280,7 @@ To become the foundational layer for decentralized computing and intelligent fin
 - Architecture: `docs/ARCHITECTURE.md`
 - Setup Guide: `docs/getting-started/QUICKSTART.md`
 - API Reference: `packages/`
-- Security: `SECURITY.md`
+- Security: `docs/security/docs/security/SECURITY.md`
 
 ### Technical Stack
 - **Runtime**: Substrate (Rust)
