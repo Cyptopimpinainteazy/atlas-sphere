@@ -2,7 +2,8 @@
 // GPU Memory Pooling for efficient VRAM management
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use thiserror::Error;
 use tracing::{debug, warn, span, Level};
 
@@ -88,7 +89,7 @@ impl GPUMemoryPool {
         let span = span!(Level::DEBUG, "memory_allocate", size = size);
         let _enter = span.enter();
 
-        let mut blocks = self.blocks.lock().unwrap();
+        let mut blocks = self.blocks.lock();
         
         // Find first-fit available block
         for block in blocks.iter_mut() {
@@ -99,7 +100,7 @@ impl GPUMemoryPool {
                 allocated_block.size = size;
                 
                 // Get next ID
-                let mut counter = self.allocation_counter.lock().unwrap();
+                let mut counter = self.allocation_counter.lock();
                 allocated_block.id = *counter;
                 *counter += 1;
 
@@ -124,10 +125,10 @@ impl GPUMemoryPool {
                 }
 
                 // Update metrics
-                let mut allocated = self.metrics.allocated_bytes.lock().unwrap();
+                let mut allocated = self.metrics.allocated_bytes.lock();
                 *allocated += size;
                 
-                let mut alloc_count = self.metrics.allocation_count.lock().unwrap();
+                let mut alloc_count = self.metrics.allocation_count.lock();
                 *alloc_count += 1;
 
                 debug!("✅ Allocated {} bytes (id: {})", size, allocated_block.id);
@@ -146,7 +147,7 @@ impl GPUMemoryPool {
         let span = span!(Level::DEBUG, "memory_deallocate", block_id = block_id);
         let _enter = span.enter();
 
-        let mut blocks = self.blocks.lock().unwrap();
+        let mut blocks = self.blocks.lock();
         
         // Find and mark block as free
         let mut block_pos = None;
@@ -159,10 +160,10 @@ impl GPUMemoryPool {
                 block_pos = Some(i);
                 
                 // Update metrics
-                let mut allocated = self.metrics.allocated_bytes.lock().unwrap();
+                let mut allocated = self.metrics.allocated_bytes.lock();
                 *allocated = allocated.saturating_sub(block.size);
                 
-                let mut dealloc_count = self.metrics.deallocation_count.lock().unwrap();
+                let mut dealloc_count = self.metrics.deallocation_count.lock();
                 *dealloc_count += 1;
                 
                 break;
@@ -201,7 +202,7 @@ impl GPUMemoryPool {
         let span = span!(Level::DEBUG, "memory_compact");
         let _enter = span.enter();
 
-        let mut blocks = self.blocks.lock().unwrap();
+        let mut blocks = self.blocks.lock();
         
         // Collect allocated blocks and free blocks separately
         let mut allocated: Vec<_> = blocks.iter().filter(|b| b.allocated).collect();
@@ -248,7 +249,7 @@ impl GPUMemoryPool {
 
     /// Get available memory
     pub fn available_memory(&self) -> u64 {
-        let blocks = self.blocks.lock().unwrap();
+        let blocks = self.blocks.lock();
         blocks
             .iter()
             .filter(|b| !b.allocated)
@@ -258,9 +259,9 @@ impl GPUMemoryPool {
 
     /// Get memory allocation statistics
     pub fn stats(&self) -> MemoryStats {
-        let blocks = self.blocks.lock().unwrap();
+        let blocks = self.blocks.lock();
         let allocated = blocks.iter().filter(|b| b.allocated).map(|b| b.size).sum::<u64>();
-        let fragmentation = *self.metrics.fragmentation_percent.lock().unwrap();
+        let fragmentation = *self.metrics.fragmentation_percent.lock();
 
         MemoryStats {
             total_size: self.total_size,
@@ -268,8 +269,8 @@ impl GPUMemoryPool {
             available_bytes: self.total_size - allocated,
             fragmentation_percent: fragmentation,
             block_count: blocks.len() as u32,
-            allocations_total: *self.metrics.allocation_count.lock().unwrap(),
-            deallocations_total: *self.metrics.deallocation_count.lock().unwrap(),
+            allocations_total: *self.metrics.allocation_count.lock(),
+            deallocations_total: *self.metrics.deallocation_count.lock(),
         }
     }
 
@@ -283,7 +284,7 @@ impl GPUMemoryPool {
             0.0
         };
 
-        let mut frag = self.metrics.fragmentation_percent.lock().unwrap();
+        let mut frag = self.metrics.fragmentation_percent.lock();
         *frag = fragmentation;
     }
 }

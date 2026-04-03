@@ -1,5 +1,10 @@
 //! # X3 Chain GPU Swarm Pallet
 //!
+//! **DEPRECATED**: The swarm pallet is superseded by the Inferstructor service.
+//! It is retained for reference and historical finality only and will be removed
+//! in a future release. Do not add new production dependencies on `pallet-swarm`.
+//! See `docs/openspec/changes/refactor-swarm-legacy/` for migration guidance.
+//!
 //! On-chain contributor registry, task lifecycle, commit-reveal jury verification,
 //! and reward distribution for the distributed GPU compute swarm.
 //!

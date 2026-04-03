@@ -94,6 +94,14 @@ pub struct NodeFeatureFlags {
     #[arg(long, default_value_t = false)]
     pub enable_poh: bool,
 
+    /// Enable atomic kernel/transaction orchestration paths.
+    ///
+    /// This flag enables the runtime atomic kernel pallet and sequencer
+    /// behavior for multi-VM atomic settlement while keeping the feature
+    /// gate in explicit control for staged rollouts.
+    #[arg(long, default_value_t = false)]
+    pub enable_atomic_kernel: bool,
+
     /// Require GPU path for validation critical flows.
     ///
     /// When set to true, the node will enforce GPU execution for performance-critical

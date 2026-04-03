@@ -156,6 +156,9 @@ The above error occurred in the <IpfsStoragePanel> component:
     at div
     at MonitoringDashboard
 
+error: could not compile `openssl-sys` (build script) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+lojak@x31:~/Desktop/x3-chain-master/apps/x3-desktop$ 
 Consider adding an error boundary to your tree to customize error handling behavior.
 Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
 

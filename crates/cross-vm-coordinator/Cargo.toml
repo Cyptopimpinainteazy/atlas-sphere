@@ -17,6 +17,11 @@ thiserror = "1.0"
 async-trait = "0.1"
 # SECURITY: OsRng for cryptographically secure HTLC secret generation
 rand = { version = "0.8", features = ["getrandom"] }
+# SECURITY: Zeroize on drop for sensitive key material
+zeroize = "1.7"
+# SECURITY: Cryptographic signing for HTLC operations
+secp256k1 = { version = "0.28", features = ["rand-std"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 
 # Optional: for production persistence with substrate offchain storage
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", optional = true }

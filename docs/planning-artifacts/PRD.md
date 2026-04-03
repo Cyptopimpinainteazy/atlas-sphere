@@ -14,6 +14,14 @@ This PRD focuses on the **critical path** to get X3 Chain's core functionality w
 
 **Success Criteria:** A working blockchain with WebSocket RPC, dual-VM execution (real, not mocks), and basic frontend for testing.
 
+**Supplemental Planning Artifact:** Post-MVP hardening, swarm governance, operator control-plane, and outward-action gaps are tracked in [X3_END_TO_END_GAPS_MASTER_PLAN.md](../../X3_END_TO_END_GAPS_MASTER_PLAN.md).
+
+**Supplemental Execution Status (2026-03-28):**
+- [x] Phase 4.5 Ticket 1/2 reservation-routing foundation is now live in `cross-chain-position-manager`; `cargo test -p cross-chain-position-manager --lib` passes with `5/5` tests.
+
+**Supplemental Execution Status (2026-03-29):**
+- [x] Phase 4.5 Ticket 3 inventory manager groundwork is live in `cross-chain-position-manager`; `cargo test -p cross-chain-position-manager --lib` now passes with `11/11` tests including inventory and obligation transitions.
+
 ---
 
 ## Week 1: Core Infrastructure

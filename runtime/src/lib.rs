@@ -45,11 +45,12 @@ use pallet_x3_settlement_engine;
 use pallet_x3_verifier;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
-use sp_core::{OpaqueMetadata, H256, U256};
+use sp_core::{OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
-        AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify,
+        AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto,
+        IdentifyAccount, Verify,
     },
     MultiAddress, MultiSignature, Perbill,
 };
@@ -152,6 +153,17 @@ parameter_types! {
     pub const MaxPreparedCrossVmOps: u32 = 1024;
     pub const MaxPreparedOpsPerBlock: u32 = 64;
     pub const RequireCrossVmProof: bool = false;
+    /// EVM bridge escrow contract address for atomic cross-VM swaps.
+    pub BridgeEvmEscrow: H160 = H160([
+        0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+        0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+    ]);
+    /// SVM bridge escrow program address for atomic cross-VM swaps.
+    pub BridgeSvmEscrow: [u8; 32] = [
+        0x58, 0x33, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x73, 0x63, 0x72, 0x6f, 0x77,
+        0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
+        0x31, 0x31, 0x31, 0x31,
+    ];
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
         // Keep max execution budget below slot time (200ms) to avoid author/import divergence.
         Weight::from_parts((WEIGHT_REF_TIME_PER_SECOND / 1000) * 150, 5 * 1024 * 1024),
@@ -224,7 +236,13 @@ parameter_types! {
     pub const SeqPerByteFee: u128 = 10;  // 10 nATLAS per byte
     /// Minimum base fee per transaction.
     pub const SeqBaseFee: u128 = 1_000;  // 1 µATLAS
+    /// Enable X3 Atomic Kernel.
+    pub const AtomicKernelEnabled: bool = true;
 }
+
+/// Runtime constants for performance and safety parameters.
+pub const ATOMIC_KERNEL_VERSION: u32 = 1;
+pub const ATOMIC_KERNEL_MAX_BATCH_GAS: u64 = 12_000_000; // consistent with DefaultEvmGasLimit
 
 // ── DA pallet constants ──────────────────────────────────────────────────────
 parameter_types! {
@@ -245,6 +263,7 @@ construct_runtime!(
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,
         Grandpa: pallet_grandpa,
+        Session: pallet_session,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Scheduler: pallet_scheduler,
@@ -279,6 +298,7 @@ construct_runtime!(
         Timestamp: pallet_timestamp,
         Aura: pallet_aura,
         Grandpa: pallet_grandpa,
+        Session: pallet_session,
         Balances: pallet_balances,
         TransactionPayment: pallet_transaction_payment,
         Scheduler: pallet_scheduler,
@@ -400,17 +420,35 @@ impl pallet_aura::Config for Runtime {
     type AllowMultipleBlocksPerSlot = ConstBool<true>; // Enable multiple blocks per slot for higher TPS
 }
 
+parameter_types! {
+    pub const ReportLongevity: u64 = 1000;
+}
+
+impl pallet_session::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type ValidatorId = <Self as frame_system::Config>::AccountId;
+    type ValidatorIdOf = ConvertInto;
+    type ShouldEndSession = pallet_session::PeriodicSessions<ConstU32<6>, ConstU32<0>>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<ConstU32<6>, ConstU32<0>>;
+    type SessionManager = ();
+    type SessionHandler = <SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
+    type Keys = SessionKeys;
+    type WeightInfo = pallet_session::weights::SubstrateWeight<Self>;
+}
+
+pub type Historical = pallet_session::historical::Pallet<Runtime>;
+
+impl pallet_session::historical::Config for Runtime {
+    type FullIdentification = AccountId;
+    type FullIdentificationOf = ConvertInto;
+}
+
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    // KeyOwnerProof is Void when we don't have session pallet
     type KeyOwnerProof = sp_core::Void;
-    // Equivocation reporting disabled without session/offences pallets
-    // To fully enable, add: session, historical, offences, authorship pallets
-    // For now, equivocations are still detected and logged in GRANDPA
     type EquivocationReportSystem = ();
     type WeightInfo = ();
     type MaxAuthorities = MaxAuthorities;
-    // Set to non-zero for proper set tracking (enables historical set queries)
     type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
 }
 
@@ -540,6 +578,8 @@ impl pallet_x3_kernel::Config for Runtime {
     type X3Adapter = pallet_x3_kernel::wasm_adapters::WasmX3Adapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
+    type BridgeEvmEscrow = BridgeEvmEscrow;
+    type BridgeSvmEscrow = BridgeSvmEscrow;
 }
 
 impl pallet_x3_coin::Config for Runtime {

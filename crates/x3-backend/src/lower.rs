@@ -110,7 +110,7 @@ impl BytecodeCompiler {
             let init_const = self.eval_const_expr(&global.initializer)?;
 
             entries.push(GlobalEntry {
-                name: format!("global_{}", slot),
+                name: format!("global_{slot}"),
                 type_tag: type_to_tag(&global.ty),
                 mutable: true, // Mutability tracking requires HIR annotation propagation
                 init_const,
@@ -607,7 +607,7 @@ impl BytecodeCompiler {
                 args,
             } => {
                 return Err(BackendError::new(
-                    BackendErrorKind::NotImplemented(format!("VM intrinsic: {:?}", intrinsic)),
+                    BackendErrorKind::NotImplemented(format!("VM intrinsic: {intrinsic:?}")),
                     expr.span,
                 ));
             }

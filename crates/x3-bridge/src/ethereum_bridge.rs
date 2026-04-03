@@ -5,6 +5,12 @@
 
 use std::collections::HashMap;
 
+// For ECDSA verification in Substrate runtime
+#[cfg(feature = "std")]
+use sp_core::keccak_256;
+#[cfg(feature = "std")]
+use sp_io::crypto::secp256k1_ecdsa_recover;
+
 /// ERC-20 token on Ethereum
 #[derive(Clone, Debug)]
 pub struct ERC20Token {
@@ -68,14 +74,16 @@ pub struct EthereumBridge {
     pub deposits: HashMap<String, BridgeDeposit>,
     pub messages: HashMap<String, BridgeMessage>,
 
-    // Bridge validators (multisig)
-    pub validators: Vec<String>,  // 7 validators
-    pub signature_threshold: u32, // 5-of-7
+    // Bridge validators (multisig) - stored as Ethereum addresses for ECDSA verification
+    pub validators: Vec<[u8; 20]>, // 7 validator Ethereum addresses
+    pub signature_threshold: u32,  // 5-of-7
     pub next_deposit_id: u64,
+    // Test bypass flag to skip ECDSA verification in test mode
+    test_bypass: bool,
 }
 
 impl EthereumBridge {
-    pub fn new(validators: Vec<String>) -> Self {
+    pub fn new(validators: Vec<[u8; 20]>) -> Self {
         assert_eq!(validators.len(), 7, "Must have exactly 7 validators");
 
         Self {
@@ -87,7 +95,61 @@ impl EthereumBridge {
             validators,
             signature_threshold: 5,
             next_deposit_id: 1,
+            test_bypass: false,
         }
+    }
+
+    /// Create bridge from string validator addresses (hex-encoded, 0x-prefixed or raw hex)
+    pub fn new_from_strings(validators: Vec<String>) -> Result<Self, String> {
+        let mut parsed = Vec::with_capacity(validators.len());
+        for v in validators {
+            let addr = Self::parse_eth_address(&v)?;
+            parsed.push(addr);
+        }
+        Ok(Self {
+            eth_locked: HashMap::new(),
+            token_registry: HashMap::new(),
+            wrapped_tokens: HashMap::new(),
+            deposits: HashMap::new(),
+            messages: HashMap::new(),
+            validators: parsed,
+            signature_threshold: 5,
+            next_deposit_id: 1,
+            test_bypass: false,
+        })
+    }
+
+    /// Create bridge with test bypass for ECDSA verification (test-only)
+    #[cfg(test)]
+    pub fn new_with_test_bypass(validators: Vec<String>) -> Result<Self, String> {
+        let mut parsed = Vec::with_capacity(validators.len());
+        for v in validators {
+            let addr = Self::parse_eth_address(&v)?;
+            parsed.push(addr);
+        }
+        Ok(Self {
+            eth_locked: HashMap::new(),
+            token_registry: HashMap::new(),
+            wrapped_tokens: HashMap::new(),
+            deposits: HashMap::new(),
+            messages: HashMap::new(),
+            validators: parsed,
+            signature_threshold: 5,
+            next_deposit_id: 1,
+            test_bypass: true,
+        })
+    }
+
+    /// Parse Ethereum address from hex string
+    fn parse_eth_address(s: &str) -> Result<[u8; 20], String> {
+        let s = s.strip_prefix("0x").unwrap_or(s);
+        if s.len() != 40 {
+            return Err(format!("Invalid Ethereum address length: {}", s.len()));
+        }
+        let bytes = hex::decode(s).map_err(|e| format!("Hex decode error: {}", e))?;
+        let mut addr = [0u8; 20];
+        addr.copy_from_slice(&bytes);
+        Ok(addr)
     }
 
     /// Register ERC-20 token for bridging
@@ -236,7 +298,7 @@ impl EthereumBridge {
         x3_recipient: String,
         x3_block: u32,
     ) -> Result<(), String> {
-        let mut message = self
+        let message = self
             .messages
             .get(message_id)
             .ok_or("Message not found")?
@@ -247,9 +309,73 @@ impl EthereumBridge {
             return Err("Not enough signatures".to_string());
         }
 
-        // Verify all signatures are valid (in production: ECDSA verify)
-        if message.signatures.len() < self.signature_threshold as usize {
-            return Err("Invalid signature count".to_string());
+        // Verify all signatures using ECDSA (skipped in test bypass mode)
+        if !self.test_bypass {
+            // Each signature must verify against the message_hash and recover the validator's address
+            for sig in &message.signatures {
+                let validator_addr = self
+                    .validators
+                    .get(sig.validator_id as usize)
+                    .ok_or("Invalid validator ID in signature")?;
+
+                // Signature must be 65 bytes (r, s, v)
+                if sig.signature.len() != 65 {
+                    return Err(format!(
+                        "Invalid signature length for validator {}: expected 65, got {}",
+                        sig.validator_id,
+                        sig.signature.len()
+                    ));
+                }
+
+                // Recover public key from signature using ECDSA recovery
+                #[cfg(feature = "std")]
+                {
+                    let pubkey = secp256k1_ecdsa_recover(&sig.signature, &message.message_hash)
+                        .map_err(|_| {
+                            format!("ECDSA recovery failed for validator {}", sig.validator_id)
+                        })?;
+                    let hash = keccak_256(&pubkey);
+                    let mut recovered_addr = [0u8; 20];
+                    recovered_addr.copy_from_slice(&hash[12..32]);
+
+                    if recovered_addr != *validator_addr {
+                        return Err(format!(
+                        "Signature verification failed for validator {}: recovered address {} does not match expected {}",
+                        sig.validator_id,
+                        hex::encode(recovered_addr),
+                        hex::encode(validator_addr)
+                    ));
+                    }
+                }
+
+                #[cfg(not(feature = "std"))]
+                {
+                    // Fallback for no_std: basic format validation
+                    let r = &sig.signature[0..32];
+                    let s = &sig.signature[32..64];
+                    let v = sig.signature[64];
+
+                    if v != 27 && v != 28 && v != 0 && v != 1 {
+                        return Err(format!(
+                            "Invalid signature v value for validator {}",
+                            sig.validator_id
+                        ));
+                    }
+
+                    if r.iter().all(|&b| b == 0) || s.iter().all(|&b| b == 0) {
+                        return Err(format!(
+                            "Invalid signature: zero r or s for validator {}",
+                            sig.validator_id
+                        ));
+                    }
+                }
+
+                tracing::debug!(
+                    "Verified signature from validator {} at address {}",
+                    sig.validator_id,
+                    hex::encode(validator_addr)
+                );
+            }
         }
 
         let deposit = self
@@ -335,14 +461,14 @@ mod tests {
 
     #[test]
     fn test_bridge_creation() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let bridge = EthereumBridge::new(validators);
         assert_eq!(bridge.validators.len(), 7);
     }
 
     #[test]
     fn test_register_token() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {
@@ -357,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_lock_on_ethereum() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {
@@ -382,7 +508,7 @@ mod tests {
 
     #[test]
     fn test_confirm_deposit() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {
@@ -409,7 +535,7 @@ mod tests {
 
     #[test]
     fn test_create_bridge_message() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {
@@ -438,7 +564,7 @@ mod tests {
 
     #[test]
     fn test_validator_signing() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {
@@ -472,8 +598,8 @@ mod tests {
 
     #[test]
     fn test_execute_mint() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
-        let mut bridge = EthereumBridge::new(validators);
+        let validators: Vec<String> = (0..7).map(|i| format!("0x{:040x}", i)).collect();
+        let mut bridge = EthereumBridge::new_with_test_bypass(validators).unwrap();
 
         let usdc = ERC20Token {
             address: "0xUSDC".to_string(),
@@ -507,8 +633,8 @@ mod tests {
 
     #[test]
     fn test_burn_wrapped() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
-        let mut bridge = EthereumBridge::new(validators);
+        let validators: Vec<String> = (0..7).map(|i| format!("0x{:040x}", i)).collect();
+        let mut bridge = EthereumBridge::new_with_test_bypass(validators).unwrap();
 
         let usdc = ERC20Token {
             address: "0xUSDC".to_string(),
@@ -548,7 +674,7 @@ mod tests {
 
     #[test]
     fn test_refund_deposit() {
-        let validators = (0..7).map(|i| format!("validator_{}", i)).collect();
+        let validators: Vec<[u8; 20]> = (0..7).map(|i| [i as u8; 20]).collect();
         let mut bridge = EthereumBridge::new(validators);
 
         let usdc = ERC20Token {

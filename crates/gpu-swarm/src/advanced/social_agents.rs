@@ -36,7 +36,7 @@ pub struct SocialMessage {
 pub struct SocialAgentManager {
     agents: HashMap<String, SocialAgent>,
     feature_flags: HashMap<String, bool>,
-    message_queue: std::sync::Mutex<Vec<SocialMessage>>,
+    message_queue: parking_lot::Mutex<Vec<SocialMessage>>,
 }
 
 impl SocialAgentManager {
@@ -44,7 +44,7 @@ impl SocialAgentManager {
         SocialAgentManager {
             agents: HashMap::new(),
             feature_flags: HashMap::new(),
-            message_queue: std::sync::Mutex::new(Vec::new()),
+            message_queue: parking_lot::Mutex::new(Vec::new()),
         }
     }
 
@@ -88,7 +88,7 @@ impl SocialAgentManager {
             return Err(format!("Agent {} is disabled", message.agent_id).into());
         }
 
-        let mut queue = self.message_queue.lock().unwrap();
+        let mut queue = self.message_queue.lock();
         queue.push(message.clone());
         
         // Sort by priority (descending)
@@ -103,7 +103,7 @@ impl SocialAgentManager {
         let span = span!(Level::DEBUG, "process_messages");
         let _enter = span.enter();
 
-        let mut queue = self.message_queue.lock().unwrap();
+        let mut queue = self.message_queue.lock();
         let mut processed = 0;
 
         while let Some(message) = queue.first() {
@@ -235,7 +235,7 @@ impl SocialAgentManager {
 
     /// Get pending message count
     pub fn pending_message_count(&self) -> usize {
-        self.message_queue.lock().unwrap().len()
+        self.message_queue.lock().len()
     }
 }
 

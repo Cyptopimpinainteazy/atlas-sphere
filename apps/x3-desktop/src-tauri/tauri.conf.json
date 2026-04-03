@@ -27,7 +27,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' asset: http://asset.localhost; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' asset:; connect-src ipc: http://ipc.localhost 'self' https://rpc.x3-chain.io https://rpc.x3-chain.io:9944 wss://rpc.x3-chain.io wss://rpc.x3-chain.io:9944 https://ws.x3star.net wss://ws.x3star.net http://localhost:5173 ws://localhost:5173 http://127.0.0.1:5173 ws://127.0.0.1:5173 http://localhost:9944 ws://localhost:9944 http://127.0.0.1:9944 ws://127.0.0.1:9944 http://localhost:11434 http://127.0.0.1:11434; frame-src 'none'; child-src 'none'; object-src 'none'; worker-src 'self' blob:;"
+      "csp": "default-src 'self' asset: http://asset.localhost; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost blob: data:; font-src 'self' asset:; connect-src ipc: http://localhost:5173 wss://localhost:5173 https://rpc.x3-chain.io wss://rpc.x3-chain.io; frame-src 'none'; child-src 'none'; object-src 'none'; worker-src 'self' blob:;"
     },
     "trayIcon": null
   },

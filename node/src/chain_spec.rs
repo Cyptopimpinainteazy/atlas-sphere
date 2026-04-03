@@ -10,7 +10,8 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 use x3_chain_runtime::{
     x3_kernel_default_assets, AccountId, AtlasKernelConfig, AuraConfig, BalancesConfig,
-    GrandpaConfig, RuntimeGenesisConfig, Signature, SystemConfig, X3CoinConfig, WASM_BINARY,
+    GrandpaConfig, RuntimeGenesisConfig, SessionConfig, SessionKeys, Signature, SystemConfig,
+    X3CoinConfig, WASM_BINARY,
 };
 
 /// Chain specification specialized to this runtime's genesis configuration.
@@ -110,6 +111,11 @@ fn assert_no_forbidden_live_seed() -> Result<(), String> {
 /// Environment variables:
 /// - `CHAIN_SPEC`: Override default chain spec (e.g., "dev", "staging", "production")
 /// - `X3_ENVIRONMENT`: Set environment tier for auto-config selection
+/// - `X3_STAGING_AUTHORITIES`: JSON array of staging validator keys (format: [{"aura":"SS58","grandpa":"SS58"},...])
+/// - `X3_TESTNET_AUTHORITIES`: JSON array of testnet validator keys
+/// - `X3_PRODUCTION_AUTHORITIES`: JSON array of production validator keys
+/// - `TESTNET_BOOTNODES`: Comma-separated list of bootnode multiaddrs
+/// - `X3_DEV_SEED`: Development seed hint (must not contain forbidden seeds like "Alice", "Bob")
 pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     let effective_id = if id.is_empty() {
         // Check environment for chain spec override
@@ -206,16 +212,13 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 /// Build the staging `ChainSpec` matching the release network parameters.
 pub fn staging_config() -> Result<ChainSpec, String> {
+    assert_no_forbidden_live_seed()?;
     // Staging networks are expected to have a proper WASM runtime embedded.
     // Keep the strict check here so that any missing or invalid blob fails
     // fast during chain spec construction.
     let wasm_binary =
         WASM_BINARY.ok_or_else(|| "X3 Chain WASM binary not available".to_string())?;
-    let initial_authorities = vec![
-        authority_keys_from_seed("AtlasAlpha")?,
-        authority_keys_from_seed("AtlasBeta")?,
-        authority_keys_from_seed("AtlasGamma")?,
-    ];
+    let initial_authorities = parse_authorities_from_env("X3_STAGING_AUTHORITIES")?;
     let bootnodes = load_bootnodes();
     let endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("AtlasFoundation")?,
@@ -368,8 +371,20 @@ fn x3_chain_genesis(
         .collect();
 
     let grandpa_authorities: Vec<(GrandpaId, u64)> = initial_authorities
+        .iter()
+        .map(|(_, grandpa)| (grandpa.clone(), 1))
+        .collect();
+
+    // Build session keys: (validator_id, validator_id, SessionKeys { aura })
+    let session_keys: Vec<(AccountId, AccountId, SessionKeys)> = initial_authorities
         .into_iter()
-        .map(|(_, grandpa)| (grandpa, 1))
+        .map(|(aura, _grandpa)| {
+            let mut account_bytes = [0u8; 32];
+            account_bytes.copy_from_slice(&aura.encode()[..32]);
+            let account_id = AccountId::from(account_bytes);
+            let keys = SessionKeys { aura: aura };
+            (account_id.clone(), account_id, keys)
+        })
         .collect();
 
     RuntimeGenesisConfig {
@@ -384,6 +399,9 @@ fn x3_chain_genesis(
         grandpa: GrandpaConfig {
             authorities: grandpa_authorities,
             _config: Default::default(),
+        },
+        session: SessionConfig {
+            keys: session_keys,
         },
         atlas_kernel: AtlasKernelConfig {
             assets: x3_kernel_default_assets(),

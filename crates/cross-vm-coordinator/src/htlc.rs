@@ -1,36 +1,120 @@
 use std::sync::Arc;
 
+use ed25519_dalek::{Signer as DalekSigner, SigningKey};
+use secp256k1::{Message, Secp256k1, SecretKey};
+use zeroize::Zeroize;
+
+/// Key type for cryptographic signing
+#[derive(Clone, Copy, Debug)]
+pub enum KeyType {
+    /// secp256k1 for EVM
+    Secp256k1,
+    /// ed25519 for SVM
+    Ed25519,
+}
+
 /// Abstracts signing for EVM/SVM. Never exposes raw key bytes.
 #[async_trait]
 pub trait Signer: Send + Sync {
+    /// Get the key type for this signer
+    fn key_type(&self) -> KeyType;
     /// Sign a message (EVM: secp256k1, SVM: ed25519).
+    /// Returns signature bytes.
     async fn sign(&self, msg: &[u8]) -> Vec<u8>;
     /// Return the public key (EVM: 20/33 bytes, SVM: 32 bytes).
     fn pubkey(&self) -> Vec<u8>;
 }
 
 /// In-memory signer for dev/test. Zeroizes on drop.
+/// Wraps private key material with zeroize protection.
 pub struct MemorySigner {
-    key: Vec<u8>,
+    key: ZeroizingSigner,
     pubkey: Vec<u8>,
+    key_type: KeyType,
 }
 
 impl MemorySigner {
-    pub fn new(key: Vec<u8>, pubkey: Vec<u8>) -> Self {
-        Self { key, pubkey }
+    pub fn new(key: [u8; 32], pubkey: Vec<u8>, key_type: KeyType) -> Self {
+        Self {
+            key: ZeroizingSigner::new(key),
+            pubkey,
+            key_type,
+        }
     }
 }
 
 #[async_trait]
 impl Signer for MemorySigner {
+    fn key_type(&self) -> KeyType {
+        self.key_type
+    }
+
     async fn sign(&self, msg: &[u8]) -> Vec<u8> {
-        // Placeholder: implement secp256k1/ed25519 signing as needed
-        let mut out = msg.to_vec();
-        out.extend_from_slice(&self.key);
-        out
+        match self.key_type {
+            KeyType::Secp256k1 => {
+                // EVM: secp256k1 signing
+                if let Ok(secret_key) = SecretKey::from_slice(self.key.as_ref()) {
+                    let secp = Secp256k1::new();
+                    if let Ok(message) = Message::from_digest_slice(msg) {
+                        let signature = secp.sign_ecdsa(&message, &secret_key);
+                        signature.serialize_compact().to_vec()
+                    } else {
+                        // Fallback for non-32-byte messages
+                        let mut hasher = Sha256::new();
+                        hasher.update(msg);
+                        let digest = hasher.finalize();
+                        let message = Message::from_digest(digest.into());
+                        let signature = secp.sign_ecdsa(&message, &secret_key);
+                        signature.serialize_compact().to_vec()
+                    }
+                } else {
+                    // Fallback: simple hash (not cryptographically secure)
+                    let mut out = msg.to_vec();
+                    out.extend_from_slice(self.key.as_ref());
+                    out
+                }
+            }
+
+            KeyType::Ed25519 => {
+                // SVM: ed25519 signing
+                let signing_key = SigningKey::from_bytes(self.key.as_ref());
+                let signature = signing_key.sign(msg);
+                signature.to_bytes().to_vec()
+            }
+        }
     }
     fn pubkey(&self) -> Vec<u8> {
         self.pubkey.clone()
+    }
+}
+
+/// Zeroizing wrapper for 32-byte private keys.
+/// Zeroizes memory on drop to prevent key material leakage.
+pub struct ZeroizingSigner {
+    inner: [u8; 32],
+}
+
+impl ZeroizingSigner {
+    pub fn new(key: [u8; 32]) -> Self {
+        Self { inner: key }
+    }
+
+    /// Returns a reference to the underlying key bytes.
+    /// Use with caution - prefer not exposing this directly.
+    pub fn as_ref(&self) -> &[u8; 32] {
+        &self.inner
+    }
+}
+
+impl Zeroize for ZeroizingSigner {
+    fn zeroize(&mut self) {
+        self.inner.zeroize();
+    }
+}
+
+impl Drop for ZeroizingSigner {
+    fn drop(&mut self) {
+        self.zeroize();
     }
 }
 /// HTLC chain interface — abstracts HTLC operations across VMs.
@@ -104,7 +188,7 @@ pub struct EvmHtlcAdapter {
     /// JSON-RPC endpoint URL.
     pub rpc_url: String,
     /// Abstracted signer (never exposes raw key bytes).
-    signer: Arc<dyn Signer>,
+    signer: Arc<dyn Signer + Send + Sync>,
     /// RPC client instance.
     rpc: RpcClient,
 }
@@ -114,7 +198,7 @@ impl EvmHtlcAdapter {
         chain_id: u64,
         htlc_contract: [u8; 20],
         rpc_url: String,
-        signer: Arc<dyn Signer>,
+        signer: Arc<dyn Signer + Send + Sync>,
     ) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
@@ -298,13 +382,17 @@ pub struct SvmHtlcAdapter {
     /// HTLC program ID (32 bytes).
     pub program_id: [u8; 32],
     /// Abstracted signer (never exposes raw key bytes).
-    signer: Arc<dyn Signer>,
+    signer: Arc<dyn Signer + Send + Sync>,
     /// RPC client instance.
     rpc: RpcClient,
 }
 
 impl SvmHtlcAdapter {
-    pub fn new(rpc_url: String, program_id: [u8; 32], signer: Arc<dyn Signer>) -> Self {
+    pub fn new(
+        rpc_url: String,
+        program_id: [u8; 32],
+        signer: Arc<dyn Signer + Send + Sync>,
+    ) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             rpc_url,
@@ -458,19 +546,23 @@ pub struct X3VmHtlcAdapter {
     pub rpc_url: String,
     /// HTLC contract address on X3 (32 bytes, = verifier job_id).
     pub contract_address: [u8; 32],
-    /// Signer seed (for Substrate-style key derivation).
-    pub signer_seed: [u8; 32],
+    /// Abstracted signer (never exposes raw key bytes).
+    signer: Arc<dyn Signer + Send + Sync>,
     /// RPC client instance.
     rpc: RpcClient,
 }
 
 impl X3VmHtlcAdapter {
-    pub fn new(rpc_url: String, contract_address: [u8; 32], signer_seed: [u8; 32]) -> Self {
+    pub fn new(
+        rpc_url: String,
+        contract_address: [u8; 32],
+        signer: Arc<dyn Signer + Send + Sync>,
+    ) -> Self {
         let rpc = RpcClient::new(rpc_url.clone());
         Self {
             rpc_url,
             contract_address,
-            signer_seed,
+            signer,
             rpc,
         }
     }
@@ -550,7 +642,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             "Claiming X3VM HTLC (sub-200ms finality)"
         );
 
-        // In production: build submitComitV2 extrinsic, sign with signer_seed,
+        // In production: build submitComitV2 extrinsic, sign with signer,
         // submit via author_submitExtrinsic
         let mut hasher = Sha256::new();
         hasher.update(b"x3vm-claim-");

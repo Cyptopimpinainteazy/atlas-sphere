@@ -46,11 +46,45 @@ pub trait CrossVmDispatcher {
 
     /// Get the SVM lamport balance for a pubkey
     fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64;
+
+    /// Get the EVM bridge escrow address
+    fn get_evm_bridge_escrow(&self) -> [u8; 20];
+
+    /// Get the SVM bridge escrow program address
+    fn get_svm_bridge_escrow(&self) -> [u8; 32];
 }
 
 /// Default no-op dispatcher (used when no runtime dispatcher is configured).
 /// Produces synthetic results for testing and genesis initialization.
-pub struct NoOpDispatcher;
+pub struct NoOpDispatcher {
+    evm_escrow: [u8; 20],
+    svm_escrow: [u8; 32],
+}
+
+impl NoOpDispatcher {
+    /// Create a new NoOpDispatcher with configurable escrow addresses
+    pub fn new(evm_escrow: [u8; 20], svm_escrow: [u8; 32]) -> Self {
+        Self {
+            evm_escrow,
+            svm_escrow,
+        }
+    }
+
+    /// Create a testnet dispatcher with placeholder addresses
+    pub fn testnet() -> Self {
+        Self::new(
+            [
+                0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78,
+                0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+            ],
+            [
+                0x58, 0x33, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x73, 0x63, 0x72, 0x6f, 0x77,
+                0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
+                0x31, 0x31, 0x31, 0x31,
+            ],
+        )
+    }
+}
 
 impl CrossVmDispatcher for NoOpDispatcher {
     fn execute_evm_tx(
@@ -78,6 +112,14 @@ impl CrossVmDispatcher for NoOpDispatcher {
 
     fn get_svm_balance(&self, _pubkey: &[u8; 32]) -> u64 {
         u64::MAX
+    }
+
+    fn get_evm_bridge_escrow(&self) -> [u8; 20] {
+        self.evm_escrow
+    }
+
+    fn get_svm_bridge_escrow(&self) -> [u8; 32] {
+        self.svm_escrow
     }
 }
 
@@ -599,7 +641,7 @@ impl CrossVmBridge {
     /// Execute pending operations (Legacy stub for tests. Do NOT use in production.)
     /// Delegates to `execute_pending_with_dispatcher(&NoOpDispatcher)`.
     pub fn execute_pending(&mut self) -> Result<Vec<CrossVmResult>, DispatchError> {
-        self.execute_pending_with_dispatcher(&NoOpDispatcher)
+        self.execute_pending_with_dispatcher(&NoOpDispatcher::testnet())
     }
 
     /// Execute pending operations using the provided VM dispatcher.
@@ -856,7 +898,7 @@ impl CrossVmBridge {
         &self,
         operation: &CrossVmOperation,
     ) -> Result<CrossVmResult, DispatchError> {
-        self.execute_operation_with_dispatcher(operation, &NoOpDispatcher)
+        self.execute_operation_with_dispatcher(operation, &NoOpDispatcher::testnet())
     }
 
     // =========================================================================
@@ -1399,8 +1441,8 @@ impl CrossVmBridge {
                 let len = svm_party.len().min(32);
                 svm_key[..len].copy_from_slice(&svm_party[..len]);
 
-                let evm_escrow = [0u8; 20];
-                let svm_escrow_program = [0u8; 32];
+                let evm_escrow = dispatcher.get_evm_bridge_escrow();
+                let svm_escrow_program = dispatcher.get_svm_bridge_escrow();
 
                 let mut evm_lock_input = b"LOCK_EVM_SWAP:".to_vec();
                 evm_lock_input.extend_from_slice(&evm_amount.to_le_bytes());
@@ -1602,7 +1644,7 @@ mod tests {
     #[test]
     fn test_execute_with_noop_dispatcher() {
         let mut bridge = CrossVmBridge::new();
-        let dispatcher = NoOpDispatcher;
+        let dispatcher = NoOpDispatcher::testnet();
 
         let op = CrossVmOperation::TransferToEvm {
             source: vec![1; 32],
@@ -2676,6 +2718,8 @@ mod kernel_dispatcher_integration_tests {
         evm_calls: core::cell::Cell<u32>,
         svm_calls: core::cell::Cell<u32>,
         fail_next_svm_prepare: core::cell::Cell<bool>,
+        evm_escrow: [u8; 20],
+        svm_escrow: [u8; 32],
     }
 
     impl StubKernelDispatcher {
@@ -2686,6 +2730,15 @@ mod kernel_dispatcher_integration_tests {
                 evm_calls: core::cell::Cell::new(0),
                 svm_calls: core::cell::Cell::new(0),
                 fail_next_svm_prepare: core::cell::Cell::new(false),
+                evm_escrow: [
+                    0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56,
+                    0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+                ],
+                svm_escrow: [
+                    0x58, 0x33, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x73, 0x63, 0x72, 0x6f,
+                    0x77, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
+                    0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
+                ],
             }
         }
 
@@ -2801,6 +2854,14 @@ mod kernel_dispatcher_integration_tests {
 
         fn get_svm_balance(&self, pubkey: &[u8; 32]) -> u64 {
             self.svm_balances.borrow().get(pubkey).copied().unwrap_or(0)
+        }
+
+        fn get_evm_bridge_escrow(&self) -> [u8; 20] {
+            self.evm_escrow
+        }
+
+        fn get_svm_bridge_escrow(&self) -> [u8; 32] {
+            self.svm_escrow
         }
     }
 

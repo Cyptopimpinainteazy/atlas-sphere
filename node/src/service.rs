@@ -1,4 +1,5 @@
 use crate::flash_finality::FlashFinalityBridge;
+use crate::metrics::X3PrometheusMetrics;
 use crate::rpc_middleware::{RateLimitConfig, RateLimiter};
 use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
 use futures_util::StreamExt;
@@ -56,6 +57,8 @@ pub struct NodeFeatureFlags {
     pub enable_flash_finality: bool,
     /// Enable PoH digest validation path.
     pub enable_poh: bool,
+    /// Enable the atomic kernel runtime and sequencer processing path.
+    pub enable_atomic_kernel: bool,
     /// Require GPU path for validation critical flows.
     pub gpu_required: bool,
 }
@@ -331,6 +334,15 @@ pub fn new_full(
         log::info!("⚡ Flash Finality flag is set; GRANDPA will be disabled for this node");
     }
 
+    if feature_flags.enable_atomic_kernel {
+        log::info!(
+            "🧩 Atomic kernel feature gate enabled; sequencer and settlement pipelines are active"
+        );
+        // Additional atomic kernel activation hooks can be added here.
+    } else {
+        log::info!("🧩 Atomic kernel feature gate is disabled (default)");
+    }
+
     let genesis_hash = client
         .block_hash(0)?
         .ok_or_else(|| ServiceError::Other("Genesis block not found".to_string()))?;
@@ -384,6 +396,23 @@ pub fn new_full(
     let chain_name = config.chain_spec.name().to_string();
     let prometheus_registry = config.prometheus_registry().cloned();
     let role_for_grandpa = role.clone();
+
+    // Register X3-specific Prometheus metrics alongside Substrate's built-in metrics.
+    // These counters track block production, comit lifecycle, and dual-VM execution
+    // and are automatically scraped via Substrate's /metrics endpoint.
+    let x3_metrics: Option<std::sync::Arc<X3PrometheusMetrics>> =
+        prometheus_registry.as_ref().and_then(|reg| {
+            match X3PrometheusMetrics::register(reg) {
+                Ok(m) => {
+                    log::info!("📊 X3 Prometheus metrics registered successfully");
+                    Some(std::sync::Arc::new(m))
+                }
+                Err(e) => {
+                    log::warn!("⚠️ Failed to register X3 Prometheus metrics: {}", e);
+                    None
+                }
+            }
+        });
 
     if feature_flags.enable_parallel_proposer {
         log::warn!(
@@ -593,6 +622,7 @@ pub fn new_full(
     // Spawn a background task to watch finalized blocks and log events with emojis
     {
         let client = client.clone();
+        let metrics_for_import = x3_metrics.clone();
         task_manager
             .spawn_handle()
             .spawn("import-watcher", None, async move {
@@ -601,6 +631,9 @@ pub fn new_full(
                 let mut notifications = client.import_notification_stream();
                 while let Some(notification) = notifications.next().await {
                     let number: u64 = (*notification.header.number()).saturated_into();
+                    if let Some(ref m) = metrics_for_import {
+                        m.blocks_produced.inc();
+                    }
                     // Purple color for block imported
                     log::info!(
                         "\x1b[35m📦 Block imported: #{} — syncing state\x1b[0m",

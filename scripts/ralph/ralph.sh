@@ -13,9 +13,20 @@ set -e
 # Parse arguments
 TOOL="amp"  # Default to amp for backwards compatibility
 MAX_ITERATIONS=10
+STRICT_MODE=false
 
 # Determine script directory early (used for default paths and config loading)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+PROMPT_FILE="$SCRIPT_DIR/prompt.md"
+if [[ ! -f "$PROMPT_FILE" && -f "$SCRIPT_DIR/../../ralph/prompt.md" ]]; then
+  PROMPT_FILE="$SCRIPT_DIR/../../ralph/prompt.md"
+fi
+
+CLAUDE_FILE="$SCRIPT_DIR/CLAUDE.md"
+if [[ ! -f "$CLAUDE_FILE" && -f "$SCRIPT_DIR/../../ralph/CLAUDE.md" ]]; then
+  CLAUDE_FILE="$SCRIPT_DIR/../../ralph/CLAUDE.md"
+fi
 
 # Load optional configuration (allows overriding defaults without editing this script)
 # create a file named ralph.conf in the same directory with key=value pairs,
@@ -40,6 +51,10 @@ while [[ $# -gt 0 ]]; do
       TOOL="${1#*=}"
       shift
       ;;
+    --strict)
+      STRICT_MODE=true
+      shift
+      ;;
     *)
       # Assume it's max_iterations if it's a number
       if [[ "$1" =~ ^[0-9]+$ ]]; then
@@ -60,6 +75,20 @@ PRD_FILE="$SCRIPT_DIR/prd.json"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 ARCHIVE_DIR="$SCRIPT_DIR/archive"
 LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
+
+if [[ "$TOOL" == "amp" || "$TOOL" == "ollama" ]]; then
+  if [[ ! -f "$PROMPT_FILE" ]]; then
+    echo "Error: prompt file not found at $PROMPT_FILE" >&2
+    exit 1
+  fi
+fi
+
+if [[ "$TOOL" == "claude" ]]; then
+  if [[ ! -f "$CLAUDE_FILE" ]]; then
+    echo "Error: CLAUDE file not found at $CLAUDE_FILE" >&2
+    exit 1
+  fi
+fi
 
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
@@ -101,7 +130,10 @@ if [ ! -f "$PROGRESS_FILE" ]; then
   echo "---" >> "$PROGRESS_FILE"
 fi
 
-echo "Starting Ralph - Tool: $TOOL - Max iterations: $MAX_ITERATIONS"
+echo "Starting Ralph - Tool: $TOOL - Max iterations: $MAX_ITERATIONS - Strict: $STRICT_MODE"
+
+# Export STRICT_MODE for prompt substitution
+export STRICT_MODE
 
 for i in $(seq 1 $MAX_ITERATIONS); do
   echo ""
@@ -111,13 +143,28 @@ for i in $(seq 1 $MAX_ITERATIONS); do
 
   # Run the selected tool with the ralph prompt
   if [[ "$TOOL" == "amp" ]]; then
-    OUTPUT=$(cat "$SCRIPT_DIR/prompt.md" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
+    OUTPUT=$(cat "$PROMPT_FILE" | amp --dangerously-allow-all 2>&1 | tee /dev/stderr) || true
   elif [[ "$TOOL" == "claude" ]]; then
-    OUTPUT=$(claude --dangerously-skip-permissions --print < "$SCRIPT_DIR/CLAUDE.md" 2>&1 | tee /dev/stderr) || true
+    OUTPUT=$(claude --dangerously-skip-permissions --print < "$CLAUDE_FILE" 2>&1 | tee /dev/stderr) || true
   elif [[ "$TOOL" == "ollama" ]]; then
-    MODEL=${MODEL:-codellama}
-    PROMPT_CONTENT=$(<"$SCRIPT_DIR/prompt.md")
-    OUTPUT=$(ollama run "$MODEL" "$PROMPT_CONTENT" --format text 2>&1 | tee /dev/stderr) || true
+    if [[ -z "$MODEL" ]]; then
+      if ollama list | awk '{print $1}' | grep -qx 'qwen2.5-coder:0.5b'; then
+        MODEL=qwen2.5-coder:0.5b
+      elif ollama list | awk '{print $1}' | grep -qx 'qwen2.5-coder:1.5b-base'; then
+        MODEL=qwen2.5-coder:1.5b-base
+      elif ollama list | awk '{print $1}' | grep -qx 'qwen3:8b'; then
+        MODEL=qwen3:8b
+      else
+        MODEL=codellama:latest
+      fi
+    fi
+    echo "Using Ollama model: $MODEL"
+    PROMPT_CONTENT=$(<"$PROMPT_FILE")
+    OUTPUT=$(ollama run "$MODEL" "$PROMPT_CONTENT" --nowordwrap --think low --keepalive 30m 2>&1 | tee /dev/stderr) || true
+    if echo "$OUTPUT" | grep -q "does not support thinking"; then
+      echo "Using Ollama model without thinking mode (not supported by this model)"
+      OUTPUT=$(ollama run "$MODEL" "$PROMPT_CONTENT" --nowordwrap --keepalive 30m 2>&1 | tee /dev/stderr) || true
+    fi
   elif [[ "$TOOL" == "openrouter" ]]; then
     if [[ -z "$OPENROUTER_API_KEY" ]]; then
       echo "Error: OPENROUTER_API_KEY not set for openrouter tool" >&2

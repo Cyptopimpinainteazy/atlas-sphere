@@ -9,7 +9,8 @@ use crate::protocol::TaskResult;
 use crate::task::Task;
 use async_trait::async_trait;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use std::time::{Duration, Instant};
 use tokio::process::Command;
 use tracing::{debug, info, warn};
@@ -227,17 +228,16 @@ impl GpuExecutor for CudaExecutor {
     }
 
     async fn is_available(&self) -> bool {
-        self.available && !self.devices.lock().unwrap().is_empty()
+        self.available && !self.devices.lock().is_empty()
     }
 
     async fn list_devices(&self) -> SwarmResult<Vec<GpuDeviceInfo>> {
-        Ok(self.devices.lock().unwrap().clone())
+        Ok(self.devices.lock().clone())
     }
 
     async fn get_device_info(&self, device_id: u32) -> SwarmResult<GpuDeviceInfo> {
         self.devices
             .lock()
-            .unwrap()
             .iter()
             .find(|d| d.device_id == device_id)
             .cloned()
@@ -272,7 +272,7 @@ impl GpuExecutor for CudaExecutor {
             achieved_gflops: (device_info.peak_fp32_tflops as f64 * 0.8).max(1.0),
             framework_overhead_ms: 1,
         };
-        *self.last_metrics.lock().unwrap() = Some(metrics);
+        *self.last_metrics.lock() = Some(metrics);
 
         Ok(Self::build_task_result(
             task,
@@ -315,7 +315,7 @@ impl GpuExecutor for CudaExecutor {
         };
 
         let result = Self::build_task_result(task, payload, elapsed_ms, compute_units);
-        *self.last_metrics.lock().unwrap() = Some(metrics.clone());
+        *self.last_metrics.lock() = Some(metrics.clone());
         Ok((result, metrics))
     }
 
@@ -383,7 +383,7 @@ impl GpuExecutor for CudaExecutor {
     }
 
     async fn get_last_metrics(&self) -> Option<PerformanceMetrics> {
-        self.last_metrics.lock().unwrap().clone()
+        self.last_metrics.lock().clone()
     }
 
     async fn reset_device(&self, device_id: u32) -> SwarmResult<()> {

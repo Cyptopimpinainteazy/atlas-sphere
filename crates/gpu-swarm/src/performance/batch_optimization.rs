@@ -26,7 +26,7 @@ pub struct TaskBatchOptimizer {
     min_batch_size: usize,
     max_batch_size: usize,
     batch_timeout_ms: u64,
-    batch_queue: std::sync::Mutex<VecDeque<Batch>>,
+    batch_queue: parking_lot::Mutex<VecDeque<Batch>>,
     batch_counter: std::sync::atomic::AtomicU64,
 }
 
@@ -36,7 +36,7 @@ impl TaskBatchOptimizer {
             min_batch_size,
             max_batch_size,
             batch_timeout_ms: 100,
-            batch_queue: std::sync::Mutex::new(VecDeque::new()),
+            batch_queue: parking_lot::Mutex::new(VecDeque::new()),
             batch_counter: std::sync::atomic::AtomicU64::new(0),
         }
     }
@@ -46,7 +46,7 @@ impl TaskBatchOptimizer {
         let span = span!(Level::DEBUG, "batch_add_task", task_id = &task.id);
         let _enter = span.enter();
 
-        let mut queue = self.batch_queue.lock().unwrap();
+        let mut queue = self.batch_queue.lock();
         
         // Check if last batch is incomplete
         if let Some(last_batch) = queue.back_mut() {
@@ -84,7 +84,7 @@ impl TaskBatchOptimizer {
         let span = span!(Level::DEBUG, "batch_flush");
         let _enter = span.enter();
 
-        let mut queue = self.batch_queue.lock().unwrap();
+        let mut queue = self.batch_queue.lock();
         if let Some(batch) = queue.pop_front() {
             debug!("🚀 Flushed batch with {} tasks", batch.tasks.len());
             return Some(batch);
@@ -159,14 +159,13 @@ impl TaskBatchOptimizer {
 
     /// Get pending batch queue size
     pub fn pending_batch_count(&self) -> usize {
-        self.batch_queue.lock().unwrap().len()
+        self.batch_queue.lock().len()
     }
 
     /// Get total tasks waiting in queue
     pub fn pending_task_count(&self) -> usize {
         self.batch_queue
             .lock()
-            .unwrap()
             .iter()
             .map(|b| b.tasks.len())
             .sum()

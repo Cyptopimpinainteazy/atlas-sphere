@@ -367,9 +367,22 @@ async function runBrowserAgentCommand<T>(cmd: string, args: any): Promise<T> {
       return (loadBrowserDb().proxies.find((item) => item.user_id === args.user_id) ?? null) as T;
 
     case "agents_get_all_proxies":
+      // Browser preview mode: only return proxies if user is king
+      if (!args.is_king) {
+        return [] as T;
+      }
       return loadBrowserDb().proxies as T;
 
     case "agents_get_funnel_stats": {
+      // Browser preview mode: only return stats if user is king
+      if (!args.is_king) {
+        return {
+          total_leads: 0,
+          funnel: { discovered: 0, contacted: 0, pitched: 0, negotiating: 0, converted: 0, lost: 0 },
+          tasks: { total: 0, completed: 0 },
+          emails_assigned: 0,
+        } as T;
+      }
       const db = loadBrowserDb();
       const funnel = db.leads.reduce<FunnelStats["funnel"]>((acc, lead) => {
         const stage = lead.funnel_stage as keyof FunnelStats["funnel"];

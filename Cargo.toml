@@ -92,7 +92,8 @@ members = [
     "pallets/x3-invariants",
     # Concrete implementations of x3-vm BalanceProvider + CrossVmEscrow for node use
     "crates/x3-bridge-adapters",
-        "crates/cross-chain-position-manager",
+    "crates/cross-chain-position-manager",
+    "crates/custody-service",
     "crates/x3-rpc",
     # Note: crates/dylint-determinism is intentionally NOT listed here.
     # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)
@@ -179,6 +180,9 @@ log = { version = "0.4.20", default-features = false }
 serde = { version = "1.0.195", features = ["derive"], default-features = false }
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", rev = "948fbd2" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-session = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-staking = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
+pallet-offences = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }
 
 # Substrate client (node) workspace deps used by `node` member
 sc-basic-authorship = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", default-features = false }

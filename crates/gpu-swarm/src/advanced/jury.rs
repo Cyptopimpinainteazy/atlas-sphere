@@ -4,7 +4,8 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use sha2::{Sha256, Digest};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use tracing::{debug, span, Level};
@@ -85,7 +86,7 @@ impl Jury {
             hash: hash.clone(),
         };
 
-        let mut log = self.audit_log.lock().unwrap();
+        let mut log = self.audit_log.lock();
         log.push(entry.clone());
 
         debug!("📝 Audit logged for agent {}: {}", agent_id, result);
@@ -99,7 +100,7 @@ impl Jury {
         let _enter = span.enter();
 
         let now = Utc::now().timestamp() as u64;
-        let mut last_rotation = self.last_rotation.lock().unwrap();
+        let mut last_rotation = self.last_rotation.lock();
 
         if now - *last_rotation < self.rotation_interval_seconds {
             return Ok(Vec::new());
@@ -199,7 +200,7 @@ impl Jury {
 
     /// Get audit log (decrypted/filtered)
     pub fn get_audit_log(&self, agent_id: Option<&str>) -> Result<Vec<AuditEntry>, Box<dyn std::error::Error>> {
-        let log = self.audit_log.lock().unwrap();
+        let log = self.audit_log.lock();
 
         let entries = if let Some(agent) = agent_id {
             log.iter()
@@ -215,7 +216,7 @@ impl Jury {
 
     /// Verify audit log integrity (check hashes)
     pub fn verify_audit_log(&self) -> Result<bool, Box<dyn std::error::Error>> {
-        let log = self.audit_log.lock().unwrap();
+        let log = self.audit_log.lock();
 
         for entry in log.iter() {
             let event_data = format!(
@@ -251,7 +252,7 @@ impl Jury {
             total_agents: self.agents.len(),
             active_agents,
             average_reputation: avg_reputation,
-            total_audits: self.audit_log.lock().unwrap().len(),
+            total_audits: self.audit_log.lock().len(),
         }
     }
 }

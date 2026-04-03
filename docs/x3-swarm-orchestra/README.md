@@ -56,3 +56,5 @@ make arbitrage
 
 ## Evolution Lifecycle
 This follows the **OpenSpec** BMAD workflow proposal. The central oversight “conductor” runs from `docker-compose` combining decentralized AI agents across all the links provided here. 
+
+The platform-level architecture and operating assumptions are captured in [EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md). The corresponding OpenSpec change is tracked in [docs/openspec/changes/add-swarm-orchestra-platform/proposal.md](../openspec/changes/add-swarm-orchestra-platform/proposal.md).
