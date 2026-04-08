@@ -6,15 +6,8 @@
 //! Invariants: CHAIN-CONSENSUS-001, GPU-COORD-001, SETTLEMENT-001
 //! See: docs/adr/0002-e2e-determinism-triple-run.md
 
-pub mod utils {
-    pub mod mod {
-        pub mod test_environment;
-        pub mod test_accounts;
-        pub mod test_contracts;
-        pub mod mock_services;
-        pub mod assertions;
-    }
-}
+#[path = "../utils/mod.rs"]
+pub mod utils;
 
 pub mod wait_for_rpc;
 #[cfg(test)]

@@ -1,11 +1,20 @@
-#![allow(dead_code)]
+#![allow(unused, dead_code, unused_imports, unused_variables)]
 
 extern crate alloc;
+
+pub mod accounting;
+pub mod partner;
+pub mod rebalance;
+pub mod router;
+pub mod solvency;
+pub mod visibility;
+pub mod vault_controller;
 
 use alloc::string::{String, ToString};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::sync::atomic::{AtomicU64, Ordering};
+use serde::{Deserialize, Serialize};
 use sp_core::{H160, H256, U256};
 use sp_std::collections::btree_map::BTreeMap;
 use x3_external_chains::{ChainType, SwapRoute};
@@ -18,10 +27,20 @@ pub enum PositionManagerError {
     InvalidChain(u64),
     InvalidInput(String),
     PositionNotFound { position_id: PositionId },
+    ChainNotFound(u64),
+    NoRoutesFound,
+    DexRouterNotFound(u64),
+    BridgeNotFound(u64, u64),
+    ArithmeticOverflow,
+    ReservationNotFound(String),
+    ObligationNotFound(String),
+    InvalidObligationState(String),
+    InsufficientInventory(String),
+    PriceFeedNotFound(String),
     Internal(String),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct PositionId(pub [u8; 32]);
 
 impl PositionId {
@@ -31,6 +50,10 @@ impl PositionId {
         let mut bytes = [0u8; 32];
         bytes[0..8].copy_from_slice(&n.to_le_bytes());
         Self(bytes)
+    }
+
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
     }
 }
 

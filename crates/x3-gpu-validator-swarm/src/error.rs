@@ -60,6 +60,34 @@ pub enum SwarmError {
     /// IO error
     #[error("IO error: {0}")]
     IoError(String),
+
+    /// Proof not found
+    #[error("Proof not found")]
+    ProofNotFound,
+
+    /// Duplicate proof
+    #[error("Duplicate proof")]
+    DuplicateProof,
+
+    /// Duplicate attestation
+    #[error("Duplicate attestation")]
+    DuplicateAttestation,
+
+    /// Invalid merkle proof
+    #[error("Invalid merkle proof: {0}")]
+    InvalidMerkleProof(String),
+
+    /// Invalid state root
+    #[error("Invalid state root: {0}")]
+    InvalidStateRoot(String),
+
+    /// Merkle path mismatch
+    #[error("Merkle path mismatch: {0}")]
+    MerklePathMismatch(String),
+
+    /// Invalid merkle node
+    #[error("Invalid merkle node: {0}")]
+    InvalidMerkleNode(String),
 }
 
 impl From<std::io::Error> for SwarmError {

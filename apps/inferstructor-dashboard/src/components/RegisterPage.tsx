@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { Rocket, Mail, Server, Shield, ArrowRight, Sparkles } from 'lucide-react';
+import { Rocket, Mail, Server, Shield, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { validateEmail, validateChain, validateSlaTier } from '../utils/validation';
 
 interface RegisterPageProps {
   onRegisterSuccess: () => void;
@@ -11,17 +12,47 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
   const [email, setEmail] = useState('');
   const [slaTier, setSlaTier] = useState('pro');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [credentials, setCredentials] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<{ chain?: string; email?: string; slaTier?: string }>({});
+
+  const validateForm = (): boolean => {
+    const errors: { chain?: string; email?: string; slaTier?: string } = {};
+
+    const chainValidation = validateChain(chain);
+    if (!chainValidation.valid) {
+      errors.chain = chainValidation.error;
+    }
+
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      errors.email = emailValidation.error;
+    }
+
+    const slaTierValidation = validateSlaTier(slaTier);
+    if (!slaTierValidation.valid) {
+      errors.slaTier = slaTierValidation.error;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
+    setError('');
 
     try {
       const creds = await api.register(chain, email, slaTier);
       setCredentials(creds);
-    }  catch (error: any) {
-      alert(`Registration failed: ${error.message}`);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -125,6 +156,13 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
           <div className="card">
             <h2 className="text-2xl font-bold text-white mb-6">Register Your Validator</h2>
             
+            {error && (
+              <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4 mb-6 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+            
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -134,7 +172,7 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
                 <select
                   value={chain}
                   onChange={(e) => setChain(e.target.value)}
-                  className="input"
+                  className={`input ${validationErrors.chain ? 'border-red-500 bg-red-500/5' : ''}`}
                   required
                 >
                   <option value="solana">Solana</option>
@@ -144,6 +182,12 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
                   <option value="avalanche">Avalanche</option>
                   <option value="other">Other</option>
                 </select>
+                {validationErrors.chain && (
+                  <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.chain}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -155,10 +199,16 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input"
+                  className={`input ${validationErrors.email ? 'border-red-500 bg-red-500/5' : ''}`}
                   placeholder="validator@example.com"
                   required
                 />
+                {validationErrors.email && (
+                  <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -196,6 +246,12 @@ export function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
                     </label>
                   ))}
                 </div>
+                {validationErrors.slaTier && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.slaTier}
+                  </p>
+                )}
               </div>
 
               <button type="submit" disabled={loading} className="btn-primary w-full">

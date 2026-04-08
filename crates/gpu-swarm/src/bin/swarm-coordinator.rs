@@ -2,6 +2,8 @@
 //!
 //! Run the central coordinator that manages the GPU swarm network.
 
+#![allow(unused, dead_code, deprecated)]
+
 use gpu_swarm::{
     config::SwarmConfig,
     coordinator::{CoordinatorConfig, SwarmCoordinator},

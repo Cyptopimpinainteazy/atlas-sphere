@@ -5,7 +5,8 @@ use crate::error::{SwarmError, SwarmResult};
 use crate::protocol::TaskResult;
 use crate::task::Task;
 use async_trait::async_trait;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use std::time::{Duration, Instant};
 use tracing::debug;
 
@@ -129,17 +130,16 @@ impl GpuExecutor for WebGpuExecutor {
     }
 
     async fn is_available(&self) -> bool {
-        self.available && !self.devices.lock().unwrap().is_empty()
+        self.available && !self.devices.lock().is_empty()
     }
 
     async fn list_devices(&self) -> SwarmResult<Vec<GpuDeviceInfo>> {
-        Ok(self.devices.lock().unwrap().clone())
+        Ok(self.devices.lock().clone())
     }
 
     async fn get_device_info(&self, device_id: u32) -> SwarmResult<GpuDeviceInfo> {
         self.devices
             .lock()
-            .unwrap()
             .iter()
             .find(|d| d.device_id == device_id)
             .cloned()
@@ -187,7 +187,7 @@ impl GpuExecutor for WebGpuExecutor {
             achieved_gflops: 0.5,
             framework_overhead_ms: 3,
         };
-        *self.last_metrics.lock().unwrap() = Some(metrics.clone());
+        *self.last_metrics.lock() = Some(metrics.clone());
         Ok((result, metrics))
     }
 
@@ -221,7 +221,7 @@ impl GpuExecutor for WebGpuExecutor {
     }
 
     async fn get_last_metrics(&self) -> Option<PerformanceMetrics> {
-        self.last_metrics.lock().unwrap().clone()
+        self.last_metrics.lock().clone()
     }
 
     async fn reset_device(&self, _device_id: u32) -> SwarmResult<()> {

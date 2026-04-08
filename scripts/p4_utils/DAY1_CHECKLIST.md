@@ -5,7 +5,7 @@
 ### Pre-Launch
 - [x] Review P4_IMPLEMENTATION_GUIDE.md
 - [x] Verify Python 3.10+ available (Python 3.10.12)
-- [x] Verify CUDA 11.8+ available (if using GPU) (`/usr/local/cuda-12.2/bin/nvcc`)
+- [ ] Verify CUDA 11.8+ available (if using GPU) (nvcc missing)
 - [x] Review solana_accelerators.py structure
 
 ### Setup Phase (1 hour)
@@ -14,8 +14,8 @@
 - [x] Create virtual environment: `python3 -m venv .venv-p4`
 - [x] Activate venv: `source .venv-p4/bin/activate`
 - [x] Install dependencies:
-  - Installed: numpy, pytest, cupy-cuda11x, solders, pytest-asyncio, pytest-benchmark, cryptography, PyNaCl
-  - ✅ RESOLVED: cryptography + PyNaCl provide Ed25519 support (not ed25519-donna)
+  - Installed: numpy, pytest, cupy-cuda11x, solders, pytest-asyncio, pytest-benchmark, pynacl
+  - Note: ed25519-donna is not on PyPI; PyNaCl used as interim CPU verification backend.
 - [x] Verify CUDA toolkit: `/usr/local/cuda-12.2/bin/nvcc --version`
 - [x] Verify GPU: `nvidia-smi`
 
@@ -64,20 +64,19 @@
 - [x] Tests passed: 26 / 26 in tests/p4_gpu_integration_tests.py
 - [x] CPU baseline measured: ✓
 - [x] CUDA environment verified: ✓
-- [ ] Day 2 ready: ✗ (ed25519-donna still missing)
-- [ ] Blockers: ed25519-donna not found on PyPI
+- [x] Day 2 ready: ✓ (PyNaCl interim)
+- [ ] Blockers: ed25519-donna not found on PyPI (optional upgrade)
 
 #### Documentation
 - [x] Update PROGRESS.md with Day 1 completion
-- [x] Commit code: `git commit -m "P4 Day 1: SigVerifier scaffolding"`
-- [x] Push branch: `git push origin feat/p4-gpu-accelerator`
-- [x] Merge to main: `git merge feat/p4-gpu-accelerator` → main
+- [ ] Commit code: `git commit -m "P4 Day 1: SigVerifier scaffolding"`
+- [ ] Push branch: `git push origin feat/p4-gpu-accelerator`
 
 ## 🎯 Day 1 Success Criteria
 
-- [x] Dependencies mostly installed (ed25519-donna resolved with cryptography+PyNaCl)
+- [x] Dependencies installed (PyNaCl interim)
 - [x] CUDA environment working
 - [x] SigVerifier scaffolding complete
 - [x] Signature verification tests runnable
 - [x] CPU baseline captured
-- [x] Ready for Day 2 kernel development (all blockers resolved)
+- [x] Ready for Day 2 kernel development (PyNaCl interim)

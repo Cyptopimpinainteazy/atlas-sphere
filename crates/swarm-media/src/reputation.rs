@@ -63,21 +63,21 @@ pub struct InMemoryRepo {
 #[async_trait::async_trait]
 impl ReputationRepo for InMemoryRepo {
     async fn insert_reputation_event(&self, ev: ReputationEvent) -> Result<(), String> {
-        let mut g = self.events.lock().unwrap();
+        let mut g = self.events.lock().expect("events mutex poisoned");
         g.push(ev);
         Ok(())
     }
     async fn insert_slashing_event(&self, ev: SlashingEvent) -> Result<(), String> {
-        let mut g = self.slashes.lock().unwrap();
+        let mut g = self.slashes.lock().expect("slashes mutex poisoned");
         g.push(ev);
         Ok(())
     }
     async fn get_reputation_events(&self, wallet: &str) -> Result<Vec<ReputationEvent>, String> {
-        let g = self.events.lock().unwrap();
+        let g = self.events.lock().expect("events mutex poisoned");
         Ok(g.iter().filter(|e| e.wallet_address == wallet).cloned().collect())
     }
     async fn get_slashing_events(&self, wallet: &str) -> Result<Vec<SlashingEvent>, String> {
-        let g = self.slashes.lock().unwrap();
+        let g = self.slashes.lock().expect("slashes mutex poisoned");
         Ok(g.iter().filter(|e| e.wallet_address == wallet).cloned().collect())
     }
 }

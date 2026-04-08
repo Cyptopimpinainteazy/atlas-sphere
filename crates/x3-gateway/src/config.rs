@@ -9,6 +9,8 @@ pub struct GatewayConfig {
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub cors: CorsConfig,
+    #[serde(default)]
+    pub orchestra_control_plane: Option<OrchestraControlPlaneConfig>,
 }
 
 /// HTTP server configuration.
@@ -37,6 +39,14 @@ pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
     #[serde(default = "default_cors_methods")]
     pub allowed_methods: Vec<String>,
+}
+
+/// Orchestra control-plane relay configuration.
+#[derive(Debug, Clone, Deserialize)]
+pub struct OrchestraControlPlaneConfig {
+    pub url: String,
+    #[serde(default)]
+    pub auth_token: Option<String>,
 }
 
 fn default_host() -> String {
@@ -79,6 +89,7 @@ impl Default for GatewayConfig {
                 allowed_origins: default_cors_origins(),
                 allowed_methods: default_cors_methods(),
             },
+            orchestra_control_plane: None,
         }
     }
 }

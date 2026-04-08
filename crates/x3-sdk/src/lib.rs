@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! # X3 Chain Rust SDK
 //!
 //! A comprehensive Rust SDK for interacting with the X3 Chain blockchain,

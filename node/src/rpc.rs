@@ -16,8 +16,12 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{System, SystemApiServer};
-use x3_atomic_trade::{AMMPool, SwapRPCServer, TokenPair};
+use x3_atomic_trade::{
+    billing::{calculate_trade_fee, BillingAccount, BillingMiddleware, BillingPlan},
+    AMMPool, SwapRPCServer, TokenPair,
+};
 use x3_chain_runtime::{opaque::Block, AccountId, AssetId, Balance, Nonce};
+use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
 use x3_rpc::{SwapRequest, WalletDexApi, WalletDexRpc};
 
 use crate::rpc_middleware::RateLimiter;
@@ -98,8 +102,8 @@ where
 
     module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
     module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
-    module.merge(crate::rpc_frontier::create_frontier_stub(client.clone())?)?;
-    module.merge(crate::rpc_frontier::create_svm_stub(client.clone())?)?;
+    module.merge(crate::rpc_frontier::create_frontier_rpc(client.clone())?)?;
+    module.merge(crate::rpc_frontier::create_svm_rpc(client.clone())?)?;
 
     let check_rate_limit = {
         let limiter = rate_limiter.clone();
@@ -112,6 +116,18 @@ where
 
     let wallet_dex = Arc::new(WalletDexRpc::<Block, C>::new(client.clone()));
     let swap_rpc = Arc::new(Mutex::new(SwapRPCServer::new()));
+    let billing = Arc::new(Mutex::new(BillingMiddleware::new()));
+    let cross_vm_bridge = Arc::new(Mutex::new(CrossVmBridge::new()));
+
+    // Register default testnet billing accounts
+    {
+        let mut billing_guard = billing
+            .lock()
+            .map_err(|_| custom_error("Billing lock poisoned"))?;
+        // Testnet: register free-tier account for testing
+        let default_account = BillingAccount::new([0u8; 32], BillingPlan::Free);
+        billing_guard.register_account("testnet-default".to_string(), default_account);
+    }
 
     {
         let mut engine = swap_rpc
@@ -203,9 +219,92 @@ where
 
     let c = client.clone();
     let check = check_rate_limit.clone();
+    module.register_method("x3_estimateGas", move |params, _| {
+        check("x3_estimateGas")?;
+        let body: serde_json::Value = params.one()?;
+
+        let to_hex = body
+            .get("to")
+            .and_then(|v| v.as_str())
+            .unwrap_or("0x0000000000000000000000000000000000000000");
+        let data_hex = body.get("data").and_then(|v| v.as_str()).unwrap_or("0x");
+        let gas_limit = body
+            .get("gas")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(30_000_000);
+        let caller_hex = body.get("from").and_then(|v| v.as_str());
+
+        let to_bytes = decode_hex_param(to_hex, "to")?;
+        let data_bytes = decode_hex_param(data_hex, "data")?;
+        let caller_bytes = caller_hex
+            .map(|h| decode_hex_param(h, "from"))
+            .transpose()?;
+
+        let api = c.runtime_api();
+        let at = c.info().best_hash;
+
+        // Use runtime API for accurate gas estimation
+        let estimated_gas = api
+            .estimate_evm_gas(
+                at,
+                caller_bytes,
+                to_bytes.clone(),
+                data_bytes.clone(),
+                gas_limit,
+            )
+            .map_err(|e| custom_error(format!("Runtime error: {e:?}")))?
+            .map_err(|e| {
+                custom_error(format!(
+                    "Gas estimation failed: {}",
+                    String::from_utf8_lossy(&e)
+                ))
+            })?;
+
+        // Add 25% safety margin for execution variability
+        let safe_gas = (estimated_gas as f64 * 1.25) as u64;
+
+        log::debug!(
+            "Gas estimation: to={}, data_len={}, estimated={}, safe_limit={}",
+            to_hex,
+            data_bytes.len(),
+            estimated_gas,
+            safe_gas
+        );
+
+        Ok(format!("0x{:x}", safe_gas))
+    })?;
+
+    let c = client.clone();
+    let check = check_rate_limit.clone();
+    let billing_check = billing.clone();
+    let bridge_queue = cross_vm_bridge.clone();
     module.register_method("x3_submitCrossVmTransaction", move |params, _| {
         check("x3_submitCrossVmTransaction")?;
         let body: serde_json::Value = params.one()?;
+        
+        // Extract optional API key for billing (default to testnet-default for backwards compat)
+        let api_key = body
+            .get("api_key")
+            .and_then(|v| v.as_str())
+            .unwrap_or("testnet-default")
+            .to_string();
+
+        // Get current epoch for billing (simplified: use block number / 200000 as month proxy)
+        let current_epoch = 0u64; // Testnet: always epoch 0 until mainnet billing goes live
+
+        // Validate billing quota before executing transaction
+        {
+            let mut billing_guard = billing_check
+                .lock()
+                .map_err(|_| custom_error("Billing middleware unavailable"))?;
+            
+            if let Err(e) = billing_guard.validate_request(&api_key, current_epoch) {
+                return Err(custom_error(format!(
+                    "Billing validation failed: {}. Upgrade your plan or wait for quota reset.", e
+                )));
+            }
+        }
+        
         let evm_payload_hex = body
             .get("evm_payload")
             .and_then(|v| v.as_str())
@@ -213,22 +312,84 @@ where
         let svm_payload_hex = body.get("svm_payload").and_then(|v| v.as_str()).unwrap_or("0x");
         let atomic = body.get("atomic").and_then(|v| v.as_bool()).unwrap_or(true);
 
-        if atomic || svm_payload_hex != "0x" {
+        let evm_payload = decode_hex_param(evm_payload_hex, "evm_payload")?;
+        let svm_payload = if svm_payload_hex != "0x" {
+            Some(decode_hex_param(svm_payload_hex, "svm_payload")?)
+        } else {
+            None
+        };
+
+        // SVM-only path is not exposed yet through runtime APIs.
+        if svm_payload.is_some() && evm_payload.is_empty() {
             return Err(custom_error(
-                "x3_submitCrossVmTransaction cross-VM mode is not implemented yet; svm_payload is currently unsupported",
+                "SVM-only submission is not available via RPC on this build",
             ));
         }
 
-        let evm_payload = decode_hex_param(evm_payload_hex, "evm_payload")?;
-
         let api = c.runtime_api();
         let at = c.info().best_hash;
-        let tx_hash = api
+
+        // Calculate billing fee for this transaction
+        let legs = if svm_payload.is_some() { 2u32 } else { 1u32 };
+        let capital = evm_payload.len() as u128 * 1000; // Simplified capital estimate
+        let cross_chain_hops = if svm_payload.is_some() { 1u32 } else { 0u32 };
+        let protocol_fee = calculate_trade_fee(legs, capital, cross_chain_hops);
+        log::debug!("Cross-VM transaction fee: {} (legs={}, hops={})", protocol_fee, legs, cross_chain_hops);
+
+        // Extract caller from EVM tx before moving (first 20 bytes of payload, or zero address)
+        let evm_caller: [u8; 20] = if evm_payload.len() >= 20 {
+            let mut addr = [0u8; 20];
+            addr.copy_from_slice(&evm_payload[..20]);
+            addr
+        } else {
+            [0u8; 20]
+        };
+
+        // Execute EVM phase of cross-VM transaction
+        let evm_tx_hash = api
             .submit_evm_transaction(at, evm_payload)
             .map_err(|e| custom_error(format!("Runtime error: {e:?}")))?
-            .map_err(|e| custom_error(format!("Execution failed: {}", String::from_utf8_lossy(&e))))?;
+            .map_err(|e| custom_error(format!("EVM execution failed: {}", String::from_utf8_lossy(&e))))?;
 
-        Ok(format!("0x{}", hex::encode(tx_hash)))
+        // If this is an atomic cross-VM transaction, queue SVM phase for 2PC
+        if atomic && svm_payload.is_some() {
+            let svm_data = svm_payload.unwrap();
+            
+            // Create SVM call operation for 2PC bridge
+            let svm_op = CrossVmOperation::CallSvm {
+                caller: evm_caller,
+                pallet_index: svm_data.first().copied().unwrap_or(0),
+                call_index: svm_data.get(1).copied().unwrap_or(0),
+                input: svm_data.get(2..).map(|s| s.to_vec()).unwrap_or_default(),
+            };
+            
+            // Queue in cross-VM bridge for 2PC finalization
+            let queue_result = bridge_queue
+                .lock()
+                .map_err(|_| custom_error("Cross-VM bridge unavailable"))?
+                .queue_operation(svm_op);
+                
+            match queue_result {
+                Ok(nonce) => {
+                    log::info!(
+                        "Cross-VM atomic transaction submitted. EVM tx: 0x{}. SVM queued (nonce={}) for 2PC commit. Fee: {}",
+                        hex::encode(&evm_tx_hash),
+                        nonce,
+                        protocol_fee
+                    );
+                }
+                Err(e) => {
+                    log::warn!(
+                        "SVM queue failed for atomic tx 0x{}: {:?}. EVM phase committed but SVM pending.",
+                        hex::encode(&evm_tx_hash),
+                        e
+                    );
+                    // Note: EVM already executed; SVM will need manual retry or rollback
+                }
+            }
+        }
+
+        Ok(format!("0x{}", hex::encode(evm_tx_hash)))
     })?;
 
     let check = check_rate_limit.clone();

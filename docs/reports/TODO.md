@@ -42,5 +42,7 @@
 <parameter name="filePath">/home/lojak/Desktop/X3-x3-chain/docs/reports/.md
 ## Tasks
 
+- [ ] **#1** Tomorrow: operator must provide actual rack SSH targets/IPs and bootnode public address details to finalize deployment/servers.env, deployment/inventory.yaml, and public-testnet host mapping. `#deployment` `#operator-input` `#rack` `#tomorrow`
+
 ---
-**ai-todo** | Last Updated: 2026-03-22 19:56:49
+**ai-todo** | Last Updated: 2026-04-04 16:17:53

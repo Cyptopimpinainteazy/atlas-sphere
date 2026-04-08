@@ -8,6 +8,7 @@ RELEASE_NAME="x3-chain-v1.1"
 RELEASE_TARBALL="${RELEASE_NAME}-release.tar.gz"
 CHECKSUMS_FILE="CHECKSUMS.sha256"
 SIGNATURE_FILE="CHECKSUMS.sha256.asc"
+BUNDLE_CHECKSUMS_FILE="CHECKSUMS.bundle.sha256"
 WASM_PATH="target/release/wbuild/x3-chain-runtime/x3_chain_runtime.compact.compressed.wasm"
 BINARY_PATH="target/release/x3-chain-node"
 
@@ -47,6 +48,11 @@ cp deployment/chain-specs/x3-dev-new.json "$STAGE_DIR/config/chain-spec-local.js
 cp deployment/chain-specs/x3-testnet-raw.json "$STAGE_DIR/config/chain-spec-testnet.json"
 cp .env.example "$STAGE_DIR/config/.env.example"
 
+cat > "$STAGE_DIR/$BUNDLE_CHECKSUMS_FILE" <<EOF
+$(sha256sum "$STAGE_DIR/x3-chain-node" | awk '{print $1}')  x3-chain-node
+$(sha256sum "$STAGE_DIR/runtime/x3_chain_runtime.compact.compressed.wasm" | awk '{print $1}')  runtime/x3_chain_runtime.compact.compressed.wasm
+EOF
+
 if [[ -f RELEASE_NOTES.md ]]; then
   cp RELEASE_NOTES.md "$STAGE_DIR/RELEASE_NOTES.md"
 elif [[ -f "$RELEASE_TARBALL" ]]; then
@@ -63,9 +69,7 @@ fi
 rm -f "$RELEASE_TARBALL"
 tar -czf "$RELEASE_TARBALL" -C "$STAGE_DIR" .
 
-sha256sum "$BINARY_PATH" > "$CHECKSUMS_FILE"
-sha256sum "$WASM_PATH" >> "$CHECKSUMS_FILE"
-sha256sum "$RELEASE_TARBALL" >> "$CHECKSUMS_FILE"
+sha256sum "$RELEASE_TARBALL" > "$CHECKSUMS_FILE"
 
 if gpg --list-secret-keys > /dev/null 2>&1; then
   rm -f "$SIGNATURE_FILE"

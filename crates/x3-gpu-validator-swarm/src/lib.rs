@@ -59,6 +59,7 @@ pub mod cpu_validator;
 pub mod crypto;
 pub mod deterministic;
 pub mod error;
+pub mod gpu_bytecode;
 pub mod gpu_fallback_chain;
 pub mod gpu_memory_pool;
 pub mod gpu_receipt;
@@ -68,9 +69,13 @@ pub mod multi_gpu_dispatcher;
 pub mod network;
 pub mod orchestrator;
 pub mod payment;
+pub mod proof_aggregator;
+pub mod proof_integration;
 pub mod protocol;
 pub mod quarantine;
+pub mod state_merkle_proof;
 pub mod telemetry;
+pub mod unified_proof;
 pub mod validator;
 pub mod x3_kernel_versioning;
 
@@ -95,9 +100,18 @@ pub use network::{
 };
 pub use orchestrator::{OrchestratorEvent, SwarmOrchestrator};
 pub use payment::{PaymentSystem, ProviderAccount, ProviderStatus, WorkRecord, WorkType};
+pub use proof_aggregator::{AggregationState, AggregatorStats, ProofAggregator};
 pub use protocol::{SwarmMessage, TaskAssignment, TaskResult, ValidatorMessage, ValidatorProof};
 pub use quarantine::{DivergenceRecord, QuarantineManager, QuarantineReason};
+pub use state_merkle_proof::{
+    generate_merkle_proof, compute_merkle_root, MerkleNode, MerkleProofPath,
+    StateRootVerification, StateMerkleProof,
+};
 pub use telemetry::{TelemetryConfig, TelemetrySink};
+pub use unified_proof::{
+    AtomicVmProof, ByzantineConsensus, GpuValidatorAttestation, ProofHeader, ProofValidationResult,
+    UnifiedProof,
+};
 pub use validator::{Validator, ValidatorEvent, ValidatorState};
 pub use x3_kernel_versioning::{X3KernelManifest, X3KernelRegistry, X3KernelRuntime};
 

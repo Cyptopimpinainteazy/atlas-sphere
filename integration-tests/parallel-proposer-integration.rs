@@ -41,6 +41,7 @@ async fn test_parallel_proposer_integration() -> Result<()> {
         enable_online_learning: true,
         feature_importance_threshold: 0.05,
         max_history_size: 1000,
+        max_parallel_shards: 16,
     };
 
     let queue_config = QueueConfig {

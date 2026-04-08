@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 mod api;
 mod config;
 mod executor;

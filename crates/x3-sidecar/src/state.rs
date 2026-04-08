@@ -4,6 +4,7 @@ use blake2::{Blake2s256, Digest};
 use std::collections::BTreeMap;
 
 /// State manager for tracking execution state
+#[derive(Clone)]
 pub struct StateManager {
     /// Current state tree
     tree: MerkleTree,

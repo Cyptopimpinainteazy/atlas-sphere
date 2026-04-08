@@ -1,7 +1,10 @@
 use crate::flash_finality::FlashFinalityBridge;
+use crate::metrics::X3PrometheusMetrics;
 use crate::rpc_middleware::{RateLimitConfig, RateLimiter};
+use contention_predictor::{ContentionPredictor, PredictorConfig};
 use flash_finality::{FlashFinalityConfig, FlashFinalityGadget, FLASH_FINALITY_PROTOCOL_ID};
 use futures_util::StreamExt;
+use parallel_proposer::{extract_tx_metadata, ParallelProposerFactory};
 use poh_generator::PoHState;
 use sc_client_api::{Backend, BlockBackend, BlockchainEvents};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
@@ -15,7 +18,10 @@ use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_api::HeaderT;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_core::{crypto::KeyTypeId, Pair};
-use sp_runtime::SaturatedConversion;
+use sp_runtime::{
+    traits::{BlakeTwo256, Block as BlockT, Hash as HashT},
+    SaturatedConversion,
+};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -307,11 +313,25 @@ pub fn compute_enable_grandpa(config: &Configuration, feature_flags: NodeFeature
     enable
 }
 
+fn enforce_startup_gate_if_authority(is_authority: bool) -> Result<(), ServiceError> {
+    if !is_authority {
+        return Ok(());
+    }
+
+    x3_chain_runtime::fraud_proofs::startup_gate::run_startup_gate().map_err(|err| {
+        ServiceError::Other(format!(
+            "Startup determinism gate failed; refusing authority startup: {err}"
+        ))
+    })
+}
+
 /// Start a new X3 Chain full node with complete consensus and networking
 pub fn new_full(
     mut config: Configuration,
     feature_flags: NodeFeatureFlags,
 ) -> Result<TaskManager, ServiceError> {
+    enforce_startup_gate_if_authority(config.role.is_authority())?;
+
     tune_transaction_pool_config(&mut config);
     let sc_service::PartialComponents {
         client,
@@ -396,11 +416,38 @@ pub fn new_full(
     let prometheus_registry = config.prometheus_registry().cloned();
     let role_for_grandpa = role.clone();
 
+    // Register X3-specific Prometheus metrics alongside Substrate's built-in metrics.
+    // These counters track block production, comit lifecycle, and dual-VM execution
+    // and are automatically scraped via Substrate's /metrics endpoint.
+    let x3_metrics: Option<std::sync::Arc<X3PrometheusMetrics>> =
+        prometheus_registry.as_ref().and_then(|reg| {
+            match X3PrometheusMetrics::register(reg) {
+                Ok(m) => {
+                    log::info!("📊 X3 Prometheus metrics registered successfully");
+                    Some(std::sync::Arc::new(m))
+                }
+                Err(e) => {
+                    log::warn!("⚠️ Failed to register X3 Prometheus metrics: {}", e);
+                    None
+                }
+            }
+        });
+
+    let mut predictor_config = PredictorConfig::default();
+    predictor_config.max_parallel_shards = if feature_flags.enable_parallel_proposer {
+        predictor_config.max_parallel_shards.max(2)
+    } else {
+        1
+    };
+    let contention_predictor = Arc::new(ContentionPredictor::new(predictor_config));
+    let predictor_for_heatmap = if feature_flags.enable_parallel_proposer {
+        Some(contention_predictor.clone())
+    } else {
+        None
+    };
+
     if feature_flags.enable_parallel_proposer {
-        log::warn!(
-            "⚠️ --enable-parallel-proposer is set, but node wiring still uses basic authorship. \
-            Keep this in shadow mode until deterministic scheduler integration is complete."
-        );
+        log::info!("⚡ Parallel proposer is enabled; contention predictor wired into block authoring");
     }
     if feature_flags.enable_flash_finality {
         if enable_grandpa {
@@ -508,12 +555,13 @@ pub fn new_full(
 
     // Start Aura block authoring if this is an authority node
     if role.is_authority() {
-        let proposer_factory = sc_basic_authorship::ProposerFactory::new(
+        let proposer_factory = ParallelProposerFactory::new(
             task_manager.spawn_handle(),
             client.clone(),
             transaction_pool.clone(),
             prometheus_registry.as_ref(),
             telemetry.as_ref().map(|x| x.handle()),
+            contention_predictor.clone(),
         );
 
         let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
@@ -604,6 +652,7 @@ pub fn new_full(
     // Spawn a background task to watch finalized blocks and log events with emojis
     {
         let client = client.clone();
+        let metrics_for_import = x3_metrics.clone();
         task_manager
             .spawn_handle()
             .spawn("import-watcher", None, async move {
@@ -612,6 +661,9 @@ pub fn new_full(
                 let mut notifications = client.import_notification_stream();
                 while let Some(notification) = notifications.next().await {
                     let number: u64 = (*notification.header.number()).saturated_into();
+                    if let Some(ref m) = metrics_for_import {
+                        m.blocks_produced.inc();
+                    }
                     // Purple color for block imported
                     log::info!(
                         "\x1b[35m📦 Block imported: #{} — syncing state\x1b[0m",
@@ -623,6 +675,7 @@ pub fn new_full(
 
     {
         let client = client.clone();
+        let predictor = predictor_for_heatmap.clone();
         task_manager
             .spawn_handle()
             .spawn("block-watcher", None, async move {
@@ -634,6 +687,19 @@ pub fn new_full(
                     let number: u64 = (*notification.header.number()).saturated_into();
                     // Orange color for block finalized
                     log::info!("\x1b[33m🏆 Block finalized: #{} ✅\x1b[0m", number);
+
+                    if let Some(predictor) = predictor.as_ref() {
+                        if let Ok(Some(block)) = client.block(notification.hash) {
+                            let mut txs = Vec::new();
+                            for xt in block.block.extrinsics() {
+                                let hash = BlakeTwo256::hash_of(&xt);
+                                let mut hash_bytes = [0u8; 32];
+                                hash_bytes.copy_from_slice(hash.as_ref());
+                                txs.push(extract_tx_metadata(&xt, hash_bytes));
+                            }
+                            predictor.update_heatmap(&txs).await;
+                        }
+                    }
                 }
             });
     }
@@ -837,6 +903,21 @@ async fn run_flash_finality_voter<Client, Block>(
                 break;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn startup_gate_is_skipped_for_non_authorities() {
+        assert!(enforce_startup_gate_if_authority(false).is_ok());
+    }
+
+    #[test]
+    fn startup_gate_passes_for_reference_authority_build() {
+        assert!(enforce_startup_gate_if_authority(true).is_ok());
     }
 }
 

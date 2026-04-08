@@ -178,7 +178,7 @@ impl ErrorAccumulator {
 
     pub fn into_result<T>(self, value: T) -> X3Result<T> {
         if self.has_errors() {
-            Err(self.errors.into_iter().next().unwrap())
+            Err(self.errors.into_iter().next().expect("has_errors was true so errors is non-empty"))
         } else {
             Ok(value)
         }

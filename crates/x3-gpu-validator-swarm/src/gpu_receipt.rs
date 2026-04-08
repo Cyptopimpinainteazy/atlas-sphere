@@ -4,21 +4,21 @@ use tracing::debug;
 pub type Hash = [u8; 32];
 pub type Address = [u8; 32];
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum GpuClass {
     DataCenter, // e.g., A100, H100
     Consumer,   // e.g., RTX 4090
     Embedded,   // e.g., Jetson
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ProofType {
     RecomputeA, // Re-run on CPU/GPU
     RedundantB, // N independent GPUs
     SpotCheckC, // Partial sampling
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GpuReceipt {
     pub kernel_hash: Hash,
     pub input_commitment: Hash,

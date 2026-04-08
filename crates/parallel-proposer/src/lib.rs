@@ -14,6 +14,132 @@ use tokio::sync::Mutex;
 use tokio::time::Instant;
 use tracing::{info, trace, warn};
 
+pub mod substrate;
+pub use substrate::{extract_tx_metadata, ParallelProposerFactory};
+
+/// Execution lane for unified conflict accounting across X3 runtimes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum VmLane {
+    Evm,
+    Svm,
+    X3Vm,
+    Bridge,
+    System,
+}
+
+impl Default for VmLane {
+    fn default() -> Self {
+        Self::System
+    }
+}
+
+/// Conflict class used to classify the scheduling domain of a state access.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum ConflictClass {
+    Account,
+    StorageSlot,
+    ObjectCell,
+    BridgeSession,
+    Governance,
+    Global,
+}
+
+impl Default for ConflictClass {
+    fn default() -> Self {
+        Self::Global
+    }
+}
+
+/// Explicit identifier for atomic cross-domain sessions.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct AtomicSessionId([u8; 32]);
+
+impl AtomicSessionId {
+    pub fn new(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+
+    pub fn from_seed(seed: &str) -> Self {
+        let mut hasher = Hasher::new();
+        hasher.update(seed.as_bytes());
+        let mut bytes = [0u8; 32];
+        bytes.copy_from_slice(hasher.finalize().as_bytes());
+        Self(bytes)
+    }
+
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+/// Canonical state key understood by the scheduler across all execution lanes.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct StateKey {
+    pub lane: VmLane,
+    pub conflict_class: ConflictClass,
+    pub domain: String,
+    pub key: String,
+}
+
+impl StateKey {
+    pub fn new(
+        lane: VmLane,
+        conflict_class: ConflictClass,
+        domain: impl Into<String>,
+        key: impl Into<String>,
+    ) -> Self {
+        Self {
+            lane,
+            conflict_class,
+            domain: domain.into(),
+            key: key.into(),
+        }
+    }
+
+    pub fn legacy(value: impl Into<String>) -> Self {
+        let raw = value.into();
+        let (conflict_class, domain, key) = if let Some((prefix, suffix)) = raw.split_once(':') {
+            let class = match prefix {
+                "acct" | "account" | "r" => ConflictClass::Account,
+                "slot" | "storage" | "w" => ConflictClass::StorageSlot,
+                "obj" | "object" => ConflictClass::ObjectCell,
+                "bridge" | "session" => ConflictClass::BridgeSession,
+                "gov" => ConflictClass::Governance,
+                _ => ConflictClass::Global,
+            };
+            (class, prefix.to_string(), suffix.to_string())
+        } else {
+            (ConflictClass::Global, "global".to_string(), raw)
+        };
+
+        Self {
+            lane: VmLane::System,
+            conflict_class,
+            domain,
+            key,
+        }
+    }
+
+    pub fn stable_id(&self) -> String {
+        format!(
+            "{:?}:{:?}:{}:{}",
+            self.lane, self.conflict_class, self.domain, self.key
+        )
+    }
+}
+
+impl From<&str> for StateKey {
+    fn from(value: &str) -> Self {
+        Self::legacy(value)
+    }
+}
+
+impl From<String> for StateKey {
+    fn from(value: String) -> Self {
+        Self::legacy(value)
+    }
+}
+
 /// Transaction metadata consumed by the proposer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionMeta {
@@ -32,8 +158,68 @@ pub struct TransactionMeta {
 /// Deterministic access declaration (parallel-eligible path).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DeclaredAccess {
-    pub reads: Vec<String>,
-    pub writes: Vec<String>,
+    pub lane: VmLane,
+    pub conflict_class: ConflictClass,
+    pub atomic_session: Option<AtomicSessionId>,
+    pub reads: Vec<StateKey>,
+    pub writes: Vec<StateKey>,
+}
+
+impl DeclaredAccess {
+    pub fn new(lane: VmLane, conflict_class: ConflictClass) -> Self {
+        Self {
+            lane,
+            conflict_class,
+            atomic_session: None,
+            reads: Vec::new(),
+            writes: Vec::new(),
+        }
+    }
+
+    pub fn with_atomic_session(mut self, session: AtomicSessionId) -> Self {
+        self.atomic_session = Some(session);
+        self
+    }
+
+    pub fn with_reads<I, K>(mut self, reads: I) -> Self
+    where
+        I: IntoIterator<Item = K>,
+        K: Into<StateKey>,
+    {
+        self.reads = reads.into_iter().map(Into::into).collect();
+        self
+    }
+
+    pub fn with_writes<I, K>(mut self, writes: I) -> Self
+    where
+        I: IntoIterator<Item = K>,
+        K: Into<StateKey>,
+    {
+        self.writes = writes.into_iter().map(Into::into).collect();
+        self
+    }
+
+    pub fn legacy(reads: &[&str], writes: &[&str]) -> Self {
+        Self::new(VmLane::System, ConflictClass::Global)
+            .with_reads(reads.iter().copied())
+            .with_writes(writes.iter().copied())
+    }
+}
+
+#[cfg(test)]
+mod declared_access_tests {
+    use super::*;
+
+    #[test]
+    fn declared_access_default_is_default_safe() {
+        let access = DeclaredAccess::default();
+
+        assert_eq!(access.lane, VmLane::System);
+        assert_eq!(access.conflict_class, ConflictClass::Global);
+        assert!(access.atomic_session.is_none());
+        assert!(access.reads.is_empty());
+        assert!(access.writes.is_empty());
+    }
 }
 
 /// Parallel proposal configuration.
@@ -340,7 +526,7 @@ pub struct GPUStats {
 
 // ─── Signature Verifier ───────────────────────────────────────────────────────
 
-use libloading::{Library, Symbol};
+use libloading::Library;
 use once_cell::sync::Lazy;
 
 /// Path to the CUDA kernels build directory.
@@ -494,8 +680,8 @@ fn contention_score(tx: &TransactionMeta) -> f64 {
 #[derive(Debug, Clone)]
 struct Shard {
     tx_indices: Vec<usize>,
-    reads: BTreeSet<String>,
-    writes: BTreeSet<String>,
+    reads: BTreeSet<StateKey>,
+    writes: BTreeSet<StateKey>,
 }
 
 #[derive(Debug)]
@@ -648,8 +834,8 @@ impl DeterministicScheduler {
 }
 
 fn conflicting_shards(access: &DeclaredAccess, shards: &[Shard]) -> Vec<usize> {
-    let access_reads: BTreeSet<String> = access.reads.iter().cloned().collect();
-    let access_writes: BTreeSet<String> = access.writes.iter().cloned().collect();
+    let access_reads: BTreeSet<StateKey> = access.reads.iter().cloned().collect();
+    let access_writes: BTreeSet<StateKey> = access.writes.iter().cloned().collect();
 
     shards
         .iter()
@@ -676,7 +862,7 @@ fn add_to_shard(shard: &mut Shard, tx_idx: usize, access: &DeclaredAccess) {
 
 #[derive(Debug)]
 pub struct OverlayDiff {
-    writes: BTreeMap<String, String>,
+    writes: BTreeMap<StateKey, String>,
 }
 
 fn execute_shard(
@@ -722,7 +908,7 @@ pub mod integration;
 /// Algorithm: SHA-256(sorted_key_0 || value_0 || sorted_key_1 || value_1 || ...)
 /// Sorted by BTreeMap key order — always deterministic regardless of thread schedule.
 pub fn compute_state_root(overlays: &[OverlayDiff]) -> String {
-    let mut merged: BTreeMap<String, String> = BTreeMap::new();
+    let mut merged: BTreeMap<StateKey, String> = BTreeMap::new();
     for overlay in overlays {
         for (k, v) in &overlay.writes {
             merged.insert(k.clone(), v.clone());
@@ -731,7 +917,7 @@ pub fn compute_state_root(overlays: &[OverlayDiff]) -> String {
 
     let mut hasher = Hasher::new();
     for (key, val) in &merged {
-        hasher.update(key.as_bytes());
+        hasher.update(key.stable_id().as_bytes());
         hasher.update(b"|");
         hasher.update(val.as_bytes());
         hasher.update(b"\n");
@@ -751,12 +937,12 @@ pub fn find_undeclared_writes(
     overlay: &OverlayDiff,
     declared: &DeclaredAccess,
 ) -> Vec<(String, String)> {
-    let declared_writes: BTreeSet<&String> = declared.writes.iter().collect();
+    let declared_writes: BTreeSet<&StateKey> = declared.writes.iter().collect();
     overlay
         .writes
         .iter()
         .filter(|(key, _)| !declared_writes.contains(*key))
-        .map(|(key, tx_hash)| (tx_hash.clone(), key.clone()))
+        .map(|(key, tx_hash)| (tx_hash.clone(), key.stable_id()))
         .collect()
 }
 
@@ -782,10 +968,7 @@ mod tests {
     }
 
     fn mk_access(reads: &[&str], writes: &[&str]) -> DeclaredAccess {
-        DeclaredAccess {
-            reads: reads.iter().map(|s| s.to_string()).collect(),
-            writes: writes.iter().map(|s| s.to_string()).collect(),
-        }
+        DeclaredAccess::legacy(reads, writes)
     }
 
     // ── Existing tests ────────────────────────────────────────────────────────
@@ -931,7 +1114,7 @@ mod tests {
                 .collect();
 
             // Simulate overlay computation: write declared writes per tx in order
-            let mut overlay_writes: BTreeMap<String, String> = BTreeMap::new();
+            let mut overlay_writes: BTreeMap<StateKey, String> = BTreeMap::new();
             for tx_hash in &ordered_hashes {
                 // Find the declared access for this tx
                 let access = txs
@@ -949,7 +1132,7 @@ mod tests {
             // State root = hash of sorted write set (deterministic by BTreeMap order)
             let mut hasher = Hasher::new();
             for (key, val) in &overlay_writes {
-                hasher.update(key.as_bytes());
+                hasher.update(key.stable_id().as_bytes());
                 hasher.update(b"|");
                 hasher.update(val.as_bytes());
                 hasher.update(b"\n");
@@ -984,7 +1167,7 @@ mod tests {
 
         // Execution overlay writes a key not in the declared set
         let mut actual_writes = BTreeMap::new();
-        actual_writes.insert("w:balance:42".to_string(), "tx-rogue".to_string());
+        actual_writes.insert(StateKey::from("w:balance:42"), "tx-rogue".to_string());
         let overlay = OverlayDiff {
             writes: actual_writes,
         };
@@ -997,7 +1180,10 @@ mod tests {
             "Must detect undeclared write as slashable"
         );
         assert_eq!(violations[0].0, "tx-rogue"); // tx_hash identified
-        assert_eq!(violations[0].1, "w:balance:42"); // key identified
+        assert_eq!(
+            violations[0].1,
+            StateKey::from("w:balance:42").stable_id()
+        ); // key identified
 
         // Violations are returned and can be submitted to chain for slashing
         // The caller should submit these to the governance/extrinsic system
@@ -1011,7 +1197,7 @@ mod tests {
         let declared = mk_access(&["r:account:42"], &["w:balance:42"]);
 
         let mut actual_writes = BTreeMap::new();
-        actual_writes.insert("w:balance:42".to_string(), "tx-honest".to_string());
+        actual_writes.insert(StateKey::from("w:balance:42"), "tx-honest".to_string());
         let overlay = OverlayDiff {
             writes: actual_writes,
         };
@@ -1028,14 +1214,14 @@ mod tests {
             OverlayDiff {
                 writes: {
                     let mut m = BTreeMap::new();
-                    m.insert("key:a".to_string(), "tx-1".to_string());
+                    m.insert(StateKey::from("key:a"), "tx-1".to_string());
                     m
                 },
             },
             OverlayDiff {
                 writes: {
                     let mut m = BTreeMap::new();
-                    m.insert("key:b".to_string(), "tx-2".to_string());
+                    m.insert(StateKey::from("key:b"), "tx-2".to_string());
                     m
                 },
             },
@@ -1046,14 +1232,14 @@ mod tests {
             OverlayDiff {
                 writes: {
                     let mut m = BTreeMap::new();
-                    m.insert("key:b".to_string(), "tx-2".to_string());
+                    m.insert(StateKey::from("key:b"), "tx-2".to_string());
                     m
                 },
             },
             OverlayDiff {
                 writes: {
                     let mut m = BTreeMap::new();
-                    m.insert("key:a".to_string(), "tx-1".to_string());
+                    m.insert(StateKey::from("key:a"), "tx-1".to_string());
                     m
                 },
             },
@@ -1074,7 +1260,7 @@ mod tests {
         let shard = Shard {
             tx_indices: vec![0],
             reads: BTreeSet::new(),
-            writes: BTreeSet::from(["state:counter".to_string()]),
+            writes: BTreeSet::from([StateKey::from("state:counter")]),
         };
 
         // New tx also writes state:counter → conflict
@@ -1091,7 +1277,7 @@ mod tests {
         // Existing shard has a reader on state:x
         let shard = Shard {
             tx_indices: vec![0],
-            reads: BTreeSet::from(["state:x".to_string()]),
+            reads: BTreeSet::from([StateKey::from("state:x")]),
             writes: BTreeSet::new(),
         };
 
@@ -1107,8 +1293,8 @@ mod tests {
     fn disjoint_access_sets_no_conflict() {
         let shard = Shard {
             tx_indices: vec![0],
-            reads: BTreeSet::from(["state:a".to_string()]),
-            writes: BTreeSet::from(["state:a".to_string()]),
+            reads: BTreeSet::from([StateKey::from("state:a")]),
+            writes: BTreeSet::from([StateKey::from("state:a")]),
         };
 
         // Completely different keys — should not conflict
@@ -1116,5 +1302,37 @@ mod tests {
         let conflicts = conflicting_shards(&new_access, &[shard]);
 
         assert!(conflicts.is_empty(), "No conflict for disjoint key sets");
+    }
+
+    #[test]
+    fn state_key_stable_id_is_lane_aware() {
+        let evm = StateKey::new(VmLane::Evm, ConflictClass::StorageSlot, "erc20", "slot:1");
+        let svm = StateKey::new(VmLane::Svm, ConflictClass::StorageSlot, "erc20", "slot:1");
+
+        assert_ne!(evm, svm);
+        assert_ne!(evm.stable_id(), svm.stable_id());
+    }
+
+    #[test]
+    fn atomic_session_is_preserved_in_declared_access() {
+        let session = AtomicSessionId::from_seed("cross-vm-session-1");
+        let access = DeclaredAccess::new(VmLane::Bridge, ConflictClass::BridgeSession)
+            .with_atomic_session(session.clone())
+            .with_reads([StateKey::new(
+                VmLane::Bridge,
+                ConflictClass::BridgeSession,
+                "bridge",
+                "prepare",
+            )])
+            .with_writes([StateKey::new(
+                VmLane::Bridge,
+                ConflictClass::BridgeSession,
+                "bridge",
+                "commit",
+            )]);
+
+        assert_eq!(access.atomic_session, Some(session));
+        assert_eq!(access.lane, VmLane::Bridge);
+        assert_eq!(access.conflict_class, ConflictClass::BridgeSession);
     }
 }

@@ -22,7 +22,7 @@ opencl = []
 metal = []
 vulkan = ["dep:wgpu"]
 webgpu = ["dep:wgpu"]
-x3-runtime = ["dep:x3-vm", "dep:x3-mir"]
+x3-runtime = ["dep:x3-vm", "dep:x3-mir", "dep:x3-gpu-validator-swarm", "dep:x3-backend"]
 
 [dependencies]
 # Async runtime
@@ -88,9 +88,14 @@ once_cell = "1.18"
 
 reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"] }
 
+# Caching
+lru = "0.12"
+
 # X3 integration
 x3-vm = { path = "../x3-vm", optional = true }
 x3-mir = { path = "../x3-mir", optional = true }
+x3-gpu-validator-swarm = { path = "../x3-gpu-validator-swarm", optional = true }
+x3-backend = { path = "../x3-backend", optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4"

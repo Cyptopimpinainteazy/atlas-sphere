@@ -6,8 +6,23 @@
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_core::{H160, H256, U256};
+pub use sp_core::{H160, H256, U256};
+use sp_std::string::String;
 use sp_std::vec::Vec;
+
+/// Position-manager-native route representation.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub struct SwapRoute {
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub amount_in: U256,
+    pub amount_out: U256,
+    pub hops: Vec<u64>,
+    pub gas_estimate: U256,
+    pub price_impact_bps: u32,
+}
 
 /// Unique identifier for a cross-chain position
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Encode, Decode, TypeInfo)]
@@ -309,6 +324,150 @@ pub struct RouteOptimizationParams {
     pub gas_weight: f64,
     pub time_weight: f64,
     pub slippage_weight: f64,
+}
+
+/// Operational vault classes for Phase 4.5 liquidity controls.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum VaultType {
+    GasReserve,
+    SettlementFloat,
+    TreasuryReserve,
+    InsuranceReserve,
+}
+
+/// Route-support lane classes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum LaneClass {
+    MarketOnly,
+    PartnerBacked,
+    ProtocolBacked,
+}
+
+/// Threshold state for inventory or lane health.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum ThresholdTier {
+    Normal,
+    Warning,
+    Degraded,
+    Frozen,
+}
+
+/// Live route lane status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum LaneStatus {
+    Active,
+    Warning,
+    Degraded,
+    Frozen,
+}
+
+impl LaneStatus {
+    pub fn allows_firm_execution(&self) -> bool {
+        !matches!(self, Self::Frozen)
+    }
+}
+
+/// Supported liquidity source categories.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum LiquiditySourceType {
+    InternalNetting,
+    ExternalMarket,
+    Partner,
+    ProtocolFloat,
+}
+
+/// Inventory bands for a `(chain, asset)` domain.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub struct InventoryBand {
+    pub critical_min: U256,
+    pub min: U256,
+    pub target: U256,
+    pub max: U256,
+}
+
+impl InventoryBand {
+    pub fn threshold_tier(&self, available_balance: U256) -> ThresholdTier {
+        if available_balance < self.critical_min {
+            ThresholdTier::Frozen
+        } else if available_balance < self.min {
+            ThresholdTier::Degraded
+        } else if available_balance > self.max {
+            ThresholdTier::Warning
+        } else {
+            ThresholdTier::Normal
+        }
+    }
+}
+
+/// Policy attached to an execution lane.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub struct LanePolicy {
+    pub lane_id: H256,
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub lane_class: LaneClass,
+    pub status: LaneStatus,
+    pub allowed_liquidity_sources: Vec<LiquiditySourceType>,
+    pub inventory_band: InventoryBand,
+}
+
+/// Reservation lifecycle state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum ReservationStatus {
+    Active,
+    Released,
+    Expired,
+    Rejected,
+}
+
+/// Route certainty after routing and reservation checks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub enum RouteFirmness {
+    Indicative,
+    Firm,
+}
+
+/// Explicit route reservation record.
+#[derive(Debug, Clone, PartialEq, Eq, Encode, Decode, TypeInfo, Serialize, Deserialize)]
+pub struct ReservationRecord {
+    pub reservation_id: H256,
+    pub route_id: H256,
+    pub lane_id: H256,
+    pub liquidity_source: LiquiditySourceType,
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub source_amount: U256,
+    pub target_amount: U256,
+    pub created_at_ms: u64,
+    pub expiry_ts_ms: u64,
+    pub status: ReservationStatus,
+    pub max_fee_envelope: U256,
+    pub solvency_snapshot: H256,
+}
+
+impl ReservationRecord {
+    pub fn is_active_at(&self, now_ms: u64) -> bool {
+        self.status == ReservationStatus::Active && now_ms <= self.expiry_ts_ms
+    }
+
+    pub fn is_expired_at(&self, now_ms: u64) -> bool {
+        now_ms > self.expiry_ts_ms
+    }
+}
+
+/// Route result enriched with reservation state.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RouteExecutionCandidate {
+    pub route_id: H256,
+    pub route: SwapRoute,
+    pub firmness: RouteFirmness,
+    pub lane_status: LaneStatus,
+    pub reservation: Option<ReservationRecord>,
+    pub reason: Option<String>,
 }
 
 /// Risk assessment result

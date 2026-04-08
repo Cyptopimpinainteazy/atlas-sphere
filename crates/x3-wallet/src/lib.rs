@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 // x3-wallet: Multi-featured wallet management system
 // Provides institutional-grade wallet security, DeFi integration, and institutional features
 

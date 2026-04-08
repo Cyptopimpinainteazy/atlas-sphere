@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! Dream Mining - Idle GPU Optimization for Background Computation
 //!
 //! Dream Mining enables X3 Chain to utilize idle GPU resources during

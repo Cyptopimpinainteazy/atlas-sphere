@@ -3,11 +3,11 @@
 use crate as pallet_x3_kernel;
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::{ConstBool, ConstU32, ConstU64, OnRuntimeUpgrade},
+    traits::{ConstBool, ConstU32, ConstU64, Get},
 };
 use frame_system as system;
 use parity_scale_codec::Encode;
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_io::TestExternalities;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
@@ -28,6 +28,21 @@ pub const INITIAL_BALANCE: Balance = 1_000_000_000_000;
 parameter_types! {
     pub const BlockHashCount: BlockNumber = 250;
     pub const ExistentialDeposit: Balance = 1;
+}
+
+// Wrapper types for bridge escrow addresses
+pub struct BridgeEvmEscrowValue;
+impl Get<H160> for BridgeEvmEscrowValue {
+    fn get() -> H160 {
+        H160::zero()
+    }
+}
+
+pub struct BridgeSvmEscrowValue;
+impl Get<[u8; 32]> for BridgeSvmEscrowValue {
+    fn get() -> [u8; 32] {
+        [0; 32]
+    }
 }
 
 construct_runtime!(
@@ -124,6 +139,7 @@ impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
         value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
 
         Ok(crate::ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 21000,
             return_data: Vec::new(),
@@ -165,6 +181,7 @@ impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
         value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
 
         Ok(crate::ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 5000,
             return_data: Vec::new(),
@@ -209,6 +226,7 @@ impl pallet_x3_kernel::X3ExecutorAdapter for TestX3Adapter {
         value_bytes[..balance_bytes.len()].copy_from_slice(&balance_bytes);
 
         Ok(crate::ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 1000,
             return_data: Vec::new(),
@@ -258,6 +276,8 @@ impl pallet_x3_kernel::Config for Test {
     type MaxPreparedOpsPerBlock = ConstU32<8>;
     type RequireCrossVmProof = ConstBool<false>;
     type CrossChainProofVerifier = crate::NoopProofVerifier;
+    type BridgeEvmEscrow = BridgeEvmEscrowValue;
+    type BridgeSvmEscrow = BridgeSvmEscrowValue;
 }
 
 pub struct ExtBuilder {
@@ -352,6 +372,7 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         _tx: Vec<u8>,
     ) -> Result<pallet_x3_kernel::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         Ok(pallet_x3_kernel::ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 21000,
             return_data: Default::default(),
@@ -365,6 +386,7 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         _tx: Vec<u8>,
     ) -> Result<pallet_x3_kernel::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         Ok(pallet_x3_kernel::ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 0,
             return_data: Default::default(),
@@ -391,6 +413,7 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         };
 
         Ok(pallet_x3_kernel::SphereState {
+            version: pallet_x3_kernel::SPHERE_STATE_VERSION,
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,
@@ -403,6 +426,7 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         _svm_receipt: Option<&pallet_x3_kernel::ExecutionReceipt>,
     ) -> pallet_x3_kernel::SphereState {
         pallet_x3_kernel::SphereState {
+            version: pallet_x3_kernel::SPHERE_STATE_VERSION,
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,

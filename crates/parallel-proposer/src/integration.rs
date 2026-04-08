@@ -1,6 +1,8 @@
 //! Lightweight integration helpers for the parallel proposer.
 
-use crate::{DeclaredAccess, ParallelProposer, ProposalConfig, ProposalResult, TransactionMeta};
+use crate::{
+    DeclaredAccess, ParallelProposer, ProposalConfig, ProposalResult, TransactionMeta,
+};
 use anyhow::Result;
 use std::sync::Arc;
 
@@ -79,6 +81,7 @@ impl IntegrationContext {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{ConflictClass, VmLane};
 
     fn sample_tx(id: &str) -> TransactionMeta {
         TransactionMeta {
@@ -100,10 +103,11 @@ mod tests {
         let ctx = IntegrationContext::new(IntegrationConfig::default()).unwrap();
         ctx.submit_transaction(
             sample_tx("tx-1"),
-            Some(DeclaredAccess {
-                reads: vec!["r:1".to_string()],
-                writes: vec!["w:1".to_string()],
-            }),
+            Some(
+                DeclaredAccess::new(VmLane::System, ConflictClass::Global)
+                    .with_reads(["r:1"])
+                    .with_writes(["w:1"]),
+            ),
         )
         .await
         .unwrap();

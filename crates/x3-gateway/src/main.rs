@@ -1,9 +1,12 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! X3 Gateway - REST and GraphQL API for indexed blockchain data.
 
 mod config;
 mod db;
 mod error;
 mod graphql;
+mod orchestra;
 mod rest;
 
 use crate::config::GatewayConfig;
@@ -13,8 +16,10 @@ use crate::graphql::create_schema;
 use crate::rest::create_router;
 use clap::Parser;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use x3_orchestra_control_plane::ControlPlaneClient;
 
 /// X3 Chain API Gateway
 #[derive(Parser, Debug)]
@@ -41,6 +46,14 @@ struct Args {
     /// Log level
     #[arg(long, env = "RUST_LOG", default_value = "info")]
     log_level: String,
+
+    /// Orchestra control-plane base URL
+    #[arg(long, env = "GATEWAY_ORCHESTRA_CONTROL_PLANE_URL")]
+    orchestra_control_plane_url: Option<String>,
+
+    /// Orchestra control-plane bearer token
+    #[arg(long, env = "GATEWAY_ORCHESTRA_CONTROL_PLANE_TOKEN")]
+    orchestra_control_plane_token: Option<String>,
 }
 
 fn init_logging(level: &str) {
@@ -71,20 +84,41 @@ async fn main() -> Result<()> {
             if let Some(url) = args.database_url {
                 config.database.url = url;
             }
+            if let Some(url) = args.orchestra_control_plane_url {
+                config.orchestra_control_plane = Some(crate::config::OrchestraControlPlaneConfig {
+                    url,
+                    auth_token: args.orchestra_control_plane_token,
+                });
+            }
             config
         }
     };
 
     // Connect to database
     let db = Database::connect(&config.database).await?;
+    let orchestra_client = config
+        .orchestra_control_plane
+        .as_ref()
+        .map(|control_plane| {
+            Arc::new(ControlPlaneClient::new(
+                control_plane.url.clone(),
+                control_plane.auth_token.clone(),
+            ))
+        });
 
     info!("Database connected");
+    if let Some(control_plane) = &config.orchestra_control_plane {
+        info!(
+            orchestra_control_plane_url = %control_plane.url,
+            "orchestra control-plane relay enabled"
+        );
+    }
 
     // Create GraphQL schema
-    let schema = create_schema(db.clone());
+    let schema = create_schema(db.clone(), orchestra_client.clone());
 
     // Create REST router
-    let app = create_router(db, schema);
+    let app = create_router(db, schema, orchestra_client);
 
     // Start server
     let addr: SocketAddr = format!("{}:{}", config.server.host, config.server.port)

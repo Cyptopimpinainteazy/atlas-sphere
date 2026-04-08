@@ -6,19 +6,38 @@
 use super::{ExecutionProfile, GpuBackendType, GpuDeviceInfo, GpuExecutor, PerformanceMetrics};
 use crate::error::{SwarmError, SwarmResult};
 use crate::protocol::TaskResult;
-use crate::task::Task;
+use crate::task::{Task, TaskType};
 use async_trait::async_trait;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use parking_lot::Mutex;
 use std::time::{Duration, Instant};
 use tokio::process::Command;
 use tracing::{debug, info, warn};
+
+#[cfg(feature = "x3-runtime")]
+use ::x3_vm::gpu_hostcalls::GpuHostcalls;
+
+#[cfg(feature = "x3-runtime")]
+use ::x3_vm::{Value, VM, Verifier, VerifyOptions};
+
+#[cfg(feature = "x3-runtime")]
+use x3_gpu_validator_swarm::gpu_bytecode as bytecode_gen;
+
+#[cfg(feature = "x3-runtime")]
+use lru::LruCache;
 
 /// CUDA executor.
 pub struct CudaExecutor {
     devices: Arc<Mutex<Vec<GpuDeviceInfo>>>,
     last_metrics: Arc<Mutex<Option<PerformanceMetrics>>>,
     available: bool,
+    #[cfg(feature = "x3-runtime")]
+    gpu_hostcalls: Arc<Mutex<Option<Arc<GpuHostcalls>>>>,
+    #[cfg(feature = "x3-runtime")]
+    bytecode_cache: Arc<Mutex<LruCache<String, Vec<u8>>>>,
+    #[cfg(feature = "x3-runtime")]
+    verified_bytecode_cache: Arc<Mutex<std::collections::HashMap<String, Arc<::x3_vm::BytecodeModule>>>>,
 }
 
 impl CudaExecutor {
@@ -41,11 +60,27 @@ impl CudaExecutor {
             warn!("CUDA runtime unavailable");
         }
 
-        Ok(Self {
+        let mut executor = Self {
             devices: Arc::new(Mutex::new(devices)),
             last_metrics: Arc::new(Mutex::new(None)),
             available,
-        })
+            #[cfg(feature = "x3-runtime")]
+            gpu_hostcalls: Arc::new(Mutex::new(None)),
+            #[cfg(feature = "x3-runtime")]
+            bytecode_cache: Arc::new(Mutex::new(
+                LruCache::new(std::num::NonZeroUsize::new(512).unwrap())
+            )),
+            #[cfg(feature = "x3-runtime")]
+            verified_bytecode_cache: Arc::new(Mutex::new(std::collections::HashMap::new())),
+        };
+
+        // Initialize GPU hostcalls
+        #[cfg(feature = "x3-runtime")]
+        {
+            let _ = executor.init_gpu_hostcalls().await;
+        }
+
+        Ok(executor)
     }
 
     async fn check_cuda_availability() -> bool {
@@ -214,6 +249,263 @@ impl CudaExecutor {
         let _ = tokio::fs::remove_file(&out_path).await;
         Ok(ptx)
     }
+
+    #[cfg(feature = "x3-runtime")]
+    async fn init_gpu_hostcalls(&mut self) -> SwarmResult<()> {
+        let mut hostcalls_opt = self.gpu_hostcalls.lock();
+        if hostcalls_opt.is_some() {
+            return Ok(());
+        }
+
+        let gpu_hostcalls = GpuHostcalls::new();
+        if gpu_hostcalls.is_available() {
+            info!("[CudaExecutor] GPU hostcalls initialized successfully");
+            *hostcalls_opt = Some(Arc::new(gpu_hostcalls));
+            Ok(())
+        } else {
+            warn!("[CudaExecutor] GPU hostcalls not available, CPU fallback will be used");
+            Ok(())
+        }
+    }
+
+    #[cfg(feature = "x3-runtime")]
+    fn get_gpu_hostcalls(&self) -> Option<Arc<GpuHostcalls>> {
+        self.gpu_hostcalls.lock().clone()
+    }
+
+    #[cfg(feature = "x3-runtime")]
+    fn generate_gpu_bytecode_for_task(&self, task: &Task) -> Option<Vec<u8>> {
+        // Detect task type and generate appropriate GPU bytecode
+        match &task.task_type {
+            TaskType::X3Bytecode {
+                bytecode,
+                input: _,
+                gas_budget: _,
+            } => {
+                // For X3Bytecode tasks, the bytecode is already GPU bytecode
+                // Just return it as-is
+                debug!(
+                    "[CudaExecutor] X3Bytecode task {} with {} bytes of bytecode",
+                    task.id,
+                    bytecode.len()
+                );
+                Some(bytecode.clone())
+            }
+            TaskType::Custom {
+                task_type,
+                payload,
+            } => {
+                // Generate cache key from task type and payload
+                let cache_key = format!(
+                    "{}_{}", 
+                    task_type, 
+                    blake3::hash(payload).to_hex()
+                );
+
+                // Check cache first
+                {
+                    let mut cache = self.bytecode_cache.lock();
+                    if let Some(cached) = cache.get(&cache_key) {
+                        debug!(
+                            "[CudaExecutor] Bytecode cache HIT for task {} (cache_key: {})",
+                            task.id, cache_key
+                        );
+                        return Some(cached.clone());
+                    }
+                }
+
+                // For custom tasks, check if they're hash operations
+                let generated_bytecode = if task_type.contains("hash") || task_type.contains("sha256") {
+                    debug!(
+                        "[CudaExecutor] Custom SHA-256 task {} with {} bytes of input",
+                        task.id,
+                        payload.len()
+                    );
+                    // Generate SHA-256 bytecode module
+                    let module =
+                        bytecode_gen::generate_sha256_batch_bytecode(payload.clone(), 1);
+                    // Convert module to bytes
+                    Some(module.to_bytes())
+                } else if task_type.contains("keccak") {
+                    debug!(
+                        "[CudaExecutor] Custom Keccak-256 task {} with {} bytes of input",
+                        task.id,
+                        payload.len()
+                    );
+                    // Generate Keccak-256 bytecode module
+                    let module =
+                        bytecode_gen::generate_keccak256_batch_bytecode(payload.clone(), 1);
+                    // Convert module to bytes
+                    Some(module.to_bytes())
+                } else {
+                    debug!(
+                        "[CudaExecutor] Custom task {} type {} not GPU-acceleratable",
+                        task.id, task_type
+                    );
+                    None
+                };
+
+                // Cache the generated bytecode if successful
+                if let Some(ref bytecode) = generated_bytecode {
+                    let mut cache = self.bytecode_cache.lock();
+                    cache.put(cache_key.clone(), bytecode.clone());
+                    debug!(
+                        "[CudaExecutor] Bytecode cached for task {} (cache_key: {}, size: {} bytes)",
+                        task.id, cache_key, bytecode.len()
+                    );
+                }
+
+                generated_bytecode
+            }
+            _ => {
+                // Other task types are not GPU-acceleratable
+                debug!(
+                    "[CudaExecutor] Task {} type not GPU-acceleratable",
+                    task.id
+                );
+                None
+            }
+        }
+    }
+
+    #[cfg(feature = "x3-runtime")]
+    async fn execute_gpu_bytecode(&self, bytecode: &[u8]) -> SwarmResult<Vec<u8>> {
+        // Generate cache key from raw bytecode hash
+        let cache_key = blake3::hash(bytecode).to_hex().to_string();
+        
+        // Check if bytecode is already verified and cached
+        {
+            let cache = self.verified_bytecode_cache.lock();
+            if let Some(cached_module) = cache.get(&cache_key) {
+                debug!(
+                    "[CudaExecutor] Verified bytecode cache HIT for hash {}",
+                    &cache_key[..16]
+                );
+                let module = cached_module.clone(); // Arc is cheap clone
+                drop(cache); // Release lock early
+                
+                // Use cached verified module - dereference Arc to get BytecodeModule
+                let mut vm = VM::new((*module).clone());
+                
+                // Get GPU hostcalls if available
+                if let Some(gpu_hostcalls) = self.get_gpu_hostcalls() {
+                    gpu_hostcalls.register_on_vm(&mut vm);
+                    debug!("[CudaExecutor] GPU hostcalls registered on VM");
+                } else {
+                    warn!("[CudaExecutor] GPU hostcalls not available for bytecode execution");
+                    return Err(SwarmError::ExecutionError(
+                        "GPU hostcalls not available".to_string(),
+                    ));
+                }
+                
+                // Execute the GPU bytecode
+                match vm.call_function(0, &[]) {
+                    Ok(execution_result) => {
+                        match execution_result.value {
+                            Some(Value::Bytes(result_bytes)) => {
+                                debug!(
+                                    "[CudaExecutor] GPU bytecode execution completed (cached module), {} bytes result",
+                                    result_bytes.len()
+                                );
+                                Ok(result_bytes)
+                            }
+                            other => {
+                                warn!(
+                                    "[CudaExecutor] GPU bytecode execution returned unexpected value: {:?}",
+                                    other
+                                );
+                                Err(SwarmError::ExecutionError(format!(
+                                    "GPU bytecode execution returned unexpected value: {:?}",
+                                    other
+                                )))
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        warn!(
+                            "[CudaExecutor] GPU bytecode execution failed: {}",
+                            e
+                        );
+                        Err(SwarmError::ExecutionError(format!(
+                            "GPU bytecode execution failed: {}",
+                            e
+                        )))
+                    }
+                }
+            } else {
+                drop(cache); // Release lock before expensive Verifier
+                
+                // Cache miss - need to verify bytecode
+                debug!(
+                    "[CudaExecutor] Verified bytecode cache MISS for hash {}",
+                    &cache_key[..16]
+                );
+                
+                // Deserialize bytecode into a VM module
+                let module = Verifier::verify_module_bytes(bytecode, &VerifyOptions::default())
+                    .map_err(|e| SwarmError::ExecutionError(format!(
+                        "Failed to verify GPU bytecode: {}",
+                        e
+                    )))?;
+                
+                // Store verified module in cache
+                {
+                    let mut cache = self.verified_bytecode_cache.lock();
+                    cache.insert(cache_key.clone(), Arc::new(module.clone()));
+                }
+                
+                // Create VM and register GPU hostcalls
+                let mut vm = VM::new(module);
+                
+                // Get GPU hostcalls if available
+                if let Some(gpu_hostcalls) = self.get_gpu_hostcalls() {
+                    gpu_hostcalls.register_on_vm(&mut vm);
+                    debug!("[CudaExecutor] GPU hostcalls registered on VM");
+                } else {
+                    warn!("[CudaExecutor] GPU hostcalls not available for bytecode execution");
+                    return Err(SwarmError::ExecutionError(
+                        "GPU hostcalls not available".to_string(),
+                    ));
+                }
+                
+                // Execute the GPU bytecode
+                match vm.call_function(0, &[]) {
+                    Ok(execution_result) => {
+                        match execution_result.value {
+                            Some(Value::Bytes(result_bytes)) => {
+                                debug!(
+                                    "[CudaExecutor] GPU bytecode execution completed, {} bytes result",
+                                    result_bytes.len()
+                                );
+                                Ok(result_bytes)
+                            }
+                            other => {
+                                warn!(
+                                    "[CudaExecutor] GPU bytecode execution returned unexpected value: {:?}",
+                                    other
+                                );
+                                Err(SwarmError::ExecutionError(format!(
+                                    "GPU bytecode execution returned unexpected value: {:?}",
+                                    other
+                                )))
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        warn!(
+                            "[CudaExecutor] GPU bytecode execution failed: {}",
+                            e
+                        );
+                        Err(SwarmError::ExecutionError(format!(
+                            "GPU bytecode execution failed: {}",
+                            e
+                        )))
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 #[async_trait]
@@ -227,17 +519,16 @@ impl GpuExecutor for CudaExecutor {
     }
 
     async fn is_available(&self) -> bool {
-        self.available && !self.devices.lock().unwrap().is_empty()
+        self.available && !self.devices.lock().is_empty()
     }
 
     async fn list_devices(&self) -> SwarmResult<Vec<GpuDeviceInfo>> {
-        Ok(self.devices.lock().unwrap().clone())
+        Ok(self.devices.lock().clone())
     }
 
     async fn get_device_info(&self, device_id: u32) -> SwarmResult<GpuDeviceInfo> {
         self.devices
             .lock()
-            .unwrap()
             .iter()
             .find(|d| d.device_id == device_id)
             .cloned()
@@ -256,7 +547,55 @@ impl GpuExecutor for CudaExecutor {
 
         let device_info = self.get_device_info(device_id).await?;
         let start = Instant::now();
-        let result_payload = Self::result_payload(task, device_id);
+
+        // Use GPU hostcalls if available, otherwise CPU fallback
+        let result_payload = {
+            #[cfg(feature = "x3-runtime")]
+            {
+                if self.get_gpu_hostcalls().is_some() {
+                    debug!("[CudaExecutor::execute] GPU hostcalls available");
+                    // Try to generate GPU bytecode for this task
+                    if let Some(bytecode) = self.generate_gpu_bytecode_for_task(task) {
+                        debug!(
+                            "[CudaExecutor::execute] Generated {} bytes of GPU bytecode for task {}",
+                            bytecode.len(),
+                            task.id
+                        );
+                        // Try to execute GPU bytecode
+                        match self.execute_gpu_bytecode(&bytecode).await {
+                            Ok(gpu_result) => {
+                                debug!(
+                                    "[CudaExecutor::execute] GPU bytecode execution succeeded"
+                                );
+                                gpu_result
+                            }
+                            Err(e) => {
+                                warn!(
+                                    "[CudaExecutor::execute] GPU bytecode execution failed: {}, falling back to CPU",
+                                    e
+                                );
+                                // Fall back to CPU
+                                Self::result_payload(task, device_id)
+                            }
+                        }
+                    } else {
+                        debug!(
+                            "[CudaExecutor::execute] Task {} not GPU-acceleratable, using CPU",
+                            task.id
+                        );
+                        Self::result_payload(task, device_id)
+                    }
+                } else {
+                    debug!("[CudaExecutor::execute] GPU hostcalls unavailable, CPU fallback");
+                    Self::result_payload(task, device_id)
+                }
+            }
+            #[cfg(not(feature = "x3-runtime"))]
+            {
+                Self::result_payload(task, device_id)
+            }
+        };
+
         let elapsed = start.elapsed();
         let elapsed_ms = elapsed.as_millis() as u64;
         let compute_units = (task.estimated_compute_units() / 10).max(1);
@@ -272,7 +611,7 @@ impl GpuExecutor for CudaExecutor {
             achieved_gflops: (device_info.peak_fp32_tflops as f64 * 0.8).max(1.0),
             framework_overhead_ms: 1,
         };
-        *self.last_metrics.lock().unwrap() = Some(metrics);
+        *self.last_metrics.lock() = Some(metrics);
 
         Ok(Self::build_task_result(
             task,
@@ -296,8 +635,65 @@ impl GpuExecutor for CudaExecutor {
 
         let device_info = self.get_device_info(device_id).await?;
         let start = Instant::now();
-        let mut payload = Self::result_payload(task, device_id);
-        payload.extend_from_slice(profile.kernel_name.as_bytes());
+
+        // Use GPU hostcalls if available with profile optimization
+        let payload = {
+            #[cfg(feature = "x3-runtime")]
+            {
+                if self.get_gpu_hostcalls().is_some() {
+                    debug!("[CudaExecutor::execute_with_profile] Using GPU hostcalls with profile");
+                    // Try to generate GPU bytecode for this task
+                    if let Some(bytecode) = self.generate_gpu_bytecode_for_task(task) {
+                        debug!(
+                            "[CudaExecutor::execute_with_profile] Generated {} bytes of GPU bytecode for task {}",
+                            bytecode.len(),
+                            task.id
+                        );
+                        // Try to execute GPU bytecode
+                        match self.execute_gpu_bytecode(&bytecode).await {
+                            Ok(mut gpu_result) => {
+                                debug!(
+                                    "[CudaExecutor::execute_with_profile] GPU bytecode execution succeeded"
+                                );
+                                // Extend result with profile info
+                                gpu_result.extend_from_slice(profile.kernel_name.as_bytes());
+                                gpu_result
+                            }
+                            Err(e) => {
+                                warn!(
+                                    "[CudaExecutor::execute_with_profile] GPU bytecode execution failed: {}, falling back to CPU",
+                                    e
+                                );
+                                // Fall back to CPU
+                                let mut p = Self::result_payload(task, device_id);
+                                p.extend_from_slice(profile.kernel_name.as_bytes());
+                                p
+                            }
+                        }
+                    } else {
+                        debug!(
+                            "[CudaExecutor::execute_with_profile] Task {} not GPU-acceleratable, using CPU",
+                            task.id
+                        );
+                        let mut p = Self::result_payload(task, device_id);
+                        p.extend_from_slice(profile.kernel_name.as_bytes());
+                        p
+                    }
+                } else {
+                    debug!("[CudaExecutor::execute_with_profile] GPU hostcalls unavailable, CPU fallback");
+                    let mut p = Self::result_payload(task, device_id);
+                    p.extend_from_slice(profile.kernel_name.as_bytes());
+                    p
+                }
+            }
+            #[cfg(not(feature = "x3-runtime"))]
+            {
+                let mut p = Self::result_payload(task, device_id);
+                p.extend_from_slice(profile.kernel_name.as_bytes());
+                p
+            }
+        };
+
         let elapsed = start.elapsed();
         let elapsed_ms = elapsed.as_millis() as u64;
         let compute_units = profile.estimated_time_ms.max(1) * 100;
@@ -315,7 +711,7 @@ impl GpuExecutor for CudaExecutor {
         };
 
         let result = Self::build_task_result(task, payload, elapsed_ms, compute_units);
-        *self.last_metrics.lock().unwrap() = Some(metrics.clone());
+        *self.last_metrics.lock() = Some(metrics.clone());
         Ok((result, metrics))
     }
 
@@ -383,7 +779,7 @@ impl GpuExecutor for CudaExecutor {
     }
 
     async fn get_last_metrics(&self) -> Option<PerformanceMetrics> {
-        self.last_metrics.lock().unwrap().clone()
+        self.last_metrics.lock().clone()
     }
 
     async fn reset_device(&self, device_id: u32) -> SwarmResult<()> {

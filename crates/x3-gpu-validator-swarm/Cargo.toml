@@ -16,7 +16,7 @@ name = "x3-swarm-orchestrator"
 path = "src/bin/x3_swarm_orchestrator.rs"
 
 [[bin]]
-name = "x3-bench"
+name = "x3-swarm-bench"
 path = "src/bin/x3_bench.rs"
 
 [[bin]]
@@ -59,6 +59,7 @@ getrandom = "0.2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 prometheus = "0.14.0"
+log = "0.4"
 
 # HTTP server
 axum = "0.7"
@@ -80,6 +81,11 @@ once_cell = "1.18"
 # For CPU verification
 keccak-hash = "0.1"
 
+# GPU and VM
+x3-vm = { path = "../x3-vm" }
+x3-backend = { path = "../x3-backend" }
+x3-orchestra-control-plane = { path = "../x3-orchestra-control-plane" }
+
 # For CPU detection
 num_cpus = "1.17"
 
@@ -90,3 +96,7 @@ reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"] }
 tokio-test = "0.4"
 tempfile = "3.9"
 criterion = "0.5"
+
+[[bench]]
+name = "e2e_tps"
+harness = false

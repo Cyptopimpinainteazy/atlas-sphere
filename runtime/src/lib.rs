@@ -9,6 +9,12 @@
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
+#[cfg(all(not(feature = "std"), target_arch = "wasm32"))]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    core::arch::wasm32::unreachable()
+}
+
 use codec::{Decode, Encode};
 use frame_support::PalletId;
 pub use frame_support::{
@@ -45,7 +51,7 @@ use pallet_x3_settlement_engine;
 use pallet_x3_verifier;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
-use sp_core::{OpaqueMetadata, H256, U256};
+use sp_core::{OpaqueMetadata, H160, H256, U256};
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
@@ -101,6 +107,10 @@ pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::Account
 
 pub const MILLISECS_PER_BLOCK: u64 = 200; // 200ms target for higher throughput and lower latency
 
+pub const fn blocks_from_millis(milliseconds: u64) -> BlockNumber {
+    (milliseconds / MILLISECS_PER_BLOCK) as BlockNumber
+}
+
 pub struct RuntimeVersion;
 impl frame_support::traits::Get<sp_version::RuntimeVersion> for RuntimeVersion {
     fn get() -> sp_version::RuntimeVersion {
@@ -153,6 +163,17 @@ parameter_types! {
     pub const MaxPreparedCrossVmOps: u32 = 1024;
     pub const MaxPreparedOpsPerBlock: u32 = 64;
     pub const RequireCrossVmProof: bool = false;
+    /// EVM bridge escrow contract address for atomic cross-VM swaps.
+    pub BridgeEvmEscrow: H160 = H160([
+        0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+        0x12, 0x34, 0x56, 0x78, 0x90, 0x12, 0x34, 0x56, 0x78, 0x90,
+    ]);
+    /// SVM bridge escrow program address for atomic cross-VM swaps.
+    pub BridgeSvmEscrow: [u8; 32] = [
+        0x58, 0x33, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x73, 0x63, 0x72, 0x6f, 0x77,
+        0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31,
+        0x31, 0x31, 0x31, 0x31,
+    ];
     pub BlockWeights: limits::BlockWeights = limits::BlockWeights::with_sensible_defaults(
         // Keep max execution budget below slot time (200ms) to avoid author/import divergence.
         Weight::from_parts((WEIGHT_REF_TIME_PER_SECOND / 1000) * 150, 5 * 1024 * 1024),
@@ -434,14 +455,8 @@ impl pallet_session::historical::Config for Runtime {
 
 impl pallet_grandpa::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    type KeyOwnerProofSystem = Historical;
-    type KeyOwnerProof =
-        <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, GrandpaId)>>::Proof;
-    type KeyOwnerIdentification = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
-        KeyTypeId,
-        GrandpaId,
-    )>>::IdentificationTuple;
-    type HandleEquivocation = ();
+    type KeyOwnerProof = sp_core::Void;
+    type EquivocationReportSystem = ();
     type WeightInfo = ();
     type MaxAuthorities = MaxAuthorities;
     type MaxSetIdSessionEntries = MaxSetIdSessionEntries;
@@ -573,6 +588,8 @@ impl pallet_x3_kernel::Config for Runtime {
     type X3Adapter = pallet_x3_kernel::wasm_adapters::WasmX3Adapter;
     type GovernanceOrigin = EnsureRootOrHalfCouncil;
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
+    type BridgeEvmEscrow = BridgeEvmEscrow;
+    type BridgeSvmEscrow = BridgeSvmEscrow;
 }
 
 impl pallet_x3_coin::Config for Runtime {
@@ -727,11 +744,7 @@ mod native_vm_adapters {
                     Some(target),
                     &pre_balances,
                 )),
-                Err(_) => {
-                    // As a safe fallback in tests or non-fully-initialized environments,
-                    // delegate to the Kernel's mock adapter for deterministic behavior.
-                    pallet_x3_kernel::MockEvmAdapter::execute(payload, gas_limit)
-                }
+                Err(_) => Err(DispatchError::Other("Native EVM execution failed")),
             }
         }
 
@@ -1049,14 +1062,14 @@ impl pallet_preimage::Config for Runtime {
 // ===== Governance Pallet Configuration =====
 parameter_types! {
     pub const ProposalDeposit: Balance = 100 * X3;
-    pub const VotingPeriod: BlockNumber = 7 * 24 * 60 * 10; // ~7 days at 6s blocks
-    pub const EnactmentPeriod: BlockNumber = 24 * 60 * 10; // ~1 day at 6s blocks
+    pub const VotingPeriod: BlockNumber = blocks_from_millis(7 * 24 * 60 * 60 * 1000); // 7 days at 200ms blocks
+    pub const EnactmentPeriod: BlockNumber = blocks_from_millis(24 * 60 * 60 * 1000); // 1 day at 200ms blocks
     pub const GovernanceQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(10);
     pub const ApprovalThreshold: sp_runtime::Percent = sp_runtime::Percent::from_percent(51);
     pub const MaxGovernanceProposals: u32 = 100;
     pub const MaxVotes: u32 = 1000;
     pub const MaxDelegations: u32 = 100;
-    pub const ConvictionPeriod: BlockNumber = 28 * 24 * 60 * 10; // ~28 days at 6s blocks
+    pub const ConvictionPeriod: BlockNumber = blocks_from_millis(28 * 24 * 60 * 60 * 1000); // 28 days at 200ms blocks
 
     // ============================================================================
     // AI Governance Parameters
@@ -1183,7 +1196,7 @@ parameter_types! {
     pub const MinApprovalQuorum: sp_runtime::Percent = sp_runtime::Percent::from_percent(66);
     pub const MaxPendingProposals: u32 = 100;
     pub const MaxReasonLength: u32 = 256;
-    pub const ProposalLifetime: BlockNumber = 7 * 24 * 60 * 10; // ~7 days
+    pub const ProposalLifetime: BlockNumber = blocks_from_millis(7 * 24 * 60 * 60 * 1000); // 7 days at 200ms blocks
     pub const MetricsHistoryDepth: u32 = 100;
     pub const AutoEvolutionBounds: (u32, u32) = (80, 120); // min 80%, max 120%
 }
@@ -1915,23 +1928,20 @@ impl_runtime_apis! {
         }
 
         fn submit_report_equivocation_unsigned_extrinsic(
-            equivocation_proof: sp_consensus_grandpa::EquivocationProof<
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
                 <Block as BlockT>::Hash,
                 sp_runtime::traits::NumberFor<Block>,
             >,
-            key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
         ) -> Option<()> {
-            let key_owner_proof = key_owner_proof.decode::<pallet_session::historical::Proof>()?;
-            Grandpa::submit_unsigned_equivocation_report(equivocation_proof, key_owner_proof)
+            None
         }
 
         fn generate_key_ownership_proof(
             _set_id: sp_consensus_grandpa::SetId,
-            authority_id: sp_consensus_grandpa::AuthorityId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
         ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-            Historical::prove((sp_consensus_grandpa::KEY_TYPE, authority_id))
-                .map(|p| p.encode())
-                .map(sp_consensus_grandpa::OpaqueKeyOwnershipProof::new)
+            None
         }
     }
 
@@ -2303,11 +2313,10 @@ impl_runtime_apis! {
 
         fn deploy_evm_contract(
             bytecode: Vec<u8>,
-            salt: Option<Vec<u8>>,
-            init_code_hash: Option<Vec<u8>>,
+            _salt: Option<Vec<u8>>,
+            _init_code_hash: Option<Vec<u8>>,
         ) -> Result<Vec<u8>, sp_runtime::DispatchError> {
             use sp_core::{H160, U256};
-            use sp_runtime::traits::BlakeTwo256;
             use pallet_evm::Runner;
 
             // Validate bytecode
@@ -2350,7 +2359,7 @@ impl_runtime_apis! {
                         ExitReason::Revert(_) => {
                             Err(sp_runtime::DispatchError::Other("EVM contract deployment reverted"))
                         }
-                        ExitReason::Error(e) => {
+                        ExitReason::Error(_e) => {
                             Err(sp_runtime::DispatchError::Other("EVM contract deployment error"))
                         }
                         ExitReason::Fatal(_) => {
@@ -2358,7 +2367,7 @@ impl_runtime_apis! {
                         }
                     }
                 }
-                Err(e) => {
+                Err(_e) => {
                     Err(sp_runtime::DispatchError::Other("EVM runner failed"))
                 }
             }

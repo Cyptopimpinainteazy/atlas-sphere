@@ -2,8 +2,7 @@
 //!
 //! Natural language to X3 smart contract code generation.
 
-#![allow(dead_code)]
-#![allow(unused_variables)]
+#![allow(unused, dead_code, deprecated)]
 
 pub mod error;
 pub mod generator;

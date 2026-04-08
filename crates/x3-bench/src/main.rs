@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! X3 Benchmark Runner
 //!
 //! Compiles source fixtures through the X3 pipeline and compares:

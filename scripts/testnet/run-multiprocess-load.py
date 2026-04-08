@@ -12,22 +12,22 @@ from pathlib import Path
 def parse_json_tail(text: str) -> dict:
     idx = text.rfind("{")
     if idx == -1:
-      raise ValueError("No JSON object found in process output")
+        raise ValueError("No JSON object found in process output")
     return json.loads(text[idx:])
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run multiprocess X3 remark load test.")
+    parser = argparse.ArgumentParser(description="Run multiprocess X3 submitComitV2 load test.")
     parser.add_argument("--rpc-ws", default="ws://127.0.0.1:9944")
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--senders", type=int, default=120)
-    parser.add_argument("--duration-sec", type=int, default=60)
-    parser.add_argument("--finality-wait-sec", type=int, default=20)
-    parser.add_argument("--concurrency-total", type=int, default=512)
+    parser.add_argument("--senders", type=int, default=240)
+    parser.add_argument("--duration-sec", type=int, default=180)
+    parser.add_argument("--finality-wait-sec", type=int, default=45)
+    parser.add_argument("--concurrency-total", type=int, default=1024)
     parser.add_argument("--prefund-amount-planck", default="1000000000000")
-    parser.add_argument("--output", default="benchmarks/x3_chain_tps_multiprocess.json")
+    parser.add_argument("--output", default="benchmarks/x3_chain_submit_comit_v2_tps_multiprocess.json")
     parser.add_argument("--require-baseline", action="store_true")
-    parser.add_argument("--min-duration-sec", type=int, default=1200)
+    parser.add_argument("--min-duration-sec", type=int, default=180)
     parser.add_argument("--min-finalized-tps", type=float, default=0.0)
     parser.add_argument("--max-error-rate", type=float, default=0.01)
     args = parser.parse_args()
@@ -47,10 +47,10 @@ def main() -> int:
     prefund_env["SENDER_OFFSET"] = "0"
     prefund_env["SENDER_COUNT"] = str(args.senders)
     prefund_env["PRE_FUND"] = "true"
-    prefund_env["ONLY_PREFUND"] = "true"
+    prefund_env["ONLY_PREPARE"] = "true"
     prefund_env["PREFUND_AMOUNT_PLANCK"] = str(args.prefund_amount_planck)
     prefund = subprocess.run(
-        ["node", "scripts/testnet/load-remarks-tps.js"],
+        ["node", "scripts/testnet/load-x3-comit-v2-tps.js"],
         cwd=Path(__file__).resolve().parents[2],
         env=prefund_env,
         capture_output=True,
@@ -65,7 +65,7 @@ def main() -> int:
     if prefund.returncode != 0:
         aggregate = {
             "timestamp_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-            "benchmark": "x3_chain_tps_multiprocess",
+            "benchmark": "x3_chain_submit_comit_v2_tps_multiprocess",
             "rpc_ws": args.rpc_ws,
             "workers": args.workers,
             "senders_total": args.senders,
@@ -101,7 +101,7 @@ def main() -> int:
         env["FINALITY_WAIT_SEC"] = str(args.finality_wait_sec)
         env["CONCURRENCY"] = str(conc_per_worker)
 
-        cmd = ["node", "scripts/testnet/load-remarks-tps.js"]
+        cmd = ["node", "scripts/testnet/load-x3-comit-v2-tps.js"]
         procs.append(
             (
                 worker_id,
@@ -146,7 +146,7 @@ def main() -> int:
 
     aggregate = {
         "timestamp_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "benchmark": "x3_chain_tps_multiprocess",
+        "benchmark": "x3_chain_submit_comit_v2_tps_multiprocess",
         "rpc_ws": args.rpc_ws,
         "workers": args.workers,
         "senders_total": args.senders,
@@ -183,7 +183,22 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(aggregate, indent=2))
     print(str(out))
-    print(json.dumps({k: aggregate[k] for k in ["workers", "senders_total", "concurrency_total", "finalized_total", "finalized_tps_submit_window", "successful_workers"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                k: aggregate[k]
+                for k in [
+                    "workers",
+                    "senders_total",
+                    "concurrency_total",
+                    "finalized_total",
+                    "finalized_tps_submit_window",
+                    "successful_workers",
+                ]
+            },
+            indent=2,
+        )
+    )
     if args.require_baseline and not baseline_ok:
         return 1
     return 0

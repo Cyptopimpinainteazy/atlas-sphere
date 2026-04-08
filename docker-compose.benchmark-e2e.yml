@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for gateway
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: x3_indexer
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: gateway
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateway -d x3_indexer"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # X3 Gateway service
+  x3-gateway:
+    build:
+      context: .
+      dockerfile: crates/x3-gateway/Dockerfile
+    environment:
+      DATABASE_URL: postgres://gateway:gateway@postgres:5432/x3_indexer
+      GATEWAY_HOST: 0.0.0.0
+      GATEWAY_PORT: 8080
+      RUST_LOG: debug
+      X3_GATEWAY_BENCHMARK_TOKEN: benchmark-secret-token-e2e
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # X3 Sidecar service
+  x3-sidecar:
+    build:
+      context: .
+      dockerfile: crates/x3-sidecar/Dockerfile
+    environment:
+      RUST_LOG: debug
+      X3_SIDECAR_RPC_PORT: 9955
+      X3_SIDECAR_METRICS_PORT: 9956
+    ports:
+      - "9955:9955"
+      - "9956:9956"
+    volumes:
+      - ./docker-config/sidecar-e2e.toml:/etc/x3/sidecar.toml
+      - sidecar_data:/x3-sidecar-data
+    depends_on:
+      x3-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9956/metrics"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  sidecar_data:

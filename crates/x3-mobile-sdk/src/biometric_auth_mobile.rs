@@ -132,7 +132,7 @@ impl BiometricAuth {
             enrollment_date: chrono::Utc::now().timestamp(),
         };
 
-        let mut templates = self.templates.lock().unwrap();
+        let mut templates = self.templates.lock().expect("templates mutex poisoned");
         templates.push(template);
 
         tracing::info!("Enrolled {} credential", biometric_type);
@@ -142,12 +142,12 @@ impl BiometricAuth {
     /// Verify biometric and create authenticated session
     pub async fn verify(&self, biometric_data: &[u8]) -> Result<AuthResult, SdkError> {
         // Check if locked out
-        let failed = *self.failed_attempts.lock().unwrap();
+        let failed = *self.failed_attempts.lock().expect("failed_attempts mutex poisoned");
         if failed >= self.max_failures {
             return Ok(AuthResult::Retry);
         }
 
-        let templates = self.templates.lock().unwrap();
+        let templates = self.templates.lock().expect("templates mutex poisoned");
         if templates.is_empty() {
             return Err(SdkError::BiometricError(
                 "No biometric enrolled".to_string(),
@@ -177,7 +177,7 @@ impl BiometricAuth {
                 self.sessions.write().await.push(session);
                 
                 // Reset failure count
-                *self.failed_attempts.lock().unwrap() = 0;
+                *self.failed_attempts.lock().expect("failed_attempts mutex poisoned") = 0;
 
                 tracing::info!("Biometric authentication successful");
                 return Ok(AuthResult::Success(session_token));
@@ -185,7 +185,7 @@ impl BiometricAuth {
         }
 
         // No match - increment failures
-        let mut failed = self.failed_attempts.lock().unwrap();
+        let mut failed = self.failed_attempts.lock().expect("failed_attempts mutex poisoned");
         *failed += 1;
         let remaining = self.max_failures - *failed;
 
@@ -232,7 +232,7 @@ impl BiometricAuth {
             self.sessions.write().await.push(session);
             Ok(AuthResult::Success(session_token))
         } else {
-            let mut failed = self.failed_attempts.lock().unwrap();
+            let mut failed = self.failed_attempts.lock().expect("failed_attempts mutex poisoned");
             *failed += 1;
 
             if *failed >= self.max_failures {
@@ -298,19 +298,19 @@ impl BiometricAuth {
 
     /// Get list of enrolled biometrics
     pub async fn get_enrolled_methods(&self) -> Result<Vec<BiometricType>, SdkError> {
-        let templates = self.templates.lock().unwrap();
+        let templates = self.templates.lock().expect("templates mutex poisoned");
         Ok(templates.iter().map(|t| t.biometric_type).collect())
     }
 
     /// Check if specific biometric is enrolled
     pub async fn is_enrolled(&self, biometric_type: BiometricType) -> Result<bool, SdkError> {
-        let templates = self.templates.lock().unwrap();
+        let templates = self.templates.lock().expect("templates mutex poisoned");
         Ok(templates.iter().any(|t| t.biometric_type == biometric_type))
     }
 
     /// Reset lockout (admin function - requires authentication)
     pub async fn reset_lockout(&self) -> Result<(), SdkError> {
-        *self.failed_attempts.lock().unwrap() = 0;
+        *self.failed_attempts.lock().expect("failed_attempts mutex poisoned") = 0;
         tracing::warn!("Lockout reset");
         Ok(())
     }

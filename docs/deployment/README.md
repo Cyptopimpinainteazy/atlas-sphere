@@ -4,6 +4,8 @@
 
 ### Quick Start
 - **[QUICKSTART.md](QUICKSTART.md)** - Choose your deployment path (3 options)
+- **[HARDWARE_ROLE_PLAN.md](HARDWARE_ROLE_PLAN.md)** - Exact role mapping for the current rack and the minimum VPS extension for a credible public testnet
+- **[RACK_BRINGUP_RUNBOOK.md](RACK_BRINGUP_RUNBOOK.md)** - Host-by-host bring-up using reusable systemd env files and strict firewall inputs
 - **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** - Complete in-house deployment guide
 - **[PUBLIC_RPC.md](PUBLIC_RPC.md)** - Run public RPC (dev/local/staging/testnet) safely
 
@@ -14,6 +16,10 @@
 
 ### Build & Keys
 - **[../../deployment/build-and-keygen.sh](build-and-keygen.sh)** - Build binary and generate validator keys
+- **[../../deployment/inventory.yaml](../../deployment/inventory.yaml)** - Hardware-backed inventory with real roles and null fields that must be filled before deployment
+- **[../../deployment/servers.env.example](../../deployment/servers.env.example)** - Copy to `deployment/servers.env` and set real SSH targets for multi-server deployment
+- **[../../deployment/systemd/x3-chain-node@.service](../../deployment/systemd/x3-chain-node@.service)** - Reusable node service template for rack hosts
+- **[../../deployment/systemd/examples](../../deployment/systemd/examples)** - Rack-specific env examples for the current hardware plan
 - **[../../deployment/keys](keys/)** - Validator keys and bootnode key (KEEP SECURE!)
 - **[chain-specs/](chain-specs/)** - Chain specification files
 

@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! Quantum-Resistant Cryptography for X3 Chain
 //!
 //! This crate provides post-quantum cryptographic primitives to future-proof

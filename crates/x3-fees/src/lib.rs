@@ -1,14 +1,15 @@
 //! # X3 Economic Engine
 //!
 //! Core economic mechanisms: EIP-1559 dynamic fee market, MEV protection via commit-reveal,
-//! and slashing insurance fund. Designed for deflationary fee burns, attack-resistant MEV handling,
-//! and economic security through insurance.
+//! slashing insurance fund, and multi-dimensional resource accounting (CPU/GPU/Memory/IO).
+//! Designed for deflationary fee burns, attack-resistant MEV handling, and economic security.
 //!
 //! ## Overview
 //!
 //! - **EIP-1559 Fee Market**: Base fee adjusts per-block based on target fullness (70% burn/30% validator)
 //! - **Commit-Reveal MEV**: 2-phase transaction submission blocks sandwich attacks
 //! - **Slashing Insurance**: 5% of slashed stake funds insurance pool; validators can claim recovery
+//! - **Multi-Dimensional Resources**: GPU, CPU, memory, I/O each priced separately (Section 3.11)
 
 use sp_runtime::Permill;
 use std::collections::HashMap;
@@ -293,3 +294,180 @@ mod tests {
         assert!(!fund.process_claim("claim-100k", true)); // insufficient funds
     }
 }
+
+// ============================================================================
+// Multi-Dimensional Resource Accounting (Section 3.11)
+// ============================================================================
+
+/// Resource usage vector - measures consumption across all dimensions
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResourceVector {
+    /// CPU cycles (deterministic steps)
+    pub cpu_cycles: u64,
+    /// GPU cycles or time units
+    pub gpu_cycles: u64,
+    /// Memory in bytes
+    pub memory_bytes: u64,
+    /// I/O operations count
+    pub io_ops: u64,
+    /// Storage read operations
+    pub storage_reads: u64,
+    /// Storage write operations
+    pub storage_writes: u64,
+}
+
+impl ResourceVector {
+    /// Create a new zero-initialized resource vector
+    pub fn zero() -> Self {
+        Self {
+            cpu_cycles: 0,
+            gpu_cycles: 0,
+            memory_bytes: 0,
+            io_ops: 0,
+            storage_reads: 0,
+            storage_writes: 0,
+        }
+    }
+
+    /// Sum two resource vectors (for aggregation)
+    pub fn saturating_add(&self, other: &Self) -> Self {
+        Self {
+            cpu_cycles: self.cpu_cycles.saturating_add(other.cpu_cycles),
+            gpu_cycles: self.gpu_cycles.saturating_add(other.gpu_cycles),
+            memory_bytes: self.memory_bytes.saturating_add(other.memory_bytes),
+            io_ops: self.io_ops.saturating_add(other.io_ops),
+            storage_reads: self.storage_reads.saturating_add(other.storage_reads),
+            storage_writes: self.storage_writes.saturating_add(other.storage_writes),
+        }
+    }
+
+    /// Check if this vector exceeds declared limits
+    pub fn exceeds(&self, limits: &ResourceVector) -> bool {
+        self.cpu_cycles > limits.cpu_cycles ||
+        self.gpu_cycles > limits.gpu_cycles ||
+        self.memory_bytes > limits.memory_bytes ||
+        self.io_ops > limits.io_ops ||
+        self.storage_reads > limits.storage_reads ||
+        self.storage_writes > limits.storage_writes
+    }
+}
+
+/// Price vector - unit costs for each resource type
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PriceVector {
+    /// Price per million CPU cycles
+    pub cpu_per_million: u128,
+    /// Price per million GPU cycles
+    pub gpu_per_million: u128,
+    /// Price per KB of memory
+    pub memory_per_kb: u128,
+    /// Price per I/O operation
+    pub io_op: u128,
+    /// Price per storage read
+    pub storage_read: u128,
+    /// Price per storage write
+    pub storage_write: u128,
+}
+
+impl PriceVector {
+    /// Create a new price vector with default values (canonical X3 tokenomics)
+    pub fn canonical() -> Self {
+        Self {
+            cpu_per_million: 1_000,      // 0.001 token per 1M cycles
+            gpu_per_million: 10_000,    // 0.01 token per 1M GPU cycles
+            memory_per_kb: 100,         // 0.0001 token per KB
+            io_op: 10,                  // 0.00001 token per IO
+            storage_read: 50,           // 0.00005 token per read
+            storage_write: 200,         // 0.0002 token per write
+        }
+    }
+}
+
+/// Compute total fee for a given resource usage and price vector
+pub fn compute_fee(resources: &ResourceVector, prices: &PriceVector) -> u128 {
+    let cpu_cost = (resources.cpu_cycles as u128)
+        .saturating_mul(prices.cpu_per_million)
+        .saturating_div(1_000_000);
+    let gpu_cost = (resources.gpu_cycles as u128)
+        .saturating_mul(prices.gpu_per_million)
+        .saturating_div(1_000_000);
+    let memory_cost = (resources.memory_bytes as u128)
+        .saturating_mul(prices.memory_per_kb)
+        .saturating_div(1_000);
+    let io_cost = (resources.io_ops as u128).saturating_mul(prices.io_op);
+    let storage_read_cost = (resources.storage_reads as u128).saturating_mul(prices.storage_read);
+    let storage_write_cost = (resources.storage_writes as u128).saturating_mul(prices.storage_write);
+
+    cpu_cost
+        .saturating_add(gpu_cost)
+        .saturating_add(memory_cost)
+        .saturating_add(io_cost)
+        .saturating_add(storage_read_cost)
+        .saturating_add(storage_write_cost)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_resource_vector_addition() {
+        let a = ResourceVector {
+            cpu_cycles: 100,
+            gpu_cycles: 200,
+            memory_bytes: 1024,
+            io_ops: 10,
+            storage_reads: 5,
+            storage_writes: 2,
+        };
+        let b = ResourceVector {
+            cpu_cycles: 50,
+            gpu_cycles: 100,
+            memory_bytes: 512,
+            io_ops: 5,
+            storage_reads: 3,
+            storage_writes: 1,
+        };
+        let sum = a.saturating_add(&b);
+        assert_eq!(sum.cpu_cycles, 150);
+        assert_eq!(sum.gpu_cycles, 300);
+        assert_eq!(sum.memory_bytes, 1536);
+    }
+
+    #[test]
+    fn test_fee_computation() {
+        let resources = ResourceVector {
+            cpu_cycles: 1_000_000,   // 1M
+            gpu_cycles: 500_000,     // 0.5M
+            memory_bytes: 1024,      // 1KB
+            io_ops: 100,
+            storage_reads: 50,
+            storage_writes: 25,
+        };
+        let prices = PriceVector::canonical();
+        let fee = compute_fee(&resources, &prices);
+        // Expected: CPU=1_000, GPU=5_000, Mem=102_400/1000=102? Actually 1024*100/1000=102.4→102
+        // IO=100*10=1_000, Read=50*50=2_500, Write=25*200=5_000 → total ~13_602
+        assert!(fee > 10_000 && fee < 20_000);
+    }
+
+    #[test]
+    fn test_resource_exceeds() {
+        let resources = ResourceVector {
+            cpu_cycles: 100,
+            gpu_cycles: 200,
+            memory_bytes: 1024,
+            io_ops: 10,
+            storage_reads: 5,
+            storage_writes: 2,
+        };
+        let limits = ResourceVector {
+            cpu_cycles: 50,
+            gpu_cycles: 200,
+            memory_bytes: 2048,
+            io_ops: 20,
+            storage_reads: 10,
+            storage_writes: 5,
+        };
+        assert!(resources.exceeds(&limits)); // cpu_cycles > limit
+    }

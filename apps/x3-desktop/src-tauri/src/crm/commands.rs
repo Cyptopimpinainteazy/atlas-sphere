@@ -38,7 +38,7 @@ pub fn crm_create_contact(db: State<'_, CrmDb>, user_id: String, input: CreateCo
             ts, ts,
         ],
     ).map_err(e)?;
-    get_contact_by_id(&conn, &id)
+    get_contact_by_id_scoped(&conn, &id, &user_id)
 }
 
 #[tauri::command]
@@ -166,7 +166,7 @@ pub fn crm_create_event(db: State<'_, CrmDb>, user_id: String, input: CreateEven
             ts, ts,
         ],
     ).map_err(e)?;
-    get_event_by_id(&conn, &id)
+    get_event_by_id_scoped(&conn, &id, &user_id)
 }
 
 #[tauri::command]
@@ -280,7 +280,7 @@ pub fn crm_create_deal(db: State<'_, CrmDb>, user_id: String, input: CreateDealI
             ts, ts,
         ],
     ).map_err(e)?;
-    get_deal_by_id(&conn, &id)
+    get_deal_by_id_scoped(&conn, &id, &user_id)
 }
 
 #[tauri::command]
@@ -602,7 +602,7 @@ pub async fn crm_send_email(db: State<'_, CrmDb>, user_id: String, input: SendEm
     let conn = db.conn.lock().map_err(e)?;
     conn.query_row(
         "SELECT id, owner_user_id, contact_id, to_email, subject, body, status, error_message, template_id, created_at
-         FROM crm_sent_emails WHERE id = ?1", params![email_id], row_to_sent_email,
+         FROM crm_sent_emails WHERE id = ?1 AND owner_user_id = ?2", params![email_id, user_id], row_to_sent_email,
     ).map_err(e)
 }
 

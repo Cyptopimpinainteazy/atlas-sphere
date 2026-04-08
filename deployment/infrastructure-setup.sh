@@ -56,89 +56,92 @@ INVENTORY_FILE="deployment/inventory.yaml"
 mkdir -p deployment
 
 cat > "$INVENTORY_FILE" << 'EOF'
-# X3 Chain Testnet v1 - Infrastructure Inventory
-# Update with actual IPs/hostnames after provisioning VMs
+# X3 Chain hardware-backed deployment inventory
+#
+# Fill in the null addresses with real values after provisioning or racking hosts.
+# Do not replace them with invented placeholders.
 
-validators:
-  - name: validator-01
-    ip: 10.0.1.10  # UPDATE THIS
-    public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: x3
-    specs: 4GB RAM, 2 vCPU, 50GB SSD
-  - name: validator-02
-    ip: 10.0.1.11  # UPDATE THIS
-    public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: x3
-    specs: 4GB RAM, 2 vCPU, 50GB SSD
-  - name: validator-03
-    ip: 10.0.1.12  # UPDATE THIS
-    public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: x3
-    specs: 4GB RAM, 2 vCPU, 50GB SSD
+metadata:
+  generated_for: x3-chain testnet planning
+  generated_by: deployment/infrastructure-setup.sh
+  updated_at: 2026-04-04
+  status: partial
 
-rpc_nodes:
-  - name: rpc-01
-    ip: 10.0.2.10  # UPDATE THIS
-    public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: x3
-    specs: 8GB RAM, 4 vCPU, 100GB SSD
-  - name: rpc-02
-    ip: 10.0.2.11  # UPDATE THIS
-    public_ip: x.x.x.x  # UPDATE THIS
-    ssh_user: x3
-    specs: 8GB RAM, 4 vCPU, 100GB SSD
+local_lab:
+  authorities:
+    - logical_name: validator-01
+      host_id: x3-lab-val-01
+      role: bootnode + validator
+      ssh_user: null
+      management_ip: null
+      public_ip: null
+    - logical_name: validator-02
+      host_id: x3-lab-val-02
+      role: validator
+      ssh_user: null
+      management_ip: null
+      public_ip: null
+    - logical_name: validator-03
+      host_id: x3-lab-val-03
+      role: validator during lab proving only
+      ssh_user: null
+      management_ip: null
+      public_ip: null
 
-bootnode:
-  name: bootnode-01
-  ip: 10.0.3.10  # UPDATE THIS
-  public_ip: x.x.x.x  # UPDATE THIS
-  ssh_user: x3
-  specs: 2GB RAM, 1 vCPU, 20GB SSD
+  support_nodes:
+    - logical_name: rpc-01
+      host_id: x3-lab-rpc-01
+      role: rpc + prometheus + grafana
+      ssh_user: null
+      management_ip: null
+      public_ip: null
+    - logical_name: dr-01
+      host_id: x3-lab-dr-01
+      role: restore target + spare
+      ssh_user: null
+      management_ip: null
+      public_ip: null
 
-monitoring:
-  name: monitoring-01
-  ip: 10.0.4.10  # UPDATE THIS
-  public_ip: x.x.x.x  # UPDATE THIS
-  ssh_user: x3
-  specs: 4GB RAM, 2 vCPU, 50GB SSD
-  services:
-    - prometheus (port 9090)
-    - grafana (port 3000)
+public_testnet_minimum:
+  authorities:
+    - logical_name: validator-01
+      host_id: x3-lab-val-01
+      site: local-site
+      public_ip: null
+    - logical_name: validator-02
+      host_id: remote-vps-a
+      site: remote-site-a
+      public_ip: null
+    - logical_name: validator-03
+      host_id: remote-vps-b
+      site: remote-site-b
+      public_ip: null
 
 dns_records:
-  - name: rpc
+  - name: bootnode.testnet.x3-chain.io
     type: A
-    value: x.x.x.x  # RPC load balancer IP - UPDATE THIS
-  - name: rpc2
+    value: null
+  - name: rpc.testnet.x3-chain.io
     type: A
-    value: x.x.x.x  # Backup RPC IP - UPDATE THIS
-  - name: bootnode
-    type: A
-    value: x.x.x.x  # Bootnode IP - UPDATE THIS
-  - name: faucet
-    type: A
-    value: x.x.x.x  # Faucet IP - UPDATE THIS
-  - name: metrics
-    type: A
-    value: x.x.x.x  # Grafana IP - UPDATE THIS
+    value: null
 
 firewall_rules:
   p2p:
     port: 30333
     protocol: tcp
-    source: 0.0.0.0/0  # Allow from anywhere
+    source: validator-peers-and-approved-seeds
   rpc:
     port: 9944
     protocol: tcp
-    source: load_balancer_only  # Restrict to LB
+    source: public-only-on-rpc-hosts
   metrics:
     port: 9615
     protocol: tcp
-    source: monitoring_server_only  # Restrict to monitoring
+    source: vpn-or-management-network-only
   ssh:
     port: 22
     protocol: tcp
-    source: admin_ips_only  # Restrict to admin IPs
+    source: operator-source-ips-only
 EOF
 
 echo "✅ Created inventory file: $INVENTORY_FILE"
@@ -429,12 +432,12 @@ metrics.testnet.x3-chain.io  → GRAFANA_IP
 1. Log in to Cloudflare apps/dash-legacy-2-legacy-2board
 2. Select your domain
 3. Go to DNS → Records
-4. Add A records:
-   - Name: `rpc.testnet`, IPv4: `x.x.x.x`, Proxy: OFF
-   - Name: `rpc2.testnet`, IPv4: `x.x.x.x`, Proxy: OFF
-   - Name: `bootnode.testnet`, IPv4: `x.x.x.x`, Proxy: OFF
-   - Name: `faucet.testnet`, IPv4: `x.x.x.x`, Proxy: OFF
-   - Name: `metrics.testnet`, IPv4: `x.x.x.x`, Proxy: OFF
+4. Add A records using the real public IPs from `deployment/inventory.yaml`:
+  - Name: `rpc.testnet`, IPv4: value for the public RPC host, Proxy: OFF
+  - Name: `rpc2.testnet`, IPv4: value for the backup RPC host if you have one, Proxy: OFF
+  - Name: `bootnode.testnet`, IPv4: value for the seed or bootnode host, Proxy: OFF
+  - Name: `faucet.testnet`, IPv4: value for the faucet host if you deploy one, Proxy: OFF
+  - Name: `metrics.testnet`, IPv4: value for the Grafana or monitoring host, Proxy: OFF
 
 ### AWS Route53
 ```bash
@@ -457,7 +460,7 @@ aws route53 change-resource-record-sets \
         "Name": "rpc.testnet.x3-chain.io",
         "Type": "A",
         "TTL": 300,
-        "ResourceRecords": [{"Value": "x.x.x.x"}]
+        "ResourceRecords": [{"Value": "<real-public-ip-from-deployment-inventory>"}]
       }
     }
   ]

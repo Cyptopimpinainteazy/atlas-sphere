@@ -39,8 +39,11 @@
 //! └─────────────────────────────────────────────────────────────────────┘
 //! ```
 
+pub mod benchmark;
 pub mod config;
+pub mod evm_provider;
 pub mod executor;
+pub mod gateway_client;
 pub mod job;
 pub mod receipt;
 pub mod rpc;
@@ -53,8 +56,14 @@ use std::time::Instant;
 use tokio::sync::RwLock;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
+use x3_orchestra_control_plane::ControlPlaneClient;
 
 pub use config::SidecarConfig;
+pub use benchmark::{
+    BenchmarkRunInput, BenchmarkStore, ProviderOnboardingBenchmarkRequest,
+    build_provider_onboarding_job_request,
+};
+pub use gateway_client::{GatewayClient, GatewayClientConfig, BenchmarkResultPayload};
 pub use executor::X3Executor;
 pub use job::{Job, JobQueue};
 pub use receipt::{ExecutionReceipt, ReceiptGenerator};
@@ -119,6 +128,9 @@ pub struct SidecarDaemon {
     pub state_manager: Arc<RwLock<StateManager>>,
     pub receipt_generator: Arc<ReceiptGenerator>,
     pub submitter: Arc<ChainSubmitter>,
+    pub benchmark_store: Arc<BenchmarkStore>,
+    pub gateway_client: Option<Arc<GatewayClient>>,
+    pub orchestra_client: Option<Arc<ControlPlaneClient>>,
     pub telemetry: Arc<Telemetry>,
     pub state: Arc<RwLock<SidecarState>>,
 }
@@ -137,6 +149,31 @@ impl SidecarDaemon {
         let telemetry = Telemetry::new();
         let state = Arc::new(RwLock::new(SidecarState::default()));
 
+        // Initialize gateway client first (if configured)
+        let gateway_client = if let Some(gateway_url) = &config.benchmark_gateway_url {
+            let gateway_config = GatewayClientConfig {
+                gateway_url: gateway_url.clone(),
+                auth_token: config.benchmark_gateway_token.clone(),
+                max_retries: config.submit_retries,
+                initial_backoff_ms: 100,
+            };
+            Some(Arc::new(GatewayClient::new(gateway_config)))
+        } else {
+            None
+        };
+
+        // Initialize benchmark store with gateway client
+        let benchmark_store = Arc::new(BenchmarkStore::open_with_gateway_client(
+            &config,
+            gateway_client.clone(),
+        )?);
+        let orchestra_client = config.orchestra_control_plane_url.as_ref().map(|base_url| {
+            Arc::new(ControlPlaneClient::new(
+                base_url.clone(),
+                config.orchestra_control_plane_token.clone(),
+            ))
+        });
+
         Ok(Self {
             config,
             job_queue,
@@ -144,6 +181,9 @@ impl SidecarDaemon {
             state_manager,
             receipt_generator,
             submitter,
+            benchmark_store,
+            gateway_client,
+            orchestra_client,
             telemetry,
             state,
         })
@@ -160,6 +200,8 @@ impl SidecarDaemon {
             job_queue: Arc::clone(&self.job_queue),
             sidecar_state: Arc::clone(&self.state),
             submitter: Arc::clone(&self.submitter),
+            benchmark_store: Arc::clone(&self.benchmark_store),
+            orchestra_client: self.orchestra_client.clone(),
             telemetry: Arc::clone(&self.telemetry),
         });
 
@@ -222,6 +264,14 @@ impl SidecarDaemon {
                 let timer = telemetry::ExecutionTimer::start(Arc::clone(&self.telemetry));
                 let wait_time_ms = job.submitted_at.elapsed().as_millis() as u64;
 
+                // Capture pre-execution state (before checkpoint)
+                let pre_state = {
+                    let sm = self.state_manager.read().await;
+                    // Clone the state snapshot for receipt generation
+                    // This captures the state before execution for deterministic state proofs
+                    sm.clone()
+                };
+
                 // Create checkpoint
                 {
                     let mut sm = self.state_manager.write().await;
@@ -236,40 +286,83 @@ impl SidecarDaemon {
                     Ok(result) => {
                         timer.complete(result.gas_used);
 
-                        // Get pre and post state managers
-                        let pre_state = StateManager::new();
-                        let post_state = self.state_manager.read().await;
+                        // Submit receipt with retry logic
+                        let max_retries = 3;
+                        let mut retry_count = 0;
+                        let mut submission_success = false;
+                        let mut last_error = String::new();
 
-                        // Generate receipt
-                        let receipt = self.receipt_generator.generate(
-                            job.id,
-                            &job.input,
-                            &result,
-                            &pre_state,
-                            &*post_state,
-                        );
+                        while retry_count < max_retries && !submission_success {
+                            // Get current post-state
+                            let post_state = self.state_manager.read().await;
 
-                        // Submit to chain
-                        match self.submitter.submit_receipt(&receipt).await {
-                            Ok(tx_hash) => {
-                                info!("Receipt submitted: {}", tx_hash);
-                                self.telemetry.record_receipt_submitted();
-                                let mut state = self.state.write().await;
-                                state.jobs_completed += 1;
-                                state.job_statuses.insert(
-                                    job.id,
-                                    JobStatusEntry::new("submitted", Some(tx_hash), None),
-                                );
+                            // Generate receipt
+                            let receipt = self.receipt_generator.generate(
+                                job.id,
+                                &job.input,
+                                &result,
+                                &pre_state,
+                                &*post_state,
+                            );
+                            drop(post_state);
+
+                            // Submit to chain
+                            match self.submitter.submit_receipt(&receipt).await {
+                                Ok(tx_hash) => {
+                                    info!("Receipt submitted: {}", tx_hash);
+                                    self.telemetry.record_receipt_submitted();
+                                    let mut state = self.state.write().await;
+                                    state.jobs_completed += 1;
+                                    state.job_statuses.insert(
+                                        job.id,
+                                        JobStatusEntry::new("submitted", Some(tx_hash), None),
+                                    );
+                                    submission_success = true;
+                                }
+                                Err(e) => {
+                                    last_error = e.to_string();
+                                    retry_count += 1;
+
+                                    if retry_count < max_retries {
+                                        // Exponential backoff: 100ms, 200ms, 400ms
+                                        let backoff_ms = 100u64 * (1 << (retry_count - 1));
+                                        tracing::warn!(
+                                            "Receipt submission failed (attempt {}/{}), retrying in {}ms: {}",
+                                            retry_count,
+                                            max_retries,
+                                            backoff_ms,
+                                            e
+                                        );
+                                        tokio::time::sleep(tokio::time::Duration::from_millis(
+                                            backoff_ms,
+                                        ))
+                                        .await;
+                                    } else {
+                                        tracing::error!(
+                                            "Receipt submission failed after {} retries: {}",
+                                            max_retries,
+                                            e
+                                        );
+                                        self.telemetry.record_receipt_failure();
+                                    }
+                                }
                             }
-                            Err(e) => {
-                                tracing::warn!("Failed to submit receipt: {}", e);
-                                self.telemetry.record_receipt_failure();
-                                let mut state = self.state.write().await;
-                                state.job_statuses.insert(
-                                    job.id,
-                                    JobStatusEntry::new("submit_failed", None, Some(e.to_string())),
-                                );
-                            }
+                        }
+
+                        // If all retries failed, record failure status
+                        if !submission_success {
+                            let mut state = self.state.write().await;
+                            state.job_statuses.insert(
+                                job.id,
+                                JobStatusEntry::new(
+                                    "submit_failed",
+                                    None,
+                                    Some(format!(
+                                        "Failed after {} retries: {}",
+                                        max_retries, last_error
+                                    )),
+                                ),
+                            );
                         }
 
                         let mut queue = self.job_queue.write().await;
@@ -331,5 +424,127 @@ mod tests {
         // Should succeed even if called multiple times (no panic)
         assert!(init_logging(Level::INFO).is_ok());
         assert!(init_logging(Level::DEBUG).is_ok());
+    }
+
+    #[test]
+    fn test_state_manager_clone_preserves_state() {
+        // Verify that StateManager cloning preserves state for pre/post comparisons
+        let mut original = StateManager::new();
+        original.set(b"key1", b"value1");
+        original.set(b"key2", b"value2");
+
+        let root_before = original.root();
+
+        let cloned = original.clone();
+
+        // Modify original
+        original.set(b"key1", b"modified");
+
+        // Cloned should preserve original state
+        let root_after_clone = cloned.root();
+
+        // Roots should match pre-modification
+        assert_eq!(root_before, root_after_clone);
+        assert_eq!(cloned.get(b"key1"), Some(b"value1".as_slice()));
+        assert_eq!(cloned.get(b"key2"), Some(b"value2".as_slice()));
+    }
+
+    #[test]
+    fn test_state_capture_vs_empty() {
+        // Test that pre-state captured before execution is NOT empty
+        // This was the bug: StateManager::new() created empty state
+        let mut pre_state = StateManager::new();
+        let empty_state = StateManager::new();
+
+        // Empty state should have zero root
+        assert_eq!(empty_state.root(), [0u8; 32]);
+
+        // Pre-state with values should have non-zero root
+        pre_state.set(b"execution_context", b"state_data");
+        let pre_root = pre_state.root();
+        assert_ne!(pre_root, [0u8; 32]);
+
+        // This demonstrates the bug: if pre_state was StateManager::new(),
+        // we'd lose the execution context and state proofs would be invalid
+    }
+
+    #[test]
+    fn test_job_status_tracking() {
+        // Verify job status transitions are correct
+        let status_running = JobStatusEntry::new("running", None, None);
+        assert_eq!(status_running.status, "running");
+        assert!(status_running.tx_hash.is_none());
+        assert!(status_running.error.is_none());
+
+        let status_submitted =
+            JobStatusEntry::new("submitted", Some("0x123abc".to_string()), None);
+        assert_eq!(status_submitted.status, "submitted");
+        assert_eq!(status_submitted.tx_hash.as_ref().unwrap(), "0x123abc");
+        assert!(status_submitted.error.is_none());
+
+        let status_failed = JobStatusEntry::new("failed", None, Some("timeout".to_string()));
+        assert_eq!(status_failed.status, "failed");
+        assert!(status_failed.tx_hash.is_none());
+        assert_eq!(status_failed.error.as_ref().unwrap(), "timeout");
+    }
+
+    #[test]
+    fn test_sidecar_state_initialization() {
+        // Verify sidecar state starts correctly
+        let state = SidecarState::default();
+        assert_eq!(state.jobs_completed, 0);
+        assert_eq!(state.jobs_failed, 0);
+        assert!(!state.registered);
+        assert!(state.job_statuses.is_empty());
+    }
+
+    #[test]
+    fn test_receipt_pre_post_state_difference() {
+        // Verify that pre/post states in receipts are different when execution modifies state
+        let private_key = [1u8; 32];
+        let generator = receipt::ReceiptGenerator::new(&private_key);
+
+        let job_id = [2u8; 32];
+        let input = b"test input";
+        let result = executor::ExecutionResult {
+            success: true,
+            gas_used: 100,
+            return_data: b"output".to_vec(),
+            logs: vec![],
+            error: None,
+        };
+
+        // Pre-state: empty
+        let pre_state = StateManager::new();
+        let pre_root = pre_state.root();
+
+        // Post-state: modified
+        let mut post_state = StateManager::new();
+        post_state.set(b"storage_key", b"storage_value");
+        let post_root = post_state.root();
+
+        let receipt = generator.generate(job_id, input, &result, &pre_state, &post_state);
+
+        // Pre/post roots should be different if state changed
+        assert_ne!(pre_root, post_root);
+        assert_eq!(receipt.pre_state_root, pre_root);
+        assert_eq!(receipt.post_state_root, post_root);
+        assert_ne!(receipt.pre_state_root, receipt.post_state_root);
+    }
+
+    #[test]
+    fn test_backoff_calculation() {
+        // Verify exponential backoff formula: 100ms * (1 << (retry - 1))
+        // retry_count 1: 100ms * (1 << 0) = 100ms
+        let backoff_1 = 100u64 * (1 << (1 - 1));
+        assert_eq!(backoff_1, 100);
+
+        // retry_count 2: 100ms * (1 << 1) = 200ms
+        let backoff_2 = 100u64 * (1 << (2 - 1));
+        assert_eq!(backoff_2, 200);
+
+        // retry_count 3: 100ms * (1 << 2) = 400ms
+        let backoff_3 = 100u64 * (1 << (3 - 1));
+        assert_eq!(backoff_3, 400);
     }
 }

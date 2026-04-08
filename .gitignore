@@ -134,3 +134,68 @@ usr/share/code/
 *.deb
 *.crdownload
 x3-chain-v1.1-release.tar.gz
+
+# Temporary and backup files
+*~
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Archives and compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Images (unless in assets/ or static/ directories)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.ico
+*.svg
+
+# PDFs (unless in docs/ or documentation/)
+*.pdf
+
+# HTML standalone files (keep only in docs/ or apps/)
+*.html
+!docs/**/*.html
+!apps/**/*.html
+
+# Wiring diagrams and unrelated technical docs
+*wiring*
+*diagram*
+*harley*
+*softail*
+
+# Coverage and test reports (keep specific ones if needed)
+coverage-*.xml
+*.cover
+
+# IDE and editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary downloads
+Downloads/
+*.download
+*.part
+
+apps/atlas-sphere-clean

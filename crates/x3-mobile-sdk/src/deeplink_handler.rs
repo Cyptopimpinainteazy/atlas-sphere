@@ -99,7 +99,7 @@ impl DeeplinkHandler {
         let request = DeeplinkRequest::from_url(url)?;
 
         // Validate scheme
-        let allowed = self.allowed_schemes.lock().unwrap();
+        let allowed = self.allowed_schemes.lock().expect("allowed_schemes mutex poisoned");
         let is_allowed = allowed.iter().any(|scheme| url.starts_with(scheme));
 
         if !is_allowed {
@@ -121,7 +121,7 @@ impl DeeplinkHandler {
             ));
         }
 
-        let mut allowed = self.allowed_schemes.lock().unwrap();
+        let mut allowed = self.allowed_schemes.lock().expect("allowed_schemes mutex poisoned");
         if !allowed.contains(&scheme) {
             allowed.push(scheme);
         }
@@ -131,7 +131,7 @@ impl DeeplinkHandler {
 
     /// Revoke app scheme
     pub async fn revoke_scheme(&self, scheme: &str) -> Result<(), SdkError> {
-        let mut allowed = self.allowed_schemes.lock().unwrap();
+        let mut allowed = self.allowed_schemes.lock().expect("allowed_schemes mutex poisoned");
         allowed.retain(|s| s != scheme);
         
         tracing::info!("Revoked scheme: {}", scheme);

@@ -268,21 +268,14 @@ impl BtcAdaptorSignature {
         // Perform modular subtraction in secp256k1 scalar field:
         // secret = (s_complete - s_pre) mod n
         // where n = FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
-        let mut s_complete_u256 = U256::zero();
-        s_complete_u256 = U256::from_big_endian(s_complete);
+        let s_complete_u256 = U256::from_big_endian(s_complete);
+        let s_pre_u256 = U256::from_big_endian(s_pre);
 
-        let mut s_pre_u256 = U256::zero();
-        s_pre_u256 = U256::from_big_endian(s_pre);
-
-        let secp256k1_n = {
-            let mut order = U256::zero();
-            order = U256::from_big_endian(&[
-                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                0xFF, 0xFE, 0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E, 0x8C,
-                0xD0, 0x36, 0x41, 0x41,
-            ]);
-            order
-        };
+        let secp256k1_n = U256::from_big_endian(&[
+            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+            0xFF, 0xFF, 0xFE, 0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2,
+            0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41,
+        ]);
 
         let secret_u256 = if s_complete_u256 >= s_pre_u256 {
             s_complete_u256 - s_pre_u256

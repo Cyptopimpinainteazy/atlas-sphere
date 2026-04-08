@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! X3 Bridge Infrastructure
 //!
 //! Cross-chain bridges: Ethereum, Solana, Cosmos, IBC, L2, Bitcoin, governance, and fee abstraction.

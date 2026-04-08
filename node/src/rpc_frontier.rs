@@ -1,10 +1,11 @@
-//! Frontier RPC wiring stub
+//! Runtime-backed Frontier and SVM RPC wiring.
 //!
-//! This module provides optional wiring for Frontier JSON-RPC endpoints.
+//! This module provides optional Ethereum-compatible and SVM-compatible
+//! JSON-RPC endpoints backed by runtime API calls.
 //! When `feature = "frontier"` is enabled for the node crate, this module
 //! will create and merge additional Ethereum-compatible RPC handlers. These
-//! should be replaced (or extended) with the `fc-rpc`/`fp-rpc` modules once
-//! the Frontier version compatibility is resolved.
+//! can later be extended with `fc-rpc`/`fp-rpc` once the Frontier version
+//! compatibility is resolved.
 
 use hex;
 use jsonrpsee::RpcModule;
@@ -56,7 +57,7 @@ fn parse_gas_limit(tx_obj: &serde_json::Value) -> Result<u64, jsonrpsee::core::E
 /// Create a Frontier-compatible JSON-RPC module backed by runtime API calls.
 /// Provides eth_getBalance, eth_getCode, eth_getStorageAt,
 /// eth_getTransactionCount (nonce), eth_call, and eth_estimateGas.
-pub fn create_frontier_stub<C>(
+pub fn create_frontier_rpc<C>(
     client: Arc<C>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
@@ -262,7 +263,7 @@ where
 
 /// Create an SVM-compatible JSON-RPC module backed by runtime API calls.
 /// Provides svm_getBalance and svm_isProgram endpoints for querying SVM state.
-pub fn create_svm_stub<C>(
+pub fn create_svm_rpc<C>(
     client: Arc<C>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where

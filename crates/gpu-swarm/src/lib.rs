@@ -1,4 +1,11 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! GPU Swarm - Distributed GPU Compute Network for X3 X3 Chain
+//!
+//! **DEPRECATED**: This crate is superseded by the Inferstructor service.
+//! It is retained for reference only and will be removed in a future release.
+//! Do not add new production dependencies on `gpu-swarm`.
+//! See `docs/openspec/changes/refactor-swarm-legacy/` for migration guidance.
 //!
 //! This crate provides the core infrastructure for the X3 GPU Swarm, enabling:
 //! - Distributed GPU compute across volunteer nodes

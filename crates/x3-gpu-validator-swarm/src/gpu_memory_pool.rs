@@ -150,6 +150,11 @@ impl GpuMemoryPool {
     }
 
     /// Allocate a slab for a job (with timeout and exponential backoff)
+    /// 
+    /// FIXED: Eliminates nested RwLock acquisitions by pre-popping from free_list
+    /// and only acquiring slabs lock if pop succeeds. This was: 
+    /// - free_list.write() then slabs.write() = nested locks = DEADLOCK RISK
+    /// - Now: try free_list, release, then slabs = two separate critical sections
     pub async fn allocate(&self, job_id: &str) -> Result<SlabHandle, SwarmError> {
         let start = std::time::Instant::now();
         let timeout = Duration::from_secs(30); // Configurable timeout
@@ -163,17 +168,21 @@ impl GpuMemoryPool {
                 )));
             }
 
+            // FIX: Pop from free_list and release lock BEFORE acquiring slabs lock
             let slab_id = {
                 let mut free_list = self.free_list.write();
                 free_list.pop()
-            };
+            }; // Lock released here
 
             if let Some(slab_id) = slab_id {
-                let mut slabs = self.slabs.write();
-                let slab = &mut slabs[slab_id as usize];
+                // Now acquire slabs lock - no nested lock risk
+                {
+                    let mut slabs = self.slabs.write();
+                    let slab = &mut slabs[slab_id as usize];
 
-                slab.state = SlabState::InUse;
-                slab.allocated_to_job = Some(job_id.to_string());
+                    slab.state = SlabState::InUse;
+                    slab.allocated_to_job = Some(job_id.to_string());
+                } // Lock released
 
                 self.stats.free_slabs.fetch_sub(1, Ordering::Relaxed);
                 self.stats.in_use_slabs.fetch_add(1, Ordering::Relaxed);
@@ -206,29 +215,39 @@ impl GpuMemoryPool {
     }
 
     /// Deallocate a slab (return to free list)
+    /// 
+    /// FIXED: Eliminates nested RwLock by separating state mutation from free_list push
     pub fn deallocate(&self, handle: SlabHandle) {
-        let mut slabs = self.slabs.write();
-        let slab = &mut slabs[handle.slab_id as usize];
+        // First phase: Update slab state
+        {
+            let mut slabs = self.slabs.write();
+            let slab = &mut slabs[handle.slab_id as usize];
 
-        if slab.state == SlabState::InUse {
-            slab.state = SlabState::Free;
-            let job_id = slab.allocated_to_job.take().unwrap_or_default();
-            slab.allocated_to_job = None;
+            if slab.state == SlabState::InUse {
+                slab.state = SlabState::Free;
+                slab.allocated_to_job = None;
+            } else {
+                // Slab not in use, exit early without free_list modification
+                return;
+            }
+        } // slabs lock released
 
+        // Second phase: Return to free list (now safe, no nested lock)
+        {
             let mut free_list = self.free_list.write();
             free_list.push(handle.slab_id);
+        } // free_list lock released
 
-            self.stats.free_slabs.fetch_add(1, Ordering::Relaxed);
-            self.stats.in_use_slabs.fetch_sub(1, Ordering::Relaxed);
-            self.stats
-                .deallocations_total
-                .fetch_add(1, Ordering::Relaxed);
+        self.stats.free_slabs.fetch_add(1, Ordering::Relaxed);
+        self.stats.in_use_slabs.fetch_sub(1, Ordering::Relaxed);
+        self.stats
+            .deallocations_total
+            .fetch_add(1, Ordering::Relaxed);
 
-            debug!(
-                "[MemoryPool GPU{}] Deallocated slab {} (was job {})",
-                self.device_id, handle.slab_id, job_id
-            );
-        }
+        debug!(
+            "[MemoryPool GPU{}] Deallocated slab {}",
+            self.device_id, handle.slab_id
+        );
     }
 
     /// Mark a slab as quarantined due to memory error

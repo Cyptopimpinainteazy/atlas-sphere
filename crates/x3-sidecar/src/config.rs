@@ -55,6 +55,16 @@ pub struct SidecarConfig {
     pub submit_retries: u32,
     /// Heartbeat interval (seconds)
     pub heartbeat_interval: u64,
+    /// Operator signing identity for benchmark reports
+    pub benchmark_signer: String,
+    /// Gateway base URL for benchmark report publishing
+    pub benchmark_gateway_url: Option<String>,
+    /// Bearer token used to authenticate benchmark report publishing
+    pub benchmark_gateway_token: Option<String>,
+    /// Orchestra control-plane base URL for intent submission
+    pub orchestra_control_plane_url: Option<String>,
+    /// Bearer token used to authenticate orchestra control-plane requests
+    pub orchestra_control_plane_token: Option<String>,
 }
 
 impl Default for SidecarConfig {
@@ -72,6 +82,11 @@ impl Default for SidecarConfig {
             worker_threads: 4,
             submit_retries: 3,
             heartbeat_interval: 30,
+            benchmark_signer: "x3-sidecar".to_string(),
+            benchmark_gateway_url: None,
+            benchmark_gateway_token: None,
+            orchestra_control_plane_url: None,
+            orchestra_control_plane_token: None,
         }
     }
 }

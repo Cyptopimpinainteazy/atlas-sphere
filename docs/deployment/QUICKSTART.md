@@ -65,6 +65,8 @@ cd /home/lojak/Desktop/x3-chain/deployment
 
 ## 📚 Full Documentation
 
+If you are deploying on the currently owned rack plus optional remote VPS hosts, read **[HARDWARE_ROLE_PLAN.md](HARDWARE_ROLE_PLAN.md)** before touching `deploy-multi-server.sh`. That document assigns actual X3 roles to the Threadripper workstation, Lenovo servers, DL380p, R710, and Xserve, and it separates the single-site lab topology from the minimum public-testnet topology.
+
 See **[IN_HOUSE_DEPLOYMENT.md](IN_HOUSE_DEPLOYMENT.md)** for:
 - Server requirements
 - Manual setup steps

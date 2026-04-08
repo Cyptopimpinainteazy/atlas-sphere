@@ -22,6 +22,7 @@ tracing-subscriber = "0.3"
 
 # External chains integration
 x3-external-chains = { path = "../external-chains" }
+custody-service = { path = "../custody-service" }
 x3-evolution = { path = "../x3-evolution" }
 gpu-swarm = { path = "../gpu-swarm" }
 

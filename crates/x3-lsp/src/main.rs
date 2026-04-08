@@ -1,3 +1,5 @@
+#![allow(unused, dead_code, deprecated)]
+
 //! X3 LSP - Language Server for X3 Chain development.
 //!
 //! Provides IDE features for:

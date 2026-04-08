@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Deliver a reliable, extensible blockchain execution engine that can run both EVM and SVM workloads with predictable performance.
-**Current focus:** Phase 8: Testnet proving and go/no-go
+**Current focus:** Release operations follow-through after completed Phase 8 validation
 
 ## Current Position
 
-Phase: 8 of 8 (Testnet proving and go/no-go)
-Plan: 1 of 3 in current phase
-Status: In progress (08-01 revalidated)
-Last activity: 2026-03-23 — 4-validator local proving rerun passed (all validators running, heads advancing, finalized head advancing)
+Phase: 8 of 8 (Testnet proving and go/no-go) — complete
+Plan: 3 of 3 in current phase
+Status: Phase complete; release operations follow-through pending
+Last activity: 2026-03-23 — 4-validator local proving rerun passed and Phase 8 was left complete with release-ops follow-up remaining
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed in current milestone: 15
+- Total plans completed in current milestone: 18
 - Average duration: N/A
 - Total execution time: 0 hours
 
@@ -77,10 +77,10 @@ Progress: [██████████] 100%
 
 ### Pending Todos
 
-- 08-03: Produce signed release artifacts and verify extraction/signature flow.
+- Release ops: produce signed release artifacts and verify extraction/signature flow.
 - Deploy updated node to testnet and validate public RPC endpoints.
 - Announce testnet update / operator handoff.
-- SDK-007: npm publication/release packaging for TypeScript SDK remains pending.
+- SDK-007: confirm whether the packaged TypeScript SDK artifact should also be published to npm.
 
 ### Blockers/Concerns
 
@@ -89,6 +89,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-22T21:40:00Z
-Stopped at: Phase 8 validated, waiting on signed artifacts / release ops
+Last session: 2026-03-23T18:10:00Z
+Stopped at: Phase 8 complete, waiting on signed artifacts / release ops
 Resume file: .planning/phases/08-testnet-proving-and-go-no-go/

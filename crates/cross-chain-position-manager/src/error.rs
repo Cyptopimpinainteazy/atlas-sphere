@@ -104,6 +104,42 @@ pub enum PositionManagerError {
     #[error("Unsupported operation: {operation} on chain {chain_id}")]
     UnsupportedOperation { operation: String, chain_id: u64 },
 
+    /// Chain configuration not found
+    #[error("Chain configuration not found for chain {0}")]
+    ChainNotFound(u64),
+
+    /// No routes matched the search and policy constraints
+    #[error("No routes found matching current route constraints")]
+    NoRoutesFound,
+
+    /// DEX router missing for chain
+    #[error("DEX router not found for chain {0}")]
+    DexRouterNotFound(u64),
+
+    /// Bridge contract missing between chains
+    #[error("Bridge contract not found between chain {0} and chain {1}")]
+    BridgeNotFound(u64, u64),
+
+    /// Arithmetic overflow or underflow
+    #[error("Arithmetic overflow")]
+    ArithmeticOverflow,
+
+    /// Missing price feed for asset
+    #[error("Price feed not found for asset {0}")]
+    PriceFeedNotFound(String),
+
+    /// Lane is frozen or unavailable for firm execution
+    #[error("Lane is frozen: {0}")]
+    LaneFrozen(String),
+
+    /// Reservation expired before execution
+    #[error("Reservation expired: {0}")]
+    ReservationExpired(String),
+
+    /// Reservation not found
+    #[error("Reservation not found: {0}")]
+    ReservationNotFound(String),
+
     /// Liquidity insufficient
     #[error("Insufficient liquidity for asset {asset_address} on chain {chain_id}")]
     InsufficientLiquidity { asset_address: H160, chain_id: u64 },

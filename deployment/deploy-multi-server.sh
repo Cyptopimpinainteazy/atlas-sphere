@@ -24,18 +24,35 @@ DEPLOY_DIR="$PROJECT_ROOT/deployment"
 BINARY="$PROJECT_ROOT/target/release/x3-chain-node"
 CHAIN_SPEC="$DEPLOY_DIR/chain-specs/x3-testnet-raw.json"
 KEYS_DIR="$DEPLOY_DIR/keys"
+SERVERS_ENV="$DEPLOY_DIR/servers.env"
 
-# Server inventory - CUSTOMIZE THIS!
+# Server inventory - sourced from deployment/servers.env
 echo -e "${YELLOW}Server Inventory:${NC}"
 echo ""
 
-# Define your servers here
+if [ ! -f "$SERVERS_ENV" ]; then
+    echo -e "${RED}Error: $SERVERS_ENV not found${NC}"
+    echo "Copy deployment/servers.env.example to deployment/servers.env and fill in real SSH targets."
+    exit 1
+fi
+
+# shellcheck disable=SC1090
+source "$SERVERS_ENV"
+
 declare -A SERVERS=(
-    ["bootnode"]="user@192.168.1.10"
-    ["validator-01"]="user@192.168.1.11"
-    ["validator-02"]="user@192.168.1.12"
-    ["validator-03"]="user@192.168.1.13"
+    ["bootnode"]="${BOOTNODE_HOST:-}"
+    ["validator-01"]="${VALIDATOR_01_HOST:-}"
+    ["validator-02"]="${VALIDATOR_02_HOST:-}"
+    ["validator-03"]="${VALIDATOR_03_HOST:-}"
 )
+
+for required_host in bootnode validator-01 validator-02 validator-03; do
+    if [ -z "${SERVERS[$required_host]}" ]; then
+        echo -e "${RED}Error: missing SSH target for $required_host in $SERVERS_ENV${NC}"
+        echo "Set BOOTNODE_HOST, VALIDATOR_01_HOST, VALIDATOR_02_HOST, and VALIDATOR_03_HOST before running this script."
+        exit 1
+    fi
+done
 
 # Ports
 BOOTNODE_PORT=30333
@@ -51,7 +68,7 @@ echo ""
 read -p "Is this correct? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Edit this script to set your server IPs in the SERVERS array"
+    echo "Update deployment/servers.env with the correct SSH targets and rerun this script"
     exit 1
 fi
 echo ""

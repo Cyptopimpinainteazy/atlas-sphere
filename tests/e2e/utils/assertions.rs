@@ -567,4 +567,11 @@ pub struct AssertThat<T> {
 }
 
 impl<T> AssertThat<T> {
-    pub fn new(value: T) ->
+    pub fn new(value: T) -> Self {
+        Self { value }
+    }
+
+    pub fn value(&self) -> &T {
+        &self.value
+    }
+}

@@ -8,7 +8,6 @@ GPU_LIBS_PATH="${HOME}/.venv-gpu-libs"
 
 # Set GPU library paths - try both custom location and default build dir
 export LD_LIBRARY_PATH="$GPU_LIBS_PATH:$PROJECT_ROOT/cross-chain-gpu-validator/kernels/build:${LD_LIBRARY_PATH:-}"
-export CCGV_USE_MOCK_RPC=true
 export PYTHONUNBUFFERED=1
 
 # Run validator from the pkg directory

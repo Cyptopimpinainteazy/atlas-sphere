@@ -245,7 +245,7 @@ fn uuid() -> String {
     let mut hasher = RandomState::new().build_hasher();
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_default()
         .as_nanos()
         .hash(&mut hasher);
     format!("{:x}", hasher.finish())

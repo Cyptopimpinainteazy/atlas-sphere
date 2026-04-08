@@ -7,11 +7,155 @@
 //! - Fallback route system
 //! - Route simulation
 
-use crate::config::PositionManagerConfig;
-use crate::error::{PositionManagerError, Result};
-use crate::types::{RouteOptimizationParams, SwapRoute, H160, H256, U256};
+use crate::{PositionManagerConfig, PositionManagerError, Result};
+use alloc::string::{String, ToString};
+use core::sync::atomic::{AtomicU64, Ordering};
 use serde::{Deserialize, Serialize};
+use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
+
+static RESERVATION_COUNTER: AtomicU64 = AtomicU64::new(1);
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InventoryBand {
+    pub critical_min: U256,
+    pub min: U256,
+    pub target: U256,
+    pub max: U256,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LaneClass {
+    MarketOnly,
+    PartnerBacked,
+    ProtocolBacked,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ThresholdTier {
+    Healthy,
+    Guarded,
+    Critical,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LaneStatus {
+    Active,
+    Warning,
+    Frozen,
+}
+
+impl LaneStatus {
+    pub fn allows_firm_execution(self) -> bool {
+        !matches!(self, Self::Frozen)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LiquiditySourceType {
+    ExternalMarket,
+    PartnerMm,
+    Treasury,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReservationStatus {
+    Active,
+    Released,
+    Expired,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RouteFirmness {
+    Indicative,
+    Firm,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LanePolicy {
+    pub lane_id: H256,
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub lane_class: LaneClass,
+    pub status: LaneStatus,
+    pub allowed_liquidity_sources: Vec<LiquiditySourceType>,
+    pub inventory_band: InventoryBand,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReservationRecord {
+    pub reservation_id: H256,
+    pub route_id: H256,
+    pub lane_id: H256,
+    pub liquidity_source: LiquiditySourceType,
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub source_amount: U256,
+    pub target_amount: U256,
+    pub created_at_ms: u64,
+    pub expiry_ts_ms: u64,
+    pub status: ReservationStatus,
+    pub max_fee_envelope: U256,
+    pub solvency_snapshot: H256,
+}
+
+impl ReservationRecord {
+    pub fn is_active_at(&self, now_ms: u64) -> bool {
+        self.status == ReservationStatus::Active && now_ms <= self.expiry_ts_ms
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RouteExecutionCandidate {
+    pub route_id: H256,
+    pub route: SwapRoute,
+    pub firmness: RouteFirmness,
+    pub lane_status: LaneStatus,
+    pub reservation: Option<ReservationRecord>,
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RouteOptimizationParams {
+    pub max_hops: u8,
+    pub min_liquidity: U256,
+    pub gas_weight: f64,
+    pub time_weight: f64,
+    pub slippage_weight: f64,
+    pub preferred_chains: Vec<u64>,
+    pub avoid_chains: Vec<u64>,
+}
+
+impl Default for RouteOptimizationParams {
+    fn default() -> Self {
+        Self {
+            max_hops: 2,
+            min_liquidity: U256::zero(),
+            gas_weight: 0.3,
+            time_weight: 0.2,
+            slippage_weight: 0.5,
+            preferred_chains: Vec::new(),
+            avoid_chains: Vec::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SwapRoute {
+    pub source_chain: u64,
+    pub target_chain: u64,
+    pub source_asset: H160,
+    pub target_asset: H160,
+    pub amount_in: U256,
+    pub amount_out: U256,
+    pub hops: Vec<u64>,
+    pub gas_estimate: U256,
+    pub price_impact_bps: u32,
+}
 
 /// Route optimizer for finding optimal paths
 #[derive(Debug, Clone)]
@@ -24,6 +168,10 @@ pub struct RouteOptimizer {
     bridge_contracts: sp_std::collections::btree_map::BTreeMap<(u64, u64), BridgeContract>,
     /// Route cache
     route_cache: sp_std::collections::btree_map::BTreeMap<RouteKey, CachedRoute>,
+    /// Lane policy registry for firm-route eligibility.
+    lane_policies: sp_std::collections::btree_map::BTreeMap<H256, LanePolicy>,
+    /// Active and historical reservations.
+    reservations: sp_std::collections::btree_map::BTreeMap<H256, ReservationRecord>,
     /// Configuration
     config: PositionManagerConfig,
 }
@@ -36,8 +184,91 @@ impl RouteOptimizer {
             dex_routers: sp_std::collections::btree_map::BTreeMap::new(),
             bridge_contracts: sp_std::collections::btree_map::BTreeMap::new(),
             route_cache: sp_std::collections::btree_map::BTreeMap::new(),
+            lane_policies: sp_std::collections::btree_map::BTreeMap::new(),
+            reservations: sp_std::collections::btree_map::BTreeMap::new(),
             config: config.clone(),
         })
+    }
+
+    /// Register or replace a lane policy.
+    pub fn upsert_lane_policy(&mut self, policy: LanePolicy) {
+        self.lane_policies.insert(policy.lane_id, policy);
+    }
+
+    /// Build an execution candidate that is either indicative or firm.
+    pub fn build_execution_candidate(
+        &mut self,
+        route: SwapRoute,
+        source_asset: H160,
+        target_asset: H160,
+        reservation_ttl_ms: u64,
+    ) -> Result<RouteExecutionCandidate> {
+        let route_id = self.compute_route_id(&route, source_asset, target_asset);
+        let lane_id = self.compute_lane_id(
+            route.source_chain,
+            route.target_chain,
+            source_asset,
+            target_asset,
+        );
+        let lane_policy = self.lane_policies.get(&lane_id).cloned();
+
+        let Some(policy) = lane_policy else {
+            return Ok(RouteExecutionCandidate {
+                route_id,
+                route,
+                firmness: RouteFirmness::Indicative,
+                lane_status: LaneStatus::Warning,
+                reservation: None,
+                reason: Some("lane policy missing".to_string()),
+            });
+        };
+
+        if !policy.status.allows_firm_execution() {
+            return Ok(RouteExecutionCandidate {
+                route_id,
+                route,
+                firmness: RouteFirmness::Indicative,
+                lane_status: policy.status,
+                reservation: None,
+                reason: Some("lane is frozen for firm execution".to_string()),
+            });
+        }
+
+        let reservation = self.create_reservation(&route, &policy, route_id, reservation_ttl_ms)?;
+
+        Ok(RouteExecutionCandidate {
+            route_id,
+            route,
+            firmness: RouteFirmness::Firm,
+            lane_status: policy.status,
+            reservation: Some(reservation),
+            reason: None,
+        })
+    }
+
+    /// Release an existing reservation.
+    pub fn release_reservation(&mut self, reservation_id: &H256) -> Result<()> {
+        let reservation = self
+            .reservations
+            .get_mut(reservation_id)
+            .ok_or_else(|| PositionManagerError::ReservationNotFound(hex::encode(reservation_id)))?;
+        reservation.status = ReservationStatus::Released;
+        Ok(())
+    }
+
+    /// Expire an existing reservation.
+    pub fn expire_reservation(&mut self, reservation_id: &H256) -> Result<()> {
+        let reservation = self
+            .reservations
+            .get_mut(reservation_id)
+            .ok_or_else(|| PositionManagerError::ReservationNotFound(hex::encode(reservation_id)))?;
+        reservation.status = ReservationStatus::Expired;
+        Ok(())
+    }
+
+    /// Read an existing reservation.
+    pub fn reservation(&self, reservation_id: &H256) -> Option<&ReservationRecord> {
+        self.reservations.get(reservation_id)
     }
 
     /// Find optimal route between chains
@@ -171,7 +402,7 @@ impl RouteOptimizer {
             amount_out,
             hops: vec![chain_id],
             gas_estimate,
-            price_impact: self.calculate_price_impact(amount, amount_out)?,
+            price_impact_bps: self.calculate_price_impact_bps(amount, amount_out)?,
         })
     }
 
@@ -207,7 +438,7 @@ impl RouteOptimizer {
             amount_out,
             hops: vec![source_chain, target_chain],
             gas_estimate,
-            price_impact: self.calculate_price_impact(amount, amount_out)?,
+            price_impact_bps: self.calculate_price_impact_bps(amount, amount_out)?,
         })
     }
 
@@ -320,7 +551,7 @@ impl RouteOptimizer {
             amount_out,
             hops: vec![source_chain, intermediate_chain, target_chain],
             gas_estimate,
-            price_impact: self.calculate_price_impact(amount, amount_out)?,
+            price_impact_bps: self.calculate_price_impact_bps(amount, amount_out)?,
         })
     }
 
@@ -454,9 +685,9 @@ impl RouteOptimizer {
     }
 
     /// Calculate price impact
-    fn calculate_price_impact(&self, amount_in: U256, amount_out: U256) -> Result<f64> {
+    fn calculate_price_impact_bps(&self, amount_in: U256, amount_out: U256) -> Result<u32> {
         if amount_in.is_zero() {
-            return Ok(0.0);
+            return Ok(0);
         }
 
         let diff = if amount_in > amount_out {
@@ -465,8 +696,12 @@ impl RouteOptimizer {
             amount_out - amount_in
         };
 
-        let impact = diff.as_u128() as f64 / amount_in.as_u128() as f64;
-        Ok(impact)
+        let impact_bps = diff
+            .checked_mul(U256::from(10_000u64))
+            .ok_or(PositionManagerError::ArithmeticOverflow)?
+            .checked_div(amount_in)
+            .ok_or(PositionManagerError::ArithmeticOverflow)?;
+        Ok(impact_bps.as_u32())
     }
 
     /// Get DEX router for a chain
@@ -509,6 +744,68 @@ impl RouteOptimizer {
             .insert((source_chain, target_chain), bridge);
     }
 
+    fn create_reservation(
+        &mut self,
+        route: &SwapRoute,
+        policy: &LanePolicy,
+        route_id: H256,
+        reservation_ttl_ms: u64,
+    ) -> Result<ReservationRecord> {
+        let created_at_ms = current_time_ms();
+        let reservation_id = H256::from_low_u64_be(RESERVATION_COUNTER.fetch_add(1, Ordering::Relaxed));
+        let reservation = ReservationRecord {
+            reservation_id,
+            route_id,
+            lane_id: policy.lane_id,
+            liquidity_source: policy
+                .allowed_liquidity_sources
+                .first()
+                .copied()
+                .unwrap_or(LiquiditySourceType::ExternalMarket),
+            source_chain: route.source_chain,
+            target_chain: route.target_chain,
+            source_asset: policy.source_asset,
+            target_asset: policy.target_asset,
+            source_amount: route.amount_in,
+            target_amount: route.amount_out,
+            created_at_ms,
+            expiry_ts_ms: created_at_ms.saturating_add(reservation_ttl_ms),
+            status: ReservationStatus::Active,
+            max_fee_envelope: route.gas_estimate,
+            solvency_snapshot: route_id,
+        };
+
+        self.reservations.insert(reservation_id, reservation.clone());
+        Ok(reservation)
+    }
+
+    fn compute_lane_id(
+        &self,
+        source_chain: u64,
+        target_chain: u64,
+        source_asset: H160,
+        target_asset: H160,
+    ) -> H256 {
+        let counter = source_chain ^ target_chain;
+        let mut bytes = [0u8; 32];
+        bytes[0..8].copy_from_slice(&source_chain.to_le_bytes());
+        bytes[8..16].copy_from_slice(&target_chain.to_le_bytes());
+        bytes[16..20].copy_from_slice(&source_asset.as_fixed_bytes()[0..4]);
+        bytes[20..24].copy_from_slice(&target_asset.as_fixed_bytes()[0..4]);
+        bytes[24..32].copy_from_slice(&counter.to_le_bytes());
+        H256::from(bytes)
+    }
+
+    fn compute_route_id(&self, route: &SwapRoute, source_asset: H160, target_asset: H160) -> H256 {
+        let mut bytes = [0u8; 32];
+        bytes[0..8].copy_from_slice(&route.source_chain.to_le_bytes());
+        bytes[8..16].copy_from_slice(&route.target_chain.to_le_bytes());
+        bytes[16..20].copy_from_slice(&source_asset.as_fixed_bytes()[0..4]);
+        bytes[20..24].copy_from_slice(&target_asset.as_fixed_bytes()[0..4]);
+        bytes[24..32].copy_from_slice(&route.amount_in.low_u64().to_le_bytes());
+        H256::from(bytes)
+    }
+
     /// Simulate route execution
     pub async fn simulate_route(&self, route: &SwapRoute) -> Result<SimulationResult> {
         // Check liquidity
@@ -518,12 +815,12 @@ impl RouteOptimizer {
         let actual_output = self.estimate_actual_output(route).await?;
 
         // Calculate actual price impact
-        let actual_impact = self.calculate_price_impact(route.amount_in, actual_output)?;
+        let actual_impact = self.calculate_price_impact_bps(route.amount_in, actual_output)?;
 
         Ok(SimulationResult {
             feasible: liquidity_check,
             estimated_output: actual_output,
-            actual_price_impact: actual_impact,
+            actual_price_impact_bps: actual_impact,
             gas_used: route.gas_estimate,
             warnings: if !liquidity_check {
                 vec!["Insufficient liquidity".to_string()]
@@ -543,6 +840,21 @@ impl RouteOptimizer {
     async fn estimate_actual_output(&self, route: &SwapRoute) -> Result<U256> {
         // Placeholder - would get actual quote from DEX
         Ok(route.amount_out)
+    }
+}
+
+fn current_time_ms() -> u64 {
+    #[cfg(test)]
+    {
+        1_000
+    }
+
+    #[cfg(not(test))]
+    {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_millis() as u64)
+            .unwrap_or(0)
     }
 }
 
@@ -586,7 +898,7 @@ pub struct CachedRoute {
 impl CachedRoute {
     /// Check if cache entry is expired
     pub fn is_expired(&self) -> bool {
-        let now = sp_io::offchain::timestamp().unix_millis();
+        let now = current_time_ms();
         now > self.timestamp + self.ttl_ms
     }
 }
@@ -596,7 +908,7 @@ impl CachedRoute {
 pub struct SimulationResult {
     pub feasible: bool,
     pub estimated_output: U256,
-    pub actual_price_impact: f64,
+    pub actual_price_impact_bps: u32,
     pub gas_used: U256,
     pub warnings: Vec<String>,
 }
@@ -634,6 +946,49 @@ pub enum StepType {
 mod tests {
     use super::*;
 
+    fn sample_lane_id() -> H256 {
+        let mut bytes = [0u8; 32];
+        bytes[0..8].copy_from_slice(&1u64.to_le_bytes());
+        bytes[8..16].copy_from_slice(&137u64.to_le_bytes());
+        bytes[16..20].copy_from_slice(&H160::repeat_byte(0x11).as_fixed_bytes()[0..4]);
+        bytes[20..24].copy_from_slice(&H160::repeat_byte(0x22).as_fixed_bytes()[0..4]);
+        bytes[24..32].copy_from_slice(&(1u64 ^ 137u64).to_le_bytes());
+        H256::from(bytes)
+    }
+
+    fn sample_policy(status: LaneStatus) -> LanePolicy {
+        LanePolicy {
+            lane_id: sample_lane_id(),
+            source_chain: 1,
+            target_chain: 137,
+            source_asset: H160::repeat_byte(0x11),
+            target_asset: H160::repeat_byte(0x22),
+            lane_class: LaneClass::MarketOnly,
+            status,
+            allowed_liquidity_sources: vec![LiquiditySourceType::ExternalMarket],
+            inventory_band: InventoryBand {
+                critical_min: U256::from(10u64),
+                min: U256::from(20u64),
+                target: U256::from(100u64),
+                max: U256::from(200u64),
+            },
+        }
+    }
+
+    fn sample_route() -> SwapRoute {
+        SwapRoute {
+            source_chain: 1,
+            target_chain: 137,
+            source_asset: H160::repeat_byte(0x11),
+            target_asset: H160::repeat_byte(0x22),
+            amount_in: U256::from(1000u64),
+            amount_out: U256::from(995u64),
+            hops: vec![1, 137],
+            gas_estimate: U256::from(100_000u64),
+            price_impact_bps: 50,
+        }
+    }
+
     #[test]
     fn test_route_optimizer() {
         let config = PositionManagerConfig::default();
@@ -653,15 +1008,86 @@ mod tests {
             amount_out: U256::from(1000),
             hops: vec![1, 137],
             gas_estimate: U256::from(100_000),
-            price_impact: 0.001,
+            price_impact_bps: 10,
         };
 
         let cached = CachedRoute {
             route,
             timestamp: 0,
-            ttl_ms: 60000,
+            ttl_ms: 600,
         };
 
         assert!(cached.is_expired());
+    }
+
+    #[test]
+    fn test_frozen_lane_stays_indicative() {
+        let config = PositionManagerConfig::default();
+        let mut optimizer = RouteOptimizer::new(&config).unwrap();
+        optimizer.upsert_lane_policy(sample_policy(LaneStatus::Frozen));
+
+        let candidate = optimizer
+            .build_execution_candidate(
+                sample_route(),
+                H160::repeat_byte(0x11),
+                H160::repeat_byte(0x22),
+                5_000,
+            )
+            .unwrap();
+
+        assert_eq!(candidate.firmness, RouteFirmness::Indicative);
+        assert!(candidate.reservation.is_none());
+        assert_eq!(candidate.lane_status, LaneStatus::Frozen);
+    }
+
+    #[test]
+    fn test_active_lane_gets_reservation() {
+        let config = PositionManagerConfig::default();
+        let mut optimizer = RouteOptimizer::new(&config).unwrap();
+        optimizer.upsert_lane_policy(sample_policy(LaneStatus::Active));
+
+        let candidate = optimizer
+            .build_execution_candidate(
+                sample_route(),
+                H160::repeat_byte(0x11),
+                H160::repeat_byte(0x22),
+                5_000,
+            )
+            .unwrap();
+
+        assert_eq!(candidate.firmness, RouteFirmness::Firm);
+        let reservation = candidate.reservation.expect("reservation expected");
+        assert_eq!(reservation.status, ReservationStatus::Active);
+        assert!(reservation.is_active_at(2_000));
+        assert!(optimizer.reservation(&reservation.reservation_id).is_some());
+    }
+
+    #[test]
+    fn test_release_and_expire_reservation() {
+        let config = PositionManagerConfig::default();
+        let mut optimizer = RouteOptimizer::new(&config).unwrap();
+        optimizer.upsert_lane_policy(sample_policy(LaneStatus::Active));
+
+        let candidate = optimizer
+            .build_execution_candidate(
+                sample_route(),
+                H160::repeat_byte(0x11),
+                H160::repeat_byte(0x22),
+                10,
+            )
+            .unwrap();
+
+        let reservation_id = candidate.reservation.unwrap().reservation_id;
+        optimizer.release_reservation(&reservation_id).unwrap();
+        assert_eq!(
+            optimizer.reservation(&reservation_id).unwrap().status,
+            ReservationStatus::Released
+        );
+
+        optimizer.expire_reservation(&reservation_id).unwrap();
+        assert_eq!(
+            optimizer.reservation(&reservation_id).unwrap().status,
+            ReservationStatus::Expired
+        );
     }
 }

@@ -97,7 +97,7 @@ impl MobileTransactionSigner {
             return Err(SdkError::SigningError("Invalid key size".to_string()));
         }
 
-        let mut keys = self.private_keys.lock().unwrap();
+        let mut keys = self.private_keys.lock().expect("private_keys mutex poisoned");
         
         // Store with algorithm prefix
         let key_id = format!("{}:{:?}", address, algorithm);
@@ -109,7 +109,7 @@ impl MobileTransactionSigner {
 
     /// Remove account (secure deletion)
     pub async fn remove_account(&self, address: &str) -> Result<(), SdkError> {
-        let mut keys = self.private_keys.lock().unwrap();
+        let mut keys = self.private_keys.lock().expect("private_keys mutex poisoned");
         
         // Remove all algorithm variants
         keys.retain(|k, v| {
@@ -188,7 +188,7 @@ impl MobileTransactionSigner {
             let request = entry.request;
 
             // Find private key
-            let keys = self.private_keys.lock().unwrap();
+            let keys = self.private_keys.lock().expect("private_keys mutex poisoned");
             let key_id = format!("{}:{:?}", request.account_address, request.algorithm);
             
             let private_key = keys

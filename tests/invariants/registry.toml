@@ -175,6 +175,14 @@ layer = "PALLET"
 tested_by = ["pallets/depin-marketplace/src/tests.rs::slash_on_failure"]
 property = "job_failed && verified => provider.stake -= slash_amount"
 
+[[invariant]]
+id = "SWARM-ORCHESTRA-001"
+description = "Closed orchestra vote windows emit evidence bundles that can be converted into unified security proofs without losing approval lineage"
+severity = "HIGH"
+layer = "SWARM"
+tested_by = ["crates/x3-orchestra-control-plane/src/service.rs::persistent_store_restores_intents_approvals_vote_windows_and_evidence", "crates/x3-gpu-validator-swarm/src/proof_integration.rs::orchestra_evidence_converts_to_unified_proof"]
+property = "close_vote_window(window) => exists evidence, unified_proof(evidence), and approval lineage remains reconstructible"
+
 # ──────────────────────────────────────────────────────────────────
 # EXEC-PREDICT-002: Predictive Parallel Execution with On-Device ML
 # Proposal: openspec/changes/EXEC-PREDICT-002/proposal.md
@@ -678,3 +686,278 @@ tested_by = [
   "scripts/testnet/run-multiprocess-load.py::baseline_load_20m",
 ]
 property = "tps >= target && error_rate <= 0.01 for 20m"
+
+# ──────────────────────────────────────────────────────────────────
+# add-swarm-orchestra-platform
+# Proposal: docs/openspec/changes/add-swarm-orchestra-platform/proposal.md
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "SWARM-ORCH-001"
+description = "Financially impactful strategy actions require successful risk review before execution"
+severity = "CRITICAL"
+layer = "SWARM"
+tested_by = []
+property = "strategy_action.financial_impact => risk_review == approved before execute"
+
+[[invariant]]
+id = "SWARM-ORCH-002"
+description = "Autonomous containment may be reversible and temporary, but permanent sanctions require governance or appeals flow"
+severity = "CRITICAL"
+layer = "GOVERNANCE"
+tested_by = []
+property = "permanent_sanction => governance_ratified || appeals_outcome == uphold"
+
+[[invariant]]
+id = "SWARM-ORCH-003"
+description = "Every external action has intent lineage, approval state, execution metadata, and evidence hash"
+severity = "HIGH"
+layer = "AI"
+tested_by = []
+property = "forall action: exists(intent_id, approval_ref, execution_ref, evidence_hash)"
+
+[[invariant]]
+id = "SWARM-ORCH-004"
+description = "Content and media agents may only consume approved assets and may not publish without explicit approval state"
+severity = "HIGH"
+layer = "AI"
+tested_by = []
+property = "content_publish => asset_source.approved && publish_approval == granted"
+
+# ============================================================================
+# Cross-Chain GPU Validator Invariants
+# (merged from cross-chain-gpu-validator/INVARIANTS_REGISTRY_ENTRIES.toml)
+# ============================================================================
+
+[[invariant]]
+id = "INV-SEC-001"
+description = "All transaction inputs (chain_id, signatures, pubkeys, payloads) must be validated for correct format, size, and content."
+severity = "HIGH"
+layer = "API"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_chain_transaction_rejects_empty_signature",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_chain_transaction_rejects_empty_pubkey",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_chain_transaction_rejects_oversized_payload",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_chain_id_must_be_nonempty_string",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_signature_size_validation_secp256k1",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_pubkey_size_validation_secp256k1",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestInputValidationSanitization::test_signature_size_validation_ed25519",
+]
+property = "forall tx: invalid_input(tx) => rejected_before_execution(tx)"
+
+[[invariant]]
+id = "INV-SEC-002"
+description = "Private keys must never be logged or exposed in string form. Signature verification must fail for wrong public keys."
+severity = "CRITICAL"
+layer = "API"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestPrivateKeySignatureHandling::test_private_key_never_logged",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestPrivateKeySignatureHandling::test_signature_verification_fails_on_wrong_pubkey",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestPrivateKeySignatureHandling::test_signature_order_preserved_in_batch",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestPrivateKeySignatureHandling::test_same_message_different_pubkeys_different_validity",
+]
+property = "log_output(node) ∩ private_key_space == ∅"
+
+[[invariant]]
+id = "INV-SEC-003"
+description = "RPC URLs must be validated for HTTPS (except localhost). All requests must have configurable timeouts."
+severity = "HIGH"
+layer = "API"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestRpcEndpointSecurity::test_rpc_url_must_be_https",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestRpcEndpointSecurity::test_rpc_url_localhost_allowed_for_testing",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestRpcEndpointSecurity::test_rpc_request_timeout_enforced",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestRpcEndpointSecurity::test_rpc_response_validation_rejects_malformed",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestRpcEndpointSecurity::test_rpc_endpoint_availability_check",
+]
+property = "rpc_url.scheme == 'https' || rpc_url.host == 'localhost'"
+
+[[invariant]]
+id = "INV-SEC-004"
+description = "Atomic swaps across N chains must follow all-or-nothing semantics. Failed swaps must rollback to pre-swap state across all chains."
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestTransactionAtomicityGuarantees::test_swap_cannot_proceed_with_unvalidated_txs",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestTransactionAtomicityGuarantees::test_rollback_reverses_all_chain_state",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestTransactionAtomicityGuarantees::test_timeout_triggers_automatic_rollback",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestTransactionAtomicityGuarantees::test_no_partial_atomic_swaps",
+  "cross-chain-gpu-validator/tests/test_security_e2e.py::TestTransactionAtomicityGuarantees::test_concurrent_swaps_isolated",
+]
+property = "commit(swap) => all_chains_updated || none_chains_updated"
+
+[[invariant]]
+id = "INV-DASH-001"
+description = "Dashboard /metrics.json endpoint must return valid JSON with all required fields and sane value ranges."
+severity = "MEDIUM"
+layer = "INFRA"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_endpoint_returns_json",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_all_required_fields_present",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_tps_values_are_non_negative",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_success_rate_in_valid_range",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_gpu_utilization_in_valid_range",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardMetricsEndpoint::test_metrics_gpu_vram_not_oversubscribed",
+]
+property = "metrics.tps >= 0 && 0 <= metrics.success_rate <= 1 && 0 <= metrics.gpu_util <= 100"
+
+[[invariant]]
+id = "INV-DASH-002"
+description = "Dashboard must never expose private keys, RPC credentials, or sensitive chain state in metrics output."
+severity = "CRITICAL"
+layer = "INFRA"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardSecurityNoSensitiveData::test_no_private_keys_in_metrics",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardSecurityNoSensitiveData::test_no_rpc_credentials_exposed",
+  "cross-chain-gpu-validator/tests/test_dashboard_e2e.py::TestDashboardSecurityNoSensitiveData::test_no_chain_state_secrets",
+]
+property = "metrics_json ∩ credential_space == ∅"
+
+[[invariant]]
+id = "INV-RPC-001"
+description = "RPC endpoints must be reachable, responsive, and properly timeout. Rate limiting must be handled."
+severity = "HIGH"
+layer = "API"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcEndpointAvailability::test_rpc_endpoint_reachable",
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcEndpointAvailability::test_rpc_latency_measurement",
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcEndpointAvailability::test_rpc_timeout_respected",
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcEndpointAvailability::test_rpc_rate_limiting_handling",
+]
+property = "rpc_call.duration <= rpc_timeout_ms"
+
+[[invariant]]
+id = "INV-RPC-002"
+description = "All RPC responses must conform to JSON-RPC 2.0 standard. Error responses must include code and message fields."
+severity = "HIGH"
+layer = "API"
+tested_by = [
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcResponseValidation::test_valid_json_rpc_response",
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcResponseValidation::test_rpc_error_responses_have_code_and_message",
+  "cross-chain-gpu-validator/tests/test_rpc_endpoints_e2e.py::TestRpcResponseValidation::test_null_result_vs_error_distinguished",
+]
+property = "rpc_response has (result XOR error) field conforming to JSON-RPC 2.0"
+
+# ──────────────────────────────────────────────────────────────────
+# EXEC-MERKLE-BRIDGE-003: Merkle Settlement with Cross-VM Proofs
+# Proposal: docs/openspec/changes/EXEC-MERKLE-BRIDGE-003/proposal.md
+# Phase 4 (Verification & Polish): Invariant Registration
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "CONSENSUS-MERKLE-001"
+description = "Every cross-VM settlement must have a valid merkle proof path to the claimed state root"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "crates/cross-vm-bridge/src/merkle_proof_validator.rs::tests::test_verify_empty_merkle_proof",
+  "crates/cross-vm-bridge/src/merkle_proof_validator.rs::tests::test_verify_invalid_block_number",
+  "crates/cross-vm-bridge/src/merkle_proof_validator.rs::tests::test_verify_valid_settlement",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_verify_merkle_settlement_invalid_proof",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_merkle_enabled_settlement_with_proof",
+]
+property = "cross_vm_settlement => exists valid_merkle_path(settlement.proof, claimed_state_root)"
+
+[[invariant]]
+id = "CONSENSUS-MERKLE-002"
+description = "Settlement requires >2/3 validator signatures on merkle root (Byzantine consensus threshold)"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "crates/cross-vm-bridge/src/merkle_proof_validator.rs::tests::test_verify_insufficient_validators",
+  "crates/cross-vm-bridge/src/merkle_proof_validator.rs::tests::test_verify_unauthorized_validator",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_merkle_settlement_with_signatures",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_byzantine_consensus_varying_thresholds",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_finality_threshold_enforcement",
+]
+property = "valid_settlement => count(valid_signatures) > 2/3 * validator_count"
+
+[[invariant]]
+id = "CONSENSUS-MERKLE-003"
+description = "Both EVM and SVM state changes commit or both rollback based on merkle proof validity (atomic settlement)"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_merkle_enabled_atomic_swap_simple",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_merkle_settlement_sequence",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_backward_compatibility_no_merkle_proofs",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_mixed_merkle_and_non_merkle_settlements",
+  "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs::tests::test_e2e_settlement_metadata_preservation",
+]
+property = "(proof_valid => all_chains_commit) && (proof_invalid => all_chains_rollback)"
+
+# ──────────────────────────────────────────────────────────────────
+# PHASE 4 INVARIANTS: Cross-Chain GPU Validator
+# Proposal: openspec/changes/add-cross-chain-gpu-validator/proposal.md
+# Crate: crates/cross-chain-gpu-validator
+# ──────────────────────────────────────────────────────────────────
+
+[[invariant]]
+id = "ATOMIC-COMMIT-001"
+description = "Both chains commit or both rollback - no partial commits across EVM and Solana"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_dual_chain_validation_success",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_atomic_swap_record_pending_state",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_atomic_violation_detection_both_failed",
+]
+property = "swap(evm_data, svm_data) => (evm_valid && svm_valid && commit_both) || (evm_invalid || svm_invalid && rollback_both)"
+
+[[invariant]]
+id = "ATOMIC-TIMEOUT-002"
+description = "Timeout causes automatic rollback with proper cleanup of Redis registry"
+severity = "CRITICAL"
+layer = "CONSENSUS"
+tested_by = [
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_atomic_swap_timeout_enforcement",
+]
+property = "swap_expired() => registry.delete_swap() && all_state_reverted"
+
+[[invariant]]
+id = "GPU-CPU-PARITY-001"
+description = "GPU and CPU produce identical hashes and signatures - no divergence allowed"
+severity = "CRITICAL"
+layer = "INFRA"
+tested_by = [
+  "crates/cross-chain-gpu-validator/src/kernels.rs::tests::test_keccak256_parity",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_keccak256_gpu_cpu_parity",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_keccak256_parity_all_inputs",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_keccak256_hash_consistency",
+]
+property = "forall inputs: gpu_hash(inputs) == cpu_hash(inputs) && gpu_verify(inputs) == cpu_verify(inputs)"
+
+[[invariant]]
+id = "REGISTRY-CONSISTENCY-001"
+description = "Redis registry is single source of truth for swap state across orchestrator and validators"
+severity = "HIGH"
+layer = "INFRA"
+tested_by = [
+  "crates/cross-chain-gpu-validator/src/registry.rs::tests::test_swap_record_creation",
+  "crates/cross-chain-gpu-validator/src/registry.rs::tests::test_swap_expiration",
+]
+property = "registry.get_swap(id) == current_swap_state for all id"
+
+[[invariant]]
+id = "DASHBOARD-METRICS-001"
+description = "Dashboard metrics accurately reflect transaction success/failure and GPU health"
+severity = "MEDIUM"
+layer = "INFRA"
+tested_by = [
+  "crates/cross-chain-gpu-validator/src/dashboard.rs::tests::test_dashboard_metrics_recording",
+  "crates/cross-chain-gpu-validator/src/dashboard.rs::tests::test_dashboard_tps_tracking",
+  "crates/cross-chain-gpu-validator/src/dashboard.rs::tests::test_dashboard_gpu_health",
+  "crates/cross-chain-gpu-validator/tests/integration_tests.rs::tests::test_dashboard_metrics_accumulation",
+]
+property = "dashboard.total_swaps == (successful_commits + rollbacks) && dashboard.tps >= 0"
+
+[[invariant]]
+id = "FAILOVER-HEALTH-001"
+description = "GPU failures automatically trigger CPU validation with health checks and recovery"
+severity = "HIGH"
+layer = "INFRA"
+tested_by = [
+  "crates/cross-chain-gpu-validator/src/failover.rs::tests::test_gpu_health_check",
+  "crates/cross-chain-gpu-validator/src/failover.rs::tests::test_hash_failover",
+]
+property = "gpu_error() => cpu_fallback_validates() && health_check_passes()"

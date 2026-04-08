@@ -1,55 +1,75 @@
-#!/bin/bash
-# Configure firewall on X3 Chain testnet nodes
+#!/usr/bin/env bash
+# Configure firewall on X3 Chain nodes with explicit network policy.
 
-set -e
+set -euo pipefail
 
-NODE_TYPE="${1:-validator}"  # validator, rpc, bootnode, or monitoring
-ADMIN_IP="${ADMIN_IP:-0.0.0.0/0}"  # Restrict SSH to admin IP
+node_type="${1:-validator}"
+admin_cidr="${ADMIN_CIDR:-}"
+p2p_cidr="${P2P_CIDR:-0.0.0.0/0}"
+metrics_cidr="${METRICS_CIDR:-}"
+rpc_cidr="${RPC_CIDR:-}"
+public_rpc="${PUBLIC_RPC:-0}"
+prometheus_cidr="${PROMETHEUS_CIDR:-}"
+grafana_cidr="${GRAFANA_CIDR:-}"
 
-echo "🔒 Configuring firewall for $NODE_TYPE node..."
-
-# Update system
-sudo apt-get update
-sudo apt-get install -y ufw
-
-# Default policies
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-
-# SSH access (restrict to admin IP in production!)
-sudo ufw allow from "$ADMIN_IP" to any port 22 proto tcp
-
-# Common: P2P port for all nodes
-sudo ufw allow 30333/tcp comment 'X3 P2P'
-
-# Node-type specific rules
-case "$NODE_TYPE" in
-    validator)
-        echo "Validator: Opening RPC port (localhost only)"
-        # RPC only accessible locally
-        ;;
-    rpc)
-        echo "RPC Node: Opening public RPC port"
-        sudo ufw allow 9944/tcp comment 'X3 RPC'
-        ;;
-    bootnode)
-        echo "Bootnode: P2P only (already configured)"
-        ;;
-    monitoring)
-        echo "Monitoring: Opening Prometheus and Grafana ports"
-        sudo ufw allow 9090/tcp comment 'Prometheus'
-        sudo ufw allow 3000/tcp comment 'Grafana'
+case "$node_type" in
+    validator|rpc|bootnode|monitoring) ;;
+    *)
+        echo "Usage: $0 [validator|rpc|bootnode|monitoring]" >&2
+        exit 1
         ;;
 esac
 
-# Metrics port (accessible from monitoring server only)
-# TODO: Restrict to monitoring server IP
-sudo ufw allow 9615/tcp comment 'Prometheus metrics'
+if [[ -z "$admin_cidr" ]]; then
+    echo "Error: ADMIN_CIDR must be set. Refusing to open SSH to the world by default." >&2
+    exit 1
+fi
 
-# Enable firewall
+echo "Configuring firewall for $node_type node"
+
+sudo apt-get update
+sudo apt-get install -y ufw
+
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+sudo ufw allow from "$admin_cidr" to any port 22 proto tcp comment 'X3 SSH admin'
+
+if [[ "$node_type" != "monitoring" ]]; then
+    sudo ufw allow from "$p2p_cidr" to any port 30333 proto tcp comment 'X3 P2P'
+fi
+
+case "$node_type" in
+    validator)
+        echo "Validator role: RPC remains local-only; no public 9944 rule added."
+        ;;
+    bootnode)
+        echo "Bootnode role: only SSH and P2P rules applied by default."
+        ;;
+    rpc)
+        if [[ -n "$rpc_cidr" ]]; then
+            sudo ufw allow from "$rpc_cidr" to any port 9944 proto tcp comment 'X3 RPC restricted'
+        elif [[ "$public_rpc" == "1" ]]; then
+            sudo ufw allow 9944/tcp comment 'X3 RPC public'
+        else
+            echo "RPC role: no 9944 rule added because RPC_CIDR is unset and PUBLIC_RPC is not 1."
+        fi
+        ;;
+    monitoring)
+        if [[ -n "$prometheus_cidr" ]]; then
+            sudo ufw allow from "$prometheus_cidr" to any port 9090 proto tcp comment 'Prometheus restricted'
+        fi
+        if [[ -n "$grafana_cidr" ]]; then
+            sudo ufw allow from "$grafana_cidr" to any port 3000 proto tcp comment 'Grafana restricted'
+        fi
+        ;;
+esac
+
+if [[ -n "$metrics_cidr" && "$node_type" != "monitoring" ]]; then
+    sudo ufw allow from "$metrics_cidr" to any port 9615 proto tcp comment 'X3 metrics restricted'
+fi
+
 sudo ufw --force enable
-
-# Show status
 sudo ufw status verbose
 
-echo "✅ Firewall configured for $NODE_TYPE node"
+echo "Firewall configured for $node_type node"

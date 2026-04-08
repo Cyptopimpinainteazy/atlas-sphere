@@ -35,6 +35,7 @@ pub mod router;
 pub mod rpc;
 pub mod rpc_http;
 pub mod settlement;
+pub mod settlement_integration;
 
 pub use adapter::{ChainAdapter, ChainConfig, ChainMessage, CrossChainTransfer, TransferStatus};
 pub use assets::{AssetMetadata, AssetRegistry, MirroredAsset, TokenMapping};
@@ -55,6 +56,10 @@ pub use rpc::{
     RpcEndpoint, RpcRegistry, WsEndpoint,
 };
 pub use settlement::{ProofType, SettlementConfig, SettlementProof, SettlementVerifier};
+pub use settlement_integration::{
+    BoundRoute, PreSubmissionCheckResult, SettlementCoordinator, SettlementDebitEvent,
+    SettlementFailureEvent, SettlementObligation, SettlementOblStatus,
+};
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;

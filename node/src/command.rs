@@ -550,7 +550,7 @@ pub fn run() -> CliResult<()> {
             match &cmd.command {
                 KeysSubcommand::Generate {
                     key_type,
-                    seed,
+                    seed: _,
                     output,
                 } => {
                     info!("Generating keypair...");
@@ -578,7 +578,7 @@ pub fn run() -> CliResult<()> {
                 }
                 KeysSubcommand::Insert {
                     key_type,
-                    seed,
+                    seed: _,
                     keystore_path,
                 } => {
                     info!("Inserting key into keystore...");
@@ -626,7 +626,7 @@ pub fn run() -> CliResult<()> {
                 KeysSubcommand::Verify {
                     key_type,
                     public,
-                    seed,
+                    seed: _,
                 } => {
                     info!("Verifying keypair...");
                     info!("  Key Type: {}", key_type);

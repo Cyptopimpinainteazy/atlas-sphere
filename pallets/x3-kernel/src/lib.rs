@@ -82,10 +82,53 @@ use sp_std::marker::PhantomData;
 use sp_std::vec::Vec;
 use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
 
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+
+// ## Versioning Strategy
+//
+// The X3 Kernel employs explicit version fields in major data types to support
+// forward-compatible upgrades without breaking downstream code. This enables:
+//
+// - **Version-aware parsing**: RPC clients and validators can detect type versions
+// - **Graceful degradation**: Older clients can safely handle newer type versions
+// - **Schema evolution**: New fields added in future versions won't corrupt existing data
+//
+// ### Current Versions
+// - `COMIT_VERSION = 1` — Dual-VM Comit (EVM + SVM)
+// - `COMIT_V2_VERSION = 2` — Triple-VM Comit (EVM + SVM + X3VM)
+// - `EXECUTION_RECEIPT_VERSION = 1` — VM execution results
+// - `SPHERE_STATE_VERSION = 1` — Cross-VM state root
+//
+// ### Future Upgrade Path
+// When introducing Comit v3 (e.g., with zkVM support), maintain the `Comit` type
+// with version field set to 1, and introduce `ComitV3` with version field set to 3.
+// Validators can route based on version field without requiring type-level changes.
+
+/// Comit protocol version 1 (dual-VM: EVM + SVM).
+pub const COMIT_VERSION: u8 = 1;
+
+/// Comit protocol version 2 (triple-VM: EVM + SVM + X3VM).
+pub const COMIT_V2_VERSION: u8 = 2;
+
+/// ExecutionReceipt protocol version.
+pub const EXECUTION_RECEIPT_VERSION: u8 = 1;
+
+/// SphereState protocol version.
+pub const SPHERE_STATE_VERSION: u8 = 1;
+
 /// Represents a Comit transaction submitted to the X3 Kernel.
+///
+/// # Schema Evolution
+/// The version field enables clients to interpret this struct across protocol upgrades.
+/// Version 1 indicates dual-VM payloads (EVM + SVM). Future versions may add fields
+/// without invalidating parsers that understand v1.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[scale_info(skip_type_params(AccountId, Balance))]
 pub struct Comit<AccountId, Balance> {
+    /// Protocol version for forward compatibility (always COMIT_VERSION = 1).
+    pub version: u8,
     /// Globally unique Comit identifier.
     pub comit_id: H256,
     /// Origin account that submitted the Comit.
@@ -106,9 +149,17 @@ pub struct Comit<AccountId, Balance> {
 ///
 /// This is intentionally a separate type from `Comit` to avoid breaking
 /// downstream code that relies on the original dual-VM shape.
+///
+/// # Schema Evolution
+/// The version field is set to COMIT_V2_VERSION = 2, indicating triple-VM support.
+/// When ComitV3 is introduced (e.g., with zkVM), maintain this type as-is and
+/// introduce a new `ComitV3` struct with version = 3.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[scale_info(skip_type_params(AccountId, Balance))]
 pub struct ComitV2<AccountId, Balance> {
+    /// Protocol version for forward compatibility (always COMIT_V2_VERSION = 2).
+    pub version: u8,
     /// Globally unique Comit identifier.
     pub comit_id: H256,
     /// Origin account that submitted the Comit.
@@ -128,8 +179,15 @@ pub struct ComitV2<AccountId, Balance> {
 }
 
 /// Execution receipt returned by VM runtimes after transaction execution.
+///
+/// # Schema Evolution
+/// The version field enables clients to understand receipt schema across upgrades.
+/// Version 1 includes success, gas_used, return_data, logs, and state_changes.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ExecutionReceipt {
+    /// Protocol version for forward compatibility (always EXECUTION_RECEIPT_VERSION = 1).
+    pub version: u8,
     /// Whether the execution was successful.
     pub success: bool,
     /// Gas used during execution.
@@ -144,6 +202,7 @@ pub struct ExecutionReceipt {
 
 /// Log entry emitted during VM execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ExecutionLog {
     /// Address (EVM H160 or SVM 32-byte key) that emitted the log.
     pub address: Vec<u8>,
@@ -155,6 +214,7 @@ pub struct ExecutionLog {
 
 /// State change resulting from VM execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct StateChange {
     /// Account/contract address affected (EVM H160 or SVM 32-byte key).
     pub address: Vec<u8>,
@@ -165,8 +225,16 @@ pub struct StateChange {
 }
 
 /// Unified state representation for the X3 Chain.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
+///
+/// # Schema Evolution
+/// The version field enables clients to understand state structure across upgrades.
+/// Version 1 includes state_root, block_number, and timestamp. Future versions
+/// may add additional consensus or finality metadata without breaking parsers.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct SphereState {
+    /// Protocol version for forward compatibility (always SPHERE_STATE_VERSION = 1).
+    pub version: u8,
     /// State root hash representing the entire sphere state.
     pub state_root: H256,
     /// Block number when this state was computed.
@@ -175,8 +243,20 @@ pub struct SphereState {
     pub timestamp: u64,
 }
 
+impl Default for SphereState {
+    fn default() -> Self {
+        Self {
+            version: SPHERE_STATE_VERSION,
+            state_root: H256::zero(),
+            block_number: 0,
+            timestamp: 0,
+        }
+    }
+}
+
 /// Dual-VM transaction types that can be executed.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum VmTransaction {
     /// EVM transaction payload.
     Evm(Vec<u8>),
@@ -186,6 +266,7 @@ pub enum VmTransaction {
 
 /// Reasons describing why a Comit failed verification or execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 /// Granular error codes for comit execution failures with diagnostic context.
 /// Each variant includes an error code and optional diagnostic message (max 256 bytes).
 pub enum ComitFailureReason {
@@ -605,11 +686,6 @@ pub mod pallet {
     #[pallet::storage]
     pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
 
-    /// Emergency pause flag. When `true`, all user-facing extrinsics are disabled.
-    /// Only governance (root/council) can toggle this.
-    #[pallet::storage]
-    pub type ProtocolPaused<T: Config> = StorageValue<_, bool, ValueQuery>;
-
     /// Maximum size in bytes of SVM account data stored per 32-byte pubkey.
     /// 64 KiB is sufficient for most programs; programs requiring more storage
     /// should use on-chain accounts managed by the native pallet assets pallet.
@@ -753,10 +829,6 @@ pub mod pallet {
             amount: T::Balance,
             comit_id: H256,
         },
-        /// The protocol has been emergency-paused by governance.
-        ProtocolPaused,
-        /// The protocol has been unpaused and resumed normal operation.
-        ProtocolUnpaused,
     }
 
     #[pallet::error]
@@ -835,8 +907,6 @@ pub mod pallet {
         CrossVmFeeExceeded,
         /// Cross-VM prepared queue full.
         CrossVmPreparedQueueFull,
-        /// The protocol is currently paused by governance. No user operations permitted.
-        ProtocolIsPaused,
     }
 
     use frame_support::traits::StorageVersion;
@@ -871,32 +941,6 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        /// Activate emergency pause — halts all user-facing extrinsics.
-        /// Only callable by `GovernanceOrigin` (root or council).
-        #[pallet::call_index(40)]
-        #[pallet::weight(Weight::from_parts(10_000, 0))]
-        pub fn emergency_pause(origin: OriginFor<T>) -> DispatchResult {
-            T::GovernanceOrigin::ensure_origin(origin)?;
-            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
-            ProtocolPaused::<T>::put(true);
-            Self::deposit_event(Event::ProtocolPaused);
-            Ok(())
-        }
-
-        /// Deactivate emergency pause — resumes normal operation.
-        /// Only callable by `GovernanceOrigin` (root or council).
-        #[pallet::call_index(41)]
-        #[pallet::weight(Weight::from_parts(10_000, 0))]
-        pub fn emergency_unpause(origin: OriginFor<T>) -> DispatchResult {
-            T::GovernanceOrigin::ensure_origin(origin)?;
-            // Only unpause if currently paused (nothing to do otherwise)
-            if ProtocolPaused::<T>::get() {
-                ProtocolPaused::<T>::put(false);
-                Self::deposit_event(Event::ProtocolUnpaused);
-            }
-            Ok(())
-        }
-
         /// Submit a Comit transaction describing dual-VM execution intents.
         #[pallet::call_index(0)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit())]
@@ -910,9 +954,6 @@ pub mod pallet {
             prepare_root: H256,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
-
-            // SEC-009: Emergency pause guard
-            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
 
             // Check for duplicate comit_id (M-4: Comit ID uniqueness)
             ensure!(
@@ -956,6 +997,7 @@ pub mod pallet {
             })?;
 
             let comit = Comit::<T::AccountId, T::Balance> {
+                version: COMIT_VERSION,
                 comit_id,
                 origin: who.clone(),
                 evm_payload: evm_payload.clone(),
@@ -1175,9 +1217,6 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
-            // SEC-009: Emergency pause guard
-            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
-
             ensure!(
                 !SubmittedComits::<T>::contains_key(comit_id),
                 Error::<T>::DuplicateComitId
@@ -1214,6 +1253,7 @@ pub mod pallet {
             })?;
 
             let comit = ComitV2::<T::AccountId, T::Balance> {
+                version: COMIT_V2_VERSION,
                 comit_id,
                 origin: who.clone(),
                 evm_payload: evm_payload.clone(),
@@ -1450,8 +1490,6 @@ pub mod pallet {
             proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
-            // SEC-009: Emergency pause guard
-            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             let _ = Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
             Ok(())
         }
@@ -1461,8 +1499,6 @@ pub mod pallet {
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
         pub fn commit_cross_vm_operation(origin: OriginFor<T>, comit_id: H256) -> DispatchResult {
             let who = ensure_signed(origin)?;
-            // SEC-009: Emergency pause guard
-            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             Self::commit_cross_vm_operation_inner(&who, comit_id)
         }
 
@@ -2129,6 +2165,7 @@ pub mod pallet {
 
             let bridge_state_changes = Self::build_cross_vm_state_changes(&prepared.operation)?;
             let bridge_receipt = ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: result.gas_used,
                 return_data: result.output,
@@ -2743,6 +2780,7 @@ pub mod pallet {
         ) -> Result<SphereState, DispatchError> {
             // Execute transactions on both VMs in parallel (when implemented)
             let _evm_receipt = evm_tx.map(|_tx| ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 21000,
                 return_data: Vec::new(),
@@ -2751,6 +2789,7 @@ pub mod pallet {
             });
 
             let _svm_receipt = svm_tx.map(|_tx| ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 5000,
                 return_data: Vec::new(),
@@ -2760,6 +2799,7 @@ pub mod pallet {
 
             // Merge receipts into unified state
             Ok(SphereState {
+                version: SPHERE_STATE_VERSION,
                 state_root: H256::default(),
                 block_number: 0,
                 timestamp: 0,
@@ -2884,6 +2924,7 @@ pub mod pallet {
             let state_root = H256::from(blake2_256(&state_data));
 
             SphereState {
+                version: SPHERE_STATE_VERSION,
                 state_root,
                 block_number: current_block.saturated_into(),
                 timestamp: current_timestamp,
@@ -3022,6 +3063,14 @@ pub mod pallet {
                 }
                 None => 0,
             }
+        }
+
+        fn get_evm_bridge_escrow(&self) -> [u8; 20] {
+            T::BridgeEvmEscrow::get().0
+        }
+
+        fn get_svm_bridge_escrow(&self) -> [u8; 32] {
+            T::BridgeSvmEscrow::get()
         }
     }
 

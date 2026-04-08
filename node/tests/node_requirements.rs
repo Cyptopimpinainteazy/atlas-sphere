@@ -1,3 +1,5 @@
+#![allow(unused_variables)]
+
 /// Comprehensive test suite for X3 Chain node production requirements
 ///
 /// Tests verify:

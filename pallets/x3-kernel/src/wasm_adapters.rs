@@ -29,6 +29,7 @@ impl EvmExecutorAdapter for WasmEvmAdapter {
         }
         x3_evm_integration::mini_evm::execute_evm(payload, gas_limit)
             .map(|res| ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: res.success,
                 gas_used: res.gas_used,
                 return_data: res.output,
@@ -121,6 +122,7 @@ impl SvmExecutorAdapter for WasmSvmAdapter {
                     })
                     .collect();
                 ExecutionReceipt {
+                    version: crate::EXECUTION_RECEIPT_VERSION,
                     success: res.success,
                     gas_used: res.compute_units_used,
                     return_data: res.output,
@@ -158,6 +160,7 @@ impl X3ExecutorAdapter for WasmX3Adapter {
         };
         x3_x3_integration::X3Executor::execute(payload, &[], config)
             .map(|rec| ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: rec.success,
                 gas_used: rec.gas_used,
                 return_data: rec.return_data,

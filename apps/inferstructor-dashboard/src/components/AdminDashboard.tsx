@@ -1,6 +1,20 @@
 import { useState, useEffect, useCallback, type ReactElement } from 'react';
 import { api } from '../api';
-import type { AdminCommand, AdminJob, AggregatedMetrics, Subscriber, AccountingSummary } from '../api';
+import type {
+  AccountingSummary,
+  AdminCommand,
+  AdminJob,
+  AggregatedMetrics,
+  ApprovalCase,
+  BenchmarkReport,
+  EvidenceBundle,
+  OrchestraIntent,
+  Subscriber,
+  TpsBenchmarkStatus,
+  VoteTally,
+  VoteWindow,
+} from '../api';
+import { OrchestraOperationsPanel } from './OrchestraOperationsPanel';
 import {
   Shield, ArrowLeft, RefreshCw, X, Play, Square, Terminal, Trash2,
   Activity, Cpu, Globe, Gauge, Heart, FileText, Server, Zap, TrendingUp,
@@ -17,12 +31,13 @@ interface AdminDashboardProps {
   onBack: () => void;
 }
 
-type Tab = 'overview' | 'performance' | 'network' | 'subscribers' | 'intelligence' | 'stress' | 'controls';
+type Tab = 'overview' | 'performance' | 'network' | 'orchestra' | 'subscribers' | 'intelligence' | 'stress' | 'controls';
 
 const TABS: { key: Tab; label: string; icon: typeof Shield }[] = [
   { key: 'overview',     label: 'Overview',      icon: BarChart3 },
   { key: 'performance',  label: 'Performance',   icon: TrendingUp },
   { key: 'network',      label: 'Network',       icon: Globe },
+  { key: 'orchestra',    label: 'Operator',      icon: Shield },
   { key: 'subscribers',  label: 'Subscribers',   icon: Users },
   { key: 'intelligence', label: 'Intelligence',  icon: DollarSign },
   { key: 'stress',       label: 'Stress Test',   icon: Zap },
@@ -94,6 +109,15 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [editingSub, setEditingSub] = useState<string | null>(null);
   const [editTier, setEditTier] = useState('');
 
+  const [orchestraIntents, setOrchestraIntents] = useState<OrchestraIntent[]>([]);
+  const [approvalCases, setApprovalCases] = useState<ApprovalCase[]>([]);
+  const [voteWindows, setVoteWindows] = useState<VoteWindow[]>([]);
+  const [evidenceBundles, setEvidenceBundles] = useState<EvidenceBundle[]>([]);
+  const [benchmarkStatus, setBenchmarkStatus] = useState<TpsBenchmarkStatus | null>(null);
+  const [benchmarkReports, setBenchmarkReports] = useState<BenchmarkReport[]>([]);
+  const [orchestraLoading, setOrchestraLoading] = useState(true);
+  const [orchestraError, setOrchestraError] = useState<string | null>(null);
+
   const loadMetrics = useCallback(async () => {
     try {
       const [m, hist] = await Promise.all([
@@ -136,15 +160,56 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     } catch { /* ignore */ }
   }, [subSearch, subTierFilter]);
 
+  const loadOrchestra = useCallback(async () => {
+    try {
+      const [intents, approvals, windows, evidence, benchmark, reports] = await Promise.all([
+        api.listOrchestraIntents(50, 0).catch(() => null),
+        api.listApprovalCases(50, 0).catch(() => null),
+        api.listVoteWindows(50, 0).catch(() => null),
+        api.listEvidenceBundles(50, 0).catch(() => null),
+        api.getTpsBenchmarkStatus().catch(() => null),
+        api.getBenchmarkReports(20, 0).catch(() => null),
+      ]);
+
+      if (intents) setOrchestraIntents(intents);
+      if (approvals) setApprovalCases(approvals);
+      if (windows) setVoteWindows(windows);
+      if (evidence) setEvidenceBundles(evidence);
+      if (benchmark) setBenchmarkStatus(benchmark);
+      if (reports) setBenchmarkReports(reports);
+
+      const unavailableFeeds = [
+        intents ? null : 'intents',
+        approvals ? null : 'approval cases',
+        windows ? null : 'vote windows',
+        evidence ? null : 'evidence bundles',
+        benchmark ? null : 'benchmark status',
+        reports ? null : 'benchmark reports',
+      ].filter(Boolean);
+
+      setOrchestraError(
+        unavailableFeeds.length > 0
+          ? `Some operator feeds are unavailable: ${unavailableFeeds.join(', ')}.`
+          : null,
+      );
+    } catch {
+      setOrchestraError('Failed to load operator workflow data.');
+    } finally {
+      setOrchestraLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadMetrics();
     loadCommands();
     loadSubscribers();
+    loadOrchestra();
     const i1 = setInterval(loadMetrics, 3000);
     const i2 = setInterval(loadCommands, 5000);
     const i3 = setInterval(loadSubscribers, 10000);
-    return () => { clearInterval(i1); clearInterval(i2); clearInterval(i3); };
-  }, [loadMetrics, loadCommands, loadSubscribers]);
+    const i4 = setInterval(loadOrchestra, 15000);
+    return () => { clearInterval(i1); clearInterval(i2); clearInterval(i3); clearInterval(i4); };
+  }, [loadMetrics, loadCommands, loadSubscribers, loadOrchestra]);
 
   // Poll selected job
   useEffect(() => {
@@ -960,6 +1025,41 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     );
   };
 
+  const renderOrchestra = () => (
+    <OrchestraOperationsPanel
+      services={services}
+      aggregated={agg}
+      intents={orchestraIntents}
+      approvalCases={approvalCases}
+      voteWindows={voteWindows}
+      evidenceBundles={evidenceBundles}
+      benchmarkStatus={benchmarkStatus}
+      benchmarkReports={benchmarkReports}
+      jobs={jobs}
+      loading={orchestraLoading}
+      error={orchestraError}
+      onRefresh={loadOrchestra}
+      onCloseVoteWindow={async (windowId: string) => {
+        try {
+          setOrchestraError(null);
+          await api.closeVoteWindow(windowId);
+        } catch {
+          setOrchestraError(`Failed to close vote window ${windowId}.`);
+          throw new Error('close vote window failed');
+        }
+      }}
+      onImportVoteTally={async (windowId: string): Promise<VoteTally> => {
+        try {
+          setOrchestraError(null);
+          return await api.importVoteWindowTally(windowId);
+        } catch {
+          setOrchestraError(`Failed to import tally for vote window ${windowId}.`);
+          throw new Error('import tally failed');
+        }
+      }}
+    />
+  );
+
   const renderStressTest = () => {
     const benchCmds = commands['benchmarks'] || [];
     const benchJobs = jobs.filter(j => ['bench-rpc-latency', 'load-test-bridge', 'load-test-direct'].includes(j.command));
@@ -1232,6 +1332,7 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
     overview: renderOverview,
     performance: renderPerformance,
     network: renderNetwork,
+    orchestra: renderOrchestra,
     subscribers: renderSubscribers,
     intelligence: renderIntelligence,
     stress: renderStressTest,

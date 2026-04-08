@@ -2,6 +2,8 @@
 //!
 //! Run a GPU swarm node that can execute distributed compute tasks.
 
+#![allow(unused, dead_code, deprecated)]
+
 use gpu_swarm::{
     admin::{run_admin, AdminState},
     config::SwarmConfig,

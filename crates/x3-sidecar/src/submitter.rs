@@ -266,3 +266,95 @@ pub struct PendingJob {
     pub reward: String,
     pub submitter: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{extract::State, routing::post, Json, Router};
+    use std::sync::Arc;
+
+    #[derive(Clone)]
+    struct MockRpcState {
+        fallback_only: bool,
+    }
+
+    async fn rpc_handler(
+        State(state): State<Arc<MockRpcState>>,
+        Json(request): Json<serde_json::Value>,
+    ) -> Json<serde_json::Value> {
+        let method = request
+            .get("method")
+            .and_then(|value| value.as_str())
+            .unwrap_or_default();
+
+        let response = match method {
+            "x3Verifier_isExecutorRegistered" if state.fallback_only => serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": { "code": -32601, "message": "Method not found" }
+            }),
+            "x3Verifier_isExecutorRegistered" | "x3Verifier_isExecutor" => serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": true
+            }),
+            _ => serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "error": { "code": -32601, "message": "Method not found" }
+            }),
+        };
+
+        Json(response)
+    }
+
+    async fn spawn_mock_rpc_server(fallback_only: bool) -> String {
+        let app = Router::new()
+            .route("/", post(rpc_handler))
+            .with_state(Arc::new(MockRpcState { fallback_only }));
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind listener");
+        let address = listener.local_addr().expect("listener address");
+        let listener = listener.into_std().expect("convert listener");
+
+        tokio::spawn(async move {
+            axum::Server::from_tcp(listener)
+                .expect("server from tcp")
+                .serve(app.into_make_service())
+                .await
+                .expect("serve mock rpc");
+        });
+
+        format!("http://{}", address)
+    }
+
+    #[tokio::test]
+    async fn is_registered_uses_primary_rpc_when_available() {
+        let submitter = ChainSubmitter::new(
+            spawn_mock_rpc_server(false).await,
+            "01".repeat(32),
+        );
+
+        let is_registered = submitter
+            .is_registered([7u8; 32])
+            .await
+            .expect("primary registration check succeeds");
+        assert!(is_registered);
+    }
+
+    #[tokio::test]
+    async fn is_registered_falls_back_to_legacy_rpc_surface() {
+        let submitter = ChainSubmitter::new(
+            spawn_mock_rpc_server(true).await,
+            "01".repeat(32),
+        );
+
+        let is_registered = submitter
+            .is_registered([9u8; 32])
+            .await
+            .expect("fallback registration check succeeds");
+        assert!(is_registered);
+    }
+}

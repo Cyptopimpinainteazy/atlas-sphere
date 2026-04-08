@@ -60,6 +60,7 @@ impl EvmExecutorAdapter for MockEvmAdapter {
         };
 
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 21000 + (payload.len() as u64 * 68), // Base + calldata gas
             return_data: Vec::new(),
@@ -88,6 +89,7 @@ impl EvmExecutorAdapter for () {
     fn execute(_payload: &[u8], _gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
         // Unit type returns mock receipt (for backwards compatibility)
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 21000,
             return_data: Vec::new(),
@@ -118,6 +120,7 @@ impl SvmExecutorAdapter for MockSvmAdapter {
         };
 
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 5000 + (payload.len() as u64 * 10), // Base + instruction cost
             return_data: Vec::new(),
@@ -151,6 +154,7 @@ impl EvmExecutorAdapter for FailingMockEvmAdapter {
         // Simulate execution failure (success=false) when payload starts with 0xFE
         if payload.first() == Some(&0xFE) {
             return Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: false,
                 gas_used: gas_limit / 2, // Partial gas consumed
                 return_data: b"revert".to_vec(),
@@ -184,6 +188,7 @@ impl SvmExecutorAdapter for FailingMockSvmAdapter {
         // Simulate execution failure (success=false) when payload starts with 0xFE
         if payload.first() == Some(&0xFE) {
             return Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: false,
                 gas_used: compute_limit / 2,
                 return_data: b"program error".to_vec(),
@@ -204,6 +209,7 @@ impl SvmExecutorAdapter for () {
     fn execute(_payload: &[u8], _compute_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
         // Unit type returns mock receipt (for backwards compatibility)
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 5000,
             return_data: Vec::new(),
@@ -230,6 +236,7 @@ impl X3ExecutorAdapter for MockX3Adapter {
         };
 
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 1000 + (payload.len() as u64 * 5), // Base + per-byte cost
             return_data: Vec::new(),
@@ -275,6 +282,7 @@ impl X3ExecutorAdapter for FailingMockX3Adapter {
         }
         if payload.first() == Some(&0xFE) {
             return Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: false,
                 gas_used: gas_limit / 2,
                 return_data: b"x3 fault".to_vec(),
@@ -299,6 +307,7 @@ impl X3ExecutorAdapter for () {
     fn execute(_payload: &[u8], _gas_limit: u64) -> Result<ExecutionReceipt, DispatchError> {
         // Unit type returns mock receipt (for backwards compatibility)
         Ok(ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: 1000,
             return_data: Vec::new(),
@@ -356,6 +365,7 @@ pub mod real_adapters {
             pseudo_address.copy_from_slice(&payload_hash[..20]);
 
             Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used,
                 return_data: Vec::new(),
@@ -422,6 +432,7 @@ pub mod real_adapters {
 
             // Convert SVM result to pallet ExecutionReceipt
             Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: result.success,
                 gas_used: result.compute_units_used,
                 return_data: result.output,
@@ -483,6 +494,7 @@ pub mod real_adapters {
 
             // Convert X3 receipt to pallet ExecutionReceipt
             Ok(ExecutionReceipt {
+                version: crate::EXECUTION_RECEIPT_VERSION,
                 success: receipt.success,
                 gas_used: receipt.gas_used,
                 return_data: receipt.return_data,

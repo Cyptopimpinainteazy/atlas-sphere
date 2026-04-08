@@ -1,58 +1,25 @@
 # X3 Swarm Orchestra
 
-This is the unified, single-folder orchestrator for the **X3 Swarm & Orchestra Platform**. We are shipping in two days, so everything is tied together right here, tight as hell.
+This directory documents the X3 swarm-orchestra platform shape. It is not a standalone runnable orchestrator, and it should not be treated as proof that the whole platform already exists as one deployable service.
 
-## What's Included?
+The production-relevant base in this repository is narrower than the earlier draft implied. Deterministic validator execution lives in `crates/x3-gpu-validator-swarm`. Benchmark execution and report publishing live in `crates/x3-sidecar` and `crates/x3-gateway`. Runtime governance and validator admission live in `runtime` and `node`. The older `crates/gpu-swarm` path and `pallets/swarm` are explicitly deprecated and retained for reference only.
 
-By running this master folder, you tie together the following micro-architectures into a single multi-agent system:
+## Current Scope
 
-1. **GPU Swarm & Validators (TPS Priority)**
-   - Located in `./validators/`
-   - Drives ultra-fast scaling with multi-VM nodes utilizing Nvidia configurations. The primary task is maximizing TPS.
+- Validator and benchmark automation: active and code-backed.
+- Gateway-exposed workflow APIs: active and code-backed.
+- Human approval, CRM voting, evidence bundling, and reward orchestration: planned control-plane work, not finished code.
+- Court-style replay and slashing: active in `crates/x3-court`, but this is not the same as a human approval board.
 
-2. **Blockchain Optimization & Security**
-   - The nodes are sandboxed, and we run autonomic safety health checks via `./ai-agents/python-swarm`. Autonomic ops will restart failed components and monitor the GPU heartbeat to ensure optimal chain optimization and security.
+## OpenSpec Status
 
-3. **Arbitrage (Quantum-Swarm & Atomic Swap)**
-   - Located in `./arbitrage/`
-   - Strategy Agent for extracting flash-loan opportunities and scanning prices cross-chain. 
+The platform-level architecture and operating assumptions are captured in [docs/x3-swarm-orchestra/EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md). The authoritative change proposal and implementation tickets live under [docs/openspec/changes/add-swarm-orchestra-platform/proposal.md](../openspec/changes/add-swarm-orchestra-platform/proposal.md), [docs/openspec/changes/add-swarm-orchestra-platform/design.md](../openspec/changes/add-swarm-orchestra-platform/design.md), and [docs/openspec/changes/add-swarm-orchestra-platform/tasks.md](../openspec/changes/add-swarm-orchestra-platform/tasks.md).
 
-4. **AI & User Paid Features (Marketing, Coding, Video)**
-   - Includes **Ralph** (coding), **PostAutomation** (marketing), and **Swarm-Media** (video creation). These represent the premium value-added features on the network.
+## Safety Boundary
 
-## Quick Start (Shipping Mode)
+Before new automation surfaces are added, two safety conditions apply:
 
-To fire up the entire platform on your local container engine:
+- Authority startup must enforce the determinism gate.
+- Governance and approval durations must be derived from the live 200ms runtime block target.
 
-```bash
-make start
-```
-
-### Benchmarking the TPS
-
-To test the GPU cluster and see how tight and optimized the blockchain is:
-```bash
-make tps-bench
-```
-
-### Viewing Arbitrage Logs
-```bash
-make arbitrage
-```
-
-## Structure
-
-```text
-/x3-swarm-orchestra
-├── Makefile                # Master commands
-├── docker-compose.yml      # Master container definitions
-├── validators/             # Symlink -> crates/x3-gpu-validator-swarm
-├── arbitrage/              # Symlink -> crates/quantum-swarm & crates/atomic-swap-orchestrator
-├── ai-agents/              # Symlink -> swarm/ (autonomics) & ralph
-├── marketing/              # Symlink -> super-ide/apps/PostAutomation-AIAgent 
-├── video-creation/         # Symlink -> crates/swarm-media
-└── config/                 # Master configs
-```
-
-## Evolution Lifecycle
-This follows the **OpenSpec** BMAD workflow proposal. The central oversight “conductor” runs from `docker-compose` combining decentralized AI agents across all the links provided here. 
+That safety boundary keeps validator correctness, approval workflow, and outward-facing automation from being conflated into one opaque system.

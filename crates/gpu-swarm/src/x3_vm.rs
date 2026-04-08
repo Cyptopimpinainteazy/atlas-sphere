@@ -14,7 +14,10 @@ use tokio::sync::Mutex;
 use tracing::{debug, info, warn};
 
 #[cfg(feature = "x3-runtime")]
-use ::x3_vm::{VMConfig, Value, Verifier, VerifyOptions, VM};
+use ::x3_vm::{VMConfig, Value, Verifier, VerifyOptions, VM, gpu_hostcalls::GpuHostcalls};
+
+#[cfg(feature = "x3-runtime")]
+use x3_gpu_validator_swarm::gpu_bytecode as bytecode_gen;
 
 /// X3 bytecode execution mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -58,6 +61,10 @@ pub struct X3VmExecutor {
 
     /// Execution mode
     execution_mode: ExecutionMode,
+
+    /// GPU hostcalls for real GPU execution
+    #[cfg(feature = "x3-runtime")]
+    gpu_hostcalls: Arc<Mutex<Option<Arc<GpuHostcalls>>>>,
 }
 
 impl X3VmExecutor {
@@ -69,12 +76,18 @@ impl X3VmExecutor {
             gpu_manager,
             kernel_cache: Arc::new(Mutex::new(std::collections::HashMap::new())),
             execution_mode: ExecutionMode::JitCompiled,
+            #[cfg(feature = "x3-runtime")]
+            gpu_hostcalls: Arc::new(Mutex::new(None)),
         })
     }
 
     /// Execute X3 bytecode task
     pub async fn execute_x3_task(&self, task: &Task, timeout: Duration) -> SwarmResult<TaskResult> {
         debug!("Executing X3 task: {}", task.id);
+
+        // Initialize GPU hostcalls early
+        #[cfg(feature = "x3-runtime")]
+        let _ = self.init_gpu_hostcalls().await;
 
         // Parse X3 bytecode from task payload
         let bytecode = match &task.task_type {
@@ -289,6 +302,39 @@ impl X3VmExecutor {
     }
 
     #[cfg(feature = "x3-runtime")]
+    async fn init_gpu_hostcalls(&self) -> SwarmResult<()> {
+        let mut hostcalls_opt = self.gpu_hostcalls.lock().await;
+        if hostcalls_opt.is_some() {
+            return Ok(());
+        }
+
+        let gpu_hostcalls = GpuHostcalls::new();
+        if gpu_hostcalls.is_available() {
+            info!("GPU hostcalls initialized successfully");
+            *hostcalls_opt = Some(Arc::new(gpu_hostcalls));
+        } else {
+            warn!("GPU hostcalls not available, CPU fallback will be used");
+        }
+        Ok(())
+    }
+
+    #[cfg(feature = "x3-runtime")]
+    async fn get_gpu_hostcalls(&self) -> Option<Arc<GpuHostcalls>> {
+        let _ = self.init_gpu_hostcalls().await;
+        self.gpu_hostcalls.lock().await.clone()
+    }
+
+    #[cfg(feature = "x3-runtime")]
+    fn bytes_to_hash_output(chunk: &[u8]) -> Option<[u8; 32]> {
+        if chunk.len() < 32 {
+            return None;
+        }
+        let mut result = [0u8; 32];
+        result.copy_from_slice(&chunk[..32]);
+        Some(result)
+    }
+
+    #[cfg(feature = "x3-runtime")]
     fn execute_on_vm(&self, task: &Task, bytecode: &[u8]) -> SwarmResult<TaskResult> {
         let gas_limit = match &task.task_type {
             crate::task::TaskType::X3Bytecode { gas_budget, .. } => *gas_budget,
@@ -304,6 +350,16 @@ impl X3VmExecutor {
                 ..VMConfig::default()
             },
         );
+
+        // Try to register GPU hostcalls if available (non-blocking check)
+        if let Some(hostcalls_arc) = self.gpu_hostcalls.try_lock().ok().and_then(|guard| guard.clone()) {
+            debug!("[X3VmExecutor] Registering GPU hostcalls");
+            hostcalls_arc.register_on_vm(&mut vm);
+            info!("[X3VmExecutor] GPU hostcalls registered, using GPU execution path");
+        } else {
+            debug!("[X3VmExecutor] GPU hostcalls not available, CPU fallback");
+        }
+
         let exec = vm
             .call_function(0, &[])
             .map_err(|e| SwarmError::ExecutionError(format!("x3 vm execute failed: {:?}", e)))?;
