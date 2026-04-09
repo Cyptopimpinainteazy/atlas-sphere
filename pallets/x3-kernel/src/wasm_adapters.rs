@@ -35,6 +35,9 @@ impl EvmExecutorAdapter for WasmEvmAdapter {
                 return_data: res.output,
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             })
             .map_err(|_| DispatchError::Other("EVM execution failed"))
     }
@@ -128,6 +131,9 @@ impl SvmExecutorAdapter for WasmSvmAdapter {
                     return_data: res.output,
                     logs: Vec::new(),
                     state_changes,
+                    protocol_version: 1,
+                    migration_history: Vec::new(),
+                    compatibility_flags: 0,
                 }
             })
             .map_err(|_| DispatchError::Other("SVM execution failed"))
@@ -166,6 +172,9 @@ impl X3ExecutorAdapter for WasmX3Adapter {
                 return_data: rec.return_data,
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             })
             .map_err(|_| DispatchError::Other("X3 execution failed"))
     }

@@ -70,6 +70,9 @@ impl EvmExecutorAdapter for MockEvmAdapter {
                 key: state_root,
                 value: state_root,
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -95,6 +98,9 @@ impl EvmExecutorAdapter for () {
             return_data: Vec::new(),
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -130,6 +136,9 @@ impl SvmExecutorAdapter for MockSvmAdapter {
                 key: state_root,
                 value: state_root,
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -160,6 +169,9 @@ impl EvmExecutorAdapter for FailingMockEvmAdapter {
                 return_data: b"revert".to_vec(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
         }
         // Otherwise delegate to normal mock
@@ -194,6 +206,9 @@ impl SvmExecutorAdapter for FailingMockSvmAdapter {
                 return_data: b"program error".to_vec(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
         }
         // Otherwise delegate to normal mock
@@ -215,6 +230,9 @@ impl SvmExecutorAdapter for () {
             return_data: Vec::new(),
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -246,6 +264,9 @@ impl X3ExecutorAdapter for MockX3Adapter {
                 key: state_root,
                 value: state_root,
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -288,6 +309,9 @@ impl X3ExecutorAdapter for FailingMockX3Adapter {
                 return_data: b"x3 fault".to_vec(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
         }
 
@@ -313,6 +337,9 @@ impl X3ExecutorAdapter for () {
             return_data: Vec::new(),
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -377,6 +404,9 @@ pub mod real_adapters {
                     key: canonical_asset_key(0),
                     value: canonical_balance_value(gas_used as u128),
                 }],
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             })
         }
 
@@ -454,6 +484,9 @@ pub mod real_adapters {
                         value: canonical_balance_value(update.lamports as u128),
                     })
                     .collect(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             })
         }
 
@@ -516,6 +549,9 @@ pub mod real_adapters {
                         value: H256::from_slice(change.new_value.get(..32).unwrap_or(&[0u8; 32])),
                     })
                     .collect(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             })
         }
 

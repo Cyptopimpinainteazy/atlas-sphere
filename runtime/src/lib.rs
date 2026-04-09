@@ -703,6 +703,7 @@ mod native_vm_adapters {
                 let state_changes =
                     collect_evm_balance_changes(source, None, &info.logs, &pre_balances);
                 return Ok(ExecutionReceipt {
+                    version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
                     success,
                     gas_used: info.used_gas.standard.unique_saturated_into(),
                     return_data: info.value.as_bytes().to_vec(),
@@ -716,6 +717,9 @@ mod native_vm_adapters {
                         })
                         .collect(),
                     state_changes,
+                    protocol_version: 1,
+                    migration_history: Vec::new(),
+                    compatibility_flags: 0,
                 });
             }
 
@@ -795,6 +799,7 @@ mod native_vm_adapters {
         let success = matches!(info.exit_reason, ExitReason::Succeed(_));
         let state_changes = collect_evm_balance_changes(source, target, &info.logs, pre_balances);
         ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success,
             gas_used: info.used_gas.standard.unique_saturated_into(),
             return_data: info.value,
@@ -808,6 +813,9 @@ mod native_vm_adapters {
                 })
                 .collect(),
             state_changes,
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         }
     }
 
@@ -887,6 +895,7 @@ mod native_vm_adapters {
             })
             .collect();
         ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: result.success,
             gas_used: result.compute_units_used,
             return_data: result.output,
@@ -900,6 +909,9 @@ mod native_vm_adapters {
                 })
                 .collect(),
             state_changes,
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         }
     }
 
@@ -2398,13 +2410,69 @@ pub fn runtime_uses_mock_vm_adapters() -> bool {
 #[cfg(all(test, feature = "std"))]
 mod vm_adapter_tests {
     use super::*;
+    use codec::Encode;
+    use sp_core::H160;
+    use sp_core::Pair;
     use pallet_x3_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
+    use sp_runtime::traits::BlakeTwo256;
+
+    fn vm_test_ext() -> sp_io::TestExternalities {
+        let aura = sp_consensus_aura::sr25519::AuthorityPair::from_string("//Alice", None)
+            .expect("Aura test authority should derive from seed")
+            .public();
+        let grandpa = sp_consensus_grandpa::AuthorityPair::from_string("//Alice", None)
+            .expect("Grandpa test authority should derive from seed")
+            .public();
+        let mut validator_bytes = [0u8; 32];
+        validator_bytes.copy_from_slice(&aura.encode()[..32]);
+        let validator_account = AccountId::from(validator_bytes);
+        let source_account: AccountId = <pallet_evm::HashedAddressMapping<BlakeTwo256>
+            as pallet_evm::AddressMapping<AccountId>>::into_account_id(H160::zero());
+
+        let storage = RuntimeGenesisConfig {
+            balances: BalancesConfig {
+                balances: vec![
+                    (source_account, 1_000_000 * X3),
+                    (validator_account.clone(), 1_000_000 * X3),
+                ],
+            },
+            grandpa: GrandpaConfig {
+                authorities: vec![(grandpa, 1)],
+                _config: Default::default(),
+            },
+            session: SessionConfig {
+                keys: vec![(
+                    validator_account.clone(),
+                    validator_account,
+                    SessionKeys { aura },
+                )],
+            },
+            atlas_kernel: AtlasKernelConfig {
+                assets: x3_kernel_default_assets(),
+            },
+            x3_coin: X3CoinConfig {
+                team_allocations: Vec::new(),
+                ecosystem_allocations: Vec::new(),
+                liquidity_allocations: Vec::new(),
+            },
+            ..Default::default()
+        }
+        .build_storage()
+        .expect("runtime test genesis should build");
+
+        let mut ext = sp_io::TestExternalities::new(storage);
+        ext.execute_with(|| {
+            System::set_block_number(1);
+            Timestamp::set_timestamp(MILLISECS_PER_BLOCK);
+        });
+        ext
+    }
 
     #[test]
     fn test_native_evm_adapter_real_execution() {
         // Test that NativeEvmAdapter uses real Frontier
         let simple_evm_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xf3]; // PUSH1 0 PUSH1 0 RETURN
-        sp_io::TestExternalities::default().execute_with(|| {
+        vm_test_ext().execute_with(|| {
             let result =
                 native_vm_adapters::NativeEvmAdapter::execute(&simple_evm_bytecode, 100_000);
             // Debug: print result to stderr to capture runner error details during test
@@ -2413,6 +2481,10 @@ mod vm_adapter_tests {
             let receipt = result.unwrap();
             assert!(receipt.success);
             assert!(receipt.gas_used > 0);
+            assert_eq!(receipt.version, pallet_x3_kernel::EXECUTION_RECEIPT_VERSION);
+            assert_eq!(receipt.protocol_version, 1);
+            assert!(receipt.migration_history.is_empty());
+            assert_eq!(receipt.compatibility_flags, 0);
         });
     }
 
@@ -2423,12 +2495,16 @@ mod vm_adapter_tests {
             0xb7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov r0, 0
             0x95, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // exit
         ];
-        sp_io::TestExternalities::default().execute_with(|| {
+        vm_test_ext().execute_with(|| {
             let result =
                 native_vm_adapters::NativeSvmAdapter::execute(&simple_bpf_program, 100_000);
             assert!(result.is_ok());
             let receipt = result.unwrap();
             assert!(receipt.success);
+            assert_eq!(receipt.version, pallet_x3_kernel::EXECUTION_RECEIPT_VERSION);
+            assert_eq!(receipt.protocol_version, 1);
+            assert!(receipt.migration_history.is_empty());
+            assert_eq!(receipt.compatibility_flags, 0);
         });
     }
 

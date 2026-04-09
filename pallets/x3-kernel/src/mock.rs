@@ -45,22 +45,16 @@ impl Get<[u8; 32]> for BridgeSvmEscrowValue {
     }
 }
 
+pub type Block = system::mocking::MockBlock<Test>;
+
 construct_runtime!(
-    pub enum Test
-    where
-        Block = Block,
-        NodeBlock = Block,
-        UncheckedExtrinsic = UncheckedExtrinsic,
-    {
+    pub enum Test {
         System: frame_system,
         Timestamp: pallet_timestamp,
         Balances: pallet_balances,
         AtlasKernel: pallet_x3_kernel,
     }
 );
-
-pub type UncheckedExtrinsic = system::mocking::MockUncheckedExtrinsic<Test>;
-pub type Block = system::mocking::MockBlock<Test>;
 
 impl system::Config for Test {
     type BaseCallFilter = frame_support::traits::Everything;
@@ -121,7 +115,7 @@ pub struct TestEvmAdapter;
 
 impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
     fn execute(
-        payload: &[u8],
+        _payload: &[u8],
         _gas_limit: u64,
     ) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         // Use a fixed asset/balance so tests can assert on canonical ledger.
@@ -149,6 +143,9 @@ impl pallet_x3_kernel::EvmExecutorAdapter for TestEvmAdapter {
                 key: H256::from(key_bytes),
                 value: H256::from(value_bytes),
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -165,7 +162,7 @@ pub struct TestSvmAdapter;
 
 impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
     fn execute(
-        payload: &[u8],
+        _payload: &[u8],
         _compute_limit: u64,
     ) -> Result<crate::ExecutionReceipt, frame_support::dispatch::DispatchError> {
         let account: AccountId = ALICE;
@@ -191,6 +188,9 @@ impl pallet_x3_kernel::SvmExecutorAdapter for TestSvmAdapter {
                 key: H256::from(key_bytes),
                 value: H256::from(value_bytes),
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -236,6 +236,9 @@ impl pallet_x3_kernel::X3ExecutorAdapter for TestX3Adapter {
                 key: H256::from(key_bytes),
                 value: H256::from(value_bytes),
             }],
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -378,6 +381,9 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
             return_data: Default::default(),
             logs: Default::default(),
             state_changes: Default::default(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -392,6 +398,9 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
             return_data: Default::default(),
             logs: Default::default(),
             state_changes: Default::default(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -417,6 +426,12 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,
+            state_version: pallet_x3_kernel::SemanticVersion::new(1, 0, 0),
+            version_timeline: Vec::new(),
+            current_schema: pallet_x3_kernel::SchemaDescriptor {
+                fields: Vec::new(),
+                compatibility_flags: 0,
+            },
         })
     }
 
@@ -430,6 +445,12 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,
+            state_version: pallet_x3_kernel::SemanticVersion::new(1, 0, 0),
+            version_timeline: Vec::new(),
+            current_schema: pallet_x3_kernel::SchemaDescriptor {
+                fields: Vec::new(),
+                compatibility_flags: 0,
+            },
         }
     }
 

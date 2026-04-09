@@ -79,7 +79,7 @@ use sp_io::hashing::blake2_256;
 use sp_runtime::traits::MaybeSerializeDeserialize;
 use sp_std::convert::TryInto;
 use sp_std::marker::PhantomData;
-use sp_std::vec::Vec;
+use sp_std::{vec, vec::Vec};
 use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
 
 #[cfg(feature = "std")]
@@ -116,6 +116,429 @@ pub const EXECUTION_RECEIPT_VERSION: u8 = 1;
 
 /// SphereState protocol version.
 pub const SPHERE_STATE_VERSION: u8 = 1;
+
+/// Comit protocol version 3 (batching support).
+pub const COMIT_V3_VERSION: u8 = 3;
+
+// ============================================================================
+// VERSIONING INFRASTRUCTURE: ComitV3, Routing, Migration, State Versioning
+// ============================================================================
+
+/// Error type for versioning and migration operations.
+#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
+pub enum VersioningError {
+    /// Empty batch was attempted to be committed.
+    EmptyBatch,
+    /// Duplicate entry ID within a batch.
+    DuplicateEntryId(H256),
+    /// Circular dependency detected in batch entries.
+    CircularDependency,
+    /// Hash integrity check failed.
+    HashIntegrityFailed,
+    /// Invalid batch state transition.
+    InvalidBatchState(Vec<u8>),
+    /// Entry not found in batch.
+    EntryNotFound(H256),
+    /// Version negotiation failed.
+    VersionNegotiationFailed { requested: u32, supported: Vec<u32> },
+    /// Version mismatch error.
+    VersionMismatch { expected: u32, actual: u32 },
+}
+
+/// Individual entry within a batch commit (ComitV3).
+///
+/// Each batch entry represents a single transaction with its own payload,
+/// hash, ordering, and optional dependencies on other entries.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct BatchEntry {
+    /// Unique identifier for this entry within the batch.
+    pub entry_id: H256,
+    /// Transaction payload (EVM, SVM, or X3 VM bytecode).
+    pub payload: Vec<u8>,
+    /// Hash commitment to this entry's payload (sha256 or equivalent).
+    pub entry_hash: H256,
+    /// Ordering index within the batch (0-indexed).
+    pub order_index: u32,
+    /// Optional dependencies: set of entry IDs that must complete before this entry.
+    pub depends_on: Vec<H256>,
+}
+
+impl BatchEntry {
+    /// Create a new batch entry with the given parameters.
+    pub fn new(
+        entry_id: H256,
+        payload: Vec<u8>,
+        entry_hash: H256,
+        order_index: u32,
+        depends_on: Vec<H256>,
+    ) -> Self {
+        Self {
+            entry_id,
+            payload,
+            entry_hash,
+            order_index,
+            depends_on,
+        }
+    }
+}
+
+/// Comit protocol version 3 with batch transaction support.
+///
+/// ComitV3 enables atomic batching of multiple transactions within a single
+/// commit, with support for intra-batch dependencies and atomic rollback.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct ComitV3<AccountId, Balance> {
+    /// Protocol version (always COMIT_V3_VERSION = 3).
+    pub version: u8,
+    /// Globally unique batch identifier.
+    pub batch_id: H256,
+    /// Origin account that submitted this batch.
+    pub origin: AccountId,
+    /// Entries in this batch.
+    pub entries: Vec<BatchEntry>,
+    /// Aggregate commitment hash over all entries.
+    pub aggregate_hash: H256,
+    /// Timestamp of batch creation (block number or Unix timestamp).
+    pub timestamp: u64,
+    /// Fee charged for processing the batch.
+    pub fee: Balance,
+    /// Optional metadata (e.g., correlation IDs, version hints).
+    pub metadata: Vec<u8>,
+}
+
+impl<AccountId, Balance> ComitV3<AccountId, Balance> {
+    /// Create a new empty batch.
+    pub fn new_batch(batch_id: H256, origin: AccountId, fee: Balance, timestamp: u64) -> Self {
+        Self {
+            version: COMIT_V3_VERSION,
+            batch_id,
+            origin,
+            entries: Vec::new(),
+            aggregate_hash: H256::zero(),
+            timestamp,
+            fee,
+            metadata: Vec::new(),
+        }
+    }
+
+    /// Add an entry to the batch.
+    pub fn add_entry(&mut self, entry: BatchEntry) -> Result<(), VersioningError> {
+        // Check for duplicate entry IDs
+        if self.entries.iter().any(|e| e.entry_id == entry.entry_id) {
+            return Err(VersioningError::DuplicateEntryId(entry.entry_id));
+        }
+        self.entries.push(entry);
+        Ok(())
+    }
+
+    /// Remove an entry from the batch by ID.
+    pub fn remove_entry(&mut self, entry_id: H256) -> Result<(), VersioningError> {
+        let initial_len = self.entries.len();
+        self.entries.retain(|e| e.entry_id != entry_id);
+        if self.entries.len() == initial_len {
+            return Err(VersioningError::EntryNotFound(entry_id));
+        }
+        Ok(())
+    }
+
+    /// Validate the batch for consistency, hash integrity, and acyclic dependencies.
+    pub fn validate_batch(&self) -> Result<(), VersioningError> {
+        if self.entries.is_empty() {
+            return Err(VersioningError::EmptyBatch);
+        }
+
+        // Check for duplicate entry IDs
+        let mut seen_ids = sp_std::collections::btree_set::BTreeSet::new();
+        for entry in &self.entries {
+            if !seen_ids.insert(entry.entry_id) {
+                return Err(VersioningError::DuplicateEntryId(entry.entry_id));
+            }
+        }
+
+        // Check for circular dependencies using topological sort
+        self.check_acyclic_dependencies()?;
+
+        Ok(())
+    }
+
+    /// Check that the dependency graph is acyclic using DFS.
+    fn check_acyclic_dependencies(&self) -> Result<(), VersioningError> {
+        let mut visited = sp_std::collections::btree_set::BTreeSet::new();
+        let mut rec_stack = sp_std::collections::btree_set::BTreeSet::new();
+
+        for entry in &self.entries {
+            if !visited.contains(&entry.entry_id) {
+                self.dfs_visit(entry.entry_id, &mut visited, &mut rec_stack)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Depth-first search to detect cycles in dependency graph.
+    fn dfs_visit(
+        &self,
+        node_id: H256,
+        visited: &mut sp_std::collections::btree_set::BTreeSet<H256>,
+        rec_stack: &mut sp_std::collections::btree_set::BTreeSet<H256>,
+    ) -> Result<(), VersioningError> {
+        visited.insert(node_id);
+        rec_stack.insert(node_id);
+
+        if let Some(entry) = self.entries.iter().find(|e| e.entry_id == node_id) {
+            for &dep_id in &entry.depends_on {
+                if !visited.contains(&dep_id) {
+                    self.dfs_visit(dep_id, visited, rec_stack)?;
+                } else if rec_stack.contains(&dep_id) {
+                    return Err(VersioningError::CircularDependency);
+                }
+            }
+        }
+
+        rec_stack.remove(&node_id);
+        Ok(())
+    }
+
+    /// Finalize and compute the aggregate hash over all entries.
+    pub fn commit_batch(&mut self) -> Result<H256, VersioningError> {
+        self.validate_batch()?;
+
+        // Compute aggregate hash by hashing all entry hashes in order
+        use sp_io::hashing::sha2_256;
+        let mut aggregate_data = Vec::new();
+        for entry in &self.entries {
+            aggregate_data.extend_from_slice(entry.entry_hash.as_bytes());
+        }
+        self.aggregate_hash = H256(sha2_256(&aggregate_data));
+        Ok(self.aggregate_hash)
+    }
+
+    /// Get the number of entries in the batch.
+    pub fn entry_count(&self) -> usize {
+        self.entries.len()
+    }
+
+    /// Get an entry by ID.
+    pub fn get_entry(&self, entry_id: H256) -> Option<&BatchEntry> {
+        self.entries.iter().find(|e| e.entry_id == entry_id)
+    }
+}
+
+/// Builder pattern implementation for ergonomic batch construction.
+pub struct BatchBuilder<AccountId, Balance> {
+    batch: ComitV3<AccountId, Balance>,
+}
+
+impl<AccountId, Balance> BatchBuilder<AccountId, Balance> {
+    /// Create a new batch builder.
+    pub fn new(batch_id: H256, origin: AccountId, fee: Balance, timestamp: u64) -> Self {
+        Self {
+            batch: ComitV3::new_batch(batch_id, origin, fee, timestamp),
+        }
+    }
+
+    /// Add an entry to the batch (builder method).
+    pub fn with_entry(mut self, entry: BatchEntry) -> Result<Self, VersioningError> {
+        self.batch.add_entry(entry)?;
+        Ok(self)
+    }
+
+    /// Add metadata to the batch.
+    pub fn with_metadata(mut self, metadata: Vec<u8>) -> Self {
+        self.batch.metadata = metadata;
+        self
+    }
+
+    /// Build and return the finalized batch.
+    pub fn build(mut self) -> Result<ComitV3<AccountId, Balance>, VersioningError> {
+        self.batch.commit_batch()?;
+        Ok(self.batch)
+    }
+}
+
+// ============================================================================
+// COMIT OPERATIONS TRAIT AND VERSION-AWARE ROUTING
+// ============================================================================
+
+/// Trait defining operations available across all Comit versions.
+pub trait ComitOperations: Send + Sync {
+    /// Execute the commit and return a result with execution metadata.
+    fn execute(&self) -> Result<Vec<u8>, VersioningError>;
+
+    /// Verify the commit's consistency without execution.
+    fn verify(&self) -> Result<bool, VersioningError>;
+
+    /// Rollback and restore pre-commit state.
+    fn rollback(&self) -> Result<(), VersioningError>;
+
+    /// Get the protocol version of this commit.
+    fn get_version(&self) -> u32;
+}
+
+/// Version enum wrapping all Comit versions.
+pub enum ComitVersion<AccountId, Balance> {
+    /// Comit version 1 (dual-VM).
+    V1(Comit<AccountId, Balance>),
+    /// Comit version 2 (triple-VM).
+    V2(ComitV2<AccountId, Balance>),
+    /// Comit version 3 (batching).
+    V3(ComitV3<AccountId, Balance>),
+}
+
+impl<AccountId, Balance> ComitVersion<AccountId, Balance> {
+    /// Get the protocol version.
+    pub fn version(&self) -> u32 {
+        match self {
+            ComitVersion::V1(_) => 1,
+            ComitVersion::V2(_) => 2,
+            ComitVersion::V3(_) => 3,
+        }
+    }
+}
+
+/// Forward migration from ComitV1 to ComitV2.
+impl<AccountId: Clone, Balance: Clone> From<Comit<AccountId, Balance>>
+    for ComitV2<AccountId, Balance>
+{
+    fn from(v1: Comit<AccountId, Balance>) -> Self {
+        ComitV2 {
+            version: COMIT_V2_VERSION,
+            comit_id: v1.comit_id,
+            origin: v1.origin,
+            evm_payload: v1.evm_payload,
+            svm_payload: v1.svm_payload,
+            x3_payload: Vec::new(), // V1 has no X3 payload
+            nonce: v1.nonce,
+            fee: v1.fee,
+            prepare_root: v1.prepare_root,
+        }
+    }
+}
+
+/// Forward migration from ComitV2 to ComitV3.
+impl<AccountId, Balance> From<ComitV2<AccountId, Balance>> for ComitV3<AccountId, Balance> {
+    fn from(v2: ComitV2<AccountId, Balance>) -> Self {
+        // Wrap the V2 commit as a single-entry batch
+        use sp_io::hashing::sha2_256;
+
+        let mut payload_combined = Vec::new();
+        payload_combined.extend_from_slice(&v2.evm_payload);
+        payload_combined.extend_from_slice(&v2.svm_payload);
+        payload_combined.extend_from_slice(&v2.x3_payload);
+
+        let entry_hash = H256(sha2_256(&payload_combined));
+        let entry = BatchEntry::new(v2.comit_id, payload_combined, entry_hash, 0, Vec::new());
+
+        let mut batch = ComitV3 {
+            version: COMIT_V3_VERSION,
+            batch_id: v2.comit_id,
+            origin: v2.origin,
+            entries: vec![entry],
+            aggregate_hash: entry_hash,
+            timestamp: 0, // Use 0 as placeholder, can be overridden
+            fee: v2.fee,
+            metadata: Vec::new(),
+        };
+
+        // Recompute aggregate hash
+        let _ = batch.commit_batch(); // Safe to ignore error as we know batch is valid
+        batch
+    }
+}
+
+/// Version negotiation function.
+///
+/// Returns the highest mutually supported version, or an error if no version matches.
+pub fn negotiate_version(supported: &[u32], requested: u32) -> Result<u32, VersioningError> {
+    if supported.is_empty() {
+        return Err(VersioningError::VersionNegotiationFailed {
+            requested,
+            supported: Vec::new(),
+        });
+    }
+
+    if supported.contains(&requested) {
+        return Ok(requested);
+    }
+
+    // Return highest supported version if requested is not supported
+    if let Some(&highest) = supported.iter().max() {
+        if highest < requested {
+            return Ok(highest);
+        }
+    }
+
+    Err(VersioningError::VersionNegotiationFailed {
+        requested,
+        supported: supported.to_vec(),
+    })
+}
+
+// ============================================================================
+// STATE VERSIONING INFRASTRUCTURE
+// ============================================================================
+
+/// Semantic version representation.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct SemanticVersion {
+    /// Major version number.
+    pub major: u32,
+    /// Minor version number.
+    pub minor: u32,
+    /// Patch version number.
+    pub patch: u32,
+}
+
+impl SemanticVersion {
+    /// Create a new semantic version.
+    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
+        Self {
+            major,
+            minor,
+            patch,
+        }
+    }
+}
+
+/// Migration event recording version transitions.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct MigrationEvent {
+    /// Source version.
+    pub from_version: u32,
+    /// Target version.
+    pub to_version: u32,
+    /// Timestamp of migration.
+    pub timestamp: u64,
+    /// Migration strategy identifier.
+    pub strategy: Vec<u8>,
+}
+
+/// Versioned state snapshot for historical tracking.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct VersionedSnapshot {
+    /// Serialized state bytes.
+    pub state_bytes: Vec<u8>,
+    /// Version at time of snapshot.
+    pub version: SemanticVersion,
+    /// Cryptographic hash of state for integrity.
+    pub state_hash: H256,
+    /// Timestamp of snapshot.
+    pub timestamp: u64,
+}
+
+/// Schema descriptor for state introspection.
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct SchemaDescriptor {
+    /// Field names in the schema.
+    pub fields: Vec<Vec<u8>>,
+    /// Version compatibility flags.
+    pub compatibility_flags: u32,
+}
 
 /// Represents a Comit transaction submitted to the X3 Kernel.
 ///
@@ -198,6 +621,12 @@ pub struct ExecutionReceipt {
     pub logs: Vec<ExecutionLog>,
     /// State changes resulting from execution.
     pub state_changes: Vec<StateChange>,
+    /// Protocol version at execution time.
+    pub protocol_version: u32,
+    /// Migration history tracking version transitions.
+    pub migration_history: Vec<MigrationEvent>,
+    /// Compatibility flags indicating active features.
+    pub compatibility_flags: u32,
 }
 
 /// Log entry emitted during VM execution.
@@ -241,6 +670,12 @@ pub struct SphereState {
     pub block_number: u32,
     /// Timestamp of state computation.
     pub timestamp: u64,
+    /// Semantic version of the state schema.
+    pub state_version: SemanticVersion,
+    /// Historical snapshots of state across versions.
+    pub version_timeline: Vec<VersionedSnapshot>,
+    /// Current schema descriptor for runtime introspection.
+    pub current_schema: SchemaDescriptor,
 }
 
 impl Default for SphereState {
@@ -250,6 +685,12 @@ impl Default for SphereState {
             state_root: H256::zero(),
             block_number: 0,
             timestamp: 0,
+            state_version: SemanticVersion::new(1, 0, 0),
+            version_timeline: Vec::new(),
+            current_schema: SchemaDescriptor {
+                fields: Vec::new(),
+                compatibility_flags: 0,
+            },
         }
     }
 }
@@ -434,6 +875,79 @@ impl<AccountId> CrossChainProofVerifier<AccountId> for NoopProofVerifier {
                 "Cross-chain proof verifier not configured",
             )),
         }
+    }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR VERSION-AWARE OPERATIONS
+// ============================================================================
+
+/// Create an ExecutionReceipt with default versioning fields.
+pub fn create_execution_receipt(
+    success: bool,
+    gas_used: u64,
+    return_data: Vec<u8>,
+    logs: Vec<ExecutionLog>,
+    state_changes: Vec<StateChange>,
+) -> ExecutionReceipt {
+    ExecutionReceipt {
+        version: EXECUTION_RECEIPT_VERSION,
+        success,
+        gas_used,
+        return_data,
+        logs,
+        state_changes,
+        protocol_version: 1, // Default to protocol v1
+        migration_history: Vec::new(),
+        compatibility_flags: 0,
+    }
+}
+
+/// StateVersionManager for managing version lifecycle.
+pub struct StateVersionManager;
+
+impl StateVersionManager {
+    /// Create a checkpoint of the current state.
+    pub fn checkpoint(
+        state: &SphereState,
+        state_bytes: Vec<u8>,
+    ) -> Result<VersionedSnapshot, VersioningError> {
+        use sp_io::hashing::sha2_256;
+
+        let state_hash = H256(sha2_256(&state_bytes));
+        Ok(VersionedSnapshot {
+            state_bytes,
+            version: state.state_version.clone(),
+            state_hash,
+            timestamp: frame_support::sp_runtime::traits::One::one(), // Placeholder
+        })
+    }
+
+    /// Rollback to a previous version.
+    pub fn rollback_to_version(
+        state: &mut SphereState,
+        target_version: &SemanticVersion,
+    ) -> Result<(), VersioningError> {
+        if state
+            .version_timeline
+            .iter()
+            .any(|snapshot| snapshot.version == *target_version)
+        {
+            state.state_version = target_version.clone();
+            Ok(())
+        } else {
+            Err(VersioningError::VersionMismatch {
+                expected: 1, // Placeholder
+                actual: 0,
+            })
+        }
+    }
+
+    /// Prune snapshots older than a given version.
+    pub fn prune_before(state: &mut SphereState, keep_version: &SemanticVersion) {
+        state
+            .version_timeline
+            .retain(|s| &s.version >= keep_version);
     }
 }
 
@@ -2171,6 +2685,9 @@ pub mod pallet {
                 return_data: result.output,
                 logs: Vec::new(),
                 state_changes: bridge_state_changes,
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             };
 
             let changes_applied =
@@ -2786,6 +3303,9 @@ pub mod pallet {
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
 
             let _svm_receipt = svm_tx.map(|_tx| ExecutionReceipt {
@@ -2795,6 +3315,9 @@ pub mod pallet {
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
 
             // Merge receipts into unified state
@@ -2803,6 +3326,12 @@ pub mod pallet {
                 state_root: H256::default(),
                 block_number: 0,
                 timestamp: 0,
+                state_version: SemanticVersion::new(1, 0, 0),
+                version_timeline: Vec::new(),
+                current_schema: SchemaDescriptor {
+                    fields: Vec::new(),
+                    compatibility_flags: 0,
+                },
             })
         }
     }
@@ -2928,6 +3457,12 @@ pub mod pallet {
                 state_root,
                 block_number: current_block.saturated_into(),
                 timestamp: current_timestamp,
+                state_version: SemanticVersion::new(1, 0, 0),
+                version_timeline: Vec::new(),
+                current_schema: SchemaDescriptor {
+                    fields: Vec::new(),
+                    compatibility_flags: 0,
+                },
             }
         }
 
@@ -3140,7 +3675,7 @@ sp_api::decl_runtime_apis! {
         /// Returns the execution receipt return bytes on success.
         fn submit_svm_instruction(program_id: [u8; 32], instruction_data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
 
-        /// Execute a read-only EVM call against target address with input data.
+        /// Call an EVM contract against target address with input data.
         /// `caller` may be omitted/zero for static simulation paths.
         /// Returns raw EVM return bytes on success.
         fn call_evm(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;

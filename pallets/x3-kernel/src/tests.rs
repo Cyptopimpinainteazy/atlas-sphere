@@ -1,8 +1,7 @@
 use frame_support::{assert_noop, assert_ok};
-use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
 
-use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, ComitFailureReason, Nonces};
+use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, Nonces};
 
 use crate::mock::{
     self, new_test_ext, AccountId, AssetId, AtlasId, AtlasKernel, Balance, ExtBuilder,
@@ -2077,7 +2076,7 @@ fn comit_execution_started_event_has_timestamp() {
             assert_eq!(*id, comit_id);
             // Timestamp should be non-zero (captured at execution start)
             // In mock, this will be whatever pallet_timestamp returns
-            assert!(*timestamp >= 0, "Timestamp should be captured");
+            assert!(*timestamp > 0, "Timestamp should be captured");
         }
     });
 }
@@ -2135,7 +2134,7 @@ fn comit_version_field_is_set_correctly() {
         let svm_payload = vec![4, 5];
         let nonce = 0u64;
         let fee: Balance = 500;
-        let prepare_root = compute_prepare_root(comit_id, &evm_payload, &svm_payload, nonce, fee);
+        let _ = compute_prepare_root(comit_id, &evm_payload, &svm_payload, nonce, fee);
 
         // Verify the version field is set to COMIT_VERSION
         assert_eq!(crate::COMIT_VERSION, 1);
@@ -2276,7 +2275,6 @@ fn comit_v2_scale_encoding_is_deterministic() {
 fn execution_receipt_scale_encoding_is_deterministic() {
     use crate::ExecutionReceipt;
     use parity_scale_codec::{Decode, Encode};
-    use sp_core::H256;
 
     new_test_ext().execute_with(|| {
         let receipt = ExecutionReceipt {
@@ -2286,6 +2284,9 @@ fn execution_receipt_scale_encoding_is_deterministic() {
             return_data: vec![1, 2, 3, 4, 5],
             logs: vec![],
             state_changes: vec![],
+            protocol_version: 1,
+            migration_history: vec![],
+            compatibility_flags: 0,
         };
 
         // Encode the ExecutionReceipt
@@ -2324,6 +2325,12 @@ fn sphere_state_scale_encoding_is_deterministic() {
             state_root: H256::from_low_u64_be(0xabcd),
             block_number: 42u32,
             timestamp: 1234567890u64,
+            state_version: crate::SemanticVersion::new(1, 0, 0),
+            version_timeline: vec![],
+            current_schema: crate::SchemaDescriptor {
+                fields: vec![],
+                compatibility_flags: 0,
+            },
         };
 
         // Encode the SphereState
@@ -2416,7 +2423,7 @@ fn comit_v2_does_not_break_existing_comit_submissions() {
         let comit_id_v2 = H256::from_low_u64_be(2002);
         let x3_payload = vec![6, 7];
         let nonce_v2 = 1;
-        let prepare_root_v2 = compute_prepare_root_v2(
+        let _prepare_root_v2 = compute_prepare_root_v2(
             comit_id_v2,
             &evm_payload,
             &svm_payload,
@@ -2427,7 +2434,6 @@ fn comit_v2_does_not_break_existing_comit_submissions() {
 
         // If submit_comit_v2 exists, we would call it here
         // For now, this test demonstrates that v1 and v2 can coexist
-        // in the pallet's logic with different prepare_root calculations.
 
         // Verify v1 Comit version is correct
         assert_eq!(crate::COMIT_VERSION, 1);
