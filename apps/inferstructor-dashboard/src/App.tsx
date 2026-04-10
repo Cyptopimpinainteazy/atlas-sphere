@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
-import { RegisterPage } from './components/RegisterPage';
-import { LoginPage } from './components/LoginPage';
-import { Dashboard } from './components/Dashboard';
-import { AdminLogin } from './components/AdminLogin';
-import { AdminDashboard } from './components/AdminDashboard';
-import { TpsLeaderboard } from './components/TpsLeaderboard';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { MainNav } from './components/MainNav';
-import { ValidatorControls } from './components/ValidatorControls';
-import { AdminControls } from './components/AdminControls';
-import { LeaderboardAndMetrics } from './components/LeaderboardAndMetrics';
 import { ToastProvider } from './components/Toast';
 import { api } from './api';
+
+const RegisterPage = lazy(() => import('./components/RegisterPage').then(module => ({ default: module.RegisterPage })));
+const LoginPage = lazy(() => import('./components/LoginPage').then(module => ({ default: module.LoginPage })));
+const Dashboard = lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
+const AdminLogin = lazy(() => import('./components/AdminLogin').then(module => ({ default: module.AdminLogin })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
+const TpsLeaderboard = lazy(() => import('./components/TpsLeaderboard').then(module => ({ default: module.TpsLeaderboard })));
+const ValidatorControls = lazy(() => import('./components/ValidatorControls').then(module => ({ default: module.ValidatorControls })));
+const AdminControls = lazy(() => import('./components/AdminControls').then(module => ({ default: module.AdminControls })));
+const LeaderboardAndMetrics = lazy(() => import('./components/LeaderboardAndMetrics').then(module => ({ default: module.LeaderboardAndMetrics })));
 
 type AuthPage = 'register' | 'login';
 type OperatorPage = 'overview' | 'validators' | 'swaps' | 'proofs' | 'faucet' | 'funding' | 'settings';
@@ -20,6 +21,26 @@ type Page = AuthPage | OperatorPage | AdminPage;
 export interface NavBreadcrumb {
   label: string;
   path: OperatorPage | AdminPage;
+}
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center px-6">
+      <div className="rounded-lg border border-gray-800 bg-gray-900/70 px-4 py-3 text-sm text-gray-300">
+        Loading dashboard module...
+      </div>
+    </div>
+  );
+}
+
+function AuthFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-6">
+      <div className="rounded-lg border border-gray-800 bg-gray-900/70 px-4 py-3 text-sm text-gray-300">
+        Loading authentication flow...
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -86,7 +107,9 @@ function App() {
         {/* Auth Pages */}
         {currentPage === 'register' && (
           <>
-            <RegisterPage onRegisterSuccess={handleRegisterSuccess} />
+            <Suspense fallback={<AuthFallback />}>
+              <RegisterPage onRegisterSuccess={handleRegisterSuccess} />
+            </Suspense>
             <div className="fixed bottom-6 right-6">
               <button
                 onClick={goToLogin}
@@ -98,18 +121,22 @@ function App() {
           </>
         )}
         {currentPage === 'login' && (
-          <LoginPage onLoginSuccess={handleLoginSuccess} onBackToRegister={goToRegister} />
+          <Suspense fallback={<AuthFallback />}>
+            <LoginPage onLoginSuccess={handleLoginSuccess} onBackToRegister={goToRegister} />
+          </Suspense>
         )}
 
         {/* Admin Auth */}
         {currentPage === 'admin-login' && isAuthenticated && (
-          <AdminLogin
-            onLoginSuccess={() => {
-              setIsAdmin(true);
-              setCurrentPage('admin');
-            }}
-            onBack={() => setCurrentPage('overview')}
-          />
+          <Suspense fallback={<PageFallback />}>
+            <AdminLogin
+              onLoginSuccess={() => {
+                setIsAdmin(true);
+                setCurrentPage('admin');
+              }}
+              onBack={() => setCurrentPage('overview')}
+            />
+          </Suspense>
         )}
 
         {/* Operator Pages with Navigation */}
@@ -123,12 +150,14 @@ function App() {
               breadcrumbs={breadcrumbs}
             />
             <div className="ml-64 pt-4 pb-4">
-              {currentPage === 'overview' && (
-                <Dashboard onLogout={handleLogout} onAdmin={handleAdminClick} onLeaderboard={() => setCurrentPage('leaderboard' as Page)} />
-              )}
-              {currentPage === 'validators' && (
-                <ValidatorControls />
-              )}
+              <Suspense fallback={<PageFallback />}>
+                {currentPage === 'overview' && (
+                  <Dashboard onLogout={handleLogout} onAdmin={handleAdminClick} onLeaderboard={() => setCurrentPage('leaderboard' as Page)} />
+                )}
+                {currentPage === 'validators' && (
+                  <ValidatorControls />
+                )}
+              </Suspense>
               {currentPage === 'swaps' && (
                 <div className="px-6">
                   <h1 className="text-3xl font-bold text-white mb-6">Atomic Swaps</h1>
@@ -174,24 +203,28 @@ function App() {
               isAdmin={true}
             />
             <div className="ml-64 pt-4 pb-4">
-              {currentPage === 'admin' && (
-                <AdminDashboard onBack={() => { setIsAdmin(false); setCurrentPage('overview'); }} />
-              )}
-              {currentPage === 'leaderboard' && (
-                <TpsLeaderboard onBack={() => setCurrentPage('admin')} />
-              )}
-              {currentPage === 'metrics' && (
-                <LeaderboardAndMetrics />
-              )}
+              <Suspense fallback={<PageFallback />}>
+                {currentPage === 'admin' && (
+                  <AdminDashboard onBack={() => { setIsAdmin(false); setCurrentPage('overview'); }} />
+                )}
+                {currentPage === 'leaderboard' && (
+                  <TpsLeaderboard onBack={() => setCurrentPage('admin')} />
+                )}
+                {currentPage === 'metrics' && (
+                  <LeaderboardAndMetrics />
+                )}
+              </Suspense>
               {currentPage === 'audit-logs' && (
                 <div className="px-6">
                   <h1 className="text-3xl font-bold text-white mb-6">Audit Logs</h1>
                   <p className="text-gray-400">Audit log viewer coming soon</p>
                 </div>
               )}
-              {currentPage === 'validators-admin' && (
-                <AdminControls />
-              )}
+              <Suspense fallback={<PageFallback />}>
+                {currentPage === 'validators-admin' && (
+                  <AdminControls />
+                )}
+              </Suspense>
             </div>
           </>
         )}

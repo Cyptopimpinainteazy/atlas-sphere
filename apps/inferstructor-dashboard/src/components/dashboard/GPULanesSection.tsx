@@ -1,6 +1,6 @@
 import { Cpu } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import type { GPULaneHealth } from '../../api';
+import { SvgBarChart } from '../charts/SvgCharts';
 
 interface GPULanesSectionProps {
   gpuLanes: GPULaneHealth[];
@@ -67,25 +67,15 @@ export function GPULanesSection({ gpuLanes }: GPULanesSectionProps) {
       </div>
 
       {/* GPU distribution bar chart */}
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={gpuLanes.map(l => ({
-            name: l.service.replace('gpu-lane-', '').toUpperCase(),
-            txns: l.stats.total_txns,
-            tps: Math.round(l.stats.txns_per_second),
-          }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-            <YAxis stroke="#9CA3AF" fontSize={11} tickFormatter={(v) => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(0)}K` : v} />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
-              formatter={(value: number | undefined) => [value?.toLocaleString() ?? '0']}
-            />
-            <Legend />
-            <Bar dataKey="txns" fill="#3B82F6" name="Total Txns" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <SvgBarChart
+        ariaLabel="Dashboard GPU lane transaction chart"
+        data={gpuLanes.map(lane => ({
+          label: lane.service.replace('gpu-lane-', '').toUpperCase(),
+          value: lane.stats.total_txns,
+          title: `${lane.service.replace('gpu-lane-', '').toUpperCase()}: ${lane.stats.total_txns.toLocaleString()} txns, ${Math.round(lane.stats.txns_per_second).toLocaleString()} TPS`,
+        }))}
+        heightClassName="h-48"
+      />
     </div>
   );
 }

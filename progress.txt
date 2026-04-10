@@ -1,9 +1,52 @@
+2026-04-08 — Dashboard recharts payload removed from the app bundle
+
+- Replaced the remaining `LineChart` and `AreaChart` surfaces in `AdminDashboardTelemetryPanels` and `dashboard/TpsChart` with shared lightweight SVG charts.
+- Replaced `dashboard/GPULanesSection` as well so the base dashboard route no longer eagerly imports the old `BarChart` path.
+- Added a shared `SvgCharts` module plus focused smoke coverage for the dashboard chart components and updated telemetry tests to assert the new SVG render surfaces directly.
+- Removed the unused `recharts` dependency from `apps/inferstructor-dashboard/package.json`.
+- Pruned `recharts` from `apps/inferstructor-dashboard/package-lock.json` and local `node_modules` with `npm uninstall recharts` so the installed dependency graph now matches the source tree.
+- Verified focused frontend tests remain green and the production build succeeds with no standalone `LineChart` or `BarChart` chunk; the bundle now emits a small shared `SvgCharts` chunk (~4.50 kB) instead.
+- Followed through on frontend validation cleanup: fixed the toast provider callback ordering bug, moved toast context and orchestra incident helpers into dedicated modules to satisfy fast-refresh rules, scoped the fast-refresh lint rule away from test-only files, removed render-time `Date.now()` filtering from `TpsChart`, and re-verified lint, focused Vitest coverage, and production build output.
+
+2026-04-07 — Admin telemetry no longer pulls the recharts BarChart payload
+
+- Replaced the `GPU Lane Distribution` chart in `AdminDashboardTelemetryPanels` with the same inline SVG approach used on the TPS leaderboard.
+- Verified focused dashboard tests remain green after the swap.
+- Verified the production build no longer emits the standalone `BarChart` chunk; the remaining large chart dependency is now the shared `LineChart` chunk serving the still-recharts-backed line/area telemetry surfaces.
+
+2026-04-07 — TPS leaderboard no longer depends on recharts
+
+- Replaced the `TpsLeaderboard` chart implementation with a lightweight inline SVG chart so the leaderboard route no longer imports `recharts` or the shared `BarChart` payload.
+- Added a focused `TpsLeaderboard` smoke test that exercises the lazy chart fallback and verifies the route resumes once the deferred chart module resolves.
+- Verified the targeted dashboard/frontend test suite remains green.
+- Verified the production build still succeeds and now emits a small standalone leaderboard chart chunk (~1.84 kB) while the heavy `BarChart` chunk remains deferred for admin telemetry usage only.
+
+2026-04-07 — Leaderboard chart payload isolated from route shells
+
+- Extracted the `TpsLeaderboard` bar-chart surface into a dedicated lazy-loaded `TpsLeaderboardChart` module so the leaderboard page no longer imports `recharts` directly.
+- Split `LeaderboardAndMetrics` into lazy internal panels for summary metrics, snapshots, and rankings so that route shell loads only the outer page scaffolding first.
+- Added lightweight smoke coverage for the extracted admin telemetry panels to guard the overview, performance, network, and intelligence render surfaces.
+- Verified focused dashboard tests remain green and the production build still succeeds.
+- Verified the route shells shrank again: `LeaderboardAndMetrics` is now about `5.93 kB`, its extracted panels are about `8.23 kB`, `TpsLeaderboard` is about `21.59 kB`, and the chart wrapper is isolated in a separate `TpsLeaderboardChart` chunk while the heavy `BarChart` dependency remains deferred until chart rendering is needed.
+
+2026-04-07 — Admin telemetry tabs split out of the dashboard shell
+
+- Extracted the chart-heavy `overview`, `performance`, `network`, and `intelligence` admin tabs into a dedicated lazy-loaded telemetry module so `AdminDashboard` no longer imports `recharts` directly.
+- Kept the existing admin behavior and tab structure intact while adding `Suspense` fallbacks around each extracted telemetry tab.
+- Verified focused operator-panel Vitest coverage still passes after the refactor.
+- Verified the production build now emits a much smaller `AdminDashboard` chunk (~33.76 kB) plus a separate `AdminDashboardTelemetryPanels` chunk (~35.10 kB), leaving the shell lighter and loading chart code on demand.
+
 2026-04-07 — Inferstructor operator workflow slice wired into the admin dashboard
 
 - Added typed dashboard API reads for orchestra intents, approval cases, vote windows, evidence bundles, and published benchmark reports so the existing Inferstructor admin UI can consume the gateway orchestration surfaces directly.
 - Added a dedicated operator workflow tab in `apps/inferstructor-dashboard` that combines approval backlog, incident derivation, benchmark health, and evidence lineage across gateway, sidecar, and orchestra-control-plane.
 - Added focused Vitest coverage for operator incident derivation and verified the dashboard build after fixing three unrelated frontend TypeScript issues that were already blocking compilation.
 - Added operator follow-through controls for overdue vote windows and tally import, plus approval-scoped evidence drill-down so operators can act on stale workflow state from the same dashboard slice.
+- Added React Testing Library coverage for the operator panel UI so approval selection, evidence drill-down, tally import, and overdue-window closure behavior are now exercised at the component level.
+- Split the inferstructor app at page boundaries with `React.lazy` and `Suspense`, reducing the main production entry bundle from the prior monolithic build to a smaller base chunk plus route/chart chunks and eliminating the earlier >500 kB warning.
+- Updated orchestra operator actions to apply immediate local state updates for tally import and vote-window closure, then reconcile against the gateway response instead of waiting for the polling loop to catch up.
+- Added success/error toasts for orchestra tally import and vote-window closure, and moved the operator tab itself behind a lazy boundary so `AdminDashboard` no longer pays that bundle cost until the operator workflow is actually opened.
+- Verified the follow-up split reduced the `AdminDashboard` production chunk again (from the prior ~85 kB chunk to ~66 kB gzipable output) while keeping focused operator tests and the production build green.
 
 2026-04-06 — Gateway orchestra writes now relay into the control-plane transport
 

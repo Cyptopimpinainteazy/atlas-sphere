@@ -267,6 +267,7 @@ export interface VoteTally {
   approvals: number;
   rejections: number;
   abstentions: number;
+  [key: string]: unknown;
 }
 
 export interface EvidenceBundle {

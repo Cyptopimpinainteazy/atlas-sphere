@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Loader } from 'lucide-react';
 import { api } from '../../api';
-import { useToast } from '../Toast';
+import { useToast } from '../toast-context';
 import {
   FAUCET_DEFAULT_RATE_LIMIT,
   FAUCET_DEFAULT_MAX_PER_ADDRESS,

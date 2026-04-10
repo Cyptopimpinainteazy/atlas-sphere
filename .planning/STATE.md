@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Release Readiness
 status: in_progress
-stopped_at: Phase 8 resumed — 08-01 revalidated on 4-validator cluster with advancing finality
-last_updated: "2026-03-23T18:10:00Z"
-last_activity: 2026-03-23 — repaired corrupted Rust toolchain, fixed environmental thread-local behavior, and revalidated 4-validator consensus/finality progression
+stopped_at: Session resumed — release operations follow-through pending after completed Phase 8 validation
+last_updated: "2026-04-09T00:00:00Z"
+last_activity: 2026-04-09 — resumed project context; next work remains signed artifacts, testnet publication, RPC validation, and operator handoff
 progress:
   total_phases: 6
   completed_phases: 6
@@ -89,6 +89,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:10:00Z
-Stopped at: Phase 8 complete, waiting on signed artifacts / release ops
+Last session: 2026-04-09T00:00:00Z
+Stopped at: Session resumed, proceeding from completed Phase 8 into release operations follow-through
 Resume file: .planning/phases/08-testnet-proving-and-go-no-go/

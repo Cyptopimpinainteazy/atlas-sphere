@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildOrchestraIncidents } from './OrchestraOperationsPanel';
+import { buildOrchestraIncidents } from './orchestra-incidents';
 
 describe('buildOrchestraIncidents', () => {
   it('flags degraded services, overdue votes, and missing evidence', () => {

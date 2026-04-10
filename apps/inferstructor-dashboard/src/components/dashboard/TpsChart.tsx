@@ -1,6 +1,6 @@
 import { Clock } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TIME_RANGE_MS, LARGE_NUMBER_THRESHOLD } from '../../constants';
+import { SvgLineChart } from '../charts/SvgCharts';
 
 interface TpsPoint {
   time: string;
@@ -17,9 +17,10 @@ interface TpsChartProps {
 }
 
 export function TpsChart({ tpsHistory, timeRange, onTimeRangeChange }: TpsChartProps) {
+  const latestTimestamp = tpsHistory[tpsHistory.length - 1]?.ts ?? 0;
   const filteredHistory = timeRange === 'all'
     ? tpsHistory
-    : tpsHistory.filter(p => p.ts >= Date.now() - TIME_RANGE_MS[timeRange]);
+    : tpsHistory.filter(point => point.ts >= latestTimestamp - TIME_RANGE_MS[timeRange]);
 
   const timeRangeOptions = [
     { key: '1m' as const, label: '1m' },
@@ -68,31 +69,14 @@ export function TpsChart({ tpsHistory, timeRange, onTimeRangeChange }: TpsChartP
       </div>
       
       <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={filteredHistory}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="time" stroke="#9CA3AF" fontSize={11} />
-            <YAxis stroke="#9CA3AF" fontSize={11} tickFormatter={(v) => v >= LARGE_NUMBER_THRESHOLD ? `${(v/LARGE_NUMBER_THRESHOLD).toFixed(0)}K` : v} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1F2937',
-                border: '1px solid #374151',
-                borderRadius: '8px',
-                color: '#fff',
-              }}
-              formatter={(value: number | undefined) => [value?.toLocaleString() ?? '0', 'TPS']}
-            />
-            <Line
-              type="monotone"
-              dataKey="tps"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              dot={false}
-              name="TPS"
-              isAnimationActive={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <SvgLineChart
+          ariaLabel="Dashboard TPS history chart"
+          data={filteredHistory}
+          labelKey="time"
+          series={[{ key: 'tps', color: '#3B82F6', label: 'TPS' }]}
+          heightClassName="h-72"
+          valueFormatter={(value) => value >= LARGE_NUMBER_THRESHOLD ? `${(value / LARGE_NUMBER_THRESHOLD).toFixed(0)}K` : `${Math.round(value)}`}
+        />
       </div>
     </div>
   );

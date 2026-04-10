@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactElement } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, type ReactElement } from 'react';
 import { api } from '../api';
 import type {
   AccountingSummary,
@@ -14,18 +14,14 @@ import type {
   VoteTally,
   VoteWindow,
 } from '../api';
-import { OrchestraOperationsPanel } from './OrchestraOperationsPanel';
+import { useToast } from './toast-context';
 import {
   Shield, ArrowLeft, RefreshCw, X, Play, Square, Terminal, Trash2,
   Activity, Cpu, Globe, Gauge, Heart, FileText, Server, Zap, TrendingUp,
-  DollarSign, AlertTriangle, ChevronDown, ChevronRight, Link, Lock,
-  BarChart3, Clock, Eye, Download, Pause, RotateCcw, Settings,
+  DollarSign, ChevronDown, ChevronRight, Lock,
+  BarChart3, Download, Pause, RotateCcw, Settings,
   Users, UserCheck, UserX, Search, Plus, Ban, CheckCircle, ShieldCheck,
 } from 'lucide-react';
-import {
-  LineChart, Line, BarChart, Bar, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from 'recharts';
 
 interface AdminDashboardProps {
   onBack: () => void;
@@ -61,21 +57,25 @@ function fmtK(n: number): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return n.toString();
 }
-function fmtTime(s: number): string {
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  return `${h}h ${m}m`;
-}
-function tsToTime(ts: number): string {
-  return new Date(ts * 1000).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
 
-const GPU_COUNT = 3;
-const GPU_POWER_WATTS = 150;
-const ELECTRICITY_RATE = 0.12;
+const renderMetricCard = (
+  icon: typeof Shield,
+  color: string,
+  label: string,
+  value: string | number,
+  sub?: string,
+) => {
+  const Icon = icon;
+  return (
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+      <Icon className={`w-5 h-5 ${color} mb-2`} />
+      <p className="text-2xl font-bold text-white font-mono">{value}</p>
+      <p className="text-xs text-gray-400">{label}</p>
+      {sub && <p className="text-[10px] text-gray-500 mt-1">{sub}</p>}
+    </div>
+  );
+};
 
-const statusDot = (s: string) =>
-  s === 'up' ? 'bg-green-500' : s === 'error' ? 'bg-yellow-500' : 'bg-red-500';
 const jobBadge = (s: string) => ({
   running: 'bg-blue-500/20 text-blue-300',
   completed: 'bg-green-500/20 text-green-300',
@@ -83,7 +83,14 @@ const jobBadge = (s: string) => ({
   killed: 'bg-yellow-500/20 text-yellow-300',
 }[s] || 'bg-gray-500/20 text-gray-300');
 
+const OrchestraOperationsPanel = lazy(() => import('./OrchestraOperationsPanel').then(module => ({ default: module.OrchestraOperationsPanel })));
+const OverviewPanel = lazy(() => import('./AdminDashboardTelemetryPanels').then(module => ({ default: module.OverviewPanel })));
+const PerformancePanel = lazy(() => import('./AdminDashboardTelemetryPanels').then(module => ({ default: module.PerformancePanel })));
+const NetworkPanel = lazy(() => import('./AdminDashboardTelemetryPanels').then(module => ({ default: module.NetworkPanel })));
+const IntelligencePanel = lazy(() => import('./AdminDashboardTelemetryPanels').then(module => ({ default: module.IntelligencePanel })));
+
 export function AdminDashboard({ onBack }: AdminDashboardProps) {
+  const { addToast } = useToast();
   const [tab, setTab] = useState<Tab>('overview');
   const [metrics, setMetrics] = useState<AggregatedMetrics | null>(null);
   const [metricsHistory, setMetricsHistory] = useState<AggregatedMetrics['aggregated'][]>([]);
@@ -283,453 +290,58 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
   const cutoff = Date.now() / 1000 - rangeSeconds;
   const filteredHistory = metricsHistory.filter(p => (p as any).timestamp >= cutoff);
 
-  // ── Render helpers ──
-
-  const renderMetricCard = (
-    icon: typeof Shield, color: string, label: string,
-    value: string | number, sub?: string,
-  ) => {
-    const Icon = icon;
-    return (
-      <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-        <Icon className={`w-5 h-5 ${color} mb-2`} />
-        <p className="text-2xl font-bold text-white font-mono">{value}</p>
-        <p className="text-xs text-gray-400">{label}</p>
-        {sub && <p className="text-[10px] text-gray-500 mt-1">{sub}</p>}
-      </div>
-    );
-  };
-
   // ──────────────── TAB CONTENT ────────────────
 
-  const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Service Status Grid */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-green-400" />
-          <h2 className="text-lg font-bold text-white">Service Status</h2>
-          <span className="ml-auto text-sm text-gray-400">
-            {agg?.services_up || 0}/{agg?.services_total || 0} online
-          </span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {Object.entries(services).map(([name, status]) => (
-            <div key={name} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${statusDot(status)} ${status === 'up' ? 'animate-pulse' : ''}`} />
-                <span className="text-white text-xs font-semibold truncate">{name}</span>
-              </div>
-              <span className={`text-[10px] font-semibold ${status === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                {status.toUpperCase()}
-              </span>
-            </div>
-          ))}
-        </div>
+  const renderTelemetryFallback = (label: string) => (
+    <div className="card">
+      <div className="flex items-center gap-2 text-sm text-gray-300">
+        <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />
+        Loading {label}...
       </div>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {renderMetricCard(Activity, 'text-green-400', 'Services Online', `${agg?.services_up || 0}/${agg?.services_total || 0}`)}
-        {renderMetricCard(Zap, 'text-yellow-400', 'Current TPS', fmt(agg?.current_tps))}
-        {renderMetricCard(TrendingUp, 'text-blue-400', 'Peak TPS', fmt(agg?.peak_tps))}
-        {renderMetricCard(Server, 'text-purple-400', 'Total GPU Txns', fmtK(agg?.total_gpu_txns || 0))}
-        {renderMetricCard(Heart, 'text-green-400', 'Success Rate', `${agg?.success_rate || 0}%`)}
-        {renderMetricCard(Clock, 'text-blue-400', 'Uptime', fmtTime(agg?.uptime_seconds || 0))}
-      </div>
-
-      {/* Mini TPS Chart */}
-      <div className="card">
-        <h3 className="text-sm font-bold text-white mb-3">TPS (last 5 minutes)</h3>
-        <div className="h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={filteredHistory.map(p => ({ time: tsToTime((p as any).timestamp), tps: p.current_tps }))}>
-              <defs>
-                <linearGradient id="tpsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="time" hide />
-              <YAxis hide />
-              <Area type="monotone" dataKey="tps" stroke="#3B82F6" fill="url(#tpsGrad)" strokeWidth={2} isAnimationActive={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* GPU Summary */}
-      {gpuLanes.length > 0 && (
-        <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <Cpu className="w-5 h-5 text-green-400" />
-            <h3 className="text-lg font-bold text-white">GPU Fleet</h3>
-          </div>
-          <div className="grid md:grid-cols-3 gap-3">
-            {gpuLanes.map((lane: any, i: number) => (
-              <div key={i} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white text-sm font-semibold capitalize">
-                    {lane.service?.replace('gpu-lane-', '') || `GPU ${i}`}
-                  </span>
-                  <span className="text-xs text-green-400 font-mono">GPU {lane.gpu?.id}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div><span className="text-gray-400">Util:</span> <span className="text-white">{lane.gpu?.utilization}%</span></div>
-                  <div><span className="text-gray-400">VRAM:</span> <span className="text-yellow-400">{lane.gpu?.memory_used_mb?.toFixed(0)} MB</span></div>
-                  <div><span className="text-gray-400">Temp:</span> <span className="text-orange-400">{lane.gpu?.temperature_c}°C</span></div>
-                  <div><span className="text-gray-400">TPS:</span> <span className="text-blue-400">{fmt(Math.round(lane.stats?.txns_per_second || 0))}</span></div>
-                </div>
-                <div className="mt-2 w-full bg-gray-700 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(lane.gpu?.utilization || 0, 100)}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
+  );
+
+  const renderOverview = () => (
+    <Suspense fallback={renderTelemetryFallback('overview')}>
+      <OverviewPanel
+        services={services}
+        aggregated={agg}
+        gpuLanes={gpuLanes}
+        filteredHistory={filteredHistory}
+      />
+    </Suspense>
   );
 
   const renderPerformance = () => (
-    <div className="space-y-6">
-      {/* TPS Chart */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Real-Time TPS</h2>
-          <div className="flex items-center gap-2">
-            {filteredHistory.length > 0 && (
-              <span className="text-blue-400 font-mono text-sm">
-                Peak: {fmtK(Math.max(...filteredHistory.map(h => h.peak_tps || 0)))}
-              </span>
-            )}
-          </div>
-        </div>
-        {/* Time range selector */}
-        <div className="flex items-center gap-1 mb-4 bg-gray-900/60 rounded-lg p-1 w-fit">
-          {TIME_RANGES.map(r => (
-            <button
-              key={r.key}
-              onClick={() => setTimeRange(r.key)}
-              className={`px-3 py-1 rounded text-xs font-semibold transition-all ${
-                timeRange === r.key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-          <span className="text-gray-600 text-xs ml-2 font-mono">{filteredHistory.length} pts</span>
-        </div>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={filteredHistory.map(p => ({ time: tsToTime((p as any).timestamp), tps: p.current_tps, peak: p.peak_tps }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" stroke="#9CA3AF" fontSize={11} />
-              <YAxis stroke="#9CA3AF" fontSize={11} tickFormatter={fmtK} />
-              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }} formatter={(v: number | undefined) => [fmt(v ?? 0)]} />
-              <Legend />
-              <Line type="monotone" dataKey="tps" stroke="#3B82F6" strokeWidth={2} dot={false} name="Current TPS" isAnimationActive={false} />
-              <Line type="monotone" dataKey="peak" stroke="#EF4444" strokeWidth={1} dot={false} name="Peak TPS" strokeDasharray="5 5" isAnimationActive={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Throughput & Success */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-sm font-bold text-white mb-3">Throughput Utilization</h3>
-          <div className="flex items-end gap-4 mb-3">
-            <span className="text-4xl font-bold text-blue-400">{agg?.throughput_utilization || 0}%</span>
-            <span className="text-xs text-gray-400 mb-1">of 960K theoretical max</span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-3">
-            <div className="bg-blue-500 h-3 rounded-full transition-all" style={{ width: `${Math.min(agg?.throughput_utilization || 0, 100)}%` }} />
-          </div>
-        </div>
-        <div className="card">
-          <h3 className="text-sm font-bold text-white mb-3">Transaction Success Rate</h3>
-          <div className="flex items-end gap-4 mb-3">
-            <span className={`text-4xl font-bold ${(agg?.success_rate || 0) >= 99 ? 'text-green-400' : (agg?.success_rate || 0) >= 95 ? 'text-yellow-400' : 'text-red-400'}`}>
-              {agg?.success_rate || 0}%
-            </span>
-            <span className="text-xs text-gray-400 mb-1">
-              {fmt(agg?.total_gpu_success || 0)} / {fmt(agg?.total_gpu_txns || 0)}
-            </span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-3">
-            <div className={`h-3 rounded-full transition-all ${(agg?.success_rate || 0) >= 99 ? 'bg-green-500' : 'bg-yellow-500'}`} style={{ width: `${agg?.success_rate || 0}%` }} />
-          </div>
-        </div>
-      </div>
-
-      {/* GPU Distribution */}
-      {gpuLanes.length > 0 && (
-        <div className="card">
-          <h3 className="text-sm font-bold text-white mb-3">GPU Lane Distribution</h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={gpuLanes.map((l: any) => ({
-                name: (l.service || '').replace('gpu-lane-', '').toUpperCase() || `GPU ${l.gpu?.id}`,
-                txns: l.stats?.total_txns || 0,
-                tps: Math.round(l.stats?.txns_per_second || 0),
-                utilization: l.gpu?.utilization || 0,
-              }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-                <YAxis stroke="#9CA3AF" fontSize={11} tickFormatter={fmtK} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }} formatter={(v: number | undefined) => [fmt(v ?? 0)]} />
-                <Legend />
-                <Bar dataKey="txns" fill="#3B82F6" name="Total Txns" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* GPU Thermal & Memory */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {renderMetricCard(Cpu, 'text-blue-400', 'Avg GPU Utilization', `${agg?.avg_gpu_utilization || 0}%`)}
-        {renderMetricCard(Server, 'text-yellow-400', 'Avg VRAM Used', `${(agg?.avg_gpu_memory_mb || 0).toFixed(0)} MB`)}
-        {renderMetricCard(AlertTriangle, 'text-orange-400', 'Avg GPU Temp', `${agg?.avg_gpu_temp_c || 0}°C`)}
-      </div>
-    </div>
+    <Suspense fallback={renderTelemetryFallback('performance metrics')}>
+      <PerformancePanel
+        aggregated={agg}
+        gpuLanes={gpuLanes}
+        filteredHistory={filteredHistory}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
+        timeRanges={TIME_RANGES}
+      />
+    </Suspense>
   );
 
   const renderNetwork = () => (
-    <div className="space-y-6">
-      {/* Chain Data */}
-      {chain && (
-        <div className="card">
-            <div className="flex items-center gap-2 mb-4">
-              <Globe className="w-5 h-5 text-purple-400" />
-              <h2 className="text-lg font-bold text-white">Solana Chain — Live</h2>
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              {(chain as any).version && (
-                <span className="ml-auto text-xs text-gray-400 font-mono">
-                  Core {(chain as any).version['solana-core']}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <p className="text-xs text-gray-400 mb-1">Slot</p>
-                <p className="text-xl font-bold text-white font-mono">{fmt((chain as any).slot)}</p>
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <p className="text-xs text-gray-400 mb-1">Epoch</p>
-                <p className="text-xl font-bold text-white font-mono">{fmt((chain as any).epoch?.epoch)}</p>
-                {(chain as any).epoch && (
-                  <div className="mt-2">
-                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-                      <span>{fmt((chain as any).epoch.slotIndex)}</span>
-                      <span>{fmt((chain as any).epoch.slotsInEpoch)}</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1.5">
-                      <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${((chain as any).epoch.slotIndex / (chain as any).epoch.slotsInEpoch * 100).toFixed(1)}%` }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <p className="text-xs text-gray-400 mb-1">Block Height</p>
-                <p className="text-xl font-bold text-white font-mono">{fmt((chain as any).block_height)}</p>
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <p className="text-xs text-gray-400 mb-1">Network Txns</p>
-                <p className="text-xl font-bold text-white font-mono">
-                  {(chain as any).epoch?.transactionCount
-                    ? `${((chain as any).epoch.transactionCount / 1e9).toFixed(2)}B`
-                    : '—'}
-                </p>
-              </div>
-            </div>
-            {(chain as any).latest_blockhash && (
-              <div className="bg-gray-900/50 rounded-lg p-3 font-mono text-xs">
-                <span className="text-gray-400 mr-2">Latest Blockhash:</span>
-                <span className="text-green-400 break-all">{(chain as any).latest_blockhash}</span>
-              </div>
-            )}
-          </div>
-      )}
-
-      {/* Upstream RPCs & Proxy */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="flex items-center gap-2 mb-3">
-            <Link className="w-4 h-4 text-blue-400" />
-            <h3 className="text-sm font-semibold text-white">Upstream RPCs</h3>
-          </div>
-          <div className="space-y-2">
-            {upstreams.map((u: any) => (
-              <div key={u.name} className="flex items-center justify-between text-sm bg-gray-800/40 rounded-lg p-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${u.healthy ? 'bg-green-400' : 'bg-red-400'}`} />
-                  <span className="text-white">{u.name}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-gray-400 font-mono">
-                  <span>{u.latency_ms?.toFixed(0)}ms</span>
-                  <span>{fmt(u.requests)} req</span>
-                  <span className={u.errors > 0 ? 'text-red-400' : ''}>{u.errors} err</span>
-                </div>
-              </div>
-            ))}
-            {upstreams.length === 0 && <p className="text-gray-500 text-sm">No upstream data</p>}
-          </div>
-        </div>
-        <div className="card">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap className="w-4 h-4 text-yellow-400" />
-            <h3 className="text-sm font-semibold text-white">GPU RPC Proxy</h3>
-          </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-gray-400">Total Requests</span><span className="text-white font-mono">{fmt(agg?.rpc_total_requests)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Cache Hit Rate</span><span className="text-green-400 font-mono">{agg?.rpc_cache_hit_rate || '—'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">GPU Verified</span><span className="text-purple-400 font-mono">{fmt(agg?.rpc_gpu_verified)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Cached Responses</span><span className="text-blue-400 font-mono">{fmt(agg?.rpc_cached_responses)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-400">Errors</span><span className={`font-mono ${(agg?.rpc_errors || 0) > 0 ? 'text-red-400' : 'text-gray-400'}`}>{agg?.rpc_errors || 0}</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={renderTelemetryFallback('network telemetry')}>
+      <NetworkPanel
+        aggregated={agg}
+        chain={chain}
+        upstreams={upstreams}
+      />
+    </Suspense>
   );
 
   const renderIntelligence = () => (
-    <div className="space-y-6">
-      {/* Cost Intelligence */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <DollarSign className="w-5 h-5 text-green-400" />
-          <h2 className="text-lg font-bold text-white">Cost & Fee Intelligence</h2>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">GPU Power Draw</p>
-            <p className="text-2xl font-bold text-yellow-400 font-mono">{agg?.gpu_power_watts || 0}W</p>
-            <p className="text-[10px] text-gray-500">{GPU_COUNT}x GTX 1070 @ {GPU_POWER_WATTS}W</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Cost/Hour</p>
-            <p className="text-2xl font-bold text-green-400 font-mono">${agg?.gpu_cost_per_hour_usd?.toFixed(4) || '0'}</p>
-            <p className="text-[10px] text-gray-500">@ ${ELECTRICITY_RATE}/kWh</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Cost/Million Txns</p>
-            <p className="text-2xl font-bold text-blue-400 font-mono">${agg?.cost_per_million_tx_usd?.toFixed(4) || '—'}</p>
-            <p className="text-[10px] text-gray-500">at current throughput</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Cost/Tx</p>
-            <p className="text-2xl font-bold text-purple-400 font-mono">
-              {agg?.cost_per_tx_usd ? `$${agg.cost_per_tx_usd.toExponential(2)}` : '—'}
-            </p>
-            <p className="text-[10px] text-gray-500">effectively free</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Reliability */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-5 h-5 text-orange-400" />
-          <h2 className="text-lg font-bold text-white">Reliability & Fault Detection</h2>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Dropped Tx %</p>
-            <p className={`text-2xl font-bold font-mono ${(agg?.dropped_tx_pct || 0) > 1 ? 'text-red-400' : 'text-green-400'}`}>
-              {agg?.dropped_tx_pct || 0}%
-            </p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Bridge Failed</p>
-            <p className="text-2xl font-bold text-red-400 font-mono">{fmt(agg?.bridge_failed)}</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">GPU Failed</p>
-            <p className="text-2xl font-bold text-red-400 font-mono">{fmt(agg?.total_gpu_failed)}</p>
-          </div>
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">RPC Errors</p>
-            <p className={`text-2xl font-bold font-mono ${(agg?.rpc_errors || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
-              {agg?.rpc_errors || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Security & MEV */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <Lock className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-bold text-white">Security Radar</h3>
-          </div>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Admin Auth</span>
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-500/20 text-green-300">JWT Active</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">CORS Policy</span>
-              <span className="text-yellow-400 text-xs">Open (dev mode)</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">GPU Sig Verification</span>
-              <span className="text-green-400 text-xs">{fmt(agg?.rpc_gpu_verified)} verified</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Cache Layer</span>
-              <span className="text-green-400 text-xs">{agg?.rpc_cache_hit_rate || '—'} hit rate</span>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="flex items-center gap-2 mb-4">
-            <Eye className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-bold text-white">MEV & Extraction</h3>
-          </div>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">MEV Detection</span>
-              <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/20 text-blue-300">Monitoring</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Sandwich Attacks</span>
-              <span className="text-green-400 text-xs">None detected</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Front-running Risk</span>
-              <span className="text-green-400 text-xs">Low</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Tx Ordering</span>
-              <span className="text-gray-400 text-xs">FIFO (GPU batch)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Efficiency History */}
-      {filteredHistory.length > 1 && (
-        <div className="card">
-          <h3 className="text-sm font-bold text-white mb-3">Throughput Utilization Over Time</h3>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={filteredHistory.map(p => ({ time: tsToTime((p as any).timestamp), util: p.throughput_utilization, dropped: p.dropped_tx_pct }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="time" hide />
-                <YAxis stroke="#9CA3AF" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }} />
-                <Area type="monotone" dataKey="util" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.2} name="Utilization %" isAnimationActive={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-    </div>
+    <Suspense fallback={renderTelemetryFallback('cost intelligence')}>
+      <IntelligencePanel
+        aggregated={agg}
+        filteredHistory={filteredHistory}
+      />
+    </Suspense>
   );
 
   const renderSubscribers = () => {
@@ -1026,38 +638,82 @@ export function AdminDashboard({ onBack }: AdminDashboardProps) {
   };
 
   const renderOrchestra = () => (
-    <OrchestraOperationsPanel
-      services={services}
-      aggregated={agg}
-      intents={orchestraIntents}
-      approvalCases={approvalCases}
-      voteWindows={voteWindows}
-      evidenceBundles={evidenceBundles}
-      benchmarkStatus={benchmarkStatus}
-      benchmarkReports={benchmarkReports}
-      jobs={jobs}
-      loading={orchestraLoading}
-      error={orchestraError}
-      onRefresh={loadOrchestra}
-      onCloseVoteWindow={async (windowId: string) => {
-        try {
-          setOrchestraError(null);
-          await api.closeVoteWindow(windowId);
-        } catch {
-          setOrchestraError(`Failed to close vote window ${windowId}.`);
-          throw new Error('close vote window failed');
-        }
-      }}
-      onImportVoteTally={async (windowId: string): Promise<VoteTally> => {
-        try {
-          setOrchestraError(null);
-          return await api.importVoteWindowTally(windowId);
-        } catch {
-          setOrchestraError(`Failed to import tally for vote window ${windowId}.`);
-          throw new Error('import tally failed');
-        }
-      }}
-    />
+    <Suspense
+      fallback={(
+        <div className="card">
+          <div className="flex items-center gap-2 text-sm text-gray-300">
+            <RefreshCw className="h-4 w-4 animate-spin text-blue-400" />
+            Loading operator workflow...
+          </div>
+        </div>
+      )}
+    >
+      <OrchestraOperationsPanel
+        services={services}
+        aggregated={agg}
+        intents={orchestraIntents}
+        approvalCases={approvalCases}
+        voteWindows={voteWindows}
+        evidenceBundles={evidenceBundles}
+        benchmarkStatus={benchmarkStatus}
+        benchmarkReports={benchmarkReports}
+        jobs={jobs}
+        loading={orchestraLoading}
+        error={orchestraError}
+        onRefresh={loadOrchestra}
+        onCloseVoteWindow={async (windowId: string) => {
+          const previousVoteWindows = voteWindows;
+          const optimisticUpdatedAt = new Date().toISOString();
+
+          try {
+            setOrchestraError(null);
+            setVoteWindows(current => current.map(window => (
+              window.window_id === windowId
+                ? { ...window, status: 'closed', updated_at: optimisticUpdatedAt }
+                : window
+            )));
+
+            const response = await api.closeVoteWindow(windowId);
+
+            setVoteWindows(current => current.map(window => (
+              window.window_id === windowId ? response.vote_window : window
+            )));
+            setApprovalCases(current => current.map(approvalCase => (
+              approvalCase.case_id === response.approval_case.case_id ? response.approval_case : approvalCase
+            )));
+            setEvidenceBundles(current => {
+              const filtered = current.filter(bundle => bundle.bundle_id !== response.evidence.bundle_id);
+              return [response.evidence, ...filtered];
+            });
+            addToast(`Vote window ${windowId} closed.`, 'success');
+            void loadOrchestra();
+          } catch {
+            setVoteWindows(previousVoteWindows);
+            setOrchestraError(`Failed to close vote window ${windowId}.`);
+            addToast(`Failed to close vote window ${windowId}.`, 'error');
+            throw new Error('close vote window failed');
+          }
+        }}
+        onImportVoteTally={async (windowId: string): Promise<VoteTally> => {
+          const previousVoteWindows = voteWindows;
+          try {
+            setOrchestraError(null);
+            const tally = await api.importVoteWindowTally(windowId);
+            setVoteWindows(current => current.map(window => (
+              window.window_id === windowId ? { ...window, tally, updated_at: new Date().toISOString() } : window
+            )));
+            addToast(`Imported tally for ${windowId}.`, 'success');
+            void loadOrchestra();
+            return tally;
+          } catch {
+            setVoteWindows(previousVoteWindows);
+            setOrchestraError(`Failed to import tally for vote window ${windowId}.`);
+            addToast(`Failed to import tally for ${windowId}.`, 'error');
+            throw new Error('import tally failed');
+          }
+        }}
+      />
+    </Suspense>
   );
 
   const renderStressTest = () => {
