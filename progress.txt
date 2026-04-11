@@ -3496,3 +3496,17 @@ Updated top gap head (post-fix):
 
 - Created [GO_MODE_EXECUTION_ORDER.md](GO_MODE_EXECUTION_ORDER.md) to turn the recent architecture, monetization, launchpad, user-interface, RPC, treasury, and chain-onboarding discussions into one prioritized ship order.
 - Linked the roadmap from [X3_END_TO_END_GAPS_MASTER_PLAN.md](X3_END_TO_END_GAPS_MASTER_PLAN.md) so the master gaps plan and the practical execution sequence stay aligned.
+
+2026-04-09 — Dashboard SVG migration + Kernel test coverage expansion
+
+- Committed dashboard SVG chart migration (a898b37be): removed recharts dependency, replaced all chart surfaces with lightweight SVG components (~4.5 kB shared module), added operator workflow panel, lazy-loaded heavy panels. 50/50 Vitest tests pass, production build clean at ~255 kB entry.
+- Fixed runtime and kernel receipt schema drift (93ca6fbc1).
+- Added 34 new kernel tests covering cross-VM 2PC operations and authority management (4dd8f8c04):
+  - Full cross-VM lifecycle: submit, prepare, commit, abort, force-abort
+  - 2PC fee reservation, refund verification, and expiry via on_initialize TTL scan
+  - Nonce validation: sequential, per-account independence, replay rejection (DuplicateComitId)
+  - Authority management: add, remove, schedule, enact with governance origin enforcement
+  - Error paths: InsufficientBalance, CrossVmFeeExceeded, Unauthorized, BelowMinimumAuthorities, EmptyAuthoritySet, NoPendingChanges
+  - Kernel test count: 112 → 146 (34 new, 0 regressions)
+- Made compute_cross_vm_comit_id pub(crate) to enable test assertions on comit IDs.
+- Node compilation verified clean after all changes.
