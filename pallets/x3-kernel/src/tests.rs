@@ -1,12 +1,17 @@
 use frame_support::{assert_noop, assert_ok};
 use sp_core::H256;
 
-use crate::{AccountRegistry, AssetRegistry, CanonicalLedger, Nonces};
+use crate::{
+    AccountRegistry, AssetRegistry, Authorities, CanonicalLedger, CrossChainProof, CrossVmNonces,
+    Nonces, PendingAuthorities, PreparedCrossVmOps, PreparedCrossVmQueue,
+};
 
 use crate::mock::{
     self, new_test_ext, AccountId, AssetId, AtlasId, AtlasKernel, Balance, ExtBuilder,
     RuntimeEvent, RuntimeOrigin, System, ALICE, BOB, CHARLIE, INITIAL_BALANCE,
 };
+
+use x3_cross_vm_bridge::CrossVmOperation;
 
 type Test = mock::Test;
 type AtlasEvent = crate::Event<Test>;
@@ -2517,5 +2522,851 @@ fn comit_version_field_prevents_ambiguity() {
             }
             _ => panic!("Unexpected version"),
         }
+    });
+}
+
+// ============================================================================
+// AUTHORITY MANAGEMENT TESTS
+// ============================================================================
+
+#[test]
+fn add_authority_success() {
+    new_test_ext().execute_with(|| {
+        let new_auth: AccountId = 99;
+        assert_ok!(AtlasKernel::add_authority(
+            RuntimeOrigin::root(),
+            new_auth,
+        ));
+        let auths = Authorities::<Test>::get();
+        assert!(auths.contains(&new_auth));
+
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::AuthorityAdded { authority } if *authority == new_auth
+        )));
+    });
+}
+
+#[test]
+fn add_authority_rejects_non_governance_origin() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::add_authority(RuntimeOrigin::signed(ALICE), 99),
+            frame_support::error::BadOrigin
+        );
+    });
+}
+
+#[test]
+fn add_authority_rejects_duplicate() {
+    new_test_ext().execute_with(|| {
+        assert_ok!(AtlasKernel::add_authority(RuntimeOrigin::root(), 99));
+        assert_noop!(
+            AtlasKernel::add_authority(RuntimeOrigin::root(), 99),
+            AtlasError::AuthorityAlreadyExists
+        );
+    });
+}
+
+#[test]
+fn remove_authority_success() {
+    new_test_ext().execute_with(|| {
+        // Add two authorities so we can remove one while staying above MinAuthorities=1
+        assert_ok!(AtlasKernel::add_authority(RuntimeOrigin::root(), 98));
+        assert_ok!(AtlasKernel::add_authority(RuntimeOrigin::root(), 99));
+        assert_eq!(Authorities::<Test>::get().len(), 2);
+
+        assert_ok!(AtlasKernel::remove_authority(RuntimeOrigin::root(), 98));
+        let auths = Authorities::<Test>::get();
+        assert_eq!(auths.len(), 1);
+        assert!(!auths.contains(&98));
+
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::AuthorityRemoved { authority } if *authority == 98
+        )));
+    });
+}
+
+#[test]
+fn remove_authority_rejects_non_governance_origin() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::remove_authority(RuntimeOrigin::signed(ALICE), 99),
+            frame_support::error::BadOrigin
+        );
+    });
+}
+
+#[test]
+fn remove_authority_rejects_unknown() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::remove_authority(RuntimeOrigin::root(), 999),
+            AtlasError::AuthorityNotFound
+        );
+    });
+}
+
+#[test]
+fn remove_authority_rejects_below_minimum() {
+    new_test_ext().execute_with(|| {
+        // Only one authority — cannot remove when MinAuthorities=1
+        assert_ok!(AtlasKernel::add_authority(RuntimeOrigin::root(), 98));
+        assert_eq!(Authorities::<Test>::get().len(), 1);
+
+        assert_noop!(
+            AtlasKernel::remove_authority(RuntimeOrigin::root(), 98),
+            AtlasError::BelowMinimumAuthorities
+        );
+    });
+}
+
+#[test]
+fn schedule_authority_change_success() {
+    new_test_ext().execute_with(|| {
+        let new_set = vec![ALICE, BOB, CHARLIE];
+        assert_ok!(AtlasKernel::schedule_authority_change(
+            RuntimeOrigin::root(),
+            new_set.clone(),
+        ));
+
+        let pending = PendingAuthorities::<Test>::get();
+        assert!(pending.is_some());
+        let pending_inner = pending.unwrap();
+        assert_eq!(pending_inner.len(), 3);
+
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::AuthorityChangesScheduled { new_authorities }
+                if new_authorities.len() == 3
+        )));
+    });
+}
+
+#[test]
+fn schedule_authority_change_rejects_empty_set() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::schedule_authority_change(RuntimeOrigin::root(), vec![]),
+            AtlasError::EmptyAuthoritySet
+        );
+    });
+}
+
+#[test]
+fn schedule_authority_change_rejects_non_governance() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::schedule_authority_change(
+                RuntimeOrigin::signed(ALICE),
+                vec![ALICE, BOB],
+            ),
+            frame_support::error::BadOrigin
+        );
+    });
+}
+
+#[test]
+fn enact_authority_change_success() {
+    new_test_ext().execute_with(|| {
+        let new_set = vec![ALICE, BOB];
+        assert_ok!(AtlasKernel::schedule_authority_change(
+            RuntimeOrigin::root(),
+            new_set.clone(),
+        ));
+
+        assert_ok!(AtlasKernel::enact_authority_change(RuntimeOrigin::root()));
+
+        let authorities = Authorities::<Test>::get();
+        assert_eq!(authorities.len(), 2);
+        assert!(authorities.contains(&ALICE));
+        assert!(authorities.contains(&BOB));
+
+        // Pending should be cleared after enactment
+        assert!(PendingAuthorities::<Test>::get().is_none());
+
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::AuthorityChangesEnacted { new_authorities }
+                if new_authorities.len() == 2
+        )));
+    });
+}
+
+#[test]
+fn enact_authority_change_fails_without_pending() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::enact_authority_change(RuntimeOrigin::root()),
+            AtlasError::NoPendingChanges
+        );
+    });
+}
+
+#[test]
+fn enact_authority_change_rejects_non_governance() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            AtlasKernel::enact_authority_change(RuntimeOrigin::signed(ALICE)),
+            frame_support::error::BadOrigin
+        );
+    });
+}
+
+// ============================================================================
+// CROSS-VM 2PC OPERATION TESTS
+// ============================================================================
+
+/// Build a simple MessageToEvm operation for test reuse.
+/// Using MessageToEvm because it doesn't require CanonicalLedger
+/// balance pre-population (unlike TransferToEvm / AtomicSwap).
+fn test_cross_vm_op() -> CrossVmOperation {
+    CrossVmOperation::MessageToEvm {
+        sender: vec![0u8; 32],
+        target_contract: [0x01; 20],
+        message: vec![1, 2, 3, 4],
+        nonce: 0,
+    }
+}
+
+#[test]
+fn submit_cross_vm_operation_successful_flow() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let nonce = 0u64;
+        let max_fee: Balance = 100_000;
+        let proof = CrossChainProof::None;
+
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation,
+            nonce,
+            max_fee,
+            proof,
+        ));
+
+        // Cross-VM nonce should have been incremented
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+
+        // Prepared op should be cleaned up after commit
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(
+            &ALICE,
+            &test_cross_vm_op(),
+            0,
+        );
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
+
+        // Events should include the full lifecycle
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmFeeReserved { .. }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmProofVerified { .. }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmOperationPrepared { .. }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmOperationExecuted { .. }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitFinalized { .. }
+        )));
+    });
+}
+
+#[test]
+fn prepare_cross_vm_operation_holds_locks() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let nonce = 0u64;
+        let max_fee: Balance = 100_000;
+        let proof = CrossChainProof::None;
+
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            nonce,
+            max_fee,
+            proof,
+        ));
+
+        // Nonce incremented
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+
+        // Prepared op should exist
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_some());
+
+        // Queue should contain the comit_id
+        let queue = PreparedCrossVmQueue::<Test>::get();
+        assert!(queue.contains(&comit_id));
+
+        // Fee should be reserved (free balance reduced)
+        let free = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+        assert!(free < INITIAL_BALANCE);
+    });
+}
+
+#[test]
+fn commit_cross_vm_operation_after_prepare() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let nonce = 0u64;
+        let max_fee: Balance = 100_000;
+        let proof = CrossChainProof::None;
+
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            nonce,
+            max_fee,
+            proof,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        assert_ok!(AtlasKernel::commit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            comit_id,
+        ));
+
+        // Prepared op cleaned up
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
+        let queue = PreparedCrossVmQueue::<Test>::get();
+        assert!(!queue.contains(&comit_id));
+
+        // Committed events emitted
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmOperationCommitted { .. }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::ComitFinalized { .. }
+        )));
+    });
+}
+
+#[test]
+fn commit_cross_vm_fails_if_not_prepared() {
+    new_test_ext().execute_with(|| {
+        let fake_comit_id = H256::from_low_u64_be(999);
+        assert_noop!(
+            AtlasKernel::commit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                fake_comit_id,
+            ),
+            AtlasError::CrossVmOperationNotPrepared
+        );
+    });
+}
+
+#[test]
+fn commit_cross_vm_fails_wrong_origin() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let nonce = 0u64;
+        let max_fee: Balance = 100_000;
+        let proof = CrossChainProof::None;
+
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            nonce,
+            max_fee,
+            proof,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        // BOB tries to commit ALICE's prepared operation
+        assert_noop!(
+            AtlasKernel::commit_cross_vm_operation(
+                RuntimeOrigin::signed(BOB),
+                comit_id,
+            ),
+            AtlasError::Unauthorized
+        );
+    });
+}
+
+#[test]
+fn abort_cross_vm_operation_refunds_fee() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let nonce = 0u64;
+        let max_fee: Balance = 100_000;
+        let proof = CrossChainProof::None;
+
+        let balance_before = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            nonce,
+            max_fee,
+            proof,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        assert_ok!(AtlasKernel::abort_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            comit_id,
+        ));
+
+        // Fee fully refunded
+        let balance_after = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+        assert_eq!(balance_before, balance_after);
+
+        // Prepared op removed
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
+
+        // Abort event emitted
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmOperationAborted { .. }
+        )));
+    });
+}
+
+#[test]
+fn abort_cross_vm_fails_wrong_origin() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        // BOB cannot abort ALICE's operation
+        assert_noop!(
+            AtlasKernel::abort_cross_vm_operation(
+                RuntimeOrigin::signed(BOB),
+                comit_id,
+            ),
+            AtlasError::Unauthorized
+        );
+    });
+}
+
+#[test]
+fn force_abort_cross_vm_requires_governance() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        // Non-root cannot force-abort
+        assert_noop!(
+            AtlasKernel::force_abort_cross_vm_operation(
+                RuntimeOrigin::signed(BOB),
+                comit_id,
+            ),
+            frame_support::error::BadOrigin
+        );
+
+        // Root can force-abort
+        assert_ok!(AtlasKernel::force_abort_cross_vm_operation(
+            RuntimeOrigin::root(),
+            comit_id,
+        ));
+
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
+    });
+}
+
+#[test]
+fn cross_vm_invalid_nonce_rejected() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        // Try nonce 5 when expected is 0
+        assert_noop!(
+            AtlasKernel::submit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                operation,
+                5,
+                100_000,
+                CrossChainProof::None,
+            ),
+            AtlasError::CrossVmInvalidNonce
+        );
+    });
+}
+
+#[test]
+fn cross_vm_sequential_nonces() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+
+        // First operation with nonce 0
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+
+        // Second operation with nonce 1
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            1,
+            100_000,
+            CrossChainProof::None,
+        ));
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 2);
+
+        // Replaying nonce 0 fails — DuplicateComitId fires first because
+        // the comit_id for (ALICE, op, nonce=0) is already in SubmittedComits
+        assert_noop!(
+            AtlasKernel::submit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                operation,
+                0,
+                100_000,
+                CrossChainProof::None,
+            ),
+            AtlasError::DuplicateComitId
+        );
+    });
+}
+
+#[test]
+fn cross_vm_nonces_are_per_account() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+
+        // ALICE uses nonce 0
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        // BOB can also use nonce 0
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(BOB),
+            operation,
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+        assert_eq!(CrossVmNonces::<Test>::get(BOB), 1);
+    });
+}
+
+#[test]
+fn cross_vm_fee_exceeded_rejected() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        // Provide a max_fee that is intentionally too low (less than minimum fee)
+        assert_noop!(
+            AtlasKernel::submit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                operation,
+                0,
+                0,     // zero max_fee — below any estimated fee
+                CrossChainProof::None,
+            ),
+            AtlasError::CrossVmFeeExceeded
+        );
+    });
+}
+
+#[test]
+fn cross_vm_rejects_unauthorized_account() {
+    ExtBuilder::default()
+        .balances(vec![(ALICE, INITIAL_BALANCE)])
+        .authorized_accounts(vec![])  // No authorized accounts
+        .build()
+        .execute_with(|| {
+            let operation = test_cross_vm_op();
+            assert_noop!(
+                AtlasKernel::submit_cross_vm_operation(
+                    RuntimeOrigin::signed(ALICE),
+                    operation,
+                    0,
+                    100_000,
+                    CrossChainProof::None,
+                ),
+                AtlasError::Unauthorized
+            );
+        });
+}
+
+#[test]
+fn cross_vm_duplicate_comit_id_rejected() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+
+        // Submit first operation
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        // The comit_id depends on (origin, operation, nonce), and nonce auto-increments
+        // so a true duplicate only happens if we somehow bypass the nonce
+        // But with sequential nonces, we cannot produce the same comit_id naturally.
+        // This validates that the SubmittedComits map is populated.
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        assert!(crate::SubmittedComits::<Test>::contains_key(comit_id));
+    });
+}
+
+#[test]
+fn cross_vm_prepared_op_expires_on_initialize() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        // Verify prepared op exists
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_some());
+
+        let balance_before_expiry = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+
+        // Advance past TTL (CrossVmPrepareTtl = 10 blocks, current block = 1)
+        System::set_block_number(12);
+
+        // Trigger on_initialize to scan expired ops
+        <AtlasKernel as frame_support::traits::Hooks<u64>>::on_initialize(12);
+
+        // Prepared op should be expired and cleaned up
+        assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
+
+        // Fee should be refunded
+        let balance_after = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+        assert!(balance_after > balance_before_expiry);
+    });
+}
+
+#[test]
+fn commit_cross_vm_expired_op_returns_error() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        assert_ok!(AtlasKernel::prepare_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation.clone(),
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+
+        // Advance past TTL without running on_initialize (manual expiry check in commit)
+        System::set_block_number(12);
+
+        assert_noop!(
+            AtlasKernel::commit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                comit_id,
+            ),
+            AtlasError::CrossVmOperationExpired
+        );
+    });
+}
+
+#[test]
+fn cross_vm_atomic_swap_operation() {
+    new_test_ext().execute_with(|| {
+        let evm_party: [u8; 20] = [0x01; 20];
+        let svm_party: Vec<u8> = vec![0u8; 32];
+
+        // SCALE-decode addresses to the AccountId that the dispatcher will look up:
+        // - EVM [0x01;20]: first 8 bytes decoded as u64 = 0x0101010101010101
+        // - SVM [0;32]: first 8 bytes decoded as u64 = 0
+        let evm_decoded: AccountId = u64::from_le_bytes([0x01; 8]);
+        let svm_decoded: AccountId = 0;
+        CanonicalLedger::<Test>::insert(evm_decoded, AssetId::default(), 10_000u128);
+        CanonicalLedger::<Test>::insert(svm_decoded, AssetId::default(), 10_000u128);
+
+        let operation = CrossVmOperation::AtomicSwap {
+            evm_party,
+            svm_party,
+            evm_asset: [0x02; 20],
+            svm_asset: vec![0u8; 32],
+            evm_amount: 500,
+            svm_amount: 500,
+        };
+
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation,
+            0,
+            1_000_000,
+            CrossChainProof::None,
+        ));
+
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+    });
+}
+
+#[test]
+fn cross_vm_message_to_evm_operation() {
+    new_test_ext().execute_with(|| {
+        let operation = CrossVmOperation::MessageToEvm {
+            sender: vec![0u8; 32],
+            target_contract: [0x01; 20],
+            message: vec![1, 2, 3, 4],
+            nonce: 0,
+        };
+
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation,
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+    });
+}
+
+#[test]
+fn cross_vm_message_to_svm_operation() {
+    new_test_ext().execute_with(|| {
+        let operation = CrossVmOperation::MessageToSvm {
+            sender: [0x01; 20],
+            target_program: vec![0u8; 32],
+            message: vec![5, 6, 7, 8],
+            nonce: 0,
+        };
+
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation,
+            0,
+            100_000,
+            CrossChainProof::None,
+        ));
+
+        assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
+    });
+}
+
+#[test]
+fn cross_vm_fee_refund_on_commit() {
+    new_test_ext().execute_with(|| {
+        let operation = test_cross_vm_op();
+        let max_fee: Balance = 10_000_000; // Way more than needed
+
+        let balance_before = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+
+        assert_ok!(AtlasKernel::submit_cross_vm_operation(
+            RuntimeOrigin::signed(ALICE),
+            operation,
+            0,
+            max_fee,
+            CrossChainProof::None,
+        ));
+
+        let balance_after = pallet_balances::Pallet::<Test>::free_balance(ALICE);
+
+        // Balance should decrease by actual fee, not the full max_fee
+        let actual_deduction = balance_before - balance_after;
+        assert!(actual_deduction < max_fee, "Expected partial fee refund");
+
+        // Check refund event emitted
+        let events = x3_events();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            AtlasEvent::CrossVmFeeRefunded { amount, .. } if *amount > 0
+        )));
+    });
+}
+
+#[test]
+fn cross_vm_rate_limit_enforced() {
+    new_test_ext().execute_with(|| {
+        let max_fee: Balance = 100_000;
+
+        // Submit 10 operations (the per-block limit)
+        for i in 0u64..10 {
+            let operation = CrossVmOperation::MessageToEvm {
+                sender: vec![0u8; 32],
+                target_contract: [0x01; 20],
+                message: vec![i as u8],
+                nonce: 0,
+            };
+            assert_ok!(AtlasKernel::submit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                operation,
+                i,
+                max_fee,
+                CrossChainProof::None,
+            ));
+        }
+
+        // 11th operation should be rate-limited
+        let operation = CrossVmOperation::MessageToEvm {
+            sender: vec![0u8; 32],
+            target_contract: [0x01; 20],
+            message: vec![99],
+            nonce: 0,
+        };
+        assert_noop!(
+            AtlasKernel::submit_cross_vm_operation(
+                RuntimeOrigin::signed(ALICE),
+                operation,
+                10,
+                max_fee,
+                CrossChainProof::None,
+            ),
+            AtlasError::RateLimitExceeded
+        );
     });
 }

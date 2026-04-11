@@ -2404,7 +2404,7 @@ pub mod pallet {
             context
         }
 
-        fn compute_cross_vm_comit_id(
+        pub(crate) fn compute_cross_vm_comit_id(
             origin: &T::AccountId,
             operation: &CrossVmOperation,
             nonce: u64,
