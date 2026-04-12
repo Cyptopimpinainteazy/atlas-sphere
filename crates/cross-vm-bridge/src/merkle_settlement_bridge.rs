@@ -138,7 +138,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3, 4, 5],
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -157,7 +157,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [0u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3, 4, 5],
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -176,7 +176,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3, 4, 5],
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -199,7 +199,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3],
+            merkle_proof_bytes: alloc::vec![100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -246,7 +246,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3, 4, 5],
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -283,7 +283,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![1, 2, 3, 4, 5],
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -310,7 +310,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [99; 32],
             finalized_block: 200,
-            merkle_proof_bytes: alloc::vec![5, 6, 7],
+            merkle_proof_bytes: alloc::vec![50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -348,7 +348,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [111; 32],
             finalized_block: 150,
-            merkle_proof_bytes: alloc::vec![10, 11, 12],
+            merkle_proof_bytes: alloc::vec![60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -367,7 +367,7 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [77; 32],
             finalized_block: 250,
-            merkle_proof_bytes: alloc::vec![20, 21, 22],
+            merkle_proof_bytes: alloc::vec![70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: Some(metadata.clone()),

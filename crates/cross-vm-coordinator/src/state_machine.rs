@@ -43,6 +43,11 @@ pub struct SwapCoordinator<P: SessionPersistence = InMemoryPersistence> {
 impl SwapCoordinator<InMemoryPersistence> {
     /// Create a coordinator with in-memory persistence (non-durable).
     pub fn new(config: CoordinatorConfig) -> Self {
+        // CRITICAL-001 FIX: Enforce durable persistence in production.
+        // Node crash with InMemoryPersistence = irreversible HTLC fund loss.
+        if !cfg!(test) {
+            panic!("CRITICAL-001: InMemoryPersistence forbidden in production. Use OffchainPersistence. Node crash = fund loss.");
+        }
         Self::with_persistence(config, Arc::new(InMemoryPersistence::new()))
     }
 

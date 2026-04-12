@@ -287,24 +287,34 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         merkle_proof_bytes: &[u8],
         state_root: Hash,
     ) -> MerkleValidationResult {
-        // Validate merkle proof is not empty
+        // CRITICAL-002 FIX: Validate state_root is embedded in proof bytes
+        // Format: [state_root: 32 bytes][leaf_index: u64 LE][leaf_hash: 32 bytes][sibling_0: 32 bytes]...
+        // Minimum size: 32 (root) + 8 (index) + 32 (leaf) = 72 bytes
+        
         if merkle_proof_bytes.is_empty() {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
                 "Empty merkle proof bytes".into(),
             ));
         }
 
-        // Binary merkle proof format:
-        // [leaf_index: u64 LE][leaf_hash: 32 bytes][sibling_0: 32 bytes][sibling_1: 32 bytes]...
-        // Minimum size: 8 (index) + 32 (leaf) = 40 bytes
-        if merkle_proof_bytes.len() < 40 {
+        if merkle_proof_bytes.len() < 72 {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
-                "Proof too short: need at least 40 bytes (index + leaf hash)".into(),
+                "Proof too short: need at least 72 bytes (state_root + index + leaf hash)".into(),
             ));
         }
 
-        // Remaining bytes after index+leaf must be a multiple of 32 (sibling hashes)
-        let sibling_bytes_len = merkle_proof_bytes.len() - 40;
+        // Extract and validate embedded state_root matches parameter
+        let mut embedded_root = [0u8; 32];
+        embedded_root.copy_from_slice(&merkle_proof_bytes[0..32]);
+        if embedded_root != state_root {
+            return Err(MerkleProofValidationError::StateRootMismatch {
+                expected: state_root,
+                actual: embedded_root,
+            });
+        }
+
+        // Remaining bytes after root+index+leaf must be a multiple of 32 (sibling hashes)
+        let sibling_bytes_len = merkle_proof_bytes.len() - 72;
         if sibling_bytes_len % 32 != 0 {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
                 "Sibling hashes not aligned to 32 bytes".into(),
@@ -312,19 +322,19 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         }
 
         let leaf_index = u64::from_le_bytes(
-            merkle_proof_bytes[0..8]
+            merkle_proof_bytes[32..40]
                 .try_into()
                 .map_err(|_| MerkleProofValidationError::InternalError("parse error".into()))?,
         );
 
         let mut current_hash = [0u8; 32];
-        current_hash.copy_from_slice(&merkle_proof_bytes[8..40]);
+        current_hash.copy_from_slice(&merkle_proof_bytes[40..72]);
 
         let num_siblings = sibling_bytes_len / 32;
         let mut idx = leaf_index;
 
         for i in 0..num_siblings {
-            let sib_start = 40 + i * 32;
+            let sib_start = 72 + i * 32;
             let sibling = &merkle_proof_bytes[sib_start..sib_start + 32];
 
             let mut hasher = Sha256::new();
@@ -399,8 +409,10 @@ mod tests {
         let mut leaf_hash = [0u8; 32];
         leaf_hash.copy_from_slice(&hasher.finalize());
 
-        // Proof: [leaf_index: u64 LE][leaf_hash: 32 bytes]
+        // CRITICAL-002 FIX: Proof now includes state_root binding
+        // Format: [state_root: 32 bytes][leaf_index: u64 LE][leaf_hash: 32 bytes]
         let mut proof = Vec::new();
+        proof.extend_from_slice(&leaf_hash);  // state_root is the leaf hash for single-leaf tree
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf_hash);
 
@@ -426,8 +438,10 @@ mod tests {
         let mut root = [0u8; 32];
         root.copy_from_slice(&hr.finalize());
 
-        // Proof for leaf0 (index=0): [0u64][leaf0][leaf1 as sibling]
+        // CRITICAL-002 FIX: Proof now includes state_root binding
+        // Proof for leaf0 (index=0): [root][0u64][leaf0][leaf1 as sibling]
         let mut proof = Vec::new();
+        proof.extend_from_slice(&root);  // state_root embedded
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf0);
         proof.extend_from_slice(&leaf1);
