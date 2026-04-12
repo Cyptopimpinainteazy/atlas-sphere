@@ -134,6 +134,7 @@ usr/share/code/
 *.deb
 *.crdownload
 x3-chain-v1.1-release.tar.gz
+.artifacts/release-v*/bin/
 
 # Temporary and backup files
 *~
