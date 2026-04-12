@@ -433,6 +433,15 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
     }
 
     /// Record the outcome of a flashloan leg.
+    ///
+    /// CRITICAL-006 FIX: Re-checks timelock safety margin during async execution
+    /// to detect TOCTOU race conditions. If timelock expires while legs execute,
+    /// aborts the swap before state transitions.
+    /// Record the outcome of a flashloan leg.
+    ///
+    /// CRITICAL-006 FIX: Re-checks timelock safety margin during async execution
+    /// to detect TOCTOU race conditions. If timelock expires while legs execute,
+    /// aborts the swap before state transitions.
     pub fn record_leg_outcome(
         &mut self,
         session_id: &str,
@@ -447,59 +456,75 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
                 }
             })?;
 
-            let leg_index = session.leg_outcomes.len();
+            // CRITICAL-006 FIX: Re-check timelock safety margin before state transition
+            // This detects if timelock expired during async flash leg execution
+            if self.config.is_near_expiry(session.timelock_fast, now_unix) {
+                warn!(
+                    session = %session_id,
+                    timelock = session.timelock_fast,
+                    now = now_unix,
+                    "Timelock expired during flash leg execution — aborting"
+                );
+                session.phase = SwapPhase::Aborting;
+                session.updated_at = now_unix;
+                abort_error = Some(CoordinatorError::TimelockExpired {
+                    htlc_id: session_id.to_string(),
+                });
+            } else {
+                let leg_index = session.leg_outcomes.len();
 
-            match outcome {
-                FlashLegOutcome::Success {
-                    tx_hash: _,
-                    gas_used,
-                    output_amount,
-                    premium_paid,
-                } => {
-                    info!(
-                        session = %session_id,
-                        leg = leg_index,
+                match outcome {
+                    FlashLegOutcome::Success {
+                        tx_hash: _,
                         gas_used,
                         output_amount,
                         premium_paid,
-                        "Flash leg succeeded"
-                    );
-                    session.leg_outcomes.push(outcome);
-                }
-                FlashLegOutcome::Reverted { ref reason } => {
-                    let reason_clone = reason.clone();
-                    error!(
-                        session = %session_id,
-                        leg = leg_index,
-                        reason = %reason_clone,
-                        "Flash leg REVERTED — aborting swap"
-                    );
-                    session.phase = SwapPhase::Aborting;
-                    session.updated_at = now_unix;
-                    session.leg_outcomes.push(outcome);
-                    abort_error = Some(CoordinatorError::FlashLegReverted {
-                        vm: format!("leg-{}", leg_index),
-                        reason: reason_clone,
-                    });
-                }
-            }
-
-            if abort_error.is_none() {
-                session.updated_at = now_unix;
-
-                // Check if all legs are complete
-                if session.leg_outcomes.len() == session.flash_legs.len() {
-                    let all_success = session
-                        .leg_outcomes
-                        .iter()
-                        .all(|o| matches!(o, FlashLegOutcome::Success { .. }));
-
-                    if all_success {
-                        session.phase = SwapPhase::LegsComplete;
-                        info!(session = %session_id, "All flash legs complete — ready for settlement");
-                    } else {
+                    } => {
+                        info!(
+                            session = %session_id,
+                            leg = leg_index,
+                            gas_used,
+                            output_amount,
+                            premium_paid,
+                            "Flash leg succeeded"
+                        );
+                        session.leg_outcomes.push(outcome);
+                    }
+                    FlashLegOutcome::Reverted { ref reason } => {
+                        let reason_clone = reason.clone();
+                        error!(
+                            session = %session_id,
+                            leg = leg_index,
+                            reason = %reason_clone,
+                            "Flash leg REVERTED — aborting swap"
+                        );
                         session.phase = SwapPhase::Aborting;
-                        warn!(session = %session_id, "Not all legs succeeded — aborting");
+                        session.updated_at = now_unix;
+                        session.leg_outcomes.push(outcome);
+                        abort_error = Some(CoordinatorError::FlashLegReverted {
+                            vm: format!("leg-{}", leg_index),
+                            reason: reason_clone,
+                        });
+                    }
+                }
+
+                if abort_error.is_none() {
+                    session.updated_at = now_unix;
+
+                    // Check if all legs are complete
+                    if session.leg_outcomes.len() == session.flash_legs.len() {
+                        let all_success = session
+                            .leg_outcomes
+                            .iter()
+                            .all(|o| matches!(o, FlashLegOutcome::Success { .. }));
+
+                        if all_success {
+                            session.phase = SwapPhase::LegsComplete;
+                            info!(session = %session_id, "All flash legs complete — ready for settlement");
+                        } else {
+                            session.phase = SwapPhase::Aborting;
+                            warn!(session = %session_id, "Not all legs succeeded — aborting");
+                        }
                     }
                 }
             }
@@ -513,9 +538,14 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         Ok(())
     }
 
+
     // ── Phase 4: Settlement ───────────────────────────────────────────────
 
     /// Begin settlement: reveal secret on the fast chain.
+    /// Begin settlement: reveal secret on the fast chain.
+    ///
+    /// CRITICAL-006 FIX: Re-checks timelock safety margin before revealing secret
+    /// to prevent TOCTOU race where timelock expires between flash execution and settlement.
     pub fn begin_settlement(
         &mut self,
         session_id: &str,
@@ -531,13 +561,19 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
 
         Self::validate_phase_transition(current_phase, SwapPhase::ClaimingFast)?;
 
-        let hash_lock;
         let mut abort_error = None;
         {
             let session = self.sessions.get_mut(session_id).unwrap();
 
-            // Safety: don't reveal if near fast chain timelock
+            // CRITICAL-006 FIX: Re-check timelock safety margin before settlement
+            // Prevents revealing secret after timelock has expired
             if self.config.is_near_expiry(session.timelock_fast, now_unix) {
+                warn!(
+                    session = %session_id,
+                    timelock = session.timelock_fast,
+                    now = now_unix,
+                    "Near timelock expiry at settlement — aborting to prevent fund loss"
+                );
                 session.phase = SwapPhase::Aborting;
                 abort_error = Some(CoordinatorError::TimelockExpired {
                     htlc_id: session_id.to_string(),
@@ -547,16 +583,18 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
                 info!(session = %session_id, "Settlement: claiming on fast chain");
             }
             session.updated_at = now_unix;
-            hash_lock = session.hash_lock;
         }
 
+        if abort_error.is_some() {
+            self.persist_by_id(session_id);
+            return Err(abort_error.unwrap());
+        }
+
+        let hash_lock = self.sessions.get(session_id).unwrap().hash_lock;
         self.persist_by_id(session_id);
-
-        if let Some(err) = abort_error {
-            return Err(err);
-        }
         Ok(hash_lock)
     }
+
 
     /// Record that the fast chain claim succeeded (secret revealed on-chain).
     ///
@@ -745,11 +783,14 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         let valid = matches!(
             (from, to),
             (SwapPhase::Setup, SwapPhase::LockingHtlcs)
+                | (SwapPhase::LockingHtlcs, SwapPhase::LockingHtlcs)
                 | (SwapPhase::LockingHtlcs, SwapPhase::HtlcsLocked)
                 | (SwapPhase::HtlcsLocked, SwapPhase::ExecutingFlashLegs)
                 | (SwapPhase::ExecutingFlashLegs, SwapPhase::LegsComplete)
                 | (SwapPhase::LegsComplete, SwapPhase::ClaimingFast)
+                | (SwapPhase::ClaimingFast, SwapPhase::ClaimingFast)
                 | (SwapPhase::ClaimingFast, SwapPhase::ClaimingSlow)
+                | (SwapPhase::ClaimingSlow, SwapPhase::ClaimingSlow)
                 | (SwapPhase::ClaimingSlow, SwapPhase::Complete)
                 // Abort from any active phase
                 | (SwapPhase::Setup, SwapPhase::Aborting)

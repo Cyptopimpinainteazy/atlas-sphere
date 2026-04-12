@@ -175,7 +175,9 @@ impl SwapCoordinator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::FlashLeg;
+    use crate::types::{
+        FlashLeg, HtlcCreateParams, HtlcHash, HtlcId, HtlcRecord, HtlcStatus, VmTarget,
+    };
 
     fn create_coordinator() -> SwapCoordinator {
         SwapCoordinator::with_default_config()
@@ -194,6 +196,57 @@ mod tests {
         proof
     }
 
+    fn prime_session_to_claiming_fast(
+        coordinator: &mut SwapCoordinator,
+        session_id: &str,
+        hash: HtlcHash,
+        now: u64,
+    ) {
+        let fast_htlc = HtlcRecord {
+            id: HtlcId::from_bytes(vec![1u8; 32]),
+            params: HtlcCreateParams {
+                vm: VmTarget::Svm,
+                recipient: vec![2u8; 32],
+                hash_lock: hash,
+                timelock: now + 3600,
+                asset: vec![0u8; 32],
+                amount: 1_000,
+            },
+            status: HtlcStatus::Funded,
+            created_at_block: 1,
+            confirmations_required: 1,
+            confirmations: 1,
+            params_hash: [0u8; 32],
+        };
+
+        let slow_htlc = HtlcRecord {
+            id: HtlcId::from_bytes(vec![2u8; 32]),
+            params: HtlcCreateParams {
+                vm: VmTarget::Evm { chain_id: 1 },
+                recipient: vec![3u8; 20],
+                hash_lock: hash,
+                timelock: now + 7200,
+                asset: vec![0u8; 20],
+                amount: 1_000,
+            },
+            status: HtlcStatus::Funded,
+            created_at_block: 1,
+            confirmations_required: 1,
+            confirmations: 1,
+            params_hash: [0u8; 32],
+        };
+
+        coordinator
+            .record_htlc_fast(session_id, fast_htlc, now + 10)
+            .expect("Failed to record fast HTLC");
+        coordinator
+            .record_htlc_slow(session_id, slow_htlc, now + 20)
+            .expect("Failed to record slow HTLC");
+        coordinator
+            .begin_flash_execution(session_id, now + 30)
+            .expect("Failed to begin flash execution");
+    }
+
     #[test]
     fn test_merkle_fast_claim_with_verified_proof() {
         let mut coordinator = create_coordinator();
@@ -208,6 +261,9 @@ mod tests {
                 1000,
             )
             .expect("Failed to setup swap");
+
+        let hash = secret.hash();
+        prime_session_to_claiming_fast(&mut coordinator, &session_id, hash, 1000);
 
         let settlement = create_test_settlement();
         let fast_claim = MerkleEnabledFastClaim {
@@ -237,6 +293,9 @@ mod tests {
             )
             .expect("Failed to setup swap");
 
+        let hash = secret.hash();
+        prime_session_to_claiming_fast(&mut coordinator, &session_id, hash, 1000);
+
         let fast_claim = MerkleEnabledFastClaim {
             secret_bytes: secret.0,
             merkle_settlement: None,
@@ -263,6 +322,9 @@ mod tests {
                 1000,
             )
             .expect("Failed to setup swap");
+
+        let hash = secret.hash();
+        prime_session_to_claiming_fast(&mut coordinator, &session_id, hash, 1000);
 
         let mut settlement = MerkleSettlementProof::new(
             session_id.clone(),
@@ -302,6 +364,9 @@ mod tests {
             )
             .expect("Failed to setup swap");
 
+        let hash = secret.hash();
+        prime_session_to_claiming_fast(&mut coordinator, &session_id, hash, 1000);
+
         // Progress to ClaimingSlow
         coordinator
             .record_fast_claim(&session_id, secret, 1500)
@@ -333,6 +398,9 @@ mod tests {
                 1000,
             )
             .expect("Failed to setup swap");
+
+        let hash = secret.hash();
+        prime_session_to_claiming_fast(&mut coordinator, &session_id, hash, 1000);
 
         // Progress to ClaimingSlow
         coordinator
