@@ -43,9 +43,9 @@ use frame_support::{
 };
 use frame_system::pallet_prelude::*;
 use sp_core::H256;
-use sp_runtime::traits::Hash;
+use sp_runtime::traits::{Hash, SaturatedConversion, Saturating};
 use sp_std::vec::Vec;
-use x3_slash::types::{SlashReason, SlashSeverity};
+use x3_slash::types::SlashSeverity;
 
 type BalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -239,12 +239,14 @@ pub mod pallet {
 
             // Generate bond ID
             let bond_counter = BondIdCounter::<T>::get();
-            let bond_id = T::Hashing::hash_of(&(agent.clone(), bond_counter));
-            BondIdCounter::<T>::set(T::Hashing::hash_of(&(bond_counter, 1u32)));
+            let bond_hash = T::Hashing::hash_of(&(agent.clone(), bond_counter));
+            let bond_id = H256::from_slice(bond_hash.as_ref());
+            let next_hash = T::Hashing::hash_of(&(bond_counter, 1u32));
+            BondIdCounter::<T>::set(H256::from_slice(next_hash.as_ref()));
 
             // Create bond state
-            let now = frame_system::Pallet::<T>::block_number();
-            let expires_at = now.saturating_add(T::FinalityWindow::get());
+            let now: u32 = frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
+            let expires_at = now.saturating_add(T::FinalityWindow::get().saturated_into::<u32>());
 
             let bond_state = BondState {
                 bond_id,
@@ -266,7 +268,7 @@ pub mod pallet {
                 bond_id,
                 agent,
                 amount,
-                expires_at,
+                expires_at: expires_at.into(),
             });
 
             Ok(())
@@ -277,9 +279,9 @@ pub mod pallet {
         #[pallet::call_index(1)]
         #[pallet::weight(T::SlashWeightInfo::release_bond())]
         pub fn release_bond(origin: OriginFor<T>, bond_id: H256) -> DispatchResult {
-            // Only authorized pallets can release bonds
-            // In a real implementation, this would use a privileged origin
-            let _caller = ensure_signed(origin)?;
+            // Only privileged origin (sudo / governance) may release bonds to prevent
+            // arbitrary accounts from releasing bonds they do not own.
+            ensure_root(origin)?;
 
             let bond_state = Bonds::<T>::get(bond_id).ok_or(Error::<T>::BondNotFound)?;
 
@@ -315,8 +317,10 @@ pub mod pallet {
             severity: u8, // 0=Minor, 1=Moderate, 2=Major, 3=Critical
             reason: Vec<u8>,
         ) -> DispatchResult {
-            // Privileged origin (settlement/bridge pallet)
-            let _caller = ensure_signed(origin)?;
+            // Privileged origin (sudo / settlement / bridge pallet via governance).
+            // Any signed account being able to slash arbitrary bonds is a critical
+            // vulnerability — restrict to root until a proper RelayerSet origin is added.
+            ensure_root(origin)?;
 
             let bond_state = Bonds::<T>::get(bond_id).ok_or(Error::<T>::BondNotFound)?;
 
@@ -324,6 +328,8 @@ pub mod pallet {
                 matches!(bond_state.status, BondStatus::Active),
                 Error::<T>::InvalidBondState
             );
+
+            ensure!(severity <= 3, Error::<T>::ArithmeticError);
 
             // Determine slash severity and amount
             let severity_enum = match severity {
@@ -338,32 +344,34 @@ pub mod pallet {
             let slash_amount: BalanceOf<T> =
                 (bond_state.amount / 10000u32.into()) * (slash_bps as u32).into();
 
-            // Unreserve the slashed amount and send to treasury
+            // Unreserve, then transfer slashed amount to treasury.
             T::Currency::unreserve(&bond_state.agent, bond_state.amount);
-            let (unreserved, _) =
-                T::Currency::slash(&bond_state.agent, slash_amount);
 
             // Transfer slashed amount to treasury (could also be burned)
             let recipient = T::SlashRecipient::get();
-            let _ = T::Currency::transfer(
+            T::Currency::transfer(
                 &bond_state.agent,
                 &recipient,
-                unreserved,
+                slash_amount,
                 frame_support::traits::ExistenceRequirement::AllowDeath,
-            );
+            )
+            .map_err(|_| Error::<T>::ArithmeticError)?;
 
             // Record slash
             let slash_id = SlashIdCounter::<T>::get();
             SlashIdCounter::<T>::set(slash_id.saturating_add(1));
+
+            let bounded_reason: BoundedVec<u8, ConstU32<256>> =
+                reason.try_into().map_err(|_| Error::<T>::ArithmeticError)?;
 
             let slash_record = SlashRecord {
                 slash_id,
                 agent: bond_state.agent.clone(),
                 bond_id,
                 severity,
-                amount_slashed: unreserved,
-                reason,
-                slashed_at: frame_system::Pallet::<T>::block_number(),
+                amount_slashed: slash_amount.saturated_into::<u128>(),
+                reason: bounded_reason,
+                slashed_at: frame_system::Pallet::<T>::block_number().saturated_into::<u32>(),
             };
 
             SlashRecords::<T>::insert(slash_id, slash_record);
@@ -386,7 +394,7 @@ pub mod pallet {
 
             // Track slashed amount for epoch
             SlashedThisEpoch::<T>::mutate(&bond_state.agent, |total| {
-                *total = total.saturating_add(unreserved);
+                *total = total.saturating_add(slash_amount);
             });
 
             Self::deposit_event(Event::SlashExecuted {
@@ -394,7 +402,7 @@ pub mod pallet {
                 agent: bond_state.agent,
                 bond_id,
                 severity,
-                amount_slashed: unreserved,
+                amount_slashed: slash_amount,
             });
 
             Ok(())
@@ -407,30 +415,58 @@ pub mod pallet {
         pub fn process_expirations(origin: OriginFor<T>) -> DispatchResult {
             ensure_root(origin)?;
 
-            let now = frame_system::Pallet::<T>::block_number();
+            let now: u32 = frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
 
-            // Find all active bonds that have expired
-            let mut expired_bonds = Vec::new();
-            Bonds::<T>::iter().for_each(|(bond_id, bond_state)| {
-                if matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now {
-                    expired_bonds.push((bond_id, bond_state));
-                }
-            });
+            // Cap the number of bonds processed per call to prevent DoS via
+            // unbounded storage iteration.
+            const MAX_EXPIRATIONS_PER_CALL: usize = 50;
+
+            // Find expired active bonds up to the processing cap.
+            let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
+                .take(MAX_EXPIRATIONS_PER_CALL)
+                .filter(|(_, bond_state)| {
+                    matches!(bond_state.status, BondStatus::Active)
+                        && bond_state.expires_at <= now
+                })
+                .collect();
 
             // Slash expired bonds
             for (bond_id, bond_state) in expired_bonds {
                 // Unreserve and slash
                 T::Currency::unreserve(&bond_state.agent, bond_state.amount);
-                let (slashed, _) = T::Currency::slash(&bond_state.agent, bond_state.amount);
 
-                // Transfer to treasury
+                // Transfer to treasury — log errors but don't abort (on_finalize must not fail).
                 let recipient = T::SlashRecipient::get();
-                let _ = T::Currency::transfer(
+                if let Err(e) = T::Currency::transfer(
                     &bond_state.agent,
                     &recipient,
-                    slashed,
+                    bond_state.amount,
                     frame_support::traits::ExistenceRequirement::AllowDeath,
-                );
+                ) {
+                    log::warn!(
+                        target: "x3-slash",
+                        "process_expirations: treasury transfer failed for bond {:?}: {:?}",
+                        bond_id,
+                        e
+                    );
+                }
+
+                // Record the expiry-slash so that slash history is complete.
+                let slash_id = SlashIdCounter::<T>::get();
+                SlashIdCounter::<T>::set(slash_id.saturating_add(1));
+                let slash_record = SlashRecord {
+                    slash_id,
+                    agent: bond_state.agent.clone(),
+                    bond_id,
+                    severity: 3, // Critical — bond expiry is treated as a full slash
+                    amount_slashed: bond_state.amount.saturated_into::<u128>(),
+                    reason: b"bond_expiry"
+                        .to_vec()
+                        .try_into()
+                        .map_err(|_| Error::<T>::ArithmeticError)?,
+                    slashed_at: frame_system::Pallet::<T>::block_number().saturated_into::<u32>(),
+                };
+                SlashRecords::<T>::insert(slash_id, slash_record);
 
                 // Update bond status
                 let mut bond_state = bond_state;
@@ -454,31 +490,58 @@ pub mod pallet {
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
         /// Process expired bonds at the end of every block.
+        ///
+        /// SAFETY: Caps the number of bonds processed per block to prevent
+        /// unbounded `on_finalize` execution time under a large Bonds table.
         fn on_finalize(_block: BlockNumberFor<T>) {
-            // In production, this would be more efficient by iterating
-            // only bonds that are close to expiration, using an index.
-            let now = frame_system::Pallet::<T>::block_number();
+            const MAX_BONDS_PER_BLOCK: usize = 20;
 
-            let mut expired_bonds = Vec::new();
-            Bonds::<T>::iter().for_each(|(bond_id, bond_state)| {
-                if matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now {
-                    expired_bonds.push((bond_id, bond_state));
-                }
-            });
+            let now: u32 = frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
+
+            let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
+                .take(MAX_BONDS_PER_BLOCK)
+                .filter(|(_, bond_state)| {
+                    matches!(bond_state.status, BondStatus::Active)
+                        && bond_state.expires_at <= now
+                })
+                .collect();
 
             for (bond_id, bond_state) in expired_bonds {
                 // Unreserve and slash
                 T::Currency::unreserve(&bond_state.agent, bond_state.amount);
-                let (slashed, _) = T::Currency::slash(&bond_state.agent, bond_state.amount);
 
-                // Transfer to treasury
+                // Transfer to treasury — log errors but don't abort (on_finalize must not fail).
                 let recipient = T::SlashRecipient::get();
-                let _ = T::Currency::transfer(
+                if let Err(e) = T::Currency::transfer(
                     &bond_state.agent,
                     &recipient,
-                    slashed,
+                    bond_state.amount,
                     frame_support::traits::ExistenceRequirement::AllowDeath,
-                );
+                ) {
+                    log::warn!(
+                        target: "x3-slash",
+                        "on_finalize: treasury transfer failed for bond {:?}: {:?}",
+                        bond_id,
+                        e
+                    );
+                }
+
+                // Create a SlashRecord so that expiry-slashes are preserved in history.
+                let slash_id = SlashIdCounter::<T>::get();
+                SlashIdCounter::<T>::set(slash_id.saturating_add(1));
+                let slash_record = SlashRecord {
+                    slash_id,
+                    agent: bond_state.agent.clone(),
+                    bond_id,
+                    severity: 3, // Critical — bond expiry is treated as a full slash
+                    amount_slashed: bond_state.amount.saturated_into::<u128>(),
+                    reason: b"bond_expiry"
+                        .to_vec()
+                        .try_into()
+                        .expect("bond_expiry fits in bounded reason"),
+                    slashed_at: now,
+                };
+                SlashRecords::<T>::insert(slash_id, slash_record);
 
                 // Update bond status
                 let mut bond_state = bond_state;

@@ -5,7 +5,6 @@ mod tests {
     use crate::mock::*;
     use crate::*;
     use frame_support::assert_ok;
-    use sp_core::H256;
     use sp_runtime::AccountId32;
 
     #[test]
@@ -44,7 +43,7 @@ mod tests {
 
             // Release bond
             assert_ok!(Slash::release_bond(
-                RuntimeOrigin::signed(agent.clone()),
+                RuntimeOrigin::root(),
                 bond_id
             ));
 
@@ -72,7 +71,7 @@ mod tests {
 
             // Slash bond (Major severity = 2)
             assert_ok!(Slash::slash_bond(
-                RuntimeOrigin::signed(agent.clone()),
+                RuntimeOrigin::root(),
                 bond_id,
                 2,
                 vec![1u8; 64]

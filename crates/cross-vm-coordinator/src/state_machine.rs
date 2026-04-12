@@ -12,11 +12,11 @@
 use crate::config::CoordinatorConfig;
 use crate::persistence::{InMemoryPersistence, SessionPersistence};
 use crate::types::*;
+use blake3;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use tracing::{error, info, warn};
 use subtle::ConstantTimeEq;
-use blake3;
+use tracing::{error, info, warn};
 
 /// The Cross-VM Swap Coordinator.
 ///
@@ -195,8 +195,16 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             }
         }
 
-        // Generate session ID
-        let session_id = format!("swap-{}", hex::encode(&hash.0[..8]));
+        // Generate session ID: use full 32-byte hash with collision check
+        let session_id = format!("swap-{}", hash.to_hex());
+
+        // Collision check: ensure session_id is not already in use
+        if self.sessions.contains_key(&session_id) {
+            return Err(CoordinatorError::Internal(format!(
+                "Session ID collision detected: '{}' already exists",
+                session_id
+            )));
+        }
 
         let session = SwapSession {
             session_id: session_id.clone(),
@@ -274,6 +282,17 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         record: HtlcRecord,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
+        // Read phase first, then validate, then mutate.
+        let current_phase = self
+            .sessions
+            .get(session_id)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
+                session_id: session_id.to_string(),
+            })?
+            .phase;
+
+        Self::validate_phase_transition(current_phase, SwapPhase::LockingHtlcs)?;
+
         {
             let session = self.sessions.get_mut(session_id).ok_or_else(|| {
                 CoordinatorError::SessionNotFound {
@@ -551,6 +570,17 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         secret: HtlcSecret,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
+        // Read phase first, then validate, then mutate.
+        let current_phase = self
+            .sessions
+            .get(session_id)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
+                session_id: session_id.to_string(),
+            })?
+            .phase;
+
+        Self::validate_phase_transition(current_phase, SwapPhase::ClaimingFast)?;
+
         // Global replay guard: reject any previously-seen secret immediately.
         // Global replay guard: constant-time comparison to prevent timing attacks
         let secret_hash = *blake3::hash(&secret.0).as_bytes();
@@ -607,6 +637,17 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
+        // Read phase first, then validate, then mutate.
+        let current_phase = self
+            .sessions
+            .get(session_id)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
+                session_id: session_id.to_string(),
+            })?
+            .phase;
+
+        Self::validate_phase_transition(current_phase, SwapPhase::ClaimingSlow)?;
+
         {
             let session = self.sessions.get_mut(session_id).ok_or_else(|| {
                 CoordinatorError::SessionNotFound {
@@ -659,6 +700,17 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         session_id: &str,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
+        // Read phase first, then validate, then mutate.
+        let current_phase = self
+            .sessions
+            .get(session_id)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
+                session_id: session_id.to_string(),
+            })?
+            .phase;
+
+        Self::validate_phase_transition(current_phase, SwapPhase::Refunded)?;
+
         {
             let session = self.sessions.get_mut(session_id).ok_or_else(|| {
                 CoordinatorError::SessionNotFound {

@@ -150,14 +150,17 @@ where
         // persist balance-oriented state changes in the CanonicalLedger.
         let fee_paid = U256::from(gas_used).saturating_mul(config.gas_price);
         let fee_paid_u128: u128 = fee_paid.unique_saturated_into();
-        // Clamp to i128::MAX to avoid overflow — fees above ~170 quintillion
-        // are unrealistic and indicate misconfigured gas_price.
-        let fee_delta = if fee_paid_u128 > i128::MAX as u128 {
-            i128::MIN // -(i128::MAX) - 1, maximum possible debit
-        } else {
-            // Safe: fee_paid_u128 <= i128::MAX, so cast and negate are valid.
-            -(fee_paid_u128 as i128)
-        };
+
+        // A fee above i128::MAX (~170 quintillion base units) indicates a wildly
+        // misconfigured gas_price. Rather than silently clamping the debit (which
+        // would corrupt the caller's balance record), we abort the execution so
+        // the block producer can reject the transaction.
+        if fee_paid_u128 > i128::MAX as u128 {
+            return Err(EvmError::ExecutionFailed(0xFE));
+        }
+        // Safe: fee_paid_u128 <= i128::MAX after the guard above.
+        let fee_delta = -(fee_paid_u128 as i128);
+
         let state_changes = vec![EvmStateChange {
             address: caller,
             balance_delta: fee_delta,
@@ -172,7 +175,19 @@ where
             gas_used,
             logs: logs.into_iter().map(convert_log).collect(),
             state_changes: state_changes.clone(),
-            state_root: compute_state_root(&state_changes),
+            // Use the full substrate storage root so that all EVM contract
+            // storage mutations (applied directly by the Frontier runner into
+            // pallet-evm's storage) are captured in the commitment.  The
+            // compute_state_root() helper only covers the caller's balance/nonce
+            // delta and would produce the same root for executions with
+            // different contract storage outcomes but identical fees.
+            state_root: {
+                let root_vec = sp_io::storage::root(sp_runtime::StateVersion::V1);
+                let mut root = [0u8; 32];
+                let copy_len = root_vec.len().min(32);
+                root[..copy_len].copy_from_slice(&root_vec[..copy_len]);
+                root
+            },
         })
     }
 

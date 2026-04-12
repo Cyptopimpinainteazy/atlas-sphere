@@ -400,6 +400,16 @@ impl AtomicSwapOrchestrator {
             return Vec::new(); // shm not yet created — nothing committed
         }
 
+        // Verify the shared memory region is at least as large as our struct before
+        // mapping it.  Without this check, a truncated or adversarially-sized shm
+        // segment would result in reads beyond the mapped region (UB / SIGSEGV).
+        let mut stat: libc::stat = unsafe { std::mem::zeroed() };
+        let stat_result = unsafe { libc::fstat(fd, &mut stat) };
+        if stat_result != 0 || (stat.st_size as usize) < shm_size {
+            unsafe { libc::close(fd) };
+            return Vec::new();
+        }
+
         let ptr = unsafe {
             libc::mmap(
                 std::ptr::null_mut(),

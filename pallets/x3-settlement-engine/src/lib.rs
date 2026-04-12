@@ -201,10 +201,22 @@ pub mod pallet {
     pub type ClaimedLegs<T: Config> =
         StorageDoubleMap<_, Blake2_128Concat, H256, Blake2_128Concat, u32, bool, ValueQuery>;
 
-    /// BTC UTXO Registry: Maps btc_txid → BTCUtxoState
+    /// BTC UTXO Registry: Maps (btc_txid, vout) → BTCUtxoState
+    ///
+    /// Keyed by BOTH txid AND output index to prevent UTXO double-spend where two
+    /// outputs from the same transaction (same txid, different vout) would otherwise
+    /// overwrite each other.
     #[pallet::storage]
     #[pallet::getter(fn btc_utxos)]
-    pub type BtcUtxos<T: Config> = StorageMap<_, Blake2_128Concat, H256, BtcUtxoState, OptionQuery>;
+    pub type BtcUtxos<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        H256, // btc_txid
+        Blake2_128Concat,
+        u32, // vout
+        BtcUtxoState,
+        OptionQuery,
+    >;
 
     /// BTC Block Headers (SPV): Maps block_hash → BTCBlockHeader
     #[pallet::storage]
@@ -495,15 +507,26 @@ pub mod pallet {
         }
 
         fn on_finalize(_n: BlockNumberFor<T>) {
-            // Process atomic lock timeouts and emit slashing events
-            // Actual slash execution happens via scheduled extrinsic or off-chain worker
+            // Process atomic lock timeouts and emit slashing events.
+            // Actual slash execution happens via scheduled extrinsic or off-chain worker.
+            //
+            // SAFETY: We cap the number of locks processed per block to prevent
+            // unbounded on_finalize execution. Locks that are not processed this block
+            // will be processed in subsequent blocks.
+            const MAX_LOCKS_PER_BLOCK: usize = 20;
+
             let current_block: u32 =
                 frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
 
-            // Collect expired locks (use collect to avoid borrow issues with iterator)
+            // Collect at most MAX_LOCKS_PER_BLOCK EXPIRED entries from storage.
+            // CRITICAL FIX: filter BEFORE take to ensure we process expired locks
+            // even if they are scattered throughout storage.
+            // Old pattern: .take(N).filter() could skip expired items beyond position N.
+            // New pattern: .filter().take(N) ensures we process all expired items fairly.
             let expired_locks: Vec<(H256, atomic_lock::AtomicLock<BalanceOf<T>, T::AccountId>)> =
                 AtomicLocks::<T>::iter()
                     .filter(|(_, lock)| lock.is_expired(current_block))
+                    .take(MAX_LOCKS_PER_BLOCK)
                     .collect();
 
             // Process each expired lock
@@ -654,6 +677,14 @@ pub mod pallet {
                 Error::<T>::NotAuthorized
             );
 
+            // Bounds-check leg_index against the declared leg count.
+            // Without this, an attacker could create escrows at arbitrary indices
+            // and increment legs_locked beyond legs_total.
+            ensure!(
+                leg_index < intent.legs_total,
+                Error::<T>::InvalidSettlementLeg
+            );
+
             // Check escrow doesn't exist
             ensure!(
                 !EscrowStates::<T>::contains_key(intent_id, leg_index),
@@ -726,12 +757,16 @@ pub mod pallet {
             chain: ExternalChainId,
             proof: SettlementProof,
         ) -> DispatchResult {
-            let _who = ensure_signed(origin)?;
+            let who = ensure_signed(origin)?;
 
-            // Verify intent exists
+            // Verify intent exists and caller is party to the intent.
+            // Only the maker or taker may advance proof state to prevent third-party
+            // actors from triggering state transitions for intents they are not party to.
+            let intent =
+                SettlementIntents::<T>::get(intent_id).ok_or(Error::<T>::IntentNotFound)?;
             ensure!(
-                SettlementIntents::<T>::contains_key(intent_id),
-                Error::<T>::IntentNotFound
+                who == intent.maker || who == intent.taker,
+                Error::<T>::NotAuthorized
             );
 
             let state = IntentStates::<T>::get(intent_id);
@@ -741,6 +776,18 @@ pub mod pallet {
                     IntentState::FullyFunded | IntentState::ExecutingExternal
                 ),
                 Error::<T>::InvalidIntentState
+            );
+
+            // Enforce chain-specific finality depth before accepting external proofs.
+            let finality_cfg = ChainFinality::<T>::get(chain.clone())
+                .unwrap_or_else(|| finality::FinalityOracle::default_config(chain.clone()));
+            ensure!(
+                proof.confirmations >= finality_cfg.confirmations_required,
+                Error::<T>::InvalidProof
+            );
+            ensure!(
+                proof.proof_type == finality_cfg.proof_type,
+                Error::<T>::InvalidProof
             );
 
             // Verify proof based on chain type
@@ -931,12 +978,16 @@ pub mod pallet {
             merkle_proof: Vec<H256>,
             block_header: BtcBlockHeader,
         ) -> DispatchResult {
-            let _who = ensure_signed(origin)?;
+            let who = ensure_signed(origin)?;
 
-            // Verify intent exists
+            // Verify intent exists and restrict proof submission to intent parties.
+            // Only the maker or taker may submit a BTC proof to prevent DoS or
+            // replay attacks from arbitrary accounts.
+            let intent =
+                SettlementIntents::<T>::get(intent_id).ok_or(Error::<T>::IntentNotFound)?;
             ensure!(
-                SettlementIntents::<T>::contains_key(intent_id),
-                Error::<T>::IntentNotFound
+                who == intent.maker || who == intent.taker,
+                Error::<T>::NotAuthorized
             );
 
             // Verify merkle proof
@@ -956,7 +1007,8 @@ pub mod pallet {
                 Error::<T>::InsufficientBtcConfirmations
             );
 
-            // Store UTXO state
+            // Store UTXO state keyed by (txid, vout) to correctly handle multiple
+            // outputs from the same transaction without overwriting each other.
             let utxo_state = BtcUtxoState {
                 txid: btc_txid,
                 vout,
@@ -966,7 +1018,12 @@ pub mod pallet {
                 spent: false,
                 block_hash,
             };
-            BtcUtxos::<T>::insert(btc_txid, utxo_state);
+            // Prevent spending an already-registered UTXO.
+            ensure!(
+                !BtcUtxos::<T>::contains_key(btc_txid, vout),
+                Error::<T>::EscrowAlreadyExists
+            );
+            BtcUtxos::<T>::insert(btc_txid, vout, utxo_state);
 
             Self::deposit_event(Event::BtcUtxoConfirmed {
                 intent_id,
@@ -980,10 +1037,13 @@ pub mod pallet {
         }
 
         /// Submit BTC block header (for SPV)
+        ///
+        /// Restricted to privileged origin to prevent arbitrary accounts from
+        /// pushing invalid/competing header branches into local state.
         #[pallet::call_index(11)]
         #[pallet::weight(T::SettlementWeightInfo::update_btc_block_header())]
         pub fn submit_btc_header(origin: OriginFor<T>, header: BtcBlockHeader) -> DispatchResult {
-            let _who = ensure_signed(origin)?;
+            ensure_root(origin)?;
 
             // Verify proof of work
             let is_valid = Self::verify_btc_pow(&header)?;
@@ -1214,38 +1274,20 @@ pub mod pallet {
         /// - [32 bytes] Recent blockhash
         /// - [remaining] Instructions (each: program_id_index + accounts + data)
         fn verify_svm_proof(proof: &SettlementProof) -> Result<bool, DispatchError> {
-            // Validate proof type
-            let proof_type_ok = matches!(
-                proof.proof_type,
-                ProofType::SolanaProof | ProofType::LightClient
-            );
-            if !proof_type_ok {
-                return Ok(false);
-            }
-
-            // Validate proof structure
-            if proof.merkle_proof.is_empty() || proof.receipt_data.is_empty() {
-                return Ok(false);
-            }
-            if proof.confirmations < 1 {
-                return Ok(false);
-            }
-
-            // Parse transaction data
-            let tx_data = &proof.receipt_data[..];
-            if tx_data.len() < 2 {
-                return Ok(false);
-            }
-
-            // Validate transaction structure
-            if !Self::is_valid_solana_transaction(tx_data) {
-                return Ok(false);
-            }
-
-            // Verify block_hash matches one of the merkle proof entries
-            // The block_hash should be recoverable from the recent_blockhash field
-            // For now, we just verify the structure and confirm count
-            Ok(true)
+            // CRITICAL SECURITY FIX: SVM proof verification is currently incomplete.
+            // The original implementation accepted ANY proof structure without performing
+            // cryptographic validation of the Solana transaction or block hash.
+            //
+            // INTERIM FIX (Production): Reject SVM proofs until proper cryptographic validation
+            // (signature verification + light-client integration) is implemented.
+            //
+            // PROPER FIX (Future): Implement:
+            //   1. Ed25519 signature verification of all transaction signers
+            //   2. Light-client integration to verify block_hash against Solana's recent blockhashes
+            //   3. Merkle proof validation against the block's transaction root
+            //
+            // For now, return Ok(false) to prevent spoofed finality claims on Solana.
+            Ok(false)
         }
 
         /// Validate Solana transaction structure

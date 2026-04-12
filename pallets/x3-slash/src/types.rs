@@ -53,7 +53,7 @@ pub struct SlashRecord<AccountId> {
     /// Amount slashed.
     pub amount_slashed: u128,
     /// Reason for the slash (encoded).
-    pub reason: sp_std::vec::Vec<u8>,
+    pub reason: BoundedVec<u8, ConstU32<256>>,
     /// Block at which the slash was executed.
     pub slashed_at: u32,
 }

@@ -18,6 +18,7 @@
 //! the bytes are treated as a raw instruction stream.
 
 use crate::{SvmConfig, SvmError, SvmExecutionResult, SvmResult};
+use ed25519_dalek::VerifyingKey;
 use sp_std::vec;
 use sp_std::vec::Vec;
 
@@ -209,6 +210,20 @@ impl<'a> Vm<'a> {
         if (r as usize) < NREG {
             self.regs[r as usize] = v;
         }
+    }
+
+    #[inline(always)]
+    fn charge_fuel(&mut self, cost: u64) -> Result<(), SvmError> {
+        if self.fuel < cost {
+            return Err(SvmError::OutOfComputeUnits);
+        }
+        self.fuel -= cost;
+        Ok(())
+    }
+
+    #[inline(always)]
+    fn is_on_ed25519_curve(pubkey: &[u8; 32]) -> bool {
+        VerifyingKey::from_bytes(pubkey).is_ok()
     }
 
     /// Read `size` bytes from memory.
@@ -617,6 +632,7 @@ impl<'a> Vm<'a> {
                 if n == 0 {
                     return Ok(0);
                 }
+                self.charge_fuel(n as u64)?;
                 let data = self.mem_read_bytes(src, n)?;
                 self.mem_write_bytes(dst, &data)?;
                 Ok(0)
@@ -629,6 +645,7 @@ impl<'a> Vm<'a> {
                 if n == 0 {
                     return Ok(0);
                 }
+                self.charge_fuel(n as u64)?;
                 // Read first, then write — handles overlapping regions
                 let data = self.mem_read_bytes(src, n)?;
                 self.mem_write_bytes(dst, &data)?;
@@ -644,6 +661,7 @@ impl<'a> Vm<'a> {
                     self.mem_write(result_ptr, 0i32 as u64, 4)?;
                     return Ok(0);
                 }
+                self.charge_fuel(n as u64)?;
                 let s1 = self.mem_read_bytes(s1_ptr, n)?;
                 let s2 = self.mem_read_bytes(s2_ptr, n)?;
                 let mut cmp_result: i32 = 0;
@@ -664,6 +682,7 @@ impl<'a> Vm<'a> {
                 if n == 0 {
                     return Ok(0);
                 }
+                self.charge_fuel(n as u64)?;
                 let data = vec![val; n];
                 self.mem_write_bytes(dst, &data)?;
                 Ok(0)
@@ -694,7 +713,11 @@ impl<'a> Vm<'a> {
                 preimage.extend_from_slice(&program_id);
                 preimage.extend_from_slice(b"ProgramDerivedAddress");
 
+                self.charge_fuel(100)?;
                 let hash = sp_io::hashing::sha2_256(&preimage);
+                if Self::is_on_ed25519_curve(&hash) {
+                    return Ok(1);
+                }
                 self.mem_write_bytes(result_ptr, &hash)?;
                 Ok(0)
             }
@@ -708,6 +731,13 @@ impl<'a> Vm<'a> {
                 let bump_ptr = self.regs[5];
                 let program_id = self.mem_read_bytes(program_id_ptr, 32)?;
 
+                // Solana MAX_SEEDS = 16; reject programs that pass more to prevent
+                // unbounded memory reads and compute amplification.
+                const MAX_SEEDS: u64 = 16;
+                if seeds_len > MAX_SEEDS {
+                    return Ok(1);
+                }
+
                 // Collect seeds
                 let mut seed_data_list: Vec<Vec<u8>> = Vec::new();
                 for i in 0..seeds_len {
@@ -720,8 +750,20 @@ impl<'a> Vm<'a> {
                     seed_data_list.push(self.mem_read_bytes(ptr, len)?);
                 }
 
-                // Try bump seeds 255..0
+                // Try bump seeds 255..0, debiting compute units per retry to bound
+                // the wall-clock cost of the syscall.
+                //
+                // Each iteration runs sha2_256 over (seeds + bump + program_id + nonce)
+                // which is ~85 CU on Solana.  We charge conservatively per iteration.
+                const BUMP_ITER_COST: u64 = 100;
+
                 for bump in (0u8..=255).rev() {
+                    // Debit fuel before the hash to avoid free work on the last iteration.
+                    if self.fuel < BUMP_ITER_COST {
+                        return Err(SvmError::OutOfComputeUnits);
+                    }
+                    self.fuel -= BUMP_ITER_COST;
+
                     let mut preimage = Vec::new();
                     for seed in &seed_data_list {
                         preimage.extend_from_slice(seed);
@@ -732,9 +774,9 @@ impl<'a> Vm<'a> {
 
                     let hash = sp_io::hashing::sha2_256(&preimage);
                     // A valid PDA must NOT lie on the ed25519 curve.
-                    // In our interpreter we accept any hash since we don't have
-                    // a curve-check library in no_std.  This is safe because
-                    // the on-chain state root captures the exact derived address.
+                    if Self::is_on_ed25519_curve(&hash) {
+                        continue;
+                    }
                     self.mem_write_bytes(address_ptr, &hash)?;
                     self.mem_write(bump_ptr, bump as u64, 1)?;
                     return Ok(0);
@@ -800,11 +842,13 @@ impl<'a> Vm<'a> {
             // sol_get_stack_height
             0xa2609a6c => Ok(0), // depth 0 = top level
 
-            // Any unrecognised syscall: return 0 (success)
+            // Any unrecognised syscall: fail the program.
+            // Solana rejects unknown syscalls at link-time; we do the same at
+            // runtime to prevent programs from relying on undefined behavior.
             _ => {
                 #[cfg(feature = "std")]
-                log::trace!("Unknown SVM syscall: {:#010x}", id);
-                Ok(0)
+                log::warn!("Unknown SVM syscall: {:#010x} — aborting execution", id);
+                Err(SvmError::ExecutionFailed)
             }
         }
     }
@@ -817,14 +861,33 @@ impl<'a> Vm<'a> {
         let vals_len = self.regs[2];
         let result_ptr = self.regs[3];
 
+        // Bound the number of SolBytes entries to prevent reading unbounded memory
+        // and to limit compute cost. Solana caps seed count at MAX_SEEDS (16).
+        const MAX_HASH_ENTRIES: u64 = 32;
+        if vals_len > MAX_HASH_ENTRIES {
+            return Ok(1); // Return error code to the program (not a fatal interpreter error)
+        }
+
         let mut data = Vec::new();
         for idx in 0..vals_len {
             let entry_addr = vals_ptr + idx * 16;
             let ptr = self.mem_read(entry_addr, 8)?;
             let len = self.mem_read(entry_addr + 8, 8)? as usize;
+            // Solana caps individual seed/data chunk at 1 KB.
+            if len > 1024 {
+                return Ok(1);
+            }
             let chunk = self.mem_read_bytes(ptr, len)?;
             data.extend_from_slice(&chunk);
         }
+
+        // Debit compute units proportional to data hashed.
+        // Approximation of Solana's cost model: 85 CU base + 0.5 CU/byte.
+        let cost: u64 = 85 + (data.len() as u64 / 2).max(1);
+        if self.fuel < cost {
+            return Err(SvmError::OutOfComputeUnits);
+        }
+        self.fuel -= cost;
 
         let hash = hash_fn(&data);
         self.mem_write_bytes(result_ptr, &hash)?;

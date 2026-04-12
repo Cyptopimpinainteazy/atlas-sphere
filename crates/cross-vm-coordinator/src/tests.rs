@@ -85,6 +85,7 @@ fn test_phase_transitions_happy_path() {
         created_at_block: 100,
         confirmations_required: 50,
         confirmations: 0,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_fast(&session_id, fast_htlc, now)
@@ -104,6 +105,7 @@ fn test_phase_transitions_happy_path() {
         created_at_block: 18000000,
         confirmations_required: 12,
         confirmations: 0,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_slow(&session_id, slow_htlc, now)
@@ -189,6 +191,7 @@ fn test_flash_leg_revert_aborts_swap() {
         created_at_block: 0,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_fast(&session_id, fast, now)
@@ -208,6 +211,7 @@ fn test_flash_leg_revert_aborts_swap() {
         created_at_block: 0,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_slow(&session_id, slow, now)
@@ -253,6 +257,7 @@ fn test_timelock_near_expiry_prevents_execution() {
         created_at_block: 0,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_fast(&session_id, fast, now)
@@ -272,6 +277,7 @@ fn test_timelock_near_expiry_prevents_execution() {
         created_at_block: 0,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_slow(&session_id, slow, now)
@@ -581,6 +587,7 @@ fn test_htlc_wrong_secret_is_rejected() {
         created_at_block: 100,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_fast(&session_id, fast_htlc, now)
@@ -599,6 +606,7 @@ fn test_htlc_wrong_secret_is_rejected() {
         created_at_block: 100,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_slow(&session_id, slow_htlc, now)
@@ -650,6 +658,7 @@ fn test_htlc_secret_replay_same_session_is_rejected() {
         created_at_block: 100,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_fast(&session_id, fast_htlc, now)
@@ -668,6 +677,7 @@ fn test_htlc_secret_replay_same_session_is_rejected() {
         created_at_block: 100,
         confirmations_required: 1,
         confirmations: 1,
+        params_hash: [0u8; 32],
     };
     coordinator
         .record_htlc_slow(&session_id, slow_htlc, now)
