@@ -1,3 +1,9 @@
+//! Atomic Swap Orchestrator for cross-VM settlement
+//!
+//! This crate provides the coordination layer for atomic swaps implementing
+//! the 3-Phase Atomic Commit (3PAC) protocol, with GPU acceleration for
+//! verification and commitment phases.
+
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use sp_core::{hashing::sha2_256, H256};

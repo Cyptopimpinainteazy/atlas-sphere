@@ -5,6 +5,7 @@
 //! Cross-chain bridges: Ethereum, Solana, Cosmos, IBC, L2, Bitcoin, governance, and fee abstraction.
 
 pub mod bitcoin_htlc;
+pub mod btc_spv;
 pub mod cross_chain_account;
 pub mod cross_chain_proofs;
 pub mod ethereum_bridge;
@@ -15,6 +16,7 @@ pub mod security_council;
 pub mod wormhole_adapter;
 
 pub use bitcoin_htlc::{BitcoinAddress, BitcoinHTLC, HTLCContract, Preimage};
+pub use btc_spv::{BitcoinBlockHeader, BtcBlockchain, BtcTransaction, MerkleProof};
 pub use cross_chain_account::{CrossChainAccount, CrossChainAccountManager, DerivedAddress};
 pub use cross_chain_proofs::*;
 pub use ethereum_bridge::{BridgeDeposit, ERC20Token, EthereumBridge};

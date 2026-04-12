@@ -48,6 +48,7 @@ use pallet_transaction_payment::CurrencyAdapter;
 use pallet_treasury;
 use pallet_x3_kernel;
 use pallet_x3_settlement_engine;
+use pallet_x3_atomic_kernel;
 use pallet_x3_verifier;
 use scale_info::TypeInfo;
 use sp_api::impl_runtime_apis;
@@ -230,8 +231,8 @@ parameter_types! {
     /// Maximum transactions in a single scheduler witness (prevents DoS).
     pub const FraudProofMaxTxCount: u32 = 256;
     /// Blocks within which a fraud proof must be submitted after the disputed block.
-    /// At 200 ms/block this is approximately 24 hours.
-    pub const FraudProofDisputeWindowBlocks: u32 = 7_200;
+    /// At 200 ms/block this is 24 hours (432_000 × 0.2s = 86_400s).
+    pub const FraudProofDisputeWindowBlocks: u32 = 432_000;
     /// Reward paid to the reporter on accepted fraud proof (1 ATLAS).
     pub const FraudProofReporterReward: Balance = X3;
 }
@@ -298,6 +299,7 @@ construct_runtime!(
         FraudProofs: crate::fraud_proofs::pallet::pallet,
         X3Sequencer: pallet_x3_sequencer,
         X3Da: pallet_x3_da,
+        X3AtomicKernel: pallet_x3_atomic_kernel,
     }
 );
 
@@ -332,6 +334,7 @@ construct_runtime!(
         FraudProofs: crate::fraud_proofs::pallet::pallet,
         X3Sequencer: pallet_x3_sequencer,
         X3Da: pallet_x3_da,
+        X3AtomicKernel: pallet_x3_atomic_kernel,
     }
 );
 
@@ -438,8 +441,8 @@ impl pallet_session::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type ValidatorId = <Self as frame_system::Config>::AccountId;
     type ValidatorIdOf = ConvertInto;
-    type ShouldEndSession = pallet_session::PeriodicSessions<ConstU32<6>, ConstU32<0>>;
-    type NextSessionRotation = pallet_session::PeriodicSessions<ConstU32<6>, ConstU32<0>>;
+    type ShouldEndSession = pallet_session::PeriodicSessions<ConstU32<1800>, ConstU32<0>>;
+    type NextSessionRotation = pallet_session::PeriodicSessions<ConstU32<1800>, ConstU32<0>>;
     type SessionManager = ();
     type SessionHandler = <SessionKeys as sp_runtime::traits::OpaqueKeys>::KeyTypeIdProviders;
     type Keys = SessionKeys;
@@ -638,6 +641,90 @@ impl pallet_atomic_trade_engine::Config for Runtime {
     type DefaultTradeSvmComputeLimit = DefaultTradeSvmComputeLimit;
     type DefaultTradeX3GasLimit = DefaultTradeX3GasLimit;
     type AmmRegistrarOrigin = EnsureRootOrHalfCouncil;
+    type Settlement = SettlementAdapter;
+}
+
+/// Real settlement adapter that wires trade-engine batches into the
+/// X3 Settlement Engine pallet (create intent + lock escrow per leg).
+pub struct SettlementAdapter;
+
+impl pallet_atomic_trade_engine::SettlementBridge<AccountId> for SettlementAdapter {
+    fn register_completed_batch(
+        maker: &AccountId,
+        batch_id: sp_core::H256,
+        secret_hash: sp_core::H256,
+        legs: &[(pallet_atomic_trade_engine::VmType, u128)],
+    ) -> Result<sp_core::H256, sp_runtime::DispatchError> {
+        use pallet_x3_settlement_engine::types::{AssetSpec, ExternalChainId, TokenId};
+
+        // The taker defaults to the batch origin for internal cross-VM swaps.
+        // In a full orderbook scenario the taker comes from the match engine.
+        let taker = maker.clone();
+
+        // Map total amounts from legs into the two settlement asset specs.
+        let total_output: u128 = legs.iter().map(|(_, amt)| amt).sum();
+        let total_input: u128 = legs.iter().map(|(_, amt)| amt).sum();
+
+        let asset_a = AssetSpec {
+            chain: ExternalChainId::X3Native,
+            token: TokenId::Native,
+            amount: total_input,
+        };
+        let asset_b = AssetSpec {
+            chain: ExternalChainId::X3Native,
+            token: TokenId::Native,
+            amount: total_output,
+        };
+
+        // Create intent via the settlement engine's internal API.
+        // We call the dispatchable through a signed origin.
+        // Read the nonce *before* create_intent increments TotalIntents.
+        let intent_nonce = pallet_x3_settlement_engine::TotalIntents::<Runtime>::get();
+
+        pallet_x3_settlement_engine::Pallet::<Runtime>::create_intent(
+            frame_system::RawOrigin::Signed(maker.clone()).into(),
+            taker,
+            asset_a,
+            asset_b,
+            secret_hash,
+            None, // Use default timeout
+        )?;
+
+        // Derive the intent_id the same way the settlement engine does.
+        // Must use same nonce that create_intent used (which was TotalIntents before increment).
+        let intent_id = pallet_x3_settlement_engine::Pallet::<Runtime>::generate_intent_id(
+            maker,
+            maker, // taker == maker for self-swaps
+            intent_nonce,
+        );
+
+        // Lock escrow for each leg.
+        for (i, (vm_type, amount_out)) in legs.iter().enumerate() {
+            let chain = match vm_type {
+                pallet_atomic_trade_engine::VmType::Evm => ExternalChainId::Ethereum,
+                pallet_atomic_trade_engine::VmType::Svm => ExternalChainId::Solana,
+                _ => ExternalChainId::X3Native,
+            };
+
+            // Best-effort escrow locking; log failures but don't abort.
+            if let Err(e) = pallet_x3_settlement_engine::Pallet::<Runtime>::lock_escrow(
+                frame_system::RawOrigin::Signed(maker.clone()).into(),
+                intent_id,
+                i as u32,
+                chain,
+                *amount_out,
+                batch_id.as_bytes().to_vec(),
+            ) {
+                frame_support::log::warn!(
+                    target: "trade-engine",
+                    "Lock escrow failed for intent {:?} leg {}: {:?}",
+                    intent_id, i, e,
+                );
+            }
+        }
+
+        Ok(intent_id)
+    }
 }
 
 #[cfg(feature = "std")]
@@ -1411,6 +1498,31 @@ impl pallet_x3_da::Config for Runtime {
     type PerByteFee = DaPerByteFee;
     type MaxShardProofs = DaMaxShardProofs;
     type RetentionBlocks = DaRetentionBlocks;
+}
+
+// Blanket impl: enables off-chain workers for any pallet using
+// `frame_system::offchain::SendTransactionTypes<Call<Self>>`.
+impl<LocalCall> frame_system::offchain::SendTransactionTypes<LocalCall> for Runtime
+where
+    RuntimeCall: From<LocalCall>,
+{
+    type Extrinsic = UncheckedExtrinsic;
+    type OverarchingCall = RuntimeCall;
+}
+
+parameter_types! {
+    pub const AtomicKernelMinBond: u128 = 1_000_000_000_000; // 1 X3 (12 decimals)
+    pub const AtomicKernelMaxLegsPerBundle: u32 = 16;
+    pub const AtomicKernelBundleDeadlineBlocks: BlockNumber = 100;
+}
+
+impl pallet_x3_atomic_kernel::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = Balances;
+    type WeightInfo = pallet_x3_atomic_kernel::weights::SubstrateWeight<Runtime>;
+    type MinBond = AtomicKernelMinBond;
+    type MaxLegsPerBundle = AtomicKernelMaxLegsPerBundle;
+    type BundleDeadlineBlocks = AtomicKernelBundleDeadlineBlocks;
 }
 
 // Session trait implementations for minimal runtime

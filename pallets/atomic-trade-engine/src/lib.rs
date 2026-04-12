@@ -80,6 +80,43 @@ use sp_io::hashing::blake2_256;
 use sp_runtime::{DispatchError, RuntimeDebug, SaturatedConversion};
 use sp_std::prelude::*;
 
+/// Bridge to the settlement engine.
+///
+/// The trade engine calls these methods after a batch completes
+/// successfully.  The runtime wires this to `pallet_x3_settlement`
+/// in production and a no-op adapter in tests.
+pub trait SettlementBridge<AccountId> {
+    /// Register a completed batch with the settlement layer.
+    ///
+    /// Implementations should create a settlement intent and lock
+    /// escrow for each leg.  `secret_hash` is blake2-256 of
+    /// `(batch_id, block_number)` — callers generate it.
+    fn register_completed_batch(
+        maker: &AccountId,
+        batch_id: H256,
+        secret_hash: H256,
+        legs: &[(VmType, u128)], // (vm_type, amount_out) per leg
+    ) -> Result<H256, DispatchError>; // returns intent_id
+
+    /// Release / refund escrow for a failed or rolled-back batch.
+    fn release_batch(_batch_id: H256) -> Result<(), DispatchError> {
+        Ok(())
+    }
+}
+
+/// No-op settlement bridge — used in tests or when settlement is disabled.
+pub struct NoOpSettlementBridge;
+impl<AccountId> SettlementBridge<AccountId> for NoOpSettlementBridge {
+    fn register_completed_batch(
+        _maker: &AccountId,
+        _batch_id: H256,
+        _secret_hash: H256,
+        _legs: &[(VmType, u128)],
+    ) -> Result<H256, DispatchError> {
+        Ok(H256::zero())
+    }
+}
+
 /// Maximum number of legs in a single trade batch
 pub const MAX_TRADE_LEGS: u32 = 16;
 
@@ -159,6 +196,10 @@ pub mod pallet {
 
         /// Origin allowed to register AMM adapters.
         type AmmRegistrarOrigin: EnsureOrigin<<Self as frame_system::Config>::RuntimeOrigin>;
+
+        /// Settlement bridge for post-execution settlement intent creation.
+        /// Use `NoOpSettlementBridge` in tests or when settlement is not needed.
+        type Settlement: SettlementBridge<<Self as frame_system::Config>::AccountId>;
     }
 
     /// Active trade batches indexed by batch_id.
@@ -626,6 +667,32 @@ pub mod pallet {
                     let total_input: u128 = batch.legs.iter().map(|l| l.amount_in).sum();
                     TotalVolume::<T>::mutate(|v| *v = v.saturating_add(total_input));
 
+                    // --- Settlement bridge: register completed batch ---
+                    let secret_seed = (batch_id.as_bytes(), current_block.to_le_bytes());
+                    let secret_hash =
+                        H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
+
+                    let legs_summary: Vec<(VmType, u128)> = batch
+                        .legs
+                        .iter()
+                        .map(|l| (l.vm_type, l.actual_amount_out.unwrap_or(0)))
+                        .collect();
+
+                    // Best-effort: log but don't fail the batch if settlement wiring fails
+                    if let Err(e) = T::Settlement::register_completed_batch(
+                        &who,
+                        batch_id,
+                        secret_hash,
+                        &legs_summary,
+                    ) {
+                        log::warn!(
+                            target: "trade-engine",
+                            "Settlement registration failed for batch {:?}: {:?}",
+                            batch_id,
+                            e,
+                        );
+                    }
+
                     Self::deposit_event(Event::TradeBatchCompleted {
                         batch_id,
                         total_input,
@@ -1077,6 +1144,33 @@ pub mod pallet {
 
                     let total_input: u128 = batch.legs.iter().map(|l| l.amount_in).sum();
                     TotalVolume::<T>::mutate(|v| *v = v.saturating_add(total_input));
+
+                    // --- Settlement bridge: register completed batch ---
+                    let current_blk: u64 =
+                        frame_system::Pallet::<T>::block_number().saturated_into();
+                    let secret_seed = (batch_id.as_bytes(), current_blk.to_le_bytes());
+                    let secret_hash =
+                        H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
+
+                    let legs_summary: Vec<(VmType, u128)> = batch
+                        .legs
+                        .iter()
+                        .map(|l| (l.vm_type, l.actual_amount_out.unwrap_or(0)))
+                        .collect();
+
+                    if let Err(e) = T::Settlement::register_completed_batch(
+                        &who,
+                        batch_id,
+                        secret_hash,
+                        &legs_summary,
+                    ) {
+                        log::warn!(
+                            target: "trade-engine",
+                            "Settlement registration failed for kernel-v2 batch {:?}: {:?}",
+                            batch_id,
+                            e,
+                        );
+                    }
 
                     Self::deposit_event(Event::TradeBatchExecutedViaKernelComitV2 {
                         batch_id,
@@ -1539,6 +1633,11 @@ pub mod pallet {
         }
 
         /// Rollback to a specific checkpoint.
+        ///
+        /// Restores batch leg statuses and amounts to match the state captured
+        /// at `checkpoint_index`.  For EVM/SVM state the kernel's
+        /// `with_transaction()` handles on-chain storage rollback; this
+        /// function handles the trade-engine-level bookkeeping.
         fn rollback_to_checkpoint(
             batch_id: H256,
             checkpoint_index: u32,
@@ -1550,8 +1649,29 @@ pub mod pallet {
                 Error::<T>::CheckpointNotFound
             );
 
-            // In a full implementation, we would restore state from the checkpoint
-            // For now, we emit the event and mark the rollback
+            let checkpoint = &checkpoints[checkpoint_index as usize];
+
+            // Restore batch leg states to the snapshot captured at checkpoint time.
+            // Legs completed *after* the checkpoint are reset to Pending.
+            if let Some(mut batch) = TradeBatches::<T>::get(batch_id) {
+                for (i, leg) in batch.legs.iter_mut().enumerate() {
+                    if (i as u32) >= checkpoint.completed_legs {
+                        // This leg was executed after the checkpoint — roll it back
+                        leg.status = TradeLegStatus::Pending;
+                        leg.actual_amount_out = None;
+                        leg.gas_used = 0;
+                    }
+                }
+                batch.status = BatchStatus::Executing; // back to executing state
+                batch.total_gas_used = 0;
+                TradeBatches::<T>::insert(batch_id, batch);
+            }
+
+            // Trim checkpoints created after the rollback point
+            Checkpoints::<T>::mutate(batch_id, |cps| {
+                cps.truncate((checkpoint_index as usize) + 1);
+            });
+
             Self::deposit_event(Event::RollbackExecuted {
                 batch_id,
                 checkpoint_index,

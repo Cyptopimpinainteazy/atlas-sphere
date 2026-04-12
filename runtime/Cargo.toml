@@ -61,6 +61,7 @@ pallet-depin-marketplace = { path = "../pallets/depin-marketplace", default-feat
 pallet-private-execution = { path = "../pallets/private-execution", default-features = false }
 pallet-x3-sequencer = { path = "../pallets/x3-sequencer", default-features = false }
 pallet-x3-da = { path = "../pallets/x3-da", default-features = false }
+pallet-x3-atomic-kernel = { path = "../pallets/x3-atomic-kernel", default-features = false }
 x3-svm-integration = { path = "../crates/svm-integration", default-features = false }
 
 sp-api = { workspace = true, default-features = false }
@@ -134,6 +135,7 @@ std = [
 	"pallet-private-execution/std",
 	"pallet-x3-sequencer/std",
 	"pallet-x3-da/std",
+	"pallet-x3-atomic-kernel/std",
 	"x3-svm-integration/std",
 	"sp-api/std",
 	"sp-block-builder/std",

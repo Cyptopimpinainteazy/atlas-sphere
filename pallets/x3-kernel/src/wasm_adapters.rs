@@ -27,7 +27,16 @@ impl EvmExecutorAdapter for WasmEvmAdapter {
         if payload.is_empty() {
             return Err(DispatchError::Other("Empty EVM payload"));
         }
-        x3_evm_integration::mini_evm::execute_evm(payload, gas_limit)
+        let evm_config = x3_evm_integration::EvmConfig {
+            gas_limit,
+            ..x3_evm_integration::EvmConfig::default()
+        };
+        x3_evm_integration::mini_evm::execute_evm(
+            payload,
+            sp_core::H160::zero(), // caller — pallet fills in from origin
+            sp_core::U256::zero(), // value — pallet fills in from extrinsic
+            &evm_config,
+        )
             .map(|res| ExecutionReceipt {
                 version: crate::EXECUTION_RECEIPT_VERSION,
                 success: res.success,

@@ -87,7 +87,8 @@ pub mod pallet {
     };
     use frame_system::offchain::SubmitTransaction;
     use frame_system::pallet_prelude::*;
-    use sp_core::{hashing::sha2_256, H256};
+    use sp_core::H256;
+    use sp_io::hashing::sha2_256;
     use sp_runtime::offchain::StorageKind;
     use sp_runtime::traits::{SaturatedConversion, Saturating};
     use sp_runtime::transaction_validity::{
@@ -205,6 +206,10 @@ pub mod pallet {
         pub deadline_block: BlockNumberFor<T>,
         /// Block number when the bundle was submitted.
         pub submitted_at: BlockNumberFor<T>,
+        /// The account that claimed this bundle via `assign_bundle_executor`.
+        /// `None` while the bundle is in `Pending` status.
+        /// Unsigned finalization is only accepted when this is `Some`.
+        pub executor: Option<T::AccountId>,
     }
 
     // ── Pallet ────────────────────────────────────────────────────────────────
@@ -508,6 +513,7 @@ pub mod pallet {
                 status: BundleStatus::Pending,
                 deadline_block: deadline,
                 submitted_at: now,
+                executor: None,
             };
 
             Bundles::<T>::insert(bundle_id, record);
@@ -642,6 +648,7 @@ pub mod pallet {
             ensure!(now <= record.deadline_block, Error::<T>::DeadlineExpired);
 
             record.status = BundleStatus::Executing;
+            record.executor = Some(executor.clone());
             Bundles::<T>::insert(bundle_id, &record);
 
             Self::deposit_event(Event::BundleAssigned {
@@ -751,11 +758,15 @@ pub mod pallet {
                 if *receipt_root == H256::zero() {
                     return InvalidTransaction::BadProof.into();
                 }
-                // Bundle must exist and be finalizable
+                // Bundle must exist, be in Executing state (not Pending!), and have
+                // an assigned executor.  Requiring Executing guarantees that a signed
+                // `assign_bundle_executor` call ran first, binding a real Substrate
+                // account to the bundle.  This prevents anonymous peers from finalizing
+                // bundles they never claimed.
                 match Bundles::<T>::get(bundle_id) {
                     Some(record)
-                        if record.status == BundleStatus::Pending
-                            || record.status == BundleStatus::Executing =>
+                        if record.status == BundleStatus::Executing
+                            && record.executor.is_some() =>
                     {
                         // Include finality_cert bytes in the dedup tag so that a zero-cert and a
                         // real-cert tx for the same bundle are treated as distinct (the real one
@@ -778,6 +789,21 @@ pub mod pallet {
             } else if let Call::record_flash_finality_anchor { block_num, cert } = call {
                 if *cert == H256::zero() {
                     return InvalidTransaction::BadProof.into();
+                }
+                // Block recency check: anchors must be for blocks within a
+                // reasonable window of the current chain head.  This prevents
+                // attackers from planting anchors for far-future blocks or for
+                // ancient blocks that are no longer relevant.
+                let current_block: u64 = <frame_system::Pallet<T>>::block_number()
+                    .try_into()
+                    .unwrap_or(0u64);
+                // Allow anchors for blocks up to 50 blocks in the past and
+                // up to 5 blocks in the future (accounts for propagation delay).
+                if *block_num > current_block.saturating_add(5) {
+                    return InvalidTransaction::Future.into();
+                }
+                if current_block.saturating_sub(50) > *block_num {
+                    return InvalidTransaction::Stale.into();
                 }
                 ValidTransaction::with_tag_prefix("X3FinalityAnchor")
                     .priority(TransactionPriority::max_value() / 8)

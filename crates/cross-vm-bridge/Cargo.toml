@@ -12,9 +12,13 @@ frame-support = { workspace = true, default-features = false }
 frame-system = { workspace = true, default-features = false }
 parity-scale-codec = { workspace = true, default-features = false, features = ["derive"] }
 scale-info = { workspace = true, default-features = false, features = ["derive"] }
+sp-core = { workspace = true, default-features = false }
+sp-io = { workspace = true, default-features = false }
 sp-runtime = { workspace = true, default-features = false }
 sp-std = { workspace = true, default-features = false }
 sha2 = { version = "0.10", default-features = false }
+blake3 = { version = "1.5", default-features = false }
+log = { version = "0.4", default-features = false }
 
 [features]
 default = ["std"]
@@ -23,6 +27,8 @@ std = [
     "frame-system/std",
     "parity-scale-codec/std",
     "scale-info/std",
+    "sp-core/std",
+    "sp-io/std",
     "sp-runtime/std",
     "sp-std/std",
 ]

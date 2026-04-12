@@ -10,6 +10,7 @@ use std::collections::HashSet;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::DispatchError;
+use blake3;
 /// Cross-VM Bridge for Atomic EVM ↔ SVM Operations
 ///
 /// Enables atomic transactions that span both virtual machines with guaranteed consistency.
@@ -148,6 +149,8 @@ pub struct PreparedOperation {
     pub nonce: u64,
     /// The operation being executed
     pub operation: CrossVmOperation,
+    /// Cryptographic hash of the operation for integrity verification
+    pub operation_hash: Vec<u8>,
     /// Current 2PC phase
     pub phase: TwoPhaseCommitPhase,
     /// Gas reserved for the EVM leg
@@ -366,6 +369,13 @@ pub struct CrossVmBridge {
     used_nonces: HashSet<u64>,
     #[cfg(not(feature = "std"))]
     used_nonces: BTreeSet<u64>,
+    /// Set of user-supplied message nonces already processed.
+    /// Prevents replay of MessageToEvm / MessageToSvm operations
+    /// that carry their own nonce field.
+    #[cfg(feature = "std")]
+    used_message_nonces: HashSet<u64>,
+    #[cfg(not(feature = "std"))]
+    used_message_nonces: BTreeSet<u64>,
     /// Bridge configuration (limits, circuit breaker)
     pub config: BridgeConfig,
 }
@@ -389,6 +399,10 @@ impl CrossVmBridge {
             used_nonces: HashSet::new(),
             #[cfg(not(feature = "std"))]
             used_nonces: BTreeSet::new(),
+            #[cfg(feature = "std")]
+            used_message_nonces: HashSet::new(),
+            #[cfg(not(feature = "std"))]
+            used_message_nonces: BTreeSet::new(),
             config: BridgeConfig::default(),
         }
     }
@@ -464,6 +478,15 @@ impl CrossVmBridge {
         self.next_nonce = self.next_nonce.saturating_add(1);
         // O(1) insert into the nonce set
         self.used_nonces.insert(nonce);
+
+        // Record user-supplied message nonces so duplicate messages are rejected.
+        match &operation {
+            CrossVmOperation::MessageToEvm { nonce: msg_nonce, .. }
+            | CrossVmOperation::MessageToSvm { nonce: msg_nonce, .. } => {
+                self.used_message_nonces.insert(*msg_nonce);
+            }
+            _ => {}
+        }
 
         self.pending_ops.push((operation, OperationState::Pending));
         Ok(nonce)
@@ -588,7 +611,7 @@ impl CrossVmBridge {
                 sender,
                 target_contract,
                 message,
-                ..
+                nonce,
             } => {
                 if sender.len() != 32 {
                     return Err(DispatchError::Other(
@@ -610,13 +633,19 @@ impl CrossVmBridge {
                         "MessageToEvm: payload exceeds 1024 bytes",
                     ));
                 }
+                // Reject replayed message nonces
+                if self.used_message_nonces.contains(nonce) {
+                    return Err(DispatchError::Other(
+                        "MessageToEvm: nonce already used (replay rejected)",
+                    ));
+                }
                 Ok(())
             }
             CrossVmOperation::MessageToSvm {
                 sender,
                 target_program,
                 message,
-                ..
+                nonce,
             } => {
                 if sender.len() != 20 {
                     return Err(DispatchError::Other(
@@ -638,6 +667,12 @@ impl CrossVmBridge {
                         "MessageToSvm: payload exceeds 1024 bytes",
                     ));
                 }
+                // Reject replayed message nonces
+                if self.used_message_nonces.contains(nonce) {
+                    return Err(DispatchError::Other(
+                        "MessageToSvm: nonce already used (replay rejected)",
+                    ));
+                }
                 Ok(())
             }
         }
@@ -645,6 +680,9 @@ impl CrossVmBridge {
 
     /// Execute pending operations (Legacy stub for tests. Do NOT use in production.)
     /// Delegates to `execute_pending_with_dispatcher(&NoOpDispatcher)`.
+    #[deprecated(
+        note = "Uses NoOpDispatcher which returns fake results. Use execute_pending_with_dispatcher() with a real dispatcher in production."
+    )]
     pub fn execute_pending(&mut self) -> Result<Vec<CrossVmResult>, DispatchError> {
         self.execute_pending_with_dispatcher(&NoOpDispatcher::testnet())
     }
@@ -1023,9 +1061,13 @@ impl CrossVmBridge {
 
             match (source_lock, dest_lock) {
                 (Ok(src_receipt), Ok(dst_receipt)) => {
+                    // Compute operation hash for integrity verification
+                    let op_bytes = operation.encode();
+                    let op_hash = blake3::hash(&op_bytes).as_bytes().to_vec();
                     let prep = PreparedOperation {
                         nonce,
                         operation: operation.clone(),
+                        operation_hash: op_hash,
                         phase: TwoPhaseCommitPhase::Prepared,
                         evm_gas_reserved: evm_gas,
                         svm_compute_reserved: svm_compute,
@@ -1098,6 +1140,8 @@ impl CrossVmBridge {
             }
 
             // Execute through dispatcher
+            // Verify operation integrity before commit
+            self.verify_operation_integrity(&prep.operation, &prep.operation_hash)?;
             match Self::dispatch_operation(dispatcher, &prep.operation) {
                 Ok(result) => {
                     prep.phase = TwoPhaseCommitPhase::Committed;
@@ -1169,6 +1213,24 @@ impl CrossVmBridge {
         let (results, commit_events) = self.commit(dispatcher)?;
         events.extend(commit_events);
         Ok((results, events))
+    }
+
+    /// Verify operation integrity by comparing computed hash with stored hash
+    /// This prevents parameter tampering between prepare and commit phases
+    fn verify_operation_integrity(
+        &self,
+        operation: &CrossVmOperation,
+        expected_hash: &[u8],
+    ) -> Result<(), DispatchError> {
+        let op_bytes = operation.encode();
+        let actual_hash = blake3::hash(&op_bytes).as_bytes().to_vec();
+        if actual_hash == expected_hash {
+            Ok(())
+        } else {
+            Err(DispatchError::Other(
+                "Operation integrity check failed: hash mismatch",
+            ))
+        }
     }
 
     /// Estimate gas/compute reservations for an operation
@@ -1651,6 +1713,7 @@ fn evm_address_from_slice(source: &[u8]) -> [u8; 20] {
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
 
@@ -2547,6 +2610,7 @@ mod integration_tests {
 // =========================================================================
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod message_passing_tests {
     use super::*;
 
@@ -2788,6 +2852,7 @@ mod message_passing_tests {
 // =========================================================================
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod kernel_dispatcher_integration_tests {
     use super::*;
     use alloc::collections::BTreeMap;

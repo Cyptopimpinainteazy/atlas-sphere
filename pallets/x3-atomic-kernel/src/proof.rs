@@ -98,7 +98,7 @@ impl PoaeProof {
     /// In EVM Solidity: `keccak256(abi.encode(bundle_id, receipt_root, finalized_block, finality_cert))`
     /// Here we use a SCALE-encoded SHA-256 for on-chain use.
     pub fn proof_hash(&self) -> H256 {
-        use sp_core::hashing::sha2_256;
+        use sp_io::hashing::sha2_256;
         let mut data = self.bundle_id.as_bytes().to_vec();
         data.extend_from_slice(self.receipt_root.as_bytes());
         data.extend_from_slice(&self.finalized_block.to_le_bytes());

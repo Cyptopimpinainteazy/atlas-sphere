@@ -49,3 +49,4 @@ std = [
     "log/std",
     "evm/std",
 ]
+test-utils = []

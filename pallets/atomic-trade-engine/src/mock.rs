@@ -295,6 +295,7 @@ impl pallet_atomic_trade_engine::Config for Test {
     type DefaultTradeX3GasLimit = DefaultTradeX3GasLimit;
     type AmmRegistrarOrigin = frame_system::EnsureRoot<u64>;
     type WeightInfo = ();
+    type Settlement = pallet_atomic_trade_engine::NoOpSettlementBridge;
 }
 
 /// Build genesis storage for testing

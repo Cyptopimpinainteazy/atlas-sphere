@@ -4,6 +4,7 @@ use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
 // - queue_operation + execute_pending (happy path)
 // - validation rejects malformed/zero-amount operations
 
+#[allow(deprecated)]
 #[test]
 fn integration_execute_transfers_and_atomic_swap() {
     let mut bridge = CrossVmBridge::new();

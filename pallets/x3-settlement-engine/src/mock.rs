@@ -6,7 +6,7 @@ use frame_support::{
     traits::{ConstBool, ConstU32, ConstU64},
 };
 use frame_system::EnsureRoot;
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
     BuildStorage,
@@ -76,6 +76,8 @@ impl pallet_timestamp::Config for Test {
 
 parameter_types! {
     pub const SomeDeposit: u128 = 1000;
+    pub const MockBridgeEvmEscrow: H160 = H160([0x00; 20]);
+    pub const MockBridgeSvmEscrow: [u8; 32] = [0x00; 32];
 }
 
 impl pallet_x3_kernel::Config for Test {
@@ -106,6 +108,8 @@ impl pallet_x3_kernel::Config for Test {
     type MaxPreparedOpsPerBlock = ConstU32<8>;
     type RequireCrossVmProof = ConstBool<false>;
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
+    type BridgeEvmEscrow = MockBridgeEvmEscrow;
+    type BridgeSvmEscrow = MockBridgeSvmEscrow;
 }
 
 impl pallet_x3_settlement_engine::Config for Test {

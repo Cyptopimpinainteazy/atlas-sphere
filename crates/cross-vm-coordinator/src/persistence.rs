@@ -8,6 +8,8 @@
 
 use crate::types::SwapSession;
 use std::collections::HashMap;
+#[cfg(feature = "offchain")]
+use std::sync::Arc;
 
 /// Persistence abstraction for swap sessions.
 ///
@@ -28,6 +30,16 @@ pub trait SessionPersistence: Send + Sync + 'static {
 
     /// Return the number of stored sessions.
     fn count(&self) -> usize;
+
+    /// Persist the global set of used HTLC secrets.
+    ///
+    /// This MUST be called after every secret insertion to prevent
+    /// cross-session replay attacks surviving a node restart.
+    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>);
+
+    /// Load the persisted set of used HTLC secrets.
+    /// Returns an empty set if nothing was previously persisted.
+    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]>;
 }
 
 // ─── InMemoryPersistence ──────────────────────────────────────────────────────
@@ -37,6 +49,7 @@ pub trait SessionPersistence: Send + Sync + 'static {
 /// Use for tests or ephemeral nodes where durability isn't needed.
 pub struct InMemoryPersistence {
     inner: std::sync::RwLock<HashMap<String, SwapSession>>,
+    used_secrets: std::sync::RwLock<std::collections::HashSet<[u8; 32]>>,
 }
 
 impl Default for InMemoryPersistence {
@@ -49,6 +62,7 @@ impl InMemoryPersistence {
     pub fn new() -> Self {
         Self {
             inner: std::sync::RwLock::new(HashMap::new()),
+            used_secrets: std::sync::RwLock::new(std::collections::HashSet::new()),
         }
     }
 }
@@ -77,6 +91,16 @@ impl SessionPersistence for InMemoryPersistence {
     fn count(&self) -> usize {
         let guard = self.inner.read().unwrap();
         guard.len()
+    }
+
+    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>) {
+        let mut guard = self.used_secrets.write().unwrap();
+        *guard = secrets.clone();
+    }
+
+    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]> {
+        let guard = self.used_secrets.read().unwrap();
+        guard.clone()
     }
 }
 
@@ -153,6 +177,19 @@ impl<O: OffchainStorageProvider> SessionPersistence for OffchainPersistence<O> {
     fn count(&self) -> usize {
         self.storage_provider.keys_with_prefix(Self::PREFIX).len()
     }
+
+    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>) {
+        let key = b"x3secrets:used".to_vec();
+        let value = serde_json::to_vec(secrets).expect("HashSet serializes");
+        self.storage_provider.set(&key, &value);
+    }
+
+    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]> {
+        let key = b"x3secrets:used".to_vec();
+        self.storage_provider.get(&key)
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default()
+    }
 }
 
 // ─── Adapter for sc_client_api::OffchainStorage ───────────────────────────────
@@ -172,6 +209,41 @@ impl<Backend: sc_client_api::OffchainStorage> SubstrateOffchainAdapter<Backend> 
             inner: Arc::new(std::sync::RwLock::new(backend)),
         }
     }
+
+    /// Key used to store the JSON-encoded list of session keys for a prefix.
+    fn index_key(prefix: &[u8]) -> Vec<u8> {
+        let mut k = b"__idx:".to_vec();
+        k.extend_from_slice(prefix);
+        k
+    }
+
+    /// Add `key` to the prefix-index stored in offchain DB.
+    fn add_to_index(storage: &mut Backend, key: &[u8]) {
+        let prefix = b"x3sess:" as &[u8]; // matches OffchainPersistence::PREFIX
+        let index_key = Self::index_key(prefix);
+        let mut keys: Vec<Vec<u8>> = storage
+            .get(sp_core::offchain::STORAGE_PREFIX, &index_key)
+            .and_then(|b| serde_json::from_slice(&b).ok())
+            .unwrap_or_default();
+        let key_vec = key.to_vec();
+        if !keys.contains(&key_vec) {
+            keys.push(key_vec);
+            let encoded = serde_json::to_vec(&keys).expect("index serializes");
+            storage.set(sp_core::offchain::STORAGE_PREFIX, &index_key, &encoded);
+        }
+    }
+
+    /// Remove `key` from the prefix-index.
+    fn remove_from_index(storage: &mut Backend, key: &[u8]) {
+        let prefix = b"x3sess:" as &[u8];
+        let index_key = Self::index_key(prefix);
+        if let Some(bytes) = storage.get(sp_core::offchain::STORAGE_PREFIX, &index_key) {
+            let mut keys: Vec<Vec<u8>> = serde_json::from_slice(&bytes).unwrap_or_default();
+            keys.retain(|k| k != key);
+            let encoded = serde_json::to_vec(&keys).expect("index serializes");
+            storage.set(sp_core::offchain::STORAGE_PREFIX, &index_key, &encoded);
+        }
+    }
 }
 
 #[cfg(feature = "offchain")]
@@ -179,9 +251,12 @@ impl<Backend: sc_client_api::OffchainStorage + Send + Sync + 'static> OffchainSt
     for SubstrateOffchainAdapter<Backend>
 {
     fn set(&self, key: &[u8], value: &[u8]) {
-        // Use PERSISTENT storage so it survives reboots
         let mut guard = self.inner.write().unwrap();
+        // Use PERSISTENT storage so it survives reboots
         guard.set(sp_core::offchain::STORAGE_PREFIX, key, value);
+        // Maintain an index of all stored keys under this prefix so that
+        // `keys_with_prefix` can enumerate them after restart.
+        Self::add_to_index(&mut *guard, key);
     }
 
     fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
@@ -192,15 +267,16 @@ impl<Backend: sc_client_api::OffchainStorage + Send + Sync + 'static> OffchainSt
     fn remove(&self, key: &[u8]) {
         let mut guard = self.inner.write().unwrap();
         guard.remove(sp_core::offchain::STORAGE_PREFIX, key);
+        Self::remove_from_index(&mut *guard, key);
     }
 
     fn keys_with_prefix(&self, prefix: &[u8]) -> Vec<Vec<u8>> {
-        // OffchainStorage doesn't have a native prefix scan, so we'd need
-        // to maintain a separate index. For now, return empty and rely on
-        // coordinator's in-memory sessions being authoritative after boot.
-        // In production, consider using a secondary index or rocksdb iter.
-        let _ = prefix;
-        vec![]
+        let guard = self.inner.read().unwrap();
+        let index_key = Self::index_key(prefix);
+        match guard.get(sp_core::offchain::STORAGE_PREFIX, &index_key) {
+            Some(bytes) => serde_json::from_slice::<Vec<Vec<u8>>>(&bytes).unwrap_or_default(),
+            None => vec![],
+        }
     }
 }
 
@@ -259,4 +335,14 @@ mod tests {
         assert!(all.contains_key("swap-002"));
         assert!(all.contains_key("swap-003"));
     }
+}
+
+// Note: OffchainPersistence needs to implement save_used_secrets and load_used_secrets
+// These will be added in the next PR to complete the trait implementation
+
+// For now, add stub implementations to OffchainPersistence
+
+#[cfg(feature = "offchain")]
+impl<O: OffchainStorageProvider> OffchainPersistence<O> {
+    const SECRETS_KEY: &'static [u8] = b"x3secrets:used";
 }

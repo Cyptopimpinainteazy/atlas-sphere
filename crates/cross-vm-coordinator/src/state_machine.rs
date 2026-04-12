@@ -58,17 +58,29 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         let sessions = persistence.load_all();
         let session_count = sessions.len();
 
+        // Restore the used-secrets set so that HTLC secret replay protection
+        // survives node restarts.  Without this, an adversary could restart the
+        // node and reuse a previously-revealed secret to steal funds.
+        let used_secrets = persistence.load_used_secrets();
+        let secrets_count = used_secrets.len();
+
         if session_count > 0 {
             info!(
                 sessions = session_count,
                 "Restored sessions from persistence"
             );
         }
+        if secrets_count > 0 {
+            info!(
+                used_secrets = secrets_count,
+                "Restored HTLC secret replay guard from persistence"
+            );
+        }
 
         Self {
             config,
             sessions,
-            used_secrets: HashSet::new(),
+            used_secrets,
             persistence,
         }
     }
@@ -573,6 +585,10 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             session.updated_at = now_unix;
         }
 
+        // Persist the updated secret set BEFORE persisting the session, so
+        // that on crash-recovery the replay guard is at least as restrictive
+        // as the session state (safe direction).
+        self.persistence.save_used_secrets(&self.used_secrets);
         self.persist_by_id(session_id);
         info!(session = %session_id, "Fast chain claimed — now claiming slow chain");
         Ok(())

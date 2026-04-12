@@ -332,16 +332,20 @@ impl EthereumBridge {
                 #[cfg(feature = "std")]
                 {
                     // Convert Vec to fixed-size array for secp256k1_ecdsa_recover
-                    let sig_array: &[u8; 65] = sig.signature.as_slice().try_into().map_err(|_| {
-                        format!("Invalid signature array conversion for validator {}", sig.validator_id)
-                    })?;
-                    let hash_array: &[u8; 32] = message.message_hash.as_slice().try_into().map_err(|_| {
-                        format!("Invalid message hash for validator {}", sig.validator_id)
-                    })?;
-                    let pubkey = secp256k1_ecdsa_recover(sig_array, hash_array)
-                        .map_err(|_| {
-                            format!("ECDSA recovery failed for validator {}", sig.validator_id)
+                    let sig_array: &[u8; 65] =
+                        sig.signature.as_slice().try_into().map_err(|_| {
+                            format!(
+                                "Invalid signature array conversion for validator {}",
+                                sig.validator_id
+                            )
                         })?;
+                    let hash_array: &[u8; 32] =
+                        message.message_hash.as_slice().try_into().map_err(|_| {
+                            format!("Invalid message hash for validator {}", sig.validator_id)
+                        })?;
+                    let pubkey = secp256k1_ecdsa_recover(sig_array, hash_array).map_err(|_| {
+                        format!("ECDSA recovery failed for validator {}", sig.validator_id)
+                    })?;
                     let hash = keccak_256(&pubkey);
                     let mut recovered_addr = [0u8; 20];
                     recovered_addr.copy_from_slice(&hash[12..32]);

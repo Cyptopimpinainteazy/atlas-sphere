@@ -190,35 +190,56 @@ impl DefaultMerkleProofValidator {
         Self
     }
 
-    /// Verify a single validator's signature
+    /// Verify a single validator's signature using ed25519.
     ///
-    /// In production, this would use ECDSA or similar signature verification.
-    /// This is a placeholder that verifies the signature is non-empty and from
-    /// an authorized validator.
+    /// The public key is stored as `authorized_validators[validator_id]` (32 bytes).
+    /// The signature is a 64-byte ed25519 signature over the settlement hash.
     fn verify_validator_signature(
         &self,
         validator_id: &Address,
-        _settlement_hash: Hash,
+        settlement_hash: Hash,
         signature: &Signature,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
     ) -> MerkleValidationResult {
         // Check validator is authorized
-        if !authorized_validators.contains_key(validator_id) {
-            return Err(MerkleProofValidationError::UnauthorizedValidator {
+        let pubkey_bytes = authorized_validators
+            .get(validator_id)
+            .ok_or(MerkleProofValidationError::UnauthorizedValidator {
                 validator_id: *validator_id,
-            });
-        }
+            })?;
 
-        // Check signature is not empty
-        if signature.is_empty() {
+        // Check signature is 64 bytes (ed25519 signature length)
+        if signature.len() != 64 {
             return Err(MerkleProofValidationError::SignatureVerificationFailed {
                 validator_id: *validator_id,
             });
         }
 
-        // In production: Use ECDSA, BLS, or schnorr to verify signature
-        // against public key from authorized_validators
-        // For now, we accept any non-empty signature from authorized validator
+        // Check public key is 32 bytes
+        if pubkey_bytes.len() != 32 {
+            return Err(MerkleProofValidationError::SignatureVerificationFailed {
+                validator_id: *validator_id,
+            });
+        }
+
+        // Build ed25519 types from raw bytes
+        let pubkey = sp_core::ed25519::Public::from_raw({
+            let mut buf = [0u8; 32];
+            buf.copy_from_slice(pubkey_bytes);
+            buf
+        });
+        let sig = sp_core::ed25519::Signature::from_raw({
+            let mut buf = [0u8; 64];
+            buf.copy_from_slice(signature);
+            buf
+        });
+
+        // Verify the ed25519 signature against the settlement hash
+        if !sp_io::crypto::ed25519_verify(&sig, &settlement_hash, &pubkey) {
+            return Err(MerkleProofValidationError::SignatureVerificationFailed {
+                validator_id: *validator_id,
+            });
+        }
 
         Ok(())
     }
@@ -264,7 +285,7 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
     fn verify_merkle_path(
         &self,
         merkle_proof_bytes: &[u8],
-        _state_root: Hash,
+        state_root: Hash,
     ) -> MerkleValidationResult {
         // Validate merkle proof is not empty
         if merkle_proof_bytes.is_empty() {
@@ -273,9 +294,61 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
             ));
         }
 
-        // In production: Deserialize and verify the merkle proof path
-        // against the state root using SHA-256 hashing
-        // For now, we accept any non-empty proof
+        // Binary merkle proof format:
+        // [leaf_index: u64 LE][leaf_hash: 32 bytes][sibling_0: 32 bytes][sibling_1: 32 bytes]...
+        // Minimum size: 8 (index) + 32 (leaf) = 40 bytes
+        if merkle_proof_bytes.len() < 40 {
+            return Err(MerkleProofValidationError::InvalidMerkleProof(
+                "Proof too short: need at least 40 bytes (index + leaf hash)".into(),
+            ));
+        }
+
+        // Remaining bytes after index+leaf must be a multiple of 32 (sibling hashes)
+        let sibling_bytes_len = merkle_proof_bytes.len() - 40;
+        if sibling_bytes_len % 32 != 0 {
+            return Err(MerkleProofValidationError::InvalidMerkleProof(
+                "Sibling hashes not aligned to 32 bytes".into(),
+            ));
+        }
+
+        let leaf_index = u64::from_le_bytes(
+            merkle_proof_bytes[0..8]
+                .try_into()
+                .map_err(|_| MerkleProofValidationError::InternalError("parse error".into()))?,
+        );
+
+        let mut current_hash = [0u8; 32];
+        current_hash.copy_from_slice(&merkle_proof_bytes[8..40]);
+
+        let num_siblings = sibling_bytes_len / 32;
+        let mut idx = leaf_index;
+
+        for i in 0..num_siblings {
+            let sib_start = 40 + i * 32;
+            let sibling = &merkle_proof_bytes[sib_start..sib_start + 32];
+
+            let mut hasher = Sha256::new();
+            if idx & 1 == 0 {
+                // Current node is left child
+                hasher.update(&current_hash);
+                hasher.update(sibling);
+            } else {
+                // Current node is right child
+                hasher.update(sibling);
+                hasher.update(&current_hash);
+            }
+            let result = hasher.finalize();
+            current_hash.copy_from_slice(&result);
+            idx >>= 1;
+        }
+
+        // After walking the path, current_hash should equal state_root
+        if current_hash != state_root {
+            return Err(MerkleProofValidationError::StateRootMismatch {
+                expected: state_root,
+                actual: current_hash,
+            });
+        }
 
         Ok(())
     }
@@ -317,6 +390,50 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Build a valid single-leaf merkle proof.
+    /// With zero siblings, the leaf hash IS the state root.
+    fn build_single_leaf_proof(leaf_data: &[u8]) -> (Hash, Vec<u8>) {
+        let mut hasher = Sha256::new();
+        hasher.update(leaf_data);
+        let mut leaf_hash = [0u8; 32];
+        leaf_hash.copy_from_slice(&hasher.finalize());
+
+        // Proof: [leaf_index: u64 LE][leaf_hash: 32 bytes]
+        let mut proof = Vec::new();
+        proof.extend_from_slice(&0u64.to_le_bytes());
+        proof.extend_from_slice(&leaf_hash);
+
+        (leaf_hash, proof)
+    }
+
+    /// Build a two-leaf merkle tree and return the root + proof for the left leaf.
+    fn build_two_leaf_proof() -> (Hash, Vec<u8>) {
+        let mut h0 = Sha256::new();
+        h0.update(b"leaf0");
+        let mut leaf0 = [0u8; 32];
+        leaf0.copy_from_slice(&h0.finalize());
+
+        let mut h1 = Sha256::new();
+        h1.update(b"leaf1");
+        let mut leaf1 = [0u8; 32];
+        leaf1.copy_from_slice(&h1.finalize());
+
+        // root = SHA256(leaf0 || leaf1)
+        let mut hr = Sha256::new();
+        hr.update(&leaf0);
+        hr.update(&leaf1);
+        let mut root = [0u8; 32];
+        root.copy_from_slice(&hr.finalize());
+
+        // Proof for leaf0 (index=0): [0u64][leaf0][leaf1 as sibling]
+        let mut proof = Vec::new();
+        proof.extend_from_slice(&0u64.to_le_bytes());
+        proof.extend_from_slice(&leaf0);
+        proof.extend_from_slice(&leaf1);
+
+        (root, proof)
+    }
 
     #[test]
     fn test_settlement_creation() {
@@ -362,7 +479,6 @@ mod tests {
     #[test]
     fn test_validator_creation() {
         let _validator = DefaultMerkleProofValidator::new();
-        assert!(true); // Validator created successfully
     }
 
     #[test]
@@ -373,6 +489,42 @@ mod tests {
         match result {
             Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
             other => panic!("Expected InvalidMerkleProof, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_verify_too_short_merkle_proof() {
+        let validator = DefaultMerkleProofValidator::new();
+        let result = validator.verify_merkle_path(&[1, 2, 3, 4], [0u8; 32]);
+
+        match result {
+            Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
+            other => panic!("Expected InvalidMerkleProof, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_verify_single_leaf_merkle_proof() {
+        let validator = DefaultMerkleProofValidator::new();
+        let (root, proof) = build_single_leaf_proof(b"hello world");
+        assert!(validator.verify_merkle_path(&proof, root).is_ok());
+    }
+
+    #[test]
+    fn test_verify_two_leaf_merkle_proof() {
+        let validator = DefaultMerkleProofValidator::new();
+        let (root, proof) = build_two_leaf_proof();
+        assert!(validator.verify_merkle_path(&proof, root).is_ok());
+    }
+
+    #[test]
+    fn test_merkle_proof_wrong_root_rejected() {
+        let validator = DefaultMerkleProofValidator::new();
+        let (_root, proof) = build_two_leaf_proof();
+        let wrong_root = [0xffu8; 32];
+        match validator.verify_merkle_path(&proof, wrong_root) {
+            Err(MerkleProofValidationError::StateRootMismatch { .. }) => (),
+            other => panic!("Expected StateRootMismatch, got {:?}", other),
         }
     }
 
@@ -393,17 +545,19 @@ mod tests {
     #[test]
     fn test_verify_insufficient_validators() {
         let validator = DefaultMerkleProofValidator::new();
-        let mut settlement = MerkleProofSettlement::new([1u8; 32], 100, vec![1, 2, 3, 4], 0);
+        let (root, proof) = build_single_leaf_proof(b"settle");
+        let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
+
+        // Add one signature (will fail count check before sig verification)
+        let vid = [2u8; 32];
+        settlement.add_validator_signature(vid, vec![0u8; 64]);
+
+        // Require 3 validators — test directly via verify_validator_consensus
         let mut authorized = BTreeMap::new();
+        authorized.insert(vid, vec![0u8; 32]);
 
-        // Add one validator signature
-        let validator_id = [2u8; 32];
-        settlement.add_validator_signature(validator_id, vec![1, 2, 3]);
-        authorized.insert(validator_id, vec![10, 20, 30]);
-
-        // Require 3 validators (finality_threshold = 3)
-        let result = validator.verify_settlement_proof(&settlement, &authorized, 3);
-
+        let result =
+            validator.verify_validator_consensus(&settlement, &authorized, 3);
         match result {
             Err(MerkleProofValidationError::InsufficientValidatorSignatures {
                 have: 1,
@@ -416,15 +570,16 @@ mod tests {
     #[test]
     fn test_verify_unauthorized_validator() {
         let validator = DefaultMerkleProofValidator::new();
-        let mut settlement = MerkleProofSettlement::new([1u8; 32], 100, vec![1, 2, 3, 4], 0);
+        let (root, proof) = build_single_leaf_proof(b"settle");
+        let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
         let authorized = BTreeMap::new();
 
         // Add validator signature but don't authorize it
         let validator_id = [2u8; 32];
-        settlement.add_validator_signature(validator_id, vec![1, 2, 3]);
+        settlement.add_validator_signature(validator_id, vec![0u8; 64]);
 
-        let result = validator.verify_settlement_proof(&settlement, &authorized, 1);
-
+        // Test via verify_validator_consensus directly
+        let result = validator.verify_validator_consensus(&settlement, &authorized, 1);
         match result {
             Err(MerkleProofValidationError::UnauthorizedValidator { validator_id: id })
                 if id == validator_id =>
@@ -436,20 +591,32 @@ mod tests {
     }
 
     #[test]
-    fn test_verify_valid_settlement() {
+    fn test_verify_valid_settlement_with_real_signatures() {
+        use sp_core::{ed25519::Pair, Pair as PairT};
+
         let validator = DefaultMerkleProofValidator::new();
-        let mut settlement = MerkleProofSettlement::new([1u8; 32], 100, vec![1, 2, 3, 4], 0);
+        let (root, proof) = build_single_leaf_proof(b"atomic settlement data");
+        let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
+
+        let settlement_hash = settlement.settlement_hash();
         let mut authorized = BTreeMap::new();
 
-        // Add validators
-        for i in 0..3 {
-            let validator_id = [i + 2; 32];
-            settlement.add_validator_signature(validator_id, vec![1, 2, 3]);
-            authorized.insert(validator_id, vec![10, 20, 30]);
+        // Generate 3 ed25519 keypairs, sign the settlement hash, and add
+        for i in 0u8..3 {
+            let seed = [i + 10; 32];
+            let pair = Pair::from_seed(&seed);
+            let pubkey = pair.public();
+
+            let sig = pair.sign(&settlement_hash);
+
+            let mut vid = [0u8; 32];
+            vid.copy_from_slice(pubkey.as_ref());
+
+            settlement.add_validator_signature(vid, sig.0.to_vec());
+            authorized.insert(vid, pubkey.0.to_vec());
         }
 
-        // Should succeed with 3 validators, finality_threshold = 2
         let result = validator.verify_settlement_proof(&settlement, &authorized, 2);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Valid settlement should pass: {:?}", result.err());
     }
 }

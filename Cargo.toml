@@ -83,6 +83,7 @@ members = [
     "pallets/x3-sequencer",
     "pallets/x3-da",
     "pallets/fraud-proofs",
+    "pallets/x3-slash",
     "crates/x3-atomic-client",
     "crates/cross-vm-coordinator",
     "crates/cross-chain-gpu-validator",

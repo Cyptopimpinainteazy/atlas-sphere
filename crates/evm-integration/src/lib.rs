@@ -9,7 +9,6 @@ extern crate alloc;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::{H160, H256, U256};
-use sp_std::vec;
 use sp_std::vec::Vec;
 
 /// Phase 2: EVM State Integration
@@ -248,8 +247,10 @@ pub struct EvmExecutionSnapshot {
 }
 
 /// Mock EVM executor for testing (always succeeds)
+#[cfg(any(test, feature = "test-utils"))]
 pub struct MockEvmExecutor;
 
+#[cfg(any(test, feature = "test-utils"))]
 impl EvmExecutor for MockEvmExecutor {
     fn execute(
         &self,

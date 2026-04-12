@@ -44,7 +44,10 @@ fn convert_log(log: Log) -> EvmLog {
 /// Convert exit reason to EvmError
 fn exit_reason_to_error(reason: &ExitReason, gas_used: u64) -> EvmError {
     match reason {
-        ExitReason::Succeed(_) => unreachable!("Success should not be converted to error"),
+        ExitReason::Succeed(_) => {
+            // Should not be called for success, but never panic in production.
+            EvmError::ExecutionFailed(0)
+        }
         ExitReason::Error(e) => match e {
             fp_evm::ExitError::StackOverflow => EvmError::StackOverflow,
             fp_evm::ExitError::StackUnderflow => EvmError::StackUnderflow,
@@ -67,7 +70,7 @@ where
         payload: &[u8],
         caller: H160,
         target: Option<H160>,
-        _value: U256,
+        value: U256,
         config: &EvmConfig,
     ) -> EvmResult<EvmExecutionResult> {
         if payload.is_empty() && target.is_none() {
@@ -83,10 +86,10 @@ where
             Some(to) => {
                 // Contract call
                 let call_info = T::Runner::call(
-                    sp_core::H160::zero(), // caller (placeholder)
+                    caller,
                     to,
                     payload.to_vec(),
-                    U256::zero(), // value
+                    value,
                     gas_limit,
                     Some(config.gas_price),
                     None,       // max_priority_fee_per_gas
@@ -110,9 +113,9 @@ where
             None => {
                 // Contract creation
                 let create_info = T::Runner::create(
-                    sp_core::H160::zero(), // caller
+                    caller,
                     payload.to_vec(),
-                    U256::zero(), // value
+                    value,
                     gas_limit,
                     Some(config.gas_price),
                     None,
@@ -147,9 +150,12 @@ where
         // persist balance-oriented state changes in the CanonicalLedger.
         let fee_paid = U256::from(gas_used).saturating_mul(config.gas_price);
         let fee_paid_u128: u128 = fee_paid.unique_saturated_into();
+        // Clamp to i128::MAX to avoid overflow — fees above ~170 quintillion
+        // are unrealistic and indicate misconfigured gas_price.
         let fee_delta = if fee_paid_u128 > i128::MAX as u128 {
-            i128::MIN
+            i128::MIN // -(i128::MAX) - 1, maximum possible debit
         } else {
+            // Safe: fee_paid_u128 <= i128::MAX, so cast and negate are valid.
             -(fee_paid_u128 as i128)
         };
         let state_changes = vec![EvmStateChange {
@@ -187,9 +193,16 @@ where
             return Err(EvmError::InvalidPayload);
         }
 
-        // Basic bytecode validation
-        // Check for valid STOP or RETURN at the end, or known patterns
-        // This is a simple validation - real validation would parse opcodes
+        // EIP-170: max contract code size = 24_576 bytes
+        if payload.len() > 24_576 {
+            return Err(EvmError::ExecutionFailed(0xEF));
+        }
+
+        // EIP-3541: reject bytecode starting with 0xEF (reserved for EOF)
+        if payload.first() == Some(&0xEF) {
+            return Err(EvmError::InvalidOpcode(0xEF));
+        }
+
         Ok(())
     }
 
@@ -201,20 +214,46 @@ where
         value: U256,
         config: &EvmConfig,
     ) -> EvmResult<u64> {
-        // Run with max gas to get actual consumption
-        let max_config = EvmConfig {
-            gas_limit: u64::MAX / 2,
+        // Compute intrinsic gas floor per EIP-2028
+        let calldata_gas: u64 = payload
+            .iter()
+            .map(|&b| if b == 0 { 4u64 } else { 16u64 })
+            .sum();
+        let is_create = target.is_none();
+        let base_intrinsic = if is_create { 53_000u64 } else { 21_000u64 };
+        let intrinsic_floor = base_intrinsic.saturating_add(calldata_gas);
+
+        // Run execution with generous gas ceiling to measure actual consumption.
+        // Use the configured gas_limit, but cap at 30M (Ethereum mainnet block
+        // gas limit) to prevent excessive execution during estimation.
+        let estimation_limit = config.gas_limit.min(30_000_000);
+        let estimation_config = EvmConfig {
+            gas_limit: estimation_limit,
             ..config.clone()
         };
 
-        let result = self.execute(payload, caller, target, value, &max_config)?;
-
-        // Add 10% buffer
-        Ok(result.gas_used.saturating_mul(11) / 10)
+        match self.execute(payload, caller, target, value, &estimation_config) {
+            Ok(result) => {
+                // Take the larger of the actual gas used and the intrinsic gas floor,
+                // then add a 10% safety buffer for state-dependent opcode variance.
+                let measured = result.gas_used.max(intrinsic_floor);
+                Ok(measured.saturating_mul(11) / 10)
+            }
+            Err(EvmError::OutOfGas) => {
+                // If even estimation_limit was insufficient, return the limit
+                // so the caller knows the tx is likely too expensive.
+                Ok(estimation_limit)
+            }
+            Err(e) => Err(e),
+        }
     }
 }
 
-/// Compute state root from state changes
+/// Compute state root from state changes.
+///
+/// Commits every address, balance delta, nonce delta, and storage mutation
+/// into a single blake2-256 hash so validators reach the same root for
+/// identical execution outcomes.
 fn compute_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
     use sp_io::hashing::blake2_256;
 
@@ -222,11 +261,20 @@ fn compute_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
         return [0u8; 32];
     }
 
+    // Domain separator prevents collisions with other hash uses.
     let mut data = Vec::new();
+    data.extend_from_slice(b"x3-evm-frontier-state-root-v1");
     for change in changes {
         data.extend_from_slice(change.address.as_bytes());
         data.extend_from_slice(&change.balance_delta.to_le_bytes());
         data.extend_from_slice(&change.nonce_delta.to_le_bytes());
+        for (key, val) in &change.storage_changes {
+            data.extend_from_slice(key.as_bytes());
+            data.extend_from_slice(val.as_bytes());
+        }
+        if let Some(ref code) = change.code {
+            data.extend_from_slice(code);
+        }
     }
 
     blake2_256(&data)
