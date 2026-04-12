@@ -15,6 +15,8 @@ use crate::types::*;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tracing::{error, info, warn};
+use subtle::ConstantTimeEq;
+use blake3;
 
 /// The Cross-VM Swap Coordinator.
 ///
@@ -33,7 +35,7 @@ pub struct SwapCoordinator<P: SessionPersistence = InMemoryPersistence> {
     /// secret — even in a different session — is immediately rejected.
     /// This prevents cross-session replay attacks where an adversary reuses a
     /// leaked secret to claim HTLCs in multiple sessions.
-    used_secrets: HashSet<[u8; 32]>,
+    used_secrets: Vec<[u8; 32]>,
     /// Persistence backend for sessions.
     persistence: Arc<P>,
 }
@@ -550,12 +552,15 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
         // Global replay guard: reject any previously-seen secret immediately.
-        if self.used_secrets.contains(&secret.0) {
-            return Err(CoordinatorError::Internal(
-                format!("HTLC secret replay detected for session '{}' — secret already used in a previous claim", session_id)
-            ));
+        // Global replay guard: constant-time comparison to prevent timing attacks
+        let secret_hash = *blake3::hash(&secret.0).as_bytes();
+        for stored_hash in &self.used_secrets {
+            if secret_hash.ct_eq(stored_hash).into() {
+                return Err(CoordinatorError::Internal(
+                    format!("HTLC secret replay detected for session '{}' — secret already used in a previous claim", session_id)
+                ));
+            }
         }
-
         {
             let session = self.sessions.get_mut(session_id).ok_or_else(|| {
                 CoordinatorError::SessionNotFound {
@@ -575,7 +580,9 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             // Register the secret globally BEFORE mutating session state
             // (fail-safe: if we crash after insert but before state update, the
             //  duplicate will be caught on retry, which is the safe outcome).
-            self.used_secrets.insert(secret.0);
+            // Register the secret hash globally (never store plaintext)
+            let secret_hash = *blake3::hash(&secret.0).as_bytes();
+            self.used_secrets.push(secret_hash);
 
             if let Some(ref mut htlc) = session.htlc_fast {
                 htlc.status = HtlcStatus::Claimed;

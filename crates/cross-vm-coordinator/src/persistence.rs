@@ -35,11 +35,11 @@ pub trait SessionPersistence: Send + Sync + 'static {
     ///
     /// This MUST be called after every secret insertion to prevent
     /// cross-session replay attacks surviving a node restart.
-    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>);
+    fn save_used_secrets(&self, secrets: &Vec<[u8; 32]>);
 
     /// Load the persisted set of used HTLC secrets.
     /// Returns an empty set if nothing was previously persisted.
-    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]>;
+    fn load_used_secrets(&self) -> Vec<[u8; 32]>;
 }
 
 // ─── InMemoryPersistence ──────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ pub trait SessionPersistence: Send + Sync + 'static {
 /// Use for tests or ephemeral nodes where durability isn't needed.
 pub struct InMemoryPersistence {
     inner: std::sync::RwLock<HashMap<String, SwapSession>>,
-    used_secrets: std::sync::RwLock<std::collections::HashSet<[u8; 32]>>,
+    used_secrets: std::sync::RwLock<Vec<[u8; 32]>>,
 }
 
 impl Default for InMemoryPersistence {
@@ -62,7 +62,7 @@ impl InMemoryPersistence {
     pub fn new() -> Self {
         Self {
             inner: std::sync::RwLock::new(HashMap::new()),
-            used_secrets: std::sync::RwLock::new(std::collections::HashSet::new()),
+            used_secrets: std::sync::RwLock::new(Vec::new()),
         }
     }
 }
@@ -93,12 +93,12 @@ impl SessionPersistence for InMemoryPersistence {
         guard.len()
     }
 
-    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>) {
+    fn save_used_secrets(&self, secrets: &Vec<[u8; 32]>) {
         let mut guard = self.used_secrets.write().unwrap();
         *guard = secrets.clone();
     }
 
-    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]> {
+    fn load_used_secrets(&self) -> Vec<[u8; 32]> {
         let guard = self.used_secrets.read().unwrap();
         guard.clone()
     }
@@ -178,13 +178,13 @@ impl<O: OffchainStorageProvider> SessionPersistence for OffchainPersistence<O> {
         self.storage_provider.keys_with_prefix(Self::PREFIX).len()
     }
 
-    fn save_used_secrets(&self, secrets: &std::collections::HashSet<[u8; 32]>) {
+    fn save_used_secrets(&self, secrets: &Vec<[u8; 32]>) {
         let key = b"x3secrets:used".to_vec();
         let value = serde_json::to_vec(secrets).expect("HashSet serializes");
         self.storage_provider.set(&key, &value);
     }
 
-    fn load_used_secrets(&self) -> std::collections::HashSet<[u8; 32]> {
+    fn load_used_secrets(&self) -> Vec<[u8; 32]> {
         let key = b"x3secrets:used".to_vec();
         self.storage_provider.get(&key)
             .and_then(|b| serde_json::from_slice(&b).ok())
