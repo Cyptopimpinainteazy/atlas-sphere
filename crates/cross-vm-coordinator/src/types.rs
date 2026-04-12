@@ -151,6 +151,8 @@ pub struct HtlcRecord {
     pub confirmations_required: u32,
     /// Current confirmations.
     pub confirmations: u32,
+    /// Blake3 hash of the creation parameters for integrity verification.
+    pub params_hash: [u8; 32],
 }
 
 // ─── Flashloan Types ──────────────────────────────────────────────────────────

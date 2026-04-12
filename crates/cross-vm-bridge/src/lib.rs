@@ -2471,6 +2471,7 @@ mod tests {
                 destination: [2u8; 20],
                 amount: 100,
             },
+            operation_hash: vec![0xAB; 32],
             phase: TwoPhaseCommitPhase::Prepared,
             evm_gas_reserved: 25_000,
             svm_compute_reserved: 5_000,

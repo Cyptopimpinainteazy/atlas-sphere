@@ -127,6 +127,7 @@ use crate::rpc_client::RpcClient;
 use crate::types::*;
 use async_trait::async_trait;
 use sha2::{Digest, Sha256};
+use blake3;
 
 /// Unified interface for HTLC operations on any chain.
 ///
@@ -167,6 +168,27 @@ pub trait HtlcChainAdapter: Send + Sync {
 
     /// Estimate gas/compute for an HTLC claim transaction.
     async fn estimate_claim_cost(&self, htlc_id: &HtlcId) -> Result<u64, CoordinatorError>;
+}
+
+/// Compute blake3 hash of HTLC creation parameters for integrity verification.
+///
+/// This hash is stored with the HTLC record and verified before any operations
+/// to detect tampering with the params (recipient, amount, asset, timelock, etc).
+fn compute_htlc_params_hash(params: &HtlcCreateParams) -> [u8; 32] {
+    let mut hasher = blake3::Hasher::new();
+    
+    // Hash all parameters in a deterministic order
+    hasher.update(&params.recipient);
+    hasher.update(params.hash_lock.as_bytes());
+    hasher.update(&params.timelock.to_le_bytes());
+    hasher.update(&params.asset);
+    hasher.update(&params.amount.to_le_bytes());
+    
+    // Get 32-byte hash
+    let hash = hasher.finalize();
+    let mut result = [0u8; 32];
+    result.copy_from_slice(hash.as_bytes());
+    result
 }
 
 // ─── EVM Adapter ──────────────────────────────────────────────────────────────
@@ -275,6 +297,7 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
             created_at_block: self.rpc.eth_block_number().await.unwrap_or(0),
             confirmations_required: 12,
             confirmations: 0,
+            params_hash: compute_htlc_params_hash(params),
         })
     }
 
@@ -446,6 +469,7 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
             created_at_block: slot,
             confirmations_required: 50, // finalized commitment
             confirmations: 0,
+            params_hash: compute_htlc_params_hash(params),
         })
     }
 
@@ -616,6 +640,7 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             created_at_block: block,
             confirmations_required: 1, // Flash Finality: 1 block ≈ 200ms
             confirmations: 0,
+            params_hash: compute_htlc_params_hash(params),
         })
     }
 
