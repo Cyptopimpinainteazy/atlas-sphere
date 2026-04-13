@@ -170,6 +170,7 @@ pub trait MerkleProofValidator {
         &self,
         merkle_proof_bytes: &[u8],
         state_root: Hash,
+        finalized_block: u64,
     ) -> MerkleValidationResult;
 
     /// Verify validator consensus on settlement
@@ -274,7 +275,11 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         }
 
         // Verify merkle proof bytes are valid
-        self.verify_merkle_path(&settlement.merkle_proof_bytes, settlement.state_root)?;
+        self.verify_merkle_path(
+            &settlement.merkle_proof_bytes,
+            settlement.state_root,
+            settlement.finalized_block,
+        )?;
 
         // Verify validator consensus
         self.verify_validator_consensus(settlement, authorized_validators, finality_threshold)?;
@@ -286,10 +291,11 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         &self,
         merkle_proof_bytes: &[u8],
         state_root: Hash,
+        finalized_block: u64,
     ) -> MerkleValidationResult {
-        // CRITICAL-002 FIX: Validate state_root is embedded in proof bytes
-        // Format: [state_root: 32 bytes][leaf_index: u64 LE][leaf_hash: 32 bytes][sibling_0: 32 bytes]...
-        // Minimum size: 32 (root) + 8 (index) + 32 (leaf) = 72 bytes
+        // CRITICAL-002/007 FIX: Validate state_root and finalized_block are embedded in proof bytes.
+        // Format: [state_root: 32][finalized_block: u64 LE][leaf_index: u64 LE][leaf_hash: 32][sibling_0: 32]...
+        // Minimum size: 32 (root) + 8 (block) + 8 (index) + 32 (leaf) = 80 bytes
         
         if merkle_proof_bytes.is_empty() {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
@@ -297,9 +303,9 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
             ));
         }
 
-        if merkle_proof_bytes.len() < 72 {
+        if merkle_proof_bytes.len() < 80 {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
-                "Proof too short: need at least 72 bytes (state_root + index + leaf hash)".into(),
+                "Proof too short: need at least 80 bytes (state_root + finalized_block + index + leaf hash)".into(),
             ));
         }
 
@@ -313,8 +319,20 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
             });
         }
 
-        // Remaining bytes after root+index+leaf must be a multiple of 32 (sibling hashes)
-        let sibling_bytes_len = merkle_proof_bytes.len() - 72;
+        // Extract and validate embedded finalized_block matches settlement metadata
+        let embedded_block = u64::from_le_bytes(
+            merkle_proof_bytes[32..40]
+                .try_into()
+                .map_err(|_| MerkleProofValidationError::InternalError("parse error".into()))?,
+        );
+        if embedded_block != finalized_block {
+            return Err(MerkleProofValidationError::InvalidBlockNumber {
+                block_number: embedded_block,
+            });
+        }
+
+        // Remaining bytes after root+block+index+leaf must be a multiple of 32 (sibling hashes)
+        let sibling_bytes_len = merkle_proof_bytes.len() - 80;
         if sibling_bytes_len % 32 != 0 {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
                 "Sibling hashes not aligned to 32 bytes".into(),
@@ -322,19 +340,19 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         }
 
         let leaf_index = u64::from_le_bytes(
-            merkle_proof_bytes[32..40]
+            merkle_proof_bytes[40..48]
                 .try_into()
                 .map_err(|_| MerkleProofValidationError::InternalError("parse error".into()))?,
         );
 
         let mut current_hash = [0u8; 32];
-        current_hash.copy_from_slice(&merkle_proof_bytes[40..72]);
+        current_hash.copy_from_slice(&merkle_proof_bytes[48..80]);
 
         let num_siblings = sibling_bytes_len / 32;
         let mut idx = leaf_index;
 
         for i in 0..num_siblings {
-            let sib_start = 72 + i * 32;
+            let sib_start = 80 + i * 32;
             let sibling = &merkle_proof_bytes[sib_start..sib_start + 32];
 
             let mut hasher = Sha256::new();
@@ -403,16 +421,17 @@ mod tests {
 
     /// Build a valid single-leaf merkle proof.
     /// With zero siblings, the leaf hash IS the state root.
-    fn build_single_leaf_proof(leaf_data: &[u8]) -> (Hash, Vec<u8>) {
+    fn build_single_leaf_proof(leaf_data: &[u8], finalized_block: u64) -> (Hash, Vec<u8>) {
         let mut hasher = Sha256::new();
         hasher.update(leaf_data);
         let mut leaf_hash = [0u8; 32];
         leaf_hash.copy_from_slice(&hasher.finalize());
 
-        // CRITICAL-002 FIX: Proof now includes state_root binding
-        // Format: [state_root: 32 bytes][leaf_index: u64 LE][leaf_hash: 32 bytes]
+        // CRITICAL-002/007 FIX: Proof now includes state_root and finalized_block binding
+        // Format: [state_root: 32 bytes][finalized_block: u64 LE][leaf_index: u64 LE][leaf_hash: 32 bytes]
         let mut proof = Vec::new();
         proof.extend_from_slice(&leaf_hash);  // state_root is the leaf hash for single-leaf tree
+        proof.extend_from_slice(&finalized_block.to_le_bytes());
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf_hash);
 
@@ -420,7 +439,7 @@ mod tests {
     }
 
     /// Build a two-leaf merkle tree and return the root + proof for the left leaf.
-    fn build_two_leaf_proof() -> (Hash, Vec<u8>) {
+    fn build_two_leaf_proof(finalized_block: u64) -> (Hash, Vec<u8>) {
         let mut h0 = Sha256::new();
         h0.update(b"leaf0");
         let mut leaf0 = [0u8; 32];
@@ -438,10 +457,11 @@ mod tests {
         let mut root = [0u8; 32];
         root.copy_from_slice(&hr.finalize());
 
-        // CRITICAL-002 FIX: Proof now includes state_root binding
-        // Proof for leaf0 (index=0): [root][0u64][leaf0][leaf1 as sibling]
+        // CRITICAL-002/007 FIX: proof includes state_root and finalized_block binding
+        // Proof for leaf0 (index=0): [root][finalized_block][0u64][leaf0][leaf1 as sibling]
         let mut proof = Vec::new();
         proof.extend_from_slice(&root);  // state_root embedded
+        proof.extend_from_slice(&finalized_block.to_le_bytes());
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf0);
         proof.extend_from_slice(&leaf1);
@@ -498,7 +518,7 @@ mod tests {
     #[test]
     fn test_verify_empty_merkle_proof() {
         let validator = DefaultMerkleProofValidator::new();
-        let result = validator.verify_merkle_path(&[], [0u8; 32]);
+        let result = validator.verify_merkle_path(&[], [0u8; 32], 100);
 
         match result {
             Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
@@ -509,7 +529,7 @@ mod tests {
     #[test]
     fn test_verify_too_short_merkle_proof() {
         let validator = DefaultMerkleProofValidator::new();
-        let result = validator.verify_merkle_path(&[1, 2, 3, 4], [0u8; 32]);
+        let result = validator.verify_merkle_path(&[1, 2, 3, 4], [0u8; 32], 100);
 
         match result {
             Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
@@ -520,25 +540,35 @@ mod tests {
     #[test]
     fn test_verify_single_leaf_merkle_proof() {
         let validator = DefaultMerkleProofValidator::new();
-        let (root, proof) = build_single_leaf_proof(b"hello world");
-        assert!(validator.verify_merkle_path(&proof, root).is_ok());
+        let (root, proof) = build_single_leaf_proof(b"hello world", 100);
+        assert!(validator.verify_merkle_path(&proof, root, 100).is_ok());
     }
 
     #[test]
     fn test_verify_two_leaf_merkle_proof() {
         let validator = DefaultMerkleProofValidator::new();
-        let (root, proof) = build_two_leaf_proof();
-        assert!(validator.verify_merkle_path(&proof, root).is_ok());
+        let (root, proof) = build_two_leaf_proof(100);
+        assert!(validator.verify_merkle_path(&proof, root, 100).is_ok());
     }
 
     #[test]
     fn test_merkle_proof_wrong_root_rejected() {
         let validator = DefaultMerkleProofValidator::new();
-        let (_root, proof) = build_two_leaf_proof();
+        let (_root, proof) = build_two_leaf_proof(100);
         let wrong_root = [0xffu8; 32];
-        match validator.verify_merkle_path(&proof, wrong_root) {
+        match validator.verify_merkle_path(&proof, wrong_root, 100) {
             Err(MerkleProofValidationError::StateRootMismatch { .. }) => (),
             other => panic!("Expected StateRootMismatch, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_merkle_proof_wrong_embedded_block_rejected() {
+        let validator = DefaultMerkleProofValidator::new();
+        let (root, proof) = build_single_leaf_proof(b"hello world", 100);
+        match validator.verify_merkle_path(&proof, root, 101) {
+            Err(MerkleProofValidationError::InvalidBlockNumber { block_number: 100 }) => (),
+            other => panic!("Expected InvalidBlockNumber, got {:?}", other),
         }
     }
 
@@ -559,7 +589,7 @@ mod tests {
     #[test]
     fn test_verify_insufficient_validators() {
         let validator = DefaultMerkleProofValidator::new();
-        let (root, proof) = build_single_leaf_proof(b"settle");
+        let (root, proof) = build_single_leaf_proof(b"settle", 100);
         let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
 
         // Add one signature (will fail count check before sig verification)
@@ -584,7 +614,7 @@ mod tests {
     #[test]
     fn test_verify_unauthorized_validator() {
         let validator = DefaultMerkleProofValidator::new();
-        let (root, proof) = build_single_leaf_proof(b"settle");
+        let (root, proof) = build_single_leaf_proof(b"settle", 100);
         let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
         let authorized = BTreeMap::new();
 
@@ -609,7 +639,7 @@ mod tests {
         use sp_core::{ed25519::Pair, Pair as PairT};
 
         let validator = DefaultMerkleProofValidator::new();
-        let (root, proof) = build_single_leaf_proof(b"atomic settlement data");
+        let (root, proof) = build_single_leaf_proof(b"atomic settlement data", 100);
         let mut settlement = MerkleProofSettlement::new(root, 100, proof, 0);
 
         let settlement_hash = settlement.settlement_hash();

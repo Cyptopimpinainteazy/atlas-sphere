@@ -20,7 +20,14 @@ pub struct MerkleEnabledSettlement {
     pub merkle_proof: Option<MerkleProofSettlement>,
     /// Finality threshold for Byzantine consensus (default: 2/3)
     pub finality_threshold: u32,
+    /// Current finalized block height from the destination chain.
+    /// Required when `merkle_proof` is present.
+    pub current_finalized_block: Option<u64>,
+    /// Maximum allowed proof age in blocks.
+    pub max_proof_age_blocks: u64,
 }
+
+const DEFAULT_MAX_PROOF_AGE_BLOCKS: u64 = 256;
 
 impl MerkleEnabledSettlement {
     /// Create a new merkle-enabled settlement
@@ -29,12 +36,21 @@ impl MerkleEnabledSettlement {
             nonce,
             merkle_proof,
             finality_threshold: 2, // Default: require 2/3 consensus
+            current_finalized_block: None,
+            max_proof_age_blocks: DEFAULT_MAX_PROOF_AGE_BLOCKS,
         }
     }
 
     /// Set custom finality threshold
     pub fn with_finality_threshold(mut self, threshold: u32) -> Self {
         self.finality_threshold = threshold;
+        self
+    }
+
+    /// Provide strict freshness bounds for merkle proof verification.
+    pub fn with_freshness(mut self, current_finalized_block: u64, max_proof_age_blocks: u64) -> Self {
+        self.current_finalized_block = Some(current_finalized_block);
+        self.max_proof_age_blocks = max_proof_age_blocks;
         self
     }
 }
@@ -74,6 +90,26 @@ impl MerkleSettlementExt for CrossVmBridge {
             ));
         }
 
+        // Enforce proof freshness against the caller-provided finalized tip.
+        let current_finalized = settlement.current_finalized_block.ok_or_else(|| {
+            DispatchError::Other(
+                "Merkle settlement rejected: missing current finalized block for freshness check",
+            )
+        })?;
+
+        if proof.finalized_block > current_finalized {
+            return Err(DispatchError::Other(
+                "Merkle settlement rejected: proof block is in the future",
+            ));
+        }
+
+        let proof_age = current_finalized.saturating_sub(proof.finalized_block);
+        if proof_age > settlement.max_proof_age_blocks {
+            return Err(DispatchError::Other(
+                "Merkle settlement rejected: proof is stale",
+            ));
+        }
+
         // Verify merkle settlement through validator
         validator
             .verify_settlement_proof(proof, authorized_validators, settlement.finality_threshold)
@@ -109,6 +145,8 @@ mod tests {
         assert_eq!(settlement.nonce, 1);
         assert!(settlement.merkle_proof.is_none());
         assert_eq!(settlement.finality_threshold, 2);
+        assert_eq!(settlement.current_finalized_block, None);
+        assert_eq!(settlement.max_proof_age_blocks, DEFAULT_MAX_PROOF_AGE_BLOCKS);
     }
 
     #[test]
@@ -144,7 +182,9 @@ mod tests {
             metadata: None,
         };
 
-        let settlement = MerkleEnabledSettlement::new(1, Some(proof)).with_finality_threshold(1);
+        let settlement = MerkleEnabledSettlement::new(1, Some(proof))
+            .with_finality_threshold(1)
+            .with_freshness(100, 256);
         let result = bridge.verify_merkle_settlement(&settlement, &validator, &empty_validators());
         assert!(result.is_err());
     }
@@ -163,7 +203,9 @@ mod tests {
             metadata: None,
         };
 
-        let settlement = MerkleEnabledSettlement::new(1, Some(proof)).with_finality_threshold(1);
+        let settlement = MerkleEnabledSettlement::new(1, Some(proof))
+            .with_finality_threshold(1)
+            .with_freshness(100, 256);
         let result = bridge.verify_merkle_settlement(&settlement, &validator, &test_validators());
         assert!(result.is_err());
     }
@@ -182,7 +224,9 @@ mod tests {
             metadata: None,
         };
 
-        let settlement = MerkleEnabledSettlement::new(1, Some(proof)).with_finality_threshold(1);
+        let settlement = MerkleEnabledSettlement::new(1, Some(proof))
+            .with_finality_threshold(1)
+            .with_freshness(100, 256);
         let result = bridge.verify_merkle_settlement(&settlement, &validator, &test_validators());
         assert!(result.is_err());
     }
@@ -205,9 +249,62 @@ mod tests {
             metadata: None,
         };
 
-        let settlement = MerkleEnabledSettlement::new(1, Some(proof));
+        let settlement = MerkleEnabledSettlement::new(1, Some(proof)).with_freshness(100, 256);
         let result = bridge.verify_merkle_settlement(&settlement, &validator, &test_validators());
         let _ = result;
+    }
+
+    #[test]
+    fn test_verify_merkle_settlement_rejects_missing_freshness_context() {
+        let bridge = CrossVmBridge::new();
+        let validator = DefaultMerkleProofValidator::new();
+
+        let proof = MerkleProofSettlement {
+            state_root: [42u8; 32],
+            finalized_block: 100,
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            validator_signatures: BTreeMap::new(),
+            execution_index: 1,
+            metadata: None,
+        };
+
+        let settlement = MerkleEnabledSettlement::new(6, Some(proof));
+        let result = bridge.verify_merkle_settlement(&settlement, &validator, &test_validators());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_verify_merkle_settlement_rejects_stale_or_future_proof_block() {
+        let bridge = CrossVmBridge::new();
+        let validator = DefaultMerkleProofValidator::new();
+
+        let stale_proof = MerkleProofSettlement {
+            state_root: [42u8; 32],
+            finalized_block: 100,
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            validator_signatures: BTreeMap::new(),
+            execution_index: 1,
+            metadata: None,
+        };
+
+        let stale_settlement = MerkleEnabledSettlement::new(7, Some(stale_proof)).with_freshness(400, 64);
+        assert!(bridge
+            .verify_merkle_settlement(&stale_settlement, &validator, &test_validators())
+            .is_err());
+
+        let future_proof = MerkleProofSettlement {
+            state_root: [42u8; 32],
+            finalized_block: 500,
+            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 244, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            validator_signatures: BTreeMap::new(),
+            execution_index: 1,
+            metadata: None,
+        };
+
+        let future_settlement = MerkleEnabledSettlement::new(8, Some(future_proof)).with_freshness(450, 64);
+        assert!(bridge
+            .verify_merkle_settlement(&future_settlement, &validator, &test_validators())
+            .is_err());
     }
 
     #[test]
@@ -289,7 +386,9 @@ mod tests {
             metadata: None,
         };
 
-        let settlement = MerkleEnabledSettlement::new(4, Some(proof)).with_finality_threshold(5);
+        let settlement = MerkleEnabledSettlement::new(4, Some(proof))
+            .with_finality_threshold(5)
+            .with_freshness(100, 256);
         let result = bridge.verify_merkle_settlement(&settlement, &validator, &test_validators());
         assert!(result.is_err());
     }
@@ -316,7 +415,7 @@ mod tests {
             metadata: None,
         };
 
-        let commit = MerkleEnabledSettlement::new(2, Some(proof));
+        let commit = MerkleEnabledSettlement::new(2, Some(proof)).with_freshness(210, 256);
         let _ = bridge.verify_merkle_settlement(&commit, &validator, &validators);
 
         let finalize = MerkleEnabledSettlement::new(3, None);
@@ -353,7 +452,7 @@ mod tests {
             execution_index: 1,
             metadata: None,
         };
-        let s2 = MerkleEnabledSettlement::new(2, Some(proof));
+        let s2 = MerkleEnabledSettlement::new(2, Some(proof)).with_freshness(160, 256);
         let _ = bridge.verify_merkle_settlement(&s2, &validator, &validators);
 
         let s3 = MerkleEnabledSettlement::new(3, None);
