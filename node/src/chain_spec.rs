@@ -5,8 +5,8 @@ use serde::Deserialize;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::crypto::Ss58Codec;
-use sp_core::{sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_core::{sr25519, H160, Pair, Public};
+use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 use x3_chain_runtime::{
     x3_kernel_default_assets, AccountId, AtlasKernelConfig, AuraConfig, BalancesConfig,
@@ -22,6 +22,30 @@ const X3: u128 = 1_000_000_000_000;
 const ENDOWMENT: u128 = 1_000_000 * X3;
 
 type AccountPublic = <Signature as Verify>::Signer;
+
+// EVM callers funded in dev/local chains through their mapped Substrate accounts.
+const DEV_EVM_CALLERS: [[u8; 20]; 2] = [
+    [
+        0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
+        0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58,
+    ],
+    [
+        0xf3, 0x9f, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xf6, 0xf4, 0xce, 0x6a, 0xb8, 0x82, 0x72,
+        0x79, 0xcf, 0xff, 0xb9, 0x22, 0x66,
+    ],
+];
+
+fn dev_evm_endowed_accounts() -> Vec<AccountId> {
+    DEV_EVM_CALLERS
+        .iter()
+        .map(|bytes| {
+            let evm_addr = H160::from(*bytes);
+            <pallet_evm::HashedAddressMapping<BlakeTwo256> as pallet_evm::AddressMapping<
+                AccountId,
+            >>::into_account_id(evm_addr)
+        })
+        .collect()
+}
 
 #[derive(Debug, Deserialize)]
 struct ExternalAuthority {
@@ -143,7 +167,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
     // work in this mode, which is acceptable for local development.
     let wasm_binary = WASM_BINARY.unwrap_or(&[]);
     let initial_authorities = vec![authority_keys_from_seed("Alice")?];
-    let endowed_accounts = vec![
+    let mut endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("Alice")?,
         get_account_id_from_seed::<sr25519::Public>("Bob")?,
         get_account_id_from_seed::<sr25519::Public>("Charlie")?,
@@ -151,6 +175,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         get_account_id_from_seed::<sr25519::Public>("Eve")?,
         get_account_id_from_seed::<sr25519::Public>("Ferdie")?,
     ];
+    endowed_accounts.extend(dev_evm_endowed_accounts());
 
     Ok(ChainSpec::from_genesis(
         "X3 Chain Development",
@@ -181,7 +206,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         authority_keys_from_seed("Alice")?,
         authority_keys_from_seed("Bob")?,
     ];
-    let endowed_accounts = vec![
+    let mut endowed_accounts = vec![
         get_account_id_from_seed::<sr25519::Public>("Alice")?,
         get_account_id_from_seed::<sr25519::Public>("Bob")?,
         get_account_id_from_seed::<sr25519::Public>("Charlie")?,
@@ -189,6 +214,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         get_account_id_from_seed::<sr25519::Public>("Eve")?,
         get_account_id_from_seed::<sr25519::Public>("Ferdie")?,
     ];
+    endowed_accounts.extend(dev_evm_endowed_accounts());
 
     Ok(ChainSpec::from_genesis(
         "X3 Chain Local Testnet",
@@ -365,11 +391,6 @@ fn x3_chain_genesis(
         .map(|account| (account, ENDOWMENT))
         .collect::<Vec<_>>();
 
-    let aura_authorities: Vec<AuraId> = initial_authorities
-        .iter()
-        .map(|(aura, _): &(AuraId, GrandpaId)| aura.clone())
-        .collect();
-
     let grandpa_authorities: Vec<(GrandpaId, u64)> = initial_authorities
         .iter()
         .map(|(_, grandpa)| (grandpa.clone(), 1))
@@ -394,7 +415,9 @@ fn x3_chain_genesis(
         },
         balances: BalancesConfig { balances },
         aura: AuraConfig {
-            authorities: aura_authorities,
+            // Aura authorities are provided via Session keys below.
+            // Setting them directly here as well causes double initialization at genesis.
+            authorities: Vec::new(),
         },
         grandpa: GrandpaConfig {
             authorities: grandpa_authorities,
