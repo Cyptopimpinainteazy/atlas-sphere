@@ -1,0 +1,12 @@
+/work/target-ci/release/deps/base64-aa1f864e4f290471.d: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/chunked_encoder.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/display.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/tables.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/encode.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/decode.rs
+
+/work/target-ci/release/deps/libbase64-aa1f864e4f290471.rlib: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/chunked_encoder.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/display.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/tables.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/encode.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/decode.rs
+
+/work/target-ci/release/deps/libbase64-aa1f864e4f290471.rmeta: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/chunked_encoder.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/display.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/tables.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/encode.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/decode.rs
+
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/lib.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/chunked_encoder.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/display.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/tables.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/encode.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/base64-0.13.1/src/decode.rs:

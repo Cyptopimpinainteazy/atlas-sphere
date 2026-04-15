@@ -19,7 +19,7 @@ pub struct TestAccount {
 }
 
 /// Type of test account
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AccountType {
     Regular,
     Lender,
@@ -192,7 +192,7 @@ impl TestAccountManager {
     /// Get all accounts of a specific type
     pub fn get_accounts_by_type(&self, account_type: &AccountType) -> Vec<&TestAccount> {
         self.accounts.values()
-            .filter(|acc| std::mem::discriminant(acc.account_type) == std::mem::discriminant(account_type))
+            .filter(|acc| std::mem::discriminant(&acc.account_type) == std::mem::discriminant(account_type))
             .collect()
     }
 

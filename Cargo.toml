@@ -99,7 +99,10 @@ members = [
     "crates/x3-orchestra-control-plane",
     "crates/x3-rpc",
     "tests/e2e",
-    # Note: crates/dylint-determinism is intentionally NOT listed here.
+        # Phase 4.5: Liquidity, Inventory, and Solvency control plane
+        "pallets/x3-inventory",
+        "pallets/x3-reservation",
+        # Note: crates/dylint-determinism is intentionally NOT listed here.
     # It is a standalone workspace (has its own [workspace] and rust-toolchain.toml)
     # compiled by `cargo dylint` with nightly+rustc-dev via workspace.metadata.dylint.
 ]

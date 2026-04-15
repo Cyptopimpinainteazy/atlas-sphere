@@ -1,0 +1,1 @@
+../../../release/build/wasm-opt-cxx-sys-2b3c7ef6314a9c28/out/cxxbridge/sources/wasm-opt-cxx-sys/src/lib.rs.cc

@@ -392,6 +392,105 @@ where
         Ok(format!("0x{}", hex::encode(evm_tx_hash)))
     })?;
 
+    // SVM-only submission RPC method
+    let c = client.clone();
+    let check = check_rate_limit.clone();
+    let billing_check = billing.clone();
+    let bridge_queue = cross_vm_bridge.clone();
+    module.register_method("x3_submitSvmTransaction", move |params, _| {
+        check("x3_submitSvmTransaction")?;
+        let body: serde_json::Value = params.one()?;
+        
+        // Extract optional API key for billing
+        let api_key = body
+            .get("api_key")
+            .and_then(|v| v.as_str())
+            .unwrap_or("testnet-default")
+            .to_string();
+
+        let current_epoch = 0u64; // Testnet: always epoch 0
+
+        // Validate billing quota
+        {
+            let mut billing_guard = billing_check
+                .lock()
+                .map_err(|_| custom_error("Billing middleware unavailable"))?;
+            
+            if let Err(e) = billing_guard.validate_request(&api_key, current_epoch) {
+                return Err(custom_error(format!(
+                    "Billing validation failed: {}. Upgrade your plan or wait for quota reset.", e
+                )));
+            }
+        }
+        
+        let svm_payload_hex = body
+            .get("svm_payload")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| custom_error("Missing svm_payload"))?;
+        
+        let svm_payload = decode_hex_param(svm_payload_hex, "svm_payload")?;
+
+        // Create SVM operation for bridge queuing
+        let caller = body
+            .get("caller")
+            .and_then(|v| v.as_str())
+            .map(|h| decode_hex_param(h, "caller"))
+            .transpose()?
+            .unwrap_or_default();
+
+        let caller_bytes: [u8; 20] = if caller.len() == 20 {
+            let mut addr = [0u8; 20];
+            addr.copy_from_slice(&caller);
+            addr
+        } else {
+            [0u8; 20]
+        };
+
+        // Queue SVM operation in cross-VM bridge
+        let svm_op = CrossVmOperation::CallSvm {
+            caller: caller_bytes,
+            pallet_index: svm_payload.first().copied().unwrap_or(0),
+            call_index: svm_payload.get(1).copied().unwrap_or(0),
+            input: svm_payload.get(2..).map(|s| s.to_vec()).unwrap_or_default(),
+        };
+        
+        let queue_result = bridge_queue
+            .lock()
+            .map_err(|_| custom_error("Cross-VM bridge unavailable"))?
+            .queue_operation(svm_op);
+
+        match queue_result {
+            Ok(nonce) => {
+                log::info!(
+                    "SVM transaction submitted (nonce={})",
+                    nonce
+                );
+                Ok(format!("0x{:x}", nonce))
+            }
+            Err(e) => {
+                Err(custom_error(format!(
+                    "SVM submission failed: {:?}",
+                    e
+                )))
+            }
+        }
+    })?;
+
+    // X3VM submission RPC method
+    // Note: X3VM is currently part of the Comit protocol (triple-VM: EVM + SVM + X3VM).
+    // Standalone X3VM RPC submission is registered for future use.
+    let check = check_rate_limit.clone();
+    module.register_method("x3_submitX3vmTransaction", move |params, _| {
+        check("x3_submitX3vmTransaction")?;
+        let _body: serde_json::Value = params.one()?;
+        
+        // X3VM is part of the Comit protocol and requires cross-VM coordination.
+        // Use x3_submitCrossVmTransaction with Comit payloads for triple-VM execution.
+        Err::<String, _>(custom_error(
+            "X3VM execution is available via Comit protocol. Use x3_submitCrossVmTransaction with Comit v2 payloads (EVM + SVM + X3VM triple-VM) instead."
+        ))
+    })?;
+
     let check = check_rate_limit.clone();
     let wallet_dex_estimate = wallet_dex.clone();
     module.register_method("walletDex_estimateSwap", move |params, _| {

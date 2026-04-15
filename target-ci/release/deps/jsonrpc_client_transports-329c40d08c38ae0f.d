@@ -1,0 +1,10 @@
+/work/target-ci/release/deps/jsonrpc_client_transports-329c40d08c38ae0f.d: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/duplex.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/local.rs
+
+/work/target-ci/release/deps/libjsonrpc_client_transports-329c40d08c38ae0f.rlib: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/duplex.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/local.rs
+
+/work/target-ci/release/deps/libjsonrpc_client_transports-329c40d08c38ae0f.rmeta: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/duplex.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/local.rs
+
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/lib.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/mod.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/duplex.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/jsonrpc-client-transports-18.0.0/src/transports/local.rs:

@@ -45,6 +45,18 @@ impl std::fmt::Display for E2EAssertionError {
 
 impl std::error::Error for E2EAssertionError {}
 
+impl From<reqwest::Error> for E2EAssertionError {
+    fn from(value: reqwest::Error) -> Self {
+        E2EAssertionError::new(format!("HTTP error: {}", value))
+    }
+}
+
+impl From<std::time::SystemTimeError> for E2EAssertionError {
+    fn from(value: std::time::SystemTimeError) -> Self {
+        E2EAssertionError::new(format!("Time calculation error: {}", value))
+    }
+}
+
 /// Blockchai-related assertions
 pub struct BlockchainAssertions;
 
@@ -430,20 +442,23 @@ impl PerformanceAssertions {
     }
 
     /// Assert that system handles expected load
-    pub async fn assert_load_handling<F, T>(
+    pub async fn assert_load_handling<F, Fut, T>(
         operation_name: &str,
         concurrent_requests: usize,
         operation: F
     ) -> E2EResult
     where
-        F: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
+        F: Fn() -> Fut,
+        Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error + Send + Sync>>> + Send + 'static,
+        T: Send + 'static,
     {
         let mut handles = Vec::new();
         
         for i in 0..concurrent_requests {
             let operation_name = format!("{}-{}", operation_name, i);
+            let future = operation();
             let handle = tokio::spawn(async move {
-                operation.await.map_err(|e| {
+                future.await.map_err(|e| {
                     E2EAssertionError::new(format!(
                         "Request {} failed: {}",
                         operation_name, e

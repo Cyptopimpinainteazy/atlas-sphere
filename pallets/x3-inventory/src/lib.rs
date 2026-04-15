@@ -114,6 +114,8 @@ pub mod pallet {
         SettlementConfirmed { vault_id: VaultId, amount: T::Balance },
         /// Treasury funded a vault.
         VaultFunded { vault_id: VaultId, amount: T::Balance },
+        /// Lane unsettled notional hit its cap (TICKET-4.5-006 warning gate).
+        ExposureCapBreached { lane_id: LaneId, current: T::Balance, cap: T::Balance },
     }
 
     // -----------------------------------------------------------------------
@@ -140,6 +142,8 @@ pub mod pallet {
         InsufficientPendingOutBalance,
         /// The requested operation would violate the balance invariant.
         BalanceInvariantViolation,
+        /// Reservation would exceed the lane's unsettled notional cap (TICKET-4.5-006).
+        UnsettledCapExceeded,
     }
 
     // -----------------------------------------------------------------------
@@ -399,6 +403,55 @@ pub mod pallet {
             lane_id: LaneId,
         ) -> Option<LaneState<T::Balance, T::MaxLiquiditySources>> {
             Lanes::<T>::get(lane_id)
+        }
+
+        // -----------------------------------------------------------------------
+        // TICKET-4.5-006: Unsettled-notional helpers (public API for x3-reservation)
+        // -----------------------------------------------------------------------
+
+        /// Increment both unsettled-notional counters.
+        /// Rejects with `UnsettledCapExceeded` if the lane unsettled cap is reached.
+        pub fn increment_unsettled_notional(
+            lane_id: LaneId,
+            amount: T::Balance,
+        ) -> DispatchResult {
+            if amount.is_zero() {
+                return Ok(());
+            }
+
+            let lane = Lanes::<T>::get(lane_id).ok_or(Error::<T>::LaneNotFound)?;
+
+            let current = LaneUnsettledNotional::<T>::get(lane_id);
+            let new_lane_total = current + amount;
+            ensure!(new_lane_total <= lane.unsettled_cap, Error::<T>::UnsettledCapExceeded);
+
+            LaneUnsettledNotional::<T>::insert(lane_id, new_lane_total);
+            GlobalUnsettledNotional::<T>::mutate(|g| {
+                *g = g.saturating_add(amount);
+            });
+
+            if new_lane_total == lane.unsettled_cap {
+                Self::deposit_event(Event::ExposureCapBreached {
+                    lane_id,
+                    current: new_lane_total,
+                    cap: lane.unsettled_cap,
+                });
+            }
+
+            Ok(())
+        }
+
+        /// Decrement both unsettled-notional counters (saturating; never panics).
+        pub fn decrement_unsettled_notional(lane_id: LaneId, amount: T::Balance) {
+            if amount.is_zero() {
+                return;
+            }
+            LaneUnsettledNotional::<T>::mutate(lane_id, |n| {
+                *n = n.saturating_sub(amount);
+            });
+            GlobalUnsettledNotional::<T>::mutate(|g| {
+                *g = g.saturating_sub(amount);
+            });
         }
     }
 }

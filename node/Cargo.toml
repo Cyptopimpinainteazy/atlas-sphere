@@ -41,7 +41,7 @@ serde_json = "1.0"
 parity-scale-codec = { version = "3.6", default-features = false, features = ["derive"] }
 jsonrpsee = { version = "0.16.3", features = ["macros", "server", "client"] }
 tokio = { version = "1.37", default-features = false }
-
+pallet-evm = { workspace = true, default-features = false, features = ["std"] }
 
 
 sc-basic-authorship = { workspace = true }

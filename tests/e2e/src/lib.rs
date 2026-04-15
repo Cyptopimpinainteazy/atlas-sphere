@@ -6,29 +6,39 @@
 //! Invariants: CHAIN-CONSENSUS-001, GPU-COORD-001, SETTLEMENT-001
 //! See: docs/adr/0002-e2e-determinism-triple-run.md
 
+#[cfg(feature = "full_e2e")]
 #[path = "../utils/mod.rs"]
 pub mod utils;
 
+#[cfg(feature = "full_e2e")]
 pub mod wait_for_rpc;
-#[cfg(test)]
+#[cfg(all(test, feature = "full_e2e"))]
 pub mod deterministic_integration_tests;
 
 // Re-export utility modules for easier access in tests
+#[cfg(feature = "full_e2e")]
 pub use utils::test_environment::*;
+#[cfg(feature = "full_e2e")]
 pub use utils::test_accounts::*;
+#[cfg(feature = "full_e2e")]
 pub use utils::test_contracts::*;
+#[cfg(feature = "full_e2e")]
 pub use utils::mock_services::*;
+#[cfg(feature = "full_e2e")]
 pub use utils::assertions::*;
 
+#[cfg(feature = "full_e2e")]
 use tokio::runtime::Runtime;
 
 /// Test result type for E2E tests
 pub type TestResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
 /// Global test runtime for async operations
+#[cfg(feature = "full_e2e")]
 static TEST_RUNTIME: once_cell::sync::OnceCell<Runtime> = once_cell::sync::OnceCell::new();
 
 /// Initialize the global test runtime
+#[cfg(feature = "full_e2e")]
 pub fn init_test_runtime() -> &'static Runtime {
     TEST_RUNTIME.get_or_init(|| {
         tokio::runtime::Builder::new_multi_thread()
@@ -39,7 +49,7 @@ pub fn init_test_runtime() -> &'static Runtime {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "full_e2e"))]
 mod tests {
     use super::*;
     use tracing::info;

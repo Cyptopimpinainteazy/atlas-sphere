@@ -3510,3 +3510,9 @@ Updated top gap head (post-fix):
   - Kernel test count: 112 → 146 (34 new, 0 regressions)
 - Made compute_cross_vm_comit_id pub(crate) to enable test assertions on comit IDs.
 - Node compilation verified clean after all changes.
+
+2026-04-13 — Reproducible containerized node artifact build path added
+
+- Added scripts/build-node-artifact-container.sh to build x3-chain-node in a pinned Rust 1.92.0 container and export artifacts/node/x3-chain-node plus SHA256.
+- Added .github/workflows/node-artifact-container.yml to run the same containerized build in CI and upload artifact outputs.
+- Documented operational swap/start/verify commands in Copilot session for replacing stale local node binary with CI/container artifact.

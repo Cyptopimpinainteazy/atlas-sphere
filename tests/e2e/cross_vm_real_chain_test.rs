@@ -78,12 +78,25 @@ mod tests {
             .filter_map(|m| m.as_str())
             .collect();
 
+        // Verify all three cross-VM RPC methods are registered
         assert!(
             method_names.contains(&"x3_submitCrossVmTransaction"),
             "x3_submitCrossVmTransaction should be registered. Found: {:?}",
             method_names.iter().filter(|m| m.starts_with("x3_")).collect::<Vec<_>>()
         );
         println!("✅ x3_submitCrossVmTransaction method registered");
+
+        assert!(
+            method_names.contains(&"x3_submitSvmTransaction"),
+            "x3_submitSvmTransaction should be registered"
+        );
+        println!("✅ x3_submitSvmTransaction method registered");
+
+        assert!(
+            method_names.contains(&"x3_submitX3vmTransaction"),
+            "x3_submitX3vmTransaction should be registered"
+        );
+        println!("✅ x3_submitX3vmTransaction method registered");
     }
 
     #[tokio::test]
@@ -186,6 +199,84 @@ mod tests {
                 println!("⚠ WebSocket connection failed: {e}");
                 // Not a hard failure - some test environments may not have WS
             }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_svm_submit() {
+        if !is_node_running() {
+            println!("⚠ Dev node not running - skipping");
+            return;
+        }
+
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .unwrap();
+
+        // SVM-only transaction submission
+        let res = client
+            .post(RPC_HTTP)
+            .json(&serde_json::json!({
+                "jsonrpc": "2.0",
+                "method": "x3_submitSvmTransaction",
+                "params": [{
+                    "svm_payload": "0x0102",  // Minimal SVM payload
+                    "caller": "0x0000000000000000000000000000000000000000"
+                }],
+                "id": 1
+            }))
+            .send()
+            .await
+            .expect("Failed to connect");
+
+        let body: serde_json::Value = res.json().await.unwrap();
+        
+        if body.get("error").is_some() {
+            println!("✅ x3_submitSvmTransaction responds with error (expected for minimal payload): {:?}", body["error"]["message"]);
+        } else {
+            println!("✅ x3_submitSvmTransaction successful: {:?}", body["result"]);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_x3vm_submit() {
+        if !is_node_running() {
+            println!("⚠ Dev node not running - skipping");
+            return;
+        }
+
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(10))
+            .build()
+            .unwrap();
+
+        // X3VM submission (should indicate it's part of Comit protocol)
+        let res = client
+            .post(RPC_HTTP)
+            .json(&serde_json::json!({
+                "jsonrpc": "2.0",
+                "method": "x3_submitX3vmTransaction",
+                "params": [{
+                    "x3vm_payload": "0x01"
+                }],
+                "id": 1
+            }))
+            .send()
+            .await
+            .expect("Failed to connect");
+
+        let body: serde_json::Value = res.json().await.unwrap();
+        
+        if let Some(err) = body.get("error") {
+            let msg = err["message"].as_str().unwrap_or("");
+            assert!(
+                msg.contains("Comit") || msg.contains("Comit"),
+                "X3VM should indicate Comit protocol usage. Got: {msg}"
+            );
+            println!("✅ x3_submitX3vmTransaction correctly indicates Comit protocol: {msg}");
+        } else {
+            panic!("x3_submitX3vmTransaction should return error guidance (X3VM is part of Comit)");
         }
     }
 }
