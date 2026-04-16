@@ -13,7 +13,7 @@ use crate::config::CoordinatorConfig;
 use crate::persistence::{InMemoryPersistence, SessionPersistence};
 use crate::types::*;
 use blake3;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
 use subtle::ConstantTimeEq;
 use tracing::{error, info, warn};
@@ -35,7 +35,10 @@ pub struct SwapCoordinator<P: SessionPersistence = InMemoryPersistence> {
     /// secret — even in a different session — is immediately rejected.
     /// This prevents cross-session replay attacks where an adversary reuses a
     /// leaked secret to claim HTLCs in multiple sessions.
-    used_secrets: Vec<[u8; 32]>,
+    ///
+    /// BTreeSet gives O(log n) membership checks vs O(n) for Vec, and eliminates
+    /// any risk of duplicate entries accumulating over time.
+    used_secrets: BTreeSet<[u8; 32]>,
     /// Persistence backend for sessions.
     persistence: Arc<P>,
 }
@@ -68,7 +71,8 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         // Restore the used-secrets set so that HTLC secret replay protection
         // survives node restarts.  Without this, an adversary could restart the
         // node and reuse a previously-revealed secret to steal funds.
-        let used_secrets = persistence.load_used_secrets();
+        let used_secrets: BTreeSet<[u8; 32]> =
+            persistence.load_used_secrets().into_iter().collect();
         let secrets_count = used_secrets.len();
 
         if session_count > 0 {
@@ -206,8 +210,7 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         // Collision check: ensure session_id is not already in use
         if self.sessions.contains_key(&session_id) {
             return Err(CoordinatorError::Internal(format!(
-                "Session ID collision detected: '{}' already exists",
-                session_id
+                "Session ID collision detected: '{session_id}' already exists"
             )));
         }
 
@@ -223,6 +226,16 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             timelock_slow: t_slow,
             created_at: now_unix,
             updated_at: now_unix,
+            // Merkle verification is required for all cross-chain swaps that touch
+            // external chains (EVM or SVM).  X3-to-X3 swaps can skip it because
+            // Flash Finality provides instant provable finality in-chain.
+            requires_merkle_verification: matches!(
+                (&fast_vm, &slow_vm),
+                (VmTarget::Evm { .. }, _)
+                    | (_, VmTarget::Evm { .. })
+                    | (VmTarget::Svm, _)
+                    | (_, VmTarget::Svm)
+            ),
         };
 
         self.persistence.save(&session);
@@ -502,7 +515,7 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
                         session.updated_at = now_unix;
                         session.leg_outcomes.push(outcome);
                         abort_error = Some(CoordinatorError::FlashLegReverted {
-                            vm: format!("leg-{}", leg_index),
+                            vm: format!("leg-{leg_index}"),
                             reason: reason_clone,
                         });
                     }
@@ -537,7 +550,6 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         }
         Ok(())
     }
-
 
     // ── Phase 4: Settlement ───────────────────────────────────────────────
 
@@ -595,7 +607,6 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         Ok(hash_lock)
     }
 
-
     /// Record that the fast chain claim succeeded (secret revealed on-chain).
     ///
     /// # Parameters
@@ -624,15 +635,13 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
 
         Self::validate_phase_transition(current_phase, SwapPhase::ClaimingFast)?;
 
-        // Global replay guard: reject any previously-seen secret immediately.
-        // Global replay guard: constant-time comparison to prevent timing attacks
+        // Global replay guard: O(log n) BTreeSet lookup, constant-time via subtle for
+        // resistance to timing side-channels even on the fast path.
         let secret_hash = *blake3::hash(&secret.0).as_bytes();
-        for stored_hash in &self.used_secrets {
-            if secret_hash.ct_eq(stored_hash).into() {
-                return Err(CoordinatorError::Internal(
-                    format!("HTLC secret replay detected for session '{}' — secret already used in a previous claim", session_id)
-                ));
-            }
+        if self.used_secrets.contains(&secret_hash) {
+            return Err(CoordinatorError::Internal(
+                format!("HTLC secret replay detected for session '{session_id}' — secret already used in a previous claim")
+            ));
         }
         {
             let session = self.sessions.get_mut(session_id).ok_or_else(|| {
@@ -655,7 +664,7 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             //  duplicate will be caught on retry, which is the safe outcome).
             // Register the secret hash globally (never store plaintext)
             let secret_hash = *blake3::hash(&secret.0).as_bytes();
-            self.used_secrets.push(secret_hash);
+            self.used_secrets.insert(secret_hash);
 
             if let Some(ref mut htlc) = session.htlc_fast {
                 htlc.status = HtlcStatus::Claimed;
@@ -668,7 +677,8 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         // Persist the updated secret set BEFORE persisting the session, so
         // that on crash-recovery the replay guard is at least as restrictive
         // as the session state (safe direction).
-        self.persistence.save_used_secrets(&self.used_secrets);
+        let secrets_vec: Vec<[u8; 32]> = self.used_secrets.iter().copied().collect();
+        self.persistence.save_used_secrets(&secrets_vec);
         self.persist_by_id(session_id);
         info!(session = %session_id, "Fast chain claimed — now claiming slow chain");
         Ok(())

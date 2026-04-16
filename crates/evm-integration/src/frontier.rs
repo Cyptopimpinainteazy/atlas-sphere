@@ -269,6 +269,7 @@ where
 /// Commits every address, balance delta, nonce delta, and storage mutation
 /// into a single blake2-256 hash so validators reach the same root for
 /// identical execution outcomes.
+#[allow(dead_code)]
 fn compute_state_root(changes: &[EvmStateChange]) -> [u8; 32] {
     use sp_io::hashing::blake2_256;
 
