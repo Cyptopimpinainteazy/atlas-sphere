@@ -64,497 +64,27 @@ pub mod weights;
 
 /// Runtime storage migrations.
 pub mod migrations;
-pub mod runtime_api;
 pub use weights::WeightInfo;
 
 use frame_support::pallet_prelude::*;
-use frame_support::sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, CheckedSub, SaturatedConversion};
+use frame_support::sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, SaturatedConversion};
 use frame_support::sp_runtime::DispatchError;
 use frame_support::traits::BuildGenesisConfig;
 use frame_support::traits::{Currency, UnixTime};
 use frame_system::pallet_prelude::*;
 use parity_scale_codec::Codec;
-use sp_core::{H160, H256};
+use sp_core::H256;
 use sp_io::hashing::blake2_256;
 use sp_runtime::traits::MaybeSerializeDeserialize;
 use sp_std::convert::TryInto;
 use sp_std::marker::PhantomData;
-use sp_std::{vec, vec::Vec};
+use sp_std::vec::Vec;
 use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
-use x3_cross_vm_bridge::canonical::{
-    CrossVmCall, CrossVmReceipt, CrossVmStatus, VmId, REPLAY_PRUNE_HORIZON_BLOCKS,
-};
-
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-
-// ## Versioning Strategy
-//
-// The X3 Kernel employs explicit version fields in major data types to support
-// forward-compatible upgrades without breaking downstream code. This enables:
-//
-// - **Version-aware parsing**: RPC clients and validators can detect type versions
-// - **Graceful degradation**: Older clients can safely handle newer type versions
-// - **Schema evolution**: New fields added in future versions won't corrupt existing data
-//
-// ### Current Versions
-// - `COMIT_VERSION = 1` — Dual-VM Comit (EVM + SVM)
-// - `COMIT_V2_VERSION = 2` — Triple-VM Comit (EVM + SVM + X3VM)
-// - `EXECUTION_RECEIPT_VERSION = 1` — VM execution results
-// - `SPHERE_STATE_VERSION = 1` — Cross-VM state root
-//
-// ### Future Upgrade Path
-// When introducing Comit v3 (e.g., with zkVM support), maintain the `Comit` type
-// with version field set to 1, and introduce `ComitV3` with version field set to 3.
-// Validators can route based on version field without requiring type-level changes.
-
-/// Comit protocol version 1 (dual-VM: EVM + SVM).
-pub const COMIT_VERSION: u8 = 1;
-
-/// Comit protocol version 2 (triple-VM: EVM + SVM + X3VM).
-pub const COMIT_V2_VERSION: u8 = 2;
-
-/// ExecutionReceipt protocol version.
-pub const EXECUTION_RECEIPT_VERSION: u8 = 1;
-
-/// SphereState protocol version.
-pub const SPHERE_STATE_VERSION: u8 = 1;
-
-/// Comit protocol version 3 (batching support).
-pub const COMIT_V3_VERSION: u8 = 3;
-
-// ============================================================================
-// VERSIONING INFRASTRUCTURE: ComitV3, Routing, Migration, State Versioning
-// ============================================================================
-
-/// Error type for versioning and migration operations.
-#[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, TypeInfo)]
-pub enum VersioningError {
-    /// Empty batch was attempted to be committed.
-    EmptyBatch,
-    /// Duplicate entry ID within a batch.
-    DuplicateEntryId(H256),
-    /// Circular dependency detected in batch entries.
-    CircularDependency,
-    /// Hash integrity check failed.
-    HashIntegrityFailed,
-    /// Invalid batch state transition.
-    InvalidBatchState(Vec<u8>),
-    /// Entry not found in batch.
-    EntryNotFound(H256),
-    /// Version negotiation failed.
-    VersionNegotiationFailed { requested: u32, supported: Vec<u32> },
-    /// Version mismatch error.
-    VersionMismatch { expected: u32, actual: u32 },
-}
-
-/// Individual entry within a batch commit (ComitV3).
-///
-/// Each batch entry represents a single transaction with its own payload,
-/// hash, ordering, and optional dependencies on other entries.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct BatchEntry {
-    /// Unique identifier for this entry within the batch.
-    pub entry_id: H256,
-    /// Transaction payload (EVM, SVM, or X3 VM bytecode).
-    pub payload: Vec<u8>,
-    /// Hash commitment to this entry's payload (sha256 or equivalent).
-    pub entry_hash: H256,
-    /// Ordering index within the batch (0-indexed).
-    pub order_index: u32,
-    /// Optional dependencies: set of entry IDs that must complete before this entry.
-    pub depends_on: Vec<H256>,
-}
-
-impl BatchEntry {
-    /// Create a new batch entry with the given parameters.
-    pub fn new(
-        entry_id: H256,
-        payload: Vec<u8>,
-        entry_hash: H256,
-        order_index: u32,
-        depends_on: Vec<H256>,
-    ) -> Self {
-        Self {
-            entry_id,
-            payload,
-            entry_hash,
-            order_index,
-            depends_on,
-        }
-    }
-}
-
-/// Comit protocol version 3 with batch transaction support.
-///
-/// ComitV3 enables atomic batching of multiple transactions within a single
-/// commit, with support for intra-batch dependencies and atomic rollback.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct ComitV3<AccountId, Balance> {
-    /// Protocol version (always COMIT_V3_VERSION = 3).
-    pub version: u8,
-    /// Globally unique batch identifier.
-    pub batch_id: H256,
-    /// Origin account that submitted this batch.
-    pub origin: AccountId,
-    /// Entries in this batch.
-    pub entries: Vec<BatchEntry>,
-    /// Aggregate commitment hash over all entries.
-    pub aggregate_hash: H256,
-    /// Timestamp of batch creation (block number or Unix timestamp).
-    pub timestamp: u64,
-    /// Fee charged for processing the batch.
-    pub fee: Balance,
-    /// Optional metadata (e.g., correlation IDs, version hints).
-    pub metadata: Vec<u8>,
-}
-
-impl<AccountId, Balance> ComitV3<AccountId, Balance> {
-    /// Create a new empty batch.
-    pub fn new_batch(batch_id: H256, origin: AccountId, fee: Balance, timestamp: u64) -> Self {
-        Self {
-            version: COMIT_V3_VERSION,
-            batch_id,
-            origin,
-            entries: Vec::new(),
-            aggregate_hash: H256::zero(),
-            timestamp,
-            fee,
-            metadata: Vec::new(),
-        }
-    }
-
-    /// Add an entry to the batch.
-    pub fn add_entry(&mut self, entry: BatchEntry) -> Result<(), VersioningError> {
-        // Check for duplicate entry IDs
-        if self.entries.iter().any(|e| e.entry_id == entry.entry_id) {
-            return Err(VersioningError::DuplicateEntryId(entry.entry_id));
-        }
-        self.entries.push(entry);
-        Ok(())
-    }
-
-    /// Remove an entry from the batch by ID.
-    pub fn remove_entry(&mut self, entry_id: H256) -> Result<(), VersioningError> {
-        let initial_len = self.entries.len();
-        self.entries.retain(|e| e.entry_id != entry_id);
-        if self.entries.len() == initial_len {
-            return Err(VersioningError::EntryNotFound(entry_id));
-        }
-        Ok(())
-    }
-
-    /// Validate the batch for consistency, hash integrity, and acyclic dependencies.
-    pub fn validate_batch(&self) -> Result<(), VersioningError> {
-        if self.entries.is_empty() {
-            return Err(VersioningError::EmptyBatch);
-        }
-
-        // Check for duplicate entry IDs
-        let mut seen_ids = sp_std::collections::btree_set::BTreeSet::new();
-        for entry in &self.entries {
-            if !seen_ids.insert(entry.entry_id) {
-                return Err(VersioningError::DuplicateEntryId(entry.entry_id));
-            }
-        }
-
-        // Check for circular dependencies using topological sort
-        self.check_acyclic_dependencies()?;
-
-        Ok(())
-    }
-
-    /// Check that the dependency graph is acyclic using DFS.
-    fn check_acyclic_dependencies(&self) -> Result<(), VersioningError> {
-        let mut visited = sp_std::collections::btree_set::BTreeSet::new();
-        let mut rec_stack = sp_std::collections::btree_set::BTreeSet::new();
-
-        for entry in &self.entries {
-            if !visited.contains(&entry.entry_id) {
-                self.dfs_visit(entry.entry_id, &mut visited, &mut rec_stack)?;
-            }
-        }
-        Ok(())
-    }
-
-    /// Depth-first search to detect cycles in dependency graph.
-    fn dfs_visit(
-        &self,
-        node_id: H256,
-        visited: &mut sp_std::collections::btree_set::BTreeSet<H256>,
-        rec_stack: &mut sp_std::collections::btree_set::BTreeSet<H256>,
-    ) -> Result<(), VersioningError> {
-        visited.insert(node_id);
-        rec_stack.insert(node_id);
-
-        if let Some(entry) = self.entries.iter().find(|e| e.entry_id == node_id) {
-            for &dep_id in &entry.depends_on {
-                if !visited.contains(&dep_id) {
-                    self.dfs_visit(dep_id, visited, rec_stack)?;
-                } else if rec_stack.contains(&dep_id) {
-                    return Err(VersioningError::CircularDependency);
-                }
-            }
-        }
-
-        rec_stack.remove(&node_id);
-        Ok(())
-    }
-
-    /// Finalize and compute the aggregate hash over all entries.
-    pub fn commit_batch(&mut self) -> Result<H256, VersioningError> {
-        self.validate_batch()?;
-
-        // Compute aggregate hash by hashing all entry hashes in order
-        use sp_io::hashing::sha2_256;
-        let mut aggregate_data = Vec::new();
-        for entry in &self.entries {
-            aggregate_data.extend_from_slice(entry.entry_hash.as_bytes());
-        }
-        self.aggregate_hash = H256(sha2_256(&aggregate_data));
-        Ok(self.aggregate_hash)
-    }
-
-    /// Get the number of entries in the batch.
-    pub fn entry_count(&self) -> usize {
-        self.entries.len()
-    }
-
-    /// Get an entry by ID.
-    pub fn get_entry(&self, entry_id: H256) -> Option<&BatchEntry> {
-        self.entries.iter().find(|e| e.entry_id == entry_id)
-    }
-}
-
-/// Builder pattern implementation for ergonomic batch construction.
-pub struct BatchBuilder<AccountId, Balance> {
-    batch: ComitV3<AccountId, Balance>,
-}
-
-impl<AccountId, Balance> BatchBuilder<AccountId, Balance> {
-    /// Create a new batch builder.
-    pub fn new(batch_id: H256, origin: AccountId, fee: Balance, timestamp: u64) -> Self {
-        Self {
-            batch: ComitV3::new_batch(batch_id, origin, fee, timestamp),
-        }
-    }
-
-    /// Add an entry to the batch (builder method).
-    pub fn with_entry(mut self, entry: BatchEntry) -> Result<Self, VersioningError> {
-        self.batch.add_entry(entry)?;
-        Ok(self)
-    }
-
-    /// Add metadata to the batch.
-    pub fn with_metadata(mut self, metadata: Vec<u8>) -> Self {
-        self.batch.metadata = metadata;
-        self
-    }
-
-    /// Build and return the finalized batch.
-    pub fn build(mut self) -> Result<ComitV3<AccountId, Balance>, VersioningError> {
-        self.batch.commit_batch()?;
-        Ok(self.batch)
-    }
-}
-
-// ============================================================================
-// COMIT OPERATIONS TRAIT AND VERSION-AWARE ROUTING
-// ============================================================================
-
-/// Trait defining operations available across all Comit versions.
-pub trait ComitOperations: Send + Sync {
-    /// Execute the commit and return a result with execution metadata.
-    fn execute(&self) -> Result<Vec<u8>, VersioningError>;
-
-    /// Verify the commit's consistency without execution.
-    fn verify(&self) -> Result<bool, VersioningError>;
-
-    /// Rollback and restore pre-commit state.
-    fn rollback(&self) -> Result<(), VersioningError>;
-
-    /// Get the protocol version of this commit.
-    fn get_version(&self) -> u32;
-}
-
-/// Version enum wrapping all Comit versions.
-pub enum ComitVersion<AccountId, Balance> {
-    /// Comit version 1 (dual-VM).
-    V1(Comit<AccountId, Balance>),
-    /// Comit version 2 (triple-VM).
-    V2(ComitV2<AccountId, Balance>),
-    /// Comit version 3 (batching).
-    V3(ComitV3<AccountId, Balance>),
-}
-
-impl<AccountId, Balance> ComitVersion<AccountId, Balance> {
-    /// Get the protocol version.
-    pub fn version(&self) -> u32 {
-        match self {
-            ComitVersion::V1(_) => 1,
-            ComitVersion::V2(_) => 2,
-            ComitVersion::V3(_) => 3,
-        }
-    }
-}
-
-/// Forward migration from ComitV1 to ComitV2.
-impl<AccountId: Clone, Balance: Clone> From<Comit<AccountId, Balance>>
-    for ComitV2<AccountId, Balance>
-{
-    fn from(v1: Comit<AccountId, Balance>) -> Self {
-        ComitV2 {
-            version: COMIT_V2_VERSION,
-            comit_id: v1.comit_id,
-            origin: v1.origin,
-            evm_payload: v1.evm_payload,
-            svm_payload: v1.svm_payload,
-            x3_payload: Vec::new(), // V1 has no X3 payload
-            nonce: v1.nonce,
-            fee: v1.fee,
-            prepare_root: v1.prepare_root,
-        }
-    }
-}
-
-/// Forward migration from ComitV2 to ComitV3.
-impl<AccountId, Balance> From<ComitV2<AccountId, Balance>> for ComitV3<AccountId, Balance> {
-    fn from(v2: ComitV2<AccountId, Balance>) -> Self {
-        // Wrap the V2 commit as a single-entry batch
-        use sp_io::hashing::sha2_256;
-
-        let mut payload_combined = Vec::new();
-        payload_combined.extend_from_slice(&v2.evm_payload);
-        payload_combined.extend_from_slice(&v2.svm_payload);
-        payload_combined.extend_from_slice(&v2.x3_payload);
-
-        let entry_hash = H256(sha2_256(&payload_combined));
-        let entry = BatchEntry::new(v2.comit_id, payload_combined, entry_hash, 0, Vec::new());
-
-        let mut batch = ComitV3 {
-            version: COMIT_V3_VERSION,
-            batch_id: v2.comit_id,
-            origin: v2.origin,
-            entries: vec![entry],
-            aggregate_hash: entry_hash,
-            timestamp: 0, // Use 0 as placeholder, can be overridden
-            fee: v2.fee,
-            metadata: Vec::new(),
-        };
-
-        // Recompute aggregate hash
-        let _ = batch.commit_batch(); // Safe to ignore error as we know batch is valid
-        batch
-    }
-}
-
-/// Version negotiation function.
-///
-/// Returns the highest mutually supported version, or an error if no version matches.
-pub fn negotiate_version(supported: &[u32], requested: u32) -> Result<u32, VersioningError> {
-    if supported.is_empty() {
-        return Err(VersioningError::VersionNegotiationFailed {
-            requested,
-            supported: Vec::new(),
-        });
-    }
-
-    if supported.contains(&requested) {
-        return Ok(requested);
-    }
-
-    // Return highest supported version if requested is not supported
-    if let Some(&highest) = supported.iter().max() {
-        if highest < requested {
-            return Ok(highest);
-        }
-    }
-
-    Err(VersioningError::VersionNegotiationFailed {
-        requested,
-        supported: supported.to_vec(),
-    })
-}
-
-// ============================================================================
-// STATE VERSIONING INFRASTRUCTURE
-// ============================================================================
-
-/// Semantic version representation.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct SemanticVersion {
-    /// Major version number.
-    pub major: u32,
-    /// Minor version number.
-    pub minor: u32,
-    /// Patch version number.
-    pub patch: u32,
-}
-
-impl SemanticVersion {
-    /// Create a new semantic version.
-    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self {
-            major,
-            minor,
-            patch,
-        }
-    }
-}
-
-/// Migration event recording version transitions.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct MigrationEvent {
-    /// Source version.
-    pub from_version: u32,
-    /// Target version.
-    pub to_version: u32,
-    /// Timestamp of migration.
-    pub timestamp: u64,
-    /// Migration strategy identifier.
-    pub strategy: Vec<u8>,
-}
-
-/// Versioned state snapshot for historical tracking.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct VersionedSnapshot {
-    /// Serialized state bytes.
-    pub state_bytes: Vec<u8>,
-    /// Version at time of snapshot.
-    pub version: SemanticVersion,
-    /// Cryptographic hash of state for integrity.
-    pub state_hash: H256,
-    /// Timestamp of snapshot.
-    pub timestamp: u64,
-}
-
-/// Schema descriptor for state introspection.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct SchemaDescriptor {
-    /// Field names in the schema.
-    pub fields: Vec<Vec<u8>>,
-    /// Version compatibility flags.
-    pub compatibility_flags: u32,
-}
 
 /// Represents a Comit transaction submitted to the X3 Kernel.
-///
-/// # Schema Evolution
-/// The version field enables clients to interpret this struct across protocol upgrades.
-/// Version 1 indicates dual-VM payloads (EVM + SVM). Future versions may add fields
-/// without invalidating parsers that understand v1.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[scale_info(skip_type_params(AccountId, Balance))]
 pub struct Comit<AccountId, Balance> {
-    /// Protocol version for forward compatibility (always COMIT_VERSION = 1).
-    pub version: u8,
     /// Globally unique Comit identifier.
     pub comit_id: H256,
     /// Origin account that submitted the Comit.
@@ -575,17 +105,9 @@ pub struct Comit<AccountId, Balance> {
 ///
 /// This is intentionally a separate type from `Comit` to avoid breaking
 /// downstream code that relies on the original dual-VM shape.
-///
-/// # Schema Evolution
-/// The version field is set to COMIT_V2_VERSION = 2, indicating triple-VM support.
-/// When ComitV3 is introduced (e.g., with zkVM), maintain this type as-is and
-/// introduce a new `ComitV3` struct with version = 3.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[scale_info(skip_type_params(AccountId, Balance))]
 pub struct ComitV2<AccountId, Balance> {
-    /// Protocol version for forward compatibility (always COMIT_V2_VERSION = 2).
-    pub version: u8,
     /// Globally unique Comit identifier.
     pub comit_id: H256,
     /// Origin account that submitted the Comit.
@@ -605,15 +127,8 @@ pub struct ComitV2<AccountId, Balance> {
 }
 
 /// Execution receipt returned by VM runtimes after transaction execution.
-///
-/// # Schema Evolution
-/// The version field enables clients to understand receipt schema across upgrades.
-/// Version 1 includes success, gas_used, return_data, logs, and state_changes.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ExecutionReceipt {
-    /// Protocol version for forward compatibility (always EXECUTION_RECEIPT_VERSION = 1).
-    pub version: u8,
     /// Whether the execution was successful.
     pub success: bool,
     /// Gas used during execution.
@@ -624,17 +139,10 @@ pub struct ExecutionReceipt {
     pub logs: Vec<ExecutionLog>,
     /// State changes resulting from execution.
     pub state_changes: Vec<StateChange>,
-    /// Protocol version at execution time.
-    pub protocol_version: u32,
-    /// Migration history tracking version transitions.
-    pub migration_history: Vec<MigrationEvent>,
-    /// Compatibility flags indicating active features.
-    pub compatibility_flags: u32,
 }
 
 /// Log entry emitted during VM execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct ExecutionLog {
     /// Address (EVM H160 or SVM 32-byte key) that emitted the log.
     pub address: Vec<u8>,
@@ -646,7 +154,6 @@ pub struct ExecutionLog {
 
 /// State change resulting from VM execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct StateChange {
     /// Account/contract address affected (EVM H160 or SVM 32-byte key).
     pub address: Vec<u8>,
@@ -657,50 +164,18 @@ pub struct StateChange {
 }
 
 /// Unified state representation for the X3 Chain.
-///
-/// # Schema Evolution
-/// The version field enables clients to understand state structure across upgrades.
-/// Version 1 includes state_root, block_number, and timestamp. Future versions
-/// may add additional consensus or finality metadata without breaking parsers.
-#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Default)]
 pub struct SphereState {
-    /// Protocol version for forward compatibility (always SPHERE_STATE_VERSION = 1).
-    pub version: u8,
     /// State root hash representing the entire sphere state.
     pub state_root: H256,
     /// Block number when this state was computed.
     pub block_number: u32,
     /// Timestamp of state computation.
     pub timestamp: u64,
-    /// Semantic version of the state schema.
-    pub state_version: SemanticVersion,
-    /// Historical snapshots of state across versions.
-    pub version_timeline: Vec<VersionedSnapshot>,
-    /// Current schema descriptor for runtime introspection.
-    pub current_schema: SchemaDescriptor,
-}
-
-impl Default for SphereState {
-    fn default() -> Self {
-        Self {
-            version: SPHERE_STATE_VERSION,
-            state_root: H256::zero(),
-            block_number: 0,
-            timestamp: 0,
-            state_version: SemanticVersion::new(1, 0, 0),
-            version_timeline: Vec::new(),
-            current_schema: SchemaDescriptor {
-                fields: Vec::new(),
-                compatibility_flags: 0,
-            },
-        }
-    }
 }
 
 /// Dual-VM transaction types that can be executed.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum VmTransaction {
     /// EVM transaction payload.
     Evm(Vec<u8>),
@@ -710,7 +185,6 @@ pub enum VmTransaction {
 
 /// Reasons describing why a Comit failed verification or execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 /// Granular error codes for comit execution failures with diagnostic context.
 /// Each variant includes an error code and optional diagnostic message (max 256 bytes).
 pub enum ComitFailureReason {
@@ -881,79 +355,6 @@ impl<AccountId> CrossChainProofVerifier<AccountId> for NoopProofVerifier {
     }
 }
 
-// ============================================================================
-// HELPER FUNCTIONS FOR VERSION-AWARE OPERATIONS
-// ============================================================================
-
-/// Create an ExecutionReceipt with default versioning fields.
-pub fn create_execution_receipt(
-    success: bool,
-    gas_used: u64,
-    return_data: Vec<u8>,
-    logs: Vec<ExecutionLog>,
-    state_changes: Vec<StateChange>,
-) -> ExecutionReceipt {
-    ExecutionReceipt {
-        version: EXECUTION_RECEIPT_VERSION,
-        success,
-        gas_used,
-        return_data,
-        logs,
-        state_changes,
-        protocol_version: 1, // Default to protocol v1
-        migration_history: Vec::new(),
-        compatibility_flags: 0,
-    }
-}
-
-/// StateVersionManager for managing version lifecycle.
-pub struct StateVersionManager;
-
-impl StateVersionManager {
-    /// Create a checkpoint of the current state.
-    pub fn checkpoint(
-        state: &SphereState,
-        state_bytes: Vec<u8>,
-    ) -> Result<VersionedSnapshot, VersioningError> {
-        use sp_io::hashing::sha2_256;
-
-        let state_hash = H256(sha2_256(&state_bytes));
-        Ok(VersionedSnapshot {
-            state_bytes,
-            version: state.state_version.clone(),
-            state_hash,
-            timestamp: frame_support::sp_runtime::traits::One::one(), // Placeholder
-        })
-    }
-
-    /// Rollback to a previous version.
-    pub fn rollback_to_version(
-        state: &mut SphereState,
-        target_version: &SemanticVersion,
-    ) -> Result<(), VersioningError> {
-        if state
-            .version_timeline
-            .iter()
-            .any(|snapshot| snapshot.version == *target_version)
-        {
-            state.state_version = target_version.clone();
-            Ok(())
-        } else {
-            Err(VersioningError::VersionMismatch {
-                expected: 1, // Placeholder
-                actual: 0,
-            })
-        }
-    }
-
-    /// Prune snapshots older than a given version.
-    pub fn prune_before(state: &mut SphereState, keep_version: &SemanticVersion) {
-        state
-            .version_timeline
-            .retain(|s| &s.version >= keep_version);
-    }
-}
-
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
@@ -1051,13 +452,6 @@ pub mod pallet {
         #[pallet::constant]
         type MaxPreparedOpsPerBlock: Get<u32>;
 
-        /// Maximum number of stale `(VmId, call_hash)` replay-store
-        /// entries to prune per block. Bounds `on_initialize` work so
-        /// the pruner cannot monopolise a block's weight budget even
-        /// under pathological admission patterns.
-        #[pallet::constant]
-        type MaxReplayPruneItemsPerBlock: Get<u32>;
-
         /// Require a cross-chain proof for cross-VM operations.
         #[pallet::constant]
         type RequireCrossVmProof: Get<bool>;
@@ -1083,14 +477,6 @@ pub mod pallet {
         /// Origin that can execute privileged governance functions.
         /// Typically EnsureRoot or a council-based origin.
         type GovernanceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-
-        /// Bridge escrow contract address for EVM atomic swaps.
-        #[pallet::constant]
-        type BridgeEvmEscrow: Get<H160>;
-
-        /// Bridge escrow program address for SVM atomic swaps.
-        #[pallet::constant]
-        type BridgeSvmEscrow: Get<[u8; 32]>;
     }
 
     type AssetSymbolOf<T> = BoundedVec<u8, <T as Config>::MaxAssetSymbolLength>;
@@ -1191,34 +577,6 @@ pub mod pallet {
     pub type PreparedCrossVmQueue<T: Config> =
         StorageValue<_, BoundedVec<H256, <T as Config>::MaxPreparedCrossVmOps>, ValueQuery>;
 
-    /// Canonical cross-VM replay-protection store.
-    ///
-    /// Key: `(VmId, call_hash)` where `call_hash` is
-    /// `CrossVmCall::call_hash(&source_finalized_hash)` computed against
-    /// the finalized-chain hash at admission time (see
-    /// [`Pallet::x3vm_source_finalized_hash`]).
-    ///
-    /// Value: the block number at which the call hash was admitted.
-    /// The value is the pruning cursor: entries older than
-    /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks relative to the current
-    /// block are eligible for removal in `on_initialize`.
-    ///
-    /// This store must outlive in-memory batch clears — once a call
-    /// hash is admitted, it stays admitted for at least
-    /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks regardless of whether the
-    /// dispatch succeeded, failed, or aborted. That preserves
-    /// at-most-once semantics against late-arriving proofs.
-    #[pallet::storage]
-    pub type X3vmReplayStore<T: Config> = StorageDoubleMap<
-        _,
-        Blake2_128Concat,
-        VmId,
-        Blake2_128Concat,
-        H256,
-        BlockNumberFor<T>,
-        OptionQuery,
-    >;
-
     /// Rate limiting: tracks Comit submissions per account per block.
     /// Key: (AccountId, BlockNumber), Value: submission count.
     /// Used to prevent DoS via excessive submissions from a single account.
@@ -1237,6 +595,11 @@ pub mod pallet {
     /// Useful for monitoring and debugging data format issues.
     #[pallet::storage]
     pub type DecodeFailureCount<T: Config> = StorageValue<_, u32, ValueQuery>;
+
+    /// Emergency pause flag. When `true`, all user-facing extrinsics are disabled.
+    /// Only governance (root/council) can toggle this.
+    #[pallet::storage]
+    pub type ProtocolPaused<T: Config> = StorageValue<_, bool, ValueQuery>;
 
     /// Maximum size in bytes of SVM account data stored per 32-byte pubkey.
     /// 64 KiB is sufficient for most programs; programs requiring more storage
@@ -1257,38 +620,16 @@ pub mod pallet {
         frame_support::BoundedVec<u8, frame_support::traits::ConstU32<65_536>>,
     >;
 
-    /// EVM bridge escrow contract address, operator-configurable via genesis / set_escrow extrinsic.
-    #[pallet::storage]
-    pub type EscrowEvmAddress<T: Config> = StorageValue<_, sp_core::H160, ValueQuery>;
-
-    /// SVM bridge escrow program address, operator-configurable via genesis / set_escrow extrinsic.
-    #[pallet::storage]
-    pub type EscrowSvmAddress<T: Config> = StorageValue<_, [u8; 32], ValueQuery>;
-
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
     pub struct GenesisConfig<T: Config> {
         /// Initial asset registry entries.
         pub assets: Vec<(T::AssetId, Vec<u8>, u8)>,
-        /// EVM bridge escrow contract address (20-byte hex).  Zero-value is the
-        /// safe default; set this to the deployed escrow contract before launch.
-        #[serde(default)]
-        pub evm_escrow_addr: sp_core::H160,
-        /// SVM bridge escrow program address (32-byte pubkey).  Zero-value is the
-        /// safe default; set this to the deployed escrow program before launch.
-        #[serde(default)]
-        pub svm_escrow_addr: [u8; 32],
     }
 
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            if self.evm_escrow_addr != sp_core::H160::zero() {
-                EscrowEvmAddress::<T>::put(self.evm_escrow_addr);
-            }
-            if self.svm_escrow_addr != [0u8; 32] {
-                EscrowSvmAddress::<T>::put(self.svm_escrow_addr);
-            }
             for (asset_id, symbol, decimals) in &self.assets {
                 assert!(
                     !AssetRegistry::<T>::contains_key(asset_id),
@@ -1403,6 +744,10 @@ pub mod pallet {
             amount: T::Balance,
             comit_id: H256,
         },
+        /// The protocol has been emergency-paused by governance.
+        ProtocolPaused,
+        /// The protocol has been unpaused and resumed normal operation.
+        ProtocolUnpaused,
     }
 
     #[pallet::error]
@@ -1481,6 +826,8 @@ pub mod pallet {
         CrossVmFeeExceeded,
         /// Cross-VM prepared queue full.
         CrossVmPreparedQueueFull,
+        /// The protocol is currently paused by governance. No user operations permitted.
+        ProtocolIsPaused,
     }
 
     use frame_support::traits::StorageVersion;
@@ -1508,18 +855,39 @@ pub mod pallet {
                 }
             }
 
-            // Prune stale replay-store entries (bounded per block).
-            let replay_pruned = Self::prune_x3vm_replay_store(now);
-
             // Minimal weight for bounded iteration.
-            let total =
-                (processed as u64).saturating_add(replay_pruned as u64);
-            T::DbWeight::get().reads_writes(total, total)
+            T::DbWeight::get().reads_writes(processed as u64, processed as u64)
         }
     }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        /// Activate emergency pause — halts all user-facing extrinsics.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(40)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_pause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
+            ProtocolPaused::<T>::put(true);
+            Self::deposit_event(Event::ProtocolPaused);
+            Ok(())
+        }
+
+        /// Deactivate emergency pause — resumes normal operation.
+        /// Only callable by `GovernanceOrigin` (root or council).
+        #[pallet::call_index(41)]
+        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        pub fn emergency_unpause(origin: OriginFor<T>) -> DispatchResult {
+            T::GovernanceOrigin::ensure_origin(origin)?;
+            // Only unpause if currently paused (nothing to do otherwise)
+            if ProtocolPaused::<T>::get() {
+                ProtocolPaused::<T>::put(false);
+                Self::deposit_event(Event::ProtocolUnpaused);
+            }
+            Ok(())
+        }
+
         /// Submit a Comit transaction describing dual-VM execution intents.
         #[pallet::call_index(0)]
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit())]
@@ -1533,6 +901,9 @@ pub mod pallet {
             prepare_root: H256,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
 
             // Check for duplicate comit_id (M-4: Comit ID uniqueness)
             ensure!(
@@ -1576,7 +947,6 @@ pub mod pallet {
             })?;
 
             let comit = Comit::<T::AccountId, T::Balance> {
-                version: COMIT_VERSION,
                 comit_id,
                 origin: who.clone(),
                 evm_payload: evm_payload.clone(),
@@ -1796,6 +1166,9 @@ pub mod pallet {
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
+
             ensure!(
                 !SubmittedComits::<T>::contains_key(comit_id),
                 Error::<T>::DuplicateComitId
@@ -1832,7 +1205,6 @@ pub mod pallet {
             })?;
 
             let comit = ComitV2::<T::AccountId, T::Balance> {
-                version: COMIT_V2_VERSION,
                 comit_id,
                 origin: who.clone(),
                 evm_payload: evm_payload.clone(),
@@ -2069,6 +1441,8 @@ pub mod pallet {
             proof: CrossChainProof,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             let _ = Self::prepare_cross_vm_operation_inner(&who, operation, nonce, max_fee, proof)?;
             Ok(())
         }
@@ -2078,6 +1452,8 @@ pub mod pallet {
         #[pallet::weight(<T as Config>::WeightInfo::submit_comit_v2())]
         pub fn commit_cross_vm_operation(origin: OriginFor<T>, comit_id: H256) -> DispatchResult {
             let who = ensure_signed(origin)?;
+            // SEC-009: Emergency pause guard
+            ensure!(!ProtocolPaused::<T>::get(), Error::<T>::ProtocolIsPaused);
             Self::commit_cross_vm_operation_inner(&who, comit_id)
         }
 
@@ -2469,7 +1845,7 @@ pub mod pallet {
             context
         }
 
-        pub(crate) fn compute_cross_vm_comit_id(
+        fn compute_cross_vm_comit_id(
             origin: &T::AccountId,
             operation: &CrossVmOperation,
             nonce: u64,
@@ -2510,20 +1886,9 @@ pub mod pallet {
                 }
                 CrossVmOperation::CallSvm { .. } => (0u64, T::DefaultSvmComputeLimit::get()),
                 CrossVmOperation::AtomicSwap { .. } => (200_000u64, 200_000u64),
-                // Tri-VM swap: EVM + SVM columns same as 2-party; x3VM
-                // leg's canonical gas_budget rides on the SVM compute
-                // column (matches CallX3Vm billing convention).
-                CrossVmOperation::AtomicTriSwap { x3vm_call, .. } => (
-                    200_000u64,
-                    200_000u64.saturating_add(x3vm_call.gas_budget),
-                ),
                 // Message passing: moderate gas, no balance lock
                 CrossVmOperation::MessageToEvm { .. } => (50_000u64, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, 50_000u64),
-                // x3VM calls are charged against x3VM gas (no EVM or
-                // SVM cost). We bill the caller's full `gas_budget` up
-                // front; refunds happen at post-execution settlement.
-                CrossVmOperation::CallX3Vm { call, .. } => (0u64, call.gas_budget),
             };
 
             let base_fee = T::Balance::default();
@@ -2559,29 +1924,6 @@ pub mod pallet {
                     pubkey[..len].copy_from_slice(&svm_party[..len]);
                     let svm_balance = dispatcher.get_svm_balance(&pubkey) as u128;
                     ensure!(svm_balance >= *svm_amount, Error::<T>::InsufficientBalance);
-                }
-                CrossVmOperation::AtomicTriSwap {
-                    evm_party,
-                    svm_party,
-                    evm_amount,
-                    svm_amount,
-                    x3vm_call,
-                    ..
-                } => {
-                    let evm_balance = dispatcher.get_evm_balance(evm_party);
-                    ensure!(evm_balance >= *evm_amount, Error::<T>::InsufficientBalance);
-                    let mut pubkey = [0u8; 32];
-                    let len = svm_party.len().min(32);
-                    pubkey[..len].copy_from_slice(&svm_party[..len]);
-                    let svm_balance = dispatcher.get_svm_balance(&pubkey) as u128;
-                    ensure!(svm_balance >= *svm_amount, Error::<T>::InsufficientBalance);
-                    // x3VM leg: admission-check target/version. No balance
-                    // reservation — replay protection is via call_hash.
-                    ensure!(
-                        x3vm_call.target == x3_cross_vm_bridge::VmId::X3Vm,
-                        Error::<T>::InvalidCrossVmOperation
-                    );
-                    x3vm_call.ensure_current_version()?;
                 }
                 _ => {}
             }
@@ -2738,19 +2080,8 @@ pub mod pallet {
                     let evm = result.gas_used / 2;
                     (evm, result.gas_used.saturating_sub(evm))
                 }
-                CrossVmOperation::AtomicTriSwap { .. } => {
-                    // Tri-VM: split EVM 1/3, remainder (SVM + x3VM) on
-                    // SVM compute column. Refined accounting is a Patch
-                    // 5.1 concern; conservative split avoids under-charging.
-                    let evm = result.gas_used / 3;
-                    (evm, result.gas_used.saturating_sub(evm))
-                }
                 CrossVmOperation::MessageToEvm { .. } => (result.gas_used, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, result.gas_used),
-                // x3VM calls bill under the SVM compute column for
-                // fee accounting purposes (x3VM and SVM share the
-                // compute-unit model). EVM gas column stays zero.
-                CrossVmOperation::CallX3Vm { .. } => (0u64, result.gas_used),
             };
 
             let required_fee =
@@ -2789,15 +2120,11 @@ pub mod pallet {
 
             let bridge_state_changes = Self::build_cross_vm_state_changes(&prepared.operation)?;
             let bridge_receipt = ExecutionReceipt {
-                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: result.gas_used,
                 return_data: result.output,
                 logs: Vec::new(),
                 state_changes: bridge_state_changes,
-                protocol_version: 1,
-                migration_history: Vec::new(),
-                compatibility_flags: 0,
             };
 
             let changes_applied =
@@ -2839,133 +2166,6 @@ pub mod pallet {
                     }
                 });
             }
-        }
-
-        // ─────────────────── X3VM replay protection (pallet) ───────────────
-        //
-        // The bridge crate's `used_x3vm_call_hashes` is an in-memory
-        // reference implementation. The authoritative replay store is
-        // this pallet-level `StorageDoubleMap`, keyed by
-        // `(VmId, call_hash)` with the admission-block number as value.
-        // The call hash is computed against the real finalized-chain
-        // hash returned by `x3vm_source_finalized_hash` — not
-        // `H256::zero()` as in the bridge-local helper.
-
-        /// Return the canonical source-finalized hash used to
-        /// domain-separate `call_hash` values at this block.
-        ///
-        /// Uses `frame_system::Pallet::<T>::parent_hash()` — the hash of
-        /// the most recently sealed block, which is the latest state
-        /// available to runtime logic at admission time. Binding the
-        /// hash here ensures two logically identical calls submitted
-        /// against different source-chain histories produce distinct
-        /// replay keys, which is the intended behaviour.
-        pub fn x3vm_source_finalized_hash() -> H256 {
-            // `frame_system::Pallet::<T>::parent_hash()` returns the
-            // associated `T::Hash`. `frame_system::Config` bounds
-            // `Hash: AsRef<[u8]> + AsMut<[u8]>`, so we can always
-            // re-project it into the canonical 32-byte `H256` used by
-            // the cross-VM canonical type layer.
-            let parent: <T as frame_system::Config>::Hash =
-                <frame_system::Pallet<T>>::parent_hash();
-            H256::from_slice(parent.as_ref())
-        }
-
-        /// Compute the canonical replay key for a call at the current
-        /// block's source-finalized hash.
-        pub fn x3vm_replay_key(call: &CrossVmCall) -> H256 {
-            call.call_hash(&Self::x3vm_source_finalized_hash())
-        }
-
-        /// Return `true` iff `(target_vm, call_hash)` is already
-        /// admitted in the replay store.
-        pub fn is_x3vm_call_replayed(target_vm: VmId, call_hash: &H256) -> bool {
-            X3vmReplayStore::<T>::contains_key(target_vm, call_hash)
-        }
-
-        /// Admit a call hash for `target_vm` at the current block.
-        ///
-        /// Returns `Err(DispatchError::Other(...))` if the hash is
-        /// already present — the pallet caller is expected to surface
-        /// this as `CrossVmStatus::ReplayRejected` without invoking
-        /// any VM.
-        ///
-        /// The entry is written with the current block number as
-        /// value, which is the cursor the pruner uses to decide when
-        /// the entry may be removed.
-        pub fn admit_x3vm_call(
-            target_vm: VmId,
-            call_hash: H256,
-        ) -> Result<(), DispatchError> {
-            if X3vmReplayStore::<T>::contains_key(target_vm, call_hash) {
-                return Err(DispatchError::Other(
-                    "CallX3Vm: replay rejected (pallet store)",
-                ));
-            }
-            let now = <frame_system::Pallet<T>>::block_number();
-            X3vmReplayStore::<T>::insert(target_vm, call_hash, now);
-            Ok(())
-        }
-
-        /// Atomic "check-and-admit" convenience used by the pallet's
-        /// cross-VM dispatch entrypoint. Computes the replay key
-        /// against the current source-finalized hash and admits it.
-        pub fn admit_x3vm_call_for(
-            call: &CrossVmCall,
-        ) -> Result<H256, DispatchError> {
-            let key = Self::x3vm_replay_key(call);
-            Self::admit_x3vm_call(call.target, key)?;
-            Ok(key)
-        }
-
-        /// Explicitly release an admitted replay entry. Used only for
-        /// pre-dispatch aborts (e.g. circuit-breaker trip after
-        /// admission). Failed dispatches must NOT call this — a failed
-        /// call consumed its slot.
-        ///
-        /// Returns `true` if an entry was removed.
-        pub fn abort_x3vm_admission(target_vm: VmId, call_hash: &H256) -> bool {
-            X3vmReplayStore::<T>::take(target_vm, call_hash).is_some()
-        }
-
-        /// Prune replay-store entries older than
-        /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks relative to `now`.
-        ///
-        /// Bounded by `T::MaxReplayPruneItemsPerBlock`. Returns the
-        /// number of entries actually removed so the caller can budget
-        /// weight.
-        pub fn prune_x3vm_replay_store(now: BlockNumberFor<T>) -> u32 {
-            let horizon: BlockNumberFor<T> =
-                (REPLAY_PRUNE_HORIZON_BLOCKS as u64).saturated_into();
-            // If the chain is younger than the horizon there is
-            // nothing to prune yet.
-            let threshold = match now.checked_sub(&horizon) {
-                Some(t) => t,
-                None => return 0,
-            };
-
-            let budget = T::MaxReplayPruneItemsPerBlock::get();
-            if budget == 0 {
-                return 0;
-            }
-
-            let mut removed: u32 = 0;
-            // Collect first, then remove — the storage iterator must
-            // not be mutated mid-iteration.
-            let mut victims: Vec<(VmId, H256)> = Vec::new();
-            for (vm_id, call_hash, admitted_at) in X3vmReplayStore::<T>::iter() {
-                if admitted_at <= threshold {
-                    victims.push((vm_id, call_hash));
-                    if victims.len() as u32 >= budget {
-                        break;
-                    }
-                }
-            }
-            for (vm_id, call_hash) in victims {
-                X3vmReplayStore::<T>::remove(vm_id, call_hash);
-                removed = removed.saturating_add(1);
-            }
-            removed
         }
 
         fn canonical_asset_state_key(asset_id: T::AssetId) -> H256 {
@@ -3064,12 +2264,8 @@ pub mod pallet {
                 CrossVmOperation::CallEvm { .. }
                 | CrossVmOperation::CallSvm { .. }
                 | CrossVmOperation::MessageToEvm { .. }
-                | CrossVmOperation::MessageToSvm { .. }
-                | CrossVmOperation::CallX3Vm { .. } => {
-                    // Message/call operations carry no balance state changes.
-                    // x3VM calls encode any transfer inside `call.payload`
-                    // and surface effects through the returned receipt's
-                    // `target_state_root`, not through ledger deltas here.
+                | CrossVmOperation::MessageToSvm { .. } => {
+                    // Message/call operations carry no balance state changes
                 }
                 CrossVmOperation::AtomicSwap {
                     evm_party,
@@ -3078,45 +2274,6 @@ pub mod pallet {
                     svm_amount,
                     ..
                 } => {
-                    changes.push(Self::map_cross_vm_address_delta(
-                        evm_party,
-                        canonical_asset,
-                        *evm_amount,
-                        false,
-                    )?);
-                    changes.push(Self::map_cross_vm_address_delta(
-                        svm_party,
-                        canonical_asset,
-                        *evm_amount,
-                        true,
-                    )?);
-                    changes.push(Self::map_cross_vm_address_delta(
-                        svm_party,
-                        canonical_asset,
-                        *svm_amount,
-                        false,
-                    )?);
-                    changes.push(Self::map_cross_vm_address_delta(
-                        evm_party,
-                        canonical_asset,
-                        *svm_amount,
-                        true,
-                    )?);
-                }
-                CrossVmOperation::AtomicTriSwap {
-                    evm_party,
-                    svm_party,
-                    evm_amount,
-                    svm_amount,
-                    ..
-                } => {
-                    // Tri-VM swap ledger deltas: EVM <-> SVM transfers mirror
-                    // the 2-party variant. The x3VM leg is a canonical call
-                    // whose effects surface through the returned receipt's
-                    // `target_state_root`, not through ledger deltas here.
-                    // If the x3VM call represents a transfer, the pallet
-                    // records it via a separate state-change entry in
-                    // Patch 5.1.
                     changes.push(Self::map_cross_vm_address_delta(
                         evm_party,
                         canonical_asset,
@@ -3577,41 +2734,26 @@ pub mod pallet {
         ) -> Result<SphereState, DispatchError> {
             // Execute transactions on both VMs in parallel (when implemented)
             let _evm_receipt = evm_tx.map(|_tx| ExecutionReceipt {
-                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 21000,
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
-                protocol_version: 1,
-                migration_history: Vec::new(),
-                compatibility_flags: 0,
             });
 
             let _svm_receipt = svm_tx.map(|_tx| ExecutionReceipt {
-                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 5000,
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
-                protocol_version: 1,
-                migration_history: Vec::new(),
-                compatibility_flags: 0,
             });
 
             // Merge receipts into unified state
             Ok(SphereState {
-                version: SPHERE_STATE_VERSION,
                 state_root: H256::default(),
                 block_number: 0,
                 timestamp: 0,
-                state_version: SemanticVersion::new(1, 0, 0),
-                version_timeline: Vec::new(),
-                current_schema: SchemaDescriptor {
-                    fields: Vec::new(),
-                    compatibility_flags: 0,
-                },
             })
         }
     }
@@ -3733,16 +2875,9 @@ pub mod pallet {
             let state_root = H256::from(blake2_256(&state_data));
 
             SphereState {
-                version: SPHERE_STATE_VERSION,
                 state_root,
                 block_number: current_block.saturated_into(),
                 timestamp: current_timestamp,
-                state_version: SemanticVersion::new(1, 0, 0),
-                version_timeline: Vec::new(),
-                current_schema: SchemaDescriptor {
-                    fields: Vec::new(),
-                    compatibility_flags: 0,
-                },
             }
         }
 
@@ -3856,66 +2991,6 @@ pub mod pallet {
             }
         }
 
-        /// Execute an x3VM call through the pallet-configured
-        /// [`X3ExecutorAdapter`]. This is the canonical entrypoint:
-        /// it enforces the version and target contract on
-        /// [`CrossVmCall`], computes the canonical `call_hash` against
-        /// the pallet-level source-finalized hash (parent block),
-        /// routes through `T::X3Adapter::execute`, and materializes a
-        /// [`CrossVmReceipt`] from the adapter's [`ExecutionReceipt`].
-        ///
-        /// Replay-store admission is the caller's responsibility —
-        /// dispatchers are intentionally stateless w.r.t. the replay
-        /// map so the coordinator can sequence admission → execute →
-        /// abort-on-fail without double-bookkeeping.
-        fn execute_x3vm_tx(
-            &self,
-            _caller: &[u8; 32],
-            call: &CrossVmCall,
-        ) -> Result<CrossVmReceipt, DispatchError> {
-            // Version + target gates. Mirrors NoOpDispatcher semantics:
-            // `InternalError` is a receipt-level signal, not a
-            // DispatchError, so the coordinator can distinguish
-            // "adapter rejected the call" from "runtime storage
-            // broke".
-            call.ensure_current_version()?;
-
-            let source_finalized = Pallet::<T>::x3vm_source_finalized_hash();
-            let call_hash = call.call_hash(&source_finalized);
-
-            if call.target != VmId::X3Vm {
-                return Ok(CrossVmReceipt {
-                    call_hash,
-                    source_state_root: source_finalized,
-                    target_state_root: H256::zero(),
-                    status: CrossVmStatus::InternalError,
-                    gas_used: 0,
-                    logs: Vec::new(),
-                });
-            }
-
-            match T::X3Adapter::execute(&call.payload, call.gas_budget) {
-                Ok(receipt) => {
-                    let status = if receipt.success {
-                        CrossVmStatus::Success
-                    } else if receipt.gas_used >= call.gas_budget {
-                        CrossVmStatus::OutOfGas
-                    } else {
-                        CrossVmStatus::Reverted
-                    };
-                    Ok(CrossVmReceipt {
-                        call_hash,
-                        source_state_root: source_finalized,
-                        target_state_root: H256::zero(),
-                        status,
-                        gas_used: receipt.gas_used,
-                        logs: Vec::new(),
-                    })
-                }
-                Err(e) => Err(e),
-            }
-        }
-
         fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
             let account = Pallet::<T>::decode_state_change_account(address);
             let asset = T::AssetId::default();
@@ -3937,24 +3012,6 @@ pub mod pallet {
                     bal.min(u64::MAX as u128) as u64
                 }
                 None => 0,
-            }
-        }
-
-        fn get_evm_bridge_escrow(&self) -> [u8; 20] {
-            let stored = EscrowEvmAddress::<T>::get();
-            if stored != sp_core::H160::zero() {
-                stored.0
-            } else {
-                T::BridgeEvmEscrow::get().0
-            }
-        }
-
-        fn get_svm_bridge_escrow(&self) -> [u8; 32] {
-            let stored = EscrowSvmAddress::<T>::get();
-            if stored != [0u8; 32] {
-                stored
-            } else {
-                T::BridgeSvmEscrow::get()
             }
         }
     }
@@ -4016,30 +3073,9 @@ sp_api::decl_runtime_apis! {
         fn is_svm_program(svm_pubkey: Vec<u8>) -> bool;
 
         /// Submit a signed raw EVM transaction (RLP-encoded).
-        /// Payload contract: [caller(20)] [to(20)] [value(16,LE)] [data_len(4,LE)] [data].
-        /// Executes via Frontier runner and returns keccak256(payload) on success.
+        /// Decodes the transaction, executes it via the EVM adapter, and returns
+        /// the keccak256 transaction hash on success.
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
-
-        /// Dry-run the same EVM payload as `submit_evm_transaction`, without committing
-        /// any state.  Runtime-API calls execute against a per-call throwaway overlay —
-        /// this entry point makes the read-only intent explicit on cross-VM pre-flight
-        /// validation paths (e.g. `x3_submitCrossVmTransaction` in node/src/rpc.rs).
-        fn validate_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
-
-        /// Submit an SVM instruction for execution.
-        /// Payload is instruction bytes interpreted by the configured SVM adapter.
-        /// Returns the execution receipt return bytes on success.
-        fn submit_svm_instruction(program_id: [u8; 32], instruction_data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
-
-        /// Call an EVM contract against target address with input data.
-        /// `caller` may be omitted/zero for static simulation paths.
-        /// Returns raw EVM return bytes on success.
-        fn call_evm(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;
-
-        /// Estimate gas for an EVM call against target address with input data.
-        /// For `eth_estimateGas`, a zero caller is acceptable because this path is simulation-only.
-        /// Returns used gas units on success.
-        fn estimate_evm_gas(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>>;
     }
 }
 
@@ -4048,9 +3084,6 @@ mod mock;
 
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod replay_tests;
 
 #[cfg(test)]
 mod chaos_tests;
