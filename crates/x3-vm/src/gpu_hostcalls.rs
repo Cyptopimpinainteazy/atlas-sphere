@@ -641,7 +641,7 @@ impl GpuHostcalls {
 
         // 0xD6: gpu_keccak256_batch
         {
-            let lib = self.keccak256.clone();
+            let lib = keccak256.clone();
             vm.register_hostcall(
                 gpu_hostcall_ids::GPU_KECCAK256_BATCH,
                 "gpu_keccak256_batch",
@@ -652,7 +652,7 @@ impl GpuHostcalls {
 
         // 0xD7: gpu_secp256k1_verify
         {
-            let lib = self.secp256k1.clone();
+            let lib = secp256k1.clone();
             vm.register_hostcall(
                 gpu_hostcall_ids::GPU_SECP256K1_VERIFY,
                 "gpu_secp256k1_verify",
