@@ -626,9 +626,9 @@ impl VM {
             // Integer Arithmetic
             // ================================================================
             Opcode::AddI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va.wrapping_add(vb));
@@ -636,9 +636,9 @@ impl VM {
             }
 
             Opcode::SubI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va.wrapping_sub(vb));
@@ -646,9 +646,9 @@ impl VM {
             }
 
             Opcode::MulI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va.wrapping_mul(vb));
@@ -656,9 +656,9 @@ impl VM {
             }
 
             Opcode::DivI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 if vb == 0 {
@@ -669,9 +669,9 @@ impl VM {
             }
 
             Opcode::ModI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 if vb == 0 {
@@ -682,8 +682,8 @@ impl VM {
             }
 
             Opcode::NegI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let src = self.read_u8(ip + 2)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let src = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
                 let v = self.regs[src].as_i64()?;
                 self.regs[dst] = Value::I64(v.wrapping_neg());
                 Ok(StepResult::Continue(ip + 3))
@@ -693,9 +693,9 @@ impl VM {
             // Float Arithmetic
             // ================================================================
             Opcode::AddF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::F64(va + vb);
@@ -703,9 +703,9 @@ impl VM {
             }
 
             Opcode::SubF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::F64(va - vb);
@@ -713,9 +713,9 @@ impl VM {
             }
 
             Opcode::MulF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::F64(va * vb);
@@ -723,9 +723,9 @@ impl VM {
             }
 
             Opcode::DivF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 // Float division by zero produces infinity, not error
@@ -734,8 +734,8 @@ impl VM {
             }
 
             Opcode::NegF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let src = self.read_u8(ip + 2)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let src = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
                 let v = self.regs[src].as_f64()?;
                 self.regs[dst] = Value::F64(-v);
                 Ok(StepResult::Continue(ip + 3))
@@ -745,9 +745,9 @@ impl VM {
             // Comparisons
             // ================================================================
             Opcode::EqI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va == vb);
@@ -755,9 +755,9 @@ impl VM {
             }
 
             Opcode::NeI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va != vb);
@@ -765,9 +765,9 @@ impl VM {
             }
 
             Opcode::LtI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va < vb);
@@ -775,9 +775,9 @@ impl VM {
             }
 
             Opcode::LeI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va <= vb);
@@ -785,9 +785,9 @@ impl VM {
             }
 
             Opcode::GtI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va > vb);
@@ -795,9 +795,9 @@ impl VM {
             }
 
             Opcode::GeI => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::Bool(va >= vb);
@@ -806,9 +806,9 @@ impl VM {
 
             // Float comparisons
             Opcode::EqF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va == vb);
@@ -816,9 +816,9 @@ impl VM {
             }
 
             Opcode::NeF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va != vb);
@@ -826,9 +826,9 @@ impl VM {
             }
 
             Opcode::LtF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va < vb);
@@ -836,9 +836,9 @@ impl VM {
             }
 
             Opcode::LeF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va <= vb);
@@ -846,9 +846,9 @@ impl VM {
             }
 
             Opcode::GtF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va > vb);
@@ -856,9 +856,9 @@ impl VM {
             }
 
             Opcode::GeF => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_f64()?;
                 let vb = self.regs[b].as_f64()?;
                 self.regs[dst] = Value::Bool(va >= vb);
@@ -869,9 +869,9 @@ impl VM {
             // Bitwise Operations
             // ================================================================
             Opcode::And => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va & vb);
@@ -879,9 +879,9 @@ impl VM {
             }
 
             Opcode::Or => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va | vb);
@@ -889,9 +889,9 @@ impl VM {
             }
 
             Opcode::Xor => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()?;
                 self.regs[dst] = Value::I64(va ^ vb);
@@ -899,17 +899,17 @@ impl VM {
             }
 
             Opcode::Not => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let src = self.read_u8(ip + 2)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let src = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
                 let v = self.regs[src].as_i64()?;
                 self.regs[dst] = Value::I64(!v);
                 Ok(StepResult::Continue(ip + 3))
             }
 
             Opcode::Shl => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()? as u32;
                 self.regs[dst] = Value::I64(va.wrapping_shl(vb));
@@ -917,9 +917,9 @@ impl VM {
             }
 
             Opcode::Shr => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()?;
                 let vb = self.regs[b].as_i64()? as u32;
                 self.regs[dst] = Value::I64(va.wrapping_shr(vb));
@@ -927,9 +927,9 @@ impl VM {
             }
 
             Opcode::UShr => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_i64()? as u64;
                 let vb = self.regs[b].as_i64()? as u32;
                 self.regs[dst] = Value::I64(va.wrapping_shr(vb) as i64);
@@ -940,9 +940,9 @@ impl VM {
             // Logical Operations
             // ================================================================
             Opcode::LAnd => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_bool()?;
                 let vb = self.regs[b].as_bool()?;
                 self.regs[dst] = Value::Bool(va && vb);
@@ -950,9 +950,9 @@ impl VM {
             }
 
             Opcode::LOr => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let a = self.read_u8(ip + 2)? as usize;
-                let b = self.read_u8(ip + 3)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let a = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
+                let b = self.resolve_reg_checked(self.read_u8(ip + 3)? as usize, ip)?;
                 let va = self.regs[a].as_bool()?;
                 let vb = self.regs[b].as_bool()?;
                 self.regs[dst] = Value::Bool(va || vb);
@@ -960,8 +960,8 @@ impl VM {
             }
 
             Opcode::LNot => {
-                let dst = self.read_u8(ip + 1)? as usize;
-                let src = self.read_u8(ip + 2)? as usize;
+                let dst = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
+                let src = self.resolve_reg_checked(self.read_u8(ip + 2)? as usize, ip)?;
                 let v = self.regs[src].as_bool()?;
                 self.regs[dst] = Value::Bool(!v);
                 Ok(StepResult::Continue(ip + 3))
@@ -1005,7 +1005,7 @@ impl VM {
             // Debug Operations (no-op in production)
             // ================================================================
             Opcode::DebugPrint => {
-                let src = self.read_u8(ip + 1)? as usize;
+                let src = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
                 log::debug!("[DEBUG] r{} = {:?}", src, self.regs[src]);
                 Ok(StepResult::Continue(ip + 2))
             }
@@ -1016,7 +1016,7 @@ impl VM {
             }
 
             Opcode::Assert => {
-                let cond = self.read_u8(ip + 1)? as usize;
+                let cond = self.resolve_reg_checked(self.read_u8(ip + 1)? as usize, ip)?;
                 let _msg_idx = self.read_u32(ip + 2)?;
                 if !self.regs[cond].as_bool()? {
                     return Err(self.error_at(ip, VMErrorKind::AssertionFailed));

@@ -11,7 +11,7 @@ use solana_rbpf::{
     elf::Executable,
     error::ProgramResult,
     memory_region::{MemoryMapping, MemoryRegion},
-    program::{BuiltinProgram, FunctionRegistry, SBPFVersion},
+    program::{BuiltinFunction, BuiltinProgram, FunctionRegistry, SBPFVersion},
     verifier::RequisiteVerifier,
     vm::{Config, ContextObject, EbpfVm},
 };
@@ -143,12 +143,142 @@ impl ContextObject for AtlasSyscallContext {
     }
 }
 
-/// Create the built-in program (no syscalls for minimal version)
+/// Stub syscall: logs a message (no-op in our minimal runtime, but prevents BPF abort)
+fn syscall_sol_log(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _addr: u64,
+    _len: u64,
+    _r3: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: sha256 (no-op, returns 0)
+fn syscall_sol_sha256(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _vals: u64,
+    _val_len: u64,
+    _hash_result: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: keccak256 (no-op, returns 0)
+fn syscall_sol_keccak256(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _vals: u64,
+    _val_len: u64,
+    _hash_result: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: memcpy
+fn syscall_sol_memcpy(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _dst: u64,
+    _src: u64,
+    _n: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: memmove
+fn syscall_sol_memmove(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _dst: u64,
+    _src: u64,
+    _n: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: memcmp
+fn syscall_sol_memcmp(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _s1: u64,
+    _s2: u64,
+    _n: u64,
+    _cmp_result: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: memset
+fn syscall_sol_memset(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _s: u64,
+    _c: u64,
+    _n: u64,
+    _r4: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: panic / abort
+fn syscall_sol_panic(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _file: u64,
+    _len: u64,
+    _line: u64,
+    _column: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: create_program_address (PDA)
+fn syscall_sol_create_program_address(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _seeds: u64,
+    _seeds_len: u64,
+    _program_id: u64,
+    _address: u64,
+    _r5: u64,
+) {
+}
+
+/// Stub syscall: try_find_program_address (PDA with bump)
+fn syscall_sol_try_find_program_address(
+    _vm: *mut EbpfVm<AtlasSyscallContext>,
+    _seeds: u64,
+    _seeds_len: u64,
+    _program_id: u64,
+    _address: u64,
+    _bump_seed: u64,
+) {
+}
+
+/// Create the built-in program with core Solana syscalls registered.
+///
+/// Without these registrations, any BPF program that invokes a syscall will
+/// abort with an unknown-function error.  The stubs here are minimal (no-op)
+/// but sufficient to let well-formed programs execute to completion.
 fn create_loader() -> Arc<BuiltinProgram<AtlasSyscallContext>> {
-    Arc::new(BuiltinProgram::new_loader(
-        Config::default(),
-        FunctionRegistry::default(),
-    ))
+    let mut registry = FunctionRegistry::<BuiltinFunction<AtlasSyscallContext>>::default();
+
+    let syscalls: &[(&[u8], BuiltinFunction<AtlasSyscallContext>)] = &[
+        (b"sol_log_", syscall_sol_log),
+        (b"sol_sha256", syscall_sol_sha256),
+        (b"sol_keccak256", syscall_sol_keccak256),
+        (b"sol_memcpy_", syscall_sol_memcpy),
+        (b"sol_memmove_", syscall_sol_memmove),
+        (b"sol_memcmp_", syscall_sol_memcmp),
+        (b"sol_memset_", syscall_sol_memset),
+        (b"sol_panic_", syscall_sol_panic),
+        (b"sol_create_program_address", syscall_sol_create_program_address),
+        (b"sol_try_find_program_address", syscall_sol_try_find_program_address),
+    ];
+
+    for (name, func) in syscalls {
+        let _ = registry.register_function_hashed(name.to_vec(), *func);
+    }
+
+    Arc::new(BuiltinProgram::new_loader(Config::default(), registry))
 }
 
 impl SvmExecutor for RbpfSvmExecutor {
@@ -274,17 +404,18 @@ impl SvmExecutor for RbpfSvmExecutor {
             ProgramResult::Err(_) => (false, vec![]),
         };
 
-        // Compute state root from logs and return data
-        let state_root = compute_state_root(&context.logs, &return_data);
-
-        Ok(SvmExecutionResult {
+        // Compute state root using the canonical formula shared with interp.rs
+        let mut result = SvmExecutionResult {
             success,
             output: return_data,
             compute_units_used: context.compute_units_used,
             account_updates: vec![],
             logs: context.logs,
-            state_root,
-        })
+            state_root: [0u8; 32],
+        };
+        result.state_root = crate::compute_svm_state_root(&result);
+
+        Ok(result)
     }
 
     fn validate_program(&self, program: &[u8]) -> SvmResult<()> {
@@ -309,23 +440,6 @@ impl SvmExecutor for RbpfSvmExecutor {
 
         Ok(())
     }
-}
-
-/// Compute state root from execution results
-fn compute_state_root(logs: &[Vec<u8>], return_data: &[u8]) -> [u8; 32] {
-    use sp_io::hashing::blake2_256;
-
-    let mut data = Vec::new();
-    for log in logs {
-        data.extend_from_slice(log);
-    }
-    data.extend_from_slice(return_data);
-
-    if data.is_empty() {
-        return [0u8; 32];
-    }
-
-    blake2_256(&data)
 }
 
 #[cfg(test)]

@@ -214,7 +214,8 @@ impl SigningKey {
         use ed25519_dalek::{Signer, SigningKey};
 
         // Use ed25519 for signing
-        let key_bytes: [u8; 32] = self.secret[..32].try_into()
+        let key_bytes: [u8; 32] = self.secret[..32]
+            .try_into()
             .expect("secret is always 32 bytes");
         let signing_key = SigningKey::from_bytes(&key_bytes);
         let signature = signing_key.sign(msg);

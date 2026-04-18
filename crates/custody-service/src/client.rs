@@ -1,8 +1,7 @@
+use crate::error::Result;
 /// Client library for custody service integration
 /// Used by position-manager to request vault operations
-
 use crate::types::*;
-use crate::error::Result;
 use async_trait::async_trait;
 
 /// Custody service client trait for dependency injection
@@ -27,9 +26,7 @@ pub trait CustodyServiceClient: Send + Sync {
 /// Mock client for testing position-manager without service
 pub struct MockCustodyClient {
     vaults: parking_lot::RwLock<std::collections::HashMap<String, VaultSnapshot>>,
-    operations: parking_lot::RwLock<
-        std::collections::HashMap<String, VaultOperationResponse>,
-    >,
+    operations: parking_lot::RwLock<std::collections::HashMap<String, VaultOperationResponse>>,
     audit_entries: parking_lot::RwLock<Vec<AuditLogEntry>>,
 }
 
@@ -42,12 +39,7 @@ impl MockCustodyClient {
         }
     }
 
-    pub fn init_vault(
-        &self,
-        vault_id: String,
-        asset: String,
-        balance: u128,
-    ) -> Result<()> {
+    pub fn init_vault(&self, vault_id: String, asset: String, balance: u128) -> Result<()> {
         let snapshot = VaultSnapshot {
             vault_id,
             asset,
@@ -60,7 +52,9 @@ impl MockCustodyClient {
             last_operation_id: None,
             merkle_root: String::new(),
         };
-        self.vaults.write().insert(snapshot.vault_id.clone(), snapshot);
+        self.vaults
+            .write()
+            .insert(snapshot.vault_id.clone(), snapshot);
         Ok(())
     }
 }
@@ -81,11 +75,9 @@ impl CustodyServiceClient for MockCustodyClient {
     async fn execute(&self, command: VaultOperationCommand) -> Result<VaultOperationResponse> {
         let operation_id_clone = command.operation_id.clone();
         let mut vaults = self.vaults.write();
-        let vault = vaults
-            .get_mut(&command.source_vault_id)
-            .ok_or_else(|| crate::error::CustodyError::VaultNotFound(
-                command.source_vault_id.clone(),
-            ))?;
+        let vault = vaults.get_mut(&command.source_vault_id).ok_or_else(|| {
+            crate::error::CustodyError::VaultNotFound(command.source_vault_id.clone())
+        })?;
 
         if vault.available_balance < command.amount {
             return Ok(VaultOperationResponse {
@@ -105,8 +97,7 @@ impl CustodyServiceClient for MockCustodyClient {
                 vault.reserved_balance += command.amount;
             }
             VaultOperationType::Release => {
-                vault.reserved_balance =
-                    vault.reserved_balance.saturating_sub(command.amount);
+                vault.reserved_balance = vault.reserved_balance.saturating_sub(command.amount);
                 vault.available_balance += command.amount;
             }
             VaultOperationType::Transfer => {
@@ -132,10 +123,9 @@ impl CustodyServiceClient for MockCustodyClient {
         };
 
         drop(vaults); // Release lock
-        self.operations.write().insert(
-            operation_id_clone,
-            response.clone(),
-        );
+        self.operations
+            .write()
+            .insert(operation_id_clone, response.clone());
 
         Ok(response)
     }
@@ -145,9 +135,7 @@ impl CustodyServiceClient for MockCustodyClient {
             .read()
             .get(vault_id)
             .cloned()
-            .ok_or_else(|| crate::error::CustodyError::VaultNotFound(
-                vault_id.to_string(),
-            ))
+            .ok_or_else(|| crate::error::CustodyError::VaultNotFound(vault_id.to_string()))
     }
 
     async fn poll(&self, operation_id: &str) -> Result<OperationStatus> {
@@ -155,9 +143,7 @@ impl CustodyServiceClient for MockCustodyClient {
             .read()
             .get(operation_id)
             .map(|r| r.status)
-            .ok_or_else(|| crate::error::CustodyError::OperationNotFound(
-                operation_id.to_string(),
-            ))
+            .ok_or_else(|| crate::error::CustodyError::OperationNotFound(operation_id.to_string()))
     }
 
     async fn export_audit(&self, since_ms: u64) -> Result<Vec<AuditLogEntry>> {
@@ -178,7 +164,9 @@ mod tests {
     #[tokio::test]
     async fn test_mock_client_initialization() {
         let client = MockCustodyClient::new();
-        client.init_vault("vault-1".to_string(), "USDC".to_string(), 5000).unwrap();
+        client
+            .init_vault("vault-1".to_string(), "USDC".to_string(), 5000)
+            .unwrap();
 
         let snap = client.get_vault("vault-1").await.unwrap();
         assert_eq!(snap.available_balance, 5000);
@@ -187,7 +175,9 @@ mod tests {
     #[tokio::test]
     async fn test_mock_client_reserve() {
         let client = MockCustodyClient::new();
-        client.init_vault("vault-1".to_string(), "USDC".to_string(), 5000).unwrap();
+        client
+            .init_vault("vault-1".to_string(), "USDC".to_string(), 5000)
+            .unwrap();
 
         let cmd = VaultOperationCommand {
             operation_id: "op-1".to_string(),

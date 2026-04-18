@@ -120,7 +120,7 @@ impl Default for EvmConfig {
             gas_price: U256::from(1_000_000_000), // 1 gwei
             block_number: 0,
             block_timestamp: 0,
-            chain_id: 42,                        // X3 Chain default chain ID
+            chain_id: 650_000,               // X3 Chain ID (matches runtime ChainId parameter)
             base_fee: U256::from(1_000_000_000), // 1 gwei base
             coinbase: H160::zero(),
         }

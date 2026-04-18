@@ -1,14 +1,14 @@
 //! Atomic swap orchestrator with dual-chain commit/rollback semantics
 
 use crate::error::Result;
-use crate::registry::{AtomicRegistry, AtomicSwapRecord, SwapPhase};
 use crate::evm_validator::EvmValidator;
-use crate::svm_validator::SvmValidator;
 use crate::failover::FailoverManager;
+use crate::registry::{AtomicRegistry, AtomicSwapRecord, SwapPhase};
+use crate::svm_validator::SvmValidator;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::time::{timeout, Duration};
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SwapStatus {
@@ -31,10 +31,7 @@ pub struct AtomicSwapOrchestrator {
 }
 
 impl AtomicSwapOrchestrator {
-    pub async fn new(
-        redis_url: &str,
-        default_timeout_secs: u64,
-    ) -> Result<Self> {
+    pub async fn new(redis_url: &str, default_timeout_secs: u64) -> Result<Self> {
         let registry = Arc::new(AtomicRegistry::new(redis_url, 3600).await?);
         let evm_validator = Arc::new(EvmValidator::new(32, false));
         let svm_validator = Arc::new(SvmValidator::new());
@@ -66,10 +63,16 @@ impl AtomicSwapOrchestrator {
             svm_slot,
         );
         self.registry.register_swap(&record).await?;
-        info!("Registered swap {} with timeout {} secs", swap_id, self.default_timeout.as_secs());
+        info!(
+            "Registered swap {} with timeout {} secs",
+            swap_id,
+            self.default_timeout.as_secs()
+        );
 
         // Update phase to validating EVM
-        self.registry.update_phase(&swap_id, SwapPhase::ValidatingEvm).await?;
+        self.registry
+            .update_phase(&swap_id, SwapPhase::ValidatingEvm)
+            .await?;
 
         // Validate EVM side with timeout
         let evm_result = timeout(
@@ -80,28 +83,38 @@ impl AtomicSwapOrchestrator {
 
         match evm_result {
             Ok(Ok(evm_valid)) => {
-                self.registry.mark_evm_validated(&swap_id, evm_valid).await?;
-                
+                self.registry
+                    .mark_evm_validated(&swap_id, evm_valid)
+                    .await?;
+
                 if !evm_valid {
-                    self.registry.update_phase(&swap_id, SwapPhase::RolledBack).await?;
+                    self.registry
+                        .update_phase(&swap_id, SwapPhase::RolledBack)
+                        .await?;
                     info!("Swap {} rolled back: EVM validation failed", swap_id);
                     return Ok(SwapStatus::RolledBack);
                 }
             }
             Ok(Err(e)) => {
                 warn!("EVM validation error: {}", e);
-                self.registry.update_phase(&swap_id, SwapPhase::RolledBack).await?;
+                self.registry
+                    .update_phase(&swap_id, SwapPhase::RolledBack)
+                    .await?;
                 return Ok(SwapStatus::RolledBack);
             }
             Err(_) => {
                 error!("EVM validation timeout for swap {}", swap_id);
-                self.registry.update_phase(&swap_id, SwapPhase::TimedOut).await?;
+                self.registry
+                    .update_phase(&swap_id, SwapPhase::TimedOut)
+                    .await?;
                 return Ok(SwapStatus::TimedOut);
             }
         }
 
         // Update phase to validating SVM
-        self.registry.update_phase(&swap_id, SwapPhase::ValidatingSvm).await?;
+        self.registry
+            .update_phase(&swap_id, SwapPhase::ValidatingSvm)
+            .await?;
 
         // Validate SVM side with timeout
         let svm_result = timeout(
@@ -112,28 +125,38 @@ impl AtomicSwapOrchestrator {
 
         match svm_result {
             Ok(Ok(svm_valid)) => {
-                self.registry.mark_svm_validated(&swap_id, svm_valid).await?;
-                
+                self.registry
+                    .mark_svm_validated(&swap_id, svm_valid)
+                    .await?;
+
                 if !svm_valid {
-                    self.registry.update_phase(&swap_id, SwapPhase::RolledBack).await?;
+                    self.registry
+                        .update_phase(&swap_id, SwapPhase::RolledBack)
+                        .await?;
                     info!("Swap {} rolled back: SVM validation failed", swap_id);
                     return Ok(SwapStatus::RolledBack);
                 }
             }
             Ok(Err(e)) => {
                 warn!("SVM validation error: {}", e);
-                self.registry.update_phase(&swap_id, SwapPhase::RolledBack).await?;
+                self.registry
+                    .update_phase(&swap_id, SwapPhase::RolledBack)
+                    .await?;
                 return Ok(SwapStatus::RolledBack);
             }
             Err(_) => {
                 error!("SVM validation timeout for swap {}", swap_id);
-                self.registry.update_phase(&swap_id, SwapPhase::TimedOut).await?;
+                self.registry
+                    .update_phase(&swap_id, SwapPhase::TimedOut)
+                    .await?;
                 return Ok(SwapStatus::TimedOut);
             }
         }
 
         // Both sides validated - atomic commit
-        self.registry.update_phase(&swap_id, SwapPhase::Committed).await?;
+        self.registry
+            .update_phase(&swap_id, SwapPhase::Committed)
+            .await?;
         info!("Swap {} atomically committed", swap_id);
         Ok(SwapStatus::Committed)
     }

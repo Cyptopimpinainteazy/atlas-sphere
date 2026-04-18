@@ -160,12 +160,17 @@ impl GasEstimator {
         }
 
         // Heuristic fallback: EIP-2028 compliant
-        let estimated_gas = tx.data.iter().fold(21_000u64, |acc, &b| {
-            acc + if b == 0 { 4 } else { 16 }
-        });
+        let estimated_gas = tx
+            .data
+            .iter()
+            .fold(21_000u64, |acc, &b| acc + if b == 0 { 4 } else { 16 });
 
         if estimated_gas > 30_000_000 {
-            (0, ExecutionStatus::OutOfGas, Some("Gas limit exceeded".to_string()))
+            (
+                0,
+                ExecutionStatus::OutOfGas,
+                Some("Gas limit exceeded".to_string()),
+            )
         } else {
             (estimated_gas, ExecutionStatus::Success, None)
         }

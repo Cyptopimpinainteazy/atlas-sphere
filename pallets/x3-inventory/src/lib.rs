@@ -11,8 +11,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub mod types;
 pub mod inventory;
+pub mod types;
 
 #[cfg(test)]
 mod mock;
@@ -24,12 +24,9 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
     use super::types::*;
-    use frame_support::{
-        pallet_prelude::*,
-        traits::Get,
-        BoundedVec,
-    };
+    use frame_support::{pallet_prelude::*, traits::Get, BoundedVec};
     use frame_system::pallet_prelude::*;
+    use sp_runtime::traits::{Saturating, Zero};
 
     // -----------------------------------------------------------------------
     // Pallet config
@@ -49,7 +46,8 @@ pub mod pallet {
             + core::ops::Add<Output = Self::Balance>
             + core::ops::Sub<Output = Self::Balance>
             + core::fmt::Debug
-            + sp_runtime::traits::Zero;
+            + Zero
+            + Saturating;
 
         #[pallet::constant]
         type MaxLiquiditySources: Get<u32>;
@@ -64,13 +62,8 @@ pub mod pallet {
 
     #[pallet::storage]
     #[pallet::getter(fn vaults)]
-    pub type Vaults<T: Config> = StorageMap<
-        _,
-        Blake2_128Concat,
-        VaultId,
-        VaultState<T::Balance>,
-        OptionQuery,
-    >;
+    pub type Vaults<T: Config> =
+        StorageMap<_, Blake2_128Concat, VaultId, VaultState<T::Balance>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn lanes)]
@@ -98,24 +91,63 @@ pub mod pallet {
     #[pallet::event]
     #[pallet::generate_deposit(pub(crate) fn deposit_event)]
     pub enum Event<T: Config> {
-        VaultCreated { vault_id: VaultId, vault_type: VaultType, chain_id: ChainId, asset_id: AssetId },
-        VaultStatusChanged { vault_id: VaultId, old_status: VaultStatus, new_status: VaultStatus },
-        VaultBandsUpdated { vault_id: VaultId },
-        LaneRegistered { lane_id: LaneId, lane_class: LaneClass },
-        LaneFrozen { lane_id: LaneId, reason: FreezeReason },
-        LaneUnfrozen { lane_id: LaneId, operator_id: [u8; 32] },
+        VaultCreated {
+            vault_id: VaultId,
+            vault_type: VaultType,
+            chain_id: ChainId,
+            asset_id: AssetId,
+        },
+        VaultStatusChanged {
+            vault_id: VaultId,
+            old_status: VaultStatus,
+            new_status: VaultStatus,
+        },
+        VaultBandsUpdated {
+            vault_id: VaultId,
+        },
+        LaneRegistered {
+            lane_id: LaneId,
+            lane_class: LaneClass,
+        },
+        LaneFrozen {
+            lane_id: LaneId,
+            reason: FreezeReason,
+        },
+        LaneUnfrozen {
+            lane_id: LaneId,
+            operator_id: [u8; 32],
+        },
         /// Inventory successfully reserved in a vault.
-        InventoryReserved { vault_id: VaultId, amount: T::Balance },
+        InventoryReserved {
+            vault_id: VaultId,
+            amount: T::Balance,
+        },
         /// Inventory reservation released back to available balance.
-        InventoryReleased { vault_id: VaultId, amount: T::Balance },
+        InventoryReleased {
+            vault_id: VaultId,
+            amount: T::Balance,
+        },
         /// Outbound pending balance recorded (funds in flight).
-        PendingOutRecorded { vault_id: VaultId, amount: T::Balance },
+        PendingOutRecorded {
+            vault_id: VaultId,
+            amount: T::Balance,
+        },
         /// Settlement confirmed; pending_out balance cleared.
-        SettlementConfirmed { vault_id: VaultId, amount: T::Balance },
+        SettlementConfirmed {
+            vault_id: VaultId,
+            amount: T::Balance,
+        },
         /// Treasury funded a vault.
-        VaultFunded { vault_id: VaultId, amount: T::Balance },
+        VaultFunded {
+            vault_id: VaultId,
+            amount: T::Balance,
+        },
         /// Lane unsettled notional hit its cap (TICKET-4.5-006 warning gate).
-        ExposureCapBreached { lane_id: LaneId, current: T::Balance, cap: T::Balance },
+        ExposureCapBreached {
+            lane_id: LaneId,
+            current: T::Balance,
+            cap: T::Balance,
+        },
     }
 
     // -----------------------------------------------------------------------
@@ -169,13 +201,16 @@ pub mod pallet {
             max_band: T::Balance,
         ) -> DispatchResult {
             ensure_root(origin)?;
-            ensure!(!Vaults::<T>::contains_key(vault_id), Error::<T>::VaultAlreadyExists);
+            ensure!(
+                !Vaults::<T>::contains_key(vault_id),
+                Error::<T>::VaultAlreadyExists
+            );
             ensure!(
                 critical_min <= min_band && min_band <= target_band && target_band <= max_band,
                 Error::<T>::InvalidBandOrder
             );
 
-            let state = VaultState {
+            let mut state = VaultState {
                 vault_id,
                 vault_type: vault_type.clone(),
                 owner_type,
@@ -189,11 +224,17 @@ pub mod pallet {
                 min_band,
                 target_band,
                 max_band,
-                status: VaultStatus::Active,
+                status: VaultStatus::Active, // overwritten immediately below
             };
+            state.status = Self::check_band_status(&state);
 
             Vaults::<T>::insert(vault_id, state);
-            Self::deposit_event(Event::VaultCreated { vault_id, vault_type, chain_id, asset_id });
+            Self::deposit_event(Event::VaultCreated {
+                vault_id,
+                vault_type,
+                chain_id,
+                asset_id,
+            });
             Ok(())
         }
 
@@ -244,7 +285,10 @@ pub mod pallet {
             unsettled_cap: T::Balance,
         ) -> DispatchResult {
             ensure_root(origin)?;
-            ensure!(!Lanes::<T>::contains_key(lane_id), Error::<T>::LaneAlreadyExists);
+            ensure!(
+                !Lanes::<T>::contains_key(lane_id),
+                Error::<T>::LaneAlreadyExists
+            );
 
             let state = LaneState {
                 lane_id,
@@ -260,7 +304,10 @@ pub mod pallet {
             };
 
             Lanes::<T>::insert(lane_id, state);
-            Self::deposit_event(Event::LaneRegistered { lane_id, lane_class });
+            Self::deposit_event(Event::LaneRegistered {
+                lane_id,
+                lane_class,
+            });
             Ok(())
         }
 
@@ -407,14 +454,13 @@ pub mod pallet {
 
         // -----------------------------------------------------------------------
         // TICKET-4.5-006: Unsettled-notional helpers (public API for x3-reservation)
+        // Note: lane_unsettled_notional and global_unsettled_notional are generated
+        // by #[pallet::getter] on LaneUnsettledNotional / GlobalUnsettledNotional.
         // -----------------------------------------------------------------------
 
         /// Increment both unsettled-notional counters.
         /// Rejects with `UnsettledCapExceeded` if the lane unsettled cap is reached.
-        pub fn increment_unsettled_notional(
-            lane_id: LaneId,
-            amount: T::Balance,
-        ) -> DispatchResult {
+        pub fn increment_unsettled_notional(lane_id: LaneId, amount: T::Balance) -> DispatchResult {
             if amount.is_zero() {
                 return Ok(());
             }
@@ -423,7 +469,10 @@ pub mod pallet {
 
             let current = LaneUnsettledNotional::<T>::get(lane_id);
             let new_lane_total = current + amount;
-            ensure!(new_lane_total <= lane.unsettled_cap, Error::<T>::UnsettledCapExceeded);
+            ensure!(
+                new_lane_total <= lane.unsettled_cap,
+                Error::<T>::UnsettledCapExceeded
+            );
 
             LaneUnsettledNotional::<T>::insert(lane_id, new_lane_total);
             GlobalUnsettledNotional::<T>::mutate(|g| {

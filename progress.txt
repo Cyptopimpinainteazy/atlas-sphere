@@ -3516,3 +3516,26 @@ Updated top gap head (post-fix):
 - Added scripts/build-node-artifact-container.sh to build x3-chain-node in a pinned Rust 1.92.0 container and export artifacts/node/x3-chain-node plus SHA256.
 - Added .github/workflows/node-artifact-container.yml to run the same containerized build in CI and upload artifact outputs.
 - Documented operational swap/start/verify commands in Copilot session for replacing stale local node binary with CI/container artifact.
+
+$(date +%Y-%m-%d) — Audit remediation C-008, C-009, C-011 applied
+
+- C-009 — BTC SPV Merkle direction fix (pallets/x3-settlement-engine/src/lib.rs):
+  - Added `tx_index: u32` parameter to `submit_btc_proof` extrinsic (needed for direction-aware Merkle verification).
+  - Rewrote `verify_btc_merkle_proof` to use `index % 2` direction logic: even index = current is left child, odd = current is right child, `index /= 2` after each level. Matches the already-correct `BtcSpvProof::verify()` in btc_gateway.rs.
+  - Added `sp_runtime::Saturating` to pallet use imports (fixes compile error exposed by C-006).
+
+- C-008 — Integration test stub fix (crates/cross-vm-bridge/tests/integration.rs):
+  - Removed `#[allow(deprecated)]` attribute.
+  - Added `NoOpDispatcher` to imports.
+  - Replaced `bridge.execute_pending()` (deprecated) with `bridge.execute_pending_with_dispatcher(&NoOpDispatcher::testnet())`.
+  - Both integration tests pass (ok. 2 passed).
+
+- C-011 — X3AtomicKernelApi runtime API (3 files):
+  - pallets/x3-atomic-kernel/src/lib.rs: Added `sp_api::decl_runtime_apis!` block declaring `X3AtomicKernelApi` trait with `get_poae_proof`, `get_bundle_status`, `get_finality_cert_anchor`.
+  - pallets/x3-atomic-kernel/Cargo.toml: Added `sp-api = { workspace = true, default-features = false }` dependency and `sp-api/std` feature.
+  - runtime/src/lib.rs: Added `impl pallet_x3_atomic_kernel::X3AtomicKernelApi<Block> for Runtime` inside `impl_runtime_apis!`, reading from `PoaeProofs`, `Bundles`, and `FinalityCertAnchors` storage maps.
+
+- All 10 audit comments (C-001 through C-011, no C-010) are now fully implemented.
+DEEP_AUDIT_PROTOCOL.md
+
+2026-04-17 23:49 — Created DEEP_AUDIT_PROTOCOL.md: 22-section comprehensive audit gate covering formal state machine, atomicity invariants, reorg/finality, genesis/migration, economic safety, observability, threat model, kill-switch, determinism, proof-of-integration, canonical encoding, idempotency, liveness, permissions, supply chain, unsafe Rust, differential testing, cross-version compat, chain-specific edges, canary testnet gate, operator runbook, and final no-bullshit verdict rule.

@@ -95,7 +95,10 @@ impl EvmProviderPool {
         })
     }
 
-    pub async fn ingest_recent_window(&self, sample_blocks: u64) -> anyhow::Result<EvmIngestionWindow> {
+    pub async fn ingest_recent_window(
+        &self,
+        sample_blocks: u64,
+    ) -> anyhow::Result<EvmIngestionWindow> {
         let latest_block = self.latest_block_number().await?;
         let sample_blocks = sample_blocks.max(2).min(16);
         let start = latest_block.saturating_sub(sample_blocks.saturating_sub(1));
@@ -116,7 +119,11 @@ impl EvmProviderPool {
         let mut blocks = Vec::new();
         for response in block_responses {
             if let Some(error) = response.error {
-                return Err(anyhow!("provider returned block error {}: {}", error.code, error.message));
+                return Err(anyhow!(
+                    "provider returned block error {}: {}",
+                    error.code,
+                    error.message
+                ));
             }
             let block = response
                 .result
@@ -175,7 +182,11 @@ impl EvmProviderPool {
             .await?;
 
         if let Some(error) = log_response.error {
-            return Err(anyhow!("provider returned logs error {}: {}", error.code, error.message));
+            return Err(anyhow!(
+                "provider returned logs error {}: {}",
+                error.code,
+                error.message
+            ));
         }
 
         let logs = log_response
@@ -202,10 +213,19 @@ impl EvmProviderPool {
             .await?;
 
         if let Some(error) = response.error {
-            return Err(anyhow!("provider returned latest block error {}: {}", error.code, error.message));
+            return Err(anyhow!(
+                "provider returned latest block error {}: {}",
+                error.code,
+                error.message
+            ));
         }
 
-        parse_hex_u64(response.result.as_ref().context("missing latest block result")?)
+        parse_hex_u64(
+            response
+                .result
+                .as_ref()
+                .context("missing latest block result")?,
+        )
     }
 
     async fn single_request(&self, request: Value) -> anyhow::Result<JsonRpcResponse> {
@@ -255,7 +275,9 @@ impl EvmProviderPool {
                 let success_bias = provider.successes.saturating_mul(1000);
                 let failure_penalty = provider.failures.saturating_mul(100);
                 let latency_penalty = provider.last_latency_ms;
-                success_bias.saturating_sub(failure_penalty).saturating_sub(latency_penalty)
+                success_bias
+                    .saturating_sub(failure_penalty)
+                    .saturating_sub(latency_penalty)
             })
             .map(|(idx, _)| idx)
             .ok_or_else(|| anyhow!("no providers configured"))
@@ -311,7 +333,10 @@ fn parse_transaction(value: &Value) -> anyhow::Result<EvmTransaction> {
             .and_then(Value::as_str)
             .context("missing tx from")?
             .to_string(),
-        to: value.get("to").and_then(Value::as_str).map(ToString::to_string),
+        to: value
+            .get("to")
+            .and_then(Value::as_str)
+            .map(ToString::to_string),
         input: value
             .get("input")
             .and_then(Value::as_str)
@@ -369,7 +394,11 @@ fn parse_log(value: &Value) -> anyhow::Result<EvmLog> {
             .context("missing log address")?
             .to_string(),
         topic0,
-        block_number: parse_hex_u64(value.get("blockNumber").context("missing log blockNumber")?)?,
+        block_number: parse_hex_u64(
+            value
+                .get("blockNumber")
+                .context("missing log blockNumber")?,
+        )?,
     })
 }
 
@@ -457,7 +486,7 @@ pub(crate) async fn start_mock_evm_server() -> httpmock::MockServer {
                                     "value": "0x2"
                                 }]},
                             "error": null
-                        })
+                        }),
                     ])
                     .expect("serialize"),
                 );
@@ -492,7 +521,7 @@ pub(crate) async fn start_mock_evm_server() -> httpmock::MockServer {
                                 "logs": []
                             },
                             "error": null
-                        })
+                        }),
                     ])
                     .expect("serialize"),
                 );

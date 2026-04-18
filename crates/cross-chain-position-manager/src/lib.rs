@@ -7,8 +7,8 @@ pub mod partner;
 pub mod rebalance;
 pub mod router;
 pub mod solvency;
-pub mod visibility;
 pub mod vault_controller;
+pub mod visibility;
 
 use alloc::string::{String, ToString};
 use alloc::vec;

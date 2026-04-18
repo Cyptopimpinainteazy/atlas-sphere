@@ -62,7 +62,10 @@ impl GatewayClient {
     /// This method attempts to submit benchmark results to the gateway with
     /// exponential backoff retry strategy. If all retries are exhausted, it
     /// returns an error with context.
-    pub async fn submit_benchmark_result(&self, payload: &BenchmarkResultPayload) -> Result<BenchmarkResultResponse> {
+    pub async fn submit_benchmark_result(
+        &self,
+        payload: &BenchmarkResultPayload,
+    ) -> Result<BenchmarkResultResponse> {
         let url = format!(
             "{}/api/v1/benchmarks/results",
             self.config.gateway_url.trim_end_matches('/')
@@ -158,10 +161,7 @@ impl GatewayClient {
 
     /// Check gateway health/connectivity.
     pub async fn check_health(&self) -> Result<bool> {
-        let url = format!(
-            "{}/health",
-            self.config.gateway_url.trim_end_matches('/')
-        );
+        let url = format!("{}/health", self.config.gateway_url.trim_end_matches('/'));
 
         match self.client.get(&url).send().await {
             Ok(response) => {

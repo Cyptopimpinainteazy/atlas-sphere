@@ -58,13 +58,13 @@ use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 use x3_orchestra_control_plane::ControlPlaneClient;
 
-pub use config::SidecarConfig;
 pub use benchmark::{
-    BenchmarkRunInput, BenchmarkStore, ProviderOnboardingBenchmarkRequest,
-    build_provider_onboarding_job_request,
+    build_provider_onboarding_job_request, BenchmarkRunInput, BenchmarkStore,
+    ProviderOnboardingBenchmarkRequest,
 };
-pub use gateway_client::{GatewayClient, GatewayClientConfig, BenchmarkResultPayload};
+pub use config::SidecarConfig;
 pub use executor::X3Executor;
+pub use gateway_client::{BenchmarkResultPayload, GatewayClient, GatewayClientConfig};
 pub use job::{Job, JobQueue};
 pub use receipt::{ExecutionReceipt, ReceiptGenerator};
 pub use state::StateManager;
@@ -476,8 +476,7 @@ mod tests {
         assert!(status_running.tx_hash.is_none());
         assert!(status_running.error.is_none());
 
-        let status_submitted =
-            JobStatusEntry::new("submitted", Some("0x123abc".to_string()), None);
+        let status_submitted = JobStatusEntry::new("submitted", Some("0x123abc".to_string()), None);
         assert_eq!(status_submitted.status, "submitted");
         assert_eq!(status_submitted.tx_hash.as_ref().unwrap(), "0x123abc");
         assert!(status_submitted.error.is_none());

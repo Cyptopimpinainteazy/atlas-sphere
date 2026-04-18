@@ -292,9 +292,9 @@ impl PartnerManager {
     }
 
     pub fn total_exposure(&self) -> U256 {
-        self.partners
-            .values()
-            .fold(U256::zero(), |acc, p| acc.saturating_add(p.current_exposure))
+        self.partners.values().fold(U256::zero(), |acc, p| {
+            acc.saturating_add(p.current_exposure)
+        })
     }
 
     // -- Internal ----------------------------------------------------------
@@ -308,8 +308,10 @@ impl PartnerManager {
     ///   - response time penalty: 10%
     fn compute_health_score(metrics: &PartnerHealthMetrics) -> u32 {
         let fill_component = (metrics.fill_reliability_bps as u64 * 40) / 100;
-        let rejection_component = ((10_000u64.saturating_sub(metrics.rejected_reservation_bps as u64)) * 20) / 100;
-        let stale_component = ((10_000u64.saturating_sub(metrics.stale_quote_bps as u64)) * 20) / 100;
+        let rejection_component =
+            ((10_000u64.saturating_sub(metrics.rejected_reservation_bps as u64)) * 20) / 100;
+        let stale_component =
+            ((10_000u64.saturating_sub(metrics.stale_quote_bps as u64)) * 20) / 100;
 
         // Dispute penalty: lose 500 bps per dispute, capped at 10_000
         let dispute_penalty = (metrics.dispute_count as u64 * 500).min(10_000);
@@ -323,8 +325,11 @@ impl PartnerManager {
         };
         let response_component = ((10_000u64.saturating_sub(response_penalty)) * 10) / 100;
 
-        let total = fill_component + rejection_component + stale_component
-            + dispute_component + response_component;
+        let total = fill_component
+            + rejection_component
+            + stale_component
+            + dispute_component
+            + response_component;
         (total as u32).min(10_000)
     }
 }
@@ -383,7 +388,9 @@ mod tests {
 
         let result = mgr.request_reservation("partner_a", lane_id, U256::from(200u64));
         match result {
-            PartnerReservationResult::Accepted { reserved_amount, .. } => {
+            PartnerReservationResult::Accepted {
+                reserved_amount, ..
+            } => {
                 assert_eq!(reserved_amount, U256::from(200u64));
             }
             PartnerReservationResult::Rejected { reason, .. } => {
@@ -420,7 +427,12 @@ mod tests {
         let mut mgr = PartnerManager::new(7_000);
         let supported_lane = H256::from_low_u64_be(3);
         let wrong_lane = H256::from_low_u64_be(999);
-        mgr.upsert_partner(make_partner("partner_c", 9_000, 1_000, vec![supported_lane]));
+        mgr.upsert_partner(make_partner(
+            "partner_c",
+            9_000,
+            1_000,
+            vec![supported_lane],
+        ));
 
         let result = mgr.request_reservation("partner_c", wrong_lane, U256::from(50u64));
         assert!(matches!(

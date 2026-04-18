@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
-use x3_rpc::benchmark::{BenchmarkProfile, BenchmarkReport};
 use x3_orchestra_control_plane::{ControlPlaneClient, DispatchEvidenceRequest, VoteTally};
+use x3_rpc::benchmark::{BenchmarkProfile, BenchmarkReport};
 
 /// Application state.
 #[derive(Clone)]
@@ -85,24 +85,51 @@ fn api_routes() -> Router<AppState> {
     Router::new()
         // Stats
         .route("/stats", get(get_stats))
-        .route("/benchmarks/reports", post(publish_benchmark_report).get(get_benchmark_reports))
+        .route(
+            "/benchmarks/reports",
+            post(publish_benchmark_report).get(get_benchmark_reports),
+        )
         .route("/benchmarks/reports/:report_id", get(get_benchmark_report))
         .route("/benchmarks/results", post(submit_benchmark_result))
-        .route("/orchestra/intents", post(create_orchestra_intent).get(list_orchestra_intents))
+        .route(
+            "/orchestra/intents",
+            post(create_orchestra_intent).get(list_orchestra_intents),
+        )
         .route("/orchestra/intents/:intent_id", get(get_orchestra_intent))
-        .route("/orchestra/intents/:intent_id/dispatch", post(dispatch_orchestra_intent))
-        .route("/orchestra/approval-cases", post(create_approval_case).get(list_approval_cases))
+        .route(
+            "/orchestra/intents/:intent_id/dispatch",
+            post(dispatch_orchestra_intent),
+        )
+        .route(
+            "/orchestra/approval-cases",
+            post(create_approval_case).get(list_approval_cases),
+        )
         .route("/orchestra/approval-cases/:case_id", get(get_approval_case))
-        .route("/orchestra/vote-windows", post(create_vote_window).get(list_vote_windows))
+        .route(
+            "/orchestra/vote-windows",
+            post(create_vote_window).get(list_vote_windows),
+        )
         .route("/orchestra/vote-windows/:window_id", get(get_vote_window))
-        .route("/orchestra/vote-windows/:window_id/receipts", post(create_vote_receipt))
-        .route("/orchestra/vote-windows/:window_id/close", post(close_vote_window))
+        .route(
+            "/orchestra/vote-windows/:window_id/receipts",
+            post(create_vote_receipt),
+        )
+        .route(
+            "/orchestra/vote-windows/:window_id/close",
+            post(close_vote_window),
+        )
         .route(
             "/orchestra/vote-windows/:window_id/imported-tally",
             post(import_vote_window_tally),
         )
-        .route("/orchestra/evidence-bundles", post(create_evidence_bundle).get(list_evidence_bundles))
-        .route("/orchestra/evidence-bundles/:bundle_id", get(get_evidence_bundle))
+        .route(
+            "/orchestra/evidence-bundles",
+            post(create_evidence_bundle).get(list_evidence_bundles),
+        )
+        .route(
+            "/orchestra/evidence-bundles/:bundle_id",
+            get(get_evidence_bundle),
+        )
         // Blocks
         .route("/blocks", get(get_blocks))
         .route("/blocks/latest", get(get_latest_block))
@@ -457,7 +484,9 @@ async fn create_orchestra_intent(
     State(state): State<AppState>,
     Json(request): Json<NewOrchestraIntent>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let intent = orchestra::create_orchestra_intent(&state.db, state.orchestra_client.as_ref(), request).await?;
+    let intent =
+        orchestra::create_orchestra_intent(&state.db, state.orchestra_client.as_ref(), request)
+            .await?;
     Ok((StatusCode::CREATED, Json(intent)))
 }
 
@@ -478,7 +507,10 @@ async fn get_orchestra_intent(
 ) -> Result<impl IntoResponse, GatewayError> {
     match state.db.get_orchestra_intent(&intent_id).await? {
         Some(intent) => Ok(Json(intent)),
-        None => Err(GatewayError::NotFound(format!("Intent {} not found", intent_id))),
+        None => Err(GatewayError::NotFound(format!(
+            "Intent {} not found",
+            intent_id
+        ))),
     }
 }
 
@@ -509,7 +541,9 @@ async fn create_approval_case(
     State(state): State<AppState>,
     Json(request): Json<NewApprovalCase>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let approval_case = orchestra::create_approval_case(&state.db, state.orchestra_client.as_ref(), request).await?;
+    let approval_case =
+        orchestra::create_approval_case(&state.db, state.orchestra_client.as_ref(), request)
+            .await?;
     Ok((StatusCode::CREATED, Json(approval_case)))
 }
 
@@ -530,7 +564,10 @@ async fn get_approval_case(
 ) -> Result<impl IntoResponse, GatewayError> {
     match state.db.get_approval_case(&case_id).await? {
         Some(approval_case) => Ok(Json(approval_case)),
-        None => Err(GatewayError::NotFound(format!("Approval case {} not found", case_id))),
+        None => Err(GatewayError::NotFound(format!(
+            "Approval case {} not found",
+            case_id
+        ))),
     }
 }
 
@@ -538,7 +575,8 @@ async fn create_vote_window(
     State(state): State<AppState>,
     Json(request): Json<NewVoteWindow>,
 ) -> Result<impl IntoResponse, GatewayError> {
-    let vote_window = orchestra::create_vote_window(&state.db, state.orchestra_client.as_ref(), request).await?;
+    let vote_window =
+        orchestra::create_vote_window(&state.db, state.orchestra_client.as_ref(), request).await?;
     Ok((StatusCode::CREATED, Json(vote_window)))
 }
 
@@ -559,7 +597,10 @@ async fn get_vote_window(
 ) -> Result<impl IntoResponse, GatewayError> {
     match state.db.get_vote_window(&window_id).await? {
         Some(vote_window) => Ok(Json(vote_window)),
-        None => Err(GatewayError::NotFound(format!("Vote window {} not found", window_id))),
+        None => Err(GatewayError::NotFound(format!(
+            "Vote window {} not found",
+            window_id
+        ))),
     }
 }
 
@@ -632,7 +673,10 @@ async fn get_evidence_bundle(
         .await?
     {
         Some(evidence_bundle) => Ok(Json(evidence_bundle)),
-        None => Err(GatewayError::NotFound(format!("Evidence bundle {} not found", bundle_id))),
+        None => Err(GatewayError::NotFound(format!(
+            "Evidence bundle {} not found",
+            bundle_id
+        ))),
     }
 }
 
@@ -668,9 +712,13 @@ async fn get_benchmark_reports(
             )
         })
         .collect::<Vec<_>>();
-    
-    sort_benchmark_reports(&mut filtered, query.sort_by.as_deref(), query.sort_order.as_deref());
-    
+
+    sort_benchmark_reports(
+        &mut filtered,
+        query.sort_by.as_deref(),
+        query.sort_order.as_deref(),
+    );
+
     filtered.truncate(query.pagination.limit.min(100) as usize);
     Ok(Json::<Vec<BenchmarkReport>>(filtered))
 }
@@ -696,7 +744,9 @@ async fn publish_benchmark_report(
 ) -> Result<impl IntoResponse, GatewayError> {
     authorize_benchmark_publish(&state, &headers)?;
     if request.tenant_id.trim().is_empty() {
-        return Err(GatewayError::BadRequest("tenant_id is required".to_string()));
+        return Err(GatewayError::BadRequest(
+            "tenant_id is required".to_string(),
+        ));
     }
     validate_benchmark_report_for_publish(&request.report)?;
 
@@ -720,12 +770,16 @@ async fn submit_benchmark_result(
     authorize_benchmark_publish(&state, &headers)?;
 
     if request.tenant_id.trim().is_empty() {
-        return Err(GatewayError::BadRequest("tenant_id is required".to_string()));
+        return Err(GatewayError::BadRequest(
+            "tenant_id is required".to_string(),
+        ));
     }
 
     // Validate the report has required fields
     if request.report.report_id.trim().is_empty() {
-        return Err(GatewayError::BadRequest("report_id is required".to_string()));
+        return Err(GatewayError::BadRequest(
+            "report_id is required".to_string(),
+        ));
     }
     validate_benchmark_report_for_publish(&request.report)?;
 
@@ -828,7 +882,13 @@ fn validate_benchmark_report_for_publish(report: &BenchmarkReport) -> Result<(),
     )?;
     validate_signed_onboarding_artifact(
         hardware_attestation,
-        &["hardware_id", "hardware_kind", "cpu_model", "gpu_model", "memory_gb"],
+        &[
+            "hardware_id",
+            "hardware_kind",
+            "cpu_model",
+            "gpu_model",
+            "memory_gb",
+        ],
     )?;
 
     Ok(())
@@ -886,9 +946,12 @@ fn sort_benchmark_reports(
     sort_by: Option<&str>,
     sort_order: Option<&str>,
 ) {
-    let field = sort_by.and_then(BenchmarkReportSortField::from_str)
+    let field = sort_by
+        .and_then(BenchmarkReportSortField::from_str)
         .unwrap_or(BenchmarkReportSortField::GeneratedAt);
-    let order = sort_order.map(SortOrder::from_str).unwrap_or(SortOrder::Desc);
+    let order = sort_order
+        .map(SortOrder::from_str)
+        .unwrap_or(SortOrder::Desc);
 
     match (field, order) {
         (BenchmarkReportSortField::GeneratedAt, SortOrder::Asc) => {
@@ -899,28 +962,32 @@ fn sort_benchmark_reports(
         }
         (BenchmarkReportSortField::HighConflictRatio, SortOrder::Asc) => {
             reports.sort_by(|a, b| {
-                a.workload_profile.high_conflict_ratio
+                a.workload_profile
+                    .high_conflict_ratio
                     .partial_cmp(&b.workload_profile.high_conflict_ratio)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::HighConflictRatio, SortOrder::Desc) => {
             reports.sort_by(|a, b| {
-                b.workload_profile.high_conflict_ratio
+                b.workload_profile
+                    .high_conflict_ratio
                     .partial_cmp(&a.workload_profile.high_conflict_ratio)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::SerialFraction, SortOrder::Asc) => {
             reports.sort_by(|a, b| {
-                a.workload_profile.estimated_serial_fraction
+                a.workload_profile
+                    .estimated_serial_fraction
                     .partial_cmp(&b.workload_profile.estimated_serial_fraction)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::SerialFraction, SortOrder::Desc) => {
             reports.sort_by(|a, b| {
-                b.workload_profile.estimated_serial_fraction
+                b.workload_profile
+                    .estimated_serial_fraction
                     .partial_cmp(&a.workload_profile.estimated_serial_fraction)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
@@ -937,19 +1004,19 @@ fn sort_benchmark_reports(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphql::create_schema;
     use crate::db::{NewEvidenceBundle, NewOrchestraIntent, NewVoteWindow};
+    use crate::graphql::create_schema;
     use axum::{body::Body, http::Request, Router};
     use hyper::body::to_bytes;
     use serde_json::{json, Value};
     use std::sync::Arc;
     use tower::ServiceExt;
+    use x3_orchestra_control_plane::ControlPlaneClient;
     use x3_rpc::benchmark::{
         BenchmarkChainType, BenchmarkIntegrationTier, BenchmarkLogClassStat, BenchmarkMetrics,
         BenchmarkProfile, BenchmarkReportArtifact, BenchmarkReportSummary,
         BenchmarkWorkloadProfile,
     };
-    use x3_orchestra_control_plane::ControlPlaneClient;
 
     fn sample_report() -> BenchmarkReport {
         BenchmarkReport {
@@ -1020,7 +1087,12 @@ mod tests {
     #[test]
     fn benchmark_report_matches_conflict_filters() {
         let report = sample_report();
-        assert!(benchmark_report_matches(&report, Some(0.25), Some(0.30), None));
+        assert!(benchmark_report_matches(
+            &report,
+            Some(0.25),
+            Some(0.30),
+            None
+        ));
         assert!(!benchmark_report_matches(&report, Some(0.35), None, None));
         assert!(!benchmark_report_matches(&report, None, Some(0.40), None));
     }
@@ -1034,7 +1106,12 @@ mod tests {
             None,
             Some("ERC20-TRANSFER")
         ));
-        assert!(!benchmark_report_matches(&report, None, None, Some("amm-sync")));
+        assert!(!benchmark_report_matches(
+            &report,
+            None,
+            None,
+            Some("amm-sync")
+        ));
     }
 
     #[test]
@@ -1103,7 +1180,7 @@ mod tests {
 
         let mut reports = vec![report1, report2, report3];
         sort_benchmark_reports(&mut reports, Some("high_conflict_ratio"), Some("desc"));
-        
+
         assert_eq!(reports[0].report_id, "report-2");
         assert_eq!(reports[1].report_id, "report-3");
         assert_eq!(reports[2].report_id, "report-1");
@@ -1125,7 +1202,7 @@ mod tests {
 
         let mut reports = vec![report1, report2, report3];
         sort_benchmark_reports(&mut reports, Some("serial_fraction"), Some("asc"));
-        
+
         assert_eq!(reports[0].report_id, "report-2");
         assert_eq!(reports[1].report_id, "report-3");
         assert_eq!(reports[2].report_id, "report-1");
@@ -1253,7 +1330,9 @@ mod tests {
     }
 
     async fn read_json(response: axum::response::Response) -> Value {
-        let body = to_bytes(response.into_body()).await.expect("read response body");
+        let body = to_bytes(response.into_body())
+            .await
+            .expect("read response body");
         serde_json::from_slice(&body).expect("deserialize response body")
     }
 
@@ -1265,7 +1344,9 @@ mod tests {
             orchestra_client: None,
         };
 
-        Router::new().nest("/api/v1", api_routes()).with_state(state)
+        Router::new()
+            .nest("/api/v1", api_routes())
+            .with_state(state)
     }
 
     fn integration_app_with_orchestra_client(
@@ -1279,7 +1360,9 @@ mod tests {
             orchestra_client: Some(orchestra_client),
         };
 
-        Router::new().nest("/api/v1", api_routes()).with_state(state)
+        Router::new()
+            .nest("/api/v1", api_routes())
+            .with_state(state)
     }
 
     async fn spawn_mock_control_plane() -> (String, tokio::task::JoinHandle<()>) {
@@ -1454,7 +1537,9 @@ mod tests {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
             .await
             .expect("bind mock control-plane listener");
-        let addr = listener.local_addr().expect("mock control-plane local addr");
+        let addr = listener
+            .local_addr()
+            .expect("mock control-plane local addr");
         let std_listener = listener
             .into_std()
             .expect("convert mock control-plane listener");
@@ -1657,7 +1742,10 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .method("GET")
-                        .uri(format!("/api/v1/orchestra/intents/{}", intent_json["intent_id"].as_str().expect("intent id")))
+                        .uri(format!(
+                            "/api/v1/orchestra/intents/{}",
+                            intent_json["intent_id"].as_str().expect("intent id")
+                        ))
                         .body(Body::empty())
                         .expect("build intent get request"),
                 )
@@ -1670,7 +1758,9 @@ mod tests {
                 .oneshot(
                     Request::builder()
                         .method("GET")
-                        .uri(format!("/api/v1/orchestra/approval-cases/{approval_case_id}"))
+                        .uri(format!(
+                            "/api/v1/orchestra/approval-cases/{approval_case_id}"
+                        ))
                         .body(Body::empty())
                         .expect("build approval get request"),
                 )
@@ -1709,7 +1799,10 @@ mod tests {
 
         assert_eq!(evidence_single["bundle_id"], evidence_json["bundle_id"]);
         assert_eq!(evidence_single["intent_id"], intent_json["intent_id"]);
-        assert_eq!(evidence_single["approval_case_id"], approval_json["case_id"]);
+        assert_eq!(
+            evidence_single["approval_case_id"],
+            approval_json["case_id"]
+        );
         assert!(evidence_single.get("report_id").is_none());
 
         Database::drop_test_schema(&database_url, &schema)
@@ -1818,7 +1911,10 @@ mod tests {
 
         assert_eq!(vote_window_json["window_id"], json!("remote-window-1"));
         assert_eq!(vote_window_json["status"], json!("open"));
-        assert_eq!(vote_window_json["electorate"], json!(["member-1", "member-2"]));
+        assert_eq!(
+            vote_window_json["electorate"],
+            json!(["member-1", "member-2"])
+        );
 
         let vote_receipt_json = read_json(
             app.clone()
@@ -1869,7 +1965,10 @@ mod tests {
         )
         .await;
         assert_eq!(dispatch_json["intent"]["status"], json!("dispatched"));
-        assert_eq!(dispatch_json["evidence"]["bundle_id"], json!("remote-dispatch-evidence-1"));
+        assert_eq!(
+            dispatch_json["evidence"]["bundle_id"],
+            json!("remote-dispatch-evidence-1")
+        );
 
         let imported_tally_json = read_json(
             app.clone()
@@ -1901,7 +2000,10 @@ mod tests {
         .await;
         assert_eq!(closure_json["vote_window"]["status"], json!("closed"));
         assert_eq!(closure_json["approval_case"]["status"], json!("approved"));
-        assert_eq!(closure_json["evidence"]["bundle_id"], json!("remote-close-evidence-1"));
+        assert_eq!(
+            closure_json["evidence"]["bundle_id"],
+            json!("remote-close-evidence-1")
+        );
 
         let fetched_remote_evidence = read_json(
             app.clone()
@@ -1963,7 +2065,10 @@ mod tests {
         .await;
 
         assert_eq!(persisted_intent["status"], json!("dispatched"));
-        assert_eq!(persisted_vote_window["electorate"], json!(["member-1", "member-2"]));
+        assert_eq!(
+            persisted_vote_window["electorate"],
+            json!(["member-1", "member-2"])
+        );
         assert_eq!(persisted_vote_window["status"], json!("closed"));
         assert_eq!(
             persisted_vote_window["tally"],

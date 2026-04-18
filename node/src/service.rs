@@ -26,8 +26,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
 use x3_bridge_adapters::{
-    OffchainEscrowPersistence, PalletEscrowAdapter, SubstrateClientBalanceAdapter,
+    OffchainEscrowPersistence, PalletEscrowAdapter, RuntimeCrossVmDispatcher,
+    SubstrateClientBalanceAdapter,
 };
+use x3_cross_vm_bridge::CrossVmBridge;
 /// X3 Chain node service module
 ///
 /// Provides node initialization, partial components, and full service setup with:
@@ -419,17 +421,16 @@ pub fn new_full(
     // Register X3-specific Prometheus metrics alongside Substrate's built-in metrics.
     // These counters track block production, comit lifecycle, and dual-VM execution
     // and are automatically scraped via Substrate's /metrics endpoint.
-    let x3_metrics: Option<std::sync::Arc<X3PrometheusMetrics>> =
-        prometheus_registry.as_ref().and_then(|reg| {
-            match X3PrometheusMetrics::register(reg) {
-                Ok(m) => {
-                    log::info!("📊 X3 Prometheus metrics registered successfully");
-                    Some(std::sync::Arc::new(m))
-                }
-                Err(e) => {
-                    log::warn!("⚠️ Failed to register X3 Prometheus metrics: {}", e);
-                    None
-                }
+    let x3_metrics: Option<std::sync::Arc<X3PrometheusMetrics>> = prometheus_registry
+        .as_ref()
+        .and_then(|reg| match X3PrometheusMetrics::register(reg) {
+            Ok(m) => {
+                log::info!("📊 X3 Prometheus metrics registered successfully");
+                Some(std::sync::Arc::new(m))
+            }
+            Err(e) => {
+                log::warn!("⚠️ Failed to register X3 Prometheus metrics: {}", e);
+                None
             }
         });
 
@@ -447,7 +448,9 @@ pub fn new_full(
     };
 
     if feature_flags.enable_parallel_proposer {
-        log::info!("⚡ Parallel proposer is enabled; contention predictor wired into block authoring");
+        log::info!(
+            "⚡ Parallel proposer is enabled; contention predictor wired into block authoring"
+        );
     }
     if feature_flags.enable_flash_finality {
         if enable_grandpa {
@@ -759,14 +762,45 @@ pub fn new_full(
                 ));
 
                 {
-                    let retained = escrow_adapter.clone();
+                    // C-002: replace the no-op keep-alive loop with a real
+                    // cross-VM bridge poller backed by RuntimeCrossVmDispatcher,
+                    // so pending EVM/SVM operations are actually submitted to the
+                    // runtime rather than discarded inside a 1-hour sleep loop.
+                    let dispatcher =
+                        Arc::new(RuntimeCrossVmDispatcher::new(client.clone()));
+                    let bridge =
+                        Arc::new(std::sync::Mutex::new(CrossVmBridge::new()));
+                    // Keep escrow_adapter alive for the duration of the task.
+                    let _escrow = escrow_adapter.clone();
+                    let bridge_for_task = bridge.clone();
                     task_manager.spawn_handle().spawn(
-                        "cross-vm-escrow-retainer",
-                        None,
+                        "cross-vm-bridge-poller",
+                        Some("x3"),
                         async move {
                             loop {
-                                tokio::time::sleep(Duration::from_secs(3600)).await;
-                                let _keep_alive = retained.clone();
+                                tokio::time::sleep(Duration::from_millis(200)).await;
+                                // Lock is acquired and released within this block;
+                                // not held across any await point.
+                                let mut b = bridge_for_task
+                                    .lock()
+                                    .expect("cross-vm bridge lock poisoned");
+                                match b.execute_pending_with_dispatcher(
+                                    dispatcher.as_ref(),
+                                ) {
+                                    Ok(results) if !results.is_empty() => {
+                                        log::debug!(
+                                            "[cross-vm] executed {} pending bridge ops",
+                                            results.len()
+                                        );
+                                    }
+                                    Ok(_) => {}
+                                    Err(e) => {
+                                        log::warn!(
+                                            "[cross-vm] bridge poll error: {:?}",
+                                            e
+                                        );
+                                    }
+                                }
                             }
                         },
                     );

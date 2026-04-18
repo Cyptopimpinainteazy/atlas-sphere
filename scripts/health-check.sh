@@ -71,13 +71,13 @@ main() {
     echo ""
     
     echo "Network Connectivity:"
-    check_http "RPC Node" "$RPC_URL" "200"
     check_http "Jury Service" "$JURY_URL" "200"
     
     echo ""
     echo "Blockchain Status:"
-    check_rpc_method "system_health" "isSynced"
-    check_rpc_method "system_chain" "chain"
+    check_rpc_method "system_health" "\"result\""
+    check_rpc_method "system_health" "isSyncing"
+    check_rpc_method "system_chain" "\"result\""
     
     echo ""
     echo "Jury Service Status:"

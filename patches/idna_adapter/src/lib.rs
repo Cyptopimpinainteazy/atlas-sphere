@@ -108,7 +108,7 @@ pub const MIDDLE_RTL_MASK: BidiClassMask = BidiClassMask(
 
 /// Turns a genecal category into a mask for comparing with multiple categories at once.
 const fn general_category_to_mask(gc: GeneralCategory) -> u32 {
-    1 << gc.0
+    1 << (gc as u32)
 }
 
 /// Mask for the disallowed general categories of the first character in a label.

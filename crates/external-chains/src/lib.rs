@@ -58,7 +58,7 @@ pub use rpc::{
 pub use settlement::{ProofType, SettlementConfig, SettlementProof, SettlementVerifier};
 pub use settlement_integration::{
     BoundRoute, PreSubmissionCheckResult, SettlementCoordinator, SettlementDebitEvent,
-    SettlementFailureEvent, SettlementObligation, SettlementOblStatus,
+    SettlementFailureEvent, SettlementOblStatus, SettlementObligation,
 };
 
 use parity_scale_codec::{Decode, Encode};

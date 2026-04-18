@@ -520,11 +520,13 @@ impl X3VMBridge {
                 };
                 let amount = match args.get(2) {
                     Some(Value::I64(v)) => (*v).max(0) as u128,
-                    _ => {
-                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                            "bridge_svm_to_evm: arg[2] (amount) must be I64".into(),
-                        )))
+                    Some(Value::Bytes(b)) if b.len() == 16 => {
+                        u128::from_le_bytes(b.as_slice().try_into().expect("checked len"))
                     }
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_svm_to_evm: arg[2] (amount) must be I64 or 16-byte le-encoded u128"
+                            .into(),
+                    ))),
                 };
                 let ticket = provider.lock_svm(&from, amount).map_err(|e| {
                     VMError::without_ip(VMErrorKind::HostcallError(format!(
@@ -575,11 +577,13 @@ impl X3VMBridge {
                 };
                 let amount = match args.get(2) {
                     Some(Value::I64(v)) => (*v).max(0) as u128,
-                    _ => {
-                        return Err(VMError::without_ip(VMErrorKind::HostcallError(
-                            "bridge_evm_to_svm: arg[2] (amount) must be I64".into(),
-                        )))
+                    Some(Value::Bytes(b)) if b.len() == 16 => {
+                        u128::from_le_bytes(b.as_slice().try_into().expect("checked len"))
                     }
+                    _ => return Err(VMError::without_ip(VMErrorKind::HostcallError(
+                        "bridge_evm_to_svm: arg[2] (amount) must be I64 or 16-byte le-encoded u128"
+                            .into(),
+                    ))),
                 };
                 let ticket = provider.lock_evm(&from_bytes, amount).map_err(|e| {
                     VMError::without_ip(VMErrorKind::HostcallError(format!(

@@ -42,10 +42,7 @@ mod tests {
             let bond_id = bonds[0];
 
             // Release bond
-            assert_ok!(Slash::release_bond(
-                RuntimeOrigin::root(),
-                bond_id
-            ));
+            assert_ok!(Slash::release_bond(RuntimeOrigin::root(), bond_id));
 
             // Verify bond status changed
             let bond = Bonds::<Test>::get(bond_id).unwrap();

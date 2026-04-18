@@ -37,18 +37,18 @@ impl EvmExecutorAdapter for WasmEvmAdapter {
             sp_core::U256::zero(), // value — pallet fills in from extrinsic
             &evm_config,
         )
-            .map(|res| ExecutionReceipt {
-                version: crate::EXECUTION_RECEIPT_VERSION,
-                success: res.success,
-                gas_used: res.gas_used,
-                return_data: res.output,
-                logs: Vec::new(),
-                state_changes: Vec::new(),
-                protocol_version: 1,
-                migration_history: Vec::new(),
-                compatibility_flags: 0,
-            })
-            .map_err(|_| DispatchError::Other("EVM execution failed"))
+        .map(|res| ExecutionReceipt {
+            version: crate::EXECUTION_RECEIPT_VERSION,
+            success: res.success,
+            gas_used: res.gas_used,
+            return_data: res.output,
+            logs: Vec::new(),
+            state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
+        })
+        .map_err(|_| DispatchError::Other("EVM execution failed"))
     }
 
     fn estimate_gas(payload: &[u8]) -> Result<u64, DispatchError> {

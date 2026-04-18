@@ -23,17 +23,15 @@ pub use rollback_listener::{
 };
 pub use swap_rpc::{AMMPool, SwapOrder, SwapQuote, SwapRPCServer, SwapStatus, TokenPair};
 
-
 /// Billing enforcement for atomic trade operations
 pub mod billing {
     use std::collections::HashMap;
-    
+
     /// Protocol fee collector address
     pub const PROTOCOL_FEE_COLLECTOR: [u8; 32] = [
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFE, 0xE5,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xFE, 0xE5,
     ];
 
     /// Billing plan tiers
@@ -63,6 +61,10 @@ pub mod billing {
         pub plan: BillingPlan,
         pub used_this_month: u64,
         pub last_reset_epoch: u64,
+        /// Protocol fee units reserved for the current in-flight request.
+        pub pending_fee: u128,
+        /// Cumulative protocol fees committed across all lifetime requests.
+        pub total_fees_charged: u128,
     }
 
     impl BillingAccount {
@@ -72,11 +74,15 @@ pub mod billing {
                 plan,
                 used_this_month: 0,
                 last_reset_epoch: 0,
+                pending_fee: 0,
+                total_fees_charged: 0,
             }
         }
 
         pub fn remaining_quota(&self) -> u64 {
-            self.plan.monthly_quota().saturating_sub(self.used_this_month)
+            self.plan
+                .monthly_quota()
+                .saturating_sub(self.used_this_month)
         }
 
         pub fn increment_usage(&mut self) -> Result<(), &'static str> {
@@ -113,14 +119,43 @@ pub mod billing {
             self.accounts.insert(api_key, account);
         }
 
-        pub fn validate_request(&mut self, api_key: &str, current_epoch: u64) -> Result<(), &'static str> {
+        pub fn validate_request(
+            &mut self,
+            api_key: &str,
+            current_epoch: u64,
+        ) -> Result<(), &'static str> {
             let account = self.accounts.get_mut(api_key).ok_or("Invalid API key")?;
             account.reset_if_new_month(current_epoch);
             account.increment_usage()
         }
 
         pub fn get_usage(&self, api_key: &str) -> Option<(u64, u64)> {
-            self.accounts.get(api_key).map(|a| (a.used_this_month, a.plan.monthly_quota()))
+            self.accounts
+                .get(api_key)
+                .map(|a| (a.used_this_month, a.plan.monthly_quota()))
+        }
+
+        /// Reserve `fee` units in the named account's pending-fee counter before
+        /// executing a billable operation.  Returns `Err` if the key is unknown.
+        pub fn reserve_fee(&mut self, api_key: &str, fee: u128) -> Result<(), &'static str> {
+            let account = self.accounts.get_mut(api_key).ok_or("Invalid API key")?;
+            account.pending_fee = account.pending_fee.saturating_add(fee);
+            Ok(())
+        }
+
+        /// Release a previously-reserved fee without charging it (call on failure).
+        pub fn unreserve_fee(&mut self, api_key: &str, fee: u128) {
+            if let Some(account) = self.accounts.get_mut(api_key) {
+                account.pending_fee = account.pending_fee.saturating_sub(fee);
+            }
+        }
+
+        /// Commit a previously-reserved fee to the lifetime total (call on success).
+        pub fn commit_fee(&mut self, api_key: &str, fee: u128) {
+            if let Some(account) = self.accounts.get_mut(api_key) {
+                account.pending_fee = account.pending_fee.saturating_sub(fee);
+                account.total_fees_charged = account.total_fees_charged.saturating_add(fee);
+            }
         }
     }
 
@@ -131,11 +166,7 @@ pub mod billing {
     }
 
     /// Fee calculation for atomic trades
-    pub fn calculate_trade_fee(
-        legs: u32,
-        capital: u128,
-        cross_chain_hops: u32,
-    ) -> u128 {
+    pub fn calculate_trade_fee(legs: u32, capital: u128, cross_chain_hops: u32) -> u128 {
         const BASE_FEE: u128 = 10_000;
         const COMPLEXITY_MULTIPLIER: u128 = 500;
         const CAPITAL_COEFFICIENT: u128 = 1_000;

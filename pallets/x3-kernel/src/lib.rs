@@ -68,7 +68,7 @@ pub mod runtime_api;
 pub use weights::WeightInfo;
 
 use frame_support::pallet_prelude::*;
-use frame_support::sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, SaturatedConversion};
+use frame_support::sp_runtime::traits::{AtLeast32BitUnsigned, CheckedAdd, CheckedSub, SaturatedConversion};
 use frame_support::sp_runtime::DispatchError;
 use frame_support::traits::BuildGenesisConfig;
 use frame_support::traits::{Currency, UnixTime};
@@ -81,6 +81,9 @@ use sp_std::convert::TryInto;
 use sp_std::marker::PhantomData;
 use sp_std::{vec, vec::Vec};
 use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
+use x3_cross_vm_bridge::canonical::{
+    CrossVmCall, CrossVmReceipt, CrossVmStatus, VmId, REPLAY_PRUNE_HORIZON_BLOCKS,
+};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -1048,6 +1051,13 @@ pub mod pallet {
         #[pallet::constant]
         type MaxPreparedOpsPerBlock: Get<u32>;
 
+        /// Maximum number of stale `(VmId, call_hash)` replay-store
+        /// entries to prune per block. Bounds `on_initialize` work so
+        /// the pruner cannot monopolise a block's weight budget even
+        /// under pathological admission patterns.
+        #[pallet::constant]
+        type MaxReplayPruneItemsPerBlock: Get<u32>;
+
         /// Require a cross-chain proof for cross-VM operations.
         #[pallet::constant]
         type RequireCrossVmProof: Get<bool>;
@@ -1181,6 +1191,34 @@ pub mod pallet {
     pub type PreparedCrossVmQueue<T: Config> =
         StorageValue<_, BoundedVec<H256, <T as Config>::MaxPreparedCrossVmOps>, ValueQuery>;
 
+    /// Canonical cross-VM replay-protection store.
+    ///
+    /// Key: `(VmId, call_hash)` where `call_hash` is
+    /// `CrossVmCall::call_hash(&source_finalized_hash)` computed against
+    /// the finalized-chain hash at admission time (see
+    /// [`Pallet::x3vm_source_finalized_hash`]).
+    ///
+    /// Value: the block number at which the call hash was admitted.
+    /// The value is the pruning cursor: entries older than
+    /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks relative to the current
+    /// block are eligible for removal in `on_initialize`.
+    ///
+    /// This store must outlive in-memory batch clears — once a call
+    /// hash is admitted, it stays admitted for at least
+    /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks regardless of whether the
+    /// dispatch succeeded, failed, or aborted. That preserves
+    /// at-most-once semantics against late-arriving proofs.
+    #[pallet::storage]
+    pub type X3vmReplayStore<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        VmId,
+        Blake2_128Concat,
+        H256,
+        BlockNumberFor<T>,
+        OptionQuery,
+    >;
+
     /// Rate limiting: tracks Comit submissions per account per block.
     /// Key: (AccountId, BlockNumber), Value: submission count.
     /// Used to prevent DoS via excessive submissions from a single account.
@@ -1219,16 +1257,38 @@ pub mod pallet {
         frame_support::BoundedVec<u8, frame_support::traits::ConstU32<65_536>>,
     >;
 
+    /// EVM bridge escrow contract address, operator-configurable via genesis / set_escrow extrinsic.
+    #[pallet::storage]
+    pub type EscrowEvmAddress<T: Config> = StorageValue<_, sp_core::H160, ValueQuery>;
+
+    /// SVM bridge escrow program address, operator-configurable via genesis / set_escrow extrinsic.
+    #[pallet::storage]
+    pub type EscrowSvmAddress<T: Config> = StorageValue<_, [u8; 32], ValueQuery>;
+
     #[pallet::genesis_config]
     #[derive(frame_support::DefaultNoBound)]
     pub struct GenesisConfig<T: Config> {
         /// Initial asset registry entries.
         pub assets: Vec<(T::AssetId, Vec<u8>, u8)>,
+        /// EVM bridge escrow contract address (20-byte hex).  Zero-value is the
+        /// safe default; set this to the deployed escrow contract before launch.
+        #[serde(default)]
+        pub evm_escrow_addr: sp_core::H160,
+        /// SVM bridge escrow program address (32-byte pubkey).  Zero-value is the
+        /// safe default; set this to the deployed escrow program before launch.
+        #[serde(default)]
+        pub svm_escrow_addr: [u8; 32],
     }
 
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
+            if self.evm_escrow_addr != sp_core::H160::zero() {
+                EscrowEvmAddress::<T>::put(self.evm_escrow_addr);
+            }
+            if self.svm_escrow_addr != [0u8; 32] {
+                EscrowSvmAddress::<T>::put(self.svm_escrow_addr);
+            }
             for (asset_id, symbol, decimals) in &self.assets {
                 assert!(
                     !AssetRegistry::<T>::contains_key(asset_id),
@@ -1448,8 +1508,13 @@ pub mod pallet {
                 }
             }
 
+            // Prune stale replay-store entries (bounded per block).
+            let replay_pruned = Self::prune_x3vm_replay_store(now);
+
             // Minimal weight for bounded iteration.
-            T::DbWeight::get().reads_writes(processed as u64, processed as u64)
+            let total =
+                (processed as u64).saturating_add(replay_pruned as u64);
+            T::DbWeight::get().reads_writes(total, total)
         }
     }
 
@@ -2445,9 +2510,20 @@ pub mod pallet {
                 }
                 CrossVmOperation::CallSvm { .. } => (0u64, T::DefaultSvmComputeLimit::get()),
                 CrossVmOperation::AtomicSwap { .. } => (200_000u64, 200_000u64),
+                // Tri-VM swap: EVM + SVM columns same as 2-party; x3VM
+                // leg's canonical gas_budget rides on the SVM compute
+                // column (matches CallX3Vm billing convention).
+                CrossVmOperation::AtomicTriSwap { x3vm_call, .. } => (
+                    200_000u64,
+                    200_000u64.saturating_add(x3vm_call.gas_budget),
+                ),
                 // Message passing: moderate gas, no balance lock
                 CrossVmOperation::MessageToEvm { .. } => (50_000u64, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, 50_000u64),
+                // x3VM calls are charged against x3VM gas (no EVM or
+                // SVM cost). We bill the caller's full `gas_budget` up
+                // front; refunds happen at post-execution settlement.
+                CrossVmOperation::CallX3Vm { call, .. } => (0u64, call.gas_budget),
             };
 
             let base_fee = T::Balance::default();
@@ -2483,6 +2559,29 @@ pub mod pallet {
                     pubkey[..len].copy_from_slice(&svm_party[..len]);
                     let svm_balance = dispatcher.get_svm_balance(&pubkey) as u128;
                     ensure!(svm_balance >= *svm_amount, Error::<T>::InsufficientBalance);
+                }
+                CrossVmOperation::AtomicTriSwap {
+                    evm_party,
+                    svm_party,
+                    evm_amount,
+                    svm_amount,
+                    x3vm_call,
+                    ..
+                } => {
+                    let evm_balance = dispatcher.get_evm_balance(evm_party);
+                    ensure!(evm_balance >= *evm_amount, Error::<T>::InsufficientBalance);
+                    let mut pubkey = [0u8; 32];
+                    let len = svm_party.len().min(32);
+                    pubkey[..len].copy_from_slice(&svm_party[..len]);
+                    let svm_balance = dispatcher.get_svm_balance(&pubkey) as u128;
+                    ensure!(svm_balance >= *svm_amount, Error::<T>::InsufficientBalance);
+                    // x3VM leg: admission-check target/version. No balance
+                    // reservation — replay protection is via call_hash.
+                    ensure!(
+                        x3vm_call.target == x3_cross_vm_bridge::VmId::X3Vm,
+                        Error::<T>::InvalidCrossVmOperation
+                    );
+                    x3vm_call.ensure_current_version()?;
                 }
                 _ => {}
             }
@@ -2639,8 +2738,19 @@ pub mod pallet {
                     let evm = result.gas_used / 2;
                     (evm, result.gas_used.saturating_sub(evm))
                 }
+                CrossVmOperation::AtomicTriSwap { .. } => {
+                    // Tri-VM: split EVM 1/3, remainder (SVM + x3VM) on
+                    // SVM compute column. Refined accounting is a Patch
+                    // 5.1 concern; conservative split avoids under-charging.
+                    let evm = result.gas_used / 3;
+                    (evm, result.gas_used.saturating_sub(evm))
+                }
                 CrossVmOperation::MessageToEvm { .. } => (result.gas_used, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, result.gas_used),
+                // x3VM calls bill under the SVM compute column for
+                // fee accounting purposes (x3VM and SVM share the
+                // compute-unit model). EVM gas column stays zero.
+                CrossVmOperation::CallX3Vm { .. } => (0u64, result.gas_used),
             };
 
             let required_fee =
@@ -2729,6 +2839,133 @@ pub mod pallet {
                     }
                 });
             }
+        }
+
+        // ─────────────────── X3VM replay protection (pallet) ───────────────
+        //
+        // The bridge crate's `used_x3vm_call_hashes` is an in-memory
+        // reference implementation. The authoritative replay store is
+        // this pallet-level `StorageDoubleMap`, keyed by
+        // `(VmId, call_hash)` with the admission-block number as value.
+        // The call hash is computed against the real finalized-chain
+        // hash returned by `x3vm_source_finalized_hash` — not
+        // `H256::zero()` as in the bridge-local helper.
+
+        /// Return the canonical source-finalized hash used to
+        /// domain-separate `call_hash` values at this block.
+        ///
+        /// Uses `frame_system::Pallet::<T>::parent_hash()` — the hash of
+        /// the most recently sealed block, which is the latest state
+        /// available to runtime logic at admission time. Binding the
+        /// hash here ensures two logically identical calls submitted
+        /// against different source-chain histories produce distinct
+        /// replay keys, which is the intended behaviour.
+        pub fn x3vm_source_finalized_hash() -> H256 {
+            // `frame_system::Pallet::<T>::parent_hash()` returns the
+            // associated `T::Hash`. `frame_system::Config` bounds
+            // `Hash: AsRef<[u8]> + AsMut<[u8]>`, so we can always
+            // re-project it into the canonical 32-byte `H256` used by
+            // the cross-VM canonical type layer.
+            let parent: <T as frame_system::Config>::Hash =
+                <frame_system::Pallet<T>>::parent_hash();
+            H256::from_slice(parent.as_ref())
+        }
+
+        /// Compute the canonical replay key for a call at the current
+        /// block's source-finalized hash.
+        pub fn x3vm_replay_key(call: &CrossVmCall) -> H256 {
+            call.call_hash(&Self::x3vm_source_finalized_hash())
+        }
+
+        /// Return `true` iff `(target_vm, call_hash)` is already
+        /// admitted in the replay store.
+        pub fn is_x3vm_call_replayed(target_vm: VmId, call_hash: &H256) -> bool {
+            X3vmReplayStore::<T>::contains_key(target_vm, call_hash)
+        }
+
+        /// Admit a call hash for `target_vm` at the current block.
+        ///
+        /// Returns `Err(DispatchError::Other(...))` if the hash is
+        /// already present — the pallet caller is expected to surface
+        /// this as `CrossVmStatus::ReplayRejected` without invoking
+        /// any VM.
+        ///
+        /// The entry is written with the current block number as
+        /// value, which is the cursor the pruner uses to decide when
+        /// the entry may be removed.
+        pub fn admit_x3vm_call(
+            target_vm: VmId,
+            call_hash: H256,
+        ) -> Result<(), DispatchError> {
+            if X3vmReplayStore::<T>::contains_key(target_vm, call_hash) {
+                return Err(DispatchError::Other(
+                    "CallX3Vm: replay rejected (pallet store)",
+                ));
+            }
+            let now = <frame_system::Pallet<T>>::block_number();
+            X3vmReplayStore::<T>::insert(target_vm, call_hash, now);
+            Ok(())
+        }
+
+        /// Atomic "check-and-admit" convenience used by the pallet's
+        /// cross-VM dispatch entrypoint. Computes the replay key
+        /// against the current source-finalized hash and admits it.
+        pub fn admit_x3vm_call_for(
+            call: &CrossVmCall,
+        ) -> Result<H256, DispatchError> {
+            let key = Self::x3vm_replay_key(call);
+            Self::admit_x3vm_call(call.target, key)?;
+            Ok(key)
+        }
+
+        /// Explicitly release an admitted replay entry. Used only for
+        /// pre-dispatch aborts (e.g. circuit-breaker trip after
+        /// admission). Failed dispatches must NOT call this — a failed
+        /// call consumed its slot.
+        ///
+        /// Returns `true` if an entry was removed.
+        pub fn abort_x3vm_admission(target_vm: VmId, call_hash: &H256) -> bool {
+            X3vmReplayStore::<T>::take(target_vm, call_hash).is_some()
+        }
+
+        /// Prune replay-store entries older than
+        /// `REPLAY_PRUNE_HORIZON_BLOCKS` blocks relative to `now`.
+        ///
+        /// Bounded by `T::MaxReplayPruneItemsPerBlock`. Returns the
+        /// number of entries actually removed so the caller can budget
+        /// weight.
+        pub fn prune_x3vm_replay_store(now: BlockNumberFor<T>) -> u32 {
+            let horizon: BlockNumberFor<T> =
+                (REPLAY_PRUNE_HORIZON_BLOCKS as u64).saturated_into();
+            // If the chain is younger than the horizon there is
+            // nothing to prune yet.
+            let threshold = match now.checked_sub(&horizon) {
+                Some(t) => t,
+                None => return 0,
+            };
+
+            let budget = T::MaxReplayPruneItemsPerBlock::get();
+            if budget == 0 {
+                return 0;
+            }
+
+            let mut removed: u32 = 0;
+            // Collect first, then remove — the storage iterator must
+            // not be mutated mid-iteration.
+            let mut victims: Vec<(VmId, H256)> = Vec::new();
+            for (vm_id, call_hash, admitted_at) in X3vmReplayStore::<T>::iter() {
+                if admitted_at <= threshold {
+                    victims.push((vm_id, call_hash));
+                    if victims.len() as u32 >= budget {
+                        break;
+                    }
+                }
+            }
+            for (vm_id, call_hash) in victims {
+                X3vmReplayStore::<T>::remove(vm_id, call_hash);
+                removed = removed.saturating_add(1);
+            }
+            removed
         }
 
         fn canonical_asset_state_key(asset_id: T::AssetId) -> H256 {
@@ -2827,8 +3064,12 @@ pub mod pallet {
                 CrossVmOperation::CallEvm { .. }
                 | CrossVmOperation::CallSvm { .. }
                 | CrossVmOperation::MessageToEvm { .. }
-                | CrossVmOperation::MessageToSvm { .. } => {
-                    // Message/call operations carry no balance state changes
+                | CrossVmOperation::MessageToSvm { .. }
+                | CrossVmOperation::CallX3Vm { .. } => {
+                    // Message/call operations carry no balance state changes.
+                    // x3VM calls encode any transfer inside `call.payload`
+                    // and surface effects through the returned receipt's
+                    // `target_state_root`, not through ledger deltas here.
                 }
                 CrossVmOperation::AtomicSwap {
                     evm_party,
@@ -2837,6 +3078,45 @@ pub mod pallet {
                     svm_amount,
                     ..
                 } => {
+                    changes.push(Self::map_cross_vm_address_delta(
+                        evm_party,
+                        canonical_asset,
+                        *evm_amount,
+                        false,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        svm_party,
+                        canonical_asset,
+                        *evm_amount,
+                        true,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        svm_party,
+                        canonical_asset,
+                        *svm_amount,
+                        false,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        evm_party,
+                        canonical_asset,
+                        *svm_amount,
+                        true,
+                    )?);
+                }
+                CrossVmOperation::AtomicTriSwap {
+                    evm_party,
+                    svm_party,
+                    evm_amount,
+                    svm_amount,
+                    ..
+                } => {
+                    // Tri-VM swap ledger deltas: EVM <-> SVM transfers mirror
+                    // the 2-party variant. The x3VM leg is a canonical call
+                    // whose effects surface through the returned receipt's
+                    // `target_state_root`, not through ledger deltas here.
+                    // If the x3VM call represents a transfer, the pallet
+                    // records it via a separate state-change entry in
+                    // Patch 5.1.
                     changes.push(Self::map_cross_vm_address_delta(
                         evm_party,
                         canonical_asset,
@@ -3576,6 +3856,66 @@ pub mod pallet {
             }
         }
 
+        /// Execute an x3VM call through the pallet-configured
+        /// [`X3ExecutorAdapter`]. This is the canonical entrypoint:
+        /// it enforces the version and target contract on
+        /// [`CrossVmCall`], computes the canonical `call_hash` against
+        /// the pallet-level source-finalized hash (parent block),
+        /// routes through `T::X3Adapter::execute`, and materializes a
+        /// [`CrossVmReceipt`] from the adapter's [`ExecutionReceipt`].
+        ///
+        /// Replay-store admission is the caller's responsibility —
+        /// dispatchers are intentionally stateless w.r.t. the replay
+        /// map so the coordinator can sequence admission → execute →
+        /// abort-on-fail without double-bookkeeping.
+        fn execute_x3vm_tx(
+            &self,
+            _caller: &[u8; 32],
+            call: &CrossVmCall,
+        ) -> Result<CrossVmReceipt, DispatchError> {
+            // Version + target gates. Mirrors NoOpDispatcher semantics:
+            // `InternalError` is a receipt-level signal, not a
+            // DispatchError, so the coordinator can distinguish
+            // "adapter rejected the call" from "runtime storage
+            // broke".
+            call.ensure_current_version()?;
+
+            let source_finalized = Pallet::<T>::x3vm_source_finalized_hash();
+            let call_hash = call.call_hash(&source_finalized);
+
+            if call.target != VmId::X3Vm {
+                return Ok(CrossVmReceipt {
+                    call_hash,
+                    source_state_root: source_finalized,
+                    target_state_root: H256::zero(),
+                    status: CrossVmStatus::InternalError,
+                    gas_used: 0,
+                    logs: Vec::new(),
+                });
+            }
+
+            match T::X3Adapter::execute(&call.payload, call.gas_budget) {
+                Ok(receipt) => {
+                    let status = if receipt.success {
+                        CrossVmStatus::Success
+                    } else if receipt.gas_used >= call.gas_budget {
+                        CrossVmStatus::OutOfGas
+                    } else {
+                        CrossVmStatus::Reverted
+                    };
+                    Ok(CrossVmReceipt {
+                        call_hash,
+                        source_state_root: source_finalized,
+                        target_state_root: H256::zero(),
+                        status,
+                        gas_used: receipt.gas_used,
+                        logs: Vec::new(),
+                    })
+                }
+                Err(e) => Err(e),
+            }
+        }
+
         fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
             let account = Pallet::<T>::decode_state_change_account(address);
             let asset = T::AssetId::default();
@@ -3601,11 +3941,21 @@ pub mod pallet {
         }
 
         fn get_evm_bridge_escrow(&self) -> [u8; 20] {
-            T::BridgeEvmEscrow::get().0
+            let stored = EscrowEvmAddress::<T>::get();
+            if stored != sp_core::H160::zero() {
+                stored.0
+            } else {
+                T::BridgeEvmEscrow::get().0
+            }
         }
 
         fn get_svm_bridge_escrow(&self) -> [u8; 32] {
-            T::BridgeSvmEscrow::get()
+            let stored = EscrowSvmAddress::<T>::get();
+            if stored != [0u8; 32] {
+                stored
+            } else {
+                T::BridgeSvmEscrow::get()
+            }
         }
     }
 
@@ -3670,6 +4020,12 @@ sp_api::decl_runtime_apis! {
         /// Executes via Frontier runner and returns keccak256(payload) on success.
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
 
+        /// Dry-run the same EVM payload as `submit_evm_transaction`, without committing
+        /// any state.  Runtime-API calls execute against a per-call throwaway overlay —
+        /// this entry point makes the read-only intent explicit on cross-VM pre-flight
+        /// validation paths (e.g. `x3_submitCrossVmTransaction` in node/src/rpc.rs).
+        fn validate_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
         /// Submit an SVM instruction for execution.
         /// Payload is instruction bytes interpreted by the configured SVM adapter.
         /// Returns the execution receipt return bytes on success.
@@ -3692,6 +4048,9 @@ mod mock;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod replay_tests;
 
 #[cfg(test)]
 mod chaos_tests;

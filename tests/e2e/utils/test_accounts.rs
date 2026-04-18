@@ -1,10 +1,10 @@
 //! Test Account Management
-//! 
+//!
 //! Provides utilities for creating and managing test accounts
 //! with proper funding and permissions for E2E testing.
 
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tracing::{info, warn};
 
 /// Test account with associated metadata
@@ -50,42 +50,51 @@ impl TestAccountManager {
         info!("Initializing default test accounts");
 
         // Create standard test accounts
-        self.create_test_account("test_user_1", AccountType::Regular, 1000).await?;
-        self.create_test_account("test_user_2", AccountType::Regular, 1000).await?;
-        
+        self.create_test_account("test_user_1", AccountType::Regular, 1000)
+            .await?;
+        self.create_test_account("test_user_2", AccountType::Regular, 1000)
+            .await?;
+
         // Create DeFi-specific accounts
-        self.create_test_account("test_lender", AccountType::Lender, 5000).await?;
-        self.create_test_account("test_borrower", AccountType::Borrower, 2000).await?;
-        
+        self.create_test_account("test_lender", AccountType::Lender, 5000)
+            .await?;
+        self.create_test_account("test_borrower", AccountType::Borrower, 2000)
+            .await?;
+
         // Create GPU mining accounts
-        self.create_test_account("test_gpu_miner_1", AccountType::GPUMiner, 1000).await?;
-        self.create_test_account("test_gpu_miner_2", AccountType::GPUMiner, 1000).await?;
-        
+        self.create_test_account("test_gpu_miner_1", AccountType::GPUMiner, 1000)
+            .await?;
+        self.create_test_account("test_gpu_miner_2", AccountType::GPUMiner, 1000)
+            .await?;
+
         // Create AI trading accounts
-        self.create_test_account("test_ai_trader_1", AccountType::AITrader, 3000).await?;
-        self.create_test_account("test_ai_trader_2", AccountType::AITrader, 3000).await?;
-        
+        self.create_test_account("test_ai_trader_1", AccountType::AITrader, 3000)
+            .await?;
+        self.create_test_account("test_ai_trader_2", AccountType::AITrader, 3000)
+            .await?;
+
         // Create admin account
-        self.create_test_account("test_admin", AccountType::Admin, 10000).await?;
+        self.create_test_account("test_admin", AccountType::Admin, 10000)
+            .await?;
 
         Ok(())
     }
 
     /// Create a single test account
     pub async fn create_test_account(
-        &mut self, 
-        name: &str, 
-        account_type: AccountType, 
-        initial_balance: u128
+        &mut self,
+        name: &str,
+        account_type: AccountType,
+        initial_balance: u128,
     ) -> Result<&TestAccount, Box<dyn std::error::Error>> {
         info!("Creating test account: {} ({:?})", name, account_type);
 
         // Generate account keypair
         let (address, private_key) = self.generate_keypair();
-        
+
         // Create account metadata
         let permissions = self.get_permissions_for_type(&account_type);
-        
+
         let account = TestAccount {
             address: address.clone(),
             private_key: private_key.clone(),
@@ -104,23 +113,28 @@ impl TestAccountManager {
 
     /// Generate a keypair for a test account
     fn generate_keypair(&self) -> (String, String) {
-        use secp256k1::{Secp256k1, KeyPair};
         use secp256k1::rand::thread_rng;
-        
+        use secp256k1::{KeyPair, Secp256k1};
+
         let secp = Secp256k1::new();
         let keypair = KeyPair::new(&secp, &mut thread_rng());
-        
+
         let private_key = format!("0x{}", hex::encode(keypair.secret_key().as_ref()));
         let address = format!("0x{}", hex::encode(keypair.public_key().serialize()));
-        
+
         (address, private_key)
     }
 
     /// Fund an account via RPC
-    async fn fund_account(&self, address: &str, amount: u128) -> Result<(), Box<dyn std::error::Error>> {
+    async fn fund_account(
+        &self,
+        address: &str,
+        amount: u128,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let client = reqwest::Client::new();
-        
-        let response = client.post(&format!("{}/rpc", self.network_rpc))
+
+        let response = client
+            .post(&format!("{}/rpc", self.network_rpc))
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "eth_sendTransaction",
@@ -173,9 +187,7 @@ impl TestAccountManager {
                 "contract_upgrade".to_string(),
                 "network_admin".to_string(),
             ],
-            AccountType::Contract => vec![
-                "contract_interaction".to_string(),
-            ],
+            AccountType::Contract => vec!["contract_interaction".to_string()],
         }
     }
 
@@ -191,13 +203,20 @@ impl TestAccountManager {
 
     /// Get all accounts of a specific type
     pub fn get_accounts_by_type(&self, account_type: &AccountType) -> Vec<&TestAccount> {
-        self.accounts.values()
-            .filter(|acc| std::mem::discriminant(&acc.account_type) == std::mem::discriminant(account_type))
+        self.accounts
+            .values()
+            .filter(|acc| {
+                std::mem::discriminant(&acc.account_type) == std::mem::discriminant(account_type)
+            })
             .collect()
     }
 
     /// Update account balance
-    pub fn update_balance(&mut self, name: &str, new_balance: u128) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn update_balance(
+        &mut self,
+        name: &str,
+        new_balance: u128,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(account) = self.accounts.get_mut(name) {
             account.balance = new_balance;
             Ok(())
@@ -217,7 +236,7 @@ impl TestAccountManager {
             Some(t) => self.get_accounts_by_type(&t),
             None => self.get_all_accounts(),
         };
-        
+
         if accounts.is_empty() {
             None
         } else {
@@ -259,10 +278,12 @@ mod tests {
     #[tokio::test]
     async fn test_account_creation() {
         let manager = TestAccountManager::new("http://localhost:9933".to_string());
-        
-        let result = manager.create_test_account("test_account", AccountType::Regular, 1000).await;
+
+        let result = manager
+            .create_test_account("test_account", AccountType::Regular, 1000)
+            .await;
         assert!(result.is_ok());
-        
+
         let account = result.unwrap();
         assert_eq!(account.name, "test_account");
         assert_eq!(account.balance, 1000);
@@ -272,10 +293,10 @@ mod tests {
     #[test]
     fn test_permissions() {
         let manager = TestAccountManager::new("http://localhost:9933".to_string());
-        
+
         let lender_perms = manager.get_permissions_for_type(&AccountType::Lender);
         assert!(lender_perms.contains(&"lending_deposit".to_string()));
-        
+
         let admin_perms = manager.get_permissions_for_type(&AccountType::Admin);
         assert!(admin_perms.contains(&"contract_deploy".to_string()));
     }

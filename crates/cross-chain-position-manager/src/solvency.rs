@@ -10,10 +10,8 @@
 //!
 //! Reference: [X3_LIQUIDITY_INVENTORY_SOLVENCY_SPEC.md]
 
-use crate::accounting::{InventoryManager, InventoryKey, ObligationStatus};
-use crate::router::{
-    InventoryBand, LanePolicy, LaneStatus, ReservationRecord, ReservationStatus,
-};
+use crate::accounting::{InventoryKey, InventoryManager, ObligationStatus};
+use crate::router::{InventoryBand, LanePolicy, LaneStatus, ReservationRecord, ReservationStatus};
 use crate::{PositionManagerError, Result};
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
@@ -81,7 +79,10 @@ pub enum SolvencyRejection {
     /// Quote is stale (exceeded freshness window).
     QuoteStale { age_ms: u64, max_age_ms: u64 },
     /// Partner is unhealthy.
-    PartnerUnhealthy { partner_id: String, health_score: u32 },
+    PartnerUnhealthy {
+        partner_id: String,
+        health_score: u32,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +223,10 @@ impl SolvencyEngine {
 
     /// Read per-lane exposure.
     pub fn lane_exposure(&self, lane_id: &H256) -> U256 {
-        self.lane_exposure.get(lane_id).copied().unwrap_or(U256::zero())
+        self.lane_exposure
+            .get(lane_id)
+            .copied()
+            .unwrap_or(U256::zero())
     }
 
     pub fn policy(&self) -> &SolvencyPolicy {

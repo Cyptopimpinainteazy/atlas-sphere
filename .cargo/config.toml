@@ -15,7 +15,8 @@ rustflags = [
 # Set WASM build flags for substrate-wasm-builder
 # This is picked up by the wasm builder when spawning cargo
 WASM_BUILD_RUSTFLAGS = "-C target-cpu=mvp -C target-feature=-sign-ext,-reference-types,-bulk-memory"
-RUST_MIN_STACK = "67108864"
+# 128MB compiler stack for deep macro-expanded Substrate crates.
+RUST_MIN_STACK = "134217728"
 # Disable wasm-opt post-processing to avoid cxxbridge-macro ICE under LLVM 20.1
 # wasm-opt-sys uses cxx FFI which triggers a compiler panic on rustc 1.88/LLVM 20.1
 WASM_BUILD_USE_WASM_OPT = "0"

@@ -277,6 +277,7 @@ impl pallet_x3_kernel::Config for Test {
     type CrossVmPrepareTtl = ConstU64<10>;
     type MaxPreparedCrossVmOps = ConstU32<16>;
     type MaxPreparedOpsPerBlock = ConstU32<8>;
+    type MaxReplayPruneItemsPerBlock = ConstU32<64>;
     type RequireCrossVmProof = ConstBool<false>;
     type CrossChainProofVerifier = crate::NoopProofVerifier;
     type BridgeEvmEscrow = BridgeEvmEscrowValue;

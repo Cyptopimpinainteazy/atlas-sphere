@@ -2,10 +2,10 @@ use crate::crm::CrmAdapter;
 use crate::error::{ControlPlaneError, Result};
 use crate::storage::PersistentStateStore;
 use crate::types::{
-    ApprovalCase, ApprovalStatus, DispatchEvidenceRequest, EvidenceBundle, EvidenceSummary,
-    Intent, IntentDispatchRequest, IntentStatus, NewApprovalCase, NewIntent,
-    NewRewardAccrual, NewVoteReceipt, NewVoteWindow, RewardAccrual, RewardAccrualStatus,
-    VoteChoice, VoteReceipt, VoteTally, VoteWindow, VoteWindowStatus,
+    ApprovalCase, ApprovalStatus, DispatchEvidenceRequest, EvidenceBundle, EvidenceSummary, Intent,
+    IntentDispatchRequest, IntentStatus, NewApprovalCase, NewIntent, NewRewardAccrual,
+    NewVoteReceipt, NewVoteWindow, RewardAccrual, RewardAccrualStatus, VoteChoice, VoteReceipt,
+    VoteTally, VoteWindow, VoteWindowStatus,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -64,13 +64,19 @@ impl OrchestraControlPlane {
 
     pub async fn create_intent(&self, input: NewIntent, now_unix: u64) -> Result<Intent> {
         if input.tenant_id.trim().is_empty() {
-            return Err(ControlPlaneError::InvalidRequest("tenant_id is required".to_string()));
+            return Err(ControlPlaneError::InvalidRequest(
+                "tenant_id is required".to_string(),
+            ));
         }
         if input.submitter.trim().is_empty() {
-            return Err(ControlPlaneError::InvalidRequest("submitter is required".to_string()));
+            return Err(ControlPlaneError::InvalidRequest(
+                "submitter is required".to_string(),
+            ));
         }
         if !input.payload.is_object() {
-            return Err(ControlPlaneError::InvalidRequest("payload must be a JSON object".to_string()));
+            return Err(ControlPlaneError::InvalidRequest(
+                "payload must be a JSON object".to_string(),
+            ));
         }
 
         let intent = Intent {
@@ -91,19 +97,29 @@ impl OrchestraControlPlane {
         };
 
         let mut state = self.state.write().await;
-        state.intents.insert(intent.intent_id.clone(), intent.clone());
+        state
+            .intents
+            .insert(intent.intent_id.clone(), intent.clone());
         let snapshot = state.clone();
         drop(state);
         self.persist_snapshot(&snapshot)?;
         Ok(intent)
     }
 
-    pub async fn create_approval_case(&self, input: NewApprovalCase, now_unix: u64) -> Result<ApprovalCase> {
+    pub async fn create_approval_case(
+        &self,
+        input: NewApprovalCase,
+        now_unix: u64,
+    ) -> Result<ApprovalCase> {
         if input.summary.trim().is_empty() {
-            return Err(ControlPlaneError::InvalidRequest("summary is required".to_string()));
+            return Err(ControlPlaneError::InvalidRequest(
+                "summary is required".to_string(),
+            ));
         }
         if !input.metadata.is_object() {
-            return Err(ControlPlaneError::InvalidRequest("metadata must be a JSON object".to_string()));
+            return Err(ControlPlaneError::InvalidRequest(
+                "metadata must be a JSON object".to_string(),
+            ));
         }
 
         let mut state = self.state.write().await;
@@ -153,7 +169,9 @@ impl OrchestraControlPlane {
                 .approval_cases
                 .get(&input.approval_case_id)
                 .cloned()
-                .ok_or_else(|| ControlPlaneError::NotFound(format!("approval case {}", input.approval_case_id)))?
+                .ok_or_else(|| {
+                    ControlPlaneError::NotFound(format!("approval case {}", input.approval_case_id))
+                })?
         };
 
         let snapshot = crm
@@ -206,13 +224,23 @@ impl OrchestraControlPlane {
             if input.cast_at_unix > window.closes_at_unix {
                 return Err(ControlPlaneError::VoteWindowStillOpen);
             }
-            if !window.electorate.iter().any(|voter| voter == &input.voter_id) {
+            if !window
+                .electorate
+                .iter()
+                .any(|voter| voter == &input.voter_id)
+            {
                 return Err(ControlPlaneError::IneligibleVoter);
             }
         }
 
-        let receipts = state.vote_receipts.entry(window_id.to_string()).or_default();
-        if receipts.iter().any(|receipt| receipt.voter_id == input.voter_id) {
+        let receipts = state
+            .vote_receipts
+            .entry(window_id.to_string())
+            .or_default();
+        if receipts
+            .iter()
+            .any(|receipt| receipt.voter_id == input.voter_id)
+        {
             return Err(ControlPlaneError::DuplicateVote);
         }
 
@@ -236,9 +264,17 @@ impl OrchestraControlPlane {
         Ok(receipt)
     }
 
-    pub async fn close_vote_window(&self, window_id: &str, now_unix: u64) -> Result<(VoteWindow, ApprovalCase, EvidenceBundle)> {
+    pub async fn close_vote_window(
+        &self,
+        window_id: &str,
+        now_unix: u64,
+    ) -> Result<(VoteWindow, ApprovalCase, EvidenceBundle)> {
         let mut state = self.state.write().await;
-        let receipts = state.vote_receipts.get(window_id).cloned().unwrap_or_default();
+        let receipts = state
+            .vote_receipts
+            .get(window_id)
+            .cloned()
+            .unwrap_or_default();
         let tally = tally_votes(&receipts);
         let (updated_window, approval_case_id) = {
             let window = state
@@ -256,10 +292,13 @@ impl OrchestraControlPlane {
         };
 
         let updated_approval_case = {
-            let approval_case = state
-                .approval_cases
-                .get_mut(&approval_case_id)
-                .ok_or_else(|| ControlPlaneError::NotFound(format!("approval case {}", approval_case_id)))?;
+            let approval_case =
+                state
+                    .approval_cases
+                    .get_mut(&approval_case_id)
+                    .ok_or_else(|| {
+                        ControlPlaneError::NotFound(format!("approval case {}", approval_case_id))
+                    })?;
             approval_case.status = if tally.approvals > tally.rejections {
                 ApprovalStatus::Approved
             } else {
@@ -273,7 +312,12 @@ impl OrchestraControlPlane {
             let intent = state
                 .intents
                 .get_mut(&updated_approval_case.intent_id)
-                .ok_or_else(|| ControlPlaneError::NotFound(format!("intent {}", updated_approval_case.intent_id)))?;
+                .ok_or_else(|| {
+                    ControlPlaneError::NotFound(format!(
+                        "intent {}",
+                        updated_approval_case.intent_id
+                    ))
+                })?;
             intent.status = match updated_approval_case.status {
                 ApprovalStatus::Approved => IntentStatus::Ready,
                 ApprovalStatus::Rejected => IntentStatus::Blocked,
@@ -289,7 +333,10 @@ impl OrchestraControlPlane {
             Some(updated_window.window_id.clone()),
             DispatchEvidenceRequest {
                 artifact_uri: format!("orchestra://vote-windows/{window_id}/closure"),
-                digest: format!("vote-window:{window_id}:{}:{}:{}", tally.approvals, tally.rejections, tally.abstentions),
+                digest: format!(
+                    "vote-window:{window_id}:{}:{}:{}",
+                    tally.approvals, tally.rejections, tally.abstentions
+                ),
                 detail: serde_json::json!({
                     "action": "vote_window_closed",
                     "tally": tally,
@@ -314,14 +361,13 @@ impl OrchestraControlPlane {
         crm: &dyn CrmAdapter,
         now_unix: u64,
     ) -> Result<VoteTally> {
-        let window = {
-            let state = self.state.read().await;
-            state
-                .vote_windows
-                .get(window_id)
-                .cloned()
-                .ok_or_else(|| ControlPlaneError::NotFound(format!("vote window {}", window_id)))?
-        };
+        let window =
+            {
+                let state = self.state.read().await;
+                state.vote_windows.get(window_id).cloned().ok_or_else(|| {
+                    ControlPlaneError::NotFound(format!("vote window {}", window_id))
+                })?
+            };
         let imported = crm
             .import_closed_tally(&window, now_unix)
             .await
@@ -343,10 +389,10 @@ impl OrchestraControlPlane {
             .ok_or_else(|| ControlPlaneError::NotFound(format!("intent {}", intent_id)))?;
 
         if current_intent.requires_approval {
-            let approved = state
-                .approval_cases
-                .values()
-                .any(|case| case.intent_id == current_intent.intent_id && case.status == ApprovalStatus::Approved);
+            let approved = state.approval_cases.values().any(|case| {
+                case.intent_id == current_intent.intent_id
+                    && case.status == ApprovalStatus::Approved
+            });
             if !approved {
                 return Err(ControlPlaneError::ApprovalRequired);
             }
@@ -361,8 +407,8 @@ impl OrchestraControlPlane {
                 .intents
                 .get_mut(intent_id)
                 .ok_or_else(|| ControlPlaneError::NotFound(format!("intent {}", intent_id)))?;
-        intent.status = IntentStatus::Dispatched;
-        intent.updated_at_unix = now_unix;
+            intent.status = IntentStatus::Dispatched;
+            intent.updated_at_unix = now_unix;
             intent.clone()
         };
 
@@ -382,10 +428,17 @@ impl OrchestraControlPlane {
         Ok((updated_intent, evidence))
     }
 
-    pub async fn accrue_reward(&self, input: NewRewardAccrual, now_unix: u64) -> Result<RewardAccrual> {
+    pub async fn accrue_reward(
+        &self,
+        input: NewRewardAccrual,
+        now_unix: u64,
+    ) -> Result<RewardAccrual> {
         let mut state = self.state.write().await;
         if !state.intents.contains_key(&input.intent_id) {
-            return Err(ControlPlaneError::NotFound(format!("intent {}", input.intent_id)));
+            return Err(ControlPlaneError::NotFound(format!(
+                "intent {}",
+                input.intent_id
+            )));
         }
         let accrual = RewardAccrual {
             accrual_id: Uuid::new_v4().to_string(),
@@ -483,7 +536,9 @@ fn create_evidence_bundle(
 mod tests {
     use super::*;
     use crate::crm::MemoryCrmAdapter;
-    use crate::types::{IntentKind, NewIntent, NewVoteReceipt, NewVoteWindow, RiskClass, VoteChoice};
+    use crate::types::{
+        IntentKind, NewIntent, NewVoteReceipt, NewVoteWindow, RiskClass, VoteChoice,
+    };
     use tempfile::tempdir;
 
     #[tokio::test]
@@ -554,7 +609,10 @@ mod tests {
             .expect("dispatch benchmarking intent");
 
         assert_eq!(dispatched.status, IntentStatus::Dispatched);
-        assert_eq!(evidence.intent_id.as_deref(), Some(intent.intent_id.as_str()));
+        assert_eq!(
+            evidence.intent_id.as_deref(),
+            Some(intent.intent_id.as_str())
+        );
     }
 
     #[tokio::test]
@@ -629,7 +687,10 @@ mod tests {
             .expect("record bob vote");
 
         let premature = service.close_vote_window(&window.window_id, 109).await;
-        assert!(matches!(premature, Err(ControlPlaneError::VoteWindowStillOpen)));
+        assert!(matches!(
+            premature,
+            Err(ControlPlaneError::VoteWindowStillOpen)
+        ));
 
         service
             .record_vote(
@@ -649,7 +710,10 @@ mod tests {
             .await
             .expect("close vote window");
         assert_eq!(approval_case.status, ApprovalStatus::Rejected);
-        assert_eq!(evidence.vote_window_id.as_deref(), Some(window.window_id.as_str()));
+        assert_eq!(
+            evidence.vote_window_id.as_deref(),
+            Some(window.window_id.as_str())
+        );
     }
 
     #[tokio::test]

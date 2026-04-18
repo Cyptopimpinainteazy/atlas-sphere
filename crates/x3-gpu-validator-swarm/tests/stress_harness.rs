@@ -10,9 +10,9 @@
 
 #[cfg(test)]
 mod tests {
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
     use std::sync::Arc;
-    use std::sync::atomic::{AtomicU64, AtomicBool, Ordering};
-    use std::time::{Instant, Duration};
+    use std::time::{Duration, Instant};
     use tokio::sync::Barrier;
 
     /// Configuration for stress test
@@ -200,7 +200,9 @@ mod tests {
                 };
 
                 let handle = tokio::spawn(async move {
-                    harness_clone.submitter_task(submitter_id, barrier_clone).await;
+                    harness_clone
+                        .submitter_task(submitter_id, barrier_clone)
+                        .await;
                 });
                 handles.push(handle);
             }
@@ -225,7 +227,9 @@ mod tests {
             let failed = self.tasks_failed.load(Ordering::Acquire);
 
             // Calculate latency percentiles
-            let mut latencies = self.latencies.try_lock()
+            let mut latencies = self
+                .latencies
+                .try_lock()
                 .map(|guard| guard.clone())
                 .unwrap_or_default();
             latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -291,11 +295,15 @@ mod tests {
         let result = harness.run().await;
 
         println!("\n=== Stress Test 1K TPS ===");
-        println!("Submitted: {}, Completed: {}, Failed: {}", 
-            result.tasks_submitted, result.tasks_completed, result.tasks_failed);
+        println!(
+            "Submitted: {}, Completed: {}, Failed: {}",
+            result.tasks_submitted, result.tasks_completed, result.tasks_failed
+        );
         println!("Actual TPS: {:.0}", result.actual_tps);
-        println!("Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms", 
-            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms);
+        println!(
+            "Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms",
+            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms
+        );
         if let Some(bottleneck) = &result.bottleneck {
             println!("Bottleneck: {}", bottleneck);
         }
@@ -304,7 +312,10 @@ mod tests {
         // (mock compute is much faster than real GPU, so we don't check against target TPS)
         assert!(result.tasks_completed > 0, "Must complete at least 1 task");
         assert!(result.actual_tps > 0.0, "Must achieve positive TPS");
-        assert!(result.tasks_failed == 0, "Should have no failures in normal test");
+        assert!(
+            result.tasks_failed == 0,
+            "Should have no failures in normal test"
+        );
     }
 
     #[tokio::test]
@@ -323,11 +334,15 @@ mod tests {
         let result = harness.run().await;
 
         println!("\n=== Stress Test 10K TPS ===");
-        println!("Submitted: {}, Completed: {}, Failed: {}", 
-            result.tasks_submitted, result.tasks_completed, result.tasks_failed);
+        println!(
+            "Submitted: {}, Completed: {}, Failed: {}",
+            result.tasks_submitted, result.tasks_completed, result.tasks_failed
+        );
         println!("Actual TPS: {:.0}", result.actual_tps);
-        println!("Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms", 
-            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms);
+        println!(
+            "Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms",
+            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms
+        );
         if let Some(bottleneck) = &result.bottleneck {
             println!("Bottleneck: {}", bottleneck);
         }
@@ -349,12 +364,19 @@ mod tests {
         let result = harness.run().await;
 
         println!("\n=== Stress Test with GPU Failures ===");
-        println!("Submitted: {}, Completed: {}, Failed: {}", 
-            result.tasks_submitted, result.tasks_completed, result.tasks_failed);
-        println!("Failure rate: {:.2}%", 
-            (result.tasks_failed as f64 / result.tasks_submitted as f64) * 100.0);
+        println!(
+            "Submitted: {}, Completed: {}, Failed: {}",
+            result.tasks_submitted, result.tasks_completed, result.tasks_failed
+        );
+        println!(
+            "Failure rate: {:.2}%",
+            (result.tasks_failed as f64 / result.tasks_submitted as f64) * 100.0
+        );
 
-        assert!(result.tasks_failed > 0, "GPU failures should have been injected");
+        assert!(
+            result.tasks_failed > 0,
+            "GPU failures should have been injected"
+        );
     }
 
     #[tokio::test]
@@ -374,12 +396,16 @@ mod tests {
 
         println!("\n=== Stress Test with Network Latency (10ms) ===");
         println!("Actual TPS: {:.0}", result.actual_tps);
-        println!("Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms", 
-            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms);
+        println!(
+            "Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms",
+            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms
+        );
 
         // Network latency should be visible in p50
-        assert!(result.p50_latency_ms >= 10.0, 
-            "Network latency should increase observed latency");
+        assert!(
+            result.p50_latency_ms >= 10.0,
+            "Network latency should increase observed latency"
+        );
     }
 
     #[tokio::test]
@@ -398,11 +424,15 @@ mod tests {
         let result = harness.run().await;
 
         println!("\n=== Sustained Stress Test (30 seconds) ===");
-        println!("Submitted: {}, Completed: {}, Failed: {}", 
-            result.tasks_submitted, result.tasks_completed, result.tasks_failed);
+        println!(
+            "Submitted: {}, Completed: {}, Failed: {}",
+            result.tasks_submitted, result.tasks_completed, result.tasks_failed
+        );
         println!("Actual TPS: {:.0}", result.actual_tps);
-        println!("Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms", 
-            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms);
+        println!(
+            "Latency: p50={:.2}ms, p95={:.2}ms, p99={:.2}ms",
+            result.p50_latency_ms, result.p95_latency_ms, result.p99_latency_ms
+        );
         if let Some(bottleneck) = &result.bottleneck {
             println!("Detected bottleneck: {}", bottleneck);
         }

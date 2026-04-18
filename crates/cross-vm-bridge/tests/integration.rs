@@ -1,10 +1,9 @@
-use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation};
+use x3_cross_vm_bridge::{CrossVmBridge, CrossVmOperation, NoOpDispatcher};
 
 // Integration tests for the cross-VM bridge exercising the public API
 // - queue_operation + execute_pending (happy path)
 // - validation rejects malformed/zero-amount operations
 
-#[allow(deprecated)]
 #[test]
 fn integration_execute_transfers_and_atomic_swap() {
     let mut bridge = CrossVmBridge::new();
@@ -39,7 +38,8 @@ fn integration_execute_transfers_and_atomic_swap() {
 
     assert_eq!(bridge.pending_count(), 3);
 
-    let results = bridge.execute_pending().expect("execute pending");
+    let dispatcher = NoOpDispatcher::testnet();
+    let results = bridge.execute_pending_with_dispatcher(&dispatcher).expect("execute pending");
 
     // all operations executed and succeeded
     assert_eq!(results.len(), 3);

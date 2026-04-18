@@ -1,3 +1,8 @@
+pub mod audit;
+pub mod client;
+pub mod error;
+pub mod hsm;
+pub mod service;
 /// Custody Service: Enterprise-grade vault operations with HSM, audit trail, and service boundaries
 ///
 /// The custody service is a dedicated, isolated microservice responsible for:
@@ -6,15 +11,9 @@
 /// - Operation tracking and audit trails
 /// - Authorization and policy enforcement
 /// - Cryptographic proofs for settlement
-
 pub mod types;
-pub mod service;
-pub mod hsm;
-pub mod audit;
-pub mod error;
-pub mod client;
 
-pub use service::{CustodyService, CustodyServiceImpl};
-pub use types::*;
 pub use client::CustodyServiceClient;
 pub use error::{CustodyError, Result};
+pub use service::{CustodyService, CustodyServiceImpl};
+pub use types::*;

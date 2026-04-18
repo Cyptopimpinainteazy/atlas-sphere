@@ -488,16 +488,21 @@ impl GpuHostcalls {
             );
         }
         {
-            let has_any = sha256.is_some()
-                || ed25519.is_some()
-                || pipeline.is_some()
-                || keccak256.is_some()
-                || secp256k1.is_some();
+            let gpu_lib_count = [
+                sha256.is_some(),
+                ed25519.is_some(),
+                pipeline.is_some(),
+                keccak256.is_some(),
+                secp256k1.is_some(),
+            ]
+            .iter()
+            .filter(|&&present| present)
+            .count() as i64;
             registry.register(
                 gpu_hostcall_ids::GPU_DEVICE_COUNT,
                 "gpu_device_count",
                 0,
-                move |_args| Ok(Some(Value::I64(if has_any { 3 } else { 0 }))),
+                move |_args| Ok(Some(Value::I64(gpu_lib_count))),
             );
         }
         {
@@ -601,12 +606,15 @@ impl GpuHostcalls {
 
         // 0xD4: gpu_device_count
         {
-            let has_any = sha256.is_some() || ed25519.is_some() || pipeline.is_some();
+            let gpu_lib_count = [sha256.is_some(), ed25519.is_some(), pipeline.is_some()]
+                .iter()
+                .filter(|&&present| present)
+                .count() as i64;
             vm.register_hostcall(
                 gpu_hostcall_ids::GPU_DEVICE_COUNT,
                 "gpu_device_count",
                 0,
-                move |_args| Ok(Some(Value::I64(if has_any { 3 } else { 0 }))),
+                move |_args| Ok(Some(Value::I64(gpu_lib_count))),
             );
         }
 

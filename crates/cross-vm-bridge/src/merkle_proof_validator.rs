@@ -46,34 +46,32 @@ pub enum MerkleProofValidationError {
 impl core::fmt::Display for MerkleProofValidationError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::InvalidMerkleProof(msg) => write!(f, "Invalid merkle proof: {}", msg),
+            Self::InvalidMerkleProof(msg) => write!(f, "Invalid merkle proof: {msg}"),
             Self::InsufficientValidatorSignatures { have, need } => {
-                write!(f, "Insufficient validator signatures: {}/{}", have, need)
+                write!(f, "Insufficient validator signatures: {have}/{need}")
             }
             Self::SignatureVerificationFailed { validator_id } => {
                 write!(
                     f,
-                    "Signature verification failed for validator {:?}",
-                    validator_id
+                    "Signature verification failed for validator {validator_id:?}"
                 )
             }
             Self::UnauthorizedValidator { validator_id } => {
-                write!(f, "Unauthorized validator: {:?}", validator_id)
+                write!(f, "Unauthorized validator: {validator_id:?}")
             }
             Self::StateRootMismatch { expected, actual } => {
                 write!(
                     f,
-                    "State root mismatch: expected {:?}, got {:?}",
-                    expected, actual
+                    "State root mismatch: expected {expected:?}, got {actual:?}"
                 )
             }
             Self::InvalidBlockNumber { block_number } => {
-                write!(f, "Invalid block number: {}", block_number)
+                write!(f, "Invalid block number: {block_number}")
             }
             Self::InvalidTreeSize { size } => {
-                write!(f, "Invalid tree size: {}", size)
+                write!(f, "Invalid tree size: {size}")
             }
-            Self::InternalError(msg) => write!(f, "Internal error: {}", msg),
+            Self::InternalError(msg) => write!(f, "Internal error: {msg}"),
         }
     }
 }
@@ -135,9 +133,9 @@ impl MerkleProofSettlement {
     /// Compute settlement hash for canonical ordering
     pub fn settlement_hash(&self) -> Hash {
         let mut hasher = Sha256::new();
-        hasher.update(&self.state_root);
-        hasher.update(&self.finalized_block.to_le_bytes());
-        hasher.update(&self.execution_index.to_le_bytes());
+        hasher.update(self.state_root);
+        hasher.update(self.finalized_block.to_le_bytes());
+        hasher.update(self.execution_index.to_le_bytes());
         hasher.update(&self.merkle_proof_bytes);
 
         let result = hasher.finalize();
@@ -203,11 +201,11 @@ impl DefaultMerkleProofValidator {
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
     ) -> MerkleValidationResult {
         // Check validator is authorized
-        let pubkey_bytes = authorized_validators
-            .get(validator_id)
-            .ok_or(MerkleProofValidationError::UnauthorizedValidator {
+        let pubkey_bytes = authorized_validators.get(validator_id).ok_or(
+            MerkleProofValidationError::UnauthorizedValidator {
                 validator_id: *validator_id,
-            })?;
+            },
+        )?;
 
         // Check signature is 64 bytes (ed25519 signature length)
         if signature.len() != 64 {
@@ -296,7 +294,7 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
         // CRITICAL-002/007 FIX: Validate state_root and finalized_block are embedded in proof bytes.
         // Format: [state_root: 32][finalized_block: u64 LE][leaf_index: u64 LE][leaf_hash: 32][sibling_0: 32]...
         // Minimum size: 32 (root) + 8 (block) + 8 (index) + 32 (leaf) = 80 bytes
-        
+
         if merkle_proof_bytes.is_empty() {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
                 "Empty merkle proof bytes".into(),
@@ -358,12 +356,12 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
             let mut hasher = Sha256::new();
             if idx & 1 == 0 {
                 // Current node is left child
-                hasher.update(&current_hash);
+                hasher.update(current_hash);
                 hasher.update(sibling);
             } else {
                 // Current node is right child
                 hasher.update(sibling);
-                hasher.update(&current_hash);
+                hasher.update(current_hash);
             }
             let result = hasher.finalize();
             current_hash.copy_from_slice(&result);
@@ -430,7 +428,7 @@ mod tests {
         // CRITICAL-002/007 FIX: Proof now includes state_root and finalized_block binding
         // Format: [state_root: 32 bytes][finalized_block: u64 LE][leaf_index: u64 LE][leaf_hash: 32 bytes]
         let mut proof = Vec::new();
-        proof.extend_from_slice(&leaf_hash);  // state_root is the leaf hash for single-leaf tree
+        proof.extend_from_slice(&leaf_hash); // state_root is the leaf hash for single-leaf tree
         proof.extend_from_slice(&finalized_block.to_le_bytes());
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf_hash);
@@ -452,15 +450,15 @@ mod tests {
 
         // root = SHA256(leaf0 || leaf1)
         let mut hr = Sha256::new();
-        hr.update(&leaf0);
-        hr.update(&leaf1);
+        hr.update(leaf0);
+        hr.update(leaf1);
         let mut root = [0u8; 32];
         root.copy_from_slice(&hr.finalize());
 
         // CRITICAL-002/007 FIX: proof includes state_root and finalized_block binding
         // Proof for leaf0 (index=0): [root][finalized_block][0u64][leaf0][leaf1 as sibling]
         let mut proof = Vec::new();
-        proof.extend_from_slice(&root);  // state_root embedded
+        proof.extend_from_slice(&root); // state_root embedded
         proof.extend_from_slice(&finalized_block.to_le_bytes());
         proof.extend_from_slice(&0u64.to_le_bytes());
         proof.extend_from_slice(&leaf0);
@@ -522,7 +520,7 @@ mod tests {
 
         match result {
             Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
-            other => panic!("Expected InvalidMerkleProof, got {:?}", other),
+            other => panic!("Expected InvalidMerkleProof, got {other:?}"),
         }
     }
 
@@ -533,7 +531,7 @@ mod tests {
 
         match result {
             Err(MerkleProofValidationError::InvalidMerkleProof(_)) => (),
-            other => panic!("Expected InvalidMerkleProof, got {:?}", other),
+            other => panic!("Expected InvalidMerkleProof, got {other:?}"),
         }
     }
 
@@ -558,7 +556,7 @@ mod tests {
         let wrong_root = [0xffu8; 32];
         match validator.verify_merkle_path(&proof, wrong_root, 100) {
             Err(MerkleProofValidationError::StateRootMismatch { .. }) => (),
-            other => panic!("Expected StateRootMismatch, got {:?}", other),
+            other => panic!("Expected StateRootMismatch, got {other:?}"),
         }
     }
 
@@ -568,7 +566,7 @@ mod tests {
         let (root, proof) = build_single_leaf_proof(b"hello world", 100);
         match validator.verify_merkle_path(&proof, root, 101) {
             Err(MerkleProofValidationError::InvalidBlockNumber { block_number: 100 }) => (),
-            other => panic!("Expected InvalidBlockNumber, got {:?}", other),
+            other => panic!("Expected InvalidBlockNumber, got {other:?}"),
         }
     }
 
@@ -582,7 +580,7 @@ mod tests {
 
         match result {
             Err(MerkleProofValidationError::InvalidBlockNumber { block_number: 0 }) => (),
-            other => panic!("Expected InvalidBlockNumber, got {:?}", other),
+            other => panic!("Expected InvalidBlockNumber, got {other:?}"),
         }
     }
 
@@ -600,14 +598,13 @@ mod tests {
         let mut authorized = BTreeMap::new();
         authorized.insert(vid, vec![0u8; 32]);
 
-        let result =
-            validator.verify_validator_consensus(&settlement, &authorized, 3);
+        let result = validator.verify_validator_consensus(&settlement, &authorized, 3);
         match result {
             Err(MerkleProofValidationError::InsufficientValidatorSignatures {
                 have: 1,
                 need: 3,
             }) => (),
-            other => panic!("Expected InsufficientValidatorSignatures, got {:?}", other),
+            other => panic!("Expected InsufficientValidatorSignatures, got {other:?}"),
         }
     }
 
@@ -628,9 +625,9 @@ mod tests {
             Err(MerkleProofValidationError::UnauthorizedValidator { validator_id: id })
                 if id == validator_id =>
             {
-                ()
+                
             }
-            other => panic!("Expected UnauthorizedValidator, got {:?}", other),
+            other => panic!("Expected UnauthorizedValidator, got {other:?}"),
         }
     }
 
@@ -661,6 +658,10 @@ mod tests {
         }
 
         let result = validator.verify_settlement_proof(&settlement, &authorized, 2);
-        assert!(result.is_ok(), "Valid settlement should pass: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Valid settlement should pass: {:?}",
+            result.err()
+        );
     }
 }

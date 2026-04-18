@@ -37,7 +37,7 @@ fn contributor_name(name: &str) -> BoundedVec<u8, frame_support::traits::ConstU3
 fn register_contributor_works() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -75,7 +75,7 @@ fn register_contributor_works() {
 fn register_contributor_fails_if_already_registered() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -99,7 +99,7 @@ fn register_contributor_fails_if_already_registered() {
 fn register_contributor_fails_with_insufficient_stake() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         // MinContributorStake is 1_000
         assert_noop!(
             Swarm::register_contributor(
@@ -117,14 +117,14 @@ fn register_contributor_fails_with_insufficient_stake() {
 fn register_multiple_contributors_works() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
             contributor_name("Alice GPU"),
             default_capabilities(),
         ));
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(BOB),
             2_000,
@@ -146,7 +146,7 @@ fn register_multiple_contributors_works() {
 fn heartbeat_works() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -173,7 +173,7 @@ fn heartbeat_works() {
 fn heartbeat_fails_if_not_registered() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_noop!(
             Swarm::heartbeat(RuntimeOrigin::signed(ALICE)),
             Error::<Test>::ContributorNotFound
@@ -189,7 +189,7 @@ fn heartbeat_fails_if_not_registered() {
 fn request_deregister_works() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -215,7 +215,7 @@ fn request_deregister_works() {
 fn request_deregister_fails_if_not_registered() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_noop!(
             Swarm::request_deregister(RuntimeOrigin::signed(ALICE)),
             Error::<Test>::ContributorNotFound
@@ -227,7 +227,7 @@ fn request_deregister_fails_if_not_registered() {
 fn complete_deregister_works_after_cooldown() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -266,7 +266,7 @@ fn complete_deregister_works_after_cooldown() {
 fn complete_deregister_fails_before_cooldown() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -291,7 +291,7 @@ fn complete_deregister_fails_before_cooldown() {
 fn complete_deregister_fails_if_not_deregistering() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -314,7 +314,7 @@ fn complete_deregister_fails_if_not_deregistering() {
 fn storage_queries_work() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_eq!(Swarm::next_contributor_id(), 0);
         assert_eq!(Swarm::total_contributors(), 0);
         assert_eq!(Swarm::active_contributors(), 0);
@@ -347,7 +347,7 @@ fn storage_queries_work() {
 fn heartbeat_fails_when_deregistering() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,
@@ -370,7 +370,7 @@ fn heartbeat_fails_when_deregistering() {
 fn double_deregister_request_fails() {
     new_test_ext().execute_with(|| {
         System::set_block_number(1);
-        
+
         assert_ok!(Swarm::register_contributor(
             RuntimeOrigin::signed(ALICE),
             1_000,

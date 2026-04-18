@@ -14,6 +14,12 @@ pub struct SvmState {
 /// Solana validator for transaction verification and state validation
 pub struct SvmValidator;
 
+impl Default for SvmValidator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SvmValidator {
     pub fn new() -> Self {
         Self
@@ -33,7 +39,7 @@ impl SvmValidator {
 
         // Validate each transaction structure
         for tx in &svm_state.transactions {
-            if tx.len() < 1 {
+            if tx.is_empty() {
                 let duration = start.elapsed().as_millis() as u64;
                 return Ok(ValidationResult {
                     valid: false,
@@ -121,7 +127,7 @@ mod tests {
     #[tokio::test]
     async fn test_svm_block_hash_validation() {
         let validator = SvmValidator::new();
-        
+
         let state_valid = SvmState {
             slot: 1,
             block_hash: vec![1u8; 32],

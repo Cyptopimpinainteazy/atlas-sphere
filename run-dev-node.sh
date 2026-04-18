@@ -32,7 +32,7 @@ kill_port_processes() {
 # Default configuration
 BASE_PATH="${BASE_PATH:-/tmp/x3-dev}"
 RPC_PORT="${RPC_PORT:-9944}"
-WS_PORT="${WS_PORT:-9945}"
+WS_PORT="${WS_PORT:-$RPC_PORT}"
 P2P_PORT="${P2P_PORT:-30333}"
 PROMETHEUS_PORT="${PROMETHEUS_PORT:-9615}"
 
@@ -89,6 +89,7 @@ echo ""
 echo "Configuration:"
 echo "  Base Path: $BASE_PATH"
 echo "  RPC Port: $RPC_PORT"
+echo "  WS Port: $WS_PORT"
 echo "  P2P Port: $P2P_PORT"
 echo "  Prometheus: http://127.0.0.1:$PROMETHEUS_PORT/metrics"
 echo ""
@@ -165,7 +166,10 @@ for i in {1..30}; do
         fi
     fi
     if [ $READY -ne 0 ] && command -v curl >/dev/null 2>&1; then
-        if curl -s "http://localhost:$RPC_PORT/health" >/dev/null 2>&1; then
+        if curl -fsS -X POST "http://localhost:$RPC_PORT" \
+            -H "Content-Type: application/json" \
+            -d '{"jsonrpc":"2.0","method":"system_health","params":[],"id":1}' \
+            >/dev/null 2>&1; then
             READY=0
         fi
     fi

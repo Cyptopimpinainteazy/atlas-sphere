@@ -102,13 +102,8 @@ pub mod pallet {
     /// For efficient lookup of all bonds posted by an agent.
     #[pallet::storage]
     #[pallet::getter(fn bonds_by_agent)]
-    pub type BondsByAgent<T: Config> = StorageMap<
-        _,
-        Blake2_128Concat,
-        T::AccountId,
-        BoundedVec<H256, ConstU32<100>>,
-        ValueQuery,
-    >;
+    pub type BondsByAgent<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::AccountId, BoundedVec<H256, ConstU32<100>>, ValueQuery>;
 
     /// Slash records: Maps slash_id → SlashRecord
     /// Immutable history of all slashing events.
@@ -175,17 +170,11 @@ pub mod pallet {
 
         /// Reputation damage recorded
         /// [agent, damage_amount]
-        ReputationDamaged {
-            agent: T::AccountId,
-            damage: i64,
-        },
+        ReputationDamaged { agent: T::AccountId, damage: i64 },
 
         /// Bond expired and was slashed automatically
         /// [bond_id, agent]
-        BondExpired {
-            bond_id: H256,
-            agent: T::AccountId,
-        },
+        BondExpired { bond_id: H256, agent: T::AccountId },
     }
 
     // ========================================================================
@@ -228,14 +217,10 @@ pub mod pallet {
             let agent = ensure_signed(origin)?;
 
             // Validate amount
-            ensure!(
-                amount >= T::MinBondAmount::get(),
-                Error::<T>::BondTooSmall
-            );
+            ensure!(amount >= T::MinBondAmount::get(), Error::<T>::BondTooSmall);
 
             // Reserve currency
-            T::Currency::reserve(&agent, amount)
-                .map_err(|_| Error::<T>::InsufficientFunds)?;
+            T::Currency::reserve(&agent, amount).map_err(|_| Error::<T>::InsufficientFunds)?;
 
             // Generate bond ID
             let bond_counter = BondIdCounter::<T>::get();
@@ -425,8 +410,7 @@ pub mod pallet {
             let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
                 .take(MAX_EXPIRATIONS_PER_CALL)
                 .filter(|(_, bond_state)| {
-                    matches!(bond_state.status, BondStatus::Active)
-                        && bond_state.expires_at <= now
+                    matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now
                 })
                 .collect();
 
@@ -501,8 +485,7 @@ pub mod pallet {
             let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
                 .take(MAX_BONDS_PER_BLOCK)
                 .filter(|(_, bond_state)| {
-                    matches!(bond_state.status, BondStatus::Active)
-                        && bond_state.expires_at <= now
+                    matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now
                 })
                 .collect();
 

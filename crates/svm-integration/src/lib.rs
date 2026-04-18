@@ -93,6 +93,45 @@ pub struct AccountUpdate {
     pub rent_epoch: u64,
 }
 
+/// Compute a canonical state root from observable SVM execution outputs.
+///
+/// Both the no-std interpreter (`interp.rs`) and the std rbpf executor
+/// (`rbpf.rs`) MUST use this function so that state roots are identical for
+/// the same logical execution, regardless of which backend produced them.
+///
+/// Hash domain: `blake2_256(success || compute_units_used || return_data || account_updates || logs)`
+pub fn compute_svm_state_root(result: &SvmExecutionResult) -> [u8; 32] {
+    use sp_io::hashing::blake2_256;
+
+    let mut buf = Vec::new();
+    // 1. success flag
+    buf.push(if result.success { 1u8 } else { 0u8 });
+    // 2. compute units consumed (le)
+    buf.extend_from_slice(&result.compute_units_used.to_le_bytes());
+    // 3. return data
+    buf.extend_from_slice(&(result.output.len() as u32).to_le_bytes());
+    buf.extend_from_slice(&result.output);
+    // 4. account updates (deterministic: sorted by pubkey)
+    let mut keys: Vec<usize> = (0..result.account_updates.len()).collect();
+    keys.sort_by_key(|&i| result.account_updates[i].pubkey);
+    for i in keys {
+        let upd = &result.account_updates[i];
+        buf.extend_from_slice(&upd.pubkey);
+        buf.extend_from_slice(&upd.lamports.to_le_bytes());
+        buf.extend_from_slice(&(upd.data.len() as u32).to_le_bytes());
+        buf.extend_from_slice(&upd.data);
+        buf.extend_from_slice(&upd.owner);
+        buf.push(if upd.executable { 1 } else { 0 });
+    }
+    // 5. logs
+    for log in &result.logs {
+        buf.extend_from_slice(&(log.len() as u32).to_le_bytes());
+        buf.extend_from_slice(log);
+    }
+
+    blake2_256(&buf)
+}
+
 /// SVM execution environment configuration
 #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
 pub struct SvmConfig {
@@ -342,6 +381,7 @@ impl SvmAccountDb {
             data.extend_from_slice(pubkey);
             data.extend_from_slice(&account.lamports.to_le_bytes());
             data.extend_from_slice(&(account.data.len() as u32).to_le_bytes());
+            data.extend_from_slice(&account.data);
             data.extend_from_slice(&account.owner);
             data.push(if account.executable { 1 } else { 0 });
         }

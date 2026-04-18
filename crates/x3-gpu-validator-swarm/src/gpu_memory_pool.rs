@@ -150,9 +150,9 @@ impl GpuMemoryPool {
     }
 
     /// Allocate a slab for a job (with timeout and exponential backoff)
-    /// 
+    ///
     /// FIXED: Eliminates nested RwLock acquisitions by pre-popping from free_list
-    /// and only acquiring slabs lock if pop succeeds. This was: 
+    /// and only acquiring slabs lock if pop succeeds. This was:
     /// - free_list.write() then slabs.write() = nested locks = DEADLOCK RISK
     /// - Now: try free_list, release, then slabs = two separate critical sections
     pub async fn allocate(&self, job_id: &str) -> Result<SlabHandle, SwarmError> {
@@ -215,7 +215,7 @@ impl GpuMemoryPool {
     }
 
     /// Deallocate a slab (return to free list)
-    /// 
+    ///
     /// FIXED: Eliminates nested RwLock by separating state mutation from free_list push
     pub fn deallocate(&self, handle: SlabHandle) {
         // First phase: Update slab state

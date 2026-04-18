@@ -1,12 +1,11 @@
+use crate::error::Result;
 /// Audit trail management for immutable operation tracking
 /// Every custody operation is logged and anchored to blockchain
-
 use crate::types::*;
-use crate::error::Result;
-use parking_lot::RwLock;
-use sha2::{Sha256, Digest};
-use std::collections::BTreeMap;
 use chrono::Utc;
+use parking_lot::RwLock;
+use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 
 /// Audit log — immutable record of all vault operations
 pub struct AuditLog {
@@ -42,13 +41,8 @@ impl AuditLog {
         let entry_id = uuid::Uuid::new_v4().to_string();
 
         // Compute immutable hash of entry
-        let entry_hash = self.compute_entry_hash(
-            &entry_id,
-            &operation_id,
-            now,
-            &source_vault_id,
-            amount,
-        );
+        let entry_hash =
+            self.compute_entry_hash(&entry_id, &operation_id, now, &source_vault_id, amount);
 
         let entry = AuditLogEntry {
             entry_id,
@@ -210,21 +204,20 @@ mod tests {
         let audit = AuditLog::new();
 
         for i in 0..5 {
-            let _ = audit
-                .record_operation(
-                    format!("op-{}", i),
-                    "signer-1".to_string(),
-                    AuthorizationTier::Operational,
-                    VaultOperationType::Reserve,
-                    "vault-1".to_string(),
-                    "vault-2".to_string(),
-                    "USDC".to_string(),
-                    500u128,
-                    vec![],
-                    true,
-                    OperationStatus::Succeeded,
-                    None,
-                );
+            let _ = audit.record_operation(
+                format!("op-{}", i),
+                "signer-1".to_string(),
+                AuthorizationTier::Operational,
+                VaultOperationType::Reserve,
+                "vault-1".to_string(),
+                "vault-2".to_string(),
+                "USDC".to_string(),
+                500u128,
+                vec![],
+                true,
+                OperationStatus::Succeeded,
+                None,
+            );
         }
 
         let entries = audit.get_entries_by_operation("op-2");
@@ -266,37 +259,35 @@ mod tests {
     fn test_audit_stats() {
         let audit = AuditLog::new();
 
-        let _ = audit
-            .record_operation(
-                "op-success".to_string(),
-                "signer-1".to_string(),
-                AuthorizationTier::Operational,
-                VaultOperationType::Transfer,
-                "vault-1".to_string(),
-                "0xabc".to_string(),
-                "USDC".to_string(),
-                1000u128,
-                vec![],
-                true,
-                OperationStatus::Succeeded,
-                None,
-            );
+        let _ = audit.record_operation(
+            "op-success".to_string(),
+            "signer-1".to_string(),
+            AuthorizationTier::Operational,
+            VaultOperationType::Transfer,
+            "vault-1".to_string(),
+            "0xabc".to_string(),
+            "USDC".to_string(),
+            1000u128,
+            vec![],
+            true,
+            OperationStatus::Succeeded,
+            None,
+        );
 
-        let _ = audit
-            .record_operation(
-                "op-fail".to_string(),
-                "signer-1".to_string(),
-                AuthorizationTier::Operational,
-                VaultOperationType::Reserve,
-                "vault-2".to_string(),
-                "vault-3".to_string(),
-                "ETH".to_string(),
-                500u128,
-                vec![],
-                false,
-                OperationStatus::Failed,
-                Some("insufficient balance".to_string()),
-            );
+        let _ = audit.record_operation(
+            "op-fail".to_string(),
+            "signer-1".to_string(),
+            AuthorizationTier::Operational,
+            VaultOperationType::Reserve,
+            "vault-2".to_string(),
+            "vault-3".to_string(),
+            "ETH".to_string(),
+            500u128,
+            vec![],
+            false,
+            OperationStatus::Failed,
+            Some("insufficient balance".to_string()),
+        );
 
         let stats = audit.get_stats();
         assert_eq!(stats.total_operations, 2);

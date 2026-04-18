@@ -214,7 +214,13 @@ pub mod pallet {
 
     // ── Pallet ────────────────────────────────────────────────────────────────
 
+    /// Storage layout version. Increment whenever storage types or keys change
+    /// and provide an `on_runtime_upgrade` migration. Missing this declaration
+    /// causes silent data corruption on upgrade — P0 per DEEP_AUDIT_PROTOCOL §4.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(0);
+
     #[pallet::pallet]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     // ── Events ────────────────────────────────────────────────────────────────
@@ -687,10 +693,33 @@ pub mod pallet {
                 Error::<T>::InvalidBundleState
             );
 
-            // Only submitter can cancel voluntarily; any signed account can trigger
-            // deadline-expired rollbacks (governance rule, simplified here).
-            if reason == BundleRollbackReason::SubmitterCancelled {
-                ensure!(record.submitter == caller, Error::<T>::NotBundleSubmitter);
+            // C-005: Per-reason authorization guards.
+            // - SubmitterCancelled: only the bundle submitter may cancel voluntarily.
+            // - ExecutionFailed / AccessSetViolation: only the assigned executor may
+            //   report these; any signed account triggering them was the C-005 bug.
+            // - DeadlineExceeded: only a party to the bundle may trigger this, AND the
+            //   deadline must actually have elapsed (auto-expiry via on_initialize is
+            //   the preferred path; this guard prevents arbitrary third-party slashing).
+            match reason {
+                BundleRollbackReason::SubmitterCancelled => {
+                    ensure!(record.submitter == caller, Error::<T>::NotBundleSubmitter);
+                }
+                BundleRollbackReason::ExecutionFailed
+                | BundleRollbackReason::AccessSetViolation => {
+                    ensure!(
+                        record.executor == Some(caller.clone()),
+                        Error::<T>::NotBundleSubmitter
+                    );
+                }
+                BundleRollbackReason::DeadlineExceeded => {
+                    let now = <frame_system::Pallet<T>>::block_number();
+                    ensure!(now > record.deadline_block, Error::<T>::InvalidBundleState);
+                    ensure!(
+                        caller == record.submitter
+                            || record.executor == Some(caller.clone()),
+                        Error::<T>::NotBundleSubmitter
+                    );
+                }
             }
 
             record.status = BundleStatus::RolledBack;
@@ -908,5 +937,28 @@ pub mod pallet {
         pub fn bundle_status(bundle_id: H256) -> Option<BundleStatus> {
             Bundles::<T>::get(bundle_id).map(|r| r.status)
         }
+    }
+}
+
+// C-011: Runtime API declaration for off-chain / RPC access to atomic kernel state.
+// External consumers (indexers, frontends, RPC nodes) call these via the runtime API
+// bridge instead of directly reading storage, which ensures the API stays ABI-stable
+// across runtime upgrades.
+sp_api::decl_runtime_apis! {
+    /// Runtime API for the X3 atomic kernel pallet.
+    ///
+    /// Implements read-only queries for PoAE proofs, bundle status, and finality
+    /// certificate anchors.  These are the three pieces of data an external chain
+    /// (EVM verifier contract, SVM program, indexer) needs to settle a cross-VM
+    /// atomic trade.
+    pub trait X3AtomicKernelApi {
+        /// Return the Proof of Atomic Execution for a finalised bundle, if available.
+        fn get_poae_proof(bundle_id: sp_core::H256) -> Option<crate::proof::PoaeProof>;
+
+        /// Return the current status of a bundle.
+        fn get_bundle_status(bundle_id: sp_core::H256) -> Option<crate::BundleStatus>;
+
+        /// Return the Flash Finality certificate anchor stored for the given block number.
+        fn get_finality_cert_anchor(block_num: u64) -> Option<sp_core::H256>;
     }
 }

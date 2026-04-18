@@ -38,15 +38,24 @@ pub fn create_router(state: Arc<RpcState>) -> Router {
         .route("/jobs/:id", get(get_job))
         .route("/jobs/:id/status", get(query_job_status))
         .route("/jobs/:id/cancel", post(cancel_job))
-        .route("/benchmarks/jobs", post(submit_benchmark_job).get(list_benchmark_jobs))
+        .route(
+            "/benchmarks/jobs",
+            post(submit_benchmark_job).get(list_benchmark_jobs),
+        )
         .route("/benchmarks/jobs/:id", get(get_benchmark_job))
         .route("/benchmarks/reports/:id", get(get_benchmark_report))
-        .route("/benchmarks/reports/:id/publish", post(publish_benchmark_report))
+        .route(
+            "/benchmarks/reports/:id/publish",
+            post(publish_benchmark_report),
+        )
         .route(
             "/benchmarks/onboarding/jobs",
             post(submit_onboarding_benchmark_job).get(list_onboarding_benchmark_jobs),
         )
-        .route("/benchmarks/onboarding/jobs/:id", get(get_onboarding_benchmark_job))
+        .route(
+            "/benchmarks/onboarding/jobs/:id",
+            get(get_onboarding_benchmark_job),
+        )
         .route(
             "/benchmarks/onboarding/reports/:id",
             get(get_onboarding_benchmark_report),
@@ -389,7 +398,12 @@ async fn get_benchmark_job(
         .benchmark_store
         .get_job(&job_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("benchmark job {job_id} not found")))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("benchmark job {job_id} not found"),
+            )
+        })?;
     Ok(Json(job))
 }
 
@@ -401,7 +415,12 @@ async fn get_onboarding_benchmark_job(
         .benchmark_store
         .get_job_request(&job_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("benchmark job {job_id} not found")))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("benchmark job {job_id} not found"),
+            )
+        })?;
     if request.profile != BenchmarkProfile::ProviderOnboarding {
         return Err((
             StatusCode::NOT_FOUND,
@@ -420,7 +439,12 @@ async fn get_benchmark_report(
         .benchmark_store
         .get_report(&report_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("benchmark report {report_id} not found")))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("benchmark report {report_id} not found"),
+            )
+        })?;
     Ok(Json(report))
 }
 
@@ -432,7 +456,12 @@ async fn get_onboarding_benchmark_report(
         .benchmark_store
         .get_report(&report_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("benchmark report {report_id} not found")))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("benchmark report {report_id} not found"),
+            )
+        })?;
     if report.profile != BenchmarkProfile::ProviderOnboarding {
         return Err((
             StatusCode::NOT_FOUND,
@@ -477,7 +506,12 @@ async fn publish_onboarding_benchmark_report(
         .benchmark_store
         .get_report(&report_id)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .ok_or_else(|| (StatusCode::NOT_FOUND, format!("benchmark report {report_id} not found")))?;
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                format!("benchmark report {report_id} not found"),
+            )
+        })?;
     if report.profile != BenchmarkProfile::ProviderOnboarding {
         return Err((
             StatusCode::NOT_FOUND,
@@ -826,9 +860,15 @@ mod tests {
             .method("POST")
             .uri("/benchmarks/jobs")
             .header("content-type", "application/json")
-            .body(Body::from(serde_json::to_vec(&request).expect("serialize request")))
+            .body(Body::from(
+                serde_json::to_vec(&request).expect("serialize request"),
+            ))
             .expect("request build");
-        let submit_resp = app.clone().oneshot(submit_req).await.expect("submit request");
+        let submit_resp = app
+            .clone()
+            .oneshot(submit_req)
+            .await
+            .expect("submit request");
         assert_eq!(submit_resp.status(), StatusCode::OK);
         let submit_body = hyper::body::to_bytes(submit_resp.into_body())
             .await
@@ -845,7 +885,11 @@ mod tests {
             .uri(format!("/benchmarks/reports/{report_id}"))
             .body(Body::empty())
             .expect("request build");
-        let report_resp = app.clone().oneshot(report_req).await.expect("report request");
+        let report_resp = app
+            .clone()
+            .oneshot(report_req)
+            .await
+            .expect("report request");
         assert_eq!(report_resp.status(), StatusCode::OK);
 
         let report_body = hyper::body::to_bytes(report_resp.into_body())
@@ -853,12 +897,14 @@ mod tests {
             .expect("report body");
         let report_json: serde_json::Value =
             serde_json::from_slice(&report_body).expect("report response json");
-        assert!(report_json
-            .get("baseline")
-            .and_then(|baseline| baseline.get("avg_tps"))
-            .and_then(|value| value.as_f64())
-            .unwrap_or(0.0)
-            > 0.0);
+        assert!(
+            report_json
+                .get("baseline")
+                .and_then(|baseline| baseline.get("avg_tps"))
+                .and_then(|value| value.as_f64())
+                .unwrap_or(0.0)
+                > 0.0
+        );
     }
 
     #[tokio::test]
@@ -882,9 +928,15 @@ mod tests {
             .method("POST")
             .uri("/benchmarks/jobs")
             .header("content-type", "application/json")
-            .body(Body::from(serde_json::to_vec(&request).expect("serialize request")))
+            .body(Body::from(
+                serde_json::to_vec(&request).expect("serialize request"),
+            ))
             .expect("request build");
-        let submit_resp = app.clone().oneshot(submit_req).await.expect("submit request");
+        let submit_resp = app
+            .clone()
+            .oneshot(submit_req)
+            .await
+            .expect("submit request");
         let submit_body = hyper::body::to_bytes(submit_resp.into_body())
             .await
             .expect("body bytes");
@@ -934,9 +986,15 @@ mod tests {
             .method("POST")
             .uri("/benchmarks/onboarding/jobs")
             .header("content-type", "application/json")
-            .body(Body::from(serde_json::to_vec(&request).expect("serialize request")))
+            .body(Body::from(
+                serde_json::to_vec(&request).expect("serialize request"),
+            ))
             .expect("request build");
-        let submit_resp = app.clone().oneshot(submit_req).await.expect("submit request");
+        let submit_resp = app
+            .clone()
+            .oneshot(submit_req)
+            .await
+            .expect("submit request");
         assert_eq!(submit_resp.status(), StatusCode::OK);
         let submit_body = hyper::body::to_bytes(submit_resp.into_body())
             .await
@@ -965,7 +1023,11 @@ mod tests {
             .uri(format!("/benchmarks/onboarding/reports/{report_id}"))
             .body(Body::empty())
             .expect("request build");
-        let report_resp = app.clone().oneshot(report_req).await.expect("report request");
+        let report_resp = app
+            .clone()
+            .oneshot(report_req)
+            .await
+            .expect("report request");
         assert_eq!(report_resp.status(), StatusCode::OK);
         let report_body = hyper::body::to_bytes(report_resp.into_body())
             .await
@@ -982,7 +1044,9 @@ mod tests {
             .and_then(|value| value.as_array())
             .expect("artifact array")
             .iter()
-            .any(|artifact| artifact.get("artifact_type").and_then(|value| value.as_str())
+            .any(|artifact| artifact
+                .get("artifact_type")
+                .and_then(|value| value.as_str())
                 == Some("provider-manifest")));
     }
 
@@ -1035,9 +1099,15 @@ mod tests {
             .method("POST")
             .uri("/benchmarks/onboarding/jobs")
             .header("content-type", "application/json")
-            .body(Body::from(serde_json::to_vec(&request).expect("serialize request")))
+            .body(Body::from(
+                serde_json::to_vec(&request).expect("serialize request"),
+            ))
             .expect("request build");
-        let submit_resp = app.clone().oneshot(submit_req).await.expect("submit request");
+        let submit_resp = app
+            .clone()
+            .oneshot(submit_req)
+            .await
+            .expect("submit request");
         assert_eq!(submit_resp.status(), StatusCode::OK);
         intent_mock.assert_async().await;
     }

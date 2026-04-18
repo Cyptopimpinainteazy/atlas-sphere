@@ -48,7 +48,11 @@ impl MerkleEnabledSettlement {
     }
 
     /// Provide strict freshness bounds for merkle proof verification.
-    pub fn with_freshness(mut self, current_finalized_block: u64, max_proof_age_blocks: u64) -> Self {
+    pub fn with_freshness(
+        mut self,
+        current_finalized_block: u64,
+        max_proof_age_blocks: u64,
+    ) -> Self {
         self.current_finalized_block = Some(current_finalized_block);
         self.max_proof_age_blocks = max_proof_age_blocks;
         self
@@ -91,7 +95,7 @@ impl MerkleSettlementExt for CrossVmBridge {
         }
 
         // Enforce proof freshness against the caller-provided finalized tip.
-        let current_finalized = settlement.current_finalized_block.ok_or_else(|| {
+        let current_finalized = settlement.current_finalized_block.ok_or({
             DispatchError::Other(
                 "Merkle settlement rejected: missing current finalized block for freshness check",
             )
@@ -116,7 +120,7 @@ impl MerkleSettlementExt for CrossVmBridge {
             .map(|_| true)
             .map_err(|e| {
                 // Propagate the specific error for diagnostics
-                log::error!("Merkle settlement verification failed: {}", e);
+                log::error!("Merkle settlement verification failed: {e}");
                 DispatchError::Other("Merkle settlement verification failed")
             })
     }
@@ -146,7 +150,10 @@ mod tests {
         assert!(settlement.merkle_proof.is_none());
         assert_eq!(settlement.finality_threshold, 2);
         assert_eq!(settlement.current_finalized_block, None);
-        assert_eq!(settlement.max_proof_age_blocks, DEFAULT_MAX_PROOF_AGE_BLOCKS);
+        assert_eq!(
+            settlement.max_proof_age_blocks,
+            DEFAULT_MAX_PROOF_AGE_BLOCKS
+        );
     }
 
     #[test]
@@ -176,7 +183,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -197,7 +208,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [0u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -218,7 +233,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -243,7 +262,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -262,7 +285,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -281,13 +308,18 @@ mod tests {
         let stale_proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
         };
 
-        let stale_settlement = MerkleEnabledSettlement::new(7, Some(stale_proof)).with_freshness(400, 64);
+        let stale_settlement =
+            MerkleEnabledSettlement::new(7, Some(stale_proof)).with_freshness(400, 64);
         assert!(bridge
             .verify_merkle_settlement(&stale_settlement, &validator, &test_validators())
             .is_err());
@@ -295,13 +327,18 @@ mod tests {
         let future_proof = MerkleProofSettlement {
             state_root: [42u8; 32],
             finalized_block: 500,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 244, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 244, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
         };
 
-        let future_settlement = MerkleEnabledSettlement::new(8, Some(future_proof)).with_freshness(450, 64);
+        let future_settlement =
+            MerkleEnabledSettlement::new(8, Some(future_proof)).with_freshness(450, 64);
         assert!(bridge
             .verify_merkle_settlement(&future_settlement, &validator, &test_validators())
             .is_err());
@@ -343,7 +380,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -360,13 +401,19 @@ mod tests {
         let validator = DefaultMerkleProofValidator::new();
 
         let s1 = MerkleEnabledSettlement::new(1, None).with_finality_threshold(2);
-        assert!(bridge.verify_merkle_settlement(&s1, &validator, &empty_validators()).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&s1, &validator, &empty_validators())
+            .is_ok());
 
         let s2 = MerkleEnabledSettlement::new(2, None).with_finality_threshold(3);
-        assert!(bridge.verify_merkle_settlement(&s2, &validator, &empty_validators()).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&s2, &validator, &empty_validators())
+            .is_ok());
 
         let s3 = MerkleEnabledSettlement::new(3, None).with_finality_threshold(4);
-        assert!(bridge.verify_merkle_settlement(&s3, &validator, &empty_validators()).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&s3, &validator, &empty_validators())
+            .is_ok());
     }
 
     #[test]
@@ -380,7 +427,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [42; 32],
             finalized_block: 100,
-            merkle_proof_bytes: alloc::vec![42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -400,7 +451,9 @@ mod tests {
         let validators = test_validators();
 
         let prepare = MerkleEnabledSettlement::new(1, None);
-        assert!(bridge.verify_merkle_settlement(&prepare, &validator, &validators).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&prepare, &validator, &validators)
+            .is_ok());
 
         let mut signatures = BTreeMap::new();
         signatures.insert([1; 32], alloc::vec![200, 201]);
@@ -409,7 +462,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [99; 32],
             finalized_block: 200,
-            merkle_proof_bytes: alloc::vec![50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: signatures,
             execution_index: 1,
             metadata: None,
@@ -419,7 +476,9 @@ mod tests {
         let _ = bridge.verify_merkle_settlement(&commit, &validator, &validators);
 
         let finalize = MerkleEnabledSettlement::new(3, None);
-        assert!(bridge.verify_merkle_settlement(&finalize, &validator, &validators).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&finalize, &validator, &validators)
+            .is_ok());
     }
 
     #[test]
@@ -429,9 +488,10 @@ mod tests {
 
         for i in 1..=10 {
             let settlement = MerkleEnabledSettlement::new(i, None);
-            let result = bridge.verify_merkle_settlement(&settlement, &validator, &empty_validators());
-            assert!(result.is_ok(), "Settlement {} should verify", i);
-            assert!(result.unwrap(), "Settlement {} result should be true", i);
+            let result =
+                bridge.verify_merkle_settlement(&settlement, &validator, &empty_validators());
+            assert!(result.is_ok(), "Settlement {i} should verify");
+            assert!(result.unwrap(), "Settlement {i} result should be true");
         }
     }
 
@@ -442,12 +502,18 @@ mod tests {
         let validators = test_validators();
 
         let s1 = MerkleEnabledSettlement::new(1, None);
-        assert!(bridge.verify_merkle_settlement(&s1, &validator, &validators).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&s1, &validator, &validators)
+            .is_ok());
 
         let proof = MerkleProofSettlement {
             state_root: [111; 32],
             finalized_block: 150,
-            merkle_proof_bytes: alloc::vec![60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: None,
@@ -456,7 +522,9 @@ mod tests {
         let _ = bridge.verify_merkle_settlement(&s2, &validator, &validators);
 
         let s3 = MerkleEnabledSettlement::new(3, None);
-        assert!(bridge.verify_merkle_settlement(&s3, &validator, &validators).is_ok());
+        assert!(bridge
+            .verify_merkle_settlement(&s3, &validator, &validators)
+            .is_ok());
     }
 
     #[test]
@@ -466,7 +534,11 @@ mod tests {
         let proof = MerkleProofSettlement {
             state_root: [77; 32],
             finalized_block: 250,
-            merkle_proof_bytes: alloc::vec![70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            merkle_proof_bytes: alloc::vec![
+                70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ],
             validator_signatures: BTreeMap::new(),
             execution_index: 1,
             metadata: Some(metadata.clone()),

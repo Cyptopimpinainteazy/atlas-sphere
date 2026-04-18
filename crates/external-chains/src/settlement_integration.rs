@@ -214,9 +214,9 @@ impl SettlementCoordinator {
             active_bindings: sp_std::collections::btree_map::BTreeMap::new(),
             pending_obligations: sp_std::collections::btree_map::BTreeMap::new(),
             recent_failures: Vec::new(),
-            quote_freshness_window_ms: 30_000,  // 30 seconds
-            max_reconciliation_lag_ms: 10_000,  // 10 seconds
-            max_proof_age_ms: 86_400_000,       // 24 hours
+            quote_freshness_window_ms: 30_000, // 30 seconds
+            max_reconciliation_lag_ms: 10_000, // 10 seconds
+            max_proof_age_ms: 86_400_000,      // 24 hours
         }
     }
 
@@ -236,11 +236,7 @@ impl SettlementCoordinator {
 
     /// Run pre-submission solvency checks.
     /// Returns detailed rejection reasons if any check fails.
-    pub fn pre_submission_check(
-        &self,
-        route_id: &H256,
-        now_ms: u64,
-    ) -> PreSubmissionCheckResult {
+    pub fn pre_submission_check(&self, route_id: &H256, now_ms: u64) -> PreSubmissionCheckResult {
         let route = match self.active_bindings.get(route_id) {
             Some(r) => r,
             None => {
@@ -325,7 +321,8 @@ impl SettlementCoordinator {
             recorded_at_ms: now_ms,
         };
 
-        self.pending_obligations.insert(route_id, obligation.clone());
+        self.pending_obligations
+            .insert(route_id, obligation.clone());
 
         // Mark route as submitted
         if let Some(r) = self.active_bindings.get_mut(&route_id) {
@@ -472,7 +469,10 @@ mod tests {
         };
 
         let result = coord.pre_submission_check(&H256::from_low_u64_be(2), 5_000);
-        assert!(result.passed, "quote should still be fresh at 4 seconds ago");
+        assert!(
+            result.passed,
+            "quote should still be fresh at 4 seconds ago"
+        );
     }
 
     #[test]
@@ -483,10 +483,7 @@ mod tests {
 
         // Quote is from timestamp 1_000, checking at 50_000 = 49 seconds later
         let result = coord.pre_submission_check(&H256::from_low_u64_be(3), 50_000);
-        assert!(
-            !result.passed,
-            "quote should be stale after 30 seconds"
-        );
+        assert!(!result.passed, "quote should be stale after 30 seconds");
         assert!(result
             .rejections
             .iter()
@@ -508,10 +505,7 @@ mod tests {
         );
 
         assert_eq!(obl.route_id, H256::from_low_u64_be(4));
-        assert_eq!(
-            obl.settlement_status,
-            SettlementOblStatus::PendingProof
-        );
+        assert_eq!(obl.settlement_status, SettlementOblStatus::PendingProof);
         assert_eq!(coord.pending_obligation_count(), 1);
     }
 
@@ -529,17 +523,12 @@ mod tests {
             5_000,
         );
 
-        let updated = coord.update_obligation_status(
-            &H256::from_low_u64_be(5),
-            SettlementOblStatus::Verified,
-        );
+        let updated = coord
+            .update_obligation_status(&H256::from_low_u64_be(5), SettlementOblStatus::Verified);
         assert!(updated);
 
         let obl = coord.pending_obligations().pop().unwrap();
-        assert_eq!(
-            obl.settlement_status,
-            SettlementOblStatus::Verified
-        );
+        assert_eq!(obl.settlement_status, SettlementOblStatus::Verified);
     }
 
     #[test]
@@ -589,10 +578,7 @@ mod tests {
         assert_eq!(coord.recent_failure_count(), 1);
 
         let obl = coord.pending_obligations().pop().unwrap();
-        assert_eq!(
-            obl.settlement_status,
-            SettlementOblStatus::Failed
-        );
+        assert_eq!(obl.settlement_status, SettlementOblStatus::Failed);
     }
 
     #[test]

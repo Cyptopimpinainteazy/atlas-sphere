@@ -8,9 +8,9 @@
 //! cargo bench --bench e2e_tps -- --nocapture
 //! ```
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput, BenchmarkId};
-use std::sync::Arc;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::Barrier;
 
@@ -97,7 +97,7 @@ fn bench_tps_scaling(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     let mut group = c.benchmark_group("tps_scaling");
-    
+
     // Test with increasing load: 1, 4, 16, 64 concurrent tasks
     for num_tasks in [1, 4, 16, 64].iter() {
         group.throughput(Throughput::Elements(*num_tasks as u64));
@@ -107,16 +107,16 @@ fn bench_tps_scaling(c: &mut Criterion) {
             |b, &num_tasks| {
                 b.to_async(&rt).iter(|| async {
                     let (tps, p50, p95, p99) = measure_tps_batch(
-                        num_tasks,
-                        128, // batch_size
+                        num_tasks, 128, // batch_size
                         2,   // duration_secs
-                    ).await;
+                    )
+                    .await;
 
                     println!(
                         "  Tasks: {}, TPS: {:.0}, p50: {:.2}ms, p95: {:.2}ms, p99: {:.2}ms",
                         num_tasks, tps, p50, p95, p99
                     );
-                    
+
                     black_box((tps, p50, p95, p99))
                 });
             },
@@ -129,7 +129,7 @@ fn bench_tps_batch_sizes(c: &mut Criterion) {
     let rt = tokio::runtime::Runtime::new().unwrap();
 
     let mut group = c.benchmark_group("tps_batch_sizes");
-    
+
     // Test with different batch sizes: 32, 128, 512, 2048
     for batch_size in [32, 128, 512, 2048].iter() {
         group.bench_with_input(
@@ -138,16 +138,16 @@ fn bench_tps_batch_sizes(c: &mut Criterion) {
             |b, &batch_size| {
                 b.to_async(&rt).iter(|| async {
                     let (tps, p50, p95, p99) = measure_tps_batch(
-                        16,  // num_tasks
-                        batch_size,
-                        2,   // duration_secs
-                    ).await;
+                        16, // num_tasks
+                        batch_size, 2, // duration_secs
+                    )
+                    .await;
 
                     println!(
                         "  Batch: {}, TPS: {:.0}, p50: {:.2}ms, p95: {:.2}ms, p99: {:.2}ms",
                         batch_size, tps, p50, p95, p99
                     );
-                    
+
                     black_box((tps, p50, p95, p99))
                 });
             },
@@ -169,13 +169,14 @@ fn bench_tps_sustained_load(c: &mut Criterion) {
                 64,  // num_tasks (high load)
                 256, // batch_size
                 30,  // duration_secs (long duration)
-            ).await;
+            )
+            .await;
 
             println!(
                 "  Sustained Load (30s): TPS: {:.0}, p50: {:.2}ms, p95: {:.2}ms, p99: {:.2}ms",
                 tps, p50, p95, p99
             );
-            
+
             black_box((tps, p50, p95, p99))
         });
     });

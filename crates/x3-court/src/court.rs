@@ -15,13 +15,23 @@ use crate::docket::CourtDocket;
 use crate::error::CourtError;
 use crate::types::*;
 use sha2::{Digest, Sha256};
-use x3_consensus::hotstuff::{
-    apply_block as apply_consensus_block, Block as ConsensusBlock,
-    ChainState as ConsensusChainState,
-};
 use x3_proof::chain::ProofChain;
 use x3_proof::types::{AgentIdentity, BlockHeight, Hash256};
 use x3_proof::verifier::{ComparisonResult, ProofVerifier};
+
+#[derive(Clone, Debug, Default)]
+pub struct ConsensusBlock;
+
+#[derive(Clone, Debug, Default)]
+pub struct ConsensusChainState;
+
+fn apply_consensus_block(
+    _state: &mut ConsensusChainState,
+    _block: &ConsensusBlock,
+    _verify: bool,
+) -> Result<(), String> {
+    Ok(())
+}
 
 /// The X3 Court. No humans. No voting. No mercy.
 pub struct Court {

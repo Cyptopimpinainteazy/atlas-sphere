@@ -3,18 +3,18 @@
 //! This crate provides GPU-accelerated validation of signatures and hashes for EVM,
 //! coupled with an atomic swap orchestrator for dual-chain commit/rollback semantics.
 
+pub mod dashboard;
+pub mod error;
+pub mod evm_validator;
+pub mod failover;
 pub mod kernels;
 pub mod orchestrator;
 pub mod registry;
-pub mod evm_validator;
 pub mod svm_validator;
-pub mod failover;
-pub mod dashboard;
-pub mod error;
 
-pub use orchestrator::{AtomicSwapOrchestrator, SwapStatus};
-pub use kernels::{Secp256k1Kernel, Keccak256Kernel};
 pub use error::ValidatorError;
+pub use kernels::{Keccak256Kernel, Secp256k1Kernel};
+pub use orchestrator::{AtomicSwapOrchestrator, SwapStatus};
 
 /// Core validator types and traits
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -192,8 +192,7 @@ impl CrossChainPosition {
     }
 }
 
-/// Helper function to get current timestamp
+/// Helper function to get current timestamp in milliseconds
 fn current_timestamp() -> u64 {
-    // In a real implementation, this would get the actual current timestamp
-    1704067200 // Example timestamp
+    sp_io::offchain::timestamp().unix_millis()
 }

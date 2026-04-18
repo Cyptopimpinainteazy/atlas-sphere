@@ -46,6 +46,7 @@ pallet-evm-precompile-sha3fips = { workspace = true, default-features = false }
 fp-evm = { workspace = true, default-features = false }
 
 pallet-x3-kernel = { path = "../pallets/x3-kernel", default-features = false }
+x3-cross-vm-bridge = { path = "../crates/cross-vm-bridge", default-features = false }
 pallet-x3-coin = { path = "../pallets/x3-coin", default-features = false }
 pallet-atomic-trade-engine = { path = "../pallets/atomic-trade-engine", default-features = false }
 pallet-governance = { path = "../pallets/governance", default-features = false }
@@ -120,6 +121,7 @@ std = [
 	"pallet-evm-precompile-sha3fips/std",
 	"fp-evm/std",
 	"pallet-x3-kernel/std",
+	"x3-cross-vm-bridge/std",
 	"pallet-atomic-trade-engine/std",
 	"pallet-governance/std",
 	"pallet-treasury/std",

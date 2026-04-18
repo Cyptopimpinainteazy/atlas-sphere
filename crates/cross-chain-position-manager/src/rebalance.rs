@@ -83,18 +83,11 @@ pub enum RebalanceActionType {
     /// Offset with opposing flow.
     InternalNetting,
     /// Sweep from an overfunded chain/asset vault.
-    CrossChainSweep {
-        from_chain: u64,
-        from_asset: H160,
-    },
+    CrossChainSweep { from_chain: u64, from_asset: H160 },
     /// Rebalance through approved DEX/aggregator.
-    MarketRebalance {
-        venue: String,
-    },
+    MarketRebalance { venue: String },
     /// Use partner-provided depth.
-    PartnerAssisted {
-        partner_id: String,
-    },
+    PartnerAssisted { partner_id: String },
     /// Treasury refill — last resort for critical lanes only.
     TreasuryRefill,
 }
@@ -387,7 +380,10 @@ mod tests {
         let request = make_request(1, 100, RebalanceUrgency::Slow);
         let plan = engine.submit_request(request);
 
-        assert_eq!(plan.actions[0].action_type, RebalanceActionType::InternalNetting);
+        assert_eq!(
+            plan.actions[0].action_type,
+            RebalanceActionType::InternalNetting
+        );
         assert_eq!(plan.actions[0].amount, U256::from(100u64));
         assert_eq!(plan.resolved_amount, U256::from(100u64));
     }
@@ -408,7 +404,10 @@ mod tests {
 
         // Should have netting (30) + market (70)
         assert!(plan.actions.len() >= 2);
-        assert_eq!(plan.actions[0].action_type, RebalanceActionType::InternalNetting);
+        assert_eq!(
+            plan.actions[0].action_type,
+            RebalanceActionType::InternalNetting
+        );
         assert_eq!(plan.actions[0].amount, U256::from(30u64));
 
         let market_action = plan
@@ -519,8 +518,7 @@ mod tests {
         let sweep = plan.actions.iter().find(|a| {
             matches!(
                 a.action_type,
-                RebalanceActionType::CrossChainSweep { .. }
-                    | RebalanceActionType::InternalNetting
+                RebalanceActionType::CrossChainSweep { .. } | RebalanceActionType::InternalNetting
             )
         });
         assert!(sweep.is_some());

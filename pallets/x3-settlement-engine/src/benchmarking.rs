@@ -12,7 +12,7 @@
 #![cfg(feature = "runtime-benchmarks")]
 
 use super::*;
-use frame_benchmarking::{benchmarks, whitemp, BenchmarkError};
+use frame_benchmarking::{benchmarks, whitelisted_caller, BenchmarkError};
 use frame_system::RawOrigin;
 use sp_core::H256;
 use sp_std::vec;
@@ -25,13 +25,13 @@ fn setup_intent<T: Config>() -> (T::AccountId, T::AccountId, H256, AssetSpec, As
     let secret_hash: H256 = H256::from_low_u64_be(1);
     let asset_a = AssetSpec {
         chain: ExternalChainId::Ethereum,
-        contract: BoundedVec::try_from(vec![1u8; 32]).unwrap(),
-        decimals: 18,
+        token: TokenId::Native,
+        amount: 1_000_000u128,
     };
     let asset_b = AssetSpec {
         chain: ExternalChainId::Bitcoin,
-        contract: BoundedVec::try_from(vec![2u8; 32]).unwrap(),
-        decimals: 8,
+        token: TokenId::Native,
+        amount: 1_000_000u128,
     };
     (maker, taker, secret_hash, asset_a, asset_b)
 }
@@ -105,7 +105,7 @@ benchmarks! {
 
         let secret = H256::from_low_u64_be(1);
         let origin = RawOrigin::Signed(maker.clone());
-    }: _(origin, intent_id, 0u32, secret, vec![1u8; 128])
+    }: _(origin, intent_id, secret)
     verify {
         assert!(ClaimedLegs::<T>::get(intent_id, 0u32));
     }
@@ -152,7 +152,7 @@ benchmarks! {
     }: _(origin, intent_id, secret)
     verify {
         let state = IntentStates::<T>::get(intent_id);
-        assert!(matches!(state, IntentState::Completed | IntentState::FinalizedWithExternalProof));
+        assert!(matches!(state, IntentState::Finalized));
     }
 
     refund_intent {
@@ -217,11 +217,12 @@ benchmarks! {
     update_btc_block_header {
         let header = BtcBlockHeader {
             version: 1,
-            prev_blockhash: H256::from_low_u64_be(0),
+            prev_block_hash: H256::from_low_u64_be(0),
             merkle_root: H256::from_low_u64_be(1),
-            time: 1234567890u32,
+            timestamp: 1234567890u32,
             bits: 0x207fffff,
             nonce: 0,
+            height: 0u64,
         };
 
         let origin = RawOrigin::Root.into();
@@ -253,27 +254,28 @@ benchmarks! {
         // Verify submission succeeds
     }
 
-    create_bond {
+    deposit_bond {
         let depositor: T::AccountId = frame_benchmarking::account("depositor", 0, SEED);
         let amount = T::Currency::minimum_balance() * 100u32.into();
 
         let origin = RawOrigin::Signed(depositor.clone());
-    }: _(origin, vec![1u8; 32], amount)
+    }: _(origin, vec![1u8; 32], amount, 0u8)
     verify {
         let bond_count = BondCounter::<T>::get();
         assert!(bond_count > 0);
     }
 
-    claim_bond {
+    finalize_bond_withdraw {
         let depositor: T::AccountId = frame_benchmarking::account("depositor", 0, SEED);
         let amount = T::Currency::minimum_balance() * 100u32.into();
 
         // Create bond first
         let create_origin = RawOrigin::Signed(depositor.clone()).into();
-        Pallet::<T>::create_bond(
+        Pallet::<T>::deposit_bond(
             create_origin,
             vec![1u8; 32],
             amount,
+            0u8,
         ).ok();
 
         let bond_id = H256::from_low_u64_be(0);

@@ -12,10 +12,10 @@
 use crate::config::CoordinatorConfig;
 use crate::persistence::{InMemoryPersistence, SessionPersistence};
 use crate::types::*;
+use blake2::{Blake2b512, Digest};
 use blake3;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::sync::Arc;
-use subtle::ConstantTimeEq;
 use tracing::{error, info, warn};
 
 /// The Cross-VM Swap Coordinator.
@@ -60,6 +60,8 @@ impl SwapCoordinator<InMemoryPersistence> {
 }
 
 impl<P: SessionPersistence> SwapCoordinator<P> {
+    const PURGE_BATCH_SIZE: usize = 256;
+
     /// Create a coordinator with custom persistence backend.
     ///
     /// On construction, loads all existing sessions from the persistence layer.
@@ -137,26 +139,29 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
     /// Call periodically (e.g., every epoch) to prevent unbounded memory growth on
     /// long-running nodes. Returns the number of sessions purged.
     pub fn purge_terminated_sessions(&mut self, now_unix: u64, max_age_secs: u64) -> usize {
-        let before = self.sessions.len();
-        let mut to_remove = Vec::new();
+        let mut purged = 0;
+        let mut cursor: Option<String> = None;
 
-        for (id, s) in self.sessions.iter() {
-            let is_terminal = matches!(
-                s.phase,
-                SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed
+        loop {
+            let batch = self.next_stale_terminal_session_batch(
+                now_unix,
+                max_age_secs,
+                cursor.as_deref(),
+                Self::PURGE_BATCH_SIZE,
             );
-            let is_stale = now_unix.saturating_sub(s.updated_at) > max_age_secs;
-            if is_terminal && is_stale {
-                to_remove.push(id.clone());
+            if batch.is_empty() {
+                break;
+            }
+
+            cursor = batch.last().cloned();
+            for id in batch {
+                self.sessions.remove(&id);
+                self.persistence.remove(&id);
+                purged += 1;
             }
         }
 
-        for id in &to_remove {
-            self.sessions.remove(id);
-            self.persistence.remove(id);
-        }
-
-        before - self.sessions.len()
+        purged
     }
 
     // ── Phase 1: Setup ────────────────────────────────────────────────────
@@ -178,7 +183,6 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         flash_legs: Vec<FlashLeg>,
         now_unix: u64,
     ) -> Result<(String, HtlcSecret, HtlcHash), CoordinatorError> {
-        // DoS guard: cap total live sessions to prevent unbounded memory growth.
         const MAX_TOTAL_SESSIONS: usize = 10_000;
         if self.sessions.len() >= MAX_TOTAL_SESSIONS {
             return Err(CoordinatorError::Internal(
@@ -187,14 +191,10 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             ));
         }
 
-        // Generate cryptographic secret and hash
         let secret = HtlcSecret::generate();
         let hash = secret.hash();
-
-        // Compute timelocks
         let (t_fast, t_slow) = self.config.compute_timelocks(now_unix, &fast_vm);
 
-        // Validate flashloan providers
         for leg in &flash_legs {
             if !leg.provider.supports_vm(&leg.vm) {
                 return Err(CoordinatorError::ProviderUnavailable {
@@ -204,10 +204,7 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             }
         }
 
-        // Generate session ID: use full 32-byte hash with collision check
-        let session_id = format!("swap-{}", hash.to_hex());
-
-        // Collision check: ensure session_id is not already in use
+        let session_id = Self::derive_session_id(&secret);
         if self.sessions.contains_key(&session_id) {
             return Err(CoordinatorError::Internal(format!(
                 "Session ID collision detected: '{session_id}' already exists"
@@ -226,9 +223,6 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
             timelock_slow: t_slow,
             created_at: now_unix,
             updated_at: now_unix,
-            // Merkle verification is required for all cross-chain swaps that touch
-            // external chains (EVM or SVM).  X3-to-X3 swaps can skip it because
-            // Flash Finality provides instant provable finality in-chain.
             requires_merkle_verification: matches!(
                 (&fast_vm, &slow_vm),
                 (VmTarget::Evm { .. }, _)
@@ -254,6 +248,61 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         Ok((session_id, secret, hash))
     }
 
+    fn derive_session_id(secret: &HtlcSecret) -> String {
+        let mut hasher = Blake2b512::new();
+        hasher.update(b"x3-cross-vm-session-id-v1");
+        hasher.update(secret.as_bytes());
+        let digest = hasher.finalize();
+        format!("swap-{}", hex::encode(&digest[..32]))
+    }
+
+    fn is_stale_terminal_session(session: &SwapSession, now_unix: u64, max_age_secs: u64) -> bool {
+        let is_terminal = matches!(
+            session.phase,
+            SwapPhase::Complete | SwapPhase::Refunded | SwapPhase::Failed
+        );
+        let is_stale = now_unix.saturating_sub(session.updated_at) > max_age_secs;
+
+        is_terminal && is_stale
+    }
+
+    fn next_stale_terminal_session_batch(
+        &self,
+        now_unix: u64,
+        max_age_secs: u64,
+        after_session_id: Option<&str>,
+        limit: usize,
+    ) -> Vec<String> {
+        if limit == 0 {
+            return Vec::new();
+        }
+
+        let mut session_ids: Vec<&str> = self.sessions.keys().map(String::as_str).collect();
+        session_ids.sort_unstable();
+
+        let mut batch = Vec::with_capacity(limit);
+        for session_id in session_ids {
+            if after_session_id.is_some_and(|cursor| session_id <= cursor) {
+                continue;
+            }
+
+            let session = self
+                .sessions
+                .get(session_id)
+                .expect("session id collected from map keys must exist");
+            if !Self::is_stale_terminal_session(session, now_unix, max_age_secs) {
+                continue;
+            }
+
+            batch.push(session_id.to_string());
+            if batch.len() == limit {
+                break;
+            }
+        }
+
+        batch
+    }
+
     // ── Phase 2: Lock HTLCs ───────────────────────────────────────────────
 
     /// Record that an HTLC has been created on the fast chain.
@@ -263,7 +312,6 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
         record: HtlcRecord,
         now_unix: u64,
     ) -> Result<(), CoordinatorError> {
-        // Read phase first, then validate, then mutate.
         let current_phase = self
             .sessions
             .get(session_id)
@@ -820,5 +868,74 @@ impl<P: SessionPersistence> SwapCoordinator<P> {
                 to: to.to_string(),
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod state_machine_regression_tests {
+    use super::*;
+
+    fn make_session(session_id: &str, phase: SwapPhase, updated_at: u64) -> SwapSession {
+        SwapSession {
+            session_id: session_id.to_string(),
+            hash_lock: HtlcHash([0u8; 32]),
+            htlc_fast: None,
+            htlc_slow: None,
+            flash_legs: vec![],
+            leg_outcomes: vec![],
+            phase,
+            timelock_fast: updated_at + 10,
+            timelock_slow: updated_at + 20,
+            created_at: updated_at,
+            updated_at,
+            requires_merkle_verification: false,
+        }
+    }
+
+    #[test]
+    fn stale_session_batch_filters_before_limiting_and_seeks_from_cursor() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let now = 10_000;
+        let max_age = 100;
+
+        coordinator.sessions.insert(
+            "swap-001-active".to_string(),
+            make_session("swap-001-active", SwapPhase::Setup, now - 1_000),
+        );
+        coordinator.sessions.insert(
+            "swap-002-stale".to_string(),
+            make_session("swap-002-stale", SwapPhase::Refunded, now - 1_000),
+        );
+        coordinator.sessions.insert(
+            "swap-003-active".to_string(),
+            make_session("swap-003-active", SwapPhase::LockingHtlcs, now - 1_000),
+        );
+        coordinator.sessions.insert(
+            "swap-004-stale".to_string(),
+            make_session("swap-004-stale", SwapPhase::Complete, now - 1_000),
+        );
+        coordinator.sessions.insert(
+            "swap-005-active".to_string(),
+            make_session("swap-005-active", SwapPhase::ClaimingFast, now - 1_000),
+        );
+        coordinator.sessions.insert(
+            "swap-006-stale".to_string(),
+            make_session("swap-006-stale", SwapPhase::Failed, now - 1_000),
+        );
+
+        let first_batch = coordinator.next_stale_terminal_session_batch(now, max_age, None, 2);
+        assert_eq!(
+            first_batch,
+            vec!["swap-002-stale".to_string(), "swap-004-stale".to_string()],
+            "limit must apply after filtering for stale terminal sessions"
+        );
+
+        let second_batch = coordinator.next_stale_terminal_session_batch(
+            now,
+            max_age,
+            Some("swap-004-stale"),
+            2,
+        );
+        assert_eq!(second_batch, vec!["swap-006-stale".to_string()]);
     }
 }

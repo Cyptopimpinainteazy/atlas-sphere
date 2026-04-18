@@ -9,9 +9,9 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use x3_rpc::benchmark::{
     BenchmarkChainType, BenchmarkIntegrationTier, BenchmarkJobRequest, BenchmarkJobResponse,
-    BenchmarkJobStatus, BenchmarkLogClassStat, BenchmarkMetrics, BenchmarkProfile,
-    BenchmarkReport, BenchmarkReportArtifact, BenchmarkReportSummary,
-    BenchmarkWorkloadProfile, ProviderOnboardingMetadata,
+    BenchmarkJobStatus, BenchmarkLogClassStat, BenchmarkMetrics, BenchmarkProfile, BenchmarkReport,
+    BenchmarkReportArtifact, BenchmarkReportSummary, BenchmarkWorkloadProfile,
+    ProviderOnboardingMetadata,
 };
 
 const JOB_PREFIX: &str = "benchmark-job:";
@@ -120,7 +120,11 @@ impl BenchmarkStore {
         Ok((request, response))
     }
 
-    pub async fn execute_job(&self, job_id: &str, request: &BenchmarkJobRequest) -> anyhow::Result<BenchmarkJobResponse> {
+    pub async fn execute_job(
+        &self,
+        job_id: &str,
+        request: &BenchmarkJobRequest,
+    ) -> anyhow::Result<BenchmarkJobResponse> {
         let now = now_unix();
         self.store_job(BenchmarkJobResponse {
             job_id: job_id.to_string(),
@@ -138,7 +142,9 @@ impl BenchmarkStore {
                 let ingestion = provider_pool.ingest_recent_window(6).await?;
                 build_report_from_evm_window(&self.signer, &report_id, request, now, &ingestion)
             }
-            _ => anyhow::bail!("benchmark execution currently supports only EVM and OP Stack chains"),
+            _ => {
+                anyhow::bail!("benchmark execution currently supports only EVM and OP Stack chains")
+            }
         };
 
         let envelope = StoredBenchmarkEnvelope {
@@ -257,7 +263,10 @@ impl BenchmarkStore {
                 .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("benchmark gateway url is not configured"))?;
 
-            let url = format!("{}/api/v1/benchmarks/reports", gateway_url.trim_end_matches('/'));
+            let url = format!(
+                "{}/api/v1/benchmarks/reports",
+                gateway_url.trim_end_matches('/')
+            );
             let mut request = self.client.post(url).json(&serde_json::json!({
                 "tenant_id": tenant_id,
                 "report": report,
@@ -293,10 +302,9 @@ fn validate_request(request: &BenchmarkJobRequest) -> anyhow::Result<()> {
         anyhow::bail!("date_range_end_unix must be greater than date_range_start_unix");
     }
     if request.profile == BenchmarkProfile::ProviderOnboarding {
-        let metadata = request
-            .onboarding_metadata
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("onboarding_metadata is required for provider onboarding benchmarks"))?;
+        let metadata = request.onboarding_metadata.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("onboarding_metadata is required for provider onboarding benchmarks")
+        })?;
         require_onboarding_field(&metadata.provider_id, "provider_id")?;
         require_onboarding_field(&metadata.operator_id, "operator_id")?;
         require_onboarding_field(&metadata.region, "region")?;
@@ -347,8 +355,7 @@ pub fn build_provider_onboarding_job_request(
         explorer_endpoint: request.explorer_endpoint,
         workload_trace_uri: Some(format!(
             "{}/{}",
-            PROVIDER_ONBOARDING_TEMPLATE_PREFIX,
-            chain_type_slug
+            PROVIDER_ONBOARDING_TEMPLATE_PREFIX, chain_type_slug
         )),
         onboarding_metadata: Some(metadata),
         date_range_start_unix: now.saturating_sub(PROVIDER_ONBOARDING_WINDOW_SECS),
@@ -480,7 +487,11 @@ fn benchmark_artifacts_for_request(
 fn baseline_metrics(ingestion: &EvmIngestionWindow) -> BenchmarkMetrics {
     let block_span = block_span_seconds(ingestion).max(1.0);
     let receipt_count = ingestion.receipts.len() as f64;
-    let failed = ingestion.receipts.iter().filter(|receipt| !receipt.status).count() as f64;
+    let failed = ingestion
+        .receipts
+        .iter()
+        .filter(|receipt| !receipt.status)
+        .count() as f64;
     let logs_per_receipt = safe_ratio(ingestion.logs.len() as f64, receipt_count.max(1.0));
     let mut latencies = ingestion
         .receipts
@@ -497,7 +508,11 @@ fn baseline_metrics(ingestion: &EvmIngestionWindow) -> BenchmarkMetrics {
         p50_latency_ms: percentile(&latencies, 50),
         p95_latency_ms: percentile(&latencies, 95),
         p99_latency_ms: percentile(&latencies, 99),
-        failure_rate: if receipt_count > 0.0 { failed / receipt_count } else { 0.0 },
+        failure_rate: if receipt_count > 0.0 {
+            failed / receipt_count
+        } else {
+            0.0
+        },
     }
 }
 
@@ -509,15 +524,19 @@ fn replay_metrics(ingestion: &EvmIngestionWindow, baseline: &BenchmarkMetrics) -
     let logs_per_receipt = total_logs / receipts;
     let log_parallelism = (unique_log_lanes / lane_count).clamp(0.5, 1.5);
     let contention_penalty = (1.0 / (1.0 + (logs_per_receipt * 0.12))).clamp(0.55, 1.0);
-    let parallelism_gain = (lane_count.sqrt() * log_parallelism * contention_penalty).clamp(1.0, 6.0);
+    let parallelism_gain =
+        (lane_count.sqrt() * log_parallelism * contention_penalty).clamp(1.0, 6.0);
     let avg_tps = (baseline.avg_tps * parallelism_gain * 1.35).max(baseline.avg_tps);
     let failure_reduction = (0.35 * contention_penalty).clamp(0.12, 0.35);
     BenchmarkMetrics {
         avg_tps,
-        p50_latency_ms: ((baseline.p50_latency_ms as f64 / parallelism_gain).round() as u64).max(75),
-        p95_latency_ms: ((baseline.p95_latency_ms as f64 / (parallelism_gain * 0.9)).round() as u64)
+        p50_latency_ms: ((baseline.p50_latency_ms as f64 / parallelism_gain).round() as u64)
+            .max(75),
+        p95_latency_ms: ((baseline.p95_latency_ms as f64 / (parallelism_gain * 0.9)).round()
+            as u64)
             .max(150),
-        p99_latency_ms: ((baseline.p99_latency_ms as f64 / (parallelism_gain * 0.85)).round() as u64)
+        p99_latency_ms: ((baseline.p99_latency_ms as f64 / (parallelism_gain * 0.85)).round()
+            as u64)
             .max(225),
         failure_rate: (baseline.failure_rate * failure_reduction).min(baseline.failure_rate),
     }
@@ -537,7 +556,11 @@ fn log_lane_count(ingestion: &EvmIngestionWindow) -> usize {
     let mut lanes = HashSet::new();
     for log in &ingestion.logs {
         let selector = log.topic0.as_deref().unwrap_or("no-topic");
-        lanes.insert(format!("{}:{}", log.address.to_lowercase(), selector.to_lowercase()));
+        lanes.insert(format!(
+            "{}:{}",
+            log.address.to_lowercase(),
+            selector.to_lowercase()
+        ));
     }
     lanes.len()
 }
@@ -555,7 +578,11 @@ fn workload_profile(ingestion: &EvmIngestionWindow) -> BenchmarkWorkloadProfile 
     let (low_conflict_ratio, medium_conflict_ratio, high_conflict_ratio, estimated_serial_fraction) =
         conflict_profile(ingestion);
     let mut log_classes = classify_log_mix(ingestion);
-    log_classes.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.class_name.cmp(&b.class_name)));
+    log_classes.sort_by(|a, b| {
+        b.count
+            .cmp(&a.count)
+            .then_with(|| a.class_name.cmp(&b.class_name))
+    });
 
     BenchmarkWorkloadProfile {
         total_transactions,
@@ -591,7 +618,11 @@ fn conflict_profile(ingestion: &EvmIngestionWindow) -> (f64, f64, f64, f64) {
 
     let lane_count = per_lane_txs.len().max(1) as f64;
     let total_logs = ingestion.logs.len() as f64;
-    let avg_logs_per_lane = if lane_count == 0.0 { 0.0 } else { total_logs / lane_count };
+    let avg_logs_per_lane = if lane_count == 0.0 {
+        0.0
+    } else {
+        total_logs / lane_count
+    };
 
     let mut low = 0u64;
     let mut medium = 0u64;
@@ -683,8 +714,16 @@ fn classify_log(topic0: Option<&str>, address: &str) -> String {
 }
 
 fn block_span_seconds(ingestion: &EvmIngestionWindow) -> f64 {
-    let first = ingestion.blocks.first().map(|block| block.timestamp).unwrap_or_default();
-    let last = ingestion.blocks.last().map(|block| block.timestamp).unwrap_or(first);
+    let first = ingestion
+        .blocks
+        .first()
+        .map(|block| block.timestamp)
+        .unwrap_or_default();
+    let last = ingestion
+        .blocks
+        .last()
+        .map(|block| block.timestamp)
+        .unwrap_or(first);
     (last.saturating_sub(first).max(1)) as f64
 }
 
@@ -697,15 +736,27 @@ fn percentile(values: &[u64], percentile: usize) -> u64 {
 }
 
 fn safe_ratio(a: f64, b: f64) -> f64 {
-    if b == 0.0 { 0.0 } else { a / b }
+    if b == 0.0 {
+        0.0
+    } else {
+        a / b
+    }
 }
 
 fn ratio(a: u64, b: u64) -> f64 {
-    if b == 0 { 0.0 } else { a as f64 / b as f64 }
+    if b == 0 {
+        0.0
+    } else {
+        a as f64 / b as f64
+    }
 }
 
 fn percentage_drop(a: u64, b: u64) -> f64 {
-    if a == 0 { 0.0 } else { ((a.saturating_sub(b)) as f64 / a as f64) * 100.0 }
+    if a == 0 {
+        0.0
+    } else {
+        ((a.saturating_sub(b)) as f64 / a as f64) * 100.0
+    }
 }
 
 fn now_unix() -> u64 {
@@ -744,150 +795,153 @@ mod tests {
         }
     }
 
-     #[test]
-     fn benchmark_store_persists_job_and_report() {
-         let store = BenchmarkStore::open(&config()).expect("store");
-         let queued = store
-             .submit(BenchmarkRunInput {
-                 request: request("http://127.0.0.1:8545".to_string()),
-             })
-             .expect("submit");
-         assert_eq!(queued.status, BenchmarkJobStatus::Queued);
-     }
+    #[test]
+    fn benchmark_store_persists_job_and_report() {
+        let store = BenchmarkStore::open(&config()).expect("store");
+        let queued = store
+            .submit(BenchmarkRunInput {
+                request: request("http://127.0.0.1:8545".to_string()),
+            })
+            .expect("submit");
+        assert_eq!(queued.status, BenchmarkJobStatus::Queued);
+    }
 
-     #[tokio::test]
-     async fn benchmark_store_executes_job_and_generates_report() {
-         let server = start_mock_evm_server().await;
-         let store = BenchmarkStore::open(&config()).expect("store");
-         let request = request(server.url("/"));
-         let queued = store
-             .submit(BenchmarkRunInput {
-                 request: request.clone(),
-             })
-             .expect("submit");
-         let response = store
-             .execute_job(&queued.job_id, &request)
-             .await
-             .expect("execute");
-         let loaded = store
-             .get_job(&response.job_id)
-             .expect("get job")
-             .expect("job exists");
-         assert_eq!(loaded.status, BenchmarkJobStatus::Completed);
-         let report = store
-             .get_report(loaded.report_id.as_deref().expect("report id"))
-             .expect("get report")
-             .expect("report exists");
-         assert_eq!(report.signer, "sidecar-test");
-         assert!(report.baseline.avg_tps > 0.0);
-         assert!(report.x3_replay.avg_tps >= report.baseline.avg_tps);
-         assert!(report.baseline.p50_latency_ms >= 250);
-         assert!(report.x3_replay.p50_latency_ms <= report.baseline.p50_latency_ms);
-         assert_eq!(report.workload_profile.total_logs, 3);
-         assert!(!report.workload_profile.log_classes.is_empty());
-         assert!(report.workload_profile.low_conflict_ratio >= 0.0);
-         assert!(report.workload_profile.medium_conflict_ratio >= 0.0);
-         assert!(report.workload_profile.high_conflict_ratio >= 0.0);
-         assert!(report.workload_profile.estimated_serial_fraction >= 0.0);
-         assert!(report.workload_profile.estimated_serial_fraction <= 1.0);
-     }
+    #[tokio::test]
+    async fn benchmark_store_executes_job_and_generates_report() {
+        let server = start_mock_evm_server().await;
+        let store = BenchmarkStore::open(&config()).expect("store");
+        let request = request(server.url("/"));
+        let queued = store
+            .submit(BenchmarkRunInput {
+                request: request.clone(),
+            })
+            .expect("submit");
+        let response = store
+            .execute_job(&queued.job_id, &request)
+            .await
+            .expect("execute");
+        let loaded = store
+            .get_job(&response.job_id)
+            .expect("get job")
+            .expect("job exists");
+        assert_eq!(loaded.status, BenchmarkJobStatus::Completed);
+        let report = store
+            .get_report(loaded.report_id.as_deref().expect("report id"))
+            .expect("get report")
+            .expect("report exists");
+        assert_eq!(report.signer, "sidecar-test");
+        assert!(report.baseline.avg_tps > 0.0);
+        assert!(report.x3_replay.avg_tps >= report.baseline.avg_tps);
+        assert!(report.baseline.p50_latency_ms >= 250);
+        assert!(report.x3_replay.p50_latency_ms <= report.baseline.p50_latency_ms);
+        assert_eq!(report.workload_profile.total_logs, 3);
+        assert!(!report.workload_profile.log_classes.is_empty());
+        assert!(report.workload_profile.low_conflict_ratio >= 0.0);
+        assert!(report.workload_profile.medium_conflict_ratio >= 0.0);
+        assert!(report.workload_profile.high_conflict_ratio >= 0.0);
+        assert!(report.workload_profile.estimated_serial_fraction >= 0.0);
+        assert!(report.workload_profile.estimated_serial_fraction <= 1.0);
+    }
 
-     #[tokio::test]
+    #[tokio::test]
 
-     async fn benchmark_store_submits_result_to_gateway_with_retry() {
-         // Start mock EVM server for benchmark execution
-         let evm_server = start_mock_evm_server().await;
+    async fn benchmark_store_submits_result_to_gateway_with_retry() {
+        // Start mock EVM server for benchmark execution
+        let evm_server = start_mock_evm_server().await;
 
-         // Start mock gateway server
-         let gateway_server = tokio::spawn(async {
-             use axum::{routing::post, Router, Json, http::StatusCode};
-             use std::sync::Arc;
-             use tokio::sync::Mutex;
+        // Start mock gateway server
+        let gateway_server = tokio::spawn(async {
+            use axum::{http::StatusCode, routing::post, Json, Router};
+            use std::sync::Arc;
+            use tokio::sync::Mutex;
 
-             let submitted_count = Arc::new(Mutex::new(0));
-             let submitted_count_clone = submitted_count.clone();
+            let submitted_count = Arc::new(Mutex::new(0));
+            let submitted_count_clone = submitted_count.clone();
 
-             let app = Router::new()
-                 .route("/api/v1/benchmarks/results", post({
-                     let submitted_count = submitted_count_clone;
-                     move |Json(_): Json<serde_json::Value>| {
-                         let submitted_count = submitted_count.clone();
-                         async move {
-                             let mut count = submitted_count.lock().await;
-                             *count += 1;
-                             (StatusCode::OK, Json(serde_json::json!({
-                                 "report_id": "report-123",
-                                 "status": "stored"
-                             })))
-                         }
-                     }
-                 }));
+            let app = Router::new().route(
+                "/api/v1/benchmarks/results",
+                post({
+                    let submitted_count = submitted_count_clone;
+                    move |Json(_): Json<serde_json::Value>| {
+                        let submitted_count = submitted_count.clone();
+                        async move {
+                            let mut count = submitted_count.lock().await;
+                            *count += 1;
+                            (
+                                StatusCode::OK,
+                                Json(serde_json::json!({
+                                    "report_id": "report-123",
+                                    "status": "stored"
+                                })),
+                            )
+                        }
+                    }
+                }),
+            );
 
-             let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-                 .await
-                 .expect("bind");
-             let addr = listener.local_addr().expect("local addr");
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+                .await
+                .expect("bind");
+            let addr = listener.local_addr().expect("local addr");
 
-             tokio::spawn(async move {
-                 axum::Server::bind(&addr)
-                     .serve(app.into_make_service())
-                     .await
-                     .expect("serve");
-             });
+            tokio::spawn(async move {
+                axum::Server::bind(&addr)
+                    .serve(app.into_make_service())
+                    .await
+                    .expect("serve");
+            });
 
-             (addr, submitted_count)
-         });
+            (addr, submitted_count)
+        });
 
-         let (gateway_addr, _) = gateway_server.await.expect("gateway setup");
-         let gateway_url = format!("http://{}", gateway_addr);
+        let (gateway_addr, _) = gateway_server.await.expect("gateway setup");
+        let gateway_url = format!("http://{}", gateway_addr);
 
-         // Create config with gateway
-         let mut config = config();
-         config.benchmark_gateway_url = Some(gateway_url.clone());
-         config.benchmark_gateway_token = Some("test-token".to_string());
+        // Create config with gateway
+        let mut config = config();
+        config.benchmark_gateway_url = Some(gateway_url.clone());
+        config.benchmark_gateway_token = Some("test-token".to_string());
 
-         // Create gateway client
-         let gateway_client = Arc::new(crate::GatewayClient::new(
-             crate::GatewayClientConfig {
-                 gateway_url,
-                 auth_token: Some("test-token".to_string()),
-                 max_retries: 3,
-                 initial_backoff_ms: 10, // Short backoff for testing
-             },
-         ));
+        // Create gateway client
+        let gateway_client = Arc::new(crate::GatewayClient::new(crate::GatewayClientConfig {
+            gateway_url,
+            auth_token: Some("test-token".to_string()),
+            max_retries: 3,
+            initial_backoff_ms: 10, // Short backoff for testing
+        }));
 
-         // Create store with gateway client
-         let store =
-             BenchmarkStore::open_with_gateway_client(&config, Some(gateway_client)).expect("store");
+        // Create store with gateway client
+        let store =
+            BenchmarkStore::open_with_gateway_client(&config, Some(gateway_client)).expect("store");
 
-         // Submit and execute benchmark
-         let request = request(evm_server.url("/"));
-         let queued = store
-             .submit(BenchmarkRunInput {
-                 request: request.clone(),
-             })
-             .expect("submit");
+        // Submit and execute benchmark
+        let request = request(evm_server.url("/"));
+        let queued = store
+            .submit(BenchmarkRunInput {
+                request: request.clone(),
+            })
+            .expect("submit");
 
-         // Execute job (which should trigger gateway submission)
-         let response = store
-             .execute_job(&queued.job_id, &request)
-             .await
-             .expect("execute");
+        // Execute job (which should trigger gateway submission)
+        let response = store
+            .execute_job(&queued.job_id, &request)
+            .await
+            .expect("execute");
 
-         // Verify job completed
-         assert_eq!(response.status, BenchmarkJobStatus::Completed);
-         assert!(response.report_id.is_some());
+        // Verify job completed
+        assert_eq!(response.status, BenchmarkJobStatus::Completed);
+        assert!(response.report_id.is_some());
 
-         // Give the gateway submission a moment to complete
-         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        // Give the gateway submission a moment to complete
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-         // Verify report was retrieved from store
-         let report = store
-             .get_report(response.report_id.as_deref().expect("report id"))
-             .expect("get report")
-             .expect("report exists");
-         assert_eq!(report.signer, "sidecar-test");
-     }
+        // Verify report was retrieved from store
+        let report = store
+            .get_report(response.report_id.as_deref().expect("report id"))
+            .expect("get report")
+            .expect("report exists");
+        assert_eq!(report.signer, "sidecar-test");
+    }
 
     #[test]
     fn provider_onboarding_template_uses_standardized_defaults() {
@@ -964,7 +1018,10 @@ mod tests {
             .expect("hardware attestation artifact");
 
         assert_eq!(provider_manifest.signature.as_deref(), Some("provider-sig"));
-        assert_eq!(hardware_attestation.signature.as_deref(), Some("hardware-sig"));
+        assert_eq!(
+            hardware_attestation.signature.as_deref(),
+            Some("hardware-sig")
+        );
         assert_eq!(
             provider_manifest
                 .metadata
@@ -983,4 +1040,3 @@ mod tests {
         );
     }
 }
-

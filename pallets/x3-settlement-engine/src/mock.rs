@@ -110,6 +110,7 @@ impl pallet_x3_kernel::Config for Test {
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
     type BridgeEvmEscrow = MockBridgeEvmEscrow;
     type BridgeSvmEscrow = MockBridgeSvmEscrow;
+    type MaxReplayPruneItemsPerBlock = ConstU32<64>;
 }
 
 impl pallet_x3_settlement_engine::Config for Test {

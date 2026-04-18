@@ -164,11 +164,11 @@ impl SwapCoordinator {
     /// * `Ok(bool)` - True if session requires merkle verification
     /// * `Err(CoordinatorError)` - If session not found
     pub fn session_requires_merkle(&self, session_id: &str) -> Result<bool, CoordinatorError> {
-        self.get_session(session_id).map(|_| false).ok_or_else(|| {
-            CoordinatorError::SessionNotFound {
+        self.get_session(session_id)
+            .map(|s| s.requires_merkle_verification)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
                 session_id: session_id.to_string(),
-            }
-        })
+            })
     }
 }
 
@@ -417,7 +417,6 @@ mod tests {
 
         assert_eq!(result, MerkleVerificationResult::NotProvided);
     }
-
 
     #[test]
     fn test_init_merkle_settlement() {
