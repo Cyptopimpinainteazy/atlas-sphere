@@ -1,10 +1,10 @@
 //! Operator dashboard and metrics pipeline
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use std::collections::VecDeque;
-use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsSnapshot {
@@ -148,12 +148,12 @@ mod tests {
     #[tokio::test]
     async fn test_dashboard_metrics_recording() {
         let dashboard = OperatorDashboard::new(100);
-        
+
         dashboard.record_swap_success().await;
         dashboard.record_swap_success().await;
         dashboard.record_swap_rollback().await;
         dashboard.record_swap_timeout().await;
-        
+
         let metrics = dashboard.get_metrics().await;
         assert_eq!(metrics.total_swaps, 4);
         assert_eq!(metrics.successful_commits, 2);
@@ -164,23 +164,23 @@ mod tests {
     #[tokio::test]
     async fn test_dashboard_tps_tracking() {
         let dashboard = OperatorDashboard::new(100);
-        
+
         dashboard.record_tps(1000.0, 10).await;
         dashboard.record_tps(1500.0, 15).await;
         dashboard.record_tps(1200.0, 12).await;
-        
+
         let metrics = dashboard.get_metrics().await;
         assert!(metrics.peak_tps >= 1500.0);
-        assert!(metrics.snapshots.len() > 0);
+        assert!(!metrics.snapshots.is_empty());
     }
 
     #[tokio::test]
     async fn test_dashboard_gpu_health() {
         let dashboard = OperatorDashboard::new(100);
-        
+
         dashboard.enable_gpu(true).await;
         dashboard.record_gpu_health(true).await;
-        
+
         let metrics = dashboard.get_metrics().await;
         assert!(metrics.gpu_enabled);
         assert!(metrics.gpu_healthy);
@@ -190,7 +190,7 @@ mod tests {
     async fn test_dashboard_json_render() {
         let dashboard = OperatorDashboard::new(100);
         dashboard.record_swap_success().await;
-        
+
         let json = dashboard.render_json().await;
         assert!(json.contains("total_swaps"));
         assert!(json.contains("successful_commits"));

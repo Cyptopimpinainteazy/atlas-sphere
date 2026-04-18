@@ -100,10 +100,10 @@ impl MerkleSettlementProof {
         use sha2::{Digest, Sha256};
 
         let mut hasher = Sha256::new();
-        hasher.update(&self.session_id.as_bytes());
-        hasher.update(&self.state_root);
-        hasher.update(&self.finalized_block.to_le_bytes());
-        hasher.update(&self.execution_index.to_le_bytes());
+        hasher.update(self.session_id.as_bytes());
+        hasher.update(self.state_root);
+        hasher.update(self.finalized_block.to_le_bytes());
+        hasher.update(self.execution_index.to_le_bytes());
         hasher.update(&self.merkle_proof_bytes);
 
         let result = hasher.finalize();
@@ -196,6 +196,7 @@ mod tests {
             timelock_slow: 200,
             created_at: 0,
             updated_at: 0,
+            requires_merkle_verification: true,
         }
     }
 

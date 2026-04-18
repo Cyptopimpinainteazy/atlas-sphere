@@ -272,7 +272,9 @@ pub enum ChainHealthStatus {
 /// Full state record for a single vault.
 #[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct VaultState<Balance: Encode + Decode + MaxEncodedLen + TypeInfo + Clone + core::fmt::Debug + PartialEq + Eq> {
+pub struct VaultState<
+    Balance: Encode + Decode + MaxEncodedLen + TypeInfo + Clone + core::fmt::Debug + PartialEq + Eq,
+> {
     pub vault_id: VaultId,
     pub vault_type: VaultType,
     pub owner_type: OwnerType,
@@ -292,8 +294,12 @@ pub struct VaultState<Balance: Encode + Decode + MaxEncodedLen + TypeInfo + Clon
 /// Full state record for a single lane.
 /// `MaxSources` is a const-generic bound for the `BoundedVec`.
 #[derive(Clone, Debug, PartialEq, Eq, Encode, Decode, MaxEncodedLen, TypeInfo)]
+#[scale_info(skip_type_params(MaxSources))]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct LaneState<Balance: Encode + Decode + MaxEncodedLen + TypeInfo + Clone + core::fmt::Debug + PartialEq + Eq, MaxSources: frame_support::traits::Get<u32>> {
+pub struct LaneState<
+    Balance: Encode + Decode + MaxEncodedLen + TypeInfo + Clone + core::fmt::Debug + PartialEq + Eq,
+    MaxSources: frame_support::traits::Get<u32>,
+> {
     pub lane_id: LaneId,
     pub source_chain: ChainId,
     pub dest_chain: ChainId,
@@ -451,8 +457,12 @@ mod tests {
 
     #[test]
     fn rebalance_trigger_roundtrip() {
-        assert_codec_roundtrip!(RebalanceTrigger::BelowMinBand { vault_id: [0x01; 32] });
-        assert_codec_roundtrip!(RebalanceTrigger::DemandSpike { lane_id: [0x02; 32] });
+        assert_codec_roundtrip!(RebalanceTrigger::BelowMinBand {
+            vault_id: [0x01; 32]
+        });
+        assert_codec_roundtrip!(RebalanceTrigger::DemandSpike {
+            lane_id: [0x02; 32]
+        });
         assert_codec_roundtrip!(RebalanceTrigger::ConcentrationBreach { chain_id: 1 });
         assert_codec_roundtrip!(RebalanceTrigger::PartnerCapacityLoss {
             partner_id: [0x03; 32]
@@ -460,7 +470,9 @@ mod tests {
         assert_codec_roundtrip!(RebalanceTrigger::VenueLiquidityCollapse {
             venue_id: [0x04; 32]
         });
-        assert_codec_roundtrip!(RebalanceTrigger::PersistentOneWayFlow { lane_id: [0x05; 32] });
+        assert_codec_roundtrip!(RebalanceTrigger::PersistentOneWayFlow {
+            lane_id: [0x05; 32]
+        });
         assert_codec_roundtrip!(RebalanceTrigger::ChainDegradation { chain_id: 2 });
     }
 

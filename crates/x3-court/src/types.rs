@@ -14,6 +14,17 @@ pub struct ResourceVector {
     pub storage_writes: u64,
 }
 
+impl ResourceVector {
+    pub fn exceeds(&self, other: &Self) -> bool {
+        self.cpu_cycles > other.cpu_cycles
+            || self.gpu_cycles > other.gpu_cycles
+            || self.memory_bytes > other.memory_bytes
+            || self.io_ops > other.io_ops
+            || self.storage_reads > other.storage_reads
+            || self.storage_writes > other.storage_writes
+    }
+}
+
 /// Dispute identifier.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct DisputeId(pub u64);

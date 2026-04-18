@@ -1,8 +1,6 @@
 [toolchain]
 # Pin an exact stable toolchain for reproducible local and CI builds.
-# Upgraded from 1.88.0 which has a known ICE (SIGSEGV) in resolver_for_lowering_raw
-# when compiling ed25519/scale-info crates during `cargo test`.
-channel = "1.93.0"
+channel = "1.88.0"
 components = ["rustfmt", "clippy", "rust-src"]
 targets = ["wasm32-unknown-unknown"]
 profile = "minimal"

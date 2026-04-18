@@ -1,14 +1,13 @@
+use chrono::Utc;
+use custody_service::client::CustodyServiceClient;
 /// Vault Controller: Custody-aware execution boundary for position manager
 /// Ticket 11 implementation — integrates custody service with signer policy
 ///
 /// This module provides the interface between the position manager's inventory
 /// and the dedicated custody service. It handles vault operations, settlement
 /// linkage, and signer policy enforcement.
-
 use custody_service::types::*;
-use custody_service::client::CustodyServiceClient;
 use std::collections::BTreeMap;
-use chrono::Utc;
 
 /// Result type for vault operations
 pub type Result<T> = std::result::Result<T, VaultControllerError>;
@@ -131,9 +130,7 @@ impl VaultController {
             proof_requirement: "settlement-proof".to_string(),
             timeout_ms,
         };
-        self.settlement_linkages
-            .write()
-            .insert(route_id, linkage);
+        self.settlement_linkages.write().insert(route_id, linkage);
         Ok(())
     }
 
@@ -149,14 +146,12 @@ impl VaultController {
     ) -> Result<VaultOperationResponse> {
         // Check signer policy
         let policies = self.signer_policies.read();
-        let policy = policies
-            .get(signer_id)
-            .ok_or_else(|| {
-                VaultControllerError::OperationFailed(format!(
-                    "Signer {} policy not registered",
-                    signer_id
-                ))
-            })?;
+        let policy = policies.get(signer_id).ok_or_else(|| {
+            VaultControllerError::OperationFailed(format!(
+                "Signer {} policy not registered",
+                signer_id
+            ))
+        })?;
 
         // Check signer policy limits
         if amount > policy.max_single_operation {
@@ -238,8 +233,7 @@ impl VaultController {
         amount: u128,
     ) -> Result<VaultOperationResponse> {
         let vault_id = vault_type.vault_id(chain_id, asset);
-        let operation_id =
-            format!("release-{}-{}", route_id, Utc::now().timestamp_millis());
+        let operation_id = format!("release-{}-{}", route_id, Utc::now().timestamp_millis());
         let now = Utc::now().timestamp_millis() as u64;
 
         let cmd = VaultOperationCommand {
@@ -289,8 +283,11 @@ impl VaultController {
     ) -> Result<VaultOperationResponse> {
         let source_vault_id = source_vault_type.vault_id(chain_id, asset);
         let dest_vault_id = dest_vault_type.vault_id(chain_id, asset);
-        let operation_id =
-            format!("sweep-{}-{}", source_vault_id, Utc::now().timestamp_millis());
+        let operation_id = format!(
+            "sweep-{}-{}",
+            source_vault_id,
+            Utc::now().timestamp_millis()
+        );
         let now = Utc::now().timestamp_millis() as u64;
 
         let cmd = VaultOperationCommand {

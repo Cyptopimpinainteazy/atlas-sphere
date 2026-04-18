@@ -21,7 +21,9 @@ mod tests {
     #[tokio::test]
     async fn test_cross_vm_connects() {
         if !is_node_running() {
-            println!("⚠ Dev node not running - skipping. Start with: ./target/release/x3-node --dev");
+            println!(
+                "⚠ Dev node not running - skipping. Start with: ./target/release/x3-node --dev"
+            );
             return;
         }
 
@@ -42,7 +44,10 @@ mod tests {
             .expect("Failed to connect");
 
         let body: serde_json::Value = res.json().await.unwrap();
-        assert!(body.get("result").is_some(), "Node should respond with health status");
+        assert!(
+            body.get("result").is_some(),
+            "Node should respond with health status"
+        );
         println!("✅ system_health OK: {:?}", body["result"]);
     }
 
@@ -73,16 +78,16 @@ mod tests {
         let methods = body["result"]["methods"]
             .as_array()
             .expect("Methods should be array");
-        let method_names: Vec<&str> = methods
-            .iter()
-            .filter_map(|m| m.as_str())
-            .collect();
+        let method_names: Vec<&str> = methods.iter().filter_map(|m| m.as_str()).collect();
 
         // Verify all three cross-VM RPC methods are registered
         assert!(
             method_names.contains(&"x3_submitCrossVmTransaction"),
             "x3_submitCrossVmTransaction should be registered. Found: {:?}",
-            method_names.iter().filter(|m| m.starts_with("x3_")).collect::<Vec<_>>()
+            method_names
+                .iter()
+                .filter(|m| m.starts_with("x3_"))
+                .collect::<Vec<_>>()
         );
         println!("✅ x3_submitCrossVmTransaction method registered");
 
@@ -134,7 +139,10 @@ mod tests {
         if body.get("error").is_some() {
             println!("✅ x3_submitCrossVmTransaction responds (error expected for minimal payload): {:?}", body["error"]["message"]);
         } else {
-            println!("✅ x3_submitCrossVmTransaction successful: {:?}", body["result"]);
+            println!(
+                "✅ x3_submitCrossVmTransaction successful: {:?}",
+                body["result"]
+            );
         }
     }
 
@@ -175,9 +183,14 @@ mod tests {
                 !msg.contains("not available"),
                 "Cross-VM should be enabled. Got: {msg}"
             );
-            println!("✅ Atomic cross-VM accepted (execution error expected for test payload): {msg}");
+            println!(
+                "✅ Atomic cross-VM accepted (execution error expected for test payload): {msg}"
+            );
         } else {
-            println!("✅ Atomic cross-VM transaction submitted: {:?}", body["result"]);
+            println!(
+                "✅ Atomic cross-VM transaction submitted: {:?}",
+                body["result"]
+            );
         }
     }
 
@@ -231,11 +244,14 @@ mod tests {
             .expect("Failed to connect");
 
         let body: serde_json::Value = res.json().await.unwrap();
-        
+
         if body.get("error").is_some() {
             println!("✅ x3_submitSvmTransaction responds with error (expected for minimal payload): {:?}", body["error"]["message"]);
         } else {
-            println!("✅ x3_submitSvmTransaction successful: {:?}", body["result"]);
+            println!(
+                "✅ x3_submitSvmTransaction successful: {:?}",
+                body["result"]
+            );
         }
     }
 
@@ -267,7 +283,7 @@ mod tests {
             .expect("Failed to connect");
 
         let body: serde_json::Value = res.json().await.unwrap();
-        
+
         if let Some(err) = body.get("error") {
             let msg = err["message"].as_str().unwrap_or("");
             assert!(

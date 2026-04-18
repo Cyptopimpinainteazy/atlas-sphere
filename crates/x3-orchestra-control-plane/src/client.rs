@@ -40,7 +40,10 @@ impl ControlPlaneClient {
         self.post_json("/intents", input).await
     }
 
-    pub async fn create_approval_case(&self, input: &NewApprovalCase) -> anyhow::Result<ApprovalCase> {
+    pub async fn create_approval_case(
+        &self,
+        input: &NewApprovalCase,
+    ) -> anyhow::Result<ApprovalCase> {
         self.post_json("/approval-cases", input).await
     }
 
@@ -48,12 +51,19 @@ impl ControlPlaneClient {
         self.post_json("/vote-windows", input).await
     }
 
-    pub async fn record_vote(&self, window_id: &str, input: &NewVoteReceipt) -> anyhow::Result<VoteReceipt> {
+    pub async fn record_vote(
+        &self,
+        window_id: &str,
+        input: &NewVoteReceipt,
+    ) -> anyhow::Result<VoteReceipt> {
         self.post_json(&format!("/vote-windows/{window_id}/votes"), input)
             .await
     }
 
-    pub async fn close_vote_window(&self, window_id: &str) -> anyhow::Result<VoteWindowClosureResponse> {
+    pub async fn close_vote_window(
+        &self,
+        window_id: &str,
+    ) -> anyhow::Result<VoteWindowClosureResponse> {
         self.post_json::<VoteWindowClosureResponse, serde_json::Value>(
             &format!("/vote-windows/{window_id}/close"),
             &serde_json::json!({}),
@@ -94,8 +104,16 @@ impl ControlPlaneClient {
         self.send(request).await
     }
 
-    async fn post_json<T: DeserializeOwned, B: Serialize>(&self, path: &str, body: &B) -> anyhow::Result<T> {
-        let request = self.request(self.client.post(format!("{}{}", self.base_url, path)).json(body));
+    async fn post_json<T: DeserializeOwned, B: Serialize>(
+        &self,
+        path: &str,
+        body: &B,
+    ) -> anyhow::Result<T> {
+        let request = self.request(
+            self.client
+                .post(format!("{}{}", self.base_url, path))
+                .json(body),
+        );
         self.send(request).await
     }
 
@@ -106,15 +124,23 @@ impl ControlPlaneClient {
         }
     }
 
-    async fn send<T: DeserializeOwned>(&self, request: reqwest::RequestBuilder) -> anyhow::Result<T> {
-        let response = request.send().await.context("control-plane request failed")?;
+    async fn send<T: DeserializeOwned>(
+        &self,
+        request: reqwest::RequestBuilder,
+    ) -> anyhow::Result<T> {
+        let response = request
+            .send()
+            .await
+            .context("control-plane request failed")?;
         let status = response.status();
         match response.error_for_status() {
             Ok(ok) => Ok(ok
                 .json::<T>()
                 .await
                 .context("invalid control-plane response body")?),
-            Err(err) => Err(anyhow!("control-plane request failed with status {status}: {err}")),
+            Err(err) => Err(anyhow!(
+                "control-plane request failed with status {status}: {err}"
+            )),
         }
     }
 }

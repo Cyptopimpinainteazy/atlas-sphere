@@ -332,10 +332,7 @@ mod tests {
 
     #[tokio::test]
     async fn is_registered_uses_primary_rpc_when_available() {
-        let submitter = ChainSubmitter::new(
-            spawn_mock_rpc_server(false).await,
-            "01".repeat(32),
-        );
+        let submitter = ChainSubmitter::new(spawn_mock_rpc_server(false).await, "01".repeat(32));
 
         let is_registered = submitter
             .is_registered([7u8; 32])
@@ -346,10 +343,7 @@ mod tests {
 
     #[tokio::test]
     async fn is_registered_falls_back_to_legacy_rpc_surface() {
-        let submitter = ChainSubmitter::new(
-            spawn_mock_rpc_server(true).await,
-            "01".repeat(32),
-        );
+        let submitter = ChainSubmitter::new(spawn_mock_rpc_server(true).await, "01".repeat(32));
 
         let is_registered = submitter
             .is_registered([9u8; 32])

@@ -2533,10 +2533,7 @@ fn comit_version_field_prevents_ambiguity() {
 fn add_authority_success() {
     new_test_ext().execute_with(|| {
         let new_auth: AccountId = 99;
-        assert_ok!(AtlasKernel::add_authority(
-            RuntimeOrigin::root(),
-            new_auth,
-        ));
+        assert_ok!(AtlasKernel::add_authority(RuntimeOrigin::root(), new_auth,));
         let auths = Authorities::<Test>::get();
         assert!(auths.contains(&new_auth));
 
@@ -2661,10 +2658,7 @@ fn schedule_authority_change_rejects_empty_set() {
 fn schedule_authority_change_rejects_non_governance() {
     new_test_ext().execute_with(|| {
         assert_noop!(
-            AtlasKernel::schedule_authority_change(
-                RuntimeOrigin::signed(ALICE),
-                vec![ALICE, BOB],
-            ),
+            AtlasKernel::schedule_authority_change(RuntimeOrigin::signed(ALICE), vec![ALICE, BOB],),
             frame_support::error::BadOrigin
         );
     });
@@ -2754,35 +2748,27 @@ fn submit_cross_vm_operation_successful_flow() {
         assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
 
         // Prepared op should be cleaned up after commit
-        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(
-            &ALICE,
-            &test_cross_vm_op(),
-            0,
-        );
+        let comit_id =
+            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &test_cross_vm_op(), 0);
         assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_none());
 
         // Events should include the full lifecycle
         let events = x3_events();
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmFeeReserved { .. }
-        )));
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmProofVerified { .. }
-        )));
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmOperationPrepared { .. }
-        )));
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmOperationExecuted { .. }
-        )));
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitFinalized { .. }
-        )));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmFeeReserved { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmProofVerified { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmOperationPrepared { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmOperationExecuted { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::ComitFinalized { .. })));
     });
 }
 
@@ -2806,8 +2792,7 @@ fn prepare_cross_vm_operation_holds_locks() {
         assert_eq!(CrossVmNonces::<Test>::get(ALICE), 1);
 
         // Prepared op should exist
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
         assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_some());
 
         // Queue should contain the comit_id
@@ -2836,8 +2821,7 @@ fn commit_cross_vm_operation_after_prepare() {
             proof,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         assert_ok!(AtlasKernel::commit_cross_vm_operation(
             RuntimeOrigin::signed(ALICE),
@@ -2851,14 +2835,12 @@ fn commit_cross_vm_operation_after_prepare() {
 
         // Committed events emitted
         let events = x3_events();
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmOperationCommitted { .. }
-        )));
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::ComitFinalized { .. }
-        )));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmOperationCommitted { .. })));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::ComitFinalized { .. })));
     });
 }
 
@@ -2867,10 +2849,7 @@ fn commit_cross_vm_fails_if_not_prepared() {
     new_test_ext().execute_with(|| {
         let fake_comit_id = H256::from_low_u64_be(999);
         assert_noop!(
-            AtlasKernel::commit_cross_vm_operation(
-                RuntimeOrigin::signed(ALICE),
-                fake_comit_id,
-            ),
+            AtlasKernel::commit_cross_vm_operation(RuntimeOrigin::signed(ALICE), fake_comit_id,),
             AtlasError::CrossVmOperationNotPrepared
         );
     });
@@ -2892,15 +2871,11 @@ fn commit_cross_vm_fails_wrong_origin() {
             proof,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         // BOB tries to commit ALICE's prepared operation
         assert_noop!(
-            AtlasKernel::commit_cross_vm_operation(
-                RuntimeOrigin::signed(BOB),
-                comit_id,
-            ),
+            AtlasKernel::commit_cross_vm_operation(RuntimeOrigin::signed(BOB), comit_id,),
             AtlasError::Unauthorized
         );
     });
@@ -2923,8 +2898,7 @@ fn abort_cross_vm_operation_refunds_fee() {
             proof,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         assert_ok!(AtlasKernel::abort_cross_vm_operation(
             RuntimeOrigin::signed(ALICE),
@@ -2940,10 +2914,9 @@ fn abort_cross_vm_operation_refunds_fee() {
 
         // Abort event emitted
         let events = x3_events();
-        assert!(events.iter().any(|e| matches!(
-            e,
-            AtlasEvent::CrossVmOperationAborted { .. }
-        )));
+        assert!(events
+            .iter()
+            .any(|e| matches!(e, AtlasEvent::CrossVmOperationAborted { .. })));
     });
 }
 
@@ -2959,15 +2932,11 @@ fn abort_cross_vm_fails_wrong_origin() {
             CrossChainProof::None,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         // BOB cannot abort ALICE's operation
         assert_noop!(
-            AtlasKernel::abort_cross_vm_operation(
-                RuntimeOrigin::signed(BOB),
-                comit_id,
-            ),
+            AtlasKernel::abort_cross_vm_operation(RuntimeOrigin::signed(BOB), comit_id,),
             AtlasError::Unauthorized
         );
     });
@@ -2985,15 +2954,11 @@ fn force_abort_cross_vm_requires_governance() {
             CrossChainProof::None,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         // Non-root cannot force-abort
         assert_noop!(
-            AtlasKernel::force_abort_cross_vm_operation(
-                RuntimeOrigin::signed(BOB),
-                comit_id,
-            ),
+            AtlasKernel::force_abort_cross_vm_operation(RuntimeOrigin::signed(BOB), comit_id,),
             frame_support::error::BadOrigin
         );
 
@@ -3103,7 +3068,7 @@ fn cross_vm_fee_exceeded_rejected() {
                 RuntimeOrigin::signed(ALICE),
                 operation,
                 0,
-                0,     // zero max_fee — below any estimated fee
+                0, // zero max_fee — below any estimated fee
                 CrossChainProof::None,
             ),
             AtlasError::CrossVmFeeExceeded
@@ -3115,7 +3080,7 @@ fn cross_vm_fee_exceeded_rejected() {
 fn cross_vm_rejects_unauthorized_account() {
     ExtBuilder::default()
         .balances(vec![(ALICE, INITIAL_BALANCE)])
-        .authorized_accounts(vec![])  // No authorized accounts
+        .authorized_accounts(vec![]) // No authorized accounts
         .build()
         .execute_with(|| {
             let operation = test_cross_vm_op();
@@ -3150,8 +3115,7 @@ fn cross_vm_duplicate_comit_id_rejected() {
         // so a true duplicate only happens if we somehow bypass the nonce
         // But with sequential nonces, we cannot produce the same comit_id naturally.
         // This validates that the SubmittedComits map is populated.
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
         assert!(crate::SubmittedComits::<Test>::contains_key(comit_id));
     });
 }
@@ -3168,8 +3132,7 @@ fn cross_vm_prepared_op_expires_on_initialize() {
             CrossChainProof::None,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         // Verify prepared op exists
         assert!(PreparedCrossVmOps::<Test>::get(comit_id).is_some());
@@ -3203,17 +3166,13 @@ fn commit_cross_vm_expired_op_returns_error() {
             CrossChainProof::None,
         ));
 
-        let comit_id =
-            crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
+        let comit_id = crate::Pallet::<Test>::compute_cross_vm_comit_id(&ALICE, &operation, 0);
 
         // Advance past TTL without running on_initialize (manual expiry check in commit)
         System::set_block_number(12);
 
         assert_noop!(
-            AtlasKernel::commit_cross_vm_operation(
-                RuntimeOrigin::signed(ALICE),
-                comit_id,
-            ),
+            AtlasKernel::commit_cross_vm_operation(RuntimeOrigin::signed(ALICE), comit_id,),
             AtlasError::CrossVmOperationExpired
         );
     });

@@ -8,8 +8,8 @@ use crate::error::SwarmResult;
 use crate::gpu_receipt::{Address as GpuAddress, GpuClass, GpuReceipt, ProofType};
 use crate::proof_aggregator::ProofAggregator;
 use crate::state_merkle_proof::{generate_merkle_proof, StateMerkleProof};
-use crate::{crypto::HashOutput, deterministic::ExecutionMode};
 use crate::unified_proof::{AtomicVmProof, GpuValidatorAttestation, ProofHeader, UnifiedProof};
+use crate::{crypto::HashOutput, deterministic::ExecutionMode};
 use sha2::{Digest, Sha256};
 use x3_orchestra_control_plane::EvidenceBundle;
 
@@ -118,7 +118,7 @@ pub fn orchestra_evidence_to_unified_proof(
             evidence.digest.as_bytes().to_vec(),
         ]),
         output_commitment: compute_output_hash(&[
-            serde_json::to_vec(&evidence.summary.detail).unwrap_or_default(),
+            serde_json::to_vec(&evidence.summary.detail).unwrap_or_default()
         ]),
         gpu_cycles_used: 0,
         device_class: GpuClass::DataCenter,

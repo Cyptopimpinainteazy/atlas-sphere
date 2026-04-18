@@ -6,7 +6,6 @@
 ///
 /// Reference: ADR 0002 — E2E Test Determinism via Triple-Run Verification
 /// Invariants: CHAIN-CONSENSUS-001, GPU-COORD-001, SETTLEMENT-001
-
 use crate::wait_for_rpc::{wait_for_rpc_health, RetryPolicy};
 use reqwest::Client;
 use serde_json::json;
@@ -92,7 +91,10 @@ async fn test_chain_consensus_deterministic_state_root() -> Result<(), Box<dyn s
         .and_then(|s| s.as_bool())
         .unwrap_or(false);
 
-    assert!(!is_syncing, "System should be fully synced in deterministic E2E mode");
+    assert!(
+        !is_syncing,
+        "System should be fully synced in deterministic E2E mode"
+    );
 
     info!("✓ CHAIN-CONSENSUS-001: State root determinism validated");
     Ok(())
@@ -105,7 +107,8 @@ async fn test_chain_consensus_deterministic_state_root() -> Result<(), Box<dyn s
 /// 2. Task scheduling order is reproducible (fixed seed)
 /// 3. Cross-chain GPU coordinator state matches across runs
 #[tokio::test]
-async fn test_gpu_coordination_deterministic_task_scheduling() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_gpu_coordination_deterministic_task_scheduling(
+) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting GPU-COORD-001 test: deterministic task scheduling");
 
     // This test validates that the GPU swarm refactor maintains deterministic
@@ -161,7 +164,8 @@ async fn test_gpu_coordination_deterministic_task_scheduling() -> Result<(), Box
 /// 2. Withdrawal requests follow lock/unlock patterns reproducibly
 /// 3. Slashing actions produce identical audit logs
 #[tokio::test]
-async fn test_settlement_deterministic_collateral_transitions() -> Result<(), Box<dyn std::error::Error>> {
+async fn test_settlement_deterministic_collateral_transitions(
+) -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting SETTLEMENT-001 test: deterministic collateral transitions");
 
     let client = Client::new();
@@ -175,7 +179,10 @@ async fn test_settlement_deterministic_collateral_transitions() -> Result<(), Bo
     );
 
     let ts = genesis_ts.unwrap();
-    info!("Settlement test running with deterministic genesis timestamp: {}", ts);
+    info!(
+        "Settlement test running with deterministic genesis timestamp: {}",
+        ts
+    );
 
     // Query settlement engine pallet state (bonding collateral)
     let result: serde_json::Value = client

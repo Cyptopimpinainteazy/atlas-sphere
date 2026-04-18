@@ -2,7 +2,7 @@
 //!
 //! Provides HTTP client with connection pooling, request timeout enforcement,
 //! and retry logic for EVM, SVM, and X3 chain RPC calls.
-//! 
+//!
 //! CRITICAL-003 SECURITY FIX:
 //! - Request timeout: 30 seconds (prevents indefinite blocking)
 //! - Connection pooling (reuses TCP connections, reduces latency)
@@ -74,7 +74,7 @@ impl RpcClient {
     }
 
     /// Execute a JSON-RPC call with timeout enforcement and retry logic.
-    /// 
+    ///
     /// Guarantees:
     /// 1. No request hangs longer than 30 seconds
     /// 2. Transient network errors retried up to 3 times with exponential backoff
@@ -92,7 +92,7 @@ impl RpcClient {
         };
 
         let body = serde_json::to_string(&request).map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to serialize RPC request: {}", e))
+            CoordinatorError::Internal(format!("Failed to serialize RPC request: {e}"))
         })?;
 
         // Retry loop with exponential backoff
@@ -115,22 +115,22 @@ impl RpcClient {
         // Enforce 30-second timeout on the HTTP request
         let response = tokio::time::timeout(
             self.timeout,
-            self.client.post(&self.url)
+            self.client
+                .post(&self.url)
                 .header("Content-Type", "application/json")
                 .body(body.to_string())
-                .send()
+                .send(),
         )
         .await
         .map_err(|_| CoordinatorError::Internal("RPC request timeout (30s exceeded)".into()))?
-        .map_err(|e| CoordinatorError::Internal(format!("RPC network error: {}", e)))?;
+        .map_err(|e| CoordinatorError::Internal(format!("RPC network error: {e}")))?;
 
-        let response_body = response
-            .text()
-            .await
-            .map_err(|e| CoordinatorError::Internal(format!("Failed to read RPC response: {}", e)))?;
+        let response_body = response.text().await.map_err(|e| {
+            CoordinatorError::Internal(format!("Failed to read RPC response: {e}"))
+        })?;
 
         let response: JsonRpcResponse = serde_json::from_str(&response_body).map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to parse RPC response: {}", e))
+            CoordinatorError::Internal(format!("Failed to parse RPC response: {e}"))
         })?;
 
         // Validate JSON-RPC response structure
@@ -193,7 +193,7 @@ impl RpcClient {
             .ok_or_else(|| CoordinatorError::Internal("expected hex block number".into()))?;
         let without_prefix = hex_str.strip_prefix("0x").unwrap_or(hex_str);
         u64::from_str_radix(without_prefix, 16)
-            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse block number: {}", e)))
+            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse block number: {e}")))
     }
 
     /// eth_getBlock — get block timestamp.
@@ -205,7 +205,7 @@ impl RpcClient {
             .ok_or_else(|| CoordinatorError::Internal("Missing block timestamp".into()))?;
         let without_prefix = timestamp_hex.strip_prefix("0x").unwrap_or(timestamp_hex);
         u64::from_str_radix(without_prefix, 16)
-            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse timestamp: {}", e)))
+            .map_err(|e| CoordinatorError::Internal(format!("Failed to parse timestamp: {e}")))
     }
 }
 
@@ -241,7 +241,7 @@ impl RpcClient {
 
         // Decode base64
         let data = base64_decode(data_str)
-            .map_err(|e| CoordinatorError::Internal(format!("Base64 decode failed: {}", e)))?;
+            .map_err(|e| CoordinatorError::Internal(format!("Base64 decode failed: {e}")))?;
 
         Ok(Some(data))
     }
@@ -277,7 +277,7 @@ impl RpcClient {
             .ok_or_else(|| CoordinatorError::Internal("Missing block number".into()))?;
         let without_prefix = number_hex.strip_prefix("0x").unwrap_or(number_hex);
         u64::from_str_radix(without_prefix, 16).map_err(|e| {
-            CoordinatorError::Internal(format!("Failed to parse X3 block number: {}", e))
+            CoordinatorError::Internal(format!("Failed to parse X3 block number: {e}"))
         })
     }
 }

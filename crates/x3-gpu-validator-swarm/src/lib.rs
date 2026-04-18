@@ -104,8 +104,8 @@ pub use proof_aggregator::{AggregationState, AggregatorStats, ProofAggregator};
 pub use protocol::{SwarmMessage, TaskAssignment, TaskResult, ValidatorMessage, ValidatorProof};
 pub use quarantine::{DivergenceRecord, QuarantineManager, QuarantineReason};
 pub use state_merkle_proof::{
-    generate_merkle_proof, compute_merkle_root, MerkleNode, MerkleProofPath,
-    StateRootVerification, StateMerkleProof,
+    compute_merkle_root, generate_merkle_proof, MerkleNode, MerkleProofPath, StateMerkleProof,
+    StateRootVerification,
 };
 pub use telemetry::{TelemetryConfig, TelemetrySink};
 pub use unified_proof::{

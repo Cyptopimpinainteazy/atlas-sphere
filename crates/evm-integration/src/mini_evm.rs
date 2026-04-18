@@ -24,7 +24,7 @@ use evm::{
         MemoryStackState, PrecompileFailure, PrecompileFn, PrecompileOutput, StackExecutor,
         StackSubstateMetadata,
     },
-    Config, Context, ExitError, ExitSucceed, ExitReason,
+    Config, Context, ExitError, ExitReason, ExitSucceed,
 };
 use sp_core::{H160, U256};
 use sp_std::collections::btree_map::BTreeMap;
@@ -52,7 +52,7 @@ pub fn execute_evm(
     }
 
     let gas_limit = evm_config.gas_limit;
-    let config = Config::istanbul();
+    let config = Config::shanghai();
 
     let vicinity = MemoryVicinity {
         gas_price: evm_config.gas_price,

@@ -1,10 +1,9 @@
 /// HSM (Hardware Security Module) integration layer
 /// Handles key management, signing, and cryptographic operations
-
 use crate::error::{CustodyError, Result};
 use crate::types::{HSMKeyReference, VaultOperationCommand};
-use sha2::{Sha256, Digest};
 use chrono::Utc;
+use sha2::{Digest, Sha256};
 
 /// HSM backend abstraction
 #[async_trait::async_trait]
@@ -66,7 +65,9 @@ impl HSMBackend for MockHSM {
             last_rotated_at_ms: now,
             is_vault_key: true,
         };
-        self.keys.write().insert(key_id.to_string(), key_ref.clone());
+        self.keys
+            .write()
+            .insert(key_id.to_string(), key_ref.clone());
         Ok(key_ref)
     }
 
@@ -101,7 +102,10 @@ pub struct HSMSigner {
 
 impl HSMSigner {
     pub fn new(backend: Box<dyn HSMBackend>, vault_key_id: String) -> Self {
-        Self { backend, vault_key_id }
+        Self {
+            backend,
+            vault_key_id,
+        }
     }
 
     /// Create operation proof by signing the command
@@ -119,7 +123,9 @@ impl HSMSigner {
     ) -> Result<bool> {
         let payload = serde_json::to_vec(cmd)
             .map_err(|e| CustodyError::Internal(format!("serialization failed: {}", e)))?;
-        self.backend.verify(&self.vault_key_id, &payload, proof).await
+        self.backend
+            .verify(&self.vault_key_id, &payload, proof)
+            .await
     }
 
     /// Compute merkle root of vault state for settlement proof

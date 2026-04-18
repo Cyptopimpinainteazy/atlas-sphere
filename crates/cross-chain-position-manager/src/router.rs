@@ -248,20 +248,18 @@ impl RouteOptimizer {
 
     /// Release an existing reservation.
     pub fn release_reservation(&mut self, reservation_id: &H256) -> Result<()> {
-        let reservation = self
-            .reservations
-            .get_mut(reservation_id)
-            .ok_or_else(|| PositionManagerError::ReservationNotFound(hex::encode(reservation_id)))?;
+        let reservation = self.reservations.get_mut(reservation_id).ok_or_else(|| {
+            PositionManagerError::ReservationNotFound(hex::encode(reservation_id))
+        })?;
         reservation.status = ReservationStatus::Released;
         Ok(())
     }
 
     /// Expire an existing reservation.
     pub fn expire_reservation(&mut self, reservation_id: &H256) -> Result<()> {
-        let reservation = self
-            .reservations
-            .get_mut(reservation_id)
-            .ok_or_else(|| PositionManagerError::ReservationNotFound(hex::encode(reservation_id)))?;
+        let reservation = self.reservations.get_mut(reservation_id).ok_or_else(|| {
+            PositionManagerError::ReservationNotFound(hex::encode(reservation_id))
+        })?;
         reservation.status = ReservationStatus::Expired;
         Ok(())
     }
@@ -752,7 +750,8 @@ impl RouteOptimizer {
         reservation_ttl_ms: u64,
     ) -> Result<ReservationRecord> {
         let created_at_ms = current_time_ms();
-        let reservation_id = H256::from_low_u64_be(RESERVATION_COUNTER.fetch_add(1, Ordering::Relaxed));
+        let reservation_id =
+            H256::from_low_u64_be(RESERVATION_COUNTER.fetch_add(1, Ordering::Relaxed));
         let reservation = ReservationRecord {
             reservation_id,
             route_id,
@@ -775,7 +774,8 @@ impl RouteOptimizer {
             solvency_snapshot: route_id,
         };
 
-        self.reservations.insert(reservation_id, reservation.clone());
+        self.reservations
+            .insert(reservation_id, reservation.clone());
         Ok(reservation)
     }
 

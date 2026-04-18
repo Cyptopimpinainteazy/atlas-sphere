@@ -669,8 +669,7 @@ pub mod pallet {
 
                     // --- Settlement bridge: register completed batch ---
                     let secret_seed = (batch_id.as_bytes(), current_block.to_le_bytes());
-                    let secret_hash =
-                        H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
+                    let secret_hash = H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
 
                     let legs_summary: Vec<(VmType, u128)> = batch
                         .legs
@@ -1149,8 +1148,7 @@ pub mod pallet {
                     let current_blk: u64 =
                         frame_system::Pallet::<T>::block_number().saturated_into();
                     let secret_seed = (batch_id.as_bytes(), current_blk.to_le_bytes());
-                    let secret_hash =
-                        H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
+                    let secret_hash = H256::from(blake2_256(&codec::Encode::encode(&secret_seed)));
 
                     let legs_summary: Vec<(VmType, u128)> = batch
                         .legs

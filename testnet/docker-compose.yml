@@ -30,7 +30,11 @@ services:
     networks:
       - x3-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9944/health"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"system_health\",\"params\":[],\"id\":1}' http://localhost:9944 | grep -q '\"result\"'",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -103,7 +107,6 @@ services:
       - "30336:30333"
       - "9947:9944"
       - "9618:9615"
-      - "9933:9933" # WS port
     environment:
       - RUST_LOG=info
       - VALIDATOR_NAME=rpc-node
@@ -116,8 +119,6 @@ services:
       --rpc-external
       --rpc-methods Unsafe
       --rpc-port 9944
-      --ws-external
-      --ws-port 9933
       --port 30333
       --base-path /chain/data
       --chain /chain/genesis.json

@@ -152,9 +152,15 @@ impl TryFrom<BenchmarkReportRow> for BenchmarkReport {
 
     fn try_from(value: BenchmarkReportRow) -> std::result::Result<Self, Self::Error> {
         let artifacts = serde_json::from_value::<Vec<BenchmarkReportArtifact>>(value.artifacts)
-            .map_err(|e| crate::error::GatewayError::Internal(format!("invalid benchmark artifacts: {e}")))?;
-        let workload_profile = serde_json::from_value::<BenchmarkWorkloadProfile>(value.workload_profile)
-            .map_err(|e| crate::error::GatewayError::Internal(format!("invalid benchmark workload profile: {e}")))?;
+            .map_err(|e| {
+                crate::error::GatewayError::Internal(format!("invalid benchmark artifacts: {e}"))
+            })?;
+        let workload_profile = serde_json::from_value::<BenchmarkWorkloadProfile>(
+            value.workload_profile,
+        )
+        .map_err(|e| {
+            crate::error::GatewayError::Internal(format!("invalid benchmark workload profile: {e}"))
+        })?;
 
         Ok(BenchmarkReport {
             report_id: value.report_id,
@@ -178,7 +184,8 @@ impl TryFrom<BenchmarkReportRow> for BenchmarkReport {
             },
             recommendation: parse_integration_tier(&value.recommendation)?,
             summary: BenchmarkReportSummary {
-                projected_soft_confirmation_improvement: value.projected_soft_confirmation_improvement,
+                projected_soft_confirmation_improvement: value
+                    .projected_soft_confirmation_improvement,
                 projected_app_throughput_improvement: value.projected_app_throughput_improvement,
                 projected_route_latency_delta: value.projected_route_latency_delta,
                 projected_bridge_latency_delta: value.projected_bridge_latency_delta,
@@ -312,7 +319,9 @@ pub struct NewEvidenceBundle {
 
 fn require_non_empty(value: &str, field: &str) -> Result<()> {
     if value.trim().is_empty() {
-        return Err(GatewayError::BadRequest(format!("{field} must not be empty")));
+        return Err(GatewayError::BadRequest(format!(
+            "{field} must not be empty"
+        )));
     }
     Ok(())
 }
@@ -324,7 +333,9 @@ fn validate_orchestra_intent(input: &NewOrchestraIntent) -> Result<()> {
     require_non_empty(&input.risk_class, "risk_class")?;
     require_non_empty(&input.submitter, "submitter")?;
     if !input.payload.is_object() {
-        return Err(GatewayError::BadRequest("payload must be a JSON object".to_string()));
+        return Err(GatewayError::BadRequest(
+            "payload must be a JSON object".to_string(),
+        ));
     }
     Ok(())
 }
@@ -336,7 +347,9 @@ fn validate_approval_case(input: &NewApprovalCase) -> Result<()> {
     require_non_empty(&input.requested_by, "requested_by")?;
     require_non_empty(&input.summary, "summary")?;
     if !input.metadata.is_object() {
-        return Err(GatewayError::BadRequest("metadata must be a JSON object".to_string()));
+        return Err(GatewayError::BadRequest(
+            "metadata must be a JSON object".to_string(),
+        ));
     }
     Ok(())
 }
@@ -368,12 +381,16 @@ fn validate_evidence_bundle(input: &NewEvidenceBundle) -> Result<()> {
     require_non_empty(&input.artifact_uri, "artifact_uri")?;
     require_non_empty(&input.digest, "digest")?;
     if !input.summary.is_object() {
-        return Err(GatewayError::BadRequest("summary must be a JSON object".to_string()));
+        return Err(GatewayError::BadRequest(
+            "summary must be a JSON object".to_string(),
+        ));
     }
     Ok(())
 }
 
-fn parse_chain_type(value: &str) -> std::result::Result<BenchmarkChainType, crate::error::GatewayError> {
+fn parse_chain_type(
+    value: &str,
+) -> std::result::Result<BenchmarkChainType, crate::error::GatewayError> {
     match value {
         "evm" => Ok(BenchmarkChainType::Evm),
         "op-stack" => Ok(BenchmarkChainType::OpStack),
@@ -381,7 +398,9 @@ fn parse_chain_type(value: &str) -> std::result::Result<BenchmarkChainType, crat
         "cosmos" => Ok(BenchmarkChainType::Cosmos),
         "svm" => Ok(BenchmarkChainType::Svm),
         "custom" => Ok(BenchmarkChainType::Custom),
-        other => Err(crate::error::GatewayError::Internal(format!("unknown benchmark chain type {other}"))),
+        other => Err(crate::error::GatewayError::Internal(format!(
+            "unknown benchmark chain type {other}"
+        ))),
     }
 }
 
@@ -393,7 +412,9 @@ fn parse_integration_tier(
         "sidecar-mode" => Ok(BenchmarkIntegrationTier::SidecarMode),
         "turbo-lane-mode" => Ok(BenchmarkIntegrationTier::TurboLaneMode),
         "shared-settlement-mode" => Ok(BenchmarkIntegrationTier::SharedSettlementMode),
-        other => Err(crate::error::GatewayError::Internal(format!("unknown benchmark integration tier {other}"))),
+        other => Err(crate::error::GatewayError::Internal(format!(
+            "unknown benchmark integration tier {other}"
+        ))),
     }
 }
 
@@ -478,7 +499,10 @@ impl Database {
         Ok(())
     }
 
-    pub async fn create_orchestra_intent(&self, input: NewOrchestraIntent) -> Result<OrchestraIntent> {
+    pub async fn create_orchestra_intent(
+        &self,
+        input: NewOrchestraIntent,
+    ) -> Result<OrchestraIntent> {
         validate_orchestra_intent(&input)?;
 
         let intent_id = Uuid::new_v4().to_string();
@@ -544,20 +568,29 @@ impl Database {
             .map_err(Into::into)
     }
 
-    pub async fn list_orchestra_intents(&self, limit: i64, offset: i64) -> Result<Vec<OrchestraIntent>> {
-        sqlx::query_as("SELECT * FROM orchestra_intents ORDER BY created_at DESC LIMIT $1 OFFSET $2")
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(Into::into)
+    pub async fn list_orchestra_intents(
+        &self,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<OrchestraIntent>> {
+        sqlx::query_as(
+            "SELECT * FROM orchestra_intents ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn create_approval_case(&self, input: NewApprovalCase) -> Result<ApprovalCase> {
         validate_approval_case(&input)?;
 
         if self.get_orchestra_intent(&input.intent_id).await?.is_none() {
-            return Err(GatewayError::NotFound(format!("intent {} not found", input.intent_id)));
+            return Err(GatewayError::NotFound(format!(
+                "intent {} not found",
+                input.intent_id
+            )));
         }
 
         let case_id = Uuid::new_v4().to_string();
@@ -632,7 +665,11 @@ impl Database {
     pub async fn create_vote_window(&self, input: NewVoteWindow) -> Result<VoteWindow> {
         validate_vote_window(&input)?;
 
-        if self.get_approval_case(&input.approval_case_id).await?.is_none() {
+        if self
+            .get_approval_case(&input.approval_case_id)
+            .await?
+            .is_none()
+        {
             return Err(GatewayError::NotFound(format!(
                 "approval case {} not found",
                 input.approval_case_id
@@ -742,11 +779,18 @@ impl Database {
             .map_err(Into::into)
     }
 
-    pub async fn create_vote_receipt(&self, window_id: &str, input: NewVoteReceipt) -> Result<VoteReceipt> {
+    pub async fn create_vote_receipt(
+        &self,
+        window_id: &str,
+        input: NewVoteReceipt,
+    ) -> Result<VoteReceipt> {
         validate_vote_receipt(&input)?;
 
         if self.get_vote_window(window_id).await?.is_none() {
-            return Err(GatewayError::NotFound(format!("vote window {} not found", window_id)));
+            return Err(GatewayError::NotFound(format!(
+                "vote window {} not found",
+                window_id
+            )));
         }
 
         let receipt_id = Uuid::new_v4().to_string();
@@ -872,7 +916,11 @@ impl Database {
             .map_err(Into::into)
     }
 
-    pub async fn list_evidence_bundles(&self, limit: i64, offset: i64) -> Result<Vec<EvidenceBundle>> {
+    pub async fn list_evidence_bundles(
+        &self,
+        limit: i64,
+        offset: i64,
+    ) -> Result<Vec<EvidenceBundle>> {
         sqlx::query_as("SELECT * FROM evidence_bundles ORDER BY created_at DESC LIMIT $1 OFFSET $2")
             .bind(limit)
             .bind(offset)
@@ -882,12 +930,11 @@ impl Database {
     }
 
     pub async fn get_benchmark_report(&self, report_id: &str) -> Result<Option<BenchmarkReport>> {
-        let report: Option<BenchmarkReportRow> = sqlx::query_as(
-            "SELECT * FROM benchmark_reports WHERE report_id = $1",
-        )
-        .bind(report_id)
-        .fetch_optional(&self.pool)
-        .await?;
+        let report: Option<BenchmarkReportRow> =
+            sqlx::query_as("SELECT * FROM benchmark_reports WHERE report_id = $1")
+                .bind(report_id)
+                .fetch_optional(&self.pool)
+                .await?;
 
         report.map(TryInto::try_into).transpose()
     }
@@ -1333,7 +1380,9 @@ fn control_plane_intent_status_as_str(status: &ControlPlaneIntentStatus) -> &'st
     }
 }
 
-fn control_plane_risk_class_as_str(risk_class: &x3_orchestra_control_plane::RiskClass) -> &'static str {
+fn control_plane_risk_class_as_str(
+    risk_class: &x3_orchestra_control_plane::RiskClass,
+) -> &'static str {
     match risk_class {
         x3_orchestra_control_plane::RiskClass::Low => "low",
         x3_orchestra_control_plane::RiskClass::Medium => "medium",

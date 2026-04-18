@@ -179,10 +179,12 @@ struct Vm<'a> {
     fuel: u64,
     insns: &'a [u8], // raw instruction bytes
     pc: usize,       // instruction index
+    /// Execution context for sysvar data (slot, timestamp, etc.)
+    config: &'a SvmConfig,
 }
 
 impl<'a> Vm<'a> {
-    fn new(insns: &'a [u8], input: &[u8], fuel: u64) -> Self {
+    fn new(insns: &'a [u8], input: &[u8], fuel: u64, config: &'a SvmConfig) -> Self {
         let mut regs = [0u64; NREG];
         // r1 = pointer to input data (mapped at offset STACK_SIZE in our memory model)
         regs[1] = STACK_SIZE as u64;
@@ -197,6 +199,7 @@ impl<'a> Vm<'a> {
             fuel,
             insns,
             pc: 0,
+            config,
         }
     }
 
@@ -245,7 +248,9 @@ impl<'a> Vm<'a> {
             Ok(u64::from_le_bytes(out))
         } else {
             let heap_off = addr.wrapping_sub(STACK_SIZE);
-            let end = heap_off.checked_add(size).ok_or(SvmError::ExecutionFailed)?;
+            let end = heap_off
+                .checked_add(size)
+                .ok_or(SvmError::ExecutionFailed)?;
             if end > self.heap.len() {
                 return Err(SvmError::ExecutionFailed);
             }
@@ -273,7 +278,9 @@ impl<'a> Vm<'a> {
             Ok(())
         } else {
             let heap_off = addr.wrapping_sub(STACK_SIZE);
-            let end = heap_off.checked_add(size).ok_or(SvmError::ExecutionFailed)?;
+            let end = heap_off
+                .checked_add(size)
+                .ok_or(SvmError::ExecutionFailed)?;
             if end > self.heap.len() {
                 return Err(SvmError::ExecutionFailed);
             }
@@ -311,7 +318,9 @@ impl<'a> Vm<'a> {
         if data.is_empty() {
             return Ok(());
         }
-        let end = addr.checked_add(data.len()).ok_or(SvmError::ExecutionFailed)?;
+        let end = addr
+            .checked_add(data.len())
+            .ok_or(SvmError::ExecutionFailed)?;
 
         if addr < STACK_SIZE {
             if end > STACK_SIZE {
@@ -321,7 +330,9 @@ impl<'a> Vm<'a> {
             Ok(())
         } else {
             let heap_off = addr.wrapping_sub(STACK_SIZE);
-            let heap_end = heap_off.checked_add(data.len()).ok_or(SvmError::ExecutionFailed)?;
+            let heap_end = heap_off
+                .checked_add(data.len())
+                .ok_or(SvmError::ExecutionFailed)?;
             if heap_end > self.heap.len() {
                 return Err(SvmError::ExecutionFailed);
             }
@@ -519,7 +530,8 @@ impl<'a> Vm<'a> {
                 }
 
                 _ => {
-                    // Unknown opcode — treat as NOP to be forward-compatible
+                    // Unknown opcode — reject to prevent undefined behavior
+                    return Err(SvmError::ExecutionFailed);
                 }
             }
 
@@ -785,23 +797,27 @@ impl<'a> Vm<'a> {
             }
 
             // sol_invoke_signed_c / sol_invoke_signed_rust
-            0xcb228b32 | 0xd7449092 => {
-                let signers_seeds_len = self.regs[5];
-                if signers_seeds_len == 0 {
-                    Ok(0) // Simple CPI without PDA signing — allow
-                } else {
-                    // PDA-signed CPI — requires full account resolution
-                    Ok(1)
-                }
-            }
+            // CPI is not supported in the no_std interpreter path.
+            // Return error code so programs detect the failure instead
+            // of silently assuming the cross-program call succeeded.
+            0xcb228b32 | 0xd7449092 => Err(SvmError::ExecutionFailed),
 
             // sol_get_clock_sysvar – populate clock struct at r1
             0xe8a04f5a => {
                 // Clock struct: slot(u64), epoch_start_timestamp(i64), epoch(u64),
                 //               leader_schedule_epoch(u64), unix_timestamp(i64) = 40 bytes
-                // Write zeroed struct — programs that need real clock data should
-                // use the rbpf executor path.
-                let buf = [0u8; 40];
+                let mut buf = [0u8; 40];
+                // slot
+                buf[0..8].copy_from_slice(&self.config.slot.to_le_bytes());
+                // epoch_start_timestamp — use block_timestamp as approximation
+                buf[8..16].copy_from_slice(&self.config.block_timestamp.to_le_bytes());
+                // epoch — derive from slot (slots_per_epoch = 432_000 on mainnet)
+                let epoch = self.config.slot / 432_000;
+                buf[16..24].copy_from_slice(&epoch.to_le_bytes());
+                // leader_schedule_epoch
+                buf[24..32].copy_from_slice(&(epoch.saturating_add(1)).to_le_bytes());
+                // unix_timestamp
+                buf[32..40].copy_from_slice(&self.config.block_timestamp.to_le_bytes());
                 self.mem_write_bytes(self.regs[1], &buf)?;
                 Ok(0)
             }
@@ -810,7 +826,13 @@ impl<'a> Vm<'a> {
             0x3b97b73c => {
                 // Rent struct: lamports_per_byte_year(u64), exemption_threshold(f64),
                 //              burn_percent(u8) = 17 bytes
-                let buf = [0u8; 17];
+                let mut buf = [0u8; 17];
+                // lamports_per_byte_year: Solana default = 3_480
+                buf[0..8].copy_from_slice(&3_480u64.to_le_bytes());
+                // exemption_threshold: Solana default = 2.0 years (as f64)
+                buf[8..16].copy_from_slice(&2.0f64.to_le_bytes());
+                // burn_percent: Solana default = 50
+                buf[16] = 50;
                 self.mem_write_bytes(self.regs[1], &buf)?;
                 Ok(0)
             }
@@ -819,7 +841,17 @@ impl<'a> Vm<'a> {
             0x6f54e7b4 => {
                 // EpochSchedule: slots_per_epoch(u64), leader_schedule_slot_offset(u64),
                 //                warmup(bool), first_normal_epoch(u64), first_normal_slot(u64) = 33 bytes
-                let buf = [0u8; 33];
+                let mut buf = [0u8; 33];
+                // slots_per_epoch: Solana default = 432_000
+                buf[0..8].copy_from_slice(&432_000u64.to_le_bytes());
+                // leader_schedule_slot_offset: Solana default = 432_000
+                buf[8..16].copy_from_slice(&432_000u64.to_le_bytes());
+                // warmup: false
+                buf[16] = 0;
+                // first_normal_epoch: 0
+                buf[17..25].copy_from_slice(&0u64.to_le_bytes());
+                // first_normal_slot: 0
+                buf[25..33].copy_from_slice(&0u64.to_le_bytes());
                 self.mem_write_bytes(self.regs[1], &buf)?;
                 Ok(0)
             }
@@ -929,23 +961,21 @@ pub fn execute_bpf(
     }
 
     let fuel = config.compute_unit_limit.min(MAX_INSN_FUEL);
-    let mut vm = Vm::new(text, input_data, fuel);
+    let mut vm = Vm::new(text, input_data, fuel, config);
 
     match vm.run() {
         Ok(r0) => {
             let compute_units = config.compute_unit_limit - vm.fuel;
-            // Include heap (modified account data) in the state root so that
-            // writes to program memory are reflected in the execution digest.
-            let mut hash_input = payload.to_vec();
-            hash_input.extend_from_slice(&vm.heap);
-            Ok(SvmExecutionResult {
+            let mut result = SvmExecutionResult {
                 success: r0 == 0, // Solana convention: 0 = success
                 output: (r0 as u64).to_le_bytes().to_vec(),
                 compute_units_used: compute_units,
                 account_updates: Vec::new(),
                 logs: vec![],
-                state_root: sp_io::hashing::blake2_256(&hash_input),
-            })
+                state_root: [0u8; 32],
+            };
+            result.state_root = crate::compute_svm_state_root(&result);
+            Ok(result)
         }
         Err(e) => Err(e),
     }
@@ -1066,19 +1096,17 @@ mod tests {
     }
 
     #[test]
-    fn test_cpi_syscall_pda_signed_returns_error() {
-        // CPI with PDA signing (signers_seeds_len > 0) should return 1 (error)
+    fn test_cpi_syscall_returns_error() {
+        // CPI is not supported in the no_std interpreter — both signed and
+        // unsigned variants must return an execution error.
         let prog = prog_return(0);
         let text: &[u8] = &prog;
-        let mut vm = Vm::new(text, &[], 1000);
-        // Set r5 = signers_seeds_len = 1 (PDA-signed CPI)
-        vm.regs[5] = 1;
-        let cpi_c = vm.dispatch_syscall(0xcb228b32).unwrap();
-        assert_eq!(cpi_c, 1, "PDA-signed CPI should return error code 1");
+        let cfg = SvmConfig::default();
+        let mut vm = Vm::new(text, &[], 1000, &cfg);
+        let cpi_c = vm.dispatch_syscall(0xcb228b32);
+        assert!(cpi_c.is_err(), "CPI should fail in no_std interpreter");
 
-        // Simple CPI (no PDA signing) should succeed
-        vm.regs[5] = 0;
-        let cpi_simple = vm.dispatch_syscall(0xcb228b32).unwrap();
-        assert_eq!(cpi_simple, 0, "Simple CPI should succeed");
+        let cpi_rust = vm.dispatch_syscall(0xd7449092);
+        assert!(cpi_rust.is_err(), "CPI should fail in no_std interpreter");
     }
 }

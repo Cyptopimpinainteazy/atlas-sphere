@@ -8,6 +8,9 @@ pub enum CourtError {
     #[error("dispute not found: {0:?}")]
     DisputeNotFound(DisputeId),
 
+    #[error("challenger bond too small")]
+    BondTooSmall,
+
     #[error("dispute {0:?} is not in a fileable state")]
     DisputeNotFileable(DisputeId),
 

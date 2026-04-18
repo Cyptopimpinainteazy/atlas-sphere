@@ -1180,10 +1180,8 @@ mod tests {
             "Must detect undeclared write as slashable"
         );
         assert_eq!(violations[0].0, "tx-rogue"); // tx_hash identified
-        assert_eq!(
-            violations[0].1,
-            StateKey::from("w:balance:42").stable_id()
-        ); // key identified
+        assert_eq!(violations[0].1, StateKey::from("w:balance:42").stable_id());
+        // key identified
 
         // Violations are returned and can be submitted to chain for slashing
         // The caller should submit these to the governance/extrinsic system

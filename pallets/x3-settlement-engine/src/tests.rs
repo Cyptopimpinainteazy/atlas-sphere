@@ -98,7 +98,7 @@ mod tests {
             let taker = BOB;
             let secret_hash = H256::from([1u8; 32]);
 
-            // Create an intent - this should create an AtomicLock
+            // Create an intent
             assert_ok!(Pallet::<Test>::create_intent(
                 RuntimeOrigin::signed(maker),
                 taker,
@@ -116,12 +116,24 @@ mod tests {
                 Some(3600),
             ));
 
-            // Get intent_id from the created intent
-            // The intent should have been stored, so we iterate through all stored intents
-            let (intent_id, lock) = crate::SettlementIntents::<Test>::iter()
+            let intent_id = crate::SettlementIntents::<Test>::iter()
                 .find(|(_, intent)| intent.maker == maker)
-                .and_then(|(id, _)| crate::AtomicLocks::<Test>::get(id).map(|lock| (id, lock)))
-                .expect("Intent and AtomicLock should exist after create_intent");
+                .map(|(id, _)| id)
+                .expect("Intent should exist after create_intent");
+
+            // AtomicLock is created by lock_escrow (first leg), not by create_intent.
+            // Lock the first escrow leg so the AtomicLock entry is created.
+            assert_ok!(Pallet::<Test>::lock_escrow(
+                RuntimeOrigin::signed(taker),
+                intent_id,
+                0,
+                ExternalChainId::Ethereum,
+                1000u128,
+                vec![],
+            ));
+
+            let lock = crate::AtomicLocks::<Test>::get(intent_id)
+                .expect("AtomicLock should exist after first lock_escrow");
 
             // Verify the lock is in LockedForCommit phase (initial phase)
             match lock.phase {
@@ -165,13 +177,7 @@ mod tests {
                 .map(|(id, _)| id)
                 .expect("Intent should exist");
 
-            // Lock should be in LockedForCommit phase after intent creation
-            let initial_lock = crate::AtomicLocks::<Test>::get(intent_id).expect("lock exists");
-            match initial_lock.phase {
-                LockPhase::LockedForCommit { .. } => {}
-                _ => panic!("Lock should be in LockedForCommit phase after intent creation"),
-            }
-
+            // AtomicLock is created by the first lock_escrow call, not by create_intent.
             // Lock escrow for first leg
             assert_ok!(Pallet::<Test>::lock_escrow(
                 RuntimeOrigin::signed(taker),
@@ -217,7 +223,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([42u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // Create an intent
             assert_ok!(Pallet::<Test>::create_intent(
@@ -334,16 +340,25 @@ mod tests {
                 Some(100),
             ));
 
-            // Get the lock
             let intent_id = crate::SettlementIntents::<Test>::iter()
                 .find(|(_, intent)| intent.maker == maker)
                 .map(|(id, _)| id)
                 .expect("Intent should exist");
 
-            let lock_before =
-                crate::AtomicLocks::<Test>::get(intent_id).expect("Lock should exist");
+            // AtomicLock is created by the first lock_escrow call.
+            assert_ok!(Pallet::<Test>::lock_escrow(
+                RuntimeOrigin::signed(taker),
+                intent_id,
+                0,
+                ExternalChainId::Ethereum,
+                1000u128,
+                vec![],
+            ));
 
-            // Verify lock exists in LockedForCommit phase
+            let lock_before =
+                crate::AtomicLocks::<Test>::get(intent_id).expect("Lock should exist after lock_escrow");
+
+            // Verify lock is in LockedForCommit phase
             match lock_before.phase {
                 LockPhase::LockedForCommit { .. } => {}
                 _ => panic!("Lock should be in LockedForCommit phase"),
@@ -401,13 +416,23 @@ mod tests {
                 Some(100),
             ));
 
-            // Get the lock
             let intent_id = crate::SettlementIntents::<Test>::iter()
                 .find(|(_, intent)| intent.maker == maker)
                 .map(|(id, _)| id)
                 .expect("Intent should exist");
 
-            let lock = crate::AtomicLocks::<Test>::get(intent_id).expect("Lock should exist");
+            // AtomicLock is created by the first lock_escrow call.
+            assert_ok!(Pallet::<Test>::lock_escrow(
+                RuntimeOrigin::signed(taker),
+                intent_id,
+                0,
+                ExternalChainId::Ethereum,
+                1000u128,
+                vec![],
+            ));
+
+            let lock = crate::AtomicLocks::<Test>::get(intent_id)
+                .expect("Lock should exist after lock_escrow");
 
             if let Some(deadline) = lock.deadline_block() {
                 // Clear events
@@ -505,7 +530,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([42u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // 1. Create intent: maker sends ETH, taker sends ETH on different chain
             assert_ok!(Pallet::<Test>::create_intent(
@@ -588,7 +613,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([43u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // 1. Create intent: maker sends ETH, taker sends SOL
             assert_ok!(Pallet::<Test>::create_intent(
@@ -751,7 +776,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let correct_secret = H256::from([42u8; 32]);
-            let correct_hash = H256::from(sp_io::hashing::blake2_256(correct_secret.as_bytes()));
+            let correct_hash = H256::from(sp_io::hashing::sha2_256(correct_secret.as_bytes()));
             let wrong_secret = H256::from([99u8; 32]);
 
             // Create intent with correct secret hash
@@ -896,7 +921,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([42u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // Create intent with 2 legs
             assert_ok!(Pallet::<Test>::create_intent(
@@ -947,7 +972,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([42u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // Create intent
             assert_ok!(Pallet::<Test>::create_intent(
@@ -1048,7 +1073,7 @@ mod tests {
             let maker = ALICE;
             let taker = BOB;
             let secret = H256::from([42u8; 32]);
-            let secret_hash = H256::from(sp_io::hashing::blake2_256(secret.as_bytes()));
+            let secret_hash = H256::from(sp_io::hashing::sha2_256(secret.as_bytes()));
 
             // Create intent with very short timeout (100 seconds)
             assert_ok!(Pallet::<Test>::create_intent(

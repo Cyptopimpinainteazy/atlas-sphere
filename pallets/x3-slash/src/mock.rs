@@ -1,16 +1,12 @@
 //! Test mock runtime.
 
 use crate as pallet_x3_slash;
-use frame_support::{
-    derive_impl, parameter_types,
-    traits::Everything,
-};
+use frame_support::{derive_impl, parameter_types, traits::Everything};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
-    BuildStorage,
-    AccountId32,
+    AccountId32, BuildStorage,
 };
 
 type AccountId = AccountId32;

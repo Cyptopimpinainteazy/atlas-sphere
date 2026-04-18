@@ -1,19 +1,19 @@
 //! E2E Test Utilities and Infrastructure
-//! 
+//!
 //! This module provides common utilities, test fixtures, and infrastructure
 //! for end-to-end integration tests across the X3-X3-Sphere ecosystem.
 
-pub mod test_environment;
+pub mod assertions;
+pub mod mock_services;
 pub mod test_accounts;
 pub mod test_contracts;
-pub mod mock_services;
-pub mod assertions;
+pub mod test_environment;
 
-pub use test_environment::*;
+pub use assertions::*;
+pub use mock_services::*;
 pub use test_accounts::*;
 pub use test_contracts::*;
-pub use mock_services::*;
-pub use assertions::*;
+pub use test_environment::*;
 
 use std::sync::Once;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -77,7 +77,8 @@ impl Default for TestConfig {
             rpc_url: "http://localhost:9933".to_string(),
             websocket_url: "ws://localhost:9944".to_string(),
             chain_id: 9999,
-            private_key: "0x1234567890123456789012345678901234567890123456789012345678901234".to_string(),
+            private_key: "0x1234567890123456789012345678901234567890123456789012345678901234"
+                .to_string(),
             timeout: TestTimeout::default(),
             parallel_tests: false,
         }

@@ -1,18 +1,16 @@
 //! GraphQL schema and resolvers.
 
 use crate::db::{
-    Account, ApprovalCase, Block, ChainStats, ComitTransaction, Database, EvidenceBundle, Event,
+    Account, ApprovalCase, Block, ChainStats, ComitTransaction, Database, Event, EvidenceBundle,
     Extrinsic, NewApprovalCase, NewEvidenceBundle, NewOrchestraIntent, NewVoteReceipt,
     NewVoteWindow, OrchestraIntent, VoteReceipt, VoteWindow,
 };
 use crate::orchestra;
-use async_graphql::{
-    Context, EmptySubscription, InputObject, Json, Object, Schema, SimpleObject,
-};
+use async_graphql::{Context, EmptySubscription, InputObject, Json, Object, Schema, SimpleObject};
 use chrono::{DateTime, Utc};
 use std::sync::Arc;
-use x3_rpc::benchmark::{BenchmarkLogClassStat, BenchmarkReport, BenchmarkWorkloadProfile};
 use x3_orchestra_control_plane::{ControlPlaneClient, DispatchEvidenceRequest};
+use x3_rpc::benchmark::{BenchmarkLogClassStat, BenchmarkReport, BenchmarkWorkloadProfile};
 
 /// GraphQL query root.
 pub struct QueryRoot;
@@ -266,13 +264,15 @@ impl QueryRoot {
             .get_benchmark_reports(tenant_id.as_deref(), limit.min(100), offset)
             .await?;
 
-        reports.retain(|report| benchmark_report_matches(
-            report,
-            min_high_conflict_ratio,
-            min_serial_fraction,
-            log_class.as_deref(),
-        ));
-        
+        reports.retain(|report| {
+            benchmark_report_matches(
+                report,
+                min_high_conflict_ratio,
+                min_serial_fraction,
+                log_class.as_deref(),
+            )
+        });
+
         sort_benchmark_reports(&mut reports, sort_by.as_deref(), sort_order.as_deref());
 
         Ok(reports
@@ -399,9 +399,11 @@ impl QueryRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        Ok(orchestra::get_evidence_bundle(db, orchestra_client.as_ref(), &bundle_id)
-            .await?
-            .map(Into::into))
+        Ok(
+            orchestra::get_evidence_bundle(db, orchestra_client.as_ref(), &bundle_id)
+                .await?
+                .map(Into::into),
+        )
     }
 }
 
@@ -417,9 +419,11 @@ impl MutationRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        Ok(orchestra::create_orchestra_intent(db, orchestra_client.as_ref(), input.into())
-            .await?
-            .into())
+        Ok(
+            orchestra::create_orchestra_intent(db, orchestra_client.as_ref(), input.into())
+                .await?
+                .into(),
+        )
     }
 
     /// Create an approval case.
@@ -432,9 +436,11 @@ impl MutationRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        Ok(orchestra::create_approval_case(db, orchestra_client.as_ref(), input.into())
-            .await?
-            .into())
+        Ok(
+            orchestra::create_approval_case(db, orchestra_client.as_ref(), input.into())
+                .await?
+                .into(),
+        )
     }
 
     /// Create a vote window.
@@ -447,9 +453,11 @@ impl MutationRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        Ok(orchestra::create_vote_window(db, orchestra_client.as_ref(), input.into())
-            .await?
-            .into())
+        Ok(
+            orchestra::create_vote_window(db, orchestra_client.as_ref(), input.into())
+                .await?
+                .into(),
+        )
     }
 
     /// Record a vote receipt.
@@ -463,9 +471,11 @@ impl MutationRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        Ok(orchestra::create_vote_receipt(db, orchestra_client.as_ref(), &window_id, input.into())
-            .await?
-            .into())
+        Ok(
+            orchestra::create_vote_receipt(db, orchestra_client.as_ref(), &window_id, input.into())
+                .await?
+                .into(),
+        )
     }
 
     /// Create an evidence bundle.
@@ -535,8 +545,8 @@ impl MutationRoot {
         let orchestra_client = ctx
             .data_opt::<Option<Arc<ControlPlaneClient>>>()
             .and_then(|client| client.clone());
-        let tally = orchestra::import_vote_window_tally(db, orchestra_client.as_ref(), &window_id)
-            .await?;
+        let tally =
+            orchestra::import_vote_window_tally(db, orchestra_client.as_ref(), &window_id).await?;
         Ok(tally.into())
     }
 }
@@ -548,7 +558,7 @@ pub type AppSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
 pub fn create_schema(db: Database, orchestra_client: Option<Arc<ControlPlaneClient>>) -> AppSchema {
     Schema::build(QueryRoot, MutationRoot, EmptySubscription)
         .data(db)
-    .data(orchestra_client)
+        .data(orchestra_client)
         .finish()
 }
 
@@ -992,9 +1002,12 @@ fn sort_benchmark_reports(
     sort_by: Option<&str>,
     sort_order: Option<&str>,
 ) {
-    let field = sort_by.and_then(BenchmarkReportSortField::from_str)
+    let field = sort_by
+        .and_then(BenchmarkReportSortField::from_str)
         .unwrap_or(BenchmarkReportSortField::GeneratedAt);
-    let order = sort_order.map(SortOrder::from_str).unwrap_or(SortOrder::Desc);
+    let order = sort_order
+        .map(SortOrder::from_str)
+        .unwrap_or(SortOrder::Desc);
 
     match (field, order) {
         (BenchmarkReportSortField::GeneratedAt, SortOrder::Asc) => {
@@ -1005,28 +1018,32 @@ fn sort_benchmark_reports(
         }
         (BenchmarkReportSortField::HighConflictRatio, SortOrder::Asc) => {
             reports.sort_by(|a, b| {
-                a.workload_profile.high_conflict_ratio
+                a.workload_profile
+                    .high_conflict_ratio
                     .partial_cmp(&b.workload_profile.high_conflict_ratio)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::HighConflictRatio, SortOrder::Desc) => {
             reports.sort_by(|a, b| {
-                b.workload_profile.high_conflict_ratio
+                b.workload_profile
+                    .high_conflict_ratio
                     .partial_cmp(&a.workload_profile.high_conflict_ratio)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::SerialFraction, SortOrder::Asc) => {
             reports.sort_by(|a, b| {
-                a.workload_profile.estimated_serial_fraction
+                a.workload_profile
+                    .estimated_serial_fraction
                     .partial_cmp(&b.workload_profile.estimated_serial_fraction)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
         (BenchmarkReportSortField::SerialFraction, SortOrder::Desc) => {
             reports.sort_by(|a, b| {
-                b.workload_profile.estimated_serial_fraction
+                b.workload_profile
+                    .estimated_serial_fraction
                     .partial_cmp(&a.workload_profile.estimated_serial_fraction)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
@@ -1110,16 +1127,29 @@ mod tests {
         let view = BenchmarkReportView::from(sample_report());
         assert_eq!(view.report_id, "report-1");
         assert_eq!(view.workload_profile.total_logs, 7);
-        assert_eq!(view.workload_profile.log_classes[0].class_name, "bridge-event");
+        assert_eq!(
+            view.workload_profile.log_classes[0].class_name,
+            "bridge-event"
+        );
         assert!(view.workload_profile.estimated_serial_fraction > 0.0);
     }
 
     #[test]
     fn graphql_benchmark_report_matches_filters() {
         let report = sample_report();
-        assert!(benchmark_report_matches(&report, Some(0.25), Some(0.35), Some("bridge-event")));
+        assert!(benchmark_report_matches(
+            &report,
+            Some(0.25),
+            Some(0.35),
+            Some("bridge-event")
+        ));
         assert!(!benchmark_report_matches(&report, Some(0.40), None, None));
-        assert!(!benchmark_report_matches(&report, None, None, Some("erc20-transfer")));
+        assert!(!benchmark_report_matches(
+            &report,
+            None,
+            None,
+            Some("erc20-transfer")
+        ));
     }
 
     #[test]
@@ -1188,7 +1218,7 @@ mod tests {
 
         let mut reports = vec![report1, report2, report3];
         sort_benchmark_reports(&mut reports, Some("high_conflict_ratio"), Some("desc"));
-        
+
         assert_eq!(reports[0].report_id, "report-2");
         assert_eq!(reports[1].report_id, "report-3");
         assert_eq!(reports[2].report_id, "report-1");
@@ -1210,7 +1240,7 @@ mod tests {
 
         let mut reports = vec![report1, report2, report3];
         sort_benchmark_reports(&mut reports, Some("total_transactions"), Some("asc"));
-        
+
         assert_eq!(reports[0].report_id, "report-2");
         assert_eq!(reports[1].report_id, "report-3");
         assert_eq!(reports[2].report_id, "report-1");

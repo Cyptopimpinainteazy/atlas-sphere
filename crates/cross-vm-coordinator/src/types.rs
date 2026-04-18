@@ -21,7 +21,7 @@ pub enum VmTarget {
 impl fmt::Display for VmTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            VmTarget::Evm { chain_id } => write!(f, "EVM({})", chain_id),
+            VmTarget::Evm { chain_id } => write!(f, "EVM({chain_id})"),
             VmTarget::Svm => write!(f, "SVM"),
             VmTarget::X3Vm => write!(f, "X3VM"),
         }
@@ -52,7 +52,7 @@ impl HtlcSecret {
     /// Compute SHA-256 hash of the secret.
     pub fn hash(&self) -> HtlcHash {
         let mut hasher = Sha256::new();
-        hasher.update(&self.0);
+        hasher.update(self.0);
         let hash = hasher.finalize();
         let mut out = [0u8; 32];
         out.copy_from_slice(&hash);
@@ -80,7 +80,7 @@ impl HtlcHash {
     }
 
     pub fn to_hex(&self) -> String {
-        hex::encode(&self.0)
+        hex::encode(self.0)
     }
 }
 
@@ -271,6 +271,13 @@ pub struct SwapSession {
     pub created_at: u64,
     /// Last update timestamp.
     pub updated_at: u64,
+    /// Whether this session requires Merkle proof verification during settlement.
+    ///
+    /// Set `true` for cross-chain swaps that involve chains requiring
+    /// transaction inclusion proofs (e.g. Ethereum, Solana finalized commitment).
+    /// When `true`, `MerkleSettlementCoordinator::session_requires_merkle` returns
+    /// `true` and the settlement path verifies the Merkle proof before releasing funds.
+    pub requires_merkle_verification: bool,
 }
 
 /// Phase of the atomic swap.
@@ -315,7 +322,7 @@ impl fmt::Display for SwapPhase {
             Self::Refunded => "REFUNDED",
             Self::Failed => "FAILED",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

@@ -135,8 +135,13 @@ impl FinalityOracle {
         if confirmations >= config.confirmations_required {
             100
         } else {
-            // Linear scale up to required confirmations
-            (confirmations * 100) / config.confirmations_required
+            // Linear scale up to required confirmations.
+            // checked_div guards against a zero confirmations_required value reaching
+            // this branch (should never happen after the update_finality_config guard,
+            // but defense-in-depth avoids a runtime panic).
+            (confirmations * 100)
+                .checked_div(config.confirmations_required)
+                .unwrap_or(100)
         }
     }
 

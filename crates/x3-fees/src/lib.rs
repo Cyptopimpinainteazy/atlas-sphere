@@ -11,6 +11,7 @@
 //! - **Slashing Insurance**: 5% of slashed stake funds insurance pool; validators can claim recovery
 //! - **Multi-Dimensional Resources**: GPU, CPU, memory, I/O each priced separately (Section 3.11)
 
+use serde::{Deserialize, Serialize};
 use sp_runtime::Permill;
 use std::collections::HashMap;
 
@@ -343,12 +344,12 @@ impl ResourceVector {
 
     /// Check if this vector exceeds declared limits
     pub fn exceeds(&self, limits: &ResourceVector) -> bool {
-        self.cpu_cycles > limits.cpu_cycles ||
-        self.gpu_cycles > limits.gpu_cycles ||
-        self.memory_bytes > limits.memory_bytes ||
-        self.io_ops > limits.io_ops ||
-        self.storage_reads > limits.storage_reads ||
-        self.storage_writes > limits.storage_writes
+        self.cpu_cycles > limits.cpu_cycles
+            || self.gpu_cycles > limits.gpu_cycles
+            || self.memory_bytes > limits.memory_bytes
+            || self.io_ops > limits.io_ops
+            || self.storage_reads > limits.storage_reads
+            || self.storage_writes > limits.storage_writes
     }
 }
 
@@ -373,12 +374,12 @@ impl PriceVector {
     /// Create a new price vector with default values (canonical X3 tokenomics)
     pub fn canonical() -> Self {
         Self {
-            cpu_per_million: 1_000,      // 0.001 token per 1M cycles
-            gpu_per_million: 10_000,    // 0.01 token per 1M GPU cycles
-            memory_per_kb: 100,         // 0.0001 token per KB
-            io_op: 10,                  // 0.00001 token per IO
-            storage_read: 50,           // 0.00005 token per read
-            storage_write: 200,         // 0.0002 token per write
+            cpu_per_million: 1_000,  // 0.001 token per 1M cycles
+            gpu_per_million: 10_000, // 0.01 token per 1M GPU cycles
+            memory_per_kb: 100,      // 0.0001 token per KB
+            io_op: 10,               // 0.00001 token per IO
+            storage_read: 50,        // 0.00005 token per read
+            storage_write: 200,      // 0.0002 token per write
         }
     }
 }
@@ -396,7 +397,8 @@ pub fn compute_fee(resources: &ResourceVector, prices: &PriceVector) -> u128 {
         .saturating_div(1_000);
     let io_cost = (resources.io_ops as u128).saturating_mul(prices.io_op);
     let storage_read_cost = (resources.storage_reads as u128).saturating_mul(prices.storage_read);
-    let storage_write_cost = (resources.storage_writes as u128).saturating_mul(prices.storage_write);
+    let storage_write_cost =
+        (resources.storage_writes as u128).saturating_mul(prices.storage_write);
 
     cpu_cost
         .saturating_add(gpu_cost)
@@ -437,9 +439,9 @@ mod tests {
     #[test]
     fn test_fee_computation() {
         let resources = ResourceVector {
-            cpu_cycles: 1_000_000,   // 1M
-            gpu_cycles: 500_000,     // 0.5M
-            memory_bytes: 1024,      // 1KB
+            cpu_cycles: 1_000_000, // 1M
+            gpu_cycles: 500_000,   // 0.5M
+            memory_bytes: 1024,    // 1KB
             io_ops: 100,
             storage_reads: 50,
             storage_writes: 25,
@@ -471,3 +473,4 @@ mod tests {
         };
         assert!(resources.exceeds(&limits)); // cpu_cycles > limit
     }
+}

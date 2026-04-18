@@ -126,7 +126,9 @@ where
     type Error = sp_blockchain::Error;
 
     fn init(&mut self, parent_header: &<A::Block as BlockT>::Header) -> Self::CreateProposer {
-        future::ready(Ok(self.init_with_now(parent_header, Box::new(time::Instant::now))))
+        future::ready(Ok(
+            self.init_with_now(parent_header, Box::new(time::Instant::now))
+        ))
     }
 }
 
@@ -157,7 +159,8 @@ where
         + Send
         + Sync
         + 'static,
-    C::Api: ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+    C::Api:
+        ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
     PR: ProofRecording,
 {
     type Transaction = backend::TransactionFor<B, Block>;
@@ -211,7 +214,8 @@ where
         + Send
         + Sync
         + 'static,
-    C::Api: ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
+    C::Api:
+        ApiExt<Block, StateBackend = backend::StateBackendFor<B, Block>> + BlockBuilderApi<Block>,
     PR: ProofRecording,
 {
     async fn propose_with(
@@ -223,7 +227,8 @@ where
     ) -> Result<Proposal<Block, backend::TransactionFor<B, Block>, PR::Proof>, sp_blockchain::Error>
     {
         let mut block_builder =
-            self.client.new_block_at(self.parent_hash, inherent_digests, PR::ENABLED)?;
+            self.client
+                .new_block_at(self.parent_hash, inherent_digests, PR::ENABLED)?;
 
         self.apply_inherents(&mut block_builder, inherent_data)?;
         self.apply_extrinsics_parallel(&mut block_builder, deadline, block_size_limit)

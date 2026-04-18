@@ -12,7 +12,7 @@ use alloc::vec::Vec;
 use serde::{Deserialize, Serialize};
 use sp_core::{H160, H256, U256};
 
-use crate::accounting::{InventoryManager, InventoryKey, InventorySnapshot};
+use crate::accounting::{InventoryKey, InventoryManager, InventorySnapshot};
 use crate::partner::{PartnerManager, PartnerRecord, PartnerStatus};
 use crate::rebalance::{RebalanceEngine, RebalancePlan, RebalanceStatus};
 use crate::solvency::{BandEvaluation, SolvencyEngine};
@@ -187,11 +187,8 @@ impl OperatorDashboard {
         keys.iter()
             .filter_map(|key| {
                 let balance = inventory.balance(key.chain_id, key.asset)?;
-                let band_eval = Some(solvency.evaluate_band_status(
-                    inventory,
-                    key.chain_id,
-                    key.asset,
-                ));
+                let band_eval =
+                    Some(solvency.evaluate_band_status(inventory, key.chain_id, key.asset));
                 Some(InventoryDetailView {
                     chain_id: key.chain_id,
                     asset: key.asset,
@@ -290,9 +287,8 @@ mod tests {
         let asset = H160::repeat_byte(0xAA);
         let lanes = vec![(H256::from_low_u64_be(1), 1u64, 137u64, asset)];
 
-        let view = OperatorDashboard::system_health(
-            &inventory, &solvency, &rebalance, &partners, &lanes,
-        );
+        let view =
+            OperatorDashboard::system_health(&inventory, &solvency, &rebalance, &partners, &lanes);
 
         assert_eq!(view.active_partners, 1);
         assert_eq!(view.active_rebalances, 0);
@@ -306,10 +302,7 @@ mod tests {
         let solvency = SolvencyEngine::new(SolvencyPolicy::default());
         let asset = H160::repeat_byte(0xAA);
 
-        let keys = vec![InventoryKey {
-            chain_id: 1,
-            asset,
-        }];
+        let keys = vec![InventoryKey { chain_id: 1, asset }];
 
         let details = OperatorDashboard::inventory_details(&inventory, &solvency, &keys);
         assert_eq!(details.len(), 1);

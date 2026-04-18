@@ -1,6 +1,7 @@
 /// Cross-Chain Account Abstraction — Unified account control across EVM, SVM, IBC-compatible chains
 /// Implements unified key standard with threshold multisig support across multiple blockchains
 use parity_scale_codec::{Decode, Encode};
+use sp_core::{ed25519, sr25519};
 use sp_std::vec::Vec;
 
 #[derive(Clone, Encode, Decode, Debug, PartialEq, Eq)]
@@ -155,7 +156,12 @@ impl CrossChainAccountManager {
         Ok(())
     }
 
-    /// Verify multi-chain signature (threshold: 1-of-N for now, upgradeable to M-of-N)
+    /// Verify multi-chain signature with real per-chain cryptographic verification.
+    ///
+    /// - **Ethereum**: secp256k1 ECDSA recovery; recovered address matched against `account.evm_address`
+    /// - **Solana / Cosmos**: Ed25519 verification; `signature.signer` used as the 32-byte public key
+    /// - **X3**: sr25519 verification; `signature.signer` used as the 32-byte public key
+    /// - **Bitcoin**: secp256k1 recovery; recovered key hash matched against `signature.signer[12..]`
     pub fn verify_signature(
         account: &CrossChainAccount,
         signature: &MultiChainSignature,
@@ -165,18 +171,90 @@ impl CrossChainAccountManager {
             return Err("Signer not recognized for this account");
         }
 
-        // Verify nonce matches to prevent replays
+        // Verify nonce to prevent replays
         if signature.nonce < account.key_rotation_nonce {
             return Err("Signature nonce is stale");
         }
 
-        // In production, implement proper signature verification per chain type:
-        // - EVM: ECDSA recovery
-        // - Cosmos: Ed25519 verification
-        // - Solana: Ed25519 verification
-        // - X3: sr25519 verification
+        // Per-chain cryptographic verification
+        match signature.chain_type {
+            ChainType::Ethereum => {
+                // secp256k1 ECDSA recovery: signature must be 65 bytes (r + s + v)
+                if signature.signature.len() != 65 {
+                    return Err("Ethereum signature must be 65 bytes");
+                }
+                let mut sig65 = [0u8; 65];
+                sig65.copy_from_slice(&signature.signature);
 
-        Ok(true)
+                let recovered =
+                    sp_io::crypto::secp256k1_ecdsa_recover(&sig65, &signature.message_hash)
+                        .map_err(|_| "secp256k1 recovery failed")?;
+
+                // Ethereum address = keccak256(uncompressed_pubkey)[12..]
+                let pubkey_hash = sp_io::hashing::keccak_256(&recovered);
+                let mut eth_addr = [0u8; 20];
+                eth_addr.copy_from_slice(&pubkey_hash[12..]);
+
+                match account.evm_address {
+                    Some(stored_addr) if stored_addr == eth_addr => Ok(true),
+                    Some(_) => Err("Recovered Ethereum address does not match account"),
+                    None => Err("Account has no EVM address to verify against"),
+                }
+            }
+            ChainType::Solana | ChainType::Cosmos => {
+                // Ed25519: signature must be exactly 64 bytes; signer is the 32-byte public key
+                if signature.signature.len() != 64 {
+                    return Err("Ed25519 signature must be 64 bytes");
+                }
+                let mut sig_bytes = [0u8; 64];
+                sig_bytes.copy_from_slice(&signature.signature);
+
+                let ed_sig = ed25519::Signature::from_raw(sig_bytes);
+                let ed_pubkey = ed25519::Public::from_raw(signature.signer);
+
+                if sp_io::crypto::ed25519_verify(&ed_sig, &signature.message_hash, &ed_pubkey) {
+                    Ok(true)
+                } else {
+                    Err("Ed25519 signature verification failed")
+                }
+            }
+            ChainType::X3 => {
+                // sr25519: signature must be exactly 64 bytes; signer is the 32-byte public key
+                if signature.signature.len() != 64 {
+                    return Err("sr25519 signature must be 64 bytes");
+                }
+                let mut sig_bytes = [0u8; 64];
+                sig_bytes.copy_from_slice(&signature.signature);
+
+                let sr_sig = sr25519::Signature::from_raw(sig_bytes);
+                let sr_pubkey = sr25519::Public::from_raw(signature.signer);
+
+                if sp_io::crypto::sr25519_verify(&sr_sig, &signature.message_hash, &sr_pubkey) {
+                    Ok(true)
+                } else {
+                    Err("sr25519 signature verification failed")
+                }
+            }
+            ChainType::Bitcoin => {
+                // Bitcoin secp256k1: signature must be exactly 65 bytes
+                if signature.signature.len() != 65 {
+                    return Err("Bitcoin signature must be 65 bytes");
+                }
+                let mut sig65 = [0u8; 65];
+                sig65.copy_from_slice(&signature.signature);
+
+                let recovered =
+                    sp_io::crypto::secp256k1_ecdsa_recover(&sig65, &signature.message_hash)
+                        .map_err(|_| "secp256k1 recovery failed (Bitcoin)")?;
+
+                // Compare keccak256(pubkey)[12..] against signer[12..]
+                let pubkey_hash = sp_io::hashing::keccak_256(&recovered);
+                if pubkey_hash[12..] != signature.signer[12..] {
+                    return Err("Recovered Bitcoin key does not match signer");
+                }
+                Ok(true)
+            }
+        }
     }
 
     /// Propose key rotation with threshold consensus requirement
@@ -485,17 +563,28 @@ mod tests {
 
     #[test]
     fn test_verify_signature() {
-        let account = CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
+        sp_io::TestExternalities::default().execute_with(|| {
+            use sp_core::Pair;
+            let pair = sp_core::sr25519::Pair::from_seed_slice(&[1u8; 32]).unwrap();
+            let sr_pubkey = pair.public();
+            let message_hash = [3u8; 32];
+            let sr_sig = pair.sign(&message_hash);
 
-        let sig = MultiChainSignature {
-            signer: account.account_id,
-            message_hash: [3; 32],
-            signature: vec![1, 2, 3],
-            chain_type: ChainType::X3,
-            nonce: 0,
-        };
+            let mut account =
+                CrossChainAccountManager::create_account([1; 32], [2; 32]).unwrap();
+            // Override account_id so the signer-association check matches the sr25519 pubkey.
+            account.account_id = sr_pubkey.0;
 
-        assert!(CrossChainAccountManager::verify_signature(&account, &sig).unwrap());
+            let sig = MultiChainSignature {
+                signer: sr_pubkey.0,
+                message_hash,
+                signature: sr_sig.0.to_vec(),
+                chain_type: ChainType::X3,
+                nonce: 0,
+            };
+
+            assert!(CrossChainAccountManager::verify_signature(&account, &sig).unwrap());
+        });
     }
 
     #[test]

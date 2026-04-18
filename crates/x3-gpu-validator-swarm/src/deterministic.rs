@@ -246,9 +246,7 @@ impl DeterministicEngine {
                 *hostcalls_guard = Some(Arc::new(gpu_hostcalls));
                 return true;
             } else {
-                warn!(
-                    "[Deterministic Engine] GPU hostcalls unavailable, will use CPU fallback"
-                );
+                warn!("[Deterministic Engine] GPU hostcalls unavailable, will use CPU fallback");
                 return false;
             }
         }
@@ -416,8 +414,7 @@ impl DeterministicEngine {
             Err(e) => {
                 error!(
                     "[Deterministic Engine] GPU execution failed for task {}: {:?}",
-                    task.task_id,
-                    e
+                    task.task_id, e
                 );
                 Err(SwarmError::GpuError(format!("GPU execution failed: {}", e)))
             }
@@ -540,8 +537,7 @@ impl DeterministicEngine {
                 Err(e) => {
                     error!(
                         "[Deterministic Engine] GPU execution failed for task {}: {:?}",
-                        task.task_id,
-                        e
+                        task.task_id, e
                     );
                     return Err(crate::error::SwarmError::GpuError(format!(
                         "GPU execution failed: {}",
@@ -645,8 +641,7 @@ impl DeterministicEngine {
                             Err(e) => {
                                 error!(
                                     "[Deterministic Engine] GPU replay failed for task {}: {}",
-                                    task.task_id,
-                                    e
+                                    task.task_id, e
                                 );
                                 gpu_outputs.clone()
                             }

@@ -1,12 +1,12 @@
 use jsonrpc_core::{Error as JsonRpcError, ErrorCode, Result as JsonRpcResult};
 use jsonrpc_derive::rpc;
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::PgPool;
+use sqlx::Row;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
-use sqlx::postgres::PgPool;
-use sqlx::Row;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -47,7 +47,7 @@ pub enum BenchmarkProfile {
 
 impl std::str::FromStr for BenchmarkJobStatus {
     type Err = String;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "queued" => Ok(BenchmarkJobStatus::Queued),
@@ -234,7 +234,7 @@ pub trait BenchmarkService: Send + Sync + 'static {
 
 /// Database-backed benchmark service implementation using PostgreSQL.
 /// Provides persistent job storage, status tracking, and report retrieval.
-/// 
+///
 /// Note: Due to JSON-RPC requiring synchronous trait methods, this implementation
 /// uses blocking database calls. In a production environment, consider using
 /// tokio::task::block_in_place within a tokio runtime context, or refactor the
@@ -284,7 +284,8 @@ impl DatabaseBenchmarkService {
             BenchmarkChainType::Cosmos => "cosmos",
             BenchmarkChainType::Svm => "svm",
             BenchmarkChainType::Custom => "custom",
-        }.to_string()
+        }
+        .to_string()
     }
 
     /// Deserializes string from database to BenchmarkChainType.
@@ -306,7 +307,8 @@ impl DatabaseBenchmarkService {
             BenchmarkIntegrationTier::SidecarMode => "sidecar-mode",
             BenchmarkIntegrationTier::TurboLaneMode => "turbo-lane-mode",
             BenchmarkIntegrationTier::SharedSettlementMode => "shared-settlement-mode",
-        }.to_string()
+        }
+        .to_string()
     }
 
     /// Deserializes string from database to BenchmarkIntegrationTier.
@@ -321,11 +323,16 @@ impl DatabaseBenchmarkService {
     }
 
     /// Converts a database row to a BenchmarkJobResponse.
-    fn row_to_response(&self, row: (String, String, Option<String>, i64, i64, Option<String>)) -> BenchmarkJobResponse {
-        let (job_id, status_str, report_id, submitted_at_unix, updated_at_unix, error_message) = row;
-        let status = status_str.parse::<BenchmarkJobStatus>()
+    fn row_to_response(
+        &self,
+        row: (String, String, Option<String>, i64, i64, Option<String>),
+    ) -> BenchmarkJobResponse {
+        let (job_id, status_str, report_id, submitted_at_unix, updated_at_unix, error_message) =
+            row;
+        let status = status_str
+            .parse::<BenchmarkJobStatus>()
             .unwrap_or(BenchmarkJobStatus::Failed);
-        
+
         BenchmarkJobResponse {
             job_id,
             status,
@@ -360,7 +367,7 @@ impl BenchmarkService for DatabaseBenchmarkService {
                      explorer_endpoint, workload_trace_uri, date_range_start_unix, 
                      date_range_end_unix, status, submitted_at_unix, updated_at_unix)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-                    "#
+                    "#,
                 )
                 .bind(&job_id)
                 .bind(&request.tenant_id)
@@ -382,25 +389,24 @@ impl BenchmarkService for DatabaseBenchmarkService {
         };
 
         match job_id_result {
-            Ok(_) => {
-                Ok(BenchmarkJobResponse {
-                    job_id,
-                    status: BenchmarkJobStatus::Queued,
-                    report_id: None,
-                    submitted_at_unix: now,
-                    updated_at_unix: now,
-                    error: None,
-                })
-            },
-            Err(e) => {
-                Err(BenchmarkError::Internal(format!("failed to insert benchmark job: {}", e)))
-            }
+            Ok(_) => Ok(BenchmarkJobResponse {
+                job_id,
+                status: BenchmarkJobStatus::Queued,
+                report_id: None,
+                submitted_at_unix: now,
+                updated_at_unix: now,
+                error: None,
+            }),
+            Err(e) => Err(BenchmarkError::Internal(format!(
+                "failed to insert benchmark job: {}",
+                e
+            ))),
         }
     }
 
     fn get_job(&self, job_id: &str) -> Result<BenchmarkJobResponse, BenchmarkError> {
         let job_id_str = job_id.to_string();
-        
+
         let result = if let Ok(handle) = tokio::runtime::Handle::try_current() {
             handle.block_on(async {
                 sqlx::query_as::<_, (String, String, Option<String>, i64, i64, Option<String>)>(
@@ -419,21 +425,17 @@ impl BenchmarkService for DatabaseBenchmarkService {
         };
 
         match result {
-            Ok(Some(row)) => {
-                Ok(self.row_to_response(row))
-            },
-            Ok(None) => {
-                Err(BenchmarkError::NotFound(format!("benchmark job {job_id} not found")))
-            },
-            Err(e) => {
-                Err(BenchmarkError::Internal(format!("database error: {}", e)))
-            }
+            Ok(Some(row)) => Ok(self.row_to_response(row)),
+            Ok(None) => Err(BenchmarkError::NotFound(format!(
+                "benchmark job {job_id} not found"
+            ))),
+            Err(e) => Err(BenchmarkError::Internal(format!("database error: {}", e))),
         }
     }
 
     fn get_report(&self, report_id: &str) -> Result<BenchmarkReport, BenchmarkError> {
         let report_id_str = report_id.to_string();
-        
+
         let result = if let Ok(handle) = tokio::runtime::Handle::try_current() {
             handle.block_on(async {
                 // Query reports using a raw SQL query and manually convert results
@@ -492,21 +494,44 @@ impl BenchmarkService for DatabaseBenchmarkService {
         };
 
         match result {
-            Ok(Some((report_id, chain_name, chain_type_str, recommendation_str,
-                     baseline_tps, baseline_p50, baseline_p95, baseline_p99, baseline_failure,
-                     x3_tps, x3_p50, x3_p95, x3_p99, x3_failure, signer,
-                     summary_soft, summary_throughput, summary_latency_route, summary_latency_bridge,
-                     workload_profile_json, artifacts_json))) => {
-                
+            Ok(Some((
+                report_id,
+                chain_name,
+                chain_type_str,
+                recommendation_str,
+                baseline_tps,
+                baseline_p50,
+                baseline_p95,
+                baseline_p99,
+                baseline_failure,
+                x3_tps,
+                x3_p50,
+                x3_p95,
+                x3_p99,
+                x3_failure,
+                signer,
+                summary_soft,
+                summary_throughput,
+                summary_latency_route,
+                summary_latency_bridge,
+                workload_profile_json,
+                artifacts_json,
+            ))) => {
                 let chain_type = Self::string_to_chain_type(&chain_type_str);
                 let recommendation = Self::string_to_recommendation(&recommendation_str);
-                
-                let workload_profile = serde_json::from_value::<BenchmarkWorkloadProfile>(workload_profile_json)
-                    .map_err(|e| BenchmarkError::Internal(format!("invalid workload profile: {}", e)))?;
-                
-                let artifacts = serde_json::from_value::<Vec<BenchmarkReportArtifact>>(artifacts_json)
-                    .map_err(|e| BenchmarkError::Internal(format!("invalid artifacts: {}", e)))?;
-                
+
+                let workload_profile =
+                    serde_json::from_value::<BenchmarkWorkloadProfile>(workload_profile_json)
+                        .map_err(|e| {
+                            BenchmarkError::Internal(format!("invalid workload profile: {}", e))
+                        })?;
+
+                let artifacts =
+                    serde_json::from_value::<Vec<BenchmarkReportArtifact>>(artifacts_json)
+                        .map_err(|e| {
+                            BenchmarkError::Internal(format!("invalid artifacts: {}", e))
+                        })?;
+
                 Ok(BenchmarkReport {
                     report_id,
                     generated_at_unix: 0, // Will be set from database timestamp if needed
@@ -538,13 +563,11 @@ impl BenchmarkService for DatabaseBenchmarkService {
                     artifacts,
                     signer,
                 })
-            },
-            Ok(None) => {
-                Err(BenchmarkError::NotFound(format!("benchmark report {report_id} not found")))
-            },
-            Err(e) => {
-                Err(BenchmarkError::Internal(format!("database error: {}", e)))
             }
+            Ok(None) => Err(BenchmarkError::NotFound(format!(
+                "benchmark report {report_id} not found"
+            ))),
+            Err(e) => Err(BenchmarkError::Internal(format!("database error: {}", e))),
         }
     }
 
@@ -583,12 +606,11 @@ impl BenchmarkService for DatabaseBenchmarkService {
         };
 
         match result {
-            Ok(rows) => {
-                Ok(rows.into_iter().map(|row| self.row_to_response(row)).collect())
-            },
-            Err(e) => {
-                Err(BenchmarkError::Internal(format!("database error: {}", e)))
-            }
+            Ok(rows) => Ok(rows
+                .into_iter()
+                .map(|row| self.row_to_response(row))
+                .collect()),
+            Err(e) => Err(BenchmarkError::Internal(format!("database error: {}", e))),
         }
     }
 }
@@ -762,9 +784,21 @@ mod tests {
 
     #[test]
     fn benchmark_job_status_parse() {
-        assert_eq!("queued".parse::<BenchmarkJobStatus>().unwrap(), BenchmarkJobStatus::Queued);
-        assert_eq!("running".parse::<BenchmarkJobStatus>().unwrap(), BenchmarkJobStatus::Running);
-        assert_eq!("completed".parse::<BenchmarkJobStatus>().unwrap(), BenchmarkJobStatus::Completed);
-        assert_eq!("failed".parse::<BenchmarkJobStatus>().unwrap(), BenchmarkJobStatus::Failed);
+        assert_eq!(
+            "queued".parse::<BenchmarkJobStatus>().unwrap(),
+            BenchmarkJobStatus::Queued
+        );
+        assert_eq!(
+            "running".parse::<BenchmarkJobStatus>().unwrap(),
+            BenchmarkJobStatus::Running
+        );
+        assert_eq!(
+            "completed".parse::<BenchmarkJobStatus>().unwrap(),
+            BenchmarkJobStatus::Completed
+        );
+        assert_eq!(
+            "failed".parse::<BenchmarkJobStatus>().unwrap(),
+            BenchmarkJobStatus::Failed
+        );
     }
 }

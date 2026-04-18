@@ -210,29 +210,31 @@ impl Verifier {
     ///
     /// # Operand Encoding Reference (74 opcodes)
     ///
+    /// Register operands are encoded as **u8** (matching the VM interpreter).
+    ///
     /// | Size | Format | Count | Examples |
     /// |------|--------|-------|----------|
     /// | 1B   | `[op]` | 4 | Nop, Halt, RetVoid, Breakpoint |
-    /// | 3B   | `[op][reg:u16]` | 14 | Ret, LoadZero, CtxSender, AtomicCheck, DebugPrint |
+    /// | 2B   | `[op][reg:u8]` | 14 | Ret, LoadZero, CtxSender, AtomicCheck, DebugPrint |
     /// | 3B   | `[op][id:u16]` | 3 | AtomicBegin/Commit/Rollback |
-    /// | 4B   | `[op][reg:u16][i8]` | 1 | LoadImm |
+    /// | 3B   | `[op][reg:u8][i8]` | 1 | LoadImm |
+    /// | 3B   | `[op][dst:u8][src:u8]` | 18 | Mov, NegI, Inc, conversions, ArrayLen |
+    /// | 3B   | `[op][dst:u8][cap:u8]` | 1 | NewArray |
+    /// | 3B   | `[op][r:u8][r:u8]` | 6 | EvmSload, EvmSstore, EvmBalance, SvmGetData... |
+    /// | 4B   | `[op][dst:u8][a:u8][b:u8]` | 28 | AddI, EqI, LoadField, TupleGet, SvmTransfer... |
     /// | 5B   | `[op][target:u32]` | 1 | Jump |
     /// | 5B   | `[op][idx:u32]` | 1 | Panic |
-    /// | 5B   | `[op][dst:u16][src:u16]` | 18 | Mov, NegI, Inc, conversions, ArrayLen |
-    /// | 5B   | `[op][dst:u16][cap:u16]` | 1 | NewArray |
-    /// | 5B   | `[op][r:u16][r:u16]` | 6 | EvmSload, EvmSstore, EvmBalance, SvmGetData... |
-    /// | 7B   | `[op][cond:u16][target:u32]` | 2 | JumpIf, JumpUnless |
-    /// | 7B   | `[op][dst:u16][idx:u32]` | 2 | LoadConst, LoadGlobal |
-    /// | 7B   | `[op][idx:u32][src:u16]` | 1 | StoreGlobal |
-    /// | 7B   | `[op][cond:u16][msg:u32]` | 1 | Assert |
-    /// | 7B   | `[op][dst:u16][a:u16][b:u16]` | 28 | AddI, EqI, LoadField, TupleGet, SvmTransfer... |
-    /// | 9B   | `[op][dst:u16][4×reg:u16]` | 5 | EvmStaticCall, SvmInvoke, SvmCreateAccount |
-    /// | 11B  | `[op][dst:u16][5×reg:u16]` | 2 | EvmCall, SvmInvokeSigned |
-    /// | var  | `[op][dst:u16][func:u32][argc:u16][args...]` | 1 | Call |
-    /// | var  | `[op][dst:u16][count:u16][elems...]` | 1 | NewTuple |
-    /// | var  | `[op][evt:u32][argc:u16][args...]` | 1 | Emit |
-    /// | var  | `[op][agent:u16][fc:u16][pairs...]` | 1 | AgentInit |
-    /// | var  | `[op][tc:u8][topics...][data:u16]` | 1 | EvmLog |
+    /// | 5B   | `[op][dst:u8][4×reg:u8]` | 5 | EvmStaticCall, SvmInvoke, SvmCreateAccount |
+    /// | 6B   | `[op][cond:u8][target:u32]` | 2 | JumpIf, JumpUnless |
+    /// | 6B   | `[op][dst:u8][idx:u32]` | 2 | LoadConst, LoadGlobal |
+    /// | 6B   | `[op][idx:u32][src:u8]` | 1 | StoreGlobal |
+    /// | 6B   | `[op][cond:u8][msg:u32]` | 1 | Assert |
+    /// | 6B   | `[op][dst:u8][5×reg:u8]` | 2 | EvmCall, SvmInvokeSigned |
+    /// | var  | `[op][dst:u8][func:u32][argc:u16][args:u8...]` | 1 | Call |
+    /// | var  | `[op][dst:u8][count:u16][elems:u8...]` | 1 | NewTuple |
+    /// | var  | `[op][evt:u32][argc:u16][args:u8...]` | 1 | Emit |
+    /// | var  | `[op][agent:u8][fc:u16][pairs:u8...]` | 1 | AgentInit |
+    /// | var  | `[op][tc:u8][topics:u8...][data:u8]` | 1 | EvmLog |
     fn decode_operands(
         code: &[u8],
         pc: usize,
@@ -278,7 +280,7 @@ impl Verifier {
             // No operands (1 byte total)
             Opcode::Nop | Opcode::Halt | Opcode::RetVoid => Ok((1, vec![])),
 
-            // Single register operand: opcode reg:u16 (3 bytes)
+            // Single register operand: opcode reg:u8 (2 bytes)
             Opcode::LoadZero
             | Opcode::LoadTrue
             | Opcode::LoadFalse
@@ -290,17 +292,17 @@ impl Verifier {
             | Opcode::CtxChainId
             | Opcode::AtomicCheck
             | Opcode::AgentSelf => {
-                let dst = read_u16(1)? as u64;
-                Ok((3, vec![dst]))
+                let dst = read_u8(1)? as u64;
+                Ok((2, vec![dst]))
             }
 
-            // Return with value: opcode src:u16 (3 bytes)
+            // Return with value: opcode src:u8 (2 bytes)
             Opcode::Ret => {
-                let src = read_u16(1)? as u64;
-                Ok((3, vec![src]))
+                let src = read_u8(1)? as u64;
+                Ok((2, vec![src]))
             }
 
-            // Two registers: opcode dst:u16 src:u16 (5 bytes)
+            // Two registers: opcode dst:u8 src:u8 (3 bytes)
             Opcode::Mov
             | Opcode::NegI
             | Opcode::NegF
@@ -319,12 +321,12 @@ impl Verifier {
             | Opcode::ToBool
             | Opcode::ArrayLen
             | Opcode::ArrayPop => {
-                let dst = read_u16(1)? as u64;
-                let src = read_u16(3)? as u64;
-                Ok((5, vec![dst, src]))
+                let dst = read_u8(1)? as u64;
+                let src = read_u8(2)? as u64;
+                Ok((3, vec![dst, src]))
             }
 
-            // Three registers: opcode dst:u16 a:u16 b:u16 (7 bytes)
+            // Three registers: opcode dst:u8 a:u8 b:u8 (4 bytes)
             Opcode::AddI
             | Opcode::SubI
             | Opcode::MulI
@@ -357,10 +359,10 @@ impl Verifier {
             | Opcode::LOr
             | Opcode::LoadIndex
             | Opcode::StoreIndex => {
-                let dst = read_u16(1)? as u64;
-                let a = read_u16(3)? as u64;
-                let b = read_u16(5)? as u64;
-                Ok((7, vec![dst, a, b]))
+                let dst = read_u8(1)? as u64;
+                let a = read_u8(2)? as u64;
+                let b = read_u8(3)? as u64;
+                Ok((4, vec![dst, a, b]))
             }
 
             // Jump: opcode target:u32 (5 bytes)
@@ -369,75 +371,75 @@ impl Verifier {
                 Ok((5, vec![target]))
             }
 
-            // Conditional jump: opcode cond:u16 target:u32 (7 bytes)
+            // Conditional jump: opcode cond:u8 target:u32 (6 bytes)
             Opcode::JumpIf | Opcode::JumpUnless => {
-                let cond = read_u16(1)? as u64;
-                let target = read_u32(3)? as u64;
-                Ok((7, vec![cond, target]))
+                let cond = read_u8(1)? as u64;
+                let target = read_u32(2)? as u64;
+                Ok((6, vec![cond, target]))
             }
 
-            // Load const: opcode dst:u16 idx:u32 (7 bytes)
+            // Load const: opcode dst:u8 idx:u32 (6 bytes)
             Opcode::LoadConst => {
-                let dst = read_u16(1)? as u64;
-                let idx = read_u32(3)? as u64;
-                Ok((7, vec![dst, idx]))
+                let dst = read_u8(1)? as u64;
+                let idx = read_u32(2)? as u64;
+                Ok((6, vec![dst, idx]))
             }
 
-            // Load/store global: opcode dst:u16 idx:u32 (7 bytes)
+            // Load/store global: opcode dst:u8 idx:u32 (6 bytes)
             Opcode::LoadGlobal => {
-                let dst = read_u16(1)? as u64;
-                let idx = read_u32(3)? as u64;
-                Ok((7, vec![dst, idx]))
+                let dst = read_u8(1)? as u64;
+                let idx = read_u32(2)? as u64;
+                Ok((6, vec![dst, idx]))
             }
             Opcode::StoreGlobal => {
                 let idx = read_u32(1)? as u64;
-                let src = read_u16(5)? as u64;
-                Ok((7, vec![idx, src]))
+                let src = read_u8(5)? as u64;
+                Ok((6, vec![idx, src]))
             }
 
-            // Load field: opcode dst:u16 obj:u16 field:u16 (7 bytes)
+            // Load field: opcode dst:u8 obj:u8 field:u8 (4 bytes)
             Opcode::LoadField => {
-                let dst = read_u16(1)? as u64;
-                let obj = read_u16(3)? as u64;
-                let field = read_u16(5)? as u64;
-                Ok((7, vec![dst, obj, field]))
+                let dst = read_u8(1)? as u64;
+                let obj = read_u8(2)? as u64;
+                let field = read_u8(3)? as u64;
+                Ok((4, vec![dst, obj, field]))
             }
 
-            // Store field: opcode obj:u16 field:u16 val:u16 (7 bytes)
+            // Store field: opcode obj:u8 field:u8 val:u8 (4 bytes)
             Opcode::StoreField => {
-                let obj = read_u16(1)? as u64;
-                let field = read_u16(3)? as u64;
-                let val = read_u16(5)? as u64;
-                Ok((7, vec![obj, field, val]))
+                let obj = read_u8(1)? as u64;
+                let field = read_u8(2)? as u64;
+                let val = read_u8(3)? as u64;
+                Ok((4, vec![obj, field, val]))
             }
 
-            // Load immediate: opcode dst:u16 val:i8 (4 bytes)
+            // Load immediate: opcode dst:u8 val:i8 (3 bytes)
             Opcode::LoadImm => {
-                let dst = read_u16(1)? as u64;
-                let val = read_u8(3)? as i8 as i64 as u64;
-                Ok((4, vec![dst, val]))
+                let dst = read_u8(1)? as u64;
+                let val = read_u8(2)? as i8 as i64 as u64;
+                Ok((3, vec![dst, val]))
             }
 
-            // Array push: opcode arr:u16 val:u16 (5 bytes)
+            // Array push: opcode arr:u8 val:u8 (3 bytes)
             Opcode::ArrayPush => {
-                let arr = read_u16(1)? as u64;
-                let val = read_u16(3)? as u64;
-                Ok((5, vec![arr, val]))
+                let arr = read_u8(1)? as u64;
+                let val = read_u8(2)? as u64;
+                Ok((3, vec![arr, val]))
             }
 
-            // New array: opcode dst:u16 capacity:u16 (5 bytes)
+            // New array: opcode dst:u8 capacity:u8 (3 bytes)
             Opcode::NewArray => {
-                let dst = read_u16(1)? as u64;
-                let capacity = read_u16(3)? as u64;
-                Ok((5, vec![dst, capacity]))
+                let dst = read_u8(1)? as u64;
+                let capacity = read_u8(2)? as u64;
+                Ok((3, vec![dst, capacity]))
             }
 
-            // Tuple get: opcode dst:u16 tuple:u16 idx:u16 (7 bytes)
+            // Tuple get: opcode dst:u8 tuple:u8 idx:u8 (4 bytes)
             Opcode::TupleGet => {
-                let dst = read_u16(1)? as u64;
-                let tuple = read_u16(3)? as u64;
-                let idx = read_u16(5)? as u64;
-                Ok((7, vec![dst, tuple, idx]))
+                let dst = read_u8(1)? as u64;
+                let tuple = read_u8(2)? as u64;
+                let idx = read_u8(3)? as u64;
+                Ok((4, vec![dst, tuple, idx]))
             }
 
             // Atomic operations: opcode id:u16 (3 bytes)
@@ -446,126 +448,126 @@ impl Verifier {
                 Ok((3, vec![id]))
             }
 
-            // Call: opcode dst:u16 func:u32 argc:u16 [args...] (variable)
+            // Call: opcode dst:u8 func:u32 argc:u16 [args:u8...] (variable)
             Opcode::Call => {
-                let dst = read_u16(1)? as u64;
-                let func = read_u32(3)? as u64;
-                let argc = read_u16(7)? as usize;
+                let dst = read_u8(1)? as u64;
+                let func = read_u32(2)? as u64;
+                let argc = read_u16(6)? as usize;
                 let mut operands = vec![dst, func, argc as u64];
                 // Read argument registers
                 for i in 0..argc {
-                    let arg = read_u16(9 + i * 2)? as u64;
+                    let arg = read_u8(8 + i)? as u64;
                     operands.push(arg);
                 }
-                Ok((9 + argc * 2, operands))
+                Ok((8 + argc, operands))
             }
 
-            // New tuple: opcode dst:u16 count:u16 [elements...] (variable)
+            // New tuple: opcode dst:u8 count:u16 [elements:u8...] (variable)
             Opcode::NewTuple => {
-                let dst = read_u16(1)? as u64;
-                let count = read_u16(3)? as usize;
+                let dst = read_u8(1)? as u64;
+                let count = read_u16(2)? as usize;
                 let mut operands = vec![dst, count as u64];
                 for i in 0..count {
-                    let elem = read_u16(5 + i * 2)? as u64;
+                    let elem = read_u8(4 + i)? as u64;
                     operands.push(elem);
                 }
-                Ok((5 + count * 2, operands))
+                Ok((4 + count, operands))
             }
 
-            // Emit: opcode event_id:u32 argc:u16 [args...] (variable)
+            // Emit: opcode event_id:u32 argc:u16 [args:u8...] (variable)
             Opcode::Emit => {
                 let event_id = read_u32(1)? as u64;
                 let argc = read_u16(5)? as usize;
                 let mut operands = vec![event_id, argc as u64];
                 for i in 0..argc {
-                    let arg = read_u16(7 + i * 2)? as u64;
+                    let arg = read_u8(7 + i)? as u64;
                     operands.push(arg);
                 }
-                Ok((7 + argc * 2, operands))
+                Ok((7 + argc, operands))
             }
 
-            // Agent init: opcode agent:u16 field_count:u16 [field_idx:u16 val:u16...] (variable)
+            // Agent init: opcode agent:u8 field_count:u16 [field_idx:u8 val:u8...] (variable)
             Opcode::AgentInit => {
-                let agent = read_u16(1)? as u64;
-                let field_count = read_u16(3)? as usize;
+                let agent = read_u8(1)? as u64;
+                let field_count = read_u16(2)? as usize;
                 let mut operands = vec![agent, field_count as u64];
                 for i in 0..field_count {
-                    let field_idx = read_u16(5 + i * 4)? as u64;
-                    let val = read_u16(7 + i * 4)? as u64;
+                    let field_idx = read_u8(4 + i * 2)? as u64;
+                    let val = read_u8(5 + i * 2)? as u64;
                     operands.push(field_idx);
                     operands.push(val);
                 }
-                Ok((5 + field_count * 4, operands))
+                Ok((4 + field_count * 2, operands))
             }
 
-            // EVM call: opcode dst:u16 gas:u16 addr:u16 value:u16 data:u16 (11 bytes)
+            // EVM call: opcode dst:u8 gas:u8 addr:u8 value:u8 data:u8 (6 bytes)
             Opcode::EvmCall => {
-                let dst = read_u16(1)? as u64;
-                let gas = read_u16(3)? as u64;
-                let addr = read_u16(5)? as u64;
-                let value = read_u16(7)? as u64;
-                let data = read_u16(9)? as u64;
-                Ok((11, vec![dst, gas, addr, value, data]))
+                let dst = read_u8(1)? as u64;
+                let gas = read_u8(2)? as u64;
+                let addr = read_u8(3)? as u64;
+                let value = read_u8(4)? as u64;
+                let data = read_u8(5)? as u64;
+                Ok((6, vec![dst, gas, addr, value, data]))
             }
 
-            // EVM staticcall/delegatecall: opcode dst:u16 gas:u16 addr:u16 data:u16 (9 bytes)
+            // EVM staticcall/delegatecall: opcode dst:u8 gas:u8 addr:u8 data:u8 (5 bytes)
             Opcode::EvmStaticCall | Opcode::EvmDelegateCall => {
-                let dst = read_u16(1)? as u64;
-                let gas = read_u16(3)? as u64;
-                let addr = read_u16(5)? as u64;
-                let data = read_u16(7)? as u64;
-                Ok((9, vec![dst, gas, addr, data]))
+                let dst = read_u8(1)? as u64;
+                let gas = read_u8(2)? as u64;
+                let addr = read_u8(3)? as u64;
+                let data = read_u8(4)? as u64;
+                Ok((5, vec![dst, gas, addr, data]))
             }
 
-            // EVM sload: opcode dst:u16 slot:u16 (5 bytes)
+            // EVM sload: opcode dst:u8 slot:u8 (3 bytes)
             Opcode::EvmSload => {
-                let dst = read_u16(1)? as u64;
-                let slot = read_u16(3)? as u64;
-                Ok((5, vec![dst, slot]))
+                let dst = read_u8(1)? as u64;
+                let slot = read_u8(2)? as u64;
+                Ok((3, vec![dst, slot]))
             }
 
-            // EVM sstore: opcode slot:u16 val:u16 (5 bytes)
+            // EVM sstore: opcode slot:u8 val:u8 (3 bytes)
             Opcode::EvmSstore => {
-                let slot = read_u16(1)? as u64;
-                let val = read_u16(3)? as u64;
-                Ok((5, vec![slot, val]))
+                let slot = read_u8(1)? as u64;
+                let val = read_u8(2)? as u64;
+                Ok((3, vec![slot, val]))
             }
 
-            // EVM create: opcode dst:u16 value:u16 code:u16 (7 bytes)
+            // EVM create: opcode dst:u8 value:u8 code:u8 (4 bytes)
             Opcode::EvmCreate => {
-                let dst = read_u16(1)? as u64;
-                let value = read_u16(3)? as u64;
-                let code_reg = read_u16(5)? as u64;
-                Ok((7, vec![dst, value, code_reg]))
+                let dst = read_u8(1)? as u64;
+                let value = read_u8(2)? as u64;
+                let code_reg = read_u8(3)? as u64;
+                Ok((4, vec![dst, value, code_reg]))
             }
 
-            // EVM create2: opcode dst:u16 value:u16 code:u16 salt:u16 (9 bytes)
+            // EVM create2: opcode dst:u8 value:u8 code:u8 salt:u8 (5 bytes)
             Opcode::EvmCreate2 => {
-                let dst = read_u16(1)? as u64;
-                let value = read_u16(3)? as u64;
-                let code_reg = read_u16(5)? as u64;
-                let salt = read_u16(7)? as u64;
-                Ok((9, vec![dst, value, code_reg, salt]))
+                let dst = read_u8(1)? as u64;
+                let value = read_u8(2)? as u64;
+                let code_reg = read_u8(3)? as u64;
+                let salt = read_u8(4)? as u64;
+                Ok((5, vec![dst, value, code_reg, salt]))
             }
 
             // ================================================================
             // Debug/Meta (0xF0 - 0xFF)
             // ================================================================
 
-            // Debug print: opcode src:u16 (3 bytes)
+            // Debug print: opcode src:u8 (2 bytes)
             Opcode::DebugPrint => {
-                let src = read_u16(1)? as u64;
-                Ok((3, vec![src]))
+                let src = read_u8(1)? as u64;
+                Ok((2, vec![src]))
             }
 
             // Breakpoint: opcode (1 byte) - no operands
             Opcode::Breakpoint => Ok((1, vec![])),
 
-            // Assert: opcode cond:u16 msg_idx:u32 (7 bytes)
+            // Assert: opcode cond:u8 msg_idx:u32 (6 bytes)
             Opcode::Assert => {
-                let cond = read_u16(1)? as u64;
-                let msg_idx = read_u32(3)? as u64;
-                Ok((7, vec![cond, msg_idx]))
+                let cond = read_u8(1)? as u64;
+                let msg_idx = read_u32(2)? as u64;
+                Ok((6, vec![cond, msg_idx]))
             }
 
             // Panic: opcode msg_idx:u32 (5 bytes)
@@ -578,98 +580,98 @@ impl Verifier {
             // EVM Intrinsics (0xB0 - 0xBF) - remaining opcodes
             // ================================================================
 
-            // EVM log: opcode topic_count:u8 [topics:u16...] data:u16 (variable)
-            // Size = 1 (opcode) + 1 (count) + count*2 (topics) + 2 (data)
+            // EVM log: opcode topic_count:u8 [topics:u8...] data:u8 (variable)
+            // Size = 1 (opcode) + 1 (count) + count (topics) + 1 (data)
             Opcode::EvmLog => {
                 let topic_count = read_u8(1)? as usize;
                 let mut operands = vec![topic_count as u64];
                 for i in 0..topic_count {
-                    let topic = read_u16(2 + i * 2)? as u64;
+                    let topic = read_u8(2 + i)? as u64;
                     operands.push(topic);
                 }
-                let data = read_u16(2 + topic_count * 2)? as u64;
+                let data = read_u8(2 + topic_count)? as u64;
                 operands.push(data);
-                Ok((4 + topic_count * 2, operands))
+                Ok((3 + topic_count, operands))
             }
 
-            // EVM balance: opcode dst:u16 addr:u16 (5 bytes)
+            // EVM balance: opcode dst:u8 addr:u8 (3 bytes)
             Opcode::EvmBalance => {
-                let dst = read_u16(1)? as u64;
-                let addr = read_u16(3)? as u64;
-                Ok((5, vec![dst, addr]))
+                let dst = read_u8(1)? as u64;
+                let addr = read_u8(2)? as u64;
+                Ok((3, vec![dst, addr]))
             }
 
-            // EVM codesize: opcode dst:u16 addr:u16 (5 bytes)
+            // EVM codesize: opcode dst:u8 addr:u8 (3 bytes)
             Opcode::EvmCodeSize => {
-                let dst = read_u16(1)? as u64;
-                let addr = read_u16(3)? as u64;
-                Ok((5, vec![dst, addr]))
+                let dst = read_u8(1)? as u64;
+                let addr = read_u8(2)? as u64;
+                Ok((3, vec![dst, addr]))
             }
 
             // ================================================================
             // SVM Intrinsics (0xC0 - 0xCF)
             // ================================================================
 
-            // SVM invoke: opcode dst:u16 program:u16 accounts:u16 data:u16 (9 bytes)
+            // SVM invoke: opcode dst:u8 program:u8 accounts:u8 data:u8 (5 bytes)
             Opcode::SvmInvoke => {
-                let dst = read_u16(1)? as u64;
-                let program = read_u16(3)? as u64;
-                let accounts = read_u16(5)? as u64;
-                let data = read_u16(7)? as u64;
-                Ok((9, vec![dst, program, accounts, data]))
+                let dst = read_u8(1)? as u64;
+                let program = read_u8(2)? as u64;
+                let accounts = read_u8(3)? as u64;
+                let data = read_u8(4)? as u64;
+                Ok((5, vec![dst, program, accounts, data]))
             }
 
-            // SVM invoke signed: opcode dst:u16 program:u16 accounts:u16 data:u16 seeds:u16 (11 bytes)
+            // SVM invoke signed: opcode dst:u8 program:u8 accounts:u8 data:u8 seeds:u8 (6 bytes)
             Opcode::SvmInvokeSigned => {
-                let dst = read_u16(1)? as u64;
-                let program = read_u16(3)? as u64;
-                let accounts = read_u16(5)? as u64;
-                let data = read_u16(7)? as u64;
-                let seeds = read_u16(9)? as u64;
-                Ok((11, vec![dst, program, accounts, data, seeds]))
+                let dst = read_u8(1)? as u64;
+                let program = read_u8(2)? as u64;
+                let accounts = read_u8(3)? as u64;
+                let data = read_u8(4)? as u64;
+                let seeds = read_u8(5)? as u64;
+                Ok((6, vec![dst, program, accounts, data, seeds]))
             }
 
-            // SVM create account: opcode dst:u16 lamports:u16 space:u16 owner:u16 (9 bytes)
+            // SVM create account: opcode dst:u8 lamports:u8 space:u8 owner:u8 (5 bytes)
             Opcode::SvmCreateAccount => {
-                let dst = read_u16(1)? as u64;
-                let lamports = read_u16(3)? as u64;
-                let space = read_u16(5)? as u64;
-                let owner = read_u16(7)? as u64;
-                Ok((9, vec![dst, lamports, space, owner]))
+                let dst = read_u8(1)? as u64;
+                let lamports = read_u8(2)? as u64;
+                let space = read_u8(3)? as u64;
+                let owner = read_u8(4)? as u64;
+                Ok((5, vec![dst, lamports, space, owner]))
             }
 
-            // SVM transfer: opcode from:u16 to:u16 lamports:u16 (7 bytes)
+            // SVM transfer: opcode from:u8 to:u8 lamports:u8 (4 bytes)
             Opcode::SvmTransfer => {
-                let from = read_u16(1)? as u64;
-                let to = read_u16(3)? as u64;
-                let lamports = read_u16(5)? as u64;
-                Ok((7, vec![from, to, lamports]))
+                let from = read_u8(1)? as u64;
+                let to = read_u8(2)? as u64;
+                let lamports = read_u8(3)? as u64;
+                Ok((4, vec![from, to, lamports]))
             }
 
-            // SVM get data: opcode dst:u16 account:u16 (5 bytes)
+            // SVM get data: opcode dst:u8 account:u8 (3 bytes)
             Opcode::SvmGetData => {
-                let dst = read_u16(1)? as u64;
-                let account = read_u16(3)? as u64;
-                Ok((5, vec![dst, account]))
+                let dst = read_u8(1)? as u64;
+                let account = read_u8(2)? as u64;
+                Ok((3, vec![dst, account]))
             }
 
-            // SVM set data: opcode account:u16 data:u16 (5 bytes)
+            // SVM set data: opcode account:u8 data:u8 (3 bytes)
             Opcode::SvmSetData => {
-                let account = read_u16(1)? as u64;
-                let data = read_u16(3)? as u64;
-                Ok((5, vec![account, data]))
+                let account = read_u8(1)? as u64;
+                let data = read_u8(2)? as u64;
+                Ok((3, vec![account, data]))
             }
 
-            // SVM get rent: opcode dst:u16 (3 bytes)
+            // SVM get rent: opcode dst:u8 (2 bytes)
             Opcode::SvmGetRent => {
-                let dst = read_u16(1)? as u64;
-                Ok((3, vec![dst]))
+                let dst = read_u8(1)? as u64;
+                Ok((2, vec![dst]))
             }
 
-            // SVM get clock: opcode dst:u16 (3 bytes)
+            // SVM get clock: opcode dst:u8 (2 bytes)
             Opcode::SvmGetClock => {
-                let dst = read_u16(1)? as u64;
-                Ok((3, vec![dst]))
+                let dst = read_u8(1)? as u64;
+                Ok((2, vec![dst]))
             }
 
             // ================================================================
@@ -874,7 +876,7 @@ impl Verifier {
     fn verify_on_chain_restrictions(instrs: &[DecodedInstr]) -> VerifierResult<()> {
         for instr in instrs {
             match Opcode::from_byte(instr.opcode) {
-                Some(Opcode::DebugPrint) => {
+                Some(Opcode::DebugPrint) | Some(Opcode::Breakpoint) => {
                     return Err(VerifierError::new(
                         VerifierErrorKind::ForbiddenOnChain(instr.opcode),
                         instr.offset,
@@ -1132,7 +1134,6 @@ mod tests {
     fn verify_debug_forbidden_on_chain() {
         let module = make_simple_module(vec![
             Opcode::DebugPrint.to_byte(),
-            0x00,
             0x00, // Register 0
         ]);
         let result = Verifier::verify_module(&module, &VerifyOptions::on_chain());
@@ -1175,22 +1176,20 @@ mod tests {
 
     #[test]
     fn decode_single_register_instructions() {
-        // LoadZero, CtxSender, etc. - 3 bytes (opcode + reg:u16)
+        // LoadZero, CtxSender, etc. - 2 bytes (opcode + reg:u8)
         let code = vec![
             Opcode::LoadZero.to_byte(),
-            0x05,
-            0x00, // r5
+            0x05, // r5
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 3);
+        assert_eq!(instrs[0].size, 2);
         assert_eq!(instrs[0].operands, vec![5]);
 
-        // Ret - 3 bytes
+        // Ret - 2 bytes
         let code = vec![
             Opcode::Ret.to_byte(),
-            0x07,
-            0x00, // r7
+            0x07, // r7
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs[0].operands, vec![7]);
@@ -1198,35 +1197,30 @@ mod tests {
 
     #[test]
     fn decode_two_register_instructions() {
-        // Mov, NegI, Not, ArrayLen, etc. - 5 bytes
+        // Mov, NegI, Not, ArrayLen, etc. - 3 bytes
         let code = vec![
             Opcode::Mov.to_byte(),
-            0x01,
-            0x00, // dst: r1
-            0x02,
-            0x00, // src: r2
+            0x01, // dst: r1
+            0x02, // src: r2
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 5);
+        assert_eq!(instrs[0].size, 3);
         assert_eq!(instrs[0].operands, vec![1, 2]);
     }
 
     #[test]
     fn decode_three_register_instructions() {
-        // AddI, SubI, MulI, EqI, LoadIndex, etc. - 7 bytes
+        // AddI, SubI, MulI, EqI, LoadIndex, etc. - 4 bytes
         let code = vec![
             Opcode::AddI.to_byte(),
-            0x03,
-            0x00, // dst: r3
-            0x01,
-            0x00, // a: r1
-            0x02,
-            0x00, // b: r2
+            0x03, // dst: r3
+            0x01, // a: r1
+            0x02, // b: r2
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 7);
+        assert_eq!(instrs[0].size, 4);
         assert_eq!(instrs[0].operands, vec![3, 1, 2]);
     }
 
@@ -1245,28 +1239,26 @@ mod tests {
         assert_eq!(instrs[0].size, 5);
         assert_eq!(instrs[0].operands, vec![16]);
 
-        // JumpIf - 7 bytes (opcode + cond:u16 + target:u32)
+        // JumpIf - 6 bytes (opcode + cond:u8 + target:u32)
         let code = vec![
             Opcode::JumpIf.to_byte(),
-            0x05,
-            0x00, // cond: r5
+            0x05, // cond: r5
             0x20,
             0x00,
             0x00,
             0x00, // target: 32
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 7);
+        assert_eq!(instrs[0].size, 6);
         assert_eq!(instrs[0].operands, vec![5, 32]);
     }
 
     #[test]
     fn decode_load_const() {
-        // LoadConst - 7 bytes (opcode + dst:u16 + idx:u32)
+        // LoadConst - 6 bytes (opcode + dst:u8 + idx:u32)
         let code = vec![
             Opcode::LoadConst.to_byte(),
-            0x01,
-            0x00, // dst: r1
+            0x01, // dst: r1
             0x00,
             0x01,
             0x00,
@@ -1274,22 +1266,21 @@ mod tests {
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 7);
+        assert_eq!(instrs[0].size, 6);
         assert_eq!(instrs[0].operands, vec![1, 256]);
     }
 
     #[test]
     fn decode_load_imm() {
-        // LoadImm - 4 bytes (opcode + dst:u16 + val:i8)
+        // LoadImm - 3 bytes (opcode + dst:u8 + val:i8)
         let code = vec![
             Opcode::LoadImm.to_byte(),
-            0x05,
-            0x00, // dst: r5
+            0x05, // dst: r5
             0xFE, // val: -2 (signed)
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 4);
+        assert_eq!(instrs[0].size, 3);
         // -2 as i8 sign-extended to u64
         assert_eq!(instrs[0].operands[0], 5);
         assert_eq!(instrs[0].operands[1] as i64, -2);
@@ -1297,11 +1288,10 @@ mod tests {
 
     #[test]
     fn decode_call_variable_length() {
-        // Call - variable: opcode + dst:u16 + func:u32 + argc:u16 + [args:u16...]
-        // 0 args: 9 bytes
+        // Call - variable: opcode + dst:u8 + func:u32 + argc:u16 + [args:u8...]
+        // 0 args: 8 bytes
         let code = vec![
             Opcode::Call.to_byte(),
-            0x00,
             0x00, // dst: r0
             0x05,
             0x00,
@@ -1312,13 +1302,12 @@ mod tests {
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 9);
+        assert_eq!(instrs[0].size, 8);
         assert_eq!(instrs[0].operands, vec![0, 5, 0]);
 
-        // 2 args: 13 bytes
+        // 2 args: 10 bytes
         let code = vec![
             Opcode::Call.to_byte(),
-            0x00,
             0x00, // dst: r0
             0x03,
             0x00,
@@ -1326,41 +1315,35 @@ mod tests {
             0x00, // func: 3
             0x02,
             0x00, // argc: 2
-            0x01,
-            0x00, // arg0: r1
-            0x02,
-            0x00, // arg1: r2
+            0x01, // arg0: r1
+            0x02, // arg1: r2
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 13);
+        assert_eq!(instrs[0].size, 10);
         assert_eq!(instrs[0].operands, vec![0, 3, 2, 1, 2]);
     }
 
     #[test]
     fn decode_new_tuple_variable_length() {
-        // NewTuple - variable: opcode + dst:u16 + count:u16 + [elements:u16...]
+        // NewTuple - variable: opcode + dst:u8 + count:u16 + [elements:u8...]
         let code = vec![
             Opcode::NewTuple.to_byte(),
-            0x05,
-            0x00, // dst: r5
+            0x05, // dst: r5
             0x03,
             0x00, // count: 3
-            0x01,
-            0x00, // elem0: r1
-            0x02,
-            0x00, // elem1: r2
-            0x03,
-            0x00, // elem2: r3
+            0x01, // elem0: r1
+            0x02, // elem1: r2
+            0x03, // elem2: r3
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 11); // 5 + 3*2
+        assert_eq!(instrs[0].size, 7); // 4 + 3
         assert_eq!(instrs[0].operands, vec![5, 3, 1, 2, 3]);
     }
 
     #[test]
     fn decode_emit_variable_length() {
-        // Emit - variable: opcode + event_id:u32 + argc:u16 + [args:u16...]
+        // Emit - variable: opcode + event_id:u32 + argc:u16 + [args:u8...]
         let code = vec![
             Opcode::Emit.to_byte(),
             0x0A,
@@ -1369,105 +1352,88 @@ mod tests {
             0x00, // event_id: 10
             0x01,
             0x00, // argc: 1
-            0x07,
-            0x00, // arg0: r7
+            0x07, // arg0: r7
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 1);
-        assert_eq!(instrs[0].size, 9); // 7 + 1*2
+        assert_eq!(instrs[0].size, 8); // 7 + 1
         assert_eq!(instrs[0].operands, vec![10, 1, 7]);
     }
 
     #[test]
     fn decode_evm_intrinsics() {
-        // EvmCall - 11 bytes
+        // EvmCall - 6 bytes
         let code = vec![
             Opcode::EvmCall.to_byte(),
-            0x00,
             0x00, // dst: r0
-            0x01,
-            0x00, // gas: r1
-            0x02,
-            0x00, // addr: r2
-            0x03,
-            0x00, // value: r3
-            0x04,
-            0x00, // data: r4
+            0x01, // gas: r1
+            0x02, // addr: r2
+            0x03, // value: r3
+            0x04, // data: r4
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 11);
+        assert_eq!(instrs[0].size, 6);
         assert_eq!(instrs[0].operands, vec![0, 1, 2, 3, 4]);
 
-        // EvmSload - 5 bytes
+        // EvmSload - 3 bytes
         let code = vec![
             Opcode::EvmSload.to_byte(),
-            0x05,
-            0x00, // dst: r5
-            0x06,
-            0x00, // slot: r6
+            0x05, // dst: r5
+            0x06, // slot: r6
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 5);
+        assert_eq!(instrs[0].size, 3);
         assert_eq!(instrs[0].operands, vec![5, 6]);
     }
 
     #[test]
     fn decode_svm_intrinsics() {
-        // SvmInvoke - 9 bytes
+        // SvmInvoke - 5 bytes
         let code = vec![
             Opcode::SvmInvoke.to_byte(),
-            0x00,
             0x00, // dst: r0
-            0x01,
-            0x00, // program: r1
-            0x02,
-            0x00, // accounts: r2
-            0x03,
-            0x00, // data: r3
+            0x01, // program: r1
+            0x02, // accounts: r2
+            0x03, // data: r3
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 9);
+        assert_eq!(instrs[0].size, 5);
         assert_eq!(instrs[0].operands, vec![0, 1, 2, 3]);
 
-        // SvmTransfer - 7 bytes
+        // SvmTransfer - 4 bytes
         let code = vec![
             Opcode::SvmTransfer.to_byte(),
-            0x01,
-            0x00, // from: r1
-            0x02,
-            0x00, // to: r2
-            0x03,
-            0x00, // lamports: r3
+            0x01, // from: r1
+            0x02, // to: r2
+            0x03, // lamports: r3
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 7);
+        assert_eq!(instrs[0].size, 4);
         assert_eq!(instrs[0].operands, vec![1, 2, 3]);
 
-        // SvmGetClock - 3 bytes
+        // SvmGetClock - 2 bytes
         let code = vec![
             Opcode::SvmGetClock.to_byte(),
-            0x09,
-            0x00, // dst: r9
+            0x09, // dst: r9
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 3);
+        assert_eq!(instrs[0].size, 2);
         assert_eq!(instrs[0].operands, vec![9]);
     }
 
     #[test]
     fn decode_debug_instructions() {
-        // Assert - 7 bytes (opcode + cond:u16 + msg_idx:u32)
+        // Assert - 6 bytes (opcode + cond:u8 + msg_idx:u32)
         let code = vec![
             Opcode::Assert.to_byte(),
-            0x01,
-            0x00, // cond: r1
+            0x01, // cond: r1
             0x00,
             0x00,
             0x00,
             0x00, // msg_idx: 0
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 7);
+        assert_eq!(instrs[0].size, 6);
         assert_eq!(instrs[0].operands, vec![1, 0]);
 
         // Panic - 5 bytes (opcode + msg_idx:u32)
@@ -1485,31 +1451,27 @@ mod tests {
 
     #[test]
     fn decode_evm_log_variable_length() {
-        // EvmLog - variable: opcode + topic_count:u8 + [topics:u16...] + data:u16
-        // 0 topics: 4 bytes
+        // EvmLog - variable: opcode + topic_count:u8 + [topics:u8...] + data:u8
+        // 0 topics: 3 bytes
         let code = vec![
             Opcode::EvmLog.to_byte(),
             0x00, // topic_count: 0
-            0x05,
-            0x00, // data: r5
+            0x05, // data: r5
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 4);
+        assert_eq!(instrs[0].size, 3);
         assert_eq!(instrs[0].operands, vec![0, 5]);
 
-        // 2 topics: 8 bytes
+        // 2 topics: 5 bytes
         let code = vec![
             Opcode::EvmLog.to_byte(),
             0x02, // topic_count: 2
-            0x01,
-            0x00, // topic0: r1
-            0x02,
-            0x00, // topic1: r2
-            0x03,
-            0x00, // data: r3
+            0x01, // topic0: r1
+            0x02, // topic1: r2
+            0x03, // data: r3
         ];
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
-        assert_eq!(instrs[0].size, 8); // 4 + 2*2
+        assert_eq!(instrs[0].size, 5); // 3 + 2
         assert_eq!(instrs[0].operands, vec![2, 1, 2, 3]);
     }
 
@@ -1518,42 +1480,42 @@ mod tests {
         // Test a realistic instruction sequence
         let mut code = Vec::new();
 
-        // load_const r1, c0 (7 bytes)
+        // load_const r1, c0 (6 bytes)
         code.push(Opcode::LoadConst.to_byte());
-        code.extend_from_slice(&1u16.to_le_bytes());
+        code.push(1u8); // dst: r1
         code.extend_from_slice(&0u32.to_le_bytes());
 
-        // load_const r2, c1 (7 bytes)
+        // load_const r2, c1 (6 bytes)
         code.push(Opcode::LoadConst.to_byte());
-        code.extend_from_slice(&2u16.to_le_bytes());
+        code.push(2u8); // dst: r2
         code.extend_from_slice(&1u32.to_le_bytes());
 
-        // add_i r3, r1, r2 (7 bytes)
+        // add_i r3, r1, r2 (4 bytes)
         code.push(Opcode::AddI.to_byte());
-        code.extend_from_slice(&3u16.to_le_bytes());
-        code.extend_from_slice(&1u16.to_le_bytes());
-        code.extend_from_slice(&2u16.to_le_bytes());
+        code.push(3u8); // dst: r3
+        code.push(1u8); // a: r1
+        code.push(2u8); // b: r2
 
-        // ret r3 (3 bytes)
+        // ret r3 (2 bytes)
         code.push(Opcode::Ret.to_byte());
-        code.extend_from_slice(&3u16.to_le_bytes());
+        code.push(3u8); // src: r3
 
         let instrs = Verifier::decode_all_instructions(&code).unwrap();
         assert_eq!(instrs.len(), 4);
 
         // Verify offsets
         assert_eq!(instrs[0].offset, 0);
-        assert_eq!(instrs[1].offset, 7);
-        assert_eq!(instrs[2].offset, 14);
-        assert_eq!(instrs[3].offset, 21);
+        assert_eq!(instrs[1].offset, 6);
+        assert_eq!(instrs[2].offset, 12);
+        assert_eq!(instrs[3].offset, 16);
 
-        // Total should be 24 bytes
-        assert_eq!(code.len(), 24);
+        // Total should be 18 bytes
+        assert_eq!(code.len(), 18);
     }
 
     #[test]
     fn decode_all_context_ops() {
-        // All context ops are 3 bytes
+        // All context ops are 2 bytes
         for opcode in [
             Opcode::CtxSender,
             Opcode::CtxBlockHeight,
@@ -1564,18 +1526,17 @@ mod tests {
         ] {
             let code = vec![
                 opcode.to_byte(),
-                0x01,
-                0x00, // dst: r1
+                0x01, // dst: r1
             ];
             let instrs = Verifier::decode_all_instructions(&code).unwrap();
-            assert_eq!(instrs[0].size, 3, "Failed for {:?}", opcode);
+            assert_eq!(instrs[0].size, 2, "Failed for {:?}", opcode);
             assert_eq!(instrs[0].operands, vec![1]);
         }
     }
 
     #[test]
     fn decode_all_type_conversions() {
-        // All type conversions are 5 bytes (dst:u16 + src:u16)
+        // All type conversions are 3 bytes (dst:u8 + src:u8)
         for opcode in [
             Opcode::I32ToI64,
             Opcode::I64ToI32,
@@ -1589,13 +1550,11 @@ mod tests {
         ] {
             let code = vec![
                 opcode.to_byte(),
-                0x02,
-                0x00, // dst: r2
-                0x01,
-                0x00, // src: r1
+                0x02, // dst: r2
+                0x01, // src: r1
             ];
             let instrs = Verifier::decode_all_instructions(&code).unwrap();
-            assert_eq!(instrs[0].size, 5, "Failed for {:?}", opcode);
+            assert_eq!(instrs[0].size, 3, "Failed for {:?}", opcode);
             assert_eq!(instrs[0].operands, vec![2, 1]);
         }
     }

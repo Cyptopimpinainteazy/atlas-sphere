@@ -59,12 +59,20 @@ mod integration_tests {
         });
 
         // Create test database
-        let test_db_name = format!("x3_benchmark_test_{}", uuid::Uuid::new_v4().to_string().replace("-", "_"));
-        client.execute(&format!("CREATE DATABASE {}", test_db_name), &[]).await?;
+        let test_db_name = format!(
+            "x3_benchmark_test_{}",
+            uuid::Uuid::new_v4().to_string().replace("-", "_")
+        );
+        client
+            .execute(&format!("CREATE DATABASE {}", test_db_name), &[])
+            .await?;
 
         // Connect to test database
         let (client, connection) = tokio_postgres::connect(
-            &format!("host=localhost user=postgres password=postgres dbname={}", test_db_name),
+            &format!(
+                "host=localhost user=postgres password=postgres dbname={}",
+                test_db_name
+            ),
             tokio_postgres::NoTls,
         )
         .await?;
@@ -147,7 +155,9 @@ mod integration_tests {
         ).await?;
 
         // Drop the database
-        client.execute(&format!("DROP DATABASE IF EXISTS {}", db_name), &[]).await?;
+        client
+            .execute(&format!("DROP DATABASE IF EXISTS {}", db_name), &[])
+            .await?;
 
         Ok(())
     }
@@ -295,13 +305,14 @@ mod integration_tests {
         // Start mock gateway server with PostgreSQL storage
         let _db_name_clone = test_db.clone();
         let gateway_server = tokio::spawn(async move {
-            use axum::{routing::post, Router, Json, http::StatusCode};
+            use axum::{http::StatusCode, routing::post, Json, Router};
 
             let submitted_reports = Arc::new(Mutex::new(vec![]));
             let submitted_reports_clone = submitted_reports.clone();
 
-            let app = Router::new()
-                .route("/api/v1/benchmarks/results", post({
+            let app = Router::new().route(
+                "/api/v1/benchmarks/results",
+                post({
                     let submitted_reports = submitted_reports_clone;
                     move |Json(payload): Json<serde_json::Value>| {
                         let submitted_reports = submitted_reports.clone();
@@ -310,16 +321,22 @@ mod integration_tests {
                             reports.push(payload.clone());
 
                             // Simulate storing to PostgreSQL
-                            if let Ok(report_id) = payload.get("report_id").and_then(|v| v.as_str()).ok_or(()) {
+                            if let Ok(report_id) =
+                                payload.get("report_id").and_then(|v| v.as_str()).ok_or(())
+                            {
                                 println!("✓ Gateway received report: {}", report_id);
                             }
 
-                            (StatusCode::OK, Json(serde_json::json!({
-                                "status": "stored"
-                            })))
+                            (
+                                StatusCode::OK,
+                                Json(serde_json::json!({
+                                    "status": "stored"
+                                })),
+                            )
                         }
                     }
-                }));
+                }),
+            );
 
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
                 .await
@@ -386,15 +403,13 @@ mod integration_tests {
                 total_logs: 1000,
                 active_lanes: 8,
                 active_log_lanes: 4,
-                log_classes: vec![
-                    BenchmarkLogClassStat {
-                        class_name: "Transfer".to_string(),
-                        count: 500,
-                        share_of_logs: 0.5,
-                        unique_contracts: 10,
-                        unique_transactions: 100,
-                    },
-                ],
+                log_classes: vec![BenchmarkLogClassStat {
+                    class_name: "Transfer".to_string(),
+                    count: 500,
+                    share_of_logs: 0.5,
+                    unique_contracts: 10,
+                    unique_transactions: 100,
+                }],
                 low_conflict_ratio: 0.5,
                 medium_conflict_ratio: 0.3,
                 high_conflict_ratio: 0.2,
@@ -409,10 +424,13 @@ mod integration_tests {
         };
 
         // Send report to gateway
-        match gateway_client.submit_benchmark_result(&x3_sidecar::gateway_client::BenchmarkResultPayload {
-            tenant_id: "e2e-test-tenant".to_string(),
-            report: test_report,
-        }).await {
+        match gateway_client
+            .submit_benchmark_result(&x3_sidecar::gateway_client::BenchmarkResultPayload {
+                tenant_id: "e2e-test-tenant".to_string(),
+                report: test_report,
+            })
+            .await
+        {
             Ok(_) => println!("✓ Successfully submitted report to gateway"),
             Err(e) => {
                 eprintln!("✗ Failed to submit report: {}", e);
@@ -774,10 +792,10 @@ mod integration_tests {
     fn test_required_env_vars_validation() {
         // Verify that critical configuration is defined
         let required_vars = vec![
-            "DATABASE_URL",      // PostgreSQL connection
-            "GATEWAY_URL",       // Gateway endpoint
-            "SIDECAR_PORT",      // Sidecar listen port
-            "RUST_LOG",          // Logging level
+            "DATABASE_URL", // PostgreSQL connection
+            "GATEWAY_URL",  // Gateway endpoint
+            "SIDECAR_PORT", // Sidecar listen port
+            "RUST_LOG",     // Logging level
         ];
 
         // This test validates the structure - actual env vars would be checked at runtime
@@ -914,12 +932,14 @@ mod integration_tests {
         // Set up wiremock with a small delay to simulate network latency
         Mock::given(method("POST"))
             .and(path("/api/v1/benchmarks/results"))
-            .respond_with(ResponseTemplate::new(200)
-                .set_delay(Duration::from_millis(5))
-                .set_body_json(serde_json::json!({
-                    "report_id": "test-123",
-                    "status": "accepted"
-                })))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_delay(Duration::from_millis(5))
+                    .set_body_json(serde_json::json!({
+                        "report_id": "test-123",
+                        "status": "accepted"
+                    })),
+            )
             .mount(&mock_server)
             .await;
 
@@ -999,7 +1019,11 @@ mod integration_tests {
         // With exponential backoff (30ms initial, 60ms second):
         // First attempt: 0ms, Second attempt: ~30ms, Third attempt: ~90ms
         // Total expected: ~90ms + request/response time, allow up to 500ms for variance
-        assert!(total_time_ms < 500, "Total backoff time: {} ms", total_time_ms);
+        assert!(
+            total_time_ms < 500,
+            "Total backoff time: {} ms",
+            total_time_ms
+        );
     }
 
     // ============================================================================
@@ -1045,23 +1069,19 @@ mod integration_tests {
                 medium_conflict_ratio: 0.5_f64,
                 high_conflict_ratio: 0.2_f64,
                 estimated_serial_fraction: 0.1_f64,
-                log_classes: vec![
-                    BenchmarkLogClassStat {
-                        class_name: "Transfer".to_string(),
-                        count: 500,
-                        share_of_logs: 0.5_f64,
-                        unique_contracts: 10,
-                        unique_transactions: 100,
-                    },
-                ],
+                log_classes: vec![BenchmarkLogClassStat {
+                    class_name: "Transfer".to_string(),
+                    count: 500,
+                    share_of_logs: 0.5_f64,
+                    unique_contracts: 10,
+                    unique_transactions: 100,
+                }],
             },
-            artifacts: vec![
-                BenchmarkReportArtifact {
-                    artifact_type: "summary".to_string(),
-                    uri: "https://example.com/summary.html".to_string(),
-                    digest: "sha256:abc123".to_string(),
-                },
-            ],
+            artifacts: vec![BenchmarkReportArtifact {
+                artifact_type: "summary".to_string(),
+                uri: "https://example.com/summary.html".to_string(),
+                digest: "sha256:abc123".to_string(),
+            }],
         }
     }
 }

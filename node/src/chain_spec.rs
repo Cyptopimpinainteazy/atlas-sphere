@@ -5,7 +5,7 @@ use serde::Deserialize;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::crypto::Ss58Codec;
-use sp_core::{sr25519, H160, Pair, Public};
+use sp_core::{sr25519, Pair, Public, H160};
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 use x3_chain_runtime::{
@@ -26,12 +26,12 @@ type AccountPublic = <Signature as Verify>::Signer;
 // EVM callers funded in dev/local chains through their mapped Substrate accounts.
 const DEV_EVM_CALLERS: [[u8; 20]; 2] = [
     [
-        0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9,
-        0x9f, 0xd6, 0x82, 0x2c, 0x85, 0x58,
+        0xd4, 0x35, 0x93, 0xc7, 0x15, 0xfd, 0xd3, 0x1c, 0x61, 0x14, 0x1a, 0xbd, 0x04, 0xa9, 0x9f,
+        0xd6, 0x82, 0x2c, 0x85, 0x58,
     ],
     [
-        0xf3, 0x9f, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xf6, 0xf4, 0xce, 0x6a, 0xb8, 0x82, 0x72,
-        0x79, 0xcf, 0xff, 0xb9, 0x22, 0x66,
+        0xf3, 0x9f, 0xd6, 0xe5, 0x1a, 0xad, 0x88, 0xf6, 0xf4, 0xce, 0x6a, 0xb8, 0x82, 0x72, 0x79,
+        0xcf, 0xff, 0xb9, 0x22, 0x66,
     ],
 ];
 
@@ -151,6 +151,7 @@ pub fn load_spec(id: &str) -> Result<Box<dyn ServiceChainSpec>, String> {
     match effective_id.as_str() {
         "" | "dev" => Ok(Box::new(development_config()?)),
         "local" => Ok(Box::new(local_testnet_config()?)),
+        "local3" | "local-3" => Ok(Box::new(local_three_validator_config()?)),
         "staging" => Ok(Box::new(staging_config()?)),
         "testnet" => Ok(Box::new(testnet_config()?)),
         "production" => Ok(Box::new(production_config()?)),
@@ -186,6 +187,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                sp_core::H160::zero(),
+                [0u8; 32],
             )
         },
         vec![],
@@ -225,6 +228,50 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                sp_core::H160::zero(),
+                [0u8; 32],
+            )
+        },
+        vec![],
+        None,
+        Some(DEFAULT_PROTOCOL_ID),
+        None,
+        Default::default(),
+        None,
+    ))
+}
+
+/// Build a local 3-validator `ChainSpec` (Alice/Bob/Charlie) for MVP consensus validation.
+pub fn local_three_validator_config() -> Result<ChainSpec, String> {
+    // Mirror the development config behavior: allow local testnets to run
+    // without an embedded WASM blob when using native-only execution.
+    let wasm_binary = WASM_BINARY.unwrap_or(&[]);
+    let initial_authorities = vec![
+        authority_keys_from_seed("Alice")?,
+        authority_keys_from_seed("Bob")?,
+        authority_keys_from_seed("Charlie")?,
+    ];
+    let mut endowed_accounts = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice")?,
+        get_account_id_from_seed::<sr25519::Public>("Bob")?,
+        get_account_id_from_seed::<sr25519::Public>("Charlie")?,
+        get_account_id_from_seed::<sr25519::Public>("Dave")?,
+        get_account_id_from_seed::<sr25519::Public>("Eve")?,
+        get_account_id_from_seed::<sr25519::Public>("Ferdie")?,
+    ];
+    endowed_accounts.extend(dev_evm_endowed_accounts());
+
+    Ok(ChainSpec::from_genesis(
+        "X3 Chain Local 3-Validator Testnet",
+        "x3_chain_local3",
+        ChainType::Local,
+        move || {
+            x3_chain_genesis(
+                wasm_binary,
+                initial_authorities.clone(),
+                endowed_accounts.clone(),
+                sp_core::H160::zero(),
+                [0u8; 32],
             )
         },
         vec![],
@@ -261,6 +308,8 @@ pub fn staging_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
+                parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
         },
         bootnodes,
@@ -313,6 +362,8 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
+                parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
         },
         bootnodes,
@@ -358,6 +409,8 @@ pub fn production_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
+                parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
         },
         bootnodes,
@@ -369,10 +422,60 @@ pub fn production_config() -> Result<ChainSpec, String> {
     ))
 }
 
+/// Parse a 20-byte EVM address from an env var (hex with or without 0x prefix).
+/// Returns `H160::zero()` if the var is absent or unparseable.
+fn parse_escrow_addr_from_env(var: &str) -> sp_core::H160 {
+    std::env::var(var)
+        .ok()
+        .and_then(|s| {
+            let s = s.trim().trim_start_matches("0x").trim_start_matches("0X");
+            let bytes = hex::decode(s).ok()?;
+            if bytes.len() == 20 {
+                let mut arr = [0u8; 20];
+                arr.copy_from_slice(&bytes);
+                Some(sp_core::H160(arr))
+            } else {
+                None
+            }
+        })
+        .unwrap_or_default()
+}
+
+/// Parse a 32-byte SVM address from an env var (hex with or without 0x prefix, or base58).
+/// Returns `[0u8; 32]` if the var is absent or unparseable.
+fn parse_svm_escrow_from_env(var: &str) -> [u8; 32] {
+    std::env::var(var)
+        .ok()
+        .and_then(|s| {
+            let s = s.trim();
+            // Try hex first
+            let hex_s = s.trim_start_matches("0x").trim_start_matches("0X");
+            if let Ok(bytes) = hex::decode(hex_s) {
+                if bytes.len() == 32 {
+                    let mut arr = [0u8; 32];
+                    arr.copy_from_slice(&bytes);
+                    return Some(arr);
+                }
+            }
+            // Try base58
+            if let Ok(bytes) = bs58::decode(s).into_vec() {
+                if bytes.len() == 32 {
+                    let mut arr = [0u8; 32];
+                    arr.copy_from_slice(&bytes);
+                    return Some(arr);
+                }
+            }
+            None
+        })
+        .unwrap_or([0u8; 32])
+}
+
 fn x3_chain_genesis(
     wasm_binary: &[u8],
     initial_authorities: Vec<(AuraId, GrandpaId)>,
     endowed_accounts: Vec<AccountId>,
+    evm_escrow_addr: sp_core::H160,
+    svm_escrow_addr: [u8; 32],
 ) -> RuntimeGenesisConfig {
     let mut endowed: BTreeSet<AccountId> = endowed_accounts.into_iter().collect();
 
@@ -423,11 +526,11 @@ fn x3_chain_genesis(
             authorities: grandpa_authorities,
             _config: Default::default(),
         },
-        session: SessionConfig {
-            keys: session_keys,
-        },
+        session: SessionConfig { keys: session_keys },
         atlas_kernel: AtlasKernelConfig {
             assets: x3_kernel_default_assets(),
+            evm_escrow_addr,
+            svm_escrow_addr,
         },
         transaction_payment: Default::default(),
         council: Default::default(),

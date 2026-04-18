@@ -1,0 +1,110 @@
+{
+  "generated_at": 1776285388.228012,
+  "duration_s": 0.16855382919311523,
+  "levels": [
+    10000,
+    50000
+  ],
+  "tested_chains": 1,
+  "our_chain_id": "solana",
+  "our_chain_max_tps": 718608.8029194579,
+  "global_max_tps": 718608.8029194579,
+  "lanes": [
+    {
+      "name": "primary",
+      "url": "http://localhost:9001/accelerate/batch"
+    },
+    {
+      "name": "shadow",
+      "url": "http://localhost:9002/accelerate/batch"
+    },
+    {
+      "name": "tertiary",
+      "url": "http://localhost:9003/accelerate/batch"
+    }
+  ],
+  "chains": [
+    {
+      "chain_id": "solana",
+      "chain_name": "SOLANA",
+      "max_tps": 718608.8029194579,
+      "best_level": 50000,
+      "levels": [
+        {
+          "level": 10000,
+          "successful": 10000,
+          "failed": 0,
+          "success_rate": 1.0,
+          "duration_s": 0.022101402282714844,
+          "tps": 452459.978425027,
+          "lanes": [
+            {
+              "lane": "primary",
+              "requested": 3334,
+              "successful": 3334,
+              "failed": 0,
+              "duration_s": 0.02198505401611328,
+              "status": 200,
+              "error": null
+            },
+            {
+              "lane": "shadow",
+              "requested": 3333,
+              "successful": 3333,
+              "failed": 0,
+              "duration_s": 0.02166461944580078,
+              "status": 200,
+              "error": null
+            },
+            {
+              "lane": "tertiary",
+              "requested": 3333,
+              "successful": 3333,
+              "failed": 0,
+              "duration_s": 0.015173912048339844,
+              "status": 200,
+              "error": null
+            }
+          ]
+        },
+        {
+          "level": 50000,
+          "successful": 50000,
+          "failed": 0,
+          "success_rate": 1.0,
+          "duration_s": 0.06957888603210449,
+          "tps": 718608.8029194579,
+          "lanes": [
+            {
+              "lane": "primary",
+              "requested": 16667,
+              "successful": 16667,
+              "failed": 0,
+              "duration_s": 0.05401349067687988,
+              "status": 200,
+              "error": null
+            },
+            {
+              "lane": "shadow",
+              "requested": 16667,
+              "successful": 16667,
+              "failed": 0,
+              "duration_s": 0.06900644302368164,
+              "status": 200,
+              "error": null
+            },
+            {
+              "lane": "tertiary",
+              "requested": 16666,
+              "successful": 16666,
+              "failed": 0,
+              "duration_s": 0.06907486915588379,
+              "status": 200,
+              "error": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

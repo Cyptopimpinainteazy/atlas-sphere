@@ -29,8 +29,12 @@ impl EvmValidator {
         let start = Instant::now();
 
         // Build transaction merkle tree
-        let tx_bytes: Vec<&[u8]> = evm_state.transactions.iter().map(|t| t.as_slice()).collect();
-        
+        let tx_bytes: Vec<&[u8]> = evm_state
+            .transactions
+            .iter()
+            .map(|t| t.as_slice())
+            .collect();
+
         if tx_bytes.is_empty() {
             return Ok(ValidationResult {
                 valid: false,
@@ -125,11 +129,11 @@ mod tests {
     #[tokio::test]
     async fn test_evm_state_validation_single_tx() {
         let validator = EvmValidator::new(32, false);
-        
+
         // Create a single transaction
         let tx = b"test_transaction".to_vec();
         let tx_bytes = vec![tx.as_slice()];
-        
+
         // Compute expected root
         let (hashes, _) = validator.hasher.hash_batch_cpu(&tx_bytes).unwrap();
         let expected_root = hashes[0].clone();
@@ -147,13 +151,8 @@ mod tests {
     #[tokio::test]
     async fn test_evm_merkle_tree_computation() {
         let validator = EvmValidator::new(32, false);
-        
-        let leaves = vec![
-            vec![1u8; 32],
-            vec![2u8; 32],
-            vec![3u8; 32],
-            vec![4u8; 32],
-        ];
+
+        let leaves = vec![vec![1u8; 32], vec![2u8; 32], vec![3u8; 32], vec![4u8; 32]];
 
         let root = validator.compute_merkle_root(&leaves).unwrap();
         assert_eq!(root.len(), 32);

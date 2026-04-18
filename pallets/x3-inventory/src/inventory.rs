@@ -6,9 +6,7 @@
 //! is maintained by construction: we never add to more than one bucket at a time,
 //! and we only move between buckets on explicit confirmation.
 
-use crate::pallet::{
-    Config, Error, Event, Pallet, Vaults,
-};
+use crate::pallet::{Config, Error, Event, Pallet, Vaults};
 use crate::types::VaultId;
 use frame_support::pallet_prelude::*;
 use sp_runtime::traits::Zero;

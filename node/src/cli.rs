@@ -118,6 +118,26 @@ pub struct NodeFeatureFlags {
     /// Default: false
     #[arg(long, default_value_t = false)]
     pub gpu_required: bool,
+
+    /// EVM bridge escrow contract address (20-byte hex, with or without 0x prefix).
+    ///
+    /// This address is written into genesis and stored in on-chain state.
+    /// It overrides the default placeholder address compiled into the runtime.
+    /// Must be set to the deployed EVM bridge escrow contract before mainnet launch.
+    ///
+    /// Example: --evm-escrow-addr 0xdead000000000000000000000000000000000001
+    #[arg(long)]
+    pub evm_escrow_addr: Option<String>,
+
+    /// SVM bridge escrow program address (32-byte pubkey, hex or base58).
+    ///
+    /// This address is written into genesis and stored in on-chain state.
+    /// It overrides the default placeholder address compiled into the runtime.
+    /// Must be set to the deployed SVM bridge escrow program before mainnet launch.
+    ///
+    /// Example: --svm-escrow-addr 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d
+    #[arg(long)]
+    pub svm_escrow_addr: Option<String>,
 }
 
 /// X3 Chain node subcommands.
@@ -476,6 +496,7 @@ impl SubstrateCli for Cli {
         let spec = match id {
             "" | "dev" => crate::chain_spec::development_config(),
             "local" => crate::chain_spec::local_testnet_config(),
+            "local3" | "local-3" => crate::chain_spec::local_three_validator_config(),
             "staging" | "staging-net" => crate::chain_spec::staging_config(),
             "testnet" | "test-net" => crate::chain_spec::testnet_config(),
             "production" | "prod" => crate::chain_spec::production_config(),

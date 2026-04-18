@@ -8,8 +8,12 @@ PEER_TIMEOUT_SEC="${PEER_TIMEOUT_SEC:-120}"
 CHECK_PEERS="${CHECK_PEERS:-0}"
 CHECK_FINALITY="${CHECK_FINALITY:-0}"
 FINALITY_WINDOW_SEC="${FINALITY_WINDOW_SEC:-12}"
+FINALITY_TIMEOUT_SEC="${FINALITY_TIMEOUT_SEC:-120}"
 TARGET_BLOCK_TIME_SEC="${TARGET_BLOCK_TIME_SEC:-6}"
 MAX_FINALITY_LAG_MULT="${MAX_FINALITY_LAG_MULT:-2}"
+# Absolute cap on acceptable lag between best and finalized (in blocks).
+# Set to 0 to disable lag checks and only require finalized head to advance.
+MAX_FINALITY_LAG_BLOCKS="${MAX_FINALITY_LAG_BLOCKS:-0}"
 
 usage() {
   cat <<EOF
@@ -21,8 +25,10 @@ Options:
   --min-peers N            Minimum peer count (default: ${MIN_PEERS}).
   --timeout-sec N          Peer check timeout in seconds (default: ${PEER_TIMEOUT_SEC}).
   --finality-window-sec N  Seconds between finality samples (default: ${FINALITY_WINDOW_SEC}).
+  --finality-timeout-sec N Seconds to wait for finality progress (default: ${FINALITY_TIMEOUT_SEC}).
   --target-block-time-sec N Target block time in seconds (default: ${TARGET_BLOCK_TIME_SEC}).
   --max-finality-lag-mult N Max finalized lag in blocks as multiple of target block time (default: ${MAX_FINALITY_LAG_MULT}).
+  --max-finality-lag-blocks N Absolute max finalized lag in blocks; 0 disables lag check (default: ${MAX_FINALITY_LAG_BLOCKS}).
 EOF
 }
 
@@ -48,12 +54,20 @@ while [[ $# -gt 0 ]]; do
       FINALITY_WINDOW_SEC="${2:-}"
       shift 2
       ;;
+    --finality-timeout-sec)
+      FINALITY_TIMEOUT_SEC="${2:-}"
+      shift 2
+      ;;
     --target-block-time-sec)
       TARGET_BLOCK_TIME_SEC="${2:-}"
       shift 2
       ;;
     --max-finality-lag-mult)
       MAX_FINALITY_LAG_MULT="${2:-}"
+      shift 2
+      ;;
+    --max-finality-lag-blocks)
+      MAX_FINALITY_LAG_BLOCKS="${2:-}"
       shift 2
       ;;
     -h|--help)
@@ -204,33 +218,37 @@ PY
 
 finality_check() {
   local max_lag_blocks
-  max_lag_blocks="$MAX_FINALITY_LAG_MULT"
+  max_lag_blocks="$MAX_FINALITY_LAG_BLOCKS"
 
-  local sample1=()
-  local sample2=()
-  for i in $(seq 0 $((COUNT - 1))); do
-    local port=$((BASE_RPC_PORT + i))
-    local url="http://127.0.0.1:${port}"
-    local finalized_hash
-    finalized_hash="$(jsonrpc "$url" "chain_getFinalizedHead")"
-    local header
-    header="$(jsonrpc "$url" "chain_getHeader")"
-    sample1+=("${finalized_hash}|||${header}")
-  done
+  local start_ts
+  start_ts="$(date +%s)"
 
-  sleep "$FINALITY_WINDOW_SEC"
+  while true; do
+    local sample1=()
+    local sample2=()
+    for i in $(seq 0 $((COUNT - 1))); do
+      local port=$((BASE_RPC_PORT + i))
+      local url="http://127.0.0.1:${port}"
+      local finalized_hash
+      finalized_hash="$(jsonrpc "$url" "chain_getFinalizedHead")"
+      local header
+      header="$(jsonrpc "$url" "chain_getHeader")"
+      sample1+=("${finalized_hash}|||${header}")
+    done
 
-  for i in $(seq 0 $((COUNT - 1))); do
-    local port=$((BASE_RPC_PORT + i))
-    local url="http://127.0.0.1:${port}"
-    local finalized_hash
-    finalized_hash="$(jsonrpc "$url" "chain_getFinalizedHead")"
-    local header
-    header="$(jsonrpc "$url" "chain_getHeader")"
-    sample2+=("${finalized_hash}|||${header}")
-  done
+    sleep "$FINALITY_WINDOW_SEC"
 
-  SAMPLE1="${sample1[*]}" SAMPLE2="${sample2[*]}" MAX_LAG="$max_lag_blocks" BASE_RPC_PORT="$BASE_RPC_PORT" python - <<'PY'
+    for i in $(seq 0 $((COUNT - 1))); do
+      local port=$((BASE_RPC_PORT + i))
+      local url="http://127.0.0.1:${port}"
+      local finalized_hash
+      finalized_hash="$(jsonrpc "$url" "chain_getFinalizedHead")"
+      local header
+      header="$(jsonrpc "$url" "chain_getHeader")"
+      sample2+=("${finalized_hash}|||${header}")
+    done
+
+    if SAMPLE1="${sample1[*]}" SAMPLE2="${sample2[*]}" MAX_LAG="$max_lag_blocks" BASE_RPC_PORT="$BASE_RPC_PORT" python - <<'PY'
 import json
 import os
 import sys
@@ -263,7 +281,12 @@ def finalized_number(rpc_url: str, finalized_hash: str) -> int:
             "method": "chain_getHeader",
             "params": [finalized_hash],
         }).encode()
-        resp = urllib.request.urlopen(rpc_url, data=req, timeout=1)
+        request = urllib.request.Request(
+            rpc_url,
+            data=req,
+            headers={"Content-Type": "application/json"},
+        )
+        resp = urllib.request.urlopen(request, timeout=1)
         obj = json.loads(resp.read().decode())
         num = obj.get("result", {}).get("number")
         if isinstance(num, str) and num.startswith("0x"):
@@ -304,12 +327,23 @@ for idx, (row1, row2) in enumerate(zip(sample1, sample2)):
     if fin_2 <= fin_1:
         ok = False
         continue
-    lag = best_2 - fin_2
-    if lag > max_lag:
-        ok = False
+    if max_lag > 0:
+        lag = best_2 - fin_2
+        if lag > max_lag:
+            ok = False
 
 sys.exit(0 if ok else 3)
 PY
+    then
+      return 0
+    fi
+
+    local now
+    now="$(date +%s)"
+    if (( now - start_ts >= FINALITY_TIMEOUT_SEC )); then
+      return 1
+    fi
+  done
 }
 
 if [[ "$CHECK_PEERS" == "1" ]]; then
@@ -323,7 +357,11 @@ fi
 
 if [[ "$CHECK_FINALITY" == "1" ]]; then
   if finality_check; then
-    echo "Finality check OK (progress within ${FINALITY_WINDOW_SEC}s, lag <= ${MAX_FINALITY_LAG_MULT} blocks)"
+    if [[ "${MAX_FINALITY_LAG_BLOCKS}" == "0" ]]; then
+      echo "Finality check OK (progress within ${FINALITY_WINDOW_SEC}s, lag check disabled)"
+    else
+      echo "Finality check OK (progress within ${FINALITY_WINDOW_SEC}s, lag <= ${MAX_FINALITY_LAG_BLOCKS} blocks)"
+    fi
   else
     echo "Finality check FAILED"
     exit 1

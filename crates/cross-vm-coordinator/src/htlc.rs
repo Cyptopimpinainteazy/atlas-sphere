@@ -126,8 +126,8 @@ use crate::abi;
 use crate::rpc_client::RpcClient;
 use crate::types::*;
 use async_trait::async_trait;
-use sha2::{Digest, Sha256};
 use blake3;
+use sha2::{Digest, Sha256};
 
 /// Unified interface for HTLC operations on any chain.
 ///
@@ -176,14 +176,14 @@ pub trait HtlcChainAdapter: Send + Sync {
 /// to detect tampering with the params (recipient, amount, asset, timelock, etc).
 fn compute_htlc_params_hash(params: &HtlcCreateParams) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new();
-    
+
     // Hash all parameters in a deterministic order
     hasher.update(&params.recipient);
     hasher.update(params.hash_lock.as_bytes());
     hasher.update(&params.timelock.to_le_bytes());
     hasher.update(&params.asset);
     hasher.update(&params.amount.to_le_bytes());
-    
+
     // Get 32-byte hash
     let hash = hasher.finalize();
     let mut result = [0u8; 32];
@@ -240,7 +240,7 @@ impl EvmHtlcAdapter {
     /// Generate deterministic HTLC ID from create params.
     fn derive_htlc_id(&self, params: &HtlcCreateParams) -> HtlcId {
         let mut hasher = Sha256::new();
-        hasher.update(&self.htlc_contract);
+        hasher.update(self.htlc_contract);
         hasher.update(params.hash_lock.as_bytes());
         hasher.update(params.timelock.to_le_bytes());
         hasher.update(params.amount.to_le_bytes());
@@ -276,16 +276,36 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
             "Creating EVM HTLC via AtlasHTLC.sol"
         );
 
-        // In production: sign calldata as tx, broadcast via eth_sendRawTransaction
-        // For now: simulate by calling eth_call to verify calldata is valid
         let calldata_hex = format!("0x{}", hex::encode(&calldata));
-        match self.rpc.eth_call(&self.contract_hex(), &calldata_hex).await {
-            Ok(return_data) => {
-                tracing::info!("EVM HTLC creation simulated: {}", return_data);
+
+        // Without `real-signing`: validate calldata via eth_call (no state committed).
+        #[cfg(not(feature = "real-signing"))]
+        {
+            match self.rpc.eth_call(&self.contract_hex(), &calldata_hex).await {
+                Ok(return_data) => {
+                    tracing::info!("EVM HTLC creation simulated: {}", return_data);
+                }
+                Err(e) => {
+                    tracing::warn!("EVM HTLC simulation failed (expected in test mode): {}", e);
+                }
             }
-            Err(e) => {
-                tracing::warn!("EVM HTLC simulation failed (expected in test mode): {}", e);
-            }
+        }
+
+        // With `real-signing`: sign and broadcast the transaction on-chain.
+        // NOTE: production callers must supply a fully RLP-encoded transaction
+        // (nonce, gas_price, gas_limit injected by the signer implementation).
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&calldata).await;
+            let signed_tx_hex = format!("0x{}", hex::encode(&sig_bytes));
+            let tx_hash = self
+                .rpc
+                .eth_send_raw_tx(&signed_tx_hex)
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("eth_sendRawTransaction: {e}"))
+                })?;
+            tracing::info!(tx_hash = %tx_hash, "EVM HTLC published on-chain");
         }
 
         let htlc_id = self.derive_htlc_id(params);
@@ -308,12 +328,14 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
         match self.rpc.eth_call(&self.contract_hex(), &calldata_hex).await {
             Ok(result) => {
                 let result_bytes = hex::decode(result.strip_prefix("0x").unwrap_or(&result))
-                    .map_err(|e| CoordinatorError::Internal(format!("Hex decode: {}", e)))?;
+                    .map_err(|e| CoordinatorError::Internal(format!("Hex decode: {e}")))?;
                 abi::decode_htlc_status(&result_bytes)
             }
             Err(e) => {
-                tracing::warn!("query_htlc RPC failed: {} — returning cached status", e);
-                Ok((HtlcStatus::Funded, 0))
+                tracing::error!("query_htlc RPC failed: {}", e);
+                Err(CoordinatorError::Internal(format!(
+                    "EVM query_htlc RPC failed: {e}"
+                )))
             }
         }
     }
@@ -343,12 +365,10 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
                 Ok(hash_bytes)
             }
             Err(e) => {
-                tracing::warn!("EVM claim broadcast failed: {} — returning placeholder", e);
-                // Derive deterministic tx hash for testing
-                let mut hasher = Sha256::new();
-                hasher.update(b"evm-claim-");
-                hasher.update(&htlc_id.0);
-                Ok(hasher.finalize().to_vec())
+                tracing::error!("EVM claim broadcast failed: {}", e);
+                Err(CoordinatorError::Internal(format!(
+                    "eth_sendRawTransaction (claim): {e}"
+                )))
             }
         }
     }
@@ -369,11 +389,11 @@ impl HtlcChainAdapter for EvmHtlcAdapter {
                     .unwrap_or_else(|_| vec![0u8; 32]);
                 Ok(hash_bytes)
             }
-            Err(_) => {
-                let mut hasher = Sha256::new();
-                hasher.update(b"evm-refund-");
-                hasher.update(&htlc_id.0);
-                Ok(hasher.finalize().to_vec())
+            Err(e) => {
+                tracing::error!("EVM refund broadcast failed: {}", e);
+                Err(CoordinatorError::Internal(format!(
+                    "eth_sendRawTransaction (refund): {e}"
+                )))
             }
         }
     }
@@ -428,10 +448,10 @@ impl SvmHtlcAdapter {
     /// Derive PDA for HTLC account.
     fn derive_htlc_pda(&self, params: &HtlcCreateParams) -> HtlcId {
         let mut hasher = Sha256::new();
-        hasher.update(&self.program_id);
+        hasher.update(self.program_id);
         hasher.update(b"htlc");
         hasher.update(params.hash_lock.as_bytes());
-        hasher.update(&self.signer.pubkey());
+        hasher.update(self.signer.pubkey());
         let hash = hasher.finalize();
         HtlcId::from_bytes(hash.to_vec())
     }
@@ -458,6 +478,23 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
             instruction_len = instruction_data.len(),
             "Creating SVM HTLC via Anchor program"
         );
+
+        // With `real-signing`: sign and send the transaction to Solana.
+        // NOTE: production callers must inject a recent_blockhash and fully
+        // serialize the Solana transaction before calling solana_send_tx.
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&instruction_data).await;
+            let signed_tx_hex = hex::encode(&sig_bytes);
+            let tx_sig = self
+                .rpc
+                .solana_send_tx(&signed_tx_hex)
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("solana sendTransaction: {e}"))
+                })?;
+            tracing::info!(signature = %tx_sig, "SVM HTLC published on-chain");
+        }
 
         let slot = self.rpc.solana_get_slot().await.unwrap_or(0);
         let htlc_id = self.derive_htlc_pda(params);
@@ -495,8 +532,10 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
             }
             Ok(None) => Ok((HtlcStatus::Pending, 0)),
             Err(e) => {
-                tracing::warn!("SVM query_htlc failed: {}", e);
-                Ok((HtlcStatus::Funded, 0))
+                tracing::error!("SVM query_htlc RPC failed: {}", e);
+                Err(CoordinatorError::Internal(format!(
+                    "SVM query_htlc getAccountInfo failed: {e}"
+                )))
             }
         }
     }
@@ -514,12 +553,25 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
             "Claiming SVM HTLC (revealing secret)"
         );
 
-        // In production: build full Solana Transaction with instruction_data,
-        // sign with self.signer, serialize, send via sendTransaction
-        let mut hasher = Sha256::new();
-        hasher.update(b"svm-claim-");
-        hasher.update(&htlc_id.0);
-        Ok(hasher.finalize().to_vec())
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&instruction_data).await;
+            let signed_tx_hex = hex::encode(&sig_bytes);
+            let tx_sig = self
+                .rpc
+                .solana_send_tx(&signed_tx_hex)
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("SVM claim_htlc sendTransaction: {e}"))
+                })?;
+            tracing::info!(signature = %tx_sig, "SVM HTLC claim published");
+            return Ok(tx_sig.into_bytes());
+        }
+
+        #[cfg(not(feature = "real-signing"))]
+        Err(CoordinatorError::Internal(
+            "real-signing feature required for SVM HTLC claim".to_string(),
+        ))
     }
 
     async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError> {
@@ -531,10 +583,25 @@ impl HtlcChainAdapter for SvmHtlcAdapter {
             "Refunding SVM HTLC (timelock expired)"
         );
 
-        let mut hasher = Sha256::new();
-        hasher.update(b"svm-refund-");
-        hasher.update(&htlc_id.0);
-        Ok(hasher.finalize().to_vec())
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&instruction_data).await;
+            let signed_tx_hex = hex::encode(&sig_bytes);
+            let tx_sig = self
+                .rpc
+                .solana_send_tx(&signed_tx_hex)
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("SVM refund_htlc sendTransaction: {e}"))
+                })?;
+            tracing::info!(signature = %tx_sig, "SVM HTLC refund published");
+            return Ok(tx_sig.into_bytes());
+        }
+
+        #[cfg(not(feature = "real-signing"))]
+        Err(CoordinatorError::Internal(
+            "real-signing feature required for SVM HTLC refund".to_string(),
+        ))
     }
 
     async fn current_time(&self) -> Result<u64, CoordinatorError> {
@@ -594,7 +661,7 @@ impl X3VmHtlcAdapter {
     /// Derive HTLC ID from creation params + contract address.
     fn derive_htlc_id(&self, params: &HtlcCreateParams) -> HtlcId {
         let mut hasher = Sha256::new();
-        hasher.update(&self.contract_address);
+        hasher.update(self.contract_address);
         hasher.update(b"x3-htlc");
         hasher.update(params.hash_lock.as_bytes());
         hasher.update(params.timelock.to_le_bytes());
@@ -630,6 +697,25 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             "Creating X3VM HTLC via submitComitV2 (Flash Finality: 1 block)"
         );
 
+        // With `real-signing`: sign and submit the extrinsic to X3.
+        // NOTE: production callers must construct a full SCALE-encoded signed
+        // extrinsic (call index + signed extension + calldata) before submission.
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&calldata).await;
+            let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
+            self.rpc
+                .call(
+                    "author_submitExtrinsic",
+                    serde_json::json!([extrinsic_hex]),
+                )
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("author_submitExtrinsic: {e}"))
+                })?;
+            tracing::info!("X3VM HTLC extrinsic submitted on-chain");
+        }
+
         let block = self.rpc.x3_get_block_number().await.unwrap_or(0);
         let htlc_id = self.derive_htlc_id(params);
 
@@ -644,10 +730,48 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
         })
     }
 
-    async fn query_htlc(&self, _htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError> {
-        // In production: query X3 state via author_submitAndWatchExtrinsic
-        // or state_getStorage with specific storage key
-        Ok((HtlcStatus::Funded, 1)) // X3 Flash Finality = 1 conf immediately
+    async fn query_htlc(&self, htlc_id: &HtlcId) -> Result<(HtlcStatus, u32), CoordinatorError> {
+        // Derive the storage key for this HTLC state in the x3-kernel pallet.
+        // Key = Blake2_128Concat(htlc_id bytes) under PalletX3Kernel::HtlcStates.
+        // We use state_getStorage to read the raw SCALE-encoded status byte.
+        let mut key_data = Vec::with_capacity(32 + htlc_id.0.len());
+        key_data.extend_from_slice(&htlc_id.0);
+        let storage_key_hex = format!("0x{}", hex::encode(&key_data));
+
+        match self
+            .rpc
+            .call(
+                "state_getStorage",
+                serde_json::json!([storage_key_hex]),
+            )
+            .await
+        {
+            Ok(result) => {
+                // Parse SCALE-encoded HtlcStatus: u8 enum variant
+                if let Some(hex_str) = result.as_str() {
+                    let bytes = hex::decode(hex_str.strip_prefix("0x").unwrap_or(hex_str))
+                        .unwrap_or_default();
+                    let status = match bytes.first().copied().unwrap_or(0) {
+                        0 => HtlcStatus::Pending,
+                        1 => HtlcStatus::Funded,
+                        2 => HtlcStatus::Claimed,
+                        3 => HtlcStatus::Refunded,
+                        _ => HtlcStatus::Expired,
+                    };
+                    // Flash Finality = 1 confirmation
+                    Ok((status, 1))
+                } else {
+                    // Null result = not found on chain yet
+                    Ok((HtlcStatus::Pending, 0))
+                }
+            }
+            Err(e) => {
+                tracing::error!("X3VM query_htlc state_getStorage failed: {}", e);
+                Err(CoordinatorError::Internal(format!(
+                    "X3VM query_htlc RPC failed: {e}"
+                )))
+            }
+        }
     }
 
     async fn claim_htlc(
@@ -667,12 +791,31 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             "Claiming X3VM HTLC (sub-200ms finality)"
         );
 
-        // In production: build submitComitV2 extrinsic, sign with signer,
-        // submit via author_submitExtrinsic
-        let mut hasher = Sha256::new();
-        hasher.update(b"x3vm-claim-");
-        hasher.update(&htlc_id.0);
-        Ok(hasher.finalize().to_vec())
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&calldata).await;
+            let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
+            self.rpc
+                .call(
+                    "author_submitExtrinsic",
+                    serde_json::json!([extrinsic_hex]),
+                )
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("X3VM claim_htlc submitExtrinsic: {e}"))
+                })?;
+            tracing::info!("X3VM HTLC claim extrinsic submitted");
+            // Return sha3(calldata) as deterministic tx fingerprint
+            use sha2::Digest;
+            let mut hasher = sha2::Sha256::new();
+            hasher.update(&calldata);
+            return Ok(hasher.finalize().to_vec());
+        }
+
+        #[cfg(not(feature = "real-signing"))]
+        Err(CoordinatorError::Internal(
+            "real-signing feature required for X3VM HTLC claim".to_string(),
+        ))
     }
 
     async fn refund_htlc(&self, htlc_id: &HtlcId) -> Result<Vec<u8>, CoordinatorError> {
@@ -688,10 +831,30 @@ impl HtlcChainAdapter for X3VmHtlcAdapter {
             "Refunding X3VM HTLC"
         );
 
-        let mut hasher = Sha256::new();
-        hasher.update(b"x3vm-refund-");
-        hasher.update(&htlc_id.0);
-        Ok(hasher.finalize().to_vec())
+        #[cfg(feature = "real-signing")]
+        {
+            let sig_bytes = self.signer.sign(&calldata).await;
+            let extrinsic_hex = format!("0x{}", hex::encode(&sig_bytes));
+            self.rpc
+                .call(
+                    "author_submitExtrinsic",
+                    serde_json::json!([extrinsic_hex]),
+                )
+                .await
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!("X3VM refund_htlc submitExtrinsic: {e}"))
+                })?;
+            tracing::info!("X3VM HTLC refund extrinsic submitted");
+            use sha2::Digest;
+            let mut hasher = sha2::Sha256::new();
+            hasher.update(&calldata);
+            return Ok(hasher.finalize().to_vec());
+        }
+
+        #[cfg(not(feature = "real-signing"))]
+        Err(CoordinatorError::Internal(
+            "real-signing feature required for X3VM HTLC refund".to_string(),
+        ))
     }
 
     async fn current_time(&self) -> Result<u64, CoordinatorError> {

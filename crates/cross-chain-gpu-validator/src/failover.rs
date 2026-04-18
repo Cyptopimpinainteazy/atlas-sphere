@@ -1,8 +1,8 @@
 //! GPU-to-CPU failover logic for validation operations
 
 use crate::error::{Result, ValidatorError};
-use crate::kernels::{Secp256k1Kernel, Keccak256Kernel};
-use tracing::{warn, info};
+use crate::kernels::{Keccak256Kernel, Secp256k1Kernel};
+use tracing::{info, warn};
 
 /// Failover manager for GPU validation errors
 pub struct FailoverManager {
@@ -30,35 +30,42 @@ impl FailoverManager {
         public_keys: &[&[u8]],
     ) -> Result<(usize, u64, bool)> {
         // Try GPU first
-        match self.gpu_kernel_secp.verify_batch_gpu(messages, signatures, public_keys) {
+        match self
+            .gpu_kernel_secp
+            .verify_batch_gpu(messages, signatures, public_keys)
+        {
             Ok((count, timing)) => {
-                info!("GPU signature verification succeeded: {} valid signatures", count);
+                info!(
+                    "GPU signature verification succeeded: {} valid signatures",
+                    count
+                );
                 Ok((count, timing, true)) // GPU succeeded
             }
             Err(e) => {
                 warn!("GPU verification failed: {}, falling back to CPU", e);
-                
+
                 // Fallback to CPU
-                match self.cpu_kernel_secp.verify_batch_cpu(messages, signatures, public_keys) {
+                match self
+                    .cpu_kernel_secp
+                    .verify_batch_cpu(messages, signatures, public_keys)
+                {
                     Ok((count, timing)) => {
-                        info!("CPU fallback signature verification succeeded: {} valid signatures", count);
+                        info!(
+                            "CPU fallback signature verification succeeded: {} valid signatures",
+                            count
+                        );
                         Ok((count, timing, false)) // CPU fallback used
                     }
-                    Err(cpu_err) => {
-                        Err(ValidatorError::CpuValidationError(
-                            format!("CPU fallback also failed: {}", cpu_err)
-                        ))
-                    }
+                    Err(cpu_err) => Err(ValidatorError::CpuValidationError(format!(
+                        "CPU fallback also failed: {cpu_err}"
+                    ))),
                 }
             }
         }
     }
 
     /// Try GPU hashing first, fall back to CPU on error
-    pub fn hash_with_failover(
-        &self,
-        inputs: &[&[u8]],
-    ) -> Result<(Vec<Vec<u8>>, u64, bool)> {
+    pub fn hash_with_failover(&self, inputs: &[&[u8]]) -> Result<(Vec<Vec<u8>>, u64, bool)> {
         // Try GPU first
         match self.gpu_kernel_keccak.hash_batch_gpu(inputs) {
             Ok((hashes, timing)) => {
@@ -67,18 +74,16 @@ impl FailoverManager {
             }
             Err(e) => {
                 warn!("GPU hashing failed: {}, falling back to CPU", e);
-                
+
                 // Fallback to CPU
                 match self.cpu_kernel_keccak.hash_batch_cpu(inputs) {
                     Ok((hashes, timing)) => {
                         info!("CPU fallback hashing succeeded for {} inputs", inputs.len());
                         Ok((hashes, timing, false)) // CPU fallback used
                     }
-                    Err(cpu_err) => {
-                        Err(ValidatorError::CpuValidationError(
-                            format!("CPU fallback hashing also failed: {}", cpu_err)
-                        ))
-                    }
+                    Err(cpu_err) => Err(ValidatorError::CpuValidationError(format!(
+                        "CPU fallback hashing also failed: {cpu_err}"
+                    ))),
                 }
             }
         }
@@ -87,7 +92,7 @@ impl FailoverManager {
     /// Check if GPU is healthy by running a parity test
     pub async fn check_gpu_health(&self) -> Result<bool> {
         let test_inputs = vec![b"health_check".as_slice()];
-        
+
         match self.gpu_kernel_keccak.verify_parity(&test_inputs) {
             Ok(true) => {
                 info!("GPU health check passed");
@@ -126,7 +131,7 @@ mod tests {
     fn test_hash_failover() {
         let manager = FailoverManager::new(32);
         let inputs = vec![b"test".as_slice()];
-        
+
         let (hashes, _, used_gpu) = manager.hash_with_failover(&inputs).unwrap();
         assert_eq!(hashes.len(), 1);
         assert_eq!(hashes[0].len(), 32); // Keccak256 = 32 bytes

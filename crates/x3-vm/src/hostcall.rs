@@ -154,26 +154,22 @@ impl HostcallRegistry {
             Err(VMError::without_ip(VMErrorKind::UserPanic(msg)))
         });
 
-        // ID 10: get_timestamp - get current timestamp
+        // ID 10: get_timestamp - REMOVED: was non-deterministic (SystemTime::now).
+        // Programs must obtain the block timestamp from the execution context
+        // passed via the kernel, not from the host clock.
         self.register(10, "get_timestamp", 0, |_args| {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            let ts = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|d| d.as_secs() as i64)
-                .unwrap_or(0);
-            Ok(Some(Value::I64(ts)))
+            Err(VMError::without_ip(VMErrorKind::UserPanic(
+                "get_timestamp is disabled: use block context for deterministic timestamps".into(),
+            )))
         });
 
-        // ID 11: get_random - get pseudo-random number (NOT for production!)
+        // ID 11: get_random - REMOVED: was non-deterministic (SystemTime nanos + LCG).
+        // Programs must use a VRF or block-hash-seeded PRNG supplied by the
+        // kernel to guarantee consensus-safe randomness.
         self.register(11, "get_random", 0, |_args| {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            let ts = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|d| d.as_nanos() as i64)
-                .unwrap_or(0);
-            // Simple LCG for testing only
-            Ok(Some(Value::I64(
-                ts.wrapping_mul(1103515245).wrapping_add(12345),
+            Err(VMError::without_ip(VMErrorKind::UserPanic(
+                "get_random is disabled: use kernel-supplied VRF for deterministic randomness"
+                    .into(),
             )))
         });
 

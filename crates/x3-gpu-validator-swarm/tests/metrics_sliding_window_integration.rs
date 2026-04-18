@@ -32,9 +32,7 @@ mod tests {
 
         fn get_current_tps(&self, window_duration: Duration) -> f64 {
             let cutoff = Instant::now() - window_duration;
-            let count = self.tasks.iter()
-                .filter(|(ts, _)| *ts >= cutoff)
-                .count() as f64;
+            let count = self.tasks.iter().filter(|(ts, _)| *ts >= cutoff).count() as f64;
             count / window_duration.as_secs_f64()
         }
 
@@ -42,14 +40,14 @@ mod tests {
             if self.tasks.is_empty() {
                 return 0.0;
             }
-            
+
             let mut latencies: Vec<u64> = self.tasks.iter().map(|(_, lat)| *lat).collect();
             latencies.sort_unstable();
-            
+
             let index = ((latencies.len() as f64 * percentile / 100.0).ceil() as usize)
                 .saturating_sub(1)
                 .min(latencies.len() - 1);
-            
+
             latencies[index] as f64
         }
     }
@@ -165,7 +163,10 @@ mod tests {
             let duration = Duration::from_secs(*size);
             let tps = window.get_current_tps(duration);
             println!("TPS ({}s window): {:.0}", size, tps);
-            assert!(tps > 500.0 && tps < 2000.0, "TPS should be in expected range");
+            assert!(
+                tps > 500.0 && tps < 2000.0,
+                "TPS should be in expected range"
+            );
         }
     }
 
@@ -231,7 +232,11 @@ mod tests {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
 
-            println!("Phase {}: Current window TPS: {:.0}", phase, window.get_current_tps(window_duration));
+            println!(
+                "Phase {}: Current window TPS: {:.0}",
+                phase,
+                window.get_current_tps(window_duration)
+            );
         }
 
         println!("Peak TPS observed: {:.0}", max_tps);

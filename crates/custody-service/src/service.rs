@@ -1,14 +1,13 @@
+use crate::audit::AuditLog;
+use crate::error::{CustodyError, Result};
+use crate::hsm::{HSMBackend, HSMSigner, MockHSM};
 /// Main Custody Service implementation
 /// Orchestrates vault operations, authorization, policy enforcement, and settlement linkage
-
 use crate::types::*;
-use crate::error::{CustodyError, Result};
-use crate::audit::AuditLog;
-use crate::hsm::{HSMBackend, HSMSigner, MockHSM};
+use async_trait::async_trait;
+use chrono::Utc;
 use parking_lot::RwLock;
 use std::collections::{BTreeMap, HashMap};
-use chrono::Utc;
-use async_trait::async_trait;
 
 /// Core custody service trait
 #[async_trait]
@@ -20,7 +19,10 @@ pub trait CustodyService: Send + Sync {
     ) -> Result<AuthorizationDecision>;
 
     /// Execute authorized vault operation
-    async fn execute_operation(&self, command: VaultOperationCommand) -> Result<VaultOperationResponse>;
+    async fn execute_operation(
+        &self,
+        command: VaultOperationCommand,
+    ) -> Result<VaultOperationResponse>;
 
     /// Get current vault state snapshot
     async fn get_vault_snapshot(&self, vault_id: &str) -> Result<VaultSnapshot>;
@@ -157,7 +159,10 @@ impl CustodyService for CustodyServiceImpl {
         Ok(decision)
     }
 
-    async fn execute_operation(&self, command: VaultOperationCommand) -> Result<VaultOperationResponse> {
+    async fn execute_operation(
+        &self,
+        command: VaultOperationCommand,
+    ) -> Result<VaultOperationResponse> {
         let operation_id = command.operation_id.clone();
         let now = Utc::now().timestamp_millis() as u64;
 
@@ -238,7 +243,7 @@ impl CustodyService for CustodyServiceImpl {
         let updated_vault = {
             let mut vaults = self.vaults.write();
             let mut updated = source_vault.clone();
-            
+
             match command.operation_type {
                 VaultOperationType::Transfer => {
                     updated.available_balance -= command.amount;
@@ -249,7 +254,8 @@ impl CustodyService for CustodyServiceImpl {
                     updated.reserved_balance += command.amount;
                 }
                 VaultOperationType::Release => {
-                    updated.reserved_balance = updated.reserved_balance.saturating_sub(command.amount);
+                    updated.reserved_balance =
+                        updated.reserved_balance.saturating_sub(command.amount);
                     updated.available_balance += command.amount;
                 }
                 VaultOperationType::Sweep => {
@@ -367,10 +373,7 @@ impl PolicyEngine {
                 rule_id: "max-transfer-10k".to_string(),
                 description: "Max transfer 10k units".to_string(),
                 max_amount: Some(10_000),
-                allowed_tiers: vec![
-                    AuthorizationTier::Operational,
-                    AuthorizationTier::Strategic,
-                ],
+                allowed_tiers: vec![AuthorizationTier::Operational, AuthorizationTier::Strategic],
             },
         );
 

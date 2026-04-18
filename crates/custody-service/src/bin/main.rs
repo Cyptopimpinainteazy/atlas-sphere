@@ -1,6 +1,5 @@
 /// Custody Service binary
 /// Runs the standalone custody microservice
-
 use custody_service::CustodyServiceImpl;
 use tracing::info;
 

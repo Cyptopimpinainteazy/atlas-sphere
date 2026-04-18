@@ -1,8 +1,8 @@
 //! Redis-backed atomic swap registry for cross-chain orchestration
 
 use crate::error::{Result, ValidatorError};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc, Duration};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SwapPhase {
@@ -65,7 +65,10 @@ impl AtomicRegistry {
     }
 
     pub async fn register_swap(&self, record: &AtomicSwapRecord) -> Result<()> {
-        let conn = self.redis_client.get_async_connection().await
+        let conn = self
+            .redis_client
+            .get_async_connection()
+            .await
             .map_err(|e| ValidatorError::RedisError(e.to_string()))?;
 
         let mut conn = conn;
@@ -85,11 +88,14 @@ impl AtomicRegistry {
     }
 
     pub async fn get_swap(&self, swap_id: &str) -> Result<Option<AtomicSwapRecord>> {
-        let conn = self.redis_client.get_async_connection().await
+        let conn = self
+            .redis_client
+            .get_async_connection()
+            .await
             .map_err(|e| ValidatorError::RedisError(e.to_string()))?;
 
         let mut conn = conn;
-        let key = format!("swap:{}", swap_id);
+        let key = format!("swap:{swap_id}");
 
         let value: Option<String> = redis::cmd("GET")
             .arg(&key)
@@ -104,10 +110,9 @@ impl AtomicRegistry {
     }
 
     pub async fn update_phase(&self, swap_id: &str, phase: SwapPhase) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?
-            .ok_or_else(|| ValidatorError::InvalidSwapState(
-                format!("Swap {} not found", swap_id)
-            ))?;
+        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
+            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
+        })?;
 
         record.phase = phase;
         self.register_swap(&record).await?;
@@ -115,10 +120,9 @@ impl AtomicRegistry {
     }
 
     pub async fn mark_evm_validated(&self, swap_id: &str, valid: bool) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?
-            .ok_or_else(|| ValidatorError::InvalidSwapState(
-                format!("Swap {} not found", swap_id)
-            ))?;
+        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
+            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
+        })?;
 
         record.evm_validation_ok = valid;
         self.register_swap(&record).await?;
@@ -126,10 +130,9 @@ impl AtomicRegistry {
     }
 
     pub async fn mark_svm_validated(&self, swap_id: &str, valid: bool) -> Result<()> {
-        let mut record = self.get_swap(swap_id).await?
-            .ok_or_else(|| ValidatorError::InvalidSwapState(
-                format!("Swap {} not found", swap_id)
-            ))?;
+        let mut record = self.get_swap(swap_id).await?.ok_or_else(|| {
+            ValidatorError::InvalidSwapState(format!("Swap {swap_id} not found"))
+        })?;
 
         record.svm_validation_ok = valid;
         self.register_swap(&record).await?;
@@ -137,11 +140,14 @@ impl AtomicRegistry {
     }
 
     pub async fn delete_swap(&self, swap_id: &str) -> Result<()> {
-        let conn = self.redis_client.get_async_connection().await
+        let conn = self
+            .redis_client
+            .get_async_connection()
+            .await
             .map_err(|e| ValidatorError::RedisError(e.to_string()))?;
 
         let mut conn = conn;
-        let key = format!("swap:{}", swap_id);
+        let key = format!("swap:{swap_id}");
 
         redis::cmd("DEL")
             .arg(&key)

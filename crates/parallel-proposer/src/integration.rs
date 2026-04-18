@@ -1,8 +1,6 @@
 //! Lightweight integration helpers for the parallel proposer.
 
-use crate::{
-    DeclaredAccess, ParallelProposer, ProposalConfig, ProposalResult, TransactionMeta,
-};
+use crate::{DeclaredAccess, ParallelProposer, ProposalConfig, ProposalResult, TransactionMeta};
 use anyhow::Result;
 use std::sync::Arc;
 

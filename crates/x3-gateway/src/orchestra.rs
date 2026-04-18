@@ -111,7 +111,9 @@ pub async fn dispatch_orchestra_intent(
                 .dispatch_intent(intent_id, evidence)
                 .await
                 .map_err(map_upstream_error)?;
-            let intent = db.upsert_orchestra_intent_from_control_plane(&remote.intent).await?;
+            let intent = db
+                .upsert_orchestra_intent_from_control_plane(&remote.intent)
+                .await?;
             let evidence = db
                 .upsert_evidence_bundle_from_control_plane(&remote.evidence)
                 .await?;
@@ -183,7 +185,8 @@ pub async fn get_evidence_bundle(
     match orchestra_client {
         Some(client) => match client.get_evidence_bundle(bundle_id).await {
             Ok(remote) => Ok(Some(
-                db.upsert_evidence_bundle_from_control_plane(&remote).await?,
+                db.upsert_evidence_bundle_from_control_plane(&remote)
+                    .await?,
             )),
             Err(error) => {
                 let message = error.to_string();
@@ -215,9 +218,7 @@ fn parse_intent_kind(kind: &str) -> Result<IntentKind> {
         "benchmarking" | "benchmark" | "provider_onboarding" | "onboarding_benchmark" => {
             Ok(IntentKind::Benchmarking)
         }
-        "publication" | "content_publication" | "media_publication" => {
-            Ok(IntentKind::Publication)
-        }
+        "publication" | "content_publication" | "media_publication" => Ok(IntentKind::Publication),
         "sanctions" | "sanction" => Ok(IntentKind::Sanctions),
         "treasury_action" | "treasury" => Ok(IntentKind::TreasuryAction),
         "strategy_activation" | "strategy" => Ok(IntentKind::StrategyActivation),

@@ -554,8 +554,7 @@ fn test_secret_generated_by_osrng_is_unique() {
         for j in (i + 1)..secrets.len() {
             assert_ne!(
                 secrets[i].0, secrets[j].0,
-                "OsRng-generated secrets at indices {} and {} are identical — entropy failure",
-                i, j
+                "OsRng-generated secrets at indices {i} and {j} are identical — entropy failure"
             );
         }
     }
@@ -707,4 +706,118 @@ fn test_htlc_secret_replay_same_session_is_rejected() {
     // Replay of the same secret must be rejected
     let replay = coordinator.record_fast_claim(&session_id, secret, now);
     assert!(replay.is_err(), "Replay of own secret must be rejected");
+}
+
+fn make_fast_htlc(hash_lock: HtlcHash, now: u64) -> HtlcRecord {
+    HtlcRecord {
+        id: HtlcId(b"fast-phase".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Svm,
+            recipient: vec![],
+            hash_lock,
+            timelock: now + 3600,
+            asset: vec![0u8; 32],
+            amount: 1_000,
+        },
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
+        params_hash: [0u8; 32],
+    }
+}
+
+#[test]
+fn test_session_id_uses_full_blake2b_hex_not_hash_lock() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1_700_000_000u64;
+
+    let (session_id, _secret, hash_lock) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    assert!(session_id.starts_with("swap-"));
+    assert_eq!(session_id.len(), 69, "expected swap- + 64 hex chars");
+    assert!(session_id[5..].chars().all(|ch| ch.is_ascii_hexdigit()));
+    assert_ne!(session_id, format!("swap-{}", hash_lock.to_hex()));
+}
+
+#[test]
+fn test_phase_guards_block_out_of_order_mutators() {
+    let mut coordinator = SwapCoordinator::with_default_config();
+    let now = 1_700_000_000u64;
+
+    let (session_id, secret, hash_lock) = coordinator
+        .setup_swap(VmTarget::Svm, VmTarget::Evm { chain_id: 1 }, vec![], now)
+        .unwrap();
+
+    coordinator
+        .record_htlc_fast(&session_id, make_fast_htlc(hash_lock, now), now)
+        .unwrap();
+
+    let first_slow_lock = HtlcRecord {
+        id: HtlcId(b"slow-phase-1".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Evm { chain_id: 1 },
+            recipient: vec![],
+            hash_lock,
+            timelock: now + 7200,
+            asset: vec![0u8; 20],
+            amount: 1_000,
+        },
+        status: HtlcStatus::Funded,
+        created_at_block: 100,
+        confirmations_required: 1,
+        confirmations: 1,
+        params_hash: [0u8; 32],
+    };
+    coordinator
+        .record_htlc_slow(&session_id, first_slow_lock, now)
+        .unwrap();
+
+    let duplicate_slow_lock = HtlcRecord {
+        id: HtlcId(b"slow-phase-2".to_vec()),
+        params: HtlcCreateParams {
+            vm: VmTarget::Evm { chain_id: 1 },
+            recipient: vec![],
+            hash_lock,
+            timelock: now + 7200,
+            asset: vec![0u8; 20],
+            amount: 1_000,
+        },
+        status: HtlcStatus::Funded,
+        created_at_block: 101,
+        confirmations_required: 1,
+        confirmations: 1,
+        params_hash: [1u8; 32],
+    };
+    let slow_after_lock_phase = coordinator.record_htlc_slow(&session_id, duplicate_slow_lock, now);
+    assert!(matches!(
+        slow_after_lock_phase,
+        Err(CoordinatorError::InvalidPhaseTransition { .. })
+    ));
+
+    let fast_claim_too_early = coordinator.record_fast_claim(&session_id, secret.clone(), now);
+    assert!(matches!(
+        fast_claim_too_early,
+        Err(CoordinatorError::InvalidPhaseTransition { .. })
+    ));
+
+    let slow_claim_too_early = coordinator.record_slow_claim(&session_id, now);
+    assert!(matches!(
+        slow_claim_too_early,
+        Err(CoordinatorError::InvalidPhaseTransition { .. })
+    ));
+
+    let refunds_too_early = coordinator.record_refunds(&session_id, now);
+    assert!(matches!(
+        refunds_too_early,
+        Err(CoordinatorError::InvalidPhaseTransition { .. })
+    ));
+
+    assert_eq!(
+        coordinator.get_session(&session_id).unwrap().phase,
+        SwapPhase::HtlcsLocked,
+        "out-of-order mutators must not advance the state machine"
+    );
 }

@@ -72,7 +72,7 @@ def main() -> int:
             "(atlasKernel_getAssetMetadata/x3_getAssetMetadata)"
         )
     else:
-        asset_meta = rpc_call(url, asset_method, [1000, None])
+        asset_meta = rpc_call(url, asset_method, [1000])
         print(f"{asset_method}:", asset_meta)
 
     h256_zero = "0x" + ("00" * 32)
@@ -94,19 +94,16 @@ def main() -> int:
                 50,
                 None,
             ],
-            # Minimal probe payload; invalid params are acceptable
-            # for wiring checks.
+            # Current RPC expects a single JSON object.
             "atomicTrade_getSwapQuote": [
-                h256_zero,
-                h256_zero,
-                1_000_000_000_000,
+                {
+                    "token_in": "X3",
+                    "token_out": "USDC",
+                    "amount_in": str(1_000_000_000_000),
+                }
             ],
         }
-        simulate = rpc_call(
-            url,
-            simulate_method,
-            simulate_params[simulate_method],
-        )
+        simulate = rpc_call(url, simulate_method, simulate_params[simulate_method])
         print(f"{simulate_method}:", simulate)
 
     estimate_method = pick_method(
@@ -121,17 +118,16 @@ def main() -> int:
     else:
         estimate_params = {
             "atomicTrade_estimateCost": [2, [0, 1], None],
+            # Current RPC expects a single JSON object.
             "atomicTrade_estimateSlippage": [
-                h256_zero,
-                h256_zero,
-                1_000_000_000_000,
+                {
+                    "token_in": "X3",
+                    "token_out": "USDC",
+                    "amount_in": str(1_000_000_000_000),
+                }
             ],
         }
-        estimate = rpc_call(
-            url,
-            estimate_method,
-            estimate_params[estimate_method],
-        )
+        estimate = rpc_call(url, estimate_method, estimate_params[estimate_method])
         print(f"{estimate_method}:", estimate)
 
     price_method = pick_method(

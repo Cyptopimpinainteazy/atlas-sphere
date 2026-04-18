@@ -160,15 +160,17 @@ impl InventoryManager {
             updated_at_ms: now,
         };
 
-        self.obligations.insert(request.route_id, obligation.clone());
+        self.obligations
+            .insert(request.route_id, obligation.clone());
         Ok(obligation)
     }
 
     pub fn release_reservation(&mut self, route_id: &H256) -> Result<()> {
         let (source_key, source_amount) = {
-            let obligation = self.obligations.get_mut(route_id).ok_or_else(|| {
-                PositionManagerError::ObligationNotFound(hex::encode(route_id))
-            })?;
+            let obligation = self
+                .obligations
+                .get_mut(route_id)
+                .ok_or_else(|| PositionManagerError::ObligationNotFound(hex::encode(route_id)))?;
 
             if obligation.status != ObligationStatus::Reserved {
                 return Err(PositionManagerError::InvalidObligationState(format!(
@@ -191,9 +193,10 @@ impl InventoryManager {
 
     pub fn mark_pending_out(&mut self, route_id: &H256) -> Result<()> {
         let (source_key, source_amount) = {
-            let obligation = self.obligations.get_mut(route_id).ok_or_else(|| {
-                PositionManagerError::ObligationNotFound(hex::encode(route_id))
-            })?;
+            let obligation = self
+                .obligations
+                .get_mut(route_id)
+                .ok_or_else(|| PositionManagerError::ObligationNotFound(hex::encode(route_id)))?;
 
             if obligation.status != ObligationStatus::Reserved {
                 return Err(PositionManagerError::InvalidObligationState(format!(
@@ -216,9 +219,10 @@ impl InventoryManager {
 
     pub fn mark_pending_in(&mut self, route_id: &H256) -> Result<()> {
         let (source_key, destination_key, source_amount, destination_amount) = {
-            let obligation = self.obligations.get_mut(route_id).ok_or_else(|| {
-                PositionManagerError::ObligationNotFound(hex::encode(route_id))
-            })?;
+            let obligation = self
+                .obligations
+                .get_mut(route_id)
+                .ok_or_else(|| PositionManagerError::ObligationNotFound(hex::encode(route_id)))?;
 
             if obligation.status != ObligationStatus::PendingOutbound {
                 return Err(PositionManagerError::InvalidObligationState(format!(
@@ -244,7 +248,8 @@ impl InventoryManager {
         }
 
         {
-            let destination = self.ensure_balance_mut(destination_key.chain_id, destination_key.asset);
+            let destination =
+                self.ensure_balance_mut(destination_key.chain_id, destination_key.asset);
             destination.pending_in = destination.pending_in.saturating_add(destination_amount);
         }
 
@@ -253,9 +258,10 @@ impl InventoryManager {
 
     pub fn settle_inbound(&mut self, route_id: &H256) -> Result<()> {
         let (destination_key, destination_amount) = {
-            let obligation = self.obligations.get_mut(route_id).ok_or_else(|| {
-                PositionManagerError::ObligationNotFound(hex::encode(route_id))
-            })?;
+            let obligation = self
+                .obligations
+                .get_mut(route_id)
+                .ok_or_else(|| PositionManagerError::ObligationNotFound(hex::encode(route_id)))?;
 
             if obligation.status != ObligationStatus::PendingInbound {
                 return Err(PositionManagerError::InvalidObligationState(format!(
@@ -457,12 +463,14 @@ impl AccountingEngine {
 
         let chain_breakdown = chain_totals
             .into_iter()
-            .map(|(chain_id, (total_value_usd, asset_count, positions_count))| ChainBalance {
-                chain_id,
-                total_value_usd,
-                asset_count,
-                positions_count,
-            })
+            .map(
+                |(chain_id, (total_value_usd, asset_count, positions_count))| ChainBalance {
+                    chain_id,
+                    total_value_usd,
+                    asset_count,
+                    positions_count,
+                },
+            )
             .collect();
 
         let snapshot = PositionSnapshot {
@@ -490,7 +498,11 @@ impl AccountingEngine {
         self.snapshots[start..].iter().collect()
     }
 
-    pub fn calculate_diff(&self, snapshot1: &PositionSnapshot, snapshot2: &PositionSnapshot) -> SnapshotDiff {
+    pub fn calculate_diff(
+        &self,
+        snapshot1: &PositionSnapshot,
+        snapshot2: &PositionSnapshot,
+    ) -> SnapshotDiff {
         let mut added = Vec::new();
         let mut removed = Vec::new();
         let mut changed = Vec::new();
@@ -501,7 +513,9 @@ impl AccountingEngine {
                 .iter()
                 .find(|existing| existing.position_id == next.position_id)
             {
-                Some(previous) if previous.amount != next.amount || previous.value_usd != next.value_usd => {
+                Some(previous)
+                    if previous.amount != next.amount || previous.value_usd != next.value_usd =>
+                {
                     changed.push(PositionDiff {
                         position_id: next.position_id.clone(),
                         old_amount: previous.amount,
@@ -555,7 +569,10 @@ impl AccountingEngine {
         for balance in self.current_balances.values() {
             total_value_usd = total_value_usd.saturating_add(balance.value_usd);
 
-            if let Some(chain) = chain_breakdown.iter_mut().find(|chain: &&mut ChainSummary| chain.chain_id == balance.chain_id) {
+            if let Some(chain) = chain_breakdown
+                .iter_mut()
+                .find(|chain: &&mut ChainSummary| chain.chain_id == balance.chain_id)
+            {
                 chain.total_value_usd = chain.total_value_usd.saturating_add(balance.value_usd);
                 chain.positions_count += 1;
             } else {
@@ -567,25 +584,29 @@ impl AccountingEngine {
                 });
             }
 
-            let entry = asset_breakdown
-                .entry(balance.asset)
-                .or_insert((format!("Asset_{:?}", balance.asset), U256::zero(), Vec::new()));
+            let entry = asset_breakdown.entry(balance.asset).or_insert((
+                format!("Asset_{:?}", balance.asset),
+                U256::zero(),
+                Vec::new(),
+            ));
             entry.1 = entry.1.saturating_add(balance.amount);
             entry.2.push((balance.chain_id, balance.amount));
         }
 
         let asset_breakdown = asset_breakdown
             .into_iter()
-            .map(|(asset_address, (symbol, total_amount, chains_distribution))| AssetSummary {
-                asset_address,
-                symbol,
-                total_amount,
-                total_value_usd: self
-                    .normalizer
-                    .normalize_to_usd(&asset_address, total_amount)
-                    .unwrap_or(U256::zero()),
-                chains_distribution,
-            })
+            .map(
+                |(asset_address, (symbol, total_amount, chains_distribution))| AssetSummary {
+                    asset_address,
+                    symbol,
+                    total_amount,
+                    total_value_usd: self
+                        .normalizer
+                        .normalize_to_usd(&asset_address, total_amount)
+                        .unwrap_or(U256::zero()),
+                    chains_distribution,
+                },
+            )
             .collect();
 
         Ok(PortfolioSummary {

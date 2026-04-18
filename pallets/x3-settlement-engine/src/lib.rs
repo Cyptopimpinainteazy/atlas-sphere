@@ -107,7 +107,7 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
     use sp_core::{ed25519, ConstU32, H256};
     use sp_io::hashing::blake2_256;
-    use sp_runtime::SaturatedConversion;
+    use sp_runtime::{Saturating, SaturatedConversion};
     use sp_std::vec::Vec;
 
     /// Current storage version
@@ -307,6 +307,35 @@ pub mod pallet {
         OptionQuery,
     >;
 
+    /// Deadline index: block_number → bounded list of intent_ids whose timeout expires at that block.
+    ///
+    /// Populated by `create_intent` and consumed (removed) by `on_initialize` to provide automatic,
+    /// O(1)-lookup timeout refunds without a full storage scan. Capped at 20 intents per block to
+    /// bound on_initialize execution time; excess intents can be refunded via `refund_settlement`.
+    #[pallet::storage]
+    pub type IntentDeadlineIndex<T: Config> = StorageMap<
+        _,
+        Twox64Concat,
+        BlockNumberFor<T>,
+        BoundedVec<H256, ConstU32<20>>,
+        ValueQuery,
+    >;
+
+    /// Atomic lock expiry index: deadline_block → intent_ids whose AtomicLock expires at that block.
+    ///
+    /// Populated by `lock_escrow` when a lock is created (Prepare phase) and updated when the lock
+    /// transitions to CommitInProgress (new finalize deadline). Consumed by `on_finalize` to replace
+    /// the unbounded `AtomicLocks::iter()` scan — reduces on_finalize cost from O(all_locks) to
+    /// O(locks_expiring_at_this_block), preventing a chain-halt DoS via lock-spam.  P0 fix.
+    #[pallet::storage]
+    pub type AtomicLockExpiryIndex<T: Config> = StorageMap<
+        _,
+        Twox64Concat,
+        u32, // deadline block number (matches commit_deadline / finalize_deadline: u32 in LockPhase)
+        BoundedVec<H256, ConstU32<20>>,
+        ValueQuery,
+    >;
+
     // ============================================================================
     // Events
     // ============================================================================
@@ -499,33 +528,74 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_initialize(_n: BlockNumberFor<T>) -> Weight {
-            // Process any expired settlements that need automatic refunds
-            // In production, this would iterate through pending intents and trigger refunds
-            // for expired timeouts. For now, we skip this to avoid storage iteration costs.
-            Weight::zero()
+        fn on_initialize(n: BlockNumberFor<T>) -> Weight {
+            // C-006: Process automatic refunds for intents whose deadline falls at block `n`.
+            // IntentDeadlineIndex is taken (removed) to guarantee each entry is processed
+            // exactly once. Capped at 20 refunds per block to bound execution time;
+            // any remaining intents are unreachable via this path but remain refundable
+            // through the `refund_settlement` extrinsic.
+            const MAX_REFUNDS_PER_BLOCK: usize = 20;
+
+            // take() removes the entry and returns the BoundedVec: 1 read + 1 write.
+            let expired = IntentDeadlineIndex::<T>::take(n);
+            let mut weight =
+                <T as frame_system::Config>::DbWeight::get().reads_writes(1, 1);
+
+            for intent_id in expired.iter().take(MAX_REFUNDS_PER_BLOCK) {
+                // 2 reads per loop iteration: IntentStates + SettlementIntents.
+                weight =
+                    weight.saturating_add(<T as frame_system::Config>::DbWeight::get().reads(2));
+
+                let state = IntentStates::<T>::get(intent_id);
+                if !matches!(
+                    state,
+                    IntentState::Created
+                        | IntentState::FundingInProgress
+                        | IntentState::FullyFunded
+                ) {
+                    // Already finalized / refunded / halted — nothing to do.
+                    continue;
+                }
+
+                if let Some(intent) = SettlementIntents::<T>::get(intent_id) {
+                    let now = T::UnixTime::now().as_secs();
+                    if now >= intent.timeout {
+                        let _ = Self::process_refund(*intent_id, &intent, RefundReason::Timeout);
+                        // process_refund touches EscrowStates, IntentStates, AtomicLocks,
+                        // ClaimedLegs, PendingIntents: conservatively charge 4R + 4W.
+                        weight = weight.saturating_add(
+                            <T as frame_system::Config>::DbWeight::get().reads_writes(4, 4),
+                        );
+                    }
+                }
+            }
+
+            weight
         }
 
         fn on_finalize(_n: BlockNumberFor<T>) {
             // Process atomic lock timeouts and emit slashing events.
             // Actual slash execution happens via scheduled extrinsic or off-chain worker.
             //
-            // SAFETY: We cap the number of locks processed per block to prevent
-            // unbounded on_finalize execution. Locks that are not processed this block
-            // will be processed in subsequent blocks.
+            // P0 FIX: Use AtomicLockExpiryIndex instead of AtomicLocks::iter() to avoid
+            // an unbounded storage scan. Previously, iter() scanned ALL locks to find expired
+            // ones — an attacker could spam lock creations to inflate scan cost and halt the
+            // chain. Now we look up only the locks expiring at this specific block number.
             const MAX_LOCKS_PER_BLOCK: usize = 20;
 
             let current_block: u32 =
                 frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
 
-            // Collect at most MAX_LOCKS_PER_BLOCK EXPIRED entries from storage.
-            // CRITICAL FIX: filter BEFORE take to ensure we process expired locks
-            // even if they are scattered throughout storage.
-            // Old pattern: .take(N).filter() could skip expired items beyond position N.
-            // New pattern: .filter().take(N) ensures we process all expired items fairly.
+            // take() removes the index entry and returns the bounded vec: O(1) lookup.
+            // Then we fetch only the specific locks registered for this block.
+            let expiring_ids = AtomicLockExpiryIndex::<T>::take(current_block);
             let expired_locks: Vec<(H256, atomic_lock::AtomicLock<BalanceOf<T>, T::AccountId>)> =
-                AtomicLocks::<T>::iter()
-                    .filter(|(_, lock)| lock.is_expired(current_block))
+                expiring_ids
+                    .iter()
+                    .filter_map(|id| AtomicLocks::<T>::get(id).map(|lock| (*id, lock)))
+                    // C-004: skip zero-amount locks; they were created before the fix and
+                    // would fire spurious AtomicLockTimeoutSlashed events/slash no funds.
+                    .filter(|(_, lock)| lock.amount > BalanceOf::<T>::default())
                     .take(MAX_LOCKS_PER_BLOCK)
                     .collect();
 
@@ -624,22 +694,23 @@ pub mod pallet {
             PendingIntents::<T>::mutate(&maker, |p| *p = p.saturating_add(1));
             TotalIntents::<T>::mutate(|t| *t = t.saturating_add(1));
 
-            // Initialize atomic lock for 2PC: Prepare phase
-            // Lock funds for commitment. Deadline is 2 hours (blocks assumed ~12s = 600 blocks for 2 hours)
-            let current_block = frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
-            let commit_deadline_blocks: u32 = 600; // ~2 hours
-
-            let atomic_lock = atomic_lock::AtomicLock::new_prepare(
-                intent_id.into(),
-                maker.clone(),
-                Default::default(), // Amount set during lock_escrow, placeholder here
-                maker.clone(),      // Escrow account (temp, will be set per-leg)
-                Default::default(), // Executor ID (temp, set during finalize)
-                current_block,
-                commit_deadline_blocks,
-            );
-
-            AtomicLocks::<T>::insert(intent_id, atomic_lock);
+            // C-006: register this intent's timeout in the deadline index so that
+            // on_initialize can automatically trigger a refund without a full table scan.
+            // X3 targets ~6 s block times; divide timeout seconds by 6 to get blocks.
+            {
+                let secs_to_deadline =
+                    timeout_seconds.unwrap_or(T::DefaultSettlementTimeout::get());
+                // Add 1 block of padding so the refund fires strictly AFTER the Unix timeout.
+                let blocks_until_deadline: u32 =
+                    ((secs_to_deadline / 6).saturating_add(1)) as u32;
+                let deadline_block = frame_system::Pallet::<T>::block_number()
+                    .saturating_add(blocks_until_deadline.saturated_into());
+                IntentDeadlineIndex::<T>::mutate(deadline_block, |list| {
+                    // Silently drop if the slot is full (>20 intents/block);
+                    // the intent is still refundable via the `refund_settlement` extrinsic.
+                    let _ = list.try_push(intent_id);
+                });
+            }
 
             Self::deposit_event(Event::X3IntentCreated {
                 intent_id,
@@ -719,6 +790,34 @@ pub mod pallet {
             // Store escrow
             EscrowStates::<T>::insert(intent_id, leg_index, escrow_leg);
 
+            // C-004: Create AtomicLock with the actual locked amount on the first escrow leg.
+            // The lock is created here (not in create_intent) so the amount is non-zero.
+            if !AtomicLocks::<T>::contains_key(intent_id) {
+                let current_block =
+                    frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
+                use sp_runtime::SaturatedConversion;
+                let lock_amount: BalanceOf<T> = amount.saturated_into();
+                let commit_deadline_blocks: u32 = 600; // ~2 hours
+                let atomic_lock = atomic_lock::AtomicLock::new_prepare(
+                    intent_id.into(),
+                    who.clone(),
+                    lock_amount,     // actual amount from this escrow leg
+                    who.clone(),     // depositor is the escrow account
+                    Default::default(),
+                    current_block,
+                    commit_deadline_blocks,
+                );
+                AtomicLocks::<T>::insert(intent_id, atomic_lock);
+                // Register in AtomicLockExpiryIndex so on_finalize can slash without
+                // an unbounded scan over all locks (P0 fix — prevents chain-halt DoS).
+                // Register at deadline+1: is_expired returns true when current_block > deadline,
+                // so the first block where the lock is expired is deadline+1.
+                let expiry_block = current_block + commit_deadline_blocks + 1;
+                AtomicLockExpiryIndex::<T>::mutate(expiry_block, |ids| {
+                    let _ = ids.try_push(intent_id);
+                });
+            }
+
             // Update intent
             intent.legs_locked = intent.legs_locked.saturating_add(1);
             SettlementIntents::<T>::insert(intent_id, intent.clone());
@@ -733,9 +832,32 @@ pub mod pallet {
                         frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
                     let finalize_deadline_blocks: u32 = 600; // ~2 hours for finalization
 
+                    // Extract old prepare deadline before transitioning, so we can move
+                    // the intent_id to its new slot in AtomicLockExpiryIndex.
+                    let old_expiry = match &atomic_lock.phase {
+                        crate::atomic_lock::LockPhase::LockedForCommit { commit_deadline, .. } => {
+                            Some(*commit_deadline)
+                        }
+                        _ => None,
+                    };
+
                     // Transition to Commit phase - if this fails, we log but don't fail the extrinsic
                     // since the lock was already created in Prepare phase
                     let _ = atomic_lock.lock_for_commit(current_block, finalize_deadline_blocks);
+
+                    // Update the expiry index: remove from old prepare deadline slot and
+                    // register at the new finalize deadline so on_finalize remains bounded.
+                    // Use deadline+1 since is_expired fires when current_block > deadline.
+                    let new_expiry = current_block + finalize_deadline_blocks + 1;
+                    if let Some(old) = old_expiry {
+                        let old_slot = old + 1; // old was also registered at deadline+1
+                        AtomicLockExpiryIndex::<T>::mutate(old_slot, |ids| {
+                            ids.retain(|x| *x != intent_id);
+                        });
+                    }
+                    AtomicLockExpiryIndex::<T>::mutate(new_expiry, |ids| {
+                        let _ = ids.try_push(intent_id);
+                    });
 
                     AtomicLocks::<T>::insert(intent_id, atomic_lock);
                 }
@@ -982,6 +1104,7 @@ pub mod pallet {
             origin: OriginFor<T>,
             intent_id: H256,
             btc_txid: H256,
+            tx_index: u32,      // C-009: position of tx in block, required for direction-aware Merkle verification
             vout: u32,
             amount_sats: u64,
             merkle_proof: Vec<H256>,
@@ -1000,7 +1123,7 @@ pub mod pallet {
             );
 
             // Verify merkle proof
-            let is_valid = Self::verify_btc_merkle_proof(&btc_txid, &merkle_proof, &block_header)?;
+            let is_valid = Self::verify_btc_merkle_proof(&btc_txid, tx_index, &merkle_proof, &block_header)?;
             ensure!(is_valid, Error::<T>::InvalidBtcProof);
 
             // Store/update block header
@@ -1657,24 +1780,37 @@ pub mod pallet {
         /// The proof path allows us to reconstruct the root from the transaction hash.
         fn verify_btc_merkle_proof(
             txid: &H256,
+            tx_index: u32,
             proof: &[H256],
             header: &BtcBlockHeader,
         ) -> Result<bool, DispatchError> {
-            // Start with the transaction hash (leaf of merkle tree)
+            // C-009: Bitcoin Merkle trees require direction-aware concatenation.
+            // When the current node is a LEFT child (index is even), it goes first.
+            // When it is a RIGHT child (index is odd), the sibling goes first.
+            // Without this, the reconstructed root will be wrong for any tx that
+            // is not the leftmost leaf at every level.
             let mut current_hash = *txid;
+            let mut index = tx_index;
 
-            // Process each hash in the proof path, moving up the tree
-            for proof_hash in proof {
-                // Concatenate current hash with proof hash
-                // The order matters: we need to know if our hash is left or right
-                // Convention: concatenate in the order they appear in the tree
-                let mut combined = [0u8; 64];
-                combined[0..32].copy_from_slice(current_hash.as_bytes());
-                combined[32..64].copy_from_slice(proof_hash.as_bytes());
+            for sibling in proof {
+                let combined = if index % 2 == 0 {
+                    // Current node is a left child — concatenate current || sibling
+                    let mut buf = [0u8; 64];
+                    buf[0..32].copy_from_slice(current_hash.as_bytes());
+                    buf[32..64].copy_from_slice(sibling.as_bytes());
+                    buf
+                } else {
+                    // Current node is a right child — concatenate sibling || current
+                    let mut buf = [0u8; 64];
+                    buf[0..32].copy_from_slice(sibling.as_bytes());
+                    buf[32..64].copy_from_slice(current_hash.as_bytes());
+                    buf
+                };
 
                 // Double-SHA256 (Bitcoin's standard hash)
                 let first_hash = sp_io::hashing::sha2_256(&combined);
                 current_hash = H256::from(sp_io::hashing::sha2_256(&first_hash));
+                index /= 2;
             }
 
             // Verify the reconstructed hash matches the merkle root from the block header

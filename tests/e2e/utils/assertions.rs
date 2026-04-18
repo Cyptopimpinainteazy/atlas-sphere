@@ -1,11 +1,11 @@
 //! E2E Test Assertions
-//! 
+//!
 //! Provides custom assertion utilities and matchers for E2E testing
 //! to make tests more readable and provide better error messages.
 
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// Custom result type for E2E test assertions
 pub type E2EResult = Result<(), E2EAssertionError>;
@@ -65,13 +65,14 @@ impl BlockchainAssertions {
     pub async fn assert_transaction_confirmed(
         tx_hash: &str,
         rpc_url: &str,
-        timeout: Duration
+        timeout: Duration,
     ) -> E2EResult {
         let start_time = SystemTime::now();
         let client = reqwest::Client::new();
 
         while start_time.elapsed()? < timeout {
-            let response = client.post(rpc_url)
+            let response = client
+                .post(rpc_url)
                 .json(&serde_json::json!({
                     "jsonrpc": "2.0",
                     "method": "eth_getTransactionReceipt",
@@ -104,11 +105,12 @@ impl BlockchainAssertions {
     pub async fn assert_account_balance(
         address: &str,
         expected_balance: u128,
-        rpc_url: &str
+        rpc_url: &str,
     ) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.post(rpc_url)
+
+        let response = client
+            .post(rpc_url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "eth_getBalance",
@@ -119,20 +121,23 @@ impl BlockchainAssertions {
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("Failed to get balance for address {}", address)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "Failed to get balance for address {}",
+                address
+            )));
         }
 
         let result: serde_json::Value = response.json().await?;
         if let Some(balance_hex) = result.get("result") {
             let balance_str = balance_hex.as_str().unwrap_or("0x0");
-            let actual_balance = u128::from_str_radix(balance_str.trim_start_matches("0x"), 16)
-                .unwrap_or(0);
+            let actual_balance =
+                u128::from_str_radix(balance_str.trim_start_matches("0x"), 16).unwrap_or(0);
 
             if actual_balance >= expected_balance {
-                info!("Account {} has sufficient balance: {} >= {}", 
-                      address, actual_balance, expected_balance);
+                info!(
+                    "Account {} has sufficient balance: {} >= {}",
+                    address, actual_balance, expected_balance
+                );
                 Ok(())
             } else {
                 Err(E2EAssertionError::new(format!(
@@ -141,20 +146,19 @@ impl BlockchainAssertions {
                 )))
             }
         } else {
-            Err(E2EAssertionError::new(
-                format!("Invalid balance response for address {}", address)
-            ))
+            Err(E2EAssertionError::new(format!(
+                "Invalid balance response for address {}",
+                address
+            )))
         }
     }
 
     /// Assert that contract deployment was successful
-    pub async fn assert_contract_deployed(
-        contract_address: &str,
-        rpc_url: &str
-    ) -> E2EResult {
+    pub async fn assert_contract_deployed(contract_address: &str, rpc_url: &str) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.post(rpc_url)
+
+        let response = client
+            .post(rpc_url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "eth_getCode",
@@ -165,26 +169,30 @@ impl BlockchainAssertions {
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("Failed to get code for contract {}", contract_address)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "Failed to get code for contract {}",
+                contract_address
+            )));
         }
 
         let result: serde_json::Value = response.json().await?;
         if let Some(code) = result.get("result") {
             let code_str = code.as_str().unwrap_or("0x");
-            if code_str.len() > 2 { // Has actual bytecode (not just "0x")
+            if code_str.len() > 2 {
+                // Has actual bytecode (not just "0x")
                 info!("Contract {} successfully deployed", contract_address);
                 Ok(())
             } else {
-                Err(E2EAssertionError::new(
-                    format!("Contract {} has no bytecode", contract_address)
-                ))
+                Err(E2EAssertionError::new(format!(
+                    "Contract {} has no bytecode",
+                    contract_address
+                )))
             }
         } else {
-            Err(E2EAssertionError::new(
-                format!("Invalid code response for contract {}", contract_address)
-            ))
+            Err(E2EAssertionError::new(format!(
+                "Invalid code response for contract {}",
+                contract_address
+            )))
         }
     }
 }
@@ -198,17 +206,19 @@ impl ContractAssertions {
         contract_address: &str,
         function_signature: &str,
         expected_result: &str,
-        rpc_url: &str
+        rpc_url: &str,
     ) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let call_data = format!("{}{}", 
+
+        let call_data = format!(
+            "{}{}",
             // This would need proper ABI encoding in a real implementation
-            "0x12345678", // Mock function signature hash
+            "0x12345678",    // Mock function signature hash
             expected_result  // Mock parameter encoding
         );
 
-        let response = client.post(rpc_url)
+        let response = client
+            .post(rpc_url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "eth_call",
@@ -222,16 +232,20 @@ impl ContractAssertions {
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("Contract call failed for function {}", function_signature)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "Contract call failed for function {}",
+                function_signature
+            )));
         }
 
         let result: serde_json::Value = response.json().await?;
         if let Some(call_result) = result.get("result") {
             let result_str = call_result.as_str().unwrap_or("");
             if result_str.contains(expected_result) {
-                info!("Contract call {} returned expected result", function_signature);
+                info!(
+                    "Contract call {} returned expected result",
+                    function_signature
+                );
                 Ok(())
             } else {
                 Err(E2EAssertionError::new(format!(
@@ -240,9 +254,10 @@ impl ContractAssertions {
                 )))
             }
         } else {
-            Err(E2EAssertionError::new(
-                format!("Invalid contract call response for {}", function_signature)
-            ))
+            Err(E2EAssertionError::new(format!(
+                "Invalid contract call response for {}",
+                function_signature
+            )))
         }
     }
 
@@ -252,12 +267,13 @@ impl ContractAssertions {
         event_signature: &str,
         from_block: u64,
         to_block: u64,
-        rpc_url: &str
+        rpc_url: &str,
     ) -> E2EResult {
         let client = reqwest::Client::new();
-        
+
         // Mock event log query - in real implementation this would use eth_getLogs
-        let response = client.post(rpc_url)
+        let response = client
+            .post(rpc_url)
             .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "eth_getLogs",
@@ -272,15 +288,19 @@ impl ContractAssertions {
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("Failed to query logs for contract {}", contract_address)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "Failed to query logs for contract {}",
+                contract_address
+            )));
         }
 
         let result: serde_json::Value = response.json().await?;
         if let Some(logs) = result.get("result") {
             if logs.is_array() && !logs.as_array().unwrap().is_empty() {
-                info!("Event {} was emitted for contract {}", event_signature, contract_address);
+                info!(
+                    "Event {} was emitted for contract {}",
+                    event_signature, contract_address
+                );
                 Ok(())
             } else {
                 Err(E2EAssertionError::new(format!(
@@ -289,9 +309,10 @@ impl ContractAssertions {
                 )))
             }
         } else {
-            Err(E2EAssertionError::new(
-                format!("Invalid logs response for contract {}", contract_address)
-            ))
+            Err(E2EAssertionError::new(format!(
+                "Invalid logs response for contract {}",
+                contract_address
+            )))
         }
     }
 }
@@ -301,20 +322,19 @@ pub struct GPUSwarmAssertions;
 
 impl GPUSwarmAssertions {
     /// Assert that GPU node is available
-    pub async fn assert_node_available(
-        node_id: &str,
-        coordinator_url: &str
-    ) -> E2EResult {
+    pub async fn assert_node_available(node_id: &str, coordinator_url: &str) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.get(&format!("{}/swarm/nodes", coordinator_url))
+
+        let response = client
+            .get(&format!("{}/swarm/nodes", coordinator_url))
             .send()
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("Failed to query swarm nodes from {}", coordinator_url)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "Failed to query swarm nodes from {}",
+                coordinator_url
+            )));
         }
 
         let nodes: Vec<serde_json::Value> = response.json().await?;
@@ -338,13 +358,11 @@ impl GPUSwarmAssertions {
     }
 
     /// Assert that task was successfully submitted to swarm
-    pub async fn assert_task_submitted(
-        task_id: &str,
-        coordinator_url: &str
-    ) -> E2EResult {
+    pub async fn assert_task_submitted(task_id: &str, coordinator_url: &str) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.get(&format!("{}/swarm/tasks/{}", coordinator_url, task_id))
+
+        let response = client
+            .get(&format!("{}/swarm/tasks/{}", coordinator_url, task_id))
             .send()
             .await?;
 
@@ -373,18 +391,20 @@ impl DNSAssertions {
     pub async fn assert_domain_resolution(
         domain: &str,
         expected_ip: &str,
-        dns_server_url: &str
+        dns_server_url: &str,
     ) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.get(&format!("{}/resolve/{}", dns_server_url, domain))
+
+        let response = client
+            .get(&format!("{}/resolve/{}", dns_server_url, domain))
             .send()
             .await?;
 
         if !response.status().is_success() {
-            return Err(E2EAssertionError::new(
-                format!("DNS resolution failed for domain {}", domain)
-            ));
+            return Err(E2EAssertionError::new(format!(
+                "DNS resolution failed for domain {}",
+                domain
+            )));
         }
 
         let result: serde_json::Value = response.json().await?;
@@ -395,13 +415,16 @@ impl DNSAssertions {
             } else {
                 Err(E2EAssertionError::new(format!(
                     "Domain {} resolves to {} but expected {}",
-                    domain, ip.as_str().unwrap_or(""), expected_ip
+                    domain,
+                    ip.as_str().unwrap_or(""),
+                    expected_ip
                 )))
             }
         } else {
-            Err(E2EAssertionError::new(
-                format!("Domain {} resolution returned no IP", domain)
-            ))
+            Err(E2EAssertionError::new(format!(
+                "Domain {} resolution returned no IP",
+                domain
+            )))
         }
     }
 }
@@ -414,18 +437,21 @@ impl PerformanceAssertions {
     pub async fn assert_operation_timing<F, T>(
         operation_name: &str,
         max_duration: Duration,
-        operation: F
+        operation: F,
     ) -> E2EResult
     where
         F: std::future::Future<Output = Result<T, Box<dyn std::error::Error>>>,
     {
         let start_time = SystemTime::now();
-        
+
         match operation.await {
             Ok(_) => {
                 let duration = start_time.elapsed()?;
                 if duration <= max_duration {
-                    info!("Operation {} completed within time: {:?}", operation_name, duration);
+                    info!(
+                        "Operation {} completed within time: {:?}",
+                        operation_name, duration
+                    );
                     Ok(())
                 } else {
                     Err(E2EAssertionError::new(format!(
@@ -437,7 +463,7 @@ impl PerformanceAssertions {
             Err(e) => Err(E2EAssertionError::new(format!(
                 "Operation {} failed: {}",
                 operation_name, e
-            )))
+            ))),
         }
     }
 
@@ -445,24 +471,23 @@ impl PerformanceAssertions {
     pub async fn assert_load_handling<F, Fut, T>(
         operation_name: &str,
         concurrent_requests: usize,
-        operation: F
+        operation: F,
     ) -> E2EResult
     where
         F: Fn() -> Fut,
-        Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error + Send + Sync>>> + Send + 'static,
+        Fut: std::future::Future<Output = Result<T, Box<dyn std::error::Error + Send + Sync>>>
+            + Send
+            + 'static,
         T: Send + 'static,
     {
         let mut handles = Vec::new();
-        
+
         for i in 0..concurrent_requests {
             let operation_name = format!("{}-{}", operation_name, i);
             let future = operation();
             let handle = tokio::spawn(async move {
                 future.await.map_err(|e| {
-                    E2EAssertionError::new(format!(
-                        "Request {} failed: {}",
-                        operation_name, e
-                    ))
+                    E2EAssertionError::new(format!("Request {} failed: {}", operation_name, e))
                 })
             });
             handles.push(handle);
@@ -481,8 +506,10 @@ impl PerformanceAssertions {
 
         let successful_count = results.iter().filter(|r| r.is_ok()).count();
         if successful_count == concurrent_requests {
-            info!("All {} concurrent requests for {} completed successfully", 
-                  concurrent_requests, operation_name);
+            info!(
+                "All {} concurrent requests for {} completed successfully",
+                concurrent_requests, operation_name
+            );
             Ok(())
         } else {
             let failed_count = concurrent_requests - successful_count;
@@ -499,15 +526,13 @@ pub struct FrontendAssertions;
 
 impl FrontendAssertions {
     /// Assert that web page loads successfully
-    pub async fn assert_page_loads(
-        url: &str,
-        expected_title: Option<&str>
-    ) -> E2EResult {
+    pub async fn assert_page_loads(url: &str, expected_title: Option<&str>) -> E2EResult {
         // In a real implementation, this would use a headless browser
         // For now, we'll use a simple HTTP request to check if the page responds
         let client = reqwest::Client::new();
-        
-        let response = client.get(url)
+
+        let response = client
+            .get(url)
             .timeout(Duration::from_secs(10))
             .send()
             .await?;
@@ -515,7 +540,8 @@ impl FrontendAssertions {
         if !response.status().is_success() {
             return Err(E2EAssertionError::new(format!(
                 "Page {} failed to load: HTTP {}",
-                url, response.status()
+                url,
+                response.status()
             )));
         }
 
@@ -537,11 +563,12 @@ impl FrontendAssertions {
     pub async fn assert_api_response(
         url: &str,
         expected_status: u16,
-        expected_fields: Option<Vec<&str>>
+        expected_fields: Option<Vec<&str>>,
     ) -> E2EResult {
         let client = reqwest::Client::new();
-        
-        let response = client.get(url)
+
+        let response = client
+            .get(url)
             .timeout(Duration::from_secs(5))
             .send()
             .await?;
@@ -549,13 +576,15 @@ impl FrontendAssertions {
         if response.status() != expected_status {
             return Err(E2EAssertionError::new(format!(
                 "API {} returned status {} but expected {}",
-                url, response.status(), expected_status
+                url,
+                response.status(),
+                expected_status
             )));
         }
 
         if let Some(fields) = expected_fields {
             let json: serde_json::Value = response.json().await?;
-            
+
             let mut missing_fields = Vec::new();
             for field in fields {
                 if !json.get(field).is_some() {
