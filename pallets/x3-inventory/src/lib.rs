@@ -468,7 +468,7 @@ pub mod pallet {
             let lane = Lanes::<T>::get(lane_id).ok_or(Error::<T>::LaneNotFound)?;
 
             let current = LaneUnsettledNotional::<T>::get(lane_id);
-            let new_lane_total = current + amount;
+            let new_lane_total = current.saturating_add(amount);
             ensure!(
                 new_lane_total <= lane.unsettled_cap,
                 Error::<T>::UnsettledCapExceeded

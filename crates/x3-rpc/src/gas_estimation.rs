@@ -159,11 +159,13 @@ impl GasEstimator {
             }
         }
 
-        // Heuristic fallback: EIP-2028 compliant
+        // Heuristic fallback: EIP-2028 compliant (saturating to avoid overflow)
         let estimated_gas = tx
             .data
             .iter()
-            .fold(21_000u64, |acc, &b| acc + if b == 0 { 4 } else { 16 });
+            .fold(21_000u64, |acc, &b| {
+                acc.saturating_add(if b == 0 { 4 } else { 16 })
+            });
 
         if estimated_gas > 30_000_000 {
             (

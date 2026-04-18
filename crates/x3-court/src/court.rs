@@ -19,6 +19,8 @@ use x3_proof::chain::ProofChain;
 use x3_proof::types::{AgentIdentity, BlockHeight, Hash256};
 use x3_proof::verifier::{ComparisonResult, ProofVerifier};
 
+// FIXME: ConsensusBlock and ConsensusChainState are scaffolding placeholders.
+// Real consensus replay logic must be implemented before production use.
 #[derive(Clone, Debug, Default)]
 pub struct ConsensusBlock;
 
@@ -30,7 +32,9 @@ fn apply_consensus_block(
     _block: &ConsensusBlock,
     _verify: bool,
 ) -> Result<(), String> {
-    Ok(())
+    // FIXME: Implement deterministic consensus replay. Returning an error here
+    // ensures callers (and tests) cannot silently depend on a no-op stub.
+    Err("unimplemented consensus replay".to_string())
 }
 
 /// The X3 Court. No humans. No voting. No mercy.

@@ -192,7 +192,14 @@ impl CrossChainPosition {
     }
 }
 
-/// Helper function to get current timestamp in milliseconds
+/// Helper function to get current timestamp in milliseconds.
+///
+/// Uses `std::time::SystemTime` so it is safe in both on-chain and off-chain
+/// contexts (unlike `sp_io::offchain::timestamp()` which panics outside of
+/// off-chain workers).
 fn current_timestamp() -> u64 {
-    sp_io::offchain::timestamp().unix_millis()
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
 }

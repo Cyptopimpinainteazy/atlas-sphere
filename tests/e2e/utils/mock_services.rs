@@ -548,6 +548,6 @@ impl MockServiceManager {
     pub fn get_external_chain_url(&self, chain_name: &str) -> Option<String> {
         self.external_chains
             .get(chain_name)
-            .map(|chain| chain.url.clone())
+            .map(|chain| chain.base_url.clone())
     }
 }

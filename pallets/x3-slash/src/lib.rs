@@ -407,11 +407,12 @@ pub mod pallet {
             const MAX_EXPIRATIONS_PER_CALL: usize = 50;
 
             // Find expired active bonds up to the processing cap.
+            // Filter first so .take() counts expired bonds, not all bonds.
             let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
-                .take(MAX_EXPIRATIONS_PER_CALL)
                 .filter(|(_, bond_state)| {
                     matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now
                 })
+                .take(MAX_EXPIRATIONS_PER_CALL)
                 .collect();
 
             // Slash expired bonds
@@ -482,11 +483,12 @@ pub mod pallet {
 
             let now: u32 = frame_system::Pallet::<T>::block_number().saturated_into::<u32>();
 
+            // Filter first so .take() counts expired bonds, not all storage entries.
             let expired_bonds: Vec<(H256, _)> = Bonds::<T>::iter()
-                .take(MAX_BONDS_PER_BLOCK)
                 .filter(|(_, bond_state)| {
                     matches!(bond_state.status, BondStatus::Active) && bond_state.expires_at <= now
                 })
+                .take(MAX_BONDS_PER_BLOCK)
                 .collect();
 
             for (bond_id, bond_state) in expired_bonds {

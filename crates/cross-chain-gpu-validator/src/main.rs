@@ -55,10 +55,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let metrics = dashboard.get_metrics().await;
     println!("✓ Total swaps: {}", metrics.total_swaps);
-    println!(
-        "✓ Success rate: {:.1}%",
-        metrics.successful_commits as f64 / metrics.total_swaps as f64 * 100.0
-    );
+    let success_rate = {
+        let denominator = metrics.total_swaps as f64;
+        if denominator == 0.0 {
+            "N/A".to_string()
+        } else {
+            format!("{:.1}%", metrics.successful_commits as f64 / denominator * 100.0)
+        }
+    };
+    println!("✓ Success rate: {}", success_rate);
 
     println!("\nCross-chain GPU validator ready!");
 

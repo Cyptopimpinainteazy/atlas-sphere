@@ -559,6 +559,8 @@ impl GpuHostcalls {
         let sha256 = self.sha256.clone();
         let ed25519 = self.ed25519.clone();
         let pipeline = self.pipeline.clone();
+        let keccak256 = self.keccak256.clone();
+        let secp256k1 = self.secp256k1.clone();
 
         // 0xD0: gpu_sha256_batch
         {
@@ -605,11 +607,19 @@ impl GpuHostcalls {
         }
 
         // 0xD4: gpu_device_count
+        // Count must match register_all() which checks sha256, ed25519, pipeline,
+        // keccak256, and secp256k1.
         {
-            let gpu_lib_count = [sha256.is_some(), ed25519.is_some(), pipeline.is_some()]
-                .iter()
-                .filter(|&&present| present)
-                .count() as i64;
+            let gpu_lib_count = [
+                sha256.is_some(),
+                ed25519.is_some(),
+                pipeline.is_some(),
+                keccak256.is_some(),
+                secp256k1.is_some(),
+            ]
+            .iter()
+            .filter(|&&present| present)
+            .count() as i64;
             vm.register_hostcall(
                 gpu_hostcall_ids::GPU_DEVICE_COUNT,
                 "gpu_device_count",
