@@ -255,14 +255,19 @@ impl SwapCoordinator {
         C: MerkleSettlementCarrier,
         F: FnOnce(&mut Self, &str, C, u64) -> Result<MerkleVerificationResult, CoordinatorError>,
     {
-        Self::verify_claim_settlement_with_bridge_context(
+        Self::verify_claim_settlement_with_session_bridge_internal(
             session_id,
             now_unix,
             claim.settlement_proof_mut(),
             authorized_validators,
             finality_threshold,
             freshness,
-        )?;
+        )
+        .map_err(|e| {
+            CoordinatorError::Internal(format!(
+                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+            ))
+        })?;
 
         record_claim(self, session_id, claim, now_unix)
     }
@@ -323,29 +328,6 @@ impl SwapCoordinator {
 
         *settlement_proof = merkle_session.settlement_proof;
         verification_result
-    }
-
-    fn verify_claim_settlement_with_bridge_context(
-        session_id: &str,
-        now_unix: u64,
-        settlement_proof: &mut Option<MerkleSettlementProof>,
-        authorized_validators: &BTreeMap<Address, Vec<u8>>,
-        finality_threshold: u32,
-        freshness: Option<(u64, u64)>,
-    ) -> Result<(), CoordinatorError> {
-        Self::verify_claim_settlement_with_session_bridge_internal(
-            session_id,
-            now_unix,
-            settlement_proof,
-            authorized_validators,
-            finality_threshold,
-            freshness,
-        )
-        .map_err(|e| {
-            CoordinatorError::Internal(format!(
-                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
-            ))
-        })
     }
 
     fn evaluate_optional_settlement_verification(
