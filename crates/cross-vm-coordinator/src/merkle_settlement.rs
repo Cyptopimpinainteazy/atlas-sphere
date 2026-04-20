@@ -366,6 +366,21 @@ impl SwapCoordinator {
         }
     }
 
+    fn record_merkle_claim_with_optional_verification<F>(
+        &mut self,
+        session_id: &str,
+        settlement: Option<&MerkleSettlementProof>,
+        record_fn: F,
+    ) -> Result<MerkleVerificationResult, CoordinatorError>
+    where
+        F: FnOnce(&mut Self) -> Result<(), CoordinatorError>,
+    {
+        let verification_result =
+            Self::evaluate_optional_settlement_verification(session_id, settlement)?;
+        record_fn(self)?;
+        Ok(verification_result)
+    }
+
     /// Record a fast chain claim with optional merkle proof verification.
     pub fn record_merkle_fast_claim(
         &mut self,
@@ -373,16 +388,12 @@ impl SwapCoordinator {
         fast_claim: MerkleEnabledFastClaim,
         now_unix: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        let verification_result =
-            Self::evaluate_optional_settlement_verification(
-                session_id,
-                fast_claim.merkle_settlement.as_ref(),
-            )?;
-
         let secret = HtlcSecret(fast_claim.secret_bytes);
-        self.record_fast_claim(session_id, secret, now_unix)?;
-
-        Ok(verification_result)
+        self.record_merkle_claim_with_optional_verification(
+            session_id,
+            fast_claim.merkle_settlement.as_ref(),
+            |coordinator| coordinator.record_fast_claim(session_id, secret, now_unix),
+        )
     }
 
     /// Record a fast claim and verify merkle proof with the canonical bridge validator.
@@ -434,15 +445,11 @@ impl SwapCoordinator {
         slow_claim: MerkleEnabledSlowClaim,
         now_unix: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        let verification_result =
-            Self::evaluate_optional_settlement_verification(
-                session_id,
-                slow_claim.merkle_settlement.as_ref(),
-            )?;
-
-        self.record_slow_claim(session_id, now_unix)?;
-
-        Ok(verification_result)
+        self.record_merkle_claim_with_optional_verification(
+            session_id,
+            slow_claim.merkle_settlement.as_ref(),
+            |coordinator| coordinator.record_slow_claim(session_id, now_unix),
+        )
     }
 
     /// Record a slow claim and verify merkle proof with the canonical bridge validator.
