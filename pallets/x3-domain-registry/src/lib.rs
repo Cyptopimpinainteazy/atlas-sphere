@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Domain Registry Pallet
 //!
 //! Minimal on-chain registry for `.x3` domain ownership and DNS record sets.

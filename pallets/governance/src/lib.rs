@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3Chain Governance Pallet
 //!
 //! A comprehensive governance system for the X3 blockchain supporting:

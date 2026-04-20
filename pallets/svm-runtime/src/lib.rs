@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # SVM Pallet
 //!
 //! A Substrate pallet providing Solana Virtual Machine (SVM) functionality for X3 Chain.

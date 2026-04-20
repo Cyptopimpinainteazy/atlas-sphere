@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Atomic Kernel Pallet
 //!
 //! ## Overview

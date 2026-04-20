@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Settlement Engine Pallet
 //!
 //! ## THE SETTLEMENT ROOT OF TRUST

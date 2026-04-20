@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3Chain Agent Memory Pallet
 //!
 //! Append-only on-chain memory for AI agents with LLM-friendly serialization.

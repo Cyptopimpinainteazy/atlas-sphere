@@ -200,3 +200,4 @@ Downloads/
 *.part
 
 apps/atlas-sphere-clean
+*.cdx.json

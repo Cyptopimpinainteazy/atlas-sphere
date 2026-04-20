@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! X3 On-Chain Governance Pallet
 //!
 //! Provides comprehensive governance including:

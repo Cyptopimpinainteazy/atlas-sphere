@@ -8,8 +8,8 @@ use crate::passes::{
     copy_propagation::CopyPropagationPass, dead_code_elimination::DeadCodeEliminationPass,
     dom_const_prop::DomConstPropPass, edge_const_prop::EdgeConstPropPass,
     expression_hoist::ExpressionHoistPass, global_const_prop::GlobalConstPropPass,
-    peephole::PeepholePass, pre_morel::MorelRenvoisePrePass,
-    pre_simple::PartialRedundancyEliminationPass, speculative_hoist::SpeculativeHoistPass,
+    peephole::PeepholePass, pre::PrePass as PartialRedundancyEliminationPass,
+    pre_morel::MorelRenvoisePrePass, speculative_hoist::SpeculativeHoistPass,
 };
 use crate::OptResult;
 use x3_mir::MirModule;

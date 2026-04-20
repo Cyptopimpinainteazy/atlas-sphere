@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # Private Execution Environments Pallet
 //!
 //! Proposal: PRIV-ENCLAVE-003

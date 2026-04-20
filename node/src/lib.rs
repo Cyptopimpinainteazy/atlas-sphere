@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs, rust_2018_idioms)]
 #![allow(

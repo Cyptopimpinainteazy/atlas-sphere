@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Chain GPU Swarm Pallet
 //!
 //! **DEPRECATED**: The swarm pallet is superseded by the Inferstructor service.

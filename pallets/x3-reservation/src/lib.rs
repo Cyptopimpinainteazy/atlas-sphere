@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # pallet-x3-reservation
 //!
 //! Reservation engine for the X3 liquidity control plane (TICKET-4.5-005).

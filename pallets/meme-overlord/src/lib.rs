@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # Meme Overlord Pallet
 //!
 //! Auto-generates celebratory memes for profitable trades on X3 Chain.

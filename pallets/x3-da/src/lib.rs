@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Data Availability (DA) Pallet
 //!
 //! ## Overview

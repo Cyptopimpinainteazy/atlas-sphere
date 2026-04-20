@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Verifier Pallet
 //!
 //! On-chain verification of X3 execution receipts from the swarm network.

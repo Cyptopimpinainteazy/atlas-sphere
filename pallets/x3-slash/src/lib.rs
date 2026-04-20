@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Slashing Pallet
 //!
 //! This pallet wraps the x3-slash engine and integrates it with Substrate's pallet_staking.

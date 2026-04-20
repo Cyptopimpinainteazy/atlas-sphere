@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3Chain Agent Accounts Pallet
 //!
 //! On-chain identities, permissions, and quotas for autonomous AI agents.

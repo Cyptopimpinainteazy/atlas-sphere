@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # pallet-x3-inventory
 //!
 //! Vault model, lane model, and inventory manager for X3 liquidity control.

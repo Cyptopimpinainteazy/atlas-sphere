@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # DePIN GPU Marketplace Pallet
 //!
 //! Proposal: DEPIN-GPU-001

@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 // pallets/fraud-proofs/src/lib.rs
 //
 // Stub crate — the fraud-proof FRAME pallet is defined inline in the

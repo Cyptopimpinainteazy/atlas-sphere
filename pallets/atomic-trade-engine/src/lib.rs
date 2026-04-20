@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # Atomic Trade Engine Pallet
 //!
 //! ## Overview

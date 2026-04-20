@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 Solvency Pallet
 //!
 //! Implements the solvency gate pipeline:

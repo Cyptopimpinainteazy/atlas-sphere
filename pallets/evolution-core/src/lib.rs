@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # Evolution Core Pallet
 //!
 //! The brain of the Adaptive Intelligence Chain (AIC). This pallet enables

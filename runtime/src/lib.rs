@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "256"]
 #![allow(dead_code)]

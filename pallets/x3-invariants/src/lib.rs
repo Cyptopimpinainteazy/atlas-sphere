@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3 On-Chain Invariant Enforcement Pallet
 //!
 //! This pallet is the runtime guardian of the X3 constitutional invariants.

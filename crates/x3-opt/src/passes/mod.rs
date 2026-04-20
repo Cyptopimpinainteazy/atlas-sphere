@@ -16,5 +16,4 @@ pub mod global_const_prop;
 pub mod peephole;
 pub mod pre;
 pub mod pre_morel;
-pub mod pre_simple;
 pub mod speculative_hoist;

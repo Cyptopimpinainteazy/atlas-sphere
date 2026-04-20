@@ -1,3 +1,4 @@
+#![deny(unsafe_code)]
 //! # X3Chain Treasury Pallet
 //!
 //! A comprehensive treasury management system supporting:
