@@ -319,6 +319,42 @@ impl SwapCoordinator {
         )
     }
 
+    fn verify_claim_settlement_with_bridge_context(
+        session_id: &str,
+        now_unix: u64,
+        settlement_proof: &mut Option<MerkleSettlementProof>,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        freshness: Option<(u64, u64)>,
+    ) -> Result<(), CoordinatorError> {
+        let verification_result = match freshness {
+            Some((current_finalized_block, max_proof_age_blocks)) => {
+                Self::verify_claim_settlement_with_session_bridge_freshness(
+                    session_id,
+                    now_unix,
+                    settlement_proof,
+                    authorized_validators,
+                    finality_threshold,
+                    current_finalized_block,
+                    max_proof_age_blocks,
+                )
+            }
+            None => Self::verify_claim_settlement_with_session_bridge(
+                session_id,
+                now_unix,
+                settlement_proof,
+                authorized_validators,
+                finality_threshold,
+            ),
+        };
+
+        verification_result.map_err(|e| {
+            CoordinatorError::Internal(format!(
+                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+            ))
+        })
+    }
+
     /// Record a fast chain claim with optional merkle proof verification.
     pub fn record_merkle_fast_claim(
         &mut self,
@@ -353,18 +389,14 @@ impl SwapCoordinator {
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_session_bridge(
+        Self::verify_claim_settlement_with_bridge_context(
             session_id,
             now_unix,
             &mut fast_claim.merkle_settlement,
             authorized_validators,
             finality_threshold,
-        )
-        .map_err(|e| {
-            CoordinatorError::Internal(format!(
-                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
-            ))
-        })?;
+            None,
+        )?;
 
         self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
     }
@@ -380,20 +412,14 @@ impl SwapCoordinator {
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_session_bridge_freshness(
+        Self::verify_claim_settlement_with_bridge_context(
             session_id,
             now_unix,
             &mut fast_claim.merkle_settlement,
             authorized_validators,
             finality_threshold,
-            current_finalized_block,
-            max_proof_age_blocks,
-        )
-        .map_err(|e| {
-            CoordinatorError::Internal(format!(
-                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
-            ))
-        })?;
+            Some((current_finalized_block, max_proof_age_blocks)),
+        )?;
 
         self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
     }
@@ -431,18 +457,14 @@ impl SwapCoordinator {
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_session_bridge(
+        Self::verify_claim_settlement_with_bridge_context(
             session_id,
             now_unix,
             &mut slow_claim.merkle_settlement,
             authorized_validators,
             finality_threshold,
-        )
-        .map_err(|e| {
-            CoordinatorError::Internal(format!(
-                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
-            ))
-        })?;
+            None,
+        )?;
 
         self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
     }
@@ -458,20 +480,14 @@ impl SwapCoordinator {
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_session_bridge_freshness(
+        Self::verify_claim_settlement_with_bridge_context(
             session_id,
             now_unix,
             &mut slow_claim.merkle_settlement,
             authorized_validators,
             finality_threshold,
-            current_finalized_block,
-            max_proof_age_blocks,
-        )
-        .map_err(|e| {
-            CoordinatorError::Internal(format!(
-                "Merkle settlement bridge verification failed for session '{session_id}': {e}"
-            ))
-        })?;
+            Some((current_finalized_block, max_proof_age_blocks)),
+        )?;
 
         self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
     }
