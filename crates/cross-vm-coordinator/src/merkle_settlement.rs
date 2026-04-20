@@ -308,17 +308,17 @@ impl SwapCoordinator {
 
         let mut merkle_session = Self::build_ephemeral_merkle_session(session_id, now_unix, proof);
 
-        let verification_result = match freshness {
-            Some((current_finalized_block, max_proof_age_blocks)) => merkle_session
-                .verify_settlement_with_bridge_freshness(
-                    authorized_validators,
-                    finality_threshold,
-                    current_finalized_block,
-                    max_proof_age_blocks,
-                ),
-            None => {
-                merkle_session.verify_settlement_with_bridge(authorized_validators, finality_threshold)
-            }
+        let verification_result = if let Some((current_finalized_block, max_proof_age_blocks)) =
+            freshness
+        {
+            merkle_session.verify_settlement_with_bridge_freshness(
+                authorized_validators,
+                finality_threshold,
+                current_finalized_block,
+                max_proof_age_blocks,
+            )
+        } else {
+            merkle_session.verify_settlement_with_bridge(authorized_validators, finality_threshold)
         };
 
         *settlement_proof = merkle_session.settlement_proof;
