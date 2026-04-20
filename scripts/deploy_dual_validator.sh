@@ -14,7 +14,7 @@ echo "🚀 Starting Dual-Chain GPU Validator Deployment..."
 
 # 1. Build GPU Kernels
 echo "📦 Building GPU Kernels..."
-bash cross-chain-gpu-validator/kernels/build.sh
+bash infra-structure/validator/kernels/build.sh
 
 # 2. Build Rust Workspace
 echo "🦀 Compiling Rust Monorepo (Node + Bot + Orchestrator)..."

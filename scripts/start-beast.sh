@@ -58,9 +58,9 @@ echo ""
 
 # Start Cross-Chain GPU Validator
 echo -e "${BLUE}[*] Starting Cross-Chain GPU Validator...${NC}"
-KERNELS_PATH="$PROJECT_ROOT/cross-chain-gpu-validator/kernels"
+KERNELS_PATH="$PROJECT_ROOT/infra-structure/validator/kernels"
 (
-  cd "$PROJECT_ROOT/cross-chain-gpu-validator"
+  cd "$PROJECT_ROOT/infra-structure/validator"
   source .venv/bin/activate
   export CCGV_KERNEL_DIR="$KERNELS_PATH"
   export CCGV_USE_MOCK_RPC=true
