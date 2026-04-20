@@ -12,23 +12,19 @@ use std::time::{Duration, Instant};
 
 #[test]
 fn critical_001_memory_persistence_rejected_in_production() {
-    // VERIFY: InMemoryPersistence is blocked outside of test context.
-    // SwapCoordinator::new() panics unless cfg!(test) is true (see state_machine.rs).
-    // This test proves we ARE in test context and that the guard does NOT panic here.
+    // VERIFY: InMemoryPersistence is blocked in production-like contexts.
+    // Integration tests exercise the crate as an external dependency, so the
+    // production guard remains active and SwapCoordinator::new() must panic.
     use x3_cross_vm_coordinator::{CoordinatorConfig, SwapCoordinator};
 
-    // Calling ::new() inside a #[test] must NOT panic — cfg!(test) is true.
-    let _coordinator = SwapCoordinator::new(CoordinatorConfig::default());
+    let result = std::panic::catch_unwind(|| {
+        let _coordinator = SwapCoordinator::new(CoordinatorConfig::default());
+    });
 
-    // The production guard lives in SwapCoordinator::new():
-    //   if !cfg!(test) { panic!("CRITICAL-001: InMemoryPersistence forbidden ...") }
-    // Reaching here confirms:
-    //   1. The guard compiles and is present in the binary.
-    //   2. We are in a test context, so in-memory use is intentional.
+    assert!(result.is_err(), "CRITICAL-001 guard must panic in integration tests");
     assert!(
         cfg!(test),
-        "CRITICAL-001: This assertion must run only inside #[test] context; \
-         in production SwapCoordinator::new() panics before reaching here."
+        "CRITICAL-001 regression must run under test harness"
     );
 }
 

@@ -9,6 +9,10 @@ use crate::{CoordinatorError, SwapCoordinator};
 use crate::types::HtlcSecret;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use x3_cross_vm_bridge::merkle_proof_validator::{
+    DefaultMerkleProofValidator, MerkleProofSettlement as BridgeMerkleProofSettlement,
+    MerkleProofValidator,
+};
 
 pub type Address = [u8; 32];
 pub type Hash = [u8; 32];
@@ -112,6 +116,44 @@ impl MerkleSettlementProof {
         let mut hash = [0u8; 32];
         hash.copy_from_slice(&result);
         hash
+    }
+
+    /// Convert this coordinator proof into the canonical bridge proof type.
+    pub fn to_bridge_settlement(&self) -> BridgeMerkleProofSettlement {
+        BridgeMerkleProofSettlement {
+            state_root: self.state_root,
+            finalized_block: self.finalized_block,
+            merkle_proof_bytes: self.merkle_proof_bytes.clone(),
+            validator_signatures: self.validator_signatures.clone(),
+            execution_index: self.execution_index,
+            metadata: Some(self.session_id.as_bytes().to_vec()),
+        }
+    }
+
+    /// Verify this settlement with the canonical bridge validator path.
+    ///
+    /// On success, marks this proof as verified. On failure, marks it failed.
+    pub fn verify_via_bridge_validator(
+        &mut self,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+    ) -> Result<(), String> {
+        let validator = DefaultMerkleProofValidator::new();
+        let bridge_settlement = self.to_bridge_settlement();
+        match validator.verify_settlement_proof(
+            &bridge_settlement,
+            authorized_validators,
+            finality_threshold,
+        ) {
+            Ok(()) => {
+                self.mark_verified();
+                Ok(())
+            }
+            Err(e) => {
+                self.mark_failed();
+                Err(e.to_string())
+            }
+        }
     }
 }
 
@@ -468,6 +510,44 @@ mod tests {
             proof1.settlement_commitment(),
             proof2.settlement_commitment()
         );
+    }
+
+    #[test]
+    fn test_to_bridge_settlement_preserves_fields() {
+        let mut proof = MerkleSettlementProof::new(
+            "test-session".to_string(),
+            [7u8; 32],
+            777,
+            vec![9, 8, 7],
+            3,
+            1000,
+        );
+        proof.add_validator_signature([1u8; 32], vec![2u8; 64]);
+
+        let bridge = proof.to_bridge_settlement();
+        assert_eq!(bridge.state_root, [7u8; 32]);
+        assert_eq!(bridge.finalized_block, 777);
+        assert_eq!(bridge.merkle_proof_bytes, vec![9, 8, 7]);
+        assert_eq!(bridge.execution_index, 3);
+        assert_eq!(bridge.validator_signatures.len(), 1);
+        assert_eq!(bridge.metadata, Some(b"test-session".to_vec()));
+    }
+
+    #[test]
+    fn test_verify_via_bridge_validator_marks_failed_on_invalid_proof() {
+        let mut proof = MerkleSettlementProof::new(
+            "test-session".to_string(),
+            [0u8; 32],
+            100,
+            vec![1, 2, 3, 4],
+            0,
+            1000,
+        );
+
+        let validators = BTreeMap::new();
+        let result = proof.verify_via_bridge_validator(&validators, 1);
+        assert!(result.is_err());
+        assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
     }
 }
 
