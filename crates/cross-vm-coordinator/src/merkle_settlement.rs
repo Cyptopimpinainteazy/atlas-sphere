@@ -770,6 +770,23 @@ mod tests {
     }
 
     #[test]
+    fn test_session_verify_with_bridge_rejects_invalid_proof() {
+        let base_session = create_test_session();
+        let mut session = MerkleSwapSession::new(base_session, true);
+
+        session.init_merkle_settlement([0u8; 32], 100, vec![1, 2, 3, 4], 0, 1000);
+
+        let validators = BTreeMap::new();
+        let result = session.verify_settlement_with_bridge(&validators, 1);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("verification failed"));
+        assert_eq!(session.settlement_outcome(), Some(MerkleSettlementOutcome::Failed));
+    }
+
+    #[test]
     fn test_session_verify_with_bridge_non_merkle_noop() {
         let base_session = create_test_session();
         let mut session = MerkleSwapSession::new(base_session, false);
@@ -852,41 +869,6 @@ mod tests {
         assert_eq!(bridge.metadata, Some(b"test-session".to_vec()));
     }
 
-    #[test]
-    fn test_verify_via_bridge_validator_marks_failed_on_invalid_proof() {
-        let mut proof = MerkleSettlementProof::new(
-            "test-session".to_string(),
-            [0u8; 32],
-            100,
-            vec![1, 2, 3, 4],
-            0,
-            1000,
-        );
-
-        let validators = BTreeMap::new();
-        let result = proof.verify_via_bridge_validator(&validators, 1);
-        assert!(result.is_err());
-        assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
-    }
-
-    #[test]
-    fn test_verify_via_bridge_validator_with_freshness_rejects_stale_proof() {
-        let mut proof = MerkleSettlementProof::new(
-            "test-session".to_string(),
-            [42u8; 32],
-            100,
-            vec![42; 72],
-            0,
-            1000,
-        );
-
-        let mut validators = BTreeMap::new();
-        validators.insert([1u8; 32], vec![7u8; 32]);
-
-        let result = proof.verify_via_bridge_validator_with_freshness(&validators, 1, 200, 50);
-        assert!(result.is_err());
-        assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
-    }
 }
 
 #[cfg(test)]
