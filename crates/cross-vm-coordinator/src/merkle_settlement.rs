@@ -52,6 +52,26 @@ pub struct MerkleSettlementProof {
 }
 
 impl MerkleSettlementProof {
+    fn apply_bridge_verification_result<E: core::fmt::Debug>(
+        &mut self,
+        bridge_result: Result<bool, E>,
+    ) -> Result<(), String> {
+        match bridge_result {
+            Ok(true) => {
+                self.outcome = MerkleSettlementOutcome::Verified;
+                Ok(())
+            }
+            Ok(false) => {
+                self.outcome = MerkleSettlementOutcome::Failed;
+                Err("bridge merkle settlement returned false".to_string())
+            }
+            Err(e) => {
+                self.outcome = MerkleSettlementOutcome::Failed;
+                Err(format!("{e:?}"))
+            }
+        }
+    }
+
     /// Create a new merkle settlement proof
     pub fn new(
         session_id: String,
@@ -167,20 +187,9 @@ impl MerkleSettlementProof {
         .with_finality_threshold(finality_threshold)
         .with_freshness(current_finalized_block, max_proof_age_blocks);
 
-        match bridge.verify_merkle_settlement(&settlement, &validator, authorized_validators) {
-            Ok(true) => {
-                self.mark_verified();
-                Ok(())
-            }
-            Ok(false) => {
-                self.mark_failed();
-                Err("bridge merkle settlement returned false".to_string())
-            }
-            Err(e) => {
-                self.mark_failed();
-                Err(format!("{e:?}"))
-            }
-        }
+        self.apply_bridge_verification_result(
+            bridge.verify_merkle_settlement(&settlement, &validator, authorized_validators),
+        )
     }
 }
 
