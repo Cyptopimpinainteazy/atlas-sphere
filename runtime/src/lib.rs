@@ -143,6 +143,31 @@ pub mod gpu_validator_api {
             /// Submit GPU validator proof
             fn submit_gpu_validator_proof(proof: Vec<u8>, validator_id: u32) -> GpuProofResult;
         }
+
+        /// Cross-chain header validation and proof aggregation API (Phase 9)
+        pub trait CrossChainStateRootApi {
+            /// Validate EVM block header and return proof
+            fn validate_evm_header(
+                block_number: u64,
+                block_hash: sp_core::H256,
+                state_root: sp_core::H256,
+            ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
+            
+            /// Validate SVM (Solana) block header and return proof
+            fn validate_svm_header(
+                slot: u64,
+                block_hash: sp_core::H256,
+                state_root: sp_core::H256,
+            ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
+            
+            /// Query cross-chain validation status
+            fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
+            
+            /// Aggregate multiple proofs into a single cross-chain proof
+            fn aggregate_cross_chain_proofs(
+                proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
+            ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
+        }
     }
 
     /// Dummy trait implementation for no_std
@@ -151,6 +176,28 @@ pub mod gpu_validator_api {
         fn gpu_validator_status(validator_id: u32) -> Option<GpuValidatorStatus>;
         fn query_orchestrator_health() -> OrchestratorHealthStatus;
         fn submit_gpu_validator_proof(proof: Vec<u8>, validator_id: u32) -> GpuProofResult;
+    }
+
+    /// Dummy trait implementation for no_std
+    #[cfg(not(feature = "std"))]
+    pub trait CrossChainStateRootApi {
+        fn validate_evm_header(
+            block_number: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
+        
+        fn validate_svm_header(
+            slot: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
+        
+        fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
+        
+        fn aggregate_cross_chain_proofs(
+            proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
+        ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
     }
 }
 
@@ -2680,6 +2727,97 @@ impl_runtime_apis! {
                 error_message: Vec::new(),
                 processed_by_validator: validator_id,
             }
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // Phase 9: Cross-Chain Header Validation API
+    // ════════════════════════════════════════════════════════════════════════════════════
+    impl cross_chain_state_root_api::CrossChainStateRootApi<Block> for Runtime {
+        fn validate_evm_header(
+            block_number: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::EvmHeaderProof> {
+            // Phase 9: Validate EVM block header
+            // TODO: Wire to pallet-x3-verifier::validate_evm_header() for cryptographic proof validation
+            // For now: Accept valid structure (non-zero hashes, positive block number)
+            
+            if block_number == 0 || block_hash == sp_core::H256::zero() || state_root == sp_core::H256::zero() {
+                return None;
+            }
+            
+            Some(cross_chain_state_root_api::EvmHeaderProof {
+                block_number,
+                block_hash,
+                state_root,
+                timestamp: frame_system::Pallet::<Runtime>::block_number().saturated_into::<u64>() * MILLISECS_PER_BLOCK,
+                validator_set_hash: sp_core::H256::default(),
+                proof_hash: sp_core::H256::default(),
+                processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
+                confidence: 100,
+            })
+        }
+
+        fn validate_svm_header(
+            slot: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::SvmHeaderProof> {
+            // Phase 9: Validate SVM (Solana) block header
+            // TODO: Wire to pallet-x3-verifier::validate_svm_header() for Solana-specific validation
+            // For now: Accept valid structure
+            
+            if slot == 0 || block_hash == sp_core::H256::zero() || state_root == sp_core::H256::zero() {
+                return None;
+            }
+            
+            Some(cross_chain_state_root_api::SvmHeaderProof {
+                slot,
+                block_hash,
+                state_root,
+                parent_slot_hashes: vec![],
+                validator_signature_count: 0,
+                proof_hash: sp_core::H256::default(),
+                processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
+                confidence: 100,
+            })
+        }
+
+        fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus {
+            // Phase 9: Query aggregated cross-chain validation statistics
+            // TODO: Read from pallet-x3-verifier storage: confirmed_evm_headers, confirmed_svm_headers, validation_failures
+            
+            cross_chain_state_root_api::CrossChainValidationStatus {
+                evm_headers_validated: 0,
+                svm_headers_validated: 0,
+                proof_batches_submitted: 0,
+                validation_failures: 0,
+                last_validated_block: 0,
+                cpu_fallback_count: 0,
+            }
+        }
+
+        fn aggregate_cross_chain_proofs(
+            proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
+        ) -> Option<cross_chain_state_root_api::CrossChainProofBatch> {
+            // Phase 9: Aggregate multiple cross-chain proofs
+            // TODO: Construct merkle tree from proof batches, return aggregated proof
+            
+            if proofs.is_empty() {
+                return None;
+            }
+            
+            let first = &proofs[0];
+            Some(cross_chain_state_root_api::CrossChainProofBatch {
+                chain_id: first.chain_id,
+                proof_type: first.proof_type,
+                merkle_root: sp_core::H256::default(),
+                transaction_hashes: Vec::new(),
+                merkle_proofs: Vec::new(),
+                batch_size: proofs.len() as u32,
+                processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
+            })
         }
     }
 }

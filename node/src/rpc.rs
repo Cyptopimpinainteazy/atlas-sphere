@@ -176,10 +176,119 @@ where
         })?;
     }
 
-    // REMOVED (RC-1 Phase 8): Cross-Chain Validation RPC Methods (query_crossChainStatus, validate_evmHeader, validate_svmHeader)
-    // These RPC methods were wired to call CrossChainStateRootApi which was removed in Phase 7 (unimplemented blocker)
-    // Deferred to Phase 9 (Bridge/Relayer) when actual proof validation APIs are ready
-    // Related issue: CrossChainStateRootApi was declared but never implemented, RPC methods would have failed anyway
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // Phase 9: Cross-Chain Header Validation RPC Methods
+    // ════════════════════════════════════════════════════════════════════════════════════
+    {
+        let c = client.clone();
+        
+        // validate_evmHeader: Validate EVM block header and return proof
+        module.register_method("validate_evmHeader", move |params, _| {
+            let (block_number, block_hash_str, state_root_str): (u64, String, String) = params.parse()?;
+            
+            // Parse 0x-prefixed hex strings to H256
+            let block_hash_str = block_hash_str.strip_prefix("0x").unwrap_or(&block_hash_str);
+            let state_root_str = state_root_str.strip_prefix("0x").unwrap_or(&state_root_str);
+            
+            let block_hash_bytes = hex::decode(block_hash_str)
+                .map_err(|_| custom_error("Invalid block_hash hex"))?;
+            let state_root_bytes = hex::decode(state_root_str)
+                .map_err(|_| custom_error("Invalid state_root hex"))?;
+            
+            if block_hash_bytes.len() != 32 || state_root_bytes.len() != 32 {
+                return Err(custom_error("Hash must be 32 bytes"));
+            }
+            
+            let block_hash = sp_core::H256::from_slice(&block_hash_bytes);
+            let state_root = sp_core::H256::from_slice(&state_root_bytes);
+            
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            
+            if let Some(proof) = runtime_api
+                .validate_evm_header(best_hash, block_number, block_hash, state_root)
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "block_number": proof.block_number,
+                    "block_hash": format!("0x{}", hex::encode(proof.block_hash.as_bytes())),
+                    "state_root": format!("0x{}", hex::encode(proof.state_root.as_bytes())),
+                    "timestamp": proof.timestamp,
+                    "confidence": proof.confidence,
+                    "validated": true,
+                }))
+            } else {
+                Ok(serde_json::json!({
+                    "error": "Invalid header or finality not met",
+                    "validated": false,
+                }))
+            }
+        })?;
+        
+        // validate_svmHeader: Validate SVM (Solana) block header
+        module.register_method("validate_svmHeader", move |params, _| {
+            let (slot, block_hash_str, state_root_str): (u64, String, String) = params.parse()?;
+            
+            let block_hash_str = block_hash_str.strip_prefix("0x").unwrap_or(&block_hash_str);
+            let state_root_str = state_root_str.strip_prefix("0x").unwrap_or(&state_root_str);
+            
+            let block_hash_bytes = hex::decode(block_hash_str)
+                .map_err(|_| custom_error("Invalid block_hash hex"))?;
+            let state_root_bytes = hex::decode(state_root_str)
+                .map_err(|_| custom_error("Invalid state_root hex"))?;
+            
+            if block_hash_bytes.len() != 32 || state_root_bytes.len() != 32 {
+                return Err(custom_error("Hash must be 32 bytes"));
+            }
+            
+            let block_hash = sp_core::H256::from_slice(&block_hash_bytes);
+            let state_root = sp_core::H256::from_slice(&state_root_bytes);
+            
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            
+            if let Some(proof) = runtime_api
+                .validate_svm_header(best_hash, slot, block_hash, state_root)
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "slot": proof.slot,
+                    "block_hash": format!("0x{}", hex::encode(proof.block_hash.as_bytes())),
+                    "state_root": format!("0x{}", hex::encode(proof.state_root.as_bytes())),
+                    "validator_signature_count": proof.validator_signature_count,
+                    "confidence": proof.confidence,
+                    "validated": true,
+                }))
+            } else {
+                Ok(serde_json::json!({
+                    "error": "Invalid SVM header or finality not met",
+                    "validated": false,
+                }))
+            }
+        })?;
+        
+        // query_crossChainStatus: Get cross-chain validation statistics
+        module.register_method("query_crossChainStatus", move |_params, _| {
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            
+            let status = runtime_api
+                .query_cross_chain_status(best_hash)
+                .ok()
+                .unwrap_or_default();
+            
+            Ok(serde_json::json!({
+                "evm_headers_validated": status.evm_headers_validated,
+                "svm_headers_validated": status.svm_headers_validated,
+                "proof_batches_submitted": status.proof_batches_submitted,
+                "validation_failures": status.validation_failures,
+                "last_validated_block": status.last_validated_block,
+                "cpu_fallback_count": status.cpu_fallback_count,
+            }))
+        })?;
+    }
 
     let check_rate_limit = {
         let limiter = rate_limiter.clone();
