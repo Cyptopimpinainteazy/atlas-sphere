@@ -438,6 +438,65 @@ impl MerkleSwapSession {
         }
     }
 
+    /// Verify this session's settlement proof via the canonical bridge validator path.
+    pub fn verify_settlement_with_bridge(
+        &mut self,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+    ) -> Result<(), CoordinatorError> {
+        if !self.requires_merkle_verification {
+            return Ok(());
+        }
+
+        let proof = self
+            .settlement_proof
+            .as_mut()
+            .ok_or_else(|| {
+                CoordinatorError::Internal(
+                    "Merkle settlement proof not initialized for required session".to_string(),
+                )
+            })?;
+
+        proof
+            .verify_via_bridge_validator(authorized_validators, finality_threshold)
+            .map_err(|e| CoordinatorError::Internal(format!("Session merkle verification failed: {e}")))
+    }
+
+    /// Verify this session's settlement proof with explicit freshness bounds.
+    pub fn verify_settlement_with_bridge_freshness(
+        &mut self,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        current_finalized_block: u64,
+        max_proof_age_blocks: u64,
+    ) -> Result<(), CoordinatorError> {
+        if !self.requires_merkle_verification {
+            return Ok(());
+        }
+
+        let proof = self
+            .settlement_proof
+            .as_mut()
+            .ok_or_else(|| {
+                CoordinatorError::Internal(
+                    "Merkle settlement proof not initialized for required session".to_string(),
+                )
+            })?;
+
+        proof
+            .verify_via_bridge_validator_with_freshness(
+                authorized_validators,
+                finality_threshold,
+                current_finalized_block,
+                max_proof_age_blocks,
+            )
+            .map_err(|e| {
+                CoordinatorError::Internal(format!(
+                    "Session merkle freshness verification failed: {e}"
+                ))
+            })
+    }
+
     /// Check if settlement is ready for finalization
     pub fn is_settlement_ready(&self) -> bool {
         if !self.requires_merkle_verification {
@@ -589,6 +648,49 @@ mod tests {
 
         // Non-merkle sessions are always ready
         assert!(merkle_session.is_settlement_ready());
+    }
+
+    #[test]
+    fn test_session_verify_with_bridge_requires_initialized_proof() {
+        let base_session = create_test_session();
+        let mut session = MerkleSwapSession::new(base_session, true);
+
+        let validators = BTreeMap::new();
+        let result = session.verify_settlement_with_bridge(&validators, 1);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("not initialized"));
+    }
+
+    #[test]
+    fn test_session_verify_with_bridge_freshness_rejects_stale_proof() {
+        let base_session = create_test_session();
+        let mut session = MerkleSwapSession::new(base_session, true);
+
+        session.init_merkle_settlement([42u8; 32], 100, vec![42; 72], 0, 1000);
+
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let result = session.verify_settlement_with_bridge_freshness(&validators, 1, 200, 50);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("freshness verification failed"));
+        assert_eq!(session.settlement_outcome(), Some(MerkleSettlementOutcome::Failed));
+    }
+
+    #[test]
+    fn test_session_verify_with_bridge_non_merkle_noop() {
+        let base_session = create_test_session();
+        let mut session = MerkleSwapSession::new(base_session, false);
+
+        let validators = BTreeMap::new();
+        let result = session.verify_settlement_with_bridge(&validators, 1);
+        assert!(result.is_ok());
     }
 
     #[test]
