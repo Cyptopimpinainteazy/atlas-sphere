@@ -567,6 +567,31 @@ impl SwapCoordinator {
 }
 
 impl MerkleSwapSession {
+    fn verify_settlement_internal<F>(
+        &mut self,
+        error_prefix: &str,
+        verify_fn: F,
+    ) -> Result<(), CoordinatorError>
+    where
+        F: FnOnce(&mut MerkleSettlementProof) -> Result<(), String>,
+    {
+        if !self.requires_merkle_verification {
+            return Ok(());
+        }
+
+        let proof = self
+            .settlement_proof
+            .as_mut()
+            .ok_or_else(|| {
+                CoordinatorError::Internal(
+                    "Merkle settlement proof not initialized for required session".to_string(),
+                )
+            })?;
+
+        verify_fn(proof)
+            .map_err(|e| CoordinatorError::Internal(format!("{error_prefix}: {e}")))
+    }
+
     /// Create a new merkle swap session wrapping a base session
     pub fn new(base_session: SwapSession, requires_merkle_verification: bool) -> Self {
         Self {
@@ -604,22 +629,10 @@ impl MerkleSwapSession {
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<(), CoordinatorError> {
-        if !self.requires_merkle_verification {
-            return Ok(());
-        }
-
-        let proof = self
-            .settlement_proof
-            .as_mut()
-            .ok_or_else(|| {
-                CoordinatorError::Internal(
-                    "Merkle settlement proof not initialized for required session".to_string(),
-                )
-            })?;
-
-        proof
-            .verify_via_bridge_validator(authorized_validators, finality_threshold)
-            .map_err(|e| CoordinatorError::Internal(format!("Session merkle verification failed: {e}")))
+        self.verify_settlement_internal(
+            "Session merkle verification failed",
+            |proof| proof.verify_via_bridge_validator(authorized_validators, finality_threshold),
+        )
     }
 
     /// Verify this session's settlement proof with explicit freshness bounds.
@@ -630,31 +643,17 @@ impl MerkleSwapSession {
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<(), CoordinatorError> {
-        if !self.requires_merkle_verification {
-            return Ok(());
-        }
-
-        let proof = self
-            .settlement_proof
-            .as_mut()
-            .ok_or_else(|| {
-                CoordinatorError::Internal(
-                    "Merkle settlement proof not initialized for required session".to_string(),
-                )
-            })?;
-
-        proof
-            .verify_via_bridge_validator_with_freshness(
+        self.verify_settlement_internal(
+            "Session merkle freshness verification failed",
+            |proof| {
+                proof.verify_via_bridge_validator_with_freshness(
                 authorized_validators,
                 finality_threshold,
                 current_finalized_block,
                 max_proof_age_blocks,
-            )
-            .map_err(|e| {
-                CoordinatorError::Internal(format!(
-                    "Session merkle freshness verification failed: {e}"
-                ))
-            })
+                )
+            },
+        )
     }
 
     /// Check if settlement is ready for finalization
