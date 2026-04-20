@@ -5,14 +5,15 @@
 //! settlement phase, enabling cryptographically verified atomic swap completion.
 
 use crate::types::SwapSession;
-use crate::{CoordinatorError, SwapCoordinator};
 use crate::types::HtlcSecret;
+use crate::{CoordinatorError, SwapCoordinator};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use x3_cross_vm_bridge::merkle_settlement_bridge::{MerkleEnabledSettlement, MerkleSettlementExt};
 use x3_cross_vm_bridge::merkle_proof_validator::{
     DefaultMerkleProofValidator, MerkleProofSettlement as BridgeMerkleProofSettlement,
-    MerkleProofValidator,
 };
+use x3_cross_vm_bridge::{CrossVmBridge, MAX_PROOF_AGE_BLOCKS_TESTNET};
 
 pub type Address = [u8; 32];
 pub type Hash = [u8; 32];
@@ -132,26 +133,52 @@ impl MerkleSettlementProof {
 
     /// Verify this settlement with the canonical bridge validator path.
     ///
-    /// On success, marks this proof as verified. On failure, marks it failed.
+    /// Uses bridge-default freshness bounds anchored to this proof's finalized block.
     pub fn verify_via_bridge_validator(
         &mut self,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<(), String> {
-        let validator = DefaultMerkleProofValidator::new();
-        let bridge_settlement = self.to_bridge_settlement();
-        match validator.verify_settlement_proof(
-            &bridge_settlement,
+        self.verify_via_bridge_validator_with_freshness(
             authorized_validators,
             finality_threshold,
-        ) {
-            Ok(()) => {
+            self.finalized_block,
+            MAX_PROOF_AGE_BLOCKS_TESTNET as u64,
+        )
+    }
+
+    /// Verify this settlement via canonical bridge settlement verification with explicit
+    /// freshness context.
+    ///
+    /// On success, marks this proof as verified. On failure, marks it failed.
+    pub fn verify_via_bridge_validator_with_freshness(
+        &mut self,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        current_finalized_block: u64,
+        max_proof_age_blocks: u64,
+    ) -> Result<(), String> {
+        let bridge = CrossVmBridge::new();
+        let validator = DefaultMerkleProofValidator::new();
+        let settlement = MerkleEnabledSettlement::new(
+            self.execution_index,
+            Some(self.to_bridge_settlement()),
+        )
+        .with_finality_threshold(finality_threshold)
+        .with_freshness(current_finalized_block, max_proof_age_blocks);
+
+        match bridge.verify_merkle_settlement(&settlement, &validator, authorized_validators) {
+            Ok(true) => {
                 self.mark_verified();
                 Ok(())
             }
+            Ok(false) => {
+                self.mark_failed();
+                Err("bridge merkle settlement returned false".to_string())
+            }
             Err(e) => {
                 self.mark_failed();
-                Err(e.to_string())
+                Err(format!("{e:?}"))
             }
         }
     }
@@ -590,6 +617,25 @@ mod tests {
 
         let validators = BTreeMap::new();
         let result = proof.verify_via_bridge_validator(&validators, 1);
+        assert!(result.is_err());
+        assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
+    }
+
+    #[test]
+    fn test_verify_via_bridge_validator_with_freshness_rejects_stale_proof() {
+        let mut proof = MerkleSettlementProof::new(
+            "test-session".to_string(),
+            [42u8; 32],
+            100,
+            vec![42; 72],
+            0,
+            1000,
+        );
+
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let result = proof.verify_via_bridge_validator_with_freshness(&validators, 1, 200, 50);
         assert!(result.is_err());
         assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
     }
