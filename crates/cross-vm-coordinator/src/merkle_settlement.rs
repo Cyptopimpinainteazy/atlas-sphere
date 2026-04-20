@@ -225,19 +225,13 @@ pub enum MerkleVerificationResult {
 }
 
 impl SwapCoordinator {
-    fn verify_claim_settlement_with_session_bridge(
+    fn build_ephemeral_merkle_session(
         session_id: &str,
         now_unix: u64,
-        settlement_proof: &mut Option<MerkleSettlementProof>,
-        authorized_validators: &BTreeMap<Address, Vec<u8>>,
-        finality_threshold: u32,
-    ) -> Result<(), CoordinatorError> {
-        let Some(proof) = settlement_proof.take() else {
-            return Ok(());
-        };
-
+        proof: MerkleSettlementProof,
+    ) -> MerkleSwapSession {
         // Coordinator claim paths may verify before canonical session lookup,
-        // so use an ephemeral session wrapper around the supplied proof.
+        // so wrap the supplied proof in an ephemeral merkle-aware session.
         let base_session = SwapSession {
             session_id: session_id.to_string(),
             hash_lock: crate::types::HtlcHash([0u8; 32]),
@@ -255,12 +249,55 @@ impl SwapCoordinator {
 
         let mut merkle_session = MerkleSwapSession::new(base_session, true);
         merkle_session.settlement_proof = Some(proof);
+        merkle_session
+    }
 
-        let verification_result = merkle_session
-            .verify_settlement_with_bridge(authorized_validators, finality_threshold);
+    fn verify_claim_settlement_with_session_bridge_internal(
+        session_id: &str,
+        now_unix: u64,
+        settlement_proof: &mut Option<MerkleSettlementProof>,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        freshness: Option<(u64, u64)>,
+    ) -> Result<(), CoordinatorError> {
+        let Some(proof) = settlement_proof.take() else {
+            return Ok(());
+        };
+
+        let mut merkle_session = Self::build_ephemeral_merkle_session(session_id, now_unix, proof);
+
+        let verification_result = match freshness {
+            Some((current_finalized_block, max_proof_age_blocks)) => merkle_session
+                .verify_settlement_with_bridge_freshness(
+                    authorized_validators,
+                    finality_threshold,
+                    current_finalized_block,
+                    max_proof_age_blocks,
+                ),
+            None => {
+                merkle_session.verify_settlement_with_bridge(authorized_validators, finality_threshold)
+            }
+        };
 
         *settlement_proof = merkle_session.settlement_proof;
         verification_result
+    }
+
+    fn verify_claim_settlement_with_session_bridge(
+        session_id: &str,
+        now_unix: u64,
+        settlement_proof: &mut Option<MerkleSettlementProof>,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+    ) -> Result<(), CoordinatorError> {
+        Self::verify_claim_settlement_with_session_bridge_internal(
+            session_id,
+            now_unix,
+            settlement_proof,
+            authorized_validators,
+            finality_threshold,
+            None,
+        )
     }
 
     fn verify_claim_settlement_with_session_bridge_freshness(
@@ -272,37 +309,14 @@ impl SwapCoordinator {
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<(), CoordinatorError> {
-        let Some(proof) = settlement_proof.take() else {
-            return Ok(());
-        };
-
-        let base_session = SwapSession {
-            session_id: session_id.to_string(),
-            hash_lock: crate::types::HtlcHash([0u8; 32]),
-            htlc_fast: None,
-            htlc_slow: None,
-            flash_legs: Vec::new(),
-            leg_outcomes: Vec::new(),
-            phase: crate::types::SwapPhase::Setup,
-            timelock_fast: 0,
-            timelock_slow: 0,
-            created_at: now_unix,
-            updated_at: now_unix,
-            requires_merkle_verification: true,
-        };
-
-        let mut merkle_session = MerkleSwapSession::new(base_session, true);
-        merkle_session.settlement_proof = Some(proof);
-
-        let verification_result = merkle_session.verify_settlement_with_bridge_freshness(
+        Self::verify_claim_settlement_with_session_bridge_internal(
+            session_id,
+            now_unix,
+            settlement_proof,
             authorized_validators,
             finality_threshold,
-            current_finalized_block,
-            max_proof_age_blocks,
-        );
-
-        *settlement_proof = merkle_session.settlement_proof;
-        verification_result
+            Some((current_finalized_block, max_proof_age_blocks)),
+        )
     }
 
     /// Record a fast chain claim with optional merkle proof verification.
