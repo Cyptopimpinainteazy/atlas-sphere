@@ -273,6 +273,35 @@ impl SwapCoordinator {
         self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
     }
 
+    /// Record a fast claim and verify merkle proof with explicit freshness context.
+    pub fn record_merkle_fast_claim_with_bridge_freshness_verification(
+        &mut self,
+        session_id: &str,
+        mut fast_claim: MerkleEnabledFastClaim,
+        now_unix: u64,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        current_finalized_block: u64,
+        max_proof_age_blocks: u64,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        if let Some(settlement) = fast_claim.merkle_settlement.as_mut() {
+            settlement
+                .verify_via_bridge_validator_with_freshness(
+                    authorized_validators,
+                    finality_threshold,
+                    current_finalized_block,
+                    max_proof_age_blocks,
+                )
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!(
+                        "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+                    ))
+                })?;
+        }
+
+        self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
+    }
+
     /// Record a slow chain claim with optional merkle proof verification.
     pub fn record_merkle_slow_claim(
         &mut self,
@@ -309,6 +338,35 @@ impl SwapCoordinator {
         if let Some(settlement) = slow_claim.merkle_settlement.as_mut() {
             settlement
                 .verify_via_bridge_validator(authorized_validators, finality_threshold)
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!(
+                        "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+                    ))
+                })?;
+        }
+
+        self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
+    }
+
+    /// Record a slow claim and verify merkle proof with explicit freshness context.
+    pub fn record_merkle_slow_claim_with_bridge_freshness_verification(
+        &mut self,
+        session_id: &str,
+        mut slow_claim: MerkleEnabledSlowClaim,
+        now_unix: u64,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        current_finalized_block: u64,
+        max_proof_age_blocks: u64,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        if let Some(settlement) = slow_claim.merkle_settlement.as_mut() {
+            settlement
+                .verify_via_bridge_validator_with_freshness(
+                    authorized_validators,
+                    finality_threshold,
+                    current_finalized_block,
+                    max_proof_age_blocks,
+                )
                 .map_err(|e| {
                     CoordinatorError::Internal(format!(
                         "Merkle settlement bridge verification failed for session '{session_id}': {e}"
@@ -712,6 +770,77 @@ mod coordinator_merkle_tests {
         assert!(
             err.to_string().contains("bridge verification failed"),
             "expected bridge verification failure before session-not-found"
+        );
+    }
+
+    #[test]
+    fn test_fast_claim_bridge_freshness_verification_rejects_stale_before_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [42u8; 32],
+                100,
+                vec![42; 72],
+                0,
+                1,
+            )),
+        };
+
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let err = coordinator
+            .record_merkle_fast_claim_with_bridge_freshness_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("bridge verification failed"),
+            "expected stale-proof bridge verification failure before session-not-found"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_bridge_freshness_verification_rejects_stale_before_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [42u8; 32],
+                100,
+                vec![42; 72],
+                0,
+                1,
+            )),
+        };
+
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_freshness_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("bridge verification failed"),
+            "expected stale-proof bridge verification failure before session-not-found"
         );
     }
 }
