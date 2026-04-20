@@ -5,6 +5,8 @@
 //! settlement phase, enabling cryptographically verified atomic swap completion.
 
 use crate::types::SwapSession;
+use crate::{CoordinatorError, SwapCoordinator};
+use crate::types::HtlcSecret;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -125,6 +127,113 @@ pub struct MerkleSwapSession {
     pub settlement_proof: Option<MerkleSettlementProof>,
     /// Whether merkle verification is required for this session
     pub requires_merkle_verification: bool,
+}
+
+/// Merkle-enabled settlement claim for fast chain.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MerkleEnabledFastClaim {
+    /// The HTLC secret preimage for the fast chain.
+    pub secret_bytes: [u8; 32],
+    /// Merkle settlement proof (optional - if None, falls back to non-merkle path).
+    pub merkle_settlement: Option<MerkleSettlementProof>,
+}
+
+/// Merkle-enabled settlement claim for slow chain.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MerkleEnabledSlowClaim {
+    /// Merkle settlement proof (optional - if None, falls back to non-merkle path).
+    pub merkle_settlement: Option<MerkleSettlementProof>,
+}
+
+/// Result of merkle settlement verification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MerkleVerificationResult {
+    /// Merkle settlement was verified successfully.
+    Verified,
+    /// Merkle settlement verification failed.
+    VerificationFailed,
+    /// Settlement proof was not provided (non-merkle path).
+    NotProvided,
+}
+
+impl SwapCoordinator {
+    /// Record a fast chain claim with optional merkle proof verification.
+    pub fn record_merkle_fast_claim(
+        &mut self,
+        session_id: &str,
+        fast_claim: MerkleEnabledFastClaim,
+        now_unix: u64,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        let verification_result = if let Some(ref settlement) = fast_claim.merkle_settlement {
+            if !settlement.is_verified() {
+                return Err(CoordinatorError::Internal(format!(
+                    "Merkle settlement for session '{}' failed verification (outcome: {:?})",
+                    session_id, settlement.outcome
+                )));
+            }
+            MerkleVerificationResult::Verified
+        } else {
+            MerkleVerificationResult::NotProvided
+        };
+
+        let secret = HtlcSecret(fast_claim.secret_bytes);
+        self.record_fast_claim(session_id, secret, now_unix)?;
+
+        Ok(verification_result)
+    }
+
+    /// Record a slow chain claim with optional merkle proof verification.
+    pub fn record_merkle_slow_claim(
+        &mut self,
+        session_id: &str,
+        slow_claim: MerkleEnabledSlowClaim,
+        now_unix: u64,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        let verification_result = if let Some(ref settlement) = slow_claim.merkle_settlement {
+            if !settlement.is_verified() {
+                return Err(CoordinatorError::Internal(format!(
+                    "Merkle settlement for session '{}' failed verification (outcome: {:?})",
+                    session_id, settlement.outcome
+                )));
+            }
+            MerkleVerificationResult::Verified
+        } else {
+            MerkleVerificationResult::NotProvided
+        };
+
+        self.record_slow_claim(session_id, now_unix)?;
+
+        Ok(verification_result)
+    }
+
+    /// Initialize merkle settlement tracking for a session.
+    pub fn init_merkle_settlement(
+        &self,
+        session_id: String,
+        state_root: Hash,
+        finalized_block: u64,
+        merkle_proof_bytes: Vec<u8>,
+        execution_index: u64,
+        now_unix: u64,
+    ) -> MerkleSettlementProof {
+        MerkleSettlementProof::new(
+            session_id,
+            state_root,
+            finalized_block,
+            merkle_proof_bytes,
+            execution_index,
+            now_unix,
+        )
+    }
+
+    /// Check if a session requires merkle verification.
+    pub fn session_requires_merkle(&self, session_id: &str) -> Result<bool, CoordinatorError> {
+        self.get_session(session_id)
+            .map(|s| s.requires_merkle_verification)
+            .ok_or_else(|| CoordinatorError::SessionNotFound {
+                session_id: session_id.to_string(),
+            })
+    }
 }
 
 impl MerkleSwapSession {
@@ -359,5 +468,17 @@ mod tests {
             proof1.settlement_commitment(),
             proof2.settlement_commitment()
         );
+    }
+}
+
+#[cfg(test)]
+mod coordinator_merkle_tests {
+    use super::*;
+
+    #[test]
+    fn test_session_requires_merkle_missing_session() {
+        let coordinator = SwapCoordinator::with_default_config();
+        let result = coordinator.session_requires_merkle("nonexistent");
+        assert!(result.is_err());
     }
 }

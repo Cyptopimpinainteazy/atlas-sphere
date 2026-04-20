@@ -38,7 +38,6 @@ pub mod config;
 pub mod flashloan_adapter;
 pub mod htlc;
 pub mod merkle_settlement; // Gap #3: Merkle-backed settlement for atomic swaps
-pub mod merkle_settlement_coordinator; // Gap #3: Coordinator integration for merkle settlements
 pub mod persistence;
 pub mod relayer;
 pub mod rpc_client;
