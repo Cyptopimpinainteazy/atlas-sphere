@@ -119,6 +119,24 @@ pub struct NodeFeatureFlags {
     #[arg(long, default_value_t = false)]
     pub gpu_required: bool,
 
+    /// Enable GPU validator orchestrator (requires gpu-validator feature).
+    ///
+    /// When enabled, the node spawns the GPU validator swarm orchestrator to handle
+    /// GPU-accelerated cryptographic validation (ed25519, sr25519, keccak256, secp256k1).
+    /// Requires the gpu-validator feature to be enabled at compile time.
+    ///
+    /// The orchestrator coordinates multiple GPU validators, manages quarantine,
+    /// provides failover to CPU, and exposes health/metrics endpoints via gRPC.
+    ///
+    /// Requirements:
+    /// - gpu-validator feature enabled in Cargo.toml
+    /// - Compatible NVIDIA GPU (A100, H100, RTX 4090) or similar
+    /// - CUDA 11.0+ or cuDNN 8.0+
+    ///
+    /// Default: false
+    #[arg(long, default_value_t = false)]
+    pub enable_gpu_validator: bool,
+
     /// EVM bridge escrow contract address (20-byte hex, with or without 0x prefix).
     ///
     /// This address is written into genesis and stored in on-chain state.

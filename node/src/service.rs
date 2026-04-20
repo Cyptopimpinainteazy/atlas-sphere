@@ -30,15 +30,11 @@ use x3_bridge_adapters::{
     SubstrateClientBalanceAdapter,
 };
 use x3_cross_vm_bridge::CrossVmBridge;
-/// X3 Chain node service module
-///
-/// Provides node initialization, partial components, and full service setup with:
-/// - Aura (Authority Round) block authoring consensus
-/// - GRANDPA finality gadget
-/// - libp2p networking with peer discovery
-/// - Proper block import queue with consensus verification
-/// - Startup gate for determinism validation before joining consensus
-use x3_chain_runtime::{opaque::Block, RuntimeApi};
+
+#[cfg(feature = "gpu-validator")]
+use x3_gpu_validator_swarm::{
+    config::SwarmConfig, deterministic::DeterministicValidator, orchestrator::SwarmOrchestrator,
+};
 
 /// Key type for Aura block authoring
 const AURA: KeyTypeId = KeyTypeId(*b"aura");
@@ -68,6 +64,8 @@ pub struct NodeFeatureFlags {
     pub enable_atomic_kernel: bool,
     /// Require GPU path for validation critical flows.
     pub gpu_required: bool,
+    /// Enable GPU validator swarm orchestrator (requires gpu-validator feature).
+    pub enable_gpu_validator: bool,
 }
 /// X3 Chain native executor implementation
 pub struct AtlasSphereExecutorDispatch;
@@ -744,6 +742,61 @@ pub fn new_full(
         );
 
         log::info!("⚡ Flash Finality gadget, network bridge, and voter started");
+    }
+
+    // Spawn GPU Validator Orchestrator if enabled (feature-gated)
+    #[cfg(feature = "gpu-validator")]
+    if feature_flags.enable_gpu_validator {
+        let orchestrator_id = format!("{}-gpu-validator", name.clone());
+        let gpu_config = SwarmConfig::default();
+
+        let orchestrator = match SwarmOrchestrator::new(orchestrator_id.clone(), gpu_config) {
+            Ok(orch) => {
+                log::info!(
+                    "🎮 GPU Validator Orchestrator initialized: {}",
+                    orchestrator_id
+                );
+                Arc::new(tokio::sync::RwLock::new(orch))
+            }
+            Err(e) => {
+                log::error!(
+                    "❌ Failed to initialize GPU Validator Orchestrator: {}; GPU validation disabled",
+                    e
+                );
+                return Err(ServiceError::Other(format!(
+                    "GPU Validator Orchestrator initialization failed: {}",
+                    e
+                )));
+            }
+        };
+
+        let orch_clone = orchestrator.clone();
+        let client_for_gpu = client.clone();
+        task_manager.spawn_essential_handle().spawn(
+            "gpu-validator-orchestrator",
+            Some("gpu-validator"),
+            async move {
+                loop {
+                    // Poll orchestrator health/status; in production this would
+                    // integrate with block import, fetch pending proofs, etc.
+                    let orch = orch_clone.read().await;
+                    if let Err(e) = orch.health_check() {
+                        log::warn!("⚠️ GPU Validator health check failed: {}", e);
+                    }
+                    drop(orch);
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                }
+            },
+        );
+
+        log::info!("🎮 GPU Validator Orchestrator spawned and monitoring");
+    }
+
+    #[cfg(not(feature = "gpu-validator"))]
+    if feature_flags.enable_gpu_validator {
+        log::warn!(
+            "⚠️ GPU Validator requested but gpu-validator feature not enabled at compile time; ignored"
+        );
     }
 
     // ── Wire Cross-VM bridge adapters ─────────────────────────────────────

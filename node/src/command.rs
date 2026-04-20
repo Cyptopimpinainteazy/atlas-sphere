@@ -841,6 +841,7 @@ pub fn run() -> CliResult<()> {
                 enable_poh: cli.features.enable_poh,
                 enable_atomic_kernel: cli.features.enable_atomic_kernel,
                 gpu_required: cli.features.gpu_required,
+                enable_gpu_validator: cli.features.enable_gpu_validator,
             };
 
             runner.run_node_until_exit(|config| async move {
