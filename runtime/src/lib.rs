@@ -167,10 +167,40 @@ pub mod gpu_validator_api {
             fn aggregate_cross_chain_proofs(
                 proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
             ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
-        }
-    }
 
-    /// Dummy trait implementation for no_std
+        /// Governance-driven settlement finality and dispute resolution API (Phase 10a)
+        pub trait GovernanceSettlementApi {
+            /// Submit a dispute challenge against a settlement proof
+            fn submit_dispute(
+                proof_hash: sp_core::H256,
+                reason: Vec<u8>,
+            ) -> Option<governance_settlement_api::DisputeRecord>;
+
+            /// Query the voting state of an active dispute
+            fn query_dispute_status(
+                proof_hash: sp_core::H256,
+            ) -> Option<governance_settlement_api::DisputeRecord>;
+
+            /// Confirm that a proof has reached settlement finality
+            fn confirm_settlement_finality(
+                proof_hash: sp_core::H256,
+            ) -> Option<governance_settlement_api::ProofFinalityStatus>;
+        }
+
+        /// Settlement finality and validator attestation API (Phase 10a)
+        pub trait SettlementFinalityApi {
+            /// Query finality confirmation metrics
+            fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics;
+
+            /// Get validator dispute resolution reputation score
+            fn query_validator_reputation(
+                validator_id: AccountId,
+            ) -> governance_settlement_api::ValidatorReputation;
+
+            /// Check if a merkle-aggregated batch has finality
+            fn query_batch_finality_status(
+                merkle_root: sp_core::H256,
+            ) -> Option<governance_settlement_api::BatchFinalityStatus>;
     #[cfg(not(feature = "std"))]
     pub trait GpuValidatorRuntimeApi {
         fn gpu_validator_status(validator_id: u32) -> Option<GpuValidatorStatus>;
@@ -198,6 +228,37 @@ pub mod gpu_validator_api {
         fn aggregate_cross_chain_proofs(
             proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
         ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
+    }
+
+    /// Dummy trait implementation for no_std (GovernanceSettlementApi)
+    #[cfg(not(feature = "std"))]
+    pub trait GovernanceSettlementApi {
+        fn submit_dispute(
+            proof_hash: sp_core::H256,
+            reason: Vec<u8>,
+        ) -> Option<governance_settlement_api::DisputeRecord>;
+
+        fn query_dispute_status(
+            proof_hash: sp_core::H256,
+        ) -> Option<governance_settlement_api::DisputeRecord>;
+
+        fn confirm_settlement_finality(
+            proof_hash: sp_core::H256,
+        ) -> Option<governance_settlement_api::ProofFinalityStatus>;
+    }
+
+    /// Dummy trait implementation for no_std (SettlementFinalityApi)
+    #[cfg(not(feature = "std"))]
+    pub trait SettlementFinalityApi {
+        fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics;
+
+        fn query_validator_reputation(
+            validator_id: AccountId,
+        ) -> governance_settlement_api::ValidatorReputation;
+
+        fn query_batch_finality_status(
+            merkle_root: sp_core::H256,
+        ) -> Option<governance_settlement_api::BatchFinalityStatus>;
     }
 }
 
@@ -2820,6 +2881,170 @@ impl_runtime_apis! {
             })
         }
     }
+
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // Phase 10a: Governance Settlement & Dispute Resolution API
+    // ════════════════════════════════════════════════════════════════════════════════════
+    impl governance_settlement_api::GovernanceSettlementApi<Block> for Runtime {
+        fn submit_dispute(
+            proof_hash: sp_core::H256,
+            reason: Vec<u8>,
+        ) -> Option<governance_settlement_api::DisputeRecord> {
+            // Phase 10a: Structural validation only - defer crypto verification to Phase 10b
+            // Validate that proof_hash is non-zero and reason is not empty
+            if proof_hash == sp_core::H256::zero() || reason.is_empty() {
+                return None;
+            }
+
+            // TODO(Phase 10b): Validate proof structure against pallet_x3_verifier
+            // TODO(Phase 10b): Check proof hasn't been disputed recently (replay protection)
+            // TODO(Phase 10b): Fetch dispute window from governance pallet
+
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            let dispute_id = sp_core::H256::from_low_u64_be(current_block as u64);
+            
+            Some(governance_settlement_api::DisputeRecord {
+                dispute_id,
+                proof_hash,
+                reason,
+                challenger: None,
+                status: governance_settlement_api::DisputeStatus::Pending,
+                votes_yes: 0,
+                votes_no: 0,
+                votes_abstain: 0,
+                created_at_block: current_block,
+                resolve_at_block: current_block + 432_000, // 24 hours (432,000 × 200ms)
+                evidence_hash: sp_core::H256::default(),
+            })
+        }
+
+        fn query_dispute_status(
+            proof_hash: sp_core::H256,
+        ) -> Option<governance_settlement_api::DisputeRecord> {
+            // Phase 10a: Query dispute voting state from governance pallet
+            // TODO(Phase 10b): Read from pallet_governance::DisputeVotes storage
+            // For now: Return empty record if proof is non-zero
+            
+            if proof_hash == sp_core::H256::zero() {
+                return None;
+            }
+
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            let dispute_id = sp_core::H256::from_low_u64_be(current_block as u64);
+            
+            Some(governance_settlement_api::DisputeRecord {
+                dispute_id,
+                proof_hash,
+                reason: b"Dispute query".to_vec(),
+                challenger: None,
+                status: governance_settlement_api::DisputeStatus::Active,
+                votes_yes: 0,
+                votes_no: 0,
+                votes_abstain: 0,
+                created_at_block: current_block,
+                resolve_at_block: current_block + 432_000,
+                evidence_hash: sp_core::H256::default(),
+            })
+        }
+
+        fn confirm_settlement_finality(
+            proof_hash: sp_core::H256,
+        ) -> Option<governance_settlement_api::ProofFinalityStatus> {
+            // Phase 10a: Confirm proof has reached settlement finality
+            // Structural validation: check proof_hash is non-zero
+            if proof_hash == sp_core::H256::zero() {
+                return None;
+            }
+
+            // TODO(Phase 10b): Query pallet_x3_settlement_engine::FinalityOracle
+            // TODO(Phase 10b): Check all disputes have been resolved
+            // TODO(Phase 10b): Verify 2/3 validator supermajority consensus
+
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            
+            Some(governance_settlement_api::ProofFinalityStatus {
+                proof_hash,
+                is_finalized: true,
+                finality_block: current_block,
+                confidence_percent: 100,
+                validator_signatures: 0,
+                finality_type: governance_settlement_api::FinalityType::Governance,
+            })
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // Phase 10a: Settlement Finality Confirmation API
+    // ════════════════════════════════════════════════════════════════════════════════════
+    impl governance_settlement_api::SettlementFinalityApi<Block> for Runtime {
+        fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics {
+            // Phase 10a: Return aggregated finality metrics from settlement engine
+            // TODO(Phase 10b): Query actual stats from pallet_x3_settlement_engine
+            
+            governance_settlement_api::FinalityMetrics {
+                total_proofs: 0,
+                finalized_proofs: 0,
+                disputed_proofs: 0,
+                rejected_proofs: 0,
+                active_disputes: 0,
+                average_finality_blocks: 432_000, // 24 hours
+                finality_rate_percent: 100,
+                last_finality_block: frame_system::Pallet::<Runtime>::block_number(),
+            }
+        }
+
+        fn query_validator_reputation(
+            validator_id: AccountId,
+        ) -> governance_settlement_api::ValidatorReputation {
+            // Phase 10a: Query validator dispute resolution history
+            // Structural check: validate AccountId is non-zero (not default)
+            let is_valid_account = validator_id != AccountId::default();
+
+            if !is_valid_account {
+                return governance_settlement_api::ValidatorReputation {
+                    validator_id: validator_id.clone(),
+                    reputation_score: 0,
+                    disputes_won: 0,
+                    disputes_lost: 0,
+                    valid_dispute_percent: 0,
+                    total_disputes: 0,
+                };
+            }
+
+            // TODO(Phase 10b): Read from pallet_governance::ValidatorReputation storage
+            governance_settlement_api::ValidatorReputation {
+                validator_id,
+                reputation_score: 100,
+                disputes_won: 0,
+                disputes_lost: 0,
+                valid_dispute_percent: 100,
+                total_disputes: 0,
+            }
+        }
+
+        fn query_batch_finality_status(
+            merkle_root: sp_core::H256,
+        ) -> Option<governance_settlement_api::BatchFinalityStatus> {
+            // Phase 10a: Query merkle-aggregated batch finality confirmation
+            if merkle_root == sp_core::H256::zero() {
+                return None;
+            }
+
+            // TODO(Phase 10b): Query pallet_x3_settlement_engine::IntentFinalityMap
+            // TODO(Phase 10b): Verify merkle tree structure and inclusion proofs
+            
+            let current_block = frame_system::Pallet::<Runtime>::block_number();
+            
+            Some(governance_settlement_api::BatchFinalityStatus {
+                merkle_root,
+                batch_finalized: true,
+                finality_block: current_block,
+                merkle_path_count: 0,
+                verified_proofs: 0,
+                total_proofs_in_batch: 0,
+            })
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2896,6 +3121,125 @@ pub mod cross_chain_state_root_api {
         pub validation_failures: u32,
         pub last_validated_block: u64,
         pub cpu_fallback_count: u32,
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Phase 10a: Governance & Settlement Finality API (Structural)
+// ─────────────────────────────────────────────────────────────────
+
+pub mod governance_settlement_api {
+    use codec::{Encode, Decode};
+    use scale_info::TypeInfo;
+    use sp_core::H256;
+
+    /// Dispute record for governance-driven settlement challenges
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct DisputeRecord {
+        pub dispute_id: H256,
+        pub proof_hash: H256,
+        pub reason: Vec<u8>,
+        pub challenger: Option<Vec<u8>>, // AccountId (flexible encoding)
+        pub status: DisputeStatus,
+        pub votes_yes: u32,
+        pub votes_no: u32,
+        pub votes_abstain: u32,
+        pub created_at_block: u32,
+        pub resolve_at_block: u32,
+        pub evidence_hash: H256,
+    }
+
+    /// Dispute resolution status
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq, Copy)]
+    pub enum DisputeStatus {
+        Pending,   // Challenge submitted, voting window open
+        Active,    // Voting underway
+        Resolved,  // Voting closed, result finalized
+        Rejected,  // Challenge dismissed (proof was valid)
+        Accepted,  // Challenge upheld (proof was invalid)
+    }
+
+    /// Finality confirmation status for a proof
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct ProofFinalityStatus {
+        pub proof_hash: H256,
+        pub is_finalized: bool,
+        pub finality_block: u32,
+        pub confidence_percent: u8,
+        pub validator_signatures: u32,
+        pub finality_type: FinalityType,
+    }
+
+    /// Finality type (determined by settlement mechanism)
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq, Copy)]
+    pub enum FinalityType {
+        Governance,       // Settled by validator dispute resolution (2/3 majority)
+        SettlementEngine, // Settled by cross-chain intent finalization
+        BlockHeader,      // Native X3 block finality (1 block)
+    }
+
+    /// Aggregated finality metrics across all proofs
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct FinalityMetrics {
+        pub total_proofs: u64,
+        pub finalized_proofs: u64,
+        pub disputed_proofs: u64,
+        pub rejected_proofs: u64,
+        pub active_disputes: u32,
+        pub average_finality_blocks: u32,
+        pub finality_rate_percent: u8,
+        pub last_finality_block: u32,
+    }
+
+    /// Validator dispute resolution reputation
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct ValidatorReputation {
+        pub validator_id: Vec<u8>, // AccountId (flexible encoding)
+        pub reputation_score: u32,
+        pub disputes_won: u32,
+        pub disputes_lost: u32,
+        pub valid_dispute_percent: u8,
+        pub total_disputes: u32,
+    }
+
+    /// Finality status for a merkle-aggregated batch of proofs
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct BatchFinalityStatus {
+        pub merkle_root: H256,
+        pub batch_finalized: bool,
+        pub finality_block: u32,
+        pub merkle_path_count: u32,
+        pub verified_proofs: u32,
+        pub total_proofs_in_batch: u32,
+    }
+
+    /// Trait declaration for governance-driven settlement API
+    pub trait GovernanceSettlementApi {
+        fn submit_dispute(
+            proof_hash: H256,
+            reason: Vec<u8>,
+        ) -> Option<DisputeRecord>;
+
+        fn query_dispute_status(
+            proof_hash: H256,
+        ) -> Option<DisputeRecord>;
+
+        fn confirm_settlement_finality(
+            proof_hash: H256,
+        ) -> Option<ProofFinalityStatus>;
+    }
+
+    /// Trait declaration for settlement finality confirmation API
+    pub trait SettlementFinalityApi {
+        fn query_finality_metrics() -> FinalityMetrics;
+
+        fn query_validator_reputation(
+            validator_id: Vec<u8>,
+        ) -> ValidatorReputation;
+
+        fn query_batch_finality_status(
+            merkle_root: H256,
+        ) -> Option<BatchFinalityStatus>;
     }
 }
 

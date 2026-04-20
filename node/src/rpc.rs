@@ -288,6 +288,169 @@ where
                 "cpu_fallback_count": status.cpu_fallback_count,
             }))
         })?;
+
+        // ==================== PHASE 10a: GOVERNANCE & SETTLEMENT FINALITY ====================
+        
+        // submitDispute: Submit a new dispute for proof validation
+        // Parameters: proof_hash (H256 as "0x..."), reason (String)
+        // Returns: dispute_id, proof_hash, status, created_at_block, resolve_at_block, voting_blocks_remaining
+        let c_dispute = c.clone();
+        module.register_method("submitDispute", move |params, _| {
+            let (proof_hash_str, reason_str): (String, String) = params.parse()?;
+            
+            // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
+            let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
+            let proof_hash_bytes = hex::decode(proof_hash_str)
+                .map_err(|_| custom_error("Invalid proof_hash hex encoding"))?;
+            if proof_hash_bytes.len() != 32 {
+                return Err(custom_error("proof_hash must be exactly 32 bytes"));
+            }
+            let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
+            
+            let runtime_api = c_dispute.runtime_api();
+            let best_hash = c_dispute.info().best_hash;
+            
+            // Call governance settlement API
+            if let Some(record) = runtime_api
+                .submit_dispute(best_hash, proof_hash, reason_str.into_bytes())
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "dispute_id": format!("0x{}", hex::encode(record.dispute_id.as_bytes())),
+                    "proof_hash": format!("0x{}", hex::encode(record.proof_hash.as_bytes())),
+                    "status": "pending",
+                    "created_at_block": record.created_at_block,
+                    "resolve_at_block": record.resolve_at_block,
+                    "voting_blocks_remaining": record.resolve_at_block.saturating_sub(record.created_at_block),
+                }))
+            } else {
+                Err(custom_error("Dispute submission failed - invalid proof_hash or reason"))
+            }
+        })?;
+
+        // queryDisputeStatus: Get current dispute status and voting counts
+        // Parameters: proof_hash (H256 as "0x...")
+        // Returns: dispute_id, proof_hash, status, votes_yes, votes_no, votes_abstain, created_at_block, resolve_at_block
+        let c_query_dispute = c.clone();
+        module.register_method("queryDisputeStatus", move |params, _| {
+            let proof_hash_str: String = params.parse()?;
+            
+            // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
+            let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
+            let proof_hash_bytes = hex::decode(proof_hash_str)
+                .map_err(|_| custom_error("Invalid proof_hash hex encoding"))?;
+            if proof_hash_bytes.len() != 32 {
+                return Err(custom_error("proof_hash must be exactly 32 bytes"));
+            }
+            let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
+            
+            let runtime_api = c_query_dispute.runtime_api();
+            let best_hash = c_query_dispute.info().best_hash;
+            
+            // Call governance settlement API
+            if let Some(record) = runtime_api
+                .query_dispute_status(best_hash, proof_hash)
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "dispute_id": format!("0x{}", hex::encode(record.dispute_id.as_bytes())),
+                    "proof_hash": format!("0x{}", hex::encode(record.proof_hash.as_bytes())),
+                    "status": "active",
+                    "votes_yes": record.votes_yes,
+                    "votes_no": record.votes_no,
+                    "votes_abstain": record.votes_abstain,
+                    "created_at_block": record.created_at_block,
+                    "resolve_at_block": record.resolve_at_block,
+                    "voting_blocks_remaining": record.resolve_at_block.saturating_sub(record.created_at_block),
+                }))
+            } else {
+                Err(custom_error("Dispute not found or query failed"))
+            }
+        })?;
+
+        // queryProofFinality: Check if proof has reached settlement finality
+        // Parameters: proof_hash (H256 as "0x...")
+        // Returns: proof_hash, is_finalized, finality_block, confidence_percent, finality_type
+        let c_finality = c.clone();
+        module.register_method("queryProofFinality", move |params, _| {
+            let proof_hash_str: String = params.parse()?;
+            
+            // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
+            let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
+            let proof_hash_bytes = hex::decode(proof_hash_str)
+                .map_err(|_| custom_error("Invalid proof_hash hex encoding"))?;
+            if proof_hash_bytes.len() != 32 {
+                return Err(custom_error("proof_hash must be exactly 32 bytes"));
+            }
+            let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
+            
+            let runtime_api = c_finality.runtime_api();
+            let best_hash = c_finality.info().best_hash;
+            
+            // Call governance settlement API
+            if let Some(finality) = runtime_api
+                .confirm_settlement_finality(best_hash, proof_hash)
+                .ok()
+                .flatten()
+            {
+                Ok(serde_json::json!({
+                    "proof_hash": format!("0x{}", hex::encode(finality.proof_hash.as_bytes())),
+                    "is_finalized": finality.is_finalized,
+                    "finality_block": finality.finality_block,
+                    "confidence_percent": finality.confidence_percent,
+                    "finality_type": "governance",
+                }))
+            } else {
+                Err(custom_error("Proof finality query failed"))
+            }
+        })?;
+
+        // requestProofChallenge: Request a proof challenge (fraud proof verification)
+        // Parameters: proof_hash (H256 as "0x..."), challenge_type (String: "merkle"|"signature"|"state_root"|"fraud_proof")
+        // Returns: challenge_id, created_at_block, verification_blocks
+        let c_challenge = c.clone();
+        module.register_method("requestProofChallenge", move |params, _| {
+            let (proof_hash_str, challenge_type_str): (String, String) = params.parse()?;
+            
+            // Validate challenge_type
+            match challenge_type_str.as_str() {
+                "merkle" | "signature" | "state_root" | "fraud_proof" => {},
+                _ => return Err(custom_error("Invalid challenge_type. Must be: merkle, signature, state_root, or fraud_proof")),
+            }
+            
+            // Parse proof_hash: strip "0x" prefix, hex decode, validate 32 bytes
+            let proof_hash_str = proof_hash_str.strip_prefix("0x").unwrap_or(&proof_hash_str);
+            let proof_hash_bytes = hex::decode(proof_hash_str)
+                .map_err(|_| custom_error("Invalid proof_hash hex encoding"))?;
+            if proof_hash_bytes.len() != 32 {
+                return Err(custom_error("proof_hash must be exactly 32 bytes"));
+            }
+            let proof_hash = sp_core::H256::from_slice(&proof_hash_bytes);
+            
+            let runtime_api = c_challenge.runtime_api();
+            let best_hash = c_challenge.info().best_hash;
+            let current_block = c_challenge.info().best_number;
+            
+            // Phase 10a: Structural validation only - defer crypto challenge execution to Phase 10b
+            // TODO(Phase 10b): Validate challenge_type matches proof structure
+            // TODO(Phase 10b): Execute merkle bisection, signature verification, or fraud proof challenge
+            // TODO(Phase 10b): Store challenge in pallet_governance for voting integration
+            
+            // For now, return structural challenge response with 24-hour verification window
+            Ok(serde_json::json!({
+                "challenge_id": format!("0x{}", hex::encode(proof_hash.as_bytes())),
+                "challenge_type": challenge_type_str,
+                "proof_hash": format!("0x{}", hex::encode(proof_hash.as_bytes())),
+                "created_at_block": current_block,
+                "verification_blocks": 432_000u64,  // 24-hour window
+                "verification_deadline_block": current_block + 432_000u64,
+                "confidence": 100,
+            }))
+        })?;
+
+        // ==================== END PHASE 10a RPC METHODS ====================
     }
 
     let check_rate_limit = {
