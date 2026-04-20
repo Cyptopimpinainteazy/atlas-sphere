@@ -144,7 +144,7 @@ impl MerkleSettlementProof {
     /// Verify this settlement with the canonical bridge validator path.
     ///
     /// Uses bridge-default freshness bounds anchored to this proof's finalized block.
-    pub fn verify_via_bridge_validator(
+    fn verify_via_bridge_validator(
         &mut self,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
@@ -161,7 +161,7 @@ impl MerkleSettlementProof {
     /// freshness context.
     ///
     /// On success, marks this proof as verified. On failure, marks it failed.
-    pub fn verify_via_bridge_validator_with_freshness(
+    fn verify_via_bridge_validator_with_freshness(
         &mut self,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
