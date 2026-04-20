@@ -224,6 +224,28 @@ impl SwapCoordinator {
         Ok(verification_result)
     }
 
+    /// Record a fast claim and verify merkle proof with the canonical bridge validator.
+    pub fn record_merkle_fast_claim_with_bridge_verification(
+        &mut self,
+        session_id: &str,
+        mut fast_claim: MerkleEnabledFastClaim,
+        now_unix: u64,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        if let Some(settlement) = fast_claim.merkle_settlement.as_mut() {
+            settlement
+                .verify_via_bridge_validator(authorized_validators, finality_threshold)
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!(
+                        "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+                    ))
+                })?;
+        }
+
+        self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
+    }
+
     /// Record a slow chain claim with optional merkle proof verification.
     pub fn record_merkle_slow_claim(
         &mut self,
@@ -246,6 +268,28 @@ impl SwapCoordinator {
         self.record_slow_claim(session_id, now_unix)?;
 
         Ok(verification_result)
+    }
+
+    /// Record a slow claim and verify merkle proof with the canonical bridge validator.
+    pub fn record_merkle_slow_claim_with_bridge_verification(
+        &mut self,
+        session_id: &str,
+        mut slow_claim: MerkleEnabledSlowClaim,
+        now_unix: u64,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        if let Some(settlement) = slow_claim.merkle_settlement.as_mut() {
+            settlement
+                .verify_via_bridge_validator(authorized_validators, finality_threshold)
+                .map_err(|e| {
+                    CoordinatorError::Internal(format!(
+                        "Merkle settlement bridge verification failed for session '{session_id}': {e}"
+                    ))
+                })?;
+        }
+
+        self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
     }
 
     /// Initialize merkle settlement tracking for a session.
@@ -560,5 +604,68 @@ mod coordinator_merkle_tests {
         let coordinator = SwapCoordinator::with_default_config();
         let result = coordinator.session_requires_merkle("nonexistent");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fast_claim_bridge_verification_runs_before_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_fast_claim_with_bridge_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("bridge verification failed"),
+            "expected bridge verification failure before session-not-found"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_bridge_verification_runs_before_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("bridge verification failed"),
+            "expected bridge verification failure before session-not-found"
+        );
     }
 }
