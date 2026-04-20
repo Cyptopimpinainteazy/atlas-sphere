@@ -107,16 +107,6 @@ impl MerkleSettlementProof {
         self.validator_signatures.len() as u32
     }
 
-    /// Mark settlement as verified
-    pub fn mark_verified(&mut self) {
-        self.outcome = MerkleSettlementOutcome::Verified;
-    }
-
-    /// Mark settlement as failed
-    pub fn mark_failed(&mut self) {
-        self.outcome = MerkleSettlementOutcome::Failed;
-    }
-
     /// Check if settlement is verified
     pub fn is_verified(&self) -> bool {
         self.outcome == MerkleSettlementOutcome::Verified
@@ -543,11 +533,13 @@ mod tests {
         assert_eq!(proof.outcome, MerkleSettlementOutcome::Pending);
         assert!(!proof.is_verified());
 
-        proof.mark_verified();
+        let ok_result: Result<bool, &str> = Ok(true);
+        let _ = proof.apply_bridge_verification_result(ok_result);
         assert_eq!(proof.outcome, MerkleSettlementOutcome::Verified);
         assert!(proof.is_verified());
 
-        proof.mark_failed();
+        let err_result: Result<bool, &str> = Err("forced-failure");
+        let _ = proof.apply_bridge_verification_result(err_result);
         assert_eq!(proof.outcome, MerkleSettlementOutcome::Failed);
         assert!(!proof.is_verified());
     }
@@ -582,7 +574,8 @@ mod tests {
         // Mark as verified with signature
         if let Some(proof) = &mut merkle_session.settlement_proof {
             proof.add_validator_signature([2u8; 32], vec![1, 2, 3]);
-            proof.mark_verified();
+            let ok_result: Result<bool, &str> = Ok(true);
+            let _ = proof.apply_bridge_verification_result(ok_result);
         }
 
         // Now ready
