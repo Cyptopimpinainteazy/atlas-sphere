@@ -213,6 +213,22 @@ pub struct MerkleEnabledSlowClaim {
     pub merkle_settlement: Option<MerkleSettlementProof>,
 }
 
+trait MerkleSettlementCarrier {
+    fn settlement_proof_mut(&mut self) -> &mut Option<MerkleSettlementProof>;
+}
+
+impl MerkleSettlementCarrier for MerkleEnabledFastClaim {
+    fn settlement_proof_mut(&mut self) -> &mut Option<MerkleSettlementProof> {
+        &mut self.merkle_settlement
+    }
+}
+
+impl MerkleSettlementCarrier for MerkleEnabledSlowClaim {
+    fn settlement_proof_mut(&mut self) -> &mut Option<MerkleSettlementProof> {
+        &mut self.merkle_settlement
+    }
+}
+
 /// Result of merkle settlement verification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MerkleVerificationResult {
@@ -225,6 +241,32 @@ pub enum MerkleVerificationResult {
 }
 
 impl SwapCoordinator {
+    fn record_merkle_claim_with_bridge_context<C, F>(
+        &mut self,
+        session_id: &str,
+        now_unix: u64,
+        mut claim: C,
+        authorized_validators: &BTreeMap<Address, Vec<u8>>,
+        finality_threshold: u32,
+        freshness: Option<(u64, u64)>,
+        record_claim: F,
+    ) -> Result<MerkleVerificationResult, CoordinatorError>
+    where
+        C: MerkleSettlementCarrier,
+        F: FnOnce(&mut Self, &str, C, u64) -> Result<MerkleVerificationResult, CoordinatorError>,
+    {
+        Self::verify_claim_settlement_with_bridge_context(
+            session_id,
+            now_unix,
+            claim.settlement_proof_mut(),
+            authorized_validators,
+            finality_threshold,
+            freshness,
+        )?;
+
+        record_claim(self, session_id, claim, now_unix)
+    }
+
     fn build_ephemeral_merkle_session(
         session_id: &str,
         now_unix: u64,
@@ -396,44 +438,42 @@ impl SwapCoordinator {
     pub fn record_merkle_fast_claim_with_bridge_verification(
         &mut self,
         session_id: &str,
-        mut fast_claim: MerkleEnabledFastClaim,
+        fast_claim: MerkleEnabledFastClaim,
         now_unix: u64,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_bridge_context(
+        self.record_merkle_claim_with_bridge_context(
             session_id,
             now_unix,
-            &mut fast_claim.merkle_settlement,
+            fast_claim,
             authorized_validators,
             finality_threshold,
             None,
-        )?;
-
-        self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
+            SwapCoordinator::record_merkle_fast_claim,
+        )
     }
 
     /// Record a fast claim and verify merkle proof with explicit freshness context.
     pub fn record_merkle_fast_claim_with_bridge_freshness_verification(
         &mut self,
         session_id: &str,
-        mut fast_claim: MerkleEnabledFastClaim,
+        fast_claim: MerkleEnabledFastClaim,
         now_unix: u64,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_bridge_context(
+        self.record_merkle_claim_with_bridge_context(
             session_id,
             now_unix,
-            &mut fast_claim.merkle_settlement,
+            fast_claim,
             authorized_validators,
             finality_threshold,
             Some((current_finalized_block, max_proof_age_blocks)),
-        )?;
-
-        self.record_merkle_fast_claim(session_id, fast_claim, now_unix)
+            SwapCoordinator::record_merkle_fast_claim,
+        )
     }
 
     /// Record a slow chain claim with optional merkle proof verification.
@@ -458,44 +498,42 @@ impl SwapCoordinator {
     pub fn record_merkle_slow_claim_with_bridge_verification(
         &mut self,
         session_id: &str,
-        mut slow_claim: MerkleEnabledSlowClaim,
+        slow_claim: MerkleEnabledSlowClaim,
         now_unix: u64,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_bridge_context(
+        self.record_merkle_claim_with_bridge_context(
             session_id,
             now_unix,
-            &mut slow_claim.merkle_settlement,
+            slow_claim,
             authorized_validators,
             finality_threshold,
             None,
-        )?;
-
-        self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
+            SwapCoordinator::record_merkle_slow_claim,
+        )
     }
 
     /// Record a slow claim and verify merkle proof with explicit freshness context.
     pub fn record_merkle_slow_claim_with_bridge_freshness_verification(
         &mut self,
         session_id: &str,
-        mut slow_claim: MerkleEnabledSlowClaim,
+        slow_claim: MerkleEnabledSlowClaim,
         now_unix: u64,
         authorized_validators: &BTreeMap<Address, Vec<u8>>,
         finality_threshold: u32,
         current_finalized_block: u64,
         max_proof_age_blocks: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        Self::verify_claim_settlement_with_bridge_context(
+        self.record_merkle_claim_with_bridge_context(
             session_id,
             now_unix,
-            &mut slow_claim.merkle_settlement,
+            slow_claim,
             authorized_validators,
             finality_threshold,
             Some((current_finalized_block, max_proof_age_blocks)),
-        )?;
-
-        self.record_merkle_slow_claim(session_id, slow_claim, now_unix)
+            SwapCoordinator::record_merkle_slow_claim,
+        )
     }
 
     /// Initialize merkle settlement tracking for a session.
