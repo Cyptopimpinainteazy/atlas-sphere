@@ -176,6 +176,96 @@ where
         })?;
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // Cross-Chain Validation RPC Methods
+    // ─────────────────────────────────────────────────────────────────
+    #[cfg(feature = "gpu-validator")]
+    {
+        let c = client.clone();
+        
+        // query_crossChainStatus: Get validation statistics
+        module.register_method("query_crossChainStatus", move |_params, _| {
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            let status = runtime_api.query_cross_chain_status(best_hash)?;
+            Ok(serde_json::json!({
+                "evm_headers_validated": status.evm_headers_validated,
+                "svm_headers_validated": status.svm_headers_validated,
+                "proof_batches_submitted": status.proof_batches_submitted,
+                "validation_failures": status.validation_failures,
+                "last_validated_block": status.last_validated_block,
+                "cpu_fallback_count": status.cpu_fallback_count,
+            }))
+        })?;
+        
+        // validate_evmHeader: Trigger EVM validation
+        module.register_method("validate_evmHeader", move |params, _| {
+            let (block_number, block_hash, state_root) = params.parse::<(u64, String, String)>()?;
+            let block_hash_bytes = hex::decode(&block_hash)
+                .map_err(|e| jsonrpsee::core::Error::ParseError(e.to_string()))?;
+            let state_root_bytes = hex::decode(&state_root)
+                .map_err(|e| jsonrpsee::core::Error::ParseError(e.to_string()))?;
+            
+            let mut hash_array = [0u8; 32];
+            hash_array.copy_from_slice(&block_hash_bytes);
+            let block_hash_h256 = sp_core::H256::from(hash_array);
+            
+            let mut root_array = [0u8; 32];
+            root_array.copy_from_slice(&state_root_bytes);
+            let state_root_h256 = sp_core::H256::from(root_array);
+            
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            
+            if let Some(proof) = runtime_api.validate_evm_header(best_hash, block_number, block_hash_h256, state_root_h256)? {
+                Ok(serde_json::json!({
+                    "block_number": proof.block_number,
+                    "block_hash": format!("0x{}", hex::encode(proof.block_hash.as_fixed_bytes())),
+                    "state_root": format!("0x{}", hex::encode(proof.state_root.as_fixed_bytes())),
+                    "proof_hash": format!("0x{}", hex::encode(proof.proof_hash.as_fixed_bytes())),
+                    "processed_by": format!("{:?}", proof.processed_by),
+                    "confidence": proof.confidence,
+                }))
+            } else {
+                Err(jsonrpsee::core::Error::Custom("EVM validation failed".to_string()))
+            }
+        })?;
+        
+        // validate_svmHeader: Trigger SVM validation
+        module.register_method("validate_svmHeader", move |params, _| {
+            let (slot, block_hash, state_root) = params.parse::<(u64, String, String)>()?;
+            let block_hash_bytes = hex::decode(&block_hash)
+                .map_err(|e| jsonrpsee::core::Error::ParseError(e.to_string()))?;
+            let state_root_bytes = hex::decode(&state_root)
+                .map_err(|e| jsonrpsee::core::Error::ParseError(e.to_string()))?;
+            
+            let mut hash_array = [0u8; 32];
+            hash_array.copy_from_slice(&block_hash_bytes);
+            let block_hash_h256 = sp_core::H256::from(hash_array);
+            
+            let mut root_array = [0u8; 32];
+            root_array.copy_from_slice(&state_root_bytes);
+            let state_root_h256 = sp_core::H256::from(root_array);
+            
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+            
+            if let Some(proof) = runtime_api.validate_svm_header(best_hash, slot, block_hash_h256, state_root_h256)? {
+                Ok(serde_json::json!({
+                    "slot": proof.slot,
+                    "block_hash": format!("0x{}", hex::encode(proof.block_hash.as_fixed_bytes())),
+                    "state_root": format!("0x{}", hex::encode(proof.state_root.as_fixed_bytes())),
+                    "validator_signature_count": proof.validator_signature_count,
+                    "proof_hash": format!("0x{}", hex::encode(proof.proof_hash.as_fixed_bytes())),
+                    "processed_by": format!("{:?}", proof.processed_by),
+                    "confidence": proof.confidence,
+                }))
+            } else {
+                Err(jsonrpsee::core::Error::Custom("SVM validation failed".to_string()))
+            }
+        })?;
+    }
+
     let check_rate_limit = {
         let limiter = rate_limiter.clone();
         move |method: &str| -> Result<(), JsonRpseeError> {

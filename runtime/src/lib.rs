@@ -2807,6 +2807,151 @@ impl_runtime_apis! {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Cross-Chain GPU State-Root Validation API
+// ─────────────────────────────────────────────────────────────────
+
+#[cfg(feature = "gpu-validator")]
+pub mod cross_chain_state_root_api {
+    use codec::{Encode, Decode};
+    use scale_info::TypeInfo;
+    use sp_core::H256;
+
+    /// EVM block header validation result
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct EvmHeaderProof {
+        pub block_number: u64,
+        pub block_hash: H256,
+        pub state_root: H256,
+        pub timestamp: u64,
+        pub validator_set_hash: H256,
+        pub proof_hash: H256,
+        pub processed_by: ProcessorType,
+        pub confidence: u32,
+    }
+
+    /// SVM block header validation result (Solana)
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct SvmHeaderProof {
+        pub slot: u64,
+        pub block_hash: H256,
+        pub state_root: H256,
+        pub parent_slot_hashes: Vec<H256>,
+        pub validator_signature_count: u32,
+        pub proof_hash: H256,
+        pub processed_by: ProcessorType,
+        pub confidence: u32,
+    }
+
+    /// Merkle inclusion proof for external transaction
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct CrossChainProofBatch {
+        pub chain_id: u32,
+        pub proof_type: ProofType,
+        pub merkle_root: H256,
+        pub transaction_hashes: Vec<H256>,
+        pub merkle_proofs: Vec<Vec<H256>>,
+        pub batch_size: u32,
+        pub processed_by: ProcessorType,
+    }
+
+    /// Processor type (GPU or CPU)
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq, Copy)]
+    pub enum ProcessorType {
+        GpuCuda,
+        GpuMetal,
+        GpuOpenCl,
+        CpuRustNative,
+    }
+
+    /// Proof type
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq, Copy)]
+    pub enum ProofType {
+        EvmKeccak256,
+        SvmSha256,
+        SvmSecp256k1,
+    }
+
+    /// Cross-chain validation status
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+    pub struct CrossChainValidationStatus {
+        pub evm_headers_validated: u64,
+        pub svm_headers_validated: u64,
+        pub proof_batches_submitted: u64,
+        pub validation_failures: u32,
+        pub last_validated_block: u64,
+        pub cpu_fallback_count: u32,
+    }
+}
+
+/// Runtime API: Cross-Chain GPU State-Root Validation
+#[cfg(all(feature = "std", feature = "gpu-validator"))]
+sp_api::decl_runtime_apis! {
+    #[api_version(1)]
+    pub trait CrossChainStateRootApi {
+        /// Validate EVM header and return proof for pallet-x3-verifier
+        fn validate_evm_header(
+            block_number: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
+
+        /// Validate SVM (Solana) header and return proof
+        fn validate_svm_header(
+            slot: u64,
+            block_hash: sp_core::H256,
+            state_root: sp_core::H256,
+        ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
+
+        /// Submit batch of merkle inclusion proofs
+        fn aggregate_cross_chain_proofs(
+            chain_id: u32,
+            batch: cross_chain_state_root_api::CrossChainProofBatch,
+        ) -> Option<cross_chain_state_root_api::CrossChainValidationStatus>;
+
+        /// Query current cross-chain validation status
+        fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
+    }
+}
+
+/// Dummy trait for no_std
+#[cfg(not(feature = "std"))]
+pub trait CrossChainStateRootApi {
+    fn validate_evm_header(
+        _block_number: u64,
+        _block_hash: sp_core::H256,
+        _state_root: sp_core::H256,
+    ) -> Option<cross_chain_state_root_api::EvmHeaderProof> {
+        None
+    }
+
+    fn validate_svm_header(
+        _slot: u64,
+        _block_hash: sp_core::H256,
+        _state_root: sp_core::H256,
+    ) -> Option<cross_chain_state_root_api::SvmHeaderProof> {
+        None
+    }
+
+    fn aggregate_cross_chain_proofs(
+        _chain_id: u32,
+        _batch: cross_chain_state_root_api::CrossChainProofBatch,
+    ) -> Option<cross_chain_state_root_api::CrossChainValidationStatus> {
+        None
+    }
+
+    fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus {
+        cross_chain_state_root_api::CrossChainValidationStatus {
+            evm_headers_validated: 0,
+            svm_headers_validated: 0,
+            proof_batches_submitted: 0,
+            validation_failures: 0,
+            last_validated_block: 0,
+            cpu_fallback_count: 0,
+        }
+    }
+}
+
 #[cfg(feature = "std")]
 pub fn x3_kernel_default_assets() -> Vec<(AssetId, Vec<u8>, u8)> {
     vec![

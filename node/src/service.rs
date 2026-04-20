@@ -893,8 +893,41 @@ pub fn new_full(
     // ── Store GPU Orchestrator reference for RPC access ────────────────────────────────
     #[cfg(feature = "gpu-validator")]
     if feature_flags.enable_gpu_validator {
-        task_manager.extension().insert(orchestrator);
+        task_manager.extension().insert(orchestrator.clone());
         log::debug!("🎮 GPU Orchestrator reference stored in task manager extensions");
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Initialize Cross-Chain GPU Validator
+    // ─────────────────────────────────────────────────────────────────
+    #[cfg(feature = "gpu-validator")]
+    if feature_flags.enable_gpu_validator {
+        use x3_cross_chain_gpu_validator::CrossChainValidator;
+        
+        let cross_chain_validator = CrossChainValidator::new(
+            orchestrator.clone(),
+            config.network.protocol_version,
+        );
+        
+        // Spawn cross-chain validation task
+        task_manager.spawn_essential_handle().spawn(
+            "cross-chain-gpu-validator",
+            Box::pin(async move {
+                match cross_chain_validator.run_validation_loop().await {
+                    Ok(()) => {
+                        log::info!("🌐 Cross-chain GPU validator loop completed");
+                    }
+                    Err(e) => {
+                        log::error!("🌐 Cross-chain GPU validator loop error: {:?}", e);
+                        panic!("Cross-chain validator critical failure: {}", e);
+                    }
+                }
+            }),
+        );
+        
+        // Export for RPC layer
+        task_manager.extension().insert(cross_chain_validator.clone());
+        log::debug!("🌐 Cross-chain validator reference exported for RPC");
     }
 
     log::info!("✨ X3 Chain node started successfully");
