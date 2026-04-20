@@ -355,6 +355,24 @@ impl SwapCoordinator {
         })
     }
 
+    fn evaluate_optional_settlement_verification(
+        session_id: &str,
+        settlement: Option<&MerkleSettlementProof>,
+    ) -> Result<MerkleVerificationResult, CoordinatorError> {
+        match settlement {
+            Some(settlement) => {
+                if !settlement.is_verified() {
+                    return Err(CoordinatorError::Internal(format!(
+                        "Merkle settlement for session '{}' failed verification (outcome: {:?})",
+                        session_id, settlement.outcome
+                    )));
+                }
+                Ok(MerkleVerificationResult::Verified)
+            }
+            None => Ok(MerkleVerificationResult::NotProvided),
+        }
+    }
+
     /// Record a fast chain claim with optional merkle proof verification.
     pub fn record_merkle_fast_claim(
         &mut self,
@@ -362,17 +380,11 @@ impl SwapCoordinator {
         fast_claim: MerkleEnabledFastClaim,
         now_unix: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        let verification_result = if let Some(ref settlement) = fast_claim.merkle_settlement {
-            if !settlement.is_verified() {
-                return Err(CoordinatorError::Internal(format!(
-                    "Merkle settlement for session '{}' failed verification (outcome: {:?})",
-                    session_id, settlement.outcome
-                )));
-            }
-            MerkleVerificationResult::Verified
-        } else {
-            MerkleVerificationResult::NotProvided
-        };
+        let verification_result =
+            Self::evaluate_optional_settlement_verification(
+                session_id,
+                fast_claim.merkle_settlement.as_ref(),
+            )?;
 
         let secret = HtlcSecret(fast_claim.secret_bytes);
         self.record_fast_claim(session_id, secret, now_unix)?;
@@ -431,17 +443,11 @@ impl SwapCoordinator {
         slow_claim: MerkleEnabledSlowClaim,
         now_unix: u64,
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
-        let verification_result = if let Some(ref settlement) = slow_claim.merkle_settlement {
-            if !settlement.is_verified() {
-                return Err(CoordinatorError::Internal(format!(
-                    "Merkle settlement for session '{}' failed verification (outcome: {:?})",
-                    session_id, settlement.outcome
-                )));
-            }
-            MerkleVerificationResult::Verified
-        } else {
-            MerkleVerificationResult::NotProvided
-        };
+        let verification_result =
+            Self::evaluate_optional_settlement_verification(
+                session_id,
+                slow_claim.merkle_settlement.as_ref(),
+            )?;
 
         self.record_slow_claim(session_id, now_unix)?;
 
