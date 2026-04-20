@@ -15,7 +15,7 @@ fn critical_001_memory_persistence_rejected_in_production() {
     // VERIFY: InMemoryPersistence is blocked outside of test context.
     // SwapCoordinator::new() panics unless cfg!(test) is true (see state_machine.rs).
     // This test proves we ARE in test context and that the guard does NOT panic here.
-    use cross_vm_coordinator::{CoordinatorConfig, SwapCoordinator};
+    use x3_cross_vm_coordinator::{CoordinatorConfig, SwapCoordinator};
 
     // Calling ::new() inside a #[test] must NOT panic — cfg!(test) is true.
     let _coordinator = SwapCoordinator::new(CoordinatorConfig::default());

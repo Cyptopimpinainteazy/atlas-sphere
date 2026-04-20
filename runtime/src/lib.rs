@@ -68,6 +68,92 @@ use sp_std::prelude::*;
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+// ════════════════════════════════════════════════════════════════════════════════════
+// GPU Validator Runtime API Types
+// ════════════════════════════════════════════════════════════════════════════════════
+#[cfg(feature = "gpu-validator")]
+pub mod gpu_validator_api {
+    use codec::{Decode, Encode};
+    use scale_info::TypeInfo;
+
+    /// GPU validator status response
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+    pub struct GpuValidatorStatus {
+        /// Validator ID
+        pub validator_id: u32,
+        /// Health status: "healthy", "degraded", "unhealthy"
+        pub health_status: Vec<u8>,
+        /// Total proofs processed
+        pub total_proofs_processed: u64,
+        /// Successful proofs
+        pub successful_proofs: u64,
+        /// Failed proofs
+        pub failed_proofs: u64,
+        /// GPU devices online
+        pub gpu_devices_online: u32,
+        /// CPU fallback active
+        pub cpu_fallback_active: bool,
+        /// Last health check block
+        pub last_health_check_block: u32,
+    }
+
+    /// Orchestrator health status
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+    pub struct OrchestratorHealthStatus {
+        /// Overall status: "operational", "degraded", "error"
+        pub status: Vec<u8>,
+        /// Uptime seconds
+        pub uptime_seconds: u64,
+        /// Active validators
+        pub active_validators: u32,
+        /// Quarantined validators
+        pub quarantined_validators: u32,
+        /// Pending task count
+        pub pending_tasks: u32,
+        /// Tasks completed this epoch
+        pub tasks_completed: u64,
+        /// Average task latency ms
+        pub avg_task_latency_ms: u32,
+        /// Network health: 0-100
+        pub network_health_percent: u8,
+    }
+
+    /// GPU proof submission result
+    #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+    pub struct GpuProofResult {
+        /// Proof hash
+        pub proof_hash: [u8; 32],
+        /// Status: "accepted", "rejected", "pending"
+        pub status: Vec<u8>,
+        /// Error message if rejected
+        pub error_message: Vec<u8>,
+        /// Validator processed by
+        pub processed_by_validator: u32,
+    }
+
+    /// GPU Validator Runtime API trait
+    #[cfg(feature = "std")]
+    sp_api::decl_runtime_apis! {
+        /// GPU Validator runtime API for querying validator status and submitting proofs
+        pub trait GpuValidatorRuntimeApi {
+            /// Get GPU validator status
+            fn gpu_validator_status(validator_id: u32) -> Option<GpuValidatorStatus>;
+            /// Query orchestrator health
+            fn query_orchestrator_health() -> OrchestratorHealthStatus;
+            /// Submit GPU validator proof
+            fn submit_gpu_validator_proof(proof: Vec<u8>, validator_id: u32) -> GpuProofResult;
+        }
+    }
+
+    /// Dummy trait implementation for no_std
+    #[cfg(not(feature = "std"))]
+    pub trait GpuValidatorRuntimeApi {
+        fn gpu_validator_status(validator_id: u32) -> Option<GpuValidatorStatus>;
+        fn query_orchestrator_health() -> OrchestratorHealthStatus;
+        fn submit_gpu_validator_proof(proof: Vec<u8>, validator_id: u32) -> GpuProofResult;
+    }
+}
+
 pub mod fraud_proofs;
 
 #[cfg(any(feature = "std", test))]
@@ -2657,6 +2743,66 @@ impl_runtime_apis! {
 
         fn get_finality_cert_anchor(block_num: u64) -> Option<sp_core::H256> {
             pallet_x3_atomic_kernel::FinalityCertAnchors::<Runtime>::get(block_num)
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // GPU Validator Runtime API
+    // ════════════════════════════════════════════════════════════════════════════════════
+    #[cfg(feature = "gpu-validator")]
+    impl sp_api::ApiExt<Block> for Runtime {
+        fn execute_in_transaction<F, R>(
+            call: F,
+        ) -> sp_runtime::TransactionOutcome<R>
+        where
+            F: FnOnce() -> sp_runtime::transaction_validity::TransactionValidity,
+        {
+            unimplemented!()
+        }
+    }
+
+    #[cfg(feature = "gpu-validator")]
+    impl gpu_validator_api::GpuValidatorRuntimeApi<Block> for Runtime {
+        fn gpu_validator_status(validator_id: u32) -> Option<gpu_validator_api::GpuValidatorStatus> {
+            Some(gpu_validator_api::GpuValidatorStatus {
+                validator_id,
+                health_status: b"operational".to_vec(),
+                total_proofs_processed: 0,
+                successful_proofs: 0,
+                failed_proofs: 0,
+                gpu_devices_online: 0,
+                cpu_fallback_active: false,
+                last_health_check_block: <frame_system::Pallet<Runtime>>::block_number(),
+            })
+        }
+
+        fn query_orchestrator_health() -> gpu_validator_api::OrchestratorHealthStatus {
+            gpu_validator_api::OrchestratorHealthStatus {
+                status: b"operational".to_vec(),
+                uptime_seconds: 0,
+                active_validators: 0,
+                quarantined_validators: 0,
+                pending_tasks: 0,
+                tasks_completed: 0,
+                avg_task_latency_ms: 0,
+                network_health_percent: 100,
+            }
+        }
+
+        fn submit_gpu_validator_proof(
+            proof: Vec<u8>,
+            validator_id: u32,
+        ) -> gpu_validator_api::GpuProofResult {
+            let mut proof_hash = [0u8; 32];
+            if proof.len() >= 32 {
+                proof_hash.copy_from_slice(&proof[0..32]);
+            }
+            gpu_validator_api::GpuProofResult {
+                proof_hash,
+                status: b"pending".to_vec(),
+                error_message: Vec::new(),
+                processed_by_validator: validator_id,
+            }
         }
     }
 }

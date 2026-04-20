@@ -890,6 +890,13 @@ pub fn new_full(
         log::info!("⏱️ Proof of History (PoH) generator enabled and wired to block loop");
     }
 
+    // ── Store GPU Orchestrator reference for RPC access ────────────────────────────────
+    #[cfg(feature = "gpu-validator")]
+    if feature_flags.enable_gpu_validator {
+        task_manager.extension().insert(orchestrator);
+        log::debug!("🎮 GPU Orchestrator reference stored in task manager extensions");
+    }
+
     log::info!("✨ X3 Chain node started successfully");
     log::info!("🔗 Network: {}", chain_name);
     log::info!("👤 Node name: {}", name);

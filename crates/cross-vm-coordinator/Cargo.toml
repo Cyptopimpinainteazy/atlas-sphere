@@ -27,6 +27,7 @@ reqwest = { version = "0.11", features = ["json"] }
 blake2 = "0.10"
 blake3 = "1.5"
 subtle = "2.5"
+x3-cross-vm-bridge = { path = "../cross-vm-bridge" }
 # Optional: for production persistence with substrate offchain storage
 sc-client-api = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", optional = true }
 sp-core = { git = "https://github.com/paritytech/substrate", rev = "948fbd2", optional = true }

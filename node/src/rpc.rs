@@ -106,6 +106,76 @@ where
     module.merge(crate::rpc_frontier::create_frontier_rpc(client.clone())?)?;
     module.merge(crate::rpc_frontier::create_svm_rpc(client.clone())?)?;
 
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // GPU Validator RPC Methods
+    // ════════════════════════════════════════════════════════════════════════════════════
+    #[cfg(feature = "gpu-validator")]
+    {
+        let c = client.clone();
+        module.register_method("gpu_orchestratorHealth", move |_params, _| {
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+
+            let health = runtime_api
+                .query_orchestrator_health(best_hash)
+                .map_err(|e| custom_error(format!("Runtime API call failed: {}", e)))?;
+
+            Ok(serde_json::json!({
+                "status": String::from_utf8_lossy(&health.status).into_owned(),
+                "uptime_seconds": health.uptime_seconds,
+                "active_validators": health.active_validators,
+                "quarantined_validators": health.quarantined_validators,
+                "pending_tasks": health.pending_tasks,
+                "tasks_completed": health.tasks_completed,
+                "avg_task_latency_ms": health.avg_task_latency_ms,
+                "network_health_percent": health.network_health_percent,
+            }))
+        })?;
+
+        let c = client.clone();
+        module.register_method("gpu_validatorStatus", move |params, _| {
+            let validator_id: u32 = params.one()?;
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+
+            let status = runtime_api
+                .gpu_validator_status(best_hash, validator_id)
+                .map_err(|e| custom_error(format!("Runtime API call failed: {}", e)))?
+                .ok_or_else(|| custom_error("Validator not found"))?;
+
+            Ok(serde_json::json!({
+                "validator_id": status.validator_id,
+                "health_status": String::from_utf8_lossy(&status.health_status).into_owned(),
+                "total_proofs_processed": status.total_proofs_processed,
+                "successful_proofs": status.successful_proofs,
+                "failed_proofs": status.failed_proofs,
+                "gpu_devices_online": status.gpu_devices_online,
+                "cpu_fallback_active": status.cpu_fallback_active,
+                "last_health_check_block": status.last_health_check_block,
+            }))
+        })?;
+
+        let c = client.clone();
+        module.register_method("gpu_submitProof", move |params, _| {
+            let proof_hex: String = params.one()?;
+            let validator_id: u32 = params.one()?;
+            let proof = decode_hex_param(&proof_hex, "proof")?;
+            let runtime_api = c.runtime_api();
+            let best_hash = c.info().best_hash;
+
+            let result = runtime_api
+                .submit_gpu_validator_proof(best_hash, proof, validator_id)
+                .map_err(|e| custom_error(format!("Runtime API call failed: {}", e)))?;
+
+            Ok(serde_json::json!({
+                "proof_hash": hex::encode(&result.proof_hash),
+                "status": String::from_utf8_lossy(&result.status).into_owned(),
+                "error_message": String::from_utf8_lossy(&result.error_message).into_owned(),
+                "processed_by_validator": result.processed_by_validator,
+            }))
+        })?;
+    }
+
     let check_rate_limit = {
         let limiter = rate_limiter.clone();
         move |method: &str| -> Result<(), JsonRpseeError> {
