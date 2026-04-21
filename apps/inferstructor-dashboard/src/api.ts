@@ -455,16 +455,19 @@ class InferstructorAPI {
    * Refresh JWT token using existing JWT (no need for api_secret)
    */
   async refreshToken(): Promise<boolean> {
-    if (!this.jwtToken) return false;
+    if (!this.jwtToken) {
+      this.logout();
+      return false;
+    }
     
     try {
-      const response = await axios.post(
+      const response = await this.apiClient.withRetry(async () => axios.post(
         `${REGISTRY_URL}/api/validators/refresh-token`,
         {},
         {
           headers: { Authorization: `Bearer ${this.jwtToken}` }
         }
-      );
+      ));
       
       if (response.data.success && response.data.token) {
         this.jwtToken = response.data.token;
@@ -472,10 +475,12 @@ class InferstructorAPI {
         console.log('Token refreshed successfully');
         return true;
       }
-      
+
+      this.logout();
       return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
+      this.logout();
       return false;
     }
   }

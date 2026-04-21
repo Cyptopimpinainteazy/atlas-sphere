@@ -138,6 +138,57 @@ describe('InferstructorAPI', () => {
     });
   });
 
+  describe('Token Refresh', () => {
+    it('should refresh token and update sessionStorage on success', async () => {
+      mockedAxios.post
+        .mockResolvedValueOnce({
+          data: {
+            success: true,
+            token: 'jwt_token_before_refresh',
+            validator: { id: 'val_refresh_1' },
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            success: true,
+            token: 'jwt_token_after_refresh',
+          },
+        });
+
+      await api.login('key_refresh_1', 'secret_refresh_1');
+      const refreshed = await api.refreshToken();
+
+      expect(refreshed).toBe(true);
+      expect(api.getJWTToken()).toBe('jwt_token_after_refresh');
+      expect(sessionStorage.getItem('infra_jwt_token')).toBe('jwt_token_after_refresh');
+    });
+
+    it('should logout when refresh fails', async () => {
+      mockedAxios.post
+        .mockResolvedValueOnce({
+          data: {
+            success: true,
+            token: 'jwt_token_for_failed_refresh',
+            validator: { id: 'val_refresh_2' },
+          },
+        })
+        .mockRejectedValueOnce(new Error('refresh failed'));
+
+      await api.login('key_refresh_2', 'secret_refresh_2');
+      localStorage.setItem('infra_jwt_token', 'legacy_token_refresh_2');
+      localStorage.setItem('infra_api_key', 'legacy_key_refresh_2');
+
+      const refreshed = await api.refreshToken();
+
+      expect(refreshed).toBe(false);
+      expect(api.getJWTToken()).toBeNull();
+      expect(api.getAPIKey()).toBeNull();
+      expect(sessionStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_api_key')).toBeNull();
+    });
+  });
+
   describe('Error Handling', () => {
     it('should throw error if not authenticated when getting stats', async () => {
       localStorage.clear();
