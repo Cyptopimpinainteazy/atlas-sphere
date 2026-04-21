@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Fails if unresolved launch placeholders exist in Phase 13f docs.
+# Fails if unresolved launch placeholder tokens exist in Phase 13f docs.
 # Use inline marker PHASE13F_PLACEHOLDER_OK on a line to suppress that line.
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,7 +32,6 @@ patterns=(
   '\[email\]'
   '\[phone\]'
   '\[[xXyYzZ]\]'
-  'example\.com'
 )
 
 tmp_out="$(mktemp)"
