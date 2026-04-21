@@ -1574,6 +1574,14 @@ mod coordinator_merkle_tests {
             slow_msg.contains("session mismatch"),
             "expected slow path mismatch marker"
         );
+        assert!(
+            !fast_msg.contains("Session not found"),
+            "expected fast mismatched freshness path to fail before session-not-found lookup"
+        );
+        assert!(
+            !slow_msg.contains("Session not found"),
+            "expected slow mismatched freshness path to fail before session-not-found lookup"
+        );
     }
 
     #[test]
