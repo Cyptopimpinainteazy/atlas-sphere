@@ -1377,6 +1377,75 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_and_slow_bridge_verification_share_error_class_markers() {
+        let mut fast_coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let fast_err = fast_coordinator
+            .record_merkle_fast_claim_with_bridge_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        let mut slow_coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "missing-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let slow_err = slow_coordinator
+            .record_merkle_slow_claim_with_bridge_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        let fast_msg = fast_err.to_string();
+        let slow_msg = slow_err.to_string();
+
+        assert!(
+            fast_msg.contains("Internal error:"),
+            "expected fast path internal error classification"
+        );
+        assert!(
+            slow_msg.contains("Internal error:"),
+            "expected slow path internal error classification"
+        );
+        assert!(
+            fast_msg.contains("bridge verification failed"),
+            "expected fast path bridge verification failure marker"
+        );
+        assert!(
+            slow_msg.contains("bridge verification failed"),
+            "expected slow path bridge verification failure marker"
+        );
+    }
+
+    #[test]
     fn test_fast_and_slow_mismatched_freshness_bridge_share_error_class_markers() {
         let mut fast_coordinator = SwapCoordinator::with_default_config();
         let fast_claim = MerkleEnabledFastClaim {
