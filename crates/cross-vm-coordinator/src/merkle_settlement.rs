@@ -2088,6 +2088,18 @@ mod coordinator_merkle_tests {
             matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
             "expected slow freshness no-proof path to return SessionNotFound"
         );
+
+        let fast_msg = fast_err.to_string();
+        let slow_msg = slow_err.to_string();
+
+        assert!(
+            !fast_msg.contains("bridge verification failed"),
+            "expected fast freshness no-proof path to avoid bridge-verification failure marker"
+        );
+        assert!(
+            !slow_msg.contains("bridge verification failed"),
+            "expected slow freshness no-proof path to avoid bridge-verification failure marker"
+        );
     }
 
     #[test]
