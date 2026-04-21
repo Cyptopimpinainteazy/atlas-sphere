@@ -631,10 +631,10 @@ Upcoming Milestones:
 
 On-Call Status:
   Continue monitoring through T+7d
-  Escalate any anomalies to [contact-info]
+  Escalate any anomalies to rpc-support@x3.chain
 
 Questions or concerns?
-  Contact: [support-email] or [emergency-phone]
+  Contact: support@x3-chain.io or rpc-support@x3.chain
 ```
 
 ### T+2d to T+7d: Post-Launch Monitoring and Stabilization
@@ -911,43 +911,39 @@ Phase 13 Delivery
 ### Launch Team Contact Matrix
 
 **Primary Launch Lead:**
-- Name: _______________
-- Phone: _______________
-- Email: _______________
+- Owner: Support Desk
+- Primary channel: support@x3-chain.io
+- Secondary channel: rpc-support@x3.chain
 - Availability: T-24h to T+48h
 
 **DevOps Lead:**
-- Name: _______________
-- Phone: _______________
-- Email: _______________
+- Owner: RPC Operations
+- Primary channel: rpc-support@x3.chain
+- Secondary channel: support@x3-chain.io
 - Availability: T-24h to T+48h
 
 **Engineering Lead:**
-- Name: _______________
-- Phone: _______________
-- Email: _______________
+- Owner: Relayer Engineering
+- Primary channel: rpc-support@x3.chain
+- Secondary channel: support@x3-chain.io
 - Availability: T-24h to T+48h
 
 **VP Engineering (Escalation):**
-- Name: _______________
-- Phone: _______________
-- Email: _______________
+- Escalation alias: rpc-support@x3.chain
+- Executive notification path: support@x3-chain.io
 
 **RPC Provider Primary Contacts:**
 
 **Alchemy (Ethereum):**
-- Contact: _______________
-- Phone: _______________
+- Contact path: Alchemy support portal ticket
 - Support Portal: https://alchemy.com/support
 
 **Infura (Ethereum Backup):**
-- Contact: _______________
-- Phone: _______________
+- Contact path: Infura support portal ticket
 - Support Portal: https://infura.io/support
 
 **QuickNode (Both chains):**
-- Contact: _______________
-- Phone: _______________
+- Contact path: QuickNode support portal ticket
 - Support Portal: https://quicknode.com/support
 
 **Stakeholder Notification List:**
@@ -1053,4 +1049,4 @@ Is it critical? (> 50% uptime loss, security issue)
 3. Schedule T-48h readiness review
 4. Begin execution at T-48h
 
-**Questions or feedback?** Contact: [engineering-lead-email]
+**Questions or feedback?** Contact: rpc-support@x3.chain

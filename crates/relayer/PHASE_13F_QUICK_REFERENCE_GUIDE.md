@@ -145,19 +145,19 @@ sudo systemctl status x3-relayer
 
 ## 4. EMERGENCY CONTACTS (Keep Printed)
 
-| Role | Name | Phone | Email | Slack |
-|------|------|-------|-------|-------|
-| Launch Director | [Name] | [Phone] | [Email] | @[User] |
-| Incident Commander | [Name] | [Phone] | [Email] | @[User] |
-| Relayer Operator | [Name] | [Phone] | [Email] | @[User] |
-| RPC Manager | [Name] | [Phone] | [Email] | @[User] |
-| Infrastructure Lead | [Name] | [Phone] | [Email] | @[User] |
-| VP Engineering | [Name] | [Phone] | [Email] | @[User] |
-| On-Call Backup | [Name] | [Phone] | [Email] | @[User] |
+| Role | Owner | Primary Channel | Secondary Channel | Chat |
+|------|-------|-----------------|-------------------|------|
+| Launch Director | Support Desk | support@x3-chain.io | rpc-support@x3.chain | https://discord.gg/x3-chain |
+| Incident Commander | RPC Operations | rpc-support@x3.chain | support@x3-chain.io | https://discord.gg/x3-chain |
+| Relayer Operator | Relayer Engineering | rpc-support@x3.chain | support@x3-chain.io | https://discord.gg/x3-chain |
+| RPC Manager | RPC Operations | rpc-support@x3.chain | support@x3-chain.io | https://discord.gg/x3-chain |
+| Infrastructure Lead | Validator Support | staking-support@x3.chain | rpc-support@x3.chain | https://discord.gg/x3-chain |
+| VP Engineering | Escalation Alias | rpc-support@x3.chain | support@x3-chain.io | https://discord.gg/x3-chain |
+| On-Call Backup | Validator Support | staking-support@x3.chain | support@x3-chain.io | https://discord.gg/x3-chain |
 
-**Escalation Number:** [Conference Bridge or Phone Tree]  
-**War Room Zoom:** [URL]  
-**Status Page:** [URL]
+**Escalation Channel:** rpc-support@x3.chain  
+**War Room:** https://discord.gg/x3-chain  
+**Status Channel:** https://discord.gg/x3-chain
 
 ---
 

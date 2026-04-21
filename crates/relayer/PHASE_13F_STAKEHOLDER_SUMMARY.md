@@ -258,13 +258,13 @@ It provides:
 
 **Technical Questions:**
 - See PHASE_13F_MASTER_INDEX.md for which document covers your scenario
-- Contact: [Technical Lead Email]
+- Contact: rpc-support@x3.chain
 
 **Operational Questions:**
-- Contact: [Launch Operations Lead Email]
+- Contact: support@x3-chain.io
 
 **Executive Questions:**
-- Contact: [VP Engineering Email]
+- Contact: rpc-support@x3.chain
 
 ---
 
