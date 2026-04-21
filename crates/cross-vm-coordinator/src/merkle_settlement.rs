@@ -1127,6 +1127,33 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_slow_claim_non_bridge_rejects_mismatched_proof_session_before_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let mut proof = MerkleSettlementProof::new(
+            "other-session".to_string(),
+            [1u8; 32],
+            100,
+            vec![1, 2, 3, 4],
+            0,
+            1,
+        );
+        proof.outcome = MerkleSettlementOutcome::Verified;
+
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(proof),
+        };
+
+        let err = coordinator
+            .record_merkle_slow_claim("missing-session", slow_claim, 1)
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session-binding mismatch failure before session-not-found"
+        );
+    }
+
+    #[test]
     fn test_slow_claim_non_bridge_without_proof_falls_through_to_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let slow_claim = MerkleEnabledSlowClaim {
@@ -1164,6 +1191,37 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when bridge proof is not provided"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_bridge_rejects_mismatched_proof_session_before_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "other-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session-binding mismatch failure before session-not-found"
         );
     }
 
@@ -1288,6 +1346,39 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when freshness proof is not provided"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_bridge_freshness_rejects_mismatched_proof_session_before_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "other-session".to_string(),
+                [42u8; 32],
+                100,
+                vec![42; 72],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_freshness_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session-binding mismatch failure before session-not-found"
         );
     }
 }
