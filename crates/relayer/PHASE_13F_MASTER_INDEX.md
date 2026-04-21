@@ -309,53 +309,53 @@ P1: CRITICAL                                           P2: HIGH / P3: MEDIUM
     │                                                            │
     ├─ Incident #1: Relayer Crash                              │
     │  → MAINNET_INCIDENT_RESPONSE.md: Incident #1             │
-    │  → Escalate: VP Engineering (< 5 min)                    │
+   │  → Escalate: rpc-support@x3.chain (< 5 min)              │
     │  → Team: On-call relayer engineer + ops lead             │
     │                                                            │
     ├─ Incident #3: Multiple RPC Providers Down                │
     │  → RPC_FAILOVER_PROCEDURES.md + MAINNET_INCIDENT_RESPONSE.md: #3
-    │  → Escalate: RPC provider team + VP Eng (< 10 min)       │
+   │  → Escalate: rpc-support@x3.chain + provider portals (< 10 min) │
     │  → Team: RPC specialist + relayer engineer               │
     │                                                            │
     ├─ Incident #5: X3 Runtime Error                           │
     │  → MAINNET_INCIDENT_RESPONSE.md: Incident #5             │
-    │  → Escalate: Runtime team + VP Eng (< 5 min)             │
+   │  → Escalate: rpc-support@x3.chain (< 5 min)              │
     │  → Team: Runtime expert + bridge engineer                │
     │                                                            │
     ├─ Incident #8: Network Partition                          │
     │  → MAINNET_INCIDENT_RESPONSE.md: Incident #8             │
-    │  → Escalate: VP Eng + infrastructure team                │
+   │  → Escalate: rpc-support@x3.chain + support@x3-chain.io  │
     │  → Team: All hands on deck + external communication      │
     │                                                            │
     └─ Unknown P1 Issue                                          │
        → MAINNET_INCIDENT_RESPONSE.md: Appendix (decision tree)│
-       → Escalate: VP Engineering immediately                  │
+       → Escalate: rpc-support@x3.chain immediately            │
        → Team: War room (incident bridge + Slack)              │
                                                                 │
                                                             ├─ Incident #2: Single RPC Down
                                                             │  → RPC_FAILOVER_PROCEDURES.md
-                                                            │  → Escalate: RPC team (< 15 min)
+                                                            │  → Escalate: rpc-support@x3.chain (< 15 min)
                                                             │  → Team: RPC specialist
                                                             │
                                                             ├─ Incident #4: Bridge Paused
                                                             │  → MAINNET_INCIDENT_RESPONSE.md: #4
-                                                            │  → Escalate: Governance team
+                                                            │  → Escalate: support@x3-chain.io
                                                             │  → Team: Bridge operator
                                                             │
                                                             ├─ Incident #6: Proof Submission Fail
                                                             │  → MAINNET_INCIDENT_RESPONSE.md: #6
-                                                            │  → Escalate: RPC + runtime team
+                                                            │  → Escalate: rpc-support@x3.chain
                                                             │  → Team: Relayer engineer
                                                             │
                                                             ├─ Incident #7: Memory Leak
                                                             │  → MAINNET_INCIDENT_RESPONSE.md: #7
-                                                            │  → Escalate: Eng team (< 30 min)
+                                                            │  → Escalate: rpc-support@x3.chain (< 30 min)
                                                             │  → Team: Relayer engineer
                                                             │
                                                             └─ Performance Degradation
                                                                → MAINNET_PERFORMANCE_BASELINE.md
                                                                → MAINNET_INCIDENT_RESPONSE.md
-                                                               → Escalate: Ops lead (< 30 min)
+                                                               → Escalate: support@x3-chain.io (< 30 min)
                                                                → Team: Performance specialist
     │
     ↓
@@ -562,13 +562,13 @@ P1: CRITICAL                                           P2: HIGH / P3: MEDIUM
 
 | Role | Document Reference | On-Call Window | Escalation Path |
 |------|---|---|---|
-| **Relayer Operations** | PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md | T-48h to T+7d | → VP Engineering |
-| **RPC Provider Specialist** | RPC_FAILOVER_PROCEDURES.md | T-24h to T+48h | → RPC Team Lead |
-| **Validator Operator** | VALIDATOR_OPERATIONS.md | T-24h to T+7d | → Validator Coordinator |
-| **GPU Specialist** | GPU_VALIDATOR_TROUBLESHOOTING.md | T-24h to T+48h | → Hardware Team |
-| **Incident Commander** | MAINNET_INCIDENT_RESPONSE.md | T-0h to T+7d (primary) | → VP Engineering |
-| **Performance SRE** | MAINNET_PERFORMANCE_BASELINE.md | T-4h to T+7d | → Ops Lead |
-| **Communications Lead** | PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md | T-24h to T+7d | → Marketing/Product |
+| **Relayer Operations** | PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md | T-48h to T+7d | → rpc-support@x3.chain |
+| **RPC Provider Specialist** | RPC_FAILOVER_PROCEDURES.md | T-24h to T+48h | → rpc-support@x3.chain |
+| **Validator Operator** | VALIDATOR_OPERATIONS.md | T-24h to T+7d | → staking-support@x3.chain |
+| **GPU Specialist** | GPU_VALIDATOR_TROUBLESHOOTING.md | T-24h to T+48h | → rpc-support@x3.chain |
+| **Incident Commander** | MAINNET_INCIDENT_RESPONSE.md | T-0h to T+7d (primary) | → rpc-support@x3.chain |
+| **Performance SRE** | MAINNET_PERFORMANCE_BASELINE.md | T-4h to T+7d | → support@x3-chain.io |
+| **Communications Lead** | PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md | T-24h to T+7d | → https://discord.gg/x3-chain |
 
 ---
 
