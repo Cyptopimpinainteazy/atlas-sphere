@@ -997,6 +997,34 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_claim_non_bridge_verified_matching_session_falls_through_to_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let mut proof = MerkleSettlementProof::new(
+            "missing-session".to_string(),
+            [1u8; 32],
+            100,
+            vec![1, 2, 3, 4],
+            0,
+            1,
+        );
+        proof.outcome = MerkleSettlementOutcome::Verified;
+
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(proof),
+        };
+
+        let err = coordinator
+            .record_merkle_fast_claim("missing-session", fast_claim, 1)
+            .unwrap_err();
+
+        assert!(
+            matches!(err, CoordinatorError::SessionNotFound { .. }),
+            "expected session-not-found after verified proof passes"
+        );
+    }
+
+    #[test]
     fn test_fast_claim_non_bridge_without_proof_falls_through_to_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let fast_claim = MerkleEnabledFastClaim {
@@ -1150,6 +1178,33 @@ mod coordinator_merkle_tests {
         assert!(
             err.to_string().contains("session mismatch"),
             "expected session-binding mismatch failure before session-not-found"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_non_bridge_verified_matching_session_falls_through_to_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let mut proof = MerkleSettlementProof::new(
+            "missing-session".to_string(),
+            [1u8; 32],
+            100,
+            vec![1, 2, 3, 4],
+            0,
+            1,
+        );
+        proof.outcome = MerkleSettlementOutcome::Verified;
+
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(proof),
+        };
+
+        let err = coordinator
+            .record_merkle_slow_claim("missing-session", slow_claim, 1)
+            .unwrap_err();
+
+        assert!(
+            matches!(err, CoordinatorError::SessionNotFound { .. }),
+            "expected session-not-found after verified proof passes"
         );
     }
 
