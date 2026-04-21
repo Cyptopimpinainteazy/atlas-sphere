@@ -1451,6 +1451,14 @@ mod coordinator_merkle_tests {
             slow_msg.contains("bridge verification failed"),
             "expected slow path bridge verification failure marker"
         );
+        assert!(
+            !fast_msg.contains("session mismatch"),
+            "expected fast bridge verification path to avoid mismatch marker for matching session IDs"
+        );
+        assert!(
+            !slow_msg.contains("session mismatch"),
+            "expected slow bridge verification path to avoid mismatch marker for matching session IDs"
+        );
     }
 
     #[test]
