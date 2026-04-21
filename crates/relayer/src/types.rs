@@ -115,8 +115,10 @@ pub enum RelayerStateEnum {
 #[derive(Clone, Debug)]
 pub struct RelayerMetrics {
     pub blocks_polled: u64,
+    pub blocks_finalized: u64,
     pub proofs_submitted: u64,
     pub proofs_failed: u64,
+    pub poll_failures: u64,
     pub pause_events: u64,
     pub uptime_secs: u64,
 }
@@ -125,8 +127,10 @@ impl Default for RelayerMetrics {
     fn default() -> Self {
         Self {
             blocks_polled: 0,
+            blocks_finalized: 0,
             proofs_submitted: 0,
             proofs_failed: 0,
+            poll_failures: 0,
             pause_events: 0,
             uptime_secs: 0,
         }
