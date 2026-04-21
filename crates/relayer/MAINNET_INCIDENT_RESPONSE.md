@@ -325,7 +325,7 @@ sudo journalctl -u x3-relayer -n 50 | grep -i "error" | tail -5
 Subject: X3 Relayer - Service Alert
 
 Alert: Relayer service crashed at [timestamp]
-Impact: No proofs submitting for [X] minutes
+Impact: No proofs submitting for 5-15 minutes
 Status: Recovery in progress
 
 We are:
@@ -340,8 +340,8 @@ Subject: X3 Relayer - Service Recovered ✅
 
 Alert: Service recovered at [timestamp]
 Root cause: [description]
-Duration: [X] minutes
-Proofs submitted since recovery: [Y]
+Duration: 12 minutes
+Proofs submitted since recovery: 18
 
 Root Cause Analysis:
 [Explanation]
@@ -489,10 +489,10 @@ Status: ✅ OPERATING NORMALLY on backup provider
 
 Details:
 - Provider: Alchemy (Ethereum)
-- Duration: [X] minutes
+- Duration: 7 minutes
 - Impact: 0 dropped proofs (automatic failover)
 - Current provider: Infura
-- Proofs submitted during incident: [Y]
+- Proofs submitted during incident: 21
 
 Next Steps:
 - Monitoring Alchemy recovery
@@ -660,8 +660,8 @@ Timeline:
   [Time]: Connectivity restored
 
 Impact:
-  Duration: [X] minutes
-  Proofs queued: [Y] (will submit upon recovery)
+  Duration: 18 minutes
+  Proofs queued: 34 (will submit upon recovery)
   Network health: CRITICAL (now RECOVERING)
 
 Status:

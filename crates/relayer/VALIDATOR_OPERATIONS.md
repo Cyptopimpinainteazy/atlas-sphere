@@ -66,9 +66,9 @@ x3-cli validator claim-rewards --validator $VALIDATOR_ADDRESS
 - Monitoring agent (Prometheus)
 
 **Staking Requirements:**
-- Minimum stake: [X] X3 tokens
-- Lock period: [Y] blocks/slots
-- Unbond period: [Z] blocks/slots after removal
+- Minimum stake: 1000000 X3 tokens
+- Lock period: 300 blocks
+- Unbond period: 150 blocks after removal
 
 ### Validator Economic Model
 

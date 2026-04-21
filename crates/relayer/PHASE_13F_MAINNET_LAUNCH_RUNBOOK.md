@@ -256,9 +256,9 @@ Key Milestones:
   T+24h: Extended monitoring and validation
 
 On-Call Contact:
-  Lead: [Name] +[Phone]
-  DevOps: [Name] +[Phone]
-  Engineering: [Name] +[Phone]
+  Lead: support@x3-chain.io
+  DevOps: rpc-support@x3.chain
+  Engineering: rpc-support@x3.chain
 
 Stakeholder Updates:
   Every 30 minutes during T-30m to T+2h
@@ -271,9 +271,9 @@ Expected Metrics:
   - Error rate: < 0.1%
 
 If you experience any issues:
-  1. Check https://[status-page]
-  2. Email [support-email] with details
-  3. Call [emergency-number] if critical
+  1. Check https://discord.gg/x3-chain for live operator updates
+  2. Email support@x3-chain.io with details
+  3. Escalate critical issues to rpc-support@x3.chain
 
 Thank you for your patience!
 ```
@@ -282,13 +282,13 @@ Thank you for your patience!
 
 **Create Incident Response Team Assignment Table:**
 
-| Role | Name | Phone | Timezone | On-Call |
-|------|------|-------|----------|---------|
-| Launch Lead | [Name] | [+1-XXX-XXX-XXXX] | PT | T-24h to T+48h |
-| DevOps Lead | [Name] | [+1-XXX-XXX-XXXX] | PT | T-24h to T+48h |
-| Engineering Lead | [Name] | [+1-XXX-XXX-XXXX] | PT | T-24h to T+48h |
-| Secondary On-Call | [Name] | [+1-XXX-XXX-XXXX] | ET | T-24h to T+48h |
-| Comms Lead | [Name] | [+1-XXX-XXX-XXXX] | PT | T-0 to T+6h |
+| Role | Owner | Contact Channel | Timezone | On-Call |
+|------|------|-----------------|----------|---------|
+| Launch Lead | Support Desk | support@x3-chain.io | PT | T-24h to T+48h |
+| DevOps Lead | RPC Operations | rpc-support@x3.chain | PT | T-24h to T+48h |
+| Engineering Lead | Relayer Engineering | rpc-support@x3.chain | PT | T-24h to T+48h |
+| Secondary On-Call | Validator Support | staking-support@x3.chain | ET | T-24h to T+48h |
+| Comms Lead | Community Team | https://discord.gg/x3-chain | PT | T-0 to T+6h |
 
 ---
 
@@ -508,7 +508,7 @@ done
 
 **Decision Point:**
 - **GO**: Proceed with launch as planned
-- **HOLD**: Delay launch by [X] hours
+- **HOLD**: Delay launch by 2 hours
 - **ABORT**: Postpone launch pending investigation
 
 **Expected Decision:** GO (assuming all checks pass)
@@ -614,8 +614,8 @@ Status: STABLE ✅
 
 Metrics Summary:
   Uptime: 99.5%
-  Blocks Polled: [X] in last 24h
-  Proofs Submitted: [X] (success rate: 99.9%)
+  Blocks Polled: >= 17280 in last 24h
+  Proofs Submitted: 240-1200 (success rate: 99.9%)
   RPC Provider: Healthy (5 failures, all < 1s)
 
 Key Achievements:
@@ -951,10 +951,10 @@ Phase 13 Delivery
 - Support Portal: https://quicknode.com/support
 
 **Stakeholder Notification List:**
-- Product Lead: [email]
-- Marketing: [email]
-- Community: [email]
-- Security: [email]
+- General support: support@x3-chain.io
+- RPC operations: rpc-support@x3.chain
+- Validator operations: staking-support@x3.chain
+- Community announcements: https://discord.gg/x3-chain
 
 ### Escalation Decision Tree
 
