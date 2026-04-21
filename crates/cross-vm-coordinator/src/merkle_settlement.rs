@@ -1624,6 +1624,37 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_and_slow_non_bridge_without_proof_share_session_not_found_class() {
+        let mut fast_coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: None,
+        };
+
+        let fast_err = fast_coordinator
+            .record_merkle_fast_claim("missing-session", fast_claim, 1)
+            .unwrap_err();
+
+        let mut slow_coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: None,
+        };
+
+        let slow_err = slow_coordinator
+            .record_merkle_slow_claim("missing-session", slow_claim, 1)
+            .unwrap_err();
+
+        assert!(
+            matches!(fast_err, CoordinatorError::SessionNotFound { .. }),
+            "expected fast path session-not-found when proof is absent"
+        );
+        assert!(
+            matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
+            "expected slow path session-not-found when proof is absent"
+        );
+    }
+
+    #[test]
     fn test_slow_claim_bridge_without_proof_falls_through_to_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let slow_claim = MerkleEnabledSlowClaim {
