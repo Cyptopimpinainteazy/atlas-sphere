@@ -61,7 +61,7 @@ pub struct GovernanceConfig {
     pub enable_graceful_shutdown: bool,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct LoggingConfig {
     pub level: String,
     #[serde(default)]
@@ -129,6 +129,26 @@ impl Default for RelayerMetrics {
             proofs_failed: 0,
             pause_events: 0,
             uptime_secs: 0,
+        }
+    }
+}
+
+impl Default for SubmissionConfig {
+    fn default() -> Self {
+        Self {
+            batch_size: 1,
+            timeout_secs: 60,
+            max_retries: 3,
+            retry_backoff_ms: 1000,
+        }
+    }
+}
+
+impl Default for GovernanceConfig {
+    fn default() -> Self {
+        Self {
+            poll_interval_secs: 5,
+            enable_graceful_shutdown: true,
         }
     }
 }
