@@ -1382,6 +1382,14 @@ mod coordinator_merkle_tests {
             slow_msg.contains("session mismatch"),
             "expected slow path mismatch marker"
         );
+        assert!(
+            !fast_msg.contains("stale"),
+            "expected fast mismatched freshness path to avoid stale marker due to mismatch precedence"
+        );
+        assert!(
+            !slow_msg.contains("stale"),
+            "expected slow mismatched freshness path to avoid stale marker due to mismatch precedence"
+        );
     }
 
     #[test]
