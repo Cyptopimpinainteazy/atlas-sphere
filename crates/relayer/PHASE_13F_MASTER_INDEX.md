@@ -153,6 +153,23 @@ PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md (primary reference)
 
 ## Success Criteria Checklist
 
+### Placeholder Substitution Gate (Blocking)
+
+This gate is mandatory before launch execution. All Phase 13f runbooks must have environment placeholders replaced with real values, or explicitly marked as intentionally illustrative.
+
+Run this check:
+
+```bash
+bash scripts/check_phase13f_placeholders.sh
+```
+
+Blocking policy:
+- T-24h gate fails if any unresolved placeholders are reported.
+- T-4h gate fails if any unresolved placeholders are reported.
+- T-30m go/no-go cannot proceed while this check is failing.
+
+If a placeholder is intentionally left in a non-executable example, append `PHASE13F_PLACEHOLDER_OK` on that same line to suppress that specific finding.
+
 ### Pre-Launch Readiness (T-48h to T-0h)
 
 **Configuration & Infrastructure:**
