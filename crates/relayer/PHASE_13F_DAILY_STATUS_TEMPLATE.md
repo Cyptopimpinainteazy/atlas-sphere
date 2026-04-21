@@ -271,18 +271,18 @@ Network       < 80%       22%       ✅
 **Scheduled:** [Time] UTC (approximately 24 hours from now)
 
 **Subscribe:** 
-- 📧 [Email newsletter signup](link)
+- 📧 [support@x3-chain.io](mailto:support@x3-chain.io)
 - 🐦 [@X3Blockchain](https://twitter.com/X3Blockchain) on Twitter
-- 💬 [#mainnet](link) Discord channel
-- 📊 [Status page](link) for real-time metrics
+- 💬 [#mainnet](https://discord.gg/x3-chain) Discord channel
+- 📊 [Live status channel](https://discord.gg/x3-chain) for real-time metrics
 
 ---
 
 ### Questions or Concerns?
 
-- **Technical questions?** See [PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md](link)
-- **Incident details?** See [MAINNET_INCIDENT_RESPONSE.md](link)
-- **Validator issues?** See [VALIDATOR_OPERATIONS.md](link)
+- **Technical questions?** See [PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md](PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md)
+- **Incident details?** See [MAINNET_INCIDENT_RESPONSE.md](MAINNET_INCIDENT_RESPONSE.md)
+- **Validator issues?** See [VALIDATOR_OPERATIONS.md](VALIDATOR_OPERATIONS.md)
 - **Direct contact:** support@x3-chain.io or https://discord.gg/x3-chain
 
 ---
@@ -335,7 +335,7 @@ All metrics come from:
 **Critical Issue?** Don't wait for daily report:
 1. Post immediately to Slack #mainnet-launch
 2. Alert stakeholders via emergency comms
-3. Follow [MAINNET_INCIDENT_RESPONSE.md](link)
+3. Follow [MAINNET_INCIDENT_RESPONSE.md](MAINNET_INCIDENT_RESPONSE.md)
 4. Then document in daily report
 
 **Minor Issue?** Include in next daily report with context:
