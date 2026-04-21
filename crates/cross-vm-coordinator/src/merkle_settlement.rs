@@ -241,6 +241,19 @@ pub enum MerkleVerificationResult {
 }
 
 impl SwapCoordinator {
+    fn validate_settlement_session_binding(
+        session_id: &str,
+        settlement: &MerkleSettlementProof,
+    ) -> Result<(), CoordinatorError> {
+        if settlement.session_id != session_id {
+            return Err(CoordinatorError::Internal(format!(
+                "Merkle settlement session mismatch: claim session '{}' does not match proof session '{}'",
+                session_id, settlement.session_id
+            )));
+        }
+        Ok(())
+    }
+
     fn record_merkle_claim_with_bridge_context<C, F>(
         &mut self,
         session_id: &str,
@@ -311,6 +324,8 @@ impl SwapCoordinator {
             return Ok(());
         };
 
+        Self::validate_settlement_session_binding(session_id, &proof)?;
+
         let mut merkle_session = Self::build_ephemeral_merkle_session(session_id, now_unix, proof);
 
         let verification_result = if let Some((current_finalized_block, max_proof_age_blocks)) =
@@ -336,6 +351,7 @@ impl SwapCoordinator {
     ) -> Result<MerkleVerificationResult, CoordinatorError> {
         match settlement {
             Some(settlement) => {
+                Self::validate_settlement_session_binding(session_id, settlement)?;
                 if !settlement.is_verified() {
                     return Err(CoordinatorError::Internal(format!(
                         "Merkle settlement for session '{}' failed verification (outcome: {:?})",
@@ -953,6 +969,34 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_claim_non_bridge_rejects_mismatched_proof_session_before_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let mut proof = MerkleSettlementProof::new(
+            "other-session".to_string(),
+            [1u8; 32],
+            100,
+            vec![1, 2, 3, 4],
+            0,
+            1,
+        );
+        proof.outcome = MerkleSettlementOutcome::Verified;
+
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(proof),
+        };
+
+        let err = coordinator
+            .record_merkle_fast_claim("missing-session", fast_claim, 1)
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session-binding mismatch failure before session-not-found"
+        );
+    }
+
+    #[test]
     fn test_fast_claim_non_bridge_without_proof_falls_through_to_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let fast_claim = MerkleEnabledFastClaim {
@@ -1023,6 +1067,38 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when bridge proof is not provided"
+        );
+    }
+
+    #[test]
+    fn test_fast_claim_bridge_rejects_mismatched_proof_session_before_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "other-session".to_string(),
+                [0u8; 32],
+                100,
+                vec![1, 2, 3, 4],
+                0,
+                1,
+            )),
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_fast_claim_with_bridge_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session-binding mismatch failure before session-not-found"
         );
     }
 
