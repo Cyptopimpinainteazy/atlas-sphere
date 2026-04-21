@@ -1652,6 +1652,18 @@ mod coordinator_merkle_tests {
             matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
             "expected slow path to fall through to session-not-found after verified proof"
         );
+
+        let fast_msg = fast_err.to_string();
+        let slow_msg = slow_err.to_string();
+
+        assert!(
+            !fast_msg.contains("failed verification"),
+            "expected fast verified path to avoid verification-failure marker"
+        );
+        assert!(
+            !slow_msg.contains("failed verification"),
+            "expected slow verified path to avoid verification-failure marker"
+        );
     }
 
     #[test]
@@ -1699,6 +1711,18 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
             "expected slow path session-not-found when proof is absent"
+        );
+
+        let fast_msg = fast_err.to_string();
+        let slow_msg = slow_err.to_string();
+
+        assert!(
+            !fast_msg.contains("failed verification"),
+            "expected fast no-proof path to avoid verification-failure marker"
+        );
+        assert!(
+            !slow_msg.contains("failed verification"),
+            "expected slow no-proof path to avoid verification-failure marker"
         );
     }
 
@@ -1768,6 +1792,18 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
             "expected slow bridge no-proof path to return SessionNotFound"
+        );
+
+        let fast_msg = fast_err.to_string();
+        let slow_msg = slow_err.to_string();
+
+        assert!(
+            !fast_msg.contains("bridge verification failed"),
+            "expected fast bridge no-proof path to avoid bridge-verification failure marker"
+        );
+        assert!(
+            !slow_msg.contains("bridge verification failed"),
+            "expected slow bridge no-proof path to avoid bridge-verification failure marker"
         );
     }
 
