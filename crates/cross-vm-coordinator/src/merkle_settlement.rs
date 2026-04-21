@@ -1398,6 +1398,14 @@ mod coordinator_merkle_tests {
             !slow_msg.contains("stale"),
             "expected slow mismatched freshness path to avoid stale marker due to mismatch precedence"
         );
+        assert!(
+            !fast_msg.contains("Session not found"),
+            "expected fast mismatched bridge path to fail before session-not-found lookup"
+        );
+        assert!(
+            !slow_msg.contains("Session not found"),
+            "expected slow mismatched bridge path to fail before session-not-found lookup"
+        );
     }
 
     #[test]
