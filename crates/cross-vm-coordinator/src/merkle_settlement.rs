@@ -1378,6 +1378,44 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_freshness_mismatch_takes_precedence_over_stale_validation() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "other-session".to_string(),
+                [42u8; 32],
+                100,
+                vec![42; 72],
+                0,
+                1,
+            )),
+        };
+
+        // Even with plausible validator input and stale freshness parameters,
+        // session binding must fail first.
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let err = coordinator
+            .record_merkle_fast_claim_with_bridge_freshness_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session mismatch to be enforced before stale-proof validation"
+        );
+    }
+
+    #[test]
     fn test_slow_claim_bridge_freshness_verification_rejects_stale_before_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let slow_claim = MerkleEnabledSlowClaim {
