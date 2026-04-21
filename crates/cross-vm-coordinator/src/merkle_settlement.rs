@@ -2328,5 +2328,13 @@ mod coordinator_merkle_tests {
             !slow_msg.contains("session mismatch"),
             "expected slow stale path to avoid mismatch marker when session IDs match"
         );
+        assert!(
+            !fast_msg.contains("Session not found"),
+            "expected fast stale-freshness path to fail before session-not-found lookup"
+        );
+        assert!(
+            !slow_msg.contains("Session not found"),
+            "expected slow stale-freshness path to fail before session-not-found lookup"
+        );
     }
 }
