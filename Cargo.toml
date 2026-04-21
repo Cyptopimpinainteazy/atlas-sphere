@@ -98,6 +98,7 @@ members = [
     "crates/custody-service",
     "crates/x3-orchestra-control-plane",
     "crates/x3-rpc",
+    "crates/relayer",
     "tests/e2e",
         # Phase 4.5: Liquidity, Inventory, and Solvency control plane
         "pallets/x3-inventory",
