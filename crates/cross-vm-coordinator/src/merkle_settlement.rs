@@ -1508,4 +1508,41 @@ mod coordinator_merkle_tests {
             "expected session-binding mismatch failure before session-not-found"
         );
     }
+
+    #[test]
+    fn test_slow_freshness_mismatch_takes_precedence_over_stale_validation() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: Some(MerkleSettlementProof::new(
+                "other-session".to_string(),
+                [42u8; 32],
+                100,
+                vec![42; 72],
+                0,
+                1,
+            )),
+        };
+
+        // Even with plausible validator input and stale freshness parameters,
+        // session binding must fail first.
+        let mut validators = BTreeMap::new();
+        validators.insert([1u8; 32], vec![7u8; 32]);
+
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_freshness_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            err.to_string().contains("session mismatch"),
+            "expected session mismatch to be enforced before stale-proof validation"
+        );
+    }
 }
