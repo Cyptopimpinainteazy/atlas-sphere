@@ -1297,6 +1297,14 @@ mod coordinator_merkle_tests {
             slow_msg.contains("session mismatch"),
             "expected slow path mismatch marker"
         );
+        assert!(
+            !fast_msg.contains("stale"),
+            "expected fast path mismatch precedence over stale validation marker"
+        );
+        assert!(
+            !slow_msg.contains("stale"),
+            "expected slow path mismatch precedence over stale validation marker"
+        );
     }
 
     #[test]
