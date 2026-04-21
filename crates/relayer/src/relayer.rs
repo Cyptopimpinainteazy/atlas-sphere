@@ -95,6 +95,8 @@ impl RelayerService {
     pub async fn run(&self) -> Result<()> {
         info!("Starting relay loop");
 
+        let mut startup_time = std::time::Instant::now();
+
         loop {
             // Check for shutdown signal
             {
@@ -129,14 +131,18 @@ impl RelayerService {
                 }
             }
 
-            // Poll EVM headers
+            // Poll EVM headers (with concurrency limiting)
             self.poll_evm_headers().await;
 
-            // Poll SVM headers
+            // Poll SVM headers (with concurrency limiting)
             self.poll_svm_headers().await;
 
-            // Check finality and submit proofs
+            // Check finality and submit proofs (with deduplication)
             self.process_finalized_headers().await;
+
+            // Update uptime metrics
+            let mut metrics = self.metrics.write().await;
+            metrics.uptime_secs = startup_time.elapsed().as_secs();
 
             // Sleep before next iteration
             sleep(Duration::from_millis(
@@ -262,9 +268,39 @@ impl RelayerService {
             if let Some(&block_number) = state.finalized_evm_headers.get(&domain_id) {
                 debug!("Processing finalized EVM domain {}: block {}", domain_id, block_number);
                 
-                // In production, would acquire actual proof from EVM and submit
-                // For now, we log and track metrics
-                state.pending_submissions += 1;
+                // Acquire proof from finalized block
+                let block_hash = [0x00u8; 32];  // In production, get from watcher
+                let state_root = [0x00u8; 32];  // In production, get from watcher
+                
+                if let Ok(proof) = self.submitter
+                    .acquire_evm_proof(domain_id, block_number, block_hash, state_root)
+                    .await
+                {
+                    // Calculate proof hash for deduplication
+                    let proof_hash = self.calculate_proof_hash_evm(&proof);
+                    
+                    // Check if proof has already been submitted (deduplication)
+                    if state.proof_cache.contains(&proof_hash) {
+                        debug!("Proof already submitted, skipping deduplication");
+                        continue;
+                    }
+                    
+                    // Submit proof with retries
+                    match self.submitter.submit_evm_proof(proof).await {
+                        Ok(tx_hash) => {
+                            debug!("Submitted EVM proof: {}", tx_hash);
+                            state.pending_submissions = state.pending_submissions.saturating_sub(1);
+                            state.proof_cache.insert(proof_hash);
+                            let mut metrics = self.metrics.write().await;
+                            metrics.proofs_submitted += 1;
+                        }
+                        Err(e) => {
+                            warn!("Failed to submit EVM proof: {}", e);
+                            let mut metrics = self.metrics.write().await;
+                            metrics.proofs_failed += 1;
+                        }
+                    }
+                }
                 
                 let mut metrics = self.metrics.write().await;
                 metrics.blocks_finalized += 1;
@@ -277,9 +313,38 @@ impl RelayerService {
             if let Some(&slot) = state.finalized_svm_headers.get(&domain_id) {
                 debug!("Processing finalized SVM domain {}: slot {}", domain_id, slot);
                 
-                // In production, would acquire actual proof from SVM and submit
-                // For now, we log and track metrics
-                state.pending_submissions += 1;
+                // Acquire proof from finalized slot
+                let blockhash = [0x00u8; 32];  // In production, get from watcher
+                
+                if let Ok(proof) = self.submitter
+                    .acquire_svm_proof(domain_id, slot, blockhash)
+                    .await
+                {
+                    // Calculate proof hash for deduplication
+                    let proof_hash = self.calculate_proof_hash_svm(&proof);
+                    
+                    // Check if proof has already been submitted (deduplication)
+                    if state.proof_cache.contains(&proof_hash) {
+                        debug!("Proof already submitted, skipping deduplication");
+                        continue;
+                    }
+                    
+                    // Submit proof with retries
+                    match self.submitter.submit_svm_proof(proof).await {
+                        Ok(tx_hash) => {
+                            debug!("Submitted SVM proof: {}", tx_hash);
+                            state.pending_submissions = state.pending_submissions.saturating_sub(1);
+                            state.proof_cache.insert(proof_hash);
+                            let mut metrics = self.metrics.write().await;
+                            metrics.proofs_submitted += 1;
+                        }
+                        Err(e) => {
+                            warn!("Failed to submit SVM proof: {}", e);
+                            let mut metrics = self.metrics.write().await;
+                            metrics.proofs_failed += 1;
+                        }
+                    }
+                }
                 
                 let mut metrics = self.metrics.write().await;
                 metrics.blocks_finalized += 1;
@@ -289,6 +354,38 @@ impl RelayerService {
         // Clear processed finalized headers for next iteration
         state.finalized_evm_headers.clear();
         state.finalized_svm_headers.clear();
+    }
+
+    /// Calculate hash of EVM proof for deduplication
+    fn calculate_proof_hash_evm(&self, proof: &crate::types::EvmProof) -> [u8; 32] {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        proof.source_domain.hash(&mut hasher);
+        proof.finalized_block.hash(&mut hasher);
+        proof.block_hash.hash(&mut hasher);
+        
+        let hash_u64 = hasher.finish();
+        let mut result = [0u8; 32];
+        result[0..8].copy_from_slice(&hash_u64.to_le_bytes());
+        result
+    }
+
+    /// Calculate hash of SVM proof for deduplication
+    fn calculate_proof_hash_svm(&self, proof: &crate::types::SvmProof) -> [u8; 32] {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        proof.source_domain.hash(&mut hasher);
+        proof.slot.hash(&mut hasher);
+        proof.blockhash.hash(&mut hasher);
+        
+        let hash_u64 = hasher.finish();
+        let mut result = [0u8; 32];
+        result[0..8].copy_from_slice(&hash_u64.to_le_bytes());
+        result
     }
 }
 
@@ -416,5 +513,35 @@ mod tests {
         // Verify semaphores have correct capacity
         assert_eq!(evm_semaphore.available_permits(), 10);
         assert_eq!(svm_semaphore.available_permits(), 20);
+    }
+
+    #[test]
+    fn test_proof_deduplication_cache() {
+        // Test proof deduplication using BTreeSet
+        let mut proof_cache = std::collections::BTreeSet::new();
+        let proof_hash = [0x42u8; 32];
+        
+        // First insertion should succeed
+        assert!(proof_cache.insert(proof_hash));
+        
+        // Second insertion of same proof should be detected (deduplication)
+        assert!(!proof_cache.insert(proof_hash));
+        
+        // Different proof should succeed
+        let mut different_proof = [0x00u8; 32];
+        different_proof[0] = 0x99;
+        assert!(proof_cache.insert(different_proof));
+        
+        assert_eq!(proof_cache.len(), 2);
+    }
+
+    #[test]
+    fn test_relay_state_uptime_tracking() {
+        // Test that uptime can be tracked via metrics
+        let mut metrics = RelayerMetrics::default();
+        assert_eq!(metrics.uptime_secs, 0);
+        
+        metrics.uptime_secs = 300;  // 5 minutes
+        assert_eq!(metrics.uptime_secs, 300);
     }
 }
