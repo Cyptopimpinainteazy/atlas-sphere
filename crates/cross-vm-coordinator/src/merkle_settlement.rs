@@ -1100,6 +1100,10 @@ mod coordinator_merkle_tests {
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when bridge proof is not provided"
         );
+        assert!(
+            !err.to_string().contains("bridge verification failed"),
+            "expected no-proof bridge fast path to avoid bridge-verification failure marker"
+        );
     }
 
     #[test]
