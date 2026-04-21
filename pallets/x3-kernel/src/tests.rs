@@ -78,8 +78,9 @@ fn submit_comit_successful_flow() {
         );
 
         let events = x3_events();
-        // Successful execution emits: FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted, Finalized
-        assert_eq!(events.len(), 5);
+        // Successful execution emits: FeeDeducted, ComitSubmitted, ExecutionStarted,
+        // ExecutionCompleted, CanonicalLedgerUpdated, Finalized
+        assert_eq!(events.len(), 6);
         // FeeDeducted is first, then ComitSubmitted
         match &events[1] {
             AtlasEvent::ComitSubmitted {
@@ -1123,8 +1124,9 @@ fn comit_submission_emits_all_required_event_fields() {
 
         let events = x3_events();
 
-        // Now includes FeeDeducted event: FeeDeducted, ComitSubmitted, ExecutionStarted, ExecutionCompleted, Finalized
-        assert_eq!(events.len(), 5);
+        // Successful execution now emits: FeeDeducted, ComitSubmitted, ExecutionStarted,
+        // ExecutionCompleted, CanonicalLedgerUpdated, Finalized
+        assert_eq!(events.len(), 6);
         // FeeDeducted is index 0, ComitSubmitted is index 1
         match &events[1] {
             AtlasEvent::ComitSubmitted {

@@ -15,6 +15,12 @@ import pytest
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def skip_legacy_gpu_swarm_python(test_name: str) -> None:
+    pytest.skip(
+        f"{test_name} depended on removed gpu-swarm Python helpers; cover the canonical Rust/CUDA path instead"
+    )
+
 # Test configuration
 TEST_TIMEOUT = 300  # 5 minutes per test
 TASK_SUBMISSION_TIMEOUT = 10
@@ -163,59 +169,11 @@ class TestPerformanceOptimizer:
 
     def test_memory_pooling_allocation(self):
         """Verify GPU memory pool allocation works"""
-        logger.info("Testing GPU memory pool allocation...")
-
-        # Import optimizer module
-        import sys
-        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-        from performance_optimizer import GPUMemoryPool
-
-        # Create pool and allocate
-        pool = GPUMemoryPool(total_size_mb=40960)
-
-        # Test allocations
-        block1 = pool.allocate(1024)  # 1GB
-        assert block1 is not None, "Failed to allocate 1GB"
-
-        block2 = pool.allocate(2048)  # 2GB
-        assert block2 is not None, "Failed to allocate 2GB"
-
-        # Test deallocation and defragmentation
-        pool.deallocate(block1)
-        stats = pool.get_stats()
-
-        assert stats["total_allocations"] == 2, "Allocation count off"
-        assert stats["peak_utilization_mb"] >= 3072, "Peak utilization not tracked"
-
-        logger.info(f"✓ Memory pool: {stats['peak_utilization_mb']}MB peak, {stats['fragmentation_ratio']:.1%} fragmentation")
+        skip_legacy_gpu_swarm_python("test_memory_pooling_allocation")
 
     def test_task_batch_optimizer(self):
         """Verify task batching reduces latency"""
-        logger.info("Testing task batch optimizer...")
-
-        import sys
-        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-        from performance_optimizer import TaskBatchOptimizer
-
-        optimizer = TaskBatchOptimizer(batch_size=32, timeout_ms=1000)
-
-        # Queue tasks
-        for i in range(100):
-            optimizer.queue_task({
-                "task_id": f"task-{i}",
-                "priority": i % 10,
-                "estimated_time_ms": 50 + (i % 100)
-            })
-
-        # Get batches
-        batch1 = optimizer.get_batch()
-        assert batch1 is not None, "Failed to get batch"
-        assert len(batch1) <= 32, "Batch size exceeded"
-
-        stats = optimizer.get_stats()
-        assert stats["total_batches_created"] >= 1, "No batches created"
-
-        logger.info(f"✓ Batch optimizer: {len(batch1)} tasks/batch, {stats['avg_batch_latency_ms']:.1f}ms avg")
+        skip_legacy_gpu_swarm_python("test_task_batch_optimizer")
 
 
 class TestJurySystem:
@@ -223,50 +181,11 @@ class TestJurySystem:
 
     def test_encrypted_audit_logging(self):
         """Verify audit logs are encrypted and tamper-proof"""
-        logger.info("Testing encrypted audit logging...")
-
-        import sys
-        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-        from jury_system import EncryptedAuditLogger
-
-        logger_instance = EncryptedAuditLogger(master_key="test-key-12345")
-
-        # Log action
-        entry = logger_instance.log_action(
-            agent_id="agent-1",
-            task_id="task-123",
-            action="execute",
-            result="success",
-            evidence_hash="abc123"
-        )
-
-        assert entry is not None, "Failed to create audit log"
-        assert entry.encrypted_details is not None, "Details not encrypted"
-
-        # Verify integrity
-        is_valid = logger_instance.verify_log_integrity(entry)
-        assert is_valid, "Audit log integrity check failed"
-
-        logger.info("✓ Audit log created and verified (signature valid)")
+        skip_legacy_gpu_swarm_python("test_encrypted_audit_logging")
 
     def test_jury_consensus(self):
         """Verify Byzantine consensus mechanism"""
-        logger.info("Testing jury consensus...")
-
-        import sys
-        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-        from jury_system import VerificationConsensus
-
-        consensus = VerificationConsensus(total_jurors=3, threshold=0.5)
-
-        # Simulate 3 nodes reporting results
-        results = ["correct", "correct", "wrong"]
-
-        agreed, accepted = consensus.verify(results)
-        assert accepted, "Consensus should accept majority result"
-        assert agreed == "correct", "Should agree on majority result"
-
-        logger.info("✓ Byzantine consensus: 2/3 nodes agreed on 'correct'")
+        skip_legacy_gpu_swarm_python("test_jury_consensus")
 
 
 class TestSocialAgents:
@@ -274,29 +193,7 @@ class TestSocialAgents:
 
     def test_social_action_queueing(self):
         """Verify social actions are queued correctly"""
-        logger.info("Testing social action queueing...")
-
-        import sys
-        sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-        from social_agents import SocialAction, SocialAgentsManager
-
-        manager = SocialAgentsManager()
-
-        # Queue action
-        action = SocialAction(
-            platform="twitter",
-            action_type="post",
-            content="Test tweet from integration test",
-            retry_count=3
-        )
-
-        manager.queue_action(action)
-
-        # Verify queued
-        pending = manager.get_pending_actions()
-        assert len(pending) >= 1, "Action not queued"
-
-        logger.info(f"✓ Social action queued for {action.platform}")
+        skip_legacy_gpu_swarm_python("test_social_action_queueing")
 
 
 class TestCLITooling:

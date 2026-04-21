@@ -423,16 +423,9 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         };
 
         Ok(pallet_x3_kernel::SphereState {
-            version: pallet_x3_kernel::SPHERE_STATE_VERSION,
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,
-            state_version: pallet_x3_kernel::SemanticVersion::new(1, 0, 0),
-            version_timeline: Vec::new(),
-            current_schema: pallet_x3_kernel::SchemaDescriptor {
-                fields: Vec::new(),
-                compatibility_flags: 0,
-            },
         })
     }
 
@@ -442,16 +435,9 @@ impl pallet_x3_kernel::DualVmDispatcher for MockDispatcher {
         _svm_receipt: Option<&pallet_x3_kernel::ExecutionReceipt>,
     ) -> pallet_x3_kernel::SphereState {
         pallet_x3_kernel::SphereState {
-            version: pallet_x3_kernel::SPHERE_STATE_VERSION,
             state_root: H256::zero(),
             block_number: 1,
             timestamp: 12000,
-            state_version: pallet_x3_kernel::SemanticVersion::new(1, 0, 0),
-            version_timeline: Vec::new(),
-            current_schema: pallet_x3_kernel::SchemaDescriptor {
-                fields: Vec::new(),
-                compatibility_flags: 0,
-            },
         }
     }
 

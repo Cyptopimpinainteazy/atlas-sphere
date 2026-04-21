@@ -116,11 +116,15 @@ impl EvmExecutorAdapter for TradeEngineEvmAdapter {
         return_data[16..32].copy_from_slice(&amount_out.to_be_bytes());
 
         Ok(ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: gas_limit.min(150_000),
             return_data,
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -166,11 +170,15 @@ impl SvmExecutorAdapter for TradeEngineSvmAdapter {
         let return_data = (amount_out as u64).to_le_bytes().to_vec();
 
         Ok(ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: compute_limit.min(200_000),
             return_data,
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -207,11 +215,15 @@ impl X3ExecutorAdapter for TradeEngineX3Adapter {
         return_data[16..32].copy_from_slice(&amount_out.to_be_bytes());
 
         Ok(ExecutionReceipt {
+            version: pallet_x3_kernel::EXECUTION_RECEIPT_VERSION,
             success: true,
             gas_used: gas_limit.min(120_000),
             return_data,
             logs: Vec::new(),
             state_changes: Vec::new(),
+            protocol_version: 1,
+            migration_history: Vec::new(),
+            compatibility_flags: 0,
         })
     }
 
@@ -240,6 +252,21 @@ parameter_types! {
     pub const DefaultEvmGasLimit: u64 = 500_000;
     pub const DefaultSvmComputeLimit: u64 = 500_000;
     pub const DefaultX3GasLimit: u64 = 500_000;
+    pub const MaxReplayPruneItemsPerBlock: u32 = 64;
+}
+
+pub struct BridgeEvmEscrowValue;
+impl frame_support::traits::Get<sp_core::H160> for BridgeEvmEscrowValue {
+    fn get() -> sp_core::H160 {
+        sp_core::H160::zero()
+    }
+}
+
+pub struct BridgeSvmEscrowValue;
+impl frame_support::traits::Get<[u8; 32]> for BridgeSvmEscrowValue {
+    fn get() -> [u8; 32] {
+        [0; 32]
+    }
 }
 
 impl pallet_x3_kernel::Config for Test {
@@ -268,8 +295,11 @@ impl pallet_x3_kernel::Config for Test {
     type CrossVmPrepareTtl = ConstU64<10>;
     type MaxPreparedCrossVmOps = ConstU32<16>;
     type MaxPreparedOpsPerBlock = ConstU32<8>;
+    type MaxReplayPruneItemsPerBlock = MaxReplayPruneItemsPerBlock;
     type RequireCrossVmProof = frame_support::traits::ConstBool<false>;
     type CrossChainProofVerifier = pallet_x3_kernel::NoopProofVerifier;
+    type BridgeEvmEscrow = BridgeEvmEscrowValue;
+    type BridgeSvmEscrow = BridgeSvmEscrowValue;
 }
 
 parameter_types! {

@@ -74,13 +74,18 @@ use frame_support::traits::BuildGenesisConfig;
 use frame_support::traits::{Currency, UnixTime};
 use frame_system::pallet_prelude::*;
 use parity_scale_codec::Codec;
-use sp_core::H256;
+use sp_core::{H160, H256};
 use sp_io::hashing::blake2_256;
 use sp_runtime::traits::MaybeSerializeDeserialize;
 use sp_std::convert::TryInto;
 use sp_std::marker::PhantomData;
 use sp_std::vec::Vec;
-use x3_cross_vm_bridge::{CrossVmBridge, CrossVmDispatcher, CrossVmOperation, CrossVmResult};
+use x3_cross_vm_bridge::{
+    CrossVmBridge, CrossVmCall, CrossVmDispatcher, CrossVmOperation, CrossVmReceipt,
+    CrossVmResult, CrossVmStatus, VmId,
+};
+
+pub const EXECUTION_RECEIPT_VERSION: u32 = 1;
 
 /// Represents a Comit transaction submitted to the X3 Kernel.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -130,6 +135,8 @@ pub struct ComitV2<AccountId, Balance> {
 /// Execution receipt returned by VM runtimes after transaction execution.
 #[derive(Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
 pub struct ExecutionReceipt {
+    /// Schema version for compatibility across runtime and sidecar consumers.
+    pub version: u32,
     /// Whether the execution was successful.
     pub success: bool,
     /// Gas used during execution.
@@ -140,6 +147,12 @@ pub struct ExecutionReceipt {
     pub logs: Vec<ExecutionLog>,
     /// State changes resulting from execution.
     pub state_changes: Vec<StateChange>,
+    /// Protocol version emitted by the executor implementation.
+    pub protocol_version: u32,
+    /// Ordered migration markers applied before this receipt was produced.
+    pub migration_history: Vec<u32>,
+    /// Compatibility bits for downstream consumers.
+    pub compatibility_flags: u32,
 }
 
 /// Log entry emitted during VM execution.
@@ -441,6 +454,14 @@ pub mod pallet {
         #[pallet::constant]
         type DefaultX3GasLimit: Get<u64>;
 
+        /// EVM bridge escrow contract address for atomic cross-VM swaps.
+        #[pallet::constant]
+        type BridgeEvmEscrow: Get<H160>;
+
+        /// SVM bridge escrow program address for atomic cross-VM swaps.
+        #[pallet::constant]
+        type BridgeSvmEscrow: Get<[u8; 32]>;
+
         /// Cross-VM prepare TTL (blocks) before forced abort.
         #[pallet::constant]
         type CrossVmPrepareTtl: Get<BlockNumberFor<Self>>;
@@ -452,6 +473,10 @@ pub mod pallet {
         /// Maximum number of prepared ops to scan per block for expiry.
         #[pallet::constant]
         type MaxPreparedOpsPerBlock: Get<u32>;
+
+        /// Maximum replay-store entries pruned per block.
+        #[pallet::constant]
+        type MaxReplayPruneItemsPerBlock: Get<u32>;
 
         /// Require a cross-chain proof for cross-VM operations.
         #[pallet::constant]
@@ -1890,6 +1915,10 @@ pub mod pallet {
                 // Message passing: moderate gas, no balance lock
                 CrossVmOperation::MessageToEvm { .. } => (50_000u64, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, 50_000u64),
+                CrossVmOperation::CallX3Vm { call, .. } => (0u64, call.gas_budget),
+                CrossVmOperation::AtomicTriSwap { x3vm_call, .. } => {
+                    (200_000u64, 200_000u64.saturating_add(x3vm_call.gas_budget))
+                }
             };
 
             let base_fee = T::Balance::default();
@@ -2083,6 +2112,11 @@ pub mod pallet {
                 }
                 CrossVmOperation::MessageToEvm { .. } => (result.gas_used, 0u64),
                 CrossVmOperation::MessageToSvm { .. } => (0u64, result.gas_used),
+                CrossVmOperation::CallX3Vm { .. } => (0u64, result.gas_used),
+                CrossVmOperation::AtomicTriSwap { .. } => {
+                    let evm = result.gas_used / 2;
+                    (evm, result.gas_used.saturating_sub(evm))
+                }
             };
 
             let required_fee =
@@ -2121,11 +2155,15 @@ pub mod pallet {
 
             let bridge_state_changes = Self::build_cross_vm_state_changes(&prepared.operation)?;
             let bridge_receipt = ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: result.gas_used,
                 return_data: result.output,
                 logs: Vec::new(),
                 state_changes: bridge_state_changes,
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             };
 
             let changes_applied =
@@ -2264,11 +2302,44 @@ pub mod pallet {
                 }
                 CrossVmOperation::CallEvm { .. }
                 | CrossVmOperation::CallSvm { .. }
+                | CrossVmOperation::CallX3Vm { .. }
                 | CrossVmOperation::MessageToEvm { .. }
                 | CrossVmOperation::MessageToSvm { .. } => {
                     // Message/call operations carry no balance state changes
                 }
                 CrossVmOperation::AtomicSwap {
+                    evm_party,
+                    svm_party,
+                    evm_amount,
+                    svm_amount,
+                    ..
+                } => {
+                    changes.push(Self::map_cross_vm_address_delta(
+                        evm_party,
+                        canonical_asset,
+                        *evm_amount,
+                        false,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        svm_party,
+                        canonical_asset,
+                        *evm_amount,
+                        true,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        svm_party,
+                        canonical_asset,
+                        *svm_amount,
+                        false,
+                    )?);
+                    changes.push(Self::map_cross_vm_address_delta(
+                        evm_party,
+                        canonical_asset,
+                        *svm_amount,
+                        true,
+                    )?);
+                }
+                CrossVmOperation::AtomicTriSwap {
                     evm_party,
                     svm_party,
                     evm_amount,
@@ -2735,19 +2806,27 @@ pub mod pallet {
         ) -> Result<SphereState, DispatchError> {
             // Execute transactions on both VMs in parallel (when implemented)
             let _evm_receipt = evm_tx.map(|_tx| ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 21000,
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
 
             let _svm_receipt = svm_tx.map(|_tx| ExecutionReceipt {
+                version: EXECUTION_RECEIPT_VERSION,
                 success: true,
                 gas_used: 5000,
                 return_data: Vec::new(),
                 logs: Vec::new(),
                 state_changes: Vec::new(),
+                protocol_version: 1,
+                migration_history: Vec::new(),
+                compatibility_flags: 0,
             });
 
             // Merge receipts into unified state
@@ -2992,6 +3071,34 @@ pub mod pallet {
             }
         }
 
+        fn execute_x3vm_tx(
+            &self,
+            _caller: &[u8; 32],
+            call: &CrossVmCall,
+        ) -> Result<CrossVmReceipt, DispatchError> {
+            call.ensure_current_version()?;
+
+            if call.target != VmId::X3Vm {
+                return Ok(CrossVmReceipt {
+                    call_hash: call.call_hash(&H256::zero()),
+                    source_state_root: H256::zero(),
+                    target_state_root: H256::zero(),
+                    status: CrossVmStatus::InternalError,
+                    gas_used: 0,
+                    logs: Vec::new(),
+                });
+            }
+
+            let receipt = T::X3Adapter::execute(call.payload.as_slice(), call.gas_budget)?;
+            let result = if receipt.success {
+                CrossVmResult::success(receipt.return_data, receipt.gas_used)
+            } else {
+                CrossVmResult::failed(b"x3vm_execution_failed".to_vec(), receipt.gas_used)
+            };
+
+            Ok(result.into_receipt_for(call, &H256::zero()))
+        }
+
         fn get_evm_balance(&self, address: &[u8; 20]) -> u128 {
             let account = Pallet::<T>::decode_state_change_account(address);
             let asset = T::AssetId::default();
@@ -3014,6 +3121,14 @@ pub mod pallet {
                 }
                 None => 0,
             }
+        }
+
+        fn get_evm_bridge_escrow(&self) -> [u8; 20] {
+            T::BridgeEvmEscrow::get().0
+        }
+
+        fn get_svm_bridge_escrow(&self) -> [u8; 32] {
+            T::BridgeSvmEscrow::get()
         }
     }
 
@@ -3077,6 +3192,18 @@ sp_api::decl_runtime_apis! {
         /// Decodes the transaction, executes it via the EVM adapter, and returns
         /// the keccak256 transaction hash on success.
         fn submit_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Validate a signed raw EVM transaction without mutating state.
+        fn validate_evm_transaction(raw_tx: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Submit a raw SVM instruction payload.
+        fn submit_svm_instruction(program_id: [u8; 32], instruction_data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Execute an EVM call against a target address.
+        fn call_evm(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<Vec<u8>, Vec<u8>>;
+
+        /// Estimate gas for an EVM call.
+        fn estimate_evm_gas(caller: Option<Vec<u8>>, evm_address: Vec<u8>, input: Vec<u8>, gas_limit: u64) -> Result<u64, Vec<u8>>;
     }
 }
 

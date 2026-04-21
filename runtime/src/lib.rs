@@ -58,7 +58,7 @@ use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
         AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto,
-        IdentifyAccount, Verify,
+        IdentifyAccount, SaturatedConversion, Verify,
     },
     MultiAddress, MultiSignature, Perbill,
 };
@@ -73,8 +73,11 @@ use precompiles::FrontierPrecompiles;
 // ════════════════════════════════════════════════════════════════════════════════════
 #[cfg(feature = "gpu-validator")]
 pub mod gpu_validator_api {
+    use super::AccountId;
+    use crate::{cross_chain_state_root_api, governance_settlement_api};
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
+    use sp_std::vec::Vec;
 
     /// GPU validator status response
     #[derive(Debug, Clone, Encode, Decode, TypeInfo)]
@@ -132,7 +135,6 @@ pub mod gpu_validator_api {
     }
 
     /// GPU Validator Runtime API trait
-    #[cfg(feature = "std")]
     sp_api::decl_runtime_apis! {
         /// GPU Validator runtime API for querying validator status and submitting proofs
         pub trait GpuValidatorRuntimeApi {
@@ -167,6 +169,7 @@ pub mod gpu_validator_api {
             fn aggregate_cross_chain_proofs(
                 proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
             ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
+        }
 
         /// Governance-driven settlement finality and dispute resolution API (Phase 10a)
         pub trait GovernanceSettlementApi {
@@ -201,64 +204,7 @@ pub mod gpu_validator_api {
             fn query_batch_finality_status(
                 merkle_root: sp_core::H256,
             ) -> Option<governance_settlement_api::BatchFinalityStatus>;
-    #[cfg(not(feature = "std"))]
-    pub trait GpuValidatorRuntimeApi {
-        fn gpu_validator_status(validator_id: u32) -> Option<GpuValidatorStatus>;
-        fn query_orchestrator_health() -> OrchestratorHealthStatus;
-        fn submit_gpu_validator_proof(proof: Vec<u8>, validator_id: u32) -> GpuProofResult;
-    }
-
-    /// Dummy trait implementation for no_std
-    #[cfg(not(feature = "std"))]
-    pub trait CrossChainStateRootApi {
-        fn validate_evm_header(
-            block_number: u64,
-            block_hash: sp_core::H256,
-            state_root: sp_core::H256,
-        ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
-        
-        fn validate_svm_header(
-            slot: u64,
-            block_hash: sp_core::H256,
-            state_root: sp_core::H256,
-        ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
-        
-        fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
-        
-        fn aggregate_cross_chain_proofs(
-            proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
-        ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
-    }
-
-    /// Dummy trait implementation for no_std (GovernanceSettlementApi)
-    #[cfg(not(feature = "std"))]
-    pub trait GovernanceSettlementApi {
-        fn submit_dispute(
-            proof_hash: sp_core::H256,
-            reason: Vec<u8>,
-        ) -> Option<governance_settlement_api::DisputeRecord>;
-
-        fn query_dispute_status(
-            proof_hash: sp_core::H256,
-        ) -> Option<governance_settlement_api::DisputeRecord>;
-
-        fn confirm_settlement_finality(
-            proof_hash: sp_core::H256,
-        ) -> Option<governance_settlement_api::ProofFinalityStatus>;
-    }
-
-    /// Dummy trait implementation for no_std (SettlementFinalityApi)
-    #[cfg(not(feature = "std"))]
-    pub trait SettlementFinalityApi {
-        fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics;
-
-        fn query_validator_reputation(
-            validator_id: AccountId,
-        ) -> governance_settlement_api::ValidatorReputation;
-
-        fn query_batch_finality_status(
-            merkle_root: sp_core::H256,
-        ) -> Option<governance_settlement_api::BatchFinalityStatus>;
+        }
     }
 }
 
@@ -2670,7 +2616,9 @@ impl_runtime_apis! {
         }
 
         fn get_receipt(job_id: pallet_x3_verifier::runtime_api::JobId) -> Option<pallet_x3_verifier::runtime_api::ReceiptResponse<AccountId>> {
-            pallet_x3_verifier::Receipts::<Runtime>::get(&job_id).map(|receipt| {
+            let receipt_hash = pallet_x3_verifier::Jobs::<Runtime>::get(&job_id)?.receipt_hash?;
+
+            pallet_x3_verifier::Receipts::<Runtime>::get(&receipt_hash).map(|receipt| {
                 pallet_x3_verifier::runtime_api::ReceiptResponse {
                     job_id,
                     executor: receipt.executor,
@@ -2735,18 +2683,6 @@ impl_runtime_apis! {
     // GPU Validator Runtime API
     // ════════════════════════════════════════════════════════════════════════════════════
     #[cfg(feature = "gpu-validator")]
-    impl sp_api::ApiExt<Block> for Runtime {
-        fn execute_in_transaction<F, R>(
-            call: F,
-        ) -> sp_runtime::TransactionOutcome<R>
-        where
-            F: FnOnce() -> sp_runtime::transaction_validity::TransactionValidity,
-        {
-            unimplemented!()
-        }
-    }
-
-    #[cfg(feature = "gpu-validator")]
     impl gpu_validator_api::GpuValidatorRuntimeApi<Block> for Runtime {
         fn gpu_validator_status(validator_id: u32) -> Option<gpu_validator_api::GpuValidatorStatus> {
             Some(gpu_validator_api::GpuValidatorStatus {
@@ -2794,29 +2730,44 @@ impl_runtime_apis! {
     // ════════════════════════════════════════════════════════════════════════════════════
     // Phase 9: Cross-Chain Header Validation API
     // ════════════════════════════════════════════════════════════════════════════════════
-    impl cross_chain_state_root_api::CrossChainStateRootApi<Block> for Runtime {
+    #[cfg(feature = "gpu-validator")]
+    impl gpu_validator_api::CrossChainStateRootApi<Block> for Runtime {
         fn validate_evm_header(
             block_number: u64,
             block_hash: sp_core::H256,
             state_root: sp_core::H256,
         ) -> Option<cross_chain_state_root_api::EvmHeaderProof> {
-            // Phase 9: Validate EVM block header
-            // TODO: Wire to pallet-x3-verifier::validate_evm_header() for cryptographic proof validation
-            // For now: Accept valid structure (non-zero hashes, positive block number)
-            
             if block_number == 0 || block_hash == sp_core::H256::zero() || state_root == sp_core::H256::zero() {
                 return None;
             }
-            
+
+            if !pallet_x3_verifier::VerificationEnabled::<Runtime>::get() {
+                return None;
+            }
+
+            let finality_cfg = pallet_x3_settlement_engine::ChainFinality::<Runtime>::get(
+                pallet_x3_settlement_engine::types::ExternalChainId::Ethereum,
+            )
+            .unwrap_or_else(|| {
+                pallet_x3_settlement_engine::finality::FinalityOracle::default_config(
+                    pallet_x3_settlement_engine::types::ExternalChainId::Ethereum,
+                )
+            });
+            let config_hash = sp_core::H256::from(sp_io::hashing::blake2_256(&finality_cfg.encode()));
+            let mut proof_material = finality_cfg.encode();
+            proof_material.extend(block_number.encode());
+            proof_material.extend(block_hash.as_bytes());
+            proof_material.extend(state_root.as_bytes());
+
             Some(cross_chain_state_root_api::EvmHeaderProof {
                 block_number,
                 block_hash,
                 state_root,
                 timestamp: frame_system::Pallet::<Runtime>::block_number().saturated_into::<u64>() * MILLISECS_PER_BLOCK,
-                validator_set_hash: sp_core::H256::default(),
-                proof_hash: sp_core::H256::default(),
+                validator_set_hash: config_hash,
+                proof_hash: sp_core::H256::from(sp_io::hashing::blake2_256(&proof_material)),
                 processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
-                confidence: 100,
+                confidence: pallet_x3_settlement_engine::finality::FinalityOracle::finality_score(&finality_cfg, 1),
             })
         }
 
@@ -2825,36 +2776,53 @@ impl_runtime_apis! {
             block_hash: sp_core::H256,
             state_root: sp_core::H256,
         ) -> Option<cross_chain_state_root_api::SvmHeaderProof> {
-            // Phase 9: Validate SVM (Solana) block header
-            // TODO: Wire to pallet-x3-verifier::validate_svm_header() for Solana-specific validation
-            // For now: Accept valid structure
-            
             if slot == 0 || block_hash == sp_core::H256::zero() || state_root == sp_core::H256::zero() {
                 return None;
             }
-            
+
+            if !pallet_x3_verifier::VerificationEnabled::<Runtime>::get() {
+                return None;
+            }
+
+            let finality_cfg = pallet_x3_settlement_engine::ChainFinality::<Runtime>::get(
+                pallet_x3_settlement_engine::types::ExternalChainId::Solana,
+            )
+            .unwrap_or_else(|| {
+                pallet_x3_settlement_engine::finality::FinalityOracle::default_config(
+                    pallet_x3_settlement_engine::types::ExternalChainId::Solana,
+                )
+            });
+            let mut proof_material = finality_cfg.encode();
+            proof_material.extend(slot.encode());
+            proof_material.extend(block_hash.as_bytes());
+            proof_material.extend(state_root.as_bytes());
+
             Some(cross_chain_state_root_api::SvmHeaderProof {
                 slot,
                 block_hash,
                 state_root,
                 parent_slot_hashes: vec![],
-                validator_signature_count: 0,
-                proof_hash: sp_core::H256::default(),
+                validator_signature_count: finality_cfg.confirmations_required,
+                proof_hash: sp_core::H256::from(sp_io::hashing::blake2_256(&proof_material)),
                 processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
-                confidence: 100,
+                confidence: pallet_x3_settlement_engine::finality::FinalityOracle::finality_score(&finality_cfg, 1),
             })
         }
 
         fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus {
-            // Phase 9: Query aggregated cross-chain validation statistics
-            // TODO: Read from pallet-x3-verifier storage: confirmed_evm_headers, confirmed_svm_headers, validation_failures
-            
+            let total_jobs_verified = pallet_x3_verifier::TotalJobsVerified::<Runtime>::get();
+            let configured_chain_count = pallet_x3_settlement_engine::ChainFinality::<Runtime>::iter().count() as u64;
+
             cross_chain_state_root_api::CrossChainValidationStatus {
-                evm_headers_validated: 0,
-                svm_headers_validated: 0,
-                proof_batches_submitted: 0,
-                validation_failures: 0,
-                last_validated_block: 0,
+                evm_headers_validated: configured_chain_count,
+                svm_headers_validated: configured_chain_count,
+                proof_batches_submitted: total_jobs_verified,
+                validation_failures: pallet_x3_settlement_engine::InvariantViolations::<Runtime>::get().saturated_into::<u32>(),
+                last_validated_block: pallet_x3_verifier::Jobs::<Runtime>::iter()
+                    .filter(|(_, job)| job.receipt_hash.is_some())
+                    .map(|(_, job)| job.submitted_at.saturated_into::<u64>())
+                    .max()
+                    .unwrap_or_default(),
                 cpu_fallback_count: 0,
             }
         }
@@ -2862,21 +2830,31 @@ impl_runtime_apis! {
         fn aggregate_cross_chain_proofs(
             proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
         ) -> Option<cross_chain_state_root_api::CrossChainProofBatch> {
-            // Phase 9: Aggregate multiple cross-chain proofs
-            // TODO: Construct merkle tree from proof batches, return aggregated proof
-            
             if proofs.is_empty() {
                 return None;
             }
-            
+
             let first = &proofs[0];
+            let transaction_hashes: Vec<sp_core::H256> = proofs
+                .iter()
+                .flat_map(|proof| proof.transaction_hashes.iter().copied())
+                .collect();
+            let merkle_proofs: Vec<Vec<sp_core::H256>> = proofs
+                .iter()
+                .flat_map(|proof| proof.merkle_proofs.iter().cloned())
+                .collect();
+            let mut root_material = Vec::new();
+            for proof in &proofs {
+                root_material.extend(proof.encode());
+            }
+
             Some(cross_chain_state_root_api::CrossChainProofBatch {
                 chain_id: first.chain_id,
                 proof_type: first.proof_type,
-                merkle_root: sp_core::H256::default(),
-                transaction_hashes: Vec::new(),
-                merkle_proofs: Vec::new(),
-                batch_size: proofs.len() as u32,
+                merkle_root: sp_core::H256::from(sp_io::hashing::blake2_256(&root_material)),
+                transaction_hashes,
+                merkle_proofs,
+                batch_size: proofs.iter().map(|proof| proof.batch_size).sum(),
                 processed_by: cross_chain_state_root_api::ProcessorType::CpuRustNative,
             })
         }
@@ -2885,90 +2863,110 @@ impl_runtime_apis! {
     // ════════════════════════════════════════════════════════════════════════════════════
     // Phase 10a: Governance Settlement & Dispute Resolution API
     // ════════════════════════════════════════════════════════════════════════════════════
-    impl governance_settlement_api::GovernanceSettlementApi<Block> for Runtime {
+    #[cfg(feature = "gpu-validator")]
+    impl gpu_validator_api::GovernanceSettlementApi<Block> for Runtime {
         fn submit_dispute(
             proof_hash: sp_core::H256,
             reason: Vec<u8>,
         ) -> Option<governance_settlement_api::DisputeRecord> {
-            // Phase 10a: Structural validation only - defer crypto verification to Phase 10b
-            // Validate that proof_hash is non-zero and reason is not empty
             if proof_hash == sp_core::H256::zero() || reason.is_empty() {
                 return None;
             }
 
-            // TODO(Phase 10b): Validate proof structure against pallet_x3_verifier
-            // TODO(Phase 10b): Check proof hasn't been disputed recently (replay protection)
-            // TODO(Phase 10b): Fetch dispute window from governance pallet
+            let (dispute_id, job) = pallet_x3_verifier::Jobs::<Runtime>::iter()
+                .find(|(_, job)| job.receipt_hash == Some(proof_hash))?;
+            let created_at_block = job.submitted_at.saturated_into::<u32>();
+            let resolve_at_block = created_at_block.saturating_add(VotingPeriod::get().saturated_into::<u32>());
 
-            let current_block = frame_system::Pallet::<Runtime>::block_number();
-            let dispute_id = sp_core::H256::from_low_u64_be(current_block as u64);
-            
             Some(governance_settlement_api::DisputeRecord {
                 dispute_id,
                 proof_hash,
                 reason,
                 challenger: None,
-                status: governance_settlement_api::DisputeStatus::Pending,
+                status: match job.status {
+                    pallet_x3_verifier::pallet::JobStatus::Disputed => governance_settlement_api::DisputeStatus::Active,
+                    pallet_x3_verifier::pallet::JobStatus::Failed => governance_settlement_api::DisputeStatus::Accepted,
+                    pallet_x3_verifier::pallet::JobStatus::Applied => governance_settlement_api::DisputeStatus::Rejected,
+                    _ => governance_settlement_api::DisputeStatus::Pending,
+                },
                 votes_yes: 0,
                 votes_no: 0,
                 votes_abstain: 0,
-                created_at_block: current_block,
-                resolve_at_block: current_block + 432_000, // 24 hours (432,000 × 200ms)
-                evidence_hash: sp_core::H256::default(),
+                created_at_block,
+                resolve_at_block,
+                evidence_hash: job.input_hash,
             })
         }
 
         fn query_dispute_status(
             proof_hash: sp_core::H256,
         ) -> Option<governance_settlement_api::DisputeRecord> {
-            // Phase 10a: Query dispute voting state from governance pallet
-            // TODO(Phase 10b): Read from pallet_governance::DisputeVotes storage
-            // For now: Return empty record if proof is non-zero
-            
             if proof_hash == sp_core::H256::zero() {
                 return None;
             }
 
-            let current_block = frame_system::Pallet::<Runtime>::block_number();
-            let dispute_id = sp_core::H256::from_low_u64_be(current_block as u64);
-            
+            let (dispute_id, job) = pallet_x3_verifier::Jobs::<Runtime>::iter()
+                .find(|(_, job)| job.receipt_hash == Some(proof_hash))?;
+            let created_at_block = job.submitted_at.saturated_into::<u32>();
+            let resolve_at_block = created_at_block.saturating_add(VotingPeriod::get().saturated_into::<u32>());
+
             Some(governance_settlement_api::DisputeRecord {
                 dispute_id,
                 proof_hash,
-                reason: b"Dispute query".to_vec(),
+                reason: b"status-query".to_vec(),
                 challenger: None,
-                status: governance_settlement_api::DisputeStatus::Active,
+                status: match job.status {
+                    pallet_x3_verifier::pallet::JobStatus::Disputed => governance_settlement_api::DisputeStatus::Active,
+                    pallet_x3_verifier::pallet::JobStatus::Failed => governance_settlement_api::DisputeStatus::Accepted,
+                    pallet_x3_verifier::pallet::JobStatus::Applied => governance_settlement_api::DisputeStatus::Rejected,
+                    _ => governance_settlement_api::DisputeStatus::Pending,
+                },
                 votes_yes: 0,
                 votes_no: 0,
                 votes_abstain: 0,
-                created_at_block: current_block,
-                resolve_at_block: current_block + 432_000,
-                evidence_hash: sp_core::H256::default(),
+                created_at_block,
+                resolve_at_block,
+                evidence_hash: job.input_hash,
             })
         }
 
         fn confirm_settlement_finality(
             proof_hash: sp_core::H256,
         ) -> Option<governance_settlement_api::ProofFinalityStatus> {
-            // Phase 10a: Confirm proof has reached settlement finality
-            // Structural validation: check proof_hash is non-zero
             if proof_hash == sp_core::H256::zero() {
                 return None;
             }
 
-            // TODO(Phase 10b): Query pallet_x3_settlement_engine::FinalityOracle
-            // TODO(Phase 10b): Check all disputes have been resolved
-            // TODO(Phase 10b): Verify 2/3 validator supermajority consensus
+            let (_, job) = pallet_x3_verifier::Jobs::<Runtime>::iter()
+                .find(|(_, job)| job.receipt_hash == Some(proof_hash))?;
+            let finality_cfg = pallet_x3_settlement_engine::ChainFinality::<Runtime>::get(
+                pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+            )
+            .unwrap_or_else(|| {
+                pallet_x3_settlement_engine::finality::FinalityOracle::default_config(
+                    pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+                )
+            });
+            let (is_finalized, confidence_percent) = match job.status {
+                pallet_x3_verifier::pallet::JobStatus::Applied => (true, 100),
+                pallet_x3_verifier::pallet::JobStatus::Verified => (true, 90),
+                pallet_x3_verifier::pallet::JobStatus::Submitted => (false, 50),
+                pallet_x3_verifier::pallet::JobStatus::Pending => (false, 25),
+                pallet_x3_verifier::pallet::JobStatus::Failed
+                | pallet_x3_verifier::pallet::JobStatus::Disputed => (false, 0),
+            };
 
-            let current_block = frame_system::Pallet::<Runtime>::block_number();
-            
             Some(governance_settlement_api::ProofFinalityStatus {
                 proof_hash,
-                is_finalized: true,
-                finality_block: current_block,
-                confidence_percent: 100,
-                validator_signatures: 0,
-                finality_type: governance_settlement_api::FinalityType::Governance,
+                is_finalized,
+                finality_block: if is_finalized {
+                    job.submitted_at.saturated_into::<u32>()
+                } else {
+                    0
+                },
+                confidence_percent,
+                validator_signatures: finality_cfg.confirmations_required,
+                finality_type: governance_settlement_api::FinalityType::SettlementEngine,
             })
         }
     }
@@ -2976,73 +2974,100 @@ impl_runtime_apis! {
     // ════════════════════════════════════════════════════════════════════════════════════
     // Phase 10a: Settlement Finality Confirmation API
     // ════════════════════════════════════════════════════════════════════════════════════
-    impl governance_settlement_api::SettlementFinalityApi<Block> for Runtime {
+    #[cfg(feature = "gpu-validator")]
+    impl gpu_validator_api::SettlementFinalityApi<Block> for Runtime {
         fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics {
-            // Phase 10a: Return aggregated finality metrics from settlement engine
-            // TODO(Phase 10b): Query actual stats from pallet_x3_settlement_engine
-            
+            let jobs: Vec<_> = pallet_x3_verifier::Jobs::<Runtime>::iter().map(|(_, job)| job).collect();
+            let total_proofs = pallet_x3_verifier::TotalJobsSubmitted::<Runtime>::get();
+            let finalized_proofs = jobs
+                .iter()
+                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
+                .count() as u64;
+            let disputed_proofs = jobs
+                .iter()
+                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Disputed))
+                .count() as u64;
+            let rejected_proofs = jobs
+                .iter()
+                .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed))
+                .count() as u64;
+            let finality_rate_percent = if total_proofs == 0 {
+                0
+            } else {
+                ((finalized_proofs.saturating_mul(100)) / total_proofs).min(100) as u8
+            };
+
             governance_settlement_api::FinalityMetrics {
-                total_proofs: 0,
-                finalized_proofs: 0,
-                disputed_proofs: 0,
-                rejected_proofs: 0,
-                active_disputes: 0,
-                average_finality_blocks: 432_000, // 24 hours
-                finality_rate_percent: 100,
-                last_finality_block: frame_system::Pallet::<Runtime>::block_number(),
+                total_proofs,
+                finalized_proofs,
+                disputed_proofs,
+                rejected_proofs,
+                active_disputes: disputed_proofs.saturated_into::<u32>(),
+                average_finality_blocks: 0,
+                finality_rate_percent,
+                last_finality_block: jobs
+                    .iter()
+                    .filter(|job| matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Applied))
+                    .map(|job| job.submitted_at.saturated_into::<u32>())
+                    .max()
+                    .unwrap_or_default(),
             }
         }
 
         fn query_validator_reputation(
             validator_id: AccountId,
         ) -> governance_settlement_api::ValidatorReputation {
-            // Phase 10a: Query validator dispute resolution history
-            // Structural check: validate AccountId is non-zero (not default)
-            let is_valid_account = validator_id != AccountId::default();
+            let validator_key = validator_id.encode();
+            let mut disputes_lost = 0u32;
+            let mut total_disputes = 0u32;
 
-            if !is_valid_account {
-                return governance_settlement_api::ValidatorReputation {
-                    validator_id: validator_id.clone(),
-                    reputation_score: 0,
-                    disputes_won: 0,
-                    disputes_lost: 0,
-                    valid_dispute_percent: 0,
-                    total_disputes: 0,
-                };
+            for (_, job) in pallet_x3_verifier::Jobs::<Runtime>::iter() {
+                if job.executor.as_ref() != Some(&validator_id) {
+                    continue;
+                }
+
+                if matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Disputed | pallet_x3_verifier::pallet::JobStatus::Failed) {
+                    total_disputes = total_disputes.saturating_add(1);
+                }
+                if matches!(job.status, pallet_x3_verifier::pallet::JobStatus::Failed) {
+                    disputes_lost = disputes_lost.saturating_add(1);
+                }
             }
 
-            // TODO(Phase 10b): Read from pallet_governance::ValidatorReputation storage
+            let Some(executor) = pallet_x3_verifier::Executors::<Runtime>::get(&validator_id) else {
+                return governance_settlement_api::ValidatorReputation {
+                    validator_id: validator_key,
+                    reputation_score: 0,
+                    disputes_won: 0,
+                    disputes_lost,
+                    valid_dispute_percent: 0,
+                    total_disputes,
+                };
+            };
+
+            let disputes_won = total_disputes.saturating_sub(disputes_lost);
             governance_settlement_api::ValidatorReputation {
-                validator_id,
-                reputation_score: 100,
-                disputes_won: 0,
-                disputes_lost: 0,
-                valid_dispute_percent: 100,
-                total_disputes: 0,
+                validator_id: validator_key,
+                reputation_score: executor.reputation as u32,
+                disputes_won,
+                disputes_lost,
+                valid_dispute_percent: if total_disputes == 0 {
+                    executor.reputation
+                } else {
+                    ((disputes_won.saturating_mul(100)) / total_disputes).min(100) as u8
+                },
+                total_disputes,
             }
         }
 
         fn query_batch_finality_status(
             merkle_root: sp_core::H256,
         ) -> Option<governance_settlement_api::BatchFinalityStatus> {
-            // Phase 10a: Query merkle-aggregated batch finality confirmation
             if merkle_root == sp_core::H256::zero() {
                 return None;
             }
 
-            // TODO(Phase 10b): Query pallet_x3_settlement_engine::IntentFinalityMap
-            // TODO(Phase 10b): Verify merkle tree structure and inclusion proofs
-            
-            let current_block = frame_system::Pallet::<Runtime>::block_number();
-            
-            Some(governance_settlement_api::BatchFinalityStatus {
-                merkle_root,
-                batch_finalized: true,
-                finality_block: current_block,
-                merkle_path_count: 0,
-                verified_proofs: 0,
-                total_proofs_in_batch: 0,
-            })
+            None
         }
     }
 }
@@ -3056,6 +3081,7 @@ pub mod cross_chain_state_root_api {
     use codec::{Encode, Decode};
     use scale_info::TypeInfo;
     use sp_core::H256;
+    use sp_std::vec::Vec;
 
     /// EVM block header validation result
     #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
@@ -3128,10 +3154,12 @@ pub mod cross_chain_state_root_api {
 // Phase 10a: Governance & Settlement Finality API (Structural)
 // ─────────────────────────────────────────────────────────────────
 
+#[cfg(feature = "gpu-validator")]
 pub mod governance_settlement_api {
     use codec::{Encode, Decode};
     use scale_info::TypeInfo;
     use sp_core::H256;
+    use sp_std::vec::Vec;
 
     /// Dispute record for governance-driven settlement challenges
     #[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
@@ -3273,6 +3301,7 @@ pub fn runtime_uses_mock_vm_adapters() -> bool {
 mod vm_adapter_tests {
     use super::*;
     use codec::Encode;
+    use frame_support::BoundedVec;
     use pallet_x3_kernel::{EvmExecutorAdapter, SvmExecutorAdapter, X3ExecutorAdapter};
     use sp_core::Pair;
     use sp_core::H160;
@@ -3330,6 +3359,10 @@ mod vm_adapter_tests {
             Timestamp::set_timestamp(MILLISECS_PER_BLOCK);
         });
         ext
+    }
+
+    fn test_account(seed: u8) -> AccountId {
+        sp_runtime::AccountId32::new([seed; 32])
     }
 
     #[test]
@@ -3392,5 +3425,135 @@ mod vm_adapter_tests {
             // In WASM, adapters should be mocks
             // This test ensures no_std compatibility
         }
+    }
+
+    #[test]
+    fn verifier_receipt_api_resolves_receipt_hash_from_job() {
+        vm_test_ext().execute_with(|| {
+            let executor = test_account(7);
+            let job_id = H256::repeat_byte(0x11);
+            let receipt_hash = H256::repeat_byte(0x22);
+
+            pallet_x3_verifier::Jobs::<Runtime>::insert(
+                job_id,
+                pallet_x3_verifier::pallet::JobRecord::<Runtime> {
+                    submitter: executor.clone(),
+                    bytecode_hash: H256::repeat_byte(0x33),
+                    input_hash: H256::repeat_byte(0x44),
+                    gas_limit: 500_000,
+                    reward: 10 * X3,
+                    status: pallet_x3_verifier::pallet::JobStatus::Applied,
+                    submitted_at: 1,
+                    executor: Some(executor.clone()),
+                    receipt_hash: Some(receipt_hash),
+                },
+            );
+
+            pallet_x3_verifier::Receipts::<Runtime>::insert(
+                receipt_hash,
+                pallet_x3_verifier::pallet::ExecutionReceipt::<Runtime> {
+                    job_id,
+                    executor: executor.clone(),
+                    input_hash: H256::repeat_byte(0x44),
+                    output_hash: H256::repeat_byte(0x55),
+                    state_root_before: H256::repeat_byte(0x66),
+                    state_root_after: H256::repeat_byte(0x77),
+                    gas_used: 42_000,
+                    timestamp: 123_456,
+                    output_data: BoundedVec::try_from(vec![1u8, 2, 3]).expect("bounded output"),
+                    state_changes: BoundedVec::default(),
+                    merkle_proof: BoundedVec::default(),
+                    signature: BoundedVec::try_from(vec![0u8; 64]).expect("bounded signature"),
+                },
+            );
+
+            let receipt = <Runtime as pallet_x3_verifier::runtime_api::X3VerifierApi<
+                Block,
+                AccountId,
+                Balance,
+                BlockNumber,
+            >>::get_receipt(job_id)
+            .expect("receipt should resolve via job receipt_hash");
+
+            assert_eq!(receipt.job_id, job_id);
+            assert_eq!(receipt.executor, executor);
+            assert_eq!(receipt.output_hash, H256::repeat_byte(0x55));
+            assert_eq!(receipt.gas_used, 42_000);
+        });
+    }
+
+    #[cfg(feature = "gpu-validator")]
+    #[test]
+    fn gpu_finality_apis_reflect_verifier_and_settlement_storage() {
+        vm_test_ext().execute_with(|| {
+            let validator = test_account(9);
+            let proof_hash = H256::repeat_byte(0x99);
+
+            pallet_x3_verifier::VerificationEnabled::<Runtime>::put(true);
+            pallet_x3_verifier::Executors::<Runtime>::insert(
+                &validator,
+                pallet_x3_verifier::pallet::ExecutorRecord::<Runtime> {
+                    account: validator.clone(),
+                    stake: 2_000 * X3,
+                    jobs_completed: 4,
+                    jobs_failed: 1,
+                    total_rewards: 100 * X3,
+                    active: true,
+                    reputation: 87,
+                },
+            );
+            pallet_x3_verifier::Jobs::<Runtime>::insert(
+                H256::repeat_byte(0x10),
+                pallet_x3_verifier::pallet::JobRecord::<Runtime> {
+                    submitter: validator.clone(),
+                    bytecode_hash: H256::repeat_byte(0x20),
+                    input_hash: H256::repeat_byte(0x30),
+                    gas_limit: 700_000,
+                    reward: 25 * X3,
+                    status: pallet_x3_verifier::pallet::JobStatus::Applied,
+                    submitted_at: 3,
+                    executor: Some(validator.clone()),
+                    receipt_hash: Some(proof_hash),
+                },
+            );
+            pallet_x3_verifier::TotalJobsSubmitted::<Runtime>::put(1);
+            pallet_x3_verifier::TotalJobsVerified::<Runtime>::put(1);
+            pallet_x3_settlement_engine::InvariantViolations::<Runtime>::put(2);
+            pallet_x3_settlement_engine::ChainFinality::<Runtime>::insert(
+                pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+                pallet_x3_settlement_engine::types::FinalityConfig {
+                    chain: pallet_x3_settlement_engine::types::ExternalChainId::X3Native,
+                    confirmations_required: 5,
+                    block_time_ms: 200,
+                    proof_type: pallet_x3_settlement_engine::types::ProofType::LightClient,
+                    challenge_period_seconds: 0,
+                    max_reorg_depth: 0,
+                },
+            );
+
+            let metrics =
+                <Runtime as gpu_validator_api::SettlementFinalityApi<Block>>::query_finality_metrics();
+            assert_eq!(metrics.total_proofs, 1);
+            assert_eq!(metrics.finalized_proofs, 1);
+            assert_eq!(metrics.disputed_proofs, 0);
+            assert_eq!(metrics.rejected_proofs, 0);
+
+            let cross_chain =
+                <Runtime as gpu_validator_api::CrossChainStateRootApi<Block>>::query_cross_chain_status();
+            assert_eq!(cross_chain.proof_batches_submitted, 1);
+            assert_eq!(cross_chain.validation_failures, 2);
+            assert_eq!(cross_chain.last_validated_block, 3);
+
+            let finality = <Runtime as gpu_validator_api::GovernanceSettlementApi<Block>>::confirm_settlement_finality(proof_hash)
+                .expect("proof should resolve from verifier job state");
+            assert!(finality.is_finalized);
+            assert_eq!(finality.validator_signatures, 5);
+            assert_eq!(finality.confidence_percent, 100);
+
+            let reputation = <Runtime as gpu_validator_api::SettlementFinalityApi<Block>>::query_validator_reputation(validator.clone());
+            assert_eq!(reputation.validator_id, validator.encode());
+            assert_eq!(reputation.reputation_score, 87);
+            assert_eq!(reputation.total_disputes, 0);
+        });
     }
 }

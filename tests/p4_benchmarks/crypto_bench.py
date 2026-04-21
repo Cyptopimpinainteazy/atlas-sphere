@@ -21,6 +21,31 @@ import sys
 import time
 from pathlib import Path
 
+
+def _find_cuda_library(lib_name: str) -> Path | None:
+    candidates: list[Path] = []
+
+    env_dir = os.getenv("X3_CUDA_LIB_DIR")
+    if env_dir:
+        candidates.append(Path(env_dir) / lib_name)
+
+    root = Path(__file__).resolve().parents[2]
+    candidates.extend(
+        [
+            root / "crates" / "cross-chain-gpu-validator" / "kernels" / "build" / lib_name,
+            root / "crates" / "x3-gpu-validator-swarm" / "kernels" / "build" / lib_name,
+            root / "cross-chain-gpu-validator" / "kernels" / "build" / lib_name,
+            Path("/usr/local/lib/x3-chain") / lib_name,
+            Path("/usr/lib/x3-chain") / lib_name,
+        ]
+    )
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
 # ---------------------------------------------------------------------------
 # SHA-256 CPU benchmark
 # ---------------------------------------------------------------------------
@@ -247,42 +272,130 @@ def bench_secp256k1(count: int = 5_000, iterations: int = 3) -> dict:
 # ---------------------------------------------------------------------------
 
 def bench_sha256_gpu() -> dict | None:
-    """Attempt GPU SHA-256 benchmark."""
+    """GPU SHA-256 batch hashing via libsha256_batch.so."""
+    import ctypes as _ct
+
+    lib_path = _find_cuda_library("libsha256_batch.so")
+    if lib_path is None:
+        return None
+
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "crates" / "gpu-swarm" / "src"))
-        from sha256_gpu import SHA256GPUHasher
-        h = SHA256GPUHasher(multi_gpu=True)
-        if h.gpu_available:
-            return h.benchmark_batch(count=500_000, iterations=5)
-    except Exception:
-        pass
-    return None
+        lib = _ct.CDLL(str(lib_path))
+        lib.sha256_batch_host.argtypes = [_ct.c_void_p, _ct.c_int, _ct.c_void_p]
+        lib.sha256_batch_host.restype = _ct.c_int
+    except OSError:
+        return None
+
+    count = 500_000
+    iterations = 5
+    data = os.urandom(count * 32)
+    out = (_ct.c_ubyte * (count * 32))()
+
+    lib.sha256_batch_host(_ct.c_char_p(data), _ct.c_int(count), _ct.byref(out))
+
+    times = []
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        lib.sha256_batch_host(_ct.c_char_p(data), _ct.c_int(count), _ct.byref(out))
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    throughput = count / avg if avg > 0 else 0
+    return {
+        "operation": "SHA-256 GPU",
+        "mode": "GPU (CUDA)",
+        "batch_size": count,
+        "iterations": iterations,
+        "avg_time_ms": round(avg * 1000, 2),
+        "ops_per_sec": round(throughput),
+    }
 
 
 def bench_poh_gpu() -> dict | None:
-    """Attempt GPU PoH benchmark."""
+    """GPU PoH benchmark via libsha256_batch.so."""
+    import ctypes as _ct
+
+    lib_path = _find_cuda_library("libsha256_batch.so")
+    if lib_path is None:
+        return None
+
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "crates" / "gpu-swarm" / "src"))
-        from sha256_gpu import SHA256GPUHasher
-        h = SHA256GPUHasher(multi_gpu=True)
-        if h.gpu_available:
-            return h.benchmark_poh(num_chains=2048, chain_length=2000, iterations=5)
-    except Exception:
-        pass
-    return None
+        lib = _ct.CDLL(str(lib_path))
+        lib.sha256_poh_chain_host.argtypes = [_ct.c_void_p, _ct.c_int, _ct.c_int, _ct.c_void_p]
+        lib.sha256_poh_chain_host.restype = _ct.c_int
+    except OSError:
+        return None
+
+    num_chains = 2048
+    chain_length = 2000
+    iterations = 5
+    seeds = os.urandom(num_chains * 32)
+    out = (_ct.c_ubyte * (num_chains * 32))()
+
+    lib.sha256_poh_chain_host(
+        _ct.c_char_p(seeds), _ct.c_int(num_chains), _ct.c_int(chain_length), _ct.byref(out)
+    )
+
+    times = []
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        lib.sha256_poh_chain_host(
+            _ct.c_char_p(seeds), _ct.c_int(num_chains), _ct.c_int(chain_length), _ct.byref(out)
+        )
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    throughput = (num_chains * chain_length) / avg if avg > 0 else 0
+    return {
+        "operation": "PoH GPU",
+        "mode": "GPU (CUDA)",
+        "batch_size": num_chains,
+        "iterations": iterations,
+        "avg_time_ms": round(avg * 1000, 2),
+        "ops_per_sec": round(throughput),
+    }
 
 
 def bench_ed25519_gpu() -> dict | None:
-    """Attempt GPU Ed25519 benchmark."""
+    """GPU Ed25519 batch verification via libed25519_batch.so."""
+    import ctypes as _ct
+
+    lib_path = _find_cuda_library("libed25519_batch.so")
+    if lib_path is None:
+        return None
+
     try:
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "crates" / "gpu-swarm" / "src"))
-        from ed25519_gpu import Ed25519GPUVerifier
-        v = Ed25519GPUVerifier(multi_gpu=True)
-        if v.gpu_available:
-            return v.benchmark(batch_size=10_000, iterations=10)
-    except Exception:
-        pass
-    return None
+        lib = _ct.CDLL(str(lib_path))
+        lib.ed25519_verify_batch_multi_gpu.argtypes = [_ct.c_void_p, _ct.c_int, _ct.c_void_p]
+        lib.ed25519_verify_batch_multi_gpu.restype = _ct.c_int
+    except OSError:
+        return None
+
+    batch_size = 10_000
+    iterations = 10
+    entries = os.urandom(batch_size * 128)
+    out = (_ct.c_ubyte * batch_size)()
+
+    lib.ed25519_verify_batch_multi_gpu(_ct.c_char_p(entries), _ct.c_int(batch_size), _ct.byref(out))
+
+    times = []
+    for _ in range(iterations):
+        t0 = time.perf_counter()
+        lib.ed25519_verify_batch_multi_gpu(
+            _ct.c_char_p(entries), _ct.c_int(batch_size), _ct.byref(out)
+        )
+        times.append(time.perf_counter() - t0)
+
+    avg = sum(times) / len(times)
+    throughput = batch_size / avg if avg > 0 else 0
+    return {
+        "operation": "Ed25519 GPU",
+        "mode": "GPU (CUDA)",
+        "batch_size": batch_size,
+        "iterations": iterations,
+        "avg_time_ms": round(avg * 1000, 2),
+        "ops_per_sec": round(throughput),
+    }
 
 
 def bench_keccak_gpu(count: int = 500_000, iterations: int = 5) -> dict | None:

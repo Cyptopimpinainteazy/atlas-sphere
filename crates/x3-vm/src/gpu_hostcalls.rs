@@ -146,10 +146,14 @@ fn lib_search_paths() -> Vec<PathBuf> {
         paths.push(PathBuf::from(dir));
     }
 
-    // 2. Relative to workspace (cargo build)
+    // 2. Relative to canonical validator crates in the workspace
     let workspace_paths = [
-        "crates/gpu-swarm/src/cu_kernels/build",
-        "../gpu-swarm/src/cu_kernels/build",
+        "crates/cross-chain-gpu-validator/kernels/build",
+        "../cross-chain-gpu-validator/kernels/build",
+        "cross-chain-gpu-validator/kernels/build",
+        "crates/x3-gpu-validator-swarm/kernels/build",
+        "../x3-gpu-validator-swarm/kernels/build",
+        "x3-gpu-validator-swarm/kernels/build",
         "cu_kernels/build",
     ];
     if let Ok(cwd) = std::env::current_dir() {
@@ -161,12 +165,6 @@ fn lib_search_paths() -> Vec<PathBuf> {
     // 3. Standard library paths
     paths.push(PathBuf::from("/usr/local/lib/x3-chain"));
     paths.push(PathBuf::from("/usr/lib/x3-chain"));
-
-    // 4. Cross-chain GPU validator kernel builds
-    if let Ok(cwd) = std::env::current_dir() {
-        paths.push(cwd.join("cross-chain-gpu-validator/kernels/build"));
-        paths.push(cwd.join("../cross-chain-gpu-validator/kernels/build"));
-    }
 
     paths
 }

@@ -209,34 +209,10 @@ print(result)
         logger.info("MEMORY EFFICIENCY BENCHMARK")
         logger.info(f"{'='*80}")
 
-        try:
-            import sys
-            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-            from performance_optimizer import GPUMemoryPool
-
-            pool = GPUMemoryPool(total_size_mb=40960)
-
-            # Simulate realistic allocation pattern
-            allocations = []
-            for i in range(100):
-                size = (512 + (i % 8) * 512)  # 512MB to 4GB
-                block = pool.allocate(size)
-                if block:
-                    allocations.append((block, size))
-
-            stats = pool.get_stats()
-
-            logger.info(f"\n✓ Allocations: {stats['total_allocations']}")
-            logger.info(f"✓ Peak utilization: {stats['peak_utilization_mb']:.0f}MB")
-            logger.info(f"✓ Effective VRAM: {(stats['peak_utilization_mb'] / 40960 * 100):.1f}%")
-            logger.info(f"✓ Fragmentation: {stats['fragmentation_ratio']*100:.1f}% (target: <30%)")
-            logger.info(f"✓ Status: {'PASS ✓' if stats['fragmentation_ratio'] < 0.30 else 'WARN'}")
-
-            return stats
-
-        except ImportError:
-            logger.warning("Memory pool module not available, skipping")
-            return None
+        logger.warning(
+            "Legacy gpu-swarm Python memory-pool helper removed in RC-0; use Rust/CUDA coverage instead"
+        )
+        return None
 
     async def benchmark_network_compression(self):
         """Measure network optimization (compression ratio)"""
@@ -245,38 +221,10 @@ print(result)
         logger.info("NETWORK COMPRESSION BENCHMARK")
         logger.info(f"{'='*80}")
 
-        try:
-            import sys
-            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-            from performance_optimizer import NetworkOptimizer
-
-            optimizer = NetworkOptimizer()
-
-            # Simulate messages
-            messages = []
-            for i in range(1000):
-                msg = {
-                    "type": "task_result",
-                    "task_id": f"task-{i}",
-                    "result": "x" * 1024,  # 1KB payload
-                    "timestamp": time.time()
-                }
-                messages.append(msg)
-
-            stats = optimizer.get_stats()
-            compression_ratio = stats.get("compression_ratio", 0.4)
-
-            logger.info(f"\n✓ Messages buffered: {stats.get('messages_buffered', 0)}")
-            logger.info("✓ Compression enabled: Yes (GZIP)")
-            logger.info(f"✓ Compression ratio: {compression_ratio*100:.0f}% reduction")
-            logger.info(f"✓ Bandwidth saved: {(1 - compression_ratio)*100:.0f}%")
-            logger.info("✓ Status: PASS ✓ (target: >50% savings)")
-
-            return stats
-
-        except ImportError:
-            logger.warning("Network optimizer module not available, skipping")
-            return None
+        logger.warning(
+            "Legacy gpu-swarm Python network optimizer removed in RC-0; use Rust transport benchmarks instead"
+        )
+        return None
 
     async def benchmark_consensus_latency(self):
         """Measure Byzantine consensus latency"""
@@ -285,37 +233,10 @@ print(result)
         logger.info("CONSENSUS LATENCY BENCHMARK")
         logger.info(f"{'='*80}")
 
-        try:
-            import sys
-            sys.path.insert(0, "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src")
-            from jury_system import VerificationConsensus
-
-            consensus = VerificationConsensus(total_jurors=3, threshold=0.5)
-
-            latencies = []
-
-            # Simulate 100 consensus rounds
-            for _i in range(100):
-                results = ["correct", "correct", "wrong"]  # 2/3 agree
-
-                start = time.time()
-                _agreed, _accepted = consensus.verify(results)
-                elapsed = (time.time() - start) * 1000  # Convert to ms
-
-                latencies.append(elapsed)
-
-            avg_latency = statistics.mean(latencies)
-
-            logger.info("\n✓ Consensus rounds: 100")
-            logger.info(f"✓ Average latency: {avg_latency:.2f}ms")
-            logger.info(f"✓ P99 latency: {sorted(latencies)[99]:.2f}ms")
-            logger.info("✓ Status: PASS ✓ (target: <100ms)")
-
-            return {"avg": avg_latency, "p99": sorted(latencies)[99]}
-
-        except ImportError:
-            logger.warning("Jury system module not available, skipping")
-            return None
+        logger.warning(
+            "Legacy gpu-swarm Python consensus helper removed in RC-0; use Rust validator coverage instead"
+        )
+        return None
 
 
 async def run_full_benchmark_suite():

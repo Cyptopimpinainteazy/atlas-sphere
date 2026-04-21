@@ -9,6 +9,7 @@ use blake3::Hasher;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
@@ -529,26 +530,62 @@ pub struct GPUStats {
 use libloading::Library;
 use once_cell::sync::Lazy;
 
-/// Path to the CUDA kernels build directory.
-const CUDA_LIB_PATH: &str =
-    "/home/lojak/Desktop/x3-chain-master/crates/gpu-swarm/src/cu_kernels/build/libed25519_batch.so";
+const CUDA_SIG_LIB_NAME: &str = "libed25519_batch.so";
 
 type VerifyBatchFn = unsafe extern "C" fn(*const u8, i32, *mut u8) -> i32;
 
-static GPU_LIB: Lazy<Option<Library>> = Lazy::new(|| unsafe {
-    match Library::new(CUDA_LIB_PATH) {
-        Ok(lib) => {
-            info!(
-                "🚀 [ParallelProposer] NVIDIA GPU signature verifier loaded: {}",
-                CUDA_LIB_PATH
-            );
-            Some(lib)
-        }
-        Err(e) => {
-            warn!("⚠️ [ParallelProposer] GPU signature verifier unavailable (falling back to CPU): {}", e);
-            None
+fn cuda_sig_library_candidates() -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Ok(dir) = std::env::var("X3_CUDA_LIB_DIR") {
+        candidates.push(PathBuf::from(dir).join(CUDA_SIG_LIB_NAME));
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        let workspace_relative = [
+            PathBuf::from("crates/cross-chain-gpu-validator/kernels/build"),
+            PathBuf::from("cross-chain-gpu-validator/kernels/build"),
+            PathBuf::from("crates/x3-gpu-validator-swarm/kernels/build"),
+            PathBuf::from("x3-gpu-validator-swarm/kernels/build"),
+        ];
+
+        for relative in workspace_relative {
+            candidates.push(cwd.join(&relative).join(CUDA_SIG_LIB_NAME));
+            candidates.push(cwd.join("..").join(&relative).join(CUDA_SIG_LIB_NAME));
         }
     }
+
+    candidates.push(PathBuf::from("/usr/local/lib/x3-chain").join(CUDA_SIG_LIB_NAME));
+    candidates.push(PathBuf::from("/usr/lib/x3-chain").join(CUDA_SIG_LIB_NAME));
+
+    candidates
+}
+
+static GPU_LIB: Lazy<Option<Library>> = Lazy::new(|| unsafe {
+    for candidate in cuda_sig_library_candidates() {
+        match Library::new(&candidate) {
+            Ok(lib) => {
+                info!(
+                    "🚀 [ParallelProposer] NVIDIA GPU signature verifier loaded: {}",
+                    candidate.display()
+                );
+                return Some(lib);
+            }
+            Err(err) if candidate.exists() => {
+                warn!(
+                    "⚠️ [ParallelProposer] failed to load GPU signature verifier {}: {}",
+                    candidate.display(),
+                    err
+                );
+            }
+            Err(_) => {}
+        }
+    }
+
+    warn!(
+        "⚠️ [ParallelProposer] GPU signature verifier unavailable in canonical search paths; falling back to CPU"
+    );
+    None
 });
 
 struct SignatureVerifier;

@@ -3,13 +3,13 @@
 use crate::loop_pack_v1::LoopPackV1Pass;
 use crate::pass::{BoxedPass, Pass};
 use crate::passes::{
-    block_fusion::BlockFusionPass, branch_inversion::BranchInversionPass,
-    branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
+    block_fusion::BlockFusionPass, branch_opt::BranchOptPass,
+    cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
     copy_propagation::CopyPropagationPass, dead_code_elimination::DeadCodeEliminationPass,
     dom_const_prop::DomConstPropPass, edge_const_prop::EdgeConstPropPass,
     expression_hoist::ExpressionHoistPass, global_const_prop::GlobalConstPropPass,
     peephole::PeepholePass, pre::PrePass as PartialRedundancyEliminationPass,
-    pre_morel::MorelRenvoisePrePass, speculative_hoist::SpeculativeHoistPass,
+    speculative_hoist::SpeculativeHoistPass,
 };
 use crate::OptResult;
 use x3_mir::MirModule;
@@ -68,11 +68,9 @@ pub fn default_passes() -> Vec<BoxedPass> {
         Box::new(EdgeConstPropPass::new()),
         Box::new(ConditionalFoldPass::new()),
         Box::new(PartialRedundancyEliminationPass::new()),
-        Box::new(MorelRenvoisePrePass::new()), // Advanced PRE (Morel-Renvoise)
         Box::new(ExpressionHoistPass::new()),  // Expression hoisting (Phase 3)
         Box::new(GlobalConstPropPass),
         Box::new(BranchOptPass),
-        Box::new(BranchInversionPass),
         Box::new(BlockFusionPass),
         Box::new(SpeculativeHoistPass),
         Box::new(DeadCodeEliminationPass::new()),
@@ -141,10 +139,8 @@ impl Optimizer {
                 self.passes.push(Box::new(ConditionalFoldPass::new()));
                 self.passes
                     .push(Box::new(PartialRedundancyEliminationPass::new()));
-                self.passes.push(Box::new(MorelRenvoisePrePass::new()));
                 self.passes.push(Box::new(GlobalConstPropPass));
                 self.passes.push(Box::new(BranchOptPass));
-                self.passes.push(Box::new(BranchInversionPass));
                 self.passes.push(Box::new(BlockFusionPass));
                 self.passes.push(Box::new(SpeculativeHoistPass));
                 self.passes.push(Box::new(DeadCodeEliminationPass::new()));
@@ -160,10 +156,8 @@ impl Optimizer {
                 self.passes.push(Box::new(ConditionalFoldPass::new()));
                 self.passes
                     .push(Box::new(PartialRedundancyEliminationPass::new()));
-                self.passes.push(Box::new(MorelRenvoisePrePass::new()));
                 self.passes.push(Box::new(GlobalConstPropPass));
                 self.passes.push(Box::new(BranchOptPass));
-                self.passes.push(Box::new(BranchInversionPass));
                 self.passes.push(Box::new(BlockFusionPass));
                 self.passes.push(Box::new(SpeculativeHoistPass));
                 self.passes.push(Box::new(DeadCodeEliminationPass::new()));
@@ -315,10 +309,10 @@ mod tests {
         assert_eq!(basic.passes.len(), 2); // constant fold + peephole
 
         let default = Optimizer::new(OptLevel::Default);
-        assert_eq!(default.passes.len(), 15); // 14 base passes + loop-pack-v1 (includes MorelRenvoisePrePass)
+        assert_eq!(default.passes.len(), 13); // canonical PRE + branch pipeline + loop-pack-v1
 
         let aggressive = Optimizer::new(OptLevel::Aggressive);
-        assert_eq!(aggressive.passes.len(), 15); // 14 base passes + loop-pack-v1 (includes MorelRenvoisePrePass)
+        assert_eq!(aggressive.passes.len(), 13); // canonical PRE + branch pipeline + loop-pack-v1
         assert_eq!(aggressive.max_iterations, 20);
     }
 }
