@@ -155,7 +155,16 @@ PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md (primary reference)
 
 ### Placeholder Substitution Gate (Blocking)
 
-This gate is mandatory before launch execution. All Phase 13f runbooks must have environment placeholders replaced with real values, or explicitly marked as intentionally illustrative.
+This gate is mandatory before launch execution. All gate-scoped launch docs below must have environment placeholders replaced with real values, or explicitly marked as intentionally illustrative.
+
+Gate scope:
+- PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md
+- MAINNET_INCIDENT_RESPONSE.md
+- RPC_FAILOVER_PROCEDURES.md
+- VALIDATOR_OPERATIONS.md
+- MAINNET_PERFORMANCE_BASELINE.md
+- GPU_VALIDATOR_TROUBLESHOOTING.md
+- PHASE_13F_MASTER_INDEX.md
 
 Run this check:
 
