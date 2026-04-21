@@ -1755,6 +1755,54 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_and_slow_freshness_without_proof_share_session_not_found_class() {
+        let mut fast_coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: None,
+        };
+
+        let validators = BTreeMap::new();
+        let fast_err = fast_coordinator
+            .record_merkle_fast_claim_with_bridge_freshness_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        let mut slow_coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: None,
+        };
+
+        let slow_err = slow_coordinator
+            .record_merkle_slow_claim_with_bridge_freshness_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+                200,
+                50,
+            )
+            .unwrap_err();
+
+        assert!(
+            matches!(fast_err, CoordinatorError::SessionNotFound { .. }),
+            "expected fast freshness no-proof path to return SessionNotFound"
+        );
+        assert!(
+            matches!(slow_err, CoordinatorError::SessionNotFound { .. }),
+            "expected slow freshness no-proof path to return SessionNotFound"
+        );
+    }
+
+    #[test]
     fn test_slow_claim_bridge_freshness_rejects_mismatched_proof_session_before_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let slow_claim = MerkleEnabledSlowClaim {
