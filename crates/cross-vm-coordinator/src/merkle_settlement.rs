@@ -1208,6 +1208,14 @@ mod coordinator_merkle_tests {
             slow_msg.contains("failed verification"),
             "expected slow path verification failure marker"
         );
+        assert!(
+            !fast_msg.contains("session mismatch"),
+            "expected fast unverified path to avoid mismatch marker for matching session IDs"
+        );
+        assert!(
+            !slow_msg.contains("session mismatch"),
+            "expected slow unverified path to avoid mismatch marker for matching session IDs"
+        );
     }
 
     #[test]
