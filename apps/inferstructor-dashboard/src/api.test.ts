@@ -77,12 +77,33 @@ describe('InferstructorAPI', () => {
     it('should logout and clear credentials', () => {
       sessionStorage.setItem('infra_jwt_token', 'token_123');
       sessionStorage.setItem('infra_validator_id', 'val_123');
+      localStorage.setItem('infra_jwt_token', 'legacy_token_123');
+      localStorage.setItem('infra_api_key', 'legacy_key_123');
 
       api.logout();
 
       expect(sessionStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_api_key')).toBeNull();
       // API key is memory-only, no need to check storage
       expect(api.getAPIKey()).toBeNull();
+    });
+
+    it('should not persist JWT token to localStorage on login', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          token: 'jwt_token_localstorage_check',
+          validator: { id: 'val_789' },
+        },
+      };
+      mockedAxios.post.mockResolvedValueOnce(mockResponse);
+
+      await api.login('key_789', 'secret_789');
+
+      expect(sessionStorage.getItem('infra_jwt_token')).toBe('jwt_token_localstorage_check');
+      expect(localStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_api_key')).toBeNull();
     });
   });
 
@@ -102,6 +123,7 @@ describe('InferstructorAPI', () => {
           expires_in: 3600,
         },
       };
+      mockedAxios.get.mockResolvedValueOnce(csrfMockResponse);
       mockedAxios.get.mockResolvedValueOnce(csrfMockResponse);
       mockedAxios.post.mockResolvedValueOnce(loginMockResponse);
 

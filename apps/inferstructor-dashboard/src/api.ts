@@ -321,6 +321,10 @@ class InferstructorAPI {
   private validatorId: string | null = null; // In memory only
 
   constructor() {
+    // Remove legacy persisted credentials from older builds.
+    localStorage.removeItem('infra_jwt_token');
+    localStorage.removeItem('infra_api_key');
+
     // Security: Load JWT ONLY from sessionStorage (clears on browser tab close)
     // API key is NEVER persisted - user must re-enter on each login
     this.jwtToken = this.validateAndLoadToken(sessionStorage.getItem('infra_jwt_token'));
@@ -421,6 +425,9 @@ class InferstructorAPI {
     this.validatorId = null;
     sessionStorage.removeItem('infra_jwt_token');
     sessionStorage.removeItem('infra_validator_id');
+    // Defensive cleanup for any historical localStorage usage.
+    localStorage.removeItem('infra_jwt_token');
+    localStorage.removeItem('infra_api_key');
   }
 
   /**

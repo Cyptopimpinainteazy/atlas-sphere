@@ -96,7 +96,8 @@ export class APIClient {
   static createInterceptor(client: any) {
     client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('infra_jwt_token');
+        // Security: JWT is session-scoped only.
+        const token = sessionStorage.getItem('infra_jwt_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -110,6 +111,8 @@ export class APIClient {
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Clear stored credentials on 401
+          sessionStorage.removeItem('infra_jwt_token');
+          // Clear any legacy persisted keys from older builds.
           localStorage.removeItem('infra_jwt_token');
           localStorage.removeItem('infra_api_key');
           sessionStorage.removeItem('infra_admin_token');
