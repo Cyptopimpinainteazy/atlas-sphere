@@ -1,0 +1,30 @@
+name: Phase13f Placeholder Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md'
+      - 'crates/relayer/MAINNET_INCIDENT_RESPONSE.md'
+      - 'crates/relayer/RPC_FAILOVER_PROCEDURES.md'
+      - 'crates/relayer/VALIDATOR_OPERATIONS.md'
+      - 'crates/relayer/MAINNET_PERFORMANCE_BASELINE.md'
+      - 'crates/relayer/GPU_VALIDATOR_TROUBLESHOOTING.md'
+      - 'crates/relayer/PHASE_13F_MASTER_INDEX.md'
+      - 'scripts/check_phase13f_placeholders.sh'
+      - '.github/workflows/phase13f-placeholder-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder-gate:
+    name: Enforce Phase13f Placeholder Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run placeholder gate
+        run: bash scripts/check_phase13f_placeholders.sh
