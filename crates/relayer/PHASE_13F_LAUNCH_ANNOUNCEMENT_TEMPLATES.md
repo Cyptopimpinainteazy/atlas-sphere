@@ -301,7 +301,7 @@ The launch concludes 13 phases of development and represents the transition from
 - **X3 Bridge:** Live for cross-chain transfers (EVM ↔ SVM)
 - **Validator Participation:** Open for staking and block production
 - **Developer Access:** Full SDK and documentation
-- **Status Dashboard:** Real-time monitoring at [status page URL]
+- **Status Dashboard:** Real-time monitoring at https://discord.gg/x3-chain
 
 #### Technical Details
 
@@ -316,7 +316,7 @@ The launch concludes 13 phases of development and represents the transition from
 - **Documentation:** [docs.x3.blockchain](https://docs.x3.blockchain)
 - **Live Stream:** [link to launch stream]
 - **Status Updates:** [@X3Blockchain](https://twitter.com/X3Blockchain) on Twitter
-- **Support:** [support email or Discord]
+- **Support:** support@x3-chain.io or https://discord.gg/x3-chain
 
 ---
 
@@ -401,8 +401,8 @@ X3 is a Proof-of-Stake secured bridge connecting EVM and SVM blockchains, enabli
 ### Questions?
 
 - **Technical questions?** See [MAINNET_INCIDENT_RESPONSE.md](link)
-- **User support?** Contact [support email]
-- **Media inquiries?** Contact [press email]
+- **User support?** Contact support@x3-chain.io
+- **Media inquiries?** Contact support@x3-chain.io
 
 ---
 

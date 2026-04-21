@@ -283,7 +283,7 @@ Network       < 80%       22%       ✅
 - **Technical questions?** See [PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md](link)
 - **Incident details?** See [MAINNET_INCIDENT_RESPONSE.md](link)
 - **Validator issues?** See [VALIDATOR_OPERATIONS.md](link)
-- **Direct contact:** [support email] or [Discord channel]
+- **Direct contact:** support@x3-chain.io or https://discord.gg/x3-chain
 
 ---
 
