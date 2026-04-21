@@ -1002,6 +1002,31 @@ mod coordinator_merkle_tests {
     }
 
     #[test]
+    fn test_fast_claim_bridge_without_proof_falls_through_to_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let fast_claim = MerkleEnabledFastClaim {
+            secret_bytes: [0u8; 32],
+            merkle_settlement: None,
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_fast_claim_with_bridge_verification(
+                "missing-session",
+                fast_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            matches!(err, CoordinatorError::SessionNotFound { .. }),
+            "expected session-not-found when bridge proof is not provided"
+        );
+    }
+
+    #[test]
     fn test_slow_claim_non_bridge_rejects_unverified_before_session_lookup() {
         let mut coordinator = SwapCoordinator::with_default_config();
         let slow_claim = MerkleEnabledSlowClaim {
@@ -1039,6 +1064,30 @@ mod coordinator_merkle_tests {
         assert!(
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when proof is not provided"
+        );
+    }
+
+    #[test]
+    fn test_slow_claim_bridge_without_proof_falls_through_to_session_lookup() {
+        let mut coordinator = SwapCoordinator::with_default_config();
+        let slow_claim = MerkleEnabledSlowClaim {
+            merkle_settlement: None,
+        };
+
+        let validators = BTreeMap::new();
+        let err = coordinator
+            .record_merkle_slow_claim_with_bridge_verification(
+                "missing-session",
+                slow_claim,
+                1,
+                &validators,
+                1,
+            )
+            .unwrap_err();
+
+        assert!(
+            matches!(err, CoordinatorError::SessionNotFound { .. }),
+            "expected session-not-found when bridge proof is not provided"
         );
     }
 
