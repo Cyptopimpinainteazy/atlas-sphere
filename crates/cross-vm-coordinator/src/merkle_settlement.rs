@@ -1693,6 +1693,10 @@ mod coordinator_merkle_tests {
             matches!(err, CoordinatorError::SessionNotFound { .. }),
             "expected session-not-found when proof is not provided"
         );
+        assert!(
+            !err.to_string().contains("failed verification"),
+            "expected no-proof non-bridge slow path to avoid verification-failure marker"
+        );
     }
 
     #[test]
