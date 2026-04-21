@@ -1313,6 +1313,14 @@ mod coordinator_merkle_tests {
             !slow_msg.contains("stale"),
             "expected slow path mismatch precedence over stale validation marker"
         );
+        assert!(
+            !fast_msg.contains("Session not found"),
+            "expected fast mismatched non-bridge path to fail before session-not-found lookup"
+        );
+        assert!(
+            !slow_msg.contains("Session not found"),
+            "expected slow mismatched non-bridge path to fail before session-not-found lookup"
+        );
     }
 
     #[test]
