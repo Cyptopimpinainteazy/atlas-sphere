@@ -2224,5 +2224,13 @@ mod coordinator_merkle_tests {
             slow_msg.contains("bridge verification failed"),
             "expected slow path bridge verification failure marker"
         );
+        assert!(
+            !fast_msg.contains("session mismatch"),
+            "expected fast stale path to avoid mismatch marker when session IDs match"
+        );
+        assert!(
+            !slow_msg.contains("session mismatch"),
+            "expected slow stale path to avoid mismatch marker when session IDs match"
+        );
     }
 }
