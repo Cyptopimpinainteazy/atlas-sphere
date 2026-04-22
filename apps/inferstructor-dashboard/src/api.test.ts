@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 vi.mock('axios');
 
 import axios from 'axios';
-import { api } from './api';
+import { api, buildGpuLaneUrls } from './api';
 
 const mockedAxios = axios as any;
 
@@ -104,6 +104,29 @@ describe('InferstructorAPI', () => {
       expect(sessionStorage.getItem('infra_jwt_token')).toBe('jwt_token_localstorage_check');
       expect(localStorage.getItem('infra_jwt_token')).toBeNull();
       expect(localStorage.getItem('infra_api_key')).toBeNull();
+    });
+  });
+
+  describe('GPU Lane URL configuration', () => {
+    it('should build localhost fallback URLs when env vars are missing', () => {
+      const urls = buildGpuLaneUrls({});
+      expect(urls).toEqual([
+        'http://localhost:9001/health',
+        'http://localhost:9002/health',
+        'http://localhost:9003/health',
+      ]);
+    });
+
+    it('should use base URL with per-lane override support', () => {
+      const urls = buildGpuLaneUrls({
+        VITE_GPU_LANE_BASE: 'https://gpu-lanes.x3star.net/',
+        VITE_GPU_LANE_2_URL: 'https://custom-lane-2.x3star.net/health',
+      });
+      expect(urls).toEqual([
+        'https://gpu-lanes.x3star.net:9001/health',
+        'https://custom-lane-2.x3star.net/health',
+        'https://gpu-lanes.x3star.net:9003/health',
+      ]);
     });
   });
 

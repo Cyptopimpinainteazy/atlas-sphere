@@ -8,12 +8,38 @@ const RPC_PROXY_URL = import.meta.env.VITE_RPC_PROXY_URL || API_BASE;
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || API_BASE;
 const CHAIN_DB_URL = import.meta.env.VITE_CHAIN_DB_URL || API_BASE;
 
+interface GPULaneEnv {
+  VITE_GPU_LANE_BASE?: string;
+  VITE_GPU_LANE_1_URL?: string;
+  VITE_GPU_LANE_2_URL?: string;
+  VITE_GPU_LANE_3_URL?: string;
+}
+
+const DEFAULT_GPU_LANE_BASE = 'http://localhost';
+
+const normalizeBaseUrl = (baseUrl?: string): string => {
+  if (!baseUrl) {
+    return DEFAULT_GPU_LANE_BASE;
+  }
+  return baseUrl.replace(/\/+$/, '');
+};
+
+export const buildGpuLaneUrls = (env: GPULaneEnv): [string, string, string] => {
+  const base = normalizeBaseUrl(env.VITE_GPU_LANE_BASE);
+  return [
+    env.VITE_GPU_LANE_1_URL || `${base}:9001/health`,
+    env.VITE_GPU_LANE_2_URL || `${base}:9002/health`,
+    env.VITE_GPU_LANE_3_URL || `${base}:9003/health`,
+  ];
+};
+
 // GPU lane URLs from environment (configurable per deployment)
-const GPU_LANE_URLS = [
-  import.meta.env.VITE_GPU_LANE_1_URL || 'http://localhost:9001/health',
-  import.meta.env.VITE_GPU_LANE_2_URL || 'http://localhost:9002/health',
-  import.meta.env.VITE_GPU_LANE_3_URL || 'http://localhost:9003/health',
-];
+const GPU_LANE_URLS = buildGpuLaneUrls({
+  VITE_GPU_LANE_BASE: import.meta.env.VITE_GPU_LANE_BASE,
+  VITE_GPU_LANE_1_URL: import.meta.env.VITE_GPU_LANE_1_URL,
+  VITE_GPU_LANE_2_URL: import.meta.env.VITE_GPU_LANE_2_URL,
+  VITE_GPU_LANE_3_URL: import.meta.env.VITE_GPU_LANE_3_URL,
+});
 
 export interface ValidatorCredentials {
   validator_id: string;

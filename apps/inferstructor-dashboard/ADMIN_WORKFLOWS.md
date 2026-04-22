@@ -6,6 +6,16 @@ The Inferstructor Dashboard provides administrators with a centralized control s
 
 ## Key Admin Features
 
+## Deployment Configuration
+
+The dashboard reads GPU lane health endpoints from environment configuration:
+- `VITE_GPU_LANE_BASE` provides the default base URL for lane checks.
+- `VITE_GPU_LANE_1_URL`, `VITE_GPU_LANE_2_URL`, and `VITE_GPU_LANE_3_URL` can override each lane explicitly.
+
+For deployment references, use:
+- `.env.example` for local/dev defaults.
+- `.env.production` for production endpoint values.
+
 ### 1. Validator Controls
 
 **Purpose**: Manage validator approval, suspension, and unlock states.
