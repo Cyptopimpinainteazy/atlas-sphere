@@ -105,6 +105,28 @@ describe('InferstructorAPI', () => {
       expect(localStorage.getItem('infra_jwt_token')).toBeNull();
       expect(localStorage.getItem('infra_api_key')).toBeNull();
     });
+
+    it('integration: login then logout clears localStorage credential keys', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          token: 'jwt_token_integration_1',
+          validator: { id: 'val_integration_1' },
+        },
+      };
+      mockedAxios.post.mockResolvedValueOnce(mockResponse);
+
+      await api.login('key_integration_1', 'secret_integration_1');
+
+      expect(sessionStorage.getItem('infra_jwt_token')).toBe('jwt_token_integration_1');
+      expect(localStorage.getItem('infra_jwt_token')).toBeNull();
+
+      api.logout();
+
+      expect(sessionStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_jwt_token')).toBeNull();
+      expect(localStorage.getItem('infra_api_key')).toBeNull();
+    });
   });
 
   describe('GPU Lane URL configuration', () => {
