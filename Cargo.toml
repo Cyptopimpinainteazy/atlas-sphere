@@ -28,7 +28,6 @@ members = [
     "crates/x3-gateway",
     "crates/x3-lsp",
     "crates/x3-integration",
-    "crates/gpu-swarm",
     "crates/x3-gpu-validator-swarm",
     "crates/x3-sidecar",
     "crates/x3-evolution",
