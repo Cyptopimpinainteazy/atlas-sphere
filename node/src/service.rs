@@ -317,11 +317,14 @@ pub fn new_partial(
 ///   experimental Flash Finality gadget flag is active. This helper exists so
 ///   that unit tests can verify the decision logic without spawning a full node.
 pub fn compute_enable_grandpa(config: &Configuration, feature_flags: NodeFeatureFlags) -> bool {
-    let mut enable = !config.disable_grandpa;
-    if feature_flags.enable_flash_finality {
-        enable = false;
-    }
-    enable
+    compute_enable_grandpa_from_flags(config.disable_grandpa, feature_flags)
+}
+
+fn compute_enable_grandpa_from_flags(
+    disable_grandpa: bool,
+    feature_flags: NodeFeatureFlags,
+) -> bool {
+    !disable_grandpa && !feature_flags.enable_flash_finality
 }
 
 fn enforce_startup_gate_if_authority(is_authority: bool) -> Result<(), ServiceError> {
@@ -1237,6 +1240,30 @@ mod tests {
     #[test]
     fn startup_gate_passes_for_reference_authority_build() {
         assert!(enforce_startup_gate_if_authority(true).is_ok());
+    }
+
+    #[test]
+    fn grandpa_stays_enabled_without_disable_flag_or_flash_finality() {
+        assert!(compute_enable_grandpa_from_flags(
+            false,
+            NodeFeatureFlags::default(),
+        ));
+    }
+
+    #[test]
+    fn grandpa_is_disabled_when_config_disables_it() {
+        assert!(!compute_enable_grandpa_from_flags(
+            true,
+            NodeFeatureFlags::default(),
+        ));
+    }
+
+    #[test]
+    fn grandpa_is_disabled_when_flash_finality_is_enabled() {
+        let mut feature_flags = NodeFeatureFlags::default();
+        feature_flags.enable_flash_finality = true;
+
+        assert!(!compute_enable_grandpa_from_flags(false, feature_flags));
     }
 
     #[test]

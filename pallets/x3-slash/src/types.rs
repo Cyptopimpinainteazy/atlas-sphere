@@ -40,7 +40,7 @@ pub enum BondStatus {
 
 /// Slash record stored on-chain (immutable history).
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, PartialEq, Eq)]
-#[scale_info(skip_type_params(AccountId, Balance))]
+#[scale_info(skip_type_params(AccountId))]
 pub struct SlashRecord<AccountId> {
     /// Unique slash identifier.
     pub slash_id: u64,
