@@ -49,9 +49,50 @@ const WETH_BASE: H160 = h160_from_slice([
     0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x06,
 ]);
+const WETH_OP: H160 = h160_from_slice([
+    0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x06,
+]);
 const WMATIC: H160 = h160_from_slice([
     0x0d, 0x50, 0x0B, 0x1d, 0x8E, 0x8e, 0xF3, 0x1E, 0x21, 0xC9, 0x9d, 0x1D, 0xb9, 0xA6, 0x44, 0x4d,
     0x3A, 0xDf, 0x12, 0x70,
+]);
+const WAVAX: H160 = h160_from_slice([
+    0xB3, 0x1f, 0x66, 0xAA, 0x3C, 0x1e, 0x78, 0x53, 0x63, 0xF0, 0x87, 0x5A, 0x1B, 0x74, 0xE2, 0x7b,
+    0x85, 0xFD, 0x66, 0xc7,
+]);
+const WBNB: H160 = h160_from_slice([
+    0xbb, 0x4C, 0xdB, 0x9C, 0xBd, 0x36, 0xB0, 0x1b, 0xD1, 0xcB, 0xaE, 0xBF, 0x2D, 0xe0, 0x8d, 0x91,
+    0x73, 0xbc, 0x09, 0x5c,
+]);
+
+const UNISWAP_V2: H160 = h160_from_slice([
+    0x7a, 0x25, 0x0d, 0x56, 0x30, 0xB4, 0xcF, 0x53, 0x97, 0x39, 0xdF, 0x2C, 0x5d, 0xAc, 0xb4, 0xc6,
+    0x59, 0xF2, 0x48, 0x8D,
+]);
+const QUICKSWAP: H160 = h160_from_slice([
+    0xa5, 0xE0, 0x82, 0x9C, 0xaC, 0xEd, 0x8f, 0xFD, 0xD4, 0xDe, 0x3c, 0x43, 0x69, 0x6c, 0x57, 0xF7,
+    0xD7, 0xA6, 0x78, 0xff,
+]);
+const SUSHISWAP_ARB: H160 = h160_from_slice([
+    0x1b, 0x02, 0xdA, 0x8C, 0xb0, 0xd0, 0x97, 0xeB, 0x8D, 0x57, 0xA1, 0x75, 0xb8, 0x8c, 0x7D, 0x8b,
+    0x47, 0x99, 0x75, 0x06,
+]);
+const UNISWAP_V3: H160 = h160_from_slice([
+    0x68, 0xb3, 0x46, 0x58, 0x33, 0xfb, 0x72, 0xA7, 0x0e, 0xcd, 0xF4, 0x85, 0xE0, 0xe4, 0xC7, 0xbD,
+    0x86, 0x65, 0xFc, 0x45,
+]);
+const TRADERJOE: H160 = h160_from_slice([
+    0x60, 0xaE, 0x61, 0x6a, 0x21, 0x55, 0xEe, 0x3d, 0x9A, 0x68, 0x54, 0x1B, 0xa4, 0x54, 0x48, 0x62,
+    0x31, 0x09, 0x33, 0xd4,
+]);
+const PANCAKESWAP: H160 = h160_from_slice([
+    0x10, 0xED, 0x43, 0xC7, 0x18, 0x71, 0x4e, 0xb6, 0x3d, 0x5a, 0xA5, 0x7B, 0x78, 0xB5, 0x47, 0x04,
+    0xE2, 0x56, 0x02, 0x4E,
+]);
+const SPOOKYSWAP: H160 = h160_from_slice([
+    0xF4, 0x91, 0xe7, 0xB6, 0x9E, 0x42, 0x44, 0xad, 0x40, 0x02, 0xBC, 0x14, 0xe8, 0x78, 0xa3, 0x42,
+    0x07, 0xE3, 0x8c, 0x29,
 ]);
 
 // Production structures
@@ -400,7 +441,15 @@ impl ProductionRouter {
         }
     }
 
-    fn enhance_route(&self, legs: Vec<RouteLeg>, total_gas: U256, total_time_ms: u64, from_chain: u64, to_chain: u64, amount: U256) -> ProductionRoute {
+    fn enhance_route(
+        &self,
+        legs: Vec<RouteLeg>,
+        total_gas: U256,
+        total_time_ms: u64,
+        _from_chain: u64,
+        _to_chain: u64,
+        amount: U256,
+    ) -> ProductionRoute {
         let score = self.calculate_score(&legs, total_gas, total_time_ms);
         let mev_protection_level = self.calculate_mev_protection(&legs);
         let estimated_slippage = self.calculate_route_slippage(&legs);
@@ -413,4 +462,294 @@ impl ProductionRouter {
         ProductionRoute {
             legs,
             total_gas,
-            total_time
+            total_time_ms,
+            score,
+            mev_protection_level,
+            estimated_slippage,
+            confidence_score,
+            failure_probability,
+            estimated_fees,
+            price_impact,
+            estimated_output,
+        }
+    }
+
+    fn find_bridgeable_token(&self, chain_id: u64, token: H160) -> H160 {
+        if token == WETH_ETH || token == WETH_ARB || token == WETH_BASE || token == USDC_ETH {
+            return token;
+        }
+
+        match chain_id {
+            1 => USDC_ETH,
+            137 => USDC_POLYGON,
+            42161 => USDC_ARB,
+            8453 => USDC_BASE,
+            _ => USDC_ETH,
+        }
+    }
+
+    fn get_intermediate_chains(&self, from: u64, to: u64) -> Vec<u64> {
+        [1_u64, 42161, 137, 8453, 10]
+            .into_iter()
+            .filter(|chain_id| *chain_id != from && *chain_id != to)
+            .collect()
+    }
+
+    fn build_via_route(
+        &self,
+        via_chain: u64,
+        from_chain: u64,
+        from_token: H160,
+        to_chain: u64,
+        to_token: H160,
+        amount: U256,
+    ) -> Option<ProductionRoute> {
+        let bridge_token = self.find_bridgeable_token(via_chain, H160::zero());
+        let first = self.build_direct_route(
+            from_chain,
+            from_token,
+            via_chain,
+            bridge_token,
+            amount,
+        )?;
+        let second = self.build_direct_route(
+            via_chain,
+            bridge_token,
+            to_chain,
+            to_token,
+            first.estimated_output,
+        )?;
+
+        let mut legs = first.legs;
+        legs.extend(second.legs);
+
+        Some(self.enhance_route(
+            legs,
+            first.total_gas + second.total_gas,
+            first.total_time_ms + second.total_time_ms,
+            from_chain,
+            to_chain,
+            amount,
+        ))
+    }
+
+    fn calculate_score(&self, legs: &[RouteLeg], total_gas: U256, total_time_ms: u64) -> u64 {
+        let time_score = total_time_ms / 1000;
+        let gas_score = total_gas.low_u64() / 10_000;
+        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
+            / (legs.len().max(1) as u64);
+
+        (time_score * 6 + gas_score * 3 + mev_penalty) / 10
+    }
+
+    fn calculate_mev_protection(&self, legs: &[RouteLeg]) -> u8 {
+        let avg_risk = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
+            / legs.len().max(1) as u64;
+        let private_pool_bonus = if self.mev_protection.private_mempool { 15 } else { 0 };
+        let delay_bonus = self.mev_protection.time_delay_blocks.min(10) as i64;
+        let protection = 100_i64 - avg_risk as i64 + private_pool_bonus + delay_bonus;
+
+        protection.clamp(0, 100) as u8
+    }
+
+    fn calculate_route_slippage(&self, legs: &[RouteLeg]) -> U256 {
+        let hop_penalty = (legs.len().saturating_sub(1) as u64) * 10;
+        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
+            / legs.len().max(1) as u64;
+        let slippage_bps = (self.slippage_config.base_slippage_bps + hop_penalty + mev_penalty / 5)
+            .min(self.slippage_config.max_slippage_bps);
+
+        U256::from(slippage_bps)
+    }
+
+    fn calculate_confidence(&self, legs: &[RouteLeg]) -> u8 {
+        let liquidity = legs.iter().map(|leg| leg.liquidity_score as u64).sum::<u64>()
+            / legs.len().max(1) as u64;
+        let chain_bonus = if legs.iter().all(|leg| {
+            adapter_for(leg.from_chain).is_some() && adapter_for(leg.to_chain).is_some()
+        }) {
+            10
+        } else {
+            0
+        };
+
+        (liquidity.saturating_mul(10).saturating_add(chain_bonus)).min(100) as u8
+    }
+
+    fn calculate_failure_rate(&self, legs: &[RouteLeg]) -> u8 {
+        let hop_penalty = (legs.len().saturating_sub(1) as u64) * 8;
+        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
+            / legs.len().max(1) as u64;
+        let failure_rate = 5 + hop_penalty + mev_penalty / 6;
+
+        failure_rate.min(95) as u8
+    }
+
+    fn calculate_fees(&self, legs: &[RouteLeg]) -> U256 {
+        legs.iter().fold(U256::zero(), |acc, leg| {
+            acc + leg.estimated_gas.saturating_mul(leg.gas_price)
+        })
+    }
+
+    fn calculate_price_impact(&self, legs: &[RouteLeg], amount: U256) -> U256 {
+        let hop_penalty = (legs.len().saturating_sub(1) as u64) * 12;
+        let size_penalty = (amount.low_u64() / 1_000_000_000).min(250);
+        U256::from((hop_penalty + size_penalty).min(1_000))
+    }
+
+    fn calculate_output(&self, amount: U256, price_impact: U256) -> U256 {
+        let capped_impact = price_impact.min(U256::from(9_500));
+        amount.saturating_mul(U256::from(10_000) - capped_impact) / U256::from(10_000)
+    }
+
+    fn calculate_slippage(&self, route: &ProductionRoute, amount: U256) -> U256 {
+        let size_penalty = U256::from((amount.low_u64() / 5_000_000_000).min(100));
+        (route.estimated_slippage + size_penalty)
+            .min(U256::from(self.slippage_config.max_slippage_bps))
+    }
+
+    fn calculate_mev_fee(&self, route: &ProductionRoute, amount: U256) -> U256 {
+        if !self.mev_protection.private_mempool {
+            return U256::zero();
+        }
+
+        let protection_gap = 100_u64.saturating_sub(route.mev_protection_level as u64);
+        let mev_bps = (protection_gap / 10 + self.mev_protection.time_delay_blocks).max(1);
+        amount.saturating_mul(U256::from(mev_bps)) / U256::from(10_000)
+    }
+
+    fn encode_swap_payload(&self, leg: &RouteLeg, _sender: H160, amount: U256) -> ComitPayload {
+        let mut calldata = vec![0x38, 0xed, 0x17, 0x39];
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
+        calldata.extend_from_slice(&[0u8; 32]);
+
+        ComitPayload {
+            chain_id: leg.from_chain,
+            target: self.get_dex_router(leg.from_chain),
+            calldata,
+            value: U256::zero(),
+            gas_limit: 200_000,
+        }
+    }
+
+    fn encode_bridge_payload(
+        &self,
+        leg: &RouteLeg,
+        _sender: H160,
+        recipient: H160,
+        amount: U256,
+    ) -> ComitPayload {
+        let mut calldata = vec![0xBB, 0xBB, 0xBB, 0xBB];
+        calldata.extend_from_slice(recipient.as_bytes());
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
+        calldata.extend_from_slice(&leg.to_chain.to_be_bytes());
+
+        ComitPayload {
+            chain_id: leg.from_chain,
+            target: self.get_x3_bridge(leg.from_chain),
+            calldata,
+            value: U256::zero(),
+            gas_limit: 100_000,
+        }
+    }
+
+    fn encode_wrap_payload(&self, leg: &RouteLeg, amount: U256) -> ComitPayload {
+        ComitPayload {
+            chain_id: leg.from_chain,
+            target: self.get_weth(leg.from_chain),
+            calldata: vec![0xd0, 0xe3, 0x0d, 0xb0],
+            value: amount,
+            gas_limit: 50_000,
+        }
+    }
+
+    fn encode_unwrap_payload(&self, leg: &RouteLeg, amount: U256) -> ComitPayload {
+        let mut calldata = vec![0x2e, 0x1a, 0x7d, 0x4d];
+        let mut amount_bytes = [0u8; 32];
+        amount.to_big_endian(&mut amount_bytes);
+        calldata.extend_from_slice(&amount_bytes);
+
+        ComitPayload {
+            chain_id: leg.from_chain,
+            target: self.get_weth(leg.from_chain),
+            calldata,
+            value: U256::zero(),
+            gas_limit: 50_000,
+        }
+    }
+
+    fn get_dex_router(&self, chain_id: u64) -> H160 {
+        match chain_id {
+            1 => UNISWAP_V2,
+            137 => QUICKSWAP,
+            42161 => SUSHISWAP_ARB,
+            8453 => UNISWAP_V2,
+            10 => UNISWAP_V3,
+            43114 => TRADERJOE,
+            56 => PANCAKESWAP,
+            250 => SPOOKYSWAP,
+            _ => UNISWAP_V2,
+        }
+    }
+
+    fn get_x3_bridge(&self, chain_id: u64) -> H160 {
+        let mut bytes = [0u8; 20];
+        bytes[0..4].copy_from_slice(&[0xA7, 0x1A, 0x50, 0x00]);
+        bytes[16..20].copy_from_slice(&(chain_id as u32).to_be_bytes());
+        H160(bytes)
+    }
+
+    fn get_weth(&self, chain_id: u64) -> H160 {
+        match chain_id {
+            1 => WETH_ETH,
+            137 => WMATIC,
+            42161 => WETH_ARB,
+            8453 => WETH_BASE,
+            10 => WETH_OP,
+            43114 => WAVAX,
+            56 => WBNB,
+            _ => WETH_ETH,
+        }
+    }
+
+    fn calculate_prepare_root(&self, payloads: &[ComitPayload], nonce: u64) -> H256 {
+        let mut data = Vec::new();
+        data.extend_from_slice(&nonce.to_be_bytes());
+
+        for payload in payloads {
+            data.extend_from_slice(&payload.chain_id.to_be_bytes());
+            data.extend_from_slice(payload.target.as_bytes());
+            data.extend_from_slice(&payload.calldata);
+        }
+
+        H256::from(keccak_256(&data))
+    }
+
+    fn calculate_security_hash(&self, route: &ProductionRoute) -> H256 {
+        let mut data = Vec::new();
+        data.extend_from_slice(&route.total_time_ms.to_be_bytes());
+        data.extend_from_slice(&route.score.to_be_bytes());
+        for leg in &route.legs {
+            data.extend_from_slice(&leg.from_chain.to_be_bytes());
+            data.extend_from_slice(&leg.to_chain.to_be_bytes());
+            data.extend_from_slice(leg.from_token.as_bytes());
+            data.extend_from_slice(leg.to_token.as_bytes());
+        }
+
+        H256::from(keccak_256(&data))
+    }
+
+    fn calculate_rollback_hash(&self, payloads: &[ComitPayload]) -> H256 {
+        let mut data = Vec::new();
+        for payload in payloads.iter().rev() {
+            data.extend_from_slice(&payload.chain_id.to_be_bytes());
+            data.extend_from_slice(payload.target.as_bytes());
+            data.extend_from_slice(&payload.gas_limit.to_be_bytes());
+        }
+
+        H256::from(keccak_256(&data))
+    }
