@@ -41,7 +41,6 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 # Internal deps
-gpu-swarm = { path = "../gpu-swarm", optional = true }
 private-mempool = { path = "../private-mempool" }
 
 [dev-dependencies]
