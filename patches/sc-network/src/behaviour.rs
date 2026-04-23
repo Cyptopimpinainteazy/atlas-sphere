@@ -38,6 +38,7 @@ use sc_network_common::role::{ObservedRole, Roles};
 use sp_runtime::traits::Block as BlockT;
 use std::{collections::HashSet, time::Duration};
 
+#[allow(unused_imports)]
 pub use crate::request_responses::{InboundFailure, OutboundFailure, RequestId, ResponseFailure};
 
 /// General behaviour of the network. Combines all protocols together.
@@ -65,6 +66,7 @@ pub enum BehaviourOut {
 	/// This event is generated for statistics purposes.
 	InboundRequest {
 		/// Peer which sent us a request.
+		#[allow(dead_code)]
 		peer: PeerId,
 		/// Protocol name of the request.
 		protocol: ProtocolName,
@@ -78,6 +80,7 @@ pub enum BehaviourOut {
 	/// This event is generated for statistics purposes.
 	RequestFinished {
 		/// Peer that we send a request to.
+		#[allow(dead_code)]
 		peer: PeerId,
 		/// Name of the protocol in question.
 		protocol: ProtocolName,
@@ -215,7 +218,7 @@ impl<B: BlockT> Behaviour<B> {
 	/// Returns `None` if we don't know anything about this node. Always returns `Some` for nodes
 	/// we're connected to, meaning that if `None` is returned then we're not connected to that
 	/// node.
-	pub fn node(&self, peer_id: &PeerId) -> Option<peer_info::Node> {
+	pub fn node(&self, peer_id: &PeerId) -> Option<peer_info::Node<'_>> {
 		self.peer_info.node(peer_id)
 	}
 

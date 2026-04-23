@@ -19,6 +19,7 @@
 //! Network packet message types. These get serialized and put into the lower level protocol
 //! payload.
 
+#[allow(unused_imports)]
 pub use self::generic::{
 	RemoteCallRequest, RemoteChangesRequest, RemoteChangesResponse, RemoteHeaderRequest,
 	RemoteHeaderResponse, RemoteReadChildRequest, RemoteReadRequest,

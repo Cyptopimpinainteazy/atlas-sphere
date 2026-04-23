@@ -773,7 +773,7 @@ where
         &self,
         _caller: &[u8; 32],
         program_id: &[u8; 32],
-        input: &[u8],
+        _input: &[u8],
     ) -> Result<CrossVmResult, sp_runtime::DispatchError> {
         let at = self.best_hash();
         let api = self.client.runtime_api();
