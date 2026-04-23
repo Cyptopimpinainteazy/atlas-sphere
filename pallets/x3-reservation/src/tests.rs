@@ -1,9 +1,6 @@
 use crate::{mock::*, pallet::*};
 use frame_support::{assert_noop, assert_ok, traits::Hooks};
-use pallet_x3_inventory::{
-    pallet::Vaults,
-    types::*,
-};
+use pallet_x3_inventory::{pallet::Vaults, types::*};
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -34,6 +34,6 @@ pub use replay::ReplayEngine;
 pub use types::*;
 pub use verdict::Verdict;
 pub use vm::{
-	adjudicate, Action, Address, Block, BlockHeader, ChainState, CourtVmError, Hash,
-	PriceVector, Receipt,
+    adjudicate, Action, Address, Block, BlockHeader, ChainState, CourtVmError, Hash, PriceVector,
+    Receipt,
 };

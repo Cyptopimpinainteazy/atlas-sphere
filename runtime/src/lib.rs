@@ -2643,7 +2643,7 @@ impl_runtime_apis! {
 
     impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce> for Runtime {
         fn account_nonce(account: AccountId) -> Nonce {
-            System::account_nonce(account)
+            frame_system::Pallet::<Runtime>::account_nonce(account)
         }
     }
 
@@ -2652,22 +2652,24 @@ impl_runtime_apis! {
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
         ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
-            TransactionPayment::query_info(uxt, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_info(uxt, len)
         }
 
         fn query_fee_details(
             uxt: <Block as BlockT>::Extrinsic,
             len: u32,
         ) -> pallet_transaction_payment::FeeDetails<Balance> {
-            TransactionPayment::query_fee_details(uxt, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_fee_details(uxt, len)
         }
 
         fn query_weight_to_fee(weight: Weight) -> Balance {
-            TransactionPayment::weight_to_fee(weight)
+            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(&weight)
         }
 
         fn query_length_to_fee(length: u32) -> Balance {
-            TransactionPayment::length_to_fee(length)
+            <Runtime as pallet_transaction_payment::Config>::LengthToFee::weight_to_fee(
+                &Weight::from_all(u64::from(length) * 1000)
+            )
         }
     }
 

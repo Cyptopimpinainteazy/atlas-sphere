@@ -5,7 +5,10 @@
 use super::*;
 use crate::types::RiskLevel;
 use frame_benchmarking::v2::*;
-use frame_support::{traits::{Currency, Get}, BoundedVec};
+use frame_support::{
+    traits::{Currency, Get},
+    BoundedVec,
+};
 use frame_system::RawOrigin;
 use sp_runtime::Percent;
 

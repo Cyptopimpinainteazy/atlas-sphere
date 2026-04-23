@@ -58,8 +58,7 @@ mod benchmarks {
 
         let entries: Vec<(EntryType, BoundedVec<u8, ConstU32<4096>>)> = (0..10)
             .map(|_| {
-                let content: BoundedVec<u8, ConstU32<4096>> =
-                    vec![0u8; 100].try_into().unwrap();
+                let content: BoundedVec<u8, ConstU32<4096>> = vec![0u8; 100].try_into().unwrap();
                 (EntryType::Observation, content)
             })
             .collect();
