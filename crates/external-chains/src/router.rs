@@ -1,4 +1,3 @@
-
 //! Enhanced Production-Ready Cross-Chain Swap Router - Complete Implementation
 //!
 //! Features:
@@ -134,6 +133,9 @@ pub struct ProductionRoute {
     pub total_gas: U256,
     pub total_time_ms: u64,
     pub score: u64,
+    pub source_chain: u64,
+    pub dest_chain: u64,
+    pub input_amount: U256,
     pub mev_protection_level: u8,
     pub estimated_slippage: U256,
     pub confidence_score: u8,
@@ -235,7 +237,9 @@ impl ProductionRouter {
         let mut routes = Vec::new();
 
         // Direct route
-        if let Some(route) = self.build_direct_route(from_chain, from_token, to_chain, to_token, amount) {
+        if let Some(route) =
+            self.build_direct_route(from_chain, from_token, to_chain, to_token, amount)
+        {
             routes.push(route);
         }
 
@@ -243,7 +247,14 @@ impl ProductionRouter {
         if max_hops >= 2 {
             let intermediates = self.get_intermediate_chains(from_chain, to_chain);
             for intermediate in intermediates.iter().take(3) {
-                if let Some(route) = self.build_via_route(*intermediate, from_chain, from_token, to_chain, to_token, amount) {
+                if let Some(route) = self.build_via_route(
+                    *intermediate,
+                    from_chain,
+                    from_token,
+                    to_chain,
+                    to_token,
+                    amount,
+                ) {
                     routes.push(route);
                 }
             }
@@ -264,12 +275,14 @@ impl ProductionRouter {
         amount: U256,
         deadline_seconds: u64,
     ) -> Option<ProductionQuote> {
-        let route = self.find_optimal_route(from_chain, from_token, to_chain, to_token, amount, 2)?;
+        let route =
+            self.find_optimal_route(from_chain, from_token, to_chain, to_token, amount, 2)?;
 
         let dynamic_slippage = self.calculate_slippage(&route, amount);
         let mev_protection_fee = self.calculate_mev_fee(&route, amount);
         let total_fees = route.estimated_fees + mev_protection_fee;
-        let min_output = route.estimated_output * (U256::from(10000) - dynamic_slippage) / U256::from(10000);
+        let min_output =
+            route.estimated_output * (U256::from(10000) - dynamic_slippage) / U256::from(10000);
 
         Some(ProductionQuote {
             input_amount: amount,
@@ -301,7 +314,9 @@ impl ProductionRouter {
         for leg in &quote.route.legs {
             let payload = match leg.action {
                 RouteAction::Swap => self.encode_swap_payload(leg, sender, quote.input_amount),
-                RouteAction::Bridge => self.encode_bridge_payload(leg, sender, recipient, quote.input_amount),
+                RouteAction::Bridge => {
+                    self.encode_bridge_payload(leg, sender, recipient, quote.input_amount)
+                }
                 RouteAction::Wrap => self.encode_wrap_payload(leg, quote.input_amount),
                 RouteAction::Unwrap => self.encode_unwrap_payload(leg, quote.input_amount),
             };
@@ -349,7 +364,7 @@ impl ProductionRouter {
                     .map(|d| d.as_secs())
                     .unwrap_or_default(),
                 confidence: 95,
-            }
+            },
         );
     }
 
@@ -405,9 +420,19 @@ impl ProductionRouter {
         Some(self.enhance_route(legs, total_gas, total_time_ms, from_chain, to_chain, amount))
     }
 
-    fn create_swap_leg(&self, chain: u64, from_token: H160, to_token: H160, amount: U256) -> RouteLeg {
+    fn create_swap_leg(
+        &self,
+        chain: u64,
+        from_token: H160,
+        to_token: H160,
+        amount: U256,
+    ) -> RouteLeg {
         let default_gas_price = U256::from(20000000000u64);
-        let gas_price = self.gas_oracle.get(&chain).copied().unwrap_or(default_gas_price);
+        let gas_price = self
+            .gas_oracle
+            .get(&chain)
+            .copied()
+            .unwrap_or(default_gas_price);
 
         RouteLeg {
             from_chain: chain,
@@ -416,16 +441,21 @@ impl ProductionRouter {
             to_token,
             action: RouteAction::Swap,
             estimated_gas: U256::from(150000),
-            estimated_time_ms: get_chain(chain)
-                .map(|c| c.block_time_ms)
-                .unwrap_or(12000),
+            estimated_time_ms: get_chain(chain).map(|c| c.block_time_ms).unwrap_or(12000),
             gas_price,
             liquidity_score: 8,
             mev_risk: 20,
         }
     }
 
-    fn create_bridge_leg(&self, from_chain: u64, to_chain: u64, from_token: H160, to_token: H160, amount: U256) -> RouteLeg {
+    fn create_bridge_leg(
+        &self,
+        from_chain: u64,
+        to_chain: u64,
+        from_token: H160,
+        to_token: H160,
+        amount: U256,
+    ) -> RouteLeg {
         let default_gas_price = U256::from(20000000000u64);
         let gas_price = self
             .gas_oracle
@@ -452,8 +482,8 @@ impl ProductionRouter {
         legs: Vec<RouteLeg>,
         total_gas: U256,
         total_time_ms: u64,
-        _from_chain: u64,
-        _to_chain: u64,
+        from_chain: u64,
+        to_chain: u64,
         amount: U256,
     ) -> ProductionRoute {
         let score = self.calculate_score(&legs, total_gas, total_time_ms);
@@ -470,6 +500,9 @@ impl ProductionRouter {
             total_gas,
             total_time_ms,
             score,
+            source_chain: from_chain,
+            dest_chain: to_chain,
+            input_amount: amount,
             mev_protection_level,
             estimated_slippage,
             confidence_score,
@@ -511,13 +544,8 @@ impl ProductionRouter {
         amount: U256,
     ) -> Option<ProductionRoute> {
         let bridge_token = self.find_bridgeable_token(via_chain, H160::zero());
-        let first = self.build_direct_route(
-            from_chain,
-            from_token,
-            via_chain,
-            bridge_token,
-            amount,
-        )?;
+        let first =
+            self.build_direct_route(from_chain, from_token, via_chain, bridge_token, amount)?;
         let second = self.build_direct_route(
             via_chain,
             bridge_token,
@@ -542,16 +570,20 @@ impl ProductionRouter {
     fn calculate_score(&self, legs: &[RouteLeg], total_gas: U256, total_time_ms: u64) -> u64 {
         let time_score = total_time_ms / 1000;
         let gas_score = total_gas.low_u64() / 10_000;
-        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
-            / (legs.len().max(1) as u64);
+        let mev_penalty =
+            legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>() / (legs.len().max(1) as u64);
 
         (time_score * 6 + gas_score * 3 + mev_penalty) / 10
     }
 
     fn calculate_mev_protection(&self, legs: &[RouteLeg]) -> u8 {
-        let avg_risk = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
-            / legs.len().max(1) as u64;
-        let private_pool_bonus = if self.mev_protection.private_mempool { 15 } else { 0 };
+        let avg_risk =
+            legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>() / legs.len().max(1) as u64;
+        let private_pool_bonus = if self.mev_protection.private_mempool {
+            15
+        } else {
+            0
+        };
         let delay_bonus = self.mev_protection.time_delay_blocks.min(10) as i64;
         let protection = 100_i64 - avg_risk as i64 + private_pool_bonus + delay_bonus;
 
@@ -560,8 +592,8 @@ impl ProductionRouter {
 
     fn calculate_route_slippage(&self, legs: &[RouteLeg]) -> U256 {
         let hop_penalty = (legs.len().saturating_sub(1) as u64) * 10;
-        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
-            / legs.len().max(1) as u64;
+        let mev_penalty =
+            legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>() / legs.len().max(1) as u64;
         let slippage_bps = (self.slippage_config.base_slippage_bps + hop_penalty + mev_penalty / 5)
             .min(self.slippage_config.max_slippage_bps);
 
@@ -569,11 +601,15 @@ impl ProductionRouter {
     }
 
     fn calculate_confidence(&self, legs: &[RouteLeg]) -> u8 {
-        let liquidity = legs.iter().map(|leg| leg.liquidity_score as u64).sum::<u64>()
+        let liquidity = legs
+            .iter()
+            .map(|leg| leg.liquidity_score as u64)
+            .sum::<u64>()
             / legs.len().max(1) as u64;
-        let chain_bonus = if legs.iter().all(|leg| {
-            adapter_for(leg.from_chain).is_some() && adapter_for(leg.to_chain).is_some()
-        }) {
+        let chain_bonus = if legs
+            .iter()
+            .all(|leg| adapter_for(leg.from_chain).is_some() && adapter_for(leg.to_chain).is_some())
+        {
             10
         } else {
             0
@@ -584,8 +620,8 @@ impl ProductionRouter {
 
     fn calculate_failure_rate(&self, legs: &[RouteLeg]) -> u8 {
         let hop_penalty = (legs.len().saturating_sub(1) as u64) * 8;
-        let mev_penalty = legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>()
-            / legs.len().max(1) as u64;
+        let mev_penalty =
+            legs.iter().map(|leg| leg.mev_risk as u64).sum::<u64>() / legs.len().max(1) as u64;
         let failure_rate = 5 + hop_penalty + mev_penalty / 6;
 
         failure_rate.min(95) as u8
@@ -759,7 +795,6 @@ impl ProductionRouter {
 
         H256::from(keccak_256(&data))
     }
-
 }
 
 pub type SwapRouter = ProductionRouter;
@@ -774,14 +809,7 @@ pub fn quote_swap(
     to_token: H160,
     amount: U256,
 ) -> Option<QuoteResult> {
-    SwapRouter::new().get_production_quote(
-        from_chain,
-        from_token,
-        to_chain,
-        to_token,
-        amount,
-        30,
-    )
+    SwapRouter::new().get_production_quote(from_chain, from_token, to_chain, to_token, amount, 30)
 }
 
 pub fn find_best_route(
@@ -805,6 +833,7 @@ pub fn build_atomic_swap(
     nonce: u64,
 ) -> Option<AtomicSwapBundle> {
     let mut router = SwapRouter::new();
-    let quote = router.get_production_quote(from_chain, from_token, to_chain, to_token, amount, 30)?;
+    let quote =
+        router.get_production_quote(from_chain, from_token, to_chain, to_token, amount, 30)?;
     router.build_secure_bundle(&quote, sender, recipient, nonce)
 }

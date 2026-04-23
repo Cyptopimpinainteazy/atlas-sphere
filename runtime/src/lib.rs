@@ -25,7 +25,7 @@ pub use frame_support::{
         constants::{
             BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_REF_TIME_PER_SECOND,
         },
-        ConstantMultiplier, IdentityFee,
+        ConstantMultiplier, IdentityFee, WeightToFee,
     },
 };
 use frame_support::{traits::Currency, weights::Weight};
@@ -2679,22 +2679,24 @@ impl_runtime_apis! {
             call: RuntimeCall,
             len: u32,
         ) -> pallet_transaction_payment::RuntimeDispatchInfo<Balance> {
-            TransactionPayment::query_call_info(call, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_call_info(call, len)
         }
 
         fn query_call_fee_details(
             call: RuntimeCall,
             len: u32,
         ) -> pallet_transaction_payment::FeeDetails<Balance> {
-            TransactionPayment::query_call_fee_details(call, len)
+            pallet_transaction_payment::Pallet::<Runtime>::query_call_fee_details(call, len)
         }
 
         fn query_weight_to_fee(weight: Weight) -> Balance {
-            TransactionPayment::weight_to_fee(weight)
+            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(weight)
         }
 
         fn query_length_to_fee(length: u32) -> Balance {
-            TransactionPayment::length_to_fee(length)
+            <Runtime as pallet_transaction_payment::Config>::LengthToFee::weight_to_fee(
+                Weight::from_all(u64::from(length) * 1000)
+            )
         }
     }
 

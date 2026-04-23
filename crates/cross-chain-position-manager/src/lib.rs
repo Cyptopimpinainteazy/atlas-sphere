@@ -467,6 +467,12 @@ fn empty_route(source_chain: u64, dest_chain: u64, input_amount: U256) -> SwapRo
         source_chain,
         dest_chain,
         input_amount,
+        mev_protection_level: 0,
+        estimated_slippage: U256::zero(),
+        confidence_score: 0,
+        failure_probability: 0,
+        estimated_fees: U256::zero(),
+        price_impact: U256::zero(),
         estimated_output: input_amount,
     }
 }
