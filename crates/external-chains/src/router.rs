@@ -306,7 +306,7 @@ impl ProductionRouter {
                 RouteAction::Unwrap => self.encode_unwrap_payload(leg, quote.input_amount),
             };
 
-            total_gas_value += payload.gas_limit * leg.gas_price;
+            total_gas_value += U256::from(payload.gas_limit) * leg.gas_price;
             payloads.push(payload);
         }
 
@@ -406,7 +406,8 @@ impl ProductionRouter {
     }
 
     fn create_swap_leg(&self, chain: u64, from_token: H160, to_token: H160, amount: U256) -> RouteLeg {
-        let gas_price = self.gas_oracle.get(&chain).unwrap_or(&U256::from(20000000000));
+        let default_gas_price = U256::from(20000000000u64);
+        let gas_price = self.gas_oracle.get(&chain).copied().unwrap_or(default_gas_price);
 
         RouteLeg {
             from_chain: chain,
@@ -418,14 +419,19 @@ impl ProductionRouter {
             estimated_time_ms: get_chain(chain)
                 .map(|c| c.block_time_ms)
                 .unwrap_or(12000),
-            gas_price: *gas_price,
+            gas_price,
             liquidity_score: 8,
             mev_risk: 20,
         }
     }
 
     fn create_bridge_leg(&self, from_chain: u64, to_chain: u64, from_token: H160, to_token: H160, amount: U256) -> RouteLeg {
-        let gas_price = self.gas_oracle.get(&from_chain).unwrap_or(&U256::from(20000000000));
+        let default_gas_price = U256::from(20000000000u64);
+        let gas_price = self
+            .gas_oracle
+            .get(&from_chain)
+            .copied()
+            .unwrap_or(default_gas_price);
 
         RouteLeg {
             from_chain,
@@ -435,7 +441,7 @@ impl ProductionRouter {
             action: RouteAction::Bridge,
             estimated_gas: U256::from(50000),
             estimated_time_ms: 6000,
-            gas_price: *gas_price,
+            gas_price,
             liquidity_score: 9,
             mev_risk: 10,
         }
@@ -754,4 +760,51 @@ impl ProductionRouter {
         H256::from(keccak_256(&data))
     }
 
+}
+
+pub type SwapRouter = ProductionRouter;
+pub type SwapRoute = ProductionRoute;
+pub type QuoteResult = ProductionQuote;
+pub type AtomicSwapBundle = SecureAtomicBundle;
+
+pub fn quote_swap(
+    from_chain: u64,
+    from_token: H160,
+    to_chain: u64,
+    to_token: H160,
+    amount: U256,
+) -> Option<QuoteResult> {
+    SwapRouter::new().get_production_quote(
+        from_chain,
+        from_token,
+        to_chain,
+        to_token,
+        amount,
+        30,
+    )
+}
+
+pub fn find_best_route(
+    from_chain: u64,
+    from_token: H160,
+    to_chain: u64,
+    to_token: H160,
+    amount: U256,
+) -> Option<SwapRoute> {
+    SwapRouter::new().find_optimal_route(from_chain, from_token, to_chain, to_token, amount, 2)
+}
+
+pub fn build_atomic_swap(
+    from_chain: u64,
+    from_token: H160,
+    to_chain: u64,
+    to_token: H160,
+    amount: U256,
+    sender: H160,
+    recipient: H160,
+    nonce: u64,
+) -> Option<AtomicSwapBundle> {
+    let mut router = SwapRouter::new();
+    let quote = router.get_production_quote(from_chain, from_token, to_chain, to_token, amount, 30)?;
+    router.build_secure_bundle(&quote, sender, recipient, nonce)
 }
