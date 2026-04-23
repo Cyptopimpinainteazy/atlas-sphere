@@ -81,8 +81,8 @@ use sp_std::convert::TryInto;
 use sp_std::marker::PhantomData;
 use sp_std::vec::Vec;
 use x3_cross_vm_bridge::{
-    CrossVmBridge, CrossVmCall, CrossVmDispatcher, CrossVmOperation, CrossVmReceipt,
-    CrossVmResult, CrossVmStatus, VmId,
+    CrossVmBridge, CrossVmCall, CrossVmDispatcher, CrossVmOperation, CrossVmReceipt, CrossVmResult,
+    CrossVmStatus, VmId,
 };
 
 pub const EXECUTION_RECEIPT_VERSION: u32 = 1;

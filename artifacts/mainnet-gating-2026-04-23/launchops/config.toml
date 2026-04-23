@@ -1,0 +1,175 @@
+# X3 LaunchOps configuration.
+# All paths are relative to the workspace root (x3-live).
+
+[scan]
+include = [
+  "*.md",
+  "README.md",
+  "docs/**/*.md",
+  "crates/**/*.md",
+  "runtime/**/*.md",
+  "node/**/*.md",
+  "testnet/**/*.md",
+  "pallets/**/*.md",
+  "tools/**/*.md",
+  "scripts/**/*.md",
+  "deploy/**/*.md",
+  "ops/**/*.md",
+]
+exclude = [
+  "target/**",
+  "node_modules/**",
+  ".git/**",
+  "dist/**",
+  "build/**",
+  "repomix/**",
+  "repomix-*/**",
+  "**/repomix/**",
+  "x3-extracted/**",
+  "x3-mix/**",
+  "web/**",
+  "**/node_modules/**",
+  "**/.next/**",
+  "**/vendor/**",
+  ".launchops/**",
+]
+
+[weights]
+consensus = 20
+cross_vm = 15
+bridge = 15
+universal_asset_kernel = 10
+dex = 10
+security = 15
+wallet_explorer = 5
+ops = 5
+docs = 5
+
+[required_gates]
+cargo_check = true
+cargo_test = true
+clippy = true
+fmt = true
+no_p0_blockers = true
+no_critical_stubs = true
+cross_vm_tests = true
+bridge_replay_tests = true
+dex_liquidity_lock_tests = true
+
+[commands]
+cargo_check  = "cargo check --workspace --all-targets"
+cargo_test   = "cargo test --workspace --no-fail-fast"
+cargo_fmt    = "cargo fmt --all -- --check"
+cargo_clippy = "cargo clippy --workspace --all-targets -- -D warnings"
+# Optional tools — marked MissingTool when absent:
+cargo_audit  = "cargo audit"
+cargo_deny   = "cargo deny check"
+
+[gates.workspace_compiles]
+command = "cargo_check"
+required = true
+weight = 10
+
+[gates.workspace_tests_pass]
+command = "cargo_test"
+required = true
+weight = 20
+
+[gates.formatting_clean]
+command = "cargo_fmt"
+required = true
+weight = 5
+
+[gates.clippy_clean]
+command = "cargo_clippy"
+required = true
+weight = 10
+
+[gates.no_p0_blockers]
+source = "blockers"
+required = true
+weight = 20
+
+[gates.bridge_replay_tests]
+source = "feature_matrix"
+module = "bridge"
+keywords = ["replay", "nonce", "duplicate", "reject"]
+required = true
+weight = 15
+
+[gates.cross_vm_atomic_tests]
+source = "feature_matrix"
+module = "cross_vm"
+keywords = ["atomic", "rollback", "commit", "revert", "coordinator"]
+required = true
+weight = 15
+
+[gates.dex_liquidity_lock_tests]
+source = "feature_matrix"
+module = "dex"
+keywords = ["liquidity", "lock", "rug", "withdraw", "unlock"]
+required = true
+weight = 10
+
+[gates.no_production_stubs]
+source = "red_flags"
+required = true
+weight = 15
+
+[audit]
+baseline_branch = "main"
+fail_on_critical = true
+fail_on_test_weakening = true
+fail_on_consensus_without_invariants = true
+fail_on_bridge_without_replay_tests = true
+fail_on_mainnet_config_without_review = true
+stale_doc_days = 30
+
+[audit.paths]
+docs = [
+  "README.md",
+  "docs/**/*.md",
+  "crates/**/*.md",
+  "pallets/**/*.md",
+]
+production_code = [
+  "crates/**/src/**/*.rs",
+  "pallets/**/src/**/*.rs",
+  "runtime/**/*.rs",
+  "node/**/*.rs",
+]
+tests = [
+  "tests/**/*.rs",
+  "crates/**/tests/**/*.rs",
+  "pallets/**/tests/**/*.rs",
+  "crates/**/src/**/*test*.rs",
+]
+consensus = [
+  "runtime/src/**/*.rs",
+  "node/src/service.rs",
+  "crates/**/consensus*/**/*.rs",
+  "crates/**/finality*/**/*.rs",
+  "crates/**/flash-finality/**/*.rs",
+  "crates/**/poh*/**/*.rs",
+  "crates/**/parallel-proposer/**/*.rs",
+  "crates/**/contention-predictor/**/*.rs",
+]
+bridge = [
+  "crates/**/bridge*/**/*.rs",
+  "crates/**/*bridge*/**/*.rs",
+  "crates/**/cross-chain*/**/*.rs",
+  "crates/**/external-liquidity*/**/*.rs",
+  "crates/**/relayer*/**/*.rs",
+  "crates/**/*relayer*/**/*.rs",
+  "crates/**/adapter*/**/*.rs",
+  "crates/x3-relayer/**/*.rs",
+]
+mainnet_config = [
+  "chain-spec.json",
+  "genesis.json",
+  "**/mainnet*.json",
+  "**/testnet*.json",
+  "node/src/chain_spec.rs",
+  "node/src/service.rs",
+  "runtime/src/lib.rs",
+]

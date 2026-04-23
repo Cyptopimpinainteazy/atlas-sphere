@@ -20,7 +20,8 @@ use std::time::Duration;
 use tokio::sync::Mutex;
 use x3_rpc::benchmark::{
     BenchmarkChainType, BenchmarkIntegrationTier, BenchmarkLogClassStat, BenchmarkMetrics,
-    BenchmarkReport, BenchmarkReportArtifact, BenchmarkReportSummary, BenchmarkWorkloadProfile,
+    BenchmarkProfile, BenchmarkReport, BenchmarkReportArtifact, BenchmarkReportSummary,
+    BenchmarkWorkloadProfile,
 };
 
 #[cfg(test)]
@@ -171,6 +172,7 @@ mod integration_tests {
         let report = BenchmarkReport {
             report_id: "test-report-001".to_string(),
             generated_at_unix: 1704067200,
+            profile: BenchmarkProfile::default(),
             chain_name: "TestChain".to_string(),
             chain_type: BenchmarkChainType::Evm,
             baseline: BenchmarkMetrics {
@@ -225,6 +227,8 @@ mod integration_tests {
                 artifact_type: "trace".to_string(),
                 uri: "s3://bucket/trace.json".to_string(),
                 digest: "sha256:abc123".to_string(),
+                metadata: None,
+                signature: None,
             }],
             signer: "sidecar-test".to_string(),
         };
@@ -374,6 +378,7 @@ mod integration_tests {
         let test_report = BenchmarkReport {
             report_id: "e2e-test-001".to_string(),
             generated_at_unix: 1704067200,
+            profile: BenchmarkProfile::default(),
             chain_name: "TestChain".to_string(),
             chain_type: BenchmarkChainType::Evm,
             baseline: BenchmarkMetrics {
@@ -419,6 +424,8 @@ mod integration_tests {
                 artifact_type: "trace".to_string(),
                 uri: "s3://bucket/trace.json".to_string(),
                 digest: "sha256:abc123".to_string(),
+                metadata: None,
+                signature: None,
             }],
             signer: "e2e-test".to_string(),
         };
@@ -1036,6 +1043,7 @@ mod integration_tests {
             report_id: uuid::Uuid::new_v4().to_string(),
             chain_name: "ethereum".to_string(),
             chain_type: BenchmarkChainType::Evm,
+            profile: BenchmarkProfile::default(),
             recommendation: BenchmarkIntegrationTier::SidecarMode,
             signer: "test-signer".to_string(),
             generated_at_unix: 1704067200u64,
@@ -1081,6 +1089,8 @@ mod integration_tests {
                 artifact_type: "summary".to_string(),
                 uri: "https://example.com/summary.html".to_string(),
                 digest: "sha256:abc123".to_string(),
+                metadata: None,
+                signature: None,
             }],
         }
     }

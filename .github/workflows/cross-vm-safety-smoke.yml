@@ -1,0 +1,70 @@
+name: Cross-VM Safety Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - release/mainnet
+      - release/mainnet-*
+    paths:
+      - node/src/service.rs
+      - node/Cargo.toml
+      - crates/x3-relayer/**
+      - scripts/ci/enforce_cross_vm_safety_wiring.sh
+      - scripts/ci/enforce_node_cross_vm_safety_tests.sh
+      - .github/workflows/cross-vm-safety-smoke.yml
+      - .github/workflows/mainnet-gating.yml
+  pull_request:
+    branches:
+      - main
+      - release/mainnet
+      - release/mainnet-*
+    paths:
+      - node/src/service.rs
+      - node/Cargo.toml
+      - crates/x3-relayer/**
+      - scripts/ci/enforce_cross_vm_safety_wiring.sh
+      - scripts/ci/enforce_node_cross_vm_safety_tests.sh
+      - .github/workflows/cross-vm-safety-smoke.yml
+      - .github/workflows/mainnet-gating.yml
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cross-vm-safety-smoke:
+    name: Cross-VM Safety Smoke (Fast)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-cross-vm-safety-smoke-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Enforce cross-VM safety wiring (node + relayer)
+        run: bash scripts/ci/enforce_cross_vm_safety_wiring.sh
+
+      - name: Enforce node cross-VM safety tests
+        run: bash scripts/ci/enforce_node_cross_vm_safety_tests.sh
+
+      - name: Compile safety crates and relayer surface
+        run: |
+          cargo check -p x3-finality-oracle
+          cargo check -p x3-verification-router
+          cargo check -p x3-validator-attestation
+          cargo check -p x3-proof-dispute
+          cargo check -p x3-gateway-risk-engine
+          cargo check -p x3-relayer
+
+      - name: Run relayer safety tests
+        run: cargo test -p x3-relayer --lib

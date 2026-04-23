@@ -21,7 +21,10 @@ fn critical_001_memory_persistence_rejected_in_production() {
         let _coordinator = SwapCoordinator::new(CoordinatorConfig::default());
     });
 
-    assert!(result.is_err(), "CRITICAL-001 guard must panic in integration tests");
+    assert!(
+        result.is_err(),
+        "CRITICAL-001 guard must panic in integration tests"
+    );
     assert!(
         cfg!(test),
         "CRITICAL-001 regression must run under test harness"

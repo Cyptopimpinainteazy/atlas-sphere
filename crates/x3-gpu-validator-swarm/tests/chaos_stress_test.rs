@@ -33,10 +33,7 @@ mod chaos_tests {
         pub p50_latency_ms: f64,
         pub p95_latency_ms: f64,
         pub p99_latency_ms: f64,
-        pub memory_used_mb: f64,
-        pub cpu_usage_percent: f64,
         pub timeouts: u64,
-        pub errors: Vec<String>,
     }
 
     pub struct ChaosStressTest {
@@ -115,7 +112,7 @@ mod chaos_tests {
                     samples.push((elapsed as u64, current_tps as u64));
 
                     // Print status every 5 seconds
-                    if (start.elapsed().as_secs() % 5) == 0 {
+                    if start.elapsed().as_secs().is_multiple_of(5) {
                         self.print_status(current_tps, submitted, completed, failed, elapsed);
                     }
 
@@ -135,9 +132,9 @@ mod chaos_tests {
         fn spawn_load_generators(&self) -> Vec<tokio::task::JoinHandle<()>> {
             let mut handles = Vec::new();
             // More workers = more parallel submissions
-            let num_workers = ((self.config.target_tps / 100).max(10).min(512)) as usize;
+            let num_workers = (self.config.target_tps / 100).clamp(10, 512) as usize;
             let config = self.config.clone();
-            let delay_us = (1_000_000u64 / self.config.target_tps) as u64;
+            let delay_us = 1_000_000u64 / self.config.target_tps;
 
             for worker_id in 0..num_workers {
                 let config = config.clone();
@@ -308,9 +305,6 @@ mod chaos_tests {
                 p95_latency_ms: p95,
                 p99_latency_ms: p99,
                 timeouts,
-                errors: self.errors.lock().clone(),
-                memory_used_mb: 0.0,    // TODO: impl memory profiling
-                cpu_usage_percent: 0.0, // TODO: impl CPU profiling
             }
         }
     }

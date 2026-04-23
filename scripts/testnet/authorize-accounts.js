@@ -60,13 +60,19 @@ async function main() {
 
   console.log(`Generated ${signers.length} signer accounts`);
 
+  // Runtime pallet naming changed from x3Kernel to atlasKernel in newer chains.
+  const kernelTx = api.tx.x3Kernel || api.tx.atlasKernel;
+  if (!kernelTx || typeof kernelTx.authorizeAccount !== "function") {
+    throw new Error("Missing authorizeAccount extrinsic on x3Kernel/atlasKernel");
+  }
+
   // Authorize in batches
   for (let batch = 0; batch < signers.length; batch += batchSize) {
     const batchAccounts = signers.slice(batch, Math.min(batch + batchSize, signers.length));
     console.log(`Authorizing batch ${Math.floor(batch / batchSize) + 1}/${Math.ceil(signers.length / batchSize)} (${batchAccounts.length} accounts)...`);
 
-    const txs = batchAccounts.map(account => 
-      api.tx.x3Kernel.authorizeAccount(account.address)
+    const txs = batchAccounts.map(account =>
+      kernelTx.authorizeAccount(account.address)
     );
 
     const batchTx = api.tx.utility.batch(txs);

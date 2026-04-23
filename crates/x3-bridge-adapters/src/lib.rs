@@ -99,7 +99,9 @@ pub use pallet_x3_kernel::StateChange;
 
 // ── CrossVmDispatcher re-export ──────────────────────────────────────────────
 // Re-export the CrossVmDispatcher trait and result types for convenience.
-pub use x3_cross_vm_bridge::{CrossVmDispatcher, CrossVmResult};
+pub use x3_cross_vm_bridge::{
+    CrossVmCall, CrossVmDispatcher, CrossVmReceipt, CrossVmResult, CrossVmStatus, VmId,
+};
 
 // ── SubstrateClientBalanceAdapter ────────────────────────────────────────────
 
@@ -795,6 +797,29 @@ where
                 Err(sp_runtime::DispatchError::Other("SVM runtime API error"))
             }
         }
+    }
+
+    /// Execute an x3VM call.
+    ///
+    /// The runtime API exposed to this adapter currently provides concrete EVM/SVM
+    /// execution entrypoints but does not yet expose a native x3VM submission
+    /// endpoint. Until that API is wired, this dispatcher fails closed with a
+    /// canonical receipt instead of pretending success.
+    fn execute_x3vm_tx(
+        &self,
+        _caller: &[u8; 32],
+        call: &CrossVmCall,
+    ) -> Result<CrossVmReceipt, sp_runtime::DispatchError> {
+        call.ensure_current_version()?;
+
+        Ok(CrossVmReceipt {
+            call_hash: call.call_hash(&H256::zero()),
+            source_state_root: H256::zero(),
+            target_state_root: H256::zero(),
+            status: CrossVmStatus::InternalError,
+            gas_used: 0,
+            logs: Vec::new(),
+        })
     }
 
     /// Get EVM balance for an address.

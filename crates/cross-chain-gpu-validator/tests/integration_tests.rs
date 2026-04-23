@@ -181,9 +181,7 @@ mod tests {
     #[tokio::test]
     async fn test_benchmark_throughput_keccak256() {
         let kernel = Keccak256Kernel::new(256, false);
-        let strs: Vec<String> = (0..1000)
-            .map(|i| format!("benchmark_input_{i}"))
-            .collect();
+        let strs: Vec<String> = (0..1000).map(|i| format!("benchmark_input_{i}")).collect();
         let inputs: Vec<&[u8]> = strs.iter().map(|s| s.as_bytes()).collect();
 
         let start = std::time::Instant::now();
@@ -207,10 +205,7 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, tx)| {
-                let (hashes, _) = validator
-                    .hasher
-                    .hash_batch_cpu(&[tx.as_slice()])
-                    .unwrap();
+                let (hashes, _) = validator.hasher.hash_batch_cpu(&[tx.as_slice()]).unwrap();
                 EvmStateRoot {
                     block_number: 1000 + i as u64,
                     state_root: hashes[0].clone(),

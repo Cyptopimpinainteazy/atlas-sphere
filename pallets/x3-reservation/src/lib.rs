@@ -24,16 +24,13 @@ mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{
-        pallet_prelude::*,
-        traits::Get,
-    };
+    use frame_support::{pallet_prelude::*, traits::Get};
     use frame_system::pallet_prelude::*;
     use pallet_x3_inventory::{
         pallet::{Lanes, Pallet as InventoryPallet},
         types::{LaneId, LaneStatus, ReservationId, ReservationStatus, RouteId, VaultId},
     };
-    use sp_runtime::traits::{CheckedAdd, Zero};
+    use sp_runtime::traits::CheckedAdd;
 
     // -----------------------------------------------------------------------
     // ReservationState
@@ -66,9 +63,7 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config:
-        frame_system::Config + pallet_x3_inventory::pallet::Config
-    {
+    pub trait Config: frame_system::Config + pallet_x3_inventory::pallet::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         /// How many blocks a reservation lives before auto-expiry if not consumed.
@@ -92,10 +87,7 @@ pub mod pallet {
         _,
         Blake2_128Concat,
         ReservationId,
-        ReservationState<
-            <T as pallet_x3_inventory::pallet::Config>::Balance,
-            BlockNumberFor<T>,
-        >,
+        ReservationState<<T as pallet_x3_inventory::pallet::Config>::Balance, BlockNumberFor<T>>,
     >;
 
     /// Fast lookup: route_id → current reservation_id (one active reservation per route).
@@ -107,14 +99,8 @@ pub mod pallet {
     /// Expiry queue: (expiry_block, reservation_id) → ().
     /// `on_initialize` iterates all entries whose first key equals the current block.
     #[pallet::storage]
-    pub type ExpiryQueue<T: Config> = StorageDoubleMap<
-        _,
-        Twox64Concat,
-        BlockNumberFor<T>,
-        Blake2_128Concat,
-        ReservationId,
-        (),
-    >;
+    pub type ExpiryQueue<T: Config> =
+        StorageDoubleMap<_, Twox64Concat, BlockNumberFor<T>, Blake2_128Concat, ReservationId, ()>;
 
     // -----------------------------------------------------------------------
     // Events
@@ -276,10 +262,7 @@ pub mod pallet {
 
             // Guard: lane must not be frozen.
             if let Some(lane) = Lanes::<T>::get(lane_id) {
-                ensure!(
-                    lane.status != LaneStatus::Frozen,
-                    Error::<T>::LaneFrozen
-                );
+                ensure!(lane.status != LaneStatus::Frozen, Error::<T>::LaneFrozen);
             }
 
             // Lock inventory in the vault (propagates VaultNotFound / VaultFrozen /
@@ -345,8 +328,8 @@ pub mod pallet {
         ) -> DispatchResult {
             ensure_root(origin)?;
 
-            let state = Reservations::<T>::get(reservation_id)
-                .ok_or(Error::<T>::ReservationNotFound)?;
+            let state =
+                Reservations::<T>::get(reservation_id).ok_or(Error::<T>::ReservationNotFound)?;
 
             match state.status {
                 ReservationStatus::Active => {}
@@ -362,10 +345,7 @@ pub mod pallet {
             // Move reserved → pending_out in the vault.
             // Semantically: release from reserve, then immediately record as pending_out.
             pallet_x3_inventory::inventory::release_inventory::<T>(state.vault_id, state.amount)?;
-            pallet_x3_inventory::inventory::record_pending_out::<T>(
-                state.vault_id,
-                state.amount,
-            )?;
+            pallet_x3_inventory::inventory::record_pending_out::<T>(state.vault_id, state.amount)?;
 
             // Decrement unsettled-notional.
             let _ = InventoryPallet::<T>::decrement_unsettled_notional(state.lane_id, state.amount);
@@ -414,8 +394,8 @@ pub mod pallet {
             reservation_id: ReservationId,
             terminal_status: ReservationStatus,
         ) -> DispatchResult {
-            let state = Reservations::<T>::get(reservation_id)
-                .ok_or(Error::<T>::ReservationNotFound)?;
+            let state =
+                Reservations::<T>::get(reservation_id).ok_or(Error::<T>::ReservationNotFound)?;
 
             match state.status {
                 ReservationStatus::Active => {}
@@ -432,8 +412,7 @@ pub mod pallet {
             pallet_x3_inventory::inventory::release_inventory::<T>(state.vault_id, state.amount)?;
 
             // Decrement unsettled-notional.
-            let _ =
-                InventoryPallet::<T>::decrement_unsettled_notional(state.lane_id, state.amount);
+            let _ = InventoryPallet::<T>::decrement_unsettled_notional(state.lane_id, state.amount);
 
             // Remove expiry entry.
             ExpiryQueue::<T>::remove(state.expiry_block, reservation_id);

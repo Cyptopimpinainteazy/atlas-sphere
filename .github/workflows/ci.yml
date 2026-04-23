@@ -43,8 +43,74 @@ jobs:
       - name: Clippy (prod-faithful defaults)
         run: cargo clippy --all-targets -- -D warnings
 
+      - name: Compile relayer + security council + genesis builder crates
+        run: cargo check -p x3-relayer -p x3-bridge-security-council -p x3-genesis-builder
+
       - name: Cargo tests (release, prod-faithful defaults)
         run: cargo test --workspace --release
+
+      - name: Generate LaunchOps artifacts
+        run: cargo run -p launchops -- scan
+
+      - name: Validate LaunchOps artifact contract
+        run: cargo run -p launchops -- validate-contract
+
+      - name: Verify LaunchOps contract review note
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: bash scripts/ci/verify_launchops_contract_review.sh
+
+      - name: Verify LaunchOps allowlist/backlog disjoint
+        run: bash scripts/ci/verify_launchops_backlog_allowlist_disjoint.sh
+
+      - name: Verify LaunchOps rpc_contract_matrix invariants
+        run: bash scripts/ci/verify_launchops_rpc_matrix_invariants.sh
+
+      - name: Verify LaunchOps deep_red_flags baseline
+        run: bash scripts/ci/verify_launchops_deep_red_flags_baseline.sh
+
+      - name: Summarize LaunchOps inventory
+        if: always()
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          launchops = Path('.launchops')
+          runtime = json.loads((launchops / 'runtime_rpc_inventory.json').read_text())
+          matrix = json.loads((launchops / 'rpc_contract_matrix.json').read_text())
+          consumer = json.loads((launchops / 'rpc_consumer_contracts.json').read_text())
+          routes = json.loads((launchops / 'frontend_route_allowlist.json').read_text())
+          backlog = json.loads((launchops / 'sidecar_adapter_backlog.json').read_text())
+
+          callable_traits = sum(1 for item in runtime['runtime_traits'] if item['methods'])
+          callable_methods = sum(len(item['methods']) for item in runtime['runtime_traits'])
+
+          summary_lines = [
+              "## LaunchOps inventory",
+              f"- Runtime impl blocks: {len(runtime['runtime_traits'])}",
+              f"- Callable runtime API traits: {callable_traits}",
+              f"- Callable runtime API methods: {callable_methods}",
+              f"- RPC registrations: {len(matrix['methods'])}",
+              f"- Runtime-backed RPCs: {matrix['runtime_backed_count']}",
+              f"- Node-local adapter RPCs: {matrix['node_local_adapter_count']}",
+              f"- Placeholder RPCs: {matrix['placeholder_count']}",
+              f"- Frontend-safe methods: {consumer['frontend_safe_count']}",
+              f"- Sidecar-only methods: {consumer['sidecar_only_count']}",
+              f"- Mock-only methods: {consumer['mock_only_count']}",
+              f"- Duplicate registrations: {matrix['duplicate_registration_count']}",
+              f"- Bucket drift flags: {matrix['bucket_drift_count']}",
+              f"- Frontend routes in allowlist: {len(routes['routes'])}",
+              f"- Sidecar backlog items: {len(backlog['backlog'])}",
+              "",
+          ]
+          summary = "\n".join(summary_lines)
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as handle:
+              handle.write(summary)
+          PY
 
       - name: Run extended test suite
         run: |
@@ -53,6 +119,106 @@ jobs:
 
       - name: Build runtime WASM (no_std compatibility)
         run: cargo build -p x3-chain-runtime --release --target wasm32-unknown-unknown --no-default-features
+
+      - name: Upload LaunchOps artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launchops-prod-gate
+          path: .launchops/
+          if-no-files-found: error
+
+  launchops-full-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-launchops-full-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-launchops-full-
+            ${{ runner.os }}-cargo-
+
+      - name: Generate full LaunchOps bundle
+        run: cargo run -p launchops -- full
+
+      - name: Validate LaunchOps artifact contract
+        run: cargo run -p launchops -- validate-contract
+
+      - name: Verify LaunchOps contract review note
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: bash scripts/ci/verify_launchops_contract_review.sh
+
+      - name: Verify LaunchOps allowlist/backlog disjoint
+        run: bash scripts/ci/verify_launchops_backlog_allowlist_disjoint.sh
+
+      - name: Verify LaunchOps rpc_contract_matrix invariants
+        run: bash scripts/ci/verify_launchops_rpc_matrix_invariants.sh
+
+      - name: Verify LaunchOps deep_red_flags baseline
+        run: bash scripts/ci/verify_launchops_deep_red_flags_baseline.sh
+
+      - name: Summarize LaunchOps inventory
+        if: always()
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          launchops = Path('.launchops')
+          runtime = json.loads((launchops / 'runtime_rpc_inventory.json').read_text())
+          matrix = json.loads((launchops / 'rpc_contract_matrix.json').read_text())
+          consumer = json.loads((launchops / 'rpc_consumer_contracts.json').read_text())
+          routes = json.loads((launchops / 'frontend_route_allowlist.json').read_text())
+          backlog = json.loads((launchops / 'sidecar_adapter_backlog.json').read_text())
+
+          callable_traits = sum(1 for item in runtime['runtime_traits'] if item['methods'])
+          callable_methods = sum(len(item['methods']) for item in runtime['runtime_traits'])
+
+          summary_lines = [
+              "## LaunchOps inventory",
+              f"- Runtime impl blocks: {len(runtime['runtime_traits'])}",
+              f"- Callable runtime API traits: {callable_traits}",
+              f"- Callable runtime API methods: {callable_methods}",
+              f"- RPC registrations: {len(matrix['methods'])}",
+              f"- Runtime-backed RPCs: {matrix['runtime_backed_count']}",
+              f"- Node-local adapter RPCs: {matrix['node_local_adapter_count']}",
+              f"- Placeholder RPCs: {matrix['placeholder_count']}",
+              f"- Frontend-safe methods: {consumer['frontend_safe_count']}",
+              f"- Sidecar-only methods: {consumer['sidecar_only_count']}",
+              f"- Mock-only methods: {consumer['mock_only_count']}",
+              f"- Duplicate registrations: {matrix['duplicate_registration_count']}",
+              f"- Bucket drift flags: {matrix['bucket_drift_count']}",
+              f"- Frontend routes in allowlist: {len(routes['routes'])}",
+              f"- Sidecar backlog items: {len(backlog['backlog'])}",
+              "",
+          ]
+          summary = "\n".join(summary_lines)
+
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as handle:
+              handle.write(summary)
+          PY
+
+      - name: Upload full LaunchOps artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launchops-full-report
+          path: .launchops/
+          if-no-files-found: error
 
   feature-coverage:
     runs-on: ubuntu-latest

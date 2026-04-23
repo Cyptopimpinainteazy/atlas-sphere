@@ -4,6 +4,8 @@ extern crate alloc;
 
 #[cfg(not(feature = "std"))]
 use alloc::collections::BTreeSet;
+#[cfg(not(feature = "std"))]
+use alloc::vec;
 #[cfg(feature = "std")]
 use std::collections::HashSet;
 
@@ -32,8 +34,7 @@ pub mod canonical;
 pub use canonical::{
     CrossVmCall, CrossVmPayload, CrossVmReceipt, CrossVmStatus, VmId, CALL_HASH_DOMAIN,
     CROSS_VM_CALL_VERSION, MAX_CROSS_VM_DEADLINE_BLOCKS, MAX_CROSS_VM_PAYLOAD,
-    MAX_PROOF_AGE_BLOCKS_PRODUCTION, MAX_PROOF_AGE_BLOCKS_TESTNET,
-    REPLAY_PRUNE_HORIZON_BLOCKS,
+    MAX_PROOF_AGE_BLOCKS_PRODUCTION, MAX_PROOF_AGE_BLOCKS_TESTNET, REPLAY_PRUNE_HORIZON_BLOCKS,
 };
 
 /// Maximum single transfer amount (10 billion units — configurable at runtime)
@@ -394,9 +395,17 @@ pub enum CrossVmEvent {
         svm_compute_reserved: u64,
     },
     /// 2PC commit phase completed — state finalized on both VMs
-    CommitCompleted { nonce: u64, queue_nonce: u64, total_gas_used: u64 },
+    CommitCompleted {
+        nonce: u64,
+        queue_nonce: u64,
+        total_gas_used: u64,
+    },
     /// 2PC abort — reservations released, no state changes
-    Aborted { nonce: u64, queue_nonce: u64, reason: Vec<u8> },
+    Aborted {
+        nonce: u64,
+        queue_nonce: u64,
+        reason: Vec<u8>,
+    },
     /// Circuit breaker tripped
     CircuitBreakerTripped {
         epoch_volume: u128,
@@ -604,9 +613,7 @@ impl CrossVmResult {
         let logs = if self.output.is_empty() {
             Vec::new()
         } else {
-            let mut v = Vec::with_capacity(1);
-            v.push(self.output);
-            v
+            vec![self.output]
         };
         CrossVmReceipt {
             call_hash: call.call_hash(source_finalized_hash),
@@ -834,7 +841,8 @@ impl CrossVmBridge {
             _ => {}
         }
 
-        self.pending_ops.push((operation, OperationState::Pending, nonce));
+        self.pending_ops
+            .push((operation, OperationState::Pending, nonce));
         Ok(nonce)
     }
 
@@ -1503,9 +1511,7 @@ impl CrossVmBridge {
     /// will be dispatched to the `NoOpDispatcher` which returns synthetic results.
     /// Use `execute_pending_with_dispatcher(your_real_dispatcher)` instead.
     #[allow(dead_code)]
-    #[deprecated(
-        note = "Non-atomic. Use execute_pending_with_dispatcher for cross-VM atomicity."
-    )]
+    #[deprecated(note = "Non-atomic. Use execute_pending_with_dispatcher for cross-VM atomicity.")]
     fn execute_operation(
         &self,
         operation: &CrossVmOperation,
@@ -2026,9 +2032,7 @@ impl CrossVmBridge {
             })
             .collect();
 
-        let mut op_id: u64 = 0;
-        for (idx, operation) in ops_to_process {
-            op_id += 1;
+        for (op_id, (idx, operation)) in (1_u64..).zip(ops_to_process.into_iter()) {
             if let Some((_, state, _)) = self.pending_ops.get_mut(idx) {
                 *state = OperationState::Executing;
 
@@ -2407,9 +2411,11 @@ impl CrossVmBridge {
                 // Commit SVM leg
                 let mut svm_commit_input = b"COMMIT_SVM_TRISWAP:".to_vec();
                 svm_commit_input.extend_from_slice(&svm_amount.to_le_bytes());
-                let svm_commit = match dispatcher
-                    .execute_svm_tx(&svm_key, &svm_escrow_program, &svm_commit_input)
-                {
+                let svm_commit = match dispatcher.execute_svm_tx(
+                    &svm_key,
+                    &svm_escrow_program,
+                    &svm_commit_input,
+                ) {
                     Ok(r) => r,
                     Err(err) => {
                         refund_evm(dispatcher);
@@ -2513,9 +2519,7 @@ impl CrossVmBridge {
                 let mut output = Vec::with_capacity(32 + 8);
                 output.extend_from_slice(receipt.call_hash.as_bytes());
                 match receipt.status {
-                    CrossVmStatus::Success => {
-                        Ok(CrossVmResult::success(output, receipt.gas_used))
-                    }
+                    CrossVmStatus::Success => Ok(CrossVmResult::success(output, receipt.gas_used)),
                     other => {
                         // Tag the legacy error with the canonical status
                         // byte so downstream auditing can distinguish
@@ -4297,21 +4301,20 @@ mod execute_call_routing_tests {
         let call = call_to(VmId::Evm, vec![0u8; 20], 100_000);
         let fin = H256::repeat_byte(0x5a);
 
-        let ok = CrossVmResult::success(b"log".to_vec(), 42_000)
-            .into_receipt_for(&call, &fin);
+        let ok = CrossVmResult::success(b"log".to_vec(), 42_000).into_receipt_for(&call, &fin);
         assert_eq!(ok.status, CrossVmStatus::Success);
         assert_eq!(ok.gas_used, 42_000);
         assert_eq!(ok.call_hash, call.call_hash(&fin));
         assert_eq!(ok.logs.len(), 1);
 
-        let reverted = CrossVmResult::failed(b"revert".to_vec(), 10_000)
-            .into_receipt_for(&call, &fin);
+        let reverted =
+            CrossVmResult::failed(b"revert".to_vec(), 10_000).into_receipt_for(&call, &fin);
         assert_eq!(reverted.status, CrossVmStatus::Reverted);
         assert_eq!(reverted.gas_used, 10_000);
 
         // gas_used == gas_budget on failure must be OutOfGas.
-        let oog = CrossVmResult::failed(b"gas".to_vec(), call.gas_budget)
-            .into_receipt_for(&call, &fin);
+        let oog =
+            CrossVmResult::failed(b"gas".to_vec(), call.gas_budget).into_receipt_for(&call, &fin);
         assert_eq!(oog.status, CrossVmStatus::OutOfGas);
     }
 }
@@ -4364,7 +4367,9 @@ mod atomic_tri_swap_tests {
     fn triswap_rejects_zero_amounts() {
         let mut bridge = CrossVmBridge::new();
         let op = make_triswap(0, 2_000, 2);
-        let err = bridge.queue_operation(op).expect_err("zero EVM amt rejected");
+        let err = bridge
+            .queue_operation(op)
+            .expect_err("zero EVM amt rejected");
         assert!(matches!(err, DispatchError::Other(msg) if msg.contains("nonzero")));
 
         let op2 = make_triswap(1_000, 0, 3);

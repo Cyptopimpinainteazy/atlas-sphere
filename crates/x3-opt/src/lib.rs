@@ -116,12 +116,12 @@ pub use loop_unswitching::{apply_unswitch, find_unswitch_opportunities};
 
 // Phase 6 & Tier A-D: Advanced Optimizations
 pub use passes::{
-    block_fusion::BlockFusionPass,
-    branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass, constant_fold::ConstantFoldPass,
-    copy_propagation::CopyPropagationPass, dead_code_elimination::DeadCodeEliminationPass,
-    dom_const_prop::DomConstPropPass, edge_const_prop::EdgeConstPropPass,
-    global_const_prop::GlobalConstPropPass, peephole::PeepholePass,
-    pre::PrePass as PartialRedundancyEliminationPass, speculative_hoist::SpeculativeHoistPass,
+    block_fusion::BlockFusionPass, branch_opt::BranchOptPass, cond_fold::ConditionalFoldPass,
+    constant_fold::ConstantFoldPass, copy_propagation::CopyPropagationPass,
+    dead_code_elimination::DeadCodeEliminationPass, dom_const_prop::DomConstPropPass,
+    edge_const_prop::EdgeConstPropPass, global_const_prop::GlobalConstPropPass,
+    peephole::PeepholePass, pre::PrePass as PartialRedundancyEliminationPass,
+    speculative_hoist::SpeculativeHoistPass,
 };
 pub use peephole_autogen::{ExecutionTelemetry, PeepholeAutogen, PeepholePattern};
 pub use regalloc::ChaitinAllocator;

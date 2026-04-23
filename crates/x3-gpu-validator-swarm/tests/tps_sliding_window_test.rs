@@ -93,7 +93,6 @@ mod tests {
 
         let metrics = Arc::new(MockMetricsCollector::new());
         let num_submitters = 4;
-        let duration = Duration::from_secs(5);
         let tasks_per_submitter = 250;
 
         let start = Instant::now();
@@ -256,18 +255,15 @@ mod tests {
 
         let metrics_clone = metrics.clone();
         let spike_handle = tokio::spawn(async move {
-            let mut normal_rate = 500u64; // Start with 500 TPS
-
             while test_start.elapsed() < duration {
                 let elapsed_secs = test_start.elapsed().as_secs_f64();
+                let normal_rate = if elapsed_secs > 2.5 && elapsed_secs < 3.5 {
+                    5000
+                } else {
+                    500
+                };
 
                 // Create a spike at 2.5 second mark
-                if elapsed_secs > 2.5 && elapsed_secs < 3.5 {
-                    normal_rate = 5000; // Spike to 5000 TPS
-                } else {
-                    normal_rate = 500; // Back to normal
-                }
-
                 // Submit tasks at current rate
                 let batch_size = (normal_rate / 100).max(1);
                 for _ in 0..batch_size {

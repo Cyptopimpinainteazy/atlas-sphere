@@ -1,0 +1,395 @@
+{
+  "generated_at": "2026-04-23T01:23:10.262898101+00:00",
+  "source_matrix_file": "rpc_contract_matrix.json",
+  "frontend_safe_count": 11,
+  "sidecar_only_count": 14,
+  "mock_only_count": 3,
+  "frontend_safe_methods": [
+    {
+      "method": "gpu_orchestratorHealth",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "gpu_validatorStatus",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "queryDisputeStatus",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "queryProofFinality",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "query_crossChainStatus",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "validate_evmHeader",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "validate_svmHeader",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::CrossChainStateRootApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_getAssetMetadata",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_getAuthorities",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_getAuthorizedAccounts",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_getCanonicalBalance",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "sidecar_consumer_mode": "pass_through_candidate",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    }
+  ],
+  "sidecar_only_methods": [
+    {
+      "method": "atomicTrade_createSwap",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "atomicTrade_estimateSlippage",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "atomicTrade_executeSwap",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "atomicTrade_getSwapQuote",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "atomicTrade_getSwapStatus",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "gpu_submitProof",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GpuValidatorRuntimeApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "submitDispute",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [
+        "gpu_validator_api::GovernanceSettlementApi<Block>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "walletDex_estimateSwap",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "WalletDexRpc service adapter"
+      ],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "walletDex_executeSwap",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "WalletDexRpc service adapter"
+      ],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_estimateGas",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_flashFinalityStatus",
+      "registration_count": 2,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "async node-local orchestration",
+        "flash finality gadget"
+      ],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_isAuthorized",
+      "registration_count": 1,
+      "bucket": "runtime_backed",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [
+        "pallet_atomic_trade_engine::AtomicTradeEngineApi<Block>",
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [],
+      "notes": [
+        "-"
+      ]
+    },
+    {
+      "method": "x3_submitCrossVmTransaction",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "ownership_note": "expected mixed ownership: runtime executes the EVM leg while node-local billing and queueing own the orchestration boundary",
+      "runtime_trait_hints": [
+        "pallet_x3_kernel::AtlasKernelRuntimeApi<Block, AccountId, Balance, AssetId>"
+      ],
+      "node_local_signals": [
+        "BillingMiddleware quota path",
+        "async node-local orchestration"
+      ],
+      "notes": [
+        "contains both runtime-backed and node-local behavior; keep frontend integration behind sidecar or adapter ownership"
+      ]
+    },
+    {
+      "method": "x3_submitSvmTransaction",
+      "registration_count": 1,
+      "bucket": "node_local_adapter",
+      "frontend_consumer_mode": "adapter_only",
+      "sidecar_consumer_mode": "orchestrate",
+      "runtime_trait_hints": [],
+      "node_local_signals": [
+        "BillingMiddleware quota path"
+      ],
+      "notes": [
+        "-"
+      ]
+    }
+  ],
+  "mock_only_methods": [
+    {
+      "method": "requestProofChallenge",
+      "registration_count": 1,
+      "bucket": "placeholder",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "structural placeholder until Phase 10b challenge execution is implemented"
+      ]
+    },
+    {
+      "method": "x3_newCore",
+      "registration_count": 1,
+      "bucket": "placeholder",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "not available on this node build"
+      ]
+    },
+    {
+      "method": "x3_submitX3vmTransaction",
+      "registration_count": 1,
+      "bucket": "placeholder",
+      "frontend_consumer_mode": "mock_only",
+      "sidecar_consumer_mode": "defer",
+      "runtime_trait_hints": [],
+      "node_local_signals": [],
+      "notes": [
+        "intentional guidance error; standalone X3VM submission is unavailable on this build"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,779 @@
+[
+  {
+    "file": "tools/get-shit-done/.github/pull_request_template.md",
+    "linked_code": [
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/contention-predictor/src/lib.rs",
+      "crates/contention-predictor/src/model.rs",
+      "crates/contention-predictor/src/shard_planner.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-codebase-mapper.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/contention-predictor/src/model.rs",
+      "crates/gpu-swarm/src/admin.rs",
+      "crates/gpu-swarm/src/bip39.rs",
+      "crates/gpu-swarm/src/crown/scrapyard.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-debugger.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-executor.md",
+    "linked_code": [
+      "crates/x3-parser/src/grammar.rs",
+      "node/tests/node_requirements.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-integration-checker.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/chronos-flash/src/config.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-nyquist-auditor.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-phase-researcher.md",
+    "linked_code": [
+      "crates/orchestra/src/agent/identity.rs",
+      "crates/quantum-crypto/src/blake3ext.rs",
+      "crates/x3-asset-kernel-types/src/lib.rs",
+      "crates/x3-dns-server/src/api.rs",
+      "crates/x3-dns-server/src/blockchain.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-plan-checker.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/confidential-gpu/src/threshold.rs",
+      "crates/contention-predictor/src/shard_planner.rs",
+      "crates/cross-chain-gpu-validator/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-planner.md",
+    "linked_code": [
+      "crates/evm-integration/src/mini_evm.rs",
+      "crates/gpu-swarm/src/announcer.rs",
+      "crates/gpu-swarm/src/crown/auditor.rs",
+      "crates/gpu-swarm/src/crown/mod.rs",
+      "crates/gpu-swarm/src/crown/scrapyard.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-project-researcher.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/lib.rs",
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/chronos-flash/src/predictor.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-research-synthesizer.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/error.rs",
+      "crates/chronos-flash/src/mempool.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-roadmapper.md",
+    "linked_code": [
+      "crates/cross-chain-gpu-validator/src/lib.rs",
+      "crates/cross-chain-gpu-validator/src/orchestrator.rs",
+      "crates/cross-chain-gpu-validator/src/registry.rs",
+      "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "crates/cross-vm-coordinator/src/config.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-ui-auditor.md",
+    "linked_code": [
+      "crates/external-chains/src/settlement_integration.rs",
+      "crates/gpu-swarm/src/announcer.rs",
+      "crates/gpu-swarm/src/bip39.rs",
+      "crates/gpu-swarm/src/crown/auditor.rs",
+      "crates/gpu-swarm/src/crown/mod.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-ui-checker.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-ui-researcher.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/intent.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/agents/gsd-verifier.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/confidential-gpu/src/enclave.rs",
+      "crates/cross-chain-position-manager/src/accounting.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/commands/gsd/debug.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/confidential-gpu/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/commands/gsd/map-codebase.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/contention-predictor/src/model.rs",
+      "crates/gpu-swarm/src/advanced/jury.rs",
+      "crates/gpu-swarm/src/advanced/social_agents.rs",
+      "crates/gpu-swarm/src/agent_bridge.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/commands/gsd/reapply-patches.md",
+    "linked_code": [
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/cross-chain-gpu-validator/src/dashboard.rs",
+      "crates/cross-chain-gpu-validator/src/registry.rs",
+      "crates/cross-chain-position-manager/src/router.rs",
+      "crates/cross-chain-position-manager/src/types.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/commands/gsd/research-phase.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-position-manager/src/arbitrage.rs",
+      "crates/cross-chain-position-manager/src/events.rs",
+      "crates/cross-chain-position-manager/src/migration.rs",
+      "crates/cross-chain-position-manager/src/risk.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/references/continuation-format.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/intent.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/references/questioning.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/confidential-gpu/src/threshold.rs",
+      "crates/contention-predictor/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/references/verification-patterns.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/UI-SPEC.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/contention-predictor/src/feature_extractor.rs",
+      "crates/cross-chain-gpu-validator/src/failover.rs",
+      "crates/cross-chain-gpu-validator/src/main.rs",
+      "crates/cross-chain-position-manager/src/arbitrage.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/VALIDATION.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/confidential-gpu/src/attestation.rs",
+      "crates/cross-chain-gpu-validator/src/failover.rs",
+      "crates/cross-chain-gpu-validator/src/kernels.rs",
+      "crates/cross-chain-gpu-validator/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/discovery.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/cross-chain-position-manager/src/rebalance.rs",
+      "crates/cross-chain-position-manager/src/router.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/milestone-archive.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/mempool.rs",
+      "crates/confidential-gpu/src/attestation.rs",
+      "crates/cross-chain-position-manager/src/config.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/milestone.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/chronos-flash/src/types.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/phase-prompt.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/mempool.rs",
+      "crates/cross-vm-bridge/src/lib.rs",
+      "crates/cross-vm-coordinator/src/bridge_integration_tests.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/planner-subagent-prompt.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-position-manager/src/migration.rs",
+      "crates/cross-vm-bridge/src/lib.rs",
+      "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "crates/flash-finality/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/project.md",
+    "linked_code": [
+      "crates/cross-chain-position-manager/src/vault_controller.rs",
+      "crates/cross-vm-coordinator/src/config.rs",
+      "crates/custody-service/src/types.rs",
+      "crates/external-chains/src/adapter.rs",
+      "crates/gpu-swarm/src/node.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/requirements.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/intent.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/research-project/FEATURES.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/predictor.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/research-project/PITFALLS.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/roadmap.md",
+    "linked_code": [
+      "crates/cross-chain-position-manager/src/error.rs",
+      "crates/cross-chain-position-manager/src/events.rs",
+      "crates/cross-chain-position-manager/src/lib.rs",
+      "crates/cross-chain-position-manager/src/risk.rs",
+      "crates/cross-chain-position-manager/src/types.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/templates/user-setup.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/error.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/add-phase.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/oracle.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/add-tests.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/confidential-gpu/src/attestation.rs",
+      "crates/cross-chain-position-manager/src/accounting.rs",
+      "crates/cross-chain-position-manager/src/arbitrage.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/add-todo.md",
+    "linked_code": [
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/cross-chain-position-manager/src/accounting.rs",
+      "crates/cross-chain-position-manager/src/router.rs",
+      "crates/cross-chain-position-manager/src/types.rs",
+      "crates/cross-vm-bridge/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/audit-milestone.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/autonomous.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/check-todos.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/config.rs",
+      "crates/chronos-flash/src/lib.rs",
+      "crates/chronos-flash/src/mempool.rs",
+      "crates/chronos-flash/src/timewarp.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/cleanup.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/complete-milestone.md",
+    "linked_code": [
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/cross-chain-position-manager/src/accounting.rs",
+      "crates/cross-chain-position-manager/src/state.rs",
+      "crates/cross-vm-bridge/src/lib.rs",
+      "crates/cross-vm-coordinator/src/abi.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/diagnose-issues.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/execute-phase.md",
+    "linked_code": [
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/chronos-flash/src/types.rs",
+      "crates/cross-chain-position-manager/src/config.rs",
+      "crates/cross-chain-position-manager/src/events.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/insert-phase.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/new-milestone.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-gpu-validator/src/dashboard.rs",
+      "crates/cross-chain-gpu-validator/src/main.rs",
+      "crates/cross-chain-gpu-validator/src/orchestrator.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/new-project.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/pause-work.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/confidential-gpu/src/lib.rs",
+      "crates/confidential-gpu/src/threshold.rs",
+      "crates/contention-predictor/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/plan-milestone-gaps.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/confidential-gpu/src/enclave.rs",
+      "crates/confidential-gpu/src/lib.rs",
+      "crates/cross-chain-gpu-validator/src/orchestrator.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/plan-phase.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/chronos-flash/src/predictor.rs",
+      "crates/confidential-gpu/src/lib.rs",
+      "crates/contention-predictor/src/feature_extractor.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/progress.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/lib.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/quick.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-gpu-validator/src/orchestrator.rs",
+      "crates/cross-chain-gpu-validator/src/registry.rs",
+      "crates/cross-vm-bridge/src/canonical.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/remove-phase.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/confidential-gpu/src/enclave.rs",
+      "crates/confidential-gpu/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/resume-project.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/executor.rs",
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/lib.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/settings.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/types.rs",
+      "crates/chronos-flash/src/lib.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/chronos-flash/src/types.rs",
+      "crates/confidential-gpu/src/enclave.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/stats.md",
+    "linked_code": [
+      "crates/chronos-flash/src/lib.rs",
+      "crates/chronos-flash/src/timewarp.rs",
+      "crates/chronos-flash/src/types.rs",
+      "crates/cross-vm-bridge/src/lib.rs",
+      "crates/custody-service/src/service.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/transition.md",
+    "linked_code": [
+      "crates/chronos-flash/src/mempool.rs",
+      "crates/cross-chain-position-manager/src/config.rs",
+      "crates/cross-chain-position-manager/src/partner.rs",
+      "crates/cross-chain-position-manager/src/solvency.rs",
+      "crates/cross-vm-bridge/src/merkle_settlement_bridge.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/ui-phase.md",
+    "linked_code": [
+      "crates/cross-chain-position-manager/src/solvency.rs",
+      "crates/gpu-swarm/src/jobs/x3_simulation.rs",
+      "crates/gpu-swarm/src/x3_vm.rs",
+      "crates/quantum-swarm/src/arena/combatant.rs",
+      "crates/quantum-swarm/src/executor.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/ui-review.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-position-manager/src/accounting.rs",
+      "crates/cross-chain-position-manager/src/rebalance.rs",
+      "crates/cross-chain-position-manager/src/router.rs",
+      "crates/cross-chain-position-manager/src/types.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/update.md",
+    "linked_code": [
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/intent.rs",
+      "crates/chronos-flash/src/lib.rs",
+      "crates/chronos-flash/src/oracle.rs",
+      "crates/chronos-flash/src/timewarp.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/validate-phase.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/routes.rs",
+      "crates/atomic-swap-orchestrator/src/atomic_lock.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/chronos-flash/src/intent.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/verify-phase.md",
+    "linked_code": [
+      "crates/cross-chain-position-manager/src/accounting.rs",
+      "crates/cross-chain-position-manager/src/arbitrage.rs",
+      "crates/cross-chain-position-manager/src/error.rs",
+      "crates/cross-chain-position-manager/src/migration.rs",
+      "crates/cross-chain-position-manager/src/rebalancing.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  },
+  {
+    "file": "tools/get-shit-done/get-shit-done/workflows/verify-work.md",
+    "linked_code": [
+      "crates/apotheosis-tx/src/builder.rs",
+      "crates/apotheosis-tx/src/error.rs",
+      "crates/atomic-swap-orchestrator/src/lib.rs",
+      "crates/cross-chain-gpu-validator/src/evm_validator.rs",
+      "crates/cross-chain-position-manager/src/migration.rs"
+    ],
+    "severity": "medium",
+    "reason": "Doc older than linked code by more than 30 days"
+  }
+]

@@ -1,17 +1,16 @@
-#![cfg(feature = "runtime-benchmarks")]
-
 use super::*;
 
 #[allow(unused)]
 use crate::Pallet as X3AtomicKernel;
 use frame_benchmarking::{benchmarks, whitelisted_caller};
+use frame_support::traits::Currency;
 use frame_system::pallet_prelude::BlockNumberFor;
 use frame_system::RawOrigin;
 use sp_core::H256;
 
 benchmarks! {
-    /// Benchmark submitting an atomic bundle with variable number of legs.
-    /// Cost scales with leg count due to encoding overhead.
+    // Benchmark submitting an atomic bundle with variable number of legs.
+    // Cost scales with leg count due to encoding overhead.
     submit_atomic_bundle {
         let b in 1 .. T::MaxLegsPerBundle::get();
         let caller: T::AccountId = whitelisted_caller();
@@ -44,8 +43,8 @@ benchmarks! {
         assert_eq!(bundle.submitter, caller);
     }
 
-    /// Benchmark assigning an executor to a pending bundle.
-    /// Lightweight state transition: only updates executor field and status.
+    // Benchmark assigning an executor to a pending bundle.
+    // Lightweight state transition: only updates executor field and status.
     assign_bundle_executor {
         let caller: T::AccountId = whitelisted_caller();
         let executor: T::AccountId = whitelisted_caller();
@@ -74,9 +73,9 @@ benchmarks! {
         assert_eq!(bundle.executor, Some(executor));
     }
 
-    /// Benchmark finalizing a bundle with PoAE proof generation.
-    /// Requires bundle to be in Executing state.
-    /// Stores proof on-chain for external verifiers.
+    // Benchmark finalizing a bundle with PoAE proof generation.
+    // Requires bundle to be in Executing state.
+    // Stores proof on-chain for external verifiers.
     finalize_atomic_bundle {
         let caller: T::AccountId = whitelisted_caller();
         let executor: T::AccountId = whitelisted_caller();
@@ -113,8 +112,8 @@ benchmarks! {
         assert_eq!(proof.receipt_root, receipt_root);
     }
 
-    /// Benchmark rolling back a bundle with ExecutionFailed reason.
-    /// Slashes a portion of the submitter's bond.
+    // Benchmark rolling back a bundle with ExecutionFailed reason.
+    // Slashes a portion of the submitter's bond.
     rollback_atomic_bundle {
         let caller: T::AccountId = whitelisted_caller();
         let bond = T::MinBond::get();
@@ -141,8 +140,8 @@ benchmarks! {
         assert_eq!(bundle.status, BundleStatus::RolledBack);
     }
 
-    /// Benchmark rolling back a bundle with SubmitterCancelled reason.
-    /// No slashing — full bond returned to submitter.
+    // Benchmark rolling back a bundle with SubmitterCancelled reason.
+    // No slashing - full bond returned to submitter.
     rollback_atomic_bundle_cancel {
         let caller: T::AccountId = whitelisted_caller();
         let bond = T::MinBond::get();
@@ -169,8 +168,8 @@ benchmarks! {
         assert_eq!(bundle.status, BundleStatus::RolledBack);
     }
 
-    /// Benchmark submitting finalization result via unsigned extrinsic (OCW path).
-    /// This is the on-chain finalization path called by the off-chain orchestrator.
+    // Benchmark submitting finalization result via unsigned extrinsic (OCW path).
+    // This is the on-chain finalization path called by the off-chain orchestrator.
     submit_finalization_result {
         let caller: T::AccountId = whitelisted_caller();
         let bond = T::MinBond::get();
@@ -203,8 +202,8 @@ benchmarks! {
         assert_eq!(bundle.status, BundleStatus::Finalized);
     }
 
-    /// Benchmark recording a Flash Finality certificate anchor on-chain.
-    /// Called by off-chain worker to anchor cert hash for validation.
+    // Benchmark recording a Flash Finality certificate anchor on-chain.
+    // Called by off-chain worker to anchor cert hash for validation.
     record_flash_finality_anchor {
         let block_num = 100u64;
         let cert = H256::repeat_byte(0x33);

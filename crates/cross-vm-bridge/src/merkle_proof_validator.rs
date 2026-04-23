@@ -331,7 +331,7 @@ impl MerkleProofValidator for DefaultMerkleProofValidator {
 
         // Remaining bytes after root+block+index+leaf must be a multiple of 32 (sibling hashes)
         let sibling_bytes_len = merkle_proof_bytes.len() - 80;
-        if sibling_bytes_len % 32 != 0 {
+        if !sibling_bytes_len.is_multiple_of(32) {
             return Err(MerkleProofValidationError::InvalidMerkleProof(
                 "Sibling hashes not aligned to 32 bytes".into(),
             ));
@@ -623,10 +623,7 @@ mod tests {
         let result = validator.verify_validator_consensus(&settlement, &authorized, 1);
         match result {
             Err(MerkleProofValidationError::UnauthorizedValidator { validator_id: id })
-                if id == validator_id =>
-            {
-                
-            }
+                if id == validator_id => {}
             other => panic!("Expected UnauthorizedValidator, got {other:?}"),
         }
     }

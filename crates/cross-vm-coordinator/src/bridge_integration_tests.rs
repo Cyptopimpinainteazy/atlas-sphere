@@ -9,7 +9,7 @@
 
 #[cfg(test)]
 mod bridge_integration_tests {
-    use crate::types::{SwapSession, HtlcSecret};
+    use crate::types::{HtlcSecret, SwapSession};
     use std::collections::BTreeMap;
 
     // ============================================================================
@@ -124,7 +124,10 @@ mod bridge_integration_tests {
         registry.insert(11155111u32, config);
 
         // Expected: New value is 20
-        assert_eq!(registry.get(&11155111u32).unwrap().finality_threshold, 20u32);
+        assert_eq!(
+            registry.get(&11155111u32).unwrap().finality_threshold,
+            20u32
+        );
     }
 
     /// Test non-governance account cannot update registry
@@ -132,7 +135,7 @@ mod bridge_integration_tests {
     fn test_non_governance_cannot_update_registry() {
         // This test verifies permission logic at the pallet level
         // Simulate permission check
-        let is_governance = false;  // Non-governance account
+        let is_governance = false; // Non-governance account
         let can_update = is_governance;
 
         // Expected: Update fails (no permission)
@@ -194,11 +197,11 @@ mod bridge_integration_tests {
     #[test]
     fn test_submit_evm_proof_finality_not_met() {
         let registry = create_testnet_registry();
-        let current_block = 18500006u32;  // Only 6 blocks old
+        let current_block = 18500006u32; // Only 6 blocks old
         let proof_block = 18500000u32;
 
         // Action: Submit proof for block that's only 6 blocks old
-        let finality_threshold = 12u32;  // Sepolia requires 12
+        let finality_threshold = 12u32; // Sepolia requires 12
         let confirmations = current_block.saturating_sub(proof_block);
 
         // Expected: Fails because confirmations < threshold
@@ -225,9 +228,9 @@ mod bridge_integration_tests {
             slot: 123456789u64,
             blockhash: [3u8; 32],
             validator_signatures: vec![
-                [4u8; 32],  // Signature 1
-                [5u8; 32],  // Signature 2
-                [6u8; 32],  // Signature 3
+                [4u8; 32], // Signature 1
+                [5u8; 32], // Signature 2
+                [6u8; 32], // Signature 3
             ],
             required_signatures: 3u32,
         };
@@ -248,9 +251,9 @@ mod bridge_integration_tests {
             slot: 123456789u64,
             blockhash: [3u8; 32],
             validator_signatures: vec![
-                [4u8; 32],  // Only 1 signature
+                [4u8; 32], // Only 1 signature
             ],
-            required_signatures: 3u32,  // Needs 3
+            required_signatures: 3u32, // Needs 3
         };
 
         // Action: Check signature count

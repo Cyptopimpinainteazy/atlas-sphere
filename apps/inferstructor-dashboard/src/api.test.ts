@@ -176,6 +176,55 @@ describe('InferstructorAPI', () => {
       expect(result.token).toBe('admin_token_123');
     });
 
+    it('should include CSRF token header on admin login request', async () => {
+      const csrfMockResponse = {
+        data: {
+          token: 'csrf_token_header_check',
+        },
+      };
+      const loginMockResponse = {
+        data: {
+          success: true,
+          token: 'admin_token_header_check',
+          expires_in: 3600,
+        },
+      };
+
+      mockedAxios.get
+        .mockResolvedValueOnce(csrfMockResponse)
+        .mockResolvedValueOnce(csrfMockResponse);
+      mockedAxios.post.mockResolvedValueOnce(loginMockResponse);
+
+      await api.adminLogin('password123');
+
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        expect.stringContaining('/admin/login'),
+        { password: 'password123' },
+        { headers: { 'X-CSRF-Token': 'csrf_token_header_check' } }
+      );
+    });
+
+    it('should fail admin login when CSRF token is unavailable', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: {} });
+
+      await expect(api.adminLogin('password123')).rejects.toThrow('CSRF token unavailable');
+      expect(mockedAxios.post).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem('infra_admin_token')).toBeNull();
+      expect(sessionStorage.getItem('infra_csrf_token')).toBeNull();
+    });
+
+    it('should fail admin login with 403 when CSRF validation fails', async () => {
+      mockedAxios.get.mockResolvedValueOnce({ data: { token: 'csrf_token_403' } });
+      mockedAxios.post.mockRejectedValueOnce({
+        isAxiosError: true,
+        response: { status: 403 },
+      });
+
+      await expect(api.adminLogin('password123')).rejects.toThrow('Admin login failed: CSRF validation failed');
+      expect(sessionStorage.getItem('infra_admin_token')).toBeNull();
+      expect(sessionStorage.getItem('infra_csrf_token')).toBeNull();
+    });
+
     it('should admin logout', () => {
       sessionStorage.setItem('infra_admin_token', 'admin_token_test');
       api.adminLogout();

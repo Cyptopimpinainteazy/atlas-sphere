@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-04-23T01:23:10.262898101+00:00",
+  "source_consumer_contracts_file": "rpc_consumer_contracts.json",
+  "routes": [
+    {
+      "route_id": "bridge-status",
+      "route_label": "Bridge Status",
+      "rationale": "Only read-side proof and validation signals are allowed directly; settlement and cross-VM submission remain sidecar-owned.",
+      "allowed_methods": [
+        "query_crossChainStatus",
+        "validate_evmHeader",
+        "validate_svmHeader"
+      ]
+    },
+    {
+      "route_id": "explorer",
+      "route_label": "Explorer Feed",
+      "rationale": "No stable direct-read explorer contract is carved out yet from the current RPC surface.",
+      "allowed_methods": []
+    },
+    {
+      "route_id": "governance",
+      "route_label": "Governance Desk",
+      "rationale": "Direct-read governance dispute and finality visibility is allowed; proposal actions stay behind sidecar and signing boundaries.",
+      "allowed_methods": [
+        "queryDisputeStatus",
+        "queryProofFinality"
+      ]
+    },
+    {
+      "route_id": "network-overview",
+      "route_label": "Network Overview",
+      "rationale": "Public network posture can bind to direct-read validator and operational health endpoints only.",
+      "allowed_methods": [
+        "gpu_orchestratorHealth",
+        "gpu_validatorStatus"
+      ]
+    },
+    {
+      "route_id": "wallet-home",
+      "route_label": "Wallet Home",
+      "rationale": "Direct-read wallet and account posture data only; no relayer, queue, or signer-owned mutations.",
+      "allowed_methods": [
+        "x3_getAssetMetadata",
+        "x3_getAuthorities",
+        "x3_getAuthorizedAccounts",
+        "x3_getCanonicalBalance"
+      ]
+    }
+  ]
+}

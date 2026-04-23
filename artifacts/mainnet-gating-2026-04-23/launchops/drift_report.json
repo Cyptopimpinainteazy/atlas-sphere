@@ -1,0 +1,182 @@
+{
+  "baseline_branch": "main",
+  "changed_files": {
+    "docs": [
+      "crates/relayer/APRIL21_MAY19_CALENDAR.md",
+      "crates/relayer/EXCHANGE_INTEGRATION_PROCEDURES.md",
+      "crates/relayer/GPU_VALIDATOR_TROUBLESHOOTING.md",
+      "crates/relayer/MAINNET_DEPLOYMENT_RUNBOOK.md",
+      "crates/relayer/MAINNET_INCIDENT_RESPONSE.md",
+      "crates/relayer/MAINNET_PERFORMANCE_BASELINE.md",
+      "crates/relayer/MAINNET_VALIDATION.md",
+      "crates/relayer/MEDIA_INVITES_APRIL22.md",
+      "crates/relayer/PHASE_13D_README.md",
+      "crates/relayer/PHASE_13E_MAINNET_PREP.md",
+      "crates/relayer/PHASE_13F_COMPLETION_DECLARATION.md",
+      "crates/relayer/PHASE_13F_CROSS_REFERENCE_GUIDE.md",
+      "crates/relayer/PHASE_13F_DAILY_STATUS_TEMPLATE.md",
+      "crates/relayer/PHASE_13F_INFRASTRUCTURE_VALIDATION.md",
+      "crates/relayer/PHASE_13F_LAUNCH_ANNOUNCEMENT_TEMPLATES.md",
+      "crates/relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md",
+      "crates/relayer/PHASE_13F_MASTER_INDEX.md",
+      "crates/relayer/PHASE_13F_POSTLAUNCH_RETROSPECTIVE.md",
+      "crates/relayer/PHASE_13F_QUICK_REFERENCE_GUIDE.md",
+      "crates/relayer/PHASE_13F_STAKEHOLDER_BRIEFING_SLIDES.md",
+      "crates/relayer/PHASE_13F_STAKEHOLDER_SUMMARY.md",
+      "crates/relayer/PHASE_13F_TEST_RESULTS_TRACKER.md",
+      "crates/relayer/PHASE_13F_VERIFICATION_EXECUTION_PLAN.md",
+      "crates/relayer/PHASE_13F_VERIFICATION_EXERCISES.md",
+      "crates/relayer/PHASE_14_OUTLINE.md",
+      "crates/relayer/RPC_FAILOVER_PROCEDURES.md",
+      "crates/relayer/TESTNET_DEPLOYMENT.md",
+      "crates/relayer/TESTNET_VALIDATION.md",
+      "crates/relayer/TIGHT_IT_UP_APRIL21.md",
+      "crates/relayer/TOKEN_SYSTEM_IMPLEMENTATION_ROADMAP.md",
+      "crates/relayer/VALIDATOR_OPERATIONS.md",
+      "crates/relayer/VALIDATOR_TOKEN_OPERATIONS.md",
+      "crates/relayer/WAR_GAME_QUICK_START.md"
+    ],
+    "code": [
+      "crates/cross-chain-gpu-validator/src/lib.rs",
+      "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "crates/cross-vm-coordinator/src/lib.rs",
+      "crates/cross-vm-coordinator/src/merkle_settlement.rs",
+      "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "crates/external-chains/src/router_enhanced.rs",
+      "crates/external-chains/src/router_enhanced_complete.rs",
+      "crates/parallel-proposer/src/lib.rs",
+      "crates/relayer/src/lib.rs",
+      "crates/relayer/src/main.rs",
+      "crates/relayer/src/relayer.rs",
+      "crates/relayer/src/submitter.rs",
+      "crates/relayer/src/types.rs",
+      "crates/relayer/src/watchers/evm.rs",
+      "crates/relayer/src/watchers/mod.rs",
+      "crates/relayer/src/watchers/svm.rs",
+      "crates/x3-opt/src/lib.rs",
+      "crates/x3-opt/src/optimizer.rs",
+      "crates/x3-opt/src/passes/cond_folding.rs",
+      "crates/x3-opt/src/passes/mod.rs",
+      "crates/x3-opt/src/passes/pre_simple.rs",
+      "crates/x3-vm/src/gpu_hostcalls.rs",
+      "node/src/cli.rs",
+      "node/src/command.rs",
+      "node/src/lib.rs",
+      "node/src/main.rs",
+      "node/src/rpc.rs",
+      "node/src/service.rs",
+      "pallets/agent-accounts/src/lib.rs",
+      "pallets/agent-memory/src/lib.rs",
+      "pallets/atomic-trade-engine/src/lib.rs",
+      "pallets/atomic-trade-engine/src/mock.rs",
+      "pallets/depin-marketplace/src/lib.rs",
+      "pallets/evolution-core/src/lib.rs",
+      "pallets/fraud-proofs/src/lib.rs",
+      "pallets/governance/src/lib.rs",
+      "pallets/meme-overlord/src/lib.rs",
+      "pallets/private-execution/src/lib.rs",
+      "pallets/svm-runtime/src/lib.rs",
+      "pallets/swarm/src/lib.rs",
+      "pallets/treasury/src/lib.rs",
+      "pallets/x3-atomic-kernel/src/lib.rs",
+      "pallets/x3-coin/src/lib.rs",
+      "pallets/x3-da/src/lib.rs",
+      "pallets/x3-domain-registry/src/lib.rs",
+      "pallets/x3-governance/src/lib.rs",
+      "pallets/x3-governance/src/proposal_manager.rs",
+      "pallets/x3-governance/src/treasury.rs",
+      "pallets/x3-governance/src/voting_engine.rs",
+      "pallets/x3-invariants/src/lib.rs",
+      "pallets/x3-inventory/src/lib.rs",
+      "pallets/x3-jury-anchor/src/lib.rs",
+      "pallets/x3-kernel/src/lib.rs",
+      "pallets/x3-kernel/src/mock.rs",
+      "pallets/x3-kernel/src/tests.rs",
+      "pallets/x3-reservation/src/lib.rs",
+      "pallets/x3-sequencer/src/lib.rs",
+      "pallets/x3-settlement-engine/src/lib.rs",
+      "pallets/x3-slash/src/lib.rs",
+      "pallets/x3-solvency/src/lib.rs",
+      "pallets/x3-verifier/src/lib.rs",
+      "pallets/x3-wallet-pallet/src/lib.rs",
+      "runtime/src/lib.rs"
+    ],
+    "tests": [
+      "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "crates/cross-vm-coordinator/tests/security_regression.rs"
+    ],
+    "consensus": [
+      "crates/parallel-proposer/src/lib.rs",
+      "node/src/service.rs",
+      "runtime/src/lib.rs"
+    ],
+    "bridge": [
+      "crates/cross-chain-gpu-validator/src/lib.rs",
+      "crates/relayer/src/lib.rs",
+      "crates/relayer/src/main.rs",
+      "crates/relayer/src/relayer.rs",
+      "crates/relayer/src/submitter.rs",
+      "crates/relayer/src/types.rs",
+      "crates/relayer/src/watchers/evm.rs",
+      "crates/relayer/src/watchers/mod.rs",
+      "crates/relayer/src/watchers/svm.rs"
+    ],
+    "cross_vm": [
+      "crates/cross-vm-coordinator/src/bridge_integration_tests.rs",
+      "crates/cross-vm-coordinator/src/lib.rs",
+      "crates/cross-vm-coordinator/src/merkle_settlement.rs",
+      "crates/cross-vm-coordinator/src/merkle_settlement_coordinator.rs",
+      "crates/cross-vm-coordinator/tests/security_regression.rs"
+    ],
+    "dex": [],
+    "gpu": [
+      "crates/cross-chain-gpu-validator/src/lib.rs"
+    ],
+    "ops": [
+      ".github/workflows/phase13f-placeholder-gate.yml",
+      "scripts/check_phase13f_placeholders.sh",
+      "scripts/deploy_dual_validator.sh",
+      "scripts/run-validator.sh",
+      "scripts/start-beast.sh"
+    ],
+    "mainnet_config": [
+      "node/src/service.rs",
+      "runtime/src/lib.rs",
+      "scripts/testnet/package-lock.json"
+    ]
+  },
+  "drift_flags": [
+    {
+      "severity": "critical",
+      "flag_type": "mainnet_config_without_review",
+      "files": [
+        "node/src/service.rs",
+        "runtime/src/lib.rs",
+        "scripts/testnet/package-lock.json"
+      ],
+      "reason": "Mainnet/testnet config changed without launch review evidence",
+      "required_evidence": [
+        ".launchops/mainnet-review.md",
+        "docs/mainnet-launch-review.md",
+        "docs/launch-gates.md",
+        "MAINNET_REVIEW marker"
+      ]
+    },
+    {
+      "severity": "critical",
+      "flag_type": "test_weakened",
+      "files": [
+        "/dev/null",
+        "X3_RC1_WIRING_PLAN.md",
+        "crates/cross-vm-coordinator/src/merkle_settlement.rs",
+        "crates/x3-opt/src/optimizer.rs",
+        "pallets/x3-kernel/src/tests.rs"
+      ],
+      "reason": "Assertions removed or weakness markers added in test diff",
+      "required_evidence": [
+        "Restore removed assertions",
+        "Remove #[ignore] or replace with invariant/property tests"
+      ]
+    }
+  ]
+}

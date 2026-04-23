@@ -4,46 +4,61 @@ Use this checklist to deploy X3 Chain and run the real X3 kernel benchmark.
 
 ## Pre-Deployment
 
-- [ ] Read `TESTNET_READINESS_SUMMARY.md` for overview
-- [ ] Read `BENCHMARK_GUIDE.md` for detailed deployment steps
-- [ ] Verify system has: Rust 1.70+, Node.js 18+, Python 3.8+
+- [x] Read `TESTNET_READINESS_SUMMARY.md` for overview
+- [x] Read `BENCHMARK_GUIDE.md` for detailed deployment steps
+- [x] Verify system has: Rust 1.70+, Node.js 18+, Python 3.8+
 - [ ] Clone/pull latest x3-chain-master repo with patches applied
-- [ ] Verify patches are in place:
-  - [ ] `runtime/src/lib.rs:746` — No mock EVM fallback
-  - [ ] `node/src/rpc_frontier.rs` — Functions renamed to `create_frontier_rpc()`
-  - [ ] `scripts/run-validator.sh` — No `CCGV_USE_MOCK_RPC=true` export
+- [x] Verify patches are in place:
+  - [x] `runtime/src/lib.rs:746` — No mock EVM fallback
+  - [x] `node/src/rpc_frontier.rs` — Functions renamed to `create_frontier_rpc()`
+  - [x] `scripts/run-validator.sh` — No `CCGV_USE_MOCK_RPC=true` export
 
 ## Build & Verification
 
-- [ ] Build release node: `cargo build -p x3-chain-node --release` (takes ~5 min)
-- [ ] Verify build succeeds with no errors
-- [ ] Binary created at: `target/release/x3-chain-node` (check filesize ~150MB)
-- [ ] Install Node.js deps: `cd scripts/testnet && npm install`
-- [ ] Verify npm packages installed: check `node_modules/@polkadot/api`
+- [x] Build release node: `cargo build -p x3-chain-node --release` (takes ~5 min)
+  - Built with mitigation flags `CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 CARGO_PROFILE_RELEASE_OPT_LEVEL=1 CARGO_PROFILE_RELEASE_LTO=false` to dodge the rustc 1.88.0 / LLVM 20.1.5 SIGSEGV that hits with the workspace default `opt-level=2, codegen-units=1, lto=false` profile (panics in `blake3`, `tokio`, `wasmtime-jit`, `sp-arithmetic`).
+- [x] Verify build succeeds with no errors
+- [x] Binary created at: `target/release/x3-chain-node` (53MB with `opt-level=1`; original ~150MB target assumes `opt-level=2`+full debug)
+  - `file target/release/x3-chain-node` → ELF 64-bit LSB pie executable, dynamically linked, BuildID `80338a02…`
+  - `./target/release/x3-chain-node --version` → `X3 Chain Node 0.1.0`
+- [x] Install Node.js deps: `cd scripts/testnet && npm install`
+- [x] Verify npm packages installed: check `node_modules/@polkadot/api`
 
 ## Local Chain Deployment
 
-- [ ] Start validator node:
+- [x] Start validator node (CLI flags reconciled to current binary — `--ws-port`/`--ws-external` are gone; HTTP+WS multiplex on `--rpc-port`):
   ```bash
-  ./target/release/x3-chain-node \
-    --chain local \
-    --validator \
-    --tmp \
-    --rpc-port 9944 \
-    --ws-external
+  ./target/release/x3-chain-node --dev --rpc-port 9933
   ```
-- [ ] Verify chain starts (watch for "Alice" authority logs)
-- [ ] Verify RPC is listening: `curl -s http://127.0.0.1:9944`
-- [ ] Let chain run for ~30 sec to stabilize
-- [ ] Keep chain running in background terminal
+  `--dev` is the documented shortcut for `--chain=dev --force-authoring --rpc-cors=all --alice --tmp` and seeds the keystore with Alice's session keys so blocks are produced.
+- [x] Verify chain starts (watch for "Alice" authority logs) — `--alice` implied by `--dev`; logs show `Pre-sealed block for proposal at <n>` and `🏆 Block finalized: #<n> ✅`.
+- [x] Verify RPC is listening on `127.0.0.1:9933` (this binary multiplexes JSON-RPC HTTP+WS on `--rpc-port`; `9944` no longer applies):
+  - `system_health` → `{peers:0, isSyncing:false, shouldHavePeers:false}`
+  - `chain_getHeader` t=0  → block `0xf3` (= 243)
+  - `chain_getHeader` t=+8s → block `0x11b` (= 283)
+  - Δ ≈ 40 blocks in 8 s ⇒ ~5 blk/s, finalization advancing in lockstep.
+- [x] Let chain run for ~30 sec to stabilize
+- [x] Keep chain running in background terminal
 
 ## Account Authorization
+
+> **BLOCKED on `--dev` chain spec.** Verified against the live runtime metadata at `ws://127.0.0.1:9933`:
+> - There is **no `Sudo` pallet** in this runtime (`pallets` = System, Timestamp, Aura, Grandpa, Session, Balances, TransactionPayment, Scheduler, Preimage, EVM, AtlasKernel, X3Coin, AtomicTradeEngine, Council, Governance, Treasury, … — `tx.sudo` is empty), so `authorize-accounts.js`'s `api.tx.sudo.sudo(...)` call has no target.
+> - `pallets/x3-kernel/src/lib.rs:1591` requires `T::GovernanceOrigin::ensure_origin(origin)?`, and `runtime/src/lib.rs:680` sets `type GovernanceOrigin = EnsureRootOrHalfCouncil`.
+> - `--dev` genesis seeds **zero Council members** (`api.query.council.members()` → `[]`, `prime` → `null`), so the half-council path is also unreachable.
+> - A direct dry-run of `atlasKernel.authorizeAccount(//Alice//load//0)` signed by Alice was included in a block and dispatched **`BadOrigin`** (expected, given the above).
+>
+> Unblock options (any one, requires rebuild):
+>   1. Add Alice to `council.members` in the dev `chain_spec.rs` genesis (smallest change), then `council.execute(authorizeAccount(target))`.
+>   2. Re-add the `Sudo` pallet to the runtime with Alice as sudo key for non-mainnet specs.
+>   3. Loosen `AtlasKernel::GovernanceOrigin` to `EnsureRootOrAuthority` for non-mainnet builds.
+> Until one of those lands, the four account-authorization items below remain **unchecked on purpose**.
 
 - [ ] Run authorization script:
   ```bash
   cd scripts/testnet
   node authorize-accounts.js \
-    --wsEndpoint ws://127.0.0.1:9944 \
+    --wsEndpoint ws://127.0.0.1:9933 \
     --baseDerivation //Alice//load \
     --count 240 \
     --sudoSeed //Alice
@@ -132,6 +147,7 @@ Use this checklist to deploy X3 Chain and run the real X3 kernel benchmark.
 - [ ] Verify Alice account exists (should auto-exist on local chain)
 - [ ] Try authorizing manually via Polkadot.js UI
 - [ ] Check chain logs for sudo errors
+- [x] **Confirmed root cause on current `--dev` build**: no `Sudo` pallet, empty Council; `authorize_account` requires `EnsureRootOrHalfCouncil`. See the Account Authorization section above for the three unblock options.
 
 ### Benchmark Hangs on Finality
 - [ ] May be normal if finality_wait_sec is high

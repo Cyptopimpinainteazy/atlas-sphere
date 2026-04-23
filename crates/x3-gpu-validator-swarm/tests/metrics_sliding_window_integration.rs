@@ -72,7 +72,7 @@ mod tests {
 
             for _ in 0..to_submit {
                 // Record with realistic latencies (1-10ms)
-                let latency = ((task_count % 10) + 1) as u64;
+                let latency = (task_count % 10) + 1;
                 window.record(Instant::now(), latency);
                 task_count += 1;
             }
@@ -205,7 +205,6 @@ mod tests {
 
         let mut window = SimpleSlideWindow::new(10000);
         let window_duration = Duration::from_secs(2);
-        let test_start = Instant::now();
 
         let mut max_tps: f64 = 0.0;
 

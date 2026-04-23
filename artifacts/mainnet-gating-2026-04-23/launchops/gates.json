@@ -1,0 +1,83 @@
+[
+  {
+    "id": "bridge_replay_tests",
+    "name": "Bridge Replay Tests",
+    "status": "pass",
+    "required": true,
+    "weight": 15,
+    "source": "source:feature_matrix:bridge",
+    "reason": null
+  },
+  {
+    "id": "clippy_clean",
+    "name": "Clippy Clean",
+    "status": "fail",
+    "required": true,
+    "weight": 10,
+    "source": "command:cargo_clippy",
+    "reason": "cargo clippy --workspace --all-targets -- -D warnings exited with Some(101)"
+  },
+  {
+    "id": "cross_vm_atomic_tests",
+    "name": "Cross Vm Atomic Tests",
+    "status": "pass",
+    "required": true,
+    "weight": 15,
+    "source": "source:feature_matrix:cross_vm",
+    "reason": null
+  },
+  {
+    "id": "dex_liquidity_lock_tests",
+    "name": "Dex Liquidity Lock Tests",
+    "status": "pass",
+    "required": true,
+    "weight": 10,
+    "source": "source:feature_matrix:dex",
+    "reason": null
+  },
+  {
+    "id": "formatting_clean",
+    "name": "Formatting Clean",
+    "status": "fail",
+    "required": true,
+    "weight": 5,
+    "source": "command:cargo_fmt",
+    "reason": "cargo fmt --all -- --check exited with Some(1)"
+  },
+  {
+    "id": "no_p0_blockers",
+    "name": "No P0 Blockers",
+    "status": "pass",
+    "required": true,
+    "weight": 20,
+    "source": "source:blockers",
+    "reason": null
+  },
+  {
+    "id": "no_production_stubs",
+    "name": "No Production Stubs",
+    "status": "fail",
+    "required": true,
+    "weight": 15,
+    "source": "source:red_flags",
+    "reason": "227 critical red flags in production code"
+  },
+  {
+    "id": "workspace_compiles",
+    "name": "Workspace Compiles",
+    "status": "fail",
+    "required": true,
+    "weight": 10,
+    "source": "command:cargo_check",
+    "reason": "cargo check --workspace --all-targets exited with Some(101)"
+  },
+  {
+    "id": "workspace_tests_pass",
+    "name": "Workspace Tests Pass",
+    "status": "fail",
+    "required": true,
+    "weight": 20,
+    "source": "command:cargo_test",
+    "reason": "cargo test --workspace --no-fail-fast exited with Some(101)"
+  }
+]

@@ -8,13 +8,13 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 docs=(
-  "crates/relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md"
-  "crates/relayer/MAINNET_INCIDENT_RESPONSE.md"
-  "crates/relayer/RPC_FAILOVER_PROCEDURES.md"
-  "crates/relayer/VALIDATOR_OPERATIONS.md"
-  "crates/relayer/MAINNET_PERFORMANCE_BASELINE.md"
-  "crates/relayer/GPU_VALIDATOR_TROUBLESHOOTING.md"
-  "crates/relayer/PHASE_13F_MASTER_INDEX.md"
+  "crates/x3-relayer/PHASE_13F_MAINNET_LAUNCH_RUNBOOK.md"
+  "crates/x3-relayer/MAINNET_INCIDENT_RESPONSE.md"
+  "crates/x3-relayer/RPC_FAILOVER_PROCEDURES.md"
+  "crates/x3-relayer/VALIDATOR_OPERATIONS.md"
+  "crates/x3-relayer/MAINNET_PERFORMANCE_BASELINE.md"
+  "crates/x3-relayer/GPU_VALIDATOR_TROUBLESHOOTING.md"
+  "crates/x3-relayer/PHASE_13F_MASTER_INDEX.md"
 )
 
 for doc in "${docs[@]}"; do

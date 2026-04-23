@@ -39,6 +39,8 @@ log = { version = "0.4", default-features = false }
 
 [dev-dependencies]
 env_logger = "0.10"
+x3-evm-integration = { path = "../evm-integration", default-features = false, features = ["std", "test-utils"] }
+x3-svm-integration = { path = "../svm-integration", default-features = false, features = ["std"] }
 
 [features]
 default = ["std"]

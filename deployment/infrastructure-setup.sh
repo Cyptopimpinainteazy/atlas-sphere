@@ -494,6 +494,7 @@ set -e
 
 NODE_TYPE="${1:-validator}"  # validator, rpc, bootnode, or monitoring
 ADMIN_IP="${ADMIN_IP:-0.0.0.0/0}"  # Restrict SSH to admin IP
+MONITORING_IP="${MONITORING_IP:-$ADMIN_IP}"  # Restrict metrics scraping to monitoring host/CIDR
 
 echo "🔒 Configuring firewall for $NODE_TYPE node..."
 
@@ -532,8 +533,7 @@ case "$NODE_TYPE" in
 esac
 
 # Metrics port (accessible from monitoring server only)
-# TODO: Restrict to monitoring server IP
-sudo ufw allow 9615/tcp comment 'Prometheus metrics'
+sudo ufw allow from "$MONITORING_IP" to any port 9615 proto tcp comment 'Prometheus metrics (restricted)'
 
 # Enable firewall
 sudo ufw --force enable

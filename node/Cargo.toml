@@ -26,6 +26,11 @@ x3-bridge-adapters = { path = "../crates/x3-bridge-adapters" }
 x3-rpc = { path = "../crates/x3-rpc" }
 x3-atomic-trade = { path = "../crates/x3-atomic-trade" }
 x3-cross-vm-bridge = { path = "../crates/cross-vm-bridge" }
+x3-finality-oracle = { path = "../crates/x3-finality-oracle" }
+x3-verification-router = { path = "../crates/x3-verification-router" }
+x3-validator-attestation = { path = "../crates/x3-validator-attestation" }
+x3-proof-dispute = { path = "../crates/x3-proof-dispute" }
+x3-gateway-risk-engine = { path = "../crates/x3-gateway-risk-engine" }
 parallel-proposer = { path = "../crates/parallel-proposer" }
 contention-predictor = { path = "../crates/contention-predictor" }
 x3-gpu-validator-swarm = { path = "../crates/x3-gpu-validator-swarm", optional = true }
@@ -85,7 +90,7 @@ cli = []
 
 # GPU validator orchestrator feature (requires x3-gpu-validator-swarm crate).
 # Enable to spawn the GPU validator swarm orchestrator during node startup.
-gpu-validator = ["x3-gpu-validator-swarm"]
+gpu-validator = ["x3-gpu-validator-swarm", "x3-chain-runtime/gpu-validator"]
 
 # Optional flags to enable Frontier JSON-RPC and EVM runtime features.  
 # Enabling `frontier` will opt-in to Frontier crates and runtime adapters.

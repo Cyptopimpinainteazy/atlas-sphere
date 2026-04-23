@@ -10,8 +10,8 @@ use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::{collections::BTreeSet, path::PathBuf};
 use x3_chain_runtime::{
     x3_kernel_default_assets, AccountId, AtlasKernelConfig, AuraConfig, BalancesConfig,
-    GrandpaConfig, RuntimeGenesisConfig, SessionConfig, SessionKeys, Signature, SystemConfig,
-    X3CoinConfig, WASM_BINARY,
+    CouncilConfig, GrandpaConfig, RuntimeGenesisConfig, SessionConfig, SessionKeys, Signature,
+    SystemConfig, X3CoinConfig, WASM_BINARY,
 };
 
 /// Chain specification specialized to this runtime's genesis configuration.
@@ -178,6 +178,10 @@ pub fn development_config() -> Result<ChainSpec, String> {
     ];
     endowed_accounts.extend(dev_evm_endowed_accounts());
 
+    // Single-member dev council so EnsureRootOrHalfCouncil-gated calls can be
+    // executed via Council::propose(threshold=1, ...) without a Sudo pallet.
+    let council_members = vec![get_account_id_from_seed::<sr25519::Public>("Alice")?];
+
     Ok(ChainSpec::from_genesis(
         "X3 Chain Development",
         "x3_chain_dev",
@@ -187,6 +191,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                council_members.clone(),
                 sp_core::H160::zero(),
                 [0u8; 32],
             )
@@ -219,6 +224,11 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ];
     endowed_accounts.extend(dev_evm_endowed_accounts());
 
+    let council_members = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice")?,
+        get_account_id_from_seed::<sr25519::Public>("Bob")?,
+    ];
+
     Ok(ChainSpec::from_genesis(
         "X3 Chain Local Testnet",
         "x3_chain_local",
@@ -228,6 +238,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                council_members.clone(),
                 sp_core::H160::zero(),
                 [0u8; 32],
             )
@@ -261,6 +272,12 @@ pub fn local_three_validator_config() -> Result<ChainSpec, String> {
     ];
     endowed_accounts.extend(dev_evm_endowed_accounts());
 
+    let council_members = vec![
+        get_account_id_from_seed::<sr25519::Public>("Alice")?,
+        get_account_id_from_seed::<sr25519::Public>("Bob")?,
+        get_account_id_from_seed::<sr25519::Public>("Charlie")?,
+    ];
+
     Ok(ChainSpec::from_genesis(
         "X3 Chain Local 3-Validator Testnet",
         "x3_chain_local3",
@@ -270,6 +287,7 @@ pub fn local_three_validator_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                council_members.clone(),
                 sp_core::H160::zero(),
                 [0u8; 32],
             )
@@ -308,6 +326,7 @@ pub fn staging_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                Vec::new(),
                 parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
                 parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
@@ -362,6 +381,7 @@ pub fn testnet_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                Vec::new(),
                 parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
                 parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
@@ -409,6 +429,7 @@ pub fn production_config() -> Result<ChainSpec, String> {
                 wasm_binary,
                 initial_authorities.clone(),
                 endowed_accounts.clone(),
+                Vec::new(),
                 parse_escrow_addr_from_env("X3_EVM_ESCROW_ADDR"),
                 parse_svm_escrow_from_env("X3_SVM_ESCROW_ADDR"),
             )
@@ -474,8 +495,9 @@ fn x3_chain_genesis(
     wasm_binary: &[u8],
     initial_authorities: Vec<(AuraId, GrandpaId)>,
     endowed_accounts: Vec<AccountId>,
-    evm_escrow_addr: sp_core::H160,
-    svm_escrow_addr: [u8; 32],
+    council_members: Vec<AccountId>,
+    _evm_escrow_addr: sp_core::H160,
+    _svm_escrow_addr: [u8; 32],
 ) -> RuntimeGenesisConfig {
     let mut endowed: BTreeSet<AccountId> = endowed_accounts.into_iter().collect();
 
@@ -529,11 +551,12 @@ fn x3_chain_genesis(
         session: SessionConfig { keys: session_keys },
         atlas_kernel: AtlasKernelConfig {
             assets: x3_kernel_default_assets(),
-            evm_escrow_addr,
-            svm_escrow_addr,
         },
         transaction_payment: Default::default(),
-        council: Default::default(),
+        council: CouncilConfig {
+            members: council_members,
+            phantom: Default::default(),
+        },
         evm: Default::default(),
         governance: Default::default(),
         treasury: Default::default(),
