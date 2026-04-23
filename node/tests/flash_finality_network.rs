@@ -65,7 +65,7 @@ mod flash_finality_network_tests {
         let quorum_needed = 3; // 3 of 4
 
         // Block is broadcast to all validators
-        for validator in &validators {
+        for _validator in &validators {
             // In real scenario: validator.receive_block(block_100)
             // Here we simulate: validator knows about the block
         }
@@ -269,7 +269,7 @@ mod flash_finality_network_tests {
         }
 
         // Validators 1 and 2 in shadow mode: certificates received but not applied
-        let certs_received = validators[0].certificates_received.read().await;
+        let _certs_received = validators[0].certificates_received.read().await;
         //In real scenario: assert!(certs_received.is_empty(), "Shadow mode: no certificates applied as finality");
 
         // No finalized blocks in shadow mode
@@ -303,7 +303,7 @@ mod flash_finality_network_tests {
         const VALIDATORS: u32 = 4;
 
         // Simulate: blocks 100-110, each needs ~3-4 votes to reach quorum
-        for block_num in 100..=110 {
+        for _block_num in 100..=110 {
             // Validators 1,2,3 vote immediately (quick consensus)
             let votes_needed = QUORUM;
 

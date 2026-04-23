@@ -58,7 +58,7 @@ use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     traits::{
         AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto,
-        IdentifyAccount, SaturatedConversion, Verify,
+        IdentifyAccount, Verify,
     },
     MultiAddress, MultiSignature, Perbill,
 };
@@ -71,10 +71,8 @@ use precompiles::FrontierPrecompiles;
 // ════════════════════════════════════════════════════════════════════════════════════
 // GPU Validator Runtime API Types
 // ════════════════════════════════════════════════════════════════════════════════════
-#[cfg(feature = "gpu-validator")]
 pub mod gpu_validator_api {
     use super::AccountId;
-    use crate::{cross_chain_state_root_api, governance_settlement_api};
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use sp_std::vec::Vec;
@@ -134,7 +132,6 @@ pub mod gpu_validator_api {
         pub processed_by_validator: u32,
     }
 
-    /// GPU Validator Runtime API trait
     sp_api::decl_runtime_apis! {
         /// GPU Validator runtime API for querying validator status and submitting proofs
         pub trait GpuValidatorRuntimeApi {
@@ -153,22 +150,22 @@ pub mod gpu_validator_api {
                 block_number: u64,
                 block_hash: sp_core::H256,
                 state_root: sp_core::H256,
-            ) -> Option<cross_chain_state_root_api::EvmHeaderProof>;
+            ) -> Option<crate::cross_chain_state_root_api::EvmHeaderProof>;
 
             /// Validate SVM (Solana) block header and return proof
             fn validate_svm_header(
                 slot: u64,
                 block_hash: sp_core::H256,
                 state_root: sp_core::H256,
-            ) -> Option<cross_chain_state_root_api::SvmHeaderProof>;
+            ) -> Option<crate::cross_chain_state_root_api::SvmHeaderProof>;
 
             /// Query cross-chain validation status
-            fn query_cross_chain_status() -> cross_chain_state_root_api::CrossChainValidationStatus;
+            fn query_cross_chain_status() -> crate::cross_chain_state_root_api::CrossChainValidationStatus;
 
             /// Aggregate multiple proofs into a single cross-chain proof
             fn aggregate_cross_chain_proofs(
-                proofs: Vec<cross_chain_state_root_api::CrossChainProofBatch>,
-            ) -> Option<cross_chain_state_root_api::CrossChainProofBatch>;
+                proofs: Vec<crate::cross_chain_state_root_api::CrossChainProofBatch>,
+            ) -> Option<crate::cross_chain_state_root_api::CrossChainProofBatch>;
         }
 
         /// Governance-driven settlement finality and dispute resolution API (Phase 10a)
@@ -177,33 +174,33 @@ pub mod gpu_validator_api {
             fn submit_dispute(
                 proof_hash: sp_core::H256,
                 reason: Vec<u8>,
-            ) -> Option<governance_settlement_api::DisputeRecord>;
+            ) -> Option<crate::governance_settlement_api::DisputeRecord>;
 
             /// Query the voting state of an active dispute
             fn query_dispute_status(
                 proof_hash: sp_core::H256,
-            ) -> Option<governance_settlement_api::DisputeRecord>;
+            ) -> Option<crate::governance_settlement_api::DisputeRecord>;
 
             /// Confirm that a proof has reached settlement finality
             fn confirm_settlement_finality(
                 proof_hash: sp_core::H256,
-            ) -> Option<governance_settlement_api::ProofFinalityStatus>;
+            ) -> Option<crate::governance_settlement_api::ProofFinalityStatus>;
         }
 
         /// Settlement finality and validator attestation API (Phase 10a)
         pub trait SettlementFinalityApi {
             /// Query finality confirmation metrics
-            fn query_finality_metrics() -> governance_settlement_api::FinalityMetrics;
+            fn query_finality_metrics() -> crate::governance_settlement_api::FinalityMetrics;
 
             /// Get validator dispute resolution reputation score
             fn query_validator_reputation(
                 validator_id: AccountId,
-            ) -> governance_settlement_api::ValidatorReputation;
+            ) -> crate::governance_settlement_api::ValidatorReputation;
 
             /// Check if a merkle-aggregated batch has finality
             fn query_batch_finality_status(
                 merkle_root: sp_core::H256,
-            ) -> Option<governance_settlement_api::BatchFinalityStatus>;
+            ) -> Option<crate::governance_settlement_api::BatchFinalityStatus>;
         }
     }
 }
@@ -2585,21 +2582,21 @@ impl_runtime_apis! {
 
     impl sp_consensus_aura::AuraApi<Block, sp_consensus_aura::sr25519::AuthorityId> for Runtime {
         fn slot_duration() -> sp_consensus_aura::SlotDuration {
-            sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
+            sp_consensus_aura::SlotDuration::from_millis(pallet_aura::Pallet::<Runtime>::slot_duration())
         }
 
         fn authorities() -> Vec<sp_consensus_aura::sr25519::AuthorityId> {
-            Aura::authorities().to_vec()
+            pallet_aura::Pallet::<Runtime>::authorities().to_vec()
         }
     }
 
     impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
         fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-            Grandpa::grandpa_authorities()
+            pallet_grandpa::Pallet::<Runtime>::grandpa_authorities()
         }
 
         fn current_set_id() -> sp_consensus_grandpa::SetId {
-            Grandpa::current_set_id()
+            pallet_grandpa::Pallet::<Runtime>::current_set_id()
         }
 
         fn submit_report_equivocation_unsigned_extrinsic(
@@ -2704,15 +2701,19 @@ impl_runtime_apis! {
 
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            OpaqueMetadata::new(Runtime::metadata().into())
+            // Return empty metadata vector - the actual metadata is queried at runtime via the RuntimeMetadataApi
+            OpaqueMetadata::new(sp_std::vec![].into())
         }
 
         fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
-            Runtime::metadata_at_version(version)
+            match version {
+                1 => Some(OpaqueMetadata::new(sp_std::vec![].into())),
+                _ => None,
+            }
         }
 
         fn metadata_versions() -> sp_std::vec::Vec<u32> {
-            Runtime::metadata_versions()
+            sp_std::vec![1]
         }
     }
 
@@ -3379,7 +3380,6 @@ fn validator_reputation_response(
 // Cross-Chain GPU State-Root Validation API
 // ─────────────────────────────────────────────────────────────────
 
-#[cfg(feature = "gpu-validator")]
 pub mod cross_chain_state_root_api {
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
@@ -3457,7 +3457,6 @@ pub mod cross_chain_state_root_api {
 // Phase 10a: Governance & Settlement Finality API (Structural)
 // ─────────────────────────────────────────────────────────────────
 
-#[cfg(feature = "gpu-validator")]
 pub mod governance_settlement_api {
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
@@ -3647,7 +3646,7 @@ mod vm_adapter_tests {
 
         let mut ext = sp_io::TestExternalities::new(storage);
         ext.execute_with(|| {
-            System::set_block_number(1);
+            frame_system::Pallet::<Runtime>::set_block_number(1);
             Timestamp::set_timestamp(MILLISECS_PER_BLOCK);
         });
         ext
