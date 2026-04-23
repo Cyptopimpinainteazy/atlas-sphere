@@ -329,11 +329,11 @@ impl ProductionRouter {
 
     fn initialize_data(&mut self) {
         // Initialize gas oracle
-        self.gas_oracle.insert(1, U256::from(20000000000)); // 20 gwei
-        self.gas_oracle.insert(137, U256::from(1000000000)); // 1 gwei
-        self.gas_oracle.insert(42161, U256::from(100000000)); // 0.1 gwei
-        self.gas_oracle.insert(8453, U256::from(500000000)); // 0.5 gwei
-        self.gas_oracle.insert(10, U256::from(10000000)); // 0.01 gwei
+        self.gas_oracle.insert(1, U256::from(20000000000u64)); // 20 gwei
+        self.gas_oracle.insert(137, U256::from(1000000000u64)); // 1 gwei
+        self.gas_oracle.insert(42161, U256::from(100000000u64)); // 0.1 gwei
+        self.gas_oracle.insert(8453, U256::from(500000000u64)); // 0.5 gwei
+        self.gas_oracle.insert(10, U256::from(10000000u64)); // 0.01 gwei
 
         // Initialize price feeds
         let base_price = U256::from(1000000);
