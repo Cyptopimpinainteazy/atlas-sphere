@@ -767,6 +767,8 @@ where
     /// Execute an SVM instruction via the kernel's SVM adapter.
     ///
     /// Routes to the `RbpfSvmExecutor` through the kernel's SVM pathway.
+    /// Note: SVM execution is currently not exposed through the runtime API.
+    /// This method returns a failed status until the API is extended.
     fn execute_svm_tx(
         &self,
         _caller: &[u8; 32],
@@ -789,14 +791,20 @@ where
             return Ok(CrossVmResult::failed(b"program not found".to_vec(), 1_000));
         }
 
-        match api.submit_svm_instruction(at, *program_id, input.to_vec()) {
-            Ok(Ok(output)) => Ok(CrossVmResult::success(output, 5_000)),
-            Ok(Err(err)) => Ok(CrossVmResult::failed(err, 5_000)),
-            Err(e) => {
-                log::error!("[RuntimeDispatcher] SVM runtime API error: {:?}", e);
-                Err(sp_runtime::DispatchError::Other("SVM runtime API error"))
-            }
-        }
+        // SVM instruction submission is not yet exposed through the runtime API.
+        // Return a deterministic failure rather than attempting a non-existent API call.
+        log::warn!(
+            "[RuntimeDispatcher] SVM execution not yet exposed via runtime API. Program: 0x{}",
+            program_id
+                .iter()
+                .take(8)
+                .map(|b| format!("{:02x}", b))
+                .collect::<String>()
+        );
+        Ok(CrossVmResult::failed(
+            b"SVM execution API not yet available".to_vec(),
+            5_000,
+        ))
     }
 
     /// Execute an x3VM call.

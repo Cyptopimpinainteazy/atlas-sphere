@@ -2690,12 +2690,12 @@ impl_runtime_apis! {
         }
 
         fn query_weight_to_fee(weight: Weight) -> Balance {
-            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(weight)
+            <Runtime as pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(&weight)
         }
 
         fn query_length_to_fee(length: u32) -> Balance {
             <Runtime as pallet_transaction_payment::Config>::LengthToFee::weight_to_fee(
-                Weight::from_all(u64::from(length) * 1000)
+                &Weight::from_all(u64::from(length) * 1000)
             )
         }
     }
