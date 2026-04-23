@@ -816,15 +816,15 @@ where
     fn execute_x3vm_tx(
         &self,
         _caller: &[u8; 32],
-        call: &CrossVmCall,
-    ) -> Result<CrossVmReceipt, sp_runtime::DispatchError> {
+        call: &x3_cross_vm_bridge::CrossVmCall,
+    ) -> Result<x3_cross_vm_bridge::CrossVmReceipt, sp_runtime::DispatchError> {
         call.ensure_current_version()?;
 
-        Ok(CrossVmReceipt {
+        Ok(x3_cross_vm_bridge::CrossVmReceipt {
             call_hash: call.call_hash(&H256::zero()),
             source_state_root: H256::zero(),
             target_state_root: H256::zero(),
-            status: CrossVmStatus::InternalError,
+            status: x3_cross_vm_bridge::CrossVmStatus::InternalError,
             gas_used: 0,
             logs: Vec::new(),
         })
