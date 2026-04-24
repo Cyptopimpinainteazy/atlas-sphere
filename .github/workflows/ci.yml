@@ -101,6 +101,10 @@ jobs:
         run: bash scripts/ci/verify_launchops_feature_matrix_baseline.sh
       - name: Verify genesis allocations baseline
         run: bash scripts/ci/verify_genesis_allocations_baseline.sh
+      - name: Verify deployment chain spec baseline (x3-testnet-raw)
+        run: bash scripts/ci/verify_chain_spec_baseline.sh deployment/chain-specs/x3-testnet-raw.json deployment/chain-specs/x3-testnet-raw.baseline.json
+      - name: Verify local testnet chain spec baseline
+        run: bash scripts/ci/verify_chain_spec_baseline.sh testnet/chain-spec-raw.json testnet/chain-spec-raw.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -233,6 +237,10 @@ jobs:
         run: bash scripts/ci/verify_launchops_feature_matrix_baseline.sh
       - name: Verify genesis allocations baseline
         run: bash scripts/ci/verify_genesis_allocations_baseline.sh
+      - name: Verify deployment chain spec baseline (x3-testnet-raw)
+        run: bash scripts/ci/verify_chain_spec_baseline.sh deployment/chain-specs/x3-testnet-raw.json deployment/chain-specs/x3-testnet-raw.baseline.json
+      - name: Verify local testnet chain spec baseline
+        run: bash scripts/ci/verify_chain_spec_baseline.sh testnet/chain-spec-raw.json testnet/chain-spec-raw.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
