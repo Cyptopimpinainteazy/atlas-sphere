@@ -204,6 +204,8 @@ jobs:
         run: bash scripts/ci/verify_runtime_identity_baseline.sh runtime/src/lib.rs runtime/runtime-identity.baseline.json
       - name: Verify pallet-svm SBOM baseline
         run: bash scripts/ci/verify_sbom_baseline.sh pallets/svm-runtime/pallet-svm.cdx.json pallets/svm-runtime/pallet-svm.cdx.baseline.json
+      - name: Verify Cargo.lock baseline (Gate 22 - drift-only hash pin)
+        run: bash scripts/ci/verify_cargo_lock_baseline.sh Cargo.lock Cargo.lock.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
