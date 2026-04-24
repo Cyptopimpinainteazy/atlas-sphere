@@ -87,6 +87,8 @@ jobs:
 
       - name: Verify LaunchOps artifact_schemas baseline
         run: bash scripts/ci/verify_launchops_artifact_schemas_baseline.sh
+      - name: Verify LaunchOps stale_docs baseline
+        run: bash scripts/ci/verify_launchops_stale_docs_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -205,6 +207,8 @@ jobs:
 
       - name: Verify LaunchOps artifact_schemas baseline
         run: bash scripts/ci/verify_launchops_artifact_schemas_baseline.sh
+      - name: Verify LaunchOps stale_docs baseline
+        run: bash scripts/ci/verify_launchops_stale_docs_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()

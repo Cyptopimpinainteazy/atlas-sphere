@@ -1,0 +1,330 @@
+{
+  "_comment": "Pinned stale_docs.json fingerprints. Each entry captures sha256 over {file, severity, reason, sorted(linked_code)}. Any drift (new stale doc, removed stale doc, altered linked_code / severity / reason) fails CI until this file is regenerated with UPDATE_BASELINE=1 and each accepted_reason is reviewed.",
+  "stale_docs": [
+    {
+      "file": "tools/get-shit-done/.github/pull_request_template.md",
+      "fingerprint": "9b6809a7fd98b630",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-codebase-mapper.md",
+      "fingerprint": "b177bd9990647234",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-debugger.md",
+      "fingerprint": "3430e6b8b7cf7a72",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-executor.md",
+      "fingerprint": "dcb00f9b0cae6fc4",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-integration-checker.md",
+      "fingerprint": "40a3a5d7a4f65151",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-nyquist-auditor.md",
+      "fingerprint": "e24dfe2a1262f581",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-phase-researcher.md",
+      "fingerprint": "f6afcabf68eec8b4",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-plan-checker.md",
+      "fingerprint": "8d93511913e5e322",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-planner.md",
+      "fingerprint": "06ccf692bea3a4ce",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-project-researcher.md",
+      "fingerprint": "46032101bd269d8d",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-research-synthesizer.md",
+      "fingerprint": "f474685ea25d0ce3",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-roadmapper.md",
+      "fingerprint": "344998c89b7d04d5",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-ui-auditor.md",
+      "fingerprint": "35d4da50457e6e6d",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-ui-checker.md",
+      "fingerprint": "dc4b1a79d69949e0",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-ui-researcher.md",
+      "fingerprint": "5e29056ea8c1fec6",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/agents/gsd-verifier.md",
+      "fingerprint": "5dbf4f7243bd1ff6",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/commands/gsd/debug.md",
+      "fingerprint": "542eb133fb85efec",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/commands/gsd/map-codebase.md",
+      "fingerprint": "2b197fabb20cb235",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/commands/gsd/reapply-patches.md",
+      "fingerprint": "5d43f686ce7b1d43",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/commands/gsd/research-phase.md",
+      "fingerprint": "0a4eb065fbaa98bb",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/references/continuation-format.md",
+      "fingerprint": "663ecd66ef19436c",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/references/questioning.md",
+      "fingerprint": "b33d49d3bf7c39b7",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/references/verification-patterns.md",
+      "fingerprint": "8868e7dad37a1dc0",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/UI-SPEC.md",
+      "fingerprint": "3b68e024d764e211",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/VALIDATION.md",
+      "fingerprint": "2b3bde2d95d33dc4",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/discovery.md",
+      "fingerprint": "56de4f389b9225c6",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/milestone-archive.md",
+      "fingerprint": "a5fea08fe0a37233",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/milestone.md",
+      "fingerprint": "e10afcc801cca1c8",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/phase-prompt.md",
+      "fingerprint": "5807dc04e7cc667e",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/planner-subagent-prompt.md",
+      "fingerprint": "f045decc89c1578d",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/project.md",
+      "fingerprint": "c05f22d0196db2dc",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/requirements.md",
+      "fingerprint": "e9caefc37ea73cba",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/research-project/FEATURES.md",
+      "fingerprint": "735764297b568a7a",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/research-project/PITFALLS.md",
+      "fingerprint": "baa4805ccf72d17d",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/roadmap.md",
+      "fingerprint": "a69c269638ccd282",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/templates/user-setup.md",
+      "fingerprint": "85495833c0a9056f",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/add-phase.md",
+      "fingerprint": "65b14983f69d07f7",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/add-tests.md",
+      "fingerprint": "a6aa22421ea39a01",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/add-todo.md",
+      "fingerprint": "cc3bf02791c03970",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/audit-milestone.md",
+      "fingerprint": "f1451ada71de6462",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/autonomous.md",
+      "fingerprint": "72ff22fb49df8948",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/check-todos.md",
+      "fingerprint": "ab9fabc97f52fa59",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/cleanup.md",
+      "fingerprint": "c1fb52357b938b08",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/complete-milestone.md",
+      "fingerprint": "3b0c2dffa5d2584f",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/diagnose-issues.md",
+      "fingerprint": "6b451c53ac351750",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/execute-phase.md",
+      "fingerprint": "a0036beb35096183",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/insert-phase.md",
+      "fingerprint": "a04266692043b235",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/new-milestone.md",
+      "fingerprint": "02c1065970bdc735",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/new-project.md",
+      "fingerprint": "2fd3ba3934baf83b",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/pause-work.md",
+      "fingerprint": "bd68ee23c00c9bd9",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/plan-milestone-gaps.md",
+      "fingerprint": "d7d7bd7c989a4cc5",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/plan-phase.md",
+      "fingerprint": "cdd4bc9133a81e2f",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/progress.md",
+      "fingerprint": "3d70f5f56f3737d4",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/quick.md",
+      "fingerprint": "53475f8a43a8164d",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/remove-phase.md",
+      "fingerprint": "98c35d01aab5ec28",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/resume-project.md",
+      "fingerprint": "3332b9a71aeebb91",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/settings.md",
+      "fingerprint": "f14437a203cc4180",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/stats.md",
+      "fingerprint": "196be739fff19bed",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/transition.md",
+      "fingerprint": "87e52fe509f7ff2b",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/ui-phase.md",
+      "fingerprint": "d6a66c0d1a05ded1",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/ui-review.md",
+      "fingerprint": "9dc09b885954bb90",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/update.md",
+      "fingerprint": "579f655eae7ac4b3",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/validate-phase.md",
+      "fingerprint": "27616bfb14d85f98",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/verify-phase.md",
+      "fingerprint": "7a1f29f1e2219107",
+      "accepted_reason": ""
+    },
+    {
+      "file": "tools/get-shit-done/get-shit-done/workflows/verify-work.md",
+      "fingerprint": "da3fb669f23f1174",
+      "accepted_reason": ""
+    }
+  ]
+}
