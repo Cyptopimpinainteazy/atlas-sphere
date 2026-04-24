@@ -1,0 +1,262 @@
+{
+  "_comment": "Gate 14: per-method contract fingerprints for .launchops/rpc_consumer_contracts.json. Any change to a method's bucket, consumer modes, trait hints, node-local signals, or notes fails CI. Totals are pinned exactly. Regenerate with UPDATE_BASELINE=1 and fill accepted_reason for each change.",
+  "methods": [
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "01491c746136b1dd",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "atomicTrade_createSwap",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "d709d4ab29a8beb1",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "atomicTrade_estimateSlippage",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "59465d1aa72208ee",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "atomicTrade_executeSwap",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "0402cbc9c3e5d5c4",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "atomicTrade_getSwapQuote",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "8d6756b16b14b401",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "atomicTrade_getSwapStatus",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "3113010b35dfeaa7",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "gpu_orchestratorHealth",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "2c1c9e1586d083f4",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "gpu_submitProof",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "2ba9450daf93e26b",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "gpu_validatorStatus",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "4f0a1d1247d94f5f",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "queryDisputeStatus",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "e5c4384aa9a663aa",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "queryProofFinality",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "9420585023297b72",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "query_crossChainStatus",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "placeholder",
+      "fingerprint": "00b3c279401022df",
+      "frontend_consumer_mode": "mock_only",
+      "group": "mock_only_methods",
+      "method": "requestProofChallenge",
+      "sidecar_consumer_mode": "defer"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "c09159652f693e99",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "submitDispute",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "0a441dd4f9444c3a",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "validate_evmHeader",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "f7a95e515635c317",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "validate_svmHeader",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "6b4f38b404e24e6a",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "walletDex_estimateSwap",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "edc8f1a6014c7d7d",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "walletDex_executeSwap",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "08569405c04d7a5f",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "x3_estimateGas",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "3788b9873a345350",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "x3_flashFinalityStatus",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "f3d53870d056f450",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "x3_getAssetMetadata",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "8869ceb734bb3f5c",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "x3_getAuthorities",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "17724ed12ef6c502",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "x3_getAuthorizedAccounts",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "25622a8dd0b71792",
+      "frontend_consumer_mode": "direct_read_candidate",
+      "group": "frontend_safe_methods",
+      "method": "x3_getCanonicalBalance",
+      "sidecar_consumer_mode": "pass_through_candidate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "runtime_backed",
+      "fingerprint": "960a4d99c91bf985",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "x3_isAuthorized",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "placeholder",
+      "fingerprint": "dbc7292bea0b93ac",
+      "frontend_consumer_mode": "mock_only",
+      "group": "mock_only_methods",
+      "method": "x3_newCore",
+      "sidecar_consumer_mode": "defer"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "a7a889f68671a02e",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "x3_submitCrossVmTransaction",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "node_local_adapter",
+      "fingerprint": "a79513d4189e8db3",
+      "frontend_consumer_mode": "adapter_only",
+      "group": "sidecar_only_methods",
+      "method": "x3_submitSvmTransaction",
+      "sidecar_consumer_mode": "orchestrate"
+    },
+    {
+      "accepted_reason": "",
+      "bucket": "placeholder",
+      "fingerprint": "5540b3a54b26cf22",
+      "frontend_consumer_mode": "mock_only",
+      "group": "mock_only_methods",
+      "method": "x3_submitX3vmTransaction",
+      "sidecar_consumer_mode": "defer"
+    }
+  ],
+  "totals": {
+    "frontend_safe_count": 11,
+    "mock_only_count": 3,
+    "sidecar_only_count": 14
+  }
+}

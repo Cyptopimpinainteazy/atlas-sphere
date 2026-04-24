@@ -93,6 +93,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_red_flags_baseline.sh
       - name: Verify LaunchOps requirement_conflicts baseline
         run: bash scripts/ci/verify_launchops_requirement_conflicts_baseline.sh
+      - name: Verify LaunchOps rpc_consumer_contracts baseline
+        run: bash scripts/ci/verify_launchops_rpc_consumer_contracts_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -217,6 +219,8 @@ jobs:
         run: bash scripts/ci/verify_launchops_red_flags_baseline.sh
       - name: Verify LaunchOps requirement_conflicts baseline
         run: bash scripts/ci/verify_launchops_requirement_conflicts_baseline.sh
+      - name: Verify LaunchOps rpc_consumer_contracts baseline
+        run: bash scripts/ci/verify_launchops_rpc_consumer_contracts_baseline.sh
 
       - name: Summarize LaunchOps inventory
         if: always()
