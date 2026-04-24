@@ -105,6 +105,10 @@ jobs:
         run: bash scripts/ci/verify_chain_spec_baseline.sh deployment/chain-specs/x3-testnet-raw.json deployment/chain-specs/x3-testnet-raw.baseline.json
       - name: Verify local testnet chain spec baseline
         run: bash scripts/ci/verify_chain_spec_baseline.sh testnet/chain-spec-raw.json testnet/chain-spec-raw.baseline.json
+      - name: Verify node SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh node/x3-chain-node.cdx.json node/x3-chain-node.cdx.baseline.json
+      - name: Verify runtime SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh runtime/x3-chain-runtime.cdx.json runtime/x3-chain-runtime.cdx.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
@@ -241,6 +245,10 @@ jobs:
         run: bash scripts/ci/verify_chain_spec_baseline.sh deployment/chain-specs/x3-testnet-raw.json deployment/chain-specs/x3-testnet-raw.baseline.json
       - name: Verify local testnet chain spec baseline
         run: bash scripts/ci/verify_chain_spec_baseline.sh testnet/chain-spec-raw.json testnet/chain-spec-raw.baseline.json
+      - name: Verify node SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh node/x3-chain-node.cdx.json node/x3-chain-node.cdx.baseline.json
+      - name: Verify runtime SBOM baseline
+        run: bash scripts/ci/verify_sbom_baseline.sh runtime/x3-chain-runtime.cdx.json runtime/x3-chain-runtime.cdx.baseline.json
 
       - name: Summarize LaunchOps inventory
         if: always()
